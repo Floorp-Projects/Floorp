@@ -134,7 +134,7 @@ enum {
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
-static const ClassOps DebuggerObject_classOps = {
+const ClassOps DebuggerObject::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
     nullptr,    /* getProperty */
@@ -153,7 +153,7 @@ const Class DebuggerObject::class_ = {
     "Object",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
-    &DebuggerObject_classOps
+    &classOps_
 };
 
 enum {
@@ -7807,8 +7807,8 @@ DebuggerObject_trace(JSTracer* trc, JSObject* obj)
     }
 }
 
-static DebuggerObject*
-DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
+/* static */ DebuggerObject*
+DebuggerObject::checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
 {
     JSObject* thisobj = NonNullObject(cx, args.thisv());
     if (!thisobj)
@@ -7833,27 +7833,27 @@ DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     return nthisobj;
 }
 
-#define THIS_DEBUGOBJECT(cx, argc, vp, fnname, args, object)                        \
-    CallArgs args = CallArgsFromVp(argc, vp);                                       \
-    Rooted<DebuggerObject*> object(cx, DebuggerObject_checkThis(cx, args, fnname)); \
-    if (!object)                                                                    \
-        return false;                                                               \
+#define THIS_DEBUGOBJECT(cx, argc, vp, fnname, args, object)                         \
+    CallArgs args = CallArgsFromVp(argc, vp);                                        \
+    Rooted<DebuggerObject*> object(cx, DebuggerObject::checkThis(cx, args, fnname)); \
+    if (!object)                                                                     \
+        return false;                                                                \
 
-#define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)            \
-    CallArgs args = CallArgsFromVp(argc, vp);                                 \
-    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));         \
-    if (!obj)                                                                 \
-        return false;                                                         \
-    obj = (JSObject*) obj->as<NativeObject>().getPrivate();                   \
+#define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)     \
+    CallArgs args = CallArgsFromVp(argc, vp);                          \
+    RootedObject obj(cx, DebuggerObject::checkThis(cx, args, fnname)); \
+    if (!obj)                                                          \
+        return false;                                                  \
+    obj = (JSObject*) obj->as<NativeObject>().getPrivate();            \
     MOZ_ASSERT(obj)
 
-#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj)  \
-    CallArgs args = CallArgsFromVp(argc, vp);                                  \
-    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));          \
-    if (!obj)                                                                  \
-        return false;                                                          \
-    Debugger* dbg = Debugger::fromChildJSObject(obj);                          \
-    obj = (JSObject*) obj->as<NativeObject>().getPrivate();                    \
+#define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj) \
+    CallArgs args = CallArgsFromVp(argc, vp);                                 \
+    RootedObject obj(cx, DebuggerObject::checkThis(cx, args, fnname));        \
+    if (!obj)                                                                 \
+        return false;                                                         \
+    Debugger* dbg = Debugger::fromChildJSObject(obj);                         \
+    obj = (JSObject*) obj->as<NativeObject>().getPrivate();                   \
     MOZ_ASSERT(obj)
 
 #define THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, fnname, args, obj)                   \
@@ -7876,8 +7876,8 @@ DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
    }                                                                                \
    Rooted<PromiseObject*> promise(cx, &obj->as<PromiseObject>());
 
-static bool
-DebuggerObject_construct(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
                          "Debugger.Object");
@@ -8798,7 +8798,7 @@ DebuggerObject::initClass(JSContext* cx, HandleObject obj, HandleObject debugCto
     RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
 
     RootedNativeObject objectProto(cx, InitClass(cx, debugCtor, objProto, &class_,
-                                                 DebuggerObject_construct, 0, properties_,
+                                                 construct, 0, properties_,
                                                  methods_, nullptr, nullptr));
 
     if (!objectProto)

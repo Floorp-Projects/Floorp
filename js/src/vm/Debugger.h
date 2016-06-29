@@ -1205,14 +1205,14 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool unwrap(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandle<DebuggerObject*> result);
 
-    static MOZ_MUST_USE bool requireGlobal(JSContext* cx, Handle<DebuggerObject*> object);
-
   private:
     enum {
         OWNER_SLOT
     };
 
     static const unsigned RESERVED_SLOTS = 1;
+
+    static const ClassOps classOps_;
 
     static const JSPropertySpec properties_[];
 #ifdef SPIDERMONKEY_PROMISE
@@ -1227,6 +1227,11 @@ class DebuggerObject : public NativeObject
     }
 
     Debugger* owner() const;
+
+    static DebuggerObject* checkThis(JSContext* cx, const CallArgs& args, const char* fnname);
+    static MOZ_MUST_USE bool requireGlobal(JSContext* cx, Handle<DebuggerObject*> object);
+
+    static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
     static MOZ_MUST_USE bool callableGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool isBoundFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
