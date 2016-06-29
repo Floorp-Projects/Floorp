@@ -126,8 +126,7 @@ class CPOWProxyHandler : public BaseProxyHandler
                                               AutoIdVector& props) const override;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy,
                              MutableHandleValue v, bool* bp) const override;
-    virtual bool getBuiltinClass(JSContext* cx, HandleObject obj,
-                                 js::ESClassValue* classValue) const override;
+    virtual bool getBuiltinClass(JSContext* cx, HandleObject obj, js::ESClass* cls) const override;
     virtual bool isArray(JSContext* cx, HandleObject obj,
                          IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
@@ -729,23 +728,21 @@ WrapperOwner::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue 
 }
 
 bool
-CPOWProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
-                                  js::ESClassValue* classValue) const
+CPOWProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) const
 {
-    FORWARD(getBuiltinClass, (cx, proxy, classValue));
+    FORWARD(getBuiltinClass, (cx, proxy, cls));
 }
 
 bool
-WrapperOwner::getBuiltinClass(JSContext* cx, HandleObject proxy,
-                              js::ESClassValue* classValue)
+WrapperOwner::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls)
 {
     ObjectId objId = idOf(proxy);
 
-    uint32_t cls = ESClass_Other;
+    uint32_t classValue = uint32_t(ESClass::Other);
     ReturnStatus status;
-    if (!SendGetBuiltinClass(objId, &status, &cls))
+    if (!SendGetBuiltinClass(objId, &status, &classValue))
         return ipcfail(cx);
-    *classValue = ESClassValue(cls);
+    *cls = ESClass(classValue);
 
     LOG_STACK();
 

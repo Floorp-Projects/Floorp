@@ -958,14 +958,26 @@ Valueify(const JSClass* c)
  * Enumeration describing possible values of the [[Class]] internal property
  * value of objects.
  */
-enum ESClassValue {
-    ESClass_Object, ESClass_Array, ESClass_Number, ESClass_String,
-    ESClass_Boolean, ESClass_RegExp, ESClass_ArrayBuffer, ESClass_SharedArrayBuffer,
-    ESClass_Date, ESClass_Set, ESClass_Map, ESClass_Promise, ESClass_MapIterator,
-    ESClass_SetIterator,
+enum class ESClass {
+    Object,
+    Array,
+    Number,
+    String,
+    Boolean,
+    RegExp,
+    ArrayBuffer,
+    SharedArrayBuffer,
+    Date,
+    Set,
+    Map,
+    Promise,
+    MapIterator,
+    SetIterator,
+    Arguments,
+    Error,
 
     /** None of the above. */
-    ESClass_Other
+    Other
 };
 
 /* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
