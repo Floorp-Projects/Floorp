@@ -425,7 +425,7 @@ class BaseMarionetteArguments(ArgumentParser):
             self.error('You must specify how many chunks to split the tests into.')
 
         if args.total_chunks is not None:
-            if not 1 <= args.total_chunks:
+            if not 1 < args.total_chunks:
                 self.error('Total chunks must be greater than 1.')
             if not 1 <= args.this_chunk <= args.total_chunks:
                 self.error('Chunk to run must be between 1 and %s.' % args.total_chunks)
