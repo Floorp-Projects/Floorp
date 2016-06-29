@@ -545,7 +545,7 @@ protected:
   // mSelection with the selection at the first call during a lock and returns
   // it.  However, mSelection is NOT modified immediately.  When pending
   // changes are flushed at unlocking the document, cached mSelection is
-  // modified.  Note that this is also called by LockedContent().
+  // modified.  Note that this is also called by ContentForTSFRef().
   Selection& CurrentSelection();
 
   struct PendingAction final
@@ -789,12 +789,12 @@ protected:
   // the content during a document lock.  The information is expected by TSF
   // and TIP.  Therefore, this is useful for answering the query from TSF or
   // TIP.  This is abandoned after document is unlocked and dispatched events
-  // are handled.  This is initialized by LockedContent() automatically.
+  // are handled.  This is initialized by ContentForTSFRef() automatically.
   // So, don't access this member directly except at calling Clear(),
   // IsInitialized(), IsLayoutChangedAfter() or IsLayoutChanged().
   Content mContentForTSF;
 
-  Content& LockedContent();
+  Content& ContentForTSFRef();
 
   // While the documet is locked, this returns the text stored by
   // mContentForTSF.  Otherwise, return the current text content.
