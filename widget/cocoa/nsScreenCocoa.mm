@@ -44,7 +44,7 @@ nsScreenCocoa::GetRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int32_t 
 {
   NSRect frame = [mScreen frame];
 
-  LayoutDeviceIntRect r =
+  mozilla::LayoutDeviceIntRect r =
     nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
 
   *outX = r.x;
@@ -60,7 +60,7 @@ nsScreenCocoa::GetAvailRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int
 {
   NSRect frame = [mScreen visibleFrame];
 
-  LayoutDeviceIntRect r =
+  mozilla::LayoutDeviceIntRect r =
     nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
 
   *outX = r.x;
@@ -76,7 +76,7 @@ nsScreenCocoa::GetRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth
 {
   NSRect frame = [mScreen frame];
 
-  DesktopIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
+  mozilla::DesktopIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
 
   *outX = r.x;
   *outY = r.y;
@@ -91,7 +91,7 @@ nsScreenCocoa::GetAvailRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *out
 {
   NSRect frame = [mScreen visibleFrame];
 
-  DesktopIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
+  mozilla::DesktopIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
 
   *outX = r.x;
   *outY = r.y;

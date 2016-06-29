@@ -329,7 +329,7 @@ public:
     void DispatchSizeModeEvent();
 
     // be notified that a some form of drag event needs to go into Gecko
-    virtual bool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
+    virtual bool DragEvent(unsigned int aMessage, mozilla::gfx::Point aMouseGlobal, UInt16 aKeyModifiers);
 
     bool HasModalDescendents() { return mNumModalDescendents > 0; }
     NSWindow *GetCocoaWindow() { return mWindow; }
