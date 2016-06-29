@@ -4817,13 +4817,6 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
   return nullptr;
 }
 
-static Element*
-GetParentElement(Element* aElement)
-{
-  nsIContent* p = aElement->GetParent();
-  return (p && p->IsElement()) ? p->AsElement() : nullptr;
-}
-
 /* static */
 void
 EventStateManager::SetFullScreenState(Element* aElement, bool aIsFullScreen)
