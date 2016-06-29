@@ -30,20 +30,19 @@ function* testCopyToClipboard(inspector, view) {
 
   yield selectNode("div", inspector);
 
-  let win = view.styleWindow;
   let element = getRuleViewProperty(view, "div", "color").valueSpan
     .querySelector(".ruleview-colorswatch");
 
-  let popup = once(view._contextmenu._menupopup, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(element, {button: 2, type: "contextmenu"},
-    win);
-  yield popup;
+  let allMenuItems = openStyleContextMenuAndGetAllItems(view, element);
+  let menuitemCopyColor = allMenuItems.find(item => item.label ===
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyColor"));
 
-  ok(!view._contextmenu.menuitemCopyColor.hidden, "Copy color is visible");
+  ok(menuitemCopyColor.visible, "Copy color is visible");
 
-  yield waitForClipboard(() => view._contextmenu.menuitemCopyColor.click(),
+  yield waitForClipboard(() => menuitemCopyColor.click(),
     "#123ABC");
-  view._contextmenu._menupopup.hidePopup();
+
+  EventUtils.synthesizeKey("VK_ESCAPE", { });
 }
 
 function* testManualEdit(inspector, view) {
