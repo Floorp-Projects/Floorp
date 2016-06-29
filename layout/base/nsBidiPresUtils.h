@@ -281,6 +281,11 @@ public:
   static nsIFrame* GetFirstLeaf(nsIFrame* aFrame);
     
   /**
+   * Get the bidi data of the given (inline) frame.
+   */
+  static mozilla::FrameBidiData GetFrameBidiData(nsIFrame* aFrame);
+
+  /**
    * Get the bidi embedding level of the given (inline) frame.
    */
   static nsBidiLevel GetFrameEmbeddingLevel(nsIFrame* aFrame);

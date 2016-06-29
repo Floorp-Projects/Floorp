@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/IntegerRange.h"
+
 #include "nsAutoPtr.h"
 #include "nsBidiPresUtils.h"
 #include "nsFontMetrics.h"
@@ -371,22 +373,64 @@ struct BidiLineData {
 
     bool isReordered = false;
     bool hasRTLFrames = false;
+    bool hasVirtualControls = false;
 
-    for (nsIFrame* frame = aFirstFrameOnLine;
-         frame && aNumFramesOnLine--;
-         frame = frame->GetNextSibling()) {
-      AppendFrame(frame);
-      nsBidiLevel level = nsBidiPresUtils::GetFrameEmbeddingLevel(frame);
+    auto appendFrame = [&](nsIFrame* frame, nsBidiLevel level) {
+      mLogicalFrames.AppendElement(frame);
       mLevels.AppendElement(level);
       mIndexMap.AppendElement(0);
       if (IS_LEVEL_RTL(level)) {
         hasRTLFrames = true;
       }
+    };
+
+    bool firstFrame = true;
+    for (nsIFrame* frame = aFirstFrameOnLine;
+         frame && aNumFramesOnLine--;
+         frame = frame->GetNextSibling()) {
+      FrameBidiData bidiData = nsBidiPresUtils::GetFrameBidiData(frame);
+      // Ignore virtual control before the first frame. Doing so should
+      // not affect the visual result, but could avoid running into the
+      // stripping code below for many cases.
+      if (!firstFrame && bidiData.precedingControl != kBidiLevelNone) {
+        appendFrame(NS_BIDI_CONTROL_FRAME, bidiData.precedingControl);
+        hasVirtualControls = true;
+      }
+      appendFrame(frame, bidiData.embeddingLevel);
+      firstFrame = false;
     }
 
     // Reorder the line
     nsBidi::ReorderVisual(mLevels.Elements(), FrameCount(),
                           mIndexMap.Elements());
+
+    // Strip virtual frames
+    if (hasVirtualControls) {
+      auto originalCount = mLogicalFrames.Length();
+      nsTArray<int32_t> realFrameMap(originalCount);
+      size_t count = 0;
+      for (auto i : MakeRange(originalCount)) {
+        if (mLogicalFrames[i] == NS_BIDI_CONTROL_FRAME) {
+          realFrameMap.AppendElement(-1);
+        } else {
+          mLogicalFrames[count] = mLogicalFrames[i];
+          mLevels[count] = mLevels[i];
+          realFrameMap.AppendElement(count);
+          count++;
+        }
+      }
+      // Only keep index map for real frames.
+      for (size_t i = 0, j = 0; i < originalCount; ++i) {
+        auto newIndex = realFrameMap[mIndexMap[i]];
+        if (newIndex != -1) {
+          mIndexMap[j] = newIndex;
+          j++;
+        }
+      }
+      mLogicalFrames.TruncateLength(count);
+      mLevels.TruncateLength(count);
+      mIndexMap.TruncateLength(count);
+    }
 
     for (int32_t i = 0; i < FrameCount(); i++) {
       mVisualFrames.AppendElement(LogicalFrameAt(mIndexMap[i]));
@@ -397,11 +441,6 @@ struct BidiLineData {
 
     // If there's an RTL frame, assume the line is reordered
     mIsReordered = isReordered || hasRTLFrames;
-  }
-
-  void AppendFrame(nsIFrame* aFrame)
-  {
-    mLogicalFrames.AppendElement(aFrame); 
   }
 
   int32_t FrameCount(){ return mLogicalFrames.Length(); }
@@ -737,6 +776,27 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
   }
 
   nsIFrame* lastRealFrame = nullptr;
+  nsBidiLevel lastEmbedingLevel = kBidiLevelNone;
+  nsBidiLevel precedingControl = kBidiLevelNone;
+
+  auto storeBidiDataToFrame = [&]() {
+    FrameBidiData bidiData;
+    bidiData.embeddingLevel = embeddingLevel;
+    bidiData.baseLevel = aBpd->GetParaLevel();
+    // If a control character doesn't have a lower embedding level than
+    // both the preceding and the following frame, it isn't something
+    // needed for getting the correct result. This optimization should
+    // remove almost all of embeds and overrides, and some of isolates.
+    if (precedingControl >= embeddingLevel ||
+        precedingControl >= lastEmbedingLevel) {
+      bidiData.precedingControl = kBidiLevelNone;
+    } else {
+      bidiData.precedingControl = precedingControl;
+    }
+    precedingControl = kBidiLevelNone;
+    lastEmbedingLevel = embeddingLevel;
+    propTable->Set(frame, nsBidi::BidiDataProperty(), bidiData);
+  };
 
   for (; ;) {
     if (fragmentLength <= 0) {
@@ -765,10 +825,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
           frame->AdjustOffsetsForBidi(0, 0);
           // Set the base level and embedding level of the current run even
           // on an empty frame. Otherwise frame reordering will not be correct.
-          FrameBidiData bidiData;
-          bidiData.embeddingLevel = embeddingLevel;
-          bidiData.baseLevel = aBpd->GetParaLevel();
-          propTable->Set(frame, nsBidi::BidiDataProperty(), bidiData);
+          storeBidiDataToFrame();
           continue;
         }
         int32_t start, end;
@@ -795,13 +852,16 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
     } // if (runLength <= 0)
 
     if (frame == NS_BIDI_CONTROL_FRAME) {
+      // In theory, we only need to do this for isolates. However, it is
+      // easier to do this for all here because we do not maintain the
+      // index to get corresponding character from buffer. Since we do
+      // have proper embedding level for all those characters, including
+      // them wouldn't affect the final result.
+      precedingControl = std::min(precedingControl, embeddingLevel);
       ++lineOffset;
     }
     else {
-      FrameBidiData bidiData;
-      bidiData.embeddingLevel = embeddingLevel;
-      bidiData.baseLevel = aBpd->GetParaLevel();
-      propTable->Set(frame, nsBidi::BidiDataProperty(), bidiData);
+      storeBidiDataToFrame();
       if (isTextFrame) {
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
           /*
@@ -1214,6 +1274,12 @@ nsBidiPresUtils::GetFirstLeaf(nsIFrame* aFrame)
                  realFrame : firstChild;
   }
   return firstLeaf;
+}
+
+FrameBidiData
+nsBidiPresUtils::GetFrameBidiData(nsIFrame* aFrame)
+{
+  return nsBidi::GetBidiData(GetFirstLeaf(aFrame));
 }
 
 nsBidiLevel
@@ -1698,6 +1764,7 @@ nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData *aBpd,
                                         int32_t&        aOffset)
 {
   FrameBidiData bidiData = nsBidi::GetBidiData(aFrame);
+  bidiData.precedingControl = kBidiLevelNone;
   for (int32_t index = aFirstIndex + 1; index <= aLastIndex; index++) {
     nsIFrame* frame = aBpd->FrameAt(index);
     if (frame == NS_BIDI_CONTROL_FRAME) {

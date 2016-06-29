@@ -1609,7 +1609,8 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (mBidiEnabled) {
     FrameBidiData data1 = nsBidi::GetBidiData(aFrame1);
     FrameBidiData data2 = nsBidi::GetBidiData(aFrame2);
-    if (data1.embeddingLevel != data2.embeddingLevel) {
+    if (data1.embeddingLevel != data2.embeddingLevel ||
+        data2.precedingControl != kBidiLevelNone) {
       return false;
     }
   }
@@ -4154,6 +4155,7 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
   }
   if (aPrevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) {
     FrameBidiData bidiData = nsBidi::GetBidiData(aPrevInFlow);
+    bidiData.precedingControl = kBidiLevelNone;
     Properties().Set(nsBidi::BidiDataProperty(), bidiData);
 
     if (nextContinuation) {
@@ -4167,6 +4169,9 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
         NS_ASSERTION(bidiData.embeddingLevel == nextBidiData.embeddingLevel &&
                      bidiData.baseLevel == nextBidiData.baseLevel,
                      "stealing text from different type of BIDI continuation");
+        MOZ_ASSERT(nextBidiData.precedingControl == kBidiLevelNone,
+                   "There shouldn't be any virtual bidi formatting character "
+                   "between continuations");
 #endif
         nextContinuation->mContentOffset = mContentOffset;
         nextContinuation = static_cast<nsTextFrame*>(nextContinuation->GetNextContinuation());
