@@ -129,11 +129,15 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
 #if defined(ANDROID) || defined(MOZ_B2G)
    bool isDirPicker = false;
+   bool isWebkitPicker = false;
 #else
   nsIContent* content = GetContent();
   bool isDirPicker =
     Preferences::GetBool("dom.input.dirpicker", false) &&
     content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::directory);
+  bool isWebkitPicker =
+      Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
+      content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
 #endif
 
   RefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
@@ -144,13 +148,14 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsAutoString accessKey;
   fileContent->GetAccessKey(accessKey);
 
-  mBrowseFiles = MakeAnonButton(doc, isDirPicker ? "ChooseFiles" : "Browse",
+  mBrowseFiles = MakeAnonButton(doc,
+                                isDirPicker || isWebkitPicker ? "ChooseFiles" : "Browse",
                                 fileContent, accessKey);
   if (!mBrowseFiles || !aElements.AppendElement(mBrowseFiles)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (isDirPicker) {
+  if (isDirPicker || isWebkitPicker) {
     mBrowseDirs = MakeAnonButton(doc, "ChooseDirs", fileContent, EmptyString());
     // Setting the 'directory' attribute is simply a means of allowing our
     // event handling code in HTMLInputElement.cpp to distinguish between a
@@ -158,8 +163,15 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     if (!mBrowseDirs) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mBrowseDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::directory,
-                         EmptyString(), false);
+
+    if (isDirPicker) {
+      mBrowseDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::directory,
+                           EmptyString(), false);
+    } else {
+      mBrowseDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory,
+                           EmptyString(), false);
+    }
+
     if (!aElements.AppendElement(mBrowseDirs)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
