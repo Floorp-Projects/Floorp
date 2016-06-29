@@ -4030,6 +4030,36 @@ public:
 
     auto ForceFinished(bool) const -> nsresult;
 
+    struct GetCurrSpeedX_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCurrSpeedX";
+        static constexpr char signature[] =
+                "()F";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetCurrSpeedX(float*) const -> nsresult;
+
+    struct GetCurrSpeedY_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCurrSpeedY";
+        static constexpr char signature[] =
+                "()F";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetCurrSpeedY(float*) const -> nsresult;
+
     struct GetCurrX_t {
         typedef StackScroller Owner;
         typedef int32_t ReturnType;
