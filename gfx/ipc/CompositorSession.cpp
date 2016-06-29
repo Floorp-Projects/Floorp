@@ -11,6 +11,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace widget;
+
 class InProcessCompositorSession final : public CompositorSession
 {
 public:
