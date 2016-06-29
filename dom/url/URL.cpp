@@ -6,11 +6,13 @@
 
 #include "URL.h"
 
-#include "nsGlobalWindow.h"
 #include "DOMMediaStream.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/dom/URLBinding.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/nsIRemoteBlob.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsHostObjectProtocolHandler.h"
