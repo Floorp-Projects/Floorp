@@ -19,7 +19,6 @@
 #include "js/GCAPI.h"
 #include "js/SliceBudget.h"
 #include "js/Vector.h"
-
 #include "threading/ConditionVariable.h"
 #include "vm/NativeObject.h"
 

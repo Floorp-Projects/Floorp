@@ -885,7 +885,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     noGCOrAllocationCheck(0),
     noNurseryAllocationCheck(0),
 #endif
-    lock(),
     allocTask(rt, emptyChunks_),
     helperState(rt)
 {
