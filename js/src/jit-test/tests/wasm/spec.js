@@ -298,7 +298,8 @@ function exec(e) {
             exec(e.list[1]);
         } catch(err) {
             caught = true;
-            assert(err.toString().indexOf(errMsg) !== -1, `expected error message "${errMsg}", got "${err}"`);
+            if (err.toString().indexOf(errMsg) === -1)
+                warn(`expected error message "${errMsg}", got "${err}"`);
         }
         assert(caught, "assert_trap exception not caught");
         return;
