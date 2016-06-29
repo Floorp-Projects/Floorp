@@ -10,6 +10,7 @@
 #include "Accessible.h"
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace a11y {
@@ -101,8 +102,8 @@ private:
   void Mutated(AccMutationEvent* aEv);
   void Clear();
 
-  nsAutoPtr<EventTree> mFirst;
-  nsAutoPtr<EventTree> mNext;
+  UniquePtr<EventTree> mFirst;
+  UniquePtr<EventTree> mNext;
 
   Accessible* mContainer;
   nsTArray<RefPtr<AccMutationEvent>> mDependentEvents;
