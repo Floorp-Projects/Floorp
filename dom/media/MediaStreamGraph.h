@@ -23,7 +23,6 @@
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include <speex/speex_resampler.h>
-#include "DOMMediaStream.h"
 
 class nsIRunnable;
 
@@ -79,7 +78,16 @@ namespace media {
  * reprocess it. This is triggered automatically by the MediaStreamGraph.
  */
 
+class AudioNodeEngine;
+class AudioNodeExternalInputStream;
+class AudioNodeStream;
+class CameraPreviewMediaStream;
+class MediaInputPort;
+class MediaStream;
 class MediaStreamGraph;
+class MediaStreamGraphImpl;
+class ProcessedMediaStream;
+class SourceMediaStream;
 
 /**
  * This is a base class for media graph thread listener callbacks.
@@ -439,15 +447,6 @@ struct AudioNodeSizes
   nsCString mNodeType;
 };
 
-class MediaStreamGraphImpl;
-class SourceMediaStream;
-class ProcessedMediaStream;
-class MediaInputPort;
-class AudioNodeEngine;
-class AudioNodeExternalInputStream;
-class AudioNodeStream;
-class CameraPreviewMediaStream;
-
 /**
  * Helper struct for binding a track listener to a specific TrackID.
  */
@@ -533,7 +532,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream>
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
-  explicit MediaStream(DOMMediaStream* aWrapper);
+  MediaStream();
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -798,12 +797,6 @@ public:
 
   virtual void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
 
-  DOMMediaStream* GetWrapper()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Only use DOMMediaStream on main thread");
-    return mWrapper;
-  }
-
   // Return true if the main thread needs to observe updates from this stream.
   virtual bool MainThreadNeedsUpdates() const
   {
@@ -938,8 +931,6 @@ protected:
    */
   bool mNotifiedHasCurrentData;
 
-  // This state is only used on the main thread.
-  DOMMediaStream* mWrapper;
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
   bool mMainThreadFinished;
@@ -962,8 +953,8 @@ protected:
 class SourceMediaStream : public MediaStream
 {
 public:
-  explicit SourceMediaStream(DOMMediaStream* aWrapper) :
-    MediaStream(aWrapper),
+  explicit SourceMediaStream() :
+    MediaStream(),
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
     mPullEnabled(false),
@@ -1385,8 +1376,8 @@ private:
 class ProcessedMediaStream : public MediaStream
 {
 public:
-  explicit ProcessedMediaStream(DOMMediaStream* aWrapper)
-    : MediaStream(aWrapper), mAutofinish(false), mCycleMarker(0)
+  explicit ProcessedMediaStream()
+    : MediaStream(), mAutofinish(false), mCycleMarker(0)
   {}
 
   // Control API.
@@ -1545,7 +1536,7 @@ public:
    * Create a stream that a media decoder (or some other source of
    * media data, such as a camera) can write to.
    */
-  SourceMediaStream* CreateSourceStream(DOMMediaStream* aWrapper);
+  SourceMediaStream* CreateSourceStream();
   /**
    * Create a stream that will form the union of the tracks of its input
    * streams.
@@ -1560,12 +1551,11 @@ public:
    * TODO at some point we will probably need to add API to select
    * particular tracks of each input stream.
    */
-  ProcessedMediaStream* CreateTrackUnionStream(DOMMediaStream* aWrapper);
+  ProcessedMediaStream* CreateTrackUnionStream();
   /**
    * Create a stream that will mix all its audio input.
    */
-  ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper,
-                                                 TrackID aTrackId);
+  ProcessedMediaStream* CreateAudioCaptureStream(TrackID aTrackId);
 
   /**
    * Add a new stream to the graph.  Main thread.
