@@ -16,22 +16,15 @@
  * limitations under the License.
  */
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmCompile.h"
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/unused.h"
 
 #include "jsprf.h"
 
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
-#include "asmjs/WasmInstance.h"
-#include "vm/ArrayBufferObject.h"
-#include "vm/Debugger.h"
-
-#include "jsatominlines.h"
-
-#include "vm/Debugger-inl.h"
+#include "vm/TypedArrayObject.h"
 
 using namespace js;
 using namespace js::jit;
@@ -39,17 +32,6 @@ using namespace js::wasm;
 
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
-using mozilla::Unused;
-
-/*****************************************************************************/
-// reporting
-
-static bool
-Fail(JSContext* cx, const char* str)
-{
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, str);
-    return false;
-}
 
 static bool
 Fail(JSContext* cx, const Decoder& d, const char* str)
@@ -495,9 +477,6 @@ DecodeExpr(FunctionDecoder& f)
 
     return f.iter().unrecognizedOpcode(expr);
 }
-
-/*****************************************************************************/
-// wasm decoding and generation
 
 static bool
 DecodePreamble(JSContext* cx, Decoder& d)
@@ -1150,108 +1129,21 @@ DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode)
     return mg.finish(Move(importNames), bytecode);
 }
 
-/*****************************************************************************/
-// Top-level functions
-
-bool
-wasm::HasCompilerSupport(ExclusiveContext* cx)
+UniqueModule
+wasm::Compile(JSContext* cx, UniqueChars file, Bytes&& bytecode)
 {
-    if (!cx->jitSupportsFloatingPoint())
-        return false;
+    MOZ_ASSERT(HasCompilerSupport(cx));
 
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return false;
-#else
-    return true;
-#endif
-}
+    SharedBytes sharedBytes = cx->new_<ShareableBytes>(Move(bytecode));
+    if (!sharedBytes)
+        return nullptr;
 
-static bool
-CheckCompilerSupport(JSContext* cx)
-{
-    if (!HasCompilerSupport(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
-        return false;
-    }
-    return true;
-}
-
-static bool
-GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleValue v)
-{
-    JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return GetProperty(cx, obj, obj, id, v);
-}
-
-static bool
-ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& importNames,
-                MutableHandle<FunctionVector> imports)
-{
-    if (!importNames.empty() && !importObj)
-        return Fail(cx, "no import object given");
-
-    for (const ImportName& name : importNames) {
-        RootedValue v(cx);
-        if (!GetProperty(cx, importObj, name.module.get(), &v))
-            return false;
-
-        if (strlen(name.func.get()) > 0) {
-            if (!v.isObject())
-                return Fail(cx, "import object field is not an Object");
-
-            RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, name.func.get(), &v))
-                return false;
-        }
-
-        if (!IsFunctionObject(v))
-            return Fail(cx, "import object field is not a Function");
-
-        if (!imports.append(&v.toObject().as<JSFunction>()))
-            return false;
-    }
-
-    return true;
-}
-
-bool
-wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> view, HandleObject importObj,
-           MutableHandleWasmInstanceObject instanceObj)
-{
-    if (!CheckCompilerSupport(cx))
-        return false;
-
-    uint8_t* viewBegin = (uint8_t*)view->viewDataEither().unwrap(/* for copy */);
-
-    MutableBytes bytecode = cx->new_<ShareableBytes>();
-    if (!bytecode || !bytecode->append(viewBegin, view->byteLength()))
-        return false;
-
-    JS::AutoFilename filename;
-    if (!DescribeScriptedCaller(cx, &filename))
-        return false;
-
-    UniqueChars file = DuplicateString(filename.get());
-    if (!file)
-        return false;
-
-    UniqueModule module = DecodeModule(cx, Move(file), *bytecode);
+    UniqueModule module = DecodeModule(cx, Move(file), *sharedBytes);
     if (!module) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
-        return false;
+        return nullptr;
     }
 
-    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
-        return false;
-
-    return module->instantiate(cx, funcImports, /* asmJSHeap = */ nullptr, instanceObj);
+    return module;
 }

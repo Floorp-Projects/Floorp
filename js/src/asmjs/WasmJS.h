@@ -23,13 +23,31 @@
 #include "vm/NativeObject.h"
 
 namespace js {
+
+class TypedArrayObject;
+class WasmInstanceObject;
+
 namespace wasm {
+
+// This is a widespread header, so keep out core wasm impl definitions.
 
 class Module;
 class Instance;
 
 typedef UniquePtr<Module> UniqueModule;
 typedef UniquePtr<Instance> UniqueInstance;
+
+// Return whether WebAssembly can be compiled on this platform.
+
+bool
+HasCompilerSupport(ExclusiveContext* cx);
+
+// Compiles the given binary wasm module given the ArrayBufferObject
+// and links the module's imports with the given import object.
+
+MOZ_MUST_USE bool
+Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
+     MutableHandle<WasmInstanceObject*> instanceObj);
 
 } // namespace wasm
 
