@@ -2800,25 +2800,20 @@ JSRuntime::initSelfHosting(JSContext* cx)
 
     RootedValue rv(cx);
 
-    char* filename = getenv("MOZ_SELFHOSTEDJS");
-    if (filename) {
-        if (!Evaluate(cx, options, filename, &rv))
-            return false;
-    } else {
-        uint32_t srcLen = GetRawScriptsSize();
+    uint32_t srcLen = GetRawScriptsSize();
 
-        const unsigned char* compressed = compressedSources;
-        uint32_t compressedLen = GetCompressedSize();
-        ScopedJSFreePtr<char> src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
-        if (!src || !DecompressString(compressed, compressedLen,
-                                      reinterpret_cast<unsigned char*>(src.get()), srcLen))
-        {
-            return false;
-        }
-
-        if (!Evaluate(cx, options, src, srcLen, &rv))
-            return false;
+    const unsigned char* compressed = compressedSources;
+    uint32_t compressedLen = GetCompressedSize();
+    ScopedJSFreePtr<char> src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
+    if (!src || !DecompressString(compressed, compressedLen,
+                                  reinterpret_cast<unsigned char*>(src.get()), srcLen))
+    {
+        return false;
     }
+
+    if (!Evaluate(cx, options, src, srcLen, &rv))
+        return false;
+
     return true;
 }
 
