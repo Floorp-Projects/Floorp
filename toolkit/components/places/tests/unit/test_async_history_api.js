@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /**
  * This file tests the async history API exposed by mozIAsyncHistory.
  */
@@ -128,7 +131,7 @@ function do_check_title_for_uri(aURI,
   let stmt = DBConn().createStatement(
     `SELECT title
      FROM moz_places
-     WHERE url_hash = hash(:url) AND url = :url`
+     WHERE url = :url`
   );
   stmt.params.url = aURI.spec;
   do_check_true(stmt.executeStep(), stack);
@@ -545,8 +548,7 @@ add_task(function* test_old_referrer_ignored() {
   let stmt = DBConn().createStatement(
     `SELECT COUNT(1) AS count
      FROM moz_historyvisits
-     JOIN moz_places h ON h.id = place_id
-     WHERE url_hash = hash(:page_url) AND url = :page_url
+     WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url)
      AND from_visit = 0`
   );
   stmt.params.page_url = place.uri.spec;
@@ -738,7 +740,7 @@ add_task(function* test_properties_saved() {
        FROM moz_places h
        JOIN moz_historyvisits v
        ON h.id = v.place_id
-       WHERE h.url_hash = hash(:page_url) AND h.url = :page_url
+       WHERE h.url = :page_url
        AND v.visit_date = :visit_date`
     );
     stmt.params.page_url = uri.spec;
@@ -753,7 +755,7 @@ add_task(function* test_properties_saved() {
        FROM moz_places h
        JOIN moz_historyvisits v
        ON h.id = v.place_id
-       WHERE h.url_hash = hash(:page_url) AND h.url = :page_url
+       WHERE h.url = :page_url
        AND v.visit_type = :transition_type`
     );
     stmt.params.page_url = uri.spec;
@@ -766,7 +768,7 @@ add_task(function* test_properties_saved() {
     stmt = DBConn().createStatement(
       `SELECT COUNT(1) AS count
        FROM moz_places h
-       WHERE h.url_hash = hash(:page_url) AND h.url = :page_url
+       WHERE h.url = :page_url
        AND h.title = :title`
     );
     stmt.params.page_url = uri.spec;
@@ -839,13 +841,11 @@ add_task(function* test_referrer_saved() {
       let stmt = DBConn().createStatement(
         `SELECT COUNT(1) AS count
          FROM moz_historyvisits
-         JOIN moz_places h ON h.id = place_id
-         WHERE url_hash = hash(:page_url) AND url = :page_url
+         WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url)
          AND from_visit = (
-           SELECT v.id
-           FROM moz_historyvisits v
-           JOIN moz_places h ON h.id = place_id
-           WHERE url_hash = hash(:referrer) AND url = :referrer
+           SELECT id
+           FROM moz_historyvisits
+           WHERE place_id = (SELECT id FROM moz_places WHERE url = :referrer)
          )`
       );
       stmt.params.page_url = uri.spec;
@@ -1117,9 +1117,8 @@ add_task(function* test_typed_hidden_not_overwritten() {
   yield promiseUpdatePlaces(places);
 
   let db = yield PlacesUtils.promiseDBConnection();
-  let rows = yield db.execute(
-    "SELECT hidden, typed FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
-    { url: "http://mozilla.org/" });
+  let rows = yield db.execute("SELECT hidden, typed FROM moz_places WHERE url = :url",
+                              { url: "http://mozilla.org/" });
   Assert.equal(rows[0].getResultByName("typed"), 1,
                "The page should be marked as typed");
   Assert.equal(rows[0].getResultByName("hidden"), 0,

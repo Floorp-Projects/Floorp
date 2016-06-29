@@ -58,8 +58,7 @@ function* getTransitionForUrl(url) {
   let rows = yield db.execute(`
     SELECT visit_type
     FROM moz_historyvisits
-    JOIN moz_places h ON place_id = h.id
-    WHERE url_hash = hash(:url) AND url = :url`,
+    WHERE place_id = (SELECT id FROM moz_places WHERE url = :url)`,
     { url });
   if (rows.length) {
     return rows[0].getResultByName("visit_type");

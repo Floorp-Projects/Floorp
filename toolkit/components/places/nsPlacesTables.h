@@ -22,7 +22,6 @@
     ", last_visit_date INTEGER " \
     ", guid TEXT" \
     ", foreign_count INTEGER DEFAULT 0 NOT NULL" \
-    ", url_hash INTEGER DEFAULT 0 NOT NULL " \
   ")" \
 )
 

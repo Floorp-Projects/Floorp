@@ -34,9 +34,7 @@ function shutdownExpiration()
  * history notification.
  */
 function force_expiration_start() {
-  Cc["@mozilla.org/places/expiration;1"]
-    .getService(Ci.nsIObserver)
-    .observe(null, "testing-mode", null);
+  Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsISupports);
 }
 
 
