@@ -1610,7 +1610,7 @@ auto ProgressiveUpdateData::Y(float a0) const -> void
     return mozilla::jni::Field<Y_t>::Set(ProgressiveUpdateData::mCtx, nullptr, a0);
 }
 
-const char StackScroller::name[] =
+template<> const char mozilla::jni::Context<StackScroller, jobject>::name[] =
         "org/mozilla/gecko/gfx/StackScroller";
 
 constexpr char StackScroller::New_t::name[];
@@ -1662,6 +1662,28 @@ auto StackScroller::ForceFinished(bool a0) const -> nsresult
 {
     nsresult rv = NS_OK;
     mozilla::jni::Method<ForceFinished_t>::Call(StackScroller::mCtx, &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrSpeedX_t::name[];
+constexpr char StackScroller::GetCurrSpeedX_t::signature[];
+
+auto StackScroller::GetCurrSpeedX(float* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrSpeedX_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrSpeedY_t::name[];
+constexpr char StackScroller::GetCurrSpeedY_t::signature[];
+
+auto StackScroller::GetCurrSpeedY(float* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrSpeedY_t>::Call(StackScroller::mCtx, &rv);
     return rv;
 }
 
@@ -1860,7 +1882,7 @@ auto StackScroller::SViscousFluidScale(float a0) -> nsresult
 }
 
 template<> const char mozilla::jni::Context<ViewTransform, jobject>::name[] =
-    "org/mozilla/gecko/gfx/ViewTransform";
+        "org/mozilla/gecko/gfx/ViewTransform";
 
 constexpr char ViewTransform::New_t::name[];
 constexpr char ViewTransform::New_t::signature[];
