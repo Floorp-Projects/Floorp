@@ -408,8 +408,8 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     // that's not on the Root Document (RD). That is, on platforms where
     // RCD == RD, it's 1, and on platforms where RCD != RD, it's the RCD
     // resolution. 'input' has this resolution applied, but the scroll
-    // deltas retrieved below do not, so we need to apply them to the
-    // deltas before adding the deltas to 'input'. (Technically, deltas
+    // delta retrieved below do not, so we need to apply them to the
+    // delta before adding the delta to 'input'. (Technically, deltas
     // from scroll frames outside the RCD would already have this
     // resolution applied, but we don't have such scroll frames in
     // practice.)
@@ -417,30 +417,10 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     if (nsIPresShell* shell = GetRootContentDocumentPresShellForContent(content)) {
       nonRootResolution = shell->GetCumulativeNonRootScaleResolution();
     }
-    // Now apply the callback-transform.
-    // XXX: Walk up the frame tree from the frame of this content element
-    // to the root of the frame tree, and apply any apzCallbackTransform
-    // found on the way. This is only approximately correct, as it does
-    // not take into account CSS transforms, nor differences in structure between
-    // the frame tree (which determines the transforms we're applying)
-    // and the layer tree (which determines the transforms we *want* to
-    // apply).
-    nsIFrame* frame = content->GetPrimaryFrame();
-    nsCOMPtr<nsIContent> lastContent;
-    while (frame) {
-        if (content && (content != lastContent)) {
-            void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
-            if (property) {
-                CSSPoint delta = (*static_cast<CSSPoint*>(property));
-                delta = delta * nonRootResolution;
-                input += delta;
-            }
-        }
-        frame = frame->GetParent();
-        lastContent = content;
-        content = frame ? frame->GetContent() : nullptr;
-    }
-    return input;
+    // Now apply the callback-transform. This is only approximately correct,
+    // see the comment on GetCumulativeApzCallbackTransform for details.
+    CSSPoint transform = nsLayoutUtils::GetCumulativeApzCallbackTransform(content->GetPrimaryFrame());
+    return input + transform * nonRootResolution;
 }
 
 LayoutDeviceIntPoint
