@@ -3609,8 +3609,7 @@ Widgets.LongString.prototype = extend(Widgets.BaseWidget.prototype, {
  *        The stacktrace to display, array of frames as supplied by the server,
  *        over the remote protocol.
  */
-Widgets.Stacktrace = function (message, stacktrace)
-{
+Widgets.Stacktrace = function (message, stacktrace) {
   Widgets.BaseWidget.call(this, message);
   this.stacktrace = stacktrace;
 };
@@ -3622,72 +3621,31 @@ Widgets.Stacktrace.prototype = extend(Widgets.BaseWidget.prototype, {
    */
   stacktrace: null,
 
-  render: function ()
-  {
+  onViewSourceInDebugger(frame) {
+    this.output.openLocationInDebugger({
+      url: frame.source,
+      line: frame.line
+    });
+  },
+
+  render() {
     if (this.element) {
       return this;
     }
 
-    let result = this.element = this.document.createElementNS(XHTML_NS, "ul");
+    let result = this.element = this.document.createElementNS(XHTML_NS, "div");
     result.className = "stacktrace devtools-monospace";
 
     if (this.stacktrace) {
-      for (let frame of this.stacktrace) {
-        result.appendChild(this._renderFrame(frame));
-      }
+      this.output.owner.ReactDOM.render(this.output.owner.StackTraceView({
+        stacktrace: this.stacktrace,
+        onViewSourceInDebugger: frame => this.onViewSourceInDebugger(frame)
+      }), result);
     }
 
     return this;
-  },
-
-  /**
-   * Render a frame object received from the server.
-   *
-   * @param object frame
-   *        The stack frame to display. This object should have the following
-   *        properties: functionName, filename and lineNumber.
-   * @return DOMElement
-   *         The DOM element to display for the given frame.
-   */
-  _renderFrame: function (frame)
-  {
-    let fn = this.document.createElementNS(XHTML_NS, "span");
-    fn.className = "function";
-
-    let asyncCause = "";
-    if (frame.asyncCause) {
-      asyncCause =
-        l10n.getFormatStr("stacktrace.asyncStack", [frame.asyncCause]) + " ";
-    }
-
-    if (frame.functionName) {
-      let span = this.document.createElementNS(XHTML_NS, "span");
-      span.className = "cm-variable";
-      span.textContent = asyncCause + frame.functionName;
-      fn.appendChild(span);
-      fn.appendChild(this.document.createTextNode("()"));
-    } else {
-      fn.classList.add("cm-comment");
-      fn.textContent = asyncCause + l10n.getStr("stacktrace.anonymousFunction");
-    }
-
-    let location = this.output.owner.createLocationNode({url: frame.filename,
-                                                        line: frame.lineNumber});
-
-    // .devtools-monospace sets font-size to 80%, however .body already has
-    // .devtools-monospace. If we keep it here, the location would be rendered
-    // smaller.
-    location.classList.remove("devtools-monospace");
-
-    let elem = this.document.createElementNS(XHTML_NS, "li");
-    elem.appendChild(fn);
-    elem.appendChild(location);
-    elem.appendChild(this.document.createTextNode("\n"));
-
-    return elem;
-  },
-}); // Widgets.Stacktrace.prototype
-
+  }
+});
 
 /**
  * The table widget.
