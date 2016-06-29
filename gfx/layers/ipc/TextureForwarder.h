@@ -38,40 +38,7 @@ public:
 
   virtual TextureForwarder* AsTextureForwarder() override { return this; }
 
-  virtual int32_t GetMaxTextureSize() const override
-  {
-    return mTextureFactoryIdentifier.mMaxTextureSize;
-  }
-
-  /**
-   * Returns the type of backend that is used off the main thread.
-   * We only don't allow changing the backend type at runtime so this value can
-   * be queried once and will not change until Gecko is restarted.
-   */
-  LayersBackend GetCompositorBackendType() const
-  {
-    return mTextureFactoryIdentifier.mParentBackend;
-  }
-
-  bool SupportsTextureBlitting() const
-  {
-    return mTextureFactoryIdentifier.mSupportsTextureBlitting;
-  }
-
-  bool SupportsPartialUploads() const
-  {
-    return mTextureFactoryIdentifier.mSupportsPartialUploads;
-  }
-
-  const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
-  {
-    return mTextureFactoryIdentifier;
-  }
-
   virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator();
-
-protected:
-  TextureFactoryIdentifier mTextureFactoryIdentifier;
 
 private:
   FixedSizeSmallShmemSectionAllocator* mSectionAllocator;
