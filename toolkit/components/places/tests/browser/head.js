@@ -28,7 +28,7 @@ function fieldForUrl(aURI, aFieldName, aCallback)
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                                 .DBConnection.createAsyncStatement(
-    `SELECT ${aFieldName} FROM moz_places WHERE url = :page_url`
+    `SELECT ${aFieldName} FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url`
   );
   stmt.params.page_url = url;
   stmt.executeAsync({
@@ -216,7 +216,7 @@ function doGetGuidForURI(aURI) {
   let stmt = DBConn().createStatement(
     `SELECT guid
        FROM moz_places
-       WHERE url = :url`
+       WHERE url_hash = hash(:url) AND url = :url`
   );
   stmt.params.url = aURI.spec;
   ok(stmt.executeStep(), "Check get guid for uri from moz_places");

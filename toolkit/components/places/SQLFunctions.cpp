@@ -17,6 +17,7 @@
 #include "nsNavHistory.h"
 #include "mozilla/Likely.h"
 #include "nsVariant.h"
+#include "mozilla/HashFunctions.h"
 
 // Maximum number of chars to search through.
 // MatchAutoCompleteFunction won't look for matches over this threshold.
@@ -183,13 +184,6 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// AutoComplete Matching Function
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// MatchAutoCompleteFunction
-
-  MatchAutoCompleteFunction::~MatchAutoCompleteFunction()
-  {
-  }
-
   /* static */
   nsresult
   MatchAutoCompleteFunction::create(mozIStorageConnection *aDBConn)
@@ -328,9 +322,6 @@ namespace places {
     mozIStorageFunction
   )
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIStorageFunction
-
   NS_IMETHODIMP
   MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
                                             nsIVariant **_result)
@@ -438,13 +429,6 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// Frecency Calculation Function
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// CalculateFrecencyFunction
-
-  CalculateFrecencyFunction::~CalculateFrecencyFunction()
-  {
-  }
-
   /* static */
   nsresult
   CalculateFrecencyFunction::create(mozIStorageConnection *aDBConn)
@@ -464,9 +448,6 @@ namespace places {
     CalculateFrecencyFunction,
     mozIStorageFunction
   )
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIStorageFunction
 
   NS_IMETHODIMP
   CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
@@ -628,13 +609,6 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// GUID Creation Function
 
-  GenerateGUIDFunction::~GenerateGUIDFunction()
-  {
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// GenerateGUIDFunction
-
   /* static */
   nsresult
   GenerateGUIDFunction::create(mozIStorageConnection *aDBConn)
@@ -653,9 +627,6 @@ namespace places {
     mozIStorageFunction
   )
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIStorageFunction
-
   NS_IMETHODIMP
   GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
                                        nsIVariant **_result)
@@ -670,13 +641,6 @@ namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Get Unreversed Host Function
-
-  GetUnreversedHostFunction::~GetUnreversedHostFunction()
-  {
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// GetUnreversedHostFunction
 
   /* static */
   nsresult
@@ -695,9 +659,6 @@ namespace places {
     GetUnreversedHostFunction,
     mozIStorageFunction
   )
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIStorageFunction
 
   NS_IMETHODIMP
   GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
@@ -727,13 +688,6 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// Fixup URL Function
 
-  FixupURLFunction::~FixupURLFunction()
-  {
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// FixupURLFunction
-
   /* static */
   nsresult
   FixupURLFunction::create(mozIStorageConnection *aDBConn)
@@ -751,9 +705,6 @@ namespace places {
     FixupURLFunction,
     mozIStorageFunction
   )
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// mozIStorageFunction
 
   NS_IMETHODIMP
   FixupURLFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
@@ -786,10 +737,6 @@ namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Frecency Changed Notification Function
-
-  FrecencyNotificationFunction::~FrecencyNotificationFunction()
-  {
-  }
 
   /* static */
   nsresult
@@ -847,10 +794,6 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// Store Last Inserted Id Function
 
-  StoreLastInsertedIdFunction::~StoreLastInsertedIdFunction()
-  {
-  }
-
   /* static */
   nsresult
   StoreLastInsertedIdFunction::create(mozIStorageConnection *aDBConn)
@@ -890,6 +833,84 @@ namespace places {
     RefPtr<nsVariant> result = new nsVariant();
     rv = result->SetAsInt64(lastInsertedId);
     NS_ENSURE_SUCCESS(rv, rv);
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Hash Function
+
+  /* static */
+  nsresult
+  HashFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<HashFunction> function = new HashFunction();
+    return aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("hash"), -1, function
+    );
+  }
+
+  NS_IMPL_ISUPPORTS(
+    HashFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  HashFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                               nsIVariant **_result)
+  {
+    // Must have non-null function arguments.
+    MOZ_ASSERT(aArguments);
+
+    // Fetch arguments.  Use default values if they were omitted.
+    uint32_t numEntries;
+    nsresult rv = aArguments->GetNumEntries(&numEntries);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(numEntries >= 1  && numEntries <= 2, NS_ERROR_FAILURE);
+
+    nsString str;
+    aArguments->GetString(0, str);
+    nsAutoCString mode;
+    if (numEntries > 1) {
+      aArguments->GetUTF8String(1, mode);
+    }
+
+    RefPtr<nsVariant> result = new nsVariant();
+    if (mode.IsEmpty()) {
+      // URI-like strings (having a prefix before a colon), are handled specially,
+      // as a 48 bit hash, where first 16 bits are the prefix hash, while the
+      // other 32 are the string hash.
+      // The 16 bits have been decided based on the fact hashing all of the IANA
+      // known schemes, plus "places", does not generate collisions.
+      nsAString::const_iterator start, tip, end;
+      str.BeginReading(tip);
+      start = tip;
+      str.EndReading(end);
+      if (FindInReadable(NS_LITERAL_STRING(":"), tip, end)) {
+        const nsDependentSubstring& prefix = Substring(start, tip);
+        uint64_t prefixHash = static_cast<uint64_t>(HashString(prefix) & 0x0000FFFF);
+        // The second half of the url is more likely to be unique, so we add it.
+        uint32_t srcHash = HashString(str);
+        uint64_t hash = (prefixHash << 32) + srcHash;
+        result->SetAsInt64(hash);
+      } else {
+        uint32_t hash = HashString(str);
+        result->SetAsInt64(hash);
+      }
+    } else if (mode.Equals(NS_LITERAL_CSTRING("prefix_lo"))) {
+      // Keep only 16 bits.
+      uint64_t hash = static_cast<uint64_t>(HashString(str) & 0x0000FFFF) << 32;
+      result->SetAsInt64(hash);
+    } else if (mode.Equals(NS_LITERAL_CSTRING("prefix_hi"))) {
+      // Keep only 16 bits.
+      uint64_t hash = static_cast<uint64_t>(HashString(str) & 0x0000FFFF) << 32;
+      // Make this a prefix upper bound by filling the lowest 32 bits.
+      hash +=  0xFFFFFFFF;
+      result->SetAsInt64(hash);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+
     result.forget(_result);
     return NS_OK;
   }
