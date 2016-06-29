@@ -88,7 +88,9 @@ DocumentTimeline::ToTimelineTime(const TimeStamp& aTimeStamp) const
     return result;
   }
 
-  result.SetValue(aTimeStamp - timing->GetNavigationStartTimeStamp());
+  result.SetValue(aTimeStamp
+                  - timing->GetNavigationStartTimeStamp()
+                  - mOriginTime);
   return result;
 }
 
@@ -204,7 +206,8 @@ DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
     return result;
   }
 
-  result = timing->GetNavigationStartTimeStamp() + aTimeDuration;
+  result =
+    timing->GetNavigationStartTimeStamp() + (aTimeDuration + mOriginTime);
   return result;
 }
 
