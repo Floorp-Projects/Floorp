@@ -279,7 +279,7 @@ NormalizedConstraints::NormalizedConstraints(
 {
   if (aOther.mAdvanced.WasPassed()) {
     for (auto& entry : aOther.mAdvanced.Value()) {
-      mAdvanced.AppendElement(NormalizedConstraintSet(entry, true));
+      mAdvanced.push_back(NormalizedConstraintSet(entry, true));
     }
   }
 }
@@ -313,7 +313,7 @@ NormalizedConstraints::NormalizedConstraints(
     }
 
     for (auto& entry : other.mAdvanced) {
-      mAdvanced.AppendElement(entry);
+      mAdvanced.push_back(entry);
     }
   }
   for (auto& memberPtr : list) {

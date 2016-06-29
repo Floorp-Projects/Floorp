@@ -273,7 +273,7 @@ struct NormalizedConstraints : public NormalizedConstraintSet
   explicit NormalizedConstraints(
       const nsTArray<const NormalizedConstraints*>& aOthers);
 
-  nsTArray<NormalizedConstraintSet> mAdvanced;
+  std::vector<NormalizedConstraintSet> mAdvanced;
   const char* mBadConstraint;
 };
 
@@ -361,7 +361,7 @@ public:
 
     // Then apply advanced constraints.
 
-    for (int i = 0; i < int(c.mAdvanced.Length()); i++) {
+    for (int i = 0; i < int(c.mAdvanced.size()); i++) {
       aggregateConstraints.AppendElement(&c.mAdvanced[i]);
       nsTArray<RefPtr<DeviceType>> rejects;
       for (uint32_t j = 0; j < aDevices.Length();) {
