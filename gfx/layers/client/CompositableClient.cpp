@@ -11,6 +11,7 @@
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "mozilla/layers/PCompositableChild.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"         // for gfxWindowsPlatform
 #include "mozilla/layers/TextureD3D11.h"
