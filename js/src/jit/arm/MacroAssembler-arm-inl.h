@@ -28,6 +28,18 @@ MacroAssembler::move64(Imm64 imm, Register64 dest)
     move32(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
 }
 
+void
+MacroAssembler::moveFloat32ToGPR(FloatRegister src, Register dest)
+{
+    ma_vxfer(src, dest);
+}
+
+void
+MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest)
+{
+    ma_vxfer(src, dest);
+}
+
 // ===============================================================
 // Logical instructions
 
@@ -147,6 +159,12 @@ MacroAssembler::xor64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::xor32(Register src, Register dest)
+{
+    ma_eor(src, dest, SetCC);
+}
+
+void
 MacroAssembler::xor32(Imm32 imm, Register dest)
 {
     ma_eor(imm, dest, SetCC);
@@ -244,6 +262,12 @@ MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
 }
 
 void
+MacroAssembler::addFloat32(FloatRegister src, FloatRegister dest)
+{
+    ma_vadd_f32(dest, src, dest);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     ma_sub(src, dest, SetCC);
@@ -299,6 +323,18 @@ MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
 }
 
 void
+MacroAssembler::subFloat32(FloatRegister src, FloatRegister dest)
+{
+    ma_vsub_f32(dest, src, dest);
+}
+
+void
+MacroAssembler::mul32(Register rhs, Register srcDest)
+{
+    as_mul(srcDest, srcDest, rhs);
+}
+
+void
 MacroAssembler::mul64(Imm64 imm, const Register64& dest)
 {
     // LOW32  = LOW(LOW(dest) * LOW(imm));
@@ -334,6 +370,12 @@ MacroAssembler::mulBy3(Register src, Register dest)
 }
 
 void
+MacroAssembler::mulFloat32(FloatRegister src, FloatRegister dest)
+{
+    ma_vmul_f32(dest, src, dest);
+}
+
+void
 MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
 {
     ma_vmul(dest, src, dest);
@@ -345,6 +387,32 @@ MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
     movePtr(imm, ScratchRegister);
     loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
     mulDouble(ScratchDoubleReg, dest);
+}
+
+void
+MacroAssembler::quotient32(Register rhs, Register srcDest, bool isUnsigned)
+{
+    MOZ_ASSERT(HasIDIV());
+    if (isUnsigned)
+        ma_udiv(srcDest, rhs, srcDest);
+    else
+        ma_sdiv(srcDest, rhs, srcDest);
+}
+
+void
+MacroAssembler::remainder32(Register rhs, Register srcDest, bool isUnsigned)
+{
+    MOZ_ASSERT(HasIDIV());
+    if (isUnsigned)
+        ma_umod(srcDest, rhs, srcDest);
+    else
+        ma_smod(srcDest, rhs, srcDest);
+}
+
+void
+MacroAssembler::divFloat32(FloatRegister src, FloatRegister dest)
+{
+    ma_vdiv_f32(dest, src, dest);
 }
 
 void
@@ -382,6 +450,64 @@ MacroAssembler::negateDouble(FloatRegister reg)
     ma_vneg(reg, reg);
 }
 
+void
+MacroAssembler::negateFloat(FloatRegister reg)
+{
+    ma_vneg_f32(reg, reg);
+}
+
+void
+MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest)
+{
+    if (src != dest)
+        ma_vmov_f32(src, dest);
+    ma_vabs_f32(dest, dest);
+}
+
+void
+MacroAssembler::absDouble(FloatRegister src, FloatRegister dest)
+{
+    if (src != dest)
+        ma_vmov(src, dest);
+    ma_vabs(dest, dest);
+}
+
+void
+MacroAssembler::sqrtFloat32(FloatRegister src, FloatRegister dest)
+{
+    ma_vsqrt_f32(src, dest);
+}
+
+void
+MacroAssembler::sqrtDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vsqrt(src, dest);
+}
+
+void
+MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxFloat32(srcDest, other, handleNaN, false);
+}
+
+void
+MacroAssembler::minDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxDouble(srcDest, other, handleNaN, false);
+}
+
+void
+MacroAssembler::maxFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxFloat32(srcDest, other, handleNaN, true);
+}
+
+void
+MacroAssembler::maxDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxDouble(srcDest, other, handleNaN, true);
+}
+
 // ===============================================================
 // Shift functions
 
@@ -400,15 +526,51 @@ MacroAssembler::lshift64(Imm32 imm, Register64 dest)
 }
 
 void
+MacroAssembler::lshift32(Register src, Register dest)
+{
+    ma_lsl(src, dest, dest);
+}
+
+void
+MacroAssembler::lshift32(Imm32 imm, Register dest)
+{
+    lshiftPtr(imm, dest);
+}
+
+void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     ma_lsr(imm, dest, dest);
 }
 
 void
+MacroAssembler::rshift32(Register src, Register dest)
+{
+    ma_lsr(src, dest, dest);
+}
+
+void
+MacroAssembler::rshift32(Imm32 imm, Register dest)
+{
+    rshiftPtr(imm, dest);
+}
+
+void
 MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
 {
     ma_asr(imm, dest, dest);
+}
+
+void
+MacroAssembler::rshift32Arithmetic(Register src, Register dest)
+{
+    ma_asr(src, dest, dest);
+}
+
+void
+MacroAssembler::rshift32Arithmetic(Imm32 imm, Register dest)
+{
+    rshiftPtrArithmetic(imm, dest);
 }
 
 void
@@ -449,6 +611,42 @@ void
 MacroAssembler::rotateRight(Register count, Register input, Register dest)
 {
     ma_ror(count, input, dest);
+}
+
+// ===============================================================
+// Bit counting functions
+
+void
+MacroAssembler::clz32(Register src, Register dest, bool knownNotZero)
+{
+    ma_clz(src, dest);
+}
+
+void
+MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero)
+{
+    ma_ctz(src, dest);
+}
+
+void
+MacroAssembler::popcnt32(Register input,  Register output, Register tmp)
+{
+    // Equivalent to GCC output of mozilla::CountPopulation32()
+
+    if (input != output)
+        ma_mov(input, output);
+    as_mov(tmp, asr(output, 1));
+    ma_and(Imm32(0x55555555), tmp);
+    ma_sub(output, tmp, output);
+    as_mov(tmp, asr(output, 2));
+    ma_and(Imm32(0x33333333), output);
+    ma_and(Imm32(0x33333333), tmp);
+    ma_add(output, tmp, output);
+    as_add(output, output, lsr(output, 4));
+    ma_and(Imm32(0xF0F0F0F), output);
+    as_add(output, output, lsl(output, 8));
+    as_add(output, output, lsl(output, 16));
+    as_mov(output, asr(output, 24));
 }
 
 // ===============================================================

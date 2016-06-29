@@ -1,0 +1,146 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option('--enable-rust', help='Include Rust language sources')
+
+@depends('--enable-rust')
+def rust_compiler_names(value):
+    if value:
+        return ['rustc']
+
+rustc = check_prog('RUSTC', rust_compiler_names, allow_missing=True)
+
+@depends_if(rustc)
+@checking('rustc version')
+@imports('subprocess')
+def rustc_version(rustc):
+    try:
+        # TODO: We should run `rustc --version -v` and parse that output instead.
+        version = Version(subprocess.check_output(
+            [rustc, '--version']
+        ).splitlines()[0].split()[1])
+        return version
+    except subprocess.CalledProcessError as e:
+        die('Failed to get rustc version: %s', e.message)
+
+@depends('--enable-rust', rustc, rustc_version)
+@imports(_from='textwrap', _import='dedent')
+def rust_compiler(value, rustc, rustc_version):
+    if value:
+        if not rustc:
+            die(dedent('''\
+            Rust compiler not found.
+            To compile rust language sources, you must have 'rustc' in your path.
+            See http://www.rust-lang.org/ for more information.
+            '''))
+        if rustc_version < '1.5':
+            die(dedent('''\
+            Rust compiler {} is too old.
+            To compile Rust language sources please install at least
+            version 1.5 of the 'rustc' toolchain and make sure it is
+            first in your path.
+            You can verify this by typing 'rustc --version'.
+            '''.format(rustc_version)))
+        return True
+
+set_config('MOZ_RUST', rust_compiler)
+
+@depends(rust_compiler, rustc, target, cross_compiling)
+@imports('os')
+@imports('subprocess')
+@imports(_from='mozbuild.configure.util', _import='LineIO')
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='tempfile', _import='mkstemp')
+def rust_target(rust_compiler, rustc, target, cross_compiling):
+    if rust_compiler:
+        # Rust's --target options are similar to, but not exactly the same
+        # as, the autoconf-derived targets we use.  An example would be that
+        # Rust uses distinct target triples for targetting the GNU C++ ABI
+        # and the MSVC C++ ABI on Win32, whereas autoconf has a single
+        # triple and relies on the user to ensure that everything is
+        # compiled for the appropriate ABI.  We need to perform appropriate
+        # munging to get the correct option to rustc.
+        #
+        # The canonical list of targets supported can be derived from:
+        #
+        # https://github.com/rust-lang/rust/tree/master/mk/cfg
+
+        # Avoid having to write out os+kernel for all the platforms where
+        # they don't differ.
+        os_or_kernel = target.kernel if target.kernel == 'Linux' and target.os != 'Android' else target.os
+        rustc_target = {
+            # DragonFly
+            ('x86_64', 'Dragonfly'): 'x86_64-unknown-dragonfly',
+            # FreeBSD, GNU/kFreeBSD
+            ('x86', 'FreeBSD'): 'i686-unknown-freebsd',
+            ('x86_64', 'FreeBSD'): 'x86_64-unknown-freebsd',
+            # NetBSD
+            ('x86_64', 'NetBSD'): 'x86_64-unknown-netbsd',
+            # OpenBSD
+            ('x86_64', 'OpenBSD'): 'x86_64-unknown-openbsd',
+            # Linux
+            ('x86', 'Linux'): 'i686-unknown-linux-gnu',
+            # Linux
+            ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
+            # OS X and iOS
+            ('x86', 'OSX'): 'i686-apple-darwin',
+            ('x86', 'iOS'): 'i386-apple-ios',
+            ('x86_64', 'OSX'): 'x86_64-apple-darwin',
+            # Android
+            ('x86', 'Android'): 'i686-linux-android',
+            ('arm', 'Android'): 'arm-linux-androideabi',
+            # Windows
+            # XXX better detection of CXX needed here, to figure out whether
+            # we need i686-pc-windows-gnu instead, since mingw32 builds work.
+            ('x86', 'WINNT'): 'i686-pc-windows-msvc',
+            ('x86_64', 'WINNT'): 'x86_64-pc-windows-msvc',
+        }.get((target.cpu, os_or_kernel), None)
+
+        if rustc_target is None:
+            if cross_compiling:
+                die("Don't know how to translate {} for rustc".format(target.alias))
+            # Fall back to implicit (native) target when not cross-compiling
+            return None
+
+        # Check to see whether our rustc has a reasonably functional stdlib
+        # for our chosen target.
+        target_arg = '--target=' + rustc_target
+        in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs')
+        out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
+        os.close(out_fd)
+        try:
+            source = 'pub extern fn hello() { println!("Hello world"); }'
+            log.debug('Creating `%s` with content:', in_path)
+            with LineIO(lambda l: log.debug('| %s', l)) as out:
+                out.write(source)
+
+            os.write(in_fd, source)
+            os.close(in_fd)
+
+            cmd = [
+                rustc,
+                '--crate-type', 'staticlib',
+                target_arg,
+                '-o', out_path,
+                in_path,
+            ]
+            def failed():
+                die('Cannot compile for {} with {}'.format(target.alias, rustc))
+            check_cmd_output(*cmd, onerror=failed)
+            if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
+                failed()
+        finally:
+            os.remove(in_path)
+            os.remove(out_path)
+        # This target is usable.
+        return target_arg
+
+set_config('RUST_TARGET', rust_target)
+
+# Until we remove all the other Rust checks in old-configure.
+add_old_configure_assignment('MOZ_RUST', rust_compiler)
+add_old_configure_assignment('RUSTC', rustc)
+add_old_configure_assignment('RUST_TARGET', rust_target)

@@ -17,7 +17,7 @@ module.exports = createClass({
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     onExit: PropTypes.func.isRequired,
     onScreenshot: PropTypes.func.isRequired,
-    onUpdateTouchSimulationEnabled: PropTypes.func.isRequired,
+    onUpdateTouchSimulation: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -28,7 +28,7 @@ module.exports = createClass({
       touchSimulation,
       onExit,
       onScreenshot,
-      onUpdateTouchSimulationEnabled
+      onUpdateTouchSimulation
     } = this.props;
 
     let touchButtonClass = "toolbar-button devtools-button";
@@ -49,7 +49,7 @@ module.exports = createClass({
       dom.button({
         id: "global-touch-simulation-button",
         className: touchButtonClass,
-        onClick: onUpdateTouchSimulationEnabled,
+        onClick: () => onUpdateTouchSimulation(!touchSimulation.enabled),
       }),
       dom.button({
         id: "global-screenshot-button",

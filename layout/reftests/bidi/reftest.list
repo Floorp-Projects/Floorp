@@ -36,8 +36,8 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == mixedChartype-03-j.html mixedChartype-03-ref.html
 == unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
-fails == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html # bug 712600
-fails == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html # bug 712600
+== unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html
+== unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) fuzzy-if(skiaContent,104,32) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
 == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
 == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
@@ -73,7 +73,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 263359-1a.html 263359-1-ref.html
 != 263359-1b.html 263359-1-ref.html
 == 263359-2.html 263359-2-ref.html
-fails == 263359-3.html 263359-3-ref.html # bug 1230455
+== 263359-3.html 263359-3-ref.html
 == 263359-4.html 263359-4-ref.html
 random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 fuzzy-if(skiaContent,1,1100) == 267459-2.html 267459-2-ref.html

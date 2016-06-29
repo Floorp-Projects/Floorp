@@ -36,8 +36,7 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
   }
 
   ServiceWorkerGlobalScope* scope = nullptr;
-  nsresult rv = UnwrapObject<prototypes::id::ServiceWorkerGlobalScope_workers,
-                             mozilla::dom::ServiceWorkerGlobalScopeBinding_workers::NativeType>(aObj, scope);
+  nsresult rv = UNWRAP_OBJECT(ServiceWorkerGlobalScope, aObj, scope);
   return NS_SUCCEEDED(rv);
 }
 

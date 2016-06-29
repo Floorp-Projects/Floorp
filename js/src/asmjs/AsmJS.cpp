@@ -2832,7 +2832,8 @@ class MOZ_STACK_CLASS FunctionValidator
         breakLabels_(m.cx()),
         continueLabels_(m.cx()),
         blockDepth_(0),
-        hasAlreadyReturned_(false)
+        hasAlreadyReturned_(false),
+        ret_(ExprType::Limit)
     {}
 
     ModuleValidator& m() const        { return m_; }

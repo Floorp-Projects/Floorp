@@ -35,6 +35,7 @@
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
 #include "DecoderDoctorDiagnostics.h"
+#include "WebMDecoder.h"
 
 namespace mozilla {
 namespace dom {
@@ -412,14 +413,71 @@ GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
 }
 
 static bool
+GMPDecryptsAndGeckoDecodesVorbis(mozIGeckoMediaPluginService* aGMPService,
+                                const nsAString& aKeySystem,
+                                const nsAString& aContentType,
+                                DecoderDoctorDiagnostics* aDiagnostics)
+{
+  MOZ_ASSERT(HaveGMPFor(aGMPService,
+             NS_ConvertUTF16toUTF8(aKeySystem),
+             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
+  MOZ_ASSERT(IsVorbisContentType(aContentType));
+  return !HaveGMPFor(aGMPService,
+                     NS_ConvertUTF16toUTF8(aKeySystem),
+                     NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                     NS_LITERAL_CSTRING("vorbis")) &&
+         WebMDecoder::CanHandleMediaType(aContentType);
+}
+
+static bool
+GMPDecryptsAndGeckoDecodesVP8(mozIGeckoMediaPluginService* aGMPService,
+                             const nsAString& aKeySystem,
+                             const nsAString& aContentType,
+                             DecoderDoctorDiagnostics* aDiagnostics)
+{
+  MOZ_ASSERT(HaveGMPFor(aGMPService,
+             NS_ConvertUTF16toUTF8(aKeySystem),
+             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
+  MOZ_ASSERT(IsVP8ContentType(aContentType));
+  return !HaveGMPFor(aGMPService,
+                     NS_ConvertUTF16toUTF8(aKeySystem),
+                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                     NS_LITERAL_CSTRING("vp8")) &&
+         WebMDecoder::CanHandleMediaType(aContentType);
+}
+
+static bool
+GMPDecryptsAndGeckoDecodesVP9(mozIGeckoMediaPluginService* aGMPService,
+                             const nsAString& aKeySystem,
+                             const nsAString& aContentType,
+                             DecoderDoctorDiagnostics* aDiagnostics)
+{
+  MOZ_ASSERT(HaveGMPFor(aGMPService,
+             NS_ConvertUTF16toUTF8(aKeySystem),
+             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
+  MOZ_ASSERT(IsVP9ContentType(aContentType));
+  return !HaveGMPFor(aGMPService,
+                     NS_ConvertUTF16toUTF8(aKeySystem),
+                     NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                     NS_LITERAL_CSTRING("vp9")) &&
+         WebMDecoder::CanHandleMediaType(aContentType);
+}
+
+static bool
 IsSupportedAudio(mozIGeckoMediaPluginService* aGMPService,
                  const nsAString& aKeySystem,
                  const nsAString& aAudioType,
                  DecoderDoctorDiagnostics* aDiagnostics)
 {
-  return IsAACContentType(aAudioType) &&
-         (GMPDecryptsAndDecodesAAC(aGMPService, aKeySystem, aDiagnostics) ||
-          GMPDecryptsAndGeckoDecodesAAC(aGMPService, aKeySystem, aAudioType, aDiagnostics));
+  if (IsAACContentType(aAudioType)) {
+    return GMPDecryptsAndDecodesAAC(aGMPService, aKeySystem, aDiagnostics) ||
+           GMPDecryptsAndGeckoDecodesAAC(aGMPService, aKeySystem, aAudioType, aDiagnostics);
+  }
+  if (IsVorbisContentType(aAudioType) && aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+    // GMP does not decode Vorbis, so don't bother checking
+    return GMPDecryptsAndGeckoDecodesVorbis(aGMPService, aKeySystem, aAudioType, aDiagnostics);
+  }
+  return false;
 }
 
 static bool
@@ -428,9 +486,17 @@ IsSupportedVideo(mozIGeckoMediaPluginService* aGMPService,
                  const nsAString& aVideoType,
                  DecoderDoctorDiagnostics* aDiagnostics)
 {
-  return IsH264ContentType(aVideoType) &&
-         (GMPDecryptsAndDecodesH264(aGMPService, aKeySystem, aDiagnostics) ||
-          GMPDecryptsAndGeckoDecodesH264(aGMPService, aKeySystem, aVideoType, aDiagnostics));
+  if (IsH264ContentType(aVideoType)) {
+    return GMPDecryptsAndDecodesH264(aGMPService, aKeySystem, aDiagnostics) ||
+           GMPDecryptsAndGeckoDecodesH264(aGMPService, aKeySystem, aVideoType, aDiagnostics);
+  }
+  if (IsVP8ContentType(aVideoType) && aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+    return GMPDecryptsAndGeckoDecodesVP8(aGMPService, aKeySystem, aVideoType, aDiagnostics);
+  }
+  if (IsVP9ContentType(aVideoType) && aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+    return GMPDecryptsAndGeckoDecodesVP9(aGMPService, aKeySystem, aVideoType, aDiagnostics);
+  }
+  return false;
 }
 
 static bool
@@ -474,7 +540,7 @@ IsSupportedInitDataType(const nsString& aCandidate, const nsAString& aKeySystem)
     || aKeySystem.EqualsLiteral("com.widevine.alpha")
 #endif
     ) &&
-    (aCandidate.EqualsLiteral("keyids") || aCandidate.EqualsLiteral("webm)")));
+    (aCandidate.EqualsLiteral("keyids") || aCandidate.EqualsLiteral("webm")));
 }
 
 static bool

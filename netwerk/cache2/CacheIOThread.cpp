@@ -14,6 +14,55 @@
 namespace mozilla {
 namespace net {
 
+namespace { // anon
+
+class CacheIOTelemetry
+{
+public:
+  typedef CacheIOThread::EventQueue::size_type size_type;
+  static size_type mMinLengthToReport[CacheIOThread::LAST_LEVEL];
+  static void Report(uint32_t aLevel, size_type aLength);
+};
+
+static CacheIOTelemetry::size_type const kGranularity = 30;
+
+CacheIOTelemetry::size_type 
+CacheIOTelemetry::mMinLengthToReport[CacheIOThread::LAST_LEVEL] = {
+  kGranularity, kGranularity, kGranularity, kGranularity,
+  kGranularity, kGranularity, kGranularity, kGranularity
+};
+
+// static
+void CacheIOTelemetry::Report(uint32_t aLevel, CacheIOTelemetry::size_type aLength)
+{
+  if (mMinLengthToReport[aLevel] > aLength) {
+    return;
+  }
+
+  static Telemetry::ID telemetryID[] = {
+    Telemetry::HTTP_CACHE_IO_QUEUE_OPEN_PRIORITY,
+    Telemetry::HTTP_CACHE_IO_QUEUE_READ_PRIORITY,
+    Telemetry::HTTP_CACHE_IO_QUEUE_OPEN,
+    Telemetry::HTTP_CACHE_IO_QUEUE_READ,
+    Telemetry::HTTP_CACHE_IO_QUEUE_MANAGEMENT,
+    Telemetry::HTTP_CACHE_IO_QUEUE_WRITE,
+    Telemetry::HTTP_CACHE_IO_QUEUE_INDEX,
+    Telemetry::HTTP_CACHE_IO_QUEUE_EVICT
+  };
+
+  // Each bucket is a multiply of kGranularity (30, 60, 90..., 300+)
+  aLength = (aLength / kGranularity);
+  // Next time report only when over the current length + kGranularity
+  mMinLengthToReport[aLevel] = (aLength + 1) * kGranularity;
+
+  // 10 is number of buckets we have in each probe
+  aLength = std::min<size_type>(aLength, 10);
+
+  Telemetry::Accumulate(telemetryID[aLevel], aLength - 1); // counted from 0
+}
+
+} // anon
+
 CacheIOThread* CacheIOThread::sSelf = nullptr;
 
 NS_IMPL_ISUPPORTS(CacheIOThread, nsIThreadObserver)
@@ -62,17 +111,25 @@ nsresult CacheIOThread::Init()
 
 nsresult CacheIOThread::Dispatch(nsIRunnable* aRunnable, uint32_t aLevel)
 {
+  return Dispatch(do_AddRef(aRunnable), aLevel);
+}
+
+nsresult CacheIOThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+				 uint32_t aLevel)
+{
   NS_ENSURE_ARG(aLevel < LAST_LEVEL);
 
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
   // Runnable is always expected to be non-null, hard null-check bellow.
-  MOZ_ASSERT(aRunnable);
+  MOZ_ASSERT(runnable);
 
   MonitorAutoLock lock(mMonitor);
 
   if (mShutdown && (PR_GetCurrentThread() != mThread))
     return NS_ERROR_UNEXPECTED;
 
-  return DispatchInternal(aRunnable, aLevel);
+  return DispatchInternal(runnable.forget(), aLevel);
 }
 
 nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable)
@@ -90,17 +147,20 @@ nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable)
   mEventQueue[OPEN_PRIORITY].AppendElements(mEventQueue[OPEN]);
   mEventQueue[OPEN].Clear();
 
-  return DispatchInternal(aRunnable, OPEN_PRIORITY);
+  return DispatchInternal(do_AddRef(aRunnable), OPEN_PRIORITY);
 }
 
-nsresult CacheIOThread::DispatchInternal(nsIRunnable* aRunnable, uint32_t aLevel)
+nsresult CacheIOThread::DispatchInternal(already_AddRefed<nsIRunnable> aRunnable,
+					 uint32_t aLevel)
 {
-  if (NS_WARN_IF(!aRunnable))
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
+  if (NS_WARN_IF(!runnable))
     return NS_ERROR_NULL_POINTER;
 
   mMonitor.AssertCurrentThreadOwns();
 
-  mEventQueue[aLevel].AppendElement(aRunnable);
+  mEventQueue[aLevel].AppendElement(runnable.forget());
   if (mLowestLevelWaiting > aLevel)
     mLowestLevelWaiting = aLevel;
 
@@ -255,32 +315,18 @@ loopStart:
     threadInternal->SetObserver(nullptr);
 }
 
-static const char* const sLevelTraceName[] = {
-  "net::cache::io::level(0)",
-  "net::cache::io::level(1)",
-  "net::cache::io::level(2)",
-  "net::cache::io::level(3)",
-  "net::cache::io::level(4)",
-  "net::cache::io::level(5)",
-  "net::cache::io::level(6)",
-  "net::cache::io::level(7)",
-  "net::cache::io::level(8)",
-  "net::cache::io::level(9)",
-  "net::cache::io::level(10)",
-  "net::cache::io::level(11)",
-  "net::cache::io::level(12)"
-};
-
 void CacheIOThread::LoopOneLevel(uint32_t aLevel)
 {
-  nsTArray<nsCOMPtr<nsIRunnable> > events;
+  EventQueue events;
   events.SwapElements(mEventQueue[aLevel]);
-  uint32_t length = events.Length();
+  EventQueue::size_type length = events.Length();
 
   mCurrentlyExecutingLevel = aLevel;
 
   bool returnEvents = false;
-  uint32_t index;
+  bool reportTelementry = true;
+
+  EventQueue::size_type index;
   {
     MonitorAutoUnlock unlock(mMonitor);
 
@@ -290,6 +336,11 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
         // to execute it!  Don't forget to return what we haven't exec.
         returnEvents = true;
         break;
+      }
+
+      if (reportTelementry) {
+        reportTelementry = false;
+        CacheIOTelemetry::Report(aLevel, length);
       }
 
       // Drop any previous flagging, only an event on the current level may set

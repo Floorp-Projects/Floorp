@@ -136,9 +136,9 @@
     </hbox>
   </vbox>
   <vbox>
-    <description>&doNotTrack.pre.label;<label
-    class="text-link" id="doNotTrackSettings" href="#"
-    >&doNotTrack.settings.label;</label>&doNotTrack.post.label;</description>
+    <description>&doNotTrack.pre.label;<html:a
+    class="inline-link" id="doNotTrackSettings" href="#"
+    >&doNotTrack.settings.label;</html:a>&doNotTrack.post.label;</description>
   </vbox>
 </groupbox>
 
@@ -165,11 +165,11 @@
         <vbox flex="1">
           <description>&rememberDescription.label;</description>
           <separator class="thin"/>
-          <description>&rememberActions.pre.label;<label
-          class="text-link" id="historyRememberClear" href="#"
-          >&rememberActions.clearHistory.label;</label>&rememberActions.middle.label;<label
-          class="text-link" id="historyRememberCookies" href="#"
-          >&rememberActions.removeCookies.label;</label>&rememberActions.post.label;</description>
+          <description>&rememberActions.pre.label;<html:a
+          class="inline-link" id="historyRememberClear" href="#"
+          >&rememberActions.clearHistory.label;</html:a>&rememberActions.middle.label;<html:a
+          class="inline-link" id="historyRememberCookies" href="#"
+          >&rememberActions.removeCookies.label;</html:a>&rememberActions.post.label;</description>
         </vbox>
       </hbox>
     </vbox>
@@ -178,9 +178,9 @@
         <vbox flex="1">
           <description>&dontrememberDescription.label;</description>
           <separator class="thin"/>
-          <description>&dontrememberActions.pre.label;<label
-          class="text-link" id="historyDontRememberClear" href="#"
-          >&dontrememberActions.clearHistory.label;</label>&dontrememberActions.post.label;</description>
+          <description>&dontrememberActions.pre.label;<html:a
+          class="inline-link" id="historyDontRememberClear" href="#"
+          >&dontrememberActions.clearHistory.label;</html:a>&dontrememberActions.post.label;</description>
         </vbox>
       </hbox>
     </vbox>

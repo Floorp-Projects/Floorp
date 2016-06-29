@@ -5,6 +5,7 @@
 "use strict";
 
 const { PropTypes } = require("devtools/client/shared/vendor/react");
+const { createEnum } = require("./utils/enum");
 
 // React PropTypes are used to describe the expected "shape" of various common
 // objects that get passed down as props to components.
@@ -41,6 +42,16 @@ const device = {
 };
 
 /**
+ * An enum containing the possible values for the device list state
+ */
+exports.deviceListState = createEnum([
+  "INITIALIZED",
+  "LOADING",
+  "LOADED",
+  "ERROR",
+]);
+
+/**
  * A list of devices and their types that can be displayed in the viewport.
  */
 exports.devices = {
@@ -68,6 +79,9 @@ exports.devices = {
 
   // Whether or not the device modal is open
   isModalOpen: PropTypes.bool,
+
+  // Device list state, possible values are exported above in an enum
+  listState: PropTypes.oneOf(Object.keys(exports.deviceListState)),
 
 };
 

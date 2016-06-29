@@ -258,22 +258,22 @@ private:
   CancelableRunnable& operator=(const CancelableRunnable&&) = delete;
 };
 
-} // namespace mozilla
+namespace detail {
 
 // An event that can be used to call a C++11 functions or function objects,
 // including lambdas. The function must have no required arguments, and must
 // return void.
 template<typename StoredFunction>
-class nsRunnableFunction : public mozilla::Runnable
+class RunnableFunction : public Runnable
 {
 public:
   template <typename F>
-  explicit nsRunnableFunction(F&& aFunction)
-    : mFunction(mozilla::Forward<F>(aFunction))
+  explicit RunnableFunction(F&& aFunction)
+    : mFunction(Forward<F>(aFunction))
   { }
 
   NS_IMETHOD Run() {
-    static_assert(mozilla::IsVoid<decltype(mFunction())>::value,
+    static_assert(IsVoid<decltype(mFunction())>::value,
                   "The lambda must return void!");
     mFunction();
     return NS_OK;
@@ -282,15 +282,19 @@ private:
   StoredFunction mFunction;
 };
 
+} // namespace detail
+
+} // namespace mozilla
+
 template<typename Function>
-nsRunnableFunction<typename mozilla::RemoveReference<Function>::Type>*
+already_AddRefed<mozilla::Runnable>
 NS_NewRunnableFunction(Function&& aFunction)
 {
-  return new nsRunnableFunction
-               // Make sure we store a non-reference in nsRunnableFunction.
-               <typename mozilla::RemoveReference<Function>::Type>
-               // But still forward aFunction to move if possible.
-               (mozilla::Forward<Function>(aFunction));
+  return do_AddRef(new mozilla::detail::RunnableFunction
+                   // Make sure we store a non-reference in nsRunnableFunction.
+                   <typename mozilla::RemoveReference<Function>::Type>
+                   // But still forward aFunction to move if possible.
+                   (mozilla::Forward<Function>(aFunction)));
 }
 
 // An event that can be used to call a method on a class.  The class type must
@@ -704,49 +708,52 @@ struct ParameterStorage
 
 } /* namespace detail */
 
+namespace mozilla {
+
+namespace detail {
+
 // struct used to store arguments and later apply them to a method.
 template <typename... Ts>
-struct nsRunnableMethodArguments
+struct RunnableMethodArguments final
 {
-  mozilla::Tuple<typename ::detail::ParameterStorage<Ts>::Type...> mArguments;
+  Tuple<typename ::detail::ParameterStorage<Ts>::Type...> mArguments;
   template <typename... As>
-  explicit nsRunnableMethodArguments(As&&... aArguments)
-    : mArguments(mozilla::Forward<As>(aArguments)...)
+  explicit RunnableMethodArguments(As&&... aArguments)
+    : mArguments(Forward<As>(aArguments)...)
   {}
   template<typename C, typename M, typename... Args, size_t... Indices>
   static auto
-  applyImpl(C* o, M m, mozilla::Tuple<Args...>& args,
-            mozilla::IndexSequence<Indices...>)
-      -> decltype(((*o).*m)(mozilla::Get<Indices>(args).PassAsParameter()...))
+  applyImpl(C* o, M m, Tuple<Args...>& args, IndexSequence<Indices...>)
+      -> decltype(((*o).*m)(Get<Indices>(args).PassAsParameter()...))
   {
-    return ((*o).*m)(mozilla::Get<Indices>(args).PassAsParameter()...);
+    return ((*o).*m)(Get<Indices>(args).PassAsParameter()...);
   }
   template<class C, typename M> auto apply(C* o, M m)
       -> decltype(applyImpl(o, m, mArguments,
-                  typename mozilla::IndexSequenceFor<Ts...>::Type()))
+                  typename IndexSequenceFor<Ts...>::Type()))
   {
     return applyImpl(o, m, mArguments,
-        typename mozilla::IndexSequenceFor<Ts...>::Type());
+        typename IndexSequenceFor<Ts...>::Type());
   }
 };
 
 template<typename Method, bool Owning, bool Cancelable, typename... Storages>
-class nsRunnableMethodImpl
-  : public nsRunnableMethodTraits<Method, Owning, Cancelable>::base_type
+class RunnableMethodImpl final
+  : public ::nsRunnableMethodTraits<Method, Owning, Cancelable>::base_type
 {
-  typedef typename nsRunnableMethodTraits<Method, Owning, Cancelable>::class_type
+  typedef typename ::nsRunnableMethodTraits<Method, Owning, Cancelable>::class_type
       ClassType;
-  nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
+  ::nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
   Method mMethod;
-  nsRunnableMethodArguments<Storages...> mArgs;
+  RunnableMethodArguments<Storages...> mArgs;
 public:
-  virtual ~nsRunnableMethodImpl() { Revoke(); };
+  virtual ~RunnableMethodImpl() { Revoke(); };
   template<typename... Args>
-  explicit nsRunnableMethodImpl(ClassType* aObj, Method aMethod,
-                                Args&&... aArgs)
+  explicit RunnableMethodImpl(ClassType* aObj, Method aMethod,
+                              Args&&... aArgs)
     : mReceiver(aObj)
     , mMethod(aMethod)
-    , mArgs(mozilla::Forward<Args>(aArgs)...)
+    , mArgs(Forward<Args>(aArgs)...)
   {
     static_assert(sizeof...(Storages) == sizeof...(Args), "Storages and Args should have equal sizes");
   }
@@ -765,6 +772,8 @@ public:
   void Revoke() { mReceiver.Revoke(); }
 };
 
+} // namespace detail
+
 // Use this template function like so:
 //
 //   nsCOMPtr<nsIRunnable> event =
@@ -773,37 +782,35 @@ public:
 //
 // Statically enforced constraints:
 //  - myObject must be of (or implicitly convertible to) type MyClass
-//  - MyClass must defined AddRef and Release methods
+//  - MyClass must define AddRef and Release methods
 //
 
-namespace mozilla {
-
 template<typename PtrType, typename Method>
-already_AddRefed<typename nsRunnableMethodTraits<Method, true, false>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, false>::base_type>
 NewRunnableMethod(PtrType aPtr, Method aMethod)
 {
-  return do_AddRef(new nsRunnableMethodImpl<Method, true, false>(aPtr, aMethod));
+  return do_AddRef(new detail::RunnableMethodImpl<Method, true, false>(aPtr, aMethod));
 }
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename nsRunnableMethodTraits<Method, true, true>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, true>::base_type>
 NewCancelableRunnableMethod(PtrType aPtr, Method aMethod)
 {
-  return do_AddRef(new nsRunnableMethodImpl<Method, true, true>(aPtr, aMethod));
+  return do_AddRef(new detail::RunnableMethodImpl<Method, true, true>(aPtr, aMethod));
 }
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename nsRunnableMethodTraits<Method, false, false>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, false>::base_type>
 NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return do_AddRef(new nsRunnableMethodImpl<Method, false, false>(aPtr, aMethod));
+  return do_AddRef(new detail::RunnableMethodImpl<Method, false, false>(aPtr, aMethod));
 }
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename nsRunnableMethodTraits<Method, false, true>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, true>::base_type>
 NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return do_AddRef(new nsRunnableMethodImpl<Method, false, true>(aPtr, aMethod));
+  return do_AddRef(new detail::RunnableMethodImpl<Method, false, true>(aPtr, aMethod));
 }
 
 // Similar to NewRunnableMethod. Call like so:
@@ -811,43 +818,43 @@ NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
 //   NewRunnableMethod<Types,...>(myObject, &MyClass::HandleEvent, myArg1,...);
 // 'Types' are the stored type for each argument, see ParameterStorage for details.
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename nsRunnableMethodTraits<Method, true, false>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, false>::base_type>
 NewRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new nsRunnableMethodImpl<Method, true, false, Storages...>(
+  return do_AddRef(new detail::RunnableMethodImpl<Method, true, false, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename nsRunnableMethodTraits<Method, false, false>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, false>::base_type>
 NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new nsRunnableMethodImpl<Method, false, false, Storages...>(
+  return do_AddRef(new detail::RunnableMethodImpl<Method, false, false, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename nsRunnableMethodTraits<Method, true, true>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, true>::base_type>
 NewCancelableRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new nsRunnableMethodImpl<Method, true, true, Storages...>(
+  return do_AddRef(new detail::RunnableMethodImpl<Method, true, true, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename nsRunnableMethodTraits<Method, false, true>::base_type>
+already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, true>::base_type>
 NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod,
                                                 Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new nsRunnableMethodImpl<Method, false, true, Storages...>(
+  return do_AddRef(new detail::RunnableMethodImpl<Method, false, true, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 

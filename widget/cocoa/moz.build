@@ -55,6 +55,7 @@ UNIFIED_SOURCES += [
     'nsWidgetFactory.mm',
     'nsWindowMap.mm',
     'OSXNotificationCenter.mm',
+    'RectTextureImage.mm',
     'SwipeTracker.mm',
     'TextInputHandler.mm',
     'VibrancyManager.mm',

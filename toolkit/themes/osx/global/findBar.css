@@ -71,7 +71,8 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-next,
 .findbar-find-previous,
 .findbar-highlight,
-.findbar-case-sensitive {
+.findbar-case-sensitive,
+.findbar-entire-word {
   -moz-appearance: none;
   border-radius: 10000px;
   border: @roundButtonBorder@;
@@ -90,7 +91,8 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-highlight,
-.findbar-case-sensitive {
+.findbar-case-sensitive,
+.findbar-entire-word {
   margin-inline-end: 5px;
   padding: 2px 9px;
 }
@@ -114,8 +116,10 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-previous:not([disabled]):hover:active,
 .findbar-highlight:not([disabled]):hover:active,
 .findbar-case-sensitive:not([disabled]):hover:active,
+.findbar-entire-word:not([disabled]):hover:active,
 .findbar-highlight:not([disabled])[checked="true"],
-.findbar-case-sensitive:not([disabled])[checked="true"] {
+.findbar-case-sensitive:not([disabled])[checked="true"],
+.findbar-entire-word:not([disabled])[checked="true"] {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
   box-shadow: @roundButtonPressedShadow@;

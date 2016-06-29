@@ -52,18 +52,18 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun, aO
   // all three arguments
   if (typeof aOnClose === "object") {
     if (aOnClose.onClose) {
-      this.on("close", aOnClose.onClose);
+      this.once("close", aOnClose.onClose);
     }
     if (aOnClose.onRun) {
-      this.on("run", aOnClose.onRun);
+      this.once("run", aOnClose.onRun);
     }
     this._options = aOnClose;
   } else {
     if (aOnClose) {
-      this.on("close", aOnClose);
+      this.once("close", aOnClose);
     }
     if (aOnRun) {
-      this.on("run", aOnRun);
+      this.once("run", aOnRun);
     }
     this._options = aOptions || {};
   }
@@ -132,7 +132,7 @@ BrowserToolboxProcess.prototype = {
     dumpn("Created a separate loader instance for the DebuggerServer.");
 
     // Forward interesting events.
-    this.debuggerServer.on("connectionchange", this.emit.bind(this));
+    this.debuggerServer.on("connectionchange", this.emit);
 
     this.debuggerServer.init();
     this.debuggerServer.addBrowserActors();
@@ -249,6 +249,7 @@ BrowserToolboxProcess.prototype = {
 
     this._telemetry.toolClosed("jsbrowserdebugger");
     if (this.debuggerServer) {
+      this.debuggerServer.off("connectionchange", this.emit);
       this.debuggerServer.destroy();
       this.debuggerServer = null;
     }
@@ -260,6 +261,9 @@ BrowserToolboxProcess.prototype = {
 
     this._dbgProcess = null;
     this._options = null;
+    if (this.loader) {
+      this.loader.destroy();
+    }
     this.loader = null;
     this._telemetry = null;
   }

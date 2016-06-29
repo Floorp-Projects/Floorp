@@ -277,6 +277,7 @@ class MacroAssemblerARM : public Assembler
     void ma_udiv(Register num, Register div, Register dest, Condition cond = Always);
     // Misc operations
     void ma_clz(Register src, Register dest, Condition cond = Always);
+    void ma_ctz(Register src, Register dest);
     // Memory:
     // Shortcut for when we know we're transferring 32 bits of data.
     void ma_dtr(LoadStore ls, Register rn, Imm32 offset, Register rt,
@@ -961,6 +962,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloat32(const Address& addr, FloatRegister dest);
     void loadFloat32(const BaseIndex& src, FloatRegister dest);
 
+    void ma_loadHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck, bool faultOnOOB,
+                          FloatRegister output);
+    void ma_loadHeapAsmJS(Register ptrReg, int size, bool isSigned, bool needsBoundsCheck,
+                          bool faultOnOOB, Register output);
+
     void store8(Register src, const Address& address);
     void store8(Imm32 imm, const Address& address);
     void store8(Register src, const BaseIndex& address);
@@ -991,6 +997,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void moveDouble(FloatRegister src, FloatRegister dest, Condition cc = Always) {
         ma_vmov(src, dest, cc);
     }
+
+    void ma_storeHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck, bool faultOnOOB,
+                           FloatRegister value);
+    void ma_storeHeapAsmJS(Register ptrReg, int size, bool isSigned, bool needsBoundsCheck,
+                           bool faultOnOOB, Register value);
 
   private:
     template<typename T>
@@ -1322,6 +1333,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // The message will be printed at the stopping point.
     // (On non-simulator builds, does nothing.)
     void simulatorStop(const char* msg);
+
+    // Evaluate srcDest = minmax<isMax>{Float32,Double}(srcDest, other).
+    // Handle NaN specially if handleNaN is true.
+    void minMaxDouble(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
+    void minMaxFloat32(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
 

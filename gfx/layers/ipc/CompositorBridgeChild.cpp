@@ -882,19 +882,23 @@ CompositorBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 }
 
 TextureClientPool*
-CompositorBridgeChild::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
+CompositorBridgeChild::GetTexturePool(LayersBackend aBackend,
+                                      SurfaceFormat aFormat,
+                                      TextureFlags aFlags)
 {
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    if (mTexturePools[i]->GetFormat() == aFormat &&
+    if (mTexturePools[i]->GetBackend() == aBackend &&
+        mTexturePools[i]->GetFormat() == aFormat &&
         mTexturePools[i]->GetFlags() == aFlags) {
       return mTexturePools[i];
     }
   }
 
   mTexturePools.AppendElement(
-      new TextureClientPool(aFormat, aFlags,
+      new TextureClientPool(aBackend, aFormat,
                             IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
                                     gfxPlatform::GetPlatform()->GetTileHeight()),
+                            aFlags,
                             gfxPrefs::LayersTileMaxPoolSize(),
                             gfxPrefs::LayersTileShrinkPoolTimeout(),
                             this));
