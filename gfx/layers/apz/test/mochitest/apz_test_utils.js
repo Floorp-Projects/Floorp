@@ -16,6 +16,21 @@ function convertEntries(entries) {
   return result;
 }
 
+function getPropertyAsRect(scrollFrames, scrollId, prop) {
+  SimpleTest.ok(scrollId in scrollFrames,
+                'expected scroll frame data for scroll id ' + scrollId);
+  var scrollFrameData = scrollFrames[scrollId];
+  SimpleTest.ok('displayport' in scrollFrameData,
+                'expected a ' + prop + ' for scroll id ' + scrollId);
+  var value = scrollFrameData[prop];
+  var pieces = value.replace(/[()\s]+/g, '').split(',');
+  SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
+  return { x: parseInt(pieces[0]),
+           y: parseInt(pieces[1]),
+           w: parseInt(pieces[2]),
+           h: parseInt(pieces[3]) };
+}
+
 function convertScrollFrameData(scrollFrames) {
   var result = {};
   for (var i = 0; i < scrollFrames.length; ++i) {

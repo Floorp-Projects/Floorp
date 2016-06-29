@@ -72,23 +72,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
                     "expected a content paint with sequence number" + lastCompositorPaintSeqNo);
       var correspondingContentPaint = contentTestData.paints[lastCompositorPaintSeqNo];
 
-      // This content-side data should have a displayport for our scrollable <div>.
-      SimpleTest.ok(childScrollId in correspondingContentPaint,
-                    "expected scroll frame data for scroll id " + childScrollId);
-      SimpleTest.ok("displayport" in correspondingContentPaint[childScrollId],
-                    "expected a displayport for scroll id " + childScrollId);
-      var childDisplayport = correspondingContentPaint[childScrollId]["displayport"];
-      var dpFields = childDisplayport.replace(/[()\s]+/g, '').split(',');
-      SimpleTest.is(dpFields.length, 4, "expected displayport string of form (x,y,w,h)");
-      var dpWidth = dpFields[2];
-      var dpHeight = dpFields[3];
+      var dp = getPropertyAsRect(correspondingContentPaint, childScrollId, 'displayport');
       var subframe = document.getElementById('subframe');
       // The clientWidth and clientHeight may be less than 50 if there are scrollbars showing.
       // In general they will be (50 - <scrollbarwidth>, 50 - <scrollbarheight>).
       SimpleTest.ok(subframe.clientWidth > 0, "Expected a non-zero clientWidth, got: " + subframe.clientWidth);
       SimpleTest.ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
-      SimpleTest.ok(dpWidth >= subframe.clientWidth && dpHeight >= subframe.clientHeight,
-                    "expected a displayport at least as large as the scrollable element, got " + childDisplayport);
+      SimpleTest.ok(dp.w >= subframe.clientWidth && dp.h >= subframe.clientHeight,
+                    "expected a displayport at least as large as the scrollable element, got " + JSON.stringify(dp));
 
       window.opener.finishTest();
     }
