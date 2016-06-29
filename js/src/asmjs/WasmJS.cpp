@@ -18,7 +18,7 @@
 
 #include "asmjs/WasmJS.h"
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmCompile.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmModule.h"
 
@@ -26,6 +26,103 @@
 
 using namespace js;
 using namespace js::wasm;
+
+bool
+wasm::HasCompilerSupport(ExclusiveContext* cx)
+{
+    if (!cx->jitSupportsFloatingPoint())
+        return false;
+
+#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
+    return false;
+#else
+    return true;
+#endif
+}
+
+static bool
+Throw(JSContext* cx, const char* str)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, str);
+    return false;
+}
+
+static bool
+GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleValue v)
+{
+    JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
+    if (!atom)
+        return false;
+
+    RootedId id(cx, AtomToId(atom));
+    return GetProperty(cx, obj, obj, id, v);
+}
+
+static bool
+ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& importNames,
+                MutableHandle<FunctionVector> imports)
+{
+    if (!importNames.empty() && !importObj)
+        return Throw(cx, "no import object given");
+
+    for (const ImportName& name : importNames) {
+        RootedValue v(cx);
+        if (!GetProperty(cx, importObj, name.module.get(), &v))
+            return false;
+
+        if (strlen(name.func.get()) > 0) {
+            if (!v.isObject())
+                return Throw(cx, "import object field is not an Object");
+
+            RootedObject obj(cx, &v.toObject());
+            if (!GetProperty(cx, obj, name.func.get(), &v))
+                return false;
+        }
+
+        if (!IsFunctionObject(v))
+            return Throw(cx, "import object field is not a Function");
+
+        if (!imports.append(&v.toObject().as<JSFunction>()))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
+           MutableHandleWasmInstanceObject instanceObj)
+{
+    if (!HasCompilerSupport(cx)) {
+#ifdef JS_MORE_DETERMINISTIC
+        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
+#endif
+        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
+        return false;
+    }
+
+    Bytes bytecode;
+    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength()))
+        return false;
+
+    JS::AutoFilename filename;
+    if (!DescribeScriptedCaller(cx, &filename))
+        return false;
+
+    UniqueChars file = DuplicateString(filename.get());
+    if (!file)
+        return false;
+
+    UniqueModule module = Compile(cx, Move(file), Move(bytecode));
+    if (!module)
+        return false;
+
+    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
+    if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
+        return false;
+
+    return module->instantiate(cx, funcImports, nullptr, instanceObj);
+}
 
 static bool
 InstantiateModule(JSContext* cx, unsigned argc, Value* vp)

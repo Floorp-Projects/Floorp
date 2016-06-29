@@ -23,7 +23,6 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 
-#include "asmjs/Wasm.h"
 #include "asmjs/WasmInstance.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/Conversions.h"
