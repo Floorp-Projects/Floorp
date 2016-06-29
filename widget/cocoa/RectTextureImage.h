@@ -26,7 +26,7 @@ namespace widget {
 // OMTC BasicLayers drawing.
 class RectTextureImage {
 public:
-  explicit RectTextureImage(gl::GLContext* aGLContext);
+  RectTextureImage();
 
   virtual ~RectTextureImage();
 
@@ -34,7 +34,7 @@ public:
     BeginUpdate(const LayoutDeviceIntSize& aNewSize,
                 const LayoutDeviceIntRegion& aDirtyRegion =
                   LayoutDeviceIntRegion());
-  void EndUpdate(bool aKeepSurface = false);
+  void EndUpdate();
 
   void UpdateIfNeeded(const LayoutDeviceIntSize& aNewSize,
                       const LayoutDeviceIntRegion& aDirtyRegion,
@@ -61,18 +61,15 @@ public:
             const LayoutDeviceIntPoint& aLocation,
             const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
-  static LayoutDeviceIntSize TextureSizeForSize(
-    const LayoutDeviceIntSize& aSize);
 
 protected:
+  void DeleteTexture();
+  void BindIOSurfaceToTexture(gl::GLContext* aGL);
 
-  RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
-  UniquePtr<unsigned char[]> mUpdateDrawTargetData;
+  RefPtr<MacIOSurface> mIOSurface;
   gl::GLContext* mGLContext;
   LayoutDeviceIntRegion mUpdateRegion;
-  LayoutDeviceIntSize mUsedSize;
   LayoutDeviceIntSize mBufferSize;
-  LayoutDeviceIntSize mTextureSize;
   GLuint mTexture;
   bool mInUpdate;
 };
