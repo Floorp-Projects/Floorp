@@ -710,7 +710,7 @@ namespace detail {
 
 // struct used to store arguments and later apply them to a method.
 template <typename... Ts>
-struct RunnableMethodArguments
+struct RunnableMethodArguments final
 {
   Tuple<typename ::detail::ParameterStorage<Ts>::Type...> mArguments;
   template <typename... As>
@@ -734,7 +734,7 @@ struct RunnableMethodArguments
 };
 
 template<typename Method, bool Owning, bool Cancelable, typename... Storages>
-class RunnableMethodImpl
+class RunnableMethodImpl final
   : public ::nsRunnableMethodTraits<Method, Owning, Cancelable>::base_type
 {
   typedef typename ::nsRunnableMethodTraits<Method, Owning, Cancelable>::class_type
