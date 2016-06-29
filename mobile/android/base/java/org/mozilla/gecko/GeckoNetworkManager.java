@@ -287,20 +287,23 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      * Send current network state and connection type as a GeckoEvent, to whomever is listening.
      */
     private void sendNetworkStateToListeners() {
-        if (GeckoThread.isRunning()) {
-            final Context applicationContext = GeckoAppShell.getApplicationContext();
-            GeckoAppShell.sendEventToGecko(
-                    GeckoEvent.createNetworkEvent(
-                            currentConnectionType.value,
-                            currentConnectionType == ConnectionType.WIFI,
-                            wifiDhcpGatewayAddress(applicationContext),
-                            currentConnectionSubtype.value
-                    )
-            );
+        final Context applicationContext = GeckoAppShell.getApplicationContext();
+        final GeckoEvent networkEvent = GeckoEvent.createNetworkEvent(
+                currentConnectionType.value,
+                currentConnectionType == ConnectionType.WIFI,
+                wifiDhcpGatewayAddress(applicationContext),
+                currentConnectionSubtype.value
+        );
+        final GeckoEvent networkLinkChangeValueEvent = GeckoEvent.createNetworkLinkChangeEvent(
+                currentNetworkStatus.value
+        );
+        final GeckoEvent networkLinkChangeNotificationEvent = GeckoEvent.createNetworkLinkChangeEvent(
+                LINK_DATA_CHANGED
+        );
 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(currentNetworkStatus.value));
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(LINK_DATA_CHANGED));
-        }
+        GeckoAppShell.sendEventToGecko(networkEvent);
+        GeckoAppShell.sendEventToGecko(networkLinkChangeValueEvent);
+        GeckoAppShell.sendEventToGecko(networkLinkChangeNotificationEvent);
     }
 
     /**
@@ -315,9 +318,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      */
     private void registerBroadcastReceiver() {
         final IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        if (GeckoAppShell.getApplicationContext().registerReceiver(this, filter) == null) {
-            Log.e(LOGTAG, "Registering receiver failed");
-        }
+        GeckoAppShell.getApplicationContext().registerReceiver(this, filter);
     }
 
     private static int wifiDhcpGatewayAddress(Context context) {

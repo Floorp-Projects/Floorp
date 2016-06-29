@@ -1214,6 +1214,17 @@ interface nsIDOMWindowUtils : nsISupports {
   const unsigned long QUERY_CHARACTER_AT_POINT                  = 3208;
 
   /**
+   * QUERY_TEXT_RECT_ARRAY queries the rects per character
+   *
+   * @param aOffset   The first character's offset.  0 is the first character.
+   * @param aLength   The length of getting text.  If the aLength is too long,
+   *                  the extra length is ignored.
+   * @param aX        Not used.
+   * @param aY        Not used.
+   */
+  const unsigned long QUERY_TEXT_RECT_ARRAY                     = 3209;
+
+  /**
    * Called when the remote child frame has changed its fullscreen state,
    * when entering fullscreen, and when the origin which is fullscreen changes.
    * aFrameElement is the iframe element which contains the child-process

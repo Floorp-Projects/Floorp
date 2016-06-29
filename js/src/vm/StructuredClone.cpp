@@ -888,8 +888,10 @@ JSStructuredCloneWriter::checkStack()
         MOZ_ASSERT(total <= entries.length());
 
     size_t j = objs.length();
-    for (size_t i = 0; i < limit; i++)
-        MOZ_ASSERT(memory.has(&objs[--j].toObject()));
+    for (size_t i = 0; i < limit; i++) {
+        --j;
+        MOZ_ASSERT(memory.has(&objs[j].toObject()));
+    }
 #endif
 }
 

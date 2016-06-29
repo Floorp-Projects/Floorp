@@ -23,11 +23,11 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const message = require("./utils/message");
-const { initDevices } = require("./devices");
 const App = createFactory(require("./app"));
 const Store = require("./store");
 const { changeLocation } = require("./actions/location");
 const { addViewport, resizeViewport } = require("./actions/viewports");
+const { loadDevices } = require("./actions/devices");
 
 let bootstrap = {
 
@@ -43,7 +43,7 @@ let bootstrap = {
               "agent");
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
-    yield initDevices(this.dispatch.bind(this));
+    this.dispatch(loadDevices());
     let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
     message.post(window, "init:done");
@@ -121,12 +121,21 @@ window.setViewportSize = (width, height) => {
 };
 
 /**
- * Called by manager.js when tests want to use the viewport's browser to access
- * the content inside.  We mock the format of a <xul:browser> to make this
- * easily usable with ContentTask.spawn(), which expects an object with a
- * `messageManager` property.
+ * Called by manager.js to access the viewport's browser, either for testing
+ * purposes or to reload it when touch simulation is enabled.
+ * A messageManager getter is added on the object to provide an easy access
+ * to the message manager without pulling the frame loader.
  */
 window.getViewportBrowser = () => {
-  let { messageManager } = document.querySelector("iframe.browser").frameLoader;
-  return { messageManager };
+  let browser = document.querySelector("iframe.browser");
+  if (!browser.messageManager) {
+    Object.defineProperty(browser, "messageManager", {
+      get() {
+        return this.frameLoader.messageManager;
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  }
+  return browser;
 };

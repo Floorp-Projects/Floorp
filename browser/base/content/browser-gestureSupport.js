@@ -987,7 +987,6 @@ var gHistorySwipeAnimation = {
 
     let canvas = null;
 
-    TelemetryStopwatch.start("FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE");
     try {
       let browser = gBrowser.selectedBrowser;
       let r = browser.getBoundingClientRect();
@@ -1006,7 +1005,6 @@ var gHistorySwipeAnimation = {
                      ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
                      ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
     } finally {
-      TelemetryStopwatch.finish("FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE");
     }
 
     TelemetryStopwatch.start("FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE");

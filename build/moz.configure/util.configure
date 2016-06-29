@@ -70,9 +70,10 @@ def normsep(path):
 @imports('itertools')
 @imports(_from='os', _import='pathsep')
 def find_program(file, paths=None):
-    if is_absolute_or_relative(file):
-        return os.path.abspath(file) if os.path.isfile(file) else None
     try:
+        if is_absolute_or_relative(file):
+            return normsep(which(os.path.basename(file),
+                                 [os.path.dirname(file)]))
         if paths:
             if not isinstance(paths, (list, tuple)):
                 die("Paths provided to find_program must be a list of strings, "

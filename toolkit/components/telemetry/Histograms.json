@@ -775,60 +775,6 @@
     "description": "Number of low-commit-space events fired since last ping",
     "cpp_guard": "XP_WIN"
   },
-  "EARLY_GLUESTARTUP_READ_OPS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 12,
-    "description": "ProcessIoCounters.ReadOperationCount before glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
-    "cpp_guard": "XP_WIN"
-  },
-  "EARLY_GLUESTARTUP_READ_TRANSFER": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 51200,
-    "n_buckets": 12,
-    "description": "ProcessIoCounters.ReadTransferCount before glue startup (KB) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
-    "cpp_guard": "XP_WIN"
-  },
-  "GLUESTARTUP_READ_OPS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 12,
-    "description": "ProcessIoCounters.ReadOperationCount after glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
-    "cpp_guard": "XP_WIN"
-  },
-  "GLUESTARTUP_READ_TRANSFER": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 51200,
-    "n_buckets": 12,
-    "description": "ProcessIoCounters.ReadTransferCount after glue startup (KB) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
-    "cpp_guard": "XP_WIN"
-  },
-  "EARLY_GLUESTARTUP_HARD_FAULTS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 12,
-    "description": "Hard faults count before glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
-    "cpp_guard": "XP_UNIX"
-  },
-  "GLUESTARTUP_HARD_FAULTS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 12,
-    "description": "Hard faults count after glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
-    "cpp_guard": "XP_UNIX"
-  },
   "PAGE_FAULTS_HARD": {
     "expires_in_version": "default",
     "kind": "exponential",
@@ -1726,32 +1672,6 @@
     "kind": "boolean",
     "description": "Fraction of sockets that used a nsConnectionEntry with history - size 300."
   },
-  "DISK_CACHE_CORRUPT_DETAILS": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 50,
-    "description": "Why the HTTP disk cache was corrupted at startup"
-  },
-  "DISK_CACHE_REDUCTION_TRIAL": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if the cache would be clean with the disk cache corruption plan of Bug 105843"
-  },
-  "DISK_CACHE_REVALIDATION_SAFE": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if the cache clean file was revalidated, or 0 if a non empty doom list prevented revalidation"
-  },
-  "DISK_CACHE_INVALIDATION_SUCCESS": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if writing '0' to the cache clean file succeeded, and 0 if it failed."
-  },
-  "DISK_CACHE_REVALIDATION_SUCCESS": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if writing '1' to the cache clean file succeeded, and 0 if it failed."
-  },
   "HTTP_CACHE_DISPOSITION_2": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -1813,6 +1733,54 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Rate of page load from offline cache"
+  },
+  "HTTP_CACHE_IO_QUEUE_OPEN_PRIORITY": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_READ_PRIORITY": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_OPEN": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_READ": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_MANAGEMENT": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_WRITE": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_INDEX": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_EVICT": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
   },
   "CACHE_DEVICE_SEARCH_2": {
     "expires_in_version": "never",
@@ -1899,11 +1867,6 @@
     "high": 10000,
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock on the main thread (ms)"
-  },
-  "DISK_CACHE_SMART_SIZE_USING_OLD_MAX": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Whether we are using the old default cache smart size"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSSETDISKSMARTSIZECALLBACK_NOTIFY": {
     "expires_in_version": "never",
@@ -3348,6 +3311,8 @@
     "description": "Time spent (ms) during showdown deleting disk cache v2 for 'clear private data' option"
   },
   "NETWORK_DISK_CACHE_REVALIDATION": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "40",
     "kind": "exponential",
     "high": 10000,
@@ -3355,6 +3320,8 @@
     "description": "Total Time spent (ms) during disk cache revalidation"
   },
   "NETWORK_DISK_CACHE_STREAMIO_CLOSE": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "40",
     "kind": "exponential",
     "high": 10000,
@@ -3362,6 +3329,8 @@
     "description": "Time spent in nsDiskCacheStreamIO::Close() on non-main thread (ms)"
   },
   "NETWORK_DISK_CACHE_STREAMIO_CLOSE_MAIN_THREAD": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "40",
     "kind": "exponential",
     "high": 10000,
@@ -3377,6 +3346,8 @@
     "description": "Network identification (0=None, 1=New, 2=Same)"
   },
   "IDLE_NOTIFY_BACK_MS": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "40",
     "kind": "exponential",
     "high": 5000,
@@ -3384,6 +3355,8 @@
     "description": "Time spent checking for and notifying listeners that the user is back (ms)"
   },
   "IDLE_NOTIFY_BACK_LISTENERS": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "40",
     "kind": "linear",
     "high": 100,
@@ -3391,6 +3364,8 @@
     "description": "Number of listeners notified that the user is back"
   },
   "IDLE_NOTIFY_IDLE_MS": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "default",
     "kind": "exponential",
     "high": 5000,
@@ -3398,6 +3373,8 @@
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
   },
   "IDLE_NOTIFY_IDLE_LISTENERS": {
+    "alert_emails": ["froydnj@mozilla.com"],
+    "bug_numbers": [731004],
     "expires_in_version": "40",
     "kind": "linear",
     "high": 100,
@@ -4207,13 +4184,6 @@
     "n_buckets": 20,
     "description": "Gloda: indexing rate (message/s)"
   },
-  "FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 30,
-    "description": "Firefox: Time taken to capture the page to a canvas, for reuse while swiping through history (ms)."
-  },
   "FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE": {
     "expires_in_version": "50",
     "kind": "exponential",
@@ -4227,22 +4197,6 @@
     "high": 1000,
     "n_buckets": 30,
     "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
-  },
-  "FX_TAB_ANIM_OPEN_MS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Firefox: Time taken by the tab opening animation in milliseconds *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_TAB_ANIM_CLOSE_MS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Firefox: Time taken by the tab closing animation in milliseconds *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_INTERVAL_MS": {
     "expires_in_version": "never",
@@ -4267,13 +4221,6 @@
     "high": 500,
     "n_buckets": 50,
     "description": "Average frame interval during any tab open/close animation (excluding tabstrip scroll)"
-  },
-  "FX_TAB_ANIM_ANY_FRAME_PAINT_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 30,
-    "description": "Average paint duration during any tab open/close animation (excluding tabstrip scroll) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
@@ -4337,13 +4284,6 @@
     "high": 1000,
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
-  },
-  "FX_IDENTITY_POPUP_OPEN_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 10,
-    "description": "Firefox: Time taken by the identity popup to open in milliseconds"
   },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
     "expires_in_version": "never",
@@ -4451,14 +4391,34 @@
     "releaseChannelCollection": "opt-out",
     "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
-  "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_SUCCEEDED": {
+  "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS": {
     "bug_numbers": [1271775],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "53",
-    "kind": "count",
-    "keyed": true,
+    "kind": "enumerated",
+    "n_values": 27,
     "releaseChannelCollection": "opt-out",
-    "description": "Where automatic migration was attempted, indicates to what degree we succeeded."
+    "description": "Where automatic migration was attempted, indicates to what degree we succeeded. Values 0-25 indicate progress through the automatic migration sequence, with 25 indicating the migration finished. 26 is only used when the migration produced errors before it finished."
+  },
+  "FX_STARTUP_MIGRATION_DATA_RECENCY": {
+    "bug_numbers": [1276694],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 8760,
+    "releaseChannelCollection": "opt-out",
+    "description": "The 'last modified' time of the data we imported on the initial profile migration (time delta with 'now' at the time of migration, in hours). Collected for all browsers for which migration data is available, and stored keyed by browser identifier (e.g. 'ie', 'edge', 'safari', etc.)."
+  },
+  "FX_STARTUP_MIGRATION_USED_RECENT_BROWSER": {
+    "bug_numbers": [1276694],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "keyed": true,
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the browser we migrated from was the browser with the most recent data. Keyed by that browser's identifier (e.g. 'ie', 'edge', 'safari', etc.)."
   },
   "FX_STARTUP_EXTERNAL_CONTENT_HANDLER": {
     "bug_numbers": [1276027],
@@ -4778,20 +4738,6 @@
     "kind": "flag",
     "description": "Whether the decoder for ISO-8859-5 has been instantiated in this session."
   },
-  "XUL_FOREGROUND_REFLOW_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "XUL reflows in foreground windows (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "XUL_BACKGROUND_REFLOW_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "XUL reflows in background windows (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "HTML_FOREGROUND_REFLOW_MS_2": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4799,60 +4745,15 @@
     "n_buckets": 20,
     "description": "HTML reflows in foreground windows (ms)"
   },
-  "HTML_BACKGROUND_REFLOW_MS_2": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "HTML reflows in background windows (ms)"
-  },
   "LONG_REFLOW_INTERRUPTIBLE": {
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Long running reflow, interruptible or not"
   },
-  "XUL_INITIAL_FRAME_CONSTRUCTION": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "initial xul frame construction *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "XMLHTTPREQUEST_ASYNC_OR_SYNC": {
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Type of XMLHttpRequest, async or sync"
-  },
-  "DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "DOM: Timer handlers called per native timer expiration *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "DOM_TIMERS_RECENTLY_SET": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "DOM: setTimeout/setInterval calls recently (last 30s or more) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "DOM_RANGE_DETACHED": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "DOM: Ranges that are detached on destruction (bug 702948) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "DOM_WINDOW_SHOWMODALDIALOG_USED": {
-    "expires_in_version": "41",
-    "kind": "flag",
-    "description": "Whether Window.showModalDialog was used in this session"
-  },
-  "LOCALDOMSTORAGE_INIT_DATABASE_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time to open the localStorage database (ms)"
   },
   "LOCALDOMSTORAGE_SHUTDOWN_DATABASE_MS": {
     "expires_in_version": "default",
@@ -4928,38 +4829,6 @@
     "high": 3000,
     "n_buckets": 10,
     "description": "Time to fetch LocalStorage data before we can expose them as session only data (ms)"
-  },
-  "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 1024,
-    "high": 32768,
-    "n_buckets": 10,
-    "description": "DOM storage: size of keys stored in localStorage"
-  },
-  "LOCALDOMSTORAGE_VALUE_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 1024,
-    "high": 32768,
-    "n_buckets": 10,
-    "description": "DOM storage: size of values stored in localStorage"
-  },
-  "SESSIONDOMSTORAGE_KEY_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 1024,
-    "high": 32768,
-    "n_buckets": 10,
-    "description": "DOM storage: size of keys stored in sessionStorage"
-  },
-  "SESSIONDOMSTORAGE_VALUE_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 1024,
-    "high": 32768,
-    "n_buckets": 10,
-    "description": "DOM storage: size of values stored in sessionStorage"
   },
   "RANGE_CHECKSUM_ERRORS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
@@ -5405,29 +5274,12 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "BROWSERPROVIDER_XUL_IMPORT_TIME": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 20,
-    "high": 600000,
-    "n_buckets": 20,
-    "description": "Time for the initial conversion of a XUL places database (ms)",
-    "cpp_guard": "ANDROID"
-  },
   "BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS": {
     "expires_in_version": "default",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 20,
     "description": "Number of bookmarks in the original XUL places database",
-    "cpp_guard": "ANDROID"
-  },
-  "BROWSERPROVIDER_XUL_IMPORT_HISTORY": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000000,
-    "n_buckets": 20,
-    "description": "Number of history entries in the original XUL places database",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_GLOBALHISTORY_ADD_MS": {
@@ -5622,13 +5474,6 @@
     "bug_numbers": [1259510],
     "description": "Recorded once per session near startup: records true/false whether the search service has engines with icon update URLs.",
     "releaseChannelCollection": "opt-out"
-  },
-  "SEARCH_SERVICE_BUILD_CACHE_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 15,
-    "description": "Time (ms) it takes to build the cache of the search service"
   },
   "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
@@ -7047,38 +6892,6 @@
     "n_buckets": 1000,
     "description": "The time (in milliseconds) that it took a 'stopTrace' request to go round trip."
   },
-  "COOKIES_3RDPARTY_NUM_SITES_ACCEPTED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 5,
-    "high": 145,
-    "n_buckets": 30,
-    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been accepted. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "COOKIES_3RDPARTY_NUM_SITES_BLOCKED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 5,
-    "high": 145,
-    "n_buckets": 30,
-    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been rejected. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 10,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "The total number of distinct attempts by third-party sites to place cookies which have been accepted.  Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "COOKIES_3RDPARTY_NUM_ATTEMPTS_BLOCKED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 10,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "The total number of distinct attempts by third-party sites to place cookies which have been rejected.  Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_GET_EXECUTABLE_LINES_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -8363,24 +8176,6 @@
     "kind": "enumerated",
     "description": "Record on which attempt we successfully unlocked a database. See DATABASE_LOCKED_EXCEPTION.",
     "n_values": 5
-  },
-  "SQLITEBRIDGE_PROVIDER_PASSWORDS_LOCKED": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of errors using the PasswordsProvider due to a locked DB. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "SQLITEBRIDGE_PROVIDER_FORMS_LOCKED": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of errors using the FormHistoryProvider due to a locked DB. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "SQLITEBRIDGE_PROVIDER_HOME_LOCKED": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of errors using the HomeProvider due to a locked DB. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "SSL_TLS13_INTOLERANCE_REASON_PRE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
@@ -10898,5 +10693,21 @@
     "bug_numbers": [1280229],
     "description": "Number of the use of XHR in workers.",
     "releaseChannelCollection": "opt-out"
+  },
+  "BLINK_FILESYSTEM_USED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1272501],
+    "releaseChannelCollection": "opt-out",
+    "description": "Webkit/Blink filesystem used"
+  },
+  "WEBKIT_DIRECTORY_USED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1272501],
+    "releaseChannelCollection": "opt-out",
+    "description": "HTMLInputElement.webkitdirectory attribute used"
   }
 }

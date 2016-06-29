@@ -91,7 +91,8 @@ public:
   FromRunnable(nsIRunnable* aRunnable);
 
 protected:
-  WorkerRunnable(WorkerPrivate* aWorkerPrivate, TargetAndBusyBehavior aBehavior)
+  WorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                 TargetAndBusyBehavior aBehavior = WorkerThreadModifyBusyCount)
 #ifdef DEBUG
   ;
 #else
@@ -275,7 +276,7 @@ class WorkerControlRunnable : public WorkerRunnable
 
 protected:
   WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
-                        TargetAndBusyBehavior aBehavior)
+                        TargetAndBusyBehavior aBehavior = WorkerThreadModifyBusyCount)
 #ifdef DEBUG
   ;
 #else
@@ -300,7 +301,7 @@ private:
   using WorkerRunnable::Cancel;
 };
 
-// A convenience class for WorkerRunnables that originate on the main
+// A convenience class for WorkerRunnables that are originated on the main
 // thread.
 class MainThreadWorkerRunnable : public WorkerRunnable
 {

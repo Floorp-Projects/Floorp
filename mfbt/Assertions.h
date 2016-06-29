@@ -542,21 +542,35 @@ struct AssertionConditionType
  * using MOZ_ASSERT.
  */
 #ifdef DEBUG
-#  define MOZ_ALWAYS_TRUE(expr)      MOZ_ASSERT((expr))
-#  define MOZ_ALWAYS_FALSE(expr)     MOZ_ASSERT(!(expr))
+#  define MOZ_ALWAYS_TRUE(expr) \
+     do { \
+       if ((expr)) { \
+         /* Do nothing. */ \
+       } else { \
+         MOZ_ASSERT(false, #expr); \
+       } \
+     } while (0)
+#  define MOZ_ALWAYS_FALSE(expr) \
+     do { \
+       if ((expr)) { \
+         MOZ_ASSERT(false, #expr); \
+       } else { \
+         /* Do nothing. */ \
+       } \
+     } while (0)
 #else
 #  define MOZ_ALWAYS_TRUE(expr) \
-  do { \
-    if ( ( expr ) ) { \
-      /* Silence MOZ_MUST_USE. */ \
-    } \
-  } while (0)
+     do { \
+       if ((expr)) { \
+          /* Silence MOZ_MUST_USE. */ \
+       } \
+     } while (0)
 #  define MOZ_ALWAYS_FALSE(expr) \
-  do { \
-    if ( ( expr ) ) { \
-      /* Silence MOZ_MUST_USE. */ \
-    } \
-  } while (0)
+     do { \
+       if ((expr)) { \
+         /* Silence MOZ_MUST_USE. */ \
+       } \
+     } while (0)
 #endif
 
 #undef MOZ_DUMP_ASSERTION_STACK

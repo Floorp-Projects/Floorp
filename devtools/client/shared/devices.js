@@ -6,7 +6,6 @@
 
 const { getJSON } = require("devtools/client/shared/getjson");
 const Services = require("Services");
-const defer = require("devtools/shared/defer");
 
 const DEVICES_URL = "devtools.devices.url";
 const Strings = Services.strings.createBundle("chrome://devtools/locale/device.properties");
@@ -48,10 +47,8 @@ exports.AddDevice = AddDevice;
 
 // Get the complete devices catalog.
 function GetDevices() {
-  let deferred = defer();
-
   // Fetch common devices from Mozilla's CDN.
-  getJSON(DEVICES_URL).then(devices => {
+  return getJSON(DEVICES_URL).then(devices => {
     for (let type in localDevices) {
       if (!devices[type]) {
         devices.TYPES.push(type);
@@ -59,10 +56,8 @@ function GetDevices() {
       }
       devices[type] = localDevices[type].concat(devices[type]);
     }
-    deferred.resolve(devices);
+    return devices;
   });
-
-  return deferred.promise;
 }
 exports.GetDevices = GetDevices;
 

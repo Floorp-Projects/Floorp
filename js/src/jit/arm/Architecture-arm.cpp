@@ -187,7 +187,7 @@ InitARMFlags()
         return;
 
 #ifdef JS_SIMULATOR_ARM
-    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON;
+    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON | HWCAP_IDIVA;
 #else
 
 #if defined(__linux__)
@@ -345,9 +345,13 @@ Registers::FromName(const char* name)
 FloatRegisters::Code
 FloatRegisters::FromName(const char* name)
 {
-    for (size_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(i), name) == 0)
-            return Code(i);
+    for (size_t i = 0; i < TotalSingle; ++i) {
+        if (strcmp(GetSingleName(Encoding(i)), name) == 0)
+            return VFPRegister(i, VFPRegister::Single).code();
+    }
+    for (size_t i = 0; i < TotalDouble; ++i) {
+        if (strcmp(GetDoubleName(Encoding(i)), name) == 0)
+            return VFPRegister(i, VFPRegister::Double).code();
     }
 
     return Invalid;
@@ -357,7 +361,7 @@ FloatRegisterSet
 VFPRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     LiveFloatRegisterSet mod;
-    for (FloatRegisterIterator iter(s); iter.more(); iter++) {
+    for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
         if ((*iter).isSingle()) {
             // Add in just this float.
             mod.addUnchecked(*iter);

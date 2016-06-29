@@ -8,10 +8,42 @@ import os
 import yaml
 
 from .graph import Graph
-from .types import TaskGraph
+from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
 
 logger = logging.getLogger(__name__)
+
+
+class Kind(object):
+
+    def __init__(self, name, path, config):
+        self.name = name
+        self.path = path
+        self.config = config
+
+    def _get_impl_class(self):
+        # load the class defined by implementation
+        try:
+            impl = self.config['implementation']
+        except KeyError:
+            raise KeyError("{!r} does not define implementation".format(self.path))
+        if impl.count(':') != 1:
+            raise TypeError('{!r} implementation does not have the form "module:object"'
+                            .format(self.path))
+
+        impl_module, impl_object = impl.split(':')
+        impl_class = __import__(impl_module)
+        for a in impl_module.split('.')[1:]:
+            impl_class = getattr(impl_class, a)
+        for a in impl_object.split('.'):
+            impl_class = getattr(impl_class, a)
+
+        return impl_class
+
+    def load_tasks(self, parameters, loaded_tasks):
+        impl_class = self._get_impl_class()
+        return impl_class.load_tasks(self.name, self.path, self.config,
+                                     parameters, loaded_tasks)
 
 
 class TaskGraphGenerator(object):
@@ -115,47 +147,42 @@ class TaskGraphGenerator(object):
             path = os.path.join(self.root_dir, path)
             if not os.path.isdir(path):
                 continue
-            name = os.path.basename(path)
-            logger.debug("loading kind `{}` from `{}`".format(name, path))
+            kind_name = os.path.basename(path)
+            logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
 
             kind_yml = os.path.join(path, 'kind.yml')
             with open(kind_yml) as f:
                 config = yaml.load(f)
 
-            # load the class defined by implementation
-            try:
-                impl = config['implementation']
-            except KeyError:
-                raise KeyError("{!r} does not define implementation".format(kind_yml))
-            if impl.count(':') != 1:
-                raise TypeError('{!r} implementation does not have the form "module:object"'
-                                .format(kind_yml))
-
-            impl_module, impl_object = impl.split(':')
-            impl_class = __import__(impl_module)
-            for a in impl_module.split('.')[1:]:
-                impl_class = getattr(impl_class, a)
-            for a in impl_object.split('.'):
-                impl_class = getattr(impl_class, a)
-
-            yield impl_class(path, config)
+            yield Kind(kind_name, path, config)
 
     def _run(self):
+        logger.info("Loading kinds")
+        # put the kinds into a graph and sort topologically so that kinds are loaded
+        # in post-order
+        kinds = {kind.name: kind for kind in self._load_kinds()}
+        edges = set()
+        for kind in kinds.itervalues():
+            for dep in kind.config.get('kind-dependencies', []):
+                edges.add((kind.name, dep, 'kind-dependency'))
+        kind_graph = Graph(set(kinds), edges)
+
         logger.info("Generating full task set")
         all_tasks = {}
-        for kind in self._load_kinds():
-            for task in kind.load_tasks(self.parameters):
+        for kind_name in kind_graph.visit_postorder():
+            logger.debug("Loading tasks for kind {}".format(kind_name))
+            kind = kinds[kind_name]
+            for task in kind.load_tasks(self.parameters, list(all_tasks.values())):
                 if task.label in all_tasks:
                     raise Exception("duplicate tasks with label " + task.label)
                 all_tasks[task.label] = task
-
         full_task_set = TaskGraph(all_tasks, Graph(set(all_tasks), set()))
         yield 'full_task_set', full_task_set
 
         logger.info("Generating full task graph")
         edges = set()
         for t in full_task_set:
-            for dep, depname in t.kind.get_task_dependencies(t, full_task_set):
+            for dep, depname in t.get_dependencies(full_task_set):
                 edges.add((t.label, dep, depname))
 
         full_task_graph = TaskGraph(all_tasks,

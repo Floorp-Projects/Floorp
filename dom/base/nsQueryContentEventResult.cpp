@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsQueryContentEventResult.h"
 #include "nsIWidget.h"
 #include "nsPoint.h"
+#include "nsQueryContentEventResult.h"
+#include "mozilla/Move.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -199,9 +200,30 @@ nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsQueryContentEventResult::GetCharacterRect(int32_t aOffset,
+                                            int32_t* aLeft, int32_t* aTop,
+                                            int32_t* aWidth, int32_t* aHeight)
+{
+  NS_ENSURE_TRUE(mSucceeded, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mEventMessage == eQueryTextRectArray,
+                 NS_ERROR_NOT_AVAILABLE);
+
+  if (NS_WARN_IF(mRectArray.Length() <= static_cast<uint32_t>(aOffset))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aLeft = mRectArray[aOffset].x;
+  *aTop = mRectArray[aOffset].y;
+  *aWidth = mRectArray[aOffset].width;
+  *aHeight = mRectArray[aOffset].height;
+
+  return NS_OK;
+}
+
 void
 nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
-                                          const WidgetQueryContentEvent &aEvent)
+                                          WidgetQueryContentEvent &aEvent)
 {
   mEventMessage = aEvent.mMessage;
   mSucceeded = aEvent.mSucceeded;
@@ -210,6 +232,9 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   mOffset = aEvent.mReply.mOffset;
   mTentativeCaretOffset = aEvent.mReply.mTentativeCaretOffset;
   mString = aEvent.mReply.mString;
+  mRectArray = mozilla::Move(aEvent.mReply.mRectArray);
+  // Mark as result that is longer used.
+  aEvent.mSucceeded = false;
 
   if (!IsRectRelatedPropertyAvailable(mEventMessage) ||
       !aWidget || !mSucceeded) {
@@ -225,4 +250,7 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   LayoutDeviceIntPoint offset =
     aWidget->WidgetToScreenOffset() - topWidget->WidgetToScreenOffset();
   mRect.MoveBy(-offset);
+  for (size_t i = 0; i < mRectArray.Length(); i++) {
+    mRectArray[i].MoveBy(-offset);
+  }
 }

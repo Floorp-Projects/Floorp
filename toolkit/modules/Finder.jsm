@@ -121,6 +121,10 @@ Finder.prototype = {
     this._fastFind.caseSensitive = aSensitive;
   },
 
+  set entireWord(aEntireWord) {
+    this._fastFind.entireWord = aEntireWord;
+  },
+
   get highlighter() {
     if (this._highlighter)
       return this._highlighter;
@@ -468,6 +472,7 @@ Finder.prototype = {
                    .createInstance()
                    .QueryInterface(Ci.nsIFind);
     finder.caseSensitive = this._fastFind.caseSensitive;
+    finder.entireWord = this._fastFind.entireWord;
 
     while ((retRange = finder.Find(aWord, searchRange, startPt, endPt))) {
       yield retRange;

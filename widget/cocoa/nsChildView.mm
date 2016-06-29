@@ -57,7 +57,6 @@
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
 #include "GLContextCGL.h"
-#include "GLUploadHelpers.h"
 #include "ScopedGLHelpers.h"
 #include "HeapCopyOfStackArray.h"
 #include "mozilla/layers/APZCTreeManager.h"
@@ -71,6 +70,7 @@
 #include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
+#include "mozilla/gfx/MacIOSurface.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/Platform.h"
@@ -91,6 +91,7 @@
 #include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
+#include "RectTextureImage.h"
 #include "SwipeTracker.h"
 #include "VibrancyManager.h"
 #include "nsNativeThemeCocoa.h"
@@ -266,69 +267,6 @@ void EnsureLogInitialized()
 }
 
 namespace {
-
-// Manages a texture which can resize dynamically, binds to the
-// LOCAL_GL_TEXTURE_RECTANGLE_ARB texture target and is automatically backed
-// by a power-of-two size GL texture. The latter two features are used for
-// compatibility with older Mac hardware which we block GL layers on.
-// RectTextureImages are used both for accelerated GL layers drawing and for
-// OMTC BasicLayers drawing.
-class RectTextureImage {
-public:
-  explicit RectTextureImage(GLContext* aGLContext)
-   : mGLContext(aGLContext)
-   , mTexture(0)
-   , mInUpdate(false)
-  {}
-
-  virtual ~RectTextureImage();
-
-  already_AddRefed<gfx::DrawTarget>
-    BeginUpdate(const LayoutDeviceIntSize& aNewSize,
-                const LayoutDeviceIntRegion& aDirtyRegion =
-                  LayoutDeviceIntRegion());
-  void EndUpdate(bool aKeepSurface = false);
-
-  void UpdateIfNeeded(const LayoutDeviceIntSize& aNewSize,
-                      const LayoutDeviceIntRegion& aDirtyRegion,
-                      void (^aCallback)(gfx::DrawTarget*,
-                                        const LayoutDeviceIntRegion&))
-  {
-    RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
-    if (drawTarget) {
-      aCallback(drawTarget, GetUpdateRegion());
-      EndUpdate();
-    }
-  }
-
-  void UpdateFromCGContext(const LayoutDeviceIntSize& aNewSize,
-                           const LayoutDeviceIntRegion& aDirtyRegion,
-                           CGContextRef aCGContext);
-
-  LayoutDeviceIntRegion GetUpdateRegion() {
-    MOZ_ASSERT(mInUpdate, "update region only valid during update");
-    return mUpdateRegion;
-  }
-
-  void Draw(mozilla::layers::GLManager* aManager,
-            const LayoutDeviceIntPoint& aLocation,
-            const Matrix4x4& aTransform = Matrix4x4());
-
-  static LayoutDeviceIntSize TextureSizeForSize(
-    const LayoutDeviceIntSize& aSize);
-
-protected:
-
-  RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
-  UniquePtr<unsigned char[]> mUpdateDrawTargetData;
-  GLContext* mGLContext;
-  LayoutDeviceIntRegion mUpdateRegion;
-  LayoutDeviceIntSize mUsedSize;
-  LayoutDeviceIntSize mBufferSize;
-  LayoutDeviceIntSize mTextureSize;
-  GLuint mTexture;
-  bool mInUpdate;
-};
 
 // Used for OpenGL drawing from the compositor thread for OMTC BasicLayers.
 // We need to use OpenGL for this because there seems to be no other robust
@@ -2152,7 +2090,7 @@ nsChildView::MaybeDrawResizeIndicator(GLManager* aManager)
   }
 
   if (!mResizerImage) {
-    mResizerImage = MakeUnique<RectTextureImage>(aManager->gl());
+    mResizerImage = MakeUnique<RectTextureImage>();
   }
 
   LayoutDeviceIntSize size = mResizeIndicatorRect.Size();
@@ -2219,6 +2157,13 @@ CreateCGContext(const LayoutDeviceIntSize& aSize)
   return ctx;
 }
 
+LayoutDeviceIntSize
+TextureSizeForSize(const LayoutDeviceIntSize& aSize)
+{
+  return LayoutDeviceIntSize(gfx::NextPowerOfTwo(aSize.width),
+                             gfx::NextPowerOfTwo(aSize.height));
+}
+
 // When this method is entered, mEffectsLock is already being held.
 void
 nsChildView::UpdateTitlebarCGContext()
@@ -2232,8 +2177,7 @@ nsChildView::UpdateTitlebarCGContext()
   NSRect dirtyRect = [mView convertRect:[(BaseWindow*)[mView window] getAndResetNativeDirtyRect] fromView:nil];
   NSRect dirtyTitlebarRect = NSIntersectionRect(titlebarRect, dirtyRect);
 
-  LayoutDeviceIntSize texSize =
-    RectTextureImage::TextureSizeForSize(mTitlebarRect.Size());
+  LayoutDeviceIntSize texSize = TextureSizeForSize(mTitlebarRect.Size());
   if (!mTitlebarCGContext ||
       CGBitmapContextGetWidth(mTitlebarCGContext) != size_t(texSize.width) ||
       CGBitmapContextGetHeight(mTitlebarCGContext) != size_t(texSize.height)) {
@@ -2366,7 +2310,7 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager)
   mUpdatedTitlebarRegion.SetEmpty();
 
   if (!mTitlebarImage) {
-    mTitlebarImage = MakeUnique<RectTextureImage>(aManager->gl());
+    mTitlebarImage = MakeUnique<RectTextureImage>();
   }
 
   mTitlebarImage->UpdateFromCGContext(mTitlebarRect.Size(),
@@ -2390,7 +2334,7 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager,
   MutexAutoLock lock(mEffectsLock);
 
   if (!mCornerMaskImage) {
-    mCornerMaskImage = MakeUnique<RectTextureImage>(aManager->gl());
+    mCornerMaskImage = MakeUnique<RectTextureImage>();
   }
 
   LayoutDeviceIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
@@ -2717,7 +2661,7 @@ nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
   LayoutDeviceIntSize renderSize = mBounds.Size();
 
   if (!mBasicCompositorImage) {
-    mBasicCompositorImage = MakeUnique<RectTextureImage>(mGLPresenter->gl());
+    mBasicCompositorImage = MakeUnique<RectTextureImage>();
   }
 
   RefPtr<gfx::DrawTarget> drawTarget =
@@ -2738,7 +2682,7 @@ nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
 void
 nsChildView::EndRemoteDrawing()
 {
-  mBasicCompositorImage->EndUpdate(true);
+  mBasicCompositorImage->EndUpdate();
   DoRemoteComposition(mBounds);
 }
 
@@ -3026,160 +2970,6 @@ nsChildView::GetDocumentAccessible()
   return acc.forget();
 }
 #endif
-
-// RectTextureImage implementation
-
-RectTextureImage::~RectTextureImage()
-{
-  if (mTexture) {
-    mGLContext->MakeCurrent();
-    mGLContext->fDeleteTextures(1, &mTexture);
-    mTexture = 0;
-  }
-}
-
-LayoutDeviceIntSize
-RectTextureImage::TextureSizeForSize(const LayoutDeviceIntSize& aSize)
-{
-  return LayoutDeviceIntSize(gfx::NextPowerOfTwo(aSize.width),
-                             gfx::NextPowerOfTwo(aSize.height));
-}
-
-already_AddRefed<gfx::DrawTarget>
-RectTextureImage::BeginUpdate(const LayoutDeviceIntSize& aNewSize,
-                              const LayoutDeviceIntRegion& aDirtyRegion)
-{
-  MOZ_ASSERT(!mInUpdate, "Beginning update during update!");
-  mUpdateRegion = aDirtyRegion;
-  if (aNewSize != mUsedSize) {
-    mUsedSize = aNewSize;
-    mUpdateRegion =
-      LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), aNewSize);
-  }
-
-  if (mUpdateRegion.IsEmpty()) {
-    return nullptr;
-  }
-
-  LayoutDeviceIntSize neededBufferSize = TextureSizeForSize(mUsedSize);
-  if (!mUpdateDrawTarget || mBufferSize != neededBufferSize) {
-    gfx::IntSize size(neededBufferSize.width, neededBufferSize.height);
-    mUpdateDrawTarget = nullptr;
-    mUpdateDrawTargetData = nullptr;
-    gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
-    int32_t stride = size.width * gfx::BytesPerPixel(format);
-    mUpdateDrawTargetData = MakeUnique<unsigned char[]>(stride * size.height);
-    mUpdateDrawTarget =
-      gfx::Factory::CreateDrawTargetForData(gfx::BackendType::SKIA,
-                                            mUpdateDrawTargetData.get(), size,
-                                            stride, format);
-    mBufferSize = neededBufferSize;
-  }
-
-  mInUpdate = true;
-
-  RefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
-  return drawTarget.forget();
-}
-
-#define NSFoundationVersionWithProperStrideSupportForSubtextureUpload NSFoundationVersionNumber10_6_3
-
-static bool
-CanUploadSubtextures()
-{
-  return NSFoundationVersionNumber >= NSFoundationVersionWithProperStrideSupportForSubtextureUpload;
-}
-
-void
-RectTextureImage::EndUpdate(bool aKeepSurface)
-{
-  MOZ_ASSERT(mInUpdate, "Ending update while not in update");
-
-  bool needInit = !mTexture;
-  LayoutDeviceIntRegion updateRegion = mUpdateRegion;
-  if (mTextureSize != mBufferSize) {
-    mTextureSize = mBufferSize;
-    needInit = true;
-  }
-
-  if (needInit || !CanUploadSubtextures()) {
-    updateRegion =
-      LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), mTextureSize);
-  }
-
-  gfx::IntPoint srcPoint = updateRegion.GetBounds().TopLeft().ToUnknownPoint();
-  gfx::SurfaceFormat format = mUpdateDrawTarget->GetFormat();
-  int bpp = gfx::BytesPerPixel(format);
-  int32_t stride = mBufferSize.width * bpp;
-  unsigned char* data = mUpdateDrawTargetData.get();
-  data += srcPoint.y * stride + srcPoint.x * bpp;
-
-  UploadImageDataToTexture(mGLContext, data, stride, format,
-                           updateRegion.ToUnknownRegion(), mTexture, nullptr,
-                           needInit, /* aPixelBuffer = */ false,
-                           LOCAL_GL_TEXTURE0,
-                           LOCAL_GL_TEXTURE_RECTANGLE_ARB);
-
-
-
-  if (!aKeepSurface) {
-    mUpdateDrawTarget = nullptr;
-    mUpdateDrawTargetData = nullptr;
-  }
-
-  mInUpdate = false;
-}
-
-void
-RectTextureImage::UpdateFromCGContext(const LayoutDeviceIntSize& aNewSize,
-                                      const LayoutDeviceIntRegion& aDirtyRegion,
-                                      CGContextRef aCGContext)
-{
-  gfx::IntSize size = gfx::IntSize(CGBitmapContextGetWidth(aCGContext),
-                                   CGBitmapContextGetHeight(aCGContext));
-  mBufferSize.SizeTo(size.width, size.height);
-  RefPtr<gfx::DrawTarget> dt = BeginUpdate(aNewSize, aDirtyRegion);
-  if (dt) {
-    gfx::Rect rect(0, 0, size.width, size.height);
-    gfxUtils::ClipToRegion(dt, GetUpdateRegion().ToUnknownRegion());
-    RefPtr<gfx::SourceSurface> sourceSurface =
-      dt->CreateSourceSurfaceFromData(static_cast<uint8_t *>(CGBitmapContextGetData(aCGContext)),
-                                      size,
-                                      CGBitmapContextGetBytesPerRow(aCGContext),
-                                      gfx::SurfaceFormat::B8G8R8A8);
-    dt->DrawSurface(sourceSurface, rect, rect,
-                    gfx::DrawSurfaceOptions(),
-                    gfx::DrawOptions(1.0, gfx::CompositionOp::OP_SOURCE));
-    dt->PopClip();
-    EndUpdate();
-  }
-}
-
-void
-RectTextureImage::Draw(GLManager* aManager,
-                       const LayoutDeviceIntPoint& aLocation,
-                       const Matrix4x4& aTransform)
-{
-  ShaderProgramOGL* program = aManager->GetProgram(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                                                   gfx::SurfaceFormat::R8G8B8A8);
-
-  aManager->gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
-
-  aManager->ActivateProgram(program);
-  program->SetProjectionMatrix(aManager->GetProjMatrix());
-  program->SetLayerTransform(Matrix4x4(aTransform).PostTranslate(aLocation.x, aLocation.y, 0));
-  program->SetTextureTransform(gfx::Matrix4x4());
-  program->SetRenderOffset(nsIntPoint(0, 0));
-  program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
-  program->SetTextureUnit(0);
-
-  aManager->BindAndDrawQuad(program,
-                            gfx::Rect(0.0, 0.0, mUsedSize.width, mUsedSize.height),
-                            gfx::Rect(0.0, 0.0, 1.0f, 1.0f));
-
-  aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
-}
 
 // GLPresenter implementation
 
