@@ -17,6 +17,7 @@
 #include "nsIRunnable.h"
 #include "nsIAsyncShutdown.h"
 #include "Latency.h"
+#include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "GraphDriver.h"

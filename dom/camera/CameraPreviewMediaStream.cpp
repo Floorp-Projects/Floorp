@@ -28,8 +28,8 @@ FakeMediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(already_AddRefe
   NS_DispatchToMainThread(task);
 }
 
-CameraPreviewMediaStream::CameraPreviewMediaStream(DOMMediaStream* aWrapper)
-  : ProcessedMediaStream(aWrapper)
+CameraPreviewMediaStream::CameraPreviewMediaStream()
+  : ProcessedMediaStream()
   , mMutex("mozilla::camera::CameraPreviewMediaStream")
   , mInvalidatePending(0)
   , mDiscardedFrames(0)

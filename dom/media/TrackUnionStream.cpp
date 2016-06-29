@@ -45,8 +45,8 @@ namespace mozilla {
 LazyLogModule gTrackUnionStreamLog("TrackUnionStream");
 #define STREAM_LOG(type, msg) MOZ_LOG(gTrackUnionStreamLog, type, msg)
 
-TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
-  ProcessedMediaStream(aWrapper), mNextAvailableTrackID(1)
+TrackUnionStream::TrackUnionStream() :
+  ProcessedMediaStream(), mNextAvailableTrackID(1)
 {
 }
 

@@ -17,7 +17,7 @@ namespace mozilla {
  */
 class TrackUnionStream : public ProcessedMediaStream {
 public:
-  explicit TrackUnionStream(DOMMediaStream* aWrapper);
+  explicit TrackUnionStream();
 
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;

@@ -40,7 +40,7 @@ class CameraPreviewMediaStream : public ProcessedMediaStream
   typedef mozilla::layers::Image Image;
 
 public:
-  explicit CameraPreviewMediaStream(DOMMediaStream* aWrapper);
+  CameraPreviewMediaStream();
 
   virtual void AddAudioOutput(void* aKey) override;
   virtual void SetAudioOutputVolume(void* aKey, float aVolume) override;

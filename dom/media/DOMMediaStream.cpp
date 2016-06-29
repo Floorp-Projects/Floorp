@@ -416,6 +416,8 @@ DOMMediaStream::Destroy()
     mInputStream->UnregisterUser();
     mInputStream = nullptr;
   }
+  mRunOnTracksAvailable.Clear();
+  mTrackListeners.Clear();
 }
 
 JSObject*
@@ -781,7 +783,7 @@ DOMMediaStream::IsFinished()
 void
 DOMMediaStream::InitSourceStream(MediaStreamGraph* aGraph)
 {
-  InitInputStreamCommon(aGraph->CreateSourceStream(nullptr), aGraph);
+  InitInputStreamCommon(aGraph->CreateSourceStream(), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
 }
@@ -789,7 +791,7 @@ DOMMediaStream::InitSourceStream(MediaStreamGraph* aGraph)
 void
 DOMMediaStream::InitTrackUnionStream(MediaStreamGraph* aGraph)
 {
-  InitInputStreamCommon(aGraph->CreateTrackUnionStream(nullptr), aGraph);
+  InitInputStreamCommon(aGraph->CreateTrackUnionStream(), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
 }
@@ -803,7 +805,7 @@ DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGrap
     new BasicUnstoppableTrackSource(aPrincipal, MediaSourceEnum::AudioCapture);
 
   AudioCaptureStream* audioCaptureStream =
-    static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK));
+    static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(AUDIO_TRACK));
   InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
@@ -826,9 +828,7 @@ DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(!mPlaybackStream, "Owned stream must be initialized before playback stream");
 
-  // We pass null as the wrapper since it is only used to signal finished
-  // streams. This is only needed for the playback stream.
-  mOwnedStream = aGraph->CreateTrackUnionStream(nullptr);
+  mOwnedStream = aGraph->CreateTrackUnionStream();
   mOwnedStream->SetAutofinish(true);
   mOwnedStream->RegisterUser();
   if (mInputStream) {
@@ -843,7 +843,7 @@ DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph)
 void
 DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph)
 {
-  mPlaybackStream = aGraph->CreateTrackUnionStream(this);
+  mPlaybackStream = aGraph->CreateTrackUnionStream();
   mPlaybackStream->SetAutofinish(true);
   mPlaybackStream->RegisterUser();
   if (mOwnedStream) {
@@ -1128,24 +1128,6 @@ DOMMediaStream::TrackPort*
 DOMMediaStream::FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const
 {
   return FindTrackPortAmongTracks(aTrack, mTracks);
-}
-
-void
-DOMMediaStream::NotifyMediaStreamGraphShutdown()
-{
-  // No more tracks will ever be added, so just clear these callbacks now
-  // to prevent leaks.
-  mNotifiedOfMediaStreamGraphShutdown = true;
-  mRunOnTracksAvailable.Clear();
-  mTrackListeners.Clear();
-  mConsumersToKeepAlive.Clear();
-}
-
-void
-DOMMediaStream::NotifyStreamFinished()
-{
-  MOZ_ASSERT(IsFinished());
-  mConsumersToKeepAlive.Clear();
 }
 
 void
