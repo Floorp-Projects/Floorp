@@ -472,9 +472,18 @@ class AutoTry(object):
                 subprocess.check_call(hg_args, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 print('ERROR hg command %s returned %s' % (hg_args, e.returncode))
-                print('The "push-to-try" hg extension is required to push from '
-                      'hg to try with the autotry command.\n\nIt can be installed '
-                      'to Mercurial 3.3 or above by running ./mach mercurial-setup')
+                print('\nmach failed to push to try. There may be a problem '
+                      'with your ssh key, or another issue with your mercurial '
+                      'installation.')
+                # Check for the presence of the "push-to-try" extension, and
+                # provide instructions if it can't be found.
+                try:
+                    subprocess.check_output(['hg', 'showconfig',
+                                             'extensions.push-to-try'])
+                except subprocess.CalledProcessError:
+                    print('\nThe "push-to-try" hg extension is required. It '
+                          'can be installed to Mercurial 3.3 or above by '
+                          'running ./mach mercurial-setup')
                 sys.exit(1)
         else:
             try:
