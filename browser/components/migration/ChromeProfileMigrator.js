@@ -24,6 +24,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
@@ -134,6 +136,27 @@ ChromeProfileMigrator.prototype.getResources =
       }
     }
     return [];
+  };
+
+ChromeProfileMigrator.prototype.getLastUsedDate =
+  function Chrome_getLastUsedDate() {
+    let datePromises = this.sourceProfiles.map(profile => {
+      let profileFolder = this._chromeUserDataFolder.clone();
+      let basePath = OS.Path.join(this._chromeUserDataFolder.path, profile.id);
+      let fileDatePromises = ["Bookmarks", "History", "Cookies"].map(leafName => {
+        let path = OS.Path.join(basePath, leafName);
+        return OS.File.stat(path).catch(_ => null).then(info => {
+          return info ? info.lastModificationDate : 0;
+        });
+      });
+      return Promise.all(fileDatePromises).then(dates => {
+        return Math.max.apply(Math, dates);
+      });
+    });
+    return Promise.all(datePromises).then(dates => {
+      dates.push(0);
+      return new Date(Math.max.apply(Math, dates));
+    });
   };
 
 Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {

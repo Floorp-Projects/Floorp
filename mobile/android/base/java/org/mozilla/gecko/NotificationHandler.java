@@ -49,9 +49,10 @@ public class NotificationHandler {
      * @param aAlertTitle    title of the notification
      * @param aAlertText     text of the notification
      * @param contentIntent  Intent used when the notification is clicked
+     * @param deleteIntent   Intent used when the notification is closed
      */
     public void add(final int notificationID, String aImageUrl, String aHost, String aAlertTitle,
-                    String aAlertText, PendingIntent contentIntent) {
+                    String aAlertText, PendingIntent contentIntent, PendingIntent deleteIntent) {
         // Remove the old notification with the same ID, if any
         remove(notificationID);
 
@@ -60,6 +61,7 @@ public class NotificationHandler {
                 .setContentText(aAlertText)
                 .setSmallIcon(R.drawable.ic_status_logo)
                 .setContentIntent(contentIntent)
+                .setDeleteIntent(deleteIntent)
                 .setAutoCancel(true)
                 .setStyle(new NotificationCompat.InboxStyle()
                           .addLine(aAlertText)

@@ -83,10 +83,10 @@ var MigrationWizard = {
     this._wiz.canRewind = false;
 
     var selectedMigrator = null;
+    this._availableMigrators = [];
 
     // Figure out what source apps are are available to import from:
     var group = document.getElementById("importSourceGroup");
-    var availableMigratorCount = 0;
     for (var i = 0; i < group.childNodes.length; ++i) {
       var migratorKey = group.childNodes[i].id;
       if (migratorKey != "nothing") {
@@ -96,7 +96,7 @@ var MigrationWizard = {
           // one, or if it is the migrator that was passed to us.
           if (!selectedMigrator || this._source == migratorKey)
             selectedMigrator = group.childNodes[i];
-          availableMigratorCount++;
+          this._availableMigrators.push([migratorKey, migrator]);
         } else {
           // Hide this option
           group.childNodes[i].hidden = true;
@@ -105,7 +105,7 @@ var MigrationWizard = {
     }
     if (this.isInitialMigration) {
       Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_BROWSER_COUNT")
-        .add(availableMigratorCount);
+        .add(this._availableMigrators.length);
       let defaultBrowser = MigrationUtils.getMigratorKeyForDefaultBrowser();
       // This will record 0 for unknown default browser IDs.
       defaultBrowser = MigrationUtils.getSourceIdForTelemetry(defaultBrowser);
@@ -448,6 +448,9 @@ var MigrationWizard = {
         label.removeAttribute("style");
       break;
     case "Migration:Ended":
+      if (this.isInitialMigration) {
+        this.reportDataRecencyTelemetry();
+      }
       if (this._autoMigrate) {
         Services.telemetry.getKeyedHistogramById("FX_MIGRATION_HOMEPAGE_IMPORTED")
                           .add(this._source, !!this._newHomePage);
@@ -532,5 +535,31 @@ var MigrationWizard = {
     this._wiz.getButton("cancel").disabled = true;
     this._wiz.canRewind = false;
     this._listItems("doneItems");
-  }
+  },
+
+  reportDataRecencyTelemetry() {
+    let histogram = Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_DATA_RECENCY");
+    let lastUsedPromises = [];
+    for (let [key, migrator] of this._availableMigrators) {
+      // No block-scoped let in for...of loop conditions, so get the source:
+      let localKey = key;
+      lastUsedPromises.push(migrator.getLastUsedDate().then(date => {
+        const ONE_YEAR = 24 * 365;
+        let diffInHours = Math.round((Date.now() - date) / (60 * 60 * 1000));
+        if (diffInHours > ONE_YEAR) {
+          diffInHours = ONE_YEAR;
+        }
+        histogram.add(localKey, diffInHours);
+        return [localKey, diffInHours];
+      }));
+    }
+    Promise.all(lastUsedPromises).then(migratorUsedTimeDiff => {
+      // Sort low to high.
+      migratorUsedTimeDiff.sort(([keyA, diffA], [keyB, diffB]) => diffA - diffB);
+      let usedMostRecentBrowser = migratorUsedTimeDiff.length && this._source == migratorUsedTimeDiff[0][0];
+      let usedRecentBrowser =
+        Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_USED_RECENT_BROWSER");
+      usedRecentBrowser.add(this._source, usedMostRecentBrowser);
+    });
+  },
 };
