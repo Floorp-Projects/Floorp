@@ -4558,14 +4558,14 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
     if (set.gprs().size() > 1) {
         adjustFrame(diffG);
         startDataTransferM(IsStore, StackPointer, DB, WriteBack);
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             transferReg(*iter);
         }
         finishDataTransfer();
     } else {
         reserveStack(diffG);
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             storePtr(*iter, Address(StackPointer, diffG));
         }
@@ -4593,7 +4593,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     } else {
         LiveFloatRegisterSet fpset(set.fpus().reduceSetForPush());
         LiveFloatRegisterSet fpignore(ignore.fpus().reduceSetForPush());
-        for (FloatRegisterBackwardIterator iter(fpset); iter.more(); iter++) {
+        for (FloatRegisterBackwardIterator iter(fpset); iter.more(); ++iter) {
             diffF -= (*iter).size();
             if (!fpignore.has(*iter))
                 loadDouble(Address(StackPointer, diffF), *iter);
@@ -4604,14 +4604,14 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 
     if (set.gprs().size() > 1 && ignore.emptyGeneral()) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             transferReg(*iter);
         }
         finishDataTransfer();
         adjustFrame(-reservedG);
     } else {
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);

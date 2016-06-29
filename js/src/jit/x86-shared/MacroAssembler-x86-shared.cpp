@@ -489,14 +489,14 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 
     // On x86, always use push to push the integer registers, as it's fast
     // on modern hardware and it's a small instruction.
-    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
         diffG -= sizeof(intptr_t);
         Push(*iter);
     }
     MOZ_ASSERT(diffG == 0);
 
     reserveStack(diffF);
-    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); ++iter) {
         FloatRegister reg = *iter;
         diffF -= reg.size();
         numFpu -= 1;
@@ -527,7 +527,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
-    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); ++iter) {
         FloatRegister reg = *iter;
         diffF -= reg.size();
         numFpu -= 1;
@@ -555,12 +555,12 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     // ignore any slots, as it's fast on modern hardware and it's a small
     // instruction.
     if (ignore.emptyGeneral()) {
-        for (GeneralRegisterForwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterForwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             Pop(*iter);
         }
     } else {
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);

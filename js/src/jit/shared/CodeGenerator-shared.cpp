@@ -1137,7 +1137,7 @@ HandleRegisterDump(Op op, MacroAssembler& masm, LiveRegisterSet liveRegs, Regist
     const size_t baseOffset = JitActivation::offsetOfRegs();
 
     // Handle live GPRs.
-    for (GeneralRegisterIterator iter(liveRegs.gprs()); iter.more(); iter++) {
+    for (GeneralRegisterIterator iter(liveRegs.gprs()); iter.more(); ++iter) {
         Register reg = *iter;
         Address dump(activation, baseOffset + RegisterDump::offsetOfRegister(reg));
 
@@ -1154,7 +1154,7 @@ HandleRegisterDump(Op op, MacroAssembler& masm, LiveRegisterSet liveRegs, Regist
     }
 
     // Handle live FPRs.
-    for (FloatRegisterIterator iter(liveRegs.fpus()); iter.more(); iter++) {
+    for (FloatRegisterIterator iter(liveRegs.fpus()); iter.more(); ++iter) {
         FloatRegister reg = *iter;
         Address dump(activation, baseOffset + RegisterDump::offsetOfRegister(reg));
         op(reg, dump);
