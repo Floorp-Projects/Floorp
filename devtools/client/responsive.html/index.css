@@ -187,6 +187,7 @@ html, body {
   text-align: center;
   text-overflow: ellipsis;
   width: 150px;
+  font-size: 11px;
 }
 
 .viewport-device-selector.selected {
@@ -382,13 +383,17 @@ html, body {
 }
 
 .device-header {
+  font-size: 11px;
   font-weight: bold;
   text-transform: capitalize;
   padding: 0 0 3px 23px;
 }
 
 .device-label {
+  font-size: 11px;
   padding-bottom: 3px;
+  display: flex;
+  align-items: center;
 }
 
 .device-input-checkbox {

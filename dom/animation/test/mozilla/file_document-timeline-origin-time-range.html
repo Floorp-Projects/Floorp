@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+// If the originTime parameter passed to the DocumentTimeline exceeds
+// the range of the internal storage type (a signed 64-bit integer number
+// of ticks--a platform-dependent unit) then we should throw.
+// Infinity isn't allowed as an origin time value and clamping to just
+// inside the allowed range will just mean we overflow elsewhere.
+
+test(function(t) {
+  assert_throws({name: 'TypeError'},
+    function() { new DocumentTimeline(Number.MAX_SAFE_INTEGER); });
+}, 'Calculated current time is positive infinity');
+
+test(function(t) {
+  assert_throws({name: 'TypeError'},
+    function() { new DocumentTimeline(-1 * Number.MAX_SAFE_INTEGER); });
+}, 'Calculated current time is negative infinity');
+
+done();
+</script>
+</body>

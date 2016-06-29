@@ -153,8 +153,8 @@ exports.items = [
         root.style.cursor = "pointer";
         root.addEventListener("click", () => {
           if (imageSummary.href) {
-            const gBrowser = context.environment.chromeWindow.gBrowser;
-            gBrowser.selectedTab = gBrowser.addTab(imageSummary.href);
+            let mainWindow = context.environment.chromeWindow;
+            mainWindow.openUILinkIn(imageSummary.href, "tab");
           } else if (imageSummary.filename) {
             const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
             file.initWithPath(imageSummary.filename);
@@ -276,12 +276,15 @@ function createScreenshotData(document, args) {
   const currentX = window.scrollX;
   const currentY = window.scrollY;
 
+  let filename = getFilename(args.filename);
+
   if (args.fullpage) {
     // Bug 961832: GCLI screenshot shows fixed position element in wrong
     // position if we don't scroll to top
     window.scrollTo(0,0);
     width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
     height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
+    filename = filename.replace(".png", "-fullpage.png");
   }
   else if (args.selector) {
     ({ top, left, width, height } = getRect(window, args.selector, window));
@@ -323,7 +326,7 @@ function createScreenshotData(document, args) {
     data: data,
     height: height,
     width: width,
-    filename: getFilename(args.filename),
+    filename: filename,
   });
 }
 

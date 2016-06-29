@@ -114,5 +114,3 @@ tasks:
       extra:
         treeherder:
           symbol: D
-          revision: '{{revision}}'
-          revision_hash: '{{revision_hash}}'

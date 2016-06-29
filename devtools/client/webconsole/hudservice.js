@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft= javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -65,12 +63,12 @@ HUD_SERVICE.prototype =
   lastFinishedRequest: null,
 
   /**
-   * Firefox-specific current tab getter
+   * Get the current context, which is the main application window.
    *
    * @returns nsIDOMWindow
    */
   currentContext: function HS_currentContext() {
-    return Services.wm.getMostRecentWindow("navigator:browser");
+    return Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   },
 
   /**
@@ -295,7 +293,7 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
   this.browserWindow = this.chromeWindow.top;
 
   let element = this.browserWindow.document.documentElement;
-  if (element.getAttribute("windowtype") != "navigator:browser") {
+  if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
     this.browserWindow = HUDService.currentContext();
   }
 
@@ -438,7 +436,7 @@ WebConsole.prototype = {
   viewSource: function WC_viewSource(aSourceURL, aSourceLine) {
     // Attempt to access view source via a browser first, which may display it in
     // a tab, if enabled.
-    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (browserWin && browserWin.BrowserViewSourceOfDocument) {
       return browserWin.BrowserViewSourceOfDocument({
         URL: aSourceURL,

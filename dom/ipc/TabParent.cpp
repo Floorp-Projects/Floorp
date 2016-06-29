@@ -1888,9 +1888,6 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
   nsIMEUpdatePreference updatePreference = widget->GetIMEUpdatePreference();
   NS_ASSERTION(updatePreference.WantTextChange(),
                "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
-  MOZ_ASSERT(!aIMENotification.mTextChangeData.mCausedOnlyByComposition ||
-               updatePreference.WantChangesCausedByComposition(),
-    "The widget doesn't want text change notification caused by composition");
 #endif
 
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);

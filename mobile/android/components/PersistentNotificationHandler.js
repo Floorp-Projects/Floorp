@@ -31,24 +31,45 @@ PersistentNotificationHandler.prototype = {
     }
     const persistentInfo = JSON.parse(data);
 
-    notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
-      handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
-        serviceWorkerManager.sendNotificationClickEvent(
-          persistentInfo.originSuffix,
-          serviceWorkerRegistrationScope,
-          id,
-          title,
-          dir,
-          lang,
-          body,
-          tag,
-          icon,
-          data,
-          behavior
-        );
-        notificationStorage.delete(persistentInfo.origin, persistentInfo.id);
-      }
-    });
+    if (topic === 'persistent-notification-click') {
+      notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
+        handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
+          serviceWorkerManager.sendNotificationClickEvent(
+            persistentInfo.originSuffix,
+            serviceWorkerRegistrationScope,
+            id,
+            title,
+            dir,
+            lang,
+            body,
+            tag,
+            icon,
+            data,
+            behavior
+          );
+          notificationStorage.delete(persistentInfo.origin, persistentInfo.id);
+        }
+      });
+    } else if (topic === 'persistent-notification-close') {
+      notificationStorage.getByID(persistentInfo.origin, persistentInfo.id, {
+        handle(id, title, dir, lang, body, tag, icon, data, behavior, serviceWorkerRegistrationScope) {
+          serviceWorkerManager.sendNotificationCloseEvent(
+            persistentInfo.originSuffix,
+            serviceWorkerRegistrationScope,
+            id,
+            title,
+            dir,
+            lang,
+            body,
+            tag,
+            icon,
+            data,
+            behavior
+          );
+          notificationStorage.delete(persistentInfo.origin, persistentInfo.id);
+        }
+      });
+    }
   }
 };
 

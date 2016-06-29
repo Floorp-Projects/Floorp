@@ -8,17 +8,12 @@
 interface nsIDOMRange;
 interface nsIWordBreaker;
 
-[scriptable, uuid(75125d55-37ee-4575-b9b5-f33bfa68c2a1)]
+[scriptable, uuid(40aba110-2a56-4678-be90-e2c17a9ae7d7)]
 interface nsIFind : nsISupports
 {
   attribute boolean findBackwards;
   attribute boolean caseSensitive;
-
-  /**
-   * Use "find entire words" mode by setting to a word breaker
-   * or null, to disable "entire words" mode.
-   */
-  [noscript] attribute nsIWordBreaker wordBreaker;
+  attribute boolean entireWord;
 
   /**
    * Find some text in the current context. The implementation is
