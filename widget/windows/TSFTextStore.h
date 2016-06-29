@@ -886,7 +886,7 @@ protected:
   bool                         mPendingDestroy;
   // If this is false, MaybeFlushPendingNotifications() will clear the
   // mContentForTSF.
-  bool                         mDeferClearingLockedContent;
+  bool                         mDeferClearingContentForTSF;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
   // While the instance is dispatching events, the event may not be handled
