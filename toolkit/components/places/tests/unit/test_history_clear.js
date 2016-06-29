@@ -131,8 +131,7 @@ add_task(function* test_history_clear()
 
   // Check that all moz_places entries except bookmarks and place: have been removed
   stmt = mDBConn.createStatement(
-    `SELECT h.id FROM moz_places h WHERE
-       url_hash NOT BETWEEN hash('place', 'prefix_lo') AND hash('place', 'prefix_hi')
+    `SELECT h.id FROM moz_places h WHERE SUBSTR(h.url, 1, 6) <> 'place:'
        AND NOT EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
@@ -161,9 +160,7 @@ add_task(function* test_history_clear()
   // Check that place:uris have frecency 0
   stmt = mDBConn.createStatement(
     `SELECT h.id FROM moz_places h
-     WHERE url_hash BETWEEN hash('place', 'prefix_lo')
-                        AND hash('place', 'prefix_hi')
-       AND h.frecency <> 0 LIMIT 1`);
+     WHERE SUBSTR(h.url, 1, 6) = 'place:' AND h.frecency <> 0 LIMIT 1`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 });
