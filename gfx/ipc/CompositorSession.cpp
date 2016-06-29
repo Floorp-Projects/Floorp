@@ -17,7 +17,7 @@ class InProcessCompositorSession final : public CompositorSession
 {
 public:
   InProcessCompositorSession(
-    widget::CompositorWidget* aWidget,
+    nsIWidget* aWidget,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
@@ -35,7 +35,7 @@ private:
 };
 
 already_AddRefed<CompositorSession>
-CompositorSession::CreateInProcess(widget::CompositorWidget* aWidget,
+CompositorSession::CreateInProcess(nsIWidget* aWidget,
                                    ClientLayerManager* aLayerManager,
                                    CSSToLayoutDeviceScale aScale,
                                    bool aUseAPZ,
@@ -66,15 +66,16 @@ CompositorSession::GetCompositorBridgeChild()
   return mCompositorBridgeChild;
 }
 
-InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidget* aWidget,
+InProcessCompositorSession::InProcessCompositorSession(nsIWidget* aWidget,
                                                        ClientLayerManager* aLayerManager,
                                                        CSSToLayoutDeviceScale aScale,
                                                        bool aUseAPZ,
                                                        bool aUseExternalSurfaceSize,
                                                        const gfx::IntSize& aSurfaceSize)
 {
+  mCompositorWidget = aWidget->NewCompositorWidget();
   mCompositorBridgeParent = new CompositorBridgeParent(
-    aWidget,
+    mCompositorWidget,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
@@ -118,6 +119,7 @@ InProcessCompositorSession::Shutdown()
   mCompositorBridgeChild->Destroy();
   mCompositorBridgeChild = nullptr;
   mCompositorBridgeParent = nullptr;
+  mCompositorWidget = nullptr;
 }
 
 } // namespace layers
