@@ -184,6 +184,19 @@ class DeviceManagerADB(DeviceManager):
         if not self._checkCmd(['forward', local, remote], timeout=self.short_timeout) == 0:
             raise DMError("Failed to forward socket connection.")
 
+    def remove_forward(self, local=None):
+        """
+        Turn off forwarding of socket connection.
+        """
+        cmd = ['forward']
+        if local is None:
+            cmd.extend(['--remove-all'])
+        else:
+            cmd.extend(['--remove', local])
+        if not self._checkCmd(cmd, timeout=self.short_timeout) == 0:
+            raise DMError("Failed to remove connection forwarding.")
+
+
     def remount(self):
         "Remounts the /system partition on the device read-write."
         return self._checkCmd(['remount'], timeout=self.short_timeout)
