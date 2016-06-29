@@ -33,6 +33,7 @@ public:
 
 private:
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
+  RefPtr<CompositorWidget> mCompositorWidget;
 };
 
 already_AddRefed<CompositorSession>
@@ -54,6 +55,7 @@ CompositorSession::CreateInProcess(nsIWidget* aWidget,
 }
 
 CompositorSession::CompositorSession()
+ : mCompositorWidgetDelegate(nullptr)
 {
 }
 
@@ -77,6 +79,7 @@ InProcessCompositorSession::InProcessCompositorSession(nsIWidget* aWidget,
   CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
   mCompositorWidget = CompositorWidget::CreateLocal(initData, aWidget);
+  mCompositorWidgetDelegate = mCompositorWidget->AsDelegate();
 
   mCompositorBridgeParent = new CompositorBridgeParent(
     mCompositorWidget,
