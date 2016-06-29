@@ -21,7 +21,10 @@ namespace widget {
 class WinCompositorWidgetProxy : public CompositorWidgetProxy
 {
 public:
-  WinCompositorWidgetProxy(nsWindow* aWindow);
+  WinCompositorWidgetProxy(HWND aWnd,
+                           uintptr_t aWidgetKey,
+                           nsTransparencyMode aMode,
+                           nsWindow* aWindow = nullptr);
 
   bool PreRender(layers::LayerManagerComposite*) override;
   void PostRender(layers::LayerManagerComposite*) override;

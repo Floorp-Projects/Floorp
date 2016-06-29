@@ -13,17 +13,18 @@ namespace widget {
 
 using namespace mozilla::gfx;
 
-WinCompositorWidgetProxy::WinCompositorWidgetProxy(nsWindow* aWindow)
+WinCompositorWidgetProxy::WinCompositorWidgetProxy(HWND aWnd,
+                                                   uintptr_t aWidgetKey,
+                                                   nsTransparencyMode aMode,
+                                                   nsWindow* aWindow)
  : mWindow(aWindow),
-   mWidgetKey(reinterpret_cast<uintptr_t>(aWindow)),
-   mWnd(reinterpret_cast<HWND>(aWindow->GetNativeData(NS_NATIVE_WINDOW))),
-   mTransparencyMode(aWindow->GetTransparencyMode()),
+   mWidgetKey(aWidgetKey),
+   mWnd(aWnd),
+   mTransparencyMode(aMode),
    mMemoryDC(nullptr),
    mCompositeDC(nullptr),
    mLockedBackBufferData(nullptr)
 {
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(!aWindow->Destroyed());
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
 }
 
@@ -54,6 +55,7 @@ WinCompositorWidgetProxy::PostRender(layers::LayerManagerComposite* aManager)
 nsIWidget*
 WinCompositorWidgetProxy::RealWidget()
 {
+  MOZ_ASSERT(mWindow);
   return mWindow;
 }
 
