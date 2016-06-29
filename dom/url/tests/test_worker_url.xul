@@ -11,17 +11,16 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript" src="dom_worker_helper.js"/>
 
   <script type="application/javascript">
   <![CDATA[
 
     function test()
     {
-      waitForWorkerFinish();
+      SimpleTest.waitForExplicitFinish();
 
-      Components.utils.import("chrome://mochitests/content/chrome/dom/workers/test/test_bug883784.jsm");
-      Test.start(ok, is, finish);
+      Components.utils.import("chrome://mochitests/content/chrome/dom/url/tests/file_worker_url.jsm");
+      checkFromJSM(ok, is, SimpleTest.finish);
     }
 
   ]]>
