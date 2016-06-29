@@ -1673,6 +1673,28 @@ auto StackScroller::ForceFinished(bool a0) const -> nsresult
     return rv;
 }
 
+constexpr char StackScroller::GetCurrSpeedX_t::name[];
+constexpr char StackScroller::GetCurrSpeedX_t::signature[];
+
+auto StackScroller::GetCurrSpeedX(float* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrSpeedX_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrSpeedY_t::name[];
+constexpr char StackScroller::GetCurrSpeedY_t::signature[];
+
+auto StackScroller::GetCurrSpeedY(float* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrSpeedY_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
 constexpr char StackScroller::GetCurrX_t::name[];
 constexpr char StackScroller::GetCurrX_t::signature[];
 
