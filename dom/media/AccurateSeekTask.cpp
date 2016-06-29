@@ -45,8 +45,6 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
   , mCurrentTimeBeforeSeek(media::TimeUnit::FromMicroseconds(aCurrentMediaTime))
   , mAudioRate(aInfo.mAudio.mRate)
-  , mDropAudioUntilNextDiscontinuity(aInfo.HasAudio())
-  , mDropVideoUntilNextDiscontinuity(aInfo.HasVideo())
   , mDoneAudioSeeking(!aInfo.HasAudio() || aSeekJob.mTarget.IsVideoOnly())
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
@@ -365,28 +363,22 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
     audio->mTime, audio->GetEndTime(), audio->mDiscontinuity);
 
-  if (audio->mDiscontinuity) {
-    mDropAudioUntilNextDiscontinuity = false;
+  if (mFirstAudioSample) {
+    mFirstAudioSample = false;
+    MOZ_ASSERT(audio->mDiscontinuity);
   }
 
-  if (!mDropAudioUntilNextDiscontinuity) {
-    // We must be after the discontinuity; we're receiving samples
-    // at or after the seek target.
-    AdjustFastSeekIfNeeded(audio);
+  AdjustFastSeekIfNeeded(audio);
 
-    if (mSeekJob.mTarget.IsFast()) {
-      // Non-precise seek; we can stop the seek at the first sample.
-      mSeekedAudioData = audio;
-      mDoneAudioSeeking = true;
-    } else {
-      // We're doing an accurate seek. We must discard
-      // MediaData up to the one containing exact seek target.
-      if (NS_FAILED(DropAudioUpToSeekTarget(audio.get()))) {
-        RejectIfExist(__func__);
-        return;
-      }
-    }
+  if (mSeekJob.mTarget.IsFast()) {
+    // Non-precise seek; we can stop the seek at the first sample.
+    mSeekedAudioData = audio;
+    mDoneAudioSeeking = true;
+  } else if (NS_FAILED(DropAudioUpToSeekTarget(audio))) {
+    RejectIfExist(__func__);
+    return;
   }
+
   CheckIfSeekComplete();
 }
 
@@ -453,30 +445,22 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
     video->mTime, video->GetEndTime(), video->mDiscontinuity);
 
-  if (mDropVideoUntilNextDiscontinuity) {
-    if (video->mDiscontinuity) {
-      mDropVideoUntilNextDiscontinuity = false;
-    }
+  if (mFirstVideoSample) {
+    mFirstVideoSample = false;
+    MOZ_ASSERT(video->mDiscontinuity);
   }
 
-  if (!mDropVideoUntilNextDiscontinuity) {
-    // We must be after the discontinuity; we're receiving samples
-    // at or after the seek target.
-    AdjustFastSeekIfNeeded(video);
+  AdjustFastSeekIfNeeded(video);
 
-    if (mSeekJob.mTarget.IsFast()) {
-      // Non-precise seek. We can stop the seek at the first sample.
-      mSeekedVideoData = video;
-      mDoneVideoSeeking = true;
-    } else {
-      // We're doing an accurate seek. We still need to discard
-      // MediaData up to the one containing exact seek target.
-      if (NS_FAILED(DropVideoUpToSeekTarget(video.get()))) {
-        RejectIfExist(__func__);
-        return;
-      }
-    }
+  if (mSeekJob.mTarget.IsFast()) {
+    // Non-precise seek. We can stop the seek at the first sample.
+    mSeekedVideoData = video;
+    mDoneVideoSeeking = true;
+  } else if (NS_FAILED(DropVideoUpToSeekTarget(video.get()))) {
+    RejectIfExist(__func__);
+    return;
   }
+
   CheckIfSeekComplete();
 }
 
