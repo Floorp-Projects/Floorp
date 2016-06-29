@@ -2324,14 +2324,14 @@ TSFTextStore::RestartComposition(ITfCompositionView* aCompositionView,
   commitString.Cut(keepComposingStartOffset - mComposition.mStart,
                    keepComposingLength);
   // Update the composition string.
-  Content& lockedContent = ContentForTSFRef();
-  if (!lockedContent.IsInitialized()) {
+  Content& contentForTSF = ContentForTSFRef();
+  if (!contentForTSF.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::RestartComposition() FAILED "
             "due to ContentForTSFRef() failure", this));
     return E_FAIL;
   }
-  lockedContent.ReplaceTextWith(mComposition.mStart,
+  contentForTSF.ReplaceTextWith(mComposition.mStart,
                                 mComposition.mString.Length(),
                                 commitString);
   // Record a compositionupdate action for commit the part of composing string.
@@ -2353,7 +2353,7 @@ TSFTextStore::RestartComposition(ITfCompositionView* aCompositionView,
   RecordCompositionStartAction(aCompositionView, newStart, 0, false);
 
   // Restore the latest text content and selection.
-  lockedContent.ReplaceSelectedTextWith(
+  contentForTSF.ReplaceSelectedTextWith(
     nsDependentSubstring(oldComposition.mString,
                          keepComposingStartOffset - oldComposition.mStart,
                          keepComposingLength));
@@ -2782,28 +2782,28 @@ TSFTextStore::GetText(LONG acpStart,
     prgRunInfo->type = TS_RT_PLAIN;
   }
 
-  Content& lockedContent = ContentForTSFRef();
-  if (!lockedContent.IsInitialized()) {
+  Content& contentForTSF = ContentForTSFRef();
+  if (!contentForTSF.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetText() FAILED due to "
             "ContentForTSFRef() failure", this));
     return E_FAIL;
   }
-  if (lockedContent.Text().Length() < static_cast<uint32_t>(acpStart)) {
+  if (contentForTSF.Text().Length() < static_cast<uint32_t>(acpStart)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetText() FAILED due to "
             "acpStart is larger offset than the actual text length", this));
     return TS_E_INVALIDPOS;
   }
   if (acpEnd != -1 &&
-      lockedContent.Text().Length() < static_cast<uint32_t>(acpEnd)) {
+      contentForTSF.Text().Length() < static_cast<uint32_t>(acpEnd)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetText() FAILED due to "
             "acpEnd is larger offset than the actual text length", this));
     return TS_E_INVALIDPOS;
   }
   uint32_t length = (acpEnd == -1) ?
-    lockedContent.Text().Length() - static_cast<uint32_t>(acpStart) :
+    contentForTSF.Text().Length() - static_cast<uint32_t>(acpStart) :
     static_cast<uint32_t>(acpEnd - acpStart);
   if (cchPlainReq && cchPlainReq - 1 < length) {
     length = cchPlainReq - 1;
@@ -2811,7 +2811,7 @@ TSFTextStore::GetText(LONG acpStart,
   if (length) {
     if (pchPlain && cchPlainReq) {
       const char16_t* startChar =
-        lockedContent.Text().BeginReading() + acpStart;
+        contentForTSF.Text().BeginReading() + acpStart;
       memcpy(pchPlain, startChar, length * sizeof(*pchPlain));
       pchPlain[length] = 0;
       *pcchPlainOut = length;
@@ -3248,14 +3248,14 @@ TSFTextStore::GetEndACP(LONG* pacp)
     return E_INVALIDARG;
   }
 
-  Content& lockedContent = ContentForTSFRef();
-  if (!lockedContent.IsInitialized()) {
+  Content& contentForTSF = ContentForTSFRef();
+  if (!contentForTSF.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetEndACP() FAILED due to "
             "ContentForTSFRef() failure", this));
     return E_FAIL;
   }
-  *pacp = static_cast<LONG>(lockedContent.Text().Length());
+  *pacp = static_cast<LONG>(contentForTSF.Text().Length());
   return S_OK;
 }
 
@@ -3407,17 +3407,17 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
 
     // However, if it's after the last character, we need to decrement the
     // offset.
-    Content& lockedContent = ContentForTSFRef();
-    if (!lockedContent.IsInitialized()) {
+    Content& contentForTSF = ContentForTSFRef();
+    if (!contentForTSF.IsInitialized()) {
       MOZ_LOG(sTextStoreLog, LogLevel::Error,
              ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
               "ContentForTSFRef() failure", this));
       return E_FAIL;
     }
-    if (lockedContent.Text().Length() <= offset) {
+    if (contentForTSF.Text().Length() <= offset) {
       // If the tentative caret is after the last character, let's return
       // the last character's offset.
-      offset = lockedContent.Text().Length() - 1;
+      offset = contentForTSF.Text().Length() - 1;
     }
   }
 
@@ -3910,15 +3910,15 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
           this, NS_ConvertUTF16toUTF8(aInsertStr).get(), aTextChange,
           GetBoolName(mComposition.IsComposing())));
 
-  Content& lockedContent = ContentForTSFRef();
-  if (!lockedContent.IsInitialized()) {
+  Content& contentForTSF = ContentForTSFRef();
+  if (!contentForTSF.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::InsertTextAtSelectionInternal() failed "
             "due to ContentForTSFRef() failure()", this));
     return false;
   }
 
-  TS_SELECTION_ACP oldSelection = lockedContent.Selection().ACP();
+  TS_SELECTION_ACP oldSelection = contentForTSF.Selection().ACP();
   if (!mComposition.IsComposing()) {
     // Use a temporary composition to contain the text
     PendingAction* compositionStart = mPendingActions.AppendElement();
@@ -3944,12 +3944,12 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
              compositionEnd->mData.Length()));
   }
 
-  lockedContent.ReplaceSelectedTextWith(aInsertStr);
+  contentForTSF.ReplaceSelectedTextWith(aInsertStr);
 
   if (aTextChange) {
     aTextChange->acpStart = oldSelection.acpStart;
     aTextChange->acpOldEnd = oldSelection.acpEnd;
-    aTextChange->acpNewEnd = lockedContent.Selection().EndOffset();
+    aTextChange->acpNewEnd = contentForTSF.Selection().EndOffset();
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -4017,8 +4017,8 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
           this, aComposition, aStart, aLength, GetBoolName(aPreserveSelection),
           mComposition.mView.get()));
 
-  Content& lockedContent = ContentForTSFRef();
-  if (!lockedContent.IsInitialized()) {
+  Content& contentForTSF = ContentForTSFRef();
+  if (!contentForTSF.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::RecordCompositionStartAction() FAILED "
             "due to ContentForTSFRef() failure", this));
@@ -4038,7 +4038,7 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
     const PendingAction& pendingCompositionEnd = mPendingActions.LastElement();
     const PendingAction& pendingCompositionStart =
       mPendingActions[mPendingActions.Length() - 2];
-    lockedContent.RestoreCommittedComposition(
+    contentForTSF.RestoreCommittedComposition(
       aComposition, pendingCompositionStart, pendingCompositionEnd);
     mPendingActions.RemoveElementAt(mPendingActions.Length() - 1);
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
@@ -4078,7 +4078,7 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
     action->mAdjustSelection = false;
   }
 
-  lockedContent.StartComposition(aComposition, *action, aPreserveSelection);
+  contentForTSF.StartComposition(aComposition, *action, aPreserveSelection);
   action->mData = mComposition.mString;
 
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
@@ -4109,14 +4109,14 @@ TSFTextStore::RecordCompositionEndAction()
   action->mType = PendingAction::COMPOSITION_END;
   action->mData = mComposition.mString;
 
-  Content& lockedContent = ContentForTSFRef();
-  if (!lockedContent.IsInitialized()) {
+  Content& contentForTSF = ContentForTSFRef();
+  if (!contentForTSF.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::RecordCompositionEndAction() FAILED due "
             "to ContentForTSFRef() failure", this));
     return E_FAIL;
   }
-  lockedContent.EndComposition(*action);
+  contentForTSF.EndComposition(*action);
 
   // If this composition was restart but the composition doesn't modify
   // anything, we should remove the pending composition for preventing to
