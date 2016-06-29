@@ -8,7 +8,7 @@ task:
       name: '[TC] Android x86'
       description: 'Android x86'
 
-  workerType: linux64-opt
+  workerType: android-api-15
 
   routes:
     - 'index.buildbot.branches.{{project}}.android-x86'
