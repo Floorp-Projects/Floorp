@@ -108,11 +108,11 @@ AccurateSeekTask::EnsureAudioDecodeTaskQueued()
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mDoneAudioSeeking);
+  MOZ_ASSERT(!mReader->IsRequestingAudioData());
 
   SAMPLE_LOG("EnsureAudioDecodeTaskQueued status=%s", AudioRequestStatus());
 
-  if (mReader->IsRequestingAudioData() ||
-      mReader->IsWaitingAudioData()) {
+  if (mReader->IsWaitingAudioData()) {
     return;
   }
 
@@ -124,11 +124,11 @@ AccurateSeekTask::EnsureVideoDecodeTaskQueued()
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mDoneVideoSeeking);
+  MOZ_ASSERT(!mReader->IsRequestingVideoData());
 
   SAMPLE_LOG("EnsureVideoDecodeTaskQueued status=%s", VideoRequestStatus());
 
-  if (mReader->IsRequestingVideoData() ||
-      mReader->IsWaitingVideoData()) {
+  if (mReader->IsWaitingVideoData()) {
     return;
   }
 
@@ -283,23 +283,9 @@ AccurateSeekTask::DropVideoUpToSeekTarget(MediaData* aSample)
 }
 
 void
-AccurateSeekTask::CheckIfSeekComplete()
+AccurateSeekTask::MaybeFinishSeek()
 {
   AssertOwnerThread();
-
-  if (!mDoneVideoSeeking) {
-    // We haven't reached the target. Ensure we have requested another sample.
-    EnsureVideoDecodeTaskQueued();
-  }
-
-  if (!mDoneAudioSeeking) {
-    // We haven't reached the target. Ensure we have requested another sample.
-    EnsureAudioDecodeTaskQueued();
-  }
-
-  SAMPLE_LOG("CheckIfSeekComplete() doneAudio=%d doneVideo=%d",
-             mDoneAudioSeeking, mDoneVideoSeeking);
-
   if (mDoneAudioSeeking && mDoneVideoSeeking) {
     Resolve(__func__); // Call to MDSM::SeekCompleted();
   }
@@ -379,7 +365,11 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
     return;
   }
 
-  CheckIfSeekComplete();
+  if (!mDoneAudioSeeking) {
+    EnsureAudioDecodeTaskQueued();
+    return;
+  }
+  MaybeFinishSeek();
 }
 
 void
@@ -426,7 +416,7 @@ AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
         mSeekedVideoData = mFirstVideoFrameAfterSeek.forget();
       }
     }
-    CheckIfSeekComplete();
+    MaybeFinishSeek();
   }
 }
 
@@ -461,7 +451,11 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
     return;
   }
 
-  CheckIfSeekComplete();
+  if (!mDoneVideoSeeking) {
+    EnsureVideoDecodeTaskQueued();
+    return;
+  }
+  MaybeFinishSeek();
 }
 
 void
