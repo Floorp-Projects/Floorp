@@ -800,7 +800,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 " LIMIT " + suggestedGridLimit;
 
         // Filter out: unvisited pages (history_id == -1) pinned (and other special) sites, deleted sites,
-        // and about: pages.
+        // pages which weren't visited locally, and about: pages.
         final String ignoreForTopSitesWhereClause =
                 "(" + Combined.HISTORY_ID + " IS NOT -1)" +
                 " AND " +
@@ -809,7 +809,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 DBUtils.qualifyColumn("bookmarks", Bookmarks.PARENT) + " < " + Bookmarks.FIXED_ROOT_ID + " AND " +
                 DBUtils.qualifyColumn("bookmarks", Bookmarks.IS_DELETED) + " == 0)" +
                 " AND " +
-                "(" + Combined.URL + " NOT LIKE ?)";
+                "(" + Combined.URL + " NOT LIKE ?)" +
+                " AND " +
+                "(" + Combined.LOCAL_VISITS_COUNT + " > 0)";
 
         final String[] ignoreForTopSitesArgs = new String[] {
                 AboutPages.URL_FILTER
