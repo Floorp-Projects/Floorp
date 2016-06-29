@@ -12,6 +12,7 @@
 #include "DecoderFactory.h"
 #include "DynamicImage.h"
 #include "FrozenImage.h"
+#include "IDecodingTask.h"
 #include "Image.h"
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
@@ -127,7 +128,8 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   }
 
   // Run the decoder synchronously.
-  decoder->Decode();
+  RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
+  task->Run();
   if (!decoder->GetDecodeDone() || decoder->HasError()) {
     return nullptr;
   }
