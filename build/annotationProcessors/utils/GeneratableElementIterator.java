@@ -27,6 +27,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
     private final Member[] mObjects;
     private AnnotatableEntity mNextReturnValue;
     private int mElementIndex;
+    private AnnotationInfo mClassInfo;
 
     private boolean mIterateEveryEntry;
 
@@ -55,8 +56,8 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
 
         // Check for "Wrap ALL the things" flag.
         for (Annotation annotation : aClass.getDeclaredAnnotations()) {
-            final String annotationTypeName = annotation.annotationType().getName();
-            if (annotationTypeName.equals("org.mozilla.gecko.annotation.WrapForJNI")) {
+            mClassInfo = buildAnnotationInfo(aClass, annotation);
+            if (mClassInfo != null) {
                 mIterateEveryEntry = true;
                 break;
             }
@@ -115,6 +116,73 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         return ret;
     }
 
+    private AnnotationInfo buildAnnotationInfo(AnnotatedElement element, Annotation annotation) {
+        Class<? extends Annotation> annotationType = annotation.annotationType();
+        final String annotationTypeName = annotationType.getName();
+        if (!annotationTypeName.equals("org.mozilla.gecko.annotation.WrapForJNI")) {
+            return null;
+        }
+
+        String stubName = null;
+        boolean isMultithreadedStub = false;
+        boolean noThrow = false;
+        boolean narrowChars = false;
+        boolean catchException = false;
+        try {
+            // Determine the explicitly-given name of the stub to generate, if any.
+            final Method stubNameMethod = annotationType.getDeclaredMethod("stubName");
+            stubNameMethod.setAccessible(true);
+            stubName = (String) stubNameMethod.invoke(annotation);
+
+            if (element instanceof Class<?>) {
+                // Make @WrapForJNI always allow multithread by default, individual methods can then
+                // override with their own annotation
+                isMultithreadedStub = true;
+            } else {
+                // Determine if the generated stub is to allow calls from multiple threads.
+                final Method multithreadedStubMethod = annotationType.getDeclaredMethod("allowMultithread");
+                multithreadedStubMethod.setAccessible(true);
+                isMultithreadedStub = (Boolean) multithreadedStubMethod.invoke(annotation);
+            }
+
+            // Determine if ignoring exceptions
+            final Method noThrowMethod = annotationType.getDeclaredMethod("noThrow");
+            noThrowMethod.setAccessible(true);
+            noThrow = (Boolean) noThrowMethod.invoke(annotation);
+
+            // Determine if strings should be wide or narrow
+            final Method narrowCharsMethod = annotationType.getDeclaredMethod("narrowChars");
+            narrowCharsMethod.setAccessible(true);
+            narrowChars = (Boolean) narrowCharsMethod.invoke(annotation);
+
+            // Determine if we should catch exceptions
+            final Method catchExceptionMethod = annotationType.getDeclaredMethod("catchException");
+            catchExceptionMethod.setAccessible(true);
+            catchException = (Boolean) catchExceptionMethod.invoke(annotation);
+
+        } catch (NoSuchMethodException e) {
+            System.err.println("Unable to find expected field on WrapForJNI annotation. Did the signature change?");
+            e.printStackTrace(System.err);
+            System.exit(3);
+        } catch (IllegalAccessException e) {
+            System.err.println("IllegalAccessException reading fields on WrapForJNI annotation. Seems the semantics of Reflection have changed...");
+            e.printStackTrace(System.err);
+            System.exit(4);
+        } catch (InvocationTargetException e) {
+            System.err.println("InvocationTargetException reading fields on WrapForJNI annotation. This really shouldn't happen.");
+            e.printStackTrace(System.err);
+            System.exit(5);
+        }
+
+        // If the method name was not explicitly given in the annotation generate one...
+        if (stubName.isEmpty()) {
+            stubName = Utils.getNativeName(element);
+        }
+
+        return new AnnotationInfo(
+            stubName, isMultithreadedStub, noThrow, narrowChars, catchException);
+    }
+
     /**
      * Find and cache the next appropriately annotated method, plus the annotation parameter, if
      * one exists. Otherwise cache null, so hasNext returns false.
@@ -124,63 +192,9 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
             Member candidateElement = mObjects[mElementIndex];
             mElementIndex++;
             for (Annotation annotation : ((AnnotatedElement) candidateElement).getDeclaredAnnotations()) {
-                // WrappedJNIMethod has parameters. Use Reflection to obtain them.
-                Class<? extends Annotation> annotationType = annotation.annotationType();
-                final String annotationTypeName = annotationType.getName();
-                if (annotationTypeName.equals("org.mozilla.gecko.annotation.WrapForJNI")) {
-                    String stubName = null;
-                    boolean isMultithreadedStub = false;
-                    boolean noThrow = false;
-                    boolean narrowChars = false;
-                    boolean catchException = false;
-                    try {
-                        // Determine the explicitly-given name of the stub to generate, if any.
-                        final Method stubNameMethod = annotationType.getDeclaredMethod("stubName");
-                        stubNameMethod.setAccessible(true);
-                        stubName = (String) stubNameMethod.invoke(annotation);
-
-                        // Determine if the generated stub is to allow calls from multiple threads.
-                        final Method multithreadedStubMethod = annotationType.getDeclaredMethod("allowMultithread");
-                        multithreadedStubMethod.setAccessible(true);
-                        isMultithreadedStub = (Boolean) multithreadedStubMethod.invoke(annotation);
-
-                        // Determine if ignoring exceptions
-                        final Method noThrowMethod = annotationType.getDeclaredMethod("noThrow");
-                        noThrowMethod.setAccessible(true);
-                        noThrow = (Boolean) noThrowMethod.invoke(annotation);
-
-                        // Determine if strings should be wide or narrow
-                        final Method narrowCharsMethod = annotationType.getDeclaredMethod("narrowChars");
-                        narrowCharsMethod.setAccessible(true);
-                        narrowChars = (Boolean) narrowCharsMethod.invoke(annotation);
-
-                        // Determine if we should catch exceptions
-                        final Method catchExceptionMethod = annotationType.getDeclaredMethod("catchException");
-                        catchExceptionMethod.setAccessible(true);
-                        catchException = (Boolean) catchExceptionMethod.invoke(annotation);
-
-                    } catch (NoSuchMethodException e) {
-                        System.err.println("Unable to find expected field on WrapForJNI annotation. Did the signature change?");
-                        e.printStackTrace(System.err);
-                        System.exit(3);
-                    } catch (IllegalAccessException e) {
-                        System.err.println("IllegalAccessException reading fields on WrapForJNI annotation. Seems the semantics of Reflection have changed...");
-                        e.printStackTrace(System.err);
-                        System.exit(4);
-                    } catch (InvocationTargetException e) {
-                        System.err.println("InvocationTargetException reading fields on WrapForJNI annotation. This really shouldn't happen.");
-                        e.printStackTrace(System.err);
-                        System.exit(5);
-                    }
-
-                    // If the method name was not explicitly given in the annotation generate one...
-                    if (stubName.isEmpty()) {
-                        stubName = Utils.getNativeName(candidateElement);
-                    }
-
-                    AnnotationInfo annotationInfo = new AnnotationInfo(
-                        stubName, isMultithreadedStub, noThrow, narrowChars, catchException);
-                    mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
+                AnnotationInfo info = buildAnnotationInfo((AnnotatedElement)candidateElement, annotation);
+                if (info != null) {
+                    mNextReturnValue = new AnnotatableEntity(candidateElement, info);
                     return;
                 }
             }
@@ -190,10 +204,10 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
             if (mIterateEveryEntry) {
                 AnnotationInfo annotationInfo = new AnnotationInfo(
                     Utils.getNativeName(candidateElement),
-                    /* multithreaded */ true,
-                    /* noThrow */ false,
-                    /* narrowChars */ false,
-                    /* catchException */ false);
+                    mClassInfo.isMultithreaded,
+                    mClassInfo.noThrow,
+                    mClassInfo.narrowChars,
+                    mClassInfo.catchException);
                 mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                 return;
             }
