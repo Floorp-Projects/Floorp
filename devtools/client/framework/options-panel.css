@@ -73,7 +73,7 @@
 
 .options-groupbox.horizontal-options-groupbox label {
   display: inline-flex;
-  align-items: baseline;
+  align-items: flex-end;
 }
 
 .options-groupbox.horizontal-options-groupbox label + label {
