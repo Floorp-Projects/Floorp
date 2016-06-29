@@ -194,10 +194,6 @@ function gc()
   }
 }
 
-function quit()
-{
-}
-
 function options(aOptionName)
 {
   // return value of options() is a comma delimited list
@@ -274,11 +270,6 @@ function optionsInit() {
       options.initvalues[optionName] = true;
     }
   }
-}
-
-function gczeal(z)
-{
-  SpecialPowers.setGCZeal(z);
 }
 
 function jsTestDriverBrowserInit()
