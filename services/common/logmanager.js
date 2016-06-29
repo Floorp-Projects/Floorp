@@ -320,6 +320,7 @@ LogManager.prototype = {
                         + entry.name, ex);
       }
     }.bind(this)));
+    iterator.close();
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
     // This notification is used only for tests.
