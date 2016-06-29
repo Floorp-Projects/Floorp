@@ -7,8 +7,10 @@
 
 include LayersSurfaces;
 include LayersMessages;
+include PlatformWidgetTypes;
 include protocol PBrowser;
 include protocol PCompositable;
+include protocol PCompositorWidget;
 include protocol PImageContainer;
 include protocol PLayer;
 include protocol PLayerTransaction;
@@ -47,6 +49,7 @@ sync protocol PCompositorBridge
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;
   manages PTexture;
+  manages PCompositorWidget;
 
 child:
   // The child should invalidate retained layers. This is used for local
@@ -103,6 +106,8 @@ child:
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
 
 parent:
+  async PCompositorWidget(CompositorWidgetInitData aInitData);
+
   /**
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
    */

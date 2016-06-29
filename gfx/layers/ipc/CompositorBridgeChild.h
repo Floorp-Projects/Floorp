@@ -193,7 +193,12 @@ public:
                           mozilla::ipc::Shmem* aShmem) override;
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
+  PCompositorWidgetChild* AllocPCompositorWidgetChild(const CompositorWidgetInitData& aInitData) override;
+  bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor) override;
+
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
+
+  void ProcessingError(Result aCode, const char* aReason) override;
 
 private:
   // Private destructor, to discourage deletion outside of Release():
