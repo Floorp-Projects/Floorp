@@ -25,11 +25,11 @@ class ModuleV3:
 
 
 def getModuleV3(libName, breakpadId):
-    if not isinstance(libName, basestring) or not gLibNameRE.match(libName):
+    if not isinstance(libName, str) or not gLibNameRE.match(libName):
         LogTrace("Bad library name: " + str(libName))
         return None
 
-    if not isinstance(breakpadId, basestring):
+    if not isinstance(breakpadId, str):
         LogTrace("Bad breakpad id: " + str(breakpadId))
         return None
 
@@ -72,7 +72,7 @@ class SymbolicationRequest:
                 return
 
             if "forwarded" in rawRequests:
-                if not isinstance(rawRequests["forwarded"], (int, long)):
+                if not isinstance(rawRequests["forwarded"], (int, int)):
                     LogTrace("Invalid 'forwards' field: %s"
                              % rawRequests["forwarded"])
                     return
