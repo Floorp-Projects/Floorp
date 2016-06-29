@@ -28,10 +28,11 @@ class DocumentTimeline final
   , public nsARefreshObserver
 {
 public:
-  explicit DocumentTimeline(nsIDocument* aDocument)
+  DocumentTimeline(nsIDocument* aDocument, const TimeDuration& aOriginTime)
     : AnimationTimeline(aDocument->GetParentObject())
     , mDocument(aDocument)
     , mIsObservingRefreshDriver(false)
+    , mOriginTime(aOriginTime)
   {
   }
 
@@ -84,6 +85,8 @@ protected:
   // iframe).
   mutable TimeStamp mLastRefreshDriverTime;
   bool mIsObservingRefreshDriver;
+
+  TimeDuration mOriginTime;
 };
 
 } // namespace dom
