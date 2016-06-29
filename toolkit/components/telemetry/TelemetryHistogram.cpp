@@ -1854,12 +1854,7 @@ internal_AccumulateChildKeyed(mozilla::Telemetry::ID aId,
   id.Append(th.id());
   id.AppendLiteral(CHILD_HISTOGRAM_SUFFIX);
   KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
-  if (!keyed) {
-    const nsDependentCString expiration(th.expiration());
-    keyed = new KeyedHistogram(id, expiration, th.histogramType, th.min, th.max,
-                               th.bucketCount, th.dataset);
-    gKeyedHistograms.Put(id, keyed);
-  }
+  MOZ_ASSERT(keyed);
   keyed->Add(aKey, aSample);
 }
 
@@ -1942,6 +1937,16 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
     const nsDependentCString expiration(h.expiration());
     gKeyedHistograms.Put(id, new KeyedHistogram(id, expiration, h.histogramType,
                                                 h.min, h.max, h.bucketCount, h.dataset));
+    if (XRE_IsParentProcess()) {
+      // We must create registered child keyed histograms as well or else the
+      // same code in TelemetrySession.jsm that fails without parent keyed
+      // histograms will fail without child keyed histograms.
+      nsCString childId(id);
+      childId.AppendLiteral(CHILD_HISTOGRAM_SUFFIX);
+      gKeyedHistograms.Put(childId,
+                           new KeyedHistogram(id, expiration, h.histogramType,
+                                              h.min, h.max, h.bucketCount, h.dataset));
+    }
   }
 
   // Some Telemetry histograms depend on the value of C++ constants and hardcode
