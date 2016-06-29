@@ -69,29 +69,25 @@ function* checkCopySelection(view) {
                         "html {[\\r\\n]+" +
                         "    color: #000000;[\\r\\n]*";
 
-  let onPopup = once(view._contextmenu._menupopup, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(prop,
-    {button: 2, type: "contextmenu"}, win);
-  yield onPopup;
+  let allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
+  let menuitemCopy = allMenuItems.find(item => item.label ===
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
 
-  ok(!view._contextmenu.menuitemCopy.hidden,
+  ok(menuitemCopy.visible,
     "Copy menu item is displayed as expected");
 
   try {
-    yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
+    yield waitForClipboard(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
   }
-
-  view._contextmenu._menupopup.hidePopup();
 }
 
 function* checkSelectAll(view) {
   info("Testing select-all copy");
 
   let contentDoc = view.styleDocument;
-  let win = view.styleWindow;
   let prop = contentDoc.querySelector(".ruleview-property");
 
   info("Checking that _SelectAll() then copy returns the correct " +
@@ -107,28 +103,24 @@ function* checkSelectAll(view) {
                         "    color: #000000;[\\r\\n]+" +
                         "}[\\r\\n]*";
 
-  let onPopup = once(view._contextmenu._menupopup, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(prop,
-    {button: 2, type: "contextmenu"}, win);
-  yield onPopup;
+  let allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
+  let menuitemCopy = allMenuItems.find(item => item.label ===
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
 
-  ok(!view._contextmenu.menuitemCopy.hidden,
+  ok(menuitemCopy.visible,
     "Copy menu item is displayed as expected");
 
   try {
-    yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
+    yield waitForClipboard(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
   }
-
-  view._contextmenu._menupopup.hidePopup();
 }
 
 function* checkCopyEditorValue(view) {
   info("Testing CSS property editor value copy");
 
-  let win = view.styleWindow;
   let ruleEditor = getRuleViewRuleEditor(view, 0);
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
@@ -139,28 +131,19 @@ function* checkCopyEditorValue(view) {
 
   let expectedPattern = "10em";
 
-  let onPopup = once(view._contextmenu._menupopup, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(editor.input,
-    {button: 2, type: "contextmenu"}, win);
-  yield onPopup;
+  let allMenuItems = openStyleContextMenuAndGetAllItems(view, editor.input);
+  let menuitemCopy = allMenuItems.find(item => item.label ===
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
 
-  ok(!view._contextmenu.menuitemCopy.hidden,
+  ok(menuitemCopy.visible,
     "Copy menu item is displayed as expected");
 
   try {
-    yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
+    yield waitForClipboard(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
   }
-
-  view._contextmenu._menupopup.hidePopup();
-
-  // The value field is still focused. Blur it now and wait for the
-  // ruleview-changed event to avoid pending requests.
-  let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield onRuleViewChanged;
 }
 
 function checkClipboardData(expectedPattern) {
