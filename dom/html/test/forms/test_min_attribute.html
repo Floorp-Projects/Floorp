@@ -29,7 +29,8 @@ var data = [
   { type: 'password', apply: false },
   { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
-  { type: 'month', apply: true, todo: true },
+  // TODO: temporary set to false until bug 888324 is fixed.
+  { type: 'month', apply: false },
   { type: 'week', apply: true, todo: true },
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
@@ -140,6 +141,9 @@ for (var test of data) {
       // range is special, since setting min to 999 will make it invalid since
       // it's default maximum is 100, its value would be 999, and it would
       // suffer from overflow.
+      break;
+    case 'month':
+      // TODO: this is temporary until bug 888324 is fixed.
       break;
     default:
       ok(false, 'please, add a case for this new type (' + input.type + ')');
@@ -334,6 +338,9 @@ for (var test of data) {
 
       input.min = 'foo';
       checkValidity(input, true, apply, false);
+      break;
+    case 'month':
+      // TODO: this is temporary until bug 888324 is fixed.
       break;
     default:
       ok(false, 'write tests for ' + input.type);
