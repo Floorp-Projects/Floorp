@@ -10,6 +10,7 @@ import yaml
 from .graph import Graph
 from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
+from .util.python_path import find_object
 
 logger = logging.getLogger(__name__)
 
@@ -27,18 +28,7 @@ class Kind(object):
             impl = self.config['implementation']
         except KeyError:
             raise KeyError("{!r} does not define implementation".format(self.path))
-        if impl.count(':') != 1:
-            raise TypeError('{!r} implementation does not have the form "module:object"'
-                            .format(self.path))
-
-        impl_module, impl_object = impl.split(':')
-        impl_class = __import__(impl_module)
-        for a in impl_module.split('.')[1:]:
-            impl_class = getattr(impl_class, a)
-        for a in impl_object.split('.'):
-            impl_class = getattr(impl_class, a)
-
-        return impl_class
+        return find_object(impl)
 
     def load_tasks(self, parameters, loaded_tasks):
         impl_class = self._get_impl_class()
