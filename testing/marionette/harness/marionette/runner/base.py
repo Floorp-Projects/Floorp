@@ -409,18 +409,14 @@ class BaseMarionetteArguments(ArgumentParser):
 
     def verify_usage(self, args):
         if not args.tests:
-            print 'must specify one or more test files, manifests, or directories'
-            sys.exit(1)
+            self.error('You must specify one or more test files, manifests, or directories.')
 
         missing_tests = [path for path in args.tests if not os.path.exists(path)]
         if missing_tests:
-            for path in missing_tests:
-                print '{0} does not exist'.format(path)
-            sys.exit(1)
+            self.error("Test file(s) not found: " + " ".join([path for path in missing_tests]))
 
         if not args.address and not args.binary:
-            print 'must specify --binary, or --address'
-            sys.exit(1)
+            self.error('You must specify --binary, or --address')
 
         if args.total_chunks is not None and args.this_chunk is None:
             self.error('You must specify which chunk to run.')
