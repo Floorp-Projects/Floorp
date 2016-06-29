@@ -16,7 +16,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/bindings/URL.h"
 #include "mozilla/unused.h"
 
 #include "WorkerPrivate.h"
@@ -174,7 +173,7 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   CopyUTF8toUTF16(spec, aRequestURL);
 }
 
-already_AddRefed<workers::URL>
+already_AddRefed<URL>
 ParseURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
                    ErrorResult& aRv)
 {
@@ -183,8 +182,7 @@ ParseURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   worker->AssertIsOnWorkerThread();
 
   NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-  RefPtr<workers::URL> url =
-    workers::URL::Constructor(aGlobal, aInput, baseURL, aRv);
+  RefPtr<URL> url = URL::WorkerConstructor(aGlobal, aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aInput);
   }
@@ -195,7 +193,7 @@ void
 GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
                         nsAString& aRequestURL, ErrorResult& aRv)
 {
-  RefPtr<workers::URL> url = ParseURLFromWorker(aGlobal, aInput, aRv);
+  RefPtr<URL> url = ParseURLFromWorker(aGlobal, aInput, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -379,7 +377,7 @@ Request::Constructor(const GlobalObject& aGlobal,
           }
         }
       } else {
-        RefPtr<workers::URL> url = ParseURLFromWorker(aGlobal, referrer, aRv);
+        RefPtr<URL> url = ParseURLFromWorker(aGlobal, referrer, aRv);
         if (NS_WARN_IF(aRv.Failed())) {
           aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
           return nullptr;

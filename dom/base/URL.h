@@ -3,8 +3,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef URL_h___
-#define URL_h___
+
+#ifndef mozilla_dom_URL_h
+#define mozilla_dom_URL_h
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -27,20 +28,16 @@ class MediaSource;
 class GlobalObject;
 struct objectURLOptions;
 
-namespace workers {
-class URLProxy;
-} // namespace workers
-
-class URL final : public URLSearchParamsObserver
-                , public nsWrapperCache
+class URL : public URLSearchParamsObserver
+          , public nsWrapperCache
 {
-  ~URL() {}
-
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URL)
 
-  URL(nsISupports* aParent, already_AddRefed<nsIURI> aURI);
+  URL(nsISupports* aParent)
+    : mParent(aParent)
+  {}
 
   // WebIDL methods
   nsISupports* GetParentObject() const
@@ -52,117 +49,126 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<URL>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
+  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
               URL& aBase, ErrorResult& aRv);
+
   static already_AddRefed<URL>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
+  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
               const Optional<nsAString>& aBase, ErrorResult& aRv);
-  // Versions of Constructor that we can share with workers and other code.
+
+  // Helper for Fetch API
   static already_AddRefed<URL>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
-              const nsAString& aBase, ErrorResult& aRv);
-  static already_AddRefed<URL>
-  Constructor(nsISupports* aParent, const nsAString& aUrl,
-              const nsAString& aBase, ErrorResult& aRv);
-  static already_AddRefed<URL>
-  Constructor(nsISupports* aParent, const nsAString& aUrl,
-              nsIURI* aBase, ErrorResult& aRv);
+  WorkerConstructor(const GlobalObject& aGlobal, const nsAString& aURL,
+                    const nsAString& aBase, ErrorResult& aRv);
 
-  static void CreateObjectURL(const GlobalObject& aGlobal,
-                              Blob& aBlob,
-                              const objectURLOptions& aOptions,
-                              nsAString& aResult,
-                              ErrorResult& aError);
-  static void CreateObjectURL(const GlobalObject& aGlobal,
-                              DOMMediaStream& aStream,
-                              const objectURLOptions& aOptions,
-                              nsAString& aResult,
-                              ErrorResult& aError);
-  static void CreateObjectURL(const GlobalObject& aGlobal,
-                              MediaSource& aSource,
-                              const objectURLOptions& aOptions,
-                              nsAString& aResult,
-                              ErrorResult& aError);
-  static void RevokeObjectURL(const GlobalObject& aGlobal,
-                              const nsAString& aURL,
-                              ErrorResult& aRv);
 
-  void GetHref(nsAString& aHref) const;
+  static void
+  CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
+                  const objectURLOptions& aOptions,
+                  nsAString& aResult, ErrorResult& aRv);
 
-  void SetHref(const nsAString& aHref, ErrorResult& aRv);
+  static void
+  CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv);
 
-  void GetOrigin(nsAString& aOrigin) const;
+  static void
+  CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv);
 
-  void GetProtocol(nsAString& aProtocol) const;
+  static void
+  RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
+                  ErrorResult& aRv);
 
-  void SetProtocol(const nsAString& aProtocol);
+  virtual void
+  GetHref(nsAString& aHref, ErrorResult& aRv) const = 0;
 
-  void GetUsername(nsAString& aUsername) const;
+  virtual void
+  SetHref(const nsAString& aHref, ErrorResult& aRv) = 0;
 
-  void SetUsername(const nsAString& aUsername);
+  virtual void
+  GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const = 0;
 
-  void GetPassword(nsAString& aPassword) const;
+  virtual void
+  GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const = 0;
 
-  void SetPassword(const nsAString& aPassword);
+  virtual void
+  SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) = 0;
 
-  void GetHost(nsAString& aHost) const;
+  virtual void
+  GetUsername(nsAString& aUsername, ErrorResult& aRv) const = 0;
 
-  void SetHost(const nsAString& aHost);
+  virtual void
+  SetUsername(const nsAString& aUsername, ErrorResult& aRv) = 0;
 
-  void GetHostname(nsAString& aHostname) const;
+  virtual void
+  GetPassword(nsAString& aPassword, ErrorResult& aRv) const = 0;
 
-  void SetHostname(const nsAString& aHostname);
+  virtual void
+  SetPassword(const nsAString& aPassword, ErrorResult& aRv) = 0;
 
-  void GetPort(nsAString& aPort) const;
+  virtual void
+  GetHost(nsAString& aHost, ErrorResult& aRv) const = 0;
 
-  void SetPort(const nsAString& aPort);
+  virtual void
+  SetHost(const nsAString& aHost, ErrorResult& aRv) = 0;
 
-  void GetPathname(nsAString& aPathname) const;
+  virtual void
+  GetHostname(nsAString& aHostname, ErrorResult& aRv) const = 0;
 
-  void SetPathname(const nsAString& aPathname);
+  virtual void
+  SetHostname(const nsAString& aHostname, ErrorResult& aRv) = 0;
 
-  void GetSearch(nsAString& aRetval) const;
+  virtual void
+  GetPort(nsAString& aPort, ErrorResult& aRv) const = 0;
 
-  void SetSearch(const nsAString& aArg);
+  virtual void
+  SetPort(const nsAString& aPort, ErrorResult& aRv) = 0;
+
+  virtual void
+  GetPathname(nsAString& aPathname, ErrorResult& aRv) const = 0;
+
+  virtual void
+  SetPathname(const nsAString& aPathname, ErrorResult& aRv) = 0;
+
+  virtual void
+  GetSearch(nsAString& aSearch, ErrorResult& aRv) const = 0;
+
+  virtual void
+  SetSearch(const nsAString& aSearch, ErrorResult& aRv);
 
   URLSearchParams* SearchParams();
 
-  void GetHash(nsAString& aRetval) const;
+  virtual void
+  GetHash(nsAString& aHost, ErrorResult& aRv) const = 0;
 
-  void SetHash(const nsAString& aArg);
+  virtual void
+  SetHash(const nsAString& aHash, ErrorResult& aRv) = 0;
 
-  void Stringify(nsAString& aRetval) const
+  void Stringify(nsAString& aRetval, ErrorResult& aRv) const
   {
-    GetHref(aRetval);
+    GetHref(aRetval, aRv);
   }
 
   // URLSearchParamsObserver
-  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
+  void
+  URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
 
-private:
-  nsIURI* GetURI() const
-  {
-    return mURI;
-  }
+protected:
+  virtual ~URL()
+  {}
+
+  virtual void
+  UpdateURLSearchParams() = 0;
+
+  virtual void
+  SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv) = 0;
 
   void CreateSearchParamsIfNeeded();
 
-  void SetSearchInternal(const nsAString& aSearch);
-
-  void UpdateURLSearchParams();
-
-  static void CreateObjectURLInternal(const GlobalObject& aGlobal,
-                                      nsISupports* aObject,
-                                      const nsACString& aScheme,
-                                      const objectURLOptions& aOptions,
-                                      nsAString& aResult,
-                                      ErrorResult& aError);
-
   nsCOMPtr<nsISupports> mParent;
-  nsCOMPtr<nsIURI> mURI;
   RefPtr<URLSearchParams> mSearchParams;
-
-  friend class mozilla::dom::workers::URLProxy;
 };
 
 bool IsChromeURI(nsIURI* aURI);
@@ -170,4 +176,4 @@ bool IsChromeURI(nsIURI* aURI);
 } // namespace dom
 } // namespace mozilla
 
-#endif /* URL_h___ */
+#endif /* mozilla_dom_URL_h */

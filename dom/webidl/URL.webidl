@@ -21,31 +21,31 @@ interface URL {
   //  stringifier attribute USVString href;
 
   // Bug 824857 should remove this.
-  [Throws=Workers]
+  [Throws]
   stringifier;
 
-  [SetterThrows, GetterThrows=Workers]
+  [Throws]
   attribute USVString href;
-  [Throws=Workers]
+  [Throws]
   readonly attribute USVString origin;
-  [Throws=Workers]
+  [Throws]
            attribute USVString protocol;
-  [Throws=Workers]
+  [Throws]
            attribute USVString username;
-  [Throws=Workers]
+  [Throws]
            attribute USVString password;
-  [Throws=Workers]
+  [Throws]
            attribute USVString host;
-  [Throws=Workers]
+  [Throws]
            attribute USVString hostname;
-  [Throws=Workers]
+  [Throws]
            attribute USVString port;
-  [Throws=Workers]
+  [Throws]
            attribute USVString pathname;
-  [Throws=Workers]
+  [Throws]
            attribute USVString search;
   readonly attribute URLSearchParams searchParams;
-  [Throws=Workers]
+  [Throws]
            attribute USVString hash;
 };
 
