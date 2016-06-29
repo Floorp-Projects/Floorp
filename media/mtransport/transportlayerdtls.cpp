@@ -927,6 +927,10 @@ bool TransportLayerDtls::CheckAlpn() {
       // that callback doesn't properly handle ALPN.
       MOZ_MTLOG(ML_ERROR, LAYER_INFO << "error in ALPN selection callback");
       return false;
+
+    case SSL_NEXT_PROTO_EARLY_VALUE:
+      MOZ_CRASH("Unexpected 0-RTT ALPN value");
+      return false;
   }
 
   // Warning: NSS won't null terminate the ALPN string for us.
