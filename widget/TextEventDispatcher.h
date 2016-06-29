@@ -94,6 +94,15 @@ public:
   bool IsComposing() const { return mIsComposing; }
 
   /**
+   * IsInNativeInputTransaction() returns true if native IME handler began a
+   * transaction and it's not finished yet.
+   */
+  bool IsInNativeInputTransaction() const
+  {
+    return mInputTransactionType == eNativeInputTransaction;
+  }
+
+  /**
    * IsDispatchingEvent() returns true while this instance dispatching an event.
    */
   bool IsDispatchingEvent() const { return mDispatchingEvent > 0; }

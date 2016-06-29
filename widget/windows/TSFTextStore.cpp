@@ -1977,6 +1977,18 @@ TSFTextStore::GetSelection(ULONG ulIndex,
   return S_OK;
 }
 
+bool
+TSFTextStore::IsComposingInContent() const
+{
+  if (!mDispatcher) {
+    return false;
+  }
+  if (!mDispatcher->IsInNativeInputTransaction()) {
+    return false;
+  }
+  return mDispatcher->IsComposing();
+}
+
 TSFTextStore::Content&
 TSFTextStore::ContentForTSFRef()
 {
