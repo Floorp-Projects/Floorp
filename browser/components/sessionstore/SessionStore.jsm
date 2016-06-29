@@ -2933,10 +2933,14 @@ var SessionStoreInternal = {
       let userContextId = winData.tabs[t].userContextId;
       let reuseExisting = t < openTabCount &&
                           (tabbrowser.tabs[t].getAttribute("usercontextid") == (userContextId || ""));
+      // If the tab is pinned, then we'll be loading it right away, and
+      // there's no need to cause a remoteness flip by loading it initially
+      // non-remote.
+      let forceNotRemote = !winData.tabs[t].pinned;
       let tab = reuseExisting ? tabbrowser.tabs[t] :
                                 tabbrowser.addTab("about:blank",
                                                   {skipAnimation: true,
-                                                   forceNotRemote: true,
+                                                   forceNotRemote,
                                                    userContextId});
 
       // If we inserted a new tab because the userContextId didn't match with the
