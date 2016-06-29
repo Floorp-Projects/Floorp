@@ -336,6 +336,15 @@ public:
     return mEvents.Length();
   }
 
+  template<class TimeType>
+  void CleanupEventsOlderThan(TimeType aTime)
+  {
+    while (mEvents.Length() > 1 &&
+        aTime > mEvents[1].template Time<TimeType>()) {
+      mEvents.RemoveElementAt(0);
+    }
+  }
+
 private:
   template<class TimeType>
   void GetValuesAtTimeHelper(TimeType aTime, float* aBuffer, const size_t aSize);
