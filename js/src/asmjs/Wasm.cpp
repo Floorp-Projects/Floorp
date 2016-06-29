@@ -760,7 +760,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
 }
 
 static bool
-DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandleArrayBufferObject heap)
+DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(MemorySectionId, &sectionStart, &sectionSize))
@@ -802,11 +802,6 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandl
 
     if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "memory section byte size mismatch");
-
-    bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
-    heap.set(ArrayBufferObject::createForWasm(cx, initialSize.value(), signalsForOOB));
-    if (!heap)
-        return false;
 
     mg.initHeapUsage(HeapUsage::Unshared, initialSize.value());
     return true;
@@ -976,7 +971,7 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
+DecodeDataSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(DataSectionId, &sectionStart, &sectionSize))
@@ -984,38 +979,41 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!heap)
+    if (!mg.usesHeap())
         return Fail(cx, d, "data section requires a memory section");
 
     uint32_t numSegments;
     if (!d.readVarU32(&numSegments))
         return Fail(cx, d, "failed to read number of data segments");
 
-    uint8_t* const heapBase = heap->dataPointer();
-    uint32_t const heapLength = heap->byteLength();
-    uint32_t prevEnd = 0;
+    if (numSegments > MaxDataSegments)
+        return Fail(cx, d, "too many data segments");
 
-    for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t dstOffset;
-        if (!d.readVarU32(&dstOffset))
+    uint32_t max = mg.initialHeapLength();
+    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+        DataSegment seg;
+
+        if (!d.readVarU32(&seg.memoryOffset))
             return Fail(cx, d, "expected segment destination offset");
 
-        if (dstOffset < prevEnd)
+        if (seg.memoryOffset < prevEnd)
             return Fail(cx, d, "data segments must be disjoint and ordered");
 
-        uint32_t numBytes;
-        if (!d.readVarU32(&numBytes))
+        if (!d.readVarU32(&seg.length))
             return Fail(cx, d, "expected segment size");
 
-        if (dstOffset > heapLength || heapLength - dstOffset < numBytes)
-            return Fail(cx, d, "data segment does not fit in memory");
+        if (seg.memoryOffset > max || max - seg.memoryOffset < seg.length)
+            return Fail(cx, d, "data segment data segment does not fit");
 
-        const uint8_t* src;
-        if (!d.readBytes(numBytes, &src))
+        seg.bytecodeOffset = d.currentOffset();
+
+        if (!d.readBytes(seg.length))
             return Fail(cx, d, "data segment shorter than declared");
 
-        memcpy(heapBase + dstOffset, src, numBytes);
-        prevEnd = dstOffset + numBytes;
+        if (!mg.addDataSegment(seg))
+            return false;
+
+        prevEnd = seg.memoryOffset + seg.length;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -1033,7 +1031,7 @@ MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint3
         return false;
 
     if (numFuncNames > MaxFuncs)
-        return false;
+        return Fail(cx, d, "too many function names");
 
     NameInBytecodeVector funcNames;
     if (!funcNames.resize(numFuncNames))
@@ -1103,8 +1101,7 @@ DecodeUnknownSections(JSContext* cx, Decoder& d)
 }
 
 static UniqueModule
-DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
-             MutableHandleArrayBufferObject heap)
+DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode)
 {
     UniqueModuleGeneratorData init = js::MakeUnique<ModuleGeneratorData>(cx);
     if (!init)
@@ -1132,7 +1129,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
     if (!mg.init(Move(init), Move(file)))
         return nullptr;
 
-    if (!DecodeMemorySection(cx, d, mg, heap))
+    if (!DecodeMemorySection(cx, d, mg))
         return nullptr;
 
     if (!DecodeExportSection(cx, d, mg))
@@ -1141,7 +1138,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
     if (!DecodeCodeSection(cx, d, mg))
         return nullptr;
 
-    if (!DecodeDataSection(cx, d, heap))
+    if (!DecodeDataSection(cx, d, mg))
         return nullptr;
 
     if (!DecodeNameSection(cx, d, mg))
@@ -1245,8 +1242,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> view, HandleObject importObj
     if (!file)
         return false;
 
-    Rooted<ArrayBufferObject*> heap(cx);
-    UniqueModule module = DecodeModule(cx, Move(file), *bytecode, &heap);
+    UniqueModule module = DecodeModule(cx, Move(file), *bytecode);
     if (!module) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
@@ -1257,5 +1253,5 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> view, HandleObject importObj
     if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
         return false;
 
-    return module->instantiate(cx, funcImports, heap, instanceObj);
+    return module->instantiate(cx, funcImports, /* asmJSHeap = */ nullptr, instanceObj);
 }

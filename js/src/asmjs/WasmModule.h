@@ -135,6 +135,18 @@ struct ExportMap
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
 
+// DataSegment describes the offset of a data segment in the bytecode that is
+// to be copied at a given offset into linear memory upon instantiation.
+
+struct DataSegment
+{
+    uint32_t memoryOffset;
+    uint32_t bytecodeOffset;
+    uint32_t length;
+};
+
+typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
+
 // Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
@@ -149,24 +161,27 @@ struct ExportMap
 
 class Module
 {
-    const Bytes            code_;
-    const LinkData         linkData_;
-    const ImportNameVector importNames_;
-    const ExportMap        exportMap_;
-    const SharedMetadata   metadata_;
-    const SharedBytes      bytecode_;
+    const Bytes             code_;
+    const LinkData          linkData_;
+    const ImportNameVector  importNames_;
+    const ExportMap         exportMap_;
+    const DataSegmentVector dataSegments_;
+    const SharedMetadata    metadata_;
+    const SharedBytes       bytecode_;
 
   public:
     Module(Bytes&& code,
            LinkData&& linkData,
            ImportNameVector&& importNames,
            ExportMap&& exportMap,
+           DataSegmentVector&& dataSegments,
            const Metadata& metadata,
            const ShareableBytes& bytecode)
       : code_(Move(code)),
         linkData_(Move(linkData)),
         importNames_(Move(importNames)),
         exportMap_(Move(exportMap)),
+        dataSegments_(Move(dataSegments)),
         metadata_(&metadata),
         bytecode_(&bytecode)
     {}
@@ -178,7 +193,7 @@ class Module
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
-                     Handle<ArrayBufferObjectMaybeShared*> heap,
+                     Handle<ArrayBufferObjectMaybeShared*> asmJSHeap,
                      MutableHandle<WasmInstanceObject*> instanceObj) const;
 
     // Structured clone support:
