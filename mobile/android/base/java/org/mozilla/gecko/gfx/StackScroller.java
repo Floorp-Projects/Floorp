@@ -98,6 +98,14 @@ public class StackScroller {
         return mScrollerX.mFinal;
     }
 
+    public final float getCurrSpeedX() {
+        return mScrollerX.mCurrVelocity;
+    }
+
+    public final float getCurrSpeedY() {
+        return mScrollerY.mCurrVelocity;
+    }
+
     /**
      * Returns where the scroll will end. Valid only for "fling" scrolls.
      *
