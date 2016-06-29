@@ -123,7 +123,7 @@ struct ShareableBase : RefCounted<T>
 struct ShareableBytes : ShareableBase<ShareableBytes>
 {
     ShareableBytes() = default;
-    ShareableBytes(Bytes&& bytes) : bytes(Move(bytes)) {}
+    explicit ShareableBytes(Bytes&& bytes) : bytes(Move(bytes)) {}
 
     // Vector is 'final', so instead make Vector a member and add boilerplate.
     Bytes bytes;
