@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test that MediaStreamAudioSourceNode and its input MediaStream stays alive while there are active tracks</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("gUM and WebAudio data is async to main thread. " +
+                               "We need a timeout to see that something does " +
+                               "NOT happen to data.");
+
+var context = new AudioContext();
+var analyser = context.createAnalyser();
+
+function wait(millis, resolveWithThis) {
+  return new Promise(resolve => setTimeout(() => resolve(resolveWithThis), millis));
+}
+
+function binIndexForFrequency(frequency) {
+  return 1 + Math.round(frequency * analyser.fftSize / context.sampleRate);
+}
+
+function waitForAudio(analysisFunction, cancelPromise) {
+  var data = new Uint8Array(analyser.frequencyBinCount);
+  var cancelled = false;
+  var cancelledMsg = "";
+  cancelPromise.then(msg => {
+    cancelled = true;
+    cancelledMsg = msg;
+  });
+  return new Promise((resolve, reject) => {
+    var loop = () => {
+      analyser.getByteFrequencyData(data);
+      if (cancelled) {
+        reject(new Error("waitForAudio cancelled: " + cancelledMsg));
+        return;
+      }
+      if (analysisFunction(data)) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(loop);
+    };
+    loop();
+  });
+}
+
+navigator.mediaDevices.getUserMedia({audio: true, fake: true})
+  .then(stream => {
+    stream.onended = () => ended = true;
+    let source = context.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.connect(context.destination);
+  })
+  .then(() => {
+    ok(true, "Waiting for audio to pass through the analyser")
+    return waitForAudio(arr => arr[binIndexForFrequency(1000)] > 200,
+                        wait(60000, "Timeout waiting for audio"));
+  })
+  .then(() => {
+    ok(true, "Audio was detected by the analyser. Forcing CC.");
+    SpecialPowers.forceCC();
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+    SpecialPowers.forceGC();
+
+    info("Checking that GC didn't destroy the stream or source node");
+    return waitForAudio(arr => arr[binIndexForFrequency(1000)] < 50,
+                        wait(5000, "Timeout waiting for GC (timeout OK)"))
+                  .then(() => Promise.reject("Audio stopped unexpectedly"),
+                        () => Promise.resolve());
+  })
+  .then(() => {
+    ok(true, "Audio is still flowing");
+    SimpleTest.finish();
+  })
+  .catch(e => {
+    ok(false, "Error executing test: " + e + (e.stack ? "\n" + e.stack : ""));
+    SimpleTest.finish();
+  });
+</script>
+</pre>
+</body>
+</html>
