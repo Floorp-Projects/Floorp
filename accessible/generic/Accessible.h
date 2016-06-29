@@ -11,7 +11,8 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
+
 #include "nsIContent.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -1138,7 +1139,7 @@ protected:
   friend class xpcAccessible;
   friend class TreeMutation;
 
-  nsAutoPtr<mozilla::a11y::EmbeddedObjCollector> mEmbeddedObjCollector;
+  UniquePtr<mozilla::a11y::EmbeddedObjCollector> mEmbeddedObjCollector;
   union {
     int32_t mIndexOfEmbeddedChild;
     uint32_t mProxyInterfaces;
