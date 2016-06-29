@@ -1,4 +1,4 @@
 // |jit-test| test-also-wasm-baseline
-// TODO unaligned memory accesses
+// TODO i64 loads
 quit();
 var importedArgs = ['memory.wast']; load(scriptdir + '../spec.js');
