@@ -139,7 +139,7 @@ public:
   CheckScriptEvaluationWithCallback(WorkerPrivate* aWorkerPrivate,
                                     KeepAliveToken* aKeepAliveToken,
                                     LifeCycleEventCallback* aCallback)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mKeepAliveToken(new nsMainThreadPtrHolder<KeepAliveToken>(aKeepAliveToken))
     , mCallback(aCallback)
 #ifdef DEBUG
@@ -385,7 +385,7 @@ protected:
 public:
   ExtendableEventWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                                 KeepAliveToken* aKeepAliveToken)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aWorkerPrivate);

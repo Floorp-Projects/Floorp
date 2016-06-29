@@ -82,7 +82,7 @@ struct FrameData
     void* backtrackStackBase;
 };
 
-class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
+class MOZ_STACK_CLASS NativeRegExpMacroAssembler final : public RegExpMacroAssembler
 {
   public:
     // Type of input string to generate code for.

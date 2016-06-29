@@ -965,8 +965,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     FrameProperties props = aFrame->Properties();
 
     if (aFlags == eBBoxIncludeFillGeometry) {
-      gfxRect* prop =
-        static_cast<gfxRect*>(props.Get(ObjectBoundingBoxProperty()));
+      gfxRect* prop = props.Get(ObjectBoundingBoxProperty());
       if (prop) {
         return *prop;
       }
@@ -1316,7 +1315,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
                       gfxTextContextPaint* aOuterContextPaint,
                       SVGTextContextPaint::Paint& aTargetPaint,
                       nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                      nsSVGEffects::ObserverPropertyDescriptor aProperty)
+                      nsSVGEffects::PaintingPropertyDescriptor aProperty)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   nsSVGPaintServerFrame *ps =

@@ -1009,6 +1009,19 @@ MacroAssemblerARM::ma_clz(Register src, Register dest, Condition cond)
     as_clz(dest, src, cond);
 }
 
+void
+MacroAssemblerARM::ma_ctz(Register src, Register dest)
+{
+    // int c = __clz(a & -a);
+    // return a ? 31 - c : c;
+
+    ScratchRegisterScope scratch(asMasm());
+    as_rsb(scratch, src, Imm8(0), SetCC);
+    as_and(dest, src, O2Reg(scratch), LeaveCC);
+    as_clz(dest, dest);
+    as_rsb(dest, dest, Imm8(0x1F), LeaveCC, Assembler::NotEqual);
+}
+
 // Memory.
 // Shortcut for when we know we're transferring 32 bits of data.
 void
@@ -2103,6 +2116,55 @@ MacroAssemblerARMCompat::loadFloat32(const BaseIndex& src, FloatRegister dest)
     ma_vldr(Address(scratch, offset), VFPRegister(dest).singleOverlay());
 }
 
+
+void
+MacroAssemblerARMCompat::ma_loadHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck,
+                                          bool faultOnOOB, FloatRegister output)
+{
+    if (size == 32)
+        output = output.singleOverlay();
+
+    if (!needsBoundsCheck) {
+        ma_vldr(output, HeapReg, ptrReg, 0, Assembler::Always);
+    } else {
+        uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+        append(wasm::BoundsCheck(cmpOffset));
+
+        if (faultOnOOB) {
+            ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+        }
+        else {
+            size_t nanOffset =
+                size == 32 ? wasm::NaN32GlobalDataOffset : wasm::NaN64GlobalDataOffset;
+            ma_vldr(Address(GlobalReg, nanOffset - AsmJSGlobalRegBias), output,
+                    Assembler::AboveOrEqual);
+        }
+        ma_vldr(output, HeapReg, ptrReg, 0, Assembler::Below);
+    }
+}
+
+void
+MacroAssemblerARMCompat::ma_loadHeapAsmJS(Register ptrReg, int size, bool isSigned,
+                                          bool needsBoundsCheck, bool faultOnOOB,
+                                          Register output)
+{
+    if (!needsBoundsCheck) {
+        ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, output, Offset,
+                         Assembler::Always);
+        return;
+    }
+
+    uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+    append(wasm::BoundsCheck(cmpOffset));
+
+    if (faultOnOOB)
+        ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+    else
+        ma_mov(Imm32(0), output, Assembler::AboveOrEqual);
+
+    ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, output, Offset, Assembler::Below);
+}
+
 void
 MacroAssemblerARMCompat::store8(Imm32 imm, const Address& address)
 {
@@ -2279,6 +2341,51 @@ MacroAssemblerARMCompat::storePtr(Register src, AbsoluteAddress dest)
     storePtr(src, Address(scratch, 0));
 }
 
+void
+MacroAssemblerARMCompat::ma_storeHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck,
+                                           bool faultOnOOB, FloatRegister value)
+{
+    if (!needsBoundsCheck) {
+        BaseIndex addr(HeapReg, ptrReg, TimesOne, 0);
+        if (size == 32)
+            asMasm().storeFloat32(value, addr);
+        else
+            asMasm().storeDouble(value, addr);
+    } else {
+        uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+        append(wasm::BoundsCheck(cmpOffset));
+
+        if (faultOnOOB)
+            ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+
+        if (size == 32)
+            value = value.singleOverlay();
+
+        ma_vstr(value, HeapReg, ptrReg, 0, 0, Assembler::Below);
+    }
+}
+
+void
+MacroAssemblerARMCompat::ma_storeHeapAsmJS(Register ptrReg, int size, bool isSigned,
+                                           bool needsBoundsCheck, bool faultOnOOB,
+                                           Register value)
+{
+    if (!needsBoundsCheck) {
+        ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg, value, Offset,
+                         Assembler::Always);
+        return;
+    }
+
+    uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+    append(wasm::BoundsCheck(cmpOffset));
+
+    if (faultOnOOB)
+        ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+
+    ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg, value, Offset,
+                     Assembler::Below);
+}
+
 // Note: this function clobbers the input register.
 void
 MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
@@ -2435,6 +2542,94 @@ void
 MacroAssemblerARMCompat::setStackArg(Register reg, uint32_t arg)
 {
     ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * sizeof(intptr_t)), reg);
+}
+
+void
+MacroAssemblerARMCompat::minMaxDouble(FloatRegister srcDest, FloatRegister second, bool handleNaN, bool isMax)
+{
+    FloatRegister first = srcDest;
+
+    Assembler::Condition cond = isMax
+        ? Assembler::VFP_LessThanOrEqual
+        : Assembler::VFP_GreaterThanOrEqual;
+    Label nan, equal, returnSecond, done;
+
+    compareDouble(first, second);
+    // First or second is NaN, result is NaN.
+    ma_b(&nan, Assembler::VFP_Unordered);
+    // Make sure we handle -0 and 0 right.
+    ma_b(&equal, Assembler::VFP_Equal);
+    ma_b(&returnSecond, cond);
+    ma_b(&done);
+
+    // Check for zero.
+    bind(&equal);
+    compareDouble(first, NoVFPRegister);
+    // First wasn't 0 or -0, so just return it.
+    ma_b(&done, Assembler::VFP_NotEqualOrUnordered);
+    // So now both operands are either -0 or 0.
+    if (isMax) {
+        // -0 + -0 = -0 and -0 + 0 = 0.
+        ma_vadd(second, first, first);
+    } else {
+        ma_vneg(first, first);
+        ma_vsub(first, second, first);
+        ma_vneg(first, first);
+    }
+    ma_b(&done);
+
+    bind(&nan);
+    loadConstantDouble(JS::GenericNaN(), srcDest);
+    ma_b(&done);
+
+    bind(&returnSecond);
+    ma_vmov(second, srcDest);
+
+    bind(&done);
+}
+
+void
+MacroAssemblerARMCompat::minMaxFloat32(FloatRegister srcDest, FloatRegister second, bool handleNaN, bool isMax)
+{
+    FloatRegister first = srcDest;
+
+    Assembler::Condition cond = isMax
+        ? Assembler::VFP_LessThanOrEqual
+        : Assembler::VFP_GreaterThanOrEqual;
+    Label nan, equal, returnSecond, done;
+
+    compareFloat(first, second);
+    // First or second is NaN, result is NaN.
+    ma_b(&nan, Assembler::VFP_Unordered);
+    // Make sure we handle -0 and 0 right.
+    ma_b(&equal, Assembler::VFP_Equal);
+    ma_b(&returnSecond, cond);
+    ma_b(&done);
+
+    // Check for zero.
+    bind(&equal);
+    compareFloat(first, NoVFPRegister);
+    // First wasn't 0 or -0, so just return it.
+    ma_b(&done, Assembler::VFP_NotEqualOrUnordered);
+    // So now both operands are either -0 or 0.
+    if (isMax) {
+        // -0 + -0 = -0 and -0 + 0 = 0.
+        ma_vadd_f32(second, first, first);
+    } else {
+        ma_vneg_f32(first, first);
+        ma_vsub_f32(first, second, first);
+        ma_vneg_f32(first, first);
+    }
+    ma_b(&done);
+
+    bind(&nan);
+    loadConstantFloat32(float(JS::GenericNaN()), srcDest);
+    ma_b(&done);
+
+    bind(&returnSecond);
+    ma_vmov_f32(second, srcDest);
+
+    bind(&done);
 }
 
 void
@@ -4558,14 +4753,14 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
     if (set.gprs().size() > 1) {
         adjustFrame(diffG);
         startDataTransferM(IsStore, StackPointer, DB, WriteBack);
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             transferReg(*iter);
         }
         finishDataTransfer();
     } else {
         reserveStack(diffG);
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             storePtr(*iter, Address(StackPointer, diffG));
         }
@@ -4593,7 +4788,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     } else {
         LiveFloatRegisterSet fpset(set.fpus().reduceSetForPush());
         LiveFloatRegisterSet fpignore(ignore.fpus().reduceSetForPush());
-        for (FloatRegisterBackwardIterator iter(fpset); iter.more(); iter++) {
+        for (FloatRegisterBackwardIterator iter(fpset); iter.more(); ++iter) {
             diffF -= (*iter).size();
             if (!fpignore.has(*iter))
                 loadDouble(Address(StackPointer, diffF), *iter);
@@ -4604,14 +4799,14 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 
     if (set.gprs().size() > 1 && ignore.emptyGeneral()) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             transferReg(*iter);
         }
         finishDataTransfer();
         adjustFrame(-reservedG);
     } else {
-        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
             diffG -= sizeof(intptr_t);
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);
@@ -4668,6 +4863,13 @@ MacroAssembler::Pop(Register reg)
 {
     ma_pop(reg);
     adjustFrame(-sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Pop(FloatRegister reg)
+{
+    ma_vpop(reg);
+    adjustFrame(-reg.size());
 }
 
 void

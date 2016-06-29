@@ -395,7 +395,6 @@ IMMHandler::GetIMEUpdatePreference()
 {
   return nsIMEUpdatePreference(
     nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
-    nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
     nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR);
 }
 

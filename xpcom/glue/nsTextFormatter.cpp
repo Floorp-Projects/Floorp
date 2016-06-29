@@ -1223,7 +1223,7 @@ GrowStuff(SprintfState* aState, const char16_t* aStr, uint32_t aLen)
     --aLen;
     *aState->cur++ = *aStr++;
   }
-  PR_ASSERT((uint32_t)(aState->cur - aState->base) <= aState->maxlen);
+  MOZ_ASSERT((uint32_t)(aState->cur - aState->base) <= aState->maxlen);
   return 0;
 }
 
@@ -1318,7 +1318,7 @@ nsTextFormatter::snprintf(char16_t* aOut, uint32_t aOutLen,
   va_list ap;
   uint32_t rv;
 
-  PR_ASSERT((int32_t)aOutLen > 0);
+  MOZ_ASSERT((int32_t)aOutLen > 0);
   if ((int32_t)aOutLen <= 0) {
     return 0;
   }
@@ -1336,7 +1336,7 @@ nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
   SprintfState ss;
   uint32_t n;
 
-  PR_ASSERT((int32_t)aOutLen > 0);
+  MOZ_ASSERT((int32_t)aOutLen > 0);
   if ((int32_t)aOutLen <= 0) {
     return 0;
   }

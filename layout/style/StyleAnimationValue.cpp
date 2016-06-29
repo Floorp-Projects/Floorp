@@ -2508,15 +2508,6 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
         ++len2;
       }
       MOZ_ASSERT(len1 > 0 && len2 > 0, "unexpected length");
-      if (list1->mValue.GetUnit() == eCSSUnit_None ||
-          list2->mValue.GetUnit() == eCSSUnit_None) {
-        // One of our values is "none".  Can't do addition with that.
-        MOZ_ASSERT(
-          (list1->mValue.GetUnit() != eCSSUnit_None || len1 == 1) &&
-          (list2->mValue.GetUnit() != eCSSUnit_None || len2 == 1),
-          "multi-value valuelist with 'none' as first element");
-        return false;
-      }
 
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
@@ -3774,8 +3765,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
 
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
-          nsAutoPtr<nsCSSValueList> result;
           if (!svg->mStrokeDasharray.IsEmpty()) {
+            nsAutoPtr<nsCSSValueList> result;
             nsCSSValueList **resultTail = getter_Transfers(result);
             for (uint32_t i = 0, i_end = svg->mStrokeDasharray.Length();
                  i != i_end; ++i) {
@@ -3806,12 +3797,17 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
                   return false;
               }
             }
+            aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
+                                                        eUnit_Dasharray);
+          } else if (svg->StrokeDasharrayFromObject()) {
+            // An empty dasharray with StrokeDasharrayFromObject() == true
+            // corresponds to the "context-value" keyword.
+            aComputedValue.SetIntValue(NS_STYLE_STROKE_PROP_CONTEXT_VALUE,
+                                       eUnit_Enumerated);
           } else {
-            result = new nsCSSValueList;
-            result->mValue.SetNoneValue();
+            // Otherwise, an empty dasharray corresponds to the "none" keyword.
+            aComputedValue.SetNoneValue();
           }
-          aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
-                                                      eUnit_Dasharray);
           break;
         }
 

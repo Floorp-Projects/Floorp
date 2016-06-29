@@ -6,6 +6,14 @@ $inherits:
   from: tasks/branches/base_job_flags.yml
 
 builds:
+  android-api-15:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_15.yml
+      debug:
+        task: tasks/builds/android_api_15_debug.yml
   linux64-mulet:
     platforms:
       - Mulet Linux

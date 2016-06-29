@@ -361,7 +361,7 @@ nsComponentManagerImpl::InitializeModuleLocations()
 nsresult
 nsComponentManagerImpl::Init()
 {
-  PR_ASSERT(NOT_INITIALIZED == mStatus);
+  MOZ_ASSERT(NOT_INITIALIZED == mStatus);
 
   // Initialize our arena
   PL_INIT_ARENA_POOL(&mArena, "ComponentManagerArena", NS_CM_BLOCK_SIZE);
@@ -892,7 +892,7 @@ nsComponentManagerImpl::KnownModule::Description() const
 
 nsresult nsComponentManagerImpl::Shutdown(void)
 {
-  PR_ASSERT(NORMAL == mStatus);
+  MOZ_ASSERT(NORMAL == mStatus);
 
   mStatus = SHUTDOWN_IN_PROGRESS;
 
@@ -1019,7 +1019,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
     }
   }
 
-  PR_ASSERT(aResult != nullptr);
+  MOZ_ASSERT(aResult != nullptr);
 
   nsCOMPtr<nsIFactory> factory = FindFactory(aClass);
   if (!factory) {

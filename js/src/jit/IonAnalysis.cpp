@@ -2866,9 +2866,10 @@ jit::AssertExtendedGraphCoherency(MIRGraph& graph, bool underValueNumberer)
 
     AssertDominatorTree(graph);
 
-    uint32_t idx = 0;
+    DebugOnly<uint32_t> idx = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
-        MOZ_ASSERT(block->id() == idx++);
+        MOZ_ASSERT(block->id() == idx);
+        ++idx;
 
         // No critical edges:
         if (block->numSuccessors() > 1)

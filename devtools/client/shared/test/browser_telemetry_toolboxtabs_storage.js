@@ -5,7 +5,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolboxtabs_
 
 // Because we need to gather stats for the period of time that a tool has been
 // opened we make use of setTimeout() to create tool active times.
-const TOOL_DELAY = 200;
+const TOOL_DELAY = 1000;
 
 add_task(function* () {
   info("Activating the storage inspector");

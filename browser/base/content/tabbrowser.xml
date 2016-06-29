@@ -5625,10 +5625,6 @@
             return;
           }
 
-          Services.telemetry.getHistogramById(aTab.closing ?
-                                              "FX_TAB_ANIM_CLOSE_MS" :
-                                              "FX_TAB_ANIM_OPEN_MS")
-                            .add(Date.now() - aTab._animStartTime);
           aTab._animStartTime = 0;
 
           // Handle tab animation smoothness telemetry/logging of frame intervals and paint times

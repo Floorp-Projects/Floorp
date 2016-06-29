@@ -111,6 +111,8 @@ class nsCSPParser {
                 nsCSPContext* aCSPContext,
                 bool aDeliveredViaMetaTag);
 
+    static bool sCSPExperimentalEnabled;
+
     ~nsCSPParser();
 
 

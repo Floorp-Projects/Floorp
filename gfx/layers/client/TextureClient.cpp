@@ -103,7 +103,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureChild)
 
   TextureChild()
-  : mForwarder(nullptr)
+  : mCompositableForwarder(nullptr)
   , mTextureForwarder(nullptr)
   , mTextureClient(nullptr)
   , mTextureData(nullptr)
@@ -115,18 +115,15 @@ public:
 
   bool Recv__delete__() override { return true; }
 
-  CompositableForwarder* GetForwarder() { return mForwarder; }
-  TextureForwarder* GetTextureForwarder() { return mTextureForwarder; }
-
   ClientIPCAllocator* GetAllocator() { return mTextureForwarder; }
 
   void ActorDestroy(ActorDestroyReason why) override;
 
   bool IPCOpen() const { return mIPCOpen; }
 
-  void Lock() const { if (mForwarder->UsesImageBridge()) { mLock.Enter(); } }
+  void Lock() const { if (mCompositableForwarder->UsesImageBridge()) { mLock.Enter(); } }
 
-  void Unlock() const { if (mForwarder->UsesImageBridge()) { mLock.Leave(); } }
+  void Unlock() const { if (mCompositableForwarder->UsesImageBridge()) { mLock.Leave(); } }
 
 private:
 
@@ -210,7 +207,7 @@ private:
   // in the texture's producer thread to avoid deadlocks.
   mutable gfx::CriticalSection mLock;
 
-  RefPtr<CompositableForwarder> mForwarder;
+  RefPtr<CompositableForwarder> mCompositableForwarder;
   RefPtr<TextureForwarder> mTextureForwarder;
 
   TextureClient* mTextureClient;
@@ -350,13 +347,13 @@ DeallocateTextureClient(TextureDeallocParams params)
   if (params.syncDeallocation) {
     MOZ_PERFORMANCE_WARNING("gfx",
       "TextureClient/Host pair requires synchronous deallocation");
-    actor->DestroySynchronously(actor->GetForwarder());
+    actor->DestroySynchronously(actor->mCompositableForwarder);
     DestroyTextureData(params.data, params.allocator, params.clientDeallocation,
                        actor->mMainThreadOnly);
   } else {
     actor->mTextureData = params.data;
     actor->mOwnsTextureData = params.clientDeallocation;
-    actor->Destroy(actor->GetForwarder());
+    actor->Destroy(actor->mCompositableForwarder);
     // DestroyTextureData will be called by TextureChild::ActorDestroy
   }
 }
@@ -869,8 +866,23 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 {
   MOZ_ASSERT(aForwarder && aForwarder->GetMessageLoop() == mAllocator->AsClientAllocator()->GetMessageLoop());
   if (mActor && !mActor->mDestroyed) {
-    if (mActor->GetForwarder() != aForwarder) {
-      mActor->mForwarder = aForwarder;
+    CompositableForwarder* currentFwd = mActor->mCompositableForwarder;
+    TextureForwarder* currentTexFwd = mActor->mTextureForwarder;
+    if (currentFwd != aForwarder) {
+      // It's a bit iffy but right now ShadowLayerForwarder inherits TextureForwarder
+      // even though it should not. ShadowLayerForwarder::AsTextureForwarder actually
+      // returns a pointer to the CompositorBridgeChild.
+      // It's Ok for a texture to move from a ShadowLayerForwarder to another, but
+      // not form a CompositorBridgeChild to another (they use different channels).
+      if (currentTexFwd && currentTexFwd != aForwarder->AsTextureForwarder()) {
+        gfxCriticalError() << "Attempt to move a texture to a different channel.";
+        return false;
+      }
+      if (currentFwd && currentFwd->GetCompositorBackendType() != aForwarder->GetCompositorBackendType()) {
+        gfxCriticalError() << "Attempt to move a texture to different compositor backend.";
+        return false;
+      }
+      mActor->mCompositableForwarder = aForwarder;
     }
     return true;
   }
@@ -886,7 +898,8 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
                                                                 GetFlags(),
                                                                 mSerial));
   MOZ_ASSERT(mActor);
-  mActor->mForwarder = aForwarder;
+  mActor->mCompositableForwarder = aForwarder;
+  mActor->mTextureForwarder = aForwarder->AsTextureForwarder();
   mActor->mTextureClient = this;
   mActor->mMainThreadOnly = !!(mFlags & TextureFlags::DEALLOCATE_MAIN_THREAD);
 
@@ -921,13 +934,42 @@ BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSel
 
 // static
 already_AddRefed<TextureClient>
-TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
+TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
                                 gfx::SurfaceFormat aFormat,
                                 gfx::IntSize aSize,
                                 BackendSelector aSelector,
                                 TextureFlags aTextureFlags,
                                 TextureAllocationFlags aAllocFlags)
 {
+  LayersBackend layersBackend = aAllocator->GetCompositorBackendType();
+  return TextureClient::CreateForDrawing(aAllocator->AsTextureForwarder(),
+                                         aFormat, aSize,
+                                         layersBackend,
+                                         aSelector,
+                                         aTextureFlags,
+                                         aAllocFlags);
+}
+
+// static
+already_AddRefed<TextureClient>
+TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
+                                gfx::SurfaceFormat aFormat,
+                                gfx::IntSize aSize,
+                                LayersBackend aLayersBackend,
+                                BackendSelector aSelector,
+                                TextureFlags aTextureFlags,
+                                TextureAllocationFlags aAllocFlags)
+{
+  // What we want here is the "real" TextureForwarder. ShadowLayerForwarder,
+  // while inheriting TextureForwarder, actually forwards all of its TF methods
+  // to CompositorBridgeChild. In order to avoid odd situations where some
+  // textures point to a ShadowLayerForwarder and some point directly to the
+  // CompositorBridgeChild, we just get the actual TextureForwarder which is
+  // returned by AsTextureForwarder...
+  aAllocator = aAllocator->AsTextureForwarder();
+
+  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(aLayersBackend, aSelector);
+
   // also test the validity of aAllocator
   MOZ_ASSERT(aAllocator && aAllocator->IPCOpen());
   if (!aAllocator || !aAllocator->IPCOpen()) {
@@ -938,9 +980,6 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
     return nullptr;
   }
 
-  LayersBackend parentBackend = aAllocator->GetCompositorBackendType();
-  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(parentBackend, aSelector);
-
   TextureData* data = nullptr;
 
 #if defined(XP_WIN)
@@ -948,7 +987,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
 #endif
 
 #ifdef XP_WIN
-  if (parentBackend == LayersBackend::LAYERS_D3D11 &&
+  if (aLayersBackend == LayersBackend::LAYERS_D3D11 &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
@@ -958,7 +997,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
   {
     data = DXGITextureData::Create(aSize, aFormat, aAllocFlags);
   }
-  if (parentBackend == LayersBackend::LAYERS_D3D9 &&
+  if (aLayersBackend == LayersBackend::LAYERS_D3D9 &&
       moz2DBackend == gfx::BackendType::CAIRO &&
       aAllocator->IsSameProcess() &&
       aSize.width <= maxTextureSize &&
@@ -979,14 +1018,14 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
   gfxSurfaceType type =
     gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
 
-  if (!data && parentBackend == LayersBackend::LAYERS_BASIC &&
+  if (!data && aLayersBackend == LayersBackend::LAYERS_BASIC &&
       moz2DBackend == gfx::BackendType::CAIRO &&
       type == gfxSurfaceType::Xlib)
   {
     data = X11TextureData::Create(aSize, aFormat, aTextureFlags, aAllocator);
   }
 #ifdef GL_PROVIDER_GLX
-  if (!data && parentBackend == LayersBackend::LAYERS_OPENGL &&
+  if (!data && aLayersBackend == LayersBackend::LAYERS_OPENGL &&
       type == gfxSurfaceType::Xlib &&
       aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap())

@@ -944,7 +944,7 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext* cx, va_list ap)
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr,
                                 JSMSG_UNCAUGHT_EXCEPTION, &ownedMessage,
-                                &ownedReport, ArgumentsAreASCII, ap)) {
+                                ArgumentsAreASCII, &ownedReport, ap)) {
         return false;
     }
 

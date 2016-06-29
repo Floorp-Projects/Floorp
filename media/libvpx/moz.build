@@ -51,6 +51,10 @@ if CONFIG['VPX_ARM_ASM']:
         LOCAL_INCLUDES += [
             '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
         ]
+    if CONFIG['CLANG_CXX']:
+        ASFLAGS += [
+            '-no-integrated-as',
+        ]
 
 # boolhuff_armv5te.asm defines the same functions as boolhuff.c instead of
 # using RTCD, so we have to make sure we only add one of the two.

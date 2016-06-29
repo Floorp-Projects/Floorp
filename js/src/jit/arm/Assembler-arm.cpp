@@ -1911,6 +1911,7 @@ Assembler::as_udiv(Register rd, Register rn, Register rm, Condition c)
 BufferOffset
 Assembler::as_clz(Register dest, Register src, Condition c)
 {
+    MOZ_ASSERT(src != pc && dest != pc);
     return writeInst(RD(dest) | src.code() | c | 0x016f0f10);
 }
 

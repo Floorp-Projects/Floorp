@@ -64,7 +64,7 @@ public:
                             already_AddRefed<PromiseWorkerProxy>&& aProxy,
                             nsresult aStatus,
                             bool aSuccess)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mProxy(Move(aProxy))
     , mStatus(aStatus)
     , mSuccess(aSuccess)

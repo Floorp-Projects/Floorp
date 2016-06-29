@@ -227,7 +227,7 @@ int
 CaseInsensitiveCompareUCStrings(const CharT* substring1, const CharT* substring2,
                                 size_t byteLength);
 
-class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler : public RegExpMacroAssembler
+class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler final : public RegExpMacroAssembler
 {
   public:
     InterpretedRegExpMacroAssembler(LifoAlloc* alloc, RegExpShared* shared, size_t numSavedRegisters);

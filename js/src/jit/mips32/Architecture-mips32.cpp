@@ -66,7 +66,7 @@ FloatRegisterSet
 FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     LiveFloatRegisterSet mod;
-    for (FloatRegisterIterator iter(s); iter.more(); iter++) {
+    for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
         if ((*iter).isSingle()) {
             // Even for single size registers save complete double register.
             mod.addUnchecked((*iter).doubleOverlay());

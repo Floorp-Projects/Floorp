@@ -1512,7 +1512,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
                 Mov(ScratchReg64, immediate);
                 Eor(ScratchReg64, ScratchReg2_64, ScratchReg64);
             }
-            Tst(ScratchReg64, Operand(-1ll << JSVAL_TAG_SHIFT));
+            Tst(ScratchReg64, Operand((unsigned long long)(-1ll) << JSVAL_TAG_SHIFT));
             return cond;
         }
 

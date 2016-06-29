@@ -1096,11 +1096,6 @@ class TypedRegisterIterator
     bool more() const {
         return !regset_.empty();
     }
-    TypedRegisterIterator<T> operator ++(int) {
-        TypedRegisterIterator<T> old(*this);
-        regset_.takeAny();
-        return old;
-    }
     TypedRegisterIterator<T>& operator ++() {
         regset_.takeAny();
         return *this;
@@ -1128,11 +1123,6 @@ class TypedRegisterBackwardIterator
     bool more() const {
         return !regset_.empty();
     }
-    TypedRegisterBackwardIterator<T> operator ++(int) {
-        TypedRegisterBackwardIterator<T> old(*this);
-        regset_.takeLast();
-        return old;
-    }
     TypedRegisterBackwardIterator<T>& operator ++() {
         regset_.takeLast();
         return *this;
@@ -1158,11 +1148,6 @@ class TypedRegisterForwardIterator
 
     bool more() const {
         return !regset_.empty();
-    }
-    TypedRegisterForwardIterator<T> operator ++(int) {
-        TypedRegisterForwardIterator<T> old(*this);
-        regset_.takeFirst();
-        return old;
     }
     TypedRegisterForwardIterator<T>& operator ++() {
         regset_.takeFirst();
@@ -1204,13 +1189,12 @@ class AnyRegisterIterator
     bool more() const {
         return geniter_.more() || floatiter_.more();
     }
-    AnyRegisterIterator operator ++(int) {
-        AnyRegisterIterator old(*this);
+    AnyRegisterIterator& operator ++() {
         if (geniter_.more())
-            geniter_++;
+            ++geniter_;
         else
-            floatiter_++;
-        return old;
+            ++floatiter_;
+        return *this;
     }
     AnyRegister operator*() const {
         if (geniter_.more())
@@ -1297,7 +1281,7 @@ SavedNonVolatileRegisters(AllocatableGeneralRegisterSet unused)
 {
     LiveGeneralRegisterSet result;
 
-    for (GeneralRegisterIterator iter(GeneralRegisterSet::NonVolatile()); iter.more(); iter++) {
+    for (GeneralRegisterIterator iter(GeneralRegisterSet::NonVolatile()); iter.more(); ++iter) {
         Register reg = *iter;
         if (!unused.has(reg))
             result.add(reg);

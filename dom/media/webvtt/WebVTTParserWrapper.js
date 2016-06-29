@@ -54,9 +54,9 @@ WebVTTParserWrapper.prototype =
     return WebVTT.convertCueToDOMTree(window, cue.text);
   },
 
-  processCues: function(window, cues, overlay)
+  processCues: function(window, cues, overlay, controls)
   {
-    WebVTT.processCues(window, cues, overlay);
+    WebVTT.processCues(window, cues, overlay, controls);
   },
 
   classDescription: "Wrapper for the JS WebVTT implementation (vtt.js)",

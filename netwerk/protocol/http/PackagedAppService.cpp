@@ -1160,12 +1160,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
   if (loadContext) {
     channel->SetNotificationCallbacks(loadContext);
   }
-
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
-    return channel->AsyncOpen2(listener);
-  }
-
-  return channel->AsyncOpen(listener, nullptr);
+  return NS_MaybeOpenChannelUsingAsyncOpen2(channel, listener);
 }
 
 nsresult

@@ -116,16 +116,6 @@ this.ThirdPartyCookieProbe.prototype = {
       return;
     }
     this._latestFlush = aNow;
-    let acceptedSites = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_SITES_ACCEPTED");
-    let rejectedSites = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_SITES_BLOCKED");
-    let acceptedRequests = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED");
-    let rejectedRequests = Services.telemetry.getHistogramById("COOKIES_3RDPARTY_NUM_ATTEMPTS_BLOCKED");
-    for (let [k, data] of this._thirdPartyCookies) {
-      acceptedSites.add(data.countAcceptedSites / updays);
-      rejectedSites.add(data.countRejectedSites / updays);
-      acceptedRequests.add(data.countAcceptedRequests / updays);
-      rejectedRequests.add(data.countRejectedRequests / updays);
-    }
     this._thirdPartyCookies.clear();
   }
 };

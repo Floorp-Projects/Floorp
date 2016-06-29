@@ -3369,9 +3369,7 @@ nsWindow::GetIMEUpdatePreference()
     if (GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN) {
       return nsIMEUpdatePreference();
     }
-    return nsIMEUpdatePreference(
-        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
-        nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE);
+    return nsIMEUpdatePreference(nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE);
 }
 
 nsresult

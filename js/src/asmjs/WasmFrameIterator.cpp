@@ -791,7 +791,7 @@ wasm::ToggleProfiling(const Instance& instance, const CallSite& callSite, bool e
     (void)to;
     MOZ_CRASH();
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    callerInsn->setBOffImm16(BOffImm16(to - caller));
+    new (caller) InstImm(op_regimm, zero, rt_bgezal, BOffImm16(to - caller));
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else

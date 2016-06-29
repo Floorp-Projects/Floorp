@@ -90,7 +90,7 @@
 #include "nsBidiUtils.h"
 #include "nsServiceManagerUtils.h"
 
-#include "URL.h"
+#include "mozilla/dom/URL.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

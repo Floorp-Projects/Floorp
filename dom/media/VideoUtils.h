@@ -447,6 +447,15 @@ StringListContains(const ListString& aList, const ItemString& aItem)
   return false;
 }
 
+bool
+IsVorbisContentType(const nsAString& aContentType);
+
+bool
+IsVP8ContentType(const nsAString& aContentType);
+
+bool
+IsVP9ContentType(const nsAString& aContentType);
+
 } // end namespace mozilla
 
 #endif

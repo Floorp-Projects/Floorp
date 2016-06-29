@@ -104,3 +104,8 @@ if CONFIG['GNU_AS']:
             '-march=armv7-a',
             '-mfpu=neon',
         ]
+
+        if CONFIG['CLANG_CXX']:
+            ASFLAGS += [
+                '-no-integrated-as',
+            ]

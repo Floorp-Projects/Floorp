@@ -697,6 +697,9 @@ CompositorBridgeParent::StopAndClearResources()
     mCompositor->Destroy();
     mCompositor = nullptr;
   }
+
+  // After this point, it is no longer legal to access the widget.
+  mWidgetProxy = nullptr;
 }
 
 bool

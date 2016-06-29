@@ -1610,7 +1610,7 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
     FrameBidiData data1 = nsBidi::GetBidiData(aFrame1);
     FrameBidiData data2 = nsBidi::GetBidiData(aFrame2);
     if (data1.embeddingLevel != data2.embeddingLevel ||
-        data1.paragraphDepth != data2.paragraphDepth) {
+        data2.precedingControl != kBidiLevelNone) {
       return false;
     }
   }
@@ -2657,8 +2657,7 @@ nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
       static const gfxSkipChars emptySkipChars;
       return gfxSkipCharsIterator(emptySkipChars, 0);
     }
-    TabWidthStore* tabWidths =
-      static_cast<TabWidthStore*>(Properties().Get(TabWidthProperty()));
+    TabWidthStore* tabWidths = Properties().Get(TabWidthProperty());
     if (tabWidths && tabWidths->mValidForContentOffset != GetContentOffset()) {
       Properties().Delete(TabWidthProperty());
     }
@@ -2959,9 +2958,9 @@ public:
   // This may not be equal to the frame offset/length in because we may have
   // adjusted for whitespace trimming according to the state bits set in the frame
   // (for the static provider)
-  const gfxSkipCharsIterator& GetStart() { return mStart; }
+  const gfxSkipCharsIterator& GetStart() const { return mStart; }
   // May return INT32_MAX if that was given to the constructor
-  uint32_t GetOriginalLength() {
+  uint32_t GetOriginalLength() const {
     NS_ASSERTION(mLength != INT32_MAX, "Length not known");
     return mLength;
   }
@@ -3277,8 +3276,7 @@ PropertyProvider::CalcTabWidths(Range aRange)
       return;
     }
     if (!mReflowing) {
-      mTabWidths = static_cast<TabWidthStore*>
-        (mFrame->Properties().Get(TabWidthProperty()));
+      mTabWidths = mFrame->Properties().Get(TabWidthProperty());
 #ifdef DEBUG
       // If we're not reflowing, we should have already computed the
       // tab widths; check that they're available as far as the last
@@ -4157,6 +4155,7 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
   }
   if (aPrevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) {
     FrameBidiData bidiData = nsBidi::GetBidiData(aPrevInFlow);
+    bidiData.precedingControl = kBidiLevelNone;
     Properties().Set(nsBidi::BidiDataProperty(), bidiData);
 
     if (nextContinuation) {
@@ -4168,9 +4167,11 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
 #ifdef DEBUG
         FrameBidiData nextBidiData = nsBidi::GetBidiData(nextContinuation);
         NS_ASSERTION(bidiData.embeddingLevel == nextBidiData.embeddingLevel &&
-                     bidiData.baseLevel == nextBidiData.baseLevel &&
-                     bidiData.paragraphDepth == nextBidiData.paragraphDepth,
+                     bidiData.baseLevel == nextBidiData.baseLevel,
                      "stealing text from different type of BIDI continuation");
+        MOZ_ASSERT(nextBidiData.precedingControl == kBidiLevelNone,
+                   "There shouldn't be any virtual bidi formatting character "
+                   "between continuations");
 #endif
         nextContinuation->mContentOffset = mContentOffset;
         nextContinuation = static_cast<nsTextFrame*>(nextContinuation->GetNextContinuation());
@@ -6224,7 +6225,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const nscolor* aDecorationOverrideColor,
                                PropertyProvider* aProvider)
 {
-  const auto info = Properties().Get(EmphasisMarkProperty());
+  const EmphasisMarkInfo* info = Properties().Get(EmphasisMarkProperty());
   if (!info) {
     return;
   }
@@ -7177,6 +7178,65 @@ nsTextFrame::SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
   }
 }
 
+void
+nsTextFrame::UpdateIteratorFromOffset(const PropertyProvider& aProperties,
+                                      int32_t& aInOffset,
+                                      gfxSkipCharsIterator& aIter)
+{
+  if (aInOffset < GetContentOffset()){
+    NS_WARNING("offset before this frame's content");
+    aInOffset = GetContentOffset();
+  } else if (aInOffset > GetContentEnd()) {
+    NS_WARNING("offset after this frame's content");
+    aInOffset = GetContentEnd();
+  }
+
+  int32_t trimmedOffset = aProperties.GetStart().GetOriginalOffset();
+  int32_t trimmedEnd = trimmedOffset + aProperties.GetOriginalLength();
+  aInOffset = std::max(aInOffset, trimmedOffset);
+  aInOffset = std::min(aInOffset, trimmedEnd);
+
+  aIter.SetOriginalOffset(aInOffset);
+
+  if (aInOffset < trimmedEnd &&
+      !aIter.IsOriginalCharSkipped() &&
+      !mTextRun->IsClusterStart(aIter.GetSkippedOffset())) {
+    NS_WARNING("called for non-cluster boundary");
+    FindClusterStart(mTextRun, trimmedOffset, &aIter);
+  }
+}
+
+nsPoint
+nsTextFrame::GetPointFromIterator(const gfxSkipCharsIterator& aIter,
+                                  PropertyProvider& aProperties)
+{
+  Range range(aProperties.GetStart().GetSkippedOffset(),
+              aIter.GetSkippedOffset());
+  gfxFloat advance = mTextRun->GetAdvanceWidth(range, &aProperties);
+  nscoord iSize = NSToCoordCeilClamped(advance);
+  nsPoint point;
+
+  if (mTextRun->IsVertical()) {
+    point.x = 0;
+    if (mTextRun->IsInlineReversed()) {
+      point.y = mRect.height - iSize;
+    } else {
+      point.y = iSize;
+    }
+  } else {
+    point.y = 0;
+    if (mTextRun->IsInlineReversed()) {
+      point.x = mRect.width - iSize;
+    } else {
+      point.x = iSize;
+    }
+    if (StyleContext()->IsTextCombined()) {
+      point.x *= GetTextCombineScaleFactor(this);
+    }
+  }
+  return point;
+}
+
 nsresult
 nsTextFrame::GetPointFromOffset(int32_t inOffset,
                                 nsPoint* outPoint)
@@ -7184,14 +7244,13 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
   if (!outPoint)
     return NS_ERROR_NULL_POINTER;
 
-  outPoint->x = 0;
-  outPoint->y = 0;
-
   DEBUG_VERIFY_NOT_DIRTY(mState);
   if (mState & NS_FRAME_IS_DIRTY)
     return NS_ERROR_UNEXPECTED;
 
   if (GetContentLength() <= 0) {
+    outPoint->x = 0;
+    outPoint->y = 0;
     return NS_OK;
   }
 
@@ -7202,49 +7261,90 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
   PropertyProvider properties(this, iter, nsTextFrame::eInflated);
   // Don't trim trailing whitespace, we want the caret to appear in the right
   // place if it's positioned there
-  properties.InitializeForDisplay(false);  
+  properties.InitializeForDisplay(false);
 
-  if (inOffset < GetContentOffset()){
-    NS_WARNING("offset before this frame's content");
-    inOffset = GetContentOffset();
-  } else if (inOffset > GetContentEnd()) {
-    NS_WARNING("offset after this frame's content");
-    inOffset = GetContentEnd();
-  }
-  int32_t trimmedOffset = properties.GetStart().GetOriginalOffset();
-  int32_t trimmedEnd = trimmedOffset + properties.GetOriginalLength();
-  inOffset = std::max(inOffset, trimmedOffset);
-  inOffset = std::min(inOffset, trimmedEnd);
+  UpdateIteratorFromOffset(properties, inOffset, iter);
 
-  iter.SetOriginalOffset(inOffset);
+  *outPoint = GetPointFromIterator(iter, properties);
 
-  if (inOffset < trimmedEnd &&
-      !iter.IsOriginalCharSkipped() &&
-      !mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
-    NS_WARNING("GetPointFromOffset called for non-cluster boundary");
-    FindClusterStart(mTextRun, trimmedOffset, &iter);
+  return NS_OK;
+}
+
+nsresult
+nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
+                                      int32_t aLength,
+                                      nsTArray<nsRect>& aRects)
+{
+  DEBUG_VERIFY_NOT_DIRTY(mState);
+  if (mState & NS_FRAME_IS_DIRTY) {
+    return NS_ERROR_UNEXPECTED;
   }
 
-  Range range(properties.GetStart().GetSkippedOffset(),
-              iter.GetSkippedOffset());
-  gfxFloat advance = mTextRun->GetAdvanceWidth(range, &properties);
-  nscoord iSize = NSToCoordCeilClamped(advance);
+  if (GetContentLength() <= 0) {
+    return NS_OK;
+  }
 
-  if (mTextRun->IsVertical()) {
-    if (mTextRun->IsInlineReversed()) {
-      outPoint->y = mRect.height - iSize;
+  if (!mTextRun) {
+    return NS_ERROR_FAILURE;
+  }
+
+  gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
+  PropertyProvider properties(this, iter, nsTextFrame::eInflated);
+  // Don't trim trailing whitespace, we want the caret to appear in the right
+  // place if it's positioned there
+  properties.InitializeForDisplay(false);
+
+  UpdateIteratorFromOffset(properties, aInOffset, iter);
+
+  for (int32_t i = 0; i < aLength; i++) {
+    if (aInOffset > GetContentEnd()) {
+      break;
+    }
+
+    if (!iter.IsOriginalCharSkipped() &&
+        !mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
+      FindClusterStart(mTextRun,
+                       properties.GetStart().GetOriginalOffset() +
+                         properties.GetOriginalLength(),
+                       &iter);
+    }
+
+    nsPoint point = GetPointFromIterator(iter, properties);
+    nsRect rect;
+    rect.x = point.x;
+    rect.y = point.y;
+
+    nscoord iSize = 0;
+    gfxSkipCharsIterator nextIter(iter);
+    if (aInOffset < GetContentEnd()) {
+      nextIter.AdvanceOriginal(1);
+      if (!nextIter.IsOriginalCharSkipped() &&
+          !mTextRun->IsClusterStart(nextIter.GetSkippedOffset())) {
+        FindClusterEnd(mTextRun, GetContentEnd(), &nextIter);
+      }
+
+      gfxFloat advance =
+        mTextRun->GetAdvanceWidth(Range(iter.GetSkippedOffset(),
+                                        nextIter.GetSkippedOffset()),
+                                  &properties);
+      iSize = NSToCoordCeilClamped(advance);
+    }
+
+    if (mTextRun->IsVertical()) {
+      rect.width = mRect.width;
+      rect.height = iSize;
     } else {
-      outPoint->y = iSize;
+      rect.width = iSize;
+      rect.height = mRect.height;
+
+      if (StyleContext()->IsTextCombined()) {
+        rect.width *= GetTextCombineScaleFactor(this);
+      }
     }
-  } else {
-    if (mTextRun->IsInlineReversed()) {
-      outPoint->x = mRect.width - iSize;
-    } else {
-      outPoint->x = iSize;
-    }
-    if (StyleContext()->IsTextCombined()) {
-      outPoint->x *= GetTextCombineScaleFactor(this);
-    }
+    aRects.AppendElement(rect);
+
+    iter.AdvanceOriginal(1);
+    aInOffset++;
   }
 
   return NS_OK;

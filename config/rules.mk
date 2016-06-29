@@ -919,11 +919,11 @@ ifdef MOZ_RUST
 # in the target's LIBS.
 $(RSOBJS):
 	$(REPORT_BUILD)
-	$(RUSTC) $(RUSTFLAGS) --crate-type rlib --emit dep-info=$(MDDEPDIR)/$(call mk_libname,$<).pp,link=$(call mk_libname,$<) $(_VPATH_SRCS)
+	$(RUSTC) $(RUST_TARGET) $(RUSTFLAGS) --crate-type rlib --emit dep-info=$(MDDEPDIR)/$(call mk_libname,$<).pp,link=$(call mk_libname,$<) $(_VPATH_SRCS)
 
 $(RS_STATICLIB_CRATE_OBJ):
 	$(REPORT_BUILD)
-	$(RUSTC) $(RUSTFLAGS) --crate-type staticlib $(RLIB_EXTERN_CRATE_OPTIONS) --emit dep-info=$(MDDEPDIR)/$(call mk_global_crate_libname,$(RS_STATICLIB_CRATE_SRC)).pp,link=$@ $(RS_STATICLIB_CRATE_SRC)
+	$(RUSTC) $(RUST_TARGET) $(RUSTFLAGS) --crate-type staticlib $(RLIB_EXTERN_CRATE_OPTIONS) --emit dep-info=$(MDDEPDIR)/$(call mk_global_crate_libname,$(RS_STATICLIB_CRATE_SRC)).pp,link=$@ $(RS_STATICLIB_CRATE_SRC)
 endif
 
 $(SOBJS):
