@@ -410,6 +410,7 @@ struct MetadataCacheablePod
 {
     ModuleKind            kind;
     HeapUsage             heapUsage;
+    uint32_t              initialHeapLength;
     CompileArgs           compileArgs;
 
     MetadataCacheablePod() { mozilla::PodZero(this); }
