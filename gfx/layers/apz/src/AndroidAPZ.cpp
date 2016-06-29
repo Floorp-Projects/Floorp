@@ -137,9 +137,7 @@ AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
 
   mFlingDuration += aDelta.ToMilliseconds();
   mOverScroller->ComputeScrollOffset(mFlingDuration, &shouldContinueFling);
-  // OverScroller::GetCurrVelocity will sometimes return NaN. So need to externally
-  // calculate current velocity and not rely on what the OverScroller calculates.
-  // mOverScroller->GetCurrVelocity(&speed);
+
   int32_t currentX = 0;
   int32_t currentY = 0;
   mOverScroller->GetCurrX(&currentX);
@@ -158,7 +156,12 @@ AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
   // of the fling, then end the animation.
   if (offset != mPreviousOffset) {
     if (aDelta.ToMilliseconds() > 0) {
-      velocity = (offset - mPreviousOffset) / (float)aDelta.ToMilliseconds();
+      mOverScroller->GetCurrSpeedX(&velocity.x);
+      mOverScroller->GetCurrSpeedY(&velocity.y);
+
+      velocity.x /= 1000;
+      velocity.y /= 1000;
+
       mPreviousVelocity = velocity;
     }
   } else if ((fabsf(offset.x - preCheckedOffset.x) > BOUNDS_EPSILON) || (fabsf(offset.y - preCheckedOffset.y) > BOUNDS_EPSILON)) {
