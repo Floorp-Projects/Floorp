@@ -3534,7 +3534,20 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                 rootCompBounds = rootCompBounds.RemoveResolution(rootPresShell->GetResolution());
               }
 
+              // We want to convert the root composition bounds from the coordinate
+              // space of |rootFrame| to the coordinate space of |mOuter|. We do
+              // that with the TransformRect call below. However, since we care
+              // about the root composition bounds relative to what the user is
+              // actually seeing, we also need to incorporate the APZ callback
+              // transforms into this. Most of the time those transforms are
+              // negligible, but in some cases (e.g. when a zoom is applied on
+              // an overflow:hidden document) it is not (see bug 1280013).
+              // XXX: Eventually we may want to create a modified version of
+              // TransformRect that includes the APZ callback transforms
+              // directly.
               nsLayoutUtils::TransformRect(rootFrame, mOuter, rootCompBounds);
+              rootCompBounds += CSSPoint::ToAppUnits(
+                  nsLayoutUtils::GetCumulativeApzCallbackTransform(mOuter));
 
               displayportBase = displayportBase.Intersect(rootCompBounds);
             }
