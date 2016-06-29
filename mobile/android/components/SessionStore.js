@@ -82,6 +82,7 @@ SessionStore.prototype = {
     this._sessionFileBackup.append("sessionstore.bak");
 
     this._loadState = STATE_STOPPED;
+    this._startupRestoreFinished = false;
 
     this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
     this._maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
@@ -214,6 +215,10 @@ SessionStore.prototype = {
                   selected: true
                 });
               }
+              // Normally, _restoreWindow() will have set this to true already,
+              // but we want to make sure it's set even in case of a restore failure.
+              this._startupRestoreFinished = true;
+              log("startupRestoreFinished = true (through notification)");
             }.bind(this)
           };
           Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
@@ -223,12 +228,20 @@ SessionStore.prototype = {
           this.restoreLastSession(data.sessionString);
         } else {
           // Not doing a restore; just send restore message
+          this._startupRestoreFinished = true;
+          log("startupRestoreFinished = true");
           Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
         }
         break;
       }
       case "Session:NotifyLocationChange": {
         let browser = aSubject;
+
+        if (browser.__SS_restoreReloadPending && this._startupRestoreFinished) {
+          delete browser.__SS_restoreReloadPending;
+          log("remove restoreReloadPending");
+        }
+
         if (browser.__SS_restoreDataOnLocationChange) {
           delete browser.__SS_restoreDataOnLocationChange;
           this._restoreZoom(browser.__SS_data.scrolldata, browser);
@@ -535,8 +548,9 @@ SessionStore.prototype = {
   },
 
   onTabLoad: function ss_onTabLoad(aWindow, aBrowser) {
-    // If this browser is being restored, skip any session save activity
-    if (aBrowser.__SS_restore) {
+    // If this browser belongs to a zombie tab or the initial restore hasn't yet finished,
+    // skip any session save activity.
+    if (aBrowser.__SS_restore || !this._startupRestoreFinished || aBrowser.__SS_restoreReloadPending) {
       return;
     }
 
@@ -630,8 +644,9 @@ SessionStore.prototype = {
   },
 
   onTabInput: function ss_onTabInput(aWindow, aBrowser) {
-    // If this browser is being restored, skip any session save activity
-    if (aBrowser.__SS_restore) {
+    // If this browser belongs to a zombie tab or the initial restore hasn't yet finished,
+    // skip any session save activity.
+    if (aBrowser.__SS_restore || !this._startupRestoreFinished || aBrowser.__SS_restoreReloadPending) {
       return;
     }
 
@@ -689,8 +704,9 @@ SessionStore.prototype = {
       log("onTabScroll() clearing pending timeout");
     }
 
-    // If this browser is being restored, skip any session save activity.
-    if (aBrowser.__SS_restore) {
+    // If this browser belongs to a zombie tab or the initial restore hasn't yet finished,
+    // skip any session save activity.
+    if (aBrowser.__SS_restore || !this._startupRestoreFinished || aBrowser.__SS_restoreReloadPending) {
       return;
     }
 
@@ -1471,6 +1487,13 @@ SessionStore.prototype = {
 
       if (window.BrowserApp.selectedTab == tab) {
         this._restoreTab(tabData, tab.browser);
+
+        // We can now lift the general ban on tab data capturing,
+        // but we still need to protect the foreground tab until we're
+        // sure it's actually reloading after history restoring has finished.
+        tab.browser.__SS_restoreReloadPending = true;
+        this._startupRestoreFinished = true;
+        log("startupRestoreFinished = true");
 
         delete tab.browser.__SS_restore;
         tab.browser.removeAttribute("pending");
