@@ -163,7 +163,7 @@ LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
-    LAllocation baseAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
+    LAllocation baseAlloc = gen->needsBoundsCheckBranch(ins)
                             ? useRegisterAtStart(base)
                             : useRegisterOrZeroAtStart(base);
 
@@ -178,7 +178,7 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
-    LAllocation baseAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
+    LAllocation baseAlloc = gen->needsBoundsCheckBranch(ins)
                             ? useRegisterAtStart(base)
                             : useRegisterOrZeroAtStart(base);
 

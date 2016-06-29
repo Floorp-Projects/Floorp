@@ -12923,11 +12923,11 @@ class MWasmMemoryAccess
     MemoryBarrierBits barrierAfter_;
 
   public:
-    explicit MWasmMemoryAccess(Scalar::Type accessType, unsigned numSimdElems = 0,
+    explicit MWasmMemoryAccess(Scalar::Type accessType, uint32_t align, unsigned numSimdElems = 0,
                                MemoryBarrierBits barrierBefore = MembarNobits,
                                MemoryBarrierBits barrierAfter = MembarNobits)
       : offset_(0),
-        align_(Scalar::byteSize(accessType)),
+        align_(align),
         accessType_(accessType),
         needsBoundsCheck_(true),
         numSimdElems_(numSimdElems),
@@ -12935,6 +12935,7 @@ class MWasmMemoryAccess
         barrierAfter_(barrierAfter)
     {
         MOZ_ASSERT(numSimdElems <= ScalarTypeToLength(accessType));
+        MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
     }
 
     uint32_t offset() const { return offset_; }
@@ -12965,13 +12966,12 @@ class MAsmJSLoadHeap
       : MUnaryInstruction(base),
         MWasmMemoryAccess(access)
     {
-        if (access.barrierBefore()|access.barrierAfter())
-            setGuard();         // Not removable
+        if (access.barrierBefore() | access.barrierAfter())
+            setGuard(); // Not removable
         else
             setMovable();
 
-        MOZ_ASSERT(access.accessType() != Scalar::Uint8Clamped,
-                   "unexpected load heap in asm.js");
+        MOZ_ASSERT(access.accessType() != Scalar::Uint8Clamped, "unexpected load heap in asm.js");
         setResultType(ScalarTypeToMIRType(access.accessType()));
     }
 
@@ -12998,13 +12998,12 @@ class MAsmJSStoreHeap
     public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSStoreHeap(MDefinition* base, const MWasmMemoryAccess& access,
-                    MDefinition* v)
+    MAsmJSStoreHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
       : MBinaryInstruction(base, v),
         MWasmMemoryAccess(access)
     {
-        if (access.barrierBefore()|access.barrierAfter())
-            setGuard();         // Not removable
+        if (access.barrierBefore() | access.barrierAfter())
+            setGuard(); // Not removable
     }
 
   public:
