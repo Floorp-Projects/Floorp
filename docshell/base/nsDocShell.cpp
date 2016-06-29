@@ -2984,11 +2984,11 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
   AssertOriginAttributesMatchPrivateBrowsing();
   if (aCreate) {
     return manager->CreateStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
-                                  aDocumentURI, UsePrivateBrowsing(), aStorage);
+                                  aDocumentURI, aStorage);
   }
 
   return manager->GetStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
-                             UsePrivateBrowsing(), aStorage);
+                             aStorage);
 }
 
 nsresult
