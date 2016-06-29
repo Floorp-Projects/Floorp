@@ -1148,9 +1148,8 @@ pref("dom.forms.autocomplete.experimental", false);
 // Enables requestAutocomplete DOM API on forms.
 pref("dom.forms.requestAutocomplete", false);
 
-#ifdef NIGHTLY_BUILD
-pref("dom.input.dirpicker", true);
-#endif
+// Enable Directory API. By default, disabled.
+pref("dom.input.dirpicker", false);
 
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
