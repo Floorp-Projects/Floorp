@@ -515,6 +515,7 @@ this.MigrationUtils = Object.freeze({
     // Canary uses the same description as Chrome so we can't distinguish them.
     const APP_DESC_TO_KEY = {
       "Internet Explorer":                 "ie",
+      "Microsoft Edge":                    "edge",
       "Safari":                            "safari",
       "Firefox":                           "firefox",
       "Google Chrome":                     "chrome",  // Windows, Linux
