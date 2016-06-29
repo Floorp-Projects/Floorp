@@ -150,7 +150,7 @@ GPUProcessManager::DestroyProcess()
 }
 
 already_AddRefed<CompositorSession>
-GPUProcessManager::CreateTopLevelCompositor(widget::CompositorWidget* aWidget,
+GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
                                             ClientLayerManager* aLayerManager,
                                             CSSToLayoutDeviceScale aScale,
                                             bool aUseAPZ,
