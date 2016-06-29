@@ -449,6 +449,28 @@ struct BidiLineData {
   nsIFrame* VisualFrameAt(int32_t aIndex){ return mVisualFrames[aIndex]; }
 };
 
+#ifdef DEBUG
+extern "C" {
+void MOZ_EXPORT
+DumpFrameArray(const nsTArray<nsIFrame*>& aFrames)
+{
+  for (nsIFrame* frame : aFrames) {
+    if (frame == NS_BIDI_CONTROL_FRAME) {
+      fprintf_stderr(stderr, "(Bidi control frame)\n");
+    } else {
+      frame->List();
+    }
+  }
+}
+
+void MOZ_EXPORT
+DumpBidiLine(BidiLineData* aData, bool aVisualOrder)
+{
+  DumpFrameArray(aVisualOrder ? aData->mVisualFrames : aData->mLogicalFrames);
+}
+}
+#endif
+
 /* Some helper methods for Resolve() */
 
 // Should this frame be split between text runs?
