@@ -43,9 +43,11 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
 use std::mem::transmute;
 use std::ptr::copy_nonoverlapping;
 
-pub use byteorder::new::{ReadBytesExt, WriteBytesExt};
+#[cfg(not(feature = "no-std"))]
+pub use byteorder::new::{ReadBytesExt, WriteBytesExt, Error, Result};
 
-// Re-export new so gecko can build us as a mod instead of a crate.
+#[cfg(not(feature = "no-std"))]
+// Re-export new so gecko can build us as a mod intead of a crate.
 pub mod new;
 
 #[inline]
@@ -265,18 +267,6 @@ pub trait ByteOrder {
 /// type level.
 #[allow(missing_copy_implementations)] pub enum LittleEndian {}
 
-/// Defines network byte order serialization.
-///
-/// Network byte order is defined by [RFC 1700][1] to be big-endian, and is
-/// referred to in several protocol specifications.  This type is an alias of
-/// BigEndian.
-///
-/// [1]: https://tools.ietf.org/html/rfc1700
-///
-/// Note that this type has no value constructor. It is used purely at the
-/// type level.
-pub type NetworkEndian = BigEndian;
-
 /// Defines system native-endian serialization.
 ///
 /// Note that this type has no value constructor. It is used purely at the
@@ -293,16 +283,10 @@ pub type NativeEndian = BigEndian;
 
 macro_rules! read_num_bytes {
     ($ty:ty, $size:expr, $src:expr, $which:ident) => ({
-        assert!($size == ::std::mem::size_of::<$ty>());
         assert!($size <= $src.len());
-        let mut data: $ty = 0;
         unsafe {
-            copy_nonoverlapping(
-                $src.as_ptr(),
-                &mut data as *mut $ty as *mut u8,
-                $size);
+            (*($src.as_ptr() as *const $ty)).$which()
         }
-        data.$which()
     });
 }
 
