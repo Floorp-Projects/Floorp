@@ -15,7 +15,7 @@
 
     payload:
       maxRunTime: 3600
-      image: ttaubert/nss-ci:0.0.16
+      image: ttaubert/nss-ci:0.0.17
 
       command:
         - "/bin/bash"
@@ -33,5 +33,3 @@
         machine:
           platform: nss-tools
         symbol: clang-format-3.8
-        revision: !env TC_REVISION
-        revision_hash: !env TC_REVISION_HASH

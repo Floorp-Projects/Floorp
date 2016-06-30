@@ -394,6 +394,11 @@ sslMutex_Destroy(sslMutex *pMutex, PRBool processLocal)
     int retvalue = SECSuccess;
 
     PR_ASSERT(pMutex != 0);
+    if (!pMutex) {
+        PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+        return SECFailure;
+    }
+
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Destroy(pMutex);
     }
@@ -406,8 +411,7 @@ sslMutex_Destroy(sslMutex *pMutex, PRBool processLocal)
 
     PR_ASSERT(pMutex->u.sslMutx != 0 &&
               pMutex->u.sslMutx != INVALID_HANDLE_VALUE);
-    if (!pMutex || (hMutex = pMutex->u.sslMutx) == 0 ||
-        hMutex == INVALID_HANDLE_VALUE) {
+    if ((hMutex = pMutex->u.sslMutx) == 0 || hMutex == INVALID_HANDLE_VALUE) {
         PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
         return SECFailure;
     }
@@ -430,14 +434,18 @@ sslMutex_Unlock(sslMutex *pMutex)
     HANDLE hMutex;
 
     PR_ASSERT(pMutex != 0);
+    if (!pMutex) {
+        PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+        return SECFailure;
+    }
+
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Unlock(pMutex);
     }
 
     PR_ASSERT(pMutex->u.sslMutx != 0 &&
               pMutex->u.sslMutx != INVALID_HANDLE_VALUE);
-    if (!pMutex || (hMutex = pMutex->u.sslMutx) == 0 ||
-        hMutex == INVALID_HANDLE_VALUE) {
+    if ((hMutex = pMutex->u.sslMutx) == 0 || hMutex == INVALID_HANDLE_VALUE) {
         PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
         return SECFailure;
     }
@@ -462,20 +470,23 @@ sslMutex_Lock(sslMutex *pMutex)
     DWORD lastError;
     SECStatus rv;
     SECStatus retvalue = SECSuccess;
+
     PR_ASSERT(pMutex != 0);
+    if (!pMutex) {
+        PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+        return SECFailure;
+    }
 
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Lock(pMutex);
     }
 #ifdef WINNT
-    /* lock first to preserve from other threads/fibers
-       in the same process */
+    /* lock first to preserve from other threads/fibers in the same process */
     retvalue = single_process_sslMutex_Lock(pMutex);
 #endif
     PR_ASSERT(pMutex->u.sslMutx != 0 &&
               pMutex->u.sslMutx != INVALID_HANDLE_VALUE);
-    if (!pMutex || (hMutex = pMutex->u.sslMutx) == 0 ||
-        hMutex == INVALID_HANDLE_VALUE) {
+    if ((hMutex = pMutex->u.sslMutx) == 0 || hMutex == INVALID_HANDLE_VALUE) {
         PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
         return SECFailure; /* what else ? */
     }

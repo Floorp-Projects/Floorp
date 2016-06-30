@@ -813,10 +813,9 @@ PK11_GetPrivateModulusLen(SECKEYPrivateKey *key)
 	if ( *(unsigned char *)theTemplate.pValue == 0) {
 	    length--;
 	}
-	if (theTemplate.pValue != NULL)
-	    PORT_Free(theTemplate.pValue);
+	PORT_Free(theTemplate.pValue);
 	return (int) length;
-	
+
     case fortezzaKey:
     case dsaKey:
     case dhKey:

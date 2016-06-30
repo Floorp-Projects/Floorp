@@ -27,5 +27,9 @@ void SSLInt_ClearSessionTicketKey();
 PRInt32 SSLInt_CountTls13CipherSpecs(PRFileDesc *fd);
 void SSLInt_ForceTimerExpiry(PRFileDesc *fd);
 SECStatus SSLInt_SetMTU(PRFileDesc *fd, PRUint16 mtu);
+PRBool SSLInt_CheckSecretsDestroyed(PRFileDesc *fd);
+PRBool SSLInt_DamageHsTrafficSecret(PRFileDesc *fd);
+PRBool SSLInt_DamageEarlyTrafficSecret(PRFileDesc *fd);
+SECStatus SSLInt_Set0RttAlpn(PRFileDesc *fd, PRUint8 *data, unsigned int len);
 
 #endif // ndef libssl_internals_h_

@@ -272,7 +272,7 @@ static SECStatus
 parseNextCmdInput(const char *const *valueArray, int *value, char **nextPos,
                   PRBool *critical)
 {
-    char *thisPos = *nextPos;
+    char *thisPos;
     int keyLen = 0;
     int arrIndex = 0;
 
@@ -280,6 +280,7 @@ parseNextCmdInput(const char *const *valueArray, int *value, char **nextPos,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
+    thisPos = *nextPos;
     while (1) {
         if ((*nextPos = strchr(thisPos, ',')) == NULL) {
             keyLen = strlen(thisPos);
@@ -916,7 +917,7 @@ AddGeneralSubjectAlt(PLArenaPool *arena, CERTGeneralName **existingListp,
 }
 
 static SECStatus
-AddBasicConstraint(void *extHandle)
+AddBasicConstraint(PLArenaPool *arena, void *extHandle)
 {
     CERTBasicConstraints basicConstraint;
     SECStatus rv;
@@ -938,7 +939,7 @@ AddBasicConstraint(void *extHandle)
 
         yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
-        rv = SECU_EncodeAndAddExtensionValue(NULL, extHandle,
+        rv = SECU_EncodeAndAddExtensionValue(arena, extHandle,
                                              &basicConstraint, yesNoAns, SEC_OID_X509_BASIC_CONSTRAINTS,
                                              (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeBasicConstraintValue);
     } while (0);
@@ -1982,9 +1983,15 @@ SECStatus
 AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
               certutilExtnList extList, const char *extGeneric)
 {
+    PLArenaPool *arena;
     SECStatus rv = SECSuccess;
     char *errstring = NULL;
     const char *nextExtension = NULL;
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+        return SECFailure;
+    }
 
     do {
         /* Add key usage extension */
@@ -2007,7 +2014,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 
         /* Add basic constraint extension */
         if (extList[ext_basicConstraint].activated) {
-            rv = AddBasicConstraint(extHandle);
+            rv = AddBasicConstraint(arena, extHandle);
             if (rv) {
                 errstring = "BasicConstraint";
                 break;
@@ -2098,15 +2105,8 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
         }
 
         if (emailAddrs || dnsNames || extList[ext_subjectAltName].activated) {
-            PLArenaPool *arena;
             CERTGeneralName *namelist = NULL;
             SECItem item = { 0, NULL, 0 };
-
-            arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-            if (arena == NULL) {
-                rv = SECFailure;
-                break;
-            }
 
             rv = SECSuccess;
 
@@ -2131,13 +2131,14 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
                                            &item, PR_FALSE, PR_TRUE);
                 }
             }
-            PORT_FreeArena(arena, PR_FALSE);
             if (rv) {
                 errstring = "SubjectAltName";
                 break;
             }
         }
     } while (0);
+
+    PORT_FreeArena(arena, PR_FALSE);
 
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "Problem creating %s extension", errstring);
@@ -2198,10 +2199,10 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
             break;
         }
         rv = CERT_AddExtensionByOID(extHandle, &oid_item, &value, isCritical,
-                                    PR_FALSE /*copyData*/);
+                                    PR_TRUE /*copyData*/);
+        SECITEM_FreeItem(&value, PR_FALSE);
+        SECITEM_FreeItem(&oid_item, PR_FALSE);
         if (rv != SECSuccess) {
-            SECITEM_FreeItem(&oid_item, PR_FALSE);
-            SECITEM_FreeItem(&value, PR_FALSE);
             SECU_PrintError(progName, "failed to add extension %s", nextExtension);
             break;
         }
