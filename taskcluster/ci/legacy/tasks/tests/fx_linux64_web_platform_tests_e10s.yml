@@ -24,7 +24,7 @@ task:
   extra:
     suite:
       name: web-platform-tests
-      flavor: web-platform-tests-e10s
+      flavor: web-platform-tests
     chunks:
       total: 12
     treeherder:
