@@ -122,6 +122,11 @@ interface nsIDOMWindowUtils : nsISupports {
                        out boolean aAutoSize);
 
   /**
+   * Information about the window size in device pixels.
+   */
+  void getContentViewerSize(out uint32_t aDisplayWidth, out uint32_t aDisplayHeight);
+
+  /**
    * For any scrollable element, this allows you to override the
    * visible region and draw more than what is visible, which is
    * useful for asynchronous drawing. The "displayport" will be
