@@ -769,6 +769,9 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
     if (!maxSize.isValid())
         return Fail(cx, d, "maximum memory size too big");
 
+    if (maxSize.value() < initialSize.value())
+        return Fail(cx, d, "maximum memory size less than initial memory size");
+
     uint8_t exported;
     if (!d.readFixedU8(&exported))
         return Fail(cx, d, "expected exported byte");
