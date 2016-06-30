@@ -763,7 +763,8 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     mCurSendCodecConfig = new VideoCodecConfig(*codecConfig);
   }
 
-  mPtrRTP->SetRembStatus(mChannel, true, false);
+  bool remb_requested = codecConfig->RtcpFbRembIsSet();
+  mPtrRTP->SetRembStatus(mChannel, true, remb_requested);
 
   return kMediaConduitNoError;
 }
