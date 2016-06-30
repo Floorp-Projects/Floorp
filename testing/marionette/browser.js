@@ -63,7 +63,11 @@ browser.Context = class {
   }
 
   get browserForTab() {
-    return this.browser.getBrowserForTab(this.tab);
+    if (this.browser.getBrowserForTab) {
+      return this.browser.getBrowserForTab(this.tab);
+    } else {
+      return this.browser.selectedBrowser;
+    }
   }
 
   /**
@@ -73,7 +77,7 @@ browser.Context = class {
    */
   get curFrameId() {
     let rv = null;
-    if (this.driver.appName != "Firefox") {
+    if (this.driver.appName == "B2G") {
       rv = this._curFrameId;
     } else if (this.tab) {
       rv = this.getIdForBrowser(this.browserForTab);
@@ -157,10 +161,14 @@ browser.Context = class {
       this.window = win;
       this.setBrowser(win);
     }
-
-    this.browser.selectTabAtIndex(ind);
-    this.tab = this.browser.selectedTab;
-    this._browserWasRemote = this.browserForTab.isRemoteBrowser;
+    if (this.browser.selectTabAtIndex) {
+      this.browser.selectTabAtIndex(ind);
+      this.tab = this.browser.selectedTab;
+      this._browserWasRemote = this.browserForTab.isRemoteBrowser;
+    }
+    else {
+      this.tab = this.browser.selectedTab;
+    }
     this._hasRemotenessChange = false;
   }
 
