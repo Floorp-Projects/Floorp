@@ -13,6 +13,7 @@
 #include "mozilla/dom/MediaTrackSupportedConstraintsBinding.h"
 
 #include <map>
+#include <set>
 
 namespace mozilla {
 
@@ -78,9 +79,32 @@ struct NormalizedConstraintSet
                  bool advanced);
   };
 
-  // Do you need to add your constraint here? Only if your code uses flattening
+  struct StringRange
+  {
+    typedef std::set<nsString> ValueType;
+    ValueType mExact, mIdeal;
+
+    StringRange(
+        const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
+        bool advanced);
+
+    void SetFrom(const dom::ConstrainDOMStringParameters& aOther);
+    ValueType Clamp(const ValueType& n) const;
+    ValueType Get(const ValueType& defaultValue) const {
+      return Clamp(mIdeal.size() ? mIdeal : defaultValue);
+    }
+    bool Intersects(const StringRange& aOther) const;
+    void Intersect(const StringRange& aOther);
+  };
+
+  // All new constraints should be added here whether they use flattening or not
   LongRange mWidth, mHeight;
   DoubleRange mFrameRate;
+  StringRange mFacingMode;
+  nsString mMediaSource;
+  long long mBrowserWindow;
+  bool mScrollWithPage;
+  StringRange mDeviceId;
   LongRange mViewportOffsetX, mViewportOffsetY, mViewportWidth, mViewportHeight;
   BooleanRange mEchoCancellation, mMozNoiseSuppression, mMozAutoGainControl;
 
@@ -89,6 +113,13 @@ struct NormalizedConstraintSet
   : mWidth(aOther.mWidth, advanced)
   , mHeight(aOther.mHeight, advanced)
   , mFrameRate(aOther.mFrameRate, advanced)
+  , mFacingMode(aOther.mFacingMode, advanced)
+  , mMediaSource(aOther.mMediaSource)
+  , mBrowserWindow(aOther.mBrowserWindow.WasPassed() ?
+                   aOther.mBrowserWindow.Value() : 0)
+  , mScrollWithPage(aOther.mScrollWithPage.WasPassed() ?
+                    aOther.mScrollWithPage.Value() : false)
+  , mDeviceId(aOther.mDeviceId, advanced)
   , mViewportOffsetX(aOther.mViewportOffsetX, advanced)
   , mViewportOffsetY(aOther.mViewportOffsetY, advanced)
   , mViewportWidth(aOther.mViewportWidth, advanced)
