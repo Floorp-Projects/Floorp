@@ -298,9 +298,9 @@ NextFrameSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   // resolved.
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
-             (aAudioSample ? aAudioSample->mTime : -1),
-             (aAudioSample ? aAudioSample->GetEndTime() : -1),
-             (aAudioSample ? aAudioSample->mDiscontinuity : 0));
+             aAudioSample->mTime,
+             aAudioSample->GetEndTime(),
+             aAudioSample->mDiscontinuity);
 
   if (!Exists()) {
     // We've received a sample from a previous decode. Discard it.
@@ -341,9 +341,9 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   // resolved.
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
-             (aVideoSample ? aVideoSample->mTime : -1),
-             (aVideoSample ? aVideoSample->GetEndTime() : -1),
-             (aVideoSample ? aVideoSample->mDiscontinuity : 0));
+             aVideoSample->mTime,
+             aVideoSample->GetEndTime(),
+             aVideoSample->mDiscontinuity);
 
   if (!Exists()) {
     // We've received a sample from a previous decode. Discard it.
