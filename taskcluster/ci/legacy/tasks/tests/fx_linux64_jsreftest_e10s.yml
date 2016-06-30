@@ -21,10 +21,12 @@ task:
     name: '[TC] Linux64 jsreftest e10s'
     description: Jsreftest e10s run
   extra:
+    chunks:
+      total: 2
     suite:
       name: reftest
       flavor: jsreftest
     treeherder:
       groupName: Desktop jsreftest
       groupSymbol: tc-R-e10s
-      symbol: J
+      symbol: J{{chunk}}
