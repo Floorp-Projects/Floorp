@@ -226,6 +226,18 @@ BufferTextureData::GetSize() const
   return ImageDataSerializer::SizeFromBufferDescriptor(mDescriptor);
 }
 
+Maybe<gfx::IntSize>
+BufferTextureData::GetCbCrSize() const
+{
+  return ImageDataSerializer::CbCrSizeFromBufferDescriptor(mDescriptor);
+}
+
+Maybe<StereoMode>
+BufferTextureData::GetStereoMode() const
+{
+  return ImageDataSerializer::StereoModeFromBufferDescriptor(mDescriptor);
+}
+
 gfx::SurfaceFormat
 BufferTextureData::GetFormat() const
 {
