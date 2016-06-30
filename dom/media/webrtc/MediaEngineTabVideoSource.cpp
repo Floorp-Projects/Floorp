@@ -139,14 +139,15 @@ nsresult
 MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                     const MediaEnginePrefs& aPrefs,
                                     const nsString& aDeviceId,
-                                    const nsACString& aOrigin)
+                                    const nsACString& aOrigin,
+                                    BaseAllocationHandle** aOutHandle)
 {
   // windowId is not a proper constraint, so just read it.
   // It has no well-defined behavior in advanced, so ignore it there.
 
   mWindowId = aConstraints.mBrowserWindow.WasPassed() ?
               aConstraints.mBrowserWindow.Value() : -1;
-
+  aOutHandle = nullptr;
   return Restart(aConstraints, aPrefs, aDeviceId);
 }
 
@@ -178,8 +179,9 @@ MediaEngineTabVideoSource::Restart(const dom::MediaTrackConstraints& aConstraint
 }
 
 nsresult
-MediaEngineTabVideoSource::Deallocate()
+MediaEngineTabVideoSource::Deallocate(BaseAllocationHandle* aHandle)
 {
+  MOZ_ASSERT(!aHandle);
   return NS_OK;
 }
 
