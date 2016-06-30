@@ -171,22 +171,23 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
   // If so, we cannot resolve the SeekTaskPromise immediately because there is
   // a latency of running the resolving runnable. Instead, if there is a pending
   // media request, we wait for it.
-  if ((mVideoQueue.GetSize() > 0
-       && !mReader->IsRequestingAudioData() && !mReader->IsWaitingAudioData()
-       && !mReader->IsRequestingVideoData() && !mReader->IsWaitingVideoData())
-      || mVideoQueue.AtEndOfStream()) {
-    UpdateSeekTargetTime();
-    SeekTaskResolveValue val = {};  // Zero-initialize data members.
-    return SeekTask::SeekTaskPromise::CreateAndResolve(val, __func__);
-  } else {
-    // Only invoke EnsureVideoDecodeTaskQueued() if we have no video data; we
-    // might be here because we are waiting audio data, and don't bother to make
-    // more requests to reader in this case.
-    if (mVideoQueue.GetSize() == 0) {
-      EnsureVideoDecodeTaskQueued();
-    }
+  bool hasPendingRequests = mReader->IsRequestingAudioData() ||
+                            mReader->IsWaitingAudioData() ||
+                            mReader->IsRequestingVideoData() ||
+                            mReader->IsWaitingVideoData();
+
+  bool needMoreVideo = mVideoQueue.GetSize() == 0 && !mVideoQueue.IsFinished();
+
+  if (needMoreVideo) {
+    EnsureVideoDecodeTaskQueued();
+  }
+  if (hasPendingRequests || needMoreVideo) {
     return mSeekTaskPromise.Ensure(__func__);
   }
+
+  UpdateSeekTargetTime();
+  SeekTaskResolveValue val = {};  // Zero-initialize data members.
+  return SeekTask::SeekTaskPromise::CreateAndResolve(val, __func__);
 }
 
 bool
@@ -440,6 +441,7 @@ NextFrameSeekTask::SetCallbacks()
     OwnerThread(), [this] (WaitCallbackData aData) {
     // We don't make an audio decode request here, instead, let MDSM to
     // trigger further audio decode tasks if MDSM itself needs to play audio.
+    CheckIfSeekComplete();
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
