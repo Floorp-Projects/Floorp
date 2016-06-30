@@ -56,6 +56,8 @@ class TSFTextStore final : public ITextStoreACP
 private:
   typedef IMENotification::SelectionChangeDataBase SelectionChangeDataBase;
   typedef IMENotification::SelectionChangeData SelectionChangeData;
+  typedef IMENotification::TextChangeDataBase TextChangeDataBase;
+  typedef IMENotification::TextChangeData TextChangeData;
 
 public: /*IUnknown*/
   STDMETHODIMP          QueryInterface(REFIID, void**);
@@ -321,7 +323,12 @@ protected:
   // stores the latest selection change data because only it is necessary.
   SelectionChangeData mPendingSelectionChangeData;
 
-  void     NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange);
+  // mPendingTextChangeData stores one or more text change data until notifying
+  // TSF of text change.  If two or more text changes occur, this merges
+  // every text change data.
+  TextChangeData mPendingTextChangeData;
+
+  void     NotifyTSFOfTextChange();
   void     NotifyTSFOfSelectionChange();
   bool     NotifyTSFOfLayoutChange();
   void     NotifyTSFOfLayoutChangeAgain();
