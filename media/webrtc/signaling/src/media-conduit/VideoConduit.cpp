@@ -983,6 +983,24 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
         return kMediaConduitFECStatusError;
     }
 
+    // We also need to call SetReceiveCodec for RED and ULPFEC codecs
+    for(int idx=0; idx < mPtrViECodec->NumberOfCodecs(); idx++) {
+      webrtc::VideoCodec video_codec;
+      if(mPtrViECodec->GetCodec(idx, video_codec) == 0) {
+        payloadName = video_codec.plName;
+        if(video_codec.codecType == webrtc::VideoCodecType::kVideoCodecRED ||
+           video_codec.codecType == webrtc::VideoCodecType::kVideoCodecULPFEC) {
+          if(mPtrViECodec->SetReceiveCodec(mChannel,video_codec) == -1) {
+            CSFLogError(logTag, "%s Invalid Receive Codec %d ", __FUNCTION__,
+                        mPtrViEBase->LastError());
+          } else {
+            CSFLogDebug(logTag, "%s Successfully Set the codec %s", __FUNCTION__,
+                        video_codec.plName);
+          }
+        }
+      }
+    }
+
     if (use_nack_basic) {
       CSFLogDebug(logTag, "Enabling NACK/FEC (recv) for video stream\n");
       if (mPtrRTP->SetHybridNACKFECStatus(mChannel, true,
