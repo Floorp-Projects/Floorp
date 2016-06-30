@@ -8,7 +8,7 @@
 /* bidi */
 
 [dir] {
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 [dir="rtl"] {
   direction: rtl;
@@ -83,19 +83,19 @@ thead,
 tr,
 ul,
 xmp {
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 
 bdi, output {
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 bdo, bdo[dir] {
   unicode-bidi: bidi-override;
 }
 bdo[dir="auto"] {
-  unicode-bidi: -moz-isolate-override;
+  unicode-bidi: isolate-override;
 }
-textarea[dir="auto"], pre[dir="auto"] { unicode-bidi: -moz-plaintext; }
+textarea[dir="auto"], pre[dir="auto"] { unicode-bidi: plaintext; }
 
 /* blocks */
 
@@ -644,7 +644,7 @@ img:-moz-loading::before, input:-moz-loading::before,
 applet:-moz-empty-except-children-with-localname(param):-moz-broken::before,
 applet:-moz-empty-except-children-with-localname(param):-moz-user-disabled::before {
   content: -moz-alt-content !important;
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 
 :-moz-any(object,applet):-moz-any(:-moz-broken,:-moz-user-disabled) > *|* {
@@ -855,5 +855,5 @@ rtc > rt {
   font-size: inherit;
 }
 ruby, rb, rt, rtc {
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }

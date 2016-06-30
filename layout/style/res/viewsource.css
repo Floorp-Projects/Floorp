@@ -91,7 +91,7 @@ span:not(.error), a:not(.error) {
  unicode-bidi: embed;
 }
 span[id] {
- unicode-bidi: -moz-isolate;
+ unicode-bidi: isolate;
 }
 .highlight .error,
 .highlight .error > :-moz-any(.start-tag, .end-tag, .comment, .cdata, .doctype,
