@@ -1023,6 +1023,10 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
         mWrapT = intParam;
         break;
 
+    case LOCAL_GL_TEXTURE_COMPARE_MODE:
+        mTexCompareMode = intParam;
+        break;
+
     // We don't actually need to store the WRAP_R, since it doesn't change texture
     // completeness rules.
     }
