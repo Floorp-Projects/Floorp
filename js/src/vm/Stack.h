@@ -1431,7 +1431,6 @@ class JitActivation : public Activation
 {
     uint8_t* prevJitTop_;
     JitActivation* prevJitActivation_;
-    JSContext* prevJitJSContext_;
     bool active_;
 
     // Rematerialized Ion frames which has info copied out of snapshots. Maps
@@ -1497,9 +1496,6 @@ class JitActivation : public Activation
     }
     static size_t offsetOfPrevJitTop() {
         return offsetof(JitActivation, prevJitTop_);
-    }
-    static size_t offsetOfPrevJitJSContext() {
-        return offsetof(JitActivation, prevJitJSContext_);
     }
     static size_t offsetOfPrevJitActivation() {
         return offsetof(JitActivation, prevJitActivation_);
