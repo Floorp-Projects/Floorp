@@ -554,6 +554,16 @@ protected:
       return mWritingMode;
     }
 
+    bool EqualsExceptDirection(const TS_SELECTION_ACP& aACP) const
+    {
+      if (mACP.style.ase == aACP.style.ase) {
+        return mACP.acpStart == aACP.acpStart &&
+               mACP.acpEnd == aACP.acpEnd;
+      }
+      return mACP.acpStart == aACP.acpEnd &&
+             mACP.acpEnd == aACP.acpStart;
+    }
+
   private:
     TS_SELECTION_ACP mACP;
     WritingMode mWritingMode;
