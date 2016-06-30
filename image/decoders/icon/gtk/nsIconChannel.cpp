@@ -19,8 +19,6 @@
 #include "nsMimeTypes.h"
 #include "nsIMIMEService.h"
 
-#include "nsIStringBundle.h"
-#include "nsIStringStream.h"
 #include "nsServiceManagerUtils.h"
 
 #include "nsNetUtil.h"

@@ -12,7 +12,6 @@
 
 #include "ImageLogging.h"
 #include "nsImageModule.h"
-#include "nsPrintfCString.h"
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 
