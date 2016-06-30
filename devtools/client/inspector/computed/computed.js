@@ -11,7 +11,7 @@
 const {Cc, Ci} = require("chrome");
 
 const ToolDefinitions = require("devtools/client/definitions").Tools;
-const {CssLogic} = require("devtools/shared/inspector/css-logic");
+const CssLogic = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");

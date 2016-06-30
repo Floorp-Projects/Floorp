@@ -29,8 +29,9 @@ add_task(function* testPageActionPopup() {
       let tabId;
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
         tabId = tabs[0].id;
-        browser.pageAction.show(tabId);
-        browser.test.sendMessage("ready");
+        browser.pageAction.show(tabId).then(() => {
+          browser.test.sendMessage("ready");
+        });
       });
 
       browser.test.onMessage.addListener(() => {
