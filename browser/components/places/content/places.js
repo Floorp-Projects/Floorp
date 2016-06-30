@@ -559,6 +559,7 @@ var PlacesOrganizer = {
     fp.appendFilter(PlacesUIUtils.getString("bookmarksRestoreFilterName"),
                     RESTORE_FILEPICKER_FILTER_EXT);
     fp.defaultString = PlacesBackups.getFilenameForDate();
+    fp.defaultExtension = "json";
     fp.displayDirectory = backupsDir;
     fp.open(fpCallback);
   },
