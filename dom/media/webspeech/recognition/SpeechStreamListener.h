@@ -8,6 +8,7 @@
 #define mozilla_dom_SpeechStreamListener_h
 
 #include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "AudioSegment.h"
 
 namespace mozilla {
@@ -31,7 +32,7 @@ public:
                              TrackID aInputTrackID) override;
 
   void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamListener::MediaStreamGraphEvent event) override;
+                   MediaStreamGraphEvent event) override;
 
 private:
   template<typename SampleFormatType>

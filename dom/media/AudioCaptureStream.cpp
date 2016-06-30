@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaStreamGraphImpl.h"
+#include "MediaStreamListener.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/unused.h"
 
@@ -78,7 +79,7 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
       MediaStreamListener* l = mListeners[i];
       AudioSegment tmp;
       l->NotifyQueuedTrackChanges(
-        Graph(), mTrackId, 0, MediaStreamListener::TRACK_EVENT_CREATED, tmp);
+        Graph(), mTrackId, 0, TrackEventCommand::TRACK_EVENT_CREATED, tmp);
       l->NotifyFinishedTrackCreation(Graph());
     }
     mTrackCreated = true;

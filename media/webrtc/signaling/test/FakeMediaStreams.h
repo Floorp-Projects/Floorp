@@ -50,6 +50,9 @@ struct AudioChannel {
   };
 };
 
+enum MediaStreamGraphEvent : uint32_t;
+enum TrackEventCommand : uint32_t;
+
 class MediaStreamGraph {
 public:
   // Keep this in sync with the enum in MediaStreamGraph.h
@@ -89,7 +92,7 @@ protected:
 public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
                                         mozilla::StreamTime aTrackOffset,
-                                        uint32_t aTrackEvents,
+                                        mozilla::TrackEventCommand  aTrackEvents,
                                         const mozilla::MediaSegment& aQueuedMedia,
                                         Fake_MediaStream* aInputStream,
                                         mozilla::TrackID aInputTrackID) {}

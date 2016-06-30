@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaStreamGraphImpl.h"
+#include "MediaStreamListener.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/unused.h"
 
@@ -200,7 +201,7 @@ TrackUnionStream::TrackUnionStream() :
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
       l->NotifyQueuedTrackChanges(Graph(), id, outputStart,
-                                  MediaStreamListener::TRACK_EVENT_CREATED,
+                                  TrackEventCommand::TRACK_EVENT_CREATED,
                                   *segment,
                                   aPort->GetSource(), aTrack->GetID());
     }
@@ -256,7 +257,7 @@ TrackUnionStream::TrackUnionStream() :
       nsAutoPtr<MediaSegment> segment;
       segment = outputTrack->GetSegment()->CreateEmptyClone();
       l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(), offset,
-                                  MediaStreamListener::TRACK_EVENT_ENDED,
+                                  TrackEventCommand::TRACK_EVENT_ENDED,
                                   *segment,
                                   mTrackMap[aIndex].mInputPort->GetSource(),
                                   mTrackMap[aIndex].mInputTrackID);
@@ -334,7 +335,7 @@ TrackUnionStream::TrackUnionStream() :
         } else {
           // This part will be removed in bug 1201363.
           l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
-                                      outputStart, 0, *segment,
+                                      outputStart, TrackEventCommand::TRACK_EVENT_NONE, *segment,
                                       map->mInputPort->GetSource(),
                                       map->mInputTrackID);
         }
