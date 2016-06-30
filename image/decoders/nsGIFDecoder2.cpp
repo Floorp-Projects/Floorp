@@ -38,11 +38,12 @@ or revised. This service is offered free of charge; please provide us with your
 mailing address.
 */
 
+#include "nsGIFDecoder2.h"
+
 #include <stddef.h>
 
 #include "imgFrame.h"
 #include "mozilla/EndianUtils.h"
-#include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "RasterImage.h"
 #include "SurfacePipeFactory.h"
