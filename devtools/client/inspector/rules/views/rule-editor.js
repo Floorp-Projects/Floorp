@@ -6,7 +6,7 @@
 
 const {Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {CssLogic} = require("devtools/shared/inspector/css-logic");
+const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
@@ -159,7 +159,7 @@ RuleEditor.prototype = {
         class: "ruleview-selectorhighlighter" +
                (this.ruleView.highlightedSelector === selector ?
                 " highlighted" : ""),
-        title: CssLogic.l10n("rule.selectorHighlighter.tooltip")
+        title: l10n("rule.selectorHighlighter.tooltip")
       });
       selectorHighlighter.addEventListener("click", () => {
         this.ruleView.toggleSelectorHighlighter(selectorHighlighter, selector);

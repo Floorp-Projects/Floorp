@@ -109,6 +109,7 @@ devtools/client/webconsole/**
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
 devtools/server/**
+!devtools/server/css-logic.js
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/styles.js
 !devtools/server/actors/string.js
@@ -125,7 +126,6 @@ devtools/shared/discovery/**
 devtools/shared/gcli/**
 !devtools/shared/gcli/templater.js
 devtools/shared/heapsnapshot/**
-devtools/shared/inspector/**
 devtools/shared/layout/**
 devtools/shared/locales/**
 devtools/shared/performance/**

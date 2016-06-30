@@ -6,7 +6,6 @@
 
 DIRS += [
     'actions',
-    'audio',
     'browser',
     'components',
     'images',

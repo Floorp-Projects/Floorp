@@ -99,8 +99,9 @@ add_task(function* testGoodPermissions() {
     contentSetup() {
       return new Promise(resolve => {
         browser.tabs.query({active: true, currentWindow: true}, tabs => {
-          browser.pageAction.show(tabs[0].id);
-          resolve();
+          browser.pageAction.show(tabs[0].id).then(() => {
+            resolve();
+          });
         });
       });
     },
@@ -127,8 +128,9 @@ add_task(function* testGoodPermissions() {
     contentSetup() {
       return new Promise(resolve => {
         browser.tabs.query({active: true, currentWindow: true}, tabs => {
-          browser.pageAction.show(tabs[0].id);
-          resolve();
+          browser.pageAction.show(tabs[0].id).then(() => {
+            resolve();
+          });
         });
       });
     },

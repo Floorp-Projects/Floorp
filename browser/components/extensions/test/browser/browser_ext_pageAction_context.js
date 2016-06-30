@@ -212,8 +212,9 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Show the icon on the first tab, expect default properties.");
-          browser.pageAction.show(tabs[0]);
-          expect(details[0]);
+          browser.pageAction.show(tabs[0]).then(() => {
+            expect(details[0]);
+          });
         },
         expect => {
           browser.test.log("Change the icon. Expect default properties excluding the icon.");
@@ -234,12 +235,13 @@ add_task(function* testTabSwitchContext() {
         expect => {
           browser.test.log("Change properties. Expect new properties.");
           let tabId = tabs[1];
-          browser.pageAction.show(tabId);
-          browser.pageAction.setIcon({tabId, path: "2.png"});
-          browser.pageAction.setPopup({tabId, popup: "2.html"});
-          browser.pageAction.setTitle({tabId, title: "Title 2"});
+          browser.pageAction.show(tabId).then(() => {
+            browser.pageAction.setIcon({tabId, path: "2.png"});
+            browser.pageAction.setPopup({tabId, popup: "2.html"});
+            browser.pageAction.setTitle({tabId, title: "Title 2"});
 
-          expect(details[2]);
+            expect(details[2]);
+          });
         },
         expect => {
           browser.test.log("Clear the title. Expect default title.");
@@ -260,8 +262,9 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Show the icon. Expect default properties again.");
-          browser.pageAction.show(tabs[1]);
-          expect(details[0]);
+          browser.pageAction.show(tabs[1]).then(() => {
+            expect(details[0]);
+          });
         },
         expect => {
           browser.test.log("Switch back to the first tab. Expect previously set properties.");
@@ -271,9 +274,10 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Hide the icon on tab 2. Switch back, expect hidden.");
-          browser.pageAction.hide(tabs[1]);
-          browser.tabs.update(tabs[1], {active: true}, () => {
-            expect(null);
+          browser.pageAction.hide(tabs[1]).then(() => {
+            browser.tabs.update(tabs[1], {active: true}, () => {
+              expect(null);
+            });
           });
         },
         expect => {
@@ -284,8 +288,9 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Hide the icon. Expect hidden.");
-          browser.pageAction.hide(tabs[0]);
-          expect(null);
+          browser.pageAction.hide(tabs[0]).then(() => {
+            expect(null);
+          });
         },
       ];
     },
@@ -321,8 +326,9 @@ add_task(function* testDefaultTitle() {
         },
         expect => {
           browser.test.log("Show the icon on the first tab, expect extension title as default title.");
-          browser.pageAction.show(tabs[0]);
-          expect(details[0]);
+          browser.pageAction.show(tabs[0]).then(() => {
+            expect(details[0]);
+          });
         },
         expect => {
           browser.test.log("Change the title. Expect new title.");

@@ -16,15 +16,28 @@ XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
 // NSS Dialog Service
 // -----------------------------------------------------------------------
 
-function dump(a) {
-  Components.classes["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
-}
-
 function NSSDialogs() { }
 
 NSSDialogs.prototype = {
   classID: Components.ID("{cbc08081-49b6-4561-9c18-a7707a50bda1}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs, Ci.nsIClientAuthDialogs]),
+
+  /**
+   * Escapes the given input via HTML entity encoding. Used to prevent HTML
+   * injection when the input is to be placed inside an HTML body, but not in
+   * any other context.
+   *
+   * @param {String} input The input to interpret as a plain string.
+   * @returns {String} The escaped input.
+   */
+  escapeHTML: function(input) {
+    return input.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#x27;")
+                .replace(/\//g, "&#x2F;");
+  },
 
   getString: function(aName) {
     if (!this.bundle) {
@@ -35,9 +48,12 @@ NSSDialogs.prototype = {
 
   formatString: function(aName, argList) {
     if (!this.bundle) {
-      this.bundle = Services.strings.createBundle("chrome://browser/locale/pippki.properties");
+      this.bundle =
+        Services.strings.createBundle("chrome://browser/locale/pippki.properties");
     }
-    return this.bundle.formatStringFromName(aName, argList, argList.length);
+    let escapedArgList = Array.from(argList, x => this.escapeHTML(x));
+    return this.bundle.formatStringFromName(aName, escapedArgList,
+                                            escapedArgList.length);
   },
 
   getPrompt: function(aTitle, aText, aButtons) {
@@ -114,32 +130,43 @@ NSSDialogs.prototype = {
   },
 
   certInfoSection: function(aHeading, aDataPairs, aTrailingNewline = true) {
-    var str = "<big>" + this.getString(aHeading) + "</big><br/>";
-    for (var i = 0; i < aDataPairs.length; i += 2) {
-      str += this.getString(aDataPairs[i]) + ": " + aDataPairs[i+1] + "<br/>";
+    let certInfoStrings = [
+      "<big>" + this.getString(aHeading) + "</big>",
+    ];
+
+    for (let i = 0; i < aDataPairs.length; i += 2) {
+      let key = aDataPairs[i];
+      let value = aDataPairs[i + 1];
+      certInfoStrings.push(this.formatString(key, [value]));
     }
-    return str + (aTrailingNewline ? "<br/>" : "");
+
+    if (aTrailingNewline) {
+      certInfoStrings.push("<br/>");
+    }
+
+    return certInfoStrings.join("<br/>");
   },
 
   viewCert: function(aCtx, aCert) {
-    let p = this.getPrompt(this.getString("certmgr.title"),
-                    "",
-                    [ this.getString("nssdialogs.ok.label") ])
+    let p = this.getPrompt(this.getString("certmgr.title"), "", [
+                             this.getString("nssdialogs.ok.label"),
+                           ]);
     p.addLabel({ label: this.certInfoSection("certmgr.subjectinfo.label",
-                          ["certmgr.certdetail.cn", aCert.commonName,
-                           "certmgr.certdetail.o", aCert.organization,
-                           "certmgr.certdetail.ou", aCert.organizationalUnit,
-                           "certmgr.certdetail.serialnumber", aCert.serialNumber])})
+                          ["certdetail.cn", aCert.commonName,
+                           "certdetail.o", aCert.organization,
+                           "certdetail.ou", aCert.organizationalUnit,
+                           "certdetail.serialnumber", aCert.serialNumber])})
      .addLabel({ label: this.certInfoSection("certmgr.issuerinfo.label",
-                          ["certmgr.certdetail.cn", aCert.issuerCommonName,
-                           "certmgr.certdetail.o", aCert.issuerOrganization,
-                           "certmgr.certdetail.ou", aCert.issuerOrganizationUnit])})
+                          ["certdetail.cn", aCert.issuerCommonName,
+                           "certdetail.o", aCert.issuerOrganization,
+                           "certdetail.ou", aCert.issuerOrganizationUnit])})
      .addLabel({ label: this.certInfoSection("certmgr.periodofvalidity.label",
-                          ["certmgr.begins", aCert.validity.notBeforeLocalDay,
-                           "certmgr.expires", aCert.validity.notAfterLocalDay])})
+                          ["certdetail.notBefore", aCert.validity.notBeforeLocalDay,
+                           "certdetail.notAfter", aCert.validity.notAfterLocalDay])})
      .addLabel({ label: this.certInfoSection("certmgr.fingerprints.label",
-                          ["certmgr.certdetail.sha256fingerprint", aCert.sha256Fingerprint,
-                           "certmgr.certdetail.sha1fingerprint", aCert.sha1Fingerprint], false) });
+                          ["certdetail.sha256fingerprint", aCert.sha256Fingerprint,
+                           "certdetail.sha1fingerprint", aCert.sha1Fingerprint],
+                          false) });
     this.showPrompt(p);
   },
 
@@ -191,7 +218,7 @@ NSSDialogs.prototype = {
       Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
 
     let serverRequestedDetails = [
-      cnAndPort,
+      this.escapeHTML(cnAndPort),
       this.formatString("clientAuthAsk.organization", [organization]),
       this.formatString("clientAuthAsk.issuer", [issuerOrg]),
     ].join("<br/>");

@@ -85,7 +85,8 @@ var test = Task.async(function* () {
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
   let [, debuggee, monitor] = yield initNetMonitor(SIMPLE_URL);
-  let { RequestsMenu } = monitor.panelWin.NetMonitorView;
+  let { $, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
   debuggee.location = CAUSE_URL;
@@ -127,6 +128,16 @@ var test = Task.async(function* () {
     } else {
       is(stackLen, 0, `Request #${i} (${causeType}) has an empty stacktrace`);
     }
+  });
+
+  // Sort the requests by cause and check the order
+  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-cause-button"));
+  let expectedOrder = EXPECTED_REQUESTS.map(r => r.causeType).sort();
+  expectedOrder.forEach((expectedCause, i) => {
+    let { target } = RequestsMenu.getItemAtIndex(i);
+    let causeLabel = target.querySelector(".requests-menu-cause-label");
+    let cause = causeLabel.getAttribute("value");
+    is(cause, expectedCause, `The request #${i} has the expected cause after sorting`);
   });
 
   yield teardown(monitor);
