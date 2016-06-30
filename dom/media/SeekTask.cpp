@@ -18,6 +18,7 @@ SeekTask::SeekTask(const void* aDecoderID,
   , mOwnerThread(aThread)
   , mReader(aReader)
   , mSeekJob(Move(aSeekJob))
+  , mTarget(mSeekJob.mTarget)
   , mIsDiscarded(false)
   , mIsAudioQueueFinished(false)
   , mIsVideoQueueFinished(false)
@@ -81,6 +82,13 @@ SeekTask::GetSeekJob()
 {
   AssertOwnerThread();
   return mSeekJob;
+}
+
+SeekTarget&
+SeekTask::GetSeekTarget()
+{
+  AssertOwnerThread();
+  return mTarget;
 }
 
 bool

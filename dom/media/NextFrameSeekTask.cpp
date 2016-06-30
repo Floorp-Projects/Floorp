@@ -156,7 +156,7 @@ NextFrameSeekTask::MaybeFinishSeek()
   if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
     UpdateSeekTargetTime();
 
-    auto time = mSeekJob.mTarget.GetTime().ToMicroseconds();
+    auto time = mTarget.GetTime().ToMicroseconds();
     DiscardFrames(mAudioQueue, [time] (int64_t aSampleTime) {
       return aSampleTime < time;
     });
@@ -333,11 +333,11 @@ NextFrameSeekTask::UpdateSeekTargetTime()
 
   RefPtr<MediaData> data = mVideoQueue.PeekFront();
   if (data) {
-    mSeekJob.mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
+    mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
   } else if (mSeekedVideoData) {
-    mSeekJob.mTarget.SetTime(TimeUnit::FromMicroseconds(mSeekedVideoData->mTime));
+    mTarget.SetTime(TimeUnit::FromMicroseconds(mSeekedVideoData->mTime));
   } else if (mIsVideoQueueFinished || mVideoQueue.AtEndOfStream()) {
-    mSeekJob.mTarget.SetTime(mDuration);
+    mTarget.SetTime(mDuration);
   } else {
     MOZ_ASSERT(false, "No data!");
   }
