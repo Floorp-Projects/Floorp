@@ -87,20 +87,23 @@ MediaEngineRemoteVideoSource::Shutdown()
     MOZ_ASSERT(mState == kStopped);
   }
 
-  if (mState == kAllocated || mState == kStopped) {
-    Deallocate();
+  for (auto& registered : mRegisteredHandles) {
+    MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+    Deallocate(registered.get());
   }
 
-  mState = kReleased;
+  MOZ_ASSERT(mState == kReleased);
   mInitDone = false;
   return;
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
-                                       const MediaEnginePrefs& aPrefs,
-                                       const nsString& aDeviceId,
-                                       const nsACString& aOrigin)
+MediaEngineRemoteVideoSource::Allocate(
+    const dom::MediaTrackConstraints& aConstraints,
+    const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId,
+    const nsACString& aOrigin,
+    BaseAllocationHandle** aOutHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
@@ -109,6 +112,9 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
     LOG(("Init not done"));
     return NS_ERROR_FAILURE;
   }
+
+  RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints);
+  mRegisteredHandles.AppendElement(handle);
 
   if (mState == kReleased) {
     // Note: if shared, we don't allow a later opener to affect the resolution.
@@ -137,16 +143,28 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
   }
 
   ++mNrAllocations;
-
+  handle.forget(aOutHandle);
   return NS_OK;
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Deallocate()
+MediaEngineRemoteVideoSource::Deallocate(BaseAllocationHandle* aHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aHandle);
+  RefPtr<AllocationHandle> handle = static_cast<AllocationHandle*>(aHandle);
 
+  class Comparator {
+  public:
+    static bool Equals(const RefPtr<AllocationHandle>& a,
+                       const RefPtr<AllocationHandle>& b) {
+      return a.get() == b.get();
+    }
+  };
+  MOZ_ASSERT(mRegisteredHandles.Contains(handle, Comparator()));
+  mRegisteredHandles.RemoveElementAt(mRegisteredHandles.IndexOf(handle, 0,
+                                                                Comparator()));
   --mNrAllocations;
   MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
 
