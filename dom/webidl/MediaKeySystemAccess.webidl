@@ -10,18 +10,25 @@
  * W3C liability, trademark and document use rules apply.
  */
 
+enum MediaKeysRequirement {
+  "required",
+  "optional",
+  "not-allowed"
+};
+
 dictionary MediaKeySystemMediaCapability {
    DOMString contentType = "";
-   // TODO: robustness
+   DOMString robustness = "";
 };
 
 dictionary MediaKeySystemConfiguration {
   DOMString                               label = "";
-  sequence<DOMString>                     initDataTypes;
-  sequence<MediaKeySystemMediaCapability> audioCapabilities;
-  sequence<MediaKeySystemMediaCapability> videoCapabilities;
-
-   // TODO: distinctiveIdentifier, persistentState, sessionTypes  
+  sequence<DOMString>                     initDataTypes = [];
+  sequence<MediaKeySystemMediaCapability> audioCapabilities = [];
+  sequence<MediaKeySystemMediaCapability> videoCapabilities = [];
+  MediaKeysRequirement                    distinctiveIdentifier = "optional";
+  MediaKeysRequirement                    persistentState = "optional";
+  sequence<DOMString>                     sessionTypes;
 };
 
 [Pref="media.eme.apiVisible"]
