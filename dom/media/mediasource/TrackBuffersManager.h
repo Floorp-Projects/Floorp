@@ -31,7 +31,8 @@ class MediaRawData;
 class MediaSourceDemuxer;
 class SourceBufferResource;
 
-class SourceBufferTaskQueue {
+class SourceBufferTaskQueue
+{
 public:
   SourceBufferTaskQueue()
   : mMonitor("SourceBufferTaskQueue")
@@ -69,7 +70,8 @@ private:
   nsTArray<RefPtr<SourceBufferTask>> mQueue;
 };
 
-class TrackBuffersManager {
+class TrackBuffersManager
+{
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackBuffersManager);
 
@@ -252,7 +254,8 @@ private:
 
   void DoEvictData(const media::TimeUnit& aPlaybackTime, int64_t aSizeToEvict);
 
-  struct TrackData {
+  struct TrackData
+  {
     TrackData()
       : mNumTracks(0)
       , mNeedRandomAccessPoint(true)
@@ -378,7 +381,8 @@ private:
   TrackData mAudioTracks;
 
   // TaskQueue methods and objects.
-  AbstractThread* GetTaskQueue() {
+  AbstractThread* GetTaskQueue()
+  {
     return mTaskQueue;
   }
   bool OnTaskQueue()
