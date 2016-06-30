@@ -12271,7 +12271,9 @@ class MNewCallObject : public MNewCallObjectBase
 
     explicit MNewCallObject(CallObject* templateObj)
       : MNewCallObjectBase(templateObj)
-    {}
+    {
+        MOZ_ASSERT(!templateObj->isSingleton());
+    }
 
     static MNewCallObject*
     New(TempAllocator& alloc, CallObject* templateObj)
@@ -12280,19 +12282,19 @@ class MNewCallObject : public MNewCallObjectBase
     }
 };
 
-class MNewRunOnceCallObject : public MNewCallObjectBase
+class MNewSingletonCallObject : public MNewCallObjectBase
 {
   public:
-    INSTRUCTION_HEADER(NewRunOnceCallObject)
+    INSTRUCTION_HEADER(NewSingletonCallObject)
 
-    explicit MNewRunOnceCallObject(CallObject* templateObj)
+    explicit MNewSingletonCallObject(CallObject* templateObj)
       : MNewCallObjectBase(templateObj)
     {}
 
-    static MNewRunOnceCallObject*
+    static MNewSingletonCallObject*
     New(TempAllocator& alloc, CallObject* templateObj)
     {
-        return new(alloc) MNewRunOnceCallObject(templateObj);
+        return new(alloc) MNewSingletonCallObject(templateObj);
     }
 };
 
