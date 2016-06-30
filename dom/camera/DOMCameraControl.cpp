@@ -67,12 +67,12 @@ public:
   }
 
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset, uint32_t aTrackEvents,
+                                StreamTime aTrackOffset, TrackEventCommand aTrackEvents,
                                 const MediaSegment& aQueuedMedia,
                                 MediaStream* aInputStream,
                                 TrackID aInputTrackID) override
   {
-    if (aTrackEvents & TRACK_EVENT_CREATED) {
+    if (aTrackEvents & TrackEventCommand::TRACK_EVENT_CREATED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(NewRunnableMethod<TrackID>(
           this, &TrackCreatedListener::DoNotifyTrackCreated, aID));
     }
