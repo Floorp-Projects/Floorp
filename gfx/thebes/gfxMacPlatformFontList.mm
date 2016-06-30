@@ -731,12 +731,21 @@ gfxMacPlatformFontList::InitSingleFaceList()
     for (uint32_t i = 0; i < numFonts; i++) {
         LOG_FONTLIST(("(fontlist-singleface) face name: %s\n",
                       NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
-        gfxFontEntry *fontEntry = LookupLocalFont(singleFaceFonts[i],
+        nsAutoString familyName(singleFaceFonts[i]);
+        auto colon = familyName.FindChar(':');
+        if (colon != kNotFound) {
+            nsAutoString key(Substring(familyName, colon + 1));
+            ToLowerCase(key);
+            if (!mFontFamilies.GetWeak(key)) {
+                continue;
+            }
+            familyName.Truncate(colon);
+        }
+        gfxFontEntry *fontEntry = LookupLocalFont(familyName,
                                                   400, 0,
                                                   NS_FONT_STYLE_NORMAL);
         if (fontEntry) {
-            nsAutoString familyName, key;
-            familyName = singleFaceFonts[i];
+            nsAutoString key;
             GenerateFontListKey(familyName, key);
             LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n",
                           NS_ConvertUTF16toUTF8(familyName).get(),
