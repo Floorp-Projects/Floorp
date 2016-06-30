@@ -1,0 +1,75 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Number rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Number</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { Number } = browserRequire("devtools/client/shared/components/reps/number");
+
+  try {
+    yield testInt();
+    yield testBoolean();
+    yield testUnsafeInt();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+
+  function testInt() {
+    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testInt") });
+    is(renderedRep.type, Number.rep, `Rep correctly selects ${Number.rep.displayName} for integer value`);
+
+    const renderedComponent = renderComponent(Number.rep, { object: getGripStub("testInt") });
+    is(renderedComponent.textContent, "5", "Number rep has expected text content for integer");
+  }
+
+  function testBoolean() {
+    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testTrue") });
+    is(renderedRep.type, Number.rep, `Rep correctly selects ${Number.rep.displayName} for boolean value`);
+
+    let renderedComponent = renderComponent(Number.rep, { object: getGripStub("testTrue") });
+    is(renderedComponent.textContent, "true", "Number rep has expected text content for boolean true");
+
+    renderedComponent = renderComponent(Number.rep, { object: getGripStub("testFalse") });
+    is(renderedComponent.textContent, "false", "Number rep has expected text content for boolean false");
+  }
+
+  function testUnsafeInt() {
+    const renderedComponent = renderComponent(Number.rep, { object: getGripStub("testUnsafeInt") });
+    is(renderedComponent.textContent, "900719925474099100", "Number rep has expected text content for a long number");
+  }
+
+  function getGripStub(name) {
+    switch (name) {
+      case "testInt":
+        return 5;
+
+      case "testTrue":
+        return true;
+
+      case "testFalse":
+        return false;
+
+      case "testUnsafeInt":
+        return 900719925474099122;
+    }
+  }
+});
+</script>
+</pre>
+</body>
+</html>
