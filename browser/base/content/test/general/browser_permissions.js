@@ -11,6 +11,7 @@ registerCleanupFunction(function() {
   SitePermissions.remove(gBrowser.currentURI, "cookie");
   SitePermissions.remove(gBrowser.currentURI, "geo");
   SitePermissions.remove(gBrowser.currentURI, "camera");
+  SitePermissions.remove(gBrowser.currentURI, "microphone");
 
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
@@ -64,20 +65,48 @@ add_task(function* testIdentityIcon() {
   gIdentityHandler.setPermission("geo", SitePermissions.ALLOW);
 
   ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
-    "identity-box signals granted permssions");
+    "identity-box signals granted permissions");
 
   gIdentityHandler.setPermission("geo", SitePermissions.getDefault("geo"));
 
   ok(!gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
-    "identity-box doesn't signal granted permssions");
+    "identity-box doesn't signal granted permissions");
 
   gIdentityHandler.setPermission("camera", SitePermissions.BLOCK);
 
   ok(!gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
-    "identity-box doesn't signal granted permssions");
+    "identity-box doesn't signal granted permissions");
 
   gIdentityHandler.setPermission("cookie", SitePermissions.SESSION);
 
   ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
-    "identity-box signals granted permssions");
+    "identity-box signals granted permissions");
+});
+
+add_task(function* testPermissionIcons() {
+  let {gIdentityHandler} = gBrowser.ownerGlobal;
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
+
+  gIdentityHandler.setPermission("camera", SitePermissions.ALLOW);
+  gIdentityHandler.setPermission("geo", SitePermissions.BLOCK);
+  gIdentityHandler.setPermission("microphone", SitePermissions.SESSION);
+
+  let geoIcon = gIdentityHandler._identityBox.querySelector("[data-permission-id='geo']");
+  ok(geoIcon.hasAttribute("showing"), "blocked permission icon is shown");
+  ok(geoIcon.classList.contains("blocked"),
+    "blocked permission icon is shown as blocked");
+
+  let cameraIcon = gIdentityHandler._identityBox.querySelector("[data-permission-id='camera']");
+  ok(!cameraIcon.hasAttribute("showing"),
+    "allowed permission icon is not shown");
+
+  let microphoneIcon  = gIdentityHandler._identityBox.querySelector("[data-permission-id='microphone']");
+  ok(!microphoneIcon.hasAttribute("showing"),
+    "allowed permission icon is not shown");
+
+  gIdentityHandler.setPermission("geo", SitePermissions.getDefault("geo"));
+
+  ok(!geoIcon.hasAttribute("showing"),
+    "blocked permission icon is not shown after reset");
 });
