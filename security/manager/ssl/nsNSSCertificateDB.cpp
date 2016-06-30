@@ -5,6 +5,7 @@
 #include "nsNSSCertificateDB.h"
 
 #include "CertVerifier.h"
+#include "CryptoTask.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "SharedSSLState.h"
@@ -31,6 +32,7 @@
 #include "nsNSSShutDown.h"
 #include "nsPK11TokenDB.h"
 #include "nsPKCS12Blob.h"
+#include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "pkix/Time.h"
@@ -1615,6 +1617,85 @@ nsNSSCertificateDB::VerifyCertAtTime(nsIX509Cert* aCert,
   return ::VerifyCertAtTime(aCert, aUsage, aFlags, aHostname,
                             mozilla::pkix::TimeFromEpochInSeconds(aTime),
                             aVerifiedChain, aHasEVPolicy, _retval, locker);
+}
+
+class VerifyCertAtTimeTask final : public CryptoTask
+{
+public:
+  VerifyCertAtTimeTask(nsIX509Cert* aCert, int64_t aUsage, uint32_t aFlags,
+                       const char* aHostname, uint64_t aTime,
+                       nsICertVerificationCallback* aCallback)
+    : mCert(aCert)
+    , mUsage(aUsage)
+    , mFlags(aFlags)
+    , mHostname(aHostname)
+    , mTime(aTime)
+    , mCallback(new nsMainThreadPtrHolder<nsICertVerificationCallback>(aCallback))
+    , mPRErrorCode(SEC_ERROR_LIBRARY_FAILURE)
+    , mVerifiedCertList(nullptr)
+    , mHasEVPolicy(false)
+  {
+  }
+
+private:
+  virtual nsresult CalculateResult() override
+  {
+    nsCOMPtr<nsIX509CertDB> certDB = do_GetService(NS_X509CERTDB_CONTRACTID);
+    if (!certDB) {
+      return NS_ERROR_FAILURE;
+    }
+    // Unfortunately mHostname will have made the empty string out of a null
+    // pointer passed in the constructor. If we pass the empty string on to
+    // VerifyCertAtTime with the usage certificateUsageSSLServer, it will call
+    // VerifySSLServerCert, which expects a non-empty hostname. To avoid this,
+    // check the length and use nullptr if appropriate.
+    const char* hostname = mHostname.Length() > 0 ? mHostname.get() : nullptr;
+    return certDB->VerifyCertAtTime(mCert, mUsage, mFlags, hostname, mTime,
+                                    getter_AddRefs(mVerifiedCertList),
+                                    &mHasEVPolicy, &mPRErrorCode);
+  }
+
+  // No NSS resources are directly held, so there is nothing to release.
+  virtual void ReleaseNSSResources() override { }
+
+  virtual void CallCallback(nsresult rv) override
+  {
+    if (NS_FAILED(rv)) {
+      Unused << mCallback->VerifyCertFinished(SEC_ERROR_LIBRARY_FAILURE,
+                                              nullptr, false);
+    } else {
+      Unused << mCallback->VerifyCertFinished(mPRErrorCode, mVerifiedCertList,
+                                              mHasEVPolicy);
+    }
+  }
+
+  nsCOMPtr<nsIX509Cert> mCert;
+  int64_t mUsage;
+  uint32_t mFlags;
+  nsCString mHostname;
+  uint64_t mTime;
+  nsMainThreadPtrHandle<nsICertVerificationCallback> mCallback;
+  int32_t mPRErrorCode;
+  nsCOMPtr<nsIX509CertList> mVerifiedCertList;
+  bool mHasEVPolicy;
+};
+
+NS_IMETHODIMP
+nsNSSCertificateDB::AsyncVerifyCertAtTime(nsIX509Cert* aCert,
+                                          int64_t /*SECCertificateUsage*/ aUsage,
+                                          uint32_t aFlags,
+                                          const char* aHostname,
+                                          uint64_t aTime,
+                                          nsICertVerificationCallback* aCallback)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<VerifyCertAtTimeTask> task(new VerifyCertAtTimeTask(aCert, aUsage,
+                                                             aFlags, aHostname,
+                                                             aTime, aCallback));
+  return task->Dispatch("VerifyCert");
 }
 
 NS_IMETHODIMP
