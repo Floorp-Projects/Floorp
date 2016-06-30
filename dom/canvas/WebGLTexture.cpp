@@ -812,10 +812,6 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
     case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-    case LOCAL_GL_TEXTURE_SWIZZLE_A:
-    case LOCAL_GL_TEXTURE_SWIZZLE_B:
-    case LOCAL_GL_TEXTURE_SWIZZLE_G:
-    case LOCAL_GL_TEXTURE_SWIZZLE_R:
     case LOCAL_GL_TEXTURE_WRAP_R:
         mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
         return JS::NumberValue(uint32_t(i));
