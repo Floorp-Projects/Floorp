@@ -16,8 +16,6 @@
 namespace mozilla {
 namespace camera {
 
-nsresult SynchronouslyCreatePBackground();
-
 class ThreadDestructor : public Runnable
 {
   DISALLOW_COPY_AND_ASSIGN(ThreadDestructor);
