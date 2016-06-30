@@ -18,6 +18,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
 #include "nsStyleStruct.h"
+#include "nsStyleUtil.h"
 #include "StyleStructContext.h"
 
 #include "mozilla/EventStates.h"
@@ -161,6 +162,125 @@ Gecko_GetElementId(RawGeckoElement* aElement)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::id);
   return attr ? attr->GetAtomValue() : nullptr;
+}
+
+template<class MatchFn>
+bool
+DoMatch(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName, MatchFn aMatch)
+{
+  if (aNS) {
+    int32_t ns = nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNS);
+    NS_ENSURE_TRUE(ns != kNameSpaceID_Unknown, false);
+    const nsAttrValue* value = aElement->GetParsedAttr(aName, ns);
+    return value && aMatch(value);
+  }
+  // No namespace means any namespace - we have to check them all. :-(
+  const nsAttrName* attrName;
+  for (uint32_t i = 0; (attrName = aElement->GetAttrNameAt(i)); ++i) {
+    if (attrName->LocalName() != aName) {
+      continue;
+    }
+    const nsAttrValue* value =
+      aElement->GetParsedAttr(attrName->LocalName(), attrName->NamespaceID());
+    if (aMatch(value)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Work around our overly-restrictive static analysis. This can be removed once
+// bug 1281935 lands.
+template<typename T>
+struct FakeRef {
+  MOZ_IMPLICIT FakeRef(T* aPtr) : mPtr(aPtr) {}
+  operator T*() const { return mPtr; }
+  T* mPtr;
+};
+
+bool
+Gecko_HasAttr(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName)
+{
+  auto match = [](const nsAttrValue* aValue) { return true; };
+  return DoMatch(aElement, aNS, aName, match);
+}
+
+bool
+Gecko_AttrEquals(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName,
+                 nsIAtom* aStr_, bool aIgnoreCase)
+{
+  FakeRef<nsIAtom> aStr(aStr_);
+  auto match = [aStr, aIgnoreCase](const nsAttrValue* aValue) {
+    return aValue->Equals(aStr, aIgnoreCase ? eIgnoreCase : eCaseMatters);
+  };
+  return DoMatch(aElement, aNS, aName, match);
+}
+
+bool
+Gecko_AttrDashEquals(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName,
+                     nsIAtom* aStr_)
+{
+  FakeRef<nsIAtom> aStr(aStr_);
+  auto match = [aStr](const nsAttrValue* aValue) {
+    nsAutoString str;
+    aValue->ToString(str);
+    const nsDefaultStringComparator c;
+    return nsStyleUtil::DashMatchCompare(str, nsDependentAtomString(aStr), c);
+  };
+  return DoMatch(aElement, aNS, aName, match);
+}
+
+bool
+Gecko_AttrIncludes(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName,
+                   nsIAtom* aStr_)
+{
+  FakeRef<nsIAtom> aStr(aStr_);
+  auto match = [aStr](const nsAttrValue* aValue) {
+    nsAutoString str;
+    aValue->ToString(str);
+    const nsDefaultStringComparator c;
+    return nsStyleUtil::ValueIncludes(str, nsDependentAtomString(aStr), c);
+  };
+  return DoMatch(aElement, aNS, aName, match);
+}
+
+bool
+Gecko_AttrHasSubstring(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName,
+                       nsIAtom* aStr_)
+{
+  FakeRef<nsIAtom> aStr(aStr_);
+  auto match = [aStr](const nsAttrValue* aValue) {
+    nsAutoString str;
+    aValue->ToString(str);
+    return FindInReadable(str, nsDependentAtomString(aStr));
+  };
+  return DoMatch(aElement, aNS, aName, match);
+}
+
+bool
+Gecko_AttrHasPrefix(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName,
+                    nsIAtom* aStr_)
+{
+  FakeRef<nsIAtom> aStr(aStr_);
+  auto match = [aStr](const nsAttrValue* aValue) {
+    nsAutoString str;
+    aValue->ToString(str);
+    return StringBeginsWith(str, nsDependentAtomString(aStr));
+  };
+  return DoMatch(aElement, aNS, aName, match);
+}
+
+bool
+Gecko_AttrHasSuffix(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName,
+                    nsIAtom* aStr_)
+{
+  FakeRef<nsIAtom> aStr(aStr_);
+  auto match = [aStr](const nsAttrValue* aValue) {
+    nsAutoString str;
+    aValue->ToString(str);
+    return StringEndsWith(str, nsDependentAtomString(aStr));
+  };
+  return DoMatch(aElement, aNS, aName, match);
 }
 
 uint32_t
