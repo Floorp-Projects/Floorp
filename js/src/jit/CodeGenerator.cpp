@@ -5446,12 +5446,6 @@ typedef PlainObject* (*ObjectCreateWithTemplateFn)(JSContext*, HandlePlainObject
 static const VMFunction ObjectCreateWithTemplateInfo =
     FunctionInfo<ObjectCreateWithTemplateFn>(ObjectCreateWithTemplate, "ObjectCreateWithTemplate");
 
-typedef TypedArrayObject* (*TypedArrayCreateWithTemplateFn)(JSContext*, HandleObject);
-static const VMFunction TypedArrayCreateWithTemplateInfo =
-    FunctionInfo<TypedArrayCreateWithTemplateFn>(TypedArrayCreateWithTemplate,
-                                                 "TypedArrayCreateWithTemplate");
-
-
 void
 CodeGenerator::visitNewObjectVMCall(LNewObject* lir)
 {
@@ -5462,17 +5456,11 @@ CodeGenerator::visitNewObjectVMCall(LNewObject* lir)
 
     JSObject* templateObject = lir->mir()->templateObject();
 
-    MNewObject::Mode mode_ = lir->mir()->mode();
-
-    MOZ_ASSERT_IF(mode_ != MNewObject::TypedArray && templateObject,
-                  !templateObject->is<TypedArrayObject>());
-
     // If we're making a new object with a class prototype (that is, an object
     // that derives its class from its prototype instead of being
     // PlainObject::class_'d) from self-hosted code, we need a different init
     // function.
-    switch (mode_) {
-      case MNewObject::ObjectLiteral:
+    if (lir->mir()->mode() == MNewObject::ObjectLiteral) {
         if (templateObject) {
             pushArg(ImmGCPtr(templateObject));
             callVM(NewInitObjectWithTemplateInfo, lir);
@@ -5482,15 +5470,10 @@ CodeGenerator::visitNewObjectVMCall(LNewObject* lir)
             pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
             callVM(NewInitObjectInfo, lir);
         }
-        break;
-      case MNewObject::ObjectCreate:
+    } else {
+        MOZ_ASSERT(lir->mir()->mode() == MNewObject::ObjectCreate);
         pushArg(ImmGCPtr(templateObject));
         callVM(ObjectCreateWithTemplateInfo, lir);
-        break;
-      case MNewObject::TypedArray:
-        pushArg(ImmGCPtr(templateObject));
-        callVM(TypedArrayCreateWithTemplateInfo, lir);
-        break;
     }
 
     if (ReturnReg != objReg)
