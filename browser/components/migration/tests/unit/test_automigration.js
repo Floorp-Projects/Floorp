@@ -66,6 +66,7 @@ add_task(function* checkMigratorPicking() {
  */
 add_task(function* checkProfilePicking() {
   let fakeMigrator = {sourceProfiles: [{id: "a"}, {id: "b"}]};
+  let profB = fakeMigrator.sourceProfiles[1];
   Assert.throws(() => AutoMigrate.pickProfile(fakeMigrator),
                 /Don't know how to pick a profile when more/,
                 "Should throw when there are multiple profiles.");
@@ -73,7 +74,7 @@ add_task(function* checkProfilePicking() {
                 /Profile specified was not found/,
                 "Should throw when the profile supplied doesn't exist.");
   let profileToMigrate = AutoMigrate.pickProfile(fakeMigrator, "b");
-  Assert.equal(profileToMigrate, "b", "Should return profile supplied");
+  Assert.equal(profileToMigrate, profB, "Should return profile supplied");
 
   fakeMigrator.sourceProfiles = null;
   Assert.throws(() => AutoMigrate.pickProfile(fakeMigrator, "c"),
@@ -88,8 +89,9 @@ add_task(function* checkProfilePicking() {
                 "Should throw when no profile data is present.");
 
   fakeMigrator.sourceProfiles = [{id: "a"}];
+  let profA = fakeMigrator.sourceProfiles[0];
   profileToMigrate = AutoMigrate.pickProfile(fakeMigrator);
-  Assert.equal(profileToMigrate, "a", "Should return the only profile if only one is present.");
+  Assert.equal(profileToMigrate, profA, "Should return the only profile if only one is present.");
 });
 
 /**
