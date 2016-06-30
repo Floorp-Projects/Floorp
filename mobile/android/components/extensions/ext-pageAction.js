@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
+  IconDetails,
   SingletonEventManager,
 } = ExtensionUtils;
 
@@ -24,13 +25,13 @@ var pageActionMap = new WeakMap();
 function PageAction(options, extension) {
   this.id = null;
 
-  let DEFAULT_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAC4klEQVRYhdWXLWzbQBSADQtDAwsHC1tUhUxqfL67lk2tdn+OJg0ODU0rLByqgqINBY6tmlbn7LMTJ5FaFVVBk1G0oUGjG2jT2Y7jxmmcbU/6iJ+f36fz+e5sGP9riCGm9hB37RG+scd4Yo/wsDXCZyIE2xuXsce4bY+wXkAsQtzYmExrfFgvkJkRbkzo1ehoxx5iXcgI/9iYUGt8WH9MqDXEcmNChmEYrRCf2SHWeYgQx3x0tLNRIeKQLTtEFyJEep4NTuhk8BC+yMrwEE3+iozo42d8gK7FAOkMsRiiN8QhW2ttSK5QTfRRV4QoymVeJMvPvDp7gCZigD613MN6yRFA3SWarow9QB9LCfG+NeF9qCtjAKOSQjCqVKhfVsiHEQ+grgx/lRGqUihAc1uL8EFD+KCRO+GrF4J61phcoRoPoEzkYhZYpykh5sMb7kOdIeY+jHKur4QI4Feh4AFX1nVeLxrAvQchGsBz5ls6wa2QdwcvIcE2863bTH79KOvsz/uUYJsp+J0pSzNlDckVqqVGUAF+n6uS7txcOl6wot4JVy70ufDLy4pWLUQVPE81pRI0mGe9oxLMHSeohHvMs/STUNaUK6vDPCvOyxMFDx4achehRDJmHnydnkPww5OFfLxrGIZBFDyYl4LpMzlTQFIP6AQx86w2UeYBccFpJrcKv5L9eGDtUAU6RIELqsB74uynjy/UBRF1gS5BTFxwQT1wTiXoUg9MH7m/3NZRRoi5IJytUbMgzv4Wc832+oQkiKgEehmyMkkpKsFkQV11QsRJL5rJYBLItQgRaUZEmnoZXsomz3vGiWw+I9KMF9SVFOqZEemZekli1jN3U/UOqhHHvC6oWWGElhfSpGdOk6+O9prdwvtLj5BjRsQxdRnot+Zeifpy/2/0stktKTRNLmbk0mwXyl8253fyojj+8rxOHNAhjjm5n0/5OOCGOKBzkrMO0Z75lvSAzKlrF32Z/3z8BqLAn+yMV7VhAAAAAElFTkSuQmCC";
+  this.extension = extension;
+  this.icons = IconDetails.normalize({path: options.default_icon}, extension);
 
   this.popupUrl = options.default_popup;
 
   this.options = {
     title: options.default_title || extension.name,
-    icon: DEFAULT_ICON,
     id: extension.id,
     clickCallback: () => {
       if (this.popupUrl) {
@@ -45,18 +46,41 @@ function PageAction(options, extension) {
     },
   };
 
+  this.shouldShow = false;
+
   EventEmitter.decorate(this);
 }
 
 PageAction.prototype = {
-  show(tabId) {
-    // TODO: Only show the PageAction for the tab with the provided tabId.
-    if (!this.id) {
-      this.id = PageActions.add(this.options);
+  show(tabId, context) {
+    if (this.id) {
+      return Promise.resolve();
     }
+
+    if (this.options.icon) {
+      this.id = PageActions.add(this.options);
+      return Promise.resolve();
+    }
+
+    this.shouldShow = true;
+
+    let {icon} = IconDetails.getURL(this.icons, context.contentWindow, this.extension, 18);
+
+    let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    return IconDetails.convertImageURLToDataURL(icon, context, browserWindow).then(dataURI => {
+      if (this.shouldShow) {
+        this.options.icon = dataURI;
+        this.id = PageActions.add(this.options);
+      }
+    }).catch(() => {
+      return Promise.reject({
+        message: "Failed to load PageAction icon",
+      });
+    });
   },
 
   hide(tabId) {
+    this.shouldShow = false;
     if (this.id) {
       PageActions.remove(this.id);
       this.id = null;
@@ -106,11 +130,14 @@ extensions.registerSchemaAPI("pageAction", (extension, context) => {
       }).api(),
 
       show(tabId) {
-        pageActionMap.get(extension).show(tabId);
+        return pageActionMap.get(extension)
+                            .show(tabId, context)
+                            .then(() => {});
       },
 
       hide(tabId) {
         pageActionMap.get(extension).hide(tabId);
+        return Promise.resolve();
       },
 
       setPopup(details) {

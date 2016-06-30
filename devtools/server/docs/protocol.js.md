@@ -649,24 +649,3 @@ This will require some matching work on the front:
     }, {
         impl: "_clearTemporaryChildren"
     })
-
-Telemetry
----------
-
-You can specify a telemetry probe id in your method spec:
-
-    // spec:
-    methods: {
-      echo: {
-        request: { str: Arg(0) },
-        response: { str: RetVal() },
-        telemetry: "ECHO"
-      }
-    }
-
-    // implementation:
-    echo: function (str) {
-      return str;
-    }
-
-... and the time to execute that request will be included as a telemetry probe.

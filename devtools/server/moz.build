@@ -32,6 +32,7 @@ DevToolsModules(
     'child.js',
     'content-globals.js',
     'content-server.jsm',
+    'css-logic.js',
     'main.js',
     'primitive.js',
     'service-worker-child.js',

@@ -16,8 +16,7 @@ const { getToplevelWindow } = require("sdk/window/utils");
 const { Task: { spawn } } = require("devtools/shared/task");
 const e10s = require("../utils/e10s");
 
-const BASE_URL = "resource://devtools/client/responsive.html";
-const audioCamera = new window.Audio(`${BASE_URL}/audio/camera-click.mp3`);
+const audioCamera = new window.Audio("resource://devtools/client/themes/audio/shutter.wav");
 
 const animationFrame = () => new Promise(resolve => {
   window.requestAnimationFrame(resolve);
