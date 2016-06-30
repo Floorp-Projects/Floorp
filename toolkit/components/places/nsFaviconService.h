@@ -23,11 +23,6 @@
 
 #include "FaviconHelpers.h"
 
-// Favicons bigger than this size should not be saved to the db to avoid
-// bloating it with large image blobs.
-// This still allows us to accept a favicon even if we cannot optimize it.
-#define MAX_FAVICON_SIZE 10240
-
 // Most icons will be smaller than this rough estimate of the size of an
 // uncompressed 16x16 RGBA image of the same dimensions.
 #define MAX_ICON_FILESIZE(s) ((uint32_t) s*s*4)

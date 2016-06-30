@@ -78,6 +78,7 @@ if CONFIG['MOZ_PLACES']:
         'nsLivemarkService.js',
         'nsPlacesExpiration.js',
         'nsTaggingService.js',
+        'PageIconProtocolHandler.js',
         'PlacesCategoriesStarter.js',
         'toolkitplaces.manifest',
         'UnifiedComplete.js',
