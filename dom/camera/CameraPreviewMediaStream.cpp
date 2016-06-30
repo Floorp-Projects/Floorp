@@ -5,6 +5,7 @@
 
 #include "CameraPreviewMediaStream.h"
 #include "CameraCommon.h"
+#include "MediaStreamListener.h"
 
 /**
  * Maximum number of outstanding invalidates before we start to drop frames;
@@ -89,7 +90,7 @@ CameraPreviewMediaStream::RemoveListener(MediaStreamListener* aListener)
 
   RefPtr<MediaStreamListener> listener(aListener);
   mListeners.RemoveElement(aListener);
-  listener->NotifyEvent(mFakeMediaStreamGraph, MediaStreamListener::EVENT_REMOVED);
+  listener->NotifyEvent(mFakeMediaStreamGraph, MediaStreamGraphEvent::EVENT_REMOVED);
 }
 
 void
@@ -103,7 +104,7 @@ CameraPreviewMediaStream::OnPreviewStateChange(bool aActive)
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
         MediaStreamListener* l = mListeners[j];
         l->NotifyQueuedTrackChanges(mFakeMediaStreamGraph, TRACK_VIDEO, 0,
-                                    MediaStreamListener::TRACK_EVENT_CREATED,
+                                    TrackEventCommand::TRACK_EVENT_CREATED,
                                     tmpSegment);
         l->NotifyFinishedTrackCreation(mFakeMediaStreamGraph);
       }

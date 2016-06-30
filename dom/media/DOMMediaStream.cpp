@@ -186,18 +186,18 @@ public:
   }
 
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset, uint32_t aTrackEvents,
+                                StreamTime aTrackOffset, TrackEventCommand aTrackEvents,
                                 const MediaSegment& aQueuedMedia,
                                 MediaStream* aInputStream,
                                 TrackID aInputTrackID) override
   {
-    if (aTrackEvents & TRACK_EVENT_CREATED) {
+    if (aTrackEvents & TrackEventCommand::TRACK_EVENT_CREATED) {
       nsCOMPtr<nsIRunnable> runnable =
         NewRunnableMethod<TrackID, MediaSegment::Type, MediaStream*, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackCreated,
           aID, aQueuedMedia.GetType(), aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
-    } else if (aTrackEvents & TRACK_EVENT_ENDED) {
+    } else if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
         NewRunnableMethod<MediaStream*, TrackID, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackEnded,
@@ -276,12 +276,12 @@ public:
   // The methods below are called on the MediaStreamGraph thread.
 
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset, uint32_t aTrackEvents,
+                                StreamTime aTrackOffset, TrackEventCommand aTrackEvents,
                                 const MediaSegment& aQueuedMedia,
                                 MediaStream* aInputStream,
                                 TrackID aInputTrackID) override
   {
-    if (aTrackEvents & TRACK_EVENT_ENDED) {
+    if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
         NewRunnableMethod<StorensRefPtrPassByPtr<MediaStream>, TrackID>(
           this, &PlaybackStreamListener::DoNotifyTrackEnded, aInputStream, aInputTrackID);

@@ -10,6 +10,7 @@
 #include "TrackEncoder.h"
 #include "ContainerWriter.h"
 #include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "nsAutoPtr.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/MemoryReporting.h"
@@ -125,7 +126,7 @@ public :
    */
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                 StreamTime aTrackOffset,
-                                uint32_t aTrackEvents,
+                                TrackEventCommand aTrackEvents,
                                 const MediaSegment& aQueuedMedia,
                                 MediaStream* aInputStream,
                                 TrackID aInputTrackID) override;
@@ -144,7 +145,7 @@ public :
    * * Notified the stream is being removed.
    */
   void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamListener::MediaStreamGraphEvent event) override;
+                   MediaStreamGraphEvent event) override;
 
   /**
    * Creates an encoder with a given MIME type. Returns null if we are unable

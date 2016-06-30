@@ -24,6 +24,7 @@
 #include "ImageContainer.h"
 #include "DOMMediaStream.h"
 #include "MediaStreamTrack.h"
+#include "MediaStreamListener.h"
 #include "VideoUtils.h"
 #ifdef WEBRTC_GONK
 #include "GrallocImages.h"
