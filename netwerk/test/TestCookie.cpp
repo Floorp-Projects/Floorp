@@ -590,6 +590,52 @@ main(int32_t argc, char *argv[])
       allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
 
+      // *** Cookie prefix tests
+      sBuffer = PR_sprintf_append(sBuffer, "*** Beginning cookie prefix tests...\n");
+
+      // prefixed cookies can't be set from insecure HTTP
+      SetACookie(cookieService, "http://prefixed.test/", nullptr, "__Secure-test1=test", nullptr);
+      SetACookie(cookieService, "http://prefixed.test/", nullptr, "__Secure-test2=test; secure", nullptr);
+      SetACookie(cookieService, "http://prefixed.test/", nullptr, "__Host-test1=test", nullptr);
+      SetACookie(cookieService, "http://prefixed.test/", nullptr, "__Host-test2=test; secure", nullptr);
+      GetACookie(cookieService, "http://prefixed.test/", nullptr, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      // prefixed cookies won't be set without the secure flag
+      SetACookie(cookieService, "https://prefixed.test/", nullptr, "__Secure-test=test", nullptr);
+      SetACookie(cookieService, "https://prefixed.test/", nullptr, "__Host-test=test", nullptr);
+      GetACookie(cookieService, "https://prefixed.test/", nullptr, getter_Copies(cookie));
+      rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      // prefixed cookies can be set when done correctly
+      SetACookie(cookieService, "https://prefixed.test/", nullptr, "__Secure-test=test; secure", nullptr);
+      SetACookie(cookieService, "https://prefixed.test/", nullptr, "__Host-test=test; secure", nullptr);
+      GetACookie(cookieService, "https://prefixed.test/", nullptr, getter_Copies(cookie));
+      rv[2] = CheckResult(cookie.get(), MUST_CONTAIN, "__Secure-test=test");
+      rv[3] = CheckResult(cookie.get(), MUST_CONTAIN, "__Host-test=test");
+
+      // but when set must not be returned to the host insecurely
+      GetACookie(cookieService, "http://prefixed.test/", nullptr, getter_Copies(cookie));
+      rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      // Host-prefixed cookies cannot specify a domain
+      SetACookie(cookieService, "https://host.prefixed.test/", nullptr, "__Host-a=test; secure; domain=prefixed.test", nullptr);
+      SetACookie(cookieService, "https://host.prefixed.test/", nullptr, "__Host-b=test; secure; domain=.prefixed.test", nullptr);
+      SetACookie(cookieService, "https://host.prefixed.test/", nullptr, "__Host-c=test; secure; domain=host.prefixed.test", nullptr);
+      SetACookie(cookieService, "https://host.prefixed.test/", nullptr, "__Host-d=test; secure; domain=.host.prefixed.test", nullptr);
+      GetACookie(cookieService, "https://host.prefixed.test/", nullptr, getter_Copies(cookie));
+      rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      // Host-prefixed cookies can only have a path of "/"
+      SetACookie(cookieService, "https://host.prefixed.test/some/path", nullptr, "__Host-e=test; secure", nullptr);
+      SetACookie(cookieService, "https://host.prefixed.test/some/path", nullptr, "__Host-f=test; secure; path=/", nullptr);
+      SetACookie(cookieService, "https://host.prefixed.test/some/path", nullptr, "__Host-g=test; secure; path=/some", nullptr);
+      GetACookie(cookieService, "https://host.prefixed.test/", nullptr, getter_Copies(cookie));
+      rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "__Host-f=test");
+
+      allTestsPassed = PrintResult(rv, 7) && allTestsPassed;
+
+
       // *** nsICookieManager{2} interface tests
       sBuffer = PR_sprintf_append(sBuffer, "*** Beginning nsICookieManager{2} interface tests...\n");
       nsCOMPtr<nsICookieManager> cookieMgr = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv0);
