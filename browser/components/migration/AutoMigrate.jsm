@@ -100,7 +100,7 @@ const AutoMigrate = {
    *
    * @param {Migrator} migrator     the migrator object to use
    * @param {String}   suggestedId  the id of the profile to migrate, if pre-specified, or null
-   * @returns                       the id of the profile to migrate, or null if migrating
+   * @returns                       the profile to migrate, or null if migrating
    *                                from the default profile.
    */
   pickProfile(migrator, suggestedId) {
@@ -116,12 +116,12 @@ const AutoMigrate = {
       if (!suggestedProfile) {
         throw new Error("Profile specified was not found.");
       }
-      return suggestedProfile.id;
+      return suggestedProfile;
     }
     if (profiles && profiles.length > 1) {
       throw new Error("Don't know how to pick a profile when more than 1 profile is present.");
     }
-    return profiles ? profiles[0].id : null;
+    return profiles ? profiles[0] : null;
   },
 
   getUndoRange() {
