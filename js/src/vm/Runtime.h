@@ -1018,8 +1018,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::LifoAlloc tempLifoAlloc;
 
   private:
-    JSContext* context_;
-
     js::jit::JitRuntime* jitRuntime_;
 
     /*
@@ -1054,10 +1052,8 @@ struct JSRuntime : public JS::shadow::Runtime,
         return interpreterStack_;
     }
 
-    JSContext* contextFromMainThread() {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
-        return context_;
-    }
+    inline JSContext* unsafeContextFromAnyThread();
+    inline JSContext* contextFromMainThread();
 
     bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
@@ -1481,7 +1477,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
   protected:
-    JSRuntime(JSContext* cx, JSRuntime* parentRuntime);
+    explicit JSRuntime(JSRuntime* parentRuntime);
 
     // destroyRuntime is used instead of a destructor, to ensure the downcast
     // to JSContext remains valid. The final GC triggered here depends on this.
