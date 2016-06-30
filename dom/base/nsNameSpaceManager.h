@@ -33,21 +33,20 @@ class nsAString;
 class nsNameSpaceManager final
 {
 public:
-  virtual ~nsNameSpaceManager() {}
+  ~nsNameSpaceManager() {}
 
-  virtual nsresult RegisterNameSpace(const nsAString& aURI,
-                                     int32_t& aNameSpaceID);
+  nsresult RegisterNameSpace(const nsAString& aURI, int32_t& aNameSpaceID);
 
-  virtual nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
+  nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
 
   nsIAtom* NameSpaceURIAtom(int32_t aNameSpaceID) {
     MOZ_ASSERT(aNameSpaceID > 0 && (int64_t) aNameSpaceID <= (int64_t) mURIArray.Length());
     return mURIArray.ElementAt(aNameSpaceID - 1); // id is index + 1
   }
 
-  virtual int32_t GetNameSpaceID(const nsAString& aURI);
+  int32_t GetNameSpaceID(const nsAString& aURI);
 
-  virtual bool HasElementCreator(int32_t aNameSpaceID);
+  bool HasElementCreator(int32_t aNameSpaceID);
 
   static nsNameSpaceManager* GetInstance();
 private:
