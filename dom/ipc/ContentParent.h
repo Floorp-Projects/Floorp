@@ -958,6 +958,7 @@ private:
 
   virtual bool RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
                                 const bool& aIsPrivateData,
+                                const IPC::Principal& aRequestingPrincipal,
                                 const int32_t& aWhichClipboard) override;
 
   virtual bool RecvGetClipboard(nsTArray<nsCString>&& aTypes,
