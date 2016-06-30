@@ -108,7 +108,7 @@ function PrepareInitData(initDataType, initData)
 
 function Test(test) {
   return new Promise(function(resolve, reject) {
-    navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{initDataTypes: ['keyids']}]).then(
+    navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{initDataTypes: [test.initDataType]}]).then(
       (access) => access.createMediaKeys()
       ).then(
         (mediaKeys) => {
