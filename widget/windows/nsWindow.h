@@ -57,8 +57,8 @@ class imgIContainer;
 namespace mozilla {
 namespace widget {
 class NativeKey;
-class WinCompositorWidget;
 struct MSGResult;
+class WinCompositorWidgetProxy;
 } // namespace widget
 } // namespacw mozilla;
 
@@ -313,7 +313,7 @@ public:
                      const mozilla::NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;
 
-  void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
+  mozilla::widget::CompositorWidgetProxy* NewCompositorWidgetProxy() override;
 
 protected:
   virtual ~nsWindow();
@@ -488,6 +488,8 @@ protected:
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
 
+  mozilla::widget::WinCompositorWidgetProxy* GetCompositorWidgetProxy();
+
 protected:
   nsCOMPtr<nsIWidget>   mParent;
   nsIntSize             mLastSize;
@@ -619,8 +621,6 @@ protected:
   POINT mCachedHitTestPoint;
   TimeStamp mCachedHitTestTime;
   int32_t mCachedHitTestResult;
-
-  RefPtr<mozilla::widget::WinCompositorWidget> mBasicLayersSurface;
 
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
