@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cr } = require("chrome");
+const { Cc, Ci, Cr, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
@@ -191,7 +191,7 @@ exports.items = [
         ]
       },
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       if (args.chrome && args.selector) {
         // Node screenshot with chrome option does not work as intended
         // Refer https://bugzilla.mozilla.org/show_bug.cgi?id=659268#c7
@@ -209,7 +209,7 @@ exports.items = [
       } else {
         capture = captureScreenshot(args, context.environment.chromeDocument);
       }
-
+      simulateCameraEffect(context.environment.chromeDocument, "shutter");
       return capture.then(saveScreenshot.bind(null, args, context));
     },
   },
@@ -220,11 +220,26 @@ exports.items = [
     hidden: true,
     returnType: "imageSummary",
     params: [ filenameParam, standardParams ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       return captureScreenshot(args, context.environment.document);
     },
   }
 ];
+
+/**
+ * This function is called to simulate camera effects
+ */
+function simulateCameraEffect(document, effect) {
+  let window = document.defaultView;
+  if (effect === "shutter") {
+    const audioCamera = new window.Audio("resource://devtools/client/themes/audio/shutter.wav");
+    audioCamera.play();
+  }
+  if (effect == "flash") {
+    const frames = Cu.cloneInto({ opacity: [ 0, 1 ] }, window);
+    document.documentElement.animate(frames, 500);
+  }
+}
 
 /**
  * This function simply handles the --delay argument before calling
@@ -320,6 +335,8 @@ function createScreenshotData(document, args) {
   if (args.fullpage) {
     window.scrollTo(currentX, currentY);
   }
+
+  simulateCameraEffect(document, "flash");
 
   return Promise.resolve({
     destinations: [],

@@ -961,7 +961,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                  // When _urlbarFocused is true, tabbrowser would close the
                  // popup if it's opened here, so don't show the notification.
                  !gBrowser.selectedBrowser._urlbarFocused &&
-                 Services.prefs.getBoolPref("browser.search.suggest.enabled");
+                 Services.prefs.getBoolPref("browser.search.suggest.enabled") &&
+                 this._prefs.getIntPref("daysBeforeHidingSuggestionsPrompt");
         ]]></getter>
       </property>
 
@@ -1300,8 +1301,26 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // to avoid impacting startup / new window performance
           aInput.popup.hidden = false;
 
-          if (aInput.shouldShowSearchSuggestionsNotification) {
+          let showNotification = aInput.shouldShowSearchSuggestionsNotification;
+          if (showNotification) {
+            let prefs = aInput._prefs;
+            let date = parseInt((new Date()).toLocaleFormat("%Y%m%d"));
+            let previousDate = prefs.getIntPref("lastSuggestionsPromptDate");
+            if (previousDate < date) {
+              let remainingDays =
+                prefs.getIntPref("daysBeforeHidingSuggestionsPrompt") - 1;
+              prefs.setIntPref("daysBeforeHidingSuggestionsPrompt",
+                               remainingDays);
+              prefs.setIntPref("lastSuggestionsPromptDate", date);
+              if (!remainingDays)
+                showNotification = false;
+            }
+          }
+
+          if (showNotification) {
             this._showSearchSuggestionsNotification();
+          } else if (this.classList.contains("showSearchSuggestionsNotification")) {
+            this._hideSearchSuggestionsNotification();
           }
 
           this._openAutocompletePopup(aInput, aElement);
@@ -1384,8 +1403,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </method>
 
       <method name="_showSearchSuggestionsNotification">
-        <parameter name="aInput"/>
-        <parameter name="aElement"/>
         <body>
           <![CDATA[
           // With the notification shown, the listbox's height can sometimes be

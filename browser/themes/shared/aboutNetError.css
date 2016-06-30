@@ -111,7 +111,7 @@ span#hostname {
 #automaticallyReportInFuture {
   cursor: pointer;
   display: inline-block;
-  -moz-padding-start: 2.3em;
+  padding-inline-start: 2.3em;
   text-indent: -2.3em;
   line-height: 16px
 }

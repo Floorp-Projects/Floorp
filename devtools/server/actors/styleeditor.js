@@ -14,7 +14,7 @@ const {Arg, method, RetVal} = protocol;
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {oldStyleSheetSpec, styleEditorSpec} = require("devtools/shared/specs/styleeditor");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
+loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic"));
 
 var TRANSITION_CLASS = "moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;

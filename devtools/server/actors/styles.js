@@ -19,7 +19,8 @@ const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} = require("devtools/server/actor
 const {pageStyleSpec, styleRuleSpec, ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
-loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
+loader.lazyGetter(this, "CssLogic", () => require("devtools/server/css-logic").CssLogic);
+loader.lazyGetter(this, "SharedCssLogic", () => require("devtools/shared/inspector/css-logic"));
 loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
 
 // When gathering rules to read for pseudo elements, we will skip
@@ -202,7 +203,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   getComputed: function (node, options) {
     let ret = Object.create(null);
 
-    this.cssLogic.sourceFilter = options.filter || CssLogic.FILTER.UA;
+    this.cssLogic.sourceFilter = options.filter || SharedCssLogic.FILTER.UA;
     this.cssLogic.highlight(node.rawNode);
     let computed = this.cssLogic.computedStyle || [];
 
@@ -380,7 +381,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *  }
    */
   getMatchedSelectors: function (node, property, options) {
-    this.cssLogic.sourceFilter = options.filter || CssLogic.FILTER.UA;
+    this.cssLogic.sourceFilter = options.filter || SharedCssLogic.FILTER.UA;
     this.cssLogic.highlight(node.rawNode);
 
     let rules = new Set();
@@ -577,9 +578,9 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     for (let i = domRules.Count() - 1; i >= 0; i--) {
       let domRule = domRules.GetElementAt(i);
 
-      let isSystem = !CssLogic.isContentStylesheet(domRule.parentStyleSheet);
+      let isSystem = !SharedCssLogic.isContentStylesheet(domRule.parentStyleSheet);
 
-      if (isSystem && options.filter != CssLogic.FILTER.UA) {
+      if (isSystem && options.filter != SharedCssLogic.FILTER.UA) {
         continue;
       }
 
