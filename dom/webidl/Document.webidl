@@ -225,20 +225,20 @@ partial interface Document {
   // versions have it uppercase.
   [LenientSetter, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute boolean fullscreen;
-  [BinaryName="fullscreen", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="fullscreen"]
   readonly attribute boolean mozFullScreen;
   [LenientSetter, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute boolean fullscreenEnabled;
-  [BinaryName="fullscreenEnabled", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="fullscreenEnabled"]
   readonly attribute boolean mozFullScreenEnabled;
   [LenientSetter, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute Element? fullscreenElement;
-  [BinaryName="fullscreenElement", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="fullscreenElement"]
   readonly attribute Element? mozFullScreenElement;
 
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   void exitFullscreen();
-  [BinaryName="exitFullscreen", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="exitFullscreen"]
   void mozCancelFullScreen();
 
   // Events handlers
