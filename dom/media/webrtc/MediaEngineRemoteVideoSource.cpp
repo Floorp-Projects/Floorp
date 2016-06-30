@@ -448,12 +448,15 @@ MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aCon
     case dom::MediaSourceEnum::Window:
     case dom::MediaSourceEnum::Application: {
       FlattenedConstraints c(aConstraints);
-      mCapability.width = ((c.mWidth.mIdeal.WasPassed() ?
-        c.mWidth.mIdeal.Value() : 0) & 0xffff) << 16 | (c.mWidth.mMax & 0xffff);
-      mCapability.height = ((c.mHeight.mIdeal.WasPassed() ?
-        c.mHeight.mIdeal.Value() : 0) & 0xffff) << 16 | (c.mHeight.mMax & 0xffff);
-      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.WasPassed() ?
-        c.mFrameRate.mIdeal.Value() : aPrefs.mFPS);
+      // The actual resolution to constrain around is not easy to find ahead of
+      // time (and may in fact change over time), so as a hack, we push ideal
+      // and max constraints down to desktop_capture_impl.cc and finish the
+      // algorithm there.
+      mCapability.width = (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 |
+                          (c.mWidth.mMax & 0xffff);
+      mCapability.height = (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 |
+                           (c.mHeight.mMax & 0xffff);
+      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
       return true;
     }
     default:
