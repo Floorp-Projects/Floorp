@@ -2,14 +2,16 @@ language: generic
 
 matrix:
   include:
-    - env: TARGET=armv7-unknown-linux-gnueabihf
+    - os: linux
+      env: TARGET=armv7-unknown-linux-gnueabihf
       addons:
         apt:
           packages: &armhf
           - gcc-arm-linux-gnueabihf
           - libc6-armhf-cross
           - libc6-dev-armhf-cross
-    - env: TARGET=x86_64-unknown-linux-musl
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl
       dist: trusty
       sudo: required
       addons:
@@ -17,7 +19,8 @@ matrix:
           packages:
           - musl-tools
           - libbz2-dev
-    - env: TARGET=x86_64-pc-windows-gnu
+    - os: linux
+      env: TARGET=x86_64-pc-windows-gnu
       dist: trusty
       addons:
         apt:
@@ -26,6 +29,8 @@ matrix:
           - gcc-mingw-w64-x86-64
           - binutils-mingw-w64-x86-64
           - libbz2-dev
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
 
 install:
   - export PATH="$PATH:$HOME/.cargo/bin"
@@ -48,9 +53,10 @@ deploy:
   skip_cleanup: true
   file:
     - "geckodriver-$TRAVIS_TAG.tar.gz"
-    - "geckodriver-$TRAVIS_TAG-arm7hf.zip"
-    - "geckodriver-$TRAVIS_TAG-win64.zip"
+    - "geckodriver-$TRAVIS_TAG-arm7hf.tar.gz"
     - "geckodriver-$TRAVIS_TAG-linux64.tar.gz"
+    - "geckodriver-$TRAVIS_TAG-mac.tar.gz"
+    - "geckodriver-$TRAVIS_TAG-win64.zip"
   on:
     tags: true
     repo: mozilla/geckodriver
