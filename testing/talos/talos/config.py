@@ -467,6 +467,6 @@ def get_configs(argv=None):
 
 if __name__ == '__main__':
     cfgs = get_configs()
-    print cfgs[0]
+    print(cfgs[0])
     print
-    print cfgs[1]
+    print(cfgs[1])

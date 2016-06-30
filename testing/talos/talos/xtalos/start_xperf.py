@@ -26,7 +26,7 @@ def start(xperf_path, xperf_providers, xperf_stackwalk, xperf_user_providers,
                  '-f', '%s.user' % etl_filename
                  ]
     if debug:
-        print "executing '%s'" % subprocess.list2cmdline(xperf_cmd)
+        print("executing '%s'" % subprocess.list2cmdline(xperf_cmd))
     subprocess.call(xperf_cmd)
 
 
@@ -76,7 +76,7 @@ def main(args=sys.argv[1:]):
         start_from_config(config_file=args.configFile,
                           debug=args.debug_level >= xtalos.DEBUG_INFO,
                           **args.__dict__)
-    except xtalos.XTalosError, e:
+    except xtalos.XTalosError as e:
         parser.error(str(e))
 
 

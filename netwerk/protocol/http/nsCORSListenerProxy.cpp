@@ -41,7 +41,9 @@
 #include "nsINetworkInterceptController.h"
 #include "nsNullPrincipal.h"
 #include "nsICorsPreflightCallback.h"
+#include "nsISupportsImpl.h"
 #include "mozilla/LoadInfo.h"
+#include "nsIHttpHeaderVisitor.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -145,7 +147,7 @@ public:
     {
       MOZ_COUNT_CTOR(nsPreflightCache::CacheEntry);
     }
-    
+
     ~CacheEntry()
     {
       MOZ_COUNT_DTOR(nsPreflightCache::CacheEntry);
@@ -365,13 +367,13 @@ nsPreflightCache::GetCacheKey(nsIURI* aURI,
 {
   NS_ASSERTION(aURI, "Null uri!");
   NS_ASSERTION(aPrincipal, "Null principal!");
-  
+
   NS_NAMED_LITERAL_CSTRING(space, " ");
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, false);
-  
+
   nsAutoCString scheme, host, port;
   if (uri) {
     uri->GetScheme(scheme);
@@ -497,6 +499,40 @@ nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
   return mOuterListener->OnStartRequest(aRequest, aContext);
 }
 
+namespace {
+class CheckOriginHeader final : public nsIHttpHeaderVisitor {
+
+public:
+  NS_DECL_ISUPPORTS
+
+  CheckOriginHeader()
+   : mHeaderCount(0)
+  {}
+
+  NS_IMETHOD
+  VisitHeader(const nsACString & aHeader, const nsACString & aValue) override
+  {
+    if (aHeader.EqualsLiteral("Access-Control-Allow-Origin")) {
+      mHeaderCount++;
+    }
+
+    if (mHeaderCount > 1) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
+    return NS_OK;
+  }
+
+private:
+  uint32_t mHeaderCount;
+
+  ~CheckOriginHeader()
+  {}
+
+};
+
+NS_IMPL_ISUPPORTS(CheckOriginHeader, nsIHttpHeaderVisitor)
+}
+
 nsresult
 nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
 {
@@ -535,7 +571,16 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
   }
 
   // Check the Access-Control-Allow-Origin header
+  RefPtr<CheckOriginHeader> visitor = new CheckOriginHeader();
   nsAutoCString allowedOriginHeader;
+
+  // check for duplicate headers
+  rv = http->VisitOriginalResponseHeaders(visitor);
+  if (NS_FAILED(rv)) {
+    LogBlockedRequest(aRequest, "CORSAllowOriginNotMatchingOrigin", nullptr);
+    return rv;
+  }
+
   rv = http->GetResponseHeader(
     NS_LITERAL_CSTRING("Access-Control-Allow-Origin"), allowedOriginHeader);
   if (NS_FAILED(rv)) {
@@ -1453,10 +1498,9 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   // Start preflight
   rv = preflightChannel->AsyncOpen2(preflightListener);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // Return newly created preflight channel
   preflightChannel.forget(aPreflightChannel);
 
   return NS_OK;
 }
-

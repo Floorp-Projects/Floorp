@@ -189,7 +189,7 @@ JS_BasicObjectToString(JSContext* cx, JS::HandleObject obj);
 namespace js {
 
 JS_FRIEND_API(bool)
-GetBuiltinClass(JSContext* cx, JS::HandleObject obj, ESClassValue* classValue);
+GetBuiltinClass(JSContext* cx, JS::HandleObject obj, ESClass* cls);
 
 JS_FRIEND_API(const char*)
 ObjectClassName(JSContext* cx, JS::HandleObject obj);

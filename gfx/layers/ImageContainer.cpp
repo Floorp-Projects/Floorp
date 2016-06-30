@@ -357,6 +357,10 @@ ImageContainer::ClearCachedResources()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (mImageClient && mImageClient->AsImageClientSingle()) {
+    if (!mImageClient->HasTextureClientRecycler()) {
+      return;
+    }
+    mImageClient->GetTextureClientRecycler()->ShrinkToMinimumSize();
     return;
   }
   return mRecycleBin->ClearRecycledBuffers();

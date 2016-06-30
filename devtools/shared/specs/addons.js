@@ -12,7 +12,6 @@ const addonsSpec = generateActorSpec({
     installTemporaryAddon: {
       request: { addonPath: Arg(0, "string") },
       response: { addon: RetVal("json") },
-      telemetry: "INSTALL_TEMPORARY_ADDON"
     },
   },
 });

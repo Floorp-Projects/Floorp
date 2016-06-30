@@ -1240,9 +1240,9 @@ ScriptedProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, MutableHand
 
 bool
 ScriptedProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
-                                      ESClassValue* classValue) const
+                                      ESClass* cls) const
 {
-    *classValue = ESClass_Other;
+    *cls = ESClass::Other;
     return true;
 }
 

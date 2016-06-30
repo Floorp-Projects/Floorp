@@ -1846,6 +1846,12 @@ WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal)
   // are not thread-safe.
   mOriginDocument = nullptr;
 
+
+  // The TriggeringPrincipal for websockets must always be a script.
+  // Let's make sure that the doc's principal (if a doc exists)
+  // and aPrincipal are same origin.
+  MOZ_ASSERT(!doc || doc->NodePrincipal()->Equals(aPrincipal));
+
   wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
                           doc ? doc->NodePrincipal() : aPrincipal,
                           aPrincipal,

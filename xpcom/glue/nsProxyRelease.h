@@ -15,17 +15,19 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
+#include "mozilla/TypeTraits.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #error NS_ProxyRelease implementation depends on NSPR.
 #endif
 
+namespace detail {
 
-template<class T>
-class nsProxyReleaseEvent : public mozilla::Runnable
+template<typename T>
+class ProxyReleaseEvent : public mozilla::Runnable
 {
 public:
-  explicit nsProxyReleaseEvent(already_AddRefed<T> aDoomed)
+  explicit ProxyReleaseEvent(already_AddRefed<T> aDoomed)
   : mDoomed(aDoomed.take()) {}
 
   NS_IMETHOD Run()
@@ -37,6 +39,68 @@ public:
 private:
   T* MOZ_OWNING_REF mDoomed;
 };
+
+template<typename T>
+void
+ProxyRelease(nsIEventTarget* aTarget, already_AddRefed<T> aDoomed, bool aAlwaysProxy)
+{
+  // Auto-managing release of the pointer.
+  RefPtr<T> doomed = aDoomed;
+  nsresult rv;
+
+  if (!doomed || !aTarget) {
+    return;
+  }
+
+  if (!aAlwaysProxy) {
+    bool onCurrentThread = false;
+    rv = aTarget->IsOnCurrentThread(&onCurrentThread);
+    if (NS_SUCCEEDED(rv) && onCurrentThread) {
+      return;
+    }
+  }
+
+  nsCOMPtr<nsIRunnable> ev = new ProxyReleaseEvent<T>(doomed.forget());
+
+  rv = aTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to post proxy release event, leaking!");
+    // It is better to leak the aDoomed object than risk crashing as
+    // a result of deleting it on the wrong thread.
+  }
+}
+
+template<bool nsISupportsBased>
+struct ProxyReleaseChooser
+{
+  template<typename T>
+  static void ProxyRelease(nsIEventTarget* aTarget,
+                           already_AddRefed<T> aDoomed,
+                           bool aAlwaysProxy)
+  {
+    ::detail::ProxyRelease(aTarget, mozilla::Move(aDoomed), aAlwaysProxy);
+  }
+};
+
+template<>
+struct ProxyReleaseChooser<true>
+{
+  // We need an intermediate step for handling classes with ambiguous
+  // inheritance to nsISupports.
+  template<typename T>
+  static void ProxyRelease(nsIEventTarget* aTarget,
+                           already_AddRefed<T> aDoomed,
+                           bool aAlwaysProxy)
+  {
+    ProxyReleaseISupports(aTarget, ToSupports(aDoomed.take()), aAlwaysProxy);
+  }
+
+  static void ProxyReleaseISupports(nsIEventTarget* aTarget,
+                                    nsISupports* aDoomed,
+                                    bool aAlwaysProxy);
+};
+
+} // namespace detail
 
 /**
  * Ensures that the delete of a smart pointer occurs on the target thread.
@@ -56,30 +120,8 @@ inline NS_HIDDEN_(void)
 NS_ProxyRelease(nsIEventTarget* aTarget, already_AddRefed<T> aDoomed,
                 bool aAlwaysProxy = false)
 {
-  // Auto-managing release of the pointer.
-  RefPtr<T> doomed = aDoomed;
-  nsresult rv;
-
-  if (!doomed || !aTarget) {
-    return;
-  }
-
-  if (!aAlwaysProxy) {
-    bool onCurrentThread = false;
-    rv = aTarget->IsOnCurrentThread(&onCurrentThread);
-    if (NS_SUCCEEDED(rv) && onCurrentThread) {
-      return;
-    }
-  }
-
-  nsCOMPtr<nsIRunnable> ev = new nsProxyReleaseEvent<T>(doomed.forget());
-
-  rv = aTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to post proxy release event, leaking!");
-    // It is better to leak the aDoomed object than risk crashing as
-    // a result of deleting it on the wrong thread.
-  }
+  ::detail::ProxyReleaseChooser<mozilla::IsBaseOf<nsISupports, T>::value>
+    ::ProxyRelease(aTarget, mozilla::Move(aDoomed), aAlwaysProxy);
 }
 
 /**

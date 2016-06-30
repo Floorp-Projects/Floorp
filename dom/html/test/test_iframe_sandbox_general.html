@@ -41,7 +41,7 @@ function ok_wrapper(result, desc) {
     passedTests++;
   }
 
-  if (completedTests == 27) {
+  if (completedTests == 33) {
     is(passedTests, completedTests, "There are " + completedTests + " general tests that should pass");
     SimpleTest.finish();
   }
@@ -180,6 +180,14 @@ function doTest() {
   // This is done via file_iframe_sandbox_c_if4.html which is sandboxed with "allow-scripts" and "allow-same-origin"
   // the window it attempts to open calls window.opener.ok(false, ...) and file_iframe_c_if4.html has an ok()
   // function that calls window.parent.ok_wrapper.
+
+  // passes twice if good
+  // 29-32) Test that sandboxFlagsAsString returns the set flags.
+  // see if_14 and if_15
+
+  // passes once if good
+  // 33) Test that sandboxFlagsAsString returns null if iframe does not have sandbox flag set.
+  // see if_16
 }
 
 addLoadEvent(doTest);
@@ -212,6 +220,36 @@ function do_if_10() {
   var if_10 = document.getElementById('if_10');
   if_10.src = 'javascript:"<html><script>window.parent.ok_wrapper(true, \'an iframe sandboxed with allow-scripts should execute script in a javascript URL in a newly set src attribute\');<\/script><\/html>"';
 }
+
+function eqFlags(a, b) {
+  // both a and b should be either null or have the array same flags
+  if (a === null && b === null) { return true; }
+  if (a === null || b === null) { return false; }
+  if (a.length !== b.length) { return false; }
+  var a_sorted = a.sort();
+  var b_sorted = b.sort();
+  for (var i in a_sorted) {
+    if (a_sorted[i] !== b_sorted[i]) { return false; }
+  }
+  return true;
+}
+
+function getSandboxFlags(doc) {
+  var flags = doc.sandboxFlagsAsString;
+  if (flags === null) { return null; }
+  return flags? flags.split(" "):[];
+}
+
+function test_sandboxFlagsAsString(name, expected) {
+  var ifr = document.getElementById(name);
+  try {
+    var flags = getSandboxFlags(SpecialPowers.wrap(ifr).contentDocument);
+    ok_wrapper(eqFlags(flags, expected), name + ' expected: "' + expected + '", got: "' + flags + '"');
+  } catch (e) {
+    ok_wrapper(false, name + ' expected "' + expected + ', but failed with ' + e);
+  }
+}
+
 </script>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=341604">Mozilla Bug 341604</a> - Implement HTML5 sandbox attribute for IFRAMEs
@@ -234,6 +272,10 @@ function do_if_10() {
 <iframe sandbox="allow-same-origin allow-scripts" onload='start_if_10()' id='if_10' src="about:blank" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id='if_11' src="file_iframe_sandbox_c_if7.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-same-origin allow-scripts" id='if_12' src="file_iframe_sandbox_c_if8.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation " id='if_13' src="file_iframe_sandbox_c_if9.html" height="10" width="10" onload='test_sandboxFlagsAsString("if_13",["allow-forms", "allow-pointer-lock", "allow-popups", "allow-same-origin", "allow-scripts", "allow-top-navigation"])'></iframe>
+<iframe sandbox="&#x09;allow-same-origin&#x09;allow-scripts&#x09;" id="if_14" src="file_iframe_sandbox_c_if6.html" height="10" width="10" onload='test_sandboxFlagsAsString("if_14",["allow-same-origin","allow-scripts"])'></iframe>
+<iframe sandbox="" id="if_15" src="file_iframe_sandbox_c_if9.html" height="10" width="10" onload='test_sandboxFlagsAsString("if_15",[])'></iframe>
+<iframe id="if_16" src="file_iframe_sandbox_c_if9.html" height="10" width="10" onload='test_sandboxFlagsAsString("if_16",null)'></iframe>
 <input type='button' id="a_button" onclick='do_if_9()'>
 <input type='button' id="a_button2" onclick='do_if_10()'>
 </div>

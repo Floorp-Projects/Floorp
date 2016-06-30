@@ -227,6 +227,7 @@ Module::serializedSize() const
            linkData_.serializedSize() +
            SerializedVectorSize(importNames_) +
            exportMap_.serializedSize() +
+           SerializedPodVectorSize(dataSegments_) +
            metadata_->serializedSize() +
            SerializedPodVectorSize(bytecode_->bytes);
 }
@@ -238,6 +239,7 @@ Module::serialize(uint8_t* cursor) const
     cursor = linkData_.serialize(cursor);
     cursor = SerializeVector(cursor, importNames_);
     cursor = exportMap_.serialize(cursor);
+    cursor = SerializePodVector(cursor, dataSegments_);
     cursor = metadata_->serialize(cursor);
     cursor = SerializePodVector(cursor, bytecode_->bytes);
     return cursor;
@@ -267,6 +269,11 @@ Module::deserialize(ExclusiveContext* cx, const uint8_t* cursor, UniquePtr<Modul
     if (!cursor)
         return nullptr;
 
+    DataSegmentVector dataSegments;
+    cursor = DeserializePodVector(cx, cursor, &dataSegments);
+    if (!cursor)
+        return nullptr;
+
     MutableMetadata metadata;
     if (maybeMetadata) {
         metadata = maybeMetadata;
@@ -287,8 +294,13 @@ Module::deserialize(ExclusiveContext* cx, const uint8_t* cursor, UniquePtr<Modul
     if (!cursor)
         return nullptr;
 
-    *module = cx->make_unique<Module>(Move(code), Move(linkData), Move(importNames),
-                                      Move(exportMap), *metadata, *bytecode);
+    *module = cx->make_unique<Module>(Move(code),
+                                      Move(linkData),
+                                      Move(importNames),
+                                      Move(exportMap),
+                                      Move(dataSegments),
+                                      *metadata,
+                                      *bytecode);
     if (!*module)
         return nullptr;
 
@@ -307,6 +319,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
              importNames_.sizeOfExcludingThis(mallocSizeOf) +
              exportMap_.sizeOfExcludingThis(mallocSizeOf) +
+             dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
              metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }
@@ -314,19 +327,34 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
-                    HandleArrayBufferObjectMaybeShared heap,
+                    Handle<ArrayBufferObjectMaybeShared*> asmJSHeap,
                     MutableHandleWasmInstanceObject instanceObj) const
 {
     MOZ_ASSERT(funcImports.length() == metadata_->imports.length());
+    MOZ_ASSERT_IF(asmJSHeap, metadata_->isAsmJS());
 
-    uint8_t* heapBase = nullptr;
-    uint32_t heapLength = 0;
-    if (metadata_->usesHeap()) {
-        heapBase = heap->dataPointerEither().unwrap(/* for patching thead-safe code */);
-        heapLength = heap->byteLength();
+    // asm.js module instantiation supplies its own heap, but for wasm, create
+    // and initialize the heap if one is requested.
+
+    Rooted<ArrayBufferObjectMaybeShared*> heap(cx, asmJSHeap);
+    if (metadata_->usesHeap() && !heap) {
+        MOZ_ASSERT(!metadata_->isAsmJS());
+        bool signalsForOOB = metadata_->compileArgs.useSignalHandlersForOOB;
+        heap = ArrayBufferObject::createForWasm(cx, metadata_->initialHeapLength, signalsForOOB);
+        if (!heap)
+            return false;
     }
 
-    auto cs = CodeSegment::create(cx, code_, linkData_, *metadata_, heapBase, heapLength);
+    uint8_t* memoryBase = heap ? heap->dataPointerEither().unwrap(/* code patching */) : nullptr;
+    uint32_t memoryLength = heap ? heap->byteLength() : 0;
+
+    const uint8_t* bytecode = bytecode_->begin();
+    for (const DataSegment& seg : dataSegments_)
+        memcpy(memoryBase + seg.memoryOffset, bytecode + seg.bytecodeOffset, seg.length);
+
+    // Create a new, specialized CodeSegment for the new Instance (for now).
+
+    auto cs = CodeSegment::create(cx, code_, linkData_, *metadata_, memoryBase, memoryLength);
     if (!cs)
         return false;
 

@@ -18,6 +18,8 @@ window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { Grip } = browserRequire("devtools/client/shared/components/reps/grip");
 
+  const componentUnderTest = Grip;
+
   try {
     yield testBasic();
 
@@ -66,7 +68,7 @@ window.onload = Task.async(function* () {
       }
     ];
 
-    testRenderingInMode(modeTests, testName);
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
   function testMaxProps() {
@@ -94,7 +96,7 @@ window.onload = Task.async(function* () {
       }
     ];
 
-    testRenderingInMode(modeTests, testName);
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
   function testMoreThanMaxProps() {
@@ -131,7 +133,7 @@ window.onload = Task.async(function* () {
       }
     ];
 
-    testRenderingInMode(modeTests, testName);
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
   function testUninterestingProps() {
@@ -166,7 +168,7 @@ window.onload = Task.async(function* () {
       }
     ];
 
-    testRenderingInMode(modeTests, testName);
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
   function testNestedArray() {
@@ -194,20 +196,7 @@ window.onload = Task.async(function* () {
       }
     ];
 
-    testRenderingInMode(modeTests, testName);
-  }
-
-  function testRenderingInMode(modeTests, testName) {
-    modeTests.forEach(({mode, expectedOutput, message}) => {
-      const modeString = typeof mode === "undefined" ? "no mode" : mode;
-      if (!message) {
-        message = `${testName}: ${modeString} renders correctly.`
-      }
-      const gripStub = getGripStub(testName);
-
-      const rendered = renderComponent(Grip.rep, { object: gripStub, mode });
-      is(rendered.textContent, expectedOutput, message);
-    });
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
   function getGripStub(functionName) {
