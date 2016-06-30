@@ -34,9 +34,11 @@
 #include "nsHashKeys.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
+#include "nsThreadUtils.h"
 
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -657,3 +659,17 @@ void GeckoMediaPluginService::DisconnectCrashHelper(GMPCrashHelper* aHelper)
 
 } // namespace gmp
 } // namespace mozilla
+
+NS_IMPL_ADDREF(GMPCrashHelper)
+NS_IMPL_RELEASE_WITH_DESTROY(GMPCrashHelper, Destroy())
+
+void
+GMPCrashHelper::Destroy()
+{
+  if (NS_IsMainThread()) {
+    delete this;
+  } else {
+    // Don't addref, as then we'd end up releasing after the detele runs!
+    NS_DispatchToMainThread(mozilla::NewNonOwningRunnableMethod(this, &GMPCrashHelper::Destroy));
+  }
+}
