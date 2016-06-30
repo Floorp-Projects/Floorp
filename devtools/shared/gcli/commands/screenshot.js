@@ -33,7 +33,7 @@ const FILENAME_DEFAULT_VALUE = " ";
  * identical except that one runs on the client and one in the server.
  *
  * The server command is hidden, and is designed to be called from the client
- * command when the --chrome flag is *not* used.
+ * command.
  */
 
 /**
@@ -179,36 +179,14 @@ exports.items = [
     params: [
       filenameParam,
       standardParams,
-      {
-        group: l10n.lookup("screenshotAdvancedOptions"),
-        params: [
-          {
-            name: "chrome",
-            type: "boolean",
-            description: l10n.lookupFormat("screenshotChromeDesc2", [BRAND_SHORT_NAME]),
-            manual: l10n.lookupFormat("screenshotChromeManual2", [BRAND_SHORT_NAME])
-          },
-        ]
-      },
     ],
     exec: function (args, context) {
-      if (args.chrome && args.selector) {
-        // Node screenshot with chrome option does not work as intended
-        // Refer https://bugzilla.mozilla.org/show_bug.cgi?id=659268#c7
-        // throwing for now.
-        throw new Error(l10n.lookup("screenshotSelectorChromeConflict"));
-      }
+      // Re-execute the command on the server
+      const command = context.typed.replace(/^screenshot/, "screenshot_server");
+      let capture = context.updateExec(command).then(output => {
+        return output.error ? Promise.reject(output.data) : output.data;
+      });
 
-      let capture;
-      if (!args.chrome) {
-        // Re-execute the command on the server
-        const command = context.typed.replace(/^screenshot/, "screenshot_server");
-        capture = context.updateExec(command).then(output => {
-          return output.error ? Promise.reject(output.data) : output.data;
-        });
-      } else {
-        capture = captureScreenshot(args, context.environment.chromeDocument);
-      }
       simulateCameraEffect(context.environment.chromeDocument, "shutter");
       return capture.then(saveScreenshot.bind(null, args, context));
     },

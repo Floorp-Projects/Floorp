@@ -99,7 +99,6 @@ function* addTabWithToolbarRunTests(win) {
           filename: { value: "" + file.path },
           fullpage: { value: false },
           clipboard: { value: false },
-          chrome: { value: false },
         },
       },
       exec: {
@@ -123,7 +122,6 @@ function* addTabWithToolbarRunTests(win) {
       check: {
         args: {
           clipboard: { value: true },
-          chrome: { value: false },
         },
       },
       exec: {
@@ -143,7 +141,6 @@ function* addTabWithToolbarRunTests(win) {
         args: {
           fullpage: { value: true },
           clipboard: { value: true },
-          chrome: { value: false },
         },
       },
       exec: {
@@ -166,7 +163,6 @@ function* addTabWithToolbarRunTests(win) {
       check: {
         args: {
           clipboard: { value: true },
-          chrome: { value: false },
         },
       },
       exec: {
@@ -215,7 +211,6 @@ function* addTabWithToolbarRunTests(win) {
       check: {
         args: {
           clipboard: { value: true },
-          chrome: { value: false },
         },
       },
       exec: {
@@ -239,7 +234,6 @@ function* addTabWithToolbarRunTests(win) {
         args: {
           fullpage: { value: true },
           clipboard: { value: true },
-          chrome: { value: false },
         },
       },
       exec: {
@@ -264,7 +258,6 @@ function* addTabWithToolbarRunTests(win) {
       check: {
         args: {
           clipboard: { value: true },
-          chrome: { value: false },
         },
       },
       exec: {
