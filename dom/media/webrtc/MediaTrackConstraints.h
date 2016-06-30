@@ -42,7 +42,7 @@ struct NormalizedConstraintSet
   struct Range
   {
     ValueType mMin, mMax;
-    dom::Optional<ValueType> mIdeal;
+    Maybe<ValueType> mIdeal;
 
     Range(ValueType aMin, ValueType aMax) : mMin(aMin), mMax(aMax) {}
 
@@ -50,7 +50,7 @@ struct NormalizedConstraintSet
     void SetFrom(const ConstrainRange& aOther);
     ValueType Clamp(ValueType n) const { return std::max(mMin, std::min(n, mMax)); }
     ValueType Get(ValueType defaultValue) const {
-      return Clamp(mIdeal.WasPassed() ? mIdeal.Value() : defaultValue);
+      return Clamp(mIdeal.valueOr(defaultValue));
     }
     bool Intersects(const Range& aOther) const {
       return mMax >= aOther.mMin && mMin <= aOther.mMax;
@@ -129,9 +129,20 @@ struct NormalizedConstraintSet
   , mMozAutoGainControl(aOther.mMozAutoGainControl, advanced) {}
 };
 
+// Used instead of MediaTrackConstraints in lower-level code.
+struct NormalizedConstraints : public NormalizedConstraintSet
+{
+  explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther);
+  nsTArray<NormalizedConstraintSet> mAdvanced;
+};
+
+// Flattened version is used in low-level code with orthogonal constraints only.
 struct FlattenedConstraints : public NormalizedConstraintSet
 {
-  explicit FlattenedConstraints(const dom::MediaTrackConstraints& aOther);
+  explicit FlattenedConstraints(const NormalizedConstraints& aOther);
+
+  explicit FlattenedConstraints(const dom::MediaTrackConstraints& aOther)
+    : FlattenedConstraints(NormalizedConstraints(aOther)) {}
 };
 
 // A helper class for MediaEngines
