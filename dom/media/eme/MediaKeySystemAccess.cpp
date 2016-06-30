@@ -500,36 +500,6 @@ IsSupportedVideo(mozIGeckoMediaPluginService* aGMPService,
 }
 
 static bool
-IsSupported(mozIGeckoMediaPluginService* aGMPService,
-            const nsAString& aKeySystem,
-            const MediaKeySystemConfiguration& aConfig,
-            DecoderDoctorDiagnostics* aDiagnostics)
-{
-  if (aConfig.mInitDataType.IsEmpty() &&
-      aConfig.mAudioType.IsEmpty() &&
-      aConfig.mVideoType.IsEmpty()) {
-    // Not an old-style request.
-    return false;
-  }
-
-  // Backwards compatibility with legacy MediaKeySystemConfiguration method.
-  if (!aConfig.mInitDataType.IsEmpty() &&
-      !aConfig.mInitDataType.EqualsLiteral("cenc")) {
-    return false;
-  }
-  if (!aConfig.mAudioType.IsEmpty() &&
-      !IsSupportedAudio(aGMPService, aKeySystem, aConfig.mAudioType, aDiagnostics)) {
-    return false;
-  }
-  if (!aConfig.mVideoType.IsEmpty() &&
-      !IsSupportedVideo(aGMPService, aKeySystem, aConfig.mVideoType, aDiagnostics)) {
-    return false;
-  }
-
-  return true;
-}
-
-static bool
 IsSupportedInitDataType(const nsString& aCandidate, const nsAString& aKeySystem)
 {
   // All supported keySystems can handle "cenc" initDataType.
@@ -607,34 +577,6 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
   aOutConfig = config;
 
   return true;
-}
-
-// Backwards compatibility with legacy requestMediaKeySystemAccess with fields
-// from old MediaKeySystemOptions dictionary.
-/* static */
-bool
-MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
-                                  const Sequence<MediaKeySystemConfiguration>& aConfigs,
-                                  DecoderDoctorDiagnostics* aDiagnostics)
-{
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return false;
-  }
-
-  if (!HaveGMPFor(mps,
-                  NS_ConvertUTF16toUTF8(aKeySystem),
-                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
-    return false;
-  }
-
-  for (const MediaKeySystemConfiguration& config : aConfigs) {
-    if (mozilla::dom::IsSupported(mps, aKeySystem, config, aDiagnostics)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /* static */
