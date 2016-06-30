@@ -194,7 +194,7 @@ bool
 NextFrameSeekTask::IsVideoDecoding() const
 {
   AssertOwnerThread();
-  return HasVideo() && !mIsVideoQueueFinished;
+  return !mIsVideoQueueFinished;
 }
 
 nsresult
@@ -259,7 +259,7 @@ NextFrameSeekTask::IsVideoSeekComplete()
   SAMPLE_LOG("IsVideoSeekComplete() curTarVal=%d vqFin=%d vqSz=%d",
       mSeekJob.Exists(), mIsVideoQueueFinished, !!mSeekedVideoData);
 
-  return !HasVideo() || mIsVideoQueueFinished || mSeekedVideoData;
+  return mIsVideoQueueFinished || mSeekedVideoData;
 }
 
 void
@@ -270,7 +270,7 @@ NextFrameSeekTask::CheckIfSeekComplete()
   const bool audioSeekComplete = IsAudioSeekComplete();
 
   const bool videoSeekComplete = IsVideoSeekComplete();
-  if (HasVideo() && !videoSeekComplete) {
+  if (!videoSeekComplete) {
     // We haven't reached the target. Ensure we have requested another sample.
     if (NS_FAILED(EnsureVideoDecodeTaskQueued())) {
       DECODER_WARN("Failed to request video during seek");
