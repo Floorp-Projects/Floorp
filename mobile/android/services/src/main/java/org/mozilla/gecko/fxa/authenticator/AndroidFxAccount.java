@@ -390,6 +390,8 @@ public class AndroidFxAccount {
     } catch (UnsupportedEncodingException e) {
       // Ignore.
     }
+    o.put("fxaDeviceId", getDeviceId());
+    o.put("fxaDeviceRegistrationVersion", getDeviceRegistrationVersion());
     return o;
   }
 
