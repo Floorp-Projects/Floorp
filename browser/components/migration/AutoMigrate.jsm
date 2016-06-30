@@ -145,15 +145,26 @@ const AutoMigrate = {
     // Return a promise resolving to false if we're signed into sync, resolve
     // to true otherwise.
     let {fxAccounts} = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
-    return fxAccounts.getSignedInUser().then(user => !user, () => Promise.resolve(true));
+    return fxAccounts.getSignedInUser().then(user => {
+      if (user) {
+        Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_CANT_UNDO_BECAUSE_SYNC").add(true);
+      }
+      return !user;
+    }, () => Promise.resolve(true));
   },
 
   undo: Task.async(function* () {
+    let histogram = Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_UNDO");
+    histogram.add(0);
     if (!(yield this.canUndo())) {
+      histogram.add(5);
       throw new Error("Can't undo!");
     }
 
+    histogram.add(10);
+
     yield PlacesUtils.bookmarks.eraseEverything();
+    histogram.add(15);
 
     // NB: we drop the start time of the migration for now. This is because
     // imported history will always end up being 'backdated' to the actual
@@ -168,14 +179,17 @@ const AutoMigrate = {
       beginDate: new Date(0),
       endDate: range[1]
     });
+    histogram.add(20);
 
     try {
       Services.logins.removeAllLogins();
     } catch (ex) {
       // ignore failure.
     }
+    histogram.add(25);
     Services.prefs.clearUserPref("browser.migrate.automigrate-started");
     Services.prefs.clearUserPref("browser.migrate.automigrate-finished");
+    histogram.add(30);
   }),
 };
 
