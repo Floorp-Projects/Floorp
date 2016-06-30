@@ -1225,7 +1225,7 @@ const std::string kBasicAudioVideoOffer =
 "a=rtcp:62454 IN IP4 162.222.183.171" CRLF
 "a=end-of-candidates" CRLF
 "a=ssrc:5150" CRLF
-"m=video 9 RTP/SAVPF 120 121" CRLF
+"m=video 9 RTP/SAVPF 120 121 122 123" CRLF
 "c=IN IP6 ::1" CRLF
 "a=fingerprint:sha-1 DF:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7" CRLF
 "a=mid:second" CRLF
@@ -1233,6 +1233,8 @@ const std::string kBasicAudioVideoOffer =
 "a=fmtp:120 max-fs=3600;max-fr=30" CRLF
 "a=rtpmap:121 VP9/90000" CRLF
 "a=fmtp:121 max-fs=3600;max-fr=30" CRLF
+"a=rtpmap:122 red/90000" CRLF
+"a=rtpmap:123 ulpfec/90000" CRLF
 "a=recvonly" CRLF
 "a=rtcp-fb:120 nack" CRLF
 "a=rtcp-fb:120 nack pli" CRLF
@@ -1418,9 +1420,11 @@ TEST_P(NewSdpTest, CheckMlines) {
             mSdp->GetMediaSection(1).GetProtocol())
     << "Wrong protocol for video";
   auto video_formats = mSdp->GetMediaSection(1).GetFormats();
-  ASSERT_EQ(2U, video_formats.size()) << "Wrong number of formats for video";
+  ASSERT_EQ(4U, video_formats.size()) << "Wrong number of formats for video";
   ASSERT_EQ("120", video_formats[0]);
   ASSERT_EQ("121", video_formats[1]);
+  ASSERT_EQ("122", video_formats[2]);
+  ASSERT_EQ("123", video_formats[3]);
 
   ASSERT_EQ(SdpMediaSection::kAudio, mSdp->GetMediaSection(2).GetMediaType())
     << "Wrong type for third media section";
@@ -1518,23 +1522,128 @@ TEST_P(NewSdpTest, CheckRtpmap) {
               audiosec.GetFormats()[4],
               rtpmap);
 
-  const SdpMediaSection& videosec1 = mSdp->GetMediaSection(1);
+  const SdpMediaSection& videosec = mSdp->GetMediaSection(1);
+  const SdpRtpmapAttributeList videoRtpmap =
+    videosec.GetAttributeList().GetRtpmap();
+  ASSERT_EQ(4U, videoRtpmap.mRtpmaps.size())
+    << "Wrong number of rtpmap attributes for video";
+
   CheckRtpmap("120",
               SdpRtpmapAttributeList::kVP8,
               "VP8",
               90000,
               0,
-              videosec1.GetFormats()[0],
-              videosec1.GetAttributeList().GetRtpmap());
+              videosec.GetFormats()[0],
+              videoRtpmap);
 
-  const SdpMediaSection& videosec2 = mSdp->GetMediaSection(1);
   CheckRtpmap("121",
               SdpRtpmapAttributeList::kVP9,
               "VP9",
               90000,
               0,
-              videosec2.GetFormats()[1],
-              videosec2.GetAttributeList().GetRtpmap());
+              videosec.GetFormats()[1],
+              videoRtpmap);
+
+  CheckRtpmap("122",
+              SdpRtpmapAttributeList::kRed,
+              "red",
+              90000,
+              0,
+              videosec.GetFormats()[2],
+              videoRtpmap);
+
+  CheckRtpmap("123",
+              SdpRtpmapAttributeList::kUlpfec,
+              "ulpfec",
+              90000,
+              0,
+              videosec.GetFormats()[3],
+              videoRtpmap);
+}
+
+static const std::string kVideoWithRedAndUlpfecSdp =
+  "v=0" CRLF
+  "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+  "s=SIP Call" CRLF
+  "c=IN IP4 198.51.100.7" CRLF
+  "t=0 0" CRLF
+  "m=video 9 RTP/SAVPF 97 120 121 122 123" CRLF
+  "c=IN IP6 ::1" CRLF
+  "a=fingerprint:sha-1 DF:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7" CRLF
+  "a=rtpmap:97 H264/90000" CRLF
+  "a=fmtp:97 profile-level-id=42a01e" CRLF
+  "a=rtpmap:120 VP8/90000" CRLF
+  "a=fmtp:120 max-fs=3600;max-fr=30" CRLF
+  "a=rtpmap:121 VP9/90000" CRLF
+  "a=fmtp:121 max-fs=3600;max-fr=30" CRLF
+  "a=rtpmap:122 red/90000" CRLF
+  "a=rtpmap:123 ulpfec/90000" CRLF;
+
+TEST_P(NewSdpTest, CheckRedNoFmtp) {
+  ParseSdp(kVideoWithRedAndUlpfecSdp);
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections";
+
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+              SdpAttribute::kFmtpAttribute));
+  auto video_format_params =
+      mSdp->GetMediaSection(0).GetAttributeList().GetFmtp().mFmtps;
+  ASSERT_EQ(3U, video_format_params.size());
+
+  // make sure we don't get a fmtp for codec 122
+  for (size_t i = 0; i < video_format_params.size(); ++i) {
+    ASSERT_NE("122", video_format_params[i].format);
+  }
+}
+
+TEST_P(NewSdpTest, CheckRedFmtpWith2Codecs) {
+  ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121" CRLF);
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections";
+
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+              SdpAttribute::kFmtpAttribute));
+  auto video_format_params =
+      mSdp->GetMediaSection(0).GetAttributeList().GetFmtp().mFmtps;
+  ASSERT_EQ(4U, video_format_params.size());
+
+  ASSERT_EQ("122", video_format_params[3].format);
+  ASSERT_TRUE(!!video_format_params[3].parameters);
+  ASSERT_EQ(SdpRtpmapAttributeList::kRed,
+            video_format_params[3].parameters->codec_type);
+  const SdpFmtpAttributeList::RedParameters* red_parameters(
+      static_cast<SdpFmtpAttributeList::RedParameters*>(
+        video_format_params[3].parameters.get()));
+  ASSERT_EQ(2U, red_parameters->encodings.size());
+  ASSERT_EQ(120U, red_parameters->encodings[0]);
+  ASSERT_EQ(121U, red_parameters->encodings[1]);
+}
+
+TEST_P(NewSdpTest, CheckRedFmtpWith3Codecs) {
+  ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121/123" CRLF);
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections";
+
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+              SdpAttribute::kFmtpAttribute));
+  auto video_format_params =
+      mSdp->GetMediaSection(0).GetAttributeList().GetFmtp().mFmtps;
+  ASSERT_EQ(4U, video_format_params.size());
+
+  ASSERT_EQ("122", video_format_params[3].format);
+  ASSERT_TRUE(!!video_format_params[3].parameters);
+  ASSERT_EQ(SdpRtpmapAttributeList::kRed,
+            video_format_params[3].parameters->codec_type);
+  const SdpFmtpAttributeList::RedParameters* red_parameters(
+      static_cast<SdpFmtpAttributeList::RedParameters*>(
+        video_format_params[3].parameters.get()));
+  ASSERT_EQ(3U, red_parameters->encodings.size());
+  ASSERT_EQ(120U, red_parameters->encodings[0]);
+  ASSERT_EQ(121U, red_parameters->encodings[1]);
+  ASSERT_EQ(123U, red_parameters->encodings[2]);
 }
 
 const std::string kH264AudioVideoOffer =
