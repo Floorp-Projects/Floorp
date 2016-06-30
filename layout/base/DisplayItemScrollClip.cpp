@@ -27,6 +27,18 @@ DisplayItemScrollClip::IsAncestor(const DisplayItemScrollClip* aAncestor,
   return false;
 }
 
+bool
+DisplayItemScrollClip::HasRoundedCorners() const
+{
+  for (const DisplayItemScrollClip* scrollClip = this;
+       scrollClip; scrollClip = scrollClip->mParent) {
+    if (scrollClip->mClip->GetRoundedRectCount() > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* static */ nsCString
 DisplayItemScrollClip::ToString(const DisplayItemScrollClip* aScrollClip)
 {

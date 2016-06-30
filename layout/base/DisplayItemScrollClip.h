@@ -90,6 +90,8 @@ public:
    */
   static nsCString ToString(const DisplayItemScrollClip* aScrollClip);
 
+  bool HasRoundedCorners() const;
+
   /**
    * The previous (outer) scroll clip, or null.
    */
