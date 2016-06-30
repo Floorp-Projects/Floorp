@@ -12,7 +12,7 @@ const { on, emit } = require("sdk/event/core");
 const lazyContainer = {};
 
 loader.lazyRequireGetter(lazyContainer, "CssLogic",
-  "devtools/shared/inspector/css-logic", true);
+  "devtools/server/css-logic", true);
 exports.getComputedStyle = (node) =>
   lazyContainer.CssLogic.getComputedStyle(node);
 

@@ -188,3 +188,18 @@ function shallowRenderComponent(component, props) {
   renderer.render(el, {});
   return renderer.getRenderOutput();
 }
+
+/**
+ * Test that a rep renders correctly across different modes.
+ */
+function testRepRenderModes(modeTests, testName, componentUnderTest, gripStub) {
+  modeTests.forEach(({mode, expectedOutput, message}) => {
+    const modeString = typeof mode === "undefined" ? "no mode" : mode;
+    if (!message) {
+      message = `${testName}: ${modeString} renders correctly.`;
+    }
+
+    const rendered = renderComponent(componentUnderTest.rep, { object: gripStub, mode });
+    is(rendered.textContent, expectedOutput, message);
+  });
+}

@@ -903,7 +903,8 @@ StackFrames.prototype = {
     // to contain all the values.
     if (this._syncedWatchExpressions && aDepth == 0) {
       let label = L10N.getStr("watchExpressionsScopeLabel");
-      let scope = DebuggerView.Variables.addScope(label);
+      let scope = DebuggerView.Variables.addScope(label,
+        "variables-view-watch-expressions");
 
       // Customize the scope for holding watch expressions evaluations.
       scope.descriptorTooltip = false;

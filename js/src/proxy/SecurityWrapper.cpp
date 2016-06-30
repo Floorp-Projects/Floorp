@@ -77,9 +77,9 @@ SecurityWrapper<Base>::isExtensible(JSContext* cx, HandleObject wrapper, bool* e
 template <class Base>
 bool
 SecurityWrapper<Base>::getBuiltinClass(JSContext* cx, HandleObject wrapper,
-                                       ESClassValue* classValue) const
+                                       ESClass* cls) const
 {
-    *classValue = ESClass_Other;
+    *cls = ESClass::Other;
     return true;
 }
 

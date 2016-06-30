@@ -578,7 +578,7 @@ PluginWrapper.prototype = {
     return true;
   },
 
-  isCompatibleWith: function(aAppVerison, aPlatformVersion) {
+  isCompatibleWith: function(aAppVersion, aPlatformVersion) {
     return true;
   },
 

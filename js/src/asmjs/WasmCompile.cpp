@@ -16,22 +16,15 @@
  * limitations under the License.
  */
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmCompile.h"
 
 #include "mozilla/CheckedInt.h"
-#include "mozilla/unused.h"
 
 #include "jsprf.h"
 
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
-#include "asmjs/WasmInstance.h"
-#include "vm/ArrayBufferObject.h"
-#include "vm/Debugger.h"
-
-#include "jsatominlines.h"
-
-#include "vm/Debugger-inl.h"
+#include "vm/TypedArrayObject.h"
 
 using namespace js;
 using namespace js::jit;
@@ -39,17 +32,6 @@ using namespace js::wasm;
 
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
-using mozilla::Unused;
-
-/*****************************************************************************/
-// reporting
-
-static bool
-Fail(JSContext* cx, const char* str)
-{
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, str);
-    return false;
-}
 
 static bool
 Fail(JSContext* cx, const Decoder& d, const char* str)
@@ -496,9 +478,6 @@ DecodeExpr(FunctionDecoder& f)
     return f.iter().unrecognizedOpcode(expr);
 }
 
-/*****************************************************************************/
-// wasm decoding and generation
-
 static bool
 DecodePreamble(JSContext* cx, Decoder& d)
 {
@@ -760,7 +739,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
 }
 
 static bool
-DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandleArrayBufferObject heap)
+DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(MemorySectionId, &sectionStart, &sectionSize))
@@ -802,11 +781,6 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandl
 
     if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "memory section byte size mismatch");
-
-    bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
-    heap.set(ArrayBufferObject::createForWasm(cx, initialSize.value(), signalsForOOB));
-    if (!heap)
-        return false;
 
     mg.initHeapUsage(HeapUsage::Unshared, initialSize.value());
     return true;
@@ -976,7 +950,7 @@ DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
+DecodeDataSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(DataSectionId, &sectionStart, &sectionSize))
@@ -984,38 +958,41 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!heap)
+    if (!mg.usesHeap())
         return Fail(cx, d, "data section requires a memory section");
 
     uint32_t numSegments;
     if (!d.readVarU32(&numSegments))
         return Fail(cx, d, "failed to read number of data segments");
 
-    uint8_t* const heapBase = heap->dataPointer();
-    uint32_t const heapLength = heap->byteLength();
-    uint32_t prevEnd = 0;
+    if (numSegments > MaxDataSegments)
+        return Fail(cx, d, "too many data segments");
 
-    for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t dstOffset;
-        if (!d.readVarU32(&dstOffset))
+    uint32_t max = mg.initialHeapLength();
+    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+        DataSegment seg;
+
+        if (!d.readVarU32(&seg.memoryOffset))
             return Fail(cx, d, "expected segment destination offset");
 
-        if (dstOffset < prevEnd)
+        if (seg.memoryOffset < prevEnd)
             return Fail(cx, d, "data segments must be disjoint and ordered");
 
-        uint32_t numBytes;
-        if (!d.readVarU32(&numBytes))
+        if (!d.readVarU32(&seg.length))
             return Fail(cx, d, "expected segment size");
 
-        if (dstOffset > heapLength || heapLength - dstOffset < numBytes)
-            return Fail(cx, d, "data segment does not fit in memory");
+        if (seg.memoryOffset > max || max - seg.memoryOffset < seg.length)
+            return Fail(cx, d, "data segment data segment does not fit");
 
-        const uint8_t* src;
-        if (!d.readBytes(numBytes, &src))
+        seg.bytecodeOffset = d.currentOffset();
+
+        if (!d.readBytes(seg.length))
             return Fail(cx, d, "data segment shorter than declared");
 
-        memcpy(heapBase + dstOffset, src, numBytes);
-        prevEnd = dstOffset + numBytes;
+        if (!mg.addDataSegment(seg))
+            return false;
+
+        prevEnd = seg.memoryOffset + seg.length;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -1033,7 +1010,7 @@ MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint3
         return false;
 
     if (numFuncNames > MaxFuncs)
-        return false;
+        return Fail(cx, d, "too many function names");
 
     NameInBytecodeVector funcNames;
     if (!funcNames.resize(numFuncNames))
@@ -1103,8 +1080,7 @@ DecodeUnknownSections(JSContext* cx, Decoder& d)
 }
 
 static UniqueModule
-DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
-             MutableHandleArrayBufferObject heap)
+DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode)
 {
     UniqueModuleGeneratorData init = js::MakeUnique<ModuleGeneratorData>(cx);
     if (!init)
@@ -1132,7 +1108,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
     if (!mg.init(Move(init), Move(file)))
         return nullptr;
 
-    if (!DecodeMemorySection(cx, d, mg, heap))
+    if (!DecodeMemorySection(cx, d, mg))
         return nullptr;
 
     if (!DecodeExportSection(cx, d, mg))
@@ -1141,7 +1117,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
     if (!DecodeCodeSection(cx, d, mg))
         return nullptr;
 
-    if (!DecodeDataSection(cx, d, heap))
+    if (!DecodeDataSection(cx, d, mg))
         return nullptr;
 
     if (!DecodeNameSection(cx, d, mg))
@@ -1153,109 +1129,21 @@ DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
     return mg.finish(Move(importNames), bytecode);
 }
 
-/*****************************************************************************/
-// Top-level functions
-
-bool
-wasm::HasCompilerSupport(ExclusiveContext* cx)
+UniqueModule
+wasm::Compile(JSContext* cx, UniqueChars file, Bytes&& bytecode)
 {
-    if (!cx->jitSupportsFloatingPoint())
-        return false;
+    MOZ_ASSERT(HasCompilerSupport(cx));
 
-#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
-    return false;
-#else
-    return true;
-#endif
-}
+    SharedBytes sharedBytes = cx->new_<ShareableBytes>(Move(bytecode));
+    if (!sharedBytes)
+        return nullptr;
 
-static bool
-CheckCompilerSupport(JSContext* cx)
-{
-    if (!HasCompilerSupport(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
-        return false;
-    }
-    return true;
-}
-
-static bool
-GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleValue v)
-{
-    JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    return GetProperty(cx, obj, obj, id, v);
-}
-
-static bool
-ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& importNames,
-                MutableHandle<FunctionVector> imports)
-{
-    if (!importNames.empty() && !importObj)
-        return Fail(cx, "no import object given");
-
-    for (const ImportName& name : importNames) {
-        RootedValue v(cx);
-        if (!GetProperty(cx, importObj, name.module.get(), &v))
-            return false;
-
-        if (strlen(name.func.get()) > 0) {
-            if (!v.isObject())
-                return Fail(cx, "import object field is not an Object");
-
-            RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, name.func.get(), &v))
-                return false;
-        }
-
-        if (!IsFunctionObject(v))
-            return Fail(cx, "import object field is not a Function");
-
-        if (!imports.append(&v.toObject().as<JSFunction>()))
-            return false;
-    }
-
-    return true;
-}
-
-bool
-wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> view, HandleObject importObj,
-           MutableHandleWasmInstanceObject instanceObj)
-{
-    if (!CheckCompilerSupport(cx))
-        return false;
-
-    uint8_t* viewBegin = (uint8_t*)view->viewDataEither().unwrap(/* for copy */);
-
-    MutableBytes bytecode = cx->new_<ShareableBytes>();
-    if (!bytecode || !bytecode->append(viewBegin, view->byteLength()))
-        return false;
-
-    JS::AutoFilename filename;
-    if (!DescribeScriptedCaller(cx, &filename))
-        return false;
-
-    UniqueChars file = DuplicateString(filename.get());
-    if (!file)
-        return false;
-
-    Rooted<ArrayBufferObject*> heap(cx);
-    UniqueModule module = DecodeModule(cx, Move(file), *bytecode, &heap);
+    UniqueModule module = DecodeModule(cx, Move(file), *sharedBytes);
     if (!module) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
-        return false;
+        return nullptr;
     }
 
-    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
-        return false;
-
-    return module->instantiate(cx, funcImports, heap, instanceObj);
+    return module;
 }

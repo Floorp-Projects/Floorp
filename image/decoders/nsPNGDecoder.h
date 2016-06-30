@@ -10,6 +10,7 @@
 #include "Decoder.h"
 #include "png.h"
 #include "qcms.h"
+#include "StreamingLexer.h"
 #include "SurfacePipe.h"
 
 namespace mozilla {
@@ -84,6 +85,17 @@ private:
     }
   }
 
+  enum class State
+  {
+    PNG_DATA,
+    FINISHED_PNG_DATA
+  };
+
+  LexerTransition<State> ReadPNGData(const char* aData, size_t aLength);
+  LexerTransition<State> FinishedPNGData();
+
+  StreamingLexer<State> mLexer;
+
 public:
   png_structp mPNG;
   png_infop mInfo;
@@ -95,10 +107,6 @@ public:
 
   gfx::SurfaceFormat format;
 
-  // For metadata decodes.
-  uint8_t mSizeBytes[8]; // Space for width and height, both 4 bytes
-  uint32_t mHeaderBytesRead;
-
   // whether CMS or premultiplied alpha are forced off
   uint32_t mCMSMode;
 
@@ -106,7 +114,6 @@ public:
   uint8_t mPass;
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
-  bool mSuccessfulEarlyFinish;
 
   struct AnimFrameInfo
   {

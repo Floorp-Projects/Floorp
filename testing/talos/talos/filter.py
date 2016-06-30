@@ -106,7 +106,7 @@ def dromaeo(series):
 
 @define_filter
 def dromaeo_chunks(series, size):
-    for i in xrange(0, len(series), size):
+    for i in range(0, len(series), size):
         yield series[i:i+size]
 
 

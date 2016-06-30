@@ -2927,12 +2927,12 @@ date_toString_impl(JSContext* cx, const CallArgs& args)
     RootedObject obj(cx, &args.thisv().toObject());
 
     // Step 2.
-    ESClassValue cls;
+    ESClass cls;
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
     double tv;
-    if (cls != ESClass_Date) {
+    if (cls != ESClass::Date) {
         // Step 2.
         tv = GenericNaN();
     } else {
@@ -3108,11 +3108,11 @@ DateOneArgument(JSContext* cx, const CallArgs& args)
         if (args[0].isObject()) {
             RootedObject obj(cx, &args[0].toObject());
 
-            ESClassValue cls;
+            ESClass cls;
             if (!GetBuiltinClass(cx, obj, &cls))
                 return false;
 
-            if (cls == ESClass_Date) {
+            if (cls == ESClass::Date) {
                 RootedValue unboxed(cx);
                 if (!Unbox(cx, obj, &unboxed))
                     return false;
@@ -3319,11 +3319,11 @@ js::NewDateObject(JSContext* cx, int year, int mon, int mday,
 JS_FRIEND_API(bool)
 js::DateIsValid(JSContext* cx, HandleObject obj, bool* isValid)
 {
-    ESClassValue cls;
+    ESClass cls;
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    if (cls != ESClass_Date) {
+    if (cls != ESClass::Date) {
         *isValid = false;
         return true;
     }
@@ -3339,11 +3339,11 @@ js::DateIsValid(JSContext* cx, HandleObject obj, bool* isValid)
 JS_FRIEND_API(bool)
 js::DateGetMsecSinceEpoch(JSContext* cx, HandleObject obj, double* msecsSinceEpoch)
 {
-    ESClassValue cls;
+    ESClass cls;
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    if (cls != ESClass_Date) {
+    if (cls != ESClass::Date) {
         *msecsSinceEpoch = 0;
         return true;
     }

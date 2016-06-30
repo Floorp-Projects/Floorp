@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for bugs 886164 and 671389</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+
+<script class="testbody" type="text/javascript">
+
+var testCases = [
+  {
+    // Test 1: don't load image from non-same-origin; allow loading
+    // images from same-same origin
+    sandboxAttribute: "allow-same-origin",
+    csp: "default-src 'self'",
+    file: "file_sandbox_1.html",
+    results: { img1a_good: -1, img1_bad: -1 }
+    // fails if scripts execute
+  },
+  {
+    // Test 2: don't load image from non-same-origin; allow loading
+    // images from same-same origin, even without allow-same-origin
+    // flag
+    sandboxAttribute: "",
+    csp: "default-src 'self'",
+    file: "file_sandbox_2.html",
+    results: { img2_bad: -1, img2a_good: -1 }
+    // fails if scripts execute
+  },
+  {
+    // Test 3: disallow loading images from any host, even with
+    // allow-same-origin flag set
+    sandboxAttribute: "allow-same-origin",
+    csp: "default-src 'none'",
+    file: "file_sandbox_3.html",
+    results: { img3_bad: -1, img3a_bad: -1 },
+    // fails if scripts execute
+  },
+  {
+    // Test 4: disallow loading images from any host
+    sandboxAttribute: "",
+    csp: "default-src 'none'",
+    file: "file_sandbox_4.html",
+    results: { img4_bad: -1, img4a_bad: -1 }
+    // fails if scripts execute
+  },
+  {
+    // Test 5: disallow loading images or scripts, allow inline scripts
+    sandboxAttribute: "allow-scripts",
+    csp: "default-src 'none'; script-src 'unsafe-inline';",
+    file: "file_sandbox_5.html",
+    results: { img5_bad: -1, img5a_bad: -1, script5_bad: -1, script5a_bad: -1 },
+    nrOKmessages: 2 // sends 2 ok message
+    // fails if scripts execute
+  },
+  {
+    // Test 6: disallow non-same-origin images, allow inline and same origin scripts
+    sandboxAttribute: "allow-same-origin allow-scripts",
+    csp: "default-src 'self' 'unsafe-inline';",
+    file: "file_sandbox_6.html",
+    results: { img6_bad: -1, script6_bad: -1 },
+    nrOKmessages: 4 // sends 4 ok message
+    // fails if forms are not disallowed
+  },
+  {
+    // Test 7: same as Test 1
+    csp: "default-src 'self'; sandbox allow-same-origin",
+    file: "file_sandbox_7.html",
+    results: { img7a_good: -1, img7_bad: -1 }
+  },
+  {
+    // Test 8: same as Test 2
+    csp: "sandbox allow-same-origin; default-src 'self'",
+    file: "file_sandbox_8.html",
+    results: { img8_bad: -1, img8a_good: -1 }
+  },
+  {
+    // Test 9: same as Test 3
+    csp: "default-src 'none'; sandbox allow-same-origin",
+    file: "file_sandbox_9.html",
+    results: { img9_bad: -1, img9a_bad: -1 }
+  },
+  {
+    // Test 10: same as Test 4
+    csp: "default-src 'none'; sandbox allow-same-origin",
+    file: "file_sandbox_10.html",
+    results: { img10_bad: -1, img10a_bad: -1 }
+  },
+  {
+    // Test 11: same as Test 5
+    csp: "default-src 'none'; script-src 'unsafe-inline'; sandbox allow-scripts allow-same-origin",
+    file: "file_sandbox_11.html",
+    results: { img11_bad: -1, img11a_bad: -1, script11_bad: -1, script11a_bad: -1 },
+    nrOKmessages: 2 // sends 2 ok message
+  },
+  {
+    // Test 12: same as Test 6
+    csp: "sandbox allow-same-origin allow-scripts; default-src 'self' 'unsafe-inline';",
+    file: "file_sandbox_12.html",
+    results: { img12_bad: -1, script12_bad: -1 },
+    nrOKmessages: 4 // sends 4 ok message
+  },
+];
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+// it expects to be called with an object like:
+//  { ok: true/false,
+//    desc: <description of the test> which it then forwards to ok() }
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  ok_wrapper(event.data.ok, event.data.desc);
+}
+
+var completedTests = 0;
+var passedTests = 0;
+
+var totalTests = (function() {
+    var nrCSPloadTests = 0;
+    for(var i = 0; i < testCases.length; i++) {
+      nrCSPloadTests += Object.keys(testCases[i].results).length;
+      if (testCases[i].nrOKmessages) {
+        // + number of expected postMessages from iframe
+        nrCSPloadTests += testCases[i].nrOKmessages;
+      }
+    }
+    return nrCSPloadTests;
+})();
+
+function ok_wrapper(result, desc) {
+  ok(result, desc);
+
+  completedTests++;
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (completedTests === totalTests) {
+    window.examiner.remove();
+    SimpleTest.finish();
+  }
+}
+
+// Set the iframe src and sandbox attribute
+function runTest(test) {
+  var iframe = document.createElement('iframe');
+
+  document.getElementById('content').appendChild(iframe);
+
+  // set sandbox attribute
+  if (test.sandboxAttribute !== undefined) {
+    iframe.sandbox = test.sandboxAttribute;
+  }
+
+  // set query string
+  var src = 'file_testserver.sjs';
+  // path where the files are
+  var path = '/tests/dom/security/test/csp/';
+
+  src += '?file=' + escape(path+test.file);
+
+  if (test.csp !== undefined) {
+    src += '&csp=' + escape(test.csp);
+  }
+
+  iframe.src = src;
+  iframe.width = iframe.height = 10;
+}
+
+// Examiner related
+
+// This is used to watch the blocked data bounce off CSP and allowed data
+// get sent out to the wire.
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+}
+
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be stopped!
+
+    if (topic === "specialpowers-http-notify-request") {
+      //these things were allowed by CSP
+      var uri = data;
+      if (!testpat.test(uri)) return;
+      var testid = testpat.exec(uri)[1];
+
+      if(/_good/.test(testid)) {
+        ok_wrapper(true, uri + " is allowed by csp");
+      } else {
+        ok_wrapper(false, uri + " should not be allowed by csp");
+      }
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (!testpat.test(asciiSpec)) return;
+      var testid = testpat.exec(asciiSpec)[1];
+      if(/_bad/.test(testid)) {
+        ok_wrapper(true, asciiSpec + " was blocked by \"" + data + "\"");
+      } else {
+        ok_wrapper(false, asciiSpec + " should have been blocked by \"" + data + "\"");
+      }
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+SimpleTest.waitForExplicitFinish();
+
+(function() { // Run tests:
+  for(var i = 0; i < testCases.length; i++) {
+    runTest(testCases[i]);
+  }
+})();
+
+</script>
+</body>
+</html>

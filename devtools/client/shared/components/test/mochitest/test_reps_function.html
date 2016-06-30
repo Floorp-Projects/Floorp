@@ -1,0 +1,171 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Func rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Func</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { Func } = browserRequire("devtools/client/shared/components/reps/function");
+
+  const componentUnderTest = Func;
+
+  try {
+    // Test that correct rep is chosen
+    const gripStub = getGripStub("testNamed");
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Func.rep, `Rep correctly selects ${Func.rep.displayName}`);
+
+    yield testNamed();
+    yield testVarNamed();
+    yield testAnon();
+    yield testLongName();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testNamed() {
+    // Test declaration: `function testName{ let innerVar = "foo" }`
+    const testName = "testNamed";
+
+    const defaultOutput = `testName()`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testVarNamed() {
+    // Test declaration: `let testVarName = function() { }`
+    const testName = "testVarNamed";
+
+    const defaultOutput = `testVarName()`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testAnon() {
+    // Test declaration: `() => {}`
+    const testName = "testAnon";
+
+    const defaultOutput = `function()`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testLongName() {
+    // Test declaration: `let f = function loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong() { }`
+    const testName = "testLongName";
+
+    const defaultOutput = `looooooooooooooooooooooooooooooooooooooooooooooooo\u2026ooooooooooooooooooooooooooooooooooooooooooooong()`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function getGripStub(functionName) {
+    switch (functionName) {
+      case "testNamed":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn6.obj35",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "name": "testName",
+          "displayName": "testName",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testVarNamed":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj41",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "displayName": "testVarName",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testAnon":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj45",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testLongName":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn7.obj67",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "name": "loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong",
+          "displayName": "loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+    }
+  }
+});
+</script>
+</pre>
+</body>
+</html>
