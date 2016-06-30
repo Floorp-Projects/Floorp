@@ -163,7 +163,7 @@ private:
 
   // for MediaSourceDemuxer::GetMozDebugReaderData
   friend class MediaSourceDemuxer;
-  virtual ~TrackBuffersManager();
+  ~TrackBuffersManager();
   // All following functions run on the taskqueue.
   RefPtr<AppendPromise> DoAppendData(RefPtr<MediaByteBuffer> aData,
                                      SourceBufferAttributes aAttributes);
