@@ -2758,6 +2758,8 @@ nsDocument::ApplySettingsFromCSP(bool aSpeculative)
 nsresult
 nsDocument::InitCSP(nsIChannel* aChannel)
 {
+  MOZ_ASSERT(!mScriptGlobalObject,
+             "CSP must be initialized before mScriptGlobalObject is set!");
   if (!CSPService::sCSPEnabled) {
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
            ("CSP is disabled, skipping CSP init for document %p", this));
@@ -2790,7 +2792,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
   // Figure out if we need to apply an app default CSP or a CSP from an app manifest
-  nsIPrincipal* principal = NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
 
   uint16_t appStatus = principal->GetAppStatus();
   bool applyAppDefaultCSP = false;
@@ -2937,6 +2939,24 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   if (!cspROHeaderValue.IsEmpty()) {
     rv = AppendCSPFromHeader(csp, cspROHeaderValue, true);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // ----- Enforce sandbox policy if supplied in CSP header
+  // The document may already have some sandbox flags set (e.g. if the document
+  // is an iframe with the sandbox attribute set). If we have a CSP sandbox
+  // directive, intersect the CSP sandbox flags with the existing flags. This
+  // corresponds to the _least_ permissive policy.
+  uint32_t cspSandboxFlags = SANDBOXED_NONE;
+  rv = csp->GetCSPSandboxFlags(&cspSandboxFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mSandboxFlags |= cspSandboxFlags;
+
+  if (cspSandboxFlags & SANDBOXED_ORIGIN) {
+    // If the new CSP sandbox flags do not have the allow-same-origin flag
+    // reset the document principal to a null principal
+    principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    SetPrincipal(principal);
   }
 
   // ----- Enforce frame-ancestor policy on any applied policies
@@ -3668,6 +3688,12 @@ void
 nsDocument::RemoveCharSetObserver(nsIObserver* aObserver)
 {
   mCharSetObservers.RemoveElement(aObserver);
+}
+
+void
+nsIDocument::GetSandboxFlagsAsString(nsAString& aFlags)
+{
+  nsContentUtils::SandboxFlagsToString(mSandboxFlags, aFlags);
 }
 
 void
@@ -11658,7 +11684,7 @@ nsDocument::FullScreenStackPop()
   while (!mFullScreenStack.IsEmpty()) {
     Element* element = FullScreenStackTop();
     if (!element || !element->IsInUncomposedDoc() || element->OwnerDoc() != this) {
-      NS_ASSERTION(!element->IsFullScreenAncestor(),
+      NS_ASSERTION(!element->State().HasState(NS_EVENT_STATE_FULL_SCREEN),
                    "Should have already removed full-screen styles");
       uint32_t last = mFullScreenStack.Length() - 1;
       mFullScreenStack.RemoveElementAt(last);
@@ -12220,7 +12246,7 @@ nsDocument::GetFullscreenElement()
 {
   Element* element = FullScreenStackTop();
   NS_ASSERTION(!element ||
-               element->IsFullScreenAncestor(),
+               element->State().HasState(NS_EVENT_STATE_FULL_SCREEN),
     "Fullscreen element should have fullscreen styles applied");
   return element;
 }

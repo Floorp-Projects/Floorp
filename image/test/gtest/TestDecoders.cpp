@@ -8,6 +8,7 @@
 #include "Decoder.h"
 #include "DecoderFactory.h"
 #include "decoders/nsBMPDecoder.h"
+#include "IDecodingTask.h"
 #include "imgIContainer.h"
 #include "imgITools.h"
 #include "ImageFactory.h"
@@ -103,7 +104,7 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Write the data into a SourceBuffer.
-  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -116,9 +117,10 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aOutputSize,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
+  RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
 
   // Run the full decoder synchronously.
-  decoder->Decode();
+  task->Run();
 
   // Call the lambda to verify the expected results.
   aResultChecker(decoder);
@@ -132,16 +134,6 @@ CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
   });
 }
 
-class NoResume : public IResumable
-{
-public:
-  NS_INLINE_DECL_REFCOUNTING(NoResume, override)
-  virtual void Resume() override { }
-
-private:
-  ~NoResume() { }
-};
-
 static void
 CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
 {
@@ -154,7 +146,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Create a SourceBuffer and a decoder.
-  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
   sourceBuffer->ExpectLength(length);
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
@@ -162,11 +154,8 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
+  RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
 
-  // Decode synchronously, using a |NoResume| IResumable so the Decoder doesn't
-  // attempt to schedule itself on a nonexistent DecodePool when we write more
-  // data into the SourceBuffer.
-  RefPtr<NoResume> noResume = new NoResume();
   for (uint64_t read = 0; read < length ; ++read) {
     uint64_t available = 0;
     rv = inputStream->Available(&available);
@@ -176,11 +165,11 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
     rv = sourceBuffer->AppendFromInputStream(inputStream, 1);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-    decoder->Decode(noResume);
+    task->Run();
   }
 
   sourceBuffer->Complete(NS_OK);
-  decoder->Decode(noResume);
+  task->Run();
   
   CheckDecoderResults(aTestCase, decoder);
 }

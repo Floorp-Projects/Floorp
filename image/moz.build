@@ -58,6 +58,7 @@ UNIFIED_SOURCES += [
     'DynamicImage.cpp',
     'FrameAnimator.cpp',
     'FrozenImage.cpp',
+    'IDecodingTask.cpp',
     'Image.cpp',
     'ImageCacheKey.cpp',
     'ImageFactory.cpp',

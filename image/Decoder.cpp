@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "DecodePool.h"
 #include "GeckoProfiler.h"
+#include "IDecodingTask.h"
 #include "imgIContainer.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
@@ -81,18 +82,15 @@ Decoder::Init()
 }
 
 nsresult
-Decoder::Decode(IResumable* aOnResume)
+Decoder::Decode(NotNull<IResumable*> aOnResume)
 {
   MOZ_ASSERT(mInitialized, "Should be initialized here");
   MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
 
-  // If no IResumable was provided, default to |this|.
-  IResumable* onResume = aOnResume ? aOnResume : this;
-
   // We keep decoding chunks until the decode completes or there are no more
   // chunks available.
   while (!GetDecodeDone() && !HasError()) {
-    auto newState = mIterator->AdvanceOrScheduleResume(onResume);
+    auto newState = mIterator->AdvanceOrScheduleResume(aOnResume.get());
 
     if (newState == SourceBufferIterator::WAITING) {
       // We can't continue because the rest of the data hasn't arrived from the
@@ -121,14 +119,6 @@ Decoder::Decode(IResumable* aOnResume)
 
   CompleteDecode();
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
-}
-
-void
-Decoder::Resume()
-{
-  DecodePool* decodePool = DecodePool::Singleton();
-  MOZ_ASSERT(decodePool);
-  decodePool->AsyncDecode(this);
 }
 
 bool
@@ -455,7 +445,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
   // If we are going to keep decoding we should notify now about the first frame being done.
   if (mImage && mFrameCount == 1 && HasAnimation()) {
     MOZ_ASSERT(HasProgress());
-    DecodePool::Singleton()->NotifyProgress(this);
+    IDecodingTask::NotifyProgress(WrapNotNull(this));
   }
 }
 

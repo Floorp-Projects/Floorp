@@ -161,9 +161,9 @@ OpaqueCrossCompartmentWrapper::getOwnEnumerablePropertyKeys(JSContext* cx, Handl
 
 bool
 OpaqueCrossCompartmentWrapper::getBuiltinClass(JSContext* cx, HandleObject wrapper,
-                                               ESClassValue* classValue) const
+                                    ESClass* cls) const
 {
-    *classValue = ESClass_Other;
+    *cls = ESClass::Other;
     return true;
 }
 

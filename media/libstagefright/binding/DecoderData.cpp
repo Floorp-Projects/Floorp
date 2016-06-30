@@ -13,6 +13,10 @@
 #include "mozilla/ArrayUtils.h"
 #include "include/ESDS.h"
 
+#ifdef MOZ_RUST_MP4PARSE
+#include "mp4parse.h"
+#endif
+
 using namespace stagefright;
 
 namespace mp4_demuxer
@@ -152,6 +156,7 @@ bool
 MP4AudioInfo::IsValid() const
 {
   return mChannels > 0 && mRate > 0 &&
+         // Accept any mime type here, but if it's aac, validate the profile.
          (!mMimeType.Equals(MEDIA_MIMETYPE_AUDIO_AAC) ||
           mProfile > 0 || mExtendedProfile > 0);
 }
@@ -181,6 +186,26 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
   }
 
 }
+
+#ifdef MOZ_RUST_MP4PARSE
+void
+MP4VideoInfo::Update(const mp4parse_track_info* track,
+                     const mp4parse_track_video_info* video)
+{
+  if (track->codec == MP4PARSE_CODEC_AVC) {
+    mMimeType = MEDIA_MIMETYPE_VIDEO_AVC;
+  } else if (track->codec == MP4PARSE_CODEC_VP9) {
+    mMimeType = NS_LITERAL_CSTRING("video/vp9");
+  }
+  mTrackId = track->track_id;
+  mDuration = track->duration;
+  mMediaTime = track->media_time;
+  mDisplay.width = video->display_width;
+  mDisplay.height = video->display_height;
+  mImage.width = video->image_width;
+  mImage.height = video->image_height;
+}
+#endif
 
 bool
 MP4VideoInfo::IsValid() const

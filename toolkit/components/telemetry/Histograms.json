@@ -1938,48 +1938,6 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDECOMPRESSINPUTSTREAMWRAPPER_RELEASE"
   },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSEVICTDISKCACHEENTRIESEVENT_RUN": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSEVICTDISKCACHEENTRIESEVENT_RUN *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDOOMEVENT_RUN": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDOOMEVENT_RUN"
-  },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHESTREAMIO_WRITE": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHESTREAMIO_WRITE *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHESTREAMIO_CLOSEOUTPUTSTREAM": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHESTREAMIO_CLOSEOUTPUTSTREAM *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHEDEVICEDEACTIVATEENTRYEVENT_RUN": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEDEVICEDEACTIVATEENTRYEVENT_RUN *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHEBINDING_DESTRUCTOR": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEBINDING_DESTRUCTOR *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_SHUTDOWN": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -2336,13 +2294,6 @@
     "high": 10000,
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSBLOCKONCACHETHREADEVENT_RUN"
-  },
-  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSDISKCACHEMAP_REVALIDATION": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSDISKCACHEMAP_REVALIDATION *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSASYNCDOOMEVENT_RUN": {
     "expires_in_version": "never",
@@ -3309,33 +3260,6 @@
     "high": 10000,
     "n_buckets": 10,
     "description": "Time spent (ms) during showdown deleting disk cache v2 for 'clear private data' option"
-  },
-  "NETWORK_DISK_CACHE_REVALIDATION": {
-    "alert_emails": ["froydnj@mozilla.com"],
-    "bug_numbers": [731004],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Total Time spent (ms) during disk cache revalidation"
-  },
-  "NETWORK_DISK_CACHE_STREAMIO_CLOSE": {
-    "alert_emails": ["froydnj@mozilla.com"],
-    "bug_numbers": [731004],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheStreamIO::Close() on non-main thread (ms)"
-  },
-  "NETWORK_DISK_CACHE_STREAMIO_CLOSE_MAIN_THREAD": {
-    "alert_emails": ["froydnj@mozilla.com"],
-    "bug_numbers": [731004],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheStreamIO::Close() on the main thread (ms)"
   },
   "NETWORK_ID": {
     "alert_emails": ["necko@mozilla.com"],

@@ -1733,18 +1733,17 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   if (HasPointerLock()) {
     nsIDocument::UnlockPointer();
   }
+  if (mState.HasState(NS_EVENT_STATE_FULL_SCREEN)) {
+    // The element being removed is an ancestor of the full-screen element,
+    // exit full-screen state.
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "RemovedFullscreenElement");
+    // Fully exit full-screen.
+    nsIDocument::ExitFullscreenInDocTree(OwnerDoc());
+  }
   if (aNullParent) {
-    if (IsFullScreenAncestor()) {
-      // The element being removed is an ancestor of the full-screen element,
-      // exit full-screen state.
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "RemovedFullscreenElement");
-      // Fully exit full-screen.
-      nsIDocument::ExitFullscreenInDocTree(OwnerDoc());
-    }
-
     if (GetParent() && GetParent()->IsInUncomposedDoc()) {
       // Update the editable descendant count in the ancestors before we
       // lose the reference to the parent.

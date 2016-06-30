@@ -618,6 +618,11 @@ namespace dom {
  */
 bool IsChromeOrXBL(JSContext* cx, JSObject* /* unused */);
 
+/**
+ * Same as IsChromeOrXBL but can be used in worker threads as well.
+ */
+bool ThreadSafeIsChromeOrXBL(JSContext* cx, JSObject* obj);
+
 } // namespace dom
 } // namespace mozilla
 

@@ -22,17 +22,17 @@ class _StopAction(argparse.Action):
 class _ListTests(_StopAction):
     def __call__(self, parser, namespace, values, option_string=None):
         from talos import test
-        print 'Available tests:'
-        print '================\n'
+        print('Available tests:')
+        print('================\n')
         test_class_names = [
             (test_class.name(), test_class.description())
             for test_class in test.test_dict().itervalues()
         ]
         test_class_names.sort()
         for name, description in test_class_names:
-            print name
-            print '-'*len(name)
-            print description
+            print(name)
+            print('-'*len(name))
+            print(description)
             print  # Appends a single blank line to the end
         parser.exit()
 
@@ -40,12 +40,12 @@ class _ListTests(_StopAction):
 class _ListSuite(_StopAction):
     def __call__(self, parser, namespace, values, option_string=None):
         from talos.config import suites_conf
-        print 'Available suites:'
+        print('Available suites:')
         conf = suites_conf()
         max_suite_name = max([len(s) for s in conf])
         pattern = " %%-%ds (%%s)" % max_suite_name
         for name in conf:
-            print pattern % (name, ':'.join(conf[name]['tests']))
+            print(pattern % (name, ':'.join(conf[name]['tests'])))
         print
         parser.exit()
 
