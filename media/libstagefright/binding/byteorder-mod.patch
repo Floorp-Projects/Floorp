@@ -1,39 +1,55 @@
 diff --git a/media/libstagefright/binding/mp4parse/byteorder/mod.rs b/media/libstagefright/binding/mp4parse/byteorder/mod.rs
-index 7eea1e3..8a108cf 100644
+index a25bab6..13db30a 100644
 --- a/media/libstagefright/binding/mp4parse/byteorder/mod.rs
 +++ b/media/libstagefright/binding/mp4parse/byteorder/mod.rs
-@@ -36,7 +36,6 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
+@@ -36,24 +36,17 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
  ```
  */
  
 -#![crate_name = "byteorder"]
  #![doc(html_root_url = "http://burntsushi.net/rustdoc/byteorder")]
  
+-#![cfg_attr(not(feature = "std"), no_std)]
+-
  #![deny(missing_docs)]
-@@ -45,10 +44,11 @@ use std::mem::transmute;
- use std::ptr::copy_nonoverlapping;
  
- #[cfg(not(feature = "no-std"))]
--pub use new::{ReadBytesExt, WriteBytesExt, Error, Result};
-+pub use byteorder::new::{ReadBytesExt, WriteBytesExt, Error, Result};
+-#[cfg(feature = "std")]
+-extern crate core;
+-
+-use core::mem::transmute;
+-use core::ptr::copy_nonoverlapping;
++use std::mem::transmute;
++use std::ptr::copy_nonoverlapping;
  
- #[cfg(not(feature = "no-std"))]
+-#[cfg(feature = "std")]
+-pub use new::{ReadBytesExt, WriteBytesExt};
++pub use byteorder::new::{ReadBytesExt, WriteBytesExt};
+ 
+-#[cfg(feature = "std")]
 -mod new;
-+// Re-export new so gecko can build us as a mod intead of a crate.
++// Re-export new so gecko can build us as a mod instead of a crate.
 +pub mod new;
  
  #[inline]
  fn extend_sign(val: u64, nbytes: usize) -> i64 {
+@@ -300,7 +293,7 @@ pub type NativeEndian = BigEndian;
+ 
+ macro_rules! read_num_bytes {
+     ($ty:ty, $size:expr, $src:expr, $which:ident) => ({
+-        assert!($size == ::core::mem::size_of::<$ty>());
++        assert!($size == ::std::mem::size_of::<$ty>());
+         assert!($size <= $src.len());
+         let mut data: $ty = 0;
+         unsafe {
 diff --git a/media/libstagefright/binding/mp4parse/byteorder/new.rs b/media/libstagefright/binding/mp4parse/byteorder/new.rs
-index 54ee6a7..4efcbc3 100644
+index b5f3770..b32f97b 100644
 --- a/media/libstagefright/binding/mp4parse/byteorder/new.rs
 +++ b/media/libstagefright/binding/mp4parse/byteorder/new.rs
-@@ -3,7 +3,7 @@ use std::fmt;
- use std::io;
- use std::result;
+@@ -1,6 +1,6 @@
+ use std::io::{self, Result};
  
 -use ByteOrder;
 +use byteorder::ByteOrder;
  
- /// A short-hand for `result::Result<T, byteorder::Error>`.
- pub type Result<T> = result::Result<T, Error>;
+ /// Extends `Read` with methods for reading numbers. (For `std::io`.)
+ ///

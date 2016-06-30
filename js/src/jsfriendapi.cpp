@@ -266,41 +266,45 @@ JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpec
 }
 
 JS_FRIEND_API(bool)
-js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClassValue* classValue)
+js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClass* cls)
 {
     if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
-        return Proxy::getBuiltinClass(cx, obj, classValue);
+        return Proxy::getBuiltinClass(cx, obj, cls);
 
     if (obj->is<PlainObject>() || obj->is<UnboxedPlainObject>())
-        *classValue = ESClass_Object;
+        *cls = ESClass::Object;
     else if (obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>())
-        *classValue = ESClass_Array;
+        *cls = ESClass::Array;
     else if (obj->is<NumberObject>())
-        *classValue = ESClass_Number;
+        *cls = ESClass::Number;
     else if (obj->is<StringObject>())
-        *classValue = ESClass_String;
+        *cls = ESClass::String;
     else if (obj->is<BooleanObject>())
-        *classValue = ESClass_Boolean;
+        *cls = ESClass::Boolean;
     else if (obj->is<RegExpObject>())
-        *classValue = ESClass_RegExp;
+        *cls = ESClass::RegExp;
     else if (obj->is<ArrayBufferObject>())
-        *classValue = ESClass_ArrayBuffer;
+        *cls = ESClass::ArrayBuffer;
     else if (obj->is<SharedArrayBufferObject>())
-        *classValue = ESClass_SharedArrayBuffer;
+        *cls = ESClass::SharedArrayBuffer;
     else if (obj->is<DateObject>())
-        *classValue = ESClass_Date;
+        *cls = ESClass::Date;
     else if (obj->is<SetObject>())
-        *classValue = ESClass_Set;
+        *cls = ESClass::Set;
     else if (obj->is<MapObject>())
-        *classValue = ESClass_Map;
+        *cls = ESClass::Map;
     else if (obj->is<PromiseObject>())
-        *classValue = ESClass_Promise;
+        *cls = ESClass::Promise;
     else if (obj->is<MapIteratorObject>())
-        *classValue = ESClass_MapIterator;
+        *cls = ESClass::MapIterator;
     else if (obj->is<SetIteratorObject>())
-        *classValue = ESClass_SetIterator;
+        *cls = ESClass::SetIterator;
+    else if (obj->is<ArgumentsObject>())
+        *cls = ESClass::Arguments;
+    else if (obj->is<ErrorObject>())
+        *cls = ESClass::Error;
     else
-        *classValue = ESClass_Other;
+        *cls = ESClass::Other;
 
     return true;
 }

@@ -1982,12 +1982,12 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
                      ToString(anchor).c_str()).get();
   }
   if (GetIsStickyPosition()) {
-    aStream << nsPrintfCString(" [isStickyPosition scrollId=%d outer=%f,%f %fx%f "
-                     "inner=%f,%f %fx%f]", mStickyPositionData->mScrollId,
+    aStream << nsPrintfCString(" [isStickyPosition scrollId=%d outer=(%.3f,%.3f)-(%.3f,%.3f) "
+                     "inner=(%.3f,%.3f)-(%.3f,%.3f)]", mStickyPositionData->mScrollId,
                      mStickyPositionData->mOuter.x, mStickyPositionData->mOuter.y,
-                     mStickyPositionData->mOuter.width, mStickyPositionData->mOuter.height,
+                     mStickyPositionData->mOuter.XMost(), mStickyPositionData->mOuter.YMost(),
                      mStickyPositionData->mInner.x, mStickyPositionData->mInner.y,
-                     mStickyPositionData->mInner.width, mStickyPositionData->mInner.height).get();
+                     mStickyPositionData->mInner.XMost(), mStickyPositionData->mInner.YMost()).get();
   }
   if (mMaskLayer) {
     aStream << nsPrintfCString(" [mMaskLayer=%p]", mMaskLayer.get()).get();

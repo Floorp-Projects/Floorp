@@ -1363,7 +1363,7 @@ nsDiskCacheMap::ResetCacheTimer(int32_t timeout)
 void
 nsDiskCacheMap::RevalidateTimerCallback(nsITimer *aTimer, void *arg)
 {
-    nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHEMAP_REVALIDATION));
+    nsCacheServiceAutoLock lock;
     if (!nsCacheService::gService->mDiskDevice ||
         !nsCacheService::gService->mDiskDevice->Initialized()) {
         return;
@@ -1414,9 +1414,6 @@ nsDiskCacheMap::RevalidateCache()
         // to get proper telemetry data of how much the cache corruption plan
         // would help.
     }
-
-    // We want this after the lock to prove that flushing a file isn't that expensive
-    Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_REVALIDATION> totalTimer;
 
     // If telemetry data shows it is worth it, we'll be flushing headers and
     // records before flushing the clean cache file.

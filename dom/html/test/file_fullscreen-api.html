@@ -155,12 +155,6 @@ function enter4(event) {
   is(event.target, document, "Event target should be full-screen document #5");
   is(document.fullscreenElement, inDocElement, "FSE should be inDocElement.");
 
-  var n = container;
-  do {
-    ok(n.matches(":-moz-full-screen-ancestor"), "Ancestor " + n + " should match :-moz-full-screen-ancestor")
-    n = n.parentNode;
-  } while (n && n.matches);
-    
   // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
   addFullscreenChangeContinuation("exit", exit_to_arg_test_1);
   container.parentNode.removeChild(container);

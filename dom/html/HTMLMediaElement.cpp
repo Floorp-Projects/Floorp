@@ -304,7 +304,7 @@ public:
 private:
   RefPtr<HTMLMediaElement> mElement;
   nsCOMPtr<nsIStreamListener> mNextListener;
-  uint32_t mLoadID;
+  const uint32_t mLoadID;
 };
 
 NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
@@ -313,7 +313,8 @@ NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
 
 NS_IMETHODIMP
 HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
-                                             const char* aTopic, const char16_t* aData)
+                                             const char* aTopic,
+                                             const char16_t* aData)
 {
   nsContentUtils::UnregisterShutdownObserver(this);
 
@@ -322,21 +323,9 @@ HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void HTMLMediaElement::ReportLoadError(const char* aMsg,
-                                       const char16_t** aParams,
-                                       uint32_t aParamCount)
-{
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Media"),
-                                  OwnerDoc(),
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aMsg,
-                                  aParams,
-                                  aParamCount);
-}
-
-
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
+                                                    nsISupports* aContext)
 {
   nsContentUtils::UnregisterShutdownObserver(this);
 
@@ -394,14 +383,12 @@ NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aR
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel &&
-      element &&
       NS_SUCCEEDED(rv = element->InitializeDecoderForChannel(channel, getter_AddRefs(mNextListener))) &&
       mNextListener) {
     rv = mNextListener->OnStartRequest(aRequest, aContext);
   } else {
-    // If InitializeDecoderForChannel() returned an error, fire a network
-    // error.
-    if (NS_FAILED(rv) && !mNextListener && element) {
+    // If InitializeDecoderForChannel() returned an error, fire a network error.
+    if (NS_FAILED(rv) && !mNextListener) {
       // Load failed, attempt to load the next candidate resource. If there
       // are none, this will trigger a MEDIA_ERR_SRC_NOT_SUPPORTED error.
       element->NotifyLoadError();
@@ -415,8 +402,10 @@ NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aR
   return rv;
 }
 
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                                                                 nsresult aStatus)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::OnStopRequest(nsIRequest* aRequest,
+                                                   nsISupports* aContext,
+                                                   nsresult aStatus)
 {
   if (mNextListener) {
     return mNextListener->OnStopRequest(aRequest, aContext, aStatus);
@@ -438,26 +427,209 @@ HTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest* aRequest,
   return mNextListener->OnDataAvailable(aRequest, aContext, aStream, aOffset, aCount);
 }
 
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
-                                                                          nsIChannel* aNewChannel,
-                                                                          uint32_t aFlags,
-                                                                          nsIAsyncVerifyRedirectCallback* cb)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                                            nsIChannel* aNewChannel,
+                                                            uint32_t aFlags,
+                                                            nsIAsyncVerifyRedirectCallback* cb)
 {
   // TODO is this really correct?? See bug #579329.
-  if (mElement)
+  if (mElement) {
     mElement->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+  }
   nsCOMPtr<nsIChannelEventSink> sink = do_QueryInterface(mNextListener);
-  if (sink)
+  if (sink) {
     return sink->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, cb);
-
+  }
   cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID & aIID, void **aResult)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID& aIID,
+                                                  void** aResult)
 {
   return QueryInterface(aIID, aResult);
 }
+
+void HTMLMediaElement::ReportLoadError(const char* aMsg,
+                                       const char16_t** aParams,
+                                       uint32_t aParamCount)
+{
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Media"),
+                                  OwnerDoc(),
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aMsg,
+                                  aParams,
+                                  aParamCount);
+}
+
+class HTMLMediaElement::ChannelLoader final {
+public:
+  NS_INLINE_DECL_REFCOUNTING(ChannelLoader);
+
+  void LoadInternal(HTMLMediaElement* aElement)
+  {
+    if (mCancelled) {
+      return;
+    }
+
+    // determine what security checks need to be performed in AsyncOpen2().
+    nsSecurityFlags securityFlags = aElement->ShouldCheckAllowOrigin()
+      ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS :
+        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+
+    if (aElement->GetCORSMode() == CORS_USE_CREDENTIALS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+    }
+
+    MOZ_ASSERT(aElement->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
+    nsContentPolicyType contentPolicyType = aElement->IsHTMLElement(nsGkAtoms::audio)
+      ? nsIContentPolicy::TYPE_INTERNAL_AUDIO :
+        nsIContentPolicy::TYPE_INTERNAL_VIDEO;
+
+    nsCOMPtr<nsIDocShell> docShell = aElement->OwnerDoc()->GetDocShell();
+    if (docShell) {
+      nsDocShell* docShellPtr = nsDocShell::Cast(docShell);
+      bool privateBrowsing;
+      docShellPtr->GetUsePrivateBrowsing(&privateBrowsing);
+      if (privateBrowsing) {
+        securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
+      }
+    }
+
+    nsCOMPtr<nsILoadGroup> loadGroup = aElement->GetDocumentLoadGroup();
+    nsCOMPtr<nsIChannel> channel;
+    nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                                aElement->mLoadingSrc,
+                                static_cast<Element*>(aElement),
+                                securityFlags,
+                                contentPolicyType,
+                                loadGroup,
+                                nullptr,   // aCallbacks
+                                nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
+                                nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE |
+                                nsIChannel::LOAD_CLASSIFY_URI |
+                                nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
+
+    if (NS_FAILED(rv)) {
+      // Notify load error so the element will try next resource candidate.
+      aElement->NotifyLoadError();
+      return;
+    }
+
+    // This is a workaround and it will be fix in bug 1264230.
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    if (loadInfo) {
+      NeckoOriginAttributes originAttrs;
+      NS_GetOriginAttributes(channel, originAttrs);
+      loadInfo->SetOriginAttributes(originAttrs);
+    }
+
+    // The listener holds a strong reference to us.  This creates a
+    // reference cycle, once we've set mChannel, which is manually broken
+    // in the listener's OnStartRequest method after it is finished with
+    // the element. The cycle will also be broken if we get a shutdown
+    // notification before OnStartRequest fires.  Necko guarantees that
+    // OnStartRequest will eventually fire if we don't shut down first.
+    RefPtr<MediaLoadListener> loadListener = new MediaLoadListener(aElement);
+
+    channel->SetNotificationCallbacks(loadListener);
+
+    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(channel);
+    if (hc) {
+      // Use a byte range request from the start of the resource.
+      // This enables us to detect if the stream supports byte range
+      // requests, and therefore seeking, early.
+      hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"),
+                           NS_LITERAL_CSTRING("bytes=0-"),
+                           false);
+      aElement->SetRequestHeaders(hc);
+    }
+
+    rv = channel->AsyncOpen2(loadListener);
+    if (NS_FAILED(rv)) {
+      // Notify load error so the element will try next resource candidate.
+      aElement->NotifyLoadError();
+      return;
+    }
+
+    // Else the channel must be open and starting to download. If it encounters
+    // a non-catastrophic failure, it will set a new task to continue loading
+    // another candidate.  It's safe to set it as mChannel now.
+    mChannel = channel;
+
+    // loadListener will be unregistered either on shutdown or when
+    // OnStartRequest for the channel we just opened fires.
+    nsContentUtils::RegisterShutdownObserver(loadListener);
+  }
+
+  nsresult Load(HTMLMediaElement* aElement)
+  {
+    // Per bug 1235183 comment 8, we can't spin the event loop from stable
+    // state. Defer NS_NewChannel() to a new regular runnable.
+    return NS_DispatchToMainThread(NewRunnableMethod<HTMLMediaElement*>(
+      this, &ChannelLoader::LoadInternal, aElement));
+  }
+
+  void Cancel()
+  {
+    mCancelled = true;
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+      mChannel = nullptr;
+    }
+  }
+
+  void Done() {
+    MOZ_ASSERT(mChannel);
+    // Decoder successfully created, the decoder now owns the MediaResource
+    // which owns the channel.
+    mChannel = nullptr;
+  }
+
+  nsresult Redirect(nsIChannel* aChannel,
+                    nsIChannel* aNewChannel,
+                    uint32_t aFlags)
+  {
+    NS_ASSERTION(aChannel == mChannel, "Channels should match!");
+    mChannel = aNewChannel;
+
+    // Handle forwarding of Range header so that the intial detection
+    // of seeking support (via result code 206) works across redirects.
+    nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
+    NS_ENSURE_STATE(http);
+
+    NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
+
+    nsAutoCString rangeVal;
+    if (NS_SUCCEEDED(http->GetRequestHeader(rangeHdr, rangeVal))) {
+      NS_ENSURE_STATE(!rangeVal.IsEmpty());
+
+      http = do_QueryInterface(aNewChannel);
+      NS_ENSURE_STATE(http);
+
+      nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, false);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  ~ChannelLoader()
+  {
+    MOZ_ASSERT(!mChannel);
+  }
+  // Holds a reference to the first channel we open to the media resource.
+  // Once the decoder is created, control over the channel passes to the
+  // decoder, and we null out this reference. We must store this in case
+  // we need to cancel the channel before control of it passes to the decoder.
+  nsCOMPtr<nsIChannel> mChannel;
+
+  bool mCancelled = false;
+};
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
 NS_IMPL_RELEASE_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
@@ -672,28 +844,8 @@ HTMLMediaElement::OnChannelRedirect(nsIChannel* aChannel,
                                     nsIChannel* aNewChannel,
                                     uint32_t aFlags)
 {
-  NS_ASSERTION(aChannel == mChannel, "Channels should match!");
-  mChannel = aNewChannel;
-
-  // Handle forwarding of Range header so that the intial detection
-  // of seeking support (via result code 206) works across redirects.
-  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
-  NS_ENSURE_STATE(http);
-
-  NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
-
-  nsAutoCString rangeVal;
-  if (NS_SUCCEEDED(http->GetRequestHeader(rangeHdr, rangeVal))) {
-    NS_ENSURE_STATE(!rangeVal.IsEmpty());
-
-    http = do_QueryInterface(aNewChannel);
-    NS_ENSURE_STATE(http);
-
-    nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
+  MOZ_ASSERT(mChannelLoader);
+  return mChannelLoader->Redirect(aChannel, aNewChannel, aFlags);
 }
 
 void HTMLMediaElement::ShutdownDecoder()
@@ -720,6 +872,11 @@ void HTMLMediaElement::AbortExistingLoads()
   // Set a new load ID. This will cause events which were enqueued
   // with a different load ID to silently be cancelled.
   mCurrentLoadID++;
+
+  if (mChannelLoader) {
+    mChannelLoader->Cancel();
+    mChannelLoader = nullptr;
+  }
 
   bool fireTimeUpdate = false;
 
@@ -1250,9 +1407,9 @@ nsresult HTMLMediaElement::LoadResource()
   NS_ASSERTION(mDelayingLoadEvent,
                "Should delay load event (if in document) during load");
 
-  if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
-    mChannel = nullptr;
+  if (mChannelLoader) {
+    mChannelLoader->Cancel();
+    mChannelLoader = nullptr;
   }
 
   // Check if media is allowed for the docshell.
@@ -1308,87 +1465,12 @@ nsresult HTMLMediaElement::LoadResource()
     return FinishDecoderSetup(decoder, resource, nullptr);
   }
 
-  // determine what security checks need to be performed in AsyncOpen2().
-  nsSecurityFlags securityFlags =
-    ShouldCheckAllowOrigin() ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS :
-                               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
-
-  if (GetCORSMode() == CORS_USE_CREDENTIALS) {
-    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  RefPtr<ChannelLoader> loader = new ChannelLoader;
+  nsresult rv = loader->Load(this);
+  if (NS_SUCCEEDED(rv)) {
+    mChannelLoader = loader.forget();
   }
-
-  MOZ_ASSERT(IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
-  nsContentPolicyType contentPolicyType = IsHTMLElement(nsGkAtoms::audio) ?
-    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
-
-  nsDocShell* docShellPtr;
-  if (docShell) {
-    docShellPtr = nsDocShell::Cast(docShell);
-    bool privateBrowsing;
-    docShellPtr->GetUsePrivateBrowsing(&privateBrowsing);
-    if (privateBrowsing) {
-      securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
-    }
-  }
-
-  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel),
-                              mLoadingSrc,
-                              static_cast<Element*>(this),
-                              securityFlags,
-                              contentPolicyType,
-                              loadGroup,
-                              nullptr,   // aCallbacks
-                              nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
-                              nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE |
-                              nsIChannel::LOAD_CLASSIFY_URI |
-                              nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
-
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // This is a workaround and it will be fix in bug 1264230.
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  if (loadInfo) {
-    NeckoOriginAttributes originAttrs;
-    NS_GetOriginAttributes(channel, originAttrs);
-    loadInfo->SetOriginAttributes(originAttrs);
-  }
-
-  // The listener holds a strong reference to us.  This creates a
-  // reference cycle, once we've set mChannel, which is manually broken
-  // in the listener's OnStartRequest method after it is finished with
-  // the element. The cycle will also be broken if we get a shutdown
-  // notification before OnStartRequest fires.  Necko guarantees that
-  // OnStartRequest will eventually fire if we don't shut down first.
-  RefPtr<MediaLoadListener> loadListener = new MediaLoadListener(this);
-
-  channel->SetNotificationCallbacks(loadListener);
-
-  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(channel);
-  if (hc) {
-    // Use a byte range request from the start of the resource.
-    // This enables us to detect if the stream supports byte range
-    // requests, and therefore seeking, early.
-    hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"),
-                         NS_LITERAL_CSTRING("bytes=0-"),
-                         false);
-
-    SetRequestHeaders(hc);
-  }
-
-  rv = channel->AsyncOpen2(loadListener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Else the channel must be open and starting to download. If it encounters
-  // a non-catastrophic failure, it will set a new task to continue loading
-  // another candidate.  It's safe to set it as mChannel now.
-  mChannel = channel;
-
-  // loadListener will be unregistered either on shutdown or when
-  // OnStartRequest for the channel we just opened fires.
-  nsContentUtils::RegisterShutdownObserver(loadListener);
-  return NS_OK;
+  return rv;
 }
 
 nsresult HTMLMediaElement::LoadWithChannel(nsIChannel* aChannel,
@@ -2400,8 +2482,8 @@ HTMLMediaElement::~HTMLMediaElement()
   NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
     "Destroyed media element should no longer be in element table");
 
-  if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+  if (mChannelLoader) {
+    mChannelLoader->Cancel();
   }
 
   WakeLockRelease();
@@ -3056,8 +3138,10 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   if (!resource)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // stream successfully created, the stream now owns the channel.
-  mChannel = nullptr;
+  if (mChannelLoader) {
+    mChannelLoader->Done();
+    mChannelLoader = nullptr;
+  }
 
   // We postpone the |FinishDecoderSetup| function call until we get
   // |OnConnected| signal from MediaStreamController which is held by
@@ -3121,13 +3205,20 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
 
 #ifdef MOZ_EME
   if (mMediaKeys) {
-    mDecoder->SetCDMProxy(mMediaKeys->GetCDMProxy());
+    if (mMediaKeys->GetCDMProxy()) {
+      mDecoder->SetCDMProxy(mMediaKeys->GetCDMProxy());
+    } else {
+      // CDM must have crashed.
+      ShutdownDecoder();
+      return NS_ERROR_FAILURE;
+    }
   }
 #endif
 
-  // Decoder successfully created, the decoder now owns the MediaResource
-  // which owns the channel.
-  mChannel = nullptr;
+  if (mChannelLoader) {
+    mChannelLoader->Done();
+    mChannelLoader = nullptr;
+  }
 
   AddMediaElementToURITable();
 
@@ -5411,6 +5502,12 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
 
   // 5.3. If mediaKeys is not null, run the following steps:
   if (aMediaKeys) {
+    if (!aMediaKeys->GetCDMProxy()) {
+      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("CDM crashed before binding MediaKeys object to HTMLMediaElement"));
+      return promise.forget();
+    }
+
     // 5.3.1 Associate the CDM instance represented by mediaKeys with the
     // media element for decrypting media data.
     if (NS_FAILED(aMediaKeys->Bind(this))) {

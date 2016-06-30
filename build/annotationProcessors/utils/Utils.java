@@ -6,6 +6,7 @@ package org.mozilla.gecko.annotationProcessors.utils;
 
 import org.mozilla.gecko.annotationProcessors.AnnotationInfo;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -210,6 +211,33 @@ public class Utils {
     public static String getNativeName(Member member) {
         final String name = getMemberName(member);
         return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
+
+    /**
+     * Get the C++ name for a member.
+     *
+     * @param member Member to get the name for.
+     * @return JNI name as a string
+     */
+    public static String getNativeName(Class<?> clz) {
+        final String name = clz.getName();
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
+
+    /**
+     * Get the C++ name for a member.
+     *
+     * @param member Member to get the name for.
+     * @return JNI name as a string
+     */
+    public static String getNativeName(AnnotatedElement element) {
+        if (element instanceof Class<?>) {
+            return getNativeName((Class<?>)element);
+        } else if (element instanceof Member) {
+            return getNativeName((Member)element);
+        } else {
+            return null;
+        }
     }
 
     /**

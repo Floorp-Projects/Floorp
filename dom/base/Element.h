@@ -193,15 +193,6 @@ public:
   void UpdateLinkState(EventStates aState);
 
   /**
-   * Returns true if this element is either a full-screen element or an
-   * ancestor of the full-screen element.
-   */
-  bool IsFullScreenAncestor() const {
-    return mState.HasAtLeastOneOfStates(NS_EVENT_STATE_FULL_SCREEN_ANCESTOR |
-                                        NS_EVENT_STATE_FULL_SCREEN);
-  }
-
-  /**
    * The style state of this element. This is the real state of the element
    * with any style locks applied for pseudo-class inspecting.
    */

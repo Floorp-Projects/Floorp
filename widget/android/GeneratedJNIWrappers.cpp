@@ -1618,6 +1618,277 @@ auto ProgressiveUpdateData::Y(float a0) const -> void
     return mozilla::jni::Field<Y_t>::Set(ProgressiveUpdateData::mCtx, nullptr, a0);
 }
 
+const char StackScroller::name[] =
+        "org/mozilla/gecko/gfx/StackScroller";
+
+constexpr char StackScroller::New_t::name[];
+constexpr char StackScroller::New_t::signature[];
+
+auto StackScroller::New(mozilla::jni::Object::Param a0, StackScroller::LocalRef* a1) -> nsresult
+{
+    MOZ_ASSERT(a1);
+    nsresult rv = NS_OK;
+    *a1 = mozilla::jni::Constructor<New_t>::Call(StackScroller::Context(), &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::AbortAnimation_t::name[];
+constexpr char StackScroller::AbortAnimation_t::signature[];
+
+auto StackScroller::AbortAnimation() const -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Method<AbortAnimation_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::ComputeScrollOffset_t::name[];
+constexpr char StackScroller::ComputeScrollOffset_t::signature[];
+
+auto StackScroller::ComputeScrollOffset(int64_t a0, bool* a1) const -> nsresult
+{
+    MOZ_ASSERT(a1);
+    nsresult rv = NS_OK;
+    *a1 = mozilla::jni::Method<ComputeScrollOffset_t>::Call(StackScroller::mCtx, &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::Fling_t::name[];
+constexpr char StackScroller::Fling_t::signature[];
+
+auto StackScroller::Fling(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6, int32_t a7, int32_t a8, int32_t a9, int64_t a10) const -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Method<Fling_t>::Call(StackScroller::mCtx, &rv, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    return rv;
+}
+
+constexpr char StackScroller::ForceFinished_t::name[];
+constexpr char StackScroller::ForceFinished_t::signature[];
+
+auto StackScroller::ForceFinished(bool a0) const -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Method<ForceFinished_t>::Call(StackScroller::mCtx, &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrSpeedX_t::name[];
+constexpr char StackScroller::GetCurrSpeedX_t::signature[];
+
+auto StackScroller::GetCurrSpeedX(float* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrSpeedX_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrSpeedY_t::name[];
+constexpr char StackScroller::GetCurrSpeedY_t::signature[];
+
+auto StackScroller::GetCurrSpeedY(float* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrSpeedY_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrX_t::name[];
+constexpr char StackScroller::GetCurrX_t::signature[];
+
+auto StackScroller::GetCurrX(int32_t* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrX_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetCurrY_t::name[];
+constexpr char StackScroller::GetCurrY_t::signature[];
+
+auto StackScroller::GetCurrY(int32_t* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetCurrY_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetFinalX_t::name[];
+constexpr char StackScroller::GetFinalX_t::signature[];
+
+auto StackScroller::GetFinalX(int32_t* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetFinalX_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::GetFinalY_t::name[];
+constexpr char StackScroller::GetFinalY_t::signature[];
+
+auto StackScroller::GetFinalY(int32_t* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<GetFinalY_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::InitContants_t::name[];
+constexpr char StackScroller::InitContants_t::signature[];
+
+auto StackScroller::InitContants() -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Method<InitContants_t>::Call(StackScroller::Context(), &rv);
+    return rv;
+}
+
+constexpr char StackScroller::IsFinished_t::name[];
+constexpr char StackScroller::IsFinished_t::signature[];
+
+auto StackScroller::IsFinished(bool* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Method<IsFinished_t>::Call(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::SetFinalX_t::name[];
+constexpr char StackScroller::SetFinalX_t::signature[];
+
+auto StackScroller::SetFinalX(int32_t a0) const -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Method<SetFinalX_t>::Call(StackScroller::mCtx, &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::SpringBack_t::name[];
+constexpr char StackScroller::SpringBack_t::signature[];
+
+auto StackScroller::SpringBack(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int64_t a6, bool* a7) const -> nsresult
+{
+    MOZ_ASSERT(a7);
+    nsresult rv = NS_OK;
+    *a7 = mozilla::jni::Method<SpringBack_t>::Call(StackScroller::mCtx, &rv, a0, a1, a2, a3, a4, a5, a6);
+    return rv;
+}
+
+constexpr char StackScroller::StartScroll_t::name[];
+constexpr char StackScroller::StartScroll_t::signature[];
+
+auto StackScroller::StartScroll(int32_t a0, int32_t a1, int32_t a2, int32_t a3, int64_t a4, int32_t a5) const -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Method<StartScroll_t>::Call(StackScroller::mCtx, &rv, a0, a1, a2, a3, a4, a5);
+    return rv;
+}
+
+constexpr char StackScroller::ViscousFluid_t::name[];
+constexpr char StackScroller::ViscousFluid_t::signature[];
+
+auto StackScroller::ViscousFluid(float a0, float* a1) -> nsresult
+{
+    MOZ_ASSERT(a1);
+    nsresult rv = NS_OK;
+    *a1 = mozilla::jni::Method<ViscousFluid_t>::Call(StackScroller::Context(), &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::MFlywheel_t::name[];
+constexpr char StackScroller::MFlywheel_t::signature[];
+
+auto StackScroller::MFlywheel(bool* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Field<MFlywheel_t>::Get(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::MMode_t::name[];
+constexpr char StackScroller::MMode_t::signature[];
+
+auto StackScroller::MMode(int32_t* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Field<MMode_t>::Get(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+auto StackScroller::MMode(int32_t a0) const -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Field<MMode_t>::Set(StackScroller::mCtx, &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::MScrollerX_t::name[];
+constexpr char StackScroller::MScrollerX_t::signature[];
+
+auto StackScroller::MScrollerX(mozilla::jni::Object::LocalRef* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Field<MScrollerX_t>::Get(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::MScrollerY_t::name[];
+constexpr char StackScroller::MScrollerY_t::signature[];
+
+auto StackScroller::MScrollerY(mozilla::jni::Object::LocalRef* a0) const -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Field<MScrollerY_t>::Get(StackScroller::mCtx, &rv);
+    return rv;
+}
+
+constexpr char StackScroller::SViscousFluidNormalize_t::name[];
+constexpr char StackScroller::SViscousFluidNormalize_t::signature[];
+
+auto StackScroller::SViscousFluidNormalize(float* a0) -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Field<SViscousFluidNormalize_t>::Get(StackScroller::Context(), &rv);
+    return rv;
+}
+
+auto StackScroller::SViscousFluidNormalize(float a0) -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Field<SViscousFluidNormalize_t>::Set(StackScroller::Context(), &rv, a0);
+    return rv;
+}
+
+constexpr char StackScroller::SViscousFluidScale_t::name[];
+constexpr char StackScroller::SViscousFluidScale_t::signature[];
+
+auto StackScroller::SViscousFluidScale(float* a0) -> nsresult
+{
+    MOZ_ASSERT(a0);
+    nsresult rv = NS_OK;
+    *a0 = mozilla::jni::Field<SViscousFluidScale_t>::Get(StackScroller::Context(), &rv);
+    return rv;
+}
+
+auto StackScroller::SViscousFluidScale(float a0) -> nsresult
+{
+    nsresult rv = NS_OK;
+    mozilla::jni::Field<SViscousFluidScale_t>::Set(StackScroller::Context(), &rv, a0);
+    return rv;
+}
+
 const char ViewTransform::name[] =
         "org/mozilla/gecko/gfx/ViewTransform";
 

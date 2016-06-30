@@ -2,7 +2,7 @@
 # Script to update mp4parse-rust sources to latest upstream
 
 # Default version.
-VER=v0.2.1
+VER=v0.4.0
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -14,6 +14,8 @@ rm -rf _upstream
 git clone https://github.com/mozilla/mp4parse-rust _upstream/mp4parse
 pushd _upstream/mp4parse
 git checkout ${VER}
+echo "Constructing C api header..."
+cargo build
 popd
 rm -rf mp4parse
 mkdir mp4parse
@@ -24,7 +26,7 @@ cp _upstream/mp4parse/include/mp4parse.h include/
 
 git clone https://github.com/BurntSushi/byteorder _upstream/byteorder
 pushd _upstream/byteorder
-git checkout 0.4.2
+git checkout 0.5.3
 popd
 rm -rf mp4parse/byteorder
 mkdir mp4parse/byteorder
@@ -34,7 +36,6 @@ cp _upstream/byteorder/src/new.rs mp4parse/byteorder/new.rs
 echo "Applying patches..."
 patch -p4 < byteorder-mod.patch
 patch -p4 < mp4parse-mod.patch
-patch -p4 < mp4parse-thread.patch
 
 echo "Cleaning up..."
 rm -rf _upstream

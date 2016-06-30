@@ -32,6 +32,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Pair.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
@@ -380,7 +381,7 @@ private: // data
 #endif
 
   // The source data for this image.
-  RefPtr<SourceBuffer>     mSourceBuffer;
+  NotNull<RefPtr<SourceBuffer>>  mSourceBuffer;
 
   // The number of frames this image has.
   uint32_t                   mFrameCount;
@@ -457,5 +458,14 @@ RasterImage::GetAnimationMode(uint16_t* aAnimationMode) {
 
 } // namespace image
 } // namespace mozilla
+
+/**
+ * Casting RasterImage to nsISupports is ambiguous. This method handles that.
+ */
+inline nsISupports*
+ToSupports(mozilla::image::RasterImage* p)
+{
+  return NS_ISUPPORTS_CAST(mozilla::image::ImageResource*, p);
+}
 
 #endif /* mozilla_image_RasterImage_h */

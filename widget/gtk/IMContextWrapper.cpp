@@ -1655,13 +1655,34 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
         return textRangeArray.forget();
     }
 
+    uint32_t minOffsetOfClauses = aCompositionString.Length();
     do {
         TextRange range;
         if (!SetTextRange(iter, preedit_string, caretOffsetInUTF16, range)) {
             continue;
         }
+        MOZ_ASSERT(range.Length());
+        minOffsetOfClauses = std::min(minOffsetOfClauses, range.mStartOffset);
         textRangeArray->AppendElement(range);
     } while (pango_attr_iterator_next(iter));
+
+    // If the IME doesn't define clause from the start of the composition,
+    // we should insert dummy clause information since TextRangeArray assumes
+    // that there must be a clause whose start is 0 when there is one or
+    // more clauses.
+    if (minOffsetOfClauses) {
+        TextRange dummyClause;
+        dummyClause.mStartOffset = 0;
+        dummyClause.mEndOffset = minOffsetOfClauses;
+        dummyClause.mRangeType = TextRangeType::eRawClause;
+        textRangeArray->InsertElementAt(0, dummyClause);
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+             ("GTKIM: %p   CreateTextRangeArray(), inserting a dummy clause "
+              "at the beginning of the composition string mStartOffset=%u, "
+              "mEndOffset=%u, mRangeType=%s",
+              this, dummyClause.mStartOffset, dummyClause.mEndOffset,
+              ToChar(dummyClause.mRangeType)));
+    }
 
     TextRange range;
     range.mStartOffset = range.mEndOffset = caretOffsetInUTF16;
@@ -1737,6 +1758,17 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("GTKIM: %p   SetTextRange(), FAILED, due to g_utf8_to_utf16() "
              "failure (retrieving current clause)",
+             this));
+        return false;
+    }
+
+    // iBus Chewing IME tells us that there is an empty clause at the end of
+    // the composition string but we should ignore it since our code doesn't
+    // assume that there is an empty clause.
+    if (!utf16CurrentClauseLength) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("GTKIM: %p   SetTextRange(), FAILED, due to current clause length "
+             "is 0",
              this));
         return false;
     }

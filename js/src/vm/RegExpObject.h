@@ -509,7 +509,7 @@ class RegExpObject : public NativeObject
 bool
 ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut);
 
-/* Assuming GetBuiltinClass(obj) is ESClass_RegExp, return a RegExpShared for obj. */
+/* Assuming GetBuiltinClass(obj) is ESClass::RegExp, return a RegExpShared for obj. */
 inline bool
 RegExpToShared(JSContext* cx, HandleObject obj, RegExpGuard* g)
 {

@@ -26,6 +26,7 @@ namespace image {
 
 class Decoder;
 class DecodePoolImpl;
+class IDecodingTask;
 
 /**
  * DecodePool is a singleton class that manages decoding of raster images. It
@@ -53,22 +54,24 @@ public:
   /// same as the number of decoding threads we're actually using.
   static uint32_t NumberOfCores();
 
-  /// Ask the DecodePool to run @aDecoder asynchronously and return immediately.
-  void AsyncDecode(Decoder* aDecoder);
+  /// Ask the DecodePool to run @aTask asynchronously and return immediately.
+  void AsyncRun(IDecodingTask* aTask);
 
   /**
-   * Run @aDecoder synchronously if the image it's decoding is small. If the
-   * image is too large, or if the source data isn't complete yet, run @aDecoder
-   * asynchronously instead.
+   * Run @aTask synchronously if the task would prefer it. It's up to the task
+   * itself to make this decision; @see IDecodingTask::ShouldPreferSyncRun(). If
+   * @aTask doesn't prefer it, just run @aTask asynchronously and return
+   * immediately.
    */
-  void SyncDecodeIfSmall(Decoder* aDecoder);
+  void SyncRunIfPreferred(IDecodingTask* aTask);
 
   /**
-   * Run aDecoder synchronously if at all possible. If it can't complete
-   * synchronously because the source data isn't complete, asynchronously decode
-   * the rest.
+   * Run @aTask synchronously. This does not guarantee that @aTask will complete
+   * synchronously. If, for example, @aTask doesn't yet have the data it needs to
+   * run synchronously, it may recover by scheduling an async task to finish up
+   * the work when the remaining data is available.
    */
-  void SyncDecodeIfPossible(Decoder* aDecoder);
+  void SyncRunIfPossible(IDecodingTask* aTask);
 
   /**
    * Returns an event target interface to the DecodePool's I/O thread. Callers
@@ -79,24 +82,16 @@ public:
    */
   already_AddRefed<nsIEventTarget> GetIOEventTarget();
 
-  /**
-   * Notify about progress on aDecoder.
-   */
-  void NotifyProgress(Decoder* aDecoder);
-
 private:
   friend class DecodePoolWorker;
 
   DecodePool();
   virtual ~DecodePool();
 
-  void Decode(Decoder* aDecoder);
-  void NotifyDecodeComplete(Decoder* aDecoder);
-
   static StaticRefPtr<DecodePool> sSingleton;
   static uint32_t sNumCores;
 
-  RefPtr<DecodePoolImpl>    mImpl;
+  RefPtr<DecodePoolImpl> mImpl;
 
   // mMutex protects mThreads and mIOThread.
   Mutex                         mMutex;

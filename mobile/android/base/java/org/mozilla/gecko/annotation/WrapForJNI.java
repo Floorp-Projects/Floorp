@@ -31,9 +31,8 @@ public @interface WrapForJNI {
 
     /**
      * If set, the generated method stub will support being called from any thread via the use of
-     * GetEnvForThread. This is rarely useful, at time of writing, as well as possibly risky.
-     *
-     * Did I mention use of this function is discouraged?
+     * GetEnvForThread. This is forced to 'true' when the annotation is used on a class, but can
+     * be overridden for individual methods.
      */
     boolean allowMultithread() default false;
 

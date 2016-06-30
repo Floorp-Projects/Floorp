@@ -86,6 +86,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsICookieService.h"
 #include "nsIConsoleReportCollector.h"
+#include "nsObjectLoadingContent.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -2524,15 +2525,35 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
   if (frameElement && !frameElement->IsXULElement()) {
     // We do not allow document inside any containing element other
     // than iframe to enter fullscreen.
-    if (!frameElement->IsHTMLElement(nsGkAtoms::iframe)) {
-      return NS_OK;
-    }
-    // If any ancestor iframe does not have allowfullscreen attribute
-    // set, then fullscreen is not allowed.
-    if (!frameElement->HasAttr(kNameSpaceID_None,
-                               nsGkAtoms::allowfullscreen) &&
-        !frameElement->HasAttr(kNameSpaceID_None,
-                               nsGkAtoms::mozallowfullscreen)) {
+    if (frameElement->IsHTMLElement(nsGkAtoms::iframe)) {
+      // If any ancestor iframe does not have allowfullscreen attribute
+      // set, then fullscreen is not allowed.
+      if (!frameElement->HasAttr(kNameSpaceID_None,
+                                 nsGkAtoms::allowfullscreen) &&
+          !frameElement->HasAttr(kNameSpaceID_None,
+                                 nsGkAtoms::mozallowfullscreen)) {
+        return NS_OK;
+      }
+    } else if (frameElement->IsHTMLElement(nsGkAtoms::embed)) {
+      // Respect allowfullscreen only if this is a rewritten YouTube embed.
+      nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent =
+        do_QueryInterface(frameElement);
+      if (!objectLoadingContent) {
+        return NS_OK;
+      }
+      nsObjectLoadingContent* olc =
+        static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
+      if (!olc->IsRewrittenYoutubeEmbed()) {
+        return NS_OK;
+      }
+      // We don't have to check prefixed attributes because Flash does not
+      // support them.
+      if (!frameElement->HasAttr(kNameSpaceID_None,
+                                 nsGkAtoms::allowfullscreen)) {
+        return NS_OK;
+      }
+    } else {
+      // neither iframe nor embed
       return NS_OK;
     }
     nsIDocument* doc = frameElement->GetUncomposedDoc();

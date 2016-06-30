@@ -161,6 +161,8 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
             'work_dir': abs_dirs['abs_work_dir'],
             'b2g_src': abs_dirs['abs_work_dir'],
             'abs_tools_dir': os.path.join(abs_dirs['abs_work_dir'], 'build-tools'),
+            'b2g_repo': self.config['repo'],
+            'b2g_target': self.config['target'],
         }
 
         abs_dirs.update(dirs)

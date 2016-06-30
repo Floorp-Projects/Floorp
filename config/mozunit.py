@@ -7,6 +7,7 @@ import unittest
 import inspect
 from StringIO import StringIO
 import os
+import sys
 
 '''Helper to make python unit tests report the way that the Mozilla
 unit test infrastructure expects tests to report.
@@ -107,6 +108,17 @@ class MockedFile(StringIO):
     def __exit__(self, type, value, traceback):
         self.close()
 
+def normcase(path):
+    '''
+    Normalize the case of `path`.
+
+    Don't use `os.path.normcase` because that also normalizes forward slashes
+    to backslashes on Windows.
+    '''
+    if sys.platform.startswith('win'):
+        return path.lower()
+    return path
+
 class MockedOpen(object):
     '''
     Context manager diverting the open builtin such that opening files
@@ -129,10 +141,10 @@ class MockedOpen(object):
     def __init__(self, files = {}):
         self.files = {}
         for name, content in files.iteritems():
-            self.files[os.path.abspath(name)] = content
+            self.files[normcase(os.path.abspath(name))] = content
 
     def __call__(self, name, mode = 'r'):
-        absname = os.path.abspath(name)
+        absname = normcase(os.path.abspath(name))
         if 'w' in mode:
             file = MockedFile(self, absname)
         elif absname in self.files:
@@ -169,6 +181,7 @@ class MockedOpen(object):
                 self._orig_path_exists(p))
 
     def _wrapped_isfile(self, p):
+        p = normcase(p)
         if p in self.files:
             return True
 
@@ -179,6 +192,7 @@ class MockedOpen(object):
         return self._orig_path_isfile(p)
 
     def _wrapped_isdir(self, p):
+        p = normcase(p)
         p = p if p.endswith(('/', '\\')) else p + os.sep
         if any(f.startswith(p) for f in self.files):
             return True

@@ -13,6 +13,7 @@ task:
       MOZ_CRASHREPORTER_NO_REPORT: '1'
       GAIA_KEYBOARD_LAYOUTS: 'en,pt-BR,es,de,fr,pl,zh-Hans-Pinyin,zh-Hant-Zhuyin,en-Dvorak'
       B2G_UPDATE_CHANNEL: 'default'
+      MOZHARNESS_CONFIG: b2g/taskcluster-phone-eng.py
     command:
       - >
         checkout-gecko workspace &&

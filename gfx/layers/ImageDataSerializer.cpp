@@ -128,6 +128,30 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor)
   }
 }
 
+Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(const BufferDescriptor& aDescriptor)
+{
+  switch (aDescriptor.type()) {
+    case BufferDescriptor::TRGBDescriptor:
+      return Nothing();
+    case BufferDescriptor::TYCbCrDescriptor:
+      return Some(aDescriptor.get_YCbCrDescriptor().cbCrSize());
+    default:
+      MOZ_CRASH("GFX:  CbCrSizeFromBufferDescriptor");
+  }
+}
+
+Maybe<StereoMode> StereoModeFromBufferDescriptor(const BufferDescriptor& aDescriptor)
+{
+  switch (aDescriptor.type()) {
+    case BufferDescriptor::TRGBDescriptor:
+      return Nothing();
+    case BufferDescriptor::TYCbCrDescriptor:
+      return Some(aDescriptor.get_YCbCrDescriptor().stereoMode());
+    default:
+      MOZ_CRASH("GFX:  CbCrSizeFromBufferDescriptor");
+  }
+}
+
 uint8_t* GetYChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor)
 {
   return aBuffer + aDescriptor.yOffset();

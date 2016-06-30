@@ -213,9 +213,6 @@ private:
   uint32_t mVideoTrack;
   uint32_t mAudioTrack;
 
-  // Number of microseconds that must be discarded from the start of the Stream.
-  uint64_t mCodecDelay;
-
   // Nanoseconds to discard after seeking.
   uint64_t mSeekPreroll;
 

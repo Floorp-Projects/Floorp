@@ -4,6 +4,8 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxPlatform.h"
+#include "ImageContainer.h"
+#include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "TextureClientRecycleAllocator.h"
@@ -71,6 +73,43 @@ protected:
   TextureClientRecycleAllocator* mAllocator;
 };
 
+YCbCrTextureClientAllocationHelper::YCbCrTextureClientAllocationHelper(const PlanarYCbCrData& aData,
+                                                                       TextureFlags aTextureFlags)
+  : ITextureClientAllocationHelper(gfx::SurfaceFormat::YUV,
+                                   aData.mYSize,
+                                   BackendSelector::Content,
+                                   aTextureFlags,
+                                   ALLOC_DEFAULT)
+  , mData(aData)
+{
+}
+
+bool
+YCbCrTextureClientAllocationHelper::IsCompatible(TextureClient* aTextureClient)
+{
+  MOZ_ASSERT(aTextureClient->GetFormat() == gfx::SurfaceFormat::YUV);
+
+  BufferTextureData* bufferData = aTextureClient->GetInternalData()->AsBufferTextureData();
+  if (!bufferData ||
+      aTextureClient->GetSize() != mData.mYSize ||
+      bufferData->GetCbCrSize().isNothing() ||
+      bufferData->GetCbCrSize().ref() != mData.mCbCrSize ||
+      bufferData->GetStereoMode().isNothing() ||
+      bufferData->GetStereoMode().ref() != mData.mStereoMode) {
+    return false;
+  }
+  return true;
+}
+
+already_AddRefed<TextureClient>
+YCbCrTextureClientAllocationHelper::Allocate(CompositableForwarder* aAllocator)
+{
+  return TextureClient::CreateForYCbCr(aAllocator,
+                                       mData.mYSize, mData.mCbCrSize,
+                                       mData.mStereoMode,
+                                       mTextureFlags);
+}
+
 TextureClientRecycleAllocator::TextureClientRecycleAllocator(CompositableForwarder* aAllocator)
   : mSurfaceAllocator(aAllocator)
   , mMaxPooledSize(kMaxPooledSized)
@@ -92,25 +131,6 @@ TextureClientRecycleAllocator::SetMaxPoolSize(uint32_t aMax)
 {
   mMaxPooledSize = aMax;
 }
-
-class TextureClientRecycleTask : public Runnable
-{
-public:
-  explicit TextureClientRecycleTask(TextureClient* aClient, TextureFlags aFlags)
-    : mTextureClient(aClient)
-    , mFlags(aFlags)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    mTextureClient->RecycleTexture(mFlags);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<TextureClient> mTextureClient;
-  TextureFlags mFlags;
-};
 
 already_AddRefed<TextureClient>
 TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
@@ -147,17 +167,16 @@ TextureClientRecycleAllocator::CreateOrRecycle(ITextureClientAllocationHelper& a
     if (!mPooledClients.empty()) {
       textureHolder = mPooledClients.top();
       mPooledClients.pop();
-      RefPtr<Runnable> task;
       // If a pooled TextureClient is not compatible, release it.
       if (!aHelper.IsCompatible(textureHolder->GetTextureClient())) {
         // Release TextureClient.
-        task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
+        RefPtr<Runnable> task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();
         textureHolder = nullptr;
+        mSurfaceAllocator->GetMessageLoop()->PostTask(task.forget());
       } else {
-        task = new TextureClientRecycleTask(textureHolder->GetTextureClient(), aHelper.mTextureFlags);
+        textureHolder->GetTextureClient()->RecycleTexture(aHelper.mTextureFlags);
       }
-      mSurfaceAllocator->GetMessageLoop()->PostTask(task.forget());
     }
   }
 

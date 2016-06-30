@@ -886,6 +886,13 @@ class Assembler : public AssemblerX86Shared
         JmpSrc src = masm.call();
         addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
     }
+    void call(ImmWord target) {
+        call(ImmPtr((void*)target.value));
+    }
+    void call(ImmPtr target) {
+        JmpSrc src = masm.call();
+        addPendingJump(src, target, Relocation::HARDCODED);
+    }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
     // this instruction.

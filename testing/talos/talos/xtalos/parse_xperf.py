@@ -14,7 +14,7 @@ import etlparser
 def stop(xperf_path, debug=False):
     xperf_cmd = [xperf_path, '-stop', '-stop', 'talos_ses']
     if debug:
-        print "executing '%s'" % subprocess.list2cmdline(xperf_cmd)
+        print("executing '%s'" % subprocess.list2cmdline(xperf_cmd))
     subprocess.call(xperf_cmd)
 
 
@@ -67,7 +67,7 @@ def main(args=sys.argv[1:]):
         stop_from_config(config_file=args.configFile,
                          debug=args.debug_level >= xtalos.DEBUG_INFO,
                          **args.__dict__)
-    except xtalos.XTalosError, e:
+    except xtalos.XTalosError as e:
         parser.error(str(e))
 
 if __name__ == "__main__":

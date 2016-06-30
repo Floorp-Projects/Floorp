@@ -413,4 +413,14 @@ private:
 } // namespace storage
 } // namespace mozilla
 
+/**
+ * Casting Connection to nsISupports is ambiguous.
+ * This method handles that.
+ */
+inline nsISupports*
+ToSupports(mozilla::storage::Connection* p)
+{
+  return NS_ISUPPORTS_CAST(mozIStorageAsyncConnection*, p);
+}
+
 #endif // mozilla_storage_Connection_h

@@ -58,7 +58,7 @@ class Proxy
     static bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                            const CallArgs& args);
     static bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v, bool* bp);
-    static bool getBuiltinClass(JSContext* cx, HandleObject proxy, ESClassValue* classValue);
+    static bool getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls);
     static bool isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer);
     static const char* className(JSContext* cx, HandleObject proxy);
     static JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent);

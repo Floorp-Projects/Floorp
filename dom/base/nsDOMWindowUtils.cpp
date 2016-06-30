@@ -3214,6 +3214,10 @@ PrepareForFullscreenChange(nsIPresShell* aPresShell, const nsSize& aSize,
   }
   if (nsRefreshDriver* rd = aPresShell->GetRefreshDriver()) {
     rd->SetIsResizeSuppressed();
+    // Since we are suppressing the resize reflow which would originally
+    // be triggered by view manager, we need to ensure that the refresh
+    // driver actually schedules a flush, otherwise it may get stuck.
+    rd->ScheduleViewManagerFlush();
   }
   if (!aSize.IsEmpty()) {
     if (nsViewManager* viewManager = aPresShell->GetViewManager()) {

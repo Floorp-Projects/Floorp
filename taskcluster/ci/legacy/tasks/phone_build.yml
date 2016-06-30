@@ -2,7 +2,7 @@
 # provide.
 ---
 taskId: {{build_slugid}}
-
+docker-image: phone-builder
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
@@ -25,10 +25,13 @@ task:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
     - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
-    - 'docker-worker:image:{{#docker_image}}phone-builder{{/docker_image}}'
 
   payload:
-    image: '{{#docker_image}}phone-builder{{/docker_image}}'
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: "<docker-image>"
 
     # One hour is a good value for most builds
     maxRunTime: 3600

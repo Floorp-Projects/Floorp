@@ -287,6 +287,25 @@ public:
   }
 };
 
+class MOZ_RAII AutoSECMODListReadLock final
+{
+public:
+  AutoSECMODListReadLock()
+    : mLock(SECMOD_GetDefaultModuleListLock())
+  {
+    MOZ_ASSERT(mLock, "should have SECMOD lock (has NSS been initialized?)");
+    SECMOD_GetReadLock(mLock);
+  }
+
+  ~AutoSECMODListReadLock()
+  {
+    SECMOD_ReleaseReadLock(mLock);
+  }
+
+private:
+  SECMODListLock* mLock;
+};
+
 namespace internal {
 
 inline void SECITEM_FreeItem_true(SECItem * s)

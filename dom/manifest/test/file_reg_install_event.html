@@ -1,9 +1,15 @@
+<meta charset=utf-8>
 <script>
-window.addEventListener("install", (ev) => {
+"use strict";
+window.addEventListener("install", () => {
   document
     .querySelector("#output")
-    .innerHTML = "event received!"
+    .innerHTML = "event received!";
+  // Send a custom event back to the browser
+  // to acknowledge that we got this
+  const detail = { result: true }
+  const ev = new CustomEvent("dom.manifest.oninstall", { detail });
+  document.dispatchEvent(ev);
 });
 </script>
-<link rel="manifest" href="file_manifest.json">
 <h1 id=output>waiting for event</h1>
