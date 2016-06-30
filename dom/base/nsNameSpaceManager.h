@@ -45,6 +45,7 @@ public:
   }
 
   int32_t GetNameSpaceID(const nsAString& aURI);
+  int32_t GetNameSpaceID(nsIAtom* aURI);
 
   bool HasElementCreator(int32_t aNameSpaceID);
 
