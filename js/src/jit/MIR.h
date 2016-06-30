@@ -3279,7 +3279,7 @@ class MNewObject
     public NoTypePolicy::Data
 {
   public:
-    enum Mode { ObjectLiteral, ObjectCreate, TypedArray };
+    enum Mode { ObjectLiteral, ObjectCreate };
 
   private:
     gc::InitialHeap initialHeap_;
