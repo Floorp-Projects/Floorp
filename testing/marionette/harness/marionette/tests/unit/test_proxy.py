@@ -66,7 +66,7 @@ class TestProxy(MarionetteTestCase):
                             {
                                 "proxy":{
                                     "proxyType": "pac",
-                                    "pacUrl": url,
+                                    "proxyAutoconfigUrl": url,
                                 }
                             }
                         }
@@ -75,12 +75,12 @@ class TestProxy(MarionetteTestCase):
         with self.marionette.using_context('chrome'):
             result = self.marionette.execute_script("""return {
                 "proxyType" : Services.prefs.getIntPref('network.proxy.type'),
-                "pacUrl" : Services.prefs.getCharPref('network.proxy.autoconfig_url'),
+                "proxyAutoconfigUrl" : Services.prefs.getCharPref('network.proxy.autoconfig_url'),
                 }
             """)
 
         self.assertEqual(result["proxyType"], 2)
-        self.assertEqual(result["pacUrl"], url, 'pacUrl was not set')
+        self.assertEqual(result["proxyAutoconfigUrl"], url, 'proxyAutoconfigUrl was not set')
 
     def test_that_we_can_set_a_manual_proxy(self):
         port = 4444
