@@ -74,6 +74,17 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
 
+  enum class State
+  {
+    JPEG_DATA,
+    FINISHED_JPEG_DATA
+  };
+
+  LexerTransition<State> ReadJPEGData(const char* aData, size_t aLength);
+  LexerTransition<State> FinishedJPEGData();
+
+  StreamingLexer<State> mLexer;
+
 public:
   struct jpeg_decompress_struct mInfo;
   struct jpeg_source_mgr mSourceMgr;
