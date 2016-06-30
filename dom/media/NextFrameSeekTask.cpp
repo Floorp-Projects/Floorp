@@ -181,7 +181,7 @@ NextFrameSeekTask::IsVideoDecoding() const
   return !mIsVideoQueueFinished;
 }
 
-nsresult
+void
 NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
 {
   AssertOwnerThread();
@@ -191,11 +191,10 @@ NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
   if (!IsVideoDecoding() ||
       mReader->IsRequestingVideoData() ||
       mReader->IsWaitingVideoData()) {
-    return NS_OK;
+    return;
   }
 
   RequestVideoData();
-  return NS_OK;
 }
 
 const char*
@@ -255,10 +254,7 @@ NextFrameSeekTask::CheckIfSeekComplete()
   const bool videoSeekComplete = IsVideoSeekComplete();
   if (!videoSeekComplete) {
     // We haven't reached the target. Ensure we have requested another sample.
-    if (NS_FAILED(EnsureVideoDecodeTaskQueued())) {
-      DECODER_WARN("Failed to request video during seek");
-      RejectIfExist(__func__);
-    }
+    EnsureVideoDecodeTaskQueued();
   }
 
   SAMPLE_LOG("CheckIfSeekComplete() audioSeekComplete=%d videoSeekComplete=%d",
