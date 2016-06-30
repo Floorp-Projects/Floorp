@@ -210,6 +210,7 @@ class ExclusiveContext : public ContextFriendFields,
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }
     bool canUseSignalHandlers() const { return runtime_->canUseSignalHandlers(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
+    bool jitSupportsUnalignedAccesses() const { return runtime_->jitSupportsUnalignedAccesses; }
     bool jitSupportsSimd() const { return runtime_->jitSupportsSimd; }
     bool lcovEnabled() const { return runtime_->lcovOutput.isEnabled(); }
 

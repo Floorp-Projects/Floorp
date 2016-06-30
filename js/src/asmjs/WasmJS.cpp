@@ -35,6 +35,9 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
     if (!cx->jitSupportsFloatingPoint())
         return false;
 
+    if (!cx->jitSupportsUnalignedAccesses())
+        return false;
+
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
 #else

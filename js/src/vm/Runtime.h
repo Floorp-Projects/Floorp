@@ -1186,8 +1186,9 @@ struct JSRuntime : public JS::shadow::Runtime,
         return scriptDataTable_;
     }
 
-    bool                jitSupportsFloatingPoint;
-    bool                jitSupportsSimd;
+    bool jitSupportsFloatingPoint;
+    bool jitSupportsUnalignedAccesses;
+    bool jitSupportsSimd;
 
     // Cache for jit::GetPcScript().
     js::jit::PcScriptCache* ionPcScriptCache;
