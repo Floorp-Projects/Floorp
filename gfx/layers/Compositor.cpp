@@ -25,7 +25,7 @@ namespace mozilla {
 
 namespace layers {
 
-Compositor::Compositor(widget::CompositorWidget* aWidget,
+Compositor::Compositor(widget::CompositorWidgetProxy* aWidget,
                       CompositorBridgeParent* aParent)
   : mCompositorID(0)
   , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)

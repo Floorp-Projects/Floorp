@@ -171,7 +171,6 @@ nsBaseWidget::nsBaseWidget()
 , mSizeMode(nsSizeMode_Normal)
 , mPopupLevel(ePopupLevelTop)
 , mPopupType(ePopupTypeAny)
-, mCompositorWidgetDelegate(nullptr)
 , mUpdateCursor(true)
 , mUseAttachedEvents(false)
 , mIMEHasFocus(false)
@@ -274,13 +273,16 @@ void nsBaseWidget::DestroyCompositor()
   if (mCompositorSession) {
     ReleaseContentController();
     mAPZC = nullptr;
-    mCompositorWidgetDelegate = nullptr;
     mCompositorBridgeChild = nullptr;
 
     // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
     // ClientLayerManager destructor. See bug 1133426.
     RefPtr<CompositorSession> session = mCompositorSession.forget();
     session->Shutdown();
+
+    // Widget is used in CompositorBridgeParent, so we can't release it until
+    // it has acknowledged shutdown.
+    mCompositorWidgetProxy = nullptr;
   }
 
   // Can have base widgets that are things like tooltips
@@ -1304,18 +1306,21 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
+  if (!mCompositorWidgetProxy) {
+    mCompositorWidgetProxy = NewCompositorWidgetProxy();
+  }
+
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
-    this,
+    mCompositorWidgetProxy,
     lm,
     GetDefaultScale(),
     UseAPZ(),
     UseExternalCompositingSurface(),
     gfx::IntSize(aWidth, aHeight));
   mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
-  mCompositorWidgetDelegate = mCompositorSession->GetCompositorWidgetDelegate();
 
   mAPZC = mCompositorSession->GetAPZCTreeManager();
   if (mAPZC) {
@@ -1417,6 +1422,12 @@ uint32_t
 nsBaseWidget::GetGLFrameBufferFormat()
 {
   return LOCAL_GL_RGBA;
+}
+
+mozilla::widget::CompositorWidgetProxy*
+nsBaseWidget::NewCompositorWidgetProxy()
+{
+  return new mozilla::widget::CompositorWidgetProxyWrapper(this);
 }
 
 //-------------------------------------------------------------------------
