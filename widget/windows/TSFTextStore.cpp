@@ -1854,6 +1854,12 @@ TSFTextStore::MaybeFlushPendingNotifications()
   // When there is no cached content, we can sync actual contents and TSF/TIP
   // expecting contents.
   if (!mContentForTSF.IsInitialized()) {
+    if (mPendingTextChangeData.IsValid()) {
+      MOZ_LOG(sTextStoreLog, LogLevel::Info,
+             ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
+              "calling TSFTextStore::NotifyTSFOfTextChange()...", this));
+      NotifyTSFOfTextChange();
+    }
     if (mPendingSelectionChangeData.IsValid()) {
       MOZ_LOG(sTextStoreLog, LogLevel::Info,
              ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
@@ -4582,8 +4588,7 @@ TSFTextStore::GetIMEUpdatePreference()
 nsresult
 TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
 {
-  const IMENotification::TextChangeDataBase& textChangeData =
-    aIMENotification.mTextChangeData;
+  const TextChangeDataBase& textChangeData = aIMENotification.mTextChangeData;
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   TSFTextStore::OnTextChangeInternal(aIMENotification={ "
@@ -4612,51 +4617,17 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
     return NS_OK;
   }
 
-  if (textChangeData.mCausedOnlyByComposition) {
-    // Ignore text change notifications caused only by composition since it's
-    // already been handled internally.
-    return NS_OK;
-  }
-
-  if (mComposition.IsComposing() &&
-      !textChangeData.mIncludingChangesDuringComposition) {
-    // Ignore text changes when they don't include changes caused not by
-    // composition at the latest composition because changes before current
-    // composition start shouldn't cause forcibly committing composition.
-    // In the future, we should notify TSF of such delayed text changes
-    // after current composition is active (In such case,
-    // mIncludingChangesWithoutComposition is true).
-    return NS_OK;
-  }
-
   mDeferNotifyingTSF = false;
 
-  if (IsReadLocked()) {
-    // XXX If text change occurs during the document is locked, it must be
-    //     modified by Javascript.  In such case, we should notify merged
-    //     text changes after it's unlocked.
-    return NS_OK;
-  }
-
-  mSelection.MarkDirty();
-
+  // Different from selection change, we don't modify anything with text
+  // change data.  Therefore, if neither TSF not TIP wants text change
+  // notifications, we don't need to store the changes.
   if (!mSink || !(mSinkMask & TS_AS_TEXT_CHANGE)) {
     return NS_OK;
   }
 
-  if (aIMENotification.mTextChangeData.IsInInt32Range()) {
-    TS_TEXTCHANGE textChange;
-    textChange.acpStart = static_cast<LONG>(textChangeData.mStartOffset);
-    textChange.acpOldEnd = static_cast<LONG>(textChangeData.mRemovedEndOffset);
-    textChange.acpNewEnd = static_cast<LONG>(textChangeData.mAddedEndOffset);
-    NotifyTSFOfTextChange(textChange);
-  } else {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-           ("TSF: 0x%p   TSFTextStore::NotifyTSFOfTextChange() FAILED due to "
-            "offset is too big for calling "
-            "ITextStoreACPSink::OnTextChange()...",
-            this));
-  }
+  // Merge any text change data even if it's caused by composition.
+  mPendingTextChangeData.MergeWith(textChangeData);
 
   MaybeFlushPendingNotifications();
 
@@ -4664,34 +4635,59 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
 }
 
 void
-TSFTextStore::NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange)
+TSFTextStore::NotifyTSFOfTextChange()
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(!IsReadLocked());
+  MOZ_ASSERT(!mComposition.IsComposing());
+  MOZ_ASSERT(mPendingTextChangeData.IsValid());
 
-  // XXX We need to cache the text change ranges and notify TSF of that
-  //     the document is unlocked.
-  if (NS_WARN_IF(IsReadLocked())) {
+  // If the text changes are caused only by composition, we don't need to
+  // notify TSF of the text changes.
+  if (mPendingTextChangeData.mCausedOnlyByComposition) {
+    mPendingTextChangeData.Clear();
     return;
   }
 
-  // Some TIPs are confused by text change notification during composition.
-  // Especially, some of them stop working for composition in our process.
-  // For preventing it, let's commit the composition.
-  if (mComposition.IsComposing()) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Info,
-           ("TSF: 0x%p   TSFTextStore::NotifyTSFOfTextChange(), "
-            "committing the composition for avoiding making TIP confused...",
+  // First, forget cached selection.
+  mSelection.MarkDirty();
+
+  // For making it safer, we should check if there is a valid sink to receive
+  // text change notification.
+  if (NS_WARN_IF(!mSink) || NS_WARN_IF(!(mSinkMask & TS_AS_TEXT_CHANGE))) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+           ("TSF: 0x%p   TSFTextStore::NotifyTSFOfTextChange() FAILED due to "
+            "mSink is not ready to call ITextStoreACPSink::OnTextChange()...",
             this));
-    CommitCompositionInternal(false);
+    mPendingTextChangeData.Clear();
     return;
   }
+
+  if (NS_WARN_IF(!mPendingTextChangeData.IsInInt32Range())) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+           ("TSF: 0x%p   TSFTextStore::NotifyTSFOfTextChange() FAILED due to "
+            "offset is too big for calling "
+            "ITextStoreACPSink::OnTextChange()...",
+            this));
+    mPendingTextChangeData.Clear();
+    return;
+   }
+
+  TS_TEXTCHANGE textChange;
+  textChange.acpStart =
+    static_cast<LONG>(mPendingTextChangeData.mStartOffset);
+  textChange.acpOldEnd =
+    static_cast<LONG>(mPendingTextChangeData.mRemovedEndOffset);
+  textChange.acpNewEnd =
+    static_cast<LONG>(mPendingTextChangeData.mAddedEndOffset);
+  mPendingTextChangeData.Clear();
 
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
          ("TSF: 0x%p   TSFTextStore::NotifyTSFOfTextChange(), calling "
           "ITextStoreACPSink::OnTextChange(0, { acpStart=%ld, acpOldEnd=%ld, "
-          "acpNewEnd=%ld })...", this, aTextChange.acpStart,
-          aTextChange.acpOldEnd, aTextChange.acpNewEnd));
-  mSink->OnTextChange(0, &aTextChange);
+          "acpNewEnd=%ld })...", this, textChange.acpStart,
+          textChange.acpOldEnd, textChange.acpNewEnd));
+  mSink->OnTextChange(0, &textChange);
 }
 
 nsresult
@@ -4728,6 +4724,9 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
 
   // Assign the new selection change data to the pending selection change data
   // because only the latest selection data is necessary.
+  // Note that this is necessary to update mSelection.  Therefore, even if
+  // neither TSF nor TIP wants selection change notifications, we need to
+  // store the selection information.
   mPendingSelectionChangeData.Assign(selectionChangeData);
 
   // Flush remaining pending notifications here if it's possible.
