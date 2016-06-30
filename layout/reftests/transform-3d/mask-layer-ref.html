@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>border-radius should work correctly for transformed elements</title>
+
+<style>
+
+#a {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: red;
+}
+
+#b {
+  position: relative;
+  background: green;
+  height: 100%;
+  width: 10000px;
+  transform: translateZ(1px);
+}
+</style>
+
+<div id="a">
+  <div id="b"></div>
+</div>
