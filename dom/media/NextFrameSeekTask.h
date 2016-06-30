@@ -45,7 +45,7 @@ private:
 
   bool IsVideoDecoding() const;
 
-  nsresult EnsureVideoDecodeTaskQueued();
+  void EnsureVideoDecodeTaskQueued();
 
   const char* VideoRequestStatus();
 
