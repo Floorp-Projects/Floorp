@@ -1,8 +1,8 @@
 # We will be sourcing mozconfig files, which end up calling mk_add_options with
 # various settings. We only need the variable settings they create along the
-# way.
+# way. Print them out, to be sucked up when running this file.
 mk_add_options() {
-  : do nothing
+  echo "$@"
 }
 
 topsrcdir="$SOURCE"
@@ -15,11 +15,11 @@ VSPATH="$(cd ${topsrcdir}/.. && pwd)/vs2015u2"
 # When running on a developer machine, several variables will already
 # have the right settings and we will need to keep them since the
 # Windows mozconfigs overwrite them.
-export OLD_INCLUDE=$(IFS=';'; for d in $INCLUDE; do ( cd "$d" && echo -n $(pwd): ); done)
-export OLD_LIB=$(IFS=';'; for d in $LIB; do ( cd "$d" && echo -n $(pwd): ); done)
-export OLD_LIBPATH=$(IFS=';'; for d in $LIBPATH; do ( cd "$d" && echo -n $(pwd): ); done)
+echo "export ORIGINAL_INCLUDE=$INCLUDE"
+echo "export ORIGINAL_LIB=$LIB"
+echo "export ORIGINAL_LIBPATH=$LIBPATH"
 
-if $USE_64BIT; then
+if [ -n "$USE_64BIT" ]; then
   . $topsrcdir/build/win64/mozconfig.vs-latest
 else
   . $topsrcdir/build/win32/mozconfig.vs-latest
