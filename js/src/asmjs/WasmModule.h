@@ -41,6 +41,7 @@ struct LinkDataCacheablePod
     uint32_t globalDataLength;
     uint32_t interruptOffset;
     uint32_t outOfBoundsOffset;
+    uint32_t unalignedAccessOffset;
 
     LinkDataCacheablePod() { mozilla::PodZero(this); }
 };

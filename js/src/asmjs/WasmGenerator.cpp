@@ -419,6 +419,7 @@ ModuleGenerator::finishCodegen()
     // Fill in LinkData with the offsets of these stubs.
 
     linkData_.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
+    linkData_.unalignedAccessOffset = jumpTargets[JumpTarget::UnalignedAccess].begin;
     linkData_.interruptOffset = interruptExit.begin;
 
     // Only call convertOutOfRangeBranchesToThunks after all other codegen that may

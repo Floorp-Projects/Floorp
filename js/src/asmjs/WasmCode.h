@@ -47,10 +47,11 @@ class CodeSegment
     uint32_t codeLength_;
     uint32_t globalDataLength_;
 
-    // These are pointers into code for two stubs used for asynchronous
+    // These are pointers into code for stubs used for asynchronous
     // signal-handler control-flow transfer.
     uint8_t* interruptCode_;
     uint8_t* outOfBoundsCode_;
+    uint8_t* unalignedAccessCode_;
 
     // The profiling mode may be changed dynamically.
     bool profilingEnabled_;
@@ -80,6 +81,7 @@ class CodeSegment
 
     uint8_t* interruptCode() const { return interruptCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
+    uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
 
     // The range [0, functionBytes) is a subrange of [0, codeBytes) that
     // contains only function body code, not the stub code. This distinction is

@@ -352,6 +352,7 @@ MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,         "unreachable execut
 MSG_DEF(JSMSG_WASM_INTEGER_OVERFLOW,   0, JSEXN_ERR,         "integer overflow")
 MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_ERR,         "invalid conversion to integer")
 MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_ERR,         "integer divide by zero")
+MSG_DEF(JSMSG_WASM_UNALIGNED_ACCESS,   0, JSEXN_ERR,         "unaligned memory access")
 MSG_DEF(JSMSG_WASM_OVERRECURSED,       0, JSEXN_INTERNALERR, "call stack exhausted")
 
 // Proxy
