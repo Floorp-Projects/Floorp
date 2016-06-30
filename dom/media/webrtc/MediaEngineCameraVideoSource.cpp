@@ -146,21 +146,21 @@ MediaEngineCameraVideoSource::LogConstraints(
     const MediaTrackConstraintSet& aConstraints, bool aAdvanced)
 {
   NormalizedConstraintSet c(aConstraints, aAdvanced);
-  LOG(((c.mWidth.mIdeal.WasPassed()?
+  LOG(((c.mWidth.mIdeal.isSome()?
         "Constraints: width: { min: %d, max: %d, ideal: %d }" :
         "Constraints: width: { min: %d, max: %d }"),
        c.mWidth.mMin, c.mWidth.mMax,
-       c.mWidth.mIdeal.WasPassed()? c.mWidth.mIdeal.Value() : 0));
-  LOG(((c.mHeight.mIdeal.WasPassed()?
+       c.mWidth.mIdeal.valueOr(0)));
+  LOG(((c.mHeight.mIdeal.isSome()?
         "             height: { min: %d, max: %d, ideal: %d }" :
         "             height: { min: %d, max: %d }"),
        c.mHeight.mMin, c.mHeight.mMax,
-       c.mHeight.mIdeal.WasPassed()? c.mHeight.mIdeal.Value() : 0));
-  LOG(((c.mFrameRate.mIdeal.WasPassed()?
+       c.mHeight.mIdeal.valueOr(0)));
+  LOG(((c.mFrameRate.mIdeal.isSome()?
         "             frameRate: { min: %f, max: %f, ideal: %f }" :
         "             frameRate: { min: %f, max: %f }"),
        c.mFrameRate.mMin, c.mFrameRate.mMax,
-       c.mFrameRate.mIdeal.WasPassed()? c.mFrameRate.mIdeal.Value() : 0));
+       c.mFrameRate.mIdeal.valueOr(0)));
 }
 
 void

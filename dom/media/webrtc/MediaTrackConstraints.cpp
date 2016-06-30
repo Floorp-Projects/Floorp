@@ -15,7 +15,7 @@ void
 NormalizedConstraintSet::Range<ValueType>::SetFrom(const ConstrainRange& aOther)
 {
   if (aOther.mIdeal.WasPassed()) {
-    mIdeal.Construct(aOther.mIdeal.Value());
+    mIdeal.emplace(aOther.mIdeal.Value());
   }
   if (aOther.mExact.WasPassed()) {
     mMin = aOther.mExact.Value();
@@ -38,7 +38,7 @@ NormalizedConstraintSet::LongRange::LongRange(
     if (advanced) {
       mMin = mMax = aOther.GetAsLong();
     } else {
-      mIdeal.Construct(aOther.GetAsLong());
+      mIdeal.emplace(aOther.GetAsLong());
     }
   } else {
     SetFrom(aOther.GetAsConstrainLongRange());
@@ -54,7 +54,7 @@ NormalizedConstraintSet::DoubleRange::DoubleRange(
     if (advanced) {
       mMin = mMax = aOther.GetAsDouble();
     } else {
-      mIdeal.Construct(aOther.GetAsDouble());
+      mIdeal.emplace(aOther.GetAsDouble());
     }
   } else {
     SetFrom(aOther.GetAsConstrainDoubleRange());
@@ -69,12 +69,12 @@ NormalizedConstraintSet::BooleanRange::BooleanRange(
     if (advanced) {
       mMin = mMax = aOther.GetAsBoolean();
     } else {
-      mIdeal.Construct(aOther.GetAsBoolean());
+      mIdeal.emplace(aOther.GetAsBoolean());
     }
   } else {
     const ConstrainBooleanParameters& r = aOther.GetAsConstrainBooleanParameters();
     if (r.mIdeal.WasPassed()) {
-      mIdeal.Construct(r.mIdeal.Value());
+      mIdeal.emplace(r.mIdeal.Value());
     }
     if (r.mExact.WasPassed()) {
       mMin = r.mExact.Value();
@@ -178,31 +178,37 @@ NormalizedConstraintSet::StringRange::Intersect(const StringRange& aOther)
   }
 }
 
-FlattenedConstraints::FlattenedConstraints(const dom::MediaTrackConstraints& aOther)
+NormalizedConstraints::NormalizedConstraints(const dom::MediaTrackConstraints& aOther)
 : NormalizedConstraintSet(aOther, false)
 {
   if (aOther.mAdvanced.WasPassed()) {
-    const auto& advanced = aOther.mAdvanced.Value();
-    for (size_t i = 0; i < advanced.Length(); i++) {
-      NormalizedConstraintSet set(advanced[i], true);
-      // Must only apply compatible i.e. inherently non-overconstraining sets
-      // This rule is pretty much why this code is centralized here.
-      if (mWidth.Intersects(set.mWidth) &&
-          mHeight.Intersects(set.mHeight) &&
-          mFrameRate.Intersects(set.mFrameRate)) {
-        mWidth.Intersect(set.mWidth);
-        mHeight.Intersect(set.mHeight);
-        mFrameRate.Intersect(set.mFrameRate);
-      }
-      if (mEchoCancellation.Intersects(set.mEchoCancellation)) {
-          mEchoCancellation.Intersect(set.mEchoCancellation);
-      }
-      if (mMozNoiseSuppression.Intersects(set.mMozNoiseSuppression)) {
-          mMozNoiseSuppression.Intersect(set.mMozNoiseSuppression);
-      }
-      if (mMozAutoGainControl.Intersects(set.mMozAutoGainControl)) {
-          mMozAutoGainControl.Intersect(set.mMozAutoGainControl);
-      }
+    for (auto& entry : aOther.mAdvanced.Value()) {
+      mAdvanced.AppendElement(NormalizedConstraintSet(entry, true));
+    }
+  }
+}
+
+FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
+: NormalizedConstraintSet(aOther)
+{
+  for (auto& set : aOther.mAdvanced) {
+    // Must only apply compatible i.e. inherently non-overconstraining sets
+    // This rule is pretty much why this code is centralized here.
+    if (mWidth.Intersects(set.mWidth) &&
+        mHeight.Intersects(set.mHeight) &&
+        mFrameRate.Intersects(set.mFrameRate)) {
+      mWidth.Intersect(set.mWidth);
+      mHeight.Intersect(set.mHeight);
+      mFrameRate.Intersect(set.mFrameRate);
+    }
+    if (mEchoCancellation.Intersects(set.mEchoCancellation)) {
+        mEchoCancellation.Intersect(set.mEchoCancellation);
+    }
+    if (mMozNoiseSuppression.Intersects(set.mMozNoiseSuppression)) {
+        mMozNoiseSuppression.Intersect(set.mMozNoiseSuppression);
+    }
+    if (mMozAutoGainControl.Intersects(set.mMozAutoGainControl)) {
+        mMozAutoGainControl.Intersect(set.mMozAutoGainControl);
     }
   }
 }
