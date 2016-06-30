@@ -646,7 +646,11 @@ var DOMFullscreenHandler = {
         break;
       }
       case "DOMFullscreen:CleanUp": {
-        if (windowUtils) {
+        // If we've exited fullscreen at this point, no need to record
+        // transaction id or call exit fullscreen. This is especially
+        // important for non-e10s, since in that case, it is possible
+        // that no more paint would be triggered after this point.
+        if (content.document.fullscreenElement && windowUtils) {
           this._lastTransactionId = windowUtils.lastTransactionId;
           windowUtils.exitFullscreen();
         }
@@ -687,7 +691,10 @@ var DOMFullscreenHandler = {
       case "MozAfterPaint": {
         // Only send Painted signal after we actually finish painting
         // the transition for the fullscreen change.
-        if (aEvent.transactionId > this._lastTransactionId) {
+        // Note that this._lastTransactionId is not set when in non-e10s
+        // mode, so we need to check that explicitly.
+        if (!this._lastTransactionId ||
+            aEvent.transactionId > this._lastTransactionId) {
           removeEventListener("MozAfterPaint", this);
           sendAsyncMessage("DOMFullscreen:Painted");
         }
