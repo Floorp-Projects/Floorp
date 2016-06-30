@@ -1187,7 +1187,6 @@ TSFTextStore::TSFTextStore()
   , mContentForTSF(mComposition, mSelection)
   , mRequestedAttrValues(false)
   , mIsRecordingActionsWithoutLock(false)
-  , mPendingOnSelectionChange(false)
   , mHasReturnedNoLayoutError(false)
   , mWaitingQueryLayout(false)
   , mPendingDestroy(false)
@@ -1587,7 +1586,7 @@ TSFTextStore::DidLockGranted()
 
   // If the widget has gone, we don't need to notify anything.
   if (mDestroyed || !mWidget || mWidget->Destroyed()) {
-    mPendingOnSelectionChange = false;
+    mPendingSelectionChangeData.Clear();
     mHasReturnedNoLayoutError = false;
   }
 }
@@ -1614,7 +1613,7 @@ TSFTextStore::FlushPendingActions()
     // composition with a document lock.  In such case, TSFTextStore needs to
     // behave as expected by TIP.
     mPendingActions.Clear();
-    mPendingOnSelectionChange = false;
+    mPendingSelectionChangeData.Clear();
     mHasReturnedNoLayoutError = false;
     return;
   }
@@ -1852,18 +1851,22 @@ TSFTextStore::MaybeFlushPendingNotifications()
             "mContentForTSF is cleared", this));
   }
 
+  // When there is no cached content, we can sync actual contents and TSF/TIP
+  // expecting contents.
+  if (!mContentForTSF.IsInitialized()) {
+    if (mPendingSelectionChangeData.IsValid()) {
+      MOZ_LOG(sTextStoreLog, LogLevel::Info,
+             ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
+              "calling TSFTextStore::NotifyTSFOfSelectionChange()...", this));
+      NotifyTSFOfSelectionChange();
+    }
+  }
+
   if (mHasReturnedNoLayoutError) {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
            ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
             "calling TSFTextStore::NotifyTSFOfLayoutChange()...", this));
     NotifyTSFOfLayoutChange();
-  }
-
-  if (mPendingOnSelectionChange) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Info,
-           ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
-            "calling TSFTextStore::NotifyTSFOfSelectionChange()...", this));
-    NotifyTSFOfSelectionChange();
   }
 }
 
@@ -4694,7 +4697,7 @@ TSFTextStore::NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange)
 nsresult
 TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
 {
-  const IMENotification::SelectionChangeDataBase& selectionChangeData =
+  const SelectionChangeDataBase& selectionChangeData =
     aIMENotification.mSelectionChangeData;
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal("
@@ -4721,62 +4724,11 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
     return NS_OK;
   }
 
-  if (selectionChangeData.mCausedByComposition) {
-    // Ignore selection change notifications caused by composition since it's
-    // already been handled internally.
-    return NS_OK;
-  }
-
   mDeferNotifyingTSF = false;
 
-  // A compositionstart event handler can change selection before actually
-  // starting composition in the editor. This causes very complicated issue
-  // because TSF requests to lock the document but we allow to change the
-  // selection for web apps for keeping compatibility.
-  // For now, we should not send selection change notification until the
-  // active composition ends.  However, this causes TSF stores wrong selection
-  // offset.  That might cause TSF stopping working.  So, at next change,
-  // we should cache content *until* composition end.  Then, we will solve
-  // this issue.
-  if (mComposition.IsComposing() &&
-      !selectionChangeData.mOccurredDuringComposition) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Warning,
-           ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal(), WARNING, "
-            "ignoring selection change notification which occurred before "
-            "composition start.", this));
-    return NS_OK;
-  }
-
-  // If selection range isn't actually changed, we don't need to notify TSF
-  // of this selection change.
-  if (!mSelection.SetSelection(
-                    selectionChangeData.mOffset,
-                    selectionChangeData.Length(),
-                    selectionChangeData.mReversed,
-                    selectionChangeData.GetWritingMode())) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-           ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal(), selection "
-            "isn't actually changed.", this));
-    return NS_OK;
-  }
-
-  if (!selectionChangeData.mCausedBySelectionEvent) {
-    // Should be notified via MaybeFlushPendingNotifications() for keeping
-    // the order of change notifications.
-    mPendingOnSelectionChange = true;
-    if (mIsRecordingActionsWithoutLock) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Info,
-             ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal(), putting "
-              "off notifying TSF of selection change...", this));
-      return NS_OK;
-    }
-  } else {
-    // If the selection change is caused by setting selection range, we don't
-    // need to notify that.  Additionally, even if there is pending selection
-    // change notification, we don't need to notify that since the selection
-    // range is changed as expected by TSF or TIP.
-    mPendingOnSelectionChange = false;
-  }
+  // Assign the new selection change data to the pending selection change data
+  // because only the latest selection data is necessary.
+  mPendingSelectionChangeData.Assign(selectionChangeData);
 
   // Flush remaining pending notifications here if it's possible.
   MaybeFlushPendingNotifications();
@@ -4788,26 +4740,26 @@ void
 TSFTextStore::NotifyTSFOfSelectionChange()
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(!IsReadLocked());
+  MOZ_ASSERT(!mComposition.IsComposing());
+  MOZ_ASSERT(mPendingSelectionChangeData.IsValid());
 
-  if (NS_WARN_IF(IsReadLocked())) {
+  // If selection range isn't actually changed, we don't need to notify TSF
+  // of this selection change.
+  if (!mSelection.SetSelection(mPendingSelectionChangeData.mOffset,
+                               mPendingSelectionChangeData.Length(),
+                               mPendingSelectionChangeData.mReversed,
+                               mPendingSelectionChangeData.GetWritingMode())) {
+    mPendingSelectionChangeData.Clear();
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+           ("TSF: 0x%p   TSFTextStore::NotifyTSFOfSelectionChange(), "
+            "selection isn't actually changed.", this));
     return;
   }
 
-  mPendingOnSelectionChange = false;
+  mPendingSelectionChangeData.Clear();
 
   if (!mSink || !(mSinkMask & TS_AS_SEL_CHANGE)) {
-    return;
-  }
-
-  // Some TIPs are confused by selection change notification during composition.
-  // Especially, some of them stop working for composition in our process.
-  // For preventing it, let's commit the composition.
-  if (mComposition.IsComposing()) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Info,
-           ("TSF: 0x%p   TSFTextStore::NotifyTSFOfSelectionChange(), "
-            "committing the composition for avoiding making TIP confused...",
-            this));
-    CommitCompositionInternal(false);
     return;
   }
 

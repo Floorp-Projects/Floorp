@@ -53,6 +53,10 @@ class TSFTextStore final : public ITextStoreACP
                          , public ITfContextOwnerCompositionSink
                          , public ITfMouseTrackerACP
 {
+private:
+  typedef IMENotification::SelectionChangeDataBase SelectionChangeDataBase;
+  typedef IMENotification::SelectionChangeData SelectionChangeData;
+
 public: /*IUnknown*/
   STDMETHODIMP          QueryInterface(REFIID, void**);
 
@@ -108,7 +112,6 @@ public:
   static void     ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
                                  WPARAM& aWParam, LPARAM& aLParam,
                                  MSGResult& aResult);
-
 
   static void     SetIMEOpenState(bool);
   static bool     GetIMEOpenState(void);
@@ -276,9 +279,6 @@ protected:
   bool     InsertTextAtSelectionInternal(const nsAString& aInsertStr,
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
-  nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
-  nsresult OnSelectionChangeInternal(const IMENotification& aIMENotification);
-  nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
                                TF_DISPLAYATTRIBUTE* aResult);
@@ -310,8 +310,16 @@ protected:
   // MaybeFlushPendingNotifications() performs pending notifications to TSF.
   void     MaybeFlushPendingNotifications();
 
+  nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
+  nsresult OnSelectionChangeInternal(const IMENotification& aIMENotification);
+  nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   nsresult OnLayoutChangeInternal();
   nsresult OnUpdateCompositionInternal();
+
+  // mPendingSelectionChangeData stores selection change data until notifying
+  // TSF of selection change.  If two or more selection changes occur, this
+  // stores the latest selection change data because only it is necessary.
+  SelectionChangeData mPendingSelectionChangeData;
 
   void     NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange);
   void     NotifyTSFOfSelectionChange();
@@ -877,14 +885,6 @@ protected:
   // If edit actions are being recorded without document lock, this is true.
   // Otherwise, false.
   bool                         mIsRecordingActionsWithoutLock;
-  // During recording actions, we shouldn't call mSink->OnSelectionChange()
-  // because it may cause TSF request new lock.  This is a problem if the
-  // selection change is caused by a call of On*Composition() without document
-  // lock since RequestLock() tries to flush the pending actions again (which
-  // are flushing).  Therefore, OnSelectionChangeInternal() sets this true
-  // during recoding actions and then, RequestLock() will call
-  // mSink->OnSelectionChange() after mLock becomes 0.
-  bool                         mPendingOnSelectionChange;
   // If GetTextExt() or GetACPFromPoint() is called and the layout hasn't been
   // calculated yet, these methods return TS_E_NOLAYOUT.  At that time,
   // mHasReturnedNoLayoutError is set to true.
