@@ -176,6 +176,10 @@ inline CSPKeyword CSP_KeywordToEnum(const nsAString& aKey)
   return CSP_LAST_KEYWORD_VALUE;
 }
 
+nsresult CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
+                                 const nsAString& aHeaderValue,
+                                 bool aReportOnly);
+
 /* =============== Helpers ================== */
 
 class nsCSPHostSrc;
