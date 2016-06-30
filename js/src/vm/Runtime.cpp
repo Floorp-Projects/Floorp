@@ -131,7 +131,6 @@ ReturnZeroSize(const void* p)
 JSRuntime::JSRuntime(JSRuntime* parentRuntime)
   : mainThread(this),
     jitTop(nullptr),
-    jitJSContext(nullptr),
     jitActivation(nullptr),
     jitStackLimit_(0xbad),
     jitStackLimitNoInterrupt_(0xbad),
@@ -982,3 +981,8 @@ JSRuntime::ionLazyLinkListAdd(jit::IonBuilder* builder)
     ionLazyLinkListSize_++;
 }
 
+JSContext*
+PerThreadData::contextFromMainThread()
+{
+    return runtime_->contextFromMainThread();
+}
