@@ -47,7 +47,11 @@ firefox_ui_tests_config_options = [
         'help': 'absolute path to directory containing breakpad '
                 'symbols, or the url of a zip file containing symbols.',
     }],
-] + copy.deepcopy(testing_config_options)
+    [['--tag=TAG'], {
+        'dest': 'tag',
+        'help': 'Subset of tests to run (local, remote).',
+    }],
+] copy.deepcopy(testing_config_options)
 
 # Command line arguments for update tests
 firefox_ui_update_harness_config_options = [
@@ -259,6 +263,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         if self.query_minidump_stackwalk():
             env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+
+        if self.config.get('tag'):
+            cmd.extend(['--tag', self.config['tag']])
 
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
