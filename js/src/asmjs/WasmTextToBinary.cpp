@@ -464,6 +464,10 @@ class WasmTokenStream
         unsigned column = token.begin() - lineStart_ + 1;
         error->reset(JS_smprintf("parsing wasm text at %u:%u", line_, column));
     }
+    void generateError(WasmToken token, const char* msg, UniqueChars* error) {
+        unsigned column = token.begin() - lineStart_ + 1;
+        error->reset(JS_smprintf("parsing wasm text at %u:%u: %s", line_, column, msg));
+    }
     WasmToken peek() {
         if (!lookaheadDepth_) {
             lookahead_[lookaheadIndex_] = next();
@@ -1985,7 +1989,7 @@ ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2,
         switch (val.kind()) {
           case WasmToken::Index:
             if (!IsPowerOfTwo(val.index())) {
-                c.ts.generateError(val, c.error);
+                c.ts.generateError(val, "non-power-of-two alignment", c.error);
                 return false;
             }
             *alignLog2 = CeilingLog2(val.index());
