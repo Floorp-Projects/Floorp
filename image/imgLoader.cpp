@@ -4,15 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ImageLogging.h"
+#include "imgLoader.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ChaosMode.h"
 
-#include "ImageLogging.h"
 #include "nsImageModule.h"
-#include "imgLoader.h"
 #include "imgRequestProxy.h"
 
 #include "nsCOMPtr.h"
