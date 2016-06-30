@@ -454,5 +454,122 @@ runTests([
   }
 ], 'Test infinity iterations');
 
+
+// --------------------------------------------------------------------
+//
+// End delay tests
+//
+// --------------------------------------------------------------------
+
+runTests([
+  {
+    input:    { duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: 50 },
+    before: 0,
+    active: 0,
+    after: 1
+  },
+
+  {
+    input:    { duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -50 },
+    before: 0,
+    active: 0,
+    after: 0.5
+  },
+
+  {
+    input:    { duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -100 },
+    before: 0,
+    active: 0,
+    after: 0
+  },
+
+  {
+    input:    { duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -200 },
+    before: 0,
+    active: 0,
+    after: 0
+  },
+
+  {
+    input:    { iterationStart: 0.5,
+                duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: 50 },
+    before: 0.5,
+    active: 0.5,
+    after: 0.5
+  },
+
+  {
+    input:    { iterationStart: 0.5,
+                duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -50 },
+    before: 0.5,
+    active: 0.5,
+    after: 1
+  },
+
+  {
+    input:    { iterationStart: 0.5,
+                duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -100 },
+    before: 0.5,
+    active: 0.5,
+    after: 0.5
+  },
+
+  {
+    input:    { iterations: 2,
+                duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -100 },
+    before: 0,
+    active: 0,
+    after: 1
+  },
+
+  {
+    input:    { iterations: 1,
+                iterationStart: 2,
+                duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -50 },
+    before: 0,
+    active: 0,
+    after: 0.5
+  },
+
+  {
+    input:    { iterations: 1,
+                iterationStart: 2,
+                duration: 100,
+                delay: 1,
+                fill: 'both',
+                endDelay: -100 },
+    before: 0,
+    active: 0,
+    after: 0
+  },
+], 'Test end delay');
+
 </script>
 </body>
