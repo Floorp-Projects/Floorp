@@ -662,7 +662,7 @@ GeckoDriver.prototype.setUpProxy = function(proxy) {
 
       case "PAC":
         Preferences.set("network.proxy.type", 2);
-        Preferences.set("network.proxy.autoconfig_url", proxy.pacUrl);
+        Preferences.set("network.proxy.autoconfig_url", proxy.proxyAutoconfigUrl);
         break;
 
       case "AUTODETECT":
