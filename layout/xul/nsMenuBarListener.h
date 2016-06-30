@@ -35,7 +35,6 @@ public:
   nsresult KeyPress(nsIDOMEvent* aMouseEvent);
   nsresult Blur(nsIDOMEvent* aEvent);
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  nsresult Fullscreen(nsIDOMEvent* aEvent);
 
   static nsresult GetMenuAccessKey(int32_t* aAccessKey);
   
