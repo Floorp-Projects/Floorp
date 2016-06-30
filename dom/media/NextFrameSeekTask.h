@@ -45,8 +45,6 @@ private:
 
   bool HasAudio() const;
 
-  bool HasVideo() const;
-
   bool IsVideoDecoding() const;
 
   nsresult EnsureVideoDecodeTaskQueued();
@@ -88,7 +86,6 @@ private:
    */
   const int64_t mCurrentTimeBeforeSeek;
   const bool mHasAudio;
-  const bool mHasVideo;
   media::TimeUnit mDuration;
 
   MediaEventListener mAudioCallback;

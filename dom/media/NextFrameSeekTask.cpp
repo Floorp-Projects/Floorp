@@ -51,11 +51,10 @@ NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
   , mVideoQueue(aVideoQueue)
   , mCurrentTimeBeforeSeek(aCurrentMediaTime)
   , mHasAudio(aInfo.HasAudio())
-  , mHasVideo(aInfo.HasVideo())
   , mDuration(aDuration)
 {
   AssertOwnerThread();
-  MOZ_ASSERT(HasVideo());
+  MOZ_ASSERT(aInfo.HasVideo());
 
   // Configure MediaDecoderReaderWrapper.
   SetCallbacks();
@@ -72,13 +71,6 @@ NextFrameSeekTask::HasAudio() const
 {
   AssertOwnerThread();
   return mHasAudio;
-}
-
-bool
-NextFrameSeekTask::HasVideo() const
-{
-  AssertOwnerThread();
-  return mHasVideo;
 }
 
 void
