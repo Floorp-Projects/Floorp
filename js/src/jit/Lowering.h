@@ -78,7 +78,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitNewTypedObject(MNewTypedObject* ins);
     void visitNewDeclEnvObject(MNewDeclEnvObject* ins);
     void visitNewCallObject(MNewCallObject* ins);
-    void visitNewRunOnceCallObject(MNewRunOnceCallObject* ins);
+    void visitNewSingletonCallObject(MNewSingletonCallObject* ins);
     void visitNewStringObject(MNewStringObject* ins);
     void visitNewDerivedTypedObject(MNewDerivedTypedObject* ins);
     void visitInitElem(MInitElem* ins);
