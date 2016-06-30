@@ -613,7 +613,7 @@ js::Nursery::freeMallocedBuffers()
     bool started;
     {
         AutoLockHelperThreadState lock;
-        freeMallocedBuffersTask->joinWithLockHeld();
+        freeMallocedBuffersTask->joinWithLockHeld(lock);
         freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers);
         started = freeMallocedBuffersTask->startWithLockHeld();
     }

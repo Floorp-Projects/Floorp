@@ -23,9 +23,12 @@
 
 #include "frontend/TokenStream.h"
 #include "jit/Ion.h"
+#include "threading/ConditionVariable.h"
+#include "threading/Mutex.h"
 
 namespace js {
 
+class AutoLockHelperThreadState;
 struct HelperThread;
 struct ParseTask;
 namespace jit {
@@ -128,7 +131,8 @@ class GlobalHelperThreadState
         PAUSE
     };
 
-    void wait(CondVar which, mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
+    void wait(AutoLockHelperThreadState& locked, CondVar which,
+              mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
     void notifyAll(CondVar which);
     void notifyOne(CondVar which);
 
@@ -262,7 +266,7 @@ class GlobalHelperThreadState
           case CONSUMER: return consumerWakeup;
           case PRODUCER: return producerWakeup;
           case PAUSE: return pauseWakeup;
-          default: MOZ_CRASH();
+          default: MOZ_CRASH("Invalid CondVar in |whichWakeup|");
         }
     }
 };
@@ -351,12 +355,12 @@ struct HelperThread
         return nullptr;
     }
 
-    void handleWasmWorkload();
-    void handleIonWorkload();
-    void handleParseWorkload();
-    void handleCompressionWorkload();
-    void handleGCHelperWorkload();
-    void handleGCParallelWorkload();
+    void handleWasmWorkload(AutoLockHelperThreadState& locked);
+    void handleIonWorkload(AutoLockHelperThreadState& locked);
+    void handleParseWorkload(AutoLockHelperThreadState& locked);
+    void handleCompressionWorkload(AutoLockHelperThreadState& locked);
+    void handleGCHelperWorkload(AutoLockHelperThreadState& locked);
+    void handleGCParallelWorkload(AutoLockHelperThreadState& locked);
 };
 
 /* Methods for interacting with helper threads. */
@@ -458,7 +462,8 @@ class MOZ_RAII AutoUnlockHelperThreadState
 
   public:
 
-    explicit AutoUnlockHelperThreadState(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+    explicit AutoUnlockHelperThreadState(AutoLockHelperThreadState& locked
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         HelperThreadState().unlock();
