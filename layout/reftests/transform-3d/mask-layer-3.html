@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>border-radius should work correctly for elements with preserve-3d</title>
+
+<style>
+
+#a {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: red;
+}
+
+#b {
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(90deg);
+}
+
+#c {
+  position: relative;
+  background: green;
+  height: 100%;
+  width: 10000px;
+  transform: rotateX(90deg);
+}
+</style>
+
+<div id="a">
+  <div id="b">
+    <div id="c"></div>
+  </div>
+</div>
