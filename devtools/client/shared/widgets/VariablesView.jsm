@@ -128,14 +128,16 @@ VariablesView.prototype = {
    *
    * @param string aName
    *        The scope's name (e.g. "Local", "Global" etc.).
+   * @param string aCustomClass
+   *        An additional class name for the containing element.
    * @return Scope
    *         The newly created Scope instance.
    */
-  addScope: function (aName = "") {
+  addScope: function (aName = "", aCustomClass = "") {
     this._removeEmptyNotice();
     this._toggleSearchVisibility(true);
 
-    let scope = new Scope(this, aName);
+    let scope = new Scope(this, aName, { customClass: aCustomClass });
     this._store.push(scope);
     this._itemsByElement.set(scope._target, scope);
     this._currHierarchy.set(aName, scope);
@@ -1792,7 +1794,8 @@ Scope.prototype = {
    */
   _init: function (aName, aFlags) {
     this._idString = generateId(this._nameString = aName);
-    this._displayScope(aName, this.targetClassName, "devtools-toolbar");
+    this._displayScope(aName, `${this.targetClassName} ${aFlags.customClass}`,
+                       "devtools-toolbar");
     this._addEventListeners();
     this.parentNode.appendChild(this._target);
   },
@@ -1820,6 +1823,7 @@ Scope.prototype = {
     let name = this._name = document.createElement("label");
     name.className = "plain name";
     name.setAttribute("value", aName);
+    name.setAttribute("crop", "end");
 
     let title = this._title = document.createElement("hbox");
     title.className = "title " + aTitleClassName;

@@ -6,6 +6,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
+  IconDetails,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> PageAction]
@@ -223,11 +224,13 @@ extensions.registerSchemaAPI("pageAction", (extension, context) => {
       show(tabId) {
         let tab = TabManager.getTab(tabId);
         PageAction.for(extension).setProperty(tab, "show", true);
+        return Promise.resolve();
       },
 
       hide(tabId) {
         let tab = TabManager.getTab(tabId);
         PageAction.for(extension).setProperty(tab, "show", false);
+        return Promise.resolve();
       },
 
       setTitle(details) {

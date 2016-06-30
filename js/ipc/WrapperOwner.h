@@ -54,7 +54,7 @@ class WrapperOwner : public virtual JavaScriptShared
     bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::HandleObject proxy,
                                       JS::AutoIdVector& props);
     bool hasInstance(JSContext* cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool* bp);
-    bool getBuiltinClass(JSContext* cx, JS::HandleObject proxy, js::ESClassValue* classValue);
+    bool getBuiltinClass(JSContext* cx, JS::HandleObject proxy, js::ESClass* cls);
     bool isArray(JSContext* cx, JS::HandleObject proxy, JS::IsArrayAnswer* answer);
     const char* className(JSContext* cx, JS::HandleObject proxy);
     bool getPrototype(JSContext* cx, JS::HandleObject proxy, JS::MutableHandleObject protop);

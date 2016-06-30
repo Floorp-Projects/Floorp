@@ -34,7 +34,7 @@
 #endif
 #include "jswrapper.h"
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmTypes.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"

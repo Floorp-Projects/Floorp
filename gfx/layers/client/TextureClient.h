@@ -48,6 +48,7 @@ class SharedSurface_Gralloc;
 namespace layers {
 
 class AsyncTransactionWaiter;
+class BufferTextureData;
 class CompositableForwarder;
 class GrallocTextureData;
 class ClientIPCAllocator;
@@ -299,6 +300,8 @@ public:
 #endif
 
   virtual GrallocTextureData* AsGrallocTextureData() { return nullptr; }
+
+  virtual BufferTextureData* AsBufferTextureData() { return nullptr; }
 };
 
 /**
@@ -515,7 +518,7 @@ public:
 
   void RemoveFlags(TextureFlags aFlags);
 
-  // The TextureClient must not be locked when calling this method.
+  // Must not be called when TextureClient is in use by CompositableClient.
   void RecycleTexture(TextureFlags aFlags);
 
   /**
@@ -732,7 +735,9 @@ protected:
   // behalf of the compositor just before sending the notification.
   bool mUpdated;
 
+  // Used when TextureClient is recycled with TextureFlags::RECYCLE flag.
   bool mAddedToCompositableClient;
+
   bool mWorkaroundAnnoyingSharedSurfaceLifetimeIssues;
   bool mWorkaroundAnnoyingSharedSurfaceOwnershipIssues;
 

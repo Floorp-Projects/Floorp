@@ -222,11 +222,18 @@ function getDialogDoc() {
                                     .contentViewer
                                     .DOMDocument;
 
-        //ok(true, "Got window: " + childDoc.location.href);
-        if (childDoc.location.href == "chrome://global/content/commonDialog.xul")
-          return childDoc;
-        if (childDoc.location.href == "chrome://global/content/selectDialog.xul")
-          return childDoc;
+        if (childDoc.location.href != "chrome://global/content/commonDialog.xul" &&
+            childDoc.location.href != "chrome://global/content/selectDialog.xul")
+          continue;
+
+        // We're expecting the dialog to be focused. If it's not yet, try later.
+        // (In particular, this is needed on Linux to reliably check focused elements.)
+        let fm = Cc["@mozilla.org/focus-manager;1"].
+                 getService(Ci.nsIFocusManager);
+        if (fm.focusedWindow != childDoc.defaultView)
+          continue;
+
+        return childDoc;
     }
   }
 

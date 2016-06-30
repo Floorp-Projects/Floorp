@@ -87,7 +87,7 @@ def parse(logfilename, data):
                     stage = stage + 1
             return True
     except IOError as e:
-        print "%s: %s" % (e.filename, e.strerror)
+        print("%s: %s" % (e.filename, e.strerror))
         return False
 
 
@@ -108,21 +108,21 @@ def write_output(outfilename, data):
             outfile.write("]\n")
             return True
     except IOError as e:
-        print "%s: %s" % (e.filename, e.strerror)
+        print("%s: %s" % (e.filename, e.strerror))
         return False
 
 
 def main(argv):
     if len(argv) < 4:
-        print ("Usage: %s <main_thread_io_log_file> <output_file> <xre_path>"
-               % argv[0])
+        print("Usage: %s <main_thread_io_log_file> <output_file> <xre_path>"
+              % argv[0])
         return 1
     if not os.path.exists(argv[3]):
-        print "XRE Path \"%s\" does not exist" % argv[3]
+        print("XRE Path \"%s\" does not exist" % argv[3])
         return 1
     data = {}
     if not parse(argv[1], data):
-        print "Log parsing failed"
+        print("Log parsing failed")
         return 1
 
     wl = whitelist.Whitelist(test_name='mainthreadio',
@@ -130,7 +130,7 @@ def main(argv):
                              path_substitutions=PATH_SUBSTITUTIONS,
                              name_substitutions=NAME_SUBSTITUTIONS)
     if not wl.load(WHITELIST_FILENAME):
-        print "Failed to load whitelist"
+        print("Failed to load whitelist")
         return 1
 
     wl.filter(data, TUPLE_FILENAME_INDEX)
