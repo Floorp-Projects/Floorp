@@ -111,11 +111,11 @@ IDBKeyRange::FromJSVal(JSContext* aCx,
   JS::Rooted<JSObject*> obj(aCx, aVal.isObject() ? &aVal.toObject() : nullptr);
   bool isValidKey = aVal.isPrimitive();
   if (!isValidKey) {
-    js::ESClassValue cls;
+    js::ESClass cls;
     if (!js::GetBuiltinClass(aCx, obj, &cls)) {
       return NS_ERROR_UNEXPECTED;
     }
-    isValidKey = cls == js::ESClass_Array || cls == js::ESClass_Date;
+    isValidKey = cls == js::ESClass::Array || cls == js::ESClass::Date;
   }
   if (isValidKey) {
     // A valid key returns an 'only' IDBKeyRange.

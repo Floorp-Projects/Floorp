@@ -203,18 +203,18 @@ nsHttpHeaderArray::LookupEntry(nsHttpAtom header, nsEntry **entry)
 inline bool
 nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header)
 {
-    return header == nsHttp::Content_Type        ||
-           header == nsHttp::Content_Disposition ||
-           header == nsHttp::Content_Length      ||
-           header == nsHttp::User_Agent          ||
-           header == nsHttp::Referer             ||
-           header == nsHttp::Host                ||
-           header == nsHttp::Authorization       ||
-           header == nsHttp::Proxy_Authorization ||
-           header == nsHttp::If_Modified_Since   ||
-           header == nsHttp::If_Unmodified_Since ||
-           header == nsHttp::From                ||
-           header == nsHttp::Location            ||
+    return header == nsHttp::Content_Type                ||
+           header == nsHttp::Content_Disposition         ||
+           header == nsHttp::Content_Length              ||
+           header == nsHttp::User_Agent                  ||
+           header == nsHttp::Referer                     ||
+           header == nsHttp::Host                        ||
+           header == nsHttp::Authorization               ||
+           header == nsHttp::Proxy_Authorization         ||
+           header == nsHttp::If_Modified_Since           ||
+           header == nsHttp::If_Unmodified_Since         ||
+           header == nsHttp::From                        ||
+           header == nsHttp::Location                    ||
            header == nsHttp::Max_Forwards;
 }
 
@@ -222,7 +222,8 @@ inline bool
 nsHttpHeaderArray::TrackEmptyHeader(nsHttpAtom header)
 {
     return header == nsHttp::Content_Length ||
-           header == nsHttp::Location;
+           header == nsHttp::Location ||
+           header == nsHttp::Access_Control_Allow_Origin;
 }
 
 inline nsresult

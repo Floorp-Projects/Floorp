@@ -677,14 +677,13 @@ MacroAssembler::call(wasm::SymbolicAddress target)
 void
 MacroAssembler::call(ImmWord target)
 {
-    mov(target, eax);
-    Assembler::call(eax);
+    Assembler::call(target);
 }
 
 void
 MacroAssembler::call(ImmPtr target)
 {
-    call(ImmWord(uintptr_t(target.value)));
+    Assembler::call(target);
 }
 
 void

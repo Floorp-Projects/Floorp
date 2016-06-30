@@ -230,6 +230,8 @@ public:
 
   TextureClientRecycleAllocator* GetTextureClientRecycler();
 
+  bool HasTextureClientRecycler() { return !!mTextureClientRecycler; }
+
   static void DumpTextureClient(std::stringstream& aStream,
                                 TextureClient* aTexture,
                                 TextureDumpMode aCompress);

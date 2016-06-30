@@ -67,8 +67,7 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
 
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
-  nsContentUtils::DestroyAnonymousContent(&mBrowseDirs);
-  nsContentUtils::DestroyAnonymousContent(&mBrowseFiles);
+  nsContentUtils::DestroyAnonymousContent(&mBrowseFilesOrDirs);
 
   mMouseListener->ForgetFrame();
   nsBlockFrame::DestroyFrom(aDestructRoot);
@@ -127,15 +126,6 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
 
-#if defined(ANDROID) || defined(MOZ_B2G)
-   bool isDirPicker = false;
-#else
-  nsIContent* content = GetContent();
-  bool isDirPicker =
-    Preferences::GetBool("dom.input.dirpicker", false) &&
-    content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::directory);
-#endif
-
   RefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
 
   // The access key is transferred to the "Choose files..." button only. In
@@ -144,25 +134,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsAutoString accessKey;
   fileContent->GetAccessKey(accessKey);
 
-  mBrowseFiles = MakeAnonButton(doc, isDirPicker ? "ChooseFiles" : "Browse",
-                                fileContent, accessKey);
-  if (!mBrowseFiles || !aElements.AppendElement(mBrowseFiles)) {
+  mBrowseFilesOrDirs = MakeAnonButton(doc, "Browse", fileContent, accessKey);
+  if (!mBrowseFilesOrDirs || !aElements.AppendElement(mBrowseFilesOrDirs)) {
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (isDirPicker) {
-    mBrowseDirs = MakeAnonButton(doc, "ChooseDirs", fileContent, EmptyString());
-    // Setting the 'directory' attribute is simply a means of allowing our
-    // event handling code in HTMLInputElement.cpp to distinguish between a
-    // click on the "Choose files" button from the "Choose a folder" button.
-    if (!mBrowseDirs) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mBrowseDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::directory,
-                         EmptyString(), false);
-    if (!aElements.AppendElement(mBrowseDirs)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
   }
 
   // Create and setup the text showing the selected files.
@@ -201,12 +175,8 @@ void
 nsFileControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                              uint32_t aFilter)
 {
-  if (mBrowseFiles) {
-    aElements.AppendElement(mBrowseFiles);
-  }
-
-  if (mBrowseDirs) {
-    aElements.AppendElement(mBrowseDirs);
+  if (mBrowseFilesOrDirs) {
+    aElements.AppendElement(mBrowseFilesOrDirs);
   }
 
   if (mTextContent) {
@@ -331,17 +301,10 @@ nsFileControlFrame::SyncDisabledState()
 {
   EventStates eventStates = mContent->AsElement()->State();
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    mBrowseFiles->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
-                          true);
-    if (mBrowseDirs) {
-      mBrowseDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
-                           true);
-    }
+    mBrowseFilesOrDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
+                                EmptyString(), true);
   } else {
-    mBrowseFiles->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
-    if (mBrowseDirs) {
-      mBrowseDirs->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
-    }
+    mBrowseFilesOrDirs->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
   }
 }
 
@@ -352,17 +315,11 @@ nsFileControlFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::tabindex) {
     if (aModType == nsIDOMMutationEvent::REMOVAL) {
-      mBrowseFiles->UnsetAttr(aNameSpaceID, aAttribute, true);
-      if (mBrowseDirs) {
-        mBrowseDirs->UnsetAttr(aNameSpaceID, aAttribute, true);
-      }
+      mBrowseFilesOrDirs->UnsetAttr(aNameSpaceID, aAttribute, true);
     } else {
       nsAutoString value;
       mContent->GetAttr(aNameSpaceID, aAttribute, value);
-      mBrowseFiles->SetAttr(aNameSpaceID, aAttribute, value, true);
-      if (mBrowseDirs) {
-        mBrowseDirs->SetAttr(aNameSpaceID, aAttribute, value, true);
-      }
+      mBrowseFilesOrDirs->SetAttr(aNameSpaceID, aAttribute, value, true);
     }
   }
 

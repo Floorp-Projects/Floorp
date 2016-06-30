@@ -387,6 +387,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'gfx/RenderTask.java',
     'gfx/ScrollbarLayer.java',
     'gfx/SimpleScaleGestureDetector.java',
+    'gfx/StackScroller.java',
     'gfx/SubdocumentScrollHelper.java',
     'gfx/TextureGenerator.java',
     'gfx/TextureReaper.java',

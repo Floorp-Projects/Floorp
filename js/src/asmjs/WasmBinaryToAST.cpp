@@ -21,7 +21,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "asmjs/Wasm.h"
 #include "asmjs/WasmBinaryIterator.h"
 
 using namespace js;

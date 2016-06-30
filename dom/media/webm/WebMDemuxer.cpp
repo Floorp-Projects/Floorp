@@ -8,6 +8,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
+#include "OpusDecoder.h"
 #include "WebMDemuxer.h"
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"
@@ -396,15 +397,13 @@ WebMDemuxer::ReadMetadata()
 
       mAudioTrack = track;
       mHasAudio = true;
-      mCodecDelay = media::TimeUnit::FromNanoseconds(params.codec_delay).ToMicroseconds();
       mAudioCodec = nestegg_track_codec_id(context, track);
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
         mInfo.mAudio.mMimeType = "audio/webm; codecs=vorbis";
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
         mInfo.mAudio.mMimeType = "audio/webm; codecs=opus";
-        uint8_t c[sizeof(uint64_t)];
-        BigEndian::writeUint64(&c[0], mCodecDelay);
-        mInfo.mAudio.mCodecSpecificConfig->AppendElements(&c[0], sizeof(uint64_t));
+        OpusDataDecoder::AppendCodecDelay(mInfo.mAudio.mCodecSpecificConfig,
+            media::TimeUnit::FromNanoseconds(params.codec_delay).ToMicroseconds());
       }
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = params.rate;
