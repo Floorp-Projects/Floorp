@@ -186,7 +186,7 @@ add_task(function* setup() {
         yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
 
         registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                          REGKEY, script.name, manifestPath);
+                          `${REGKEY}\\${script.name}`, "", manifestPath);
 
         // Create a version of the manifest with a relative path
         let relativeName = `relative.${script.name}`;
@@ -197,7 +197,7 @@ add_task(function* setup() {
         yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
 
         registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                          REGKEY, relativeName, manifestPath);
+                          `${REGKEY}\\${relativeName}`, "", manifestPath);
       }
       break;
 
