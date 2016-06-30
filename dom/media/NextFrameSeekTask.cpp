@@ -50,7 +50,6 @@ NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
   , mCurrentTimeBeforeSeek(aCurrentMediaTime)
-  , mHasAudio(aInfo.HasAudio())
   , mDuration(aDuration)
 {
   AssertOwnerThread();
@@ -64,13 +63,6 @@ NextFrameSeekTask::~NextFrameSeekTask()
 {
   AssertOwnerThread();
   MOZ_ASSERT(mIsDiscarded);
-}
-
-bool
-NextFrameSeekTask::HasAudio() const
-{
-  AssertOwnerThread();
-  return mHasAudio;
 }
 
 void
@@ -240,8 +232,7 @@ NextFrameSeekTask::IsAudioSeekComplete()
 
   // Just make sure that we are not requesting or waiting for audio data. We
   // don't really need to get an decoded audio data or get EOS here.
-  return !HasAudio() ||
-         (!mReader->IsRequestingAudioData() && !mReader->IsWaitingAudioData());
+  return !mReader->IsRequestingAudioData() && !mReader->IsWaitingAudioData();
 }
 
 bool

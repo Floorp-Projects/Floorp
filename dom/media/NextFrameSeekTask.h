@@ -43,8 +43,6 @@ public:
 private:
   ~NextFrameSeekTask();
 
-  bool HasAudio() const;
-
   bool IsVideoDecoding() const;
 
   nsresult EnsureVideoDecodeTaskQueued();
@@ -85,7 +83,6 @@ private:
    * Internal state.
    */
   const int64_t mCurrentTimeBeforeSeek;
-  const bool mHasAudio;
   media::TimeUnit mDuration;
 
   MediaEventListener mAudioCallback;
