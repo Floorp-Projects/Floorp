@@ -83,6 +83,101 @@ NormalizedConstraintSet::BooleanRange::BooleanRange(
   }
 }
 
+NormalizedConstraintSet::StringRange::StringRange(
+    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
+    bool advanced)
+{
+  if (aOther.IsString()) {
+    if (advanced) {
+      mExact.insert(aOther.GetAsString());
+    } else {
+      mIdeal.insert(aOther.GetAsString());
+    }
+  } else if (aOther.IsStringSequence()) {
+    if (advanced) {
+      mExact.clear();
+      for (auto& str : aOther.GetAsStringSequence()) {
+        mExact.insert(str);
+      }
+    } else {
+      mIdeal.clear();
+      for (auto& str : aOther.GetAsStringSequence()) {
+        mIdeal.insert(str);
+      }
+    }
+  } else {
+    SetFrom(aOther.GetAsConstrainDOMStringParameters());
+  }
+}
+
+void
+NormalizedConstraintSet::StringRange::SetFrom(
+    const ConstrainDOMStringParameters& aOther)
+{
+  if (aOther.mIdeal.WasPassed()) {
+    mIdeal.clear();
+    if (aOther.mIdeal.Value().IsString()) {
+      mIdeal.insert(aOther.mIdeal.Value().GetAsString());
+    } else {
+      for (auto& str : aOther.mIdeal.Value().GetAsStringSequence()) {
+        mIdeal.insert(str);
+      }
+    }
+  }
+  if (aOther.mExact.WasPassed()) {
+    mExact.clear();
+    if (aOther.mExact.Value().IsString()) {
+      mExact.insert(aOther.mExact.Value().GetAsString());
+    } else {
+      for (auto& str : aOther.mExact.Value().GetAsStringSequence()) {
+        mIdeal.insert(str);
+      }
+    }
+  }
+}
+
+auto
+NormalizedConstraintSet::StringRange::Clamp(const ValueType& n) const -> ValueType
+{
+  if (!mExact.size()) {
+    return n;
+  }
+  ValueType result;
+  for (auto& entry : n) {
+    if (mExact.find(entry) != mExact.end()) {
+      result.insert(entry);
+    }
+  }
+  return result;
+}
+
+bool
+NormalizedConstraintSet::StringRange::Intersects(const StringRange& aOther) const
+{
+  if (!mExact.size() || !aOther.mExact.size()) {
+    return true;
+  }
+  for (auto& entry : aOther.mExact) {
+    if (mExact.find(entry) != mExact.end()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+NormalizedConstraintSet::StringRange::Intersect(const StringRange& aOther)
+{
+  if (!aOther.mExact.size()) {
+    return;
+  }
+  for (auto& entry : mExact) {
+    if (aOther.mExact.find(entry) == aOther.mExact.end()) {
+      mExact.erase(entry);
+    }
+  }
+}
+
 FlattenedConstraints::FlattenedConstraints(const dom::MediaTrackConstraints& aOther)
 : NormalizedConstraintSet(aOther, false)
 {
