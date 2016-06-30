@@ -344,13 +344,58 @@ JsepTrack::NegotiateCodecs(
     }
   }
 
+  // Find the (potential) red codec and ulpfec codec
+  JsepVideoCodecDescription* red = nullptr;
+  JsepVideoCodecDescription* ulpfec = nullptr;
+  for (auto codec : *codecs) {
+    if (codec->mName == "red") {
+      red = static_cast<JsepVideoCodecDescription*>(codec);
+      break;
+    }
+    if (codec->mName == "ulpfec") {
+      ulpfec = static_cast<JsepVideoCodecDescription*>(codec);
+      break;
+    }
+  }
+  // if we have a red codec remove redundant encodings that don't exist
+  if (red) {
+    // Since we could have an externally specified redundant endcodings
+    // list, we shouldn't simply rebuild the redundant encodings list
+    // based on the current list of codecs.
+    std::vector<uint8_t> unnegotiatedEncodings;
+    std::swap(unnegotiatedEncodings, red->mRedundantEncodings);
+    for (auto redundantPt : unnegotiatedEncodings) {
+      std::string pt = std::to_string(redundantPt);
+      for (auto codec : *codecs) {
+        if (pt == codec->mDefaultPt) {
+          red->mRedundantEncodings.push_back(redundantPt);
+          break;
+        }
+      }
+    }
+  }
+  // Video FEC is indicated by the existence of the red and ulpfec
+  // codecs and not an attribute on the particular video codec (like in
+  // a rtcpfb attr). If we see both red and ulpfec codecs, we enable FEC
+  // on all the other codecs.
+  if (red && ulpfec) {
+    for (auto codec : *codecs) {
+      if (codec->mName != "red" && codec->mName != "ulpfec") {
+        JsepVideoCodecDescription* videoCodec =
+            static_cast<JsepVideoCodecDescription*>(codec);
+        videoCodec->EnableFec();
+      }
+    }
+  }
+
   // Make sure strongly preferred codecs are up front, overriding the remote
   // side's preference.
   std::stable_sort(codecs->begin(), codecs->end(), CompareCodec);
 
   // TODO(bug 814227): Remove this once we're ready to put multiple codecs in an
-  // answer
-  if (!codecs->empty()) {
+  // answer.  For now, remove all but the first codec unless the red codec
+  // exists, and then we include the others per RFC 5109, section 14.2.
+  if (!codecs->empty() && !red) {
     for (size_t i = 1; i < codecs->size(); ++i) {
       delete (*codecs)[i];
       (*codecs)[i] = nullptr;

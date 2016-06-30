@@ -359,6 +359,10 @@ SipccSdpAttributeList::GetCodecType(rtp_ptype type)
       return SdpRtpmapAttributeList::kVP8;
     case RTP_VP9:
       return SdpRtpmapAttributeList::kVP9;
+    case RTP_RED:
+      return SdpRtpmapAttributeList::kRed;
+    case RTP_ULPFEC:
+      return SdpRtpmapAttributeList::kUlpfec;
     case RTP_NONE:
     // Happens when sipcc doesn't know how to translate to the enum
     case RTP_CELP:
@@ -720,6 +724,17 @@ SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
         vp8Parameters->max_fr = fmtp->max_fr;
 
         parameters.reset(vp8Parameters);
+      } break;
+      case RTP_RED: {
+        SdpFmtpAttributeList::RedParameters* redParameters(
+            new SdpFmtpAttributeList::RedParameters);
+        for (int i = 0;
+             i < SDP_FMTP_MAX_REDUNDANT_ENCODINGS && fmtp->redundant_encodings[i];
+             ++i) {
+          redParameters->encodings.push_back(fmtp->redundant_encodings[i]);
+        }
+
+        parameters.reset(redParameters);
       } break;
       case RTP_OPUS: {
         SdpFmtpAttributeList::OpusParameters* opusParameters(

@@ -2742,11 +2742,13 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   auto& video_attrs = video_section.GetAttributeList();
   ASSERT_EQ(SdpDirectionAttribute::kSendrecv, video_attrs.GetDirection());
 
-  ASSERT_EQ(4U, video_section.GetFormats().size());
+  ASSERT_EQ(6U, video_section.GetFormats().size());
   ASSERT_EQ("121", video_section.GetFormats()[0]);
   ASSERT_EQ("120", video_section.GetFormats()[1]);
   ASSERT_EQ("126", video_section.GetFormats()[2]);
   ASSERT_EQ("97", video_section.GetFormats()[3]);
+  ASSERT_EQ("122", video_section.GetFormats()[4]);
+  ASSERT_EQ("123", video_section.GetFormats()[5]);
 
   // Validate rtpmap
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kRtpmapAttribute));
@@ -2755,22 +2757,28 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   ASSERT_TRUE(rtpmaps.HasEntry("121"));
   ASSERT_TRUE(rtpmaps.HasEntry("126"));
   ASSERT_TRUE(rtpmaps.HasEntry("97"));
+  ASSERT_TRUE(rtpmaps.HasEntry("122"));
+  ASSERT_TRUE(rtpmaps.HasEntry("123"));
 
   auto& vp8_entry = rtpmaps.GetEntry("120");
   auto& vp9_entry = rtpmaps.GetEntry("121");
   auto& h264_1_entry = rtpmaps.GetEntry("126");
   auto& h264_0_entry = rtpmaps.GetEntry("97");
+  auto& red_0_entry = rtpmaps.GetEntry("122");
+  auto& ulpfec_0_entry = rtpmaps.GetEntry("123");
 
   ASSERT_EQ("VP8", vp8_entry.name);
   ASSERT_EQ("VP9", vp9_entry.name);
   ASSERT_EQ("H264", h264_1_entry.name);
   ASSERT_EQ("H264", h264_0_entry.name);
+  ASSERT_EQ("red", red_0_entry.name);
+  ASSERT_EQ("ulpfec", ulpfec_0_entry.name);
 
   // Validate fmtps
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kFmtpAttribute));
   auto& fmtps = video_attrs.GetFmtp().mFmtps;
 
-  ASSERT_EQ(4U, fmtps.size());
+  ASSERT_EQ(5U, fmtps.size());
 
   // VP8
   const SdpFmtpAttributeList::Parameters* vp8_params =
@@ -2821,11 +2829,30 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   ASSERT_EQ((uint32_t)0x42e00d, parsed_h264_0_params.profile_level_id);
   ASSERT_TRUE(parsed_h264_0_params.level_asymmetry_allowed);
   ASSERT_EQ(0U, parsed_h264_0_params.packetization_mode);
+
+  // red
+  const SdpFmtpAttributeList::Parameters* red_params =
+    video_section.FindFmtp("122");
+  ASSERT_TRUE(red_params);
+  ASSERT_EQ(SdpRtpmapAttributeList::kRed, red_params->codec_type);
+
+  auto& parsed_red_params =
+      *static_cast<const SdpFmtpAttributeList::RedParameters*>(red_params);
+  ASSERT_EQ(5U, parsed_red_params.encodings.size());
+  ASSERT_EQ(121, parsed_red_params.encodings[0]);
+  ASSERT_EQ(120, parsed_red_params.encodings[1]);
+  ASSERT_EQ(126, parsed_red_params.encodings[2]);
+  ASSERT_EQ(97, parsed_red_params.encodings[3]);
+  ASSERT_EQ(123, parsed_red_params.encodings[4]);
 }
 
 TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
 {
-
+  // TODO(bug 1099351): Once fixed, we can allow red in this offer,
+  // which will also cause multiple codecs in answer.  For now,
+  // red/ulpfec for video are behind a pref to mitigate potential for
+  // errors.
+  SetCodecEnabled(mSessionOff, "red", false);
   for (auto i = mSessionAns.Codecs().begin(); i != mSessionAns.Codecs().end();
        ++i) {
     auto* codec = *i;
