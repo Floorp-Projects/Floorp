@@ -140,7 +140,7 @@ memleak_init()
 	NSS_DISABLE_UNLOAD="1"
 	export NSS_DISABLE_UNLOAD
 
-	SELFSERV_ATTR="-D -p ${PORT} -d ${SERVER_DB} -n ${HOSTADDR} -e ${HOSTADDR}-ec -w nss -c :C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz -t 5"
+	SELFSERV_ATTR="-D -p ${PORT} -d ${SERVER_DB} -n ${HOSTADDR} -e ${HOSTADDR}-ec -w nss -c :C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz -t 5 -V ssl3:tls1.2"
 	TSTCLNT_ATTR="-p ${PORT} -h ${HOSTADDR} -c j -f -d ${CLIENT_DB} -w nss -o"
 	STRSCLNT_ATTR="-q -p ${PORT} -d ${CLIENT_DB} -w nss -c 1000 -n TestUser ${HOSTADDR}"
 
@@ -368,7 +368,7 @@ run_strsclnt()
 {
 	for cipher in ${cipher_list}; do
 		VMIN="ssl3"
-		VMAX=
+		VMAX="tls1.2"
 		case "${cipher}" in
 		f|g)
 			# TLS 1.1 disallows export cipher suites.
@@ -387,9 +387,10 @@ run_strsclnt()
 		fi
 	done
 	
+	ATTR="${TSTCLNT_ATTR} -V ssl3:tls1.2"
 	echo "${SCRIPTNAME}: -------- Stopping server:"
-	echo "tstclnt ${TSTCLNT_ATTR} < ${REQUEST_FILE}"
-	${BINDIR}/tstclnt ${TSTCLNT_ATTR} < ${REQUEST_FILE}
+	echo "tstclnt ${ATTR} < ${REQUEST_FILE}"
+	${BINDIR}/tstclnt ${ATTR} < ${REQUEST_FILE}
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		html_failed "${LOGNAME}: Tstclnt"
@@ -409,7 +410,7 @@ run_strsclnt_dbg()
 {
 	for cipher in ${cipher_list}; do
 		VMIN="ssl3"
-		VMAX=
+		VMAX="tls1.2"
 		case "${cipher}" in
 		f|g)
 			# TLS 1.1 disallows export cipher suites.
@@ -426,9 +427,10 @@ run_strsclnt_dbg()
 		fi
 	done
 	
+	ATTR="${TSTCLNT_ATTR} -V ssl3:tls1.2"
 	echo "${SCRIPTNAME}: -------- Stopping server:"
-	echo "tstclnt ${TSTCLNT_ATTR} < ${REQUEST_FILE}"
-	${BINDIR}/tstclnt ${TSTCLNT_ATTR} < ${REQUEST_FILE}
+	echo "tstclnt ${ATTR} < ${REQUEST_FILE}"
+	${BINDIR}/tstclnt ${ATTR} < ${REQUEST_FILE}
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		html_failed "${LOGNAME}: Tstclnt"

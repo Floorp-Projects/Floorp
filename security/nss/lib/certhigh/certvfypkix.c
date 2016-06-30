@@ -23,6 +23,7 @@
 #include "secder.h"
 #include "pkit.h"
 
+#ifndef NSS_DISABLE_LIBPKIX
 #include "pkix_pl_common.h"
 
 extern PRLogModuleInfo *pkixLog;
@@ -39,6 +40,7 @@ PRInt32 parallelFnInvocationCount;
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
 static PRBool usePKIXValidationEngine = PR_FALSE;
+#endif /* NSS_DISABLE_LIBPKIX */
 
 /*
  * FUNCTION: CERT_SetUsePKIXForValidation
@@ -58,8 +60,13 @@ static PRBool usePKIXValidationEngine = PR_FALSE;
 SECStatus
 CERT_SetUsePKIXForValidation(PRBool enable)
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return SECFailure;
+#else
     usePKIXValidationEngine = (enable > 0) ? PR_TRUE : PR_FALSE;
     return SECSuccess;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
 /*
@@ -79,9 +86,14 @@ CERT_SetUsePKIXForValidation(PRBool enable)
 PRBool
 CERT_GetUsePKIXForValidation()
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    return PR_FALSE;
+#else
     return usePKIXValidationEngine;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
+#ifndef NSS_DISABLE_LIBPKIX
 #ifdef NOTDEF
 /*
  * FUNCTION: cert_NssKeyUsagesToPkix
@@ -1062,6 +1074,7 @@ cleanup:
 
     PKIX_RETURN(CERTVFYPKIX);
 }
+#endif /* NSS_DISABLE_LIBPKIX */
 
 /*
  * FUNCTION: cert_VerifyCertChainPkix
@@ -1108,6 +1121,10 @@ cert_VerifyCertChainPkix(
     PRBool *pSigerror,
     PRBool *pRevoked)
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return SECFailure;
+#else
     PKIX_ProcessingParams *procParams = NULL;
     PKIX_BuildResult *result = NULL;
     PKIX_VerifyNode *verifyNode = NULL;
@@ -1226,8 +1243,10 @@ cert_VerifyCertChainPkix(
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
     return rv;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
+#ifndef NSS_DISABLE_LIBPKIX
 PKIX_CertSelector *
 cert_GetTargetCertConstraints(CERTCertificate *target, void *plContext)
 {
@@ -1756,13 +1775,20 @@ static const CERTRevocationFlags certRev_NSS_3_11_Ocsp_Enabled_Soft_Policy = {
       0,
       0 }
 };
+#endif /* NSS_DISABLE_LIBPKIX */
 
 extern const CERTRevocationFlags *
 CERT_GetClassicOCSPEnabledSoftFailurePolicy()
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return NULL;
+#else
     return &certRev_NSS_3_11_Ocsp_Enabled_Soft_Policy;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
+#ifndef NSS_DISABLE_LIBPKIX
 static PRUint64 certRev_NSS_3_11_Ocsp_Enabled_Hard_Policy_LeafFlags[2] = {
     /* crl */
     CERT_REV_M_TEST_USING_THIS_METHOD |
@@ -1801,13 +1827,20 @@ static const CERTRevocationFlags certRev_NSS_3_11_Ocsp_Enabled_Hard_Policy = {
       0,
       0 }
 };
+#endif /* NSS_DISABLE_LIBPKIX */
 
 extern const CERTRevocationFlags *
 CERT_GetClassicOCSPEnabledHardFailurePolicy()
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return NULL;
+#else
     return &certRev_NSS_3_11_Ocsp_Enabled_Hard_Policy;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
+#ifndef NSS_DISABLE_LIBPKIX
 static PRUint64 certRev_NSS_3_11_Ocsp_Disabled_Policy_LeafFlags[2] = {
     /* crl */
     CERT_REV_M_TEST_USING_THIS_METHOD |
@@ -1840,13 +1873,20 @@ static const CERTRevocationFlags certRev_NSS_3_11_Ocsp_Disabled_Policy = {
       0,
       0 }
 };
+#endif /* NSS_DISABLE_LIBPKIX */
 
 extern const CERTRevocationFlags *
 CERT_GetClassicOCSPDisabledPolicy()
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return NULL;
+#else
     return &certRev_NSS_3_11_Ocsp_Disabled_Policy;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
+#ifndef NSS_DISABLE_LIBPKIX
 static PRUint64 certRev_PKIX_Verify_Nist_Policy_LeafFlags[2] = {
     /* crl */
     CERT_REV_M_TEST_USING_THIS_METHOD |
@@ -1879,11 +1919,17 @@ static const CERTRevocationFlags certRev_PKIX_Verify_Nist_Policy = {
       0,
       0 }
 };
+#endif /* NSS_DISABLE_LIBPKIX */
 
 extern const CERTRevocationFlags *
 CERT_GetPKIXVerifyNistRevocationPolicy()
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return NULL;
+#else
     return &certRev_PKIX_Verify_Nist_Policy;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
 CERTRevocationFlags *
@@ -1891,6 +1937,10 @@ CERT_AllocCERTRevocationFlags(
     PRUint32 number_leaf_methods, PRUint32 number_leaf_pref_methods,
     PRUint32 number_chain_methods, PRUint32 number_chain_pref_methods)
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return NULL;
+#else
     CERTRevocationFlags *flags;
 
     flags = PORT_New(CERTRevocationFlags);
@@ -1922,11 +1972,16 @@ CERT_AllocCERTRevocationFlags(
     }
 
     return flags;
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
 void
 CERT_DestroyCERTRevocationFlags(CERTRevocationFlags *flags)
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return;
+#else
     if (!flags)
         return;
 
@@ -1943,6 +1998,7 @@ CERT_DestroyCERTRevocationFlags(CERTRevocationFlags *flags)
         PORT_Free(flags->chainTests.preferred_methods);
 
     PORT_Free(flags);
+#endif /* NSS_DISABLE_LIBPKIX */
 }
 
 /*
@@ -1978,6 +2034,10 @@ CERT_PKIXVerifyCert(
     CERTValOutParam *paramsOut,
     void *wincx)
 {
+#ifdef NSS_DISABLE_LIBPKIX
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return SECFailure;
+#else
     SECStatus r = SECFailure;
     PKIX_Error *error = NULL;
     PKIX_ProcessingParams *procParams = NULL;
@@ -2241,4 +2301,5 @@ CERT_PKIXVerifyCert(
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
     return r;
+#endif /* NSS_DISABLE_LIBPKIX */
 }

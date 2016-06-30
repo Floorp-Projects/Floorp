@@ -919,7 +919,13 @@ AddPrivKeyUsagePeriod(void *extHandle,
         error_allocate();
     }
     notBeforeStr = (char *)PORT_Alloc(16);
+    if (notBeforeStr == NULL) {
+        error_allocate();
+    }
     notAfterStr = (char *)PORT_Alloc(16);
+    if (notAfterStr == NULL) {
+        error_allocate();
+    }
     *notBeforeStr = '\0';
     *notAfterStr = '\0';
     pkup->arena = arena;
@@ -1033,15 +1039,9 @@ AddPrivKeyUsagePeriod(void *extHandle,
                                     SEC_OID_X509_PRIVATE_KEY_USAGE_PERIOD,
                                     (EXTEN_VALUE_ENCODER)
                                         CERT_EncodePrivateKeyUsagePeriod);
-    if (arena) {
-        PORT_FreeArena(arena, PR_FALSE);
-    }
-    if (notBeforeStr != NULL) {
-        PORT_Free(notBeforeStr);
-    }
-    if (notAfterStr != NULL) {
-        PORT_Free(notAfterStr);
-    }
+    PORT_FreeArena(arena, PR_FALSE);
+    PORT_Free(notBeforeStr);
+    PORT_Free(notAfterStr);
     return (rv);
 }
 

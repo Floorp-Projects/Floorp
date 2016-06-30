@@ -1167,9 +1167,7 @@ freebl_fips_ECDSA_Test(ECParams *ecparams,
 
 loser:
     /* free the memory for the private key arena*/
-    if (ecdsa_private_key != NULL) {
-        PORT_FreeArena(ecdsa_private_key->ecParams.arena, PR_FALSE);
-    }
+    PORT_FreeArena(ecdsa_private_key->ecParams.arena, PR_FALSE);
 
     if (ecdsaStatus != SECSuccess) {
         PORT_SetError( SEC_ERROR_LIBRARY_FAILURE );

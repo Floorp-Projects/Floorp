@@ -187,22 +187,25 @@ CERT_AddExtensionByOID(void *exthandle, SECItem *oid, SECItem *value,
     /* point to ext struct */
     node->ext = ext;
 
-    /* the object ID of the extension */
-    ext->id = *oid;
-
     /* set critical field */
     if (critical) {
         ext->critical.data = (unsigned char *)&hextrue;
         ext->critical.len = 1;
     }
 
-    /* set the value */
+    /* set object ID of the extension and its value */
     if (copyData) {
+        rv = SECITEM_CopyItem(handle->ownerArena, &ext->id, oid);
+        if (rv) {
+            return (SECFailure);
+        }
+
         rv = SECITEM_CopyItem(handle->ownerArena, &ext->value, value);
         if (rv) {
             return (SECFailure);
         }
     } else {
+        ext->id = *oid;
         ext->value = *value;
     }
 

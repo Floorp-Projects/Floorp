@@ -354,11 +354,9 @@ key_from_filedata(PLArenaPool *arena, SECItem *it, int ns, int ni, SECItem *file
 }
 
 static RSAPrivateKey *
-rsakey_from_filedata(SECItem *filedata)
+rsakey_from_filedata(PLArenaPool *arena, SECItem *filedata)
 {
     RSAPrivateKey *key;
-    PLArenaPool *arena;
-    arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     key = (RSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(RSAPrivateKey));
     key->arena = arena;
     key_from_filedata(arena, &key->version, 0, 9, filedata);
@@ -366,11 +364,9 @@ rsakey_from_filedata(SECItem *filedata)
 }
 
 static PQGParams *
-pqg_from_filedata(SECItem *filedata)
+pqg_from_filedata(PLArenaPool *arena, SECItem *filedata)
 {
     PQGParams *pqg;
-    PLArenaPool *arena;
-    arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     pqg = (PQGParams *)PORT_ArenaZAlloc(arena, sizeof(PQGParams));
     pqg->arena = arena;
     key_from_filedata(arena, &pqg->prime, 0, 3, filedata);
@@ -378,11 +374,9 @@ pqg_from_filedata(SECItem *filedata)
 }
 
 static DSAPrivateKey *
-dsakey_from_filedata(SECItem *filedata)
+dsakey_from_filedata(PLArenaPool *arena, SECItem *filedata)
 {
     DSAPrivateKey *key;
-    PLArenaPool *arena;
-    arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     key = (DSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(DSAPrivateKey));
     key->params.arena = arena;
     key_from_filedata(arena, &key->params.prime, 0, 5, filedata);
@@ -391,13 +385,11 @@ dsakey_from_filedata(SECItem *filedata)
 
 #ifndef NSS_DISABLE_ECC
 static ECPrivateKey *
-eckey_from_filedata(SECItem *filedata)
+eckey_from_filedata(PLArenaPool *arena, SECItem *filedata)
 {
     ECPrivateKey *key;
-    PLArenaPool *arena;
     SECStatus rv;
     ECParams *tmpECParams = NULL;
-    arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
     key = (ECPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(ECPrivateKey));
     /* read and convert params */
     key->ecParams.arena = arena;
@@ -1810,10 +1802,10 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         PORT_Free(dummyKey);
     }
     if (!dsap->pqg && dsap->pqgdata.buf.len > 0) {
-        dsap->pqg = pqg_from_filedata(&dsap->pqgdata.buf);
+        dsap->pqg = pqg_from_filedata(cipherInfo->arena, &dsap->pqgdata.buf);
     }
     if (!asymk->privKey && asymk->key.buf.len > 0) {
-        asymk->privKey = dsakey_from_filedata(&asymk->key.buf);
+        asymk->privKey = dsakey_from_filedata(cipherInfo->arena, &asymk->key.buf);
     }
     if (encrypt) {
         cipherInfo->cipher.pubkeyCipher = dsa_signDigest;
@@ -1864,7 +1856,7 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         PORT_Free(dummyKey);
     }
     if (!asymk->privKey && asymk->key.buf.len > 0) {
-        asymk->privKey = eckey_from_filedata(&asymk->key.buf);
+        asymk->privKey = eckey_from_filedata(cipherInfo->arena, &asymk->key.buf);
     }
     if (encrypt) {
         cipherInfo->cipher.pubkeyCipher = ecdsa_signDigest;
@@ -2231,7 +2223,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
                 rsap->keysizeInBits = keysize * 8;
             } else {
                 setupIO(cipherInfo->arena, &asymk->key, file, NULL, 0);
-                *rsaKey = rsakey_from_filedata(&asymk->key.buf);
+                *rsaKey = rsakey_from_filedata(cipherInfo->arena, &asymk->key.buf);
                 rsap->keysizeInBits = (*rsaKey)->modulus.len * 8;
             }
             break;
@@ -2247,7 +2239,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
                 serialize_key(&(*dsaKey)->params.prime, 5, file);
             } else {
                 setupIO(cipherInfo->arena, &asymk->key, file, NULL, 0);
-                *dsaKey = dsakey_from_filedata(&asymk->key.buf);
+                *dsaKey = dsakey_from_filedata(cipherInfo->arena, &asymk->key.buf);
                 dsap->keysize = (*dsaKey)->params.prime.len * 8;
             }
             break;
@@ -2278,7 +2270,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
                 CHECKERROR(rv, __LINE__);
             } else {
                 setupIO(cipherInfo->arena, &asymk->key, file, NULL, 0);
-                *ecKey = eckey_from_filedata(&asymk->key.buf);
+                *ecKey = eckey_from_filedata(cipherInfo->arena, &asymk->key.buf);
             }
             break;
 #endif
@@ -3070,18 +3062,18 @@ get_params(PLArenaPool *arena, bltestParams *params,
             load_file_data(arena, &params->asymk.key, filename,
                            bltestBase64Encoded);
             params->asymk.privKey =
-                (void *)rsakey_from_filedata(&params->asymk.key.buf);
+                (void *)rsakey_from_filedata(arena, &params->asymk.key.buf);
             break;
         case bltestDSA:
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
             params->asymk.privKey =
-                (void *)dsakey_from_filedata(&params->asymk.key.buf);
+                (void *)dsakey_from_filedata(arena, &params->asymk.key.buf);
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "pqg", j);
             load_file_data(arena, &params->asymk.cipherParams.dsa.pqgdata, filename,
                            bltestBase64Encoded);
             params->asymk.cipherParams.dsa.pqg =
-                pqg_from_filedata(&params->asymk.cipherParams.dsa.pqgdata.buf);
+                pqg_from_filedata(arena, &params->asymk.cipherParams.dsa.pqgdata.buf);
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "keyseed", j);
             load_file_data(arena, &params->asymk.cipherParams.dsa.keyseed, filename,
                            bltestBase64Encoded);
@@ -3096,7 +3088,7 @@ get_params(PLArenaPool *arena, bltestParams *params,
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
             load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
             params->asymk.privKey =
-                (void *)eckey_from_filedata(&params->asymk.key.buf);
+                (void *)eckey_from_filedata(arena, &params->asymk.key.buf);
             sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
             load_file_data(arena, &params->asymk.cipherParams.ecdsa.sigseed,
                            filename, bltestBase64Encoded);
@@ -3167,8 +3159,9 @@ verify_self_test(bltestIO *result, bltestIO *cmp, bltestCipherMode mode,
 }
 
 static SECStatus
-ReadFileToItem(SECItem *dst, const char *filename)
+ReadFileToItem(PLArenaPool *arena, SECItem *dst, const char *filename)
 {
+    SECItem tmp = {siBuffer, NULL, 0};
     PRFileDesc *file;
     SECStatus rv;
 
@@ -3176,7 +3169,9 @@ ReadFileToItem(SECItem *dst, const char *filename)
     if (!file) {
         return SECFailure;
     }
-    rv = SECU_FileToItem(dst, file);
+    rv = SECU_FileToItem(&tmp, file);
+    rv |= SECITEM_CopyItem(arena, dst, &tmp);
+    SECITEM_FreeItem(&tmp, PR_FALSE);
     PR_Close(file);
     return rv;
 }
@@ -3215,7 +3210,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
         params = &cipherInfo.params;
         /* get the number of tests in the directory */
         sprintf(filename, "%s/tests/%s/%s", testdir, modestr, "numtests");
-        if (ReadFileToItem(&item, filename) != SECSuccess) {
+        if (ReadFileToItem(arena, &item, filename) != SECSuccess) {
             fprintf(stderr, "%s: Cannot read file %s.\n", progName, filename);
             rv = SECFailure;
             continue;
@@ -3293,6 +3288,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
                                    &pt, mode, PR_FALSE, srv);
         }
     }
+    PORT_FreeArena(arena, PR_FALSE);
     return rv;
 }
 
@@ -3305,7 +3301,7 @@ dump_file(bltestCipherMode mode, char *filename)
     if (mode == bltestRSA || mode == bltestRSA_PSS || mode == bltestRSA_OAEP) {
         RSAPrivateKey *key;
         load_file_data(arena, &keydata, filename, bltestBase64Encoded);
-        key = rsakey_from_filedata(&keydata.buf);
+        key = rsakey_from_filedata(arena, &keydata.buf);
         dump_rsakey(key);
     } else if (mode == bltestDSA) {
 #if 0
@@ -3316,13 +3312,13 @@ dump_file(bltestCipherMode mode, char *filename)
 #endif
         DSAPrivateKey *key;
         load_file_data(arena, &keydata, filename, bltestBase64Encoded);
-        key = dsakey_from_filedata(&keydata.buf);
+        key = dsakey_from_filedata(arena, &keydata.buf);
         dump_dsakey(key);
 #ifndef NSS_DISABLE_ECC
     } else if (mode == bltestECDSA) {
         ECPrivateKey *key;
         load_file_data(arena, &keydata, filename, bltestBase64Encoded);
-        key = eckey_from_filedata(&keydata.buf);
+        key = eckey_from_filedata(arena, &keydata.buf);
         dump_eckey(key);
 #endif
     }

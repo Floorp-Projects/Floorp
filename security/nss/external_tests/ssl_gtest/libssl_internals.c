@@ -8,6 +8,7 @@
 #include "libssl_internals.h"
 
 #include "nss.h"
+#include "pk11pub.h"
 #include "seccomon.h"
 #include "ssl.h"
 #include "sslimpl.h"
@@ -140,4 +141,94 @@ void SSLInt_ForceTimerExpiry(PRFileDesc *fd)
 
   ss->ssl3.hs.rtTimerStarted = PR_IntervalNow() -
       PR_MillisecondsToInterval(ss->ssl3.hs.rtTimeoutMs + 1);
+}
+
+#define CHECK_SECRET(secret)                    \
+  if (ss->ssl3.hs.secret) {                     \
+    fprintf(stderr, "%s != NULL\n", #secret);   \
+    return PR_FALSE;                            \
+  }
+
+PRBool SSLInt_CheckSecretsDestroyed(PRFileDesc *fd)
+{
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return PR_FALSE;
+  }
+
+  CHECK_SECRET(currentSecret);
+  CHECK_SECRET(resumptionPsk);
+  CHECK_SECRET(dheSecret);
+  CHECK_SECRET(earlyTrafficSecret);
+  CHECK_SECRET(hsTrafficSecret);
+
+  return PR_TRUE;
+}
+
+PRBool sslint_DamageTrafficSecret(PRFileDesc *fd,
+                                  size_t offset)
+{
+  unsigned char data[32] = {0};
+  PK11SymKey **keyPtr;
+  PK11SlotInfo *slot = PK11_GetInternalSlot();
+  SECItem key_item = {
+      siBuffer,
+      data,
+      sizeof(data)
+  };
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return PR_FALSE;
+  }
+  if (!slot) {
+    return PR_FALSE;
+  }
+  keyPtr = (PK11SymKey **)((char *)&ss->ssl3.hs + offset);
+  if (!keyPtr)
+    return PR_FALSE;
+  PK11_FreeSymKey(*keyPtr);
+  *keyPtr = PK11_ImportSymKey(slot,
+                              CKM_NSS_HKDF_SHA256, PK11_OriginUnwrap,
+                              CKA_DERIVE, &key_item, NULL);
+  PK11_FreeSlot(slot);
+  if (!*keyPtr)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+
+PRBool SSLInt_DamageHsTrafficSecret(PRFileDesc *fd)
+{
+  return sslint_DamageTrafficSecret(
+      fd,
+      offsetof(SSL3HandshakeState,
+               hsTrafficSecret));
+}
+
+PRBool SSLInt_DamageEarlyTrafficSecret(PRFileDesc *fd)
+{
+  return sslint_DamageTrafficSecret(
+      fd,
+      offsetof(SSL3HandshakeState,
+               earlyTrafficSecret));
+}
+
+SECStatus
+SSLInt_Set0RttAlpn(PRFileDesc *fd, PRUint8 *data, unsigned int len)
+{
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  ss->ssl3.nextProtoState = SSL_NEXT_PROTO_EARLY_VALUE;
+  if (ss->ssl3.nextProto.data) {
+    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
+  }
+  if (!SECITEM_AllocItem(NULL, &ss->ssl3.nextProto, len))
+    return SECFailure;
+  PORT_Memcpy(ss->ssl3.nextProto.data, data, len);
+
+  return SECSuccess;
 }

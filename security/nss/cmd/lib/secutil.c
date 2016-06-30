@@ -213,7 +213,6 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     secuPWData *pwdata = (secuPWData *)arg;
     secuPWData pwnull = { PW_NONE, 0 };
     secuPWData pwxtrn = { PW_EXTERNAL, "external" };
-    char *pw;
 
     if (pwdata == NULL)
         pwdata = &pwnull;
@@ -232,14 +231,7 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
                     PK11_GetTokenName(slot));
             return SECU_GetPasswordString(NULL, prompt);
         case PW_FROMFILE:
-            /* Instead of opening and closing the file every time, get the pw
-             * once, then keep it in memory (duh).
-             */
-            pw = SECU_FilePasswd(slot, retry, pwdata->data);
-            pwdata->source = PW_PLAINTEXT;
-            pwdata->data = PL_strdup(pw);
-            /* it's already been dup'ed */
-            return pw;
+            return SECU_FilePasswd(slot, retry, pwdata->data);
         case PW_EXTERNAL:
             sprintf(prompt,
                     "Press Enter, then enter PIN for \"%s\" on external device.\n",
@@ -3513,9 +3505,7 @@ SECU_SignAndEncodeCRL(CERTCertificate *issuer, CERTSignedCrl *signCrl,
     }
 
 done:
-    if (caPrivateKey) {
-        SECKEY_DestroyPrivateKey(caPrivateKey);
-    }
+    SECKEY_DestroyPrivateKey(caPrivateKey);
     return rv;
 }
 
@@ -3567,20 +3557,24 @@ SECU_DerSignDataCRL(PLArenaPool *arena, CERTSignedData *sd,
 
     /* Sign input buffer */
     rv = SEC_SignData(&it, buf, len, pk, algID);
-    if (rv)
+    if (rv != SECSuccess) {
         goto loser;
+    }
 
     /* Fill out SignedData object */
     PORT_Memset(sd, 0, sizeof(*sd));
     sd->data.data = buf;
     sd->data.len = len;
-    sd->signature.data = it.data;
-    sd->signature.len = it.len << 3; /* convert to bit string */
-    rv = SECOID_SetAlgorithmID(arena, &sd->signatureAlgorithm, algID, 0);
-    if (rv)
+    rv = SECITEM_CopyItem(arena, &sd->signature, &it);
+    if (rv != SECSuccess) {
         goto loser;
+    }
 
-    return rv;
+    sd->signature.len <<= 3; /* convert to bit string */
+    rv = SECOID_SetAlgorithmID(arena, &sd->signatureAlgorithm, algID, 0);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
 
 loser:
     PORT_Free(it.data);
