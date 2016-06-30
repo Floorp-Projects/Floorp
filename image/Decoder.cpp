@@ -10,7 +10,7 @@
 #include "DecodePool.h"
 #include "GeckoProfiler.h"
 #include "IDecodingTask.h"
-#include "ISurfaceProvider.h"
+#include "imgIContainer.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -301,7 +301,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  NotNull<RefPtr<imgFrame>> frame = WrapNotNull(new imgFrame());
+  RefPtr<imgFrame> frame = new imgFrame();
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aTargetSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult))) {
@@ -316,10 +316,8 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   }
 
   if (ShouldUseSurfaceCache()) {
-    NotNull<RefPtr<ISurfaceProvider>> provider =
-      WrapNotNull(new SimpleSurfaceProvider(frame));
     InsertOutcome outcome =
-      SurfaceCache::Insert(provider, ImageKey(mImage.get()),
+      SurfaceCache::Insert(frame, ImageKey(mImage.get()),
                            RasterSurfaceKey(aTargetSize,
                                             mSurfaceFlags,
                                             aFrameNum));
