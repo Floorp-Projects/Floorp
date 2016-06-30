@@ -241,12 +241,12 @@ IsNotDateOrRegExp(JSContext* cx, JS::Handle<JSObject*> obj,
 {
   MOZ_ASSERT(obj);
 
-  js::ESClassValue cls;
+  js::ESClass cls;
   if (!js::GetBuiltinClass(cx, obj, &cls)) {
     return false;
   }
 
-  *notDateOrRegExp = cls != js::ESClass_Date && cls != js::ESClass_RegExp;
+  *notDateOrRegExp = cls != js::ESClass::Date && cls != js::ESClass::RegExp;
   return true;
 }
 

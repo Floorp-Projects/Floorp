@@ -5,6 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLogging.h" // Must appear first
+
+#include <algorithm>
+#include <cstdint>
+
 #include "gfxColor.h"
 #include "gfxPlatform.h"
 #include "imgFrame.h"
@@ -19,8 +23,6 @@
 #include "SurfacePipeFactory.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
-
-#include <algorithm>
 
 using namespace mozilla::gfx;
 
@@ -94,6 +96,9 @@ nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
  : Decoder(aImage)
+ , mLexer(Transition::ToUnbuffered(State::FINISHED_PNG_DATA,
+                                   State::PNG_DATA,
+                                   SIZE_MAX))
  , mPNG(nullptr)
  , mInfo(nullptr)
  , mCMSLine(nullptr)
@@ -101,13 +106,11 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
  , mInProfile(nullptr)
  , mTransform(nullptr)
  , format(gfx::SurfaceFormat::UNKNOWN)
- , mHeaderBytesRead(0)
  , mCMSMode(0)
  , mChannels(0)
  , mPass(0)
  , mFrameIsHidden(false)
  , mDisablePremultipliedAlpha(false)
- , mSuccessfulEarlyFinish(false)
  , mNumFrames(0)
 { }
 
@@ -349,25 +352,58 @@ void
 nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aCount > 0);
 
-  // libpng uses setjmp/longjmp for error handling. Set it up.
+  Maybe<TerminalState> terminalState =
+    mLexer.Lex(aBuffer, aCount, [=](State aState,
+                                    const char* aData, size_t aLength) {
+      switch (aState) {
+        case State::PNG_DATA:
+          return ReadPNGData(aData, aLength);
+        case State::FINISHED_PNG_DATA:
+          return FinishedPNGData();
+      }
+      MOZ_CRASH("Unknown State");
+    });
+
+  if (terminalState == Some(TerminalState::FAILURE)) {
+    PostDataError();
+  }
+}
+
+LexerTransition<nsPNGDecoder::State>
+nsPNGDecoder::ReadPNGData(const char* aData, size_t aLength)
+{
+  // libpng uses setjmp/longjmp for error handling.
   if (setjmp(png_jmpbuf(mPNG))) {
-
-    // We exited early. If mSuccessfulEarlyFinish isn't true, then we
-    // encountered an error. We might not really know what caused it, but it
-    // makes more sense to blame the data.
-    if (!mSuccessfulEarlyFinish && !HasError()) {
-      PostDataError();
-    }
-
-    png_destroy_read_struct(&mPNG, &mInfo, nullptr);
-    return;
+    return Transition::TerminateFailure();
   }
 
   // Pass the data off to libpng.
   png_process_data(mPNG, mInfo,
-                   reinterpret_cast<unsigned char*>(const_cast<char*>((aBuffer))),
-                   aCount);
+                   reinterpret_cast<unsigned char*>(const_cast<char*>((aData))),
+                   aLength);
+
+  if (HasError()) {
+    return Transition::TerminateFailure();
+  }
+
+  if (GetDecodeDone()) {
+    return Transition::TerminateSuccess();
+  }
+
+  // Keep reading data.
+  return Transition::ContinueUnbuffered(State::PNG_DATA);
+}
+
+LexerTransition<nsPNGDecoder::State>
+nsPNGDecoder::FinishedPNGData()
+{
+  // Since we set up an unbuffered read for SIZE_MAX bytes, if we actually read
+  // all that data something is really wrong.
+  MOZ_ASSERT_UNREACHABLE("Read the entire address space?");
+  return Transition::TerminateFailure();
 }
 
 // Sets up gamma pre-correction in libpng before our callback gets called.
@@ -652,10 +688,10 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     auto transparency = decoder->GetTransparencyType(decoder->format, frameRect);
     decoder->PostHasTransparencyIfNeeded(transparency);
 
-    // We have the metadata we're looking for, so we don't need to decode any
-    // further.
-    decoder->mSuccessfulEarlyFinish = true;
-    png_longjmp(decoder->mPNG, 1);
+    // We have the metadata we're looking for, so stop here, before we allocate
+    // buffers below.
+    png_process_data_pause(png_ptr, /* save = */ false);
+    return;
   }
 
 #ifdef PNG_APNG_SUPPORTED
@@ -776,6 +812,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     return;  // Skip this frame.
   }
 
+  MOZ_ASSERT_IF(decoder->IsFirstFrameDecode(), decoder->mNumFrames == 0);
+
   while (pass > decoder->mPass) {
     // Advance to the next pass. We may have to do this multiple times because
     // libpng will skip passes if the image is so small that no pixels have
@@ -881,10 +919,10 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 
   if (!decoder->mFrameIsHidden && decoder->IsFirstFrameDecode()) {
     // We're about to get a second non-hidden frame, but we only want the first.
-    // Stop decoding now.
+    // Stop decoding now. (And avoid allocating the unnecessary buffers below.)
     decoder->PostDecodeDone();
-    decoder->mSuccessfulEarlyFinish = true;
-    png_longjmp(decoder->mPNG, 1);
+    png_process_data_pause(png_ptr, /* save = */ false);
+    return;
   }
 
   // Only the first frame can be hidden, so unhide unconditionally here.

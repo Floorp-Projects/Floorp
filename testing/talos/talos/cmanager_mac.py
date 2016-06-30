@@ -20,7 +20,7 @@ def GetProcessData(pid):
         handle.wait()
         data = handle.stdout.readlines()
     except:
-        print "Unexpected error executing '%s': %s", (command, sys.exc_info())
+        print("Unexpected error executing '%s': %s", (command, sys.exc_info()))
         raise
 
     # First line is header output should look like:
@@ -75,12 +75,12 @@ class MacCounterManager(CounterManager):
     def getCounterValue(self, counterName):
         """Returns the last value of the counter 'counterName'"""
         if counterName not in self.registeredCounters:
-            print ("Warning: attempting to collect counter %s and it is not"
-                   " registered" % counterName)
+            print("Warning: attempting to collect counter %s and it is not"
+                  " registered" % counterName)
             return
 
         try:
             return self.registeredCounters[counterName][0](self.pid)
-        except Exception, e:
-            print ("Error in collecting counter: %s, pid: %s, exception: %s"
-                   % (counterName, self.pid, e))
+        except Exception as e:
+            print("Error in collecting counter: %s, pid: %s, exception: %s"
+                  % (counterName, self.pid, e))

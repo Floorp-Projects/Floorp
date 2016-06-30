@@ -39,6 +39,11 @@ function handleRequest(request, response) {
     response.setHeader("Content-Security-Policy", query.get("csp"), false);
   }
 
+  // Deliver the CSP report-only policy encoded in the URI
+  if(query.has("cspRO")){
+    response.setHeader("Content-Security-Policy-Report-Only", query.get("cspRO"), false);
+  }
+
   // Deliver the CORS header in the URL
   if(query.has("cors")){
     response.setHeader("Access-Control-Allow-Origin", query.get("cors"), false);
@@ -46,5 +51,7 @@ function handleRequest(request, response) {
 
   // Send HTML to test allowed/blocked behaviors
   response.setHeader("Content-Type", "text/html", false);
-  response.write(loadHTMLFromFile(query.get("file")));
+  if(query.has("file")){
+    response.write(loadHTMLFromFile(query.get("file")));
+  }
 }

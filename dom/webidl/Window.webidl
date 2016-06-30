@@ -89,11 +89,11 @@ typedef any Transferable;
 Window implements GlobalEventHandlers;
 Window implements WindowEventHandlers;
 
-[NoInterfaceObject, Exposed=(Window)]
-interface AppInstallEventHandlersMixin {
+// https://w3c.github.io/manifest/#oninstall-attribute
+partial interface Window {
+  [Pref="dom.manifest.oninstall"]
   attribute EventHandler oninstall;
 };
-Window implements AppInstallEventHandlersMixin;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 [NoInterfaceObject, Exposed=(Window,Worker)]

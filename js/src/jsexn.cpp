@@ -1022,13 +1022,13 @@ js::ValueToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& byte
     StringBuffer sb(cx);
     if (val.isObject()) {
         RootedObject valObj(cx, val.toObjectOrNull());
-        ESClassValue cls;
+        ESClass cls;
         if (!GetBuiltinClass(cx, valObj, &cls))
             return "<<error determining class of value>>";
         const char* s;
-        if (cls == ESClass_Array)
+        if (cls == ESClass::Array)
             s = "the array ";
-        else if (cls == ESClass_ArrayBuffer)
+        else if (cls == ESClass::ArrayBuffer)
             s = "the array buffer ";
         else if (JS_IsArrayBufferViewObject(valObj))
             s = "the typed array ";

@@ -110,4 +110,14 @@ protected:
     nsCOMPtr<nsISupports>               mSecurityInfo;
 };
 
+/**
+ * Casting nsWyciwygChannel to nsISupports is ambiguous.
+ * This method handles that.
+ */
+inline nsISupports*
+ToSupports(nsWyciwygChannel* p)
+{
+  return NS_ISUPPORTS_CAST(nsIStreamListener*, p);
+}
+
 #endif /* nsWyciwygChannel_h___ */

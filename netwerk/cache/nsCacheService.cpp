@@ -1030,7 +1030,7 @@ public:
 
     NS_IMETHOD Run()
     {
-        nsCacheServiceAutoLock lock(LOCK_TELEM(NSDOOMEVENT_RUN));
+        nsCacheServiceAutoLock lock;
 
         bool foundActive = true;
         nsresult status = NS_ERROR_NOT_AVAILABLE;

@@ -47,18 +47,28 @@ OpusDataDecoder::Shutdown()
   return NS_OK;
 }
 
+void
+OpusDataDecoder::AppendCodecDelay(MediaByteBuffer* config, uint64_t codecDelayUS)
+{
+  uint8_t buffer[sizeof(uint64_t)];
+  BigEndian::writeUint64(buffer, codecDelayUS);
+  config->AppendElements(buffer, sizeof(uint64_t));
+}
+
 RefPtr<MediaDataDecoder::InitPromise>
 OpusDataDecoder::Init()
 {
   size_t length = mInfo.mCodecSpecificConfig->Length();
   uint8_t *p = mInfo.mCodecSpecificConfig->Elements();
   if (length < sizeof(uint64_t)) {
+    OPUS_DEBUG("CodecSpecificConfig too short to read codecDelay!");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
   int64_t codecDelay = BigEndian::readUint64(p);
   length -= sizeof(uint64_t);
   p += sizeof(uint64_t);
   if (NS_FAILED(DecodeHeader(p, length))) {
+    OPUS_DEBUG("Error decoding header!");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
@@ -348,7 +358,9 @@ bool
 OpusDataDecoder::IsOpus(const nsACString& aMimeType)
 {
   return aMimeType.EqualsLiteral("audio/webm; codecs=opus") ||
-         aMimeType.EqualsLiteral("audio/ogg; codecs=opus");
+         aMimeType.EqualsLiteral("audio/ogg; codecs=opus") ||
+         aMimeType.EqualsLiteral("audio/mp4; codecs=opus") ||
+         aMimeType.EqualsLiteral("audio/opus");
 }
 
 } // namespace mozilla

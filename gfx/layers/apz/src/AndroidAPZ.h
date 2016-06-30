@@ -10,7 +10,6 @@
 #include "AsyncPanZoomAnimation.h"
 #include "AsyncPanZoomController.h"
 #include "GeneratedJNIWrappers.h"
-#include "OverScroller.h"
 
 namespace mozilla {
 namespace layers {
@@ -23,7 +22,7 @@ public:
     return this;
   }
 
-  widget::sdk::OverScroller::GlobalRef mOverScroller;
+  widget::StackScroller::GlobalRef mOverScroller;
 };
 
 class AndroidFlingAnimation: public AsyncPanZoomAnimation {
@@ -41,11 +40,12 @@ private:
   bool CheckBounds(Axis& aAxis, float aValue, float aDirection, float* aClamped);
 
   AsyncPanZoomController& mApzc;
-  widget::sdk::OverScroller::GlobalRef mOverScroller;
+  widget::StackScroller::GlobalRef mOverScroller;
   RefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   RefPtr<const AsyncPanZoomController> mScrolledApzc;
   bool mSentBounceX;
   bool mSentBounceY;
+  long mFlingDuration;
   ParentLayerPoint mStartOffset;
   ParentLayerPoint mPreviousOffset;
   // Unit vector in the direction of the fling.

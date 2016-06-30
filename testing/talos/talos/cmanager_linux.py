@@ -133,7 +133,7 @@ def GetXRes(pids):
                 data = float(data)
                 XRes += data
             except ValueError:
-                print "Invalid data, not a float"
+                print("Invalid data, not a float")
                 raise
         else:
             raise Exception("Could not find PID=%s in xrestop output" % pid)
@@ -178,4 +178,4 @@ class LinuxCounterManager(CounterManager):
             return [self.process.pid] + [child.pid
                                          for child in self.process.children()]
         except:
-            print "WARNING: problem updating child PID's"
+            print("WARNING: problem updating child PID's")

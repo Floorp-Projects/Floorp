@@ -14,6 +14,7 @@
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
@@ -176,11 +177,18 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
 {
   MOZ_ASSERT(!mTextureClient,
              "This image already has allocated data");
+  static const uint32_t MAX_POOLED_VIDEO_COUNT = 5;
 
-  mTextureClient = TextureClient::CreateForYCbCr(mCompositable->GetForwarder(),
-                                                 aData.mYSize, aData.mCbCrSize,
-                                                 aData.mStereoMode,
-                                                 mCompositable->GetTextureFlags());
+  if (!mCompositable->HasTextureClientRecycler()) {
+    // Initialize TextureClientRecycler
+    mCompositable->GetTextureClientRecycler()->SetMaxPoolSize(MAX_POOLED_VIDEO_COUNT);
+  }
+
+  {
+    YCbCrTextureClientAllocationHelper helper(aData, mCompositable->GetTextureFlags());
+    mTextureClient = mCompositable->GetTextureClientRecycler()->CreateOrRecycle(helper);
+  }
+
   if (!mTextureClient) {
     NS_WARNING("SharedPlanarYCbCrImage::Allocate failed.");
     return false;

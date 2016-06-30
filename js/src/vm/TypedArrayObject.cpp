@@ -532,10 +532,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     fromBufferWithProto(JSContext* cx, HandleObject bufobj, uint32_t byteOffset, int32_t lengthInt,
                         HandleObject proto)
     {
-        ESClassValue cls;
+        ESClass cls;
         if (!GetBuiltinClass(cx, bufobj, &cls))
             return nullptr;
-        if (cls != ESClass_ArrayBuffer && cls != ESClass_SharedArrayBuffer) {
+        if (cls != ESClass::ArrayBuffer && cls != ESClass::SharedArrayBuffer) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return nullptr;
         }

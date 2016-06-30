@@ -6,7 +6,7 @@
 
 #include "jit/MIRGraph.h"
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmTypes.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/Ion.h"
 #include "jit/JitSpewer.h"

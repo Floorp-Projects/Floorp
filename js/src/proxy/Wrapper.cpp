@@ -238,10 +238,10 @@ Wrapper::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
 }
 
 bool
-Wrapper::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClassValue* classValue) const
+Wrapper::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetBuiltinClass(cx, target, classValue);
+    return GetBuiltinClass(cx, target, cls);
 }
 
 bool

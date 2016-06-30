@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsAttrValue.h"
+#include "nsContentUtils.h"
 #include "nsCSPUtils.h"
 #include "nsDebug.h"
 #include "nsIConsoleService.h"
@@ -13,6 +15,7 @@
 #include "nsIStringBundle.h"
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
+#include "nsSandboxFlags.h"
 
 static mozilla::LogModule*
 GetCspUtilsLog()
@@ -792,6 +795,29 @@ nsCSPReportURI::toString(nsAString& outStr) const
   outStr.AppendASCII(spec.get());
 }
 
+/* ===== nsCSPSandboxFlags ===================== */
+
+nsCSPSandboxFlags::nsCSPSandboxFlags(const nsAString& aFlags)
+  : mFlags(aFlags)
+{
+}
+
+nsCSPSandboxFlags::~nsCSPSandboxFlags()
+{
+}
+
+bool
+nsCSPSandboxFlags::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return false;
+}
+
+void
+nsCSPSandboxFlags::toString(nsAString& outStr) const
+{
+  outStr.Append(mFlags);
+}
+
 /* ===== nsCSPDirective ====================== */
 
 nsCSPDirective::nsCSPDirective(CSPDirective aDirective)
@@ -951,6 +977,11 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
     case nsIContentSecurityPolicy::CHILD_SRC_DIRECTIVE:
       outCSP.mChild_src.Construct();
       outCSP.mChild_src.Value() = mozilla::Move(srcs);
+      return;
+
+    case nsIContentSecurityPolicy::SANDBOX_DIRECTIVE:
+      outCSP.mSandbox.Construct();
+      outCSP.mSandbox.Value() = mozilla::Move(srcs);
       return;
 
     // REFERRER_DIRECTIVE and REQUIRE_SRI_FOR are handled in nsCSPPolicy::toDomCSPStruct()
@@ -1342,6 +1373,33 @@ nsCSPPolicy::getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) co
       return;
     }
   }
+}
+
+/*
+ * Helper function that returns the underlying bit representation of sandbox
+ * flags. The function returns SANDBOXED_NONE if there are no sandbox
+ * directives.
+ */
+uint32_t
+nsCSPPolicy::getSandboxFlags() const
+{
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(nsIContentSecurityPolicy::SANDBOX_DIRECTIVE)) {
+      nsAutoString flags;
+      mDirectives[i]->toString(flags);
+
+      if (flags.IsEmpty()) {
+        return SANDBOX_ALL_FLAGS;
+      }
+
+      nsAttrValue attr;
+      attr.ParseAtomArray(flags);
+
+      return nsContentUtils::ParseSandboxAttributeToFlags(&attr);
+    }
+  }
+
+  return SANDBOXED_NONE;
 }
 
 void

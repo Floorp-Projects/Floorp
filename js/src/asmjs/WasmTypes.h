@@ -823,6 +823,15 @@ typedef int32_t (*ExportFuncPtr)(ExportArg* args, uint8_t* global);
 
 // Constants:
 
+// The WebAssembly spec hard-codes the virtual page size to be 64KiB and
+// requires linear memory to always be a multiple of 64KiB.
+static const unsigned PageSize = 64 * 1024;
+
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
+static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
+#endif
+
 static const unsigned ActivationGlobalDataOffset = 0;
 static const unsigned HeapGlobalDataOffset       = ActivationGlobalDataOffset + sizeof(void*);
 static const unsigned NaN64GlobalDataOffset      = HeapGlobalDataOffset + sizeof(void*);
@@ -836,6 +845,7 @@ static const unsigned MaxImports                 =       64 * 1024;
 static const unsigned MaxExports                 =       64 * 1024;
 static const unsigned MaxTables                  =        4 * 1024;
 static const unsigned MaxTableElems              =      128 * 1024;
+static const unsigned MaxDataSegments            =       64 * 1024;
 static const unsigned MaxArgsPerFunc             =        4 * 1024;
 static const unsigned MaxBrTableElems            = 4 * 1024 * 1024;
 

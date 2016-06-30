@@ -83,13 +83,12 @@ Result
 IsCertBuiltInRoot(CERTCertificate* cert, bool& result)
 {
   result = false;
+#ifdef DEBUG
   nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
   if (!component) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  nsresult rv;
-#ifdef DEBUG
-  rv = component->IsCertTestBuiltInRoot(cert, result);
+  nsresult rv = component->IsCertTestBuiltInRoot(cert, result);
   if (NS_FAILED(rv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -97,31 +96,23 @@ IsCertBuiltInRoot(CERTCertificate* cert, bool& result)
     return Success;
   }
 #endif // DEBUG
-  nsAutoString modName;
-  rv = component->GetPIPNSSBundleString("RootCertModuleName", modName);
-  if (NS_FAILED(rv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  AutoSECMODListReadLock lock;
+  for (SECMODModuleList* list = SECMOD_GetDefaultModuleList(); list;
+       list = list->next) {
+    for (int i = 0; i < list->module->slotCount; i++) {
+      PK11SlotInfo* slot = list->module->slots[i];
+      // PK11_HasRootCerts should return true if and only if the given slot has
+      // an object with a CKA_CLASS of CKO_NETSCAPE_BUILTIN_ROOT_LIST, which
+      // should be true only of the builtin root list.
+      // If we can find a copy of the given certificate on the slot with the
+      // builtin root list, that certificate must be a builtin.
+      if (PK11_IsPresent(slot) && PK11_HasRootCerts(slot) &&
+          PK11_FindCertInSlot(slot, cert, nullptr) != CK_INVALID_HANDLE) {
+        result = true;
+        return Success;
+      }
+    }
   }
-  NS_ConvertUTF16toUTF8 modNameUTF8(modName);
-  UniqueSECMODModule builtinRootsModule(SECMOD_FindModule(modNameUTF8.get()));
-  // If the built-in roots module isn't loaded, nothing is a built-in root.
-  if (!builtinRootsModule) {
-    return Success;
-  }
-  UniquePK11SlotInfo builtinSlot(SECMOD_FindSlot(builtinRootsModule.get(),
-                                                 "Builtin Object Token"));
-  // This could happen if the user loaded a module that is acting like the
-  // built-in roots module but doesn't actually have a slot called "Builtin
-  // Object Token". In that case, again nothing is a built-in root.
-  if (!builtinSlot) {
-    return Success;
-  }
-  // Attempt to find a copy of the given certificate in the "Builtin Object
-  // Token" slot of the built-in root module. If we get a valid handle, this
-  // certificate exists in the root module, so we consider it a built-in root.
-  CK_OBJECT_HANDLE handle = PK11_FindCertInSlot(builtinSlot.get(), cert,
-                                                nullptr);
-  result = (handle != CK_INVALID_HANDLE);
   return Success;
 }
 

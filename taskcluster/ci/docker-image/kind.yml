@@ -17,3 +17,4 @@ images:
   - tester
   - lint
   - android-gradle-build
+  - phone-builder

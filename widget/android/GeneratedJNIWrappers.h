@@ -3934,6 +3934,401 @@ public:
 
 };
 
+class StackScroller : public mozilla::jni::ObjectBase<StackScroller, jobject>
+{
+public:
+    static const char name[];
+
+    explicit StackScroller(const Context& ctx) : ObjectBase<StackScroller, jobject>(ctx) {}
+
+    struct New_t {
+        typedef StackScroller Owner;
+        typedef StackScroller::LocalRef ReturnType;
+        typedef StackScroller::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "(Landroid/content/Context;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    static auto New(mozilla::jni::Object::Param, StackScroller::LocalRef*) -> nsresult;
+
+    struct AbortAnimation_t {
+        typedef StackScroller Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "abortAnimation";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto AbortAnimation() const -> nsresult;
+
+    struct ComputeScrollOffset_t {
+        typedef StackScroller Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int64_t> Args;
+        static constexpr char name[] = "computeScrollOffset";
+        static constexpr char signature[] =
+                "(J)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto ComputeScrollOffset(int64_t, bool*) const -> nsresult;
+
+    struct Fling_t {
+        typedef StackScroller Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int64_t> Args;
+        static constexpr char name[] = "fling";
+        static constexpr char signature[] =
+                "(IIIIIIIIIIJ)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto Fling(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int64_t) const -> nsresult;
+
+    struct ForceFinished_t {
+        typedef StackScroller Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "forceFinished";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto ForceFinished(bool) const -> nsresult;
+
+    struct GetCurrSpeedX_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCurrSpeedX";
+        static constexpr char signature[] =
+                "()F";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetCurrSpeedX(float*) const -> nsresult;
+
+    struct GetCurrSpeedY_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCurrSpeedY";
+        static constexpr char signature[] =
+                "()F";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetCurrSpeedY(float*) const -> nsresult;
+
+    struct GetCurrX_t {
+        typedef StackScroller Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCurrX";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetCurrX(int32_t*) const -> nsresult;
+
+    struct GetCurrY_t {
+        typedef StackScroller Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCurrY";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetCurrY(int32_t*) const -> nsresult;
+
+    struct GetFinalX_t {
+        typedef StackScroller Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getFinalX";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetFinalX(int32_t*) const -> nsresult;
+
+    struct GetFinalY_t {
+        typedef StackScroller Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getFinalY";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto GetFinalY(int32_t*) const -> nsresult;
+
+    struct InitContants_t {
+        typedef StackScroller Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "initContants";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    static auto InitContants() -> nsresult;
+
+    struct IsFinished_t {
+        typedef StackScroller Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "isFinished";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto IsFinished(bool*) const -> nsresult;
+
+    struct SetFinalX_t {
+        typedef StackScroller Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "setFinalX";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto SetFinalX(int32_t) const -> nsresult;
+
+    struct SpringBack_t {
+        typedef StackScroller Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int64_t> Args;
+        static constexpr char name[] = "springBack";
+        static constexpr char signature[] =
+                "(IIIIIIJ)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto SpringBack(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int64_t, bool*) const -> nsresult;
+
+    struct StartScroll_t {
+        typedef StackScroller Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int64_t,
+                int32_t> Args;
+        static constexpr char name[] = "startScroll";
+        static constexpr char signature[] =
+                "(IIIIJI)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto StartScroll(int32_t, int32_t, int32_t, int32_t, int64_t, int32_t) const -> nsresult;
+
+    struct ViscousFluid_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<
+                float> Args;
+        static constexpr char name[] = "viscousFluid";
+        static constexpr char signature[] =
+                "(F)F";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    static auto ViscousFluid(float, float*) -> nsresult;
+
+    static const int32_t FLING_MODE = 1;
+
+    static const int32_t SCROLL_MODE = 0;
+
+    struct MFlywheel_t {
+        typedef StackScroller Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "mFlywheel";
+        static constexpr char signature[] =
+                "Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto MFlywheel(bool*) const -> nsresult;
+
+    struct MMode_t {
+        typedef StackScroller Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "mMode";
+        static constexpr char signature[] =
+                "I";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto MMode(int32_t*) const -> nsresult;
+
+    auto MMode(int32_t) const -> nsresult;
+
+    struct MScrollerX_t {
+        typedef StackScroller Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "mScrollerX";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/gfx/StackScroller$SplineStackScroller;";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto MScrollerX(mozilla::jni::Object::LocalRef*) const -> nsresult;
+
+    struct MScrollerY_t {
+        typedef StackScroller Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "mScrollerY";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/gfx/StackScroller$SplineStackScroller;";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    auto MScrollerY(mozilla::jni::Object::LocalRef*) const -> nsresult;
+
+    struct SViscousFluidNormalize_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "sViscousFluidNormalize";
+        static constexpr char signature[] =
+                "F";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    static auto SViscousFluidNormalize(float*) -> nsresult;
+
+    static auto SViscousFluidNormalize(float) -> nsresult;
+
+    struct SViscousFluidScale_t {
+        typedef StackScroller Owner;
+        typedef float ReturnType;
+        typedef float SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "sViscousFluidScale";
+        static constexpr char signature[] =
+                "F";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::NSRESULT;
+    };
+
+    static auto SViscousFluidScale(float*) -> nsresult;
+
+    static auto SViscousFluidScale(float) -> nsresult;
+
+    static const bool isMultithreaded = true;
+
+};
+
 class ViewTransform : public mozilla::jni::ObjectBase<ViewTransform, jobject>
 {
 public:

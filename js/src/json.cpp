@@ -261,21 +261,21 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
     if (vp.get().isObject()) {
         RootedObject obj(cx, &vp.get().toObject());
 
-        ESClassValue cls;
+        ESClass cls;
         if (!GetBuiltinClass(cx, obj, &cls))
             return false;
 
-        if (cls == ESClass_Number) {
+        if (cls == ESClass::Number) {
             double d;
             if (!ToNumber(cx, vp, &d))
                 return false;
             vp.setNumber(d);
-        } else if (cls == ESClass_String) {
+        } else if (cls == ESClass::String) {
             JSString* str = ToStringSlow<CanGC>(cx, vp);
             if (!str)
                 return false;
             vp.setString(str);
-        } else if (cls == ESClass_Boolean) {
+        } else if (cls == ESClass::Boolean) {
             if (!Unbox(cx, obj, vp))
                 return false;
         }
@@ -657,11 +657,11 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
                 } else {
                     bool shouldAdd = item.isString();
                     if (!shouldAdd) {
-                        ESClassValue cls;
+                        ESClass cls;
                         if (!GetClassOfValue(cx, item, &cls))
                             return false;
 
-                        shouldAdd = cls == ESClass_String || cls == ESClass_Number;
+                        shouldAdd = cls == ESClass::String || cls == ESClass::Number;
                     }
 
                     if (shouldAdd) {
@@ -691,16 +691,16 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
     if (space.isObject()) {
         RootedObject spaceObj(cx, &space.toObject());
 
-        ESClassValue cls;
+        ESClass cls;
         if (!GetBuiltinClass(cx, spaceObj, &cls))
             return false;
 
-        if (cls == ESClass_Number) {
+        if (cls == ESClass::Number) {
             double d;
             if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
-        } else if (cls == ESClass_String) {
+        } else if (cls == ESClass::String) {
             JSString* str = ToStringSlow<CanGC>(cx, space);
             if (!str)
                 return false;
