@@ -404,7 +404,8 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // of the SVG image's internal document that is visible, in combination
       // with preserveAspectRatio and viewBox.
       SVGImageContext context(CSSIntSize(width, height),
-                              Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
+                              Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
+                              1.0, true);
 
       // For the actual draw operation to draw crisply (and at the right size),
       // our destination rect needs to be |width|x|height|, *in dev pixels*.
