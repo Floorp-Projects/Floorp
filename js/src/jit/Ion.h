@@ -203,6 +203,7 @@ void DestroyJitScripts(FreeOp* fop, JSScript* script);
 void TraceJitScripts(JSTracer* trc, JSScript* script);
 
 bool JitSupportsFloatingPoint();
+bool JitSupportsUnalignedAccesses();
 bool JitSupportsSimd();
 bool JitSupportsAtomics();
 

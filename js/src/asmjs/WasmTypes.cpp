@@ -124,6 +124,9 @@ HandleTrap(int32_t trapIndex)
       case Trap::OutOfBounds:
         errorNumber = JSMSG_BAD_INDEX;
         break;
+      case Trap::UnalignedAccess:
+        errorNumber = JSMSG_WASM_UNALIGNED_ACCESS;
+        break;
       default:
         MOZ_CRASH("unexpected trap");
     }
