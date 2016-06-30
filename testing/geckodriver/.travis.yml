@@ -41,10 +41,6 @@ install:
 script:
   - bash ci.sh
 
-branches:
-  only:
-    - master
-
 deploy:
   provider: releases
   api_key:
