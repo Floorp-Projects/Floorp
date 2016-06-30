@@ -58,6 +58,8 @@ public:
 
   SeekJob& GetSeekJob();
 
+  SeekTarget& GetSeekTarget();
+
   bool Exists() const;
 
 protected:
@@ -87,6 +89,7 @@ protected:
    * Internal state.
    */
   SeekJob mSeekJob;
+  SeekTarget& mTarget;
   MozPromiseHolder<SeekTaskPromise> mSeekTaskPromise;
   bool mIsDiscarded;
 

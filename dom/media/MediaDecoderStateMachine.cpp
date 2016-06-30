@@ -1161,8 +1161,8 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
         // method later, we treat a VideoOnly seek task as a normal Accurate
         // seek task so that while it is resumed, both audio and video playback
         // are handled.
-        if (mSeekTask->GetSeekJob().mTarget.IsVideoOnly()) {
-          mSeekTask->GetSeekJob().mTarget.SetType(SeekTarget::Accurate);
+        if (mSeekTask->GetSeekTarget().IsVideoOnly()) {
+          mSeekTask->GetSeekTarget().SetType(SeekTarget::Accurate);
         }
         mQueuedSeek = Move(mSeekTask->GetSeekJob());
         mSeekTaskRequest.DisconnectIfExists();
@@ -1648,9 +1648,9 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   // dispatching SeekingStarted, playback doesn't advance and mess with
   // mCurrentPosition that we've setting to seekTime here.
   StopPlayback();
-  UpdatePlaybackPositionInternal(mSeekTask->GetSeekJob().mTarget.GetTime().ToMicroseconds());
+  UpdatePlaybackPositionInternal(mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
 
-  mOnSeekingStart.Notify(mSeekTask->GetSeekJob().mTarget.mEventVisibility);
+  mOnSeekingStart.Notify(mSeekTask->GetSeekTarget().mEventVisibility);
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) { Reset(); }
@@ -2136,7 +2136,7 @@ MediaDecoderStateMachine::SeekCompleted()
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
 
-  int64_t seekTime = mSeekTask->GetSeekJob().mTarget.GetTime().ToMicroseconds();
+  int64_t seekTime = mSeekTask->GetSeekTarget().GetTime().ToMicroseconds();
   int64_t newCurrentTime = seekTime;
 
   // Setup timestamp state.
