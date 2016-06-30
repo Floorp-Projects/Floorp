@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIconChannel.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -28,8 +30,6 @@
 #include "nsNullPrincipal.h"
 #include "nsIURL.h"
 #include "prlink.h"
-
-#include "nsIconChannel.h"
 
 NS_IMPL_ISUPPORTS(nsIconChannel,
                   nsIRequest,
