@@ -886,7 +886,8 @@ class ConfigureCodec {
       mVP8MaxFr(0),
       mUseTmmbr(false),
       mUseRemb(false),
-      mUseAudioFec(false)
+      mUseAudioFec(false),
+      mRedUlpfecEnabled(false)
     {
 #ifdef MOZ_WEBRTC_OMX
       // Check to see if what HW codecs are available (not in use) at this moment.
@@ -957,6 +958,9 @@ class ConfigureCodec {
       branch->GetBoolPref("media.navigator.video.use_remb", &mUseRemb);
 
       branch->GetBoolPref("media.navigator.audio.use_fec", &mUseAudioFec);
+
+      branch->GetBoolPref("media.navigator.video.red_ulpfec_enabled",
+                          &mRedUlpfecEnabled);
     }
 
     void operator()(JsepCodecDescription* codec) const
@@ -997,6 +1001,10 @@ class ConfigureCodec {
               if (mHardwareH264Supported) {
                 videoCodec.mStronglyPreferred = true;
               }
+            } else if (videoCodec.mName == "red") {
+              videoCodec.mEnabled = mRedUlpfecEnabled;
+            } else if (videoCodec.mName == "ulpfec") {
+              videoCodec.mEnabled = mRedUlpfecEnabled;
             } else if (videoCodec.mName == "VP8" || videoCodec.mName == "VP9") {
               if (videoCodec.mName == "VP9" && !mVP9Enabled) {
                 videoCodec.mEnabled = false;
@@ -1035,6 +1043,41 @@ class ConfigureCodec {
     bool mUseTmmbr;
     bool mUseRemb;
     bool mUseAudioFec;
+    bool mRedUlpfecEnabled;
+};
+
+class ConfigureRedCodec {
+  public:
+    explicit ConfigureRedCodec(nsCOMPtr<nsIPrefBranch>& branch,
+                               std::vector<uint8_t>* redundantEncodings) :
+      mRedundantEncodings(redundantEncodings)
+    {
+      // if we wanted to override or modify which encodings are considered
+      // for redundant encodings, we'd probably want to handle it here by
+      // checking prefs modifying the operator() code below
+    }
+
+    void operator()(JsepCodecDescription* codec) const
+    {
+      if (codec->mType == SdpMediaSection::kVideo &&
+          codec->mEnabled == false) {
+        uint8_t pt = (uint8_t)strtoul(codec->mDefaultPt.c_str(), nullptr, 10);
+        // don't search for the codec payload type unless we have a valid
+        // conversion (non-zero)
+        if (pt != 0) {
+          std::vector<uint8_t>::iterator it =
+            std::find(mRedundantEncodings->begin(),
+                      mRedundantEncodings->end(),
+                      pt);
+          if (it != mRedundantEncodings->end()) {
+            mRedundantEncodings->erase(it);
+          }
+        }
+      }
+    }
+
+  private:
+    std::vector<uint8_t>* mRedundantEncodings;
 };
 
 nsresult
@@ -1058,6 +1101,23 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
   ConfigureCodec configurer(branch);
   mJsepSession->ForEachCodec(configurer);
+
+  // first find the red codec description
+  std::vector<JsepCodecDescription*>& codecs = mJsepSession->Codecs();
+  JsepVideoCodecDescription* redCodec = nullptr;
+  for (auto codec : codecs) {
+    // we only really care about finding the RED codec if it is
+    // enabled
+    if (codec->mName == "red" && codec->mEnabled) {
+      redCodec = static_cast<JsepVideoCodecDescription*>(codec);
+      break;
+    }
+  }
+  // if red codec was found, configure it for the other enabled codecs
+  if (redCodec) {
+    ConfigureRedCodec configureRed(branch, &(redCodec->mRedundantEncodings));
+    mJsepSession->ForEachCodec(configureRed);
+  }
 
   // We use this to sort the list of codecs once everything is configured
   CompareCodecPriority comparator;

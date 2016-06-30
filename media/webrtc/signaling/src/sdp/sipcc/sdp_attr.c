@@ -1509,7 +1509,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             fmtp_p->annex_p_val_picture_resize = 0;
             fmtp_p->annex_p_val_warp = 0;
             tok = tmp;
-            tok++; temp=PL_strtok_r(tok, ",", &strtok_state);
+            tok++; temp = PL_strtok_r(tok, ",", &strtok_state);
             if (temp) {
                 iter=1;
                 while (temp != NULL) {
@@ -1525,7 +1525,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                     else if (iter == 2)
                         fmtp_p->annex_p_val_warp = (uint16_t) strtoul_result;
 
-                    temp=PL_strtok_r(NULL, ",", &strtok_state);
+                    temp = PL_strtok_r(NULL, ",", &strtok_state);
                     iter++;
                 }
             }
@@ -1780,6 +1780,27 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 }
             } /* if (temp) */
             done = TRUE;
+        } else if (strchr(tmp, '/')) {
+            // XXX Note that because RFC 5109 so conveniently specified
+            // this fmtp with no param names, we hope that nothing else
+            // has a slash in the string because otherwise we won't know
+            // how to differentiate.
+            temp=PL_strtok_r(tmp, "/", &strtok_state);
+            if (temp) {
+                iter = 0;
+                while (temp != NULL) {
+                    errno = 0;
+                    strtoul_result = strtoul(temp, &strtoul_end, 10);
+
+                    if (errno ||
+                        temp == strtoul_end || strtoul_result > USHRT_MAX) {
+                        continue;
+                    }
+                    fmtp_p->redundant_encodings[iter++] =
+                        (uint8_t)strtoul_result;
+                    temp=PL_strtok_r(NULL, "/", &strtok_state);
+                }
+            } /* if (temp) */
         } else {
           // XXX Note that DTMF fmtp will fall into here:
           // a=fmtp:101 0-15 (or 0-15,NN,NN etc)
