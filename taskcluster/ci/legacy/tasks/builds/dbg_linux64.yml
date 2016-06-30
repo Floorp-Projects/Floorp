@@ -2,11 +2,11 @@ $inherits:
   from: 'tasks/builds/base_linux64.yml'
   variables:
     build_name: 'linux64'
-    build_type: 'debug'
+    build_type: 'dbg'
 task:
   metadata:
-      name: '[TC] Linux64 Debug'
-      description: 'Linux64 Debug'
+      name: '[TC] Linux64 Dbg'
+      description: 'Linux64 Dbg'
 
   routes:
     - 'index.buildbot.branches.{{project}}.linux64-debug'

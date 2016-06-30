@@ -1,13 +1,13 @@
 $inherits:
   from: 'tasks/builds/firefox_docker_base.yml'
   variables:
-    build_name: 'linux'
+    build_name: 'linux32'
 task:
   #workerType: ..
 
   routes:
-    - 'index.buildbot.branches.{{project}}.linux'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux'
+    - 'index.buildbot.branches.{{project}}.linux32'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux32'
 
   scopes:
     - 'docker-worker:cache:tooltool-cache'
