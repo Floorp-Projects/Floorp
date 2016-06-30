@@ -2665,6 +2665,7 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
 bool
 ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
                                 const bool& aIsPrivateData,
+                                const IPC::Principal& aRequestingPrincipal,
                                 const int32_t& aWhichClipboard)
 {
   nsresult rv;
@@ -2730,6 +2731,7 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
   }
 
   trans->SetIsPrivateData(aIsPrivateData);
+  trans->SetRequestingPrincipal(aRequestingPrincipal);
 
   clipboard->SetData(trans, nullptr, aWhichClipboard);
   return true;
