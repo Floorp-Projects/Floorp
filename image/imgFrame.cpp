@@ -12,6 +12,7 @@
 
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "gfxAlphaRecovery.h"
 
