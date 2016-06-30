@@ -764,4 +764,17 @@ class MOZ_RAII AutoLockForExclusiveAccess
 #pragma warning(pop)
 #endif
 
+inline JSContext*
+JSRuntime::unsafeContextFromAnyThread()
+{
+    return static_cast<JSContext*>(this);
+}
+
+inline JSContext*
+JSRuntime::contextFromMainThread()
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
+    return unsafeContextFromAnyThread();
+}
+
 #endif /* jscntxt_h */
