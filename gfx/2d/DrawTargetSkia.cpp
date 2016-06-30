@@ -228,7 +228,10 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
       SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
 
-      if (stops->mCount >= 2) {
+      if (stops->mCount < 2 ||
+          !pat.mBegin.IsFinite() || !pat.mEnd.IsFinite()) {
+        aPaint.setColor(SK_ColorTRANSPARENT);
+      } else {
         SkPoint points[2];
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mBegin.x), SkFloatToScalar(pat.mBegin.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mEnd.x), SkFloatToScalar(pat.mEnd.y));
@@ -241,8 +244,6 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
                                                               stops->mCount,
                                                               mode, 0, &mat);
         aPaint.setShader(shader);
-      } else {
-        aPaint.setColor(SK_ColorTRANSPARENT);
       }
       break;
     }
@@ -251,7 +252,11 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
       SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
 
-      if (stops->mCount >= 2) {
+      if (stops->mCount < 2 ||
+          !pat.mCenter1.IsFinite() || !IsFinite(pat.mRadius1) ||
+          !pat.mCenter2.IsFinite() || !IsFinite(pat.mRadius2)) {
+        aPaint.setColor(SK_ColorTRANSPARENT);
+      } else {
         SkPoint points[2];
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mCenter1.x), SkFloatToScalar(pat.mCenter1.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mCenter2.x), SkFloatToScalar(pat.mCenter2.y));
@@ -267,8 +272,6 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
                                                                        stops->mCount,
                                                                        mode, 0, &mat);
         aPaint.setShader(shader);
-      } else {
-        aPaint.setColor(SK_ColorTRANSPARENT);
       }
       break;
     }

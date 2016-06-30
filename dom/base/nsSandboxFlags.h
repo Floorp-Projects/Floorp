@@ -13,6 +13,11 @@
 #define nsSandboxFlags_h___
 
 /**
+ * This constant denotes the lack of a sandbox attribute/directive.
+ */
+const unsigned long SANDBOXED_NONE = 0x0;
+
+/**
  * This flag prevents content from navigating browsing contexts other than
  * itself, browsing contexts nested inside it, the top-level browsing context
  * and browsing contexts that it has opened.

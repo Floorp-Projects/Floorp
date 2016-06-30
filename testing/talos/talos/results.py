@@ -44,7 +44,7 @@ class TalosResults(object):
                 for url in urls:
                     _output.output(results, url, tbpl_output)
 
-        except utils.TalosError, e:
+        except utils.TalosError as e:
             # print to results.out
             try:
                 _output = output.GraphserverOutput(self)
@@ -55,11 +55,11 @@ class TalosResults(object):
                 )
             except:
                 pass
-            print '\nFAIL: %s' % str(e).replace('\n', '\nRETURN:')
+            print('\nFAIL: %s' % str(e).replace('\n', '\nRETURN:'))
             raise e
 
         if tbpl_output:
-            print "TinderboxPrint: TalosResult: %s" % json.dumps(tbpl_output)
+            print("TinderboxPrint: TalosResult: %s" % json.dumps(tbpl_output))
 
 
 class TestResults(object):
@@ -367,7 +367,7 @@ class BrowserLogResults(object):
         try:
             parts, last_token = utils.tokenize(self.results_raw,
                                                start_token, end_token)
-        except AssertionError, e:
+        except AssertionError as e:
             self.error(str(e))
         if not parts:
             return None, -1  # no match
@@ -426,11 +426,11 @@ class BrowserLogResults(object):
 
         filename = 'etl_output_thread_stats.csv'
         if not os.path.exists(filename):
-            print ("Warning: we are looking for xperf results file %s, and"
-                   " didn't find it" % filename)
+            print("Warning: we are looking for xperf results file %s, and"
+                  " didn't find it" % filename)
             return
 
-        contents = file(filename).read()
+        contents = open(filename).read()
         lines = contents.splitlines()
         reader = csv.reader(lines)
         header = None
@@ -458,11 +458,11 @@ class BrowserLogResults(object):
         if (set(mainthread_counters).intersection(counter_results.keys())):
             filename = 'etl_output.csv'
             if not os.path.exists(filename):
-                print ("Warning: we are looking for xperf results file"
-                       " %s, and didn't find it" % filename)
+                print("Warning: we are looking for xperf results file"
+                      " %s, and didn't find it" % filename)
                 return
 
-            contents = file(filename).read()
+            contents = open(filename).read()
             lines = contents.splitlines()
             reader = csv.reader(lines)
             header = None
@@ -506,7 +506,7 @@ class BrowserLogResults(object):
             os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
         filename = os.path.join(SCRIPT_DIR, 'mainthread_io.json')
         try:
-            contents = file(filename).read()
+            contents = open(filename).read()
             counter_results.setdefault('mainthreadio', []).append(contents)
             self.using_xperf = True
         except:

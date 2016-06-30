@@ -286,6 +286,8 @@ nsresult
 nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor, nsHttpHeaderArray::VisitorFilter filter)
 {
     NS_ENSURE_ARG_POINTER(visitor);
+    nsresult rv;
+
     uint32_t i, count = mHeaders.Length();
     for (i = 0; i < count; ++i) {
         const nsEntry &entry = mHeaders[i];
@@ -296,9 +298,10 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor, nsHttpHeaderArray
         } else if (filter == eFilterResponseOriginal && entry.variety == eVarietyResponse) {
             continue;
         }
-        if (NS_FAILED(visitor->VisitHeader(nsDependentCString(entry.header),
-                                           entry.value))) {
-            break;
+        rv = visitor->VisitHeader(
+            nsDependentCString(entry.header), entry.value);
+        if NS_FAILED(rv) {
+            return rv;
         }
     }
     return NS_OK;
