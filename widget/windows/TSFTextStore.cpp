@@ -2670,6 +2670,17 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     return E_FAIL;
   }
 
+  // If actually the range is not changing, we should do nothing.
+  // Perhaps, we can ignore the difference change because it must not be
+  // important for following edit.
+  if (currentSel.EqualsExceptDirection(*pSelection)) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+       ("TSF: 0x%p   TSFTextStore::SetSelectionInternal() Succeeded but "
+        "did nothing because the selection range isn't changing", this));
+    currentSel.SetSelection(*pSelection);
+    return S_OK;
+  }
+
   if (mComposition.IsComposing()) {
     if (aDispatchCompositionChangeEvent) {
       HRESULT hr = RestartCompositionIfNecessary();
@@ -2701,13 +2712,50 @@ TSFTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     return S_OK;
   }
 
+  TS_SELECTION_ACP selectionInContent(*pSelection);
+
+  // If mContentForTSF caches old contents which is now different from
+  // actual contents, we need some complicated hack here...
+  // Note that this hack assumes that this is used for reconversion.
+  if (mContentForTSF.IsInitialized() &&
+      mPendingTextChangeData.IsValid() &&
+      !mPendingTextChangeData.mCausedOnlyByComposition) {
+    uint32_t startOffset = static_cast<uint32_t>(selectionInContent.acpStart);
+    uint32_t endOffset = static_cast<uint32_t>(selectionInContent.acpEnd);
+    if (mPendingTextChangeData.mStartOffset >= endOffset) {
+      // Setting selection before any changed ranges is fine.
+    } else if (mPendingTextChangeData.mRemovedEndOffset <= startOffset) {
+      // Setting selection after removed range is fine with following
+      // adjustment.
+      selectionInContent.acpStart += mPendingTextChangeData.Difference();
+      selectionInContent.acpEnd += mPendingTextChangeData.Difference();
+    } else if (startOffset == endOffset) {
+      // Moving caret position may be fine in most cases even if the insertion
+      // point has already gone but in this case, composition will be inserted
+      // to unexpected position, though.
+      // It seems that moving caret into middle of the new text is odd.
+      // Perhaps, end of it is expected by users in most cases.
+      selectionInContent.acpStart = mPendingTextChangeData.mAddedEndOffset;
+      selectionInContent.acpEnd = selectionInContent.acpStart;
+    } else {
+      // Otherwise, i.e., setting range has already gone, we cannot set
+      // selection properly.
+      MOZ_LOG(sTextStoreLog, LogLevel::Error,
+         ("TSF: 0x%p   TSFTextStore::SetSelectionInternal() FAILED due to "
+          "there is unknown content change", this));
+      return E_FAIL;
+    }
+  }
+
   CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::SET_SELECTION;
-  action->mSelectionStart = pSelection->acpStart;
-  action->mSelectionLength = pSelection->acpEnd - pSelection->acpStart;
-  action->mSelectionReversed = (pSelection->style.ase == TS_AE_START);
+  action->mSelectionStart = selectionInContent.acpStart;
+  action->mSelectionLength =
+    selectionInContent.acpEnd - selectionInContent.acpStart;
+  action->mSelectionReversed = (selectionInContent.style.ase == TS_AE_START);
 
+  // Use TSF specified selection for updating mSelection.
   currentSel.SetSelection(*pSelection);
 
   return S_OK;
