@@ -29,4 +29,4 @@ task:
     treeherder:
       groupName: Desktop reftest
       groupSymbol: tc-R-e10s
-      symbol: R-e10s{{chunk}}
+      symbol: R{{chunk}}
