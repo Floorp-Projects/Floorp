@@ -57,7 +57,6 @@ const childSpec = protocol.generateActorSpec({
     echo: {
       request: { str: Arg(0) },
       response: { str: RetVal("string") },
-      telemetry: "ECHO"
     },
     getDetail1: {
       // This also exercises return-value-as-packet.

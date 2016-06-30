@@ -96,6 +96,25 @@ function findRcdNode(apzcTree) {
   return null;
 }
 
+// Return whether an element whose id includes |elementId| has been layerized.
+// Assumes |elementId| will be present in the content description for the
+// element, and not in the content descriptions of other elements.
+function isLayerized(elementId) {
+  var contentTestData = SpecialPowers.getDOMWindowUtils(window).getContentAPZTestData();
+  ok(contentTestData.paints.length > 0, "expected at least one paint");
+  var seqno = contentTestData.paints[contentTestData.paints.length - 1].sequenceNumber;
+  contentTestData = convertTestData(contentTestData);
+  var paint = contentTestData.paints[seqno];
+  for (var scrollId in paint) {
+    if ("contentDescription" in paint[scrollId]) {
+      if (paint[scrollId]["contentDescription"].includes(elementId)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function flushApzRepaints(aCallback, aWindow = window) {
   if (!aCallback) {
     throw "A callback must be provided!";

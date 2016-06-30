@@ -1,17 +1,14 @@
 FROM          taskcluster/builder:0.5.13
 MAINTAINER    Wander Lairson Costa <wcosta@mozilla.com>
 
-ENV           SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE /home/worker/socorro.token
-
 # Add utilities and configuration
 ADD           bin                   /home/worker/bin
-ADD           config                /home/worker/.aws/config
-ADD           socorro.token         /home/worker/socorro.token
+
+# Builds need the share module enabled
+ADD           hgrc /home/worker/.hgrc
+RUN chown -R worker:worker /home/worker/.hgrc
 
 RUN           yum install -y bc lzop java-1.7.0-openjdk
 RUN           pip install awscli
 RUN           npm install -g bower gulp apm grunt-cli
-
-# Set a default command useful for debugging
-ENTRYPOINT ["validate_task.py"]
 

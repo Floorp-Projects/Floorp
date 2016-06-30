@@ -1713,6 +1713,7 @@ void
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProxy);
 
   mCDMProxyPromiseHolder.ResolveIfExists(aProxy, __func__);
 }

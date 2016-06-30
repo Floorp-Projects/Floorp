@@ -79,6 +79,7 @@ module.exports = createClass({
     if (state == Types.deviceListState.LOADED) {
       listContent = [dom.option({
         value: "",
+        title: "",
         disabled: true,
         hidden: true,
       }, getStr("responsive.noDeviceSelected")),
@@ -86,20 +87,24 @@ module.exports = createClass({
           return dom.option({
             key: device.name,
             value: device.name,
+            title: "",
           }, device.name);
         }),
         dom.option({
           value: OPEN_DEVICE_MODAL_VALUE,
+          title: "",
         }, getStr("responsive.editDeviceList"))];
     } else if (state == Types.deviceListState.LOADING
       || state == Types.deviceListState.INITIALIZED) {
       listContent = [dom.option({
         value: "",
+        title: "",
         disabled: true,
       }, getStr("responsive.deviceListLoading"))];
     } else if (state == Types.deviceListState.ERROR) {
       listContent = [dom.option({
         value: "",
+        title: "",
         disabled: true,
       }, getStr("responsive.deviceListError"))];
     }
@@ -108,6 +113,7 @@ module.exports = createClass({
       {
         className: selectClass,
         value: selectedDevice,
+        title: selectedDevice,
         onChange: this.onSelectChange,
         disabled: (state !== Types.deviceListState.LOADED),
       },

@@ -758,18 +758,6 @@ setReq.onerror = function() {
         assert len(self.test_handlers) > 0
         self.reset_test_stats()
 
-    def _start_marionette(self):
-        need_external_ip = True
-        if not self.marionette:
-            self.marionette = self.driverclass(**self._build_kwargs())
-            # if we're working against a desktop version, we usually don't need
-            # an external ip
-            if self.capabilities['device'] == "desktop":
-                need_external_ip = False
-        self.logger.info('Initial Profile Destination is '
-                         '"{}"'.format(self.marionette.profile_path))
-        return need_external_ip
-
     def _set_baseurl(self, need_external_ip):
         # Gaia sets server_root and that means we shouldn't spin up our own httpd
         if not self.httpd:
@@ -809,9 +797,18 @@ setReq.onerror = function() {
     def run_tests(self, tests):
         start_time = time.time()
         self._initialize_test_run(tests)
+        self.marionette = self.driverclass(**self._build_kwargs())
 
-        need_external_ip = self._start_marionette()
+        # Determine if we need to bind the HTTPD to an external IP.
+        # We typically only need to do so if the remote is running
+        # on an emulated system, like Android (Fennec).
+        if self.capabilities["browserName"] == "Fennec":
+            need_external_ip = True
+        else:
+            need_external_ip = False
+
         self._set_baseurl(need_external_ip)
+        self.logger.info("Initial profile destination is %s" % self.marionette.profile_path)
 
         self._add_tests(tests)
 

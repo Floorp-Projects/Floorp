@@ -1579,8 +1579,6 @@ nsDocument::~nsDocument()
       }
       Accumulate(Telemetry::MIXED_CONTENT_PAGE_LOAD, mixedContentLevel);
 
-      Accumulate(Telemetry::SCROLL_LINKED_EFFECT_FOUND, mHasScrollLinkedEffect);
-
       // record mixed object subrequest telemetry
       if (mHasMixedContentObjectSubrequest) {
         /* mixed object subrequest loaded on page*/
@@ -4799,7 +4797,9 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     }
 
     MaybeRescheduleAnimationFrameNotifications();
-    mRegistry = new Registry();
+    if (Preferences::GetBool("dom.webcomponents.enabled")) {
+      mRegistry = new Registry();
+    }
   }
 
   // Remember the pointer to our window (or lack there of), to avoid
@@ -5695,8 +5695,10 @@ nsDocument::CreateElement(const nsAString& aTagName,
     return nullptr;
   }
 
-  if (!aTagName.Equals(aTypeExtension)) {
-    // Custom element type can not extend itself.
+  if (!aTypeExtension.IsVoid() &&
+      !aTagName.Equals(aTypeExtension)) {
+    // do not process 'is' if it is null or the extended type is the same as
+    // the localName
     SetupCustomElement(elem, GetDefaultNamespaceID(), &aTypeExtension);
   }
 
@@ -5753,6 +5755,13 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
     return nullptr;
   }
 
+  if (aTypeExtension.IsVoid() ||
+      aQualifiedName.Equals(aTypeExtension)) {
+    // do not process 'is' if it is null or the extended type is the same as
+    // the localName
+    return elem.forget();
+  }
+
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
   if (!aNamespaceURI.EqualsLiteral("*")) {
     rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
@@ -5762,10 +5771,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
     }
   }
 
-  if (!aQualifiedName.Equals(aTypeExtension)) {
-    // A custom element type can not extend itself.
-    SetupCustomElement(elem, nameSpaceId, &aTypeExtension);
-  }
+  SetupCustomElement(elem, nameSpaceId, &aTypeExtension);
 
   return elem.forget();
 }
