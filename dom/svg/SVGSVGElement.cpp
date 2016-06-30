@@ -1096,6 +1096,12 @@ SVGSVGElement::ClearPreserveAspectRatioProperty()
 }
 
 void
+SVGSVGElement::SetIsPaintingForSVGImageElement(bool aIsPaintingSVGImageElement)
+{
+  mIsPaintingSVGImageElement = aIsPaintingSVGImageElement;
+}
+
+void
 SVGSVGElement::
   SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR)
 {
@@ -1111,7 +1117,6 @@ SVGSVGElement::
     // want that.  Need to tell ourselves to flush our transform.
     mImageNeedsTransformInvalidation = true;
   }
-  mIsPaintingSVGImageElement = true;
 
   if (!hasViewBoxRect) {
     return; // preserveAspectRatio irrelevant (only matters if we have viewBox)
@@ -1134,7 +1139,6 @@ SVGSVGElement::ClearImageOverridePreserveAspectRatio()
              "should only override image preserveAspectRatio in images");
 #endif
 
-  mIsPaintingSVGImageElement = false;
   if (!HasViewBoxRect() && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will want to paint me with a synthesized
     // viewBox, but my <svg:image> client that just painted me did NOT
