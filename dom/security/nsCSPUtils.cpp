@@ -316,6 +316,39 @@ permitsScheme(const nsAString& aEnforcementScheme,
            (scheme.EqualsASCII("ws") && aEnforcementScheme.EqualsASCII("wss"))));
 }
 
+/*
+ * A helper function for appending a CSP header to an existing CSP
+ * policy.
+ *
+ * @param aCsp           the CSP policy
+ * @param aHeaderValue   the header
+ * @param aReportOnly    is this a report-only header?
+ */
+
+nsresult
+CSP_AppendCSPFromHeader(nsIContentSecurityPolicy* aCsp,
+                        const nsAString& aHeaderValue,
+                        bool aReportOnly)
+{
+  NS_ENSURE_ARG(aCsp);
+
+  // Need to tokenize the header value since multiple headers could be
+  // concatenated into one comma-separated list of policies.
+  // See RFC2616 section 4.2 (last paragraph)
+  nsresult rv = NS_OK;
+  nsCharSeparatedTokenizer tokenizer(aHeaderValue, ',');
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& policy = tokenizer.nextToken();
+    rv = aCsp->AppendPolicy(policy, aReportOnly, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+    {
+      CSPUTILSLOG(("CSP refined with policy: \"%s\"",
+                   NS_ConvertUTF16toUTF8(policy).get()));
+    }
+  }
+  return NS_OK;
+}
+
 /* ===== nsCSPSrc ============================ */
 
 nsCSPBaseSrc::nsCSPBaseSrc()
