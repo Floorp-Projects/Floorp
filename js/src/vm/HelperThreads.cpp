@@ -632,32 +632,18 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threadCount(0),
    threads(nullptr),
    wasmCompilationInProgress(false),
-   numWasmFailedJobs(0),
-   helperLock(nullptr),
-   consumerWakeup(nullptr),
-   producerWakeup(nullptr),
-   pauseWakeup(nullptr)
+   numWasmFailedJobs(0)
 {
     cpuCount = GetCPUCount();
     threadCount = ThreadCountForCPUCount(cpuCount);
 
     MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
-
-    helperLock = PR_NewLock();
-    consumerWakeup = PR_NewCondVar(helperLock);
-    producerWakeup = PR_NewCondVar(helperLock);
-    pauseWakeup = PR_NewCondVar(helperLock);
 }
 
 void
 GlobalHelperThreadState::finish()
 {
     finishThreads();
-
-    PR_DestroyCondVar(consumerWakeup);
-    PR_DestroyCondVar(producerWakeup);
-    PR_DestroyCondVar(pauseWakeup);
-    PR_DestroyLock(helperLock);
 }
 
 void
@@ -678,7 +664,7 @@ GlobalHelperThreadState::lock()
 {
     MOZ_ASSERT(!isLocked());
     AssertCurrentThreadCanLock(HelperThreadStateLock);
-    PR_Lock(helperLock);
+    helperLock.lock();
 #ifdef DEBUG
     lockOwner = PR_GetCurrentThread();
 #endif
@@ -691,7 +677,7 @@ GlobalHelperThreadState::unlock()
 #ifdef DEBUG
     lockOwner = nullptr;
 #endif
-    PR_Unlock(helperLock);
+    helperLock.unlock();
 }
 
 #ifdef DEBUG
@@ -710,8 +696,7 @@ GlobalHelperThreadState::wait(AutoLockHelperThreadState& locked, CondVar which,
 #ifdef DEBUG
     lockOwner = nullptr;
 #endif
-    DebugOnly<PRStatus> status = PR_WaitCondVar(whichWakeup(which), DurationToPRInterval(timeout));
-    MOZ_ASSERT(status == PR_SUCCESS);
+    whichWakeup(which).wait_for(locked, timeout);
 #ifdef DEBUG
     lockOwner = PR_GetCurrentThread();
 #endif
@@ -721,14 +706,14 @@ void
 GlobalHelperThreadState::notifyAll(CondVar which)
 {
     MOZ_ASSERT(isLocked());
-    PR_NotifyAllCondVar(whichWakeup(which));
+    whichWakeup(which).notify_all();
 }
 
 void
 GlobalHelperThreadState::notifyOne(CondVar which)
 {
     MOZ_ASSERT(isLocked());
-    PR_NotifyCondVar(whichWakeup(which));
+    whichWakeup(which).notify_one();
 }
 
 bool

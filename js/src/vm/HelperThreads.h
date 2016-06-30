@@ -29,6 +29,7 @@
 namespace js {
 
 class AutoLockHelperThreadState;
+class AutoUnlockHelperThreadState;
 struct HelperThread;
 struct ParseTask;
 namespace jit {
@@ -50,6 +51,9 @@ enum class ParseTaskKind
 // Per-process state for off thread work items.
 class GlobalHelperThreadState
 {
+    friend class AutoLockHelperThreadState;
+    friend class AutoUnlockHelperThreadState;
+
   public:
     // Number of CPUs to treat this machine as having when creating threads.
     // May be accessed without locking.
@@ -251,17 +255,17 @@ class GlobalHelperThreadState
      * Lock protecting all mutable shared state accessed by helper threads, and
      * used by all condition variables.
      */
-    PRLock* helperLock;
+    js::Mutex helperLock;
 #ifdef DEBUG
     mozilla::Atomic<PRThread*> lockOwner;
 #endif
 
     /* Condvars for threads waiting/notifying each other. */
-    PRCondVar* consumerWakeup;
-    PRCondVar* producerWakeup;
-    PRCondVar* pauseWakeup;
+    js::ConditionVariable consumerWakeup;
+    js::ConditionVariable producerWakeup;
+    js::ConditionVariable pauseWakeup;
 
-    PRCondVar* whichWakeup(CondVar which) {
+    js::ConditionVariable& whichWakeup(CondVar which) {
         switch (which) {
           case CONSUMER: return consumerWakeup;
           case PRODUCER: return producerWakeup;
@@ -440,24 +444,36 @@ struct AutoEnqueuePendingParseTasksAfterGC {
 bool
 StartOffThreadCompression(ExclusiveContext* cx, SourceCompressionTask* task);
 
-class MOZ_RAII AutoLockHelperThreadState
+class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex>
 {
+    using Base = LockGuard<Mutex>;
+
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     explicit AutoLockHelperThreadState(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+      : Base(HelperThreadState().helperLock)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        HelperThreadState().lock();
+
+#ifdef DEBUG
+        HelperThreadState().lockOwner = PR_GetCurrentThread();
+#endif
     }
 
     ~AutoLockHelperThreadState() {
-        HelperThreadState().unlock();
+#ifdef DEBUG
+        HelperThreadState().lockOwner = nullptr;
+#endif
     }
 };
 
 class MOZ_RAII AutoUnlockHelperThreadState
 {
+    // This is only in a Maybe so that we can update the DEBUG-only lockOwner
+    // thread in the proper order.
+    mozilla::Maybe<UnlockGuard<Mutex>> unlocked;
+
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
@@ -466,12 +482,20 @@ class MOZ_RAII AutoUnlockHelperThreadState
                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        HelperThreadState().unlock();
+
+#ifdef DEBUG
+        HelperThreadState().lockOwner = nullptr;
+#endif
+
+        unlocked.emplace(locked);
     }
 
-    ~AutoUnlockHelperThreadState()
-    {
-        HelperThreadState().lock();
+    ~AutoUnlockHelperThreadState() {
+        unlocked.reset();
+
+#ifdef DEBUG
+        HelperThreadState().lockOwner = PR_GetCurrentThread();
+#endif
     }
 };
 
