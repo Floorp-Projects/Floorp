@@ -69,12 +69,6 @@ CompileRuntime::addressOfIonBailAfter()
 #endif
 
 const void*
-CompileRuntime::addressOfJSContext()
-{
-    return &runtime()->jitJSContext;
-}
-
-const void*
 CompileRuntime::addressOfActivation()
 {
     return runtime()->addressOfActivation();
@@ -98,6 +92,12 @@ const void*
 CompileRuntime::addressOfInterruptUint32()
 {
     return runtime()->addressOfInterruptUint32();
+}
+
+const void*
+CompileRuntime::getJSContext()
+{
+    return runtime()->unsafeContextFromAnyThread();
 }
 
 const JitRuntime*

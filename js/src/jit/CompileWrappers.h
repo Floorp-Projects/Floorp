@@ -48,9 +48,6 @@ class CompileRuntime
     const void* addressOfIonBailAfter();
 #endif
 
-    // &runtime()->jitJSContext
-    const void* addressOfJSContext();
-
     // &runtime()->activation_
     const void* addressOfActivation();
 
@@ -62,6 +59,10 @@ class CompileRuntime
 #endif
 
     const void* addressOfInterruptUint32();
+
+    // We have to bake JSContext* into JIT code, but this pointer shouldn't be
+    // used/dereferenced on the background thread so we return it as void*.
+    const void* getJSContext();
 
     const JitRuntime* jitRuntime();
 
