@@ -261,7 +261,9 @@ run_cycles()
             run_cycle_standard
             ;;
         "pkix")
-            run_cycle_pkix
+            if [ -z "$NSS_DISABLE_LIBPKIX" ]; then
+                run_cycle_pkix
+            fi
             ;;
         "upgradedb")
             run_cycle_upgrade_db

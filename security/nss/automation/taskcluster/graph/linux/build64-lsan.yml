@@ -1,14 +1,17 @@
 ---
 - task:
     metadata:
-      name: "Linux 64 (ASan, debug)"
-      description: "Linux 64 (ASan, debug)"
+      name: "Linux 64 (LSan, debug)"
+      description: "Linux 64 (LSan, debug)"
 
     payload:
       env:
         GCC_VERSION: clang
         GXX_VERSION: clang++
+        NSS_DISABLE_ARENA_FREE_LIST: 1
+        NSS_DISABLE_UNLOAD: 1
         NSS_ENABLE_TLS_1_3: 1
+        NSS_ENABLE_LSAN: 1
         USE_ASAN: 1
         USE_64: 1
 
@@ -19,22 +22,14 @@
         machine:
           platform: linux64
         collection:
-          asan: true
+          lsan: true
 
   tests:
-    - chains
     - cipher
-    - crmf
-    - db
     - ec
-    - fips
     - gtests
     - lowhash
     - merge
     - ocsp
     - pkits
-    - pkix
     - sdr
-    - smime
-    - ssl
-    - tools

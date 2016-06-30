@@ -81,25 +81,43 @@ class TlsConnectTestBase : public ::testing::Test {
   void ConfigureSessionCache(SessionResumptionMode client,
                              SessionResumptionMode server);
   void EnableAlpn();
+  void EnableAlpn(const uint8_t* val, size_t len);
+  void EnsureModelSockets();
+  void CheckAlpn(const std::string& val);
   void EnableSrtp();
   void CheckSrtp() const;
   void SendReceive();
+  void SetupForZeroRtt();
+  void ZeroRttSendReceive(
+      bool expect_readable,
+      std::function<bool()> post_clienthello_check = nullptr);
   void Receive(size_t amount);
   void ExpectExtendedMasterSecret(bool expected);
+  void ExpectEarlyDataAccepted(bool expected);
 
  protected:
   Mode mode_;
   TlsAgent* client_;
   TlsAgent* server_;
+  TlsAgent* client_model_;
+  TlsAgent* server_model_;
   uint16_t version_;
   SessionResumptionMode expected_resumption_mode_;
   std::vector<std::vector<uint8_t>> session_ids_;
 
+  // A simple value of "a", "b".  Note that the preferred value of "a" is placed
+  // at the end, because the NSS API follows the now defunct NPN specification,
+  // which places the preferred (and default) entry at the end of the list.
+  // NSS will move this final entry to the front when used with ALPN.
+  const uint8_t alpn_dummy_val_[4] = { 0x01, 0x62, 0x01, 0x61 };
+
  private:
   void CheckResumption(SessionResumptionMode expected);
   void CheckExtendedMasterSecret();
+  void CheckEarlyDataAccepted();
 
   bool expect_extended_master_secret_;
+  bool expect_early_data_accepted_;
 };
 
 // A non-parametrized TLS test base.

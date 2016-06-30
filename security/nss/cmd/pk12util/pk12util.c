@@ -211,6 +211,9 @@ p12u_ucs2_ascii_conversion_function(PRBool toUnicode,
     it.data = inBuf;
     it.len = inBufLen;
     dup = SECITEM_DupItem(&it);
+    if (!dup) {
+        return PR_FALSE;
+    }
     /* If converting Unicode to ASCII, swap bytes before conversion
      * as neccessary.
      */
@@ -223,8 +226,7 @@ p12u_ucs2_ascii_conversion_function(PRBool toUnicode,
     /* Perform the conversion. */
     ret = PORT_UCS2_UTF8Conversion(toUnicode, dup->data, dup->len,
                                    outBuf, maxOutBufLen, outBufLen);
-    if (dup)
-        SECITEM_ZfreeItem(dup, PR_TRUE);
+    SECITEM_ZfreeItem(dup, PR_TRUE);
 
 #ifdef DEBUG_CONVERSION
     if (pk12_debugging) {
@@ -1087,6 +1089,10 @@ main(int argc, char **argv)
     }
 
 done:
+    if (import_file != NULL)
+        PORT_ZFree(import_file, PL_strlen(import_file));
+    if (export_file != NULL)
+        PORT_ZFree(export_file, PL_strlen(export_file));
     if (slotPw.data != NULL)
         PORT_ZFree(slotPw.data, PL_strlen(slotPw.data));
     if (p12FilePw.data != NULL)

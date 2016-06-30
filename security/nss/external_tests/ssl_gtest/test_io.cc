@@ -49,6 +49,7 @@ class Packet : public DataBuffer {
 static PRStatus DummyClose(PRFileDesc *f) {
   DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
   f->secret = nullptr;
+  f->dtor(f);
   delete io;
   return PR_SUCCESS;
 }
@@ -396,6 +397,15 @@ Poller *Poller::Instance() {
 void Poller::Shutdown() {
   delete instance;
   instance = nullptr;
+}
+
+Poller::~Poller()
+{
+  while (!timers_.empty()) {
+    Timer *timer = timers_.top();
+    timers_.pop();
+    delete timer;
+  }
 }
 
 void Poller::Wait(Event event, DummyPrSocket *adapter, PollTarget *target,
