@@ -91,12 +91,10 @@ this.Context.fromString = function(s) {
  *
  * @param {string} appName
  *     Description of the product, for example "B2G" or "Firefox".
- * @param {string} device
- *     Device this driver should assume.
  * @param {function()} stopSignal
  *     Signal to stop the Marionette server.
  */
-this.GeckoDriver = function(appName, device, stopSignal) {
+this.GeckoDriver = function(appName, stopSignal) {
   this.appName = appName;
   this.stopSignal_ = stopSignal;
 
@@ -150,7 +148,6 @@ this.GeckoDriver = function(appName, device, stopSignal) {
     // proprietary extensions
     "XULappId" : Services.appinfo.ID,
     "appBuildId" : Services.appinfo.appBuildID,
-    "device": device,
     "processId" : Services.appinfo.processID,
     "version": Services.appinfo.version,
   };

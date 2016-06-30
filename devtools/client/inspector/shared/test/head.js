@@ -12,7 +12,6 @@ Services.scriptloader.loadSubScript(
   this);
 
 var {CssRuleView} = require("devtools/client/inspector/rules/rules");
-var {CssLogic, CssSelector} = require("devtools/shared/inspector/css-logic");
 var {getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/client/shared/inplace-editor");
 

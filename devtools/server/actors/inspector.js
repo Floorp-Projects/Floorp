@@ -150,7 +150,7 @@ loader.lazyGetter(this, "eventListenerService", function () {
            .getService(Ci.nsIEventListenerService);
 });
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
+loader.lazyGetter(this, "CssLogic", () => require("devtools/server/css-logic").CssLogic);
 
 /**
  * We only send nodeValue up to a certain size by default.  This stuff

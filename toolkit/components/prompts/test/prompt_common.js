@@ -12,7 +12,6 @@ function hasTabModalPrompts() {
 var isTabModal = hasTabModalPrompts();
 var isSelectDialog = false;
 var isOSX = ("nsILocalFileMac" in SpecialPowers.Ci);
-var isLinux = ("@mozilla.org/gnome-gconf-service;1" in SpecialPowers.Cc);
 var isE10S = SpecialPowers.Services.appinfo.processType == 2;
 
 
@@ -73,17 +72,11 @@ function checkPromptState(promptState, expectedState) {
         is(promptState.butt1Disabled, false, "Checking cancel-button isn't disabled");
     }
 
-    if (isLinux && !promptState.focused) {
-      todo(false, "Checking button default fails if focus is not correct."); // bug 1278418
-    } else {
-      is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
-      is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
-      is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
-    }
+    is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
+    is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
+    is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
 
-    if (isLinux && (!promptState.focused || isE10S)) {
-        todo(false, "Focus seems missing or wrong on Linux"); // bug 1265077
-    } else if (isOSX && expectedState.focused && expectedState.focused.startsWith("button")) {
+    if (isOSX && expectedState.focused && expectedState.focused.startsWith("button")) {
         is(promptState.focused, "infoBody", "buttons don't focus on OS X, but infoBody does instead");
     } else {
         is(promptState.focused, expectedState.focused, "Checking focused element");

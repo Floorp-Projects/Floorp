@@ -55,6 +55,7 @@
       {
         "name": "show",
         "type": "function",
+        "async": true,
         "description": "Shows the page action. The page action is shown whenever the tab is selected.",
         "parameters": [
           {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
@@ -63,6 +64,7 @@
       {
         "name": "hide",
         "type": "function",
+        "async": true,
         "description": "Hides the page action.",
         "parameters": [
           {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}

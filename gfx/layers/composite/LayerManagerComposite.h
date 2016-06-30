@@ -309,6 +309,9 @@ public:
   void UnusedApzTransformWarning() {
     mUnusedApzTransformWarning = true;
   }
+  void DisabledApzWarning() {
+    mDisabledApzWarning = true;
+  }
 
   bool LastFrameMissedHWC() { return mLastFrameMissedHWC; }
 
@@ -392,6 +395,7 @@ private:
   float mWarningLevel;
   mozilla::TimeStamp mWarnTime;
   bool mUnusedApzTransformWarning;
+  bool mDisabledApzWarning;
   RefPtr<Compositor> mCompositor;
   UniquePtr<LayerProperties> mClonedLayerTreeProperties;
 

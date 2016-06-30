@@ -1150,10 +1150,11 @@ ScrollFrameHelper::WantAsyncScroll() const
   }
 
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
-  uint32_t directions = mOuter->GetScrollTargetFrame()->GetPerceivedScrollingDirections();
-  bool isVScrollable = !!(directions & nsIScrollableFrame::VERTICAL) &&
+  nscoord oneDevPixel = GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
+  nsRect scrollRange = GetScrollRange();
+  bool isVScrollable = (scrollRange.height >= oneDevPixel) &&
                        (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
-  bool isHScrollable = !!(directions & nsIScrollableFrame::HORIZONTAL) &&
+  bool isHScrollable = (scrollRange.width >= oneDevPixel) &&
                        (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
 
 #if defined(MOZ_B2G) || defined(MOZ_WIDGET_ANDROID)
