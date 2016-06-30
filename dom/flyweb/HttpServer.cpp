@@ -57,7 +57,8 @@ HttpServer::Init(int32_t aPort, bool aHttps, HttpServerListener* aListener)
   if (mHttps) {
     nsCOMPtr<nsILocalCertService> lcs =
       do_CreateInstance("@mozilla.org/security/local-cert-service;1");
-    nsresult rv = lcs->GetOrCreateCert(NS_LITERAL_CSTRING("flyweb"), this);
+    nsresult rv = lcs->GetOrCreateCert(NS_LITERAL_CSTRING("flyweb"), this,
+                                       nsILocalCertService::KEY_TYPE_EC);
     if (NS_FAILED(rv)) {
       NotifyStarted(rv);
     }

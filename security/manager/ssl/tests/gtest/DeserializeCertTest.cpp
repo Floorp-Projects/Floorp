@@ -23,7 +23,7 @@
 // We would like to move away from this binary compatibility requirement
 // in service workers.  See bug 1248628.
 
-TEST(DeserializeCert, gecko33)
+TEST(psm_DeserializeCert, gecko33)
 {
   // Gecko 33+ vintage Security info serialized with UUIDs:
   //  - nsISupports  00000000-0000-0000-c000-000000000046
@@ -59,7 +59,7 @@ TEST(DeserializeCert, gecko33)
   ASSERT_TRUE(cert);
 }
 
-TEST(DeserializeCert, gecko46)
+TEST(psm_DeserializeCert, gecko46)
 {
   // Gecko 46+ vintage Security info serialized with UUIDs:
   //  - nsISupports  00000000-0000-0000-c000-000000000046

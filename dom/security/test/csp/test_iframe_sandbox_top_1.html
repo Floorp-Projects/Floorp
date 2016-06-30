@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=671389
+Bug 671389 - Implement CSP sandbox directive
+
+Tests CSP sandbox attribute on top-level page.
+
+Minimal flags: allow-same-origin allow-scripts:
+Since we need to load the SimpleTest files, we have to set the
+allow-same-origin flag. Additionally, we set the allow-scripts flag
+since we need JS to check the flags.
+
+Though not necessary, for this test we also set the allow-forms flag.
+We may later wish to extend the testing suite with sandbox_csp_top_*
+tests that set different permutations of the flags.
+
+CSP header: Content-Security-Policy: sandbox allow-forms allow-scripts allow-same-origin
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 671389</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// Check if two sandbox flags are the same.
+// getSandboxFlags returns a list of sandbox flags (if any) or
+// null if the flag is not set.
+// This function checks if two flags are the same, i.e., they're
+// either not set or have the same flags.
+function eqFlags(a, b) {
+  if (a === null && b === null) { return true; }
+  if (a === null || b === null) { return false; }
+  if (a.length !== b.length) { return false; }
+  var a_sorted = a.sort();
+  var b_sorted = b.sort();
+  for (var i in a_sorted) {
+    if (a_sorted[i] !== b_sorted[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Get the sandbox flags of document doc.
+// If the flag is not set sandboxFlagsAsString returns null,
+// this function also returns null.
+// If the flag is set it may have some flags; in this case
+// this function returns the (potentially empty) list of flags.
+function getSandboxFlags(doc) {
+  var flags = doc.sandboxFlagsAsString;
+  if (flags === null) { return null; }
+  return flags? flags.split(" "):[];
+}
+
+function checkFlags(expected) {
+  try {
+    var flags = getSandboxFlags(SpecialPowers.wrap(document));
+    ok(eqFlags(flags, expected), name + ' expected: "' + expected + '", got: "' + flags + '"');
+  } catch (e) {
+    ok(false, name + ' expected "' + expected + ', but failed with ' + e);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+
+<body onLoad='checkFlags(["allow-forms", "allow-scripts", "allow-same-origin"]);'>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=671389">Mozilla Bug 671389</a> - Implement CSP sandbox directive
+<p id="display"></p>
+<div id="content">
+  I am a top-level page sandboxed with "allow-scripts allow-forms
+  allow-same-origin".
+</div>
+</body>
+</html>

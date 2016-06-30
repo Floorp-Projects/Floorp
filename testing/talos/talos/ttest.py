@@ -195,7 +195,7 @@ class TTest(object):
                         if line.strip() == "":
                             continue
 
-                        print line
+                        print(line)
                         mainthread_error_count += 1
                     mozfile.remove(rawlog)
 

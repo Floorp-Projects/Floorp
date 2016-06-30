@@ -20,9 +20,9 @@
 #include "jswrapper.h"
 
 #include "asmjs/AsmJS.h"
-#include "asmjs/Wasm.h"
 #include "asmjs/WasmBinaryToExperimentalText.h"
 #include "asmjs/WasmBinaryToText.h"
+#include "asmjs/WasmJS.h"
 #include "asmjs/WasmTextToBinary.h"
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"

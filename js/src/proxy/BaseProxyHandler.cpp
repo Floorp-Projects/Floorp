@@ -359,10 +359,9 @@ BaseProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleVa
 }
 
 bool
-BaseProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
-                                  ESClassValue* classValue) const
+BaseProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) const
 {
-    *classValue = ESClass_Other;
+    *cls = ESClass::Other;
     return true;
 }
 

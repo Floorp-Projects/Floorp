@@ -31,10 +31,6 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 
-#ifdef DEBUG
-// #define NOISY_DEBUG
-#endif
-
 using namespace mozilla;
 
 //----------------------------------------------------------------------
@@ -331,7 +327,7 @@ void nsStyleContext::RemoveChild(nsStyleContext* aChild)
     if ((*list) == aChild) {
       (*list) = (*list)->mNextSibling;
     }
-  } 
+  }
   else {
     NS_ASSERTION((*list) == aChild, "bad sibling pointers");
     (*list) = nullptr;
@@ -474,7 +470,7 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 // This is an evil evil function, since it forces you to alloc your own separate copy of
 // style data!  Do not use this function unless you absolutely have to!  You should avoid
 // this at all costs! -dwh
-void* 
+void*
 nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 {
   MOZ_ASSERT(!mSource.IsServoComputedValues(),
@@ -559,7 +555,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 {
   // This method should only be called from nsRuleNode!  It is not a public
   // method!
-  
+
   NS_ASSERTION(aSID >= 0 && aSID < nsStyleStructID_Length, "out of bounds");
 
   // NOTE:  nsCachedStyleData::GetStyleData works roughly the same way.
@@ -1143,9 +1139,9 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
       const nsStyleOutline *otherVisOutline = otherVis->StyleOutline();
       bool haveColor;
       nscolor thisColor, otherColor;
-      if (thisVisOutline->GetOutlineInitialColor() != 
+      if (thisVisOutline->GetOutlineInitialColor() !=
             otherVisOutline->GetOutlineInitialColor() ||
-          (haveColor = thisVisOutline->GetOutlineColor(thisColor)) != 
+          (haveColor = thisVisOutline->GetOutlineColor(thisColor)) !=
             otherVisOutline->GetOutlineColor(otherColor) ||
           (haveColor && thisColor != otherColor)) {
         change = true;
@@ -1278,7 +1274,7 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
 
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
-void* 
+void*
 nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
@@ -1288,7 +1284,7 @@ nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_N
 
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
-void 
+void
 nsStyleContext::Destroy()
 {
   // Get the pres context.

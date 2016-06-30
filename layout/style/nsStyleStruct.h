@@ -1242,8 +1242,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
 
 public:
   nsBorderColors** mBorderColors;        // [reset] composite (stripe) colors
-
-public:
   nsStyleCorners mBorderRadius;       // [reset] coord, percent
   nsStyleImage   mBorderImageSource;  // [reset]
   nsStyleSides   mBorderImageSlice;   // [reset] factor, percent

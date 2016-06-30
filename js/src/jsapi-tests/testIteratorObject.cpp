@@ -13,17 +13,17 @@ BEGIN_TEST(testIteratorObject)
 
     CHECK(result.isObject());
     JS::RootedObject obj1(cx, &result.toObject());
-    ESClassValue class1 = ESClass_Other;
+    ESClass class1 = ESClass::Other;
     CHECK(GetBuiltinClass(cx, obj1, &class1));
-    CHECK(class1 == ESClass_MapIterator);
+    CHECK(class1 == ESClass::MapIterator);
 
     EVAL("new Set(['value1', 'value2']).entries()", &result);
 
     CHECK(result.isObject());
     JS::RootedObject obj2(cx, &result.toObject());
-    ESClassValue class2 = ESClass_Other;
+    ESClass class2 = ESClass::Other;
     CHECK(GetBuiltinClass(cx, obj2, &class2));
-    CHECK(class2 == ESClass_SetIterator);
+    CHECK(class2 == ESClass::SetIterator);
 
     return true;
 }

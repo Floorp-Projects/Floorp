@@ -13,7 +13,7 @@
   <label class="header" value="&certmgr.hierarchy.label;"
          control="treesetDump" accesskey="&certmgr.hierarchy.accesskey2;"/>
   <tree id="treesetDump" onselect="updateCertDump();" flex="1"
-        hidecolumnpicker="true" style="min-height: 8em;">
+        hidecolumnpicker="true" style="height: 8em;">
     <treecols>
       <treecol id="dumpCol" flex="1" primary="true" hideheader="true"/>
     </treecols>
@@ -21,7 +21,7 @@
 
   <label class="header" value="&certmgr.details.label;"
          control="prettyDumpTree" accesskey="&certmgr.details.accesskey;"/>
-  <tree id="prettyDumpTree" style="min-height: 15em" treelines="true" flex="1"
+  <tree id="prettyDumpTree" style="height: 15em" treelines="true" flex="1"
             onselect="displaySelected();" hidecolumnpicker="true">
     <treecols>
       <treecol flex="1" id="certDataCol" primary="true" hideheader="true"/>
@@ -32,7 +32,7 @@
   <label class="header" value="&certmgr.fields.label;"
          control="certDumpVal" accesskey="&certmgr.fields.accesskey;"/>
   <textbox id="certDumpVal" multiline="true" flex="1"
-           readonly="true" style="min-height: 11em; font-family: -moz-fixed;"/>
+           readonly="true" style="height: 11em; font-family: -moz-fixed;"/>
 
   <separator class="thin"/>
   <hbox>

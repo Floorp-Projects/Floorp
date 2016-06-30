@@ -3165,7 +3165,13 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
   nsXPIDLString value;
 
   if (mFilesOrDirectories.IsEmpty()) {
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+    if ((Preferences::GetBool("dom.input.dirpicker", false) &&
+         HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) ||
+        (Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
+         HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "NoDirSelected", value);
+    } else if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "NoFilesSelected", value);
     } else {
@@ -4405,12 +4411,10 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
     if (target &&
         target->GetParent() == this &&
         target->IsRootOfNativeAnonymousSubtree() &&
-        (target->HasAttr(kNameSpaceID_None, nsGkAtoms::directory) ||
-         target->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
-      MOZ_ASSERT(Preferences::GetBool("dom.input.dirpicker", false) ||
-                 Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false),
-                 "No API or UI should have been exposed to allow this code to "
-                 "be reached");
+        ((Preferences::GetBool("dom.input.dirpicker", false) &&
+          HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) ||
+         (Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
+          HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)))) {
       type = FILE_PICKER_DIRECTORY;
     }
     return InitFilePicker(type);

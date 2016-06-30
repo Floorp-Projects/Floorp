@@ -29,7 +29,6 @@
 
 #include "jswrapper.h"
 
-#include "asmjs/Wasm.h"
 #include "asmjs/WasmGenerator.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"

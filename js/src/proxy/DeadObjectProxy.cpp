@@ -115,8 +115,7 @@ DeadObjectProxy::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleVal
 }
 
 bool
-DeadObjectProxy::getBuiltinClass(JSContext* cx, HandleObject proxy,
-                                 ESClassValue* classValue) const
+DeadObjectProxy::getBuiltinClass(JSContext* cx, HandleObject proxy, ESClass* cls) const
 {
     ReportDead(cx);
     return false;

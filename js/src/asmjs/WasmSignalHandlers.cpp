@@ -21,7 +21,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
-#include "asmjs/Wasm.h"
 #include "asmjs/WasmInstance.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"

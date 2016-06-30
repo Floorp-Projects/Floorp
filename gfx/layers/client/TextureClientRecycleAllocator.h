@@ -18,6 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class TextureClientHolder;
+struct PlanarYCbCrData;
 
 class ITextureClientRecycleAllocator
 {
@@ -56,6 +57,21 @@ public:
   const TextureFlags mTextureFlags;
   const TextureAllocationFlags mAllocationFlags;
 };
+
+class YCbCrTextureClientAllocationHelper : public ITextureClientAllocationHelper
+{
+public:
+  YCbCrTextureClientAllocationHelper(const PlanarYCbCrData& aData,
+                                     TextureFlags aTextureFlags);
+
+  bool IsCompatible(TextureClient* aTextureClient) override;
+
+  already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) override;
+
+protected:
+  const PlanarYCbCrData& mData;
+};
+
 
 /**
  * TextureClientRecycleAllocator provides TextureClients allocation and

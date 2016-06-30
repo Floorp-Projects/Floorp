@@ -33,6 +33,13 @@ public:
   // Return true if mimetype is Opus
   static bool IsOpus(const nsACString& aMimeType);
 
+  // Pack pre-skip/CodecDelay, given in microseconds, into a
+  // MediaByteBuffer. The decoder expects this value to come
+  // from the container (if any) and to precede the OpusHead
+  // block in the CodecSpecificConfig buffer to verify the
+  // values match.
+  static void AppendCodecDelay(MediaByteBuffer* config, uint64_t codecDelayUS);
+
 private:
   enum DecodeError {
     DECODE_SUCCESS,
