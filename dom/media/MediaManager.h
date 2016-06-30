@@ -63,15 +63,25 @@ extern LogModule* GetMediaManagerLog();
 class MediaDevice : public nsIMediaDevice
 {
 public:
+  typedef MediaEngineSource Source;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
   void SetId(const nsAString& aID);
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
+  virtual Source* GetSource() = 0;
+  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+                    const MediaEnginePrefs &aPrefs,
+                    const nsACString& aOrigin);
+  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
+                   const MediaEnginePrefs &aPrefs);
+  nsresult Deallocate();
 protected:
   virtual ~MediaDevice() {}
   explicit MediaDevice(MediaEngineSource* aSource, bool aIsVideo);
+
   static uint32_t FitnessDistance(nsString aN,
     const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint);
 private:
@@ -84,6 +94,7 @@ protected:
   nsString mID;
   dom::MediaSourceEnum mMediaSource;
   RefPtr<MediaEngineSource> mSource;
+  RefPtr<MediaEngineSource::BaseAllocationHandle> mAllocationHandle;
 public:
   dom::MediaSourceEnum GetMediaSource() {
     return mMediaSource;
@@ -97,13 +108,8 @@ public:
   typedef MediaEngineVideoSource Source;
 
   explicit VideoDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType);
-  Source* GetSource();
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsACString& aOrigin);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
+  NS_IMETHOD GetType(nsAString& aType) override;
+  Source* GetSource() override;
 };
 
 class AudioDevice : public MediaDevice
@@ -112,13 +118,8 @@ public:
   typedef MediaEngineAudioSource Source;
 
   explicit AudioDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType);
-  Source* GetSource();
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsACString& aOrigin);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
+  NS_IMETHOD GetType(nsAString& aType) override;
+  Source* GetSource() override;
 };
 
 class GetUserMediaNotificationEvent: public Runnable
