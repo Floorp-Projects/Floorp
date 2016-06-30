@@ -1376,35 +1376,6 @@ enum class SelectorMatchesFlags : uint8_t {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SelectorMatchesFlags)
 
-static bool ValueIncludes(const nsSubstring& aValueList,
-                            const nsSubstring& aValue,
-                            const nsStringComparator& aComparator)
-{
-  const char16_t *p = aValueList.BeginReading(),
-              *p_end = aValueList.EndReading();
-
-  while (p < p_end) {
-    // skip leading space
-    while (p != p_end && nsContentUtils::IsHTMLWhitespace(*p))
-      ++p;
-
-    const char16_t *val_start = p;
-
-    // look for space or end
-    while (p != p_end && !nsContentUtils::IsHTMLWhitespace(*p))
-      ++p;
-
-    const char16_t *val_end = p;
-
-    if (val_start < val_end &&
-        aValue.Equals(Substring(val_start, val_end), aComparator))
-      return true;
-
-    ++p; // we know the next character is not whitespace
-  }
-  return false;
-}
-
 // Return whether the selector matches conditions for the :active and
 // :hover quirk.
 static inline bool ActiveHoverQuirkMatches(nsCSSSelector* aSelector,
@@ -1472,7 +1443,7 @@ static bool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
     case NS_ATTR_FUNC_EQUALS:
       return aValue.Equals(aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_INCLUDES:
-      return ValueIncludes(aValue, aAttrSelector->mValue, comparator);
+      return nsStyleUtil::ValueIncludes(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_DASHMATCH:
       return nsStyleUtil::DashMatchCompare(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_ENDSMATCH:

@@ -50,6 +50,36 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
   return result;
 }
 
+bool
+nsStyleUtil::ValueIncludes(const nsSubstring& aValueList,
+                           const nsSubstring& aValue,
+                           const nsStringComparator& aComparator)
+{
+  const char16_t *p = aValueList.BeginReading(),
+              *p_end = aValueList.EndReading();
+
+  while (p < p_end) {
+    // skip leading space
+    while (p != p_end && nsContentUtils::IsHTMLWhitespace(*p))
+      ++p;
+
+    const char16_t *val_start = p;
+
+    // look for space or end
+    while (p != p_end && !nsContentUtils::IsHTMLWhitespace(*p))
+      ++p;
+
+    const char16_t *val_end = p;
+
+    if (val_start < val_end &&
+        aValue.Equals(Substring(val_start, val_end), aComparator))
+      return true;
+
+    ++p; // we know the next character is not whitespace
+  }
+  return false;
+}
+
 void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
                                          nsAString& aReturn,
                                          char16_t quoteChar)
