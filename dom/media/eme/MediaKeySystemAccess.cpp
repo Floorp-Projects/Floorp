@@ -394,7 +394,7 @@ GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
     // We do have a GMP for AAC -> Gecko itself does *not* decode AAC.
     return false;
   }
-#if defined(MOZ_WIDEVINE_EME) && defined(XP_WIN)
+#if defined(XP_WIN)
   // Widevine CDM doesn't include an AAC decoder. So if WMF can't
   // decode AAC, and a codec wasn't specified, be conservative
   // and reject the MediaKeys request, since our policy is to prevent
@@ -536,10 +536,7 @@ IsSupportedInitDataType(const nsString& aCandidate, const nsAString& aKeySystem)
   // ClearKey also supports "keyids" and "webm" initDataTypes.
   return aCandidate.EqualsLiteral("cenc") ||
     ((aKeySystem.EqualsLiteral("org.w3.clearkey")
-#ifdef MOZ_WIDEVINE_EME
-    || aKeySystem.EqualsLiteral("com.widevine.alpha")
-#endif
-    ) &&
+    || aKeySystem.EqualsLiteral("com.widevine.alpha")) &&
     (aCandidate.EqualsLiteral("keyids") || aCandidate.EqualsLiteral("webm")));
 }
 
@@ -592,7 +589,7 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     config.mVideoCapabilities.Value().Assign(caps);
   }
 
-#if defined(MOZ_WIDEVINE_EME) && defined(XP_WIN)
+#if defined(XP_WIN)
   // Widevine CDM doesn't include an AAC decoder. So if WMF can't decode AAC,
   // and a codec wasn't specified, be conservative and reject the MediaKeys request.
   if (aKeySystem.EqualsLiteral("com.widevine.alpha") &&
