@@ -15,7 +15,6 @@
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/widget/InProcessCompositorWidget.h"
 #include "nsBaseWidget.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -100,21 +99,21 @@ NS_IMPL_ISUPPORTS_INHERITED0(MockWidget, nsBaseWidget)
 struct LayerManagerData {
   RefPtr<MockWidget> mWidget;
   RefPtr<Compositor> mCompositor;
-  RefPtr<widget::CompositorWidget> mCompositorWidget;
+  RefPtr<widget::CompositorWidgetProxy> mCompositorWidgetProxy;
   RefPtr<LayerManagerComposite> mLayerManager;
 
   LayerManagerData(Compositor* compositor,
                    MockWidget* widget,
-                   widget::CompositorWidget* aWidget,
+                   widget::CompositorWidgetProxy* aProxy,
                    LayerManagerComposite* layerManager)
     : mWidget(widget)
     , mCompositor(compositor)
-    , mCompositorWidget(aWidget)
+    , mCompositorWidgetProxy(aProxy)
     , mLayerManager(layerManager)
   {}
 };
 
-static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, widget::CompositorWidget* widget)
+static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, widget::CompositorWidgetProxy* widget)
 {
   gfxPrefs::GetSingleton();
 
@@ -158,7 +157,7 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
     auto backend = aBackends[i];
 
     RefPtr<MockWidget> widget = new MockWidget();
-    RefPtr<widget::CompositorWidget> proxy = new widget::InProcessCompositorWidget(widget);
+    RefPtr<widget::CompositorWidgetProxy> proxy = widget->NewCompositorWidgetProxy();
     RefPtr<Compositor> compositor = CreateTestCompositor(backend, proxy);
 
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);

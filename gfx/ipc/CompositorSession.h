@@ -11,12 +11,9 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/Point.h"
 
-class nsIWidget;
-
 namespace mozilla {
 namespace widget {
-class CompositorWidget;
-class CompositorWidgetDelegate;
+class CompositorWidgetProxy;
 } // namespace widget
 namespace gfx {
 class GPUProcessManager;
@@ -34,10 +31,6 @@ class ClientLayerManager;
 class CompositorSession
 {
   friend class gfx::GPUProcessManager;
-
-protected:
-  typedef widget::CompositorWidget CompositorWidget;
-  typedef widget::CompositorWidgetDelegate CompositorWidgetDelegate;
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorSession)
@@ -59,17 +52,12 @@ public:
   // Return the child end of the compositor IPC bridge.
   CompositorBridgeChild* GetCompositorBridgeChild();
 
-  // Return the proxy for accessing the compositor's widget.
-  CompositorWidgetDelegate* GetCompositorWidgetDelegate() {
-    return mCompositorWidgetDelegate;
-  }
-
 protected:
   CompositorSession();
   virtual ~CompositorSession();
 
   static already_AddRefed<CompositorSession> CreateInProcess(
-    nsIWidget* aWidget,
+    widget::CompositorWidgetProxy* aWidgetProxy,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
@@ -78,7 +66,6 @@ protected:
 
 protected:
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
-  CompositorWidgetDelegate* mCompositorWidgetDelegate;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);

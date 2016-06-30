@@ -22,7 +22,7 @@
 #include "gfxVR.h"
 #include "mozilla/gfx/StackArray.h"
 #include "mozilla/Services.h"
-#include "mozilla/widget/WinCompositorWidget.h"
+#include "mozilla/widget/WinCompositorWidgetProxy.h"
 
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Telemetry.h"
@@ -160,7 +160,7 @@ private:
   bool mInitOkay;
 };
 
-CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::CompositorWidget* aWidget)
+CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
   : Compositor(aWidget, aParent)
   , mAttachments(nullptr)
   , mHwnd(nullptr)
@@ -216,7 +216,7 @@ CompositorD3D11::Initialize()
 
   mFeatureLevel = mDevice->GetFeatureLevel();
 
-  mHwnd = mWidget->AsWindows()->GetHwnd();
+  mHwnd = mWidget->AsWindowsProxy()->GetHwnd();
 
   memset(&mVSConstants, 0, sizeof(VertexShaderConstants));
 

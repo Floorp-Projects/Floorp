@@ -17,14 +17,14 @@
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/widget/WinCompositorWidget.h"
+#include "mozilla/widget/WinCompositorWidgetProxy.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
 
-CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, widget::CompositorWidget* aWidget)
+CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
   : Compositor(aWidget, aParent)
   , mDeviceResetCount(0)
   , mFailedResetAttempts(0)
@@ -47,7 +47,7 @@ CompositorD3D9::Initialize()
     return false;
   }
 
-  mSwapChain = mDeviceManager->CreateSwapChain(mWidget->AsWindows()->GetHwnd());
+  mSwapChain = mDeviceManager->CreateSwapChain(mWidget->AsWindowsProxy()->GetHwnd());
   if (!mSwapChain) {
     return false;
   }
@@ -590,7 +590,7 @@ CompositorD3D9::EnsureSwapChain()
   MOZ_ASSERT(mDeviceManager, "Don't call EnsureSwapChain without a device manager");
 
   if (!mSwapChain) {
-    mSwapChain = mDeviceManager->CreateSwapChain(mWidget->AsWindows()->GetHwnd());
+    mSwapChain = mDeviceManager->CreateSwapChain(mWidget->AsWindowsProxy()->GetHwnd());
     // We could not create a swap chain, return false
     if (!mSwapChain) {
       // Check the state of the device too

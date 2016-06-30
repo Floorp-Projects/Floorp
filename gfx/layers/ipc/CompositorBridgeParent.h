@@ -33,10 +33,10 @@
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/layers/APZTestData.h"
-#include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "CompositorWidgetProxy.h"
 
 class MessageLoop;
 class nsIWidget;
@@ -90,7 +90,7 @@ class CompositorVsyncScheduler
 
 public:
   explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
-                                    widget::CompositorWidget* aWidget);
+                                    widget::CompositorWidgetProxy* aWidgetProxy);
 
 #ifdef MOZ_WIDGET_GONK
   // emulator-ics never trigger the display on/off, so compositor will always
@@ -212,7 +212,7 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
   friend class gfx::GPUProcessManager;
 
 public:
-  explicit CompositorBridgeParent(widget::CompositorWidget* aWidget,
+  explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
                                   CSSToLayoutDeviceScale aScale,
                                   bool aUseAPZ,
                                   bool aUseExternalSurfaceSize,
@@ -304,9 +304,6 @@ public:
                                 mozilla::ipc::Shmem* aShmem) override;
 
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
-
-  PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
-  bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
 
   virtual base::ProcessId GetChildProcessId() override
   {
@@ -467,7 +464,7 @@ public:
 
   float ComputeRenderIntegrity();
 
-  widget::CompositorWidget* GetWidget() { return mWidget; }
+  widget::CompositorWidgetProxy* GetWidgetProxy() { return mWidgetProxy; }
 
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
@@ -589,7 +586,7 @@ protected:
   RefPtr<LayerManagerComposite> mLayerManager;
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
-  widget::CompositorWidget* mWidget;
+  widget::CompositorWidgetProxy* mWidgetProxy;
   TimeStamp mTestTime;
   bool mIsTesting;
 

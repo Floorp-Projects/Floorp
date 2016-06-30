@@ -6,19 +6,16 @@
 #include "CompositorSession.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/widget/PlatformWidgetTypes.h"
 #include "base/process_util.h"
 
 namespace mozilla {
 namespace layers {
 
-using namespace widget;
-
 class InProcessCompositorSession final : public CompositorSession
 {
 public:
   InProcessCompositorSession(
-    nsIWidget* aWidget,
+    widget::CompositorWidgetProxy* aWidgetProxy,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
@@ -33,11 +30,10 @@ public:
 
 private:
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
-  RefPtr<CompositorWidget> mCompositorWidget;
 };
 
 already_AddRefed<CompositorSession>
-CompositorSession::CreateInProcess(nsIWidget* aWidget,
+CompositorSession::CreateInProcess(widget::CompositorWidgetProxy* aWidgetProxy,
                                    ClientLayerManager* aLayerManager,
                                    CSSToLayoutDeviceScale aScale,
                                    bool aUseAPZ,
@@ -45,7 +41,7 @@ CompositorSession::CreateInProcess(nsIWidget* aWidget,
                                    const gfx::IntSize& aSurfaceSize)
 {
   RefPtr<InProcessCompositorSession> session = new InProcessCompositorSession(
-    aWidget,
+    aWidgetProxy,
     aLayerManager,
     aScale,
     aUseAPZ,
@@ -55,7 +51,6 @@ CompositorSession::CreateInProcess(nsIWidget* aWidget,
 }
 
 CompositorSession::CompositorSession()
- : mCompositorWidgetDelegate(nullptr)
 {
 }
 
@@ -69,20 +64,15 @@ CompositorSession::GetCompositorBridgeChild()
   return mCompositorBridgeChild;
 }
 
-InProcessCompositorSession::InProcessCompositorSession(nsIWidget* aWidget,
+InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidgetProxy* aWidgetProxy,
                                                        ClientLayerManager* aLayerManager,
                                                        CSSToLayoutDeviceScale aScale,
                                                        bool aUseAPZ,
                                                        bool aUseExternalSurfaceSize,
                                                        const gfx::IntSize& aSurfaceSize)
 {
-  CompositorWidgetInitData initData;
-  aWidget->GetCompositorWidgetInitData(&initData);
-  mCompositorWidget = CompositorWidget::CreateLocal(initData, aWidget);
-  mCompositorWidgetDelegate = mCompositorWidget->AsDelegate();
-
   mCompositorBridgeParent = new CompositorBridgeParent(
-    mCompositorWidget,
+    aWidgetProxy,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
@@ -126,7 +116,6 @@ InProcessCompositorSession::Shutdown()
   mCompositorBridgeChild->Destroy();
   mCompositorBridgeChild = nullptr;
   mCompositorBridgeParent = nullptr;
-  mCompositorWidget = nullptr;
 }
 
 } // namespace layers
