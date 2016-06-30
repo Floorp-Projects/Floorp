@@ -2728,7 +2728,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
 
   mIsMappedArrayBuffer = false;
   if (mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
-      Preferences::GetBool("dom.mapped_arraybuffer.enabled", false)) {
+      Preferences::GetBool("dom.mapped_arraybuffer.enabled", true)) {
     nsCOMPtr<nsIURI> uri;
     nsAutoCString scheme;
 
@@ -3757,11 +3757,6 @@ nsresult
 ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
                                        nsIFile* aJarFile)
 {
-#ifdef XP_WIN
-  // TODO: Bug 988813 - Support memory mapped array buffer for Windows platform.
-  MOZ_CRASH("Not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
   nsresult rv;
 
   // Open Jar file to get related attributes of target file.
@@ -3793,7 +3788,6 @@ ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
     }
   }
   return NS_ERROR_FAILURE;
-#endif
 }
 
 /* static */ bool
