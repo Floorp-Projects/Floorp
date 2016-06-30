@@ -146,9 +146,10 @@ class ProcessHandlerMixin(object):
                         self._cleanup()
             else:
                 def send_sig(sig):
+                    pid = self.detached_pid or self.pid
                     if not self._ignore_children:
                         try:
-                            os.killpg(self.pid, sig)
+                            os.killpg(pid, sig)
                         except BaseException as e:
                             # Error 3 is a "no such process" failure, which is fine because the
                             # application might already have been terminated itself. Any other
@@ -157,7 +158,7 @@ class ProcessHandlerMixin(object):
                                 print >> sys.stderr, "Could not terminate process: %s" % self.pid
                                 raise
                     else:
-                        os.kill(self.pid, sig)
+                        os.kill(pid, sig)
 
                 if sig is None and isPosix:
                     # ask the process for termination and wait a bit
@@ -720,6 +721,11 @@ falling back to not using job objects for managing child processes"""
         # launch the process
         self.proc = self.Process([self.cmd] + self.args, **args)
 
+        if isPosix:
+            # Keep track of the initial process group in case the process detaches itself
+            self.proc.pgid = os.getpgid(self.proc.pid)
+            self.proc.detached_pid = None
+
         self.processOutput(timeout=timeout, outputTimeout=outputTimeout)
 
     def kill(self, sig=None):
@@ -827,6 +833,36 @@ falling back to not using job objects for managing child processes"""
     @property
     def pid(self):
         return self.proc.pid
+
+    def check_for_detached(self, new_pid):
+        """Check if the current process has been detached and mark it appropriately.
+
+        In case of application restarts the process can spawn itself into a new process group.
+        From now on the process can no longer be tracked by mozprocess anymore and has to be
+        marked as detached. If the consumer of mozprocess still knows the new process id it could
+        check for the detached state.
+
+        new_pid is the new process id of the child process.
+        """
+        if not self.proc:
+            return
+
+        if isPosix:
+            new_pgid = None
+            try:
+                new_pgid = os.getpgid(new_pid)
+            except OSError as e:
+                # Do not consume errors except "No such process"
+                if e.errno != 3:
+                    raise
+
+            if new_pgid and new_pgid != self.proc.pgid:
+                self.proc.detached_pid = new_pid
+                print >> sys.stdout, \
+                    'Child process with id "%s" has been marked as detached because it is no ' \
+                    'longer in the managed process group. Keeping reference to the process id ' \
+                    '"%s" which is the new child process.' % (self.pid, new_pid)
+
 
 class CallableList(list):
     def __call__(self, *args, **kwargs):
