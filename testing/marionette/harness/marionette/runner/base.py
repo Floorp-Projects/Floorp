@@ -486,7 +486,6 @@ class BaseMarionetteTestRunner(object):
         self.symbols_path = symbols_path
         self.timeout = timeout
         self.socket_timeout = socket_timeout
-        self._device = None
         self._capabilities = None
         self._appinfo = None
         self._appName = None
@@ -611,14 +610,6 @@ class BaseMarionetteTestRunner(object):
         self.marionette.delete_session()
         self._appinfo = self._appinfo or {}
         return self._appinfo
-
-    @property
-    def device(self):
-        if self._device:
-            return self._device
-
-        self._device = self.capabilities.get('device')
-        return self._device
 
     @property
     def appName(self):
@@ -759,6 +750,18 @@ setReq.onerror = function() {
         assert len(self.test_handlers) > 0
         self.reset_test_stats()
 
+    def _start_marionette(self):
+        need_external_ip = True
+        if not self.marionette:
+            self.marionette = self.driverclass(**self._build_kwargs())
+            # if we're working against a desktop version, we usually don't need
+            # an external ip
+            if self.appName != 'Fennec':
+                need_external_ip = False
+        self.logger.info('Initial Profile Destination is '
+                         '"{}"'.format(self.marionette.profile_path))
+        return need_external_ip
+
     def _set_baseurl(self, need_external_ip):
         # Gaia sets server_root and that means we shouldn't spin up our own httpd
         if not self.httpd:
@@ -798,27 +801,20 @@ setReq.onerror = function() {
     def run_tests(self, tests):
         start_time = time.time()
         self._initialize_test_run(tests)
-        self.marionette = self.driverclass(**self._build_kwargs())
 
-        # Determine if we need to bind the HTTPD to an external IP.
-        # We typically only need to do so if the remote is running
-        # on an emulated system, like Android (Fennec).
-        if self.capabilities["browserName"] == "Fennec":
-            need_external_ip = True
-        else:
-            need_external_ip = False
-
+        need_external_ip = self._start_marionette()
         self._set_baseurl(need_external_ip)
-        self.logger.info("Initial profile destination is %s" % self.marionette.profile_path)
 
         self._add_tests(tests)
 
-        self.logger.info("running with e10s: {}".format(self.e10s))
-        version_info = mozversion.get_version(binary=self.bin,
-                                              sources=self.sources,
-                                              dm_type=os.environ.get('DM_TRANS', 'adb') )
+        version_info = None
+        if self.bin:
+            version_info = mozversion.get_version(binary=self.bin,
+                                                  sources=self.sources)
 
-        self.logger.suite_start(self.tests, version_info=version_info)
+        self.logger.info("running with e10s: {}".format(self.e10s))
+
+        self.logger.suite_start(self.tests, version_info=version_info,)
 
         self._log_skipped_tests()
 
@@ -925,7 +921,6 @@ setReq.onerror = function() {
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
                                                    filters=filters,
-                                                   device=self.device,
                                                    app=self.appName,
                                                    e10s=self.e10s,
                                                    **mozinfo.info)

@@ -340,7 +340,7 @@ def test_add_test_directory(runner):
     assert len(runner.tests) == 4
 
 def test_add_test_manifest(runner):
-    runner._device, runner._appName = 'fake_device', 'fake_app'
+    runner._appName = 'fake_app'
     manifest = "/path/to/fake/manifest.ini"
     active_tests = [{'expected': 'pass',
                      'path': u'/path/to/fake/test_expected_pass.py'},
@@ -356,6 +356,8 @@ def test_add_test_manifest(runner):
                 runner.add_test(manifest)
             assert "does not exist" in err.value.message
             assert mocks['read'].call_count == mocks['active_tests'].call_count == 1
+            args, kwargs = mocks['active_tests'].call_args
+            assert kwargs['app'] == runner._appName
             runner.tests, runner.manifest_skipped_tests = [], []
             with patch('marionette.runner.base.os.path.exists', return_value=True):
                 runner.add_test(manifest)
