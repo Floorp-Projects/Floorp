@@ -25,8 +25,9 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     nsresult Allocate(const dom::MediaTrackConstraints &,
                       const mozilla::MediaEnginePrefs&,
                       const nsString& aDeviceId,
-                      const nsACString& aOrigin) override;
-    nsresult Deallocate() override;
+                      const nsACString& aOrigin,
+                      BaseAllocationHandle** aOutHandle) override;
+    nsresult Deallocate(BaseAllocationHandle* aHandle) override;
     nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID, const mozilla::PrincipalHandle&) override;
     void SetDirectListeners(bool aHasDirectListeners) override {};
     void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime, const mozilla::PrincipalHandle& aPrincipalHandle) override;
