@@ -61,7 +61,6 @@ DIRS += [
     'filesystem',
     'flyweb',
     'fmradio',
-    'gamepad',
     'geolocation',
     'html',
     'icc',
@@ -135,6 +134,9 @@ if CONFIG['MOZ_B2G_RIL']:
 
 if CONFIG['MOZ_PAY']:
     DIRS += ['payment']
+
+if CONFIG['MOZ_GAMEPAD']:
+    DIRS += ['gamepad']
 
 if CONFIG['MOZ_NFC']:
     DIRS += ['nfc']
