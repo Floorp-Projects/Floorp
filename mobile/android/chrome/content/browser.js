@@ -3449,6 +3449,8 @@ Tab.prototype = {
     this.browser.setAttribute("type", "content-targetable");
     this.browser.setAttribute("messagemanagergroup", "browsers");
 
+    this.browser.permanentKey = {};
+
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
     let selectedPanel = BrowserApp.deck.selectedPanel;

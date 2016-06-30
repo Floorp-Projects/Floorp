@@ -1278,14 +1278,13 @@ GeckoDriver.prototype.setWindowPosition = function(cmd, resp) {
  */
 GeckoDriver.prototype.switchToWindow = function*(cmd, resp) {
   let switchTo = cmd.parameters.name;
-  let isB2G = this.appName == "B2G";
+  let isMobile = this.appName == "Fennec";
   let found;
 
   let getOuterWindowId = function(win) {
     let rv = win.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .outerWindowID;
-    rv += isB2G ? "-b2g" : "";
     return rv;
   };
 
@@ -1300,7 +1299,7 @@ GeckoDriver.prototype.switchToWindow = function*(cmd, resp) {
     let win = winEn.getNext();
     let outerId = getOuterWindowId(win);
 
-    if (win.gBrowser && !isB2G) {
+    if (win.gBrowser && !isMobile) {
       let tabbrowser = win.gBrowser;
       for (let i = 0; i < tabbrowser.browsers.length; ++i) {
         let browser = tabbrowser.getBrowserAtIndex(i);
