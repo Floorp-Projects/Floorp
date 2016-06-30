@@ -808,9 +808,21 @@ function plStopAll(force) {
 function plLoadURLsFromURI(manifestUri) {
   var fstream = Cc["@mozilla.org/network/file-input-stream;1"]
     .createInstance(Ci.nsIFileInputStream);
+
   var uriFile = manifestUri.QueryInterface(Ci.nsIFileURL);
 
-  fstream.init(uriFile.file, -1, 0, 0);
+  if (uriFile.file.isFile() === false) {
+    dumpLine("tp: invalid file: %s" % uriFile.file);
+    return null;
+  }
+
+  try {
+    fstream.init(uriFile.file, -1, 0, 0);
+  } catch(ex) {
+      dumpLine("tp: the file %s doesn't exist" % uriFile.file);
+      return null;
+  }
+
   var lstream = fstream.QueryInterface(Ci.nsILineInputStream);
 
   var d = [];
