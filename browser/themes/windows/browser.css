@@ -1914,12 +1914,6 @@ html|span.ac-emphasize-text-url {
 
 %include ../shared/tabs.inc.css
 
-@media (min-resolution: 1.1dppx) {
-  .tab-throbber[progress] {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-
 /* Remove border between tab strip and navigation toolbar on Windows 10+ */
 @media not all and (-moz-os-version: windows-xp) {
   @media not all and (-moz-os-version: windows-vista) {
