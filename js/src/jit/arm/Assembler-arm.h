@@ -156,7 +156,6 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r4;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = r0;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = r1;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = r2;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = r3;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (lr).
