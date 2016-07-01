@@ -364,6 +364,8 @@ void TextureClient::Destroy(bool aForceSync)
     mActor->Lock();
   }
 
+  mReadLock = nullptr;
+
   CancelWaitFenceHandleOnImageBridge();
   RefPtr<TextureChild> actor = mActor;
   mActor = nullptr;
