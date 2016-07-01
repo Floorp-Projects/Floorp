@@ -118,6 +118,7 @@ class Poller {
 
  private:
   Poller() : waiters_(), timers_() {}
+  ~Poller();
 
   class Waiter {
    public:

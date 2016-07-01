@@ -128,10 +128,9 @@ ReturnZeroSize(const void* p)
     return 0;
 }
 
-JSRuntime::JSRuntime(JSContext* cx, JSRuntime* parentRuntime)
+JSRuntime::JSRuntime(JSRuntime* parentRuntime)
   : mainThread(this),
     jitTop(nullptr),
-    jitJSContext(nullptr),
     jitActivation(nullptr),
     jitStackLimit_(0xbad),
     jitStackLimitNoInterrupt_(0xbad),
@@ -173,7 +172,6 @@ JSRuntime::JSRuntime(JSContext* cx, JSRuntime* parentRuntime)
     ownerThread_(nullptr),
     ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    context_(cx),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
     nativeStackBase(GetNativeStackBase()),
@@ -518,7 +516,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     // For now, measure the size of the derived class (JSContext).
     // TODO (bug 1281529): make memory reporting reflect the new
     // JSContext/JSRuntime world better.
-    rtSizes->object += mallocSizeOf(context_);
+    rtSizes->object += mallocSizeOf(unsafeContextFromAnyThread());
 
     rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
 
@@ -528,7 +526,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    rtSizes->contexts += context_->sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->contexts += unsafeContextFromAnyThread()->sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->temporary += tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
@@ -983,3 +981,8 @@ JSRuntime::ionLazyLinkListAdd(jit::IonBuilder* builder)
     ionLazyLinkListSize_++;
 }
 
+JSContext*
+PerThreadData::contextFromMainThread()
+{
+    return runtime_->contextFromMainThread();
+}

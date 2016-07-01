@@ -268,30 +268,3 @@ function in ec2_k163.c:
 
 For an example of functions that use special field encodings, take a
 look at ecp_mont.c.
-
-TESTING
-=======
-
-The ecl/tests directory contains a collection of standalone tests that
-verify the correctness of the elliptic curve library.
-
-Both ecp_test and ec2_test take the following arguments:
-
-	--print     Print out results of each point arithmetic test.
-	--time      Benchmark point operations and print results.
-
-The set of curves over which ecp_test and ec2_test run is coded into the
-program, but can be changed by editing the source files.
-
-BUILDING
-========
-
-The ecl can be built as a standalone library, separate from NSS,
-dependent only on the mpi library. To build the library:
-
-	> cd ../mpi
-	> make libs
-	> cd ../ecl
-	> make libs
-	> make tests # to build test files
-	> make test  # to run automated tests

@@ -411,6 +411,10 @@ private:
   GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback);
 
   // Forwarded from BackgroundChild.
+  static PBackgroundChild*
+  SynchronouslyCreateForCurrentThread();
+
+  // Forwarded from BackgroundChild.
   static void
   CloseForCurrentThread();
 
@@ -885,6 +889,13 @@ BackgroundChild::GetOrCreateForCurrentThread(
                                  nsIIPCBackgroundChildCreateCallback* aCallback)
 {
   return ChildImpl::GetOrCreateForCurrentThread(aCallback);
+}
+
+// static
+PBackgroundChild*
+BackgroundChild::SynchronouslyCreateForCurrentThread()
+{
+  return ChildImpl::SynchronouslyCreateForCurrentThread();
 }
 
 // static
@@ -1703,6 +1714,67 @@ ChildImpl::GetOrCreateForCurrentThread(
   }
 
   return true;
+}
+
+namespace {
+
+class Callback final : public nsIIPCBackgroundChildCreateCallback
+{
+  bool* mDone;
+
+public:
+  explicit Callback(bool* aDone)
+    : mDone(aDone)
+  {
+    MOZ_ASSERT(mDone);
+  }
+
+  NS_DECL_ISUPPORTS
+
+private:
+  ~Callback()
+  { }
+
+  virtual void
+  ActorCreated(PBackgroundChild* aActor) override
+  {
+    *mDone = true;
+  }
+
+  virtual void
+  ActorFailed() override
+  {
+    *mDone = true;
+  }
+};
+
+NS_IMPL_ISUPPORTS(Callback, nsIIPCBackgroundChildCreateCallback)
+
+} // anonymous namespace
+
+/* static */
+PBackgroundChild*
+ChildImpl::SynchronouslyCreateForCurrentThread()
+{
+  MOZ_ASSERT(!GetForCurrentThread());
+
+  bool done = false;
+  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback = new Callback(&done);
+
+  if (NS_WARN_IF(!GetOrCreateForCurrentThread(callback))) {
+    return nullptr;
+  }
+
+  nsIThread* currentThread = NS_GetCurrentThread();
+  MOZ_ASSERT(currentThread);
+
+  while (!done) {
+    if (NS_WARN_IF(!NS_ProcessNextEvent(currentThread, true /* aMayWait */))) {
+      return nullptr;
+    }
+  }
+
+  return GetForCurrentThread();
 }
 
 // static

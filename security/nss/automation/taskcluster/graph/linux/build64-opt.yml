@@ -34,6 +34,7 @@
     - pkix
     - sdr
     - smime
+    - ssl
     - tools
 
 - task:
@@ -43,7 +44,6 @@
 
     payload:
       env:
-        NSS_TESTS: ssl
         BUILD_OPT: 1
         USE_64: 1
 
@@ -59,9 +59,6 @@
         groupName: Various builds
         symbol: noTLSv1.3
 
-  tests:
-    - ssl
-
 - task:
     metadata:
       name: "Linux 64 (opt, clang-3.8)"
@@ -70,8 +67,8 @@
     payload:
       env:
         NSS_ENABLE_TLS_1_3: 1
-        GCC_VERSION: clang-3.8
-        GXX_VERSION: clang++-3.8
+        GCC_VERSION: clang
+        GXX_VERSION: clang++
         BUILD_OPT: 1
         USE_64: 1
 

@@ -317,9 +317,6 @@ XRE_InitChildProcess(int aArgc,
   setupProfilingStuff();
 #endif
 
-  // This is needed by Telemetry to initialize histogram collection.
-  Telemetry::CreateStatisticsRecorder();
-
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
   // On non-Fennec Gecko, the GMPLoader code resides in plugin-container,
   // and we must forward it through to the GMP code here.
@@ -364,6 +361,14 @@ XRE_InitChildProcess(int aArgc,
 
   // NB: This must be called before profiler_init
   NS_LogInit();
+
+  // This is needed by Telemetry to initialize histogram collection.
+  // NB: This must be called after NS_LogInit().
+  // NS_LogInit must be called before Telemetry::CreateStatisticsRecorder
+  // so as to avoid many log messages of the form
+  //   WARNING: XPCOM objects created/destroyed from static ctor/dtor: [..]
+  // See bug 1279614.
+  Telemetry::CreateStatisticsRecorder();
 
   mozilla::LogModule::Init();
 

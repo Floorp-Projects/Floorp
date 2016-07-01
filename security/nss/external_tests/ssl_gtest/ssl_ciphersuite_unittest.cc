@@ -241,8 +241,7 @@ INSTANTIATE_CIPHER_TEST_P(CBC12, All, V12,
                           TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
                           TLS_RSA_WITH_AES_128_CBC_SHA256,
                           TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,
-                          TLS_DHE_DSS_WITH_AES_256_CBC_SHA256,
-                          TLS_RSA_WITH_NULL_SHA256);
+                          TLS_DHE_DSS_WITH_AES_256_CBC_SHA256);
 INSTANTIATE_CIPHER_TEST_P(CBCStream, Stream, V10ToV12,
                           TLS_ECDH_ECDSA_WITH_NULL_SHA,
                           TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,

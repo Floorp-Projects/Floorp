@@ -36,6 +36,8 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     echo "Failed:             ${FAILED_CNT}"
     CORE_CNT=$(cat ${RESULTS} | grep ">Failed Core<" | wc -l | sed s/\ *//)
     echo "Failed with core:   ${CORE_CNT}"
+    ASAN_CNT=$(cat $LOGFILE | grep "SUMMARY: AddressSanitizer" | wc -l | sed s/\ *//)
+    echo "ASan failures:      ${ASAN_CNT}"
     LINES_CNT=$(cat ${RESULTS} | grep ">Unknown<" | wc -l | sed s/\ *//)
     echo "Unknown status:     ${LINES_CNT}"
     if [ ${LINES_CNT} -gt 0 ]; then
@@ -46,7 +48,7 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     html "END_OF_TEST<BR>"
     html "</BODY></HTML>" 
     rm -f ${TEMPFILES} 2>/dev/null
-    if [ ${FAILED_CNT} -gt 0 ]; then
+    if [ ${FAILED_CNT} -gt 0 ] || [ ${ASAN_CNT} -gt 0 ]; then
         exit 1
     fi
 

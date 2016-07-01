@@ -561,8 +561,7 @@ PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 LayerManager*
 PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                               LayersBackend aBackendHint,
-                              LayerManagerPersistence aPersistence,
-                              bool* aAllowRetaining)
+                              LayerManagerPersistence aPersistence)
 {
   if (!mLayerManager) {
     mLayerManager = new ClientLayerManager(this);
@@ -570,9 +569,6 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
   ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder();
   if (!lf->HasShadowManager() && aShadowManager) {
     lf->SetShadowManager(aShadowManager);
-  }
-  if (aAllowRetaining) {
-    *aAllowRetaining = true;
   }
   return mLayerManager;
 }

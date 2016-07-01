@@ -10,6 +10,7 @@
 #include <ctime>
 #include "gfxPrefs.h"
 #include "image_operations.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/SSE.h"
 #include "mozilla/mips.h"
 #include "convolver.h"
@@ -19,6 +20,9 @@ using std::max;
 using std::swap;
 
 namespace mozilla {
+
+using gfx::IntRect;
+
 namespace image {
 
 Downscaler::Downscaler(const nsIntSize& aTargetSize)

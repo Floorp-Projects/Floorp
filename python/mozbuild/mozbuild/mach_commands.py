@@ -1486,7 +1486,8 @@ class PackageFrontend(MachCommandBase):
         from mozbuild.artifacts import Artifacts
         artifacts = Artifacts(tree, self.substs, self.defines, job,
                               log=self.log, cache_dir=cache_dir,
-                              skip_cache=skip_cache, hg=hg, git=git)
+                              skip_cache=skip_cache, hg=hg, git=git,
+                              topsrcdir=self.topsrcdir)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
