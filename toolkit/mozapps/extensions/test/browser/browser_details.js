@@ -6,7 +6,7 @@
 
 const { REQUIRE_SIGNING } = Components.utils.import("resource://gre/modules/addons/AddonConstants.jsm", {});
 
-const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault"
+const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 const SEARCH_URL = TESTROOT + "browser_details.xml";
 const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
@@ -17,8 +17,6 @@ var gProvider;
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
-var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
-var gPluginURL = Services.urlFormatter.formatURLPref("plugins.update.url");
 var gDate = new Date(2010, 7, 1);
 var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
@@ -659,7 +657,7 @@ add_test(function() {
     is(get("detail-warning").textContent, "An important update is available for Test add-on 8.", "Warning message should be correct");
     is_element_visible(get("detail-warning-link"), "Warning link should be visible");
     is(get("detail-warning-link").value, "Update Now", "Warning link text should be correct");
-    is(get("detail-warning-link").href, gPluginURL, "Warning link should be correct");
+    is(get("detail-warning-link").href, "http://example.com/addon8@tests.mozilla.org", "Warning link should be correct");
     is_element_hidden(get("detail-error"), "Error message should be hidden");
     is_element_hidden(get("detail-error-link"), "Error link should be hidden");
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
@@ -703,7 +701,7 @@ add_test(function() {
       is(get("detail-warning").textContent, "An important update is available for Test add-on 8.", "Warning message should be correct");
       is_element_visible(get("detail-warning-link"), "Warning link should be visible");
       is(get("detail-warning-link").value, "Update Now", "Warning link text should be correct");
-      is(get("detail-warning-link").href, gPluginURL, "Warning link should be correct");
+      is(get("detail-warning-link").href, "http://example.com/addon8@tests.mozilla.org", "Warning link should be correct");
       is_element_hidden(get("detail-error"), "Error message should be hidden");
       is_element_hidden(get("detail-error-link"), "Error link should be hidden");
       is_element_hidden(get("detail-pending"), "Pending message should be hidden");
