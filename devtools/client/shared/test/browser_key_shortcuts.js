@@ -18,6 +18,7 @@ add_task(function* () {
   yield testAltModifier(shortcuts);
   yield testCommandOrControlModifier(shortcuts);
   yield testCtrlModifier(shortcuts);
+  yield testInvalidShortcutString(shortcuts);
   shortcuts.destroy();
 
   yield testTarget();
@@ -361,4 +362,14 @@ function testTarget() {
   target.remove();
 
   shortcuts.destroy();
+}
+
+function testInvalidShortcutString(shortcuts) {
+  info("Test wrong shortcut string");
+
+  let shortcut = KeyShortcuts.parseElectronKey(window, "Cmmd+F");
+  ok(!shortcut, "Passing a invalid shortcut string should return a null object");
+
+  shortcuts.on("Cmmd+F", function () {});
+  ok(true, "on() shouldn't throw when passing invalid shortcut string");
 }

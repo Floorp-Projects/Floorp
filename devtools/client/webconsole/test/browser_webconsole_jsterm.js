@@ -180,13 +180,13 @@ function* testJSTerm(hud) {
   };
 
   for (let errorMessageName of Object.keys(ErrorDocStatements)) {
-    let url = ErrorDocs.GetURL(errorMessageName);
+    let title = ErrorDocs.GetURL({ errorMessageName }).split("?")[0];
 
     jsterm.clearOutput();
     yield jsterm.execute(ErrorDocStatements[errorMessageName]);
     yield checkResult((node) => {
-      return node.parentNode.getElementsByTagName("a")[0].title == url;
-    }, `error links to ${url}`);
+      return node.parentNode.getElementsByTagName("a")[0].title == title;
+    }, `error links to ${title}`);
   }
 
   // Ensure that dom errors, with error numbers outside of the range

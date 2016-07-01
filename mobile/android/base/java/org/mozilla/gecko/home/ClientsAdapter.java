@@ -66,6 +66,8 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         if (sState == null) {
             sState = new RemoteTabsExpandableListState(GeckoSharedPrefs.forProfile(context));
         }
+
+        this.setHasStableIds(true);
     }
 
     @Override
@@ -143,6 +145,50 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
     @Override
     public int getItemViewType(int position) {
         return CombinedHistoryItem.ItemType.itemTypeToViewType(getItemTypeForPosition(position));
+    }
+
+    @Override
+    public long getItemId(int position) {
+        // RecyclerView.NO_ID is -1, so start our hard-coded IDs at -2.
+        final int NAVIGATION_BACK_ID = -2;
+        final int HIDDEN_DEVICES_ID = -3;
+
+        final String clientGuid;
+        // adapterList is a list of tuples (clientGuid, tabId).
+        final Pair<String, Integer> pair = adapterList.get(position);
+
+        switch (getItemTypeForPosition(position)) {
+            case NAVIGATION_BACK:
+                return NAVIGATION_BACK_ID;
+
+            case HIDDEN_DEVICES:
+                return HIDDEN_DEVICES_ID;
+
+            // For Clients, return hashCode of their GUIDs.
+            case CLIENT:
+                clientGuid = pair.first;
+                return clientGuid.hashCode();
+
+            // For Tabs, return hashCode of their URLs.
+            case CHILD:
+                clientGuid = pair.first;
+                final Integer tabId = pair.second;
+
+                final RemoteClient remoteClient = visibleClients.get(clientGuid);
+                if (remoteClient == null) {
+                    return RecyclerView.NO_ID;
+                }
+
+                final RemoteTab remoteTab = remoteClient.tabs.get(tabId);
+                if (remoteTab == null) {
+                    return RecyclerView.NO_ID;
+                }
+
+                return remoteTab.url.hashCode();
+
+            default:
+                throw new IllegalStateException("Unexpected Home Panel item type");
+        }
     }
 
     public int getClientsCount() {
