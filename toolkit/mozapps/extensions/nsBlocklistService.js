@@ -49,7 +49,6 @@ const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_BLOCKLIST_SUPPRESSUI       = "extensions.blocklist.suppressUI";
 const PREF_ONECRL_VIA_AMO             = "security.onecrl.via.amo";
 const PREF_BLOCKLIST_UPDATE_ENABLED   = "services.blocklist.update_enabled";
-const PREF_PLUGINS_NOTIFYUSER         = "plugins.update.notifyUser";
 const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
@@ -1421,11 +1420,9 @@ Blocklist.prototype = {
             plugin.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
         }
         else if (!plugin.disabled && state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
-          if (state == Ci.nsIBlocklistService.STATE_OUTDATED) {
-            gPref.setBoolPref(PREF_PLUGINS_NOTIFYUSER, true);
-          }
-          else if (state != Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE &&
-                   state != Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
+          if (state != Ci.nsIBlocklistService.STATE_OUTDATED &&
+              state != Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE &&
+              state != Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
             addonList.push({
               name: plugin.name,
               version: plugin.version,

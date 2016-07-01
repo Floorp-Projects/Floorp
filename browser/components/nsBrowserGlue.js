@@ -171,9 +171,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "AlertsService",
                                    "@mozilla.org/alerts-service;1", "nsIAlertsService");
 
-const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
-const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
-
 // Seconds of idle before trying to create a bookmarks backup.
 const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
 // Minimum interval between backups.  We try to not create more than one backup
@@ -1230,11 +1227,6 @@ BrowserGlue.prototype = {
       this._showPlacesLockedNotificationBox();
     }
 
-    // If there are plugins installed that are outdated, and the user hasn't
-    // been warned about them yet, open the plugins update page.
-    if (Services.prefs.getBoolPref(PREF_PLUGINS_NOTIFYUSER))
-      this._showPluginUpdatePage();
-
     // For any add-ons that were installed disabled and can be enabled offer
     // them to the user.
     let win = RecentWindow.getMostRecentBrowserWindow();
@@ -1636,17 +1628,6 @@ BrowserGlue.prototype = {
     catch (e) {
       Cu.reportError(e);
     }
-  },
-
-  _showPluginUpdatePage: function BG__showPluginUpdatePage() {
-    Services.prefs.setBoolPref(PREF_PLUGINS_NOTIFYUSER, false);
-
-    var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
-                    getService(Ci.nsIURLFormatter);
-    var updateUrl = formatter.formatURLPref(PREF_PLUGINS_UPDATEURL);
-
-    var win = RecentWindow.getMostRecentBrowserWindow();
-    win.openUILinkIn(updateUrl, "tab");
   },
 
   /**
