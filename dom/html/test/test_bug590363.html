@@ -39,12 +39,11 @@ var testData = [
   [ "time",     true ],
   [ "range",    true ],
   [ "color",    true ],
-  [ 'month',    true ]
   // 'file' is treated separatly.
 ];
 
 var todoTypes = [
-  "datetime", "week", "datetime-local"
+  "datetime", "month", "week", "datetime-local"
 ];
 
 var nonTrivialSanitizing = [ 'number', 'date', 'time', 'color' ];
@@ -83,8 +82,6 @@ for (var i=0; i<length; ++i) {
       expectedValue = '2012-12-21';
     } else if (testData[i][0] == 'time' || testData[j][0] == 'time') {
       expectedValue = '21:21';
-    } else if (testData[i][0] == 'month' || testData[j][0] == 'month') {
-      expectedValue = '2013-03';
     } else {
       expectedValue = "foo";
     }

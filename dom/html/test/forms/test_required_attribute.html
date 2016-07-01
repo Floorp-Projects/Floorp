@@ -174,8 +174,6 @@ function checkInputRequiredValidity(type)
     SpecialPowers.wrap(element).value = '2010-10-10';
   } else if (element.type == 'time') {
     SpecialPowers.wrap(element).value = '21:21';
-  } else if (element.type = 'month') {
-    SpecialPowers.wrap(element).value = '2010-10';
   } else {
     SpecialPowers.wrap(element).value = 'foo';
   }
@@ -364,10 +362,10 @@ for (type of typeRequireNotApply) {
 }
 
 // Now, checking for all types which accept the required attribute.
-// TODO: check 'datetime', 'week' and 'datetime-local'
+// TODO: check 'datetime', 'month', 'week' and 'datetime-local'
 //       when they will be implemented.
 var typeRequireApply = ["text", "password", "search", "tel", "email", "url",
-                        "number", "date", "time", "month"];
+                        "number", "date", "time"];
 
 for (type of typeRequireApply) {
   checkInputRequiredValidity(type);
