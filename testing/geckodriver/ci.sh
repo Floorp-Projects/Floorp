@@ -86,41 +86,18 @@ get_binary() {
 # Create a compressed archive of the binary
 # for the given given git tag, build target, and build type.
 package_binary() {
-    local target
-    case "$2" in
-    armv7-unknown-linux-gnueabihf)
-        target=arm7hf
-        ;;
-    x86_64-pc-windows-gnu)
-        target=win64
-        ;;
-    x86_64-unknown-linux-musl)
-        target=linux64
-        ;;
-    x86_64-apple-darwin)
-        target=mac
-        ;;
-    esac
-
     local bin
-    bin=$(get_binary $2 $3)
+    bin=$(get_binary $2 $4)
     cp $bin .
 
     if [[ "$2" =~ "windows" ]]
     then
-        zip geckodriver-$1-$target.zip geckodriver.exe
-        file geckodriver-$1-$target.zip
+        zip geckodriver-$1-$3.zip geckodriver.exe
+        file geckodriver-$1-$3.zip
     else
-        tar zcvf geckodriver-$1-$target.tar.gz geckodriver
-        file geckodriver-$1-$target.tar.gz
+        tar zcvf geckodriver-$1-$3.tar.gz geckodriver
+        file geckodriver-$1-$3.tar.gz
     fi
-}
-
-# Create a compressed archive of the source code
-# for the given git tag.
-package_source() {
-    git archive --format=tar --prefix="geckodriver-$1/" $1 | \
-        gzip >geckodriver-$1.tar.gz
 }
 
 main() {
@@ -135,8 +112,7 @@ main() {
     if [ ! -z "$TRAVIS_TAG" ]
     then
         cargo_build $TARGET 1
-        package_binary $TRAVIS_TAG $TARGET "release"
-        package_source $TRAVIS_TAG
+        package_binary $TRAVIS_TAG $TARGET $NAME "release"
     fi
 }
 
