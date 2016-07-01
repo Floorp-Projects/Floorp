@@ -582,6 +582,8 @@ class PerThreadData : public PerThreadDataFriendFields
     inline JSRuntime* runtimeFromMainThread();
     inline JSRuntime* runtimeIfOnOwnerThread();
 
+    JSContext* contextFromMainThread();
+
     inline bool exclusiveThreadsPresent();
     inline void addActiveCompilation(AutoLockForExclusiveAccess& lock);
     inline void removeActiveCompilation(AutoLockForExclusiveAccess& lock);
@@ -636,13 +638,6 @@ struct JSRuntime : public JS::shadow::Runtime,
      * will be aligned to an exit frame.
      */
     uint8_t*            jitTop;
-
-    /*
-     * The current JSContext when entering JIT code. This field may only be used
-     * from JIT code and C++ directly called by JIT code (otherwise it may refer
-     * to the wrong JSContext).
-     */
-    JSContext*          jitJSContext;
 
      /*
      * Points to the most recent JitActivation pushed on the thread.
@@ -1018,8 +1013,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::LifoAlloc tempLifoAlloc;
 
   private:
-    JSContext* context_;
-
     js::jit::JitRuntime* jitRuntime_;
 
     /*
@@ -1054,10 +1047,8 @@ struct JSRuntime : public JS::shadow::Runtime,
         return interpreterStack_;
     }
 
-    JSContext* contextFromMainThread() {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
-        return context_;
-    }
+    inline JSContext* unsafeContextFromAnyThread();
+    inline JSContext* contextFromMainThread();
 
     bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
@@ -1481,7 +1472,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
   protected:
-    JSRuntime(JSContext* cx, JSRuntime* parentRuntime);
+    explicit JSRuntime(JSRuntime* parentRuntime);
 
     // destroyRuntime is used instead of a destructor, to ensure the downcast
     // to JSContext remains valid. The final GC triggered here depends on this.
@@ -1646,17 +1637,10 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 namespace js {
 
-// When entering JIT code, the calling JSContext* is stored into the thread's
-// PerThreadData. This function retrieves the JSContext with the pre-condition
-// that the caller is JIT code or C++ called directly from JIT code. This
-// function should not be called from arbitrary locations since the JSContext
-// may be the wrong one.
 static inline JSContext*
-GetJSContextFromJitCode()
+GetJSContextFromMainThread()
 {
-    JSContext* cx = js::TlsPerThreadData.get()->runtimeFromMainThread()->jitJSContext;
-    MOZ_ASSERT(cx);
-    return cx;
+    return js::TlsPerThreadData.get()->contextFromMainThread();
 }
 
 /*

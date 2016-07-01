@@ -51,6 +51,7 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
+ifndef NSS_DISABLE_LIBPKIX
 ifndef NSS_BUILD_SOFTOKEN_ONLY
 PKIXLIB = \
 	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
@@ -65,6 +66,7 @@ PKIXLIB = \
 	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pkixresults.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pkixcertsel.$(LIB_SUFFIX)
+endif
 endif
 
 NSS_LIBS_1=

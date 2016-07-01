@@ -30,16 +30,22 @@ if check_commit_msg "--dep"; then
 fi
 
 function build_js_shell () {
+    # Must unset MOZ_OBJDIR and MOZCONFIG here to prevent the build system from
+    # inferring that the analysis output directory is the current objdir. We
+    # need a separate objdir here to build the opt JS shell to use to run the
+    # analysis.
+    (
+    unset MOZ_OBJDIR
+    unset MOZCONFIG
     ( cd $JS_SRCDIR; autoconf-2.13 )
     if [[ -z "$HAZ_DEP" ]]; then
         [ -d $HAZARD_SHELL_OBJDIR ] && rm -rf $HAZARD_SHELL_OBJDIR
     fi
     mkdir -p $HAZARD_SHELL_OBJDIR || true
     cd $HAZARD_SHELL_OBJDIR
-    ( export MOZCONFIG=
-      $JS_SRCDIR/configure --enable-optimize --disable-debug --enable-ctypes --enable-nspr-build --without-intl-api --with-ccache
-      make -j4
-    )
+    $JS_SRCDIR/configure --enable-optimize --disable-debug --enable-ctypes --enable-nspr-build --without-intl-api --with-ccache
+    make -j4
+    ) # Restore MOZ_OBJDIR and MOZCONFIG
 }
 
 function configure_analysis () {
@@ -130,11 +136,11 @@ function check_hazards () {
     set +x
     echo "TinderboxPrint: rooting hazards<br/>$NUM_HAZARDS"
     echo "TinderboxPrint: unsafe references to unrooted GC pointers<br/>$NUM_UNSAFE"
-    echo "TinderboxPrint: unnecessary roots<br/>$NUM_UNSAFE"
-    set -x
+    echo "TinderboxPrint: unnecessary roots<br/>$NUM_UNNECESSARY"
 
     if [ $NUM_HAZARDS -gt 0 ]; then
         echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS hazards detected" >&2
+        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit 1
     fi
     )

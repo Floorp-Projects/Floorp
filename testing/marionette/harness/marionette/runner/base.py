@@ -375,12 +375,12 @@ class BaseMarionetteArguments(ArgumentParser):
 
         self.argument_containers.append(container)
 
-    def parse_args(self, args=None, values=None):
-        args = ArgumentParser.parse_args(self, args, values)
+    def parse_known_args(self, args=None, namespace=None):
+        args, remainder = ArgumentParser.parse_known_args(self, args, namespace)
         for container in self.argument_containers:
             if hasattr(container, 'parse_args_handler'):
                 container.parse_args_handler(args)
-        return args
+        return (args, remainder)
 
     def _get_preferences(self, prefs_files, prefs_args):
         """
@@ -397,11 +397,15 @@ class BaseMarionetteArguments(ArgumentParser):
         separator = ':'
         cli_prefs = []
         if prefs_args:
+            misformatted = []
             for pref in prefs_args:
                 if separator not in pref:
-                    continue
-                cli_prefs.append(pref.split(separator, 1))
-
+                    misformatted.append(pref)
+                else:
+                    cli_prefs.append(pref.split(separator, 1))
+            if misformatted:
+                self._print_message("Warning: Ignoring preferences not in key{}value format: {}\n"
+                                    .format(separator, ", ".join(misformatted)))
         # string preferences
         prefs.add(cli_prefs, cast=True)
 
@@ -409,17 +413,14 @@ class BaseMarionetteArguments(ArgumentParser):
 
     def verify_usage(self, args):
         if not args.tests:
-            print 'must specify one or more test files, manifests, or directories'
-            sys.exit(1)
+            self.error('You must specify one or more test files, manifests, or directories.')
 
-        for path in args.tests:
-            if not os.path.exists(path):
-                print '{0} does not exist'.format(path)
-                sys.exit(1)
+        missing_tests = [path for path in args.tests if not os.path.exists(path)]
+        if missing_tests:
+            self.error("Test file(s) not found: " + " ".join([path for path in missing_tests]))
 
         if not args.address and not args.binary:
-            print 'must specify --binary, or --address'
-            sys.exit(1)
+            self.error('You must specify --binary, or --address')
 
         if args.total_chunks is not None and args.this_chunk is None:
             self.error('You must specify which chunk to run.')
@@ -428,7 +429,7 @@ class BaseMarionetteArguments(ArgumentParser):
             self.error('You must specify how many chunks to split the tests into.')
 
         if args.total_chunks is not None:
-            if not 1 <= args.total_chunks:
+            if not 1 < args.total_chunks:
                 self.error('Total chunks must be greater than 1.')
             if not 1 <= args.this_chunk <= args.total_chunks:
                 self.error('Chunk to run must be between 1 and %s.' % args.total_chunks)

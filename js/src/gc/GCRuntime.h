@@ -23,6 +23,7 @@
 namespace js {
 
 class AutoLockGC;
+class AutoLockHelperThreadState;
 class VerifyPreTracer;
 
 namespace gc {
@@ -1198,8 +1199,8 @@ class GCRuntime
     /*
      * Concurrent sweep infrastructure.
      */
-    void startTask(GCParallelTask& task, gcstats::Phase phase);
-    void joinTask(GCParallelTask& task, gcstats::Phase phase);
+    void startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
+    void joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked);
 
     /*
      * List head of arenas allocated during the sweep phase.

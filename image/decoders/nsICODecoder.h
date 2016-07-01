@@ -13,6 +13,7 @@
 #include "nsBMPDecoder.h"
 #include "nsPNGDecoder.h"
 #include "ICOFileHeaders.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace image {
@@ -114,8 +115,8 @@ private:
   UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
   char mBIHraw[bmp::InfoHeaderLength::WIN_ICO]; // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
-  IntSize mBiggestResourceSize;        // Used to select the intrinsic size.
-  IntSize mBiggestResourceHotSpot;     // Used to select the intrinsic size.
+  gfx::IntSize mBiggestResourceSize;   // Used to select the intrinsic size.
+  gfx::IntSize mBiggestResourceHotSpot; // Used to select the intrinsic size.
   uint16_t mBiggestResourceColorDepth; // Used to select the intrinsic size.
   int32_t mBestResourceDelta;          // Used to select the best resource.
   uint16_t mBestResourceColorDepth;    // Used to select the best resource.

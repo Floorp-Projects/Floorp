@@ -22,12 +22,6 @@ apt-get -y update
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y --no-install-recommends curl apt-utils
 
-# clang(-format)-3.8
-apt_packages+=('clang-3.8')
-apt_packages+=('clang-format-3.8')
-curl http://llvm.org/apt/llvm-snapshot.gpg.key | apt-key add -
-echo "deb http://llvm.org/apt/xenial/ llvm-toolchain-xenial-3.8 main" > /etc/apt/sources.list.d/docker.list
-
 # Install the first round of packages.
 apt-get -y update
 apt-get install -y --no-install-recommends ${apt_packages[@]}
@@ -48,9 +42,12 @@ apt-get install -y --no-install-recommends ${apt_packages[@]}
 # 32-bit builds
 ln -s /usr/include/x86_64-linux-gnu/zconf.h /usr/include
 
+# Install clang-3.8 into /usr/local/.
+curl http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
+
 # Compiler options.
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/clang-3.8 5
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/clang++-3.8 5
+update-alternatives --install /usr/bin/gcc gcc /usr/local/bin/clang 5
+update-alternatives --install /usr/bin/g++ g++ /usr/local/bin/clang++ 5
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
 update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 20

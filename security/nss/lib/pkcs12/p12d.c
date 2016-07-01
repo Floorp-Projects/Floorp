@@ -1616,7 +1616,7 @@ sec_pkcs12_decoder_set_attribute_value(sec_PKCS12SafeBag *bag,
     }
 
     bag->attribs[i] = PORT_ArenaZNew(bag->arena, sec_PKCS12Attribute);
-    if(!bag->attribs) {
+    if(!bag->attribs[i]) {
 	return SECFailure;
     }
 

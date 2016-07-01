@@ -1327,7 +1327,10 @@ STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
 
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSTrust *nssTrust = nssTrustDomain_FindTrustForCertificate(td, c);
-    /* caller made sure nssTrust isn't NULL */
+    if (!nssTrust) {
+        return PR_FAILURE;
+    }
+
     nssPKIObject *tobject = &nssTrust->object;
     nssPKIObject *cobject = &c->object;
     unsigned int i;
@@ -1352,6 +1355,7 @@ STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
 	    }
 	}
     }
+    nssTrust_Destroy(nssTrust);
     nssPKIObject_Unlock(cobject);
     nssPKIObject_Destroy(cobject);
     NSSRWLock_UnlockRead(td->tokensLock);

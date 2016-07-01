@@ -776,15 +776,14 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 LayerManager*
 nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,
-                          LayerManagerPersistence aPersistence,
-                          bool* aAllowRetaining)
+                          LayerManagerPersistence aPersistence)
 {
     if (!mLayerManager && eTransparencyTransparent == GetTransparencyMode()) {
         mLayerManager = CreateBasicLayerManager();
     }
 
     return nsBaseWidget::GetLayerManager(aShadowManager, aBackendHint,
-                                         aPersistence, aAllowRetaining);
+                                         aPersistence);
 }
 
 void
