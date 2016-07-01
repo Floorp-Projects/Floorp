@@ -15,6 +15,7 @@
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/widget/InProcessCompositorWidget.h"
 #include "nsBaseWidget.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -157,7 +158,7 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
     auto backend = aBackends[i];
 
     RefPtr<MockWidget> widget = new MockWidget();
-    RefPtr<widget::CompositorWidget> proxy = widget->NewCompositorWidget();
+    RefPtr<widget::CompositorWidget> proxy = new widget::InProcessCompositorWidget(widget);
     RefPtr<Compositor> compositor = CreateTestCompositor(backend, proxy);
 
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
