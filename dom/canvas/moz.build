@@ -9,8 +9,8 @@ TEST_DIRS += [
     'gtest'
 ]
 
-# Change the following line to avoid bug 1081323 (clobber after changing a manifest):
-# Add test for webglcontextcreationerror.
+# Change the following line(s) to avoid bug 1081323 (clobber after changing a manifest):
+# * Add a regression test for triangle-then-point rendering.
 
 MOCHITEST_MANIFESTS += [
     'test/crash/mochitest.ini',

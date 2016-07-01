@@ -603,11 +603,9 @@ loser:
     if (db) {
 	(*db->close)(db);
     }
-    if (dbsp) {
-	if (dbsp->blobdir) {
-	    PORT_Free(dbsp->blobdir);
-	}
-	PORT_Free(dbsp);
+    if (dbsp->blobdir) {
+        PORT_Free(dbsp->blobdir);
     }
+    PORT_Free(dbsp);
     return NULL;
 }

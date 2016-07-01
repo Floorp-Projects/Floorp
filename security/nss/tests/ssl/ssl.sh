@@ -223,15 +223,15 @@ start_selfserv()
   echo "selfserv starting at `date`"
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
   echo "         ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID}\\"
-  echo "         $verbose -H 1 &"
+  echo "         -V ssl3:tls1.2 $verbose -H 1 &"
   if [ ${fileout} -eq 1 ]; then
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} $verbose -H 1 \
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 \
                > ${SERVEROUTFILE} 2>&1 &
       RET=$?
   else
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} $verbose -H 1 &
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss ${sparam} -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 &
       RET=$?
   fi
 
@@ -426,10 +426,10 @@ ssl_stapling_sub()
     start_selfserv
 
     echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} -v ${CLIENT_OPTIONS} \\"
-    echo "        -c v -T -O -F -M 1 -V ssl3: < ${REQUEST_FILE}"
+    echo "        -c v -T -O -F -M 1 -V ssl3:tls1.2 < ${REQUEST_FILE}"
     rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
     ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
-	    -d ${P_R_CLIENTDIR} -v -c v -T -O -F -M 1 -V ssl3: < ${REQUEST_FILE} \
+	    -d ${P_R_CLIENTDIR} -v -c v -T -O -F -M 1 -V ssl3:tls1.2 < ${REQUEST_FILE} \
 	    >${TMP}/$HOST.tmp.$$  2>&1
     ret=$?
     cat ${TMP}/$HOST.tmp.$$
@@ -474,10 +474,10 @@ ssl_stapling_stress()
     start_selfserv
 
     echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \\"
-    echo "         -c 1000 -V ssl3: -N -T $verbose ${HOSTADDR}"
+    echo "         -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}"
     echo "strsclnt started at `date`"
     ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss \
-	    -c 1000 -V ssl3: -N -T $verbose ${HOSTADDR}
+	    -c 1000 -V ssl3:tls1.2 -N -T $verbose ${HOSTADDR}
     ret=$?
 
     echo "strsclnt completed at `date`"
@@ -544,10 +544,10 @@ ssl_signed_cert_timestamps()
     # Since we don't have server-side support, this test only covers advertising the
     # extension in the client hello.
     echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} -v ${CLIENT_OPTIONS} \\"
-    echo "        -U -V tls1.0: < ${REQUEST_FILE}"
+    echo "        -U -V tls1.0:tls1.2 < ${REQUEST_FILE}"
     rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
     ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
-            -d ${P_R_CLIENTDIR} -v -U -V tls1.0: < ${REQUEST_FILE} \
+            -d ${P_R_CLIENTDIR} -v -U -V tls1.0:tls1.2 < ${REQUEST_FILE} \
             >${TMP}/$HOST.tmp.$$  2>&1
     ret=$?
     cat ${TMP}/$HOST.tmp.$$
@@ -890,7 +890,7 @@ load_group_crl() {
         echo "================= Reloading ${eccomment}CRL for group $grpBegin - $grpEnd ============="
 
         echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} -v \\"
-        echo "          -V ssl3: -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
+        echo "          -V ssl3:tls1.2 -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
         echo "Request:"
         echo "GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}"
         echo ""
@@ -903,7 +903,7 @@ GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}
 _EOF_REQUEST_
 
         ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f  \
-            -d ${R_CLIENTDIR} -v -V ssl3: -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
+            -d ${R_CLIENTDIR} -v -V ssl3:tls1.2 -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
             >${OUTFILE_TMP}  2>&1 < ${REQF}
 
         cat ${OUTFILE_TMP}
@@ -1068,7 +1068,9 @@ ssl_run()
     do
         case "${SSL_RUN}" in
         "stapling")
-            ssl_stapling
+            if [ -nz "$NSS_DISABLE_LIBPKIX" ]; then
+              ssl_stapling
+            fi
             ;;
         "signed_cert_timestamps")
             ssl_signed_cert_timestamps

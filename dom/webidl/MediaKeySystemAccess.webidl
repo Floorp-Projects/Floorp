@@ -22,12 +22,6 @@ dictionary MediaKeySystemConfiguration {
   sequence<MediaKeySystemMediaCapability> videoCapabilities;
 
    // TODO: distinctiveIdentifier, persistentState, sessionTypes  
-  
-  // For backwards compatibility with implementations using old
-  // MediaKeySystemOptions paradigm...
-  DOMString            initDataType = "";
-  DOMString            audioType = "";
-  DOMString            videoType = "";
 };
 
 [Pref="media.eme.apiVisible"]

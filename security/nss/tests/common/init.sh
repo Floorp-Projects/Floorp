@@ -45,8 +45,10 @@ NSS_STRICT_SHUTDOWN=1
 export NSS_STRICT_SHUTDOWN
 
 # If using ASan, disable LSan; see bug 1246801.
-ASAN_OPTIONS="detect_leaks=0${ASAN_OPTIONS:+:$ASAN_OPTIONS}"
-export ASAN_OPTIONS
+if [ -z "${NSS_ENABLE_LSAN}" ]; then
+    ASAN_OPTIONS="detect_leaks=0${ASAN_OPTIONS:+:$ASAN_OPTIONS}"
+    export ASAN_OPTIONS
+fi
 
 # Init directories based on HOSTDIR variable
 if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then

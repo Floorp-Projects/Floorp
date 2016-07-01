@@ -1,0 +1,19 @@
+<!doctype html>
+<head>
+<script>
+function start() {
+  var animation = document.body.animate([{marks: 'crop'},{marks: 'crop'}], 12);
+  document.write('<html><body></body></html>');
+
+  setTimeout(function() { animation.play(); }, 4);
+  setTimeout(function() {
+    animation.timeline = undefined;
+    SpecialPowers.Cu.forceGC();
+    window.top.continueTest();
+  }, 5);
+}
+</script>
+</head>
+<body onload="start()"></body>
+</html>
+

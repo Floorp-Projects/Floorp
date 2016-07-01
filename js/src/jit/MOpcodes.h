@@ -133,7 +133,7 @@ namespace jit {
     _(NewTypedObject)                                                       \
     _(NewDeclEnvObject)                                                     \
     _(NewCallObject)                                                        \
-    _(NewRunOnceCallObject)                                                 \
+    _(NewSingletonCallObject)                                               \
     _(NewStringObject)                                                      \
     _(ObjectState)                                                          \
     _(ArrayState)                                                           \

@@ -671,12 +671,8 @@ nsWindow::GetDefaultScaleInternal()
 LayerManager *
 nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,
-                          LayerManagerPersistence aPersistence,
-                          bool* aAllowRetaining)
+                          LayerManagerPersistence aPersistence)
 {
-    if (aAllowRetaining) {
-        *aAllowRetaining = true;
-    }
     if (mLayerManager) {
         // This layer manager might be used for painting outside of DoDraw(), so we need
         // to set the correct rotation on it.

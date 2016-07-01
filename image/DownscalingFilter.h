@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <ctime>
 #include <stdint.h>
-#include <string.h>
 
 #include "mozilla/Maybe.h"
 #include "mozilla/SSE.h"

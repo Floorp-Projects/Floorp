@@ -55,9 +55,9 @@ struct LinkData : LinkDataCacheablePod
             RawPointer,
             CodeLabel,
             InstructionImmediate
-        };
-        uint32_t patchAtOffset;
-        uint32_t targetOffset;
+        };	
+        MOZ_INIT_OUTSIDE_CTOR uint32_t patchAtOffset;
+        MOZ_INIT_OUTSIDE_CTOR uint32_t targetOffset;
 
         InternalLink() = default;
         explicit InternalLink(Kind kind);

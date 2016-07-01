@@ -496,9 +496,7 @@ crmf_copy_cert_req_msg(CRMFCertReqMsg *srcReqMsg)
     return newReqMsg;
 
 loser:
-    if (newReqMsg != NULL) {
-        CRMF_DestroyCertReqMsg(newReqMsg);
-    }
+    CRMF_DestroyCertReqMsg(newReqMsg);
     return NULL;
 }
 
@@ -868,9 +866,7 @@ CRMF_CertRequestGetControlAtIndex(CRMFCertRequest *inCertReq, int index)
     }
     return newControl;
 loser:
-    if (newControl != NULL) {
-        CRMF_DestroyControl(newControl);
-    }
+    CRMF_DestroyControl(newControl);
     return NULL;
 }
 

@@ -9,7 +9,6 @@
 
 #include "mozilla/Logging.h"
 #include "prinrval.h"
-#include "nsString.h"
 
 static mozilla::LazyLogModule gImgLog("imgRequest");
 
