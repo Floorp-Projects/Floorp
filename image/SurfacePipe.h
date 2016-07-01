@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "nsDebug.h"
+
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"

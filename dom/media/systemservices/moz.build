@@ -8,7 +8,6 @@ if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
         'CamerasChild.h',
         'CamerasParent.h',
-        'CamerasUtils.h',
         'LoadManager.h',
         'LoadManagerFactory.h',
         'LoadMonitor.h',
@@ -16,7 +15,6 @@ if CONFIG['MOZ_WEBRTC']:
     UNIFIED_SOURCES += [
         'CamerasChild.cpp',
         'CamerasParent.cpp',
-        'CamerasUtils.cpp',
         'LoadManager.cpp',
         'LoadManagerFactory.cpp',
         'LoadMonitor.cpp',

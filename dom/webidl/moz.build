@@ -172,7 +172,6 @@ WEBIDL_FILES = [
     'FormData.webidl',
     'Function.webidl',
     'GainNode.webidl',
-    'GamepadServiceTest.webidl',
     'Geolocation.webidl',
     'GeometryUtils.webidl',
     'GetUserMediaRequest.webidl',
@@ -660,6 +659,7 @@ if CONFIG['MOZ_WEBSPEECH']:
 if CONFIG['MOZ_GAMEPAD']:
     WEBIDL_FILES += [
         'Gamepad.webidl',
+        'GamepadServiceTest.webidl'
     ]
 
 WEBIDL_FILES += [

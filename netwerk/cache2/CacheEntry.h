@@ -292,10 +292,16 @@ private:
   nsCString mEnhanceID;
   nsCString mStorageID;
 
+  // mUseDisk, mSkipSizeCheck, mIsDoomed are plain "bool", not "bool:1",
+  // so as to avoid bitfield races with the byte containing
+  // mSecurityInfoLoaded et al.  See bug 1278524.
+  //
   // Whether it's allowed to persist the data to disk
-  bool const mUseDisk : 1;
+  bool const mUseDisk;
   // Whether it should skip max size check.
-  bool const mSkipSizeCheck : 1;
+  bool const mSkipSizeCheck;
+  // Set when entry is doomed with AsyncDoom() or DoomAlreadyRemoved().
+  bool mIsDoomed;
 
   // Following flags are all synchronized with the cache entry lock.
 
@@ -315,10 +321,6 @@ private:
   // Whether the pinning state of the entry is known (equals to the actual state
   // of the cache file)
   bool mPinningKnown : 1;
-
-  // Set when entry is doomed with AsyncDoom() or DoomAlreadyRemoved().
-  // Left as a standalone flag to not bother with locking (there is no need).
-  bool mIsDoomed;
 
   static char const * StateString(uint32_t aState);
 

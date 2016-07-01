@@ -3,12 +3,10 @@
 set -v -e -x
 
 if [ $(id -u) = 0 ]; then
-    # Switch compilers.
-    GCC=${GCC_VERSION:-gcc-5}
-    GXX=${GXX_VERSION:-g++-5}
+    source $(dirname $0)/tools.sh
 
-    update-alternatives --set gcc "/usr/bin/$GCC"
-    update-alternatives --set g++ "/usr/bin/$GXX"
+    # Set compiler.
+    switch_compilers
 
     # Drop privileges by re-running this script.
     exec su worker $0
@@ -20,13 +18,13 @@ if [ ! -d "nspr" ]; then
 fi
 
 # Build.
-cd nss && make nss_build_all
+cd nss && make nss_build_all && cd ..
 
 # Generate certificates.
-cd tests && NSS_TESTS=cert NSS_CYCLES="standard pkix sharedb" ./all.sh
+NSS_TESTS=cert NSS_CYCLES="standard pkix sharedb" $(dirname $0)/run_tests.sh
 
 # Reset test counter so that test runs pick up our certificates.
-cd && echo 1 > tests_results/security/localhost
+echo 1 > tests_results/security/localhost
 
 # Package.
 mkdir artifacts

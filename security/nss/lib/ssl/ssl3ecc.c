@@ -62,6 +62,12 @@ ssl_NamedGroup2ECParams(PLArenaPool *arena, const namedGroupDef *ecGroup,
     PRUint32 policyFlags = 0;
     SECStatus rv;
 
+    if (!params) {
+        PORT_Assert(0);
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     if (!ecGroup || ecGroup->type != group_type_ec ||
         (oidData = SECOID_FindOIDByTag(ecGroup->oidTag)) == NULL) {
         PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
@@ -74,7 +80,11 @@ ssl_NamedGroup2ECParams(PLArenaPool *arena, const namedGroupDef *ecGroup,
         return SECFailure;
     }
 
-    SECITEM_AllocItem(arena, params, (2 + oidData->oid.len));
+    if (SECITEM_AllocItem(arena, params, (2 + oidData->oid.len)) == NULL) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
+    }
+
     /*
      * params->data needs to contain the ASN encoding of an object ID (OID)
      * representing the named curve. The actual OID is in
@@ -279,7 +289,7 @@ unsigned int
 tls13_SizeOfECDHEKeyShareKEX(const SECKEYPublicKey *pubKey)
 {
     PORT_Assert(pubKey->keyType == ecKey);
-    return 1 + pubKey->u.ec.publicValue.len;
+    return pubKey->u.ec.publicValue.len;
 }
 
 /* This function encodes the key_exchange field in
@@ -291,8 +301,8 @@ tls13_EncodeECDHEKeyShareKEX(sslSocket *ss, const SECKEYPublicKey *pubKey)
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
     PORT_Assert(pubKey->keyType == ecKey);
 
-    return ssl3_AppendHandshakeVariable(ss, pubKey->u.ec.publicValue.data,
-                                        pubKey->u.ec.publicValue.len, 1);
+    return ssl3_AppendHandshake(ss, pubKey->u.ec.publicValue.data,
+                                pubKey->u.ec.publicValue.len);
 }
 
 /*
@@ -381,18 +391,13 @@ tls13_ImportECDHKeyShare(sslSocket *ss, SECKEYPublicKey *peerKey,
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
-    rv = ssl3_ConsumeHandshakeVariable(ss, &ecPoint, 1, &b, &length);
-    if (rv != SECSuccess) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECDHE_KEY_SHARE);
-        return SECFailure;
-    }
-    if (length || !ecPoint.len) {
+    if (!length) {
         PORT_SetError(SSL_ERROR_RX_MALFORMED_ECDHE_KEY_SHARE);
         return SECFailure;
     }
 
     /* Fail if the ec point uses compressed representation */
-    if (ecPoint.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
+    if (b[0] != EC_POINT_FORM_UNCOMPRESSED) {
         PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
         return SECFailure;
     }
@@ -407,6 +412,9 @@ tls13_ImportECDHKeyShare(sslSocket *ss, SECKEYPublicKey *peerKey,
     }
 
     /* copy publicValue in peerKey */
+    ecPoint.data = b;
+    ecPoint.len = length;
+
     rv = SECITEM_CopyItem(peerKey->arena, &peerKey->u.ec.publicValue, &ecPoint);
     if (rv != SECSuccess) {
         return SECFailure;
@@ -795,9 +803,6 @@ ssl3_SendECDHServerKeyExchange(
             goto loser;
         }
         PR_APPEND_LINK(&keyPair->link, &ss->ephemeralKeyPairs);
-    }
-    if (rv != SECSuccess) {
-        goto loser;
     }
 
     PORT_Assert(keyPair);

@@ -248,7 +248,7 @@ public:
     mMode = nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
   }
 
-  mozilla::layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr, bool* aAllowRetaining = nullptr);
+  mozilla::layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr);
 
   /**
    * @return true if the display is being built in order to determine which
@@ -3526,7 +3526,8 @@ public:
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList, uint32_t aFlags = 0,
                     ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
-                    float aScrollbarThumbRatio = 0.0f);
+                    float aScrollbarThumbRatio = 0.0f,
+                    bool aForceActive = true);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -3536,10 +3537,7 @@ public:
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override
-  {
-    return mozilla::LAYER_ACTIVE_FORCE;
-  }
+                                   const ContainerLayerParameters& aParameters) override;
   virtual bool TryMerge(nsDisplayItem* aItem) override
   {
     // Don't allow merging, each sublist must have its own layer
@@ -3554,6 +3552,7 @@ protected:
   uint32_t mFlags;
   ViewID mScrollTarget;
   float mScrollbarThumbRatio;
+  bool mForceActive;
 };
 
 /**
