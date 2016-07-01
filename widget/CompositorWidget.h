@@ -31,6 +31,13 @@ namespace widget {
 class WinCompositorWidget;
 class CompositorWidgetInitData;
 
+// Gecko widgets usually need to communicate with the CompositorWidget with
+// platform-specific messages (for example to update the window size or
+// transparency). This functionality is controlled through a "host". Since
+// this functionality is platform-dependent, it is only forward declared
+// here.
+class CompositorWidgetDelegate;
+
 /**
  * Access to a widget from the compositor is restricted to these methods.
  */
@@ -208,6 +215,13 @@ public:
   virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() = 0;
 
   virtual WinCompositorWidget* AsWindows() {
+    return nullptr;
+  }
+
+  /**
+   * Return the platform-specific delegate for the widget, if any.
+   */
+  virtual CompositorWidgetDelegate* AsDelegate() {
     return nullptr;
   }
 
