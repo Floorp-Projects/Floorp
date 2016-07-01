@@ -17,11 +17,11 @@
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, etc
 #include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
+#include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsRegion.h"
 #include <vector>
 #include "mozilla/WidgetUtils.h"
-#include "CompositorWidgetProxy.h"
 
 /**
  * Different elements of a web pages are rendered into separate "layers" before
@@ -192,7 +192,7 @@ protected:
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  explicit Compositor(widget::CompositorWidgetProxy* aWidget,
+  explicit Compositor(widget::CompositorWidget* aWidget,
                       CompositorBridgeParent* aParent = nullptr);
 
   virtual already_AddRefed<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) = 0;
@@ -474,7 +474,7 @@ public:
 
   virtual void ForcePresent() { }
 
-  widget::CompositorWidgetProxy* GetWidget() const { return mWidget; }
+  widget::CompositorWidget* GetWidget() const { return mWidget; }
 
   virtual bool HasImageHostOverlays() { return false; }
 
@@ -618,7 +618,7 @@ protected:
   RefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
 
-  widget::CompositorWidgetProxy* mWidget;
+  widget::CompositorWidget* mWidget;
 
   bool mIsDestroyed;
 

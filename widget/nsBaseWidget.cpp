@@ -282,7 +282,7 @@ void nsBaseWidget::DestroyCompositor()
 
     // Widget is used in CompositorBridgeParent, so we can't release it until
     // it has acknowledged shutdown.
-    mCompositorWidgetProxy = nullptr;
+    mCompositorWidget = nullptr;
   }
 
   // Can have base widgets that are things like tooltips
@@ -1306,15 +1306,15 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
-  if (!mCompositorWidgetProxy) {
-    mCompositorWidgetProxy = NewCompositorWidgetProxy();
+  if (!mCompositorWidget) {
+    mCompositorWidget = NewCompositorWidget();
   }
 
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
-    mCompositorWidgetProxy,
+    mCompositorWidget,
     lm,
     GetDefaultScale(),
     UseAPZ(),
@@ -1420,10 +1420,10 @@ nsBaseWidget::GetGLFrameBufferFormat()
   return LOCAL_GL_RGBA;
 }
 
-mozilla::widget::CompositorWidgetProxy*
-nsBaseWidget::NewCompositorWidgetProxy()
+mozilla::widget::CompositorWidget*
+nsBaseWidget::NewCompositorWidget()
 {
-  return new mozilla::widget::CompositorWidgetProxyWrapper(this);
+  return new mozilla::widget::InProcessCompositorWidget(this);
 }
 
 //-------------------------------------------------------------------------

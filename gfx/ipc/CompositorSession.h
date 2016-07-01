@@ -13,7 +13,7 @@
 
 namespace mozilla {
 namespace widget {
-class CompositorWidgetProxy;
+class CompositorWidget;
 } // namespace widget
 namespace gfx {
 class GPUProcessManager;
@@ -57,7 +57,7 @@ protected:
   virtual ~CompositorSession();
 
   static already_AddRefed<CompositorSession> CreateInProcess(
-    widget::CompositorWidgetProxy* aWidgetProxy,
+    widget::CompositorWidget* aWidget,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
