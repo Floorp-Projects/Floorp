@@ -12,7 +12,7 @@ import talos.filter
 
 class TestFilter(unittest.TestCase):
 
-    data = range(30) # test data
+    data = range(30)  # test data
 
     def test_ignore(self):
         """test the ignore filter"""
@@ -63,7 +63,7 @@ class TestFilter(unittest.TestCase):
         talos.filter.scalar_filters['foo'] = lambda *args: args
         parsed = talos.filter.parse('foo:10.1,2,5.0,6.')
         self.assertEquals(parsed, ['foo', [10.1, 2, 5.0, 6.0]])
-        for index in (2,3):
+        for index in (2, 3):
             self.assertEquals(type(parsed[1][index]), float)
             self.assertNotEqual(type(parsed[1][index]), int)
 
