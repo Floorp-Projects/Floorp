@@ -693,6 +693,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     friend void js::AssertCurrentThreadCanLock(js::RuntimeLock which);
 #endif
 
+  protected:
     /*
      * Points to the most recent activation running on the thread.
      * See Activation comment in vm/Stack.h.
