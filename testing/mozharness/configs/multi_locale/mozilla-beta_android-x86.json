@@ -17,9 +17,6 @@
         "repo": "https://hg.mozilla.org/build/tools",
         "tag": "default",
         "dest": "tools"
-    },{
-        "repo": "https://hg.mozilla.org/build/compare-locales",
-        "tag": "RELEASE_AUTOMATION"
     }],
     "vcs_share_base": "/builds/hg-shared",
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",

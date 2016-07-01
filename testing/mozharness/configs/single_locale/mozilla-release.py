@@ -20,10 +20,6 @@ config = {
         "repo": "https://hg.mozilla.org/releases/mozilla-release",
         "revision": "%(revision)s",
         "dest": "mozilla-release",
-    }, {
-        "vcs": "hgtool",
-        "repo": "https://hg.mozilla.org/build/compare-locales",
-        "revision": "RELEASE_AUTOMATION"
     }],
     # purge options
     'purge_minsize': 12,
