@@ -156,6 +156,15 @@ typedef bool HandleNaNSpecially;
 // prevent this workaround from having any consequence.  This hack
 // exists only as a stopgap; there is no ARM64 JIT support yet.
 static const Register StackPointer = RealStackPointer;
+
+// FIXME: This should somehow use vixl::UseScratchRegisterScope, or we
+// should define our own scratch register independent of the masm.
+class ScratchRegisterScope
+{
+  public:
+    ScratchRegisterScope(MacroAssembler& masm) {}
+    operator Register() const { return ScratchReg; }
+};
 #endif
 
 #ifdef JS_CODEGEN_X86
@@ -165,73 +174,23 @@ static const Register StackPointer = RealStackPointer;
 // EBX not being one of the WasmTableCall registers; and needing a
 // temp register for load/store that has a single-byte persona.
 static const Register ScratchRegX86 = ebx;
+
+// FIXME: We want this to have teeth.  One way to ensure that is to
+// pass BaseCompiler to ScratchRegisterScope instead of masm, and then
+// have a property on BaseCompiler that tracks availability.  On other
+// platforms than x86 we'd delegate from our private
+// ScratchRegisterScope to the standard one by inheritance, passing
+// BaseCompiler->masm to the base constructor.
+class ScratchRegisterScope
+{
+  public:
+    ScratchRegisterScope(MacroAssembler& masm) {}
+    operator Register() const { return ScratchRegX86; }
+};
 #endif
 
 class BaseCompiler
 {
-    // We define our own ScratchRegister abstractions, deferring to
-    // the platform's when possible.
-
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    typedef ScratchDoubleScope ScratchF64;
-#else
-    class ScratchF64
-    {
-      public:
-        ScratchF64(BaseCompiler& b) {}
-        operator FloatRegister() const {
-            MOZ_CRASH("BaseCompiler platform hook - ScratchF64");
-        }
-    };
-#endif
-
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    typedef ScratchFloat32Scope ScratchF32;
-#else
-    class ScratchF32
-    {
-      public:
-        ScratchF32(BaseCompiler& b) {}
-        operator FloatRegister() const {
-            MOZ_CRASH("BaseCompiler platform hook - ScratchF32");
-        }
-    };
-#endif
-
-#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-    typedef ScratchRegisterScope ScratchI32;
-#elif defined(JS_CODEGEN_X86)
-    class ScratchI32
-    {
-        BaseCompiler& bc;
-      public:
-        ScratchI32(BaseCompiler& bc) : bc(bc) {
-#ifdef DEBUG
-            MOZ_ASSERT(!bc.scratchRegisterTaken());
-            bc.setScratchRegisterTaken(true);
-#endif
-        }
-        ~ScratchI32() {
-#ifdef DEBUG
-            MOZ_ASSERT(bc.scratchRegisterTaken());
-            bc.setScratchRegisterTaken(false);
-#endif
-        }
-        operator Register() const {
-            return ScratchRegX86;
-        }
-    };
-#else
-    class ScratchI32
-    {
-      public:
-        ScratchI32(BaseCompiler& b) {}
-        operator Register() const {
-            MOZ_CRASH("BaseCompiler platform hook - ScratchI32");
-        }
-    };
-#endif
-
     // A Label in the code, allocated out of a temp pool in the
     // TempAllocator attached to the compilation.
 
@@ -428,9 +387,6 @@ class BaseCompiler
 
     AllocatableGeneralRegisterSet availGPR_;
     AllocatableFloatRegisterSet availFPU_;
-#ifdef DEBUG
-    bool                        scratchRegisterTaken_;
-#endif
 
     TempObjectPool<PooledLabel> labelPool_;
 
@@ -476,18 +432,6 @@ class BaseCompiler
 
     MOZ_MUST_USE
     bool emitFunction();
-
-    // Used by some of the ScratchRegister implementations.
-    operator MacroAssembler&() const { return masm; }
-
-#ifdef DEBUG
-    bool scratchRegisterTaken() const {
-        return scratchRegisterTaken_;
-    }
-    void setScratchRegisterTaken(bool state) {
-        scratchRegisterTaken_ = state;
-    }
-#endif
 
   private:
 
@@ -1068,9 +1012,13 @@ class BaseCompiler
             Stk& v = stk_[i];
             switch (v.kind()) {
               case Stk::LocalI32: {
-                ScratchI32 scratch(*this);
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+                ScratchRegisterScope scratch(masm);
                 loadLocalI32(scratch, v);
                 masm.Push(scratch);
+#else
+                MOZ_CRASH("BaseCompiler platform hook: sync LocalI32");
+#endif
                 v.setOffs(Stk::MemI32, masm.framePushed());
                 break;
               }
@@ -1082,7 +1030,7 @@ class BaseCompiler
               }
               case Stk::LocalI64: {
 #ifdef JS_PUNBOX64
-                ScratchI32 scratch(*this);
+                ScratchRegisterScope scratch(masm);
                 loadI64(Register64(scratch), v);
                 masm.Push(scratch);
 #else
@@ -1102,9 +1050,13 @@ class BaseCompiler
                 break;
               }
               case Stk::LocalF64: {
-                ScratchF64 scratch(*this);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+                ScratchDoubleScope scratch(masm);
                 loadF64(scratch, v);
                 masm.Push(scratch);
+#else
+                MOZ_CRASH("BaseCompiler platform hook: sync LocalF64");
+#endif
                 v.setOffs(Stk::MemF64, masm.framePushed());
                 break;
               }
@@ -1115,9 +1067,13 @@ class BaseCompiler
                 break;
               }
               case Stk::LocalF32: {
-                ScratchF32 scratch(*this);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+                ScratchFloat32Scope scratch(masm);
                 loadF32(scratch, v);
                 masm.Push(scratch);
+#else
+                MOZ_CRASH("BaseCompiler platform hook: sync LocalF32");
+#endif
                 v.setOffs(Stk::MemF32, masm.framePushed());
                 break;
               }
@@ -1748,10 +1704,14 @@ class BaseCompiler
         // then it's better to store a zero literal, probably.
 
         if (varLow_ < varHigh_) {
-            ScratchI32 scratch(*this);
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+            ScratchRegisterScope scratch(masm);
             masm.mov(ImmWord(0), scratch);
             for (int32_t i = varLow_ ; i < varHigh_ ; i+=4)
                 storeToFrameI32(scratch, i+4);
+#else
+            MOZ_CRASH("BaseCompiler platform hook: init frame");
+#endif
         }
     }
 
@@ -1925,9 +1885,13 @@ class BaseCompiler
           case ValType::I32: {
             ABIArg argLoc = call.abi_.next(MIRType::Int32);
             if (argLoc.kind() == ABIArg::Stack) {
-                ScratchI32 scratch(*this);
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+                ScratchRegisterScope scratch(masm);
                 loadI32(scratch, arg);
                 masm.store32(scratch, Address(StackPointer, argLoc.offsetFromArgBase()));
+#else
+                MOZ_CRASH("BaseCompiler platform hook: passArg");
+#endif
             } else {
                 loadI32(argLoc.reg().gpr(), arg);
             }
@@ -1937,7 +1901,7 @@ class BaseCompiler
 #ifdef JS_CODEGEN_X64
             ABIArg argLoc = call.abi_.next(MIRType::Int64);
             if (argLoc.kind() == ABIArg::Stack) {
-                ScratchI32 scratch(*this);
+                ScratchRegisterScope scratch(masm);
                 loadI64(Register64(scratch), arg);
                 masm.movq(scratch, Operand(StackPointer, argLoc.offsetFromArgBase()));
             } else {
@@ -1951,9 +1915,13 @@ class BaseCompiler
           case ValType::F64: {
             ABIArg argLoc = call.abi_.next(MIRType::Double);
             if (argLoc.kind() == ABIArg::Stack) {
-                ScratchF64 scratch(*this);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+                ScratchDoubleScope scratch(masm);
                 loadF64(scratch, arg);
                 masm.storeDouble(scratch, Address(StackPointer, argLoc.offsetFromArgBase()));
+#else
+                MOZ_CRASH("BaseCompiler platform hook: passArg F64");
+#endif
             } else {
                 loadF64(argLoc.reg().fpu(), arg);
             }
@@ -1962,9 +1930,13 @@ class BaseCompiler
           case ValType::F32: {
             ABIArg argLoc = call.abi_.next(MIRType::Float32);
             if (argLoc.kind() == ABIArg::Stack) {
-                ScratchF32 scratch(*this);
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+                ScratchFloat32Scope scratch(masm);
                 loadF32(scratch, arg);
                 masm.storeFloat32(scratch, Address(StackPointer, argLoc.offsetFromArgBase()));
+#else
+                MOZ_CRASH("BaseCompiler platform hook: passArg F32");
+#endif
             } else {
                 loadF32(argLoc.reg().fpu(), arg);
             }
@@ -2012,7 +1984,7 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         // CodeGeneratorX64::visitAsmJSLoadFuncPtr()
         {
-            ScratchI32 scratch(*this);
+            ScratchRegisterScope scratch(masm);
             CodeOffset label = masm.leaRipRelative(scratch);
             masm.loadPtr(Operand(scratch, ptrReg, TimesEight, 0), ptrReg);
             masm.append(AsmJSGlobalAccess(label, globalDataOffset));
@@ -2081,7 +2053,7 @@ class BaseCompiler
 
     void tableSwitch(Label* theTable, RegI32 switchValue) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
-        ScratchI32 scratch(*this);
+        ScratchRegisterScope scratch(masm);
         CodeLabel tableCl;
 
         masm.mov(tableCl.patchAt(), scratch);
@@ -2234,7 +2206,7 @@ class BaseCompiler
 #ifdef JS_CODEGEN_X64
         Label notMin;
         {
-            ScratchI32 scratch(*this);
+            ScratchRegisterScope scratch(masm);
             masm.move64(Imm64(INT64_MIN), Register64(scratch));
             masm.cmpq(scratch, srcDest.reg.reg);
         }
@@ -6068,9 +6040,6 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
       masm(compileResults_.masm()),
       availGPR_(GeneralRegisterSet::All()),
       availFPU_(FloatRegisterSet::All()),
-#ifdef DEBUG
-      scratchRegisterTaken_(false),
-#endif
 #ifdef JS_CODEGEN_X64
       specific_rax(RegI64(Register64(rax))),
       specific_rcx(RegI64(Register64(rcx))),
