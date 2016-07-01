@@ -103,8 +103,7 @@ static bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
   return aLayersBackend != LayersBackend::LAYERS_BASIC
       || UsingX11Compositor()
       || aFormat == gfx::SurfaceFormat::UNKNOWN
-      || aFormat == gfx::SurfaceFormat::YUV
-      || aFormat == gfx::SurfaceFormat::NV12;
+      || aFormat == gfx::SurfaceFormat::YUV;
 }
 
 BufferTextureData*
@@ -152,7 +151,6 @@ BufferTextureData::CreateInternal(ClientIPCAllocator* aAllocator,
 
 BufferTextureData*
 BufferTextureData::CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
-                                                gfx::SurfaceFormat aFormat,
                                                 int32_t aBufferSize,
                                                 TextureFlags aTextureFlags)
 {
@@ -211,7 +209,6 @@ BufferTextureData::FillInfo(TextureData::Info& aInfo) const
 
   switch (aInfo.format) {
     case gfx::SurfaceFormat::YUV:
-    case gfx::SurfaceFormat::NV12:
     case gfx::SurfaceFormat::UNKNOWN:
       aInfo.supportsMoz2D = false;
       break;
