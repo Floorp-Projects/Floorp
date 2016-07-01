@@ -968,7 +968,7 @@ function getObjectForLocalOrSessionStorage(type) {
   return {
     getNamesForHost(host) {
       let storage = this.hostVsStores.get(host);
-      return Object.keys(storage);
+      return storage ? Object.keys(storage) : [];
     },
 
     getValuesForHost(host, name) {
@@ -977,14 +977,16 @@ function getObjectForLocalOrSessionStorage(type) {
         return [];
       }
       if (name) {
-        return [{name: name, value: storage.getItem(name)}];
+        let value = storage ? storage.getItem(name) : null;
+        return [{ name, value }];
       }
-      return Object.keys(storage).map(key => {
-        return {
-          name: key,
-          value: storage.getItem(key)
-        };
-      });
+      if (!storage) {
+        return [];
+      }
+      return Object.keys(storage).map(key => ({
+        name: key,
+        value: storage.getItem(key)
+      }));
     },
 
     getHostName(location) {
@@ -998,22 +1000,15 @@ function getObjectForLocalOrSessionStorage(type) {
       try {
         this.hostVsStores.set(host, window[type]);
       } catch (ex) {
-        // Exceptions happen when local or session storage is inaccessible
+        console.warn(`Failed to enumerate ${type} for host ${host}: ${ex}`);
       }
-      return null;
     },
 
     populateStoresForHosts() {
       this.hostVsStores = new Map();
-      try {
-        for (let window of this.windows) {
-          this.hostVsStores.set(this.getHostName(window.location),
-                                window[type]);
-        }
-      } catch (ex) {
-        // Exceptions happen when local or session storage is inaccessible
+      for (let window of this.windows) {
+        this.populateStoresForHost(this.getHostName(window.location), window);
       }
-      return null;
     },
 
     /**
@@ -1037,6 +1032,9 @@ function getObjectForLocalOrSessionStorage(type) {
      */
     editItem: Task.async(function* ({host, field, oldValue, items}) {
       let storage = this.hostVsStores.get(host);
+      if (!storage) {
+        return;
+      }
 
       if (field === "name") {
         storage.removeItem(oldValue);
@@ -1047,11 +1045,17 @@ function getObjectForLocalOrSessionStorage(type) {
 
     removeItem: Task.async(function* (host, name) {
       let storage = this.hostVsStores.get(host);
+      if (!storage) {
+        return;
+      }
       storage.removeItem(name);
     }),
 
     removeAll: Task.async(function* (host) {
       let storage = this.hostVsStores.get(host);
+      if (!storage) {
+        return;
+      }
       storage.clear();
     }),
 
@@ -1209,7 +1213,7 @@ StorageActors.createActor({
         storeMap.set(name, (yield caches.open(name)));
       }
     } catch (ex) {
-      console.error(`Failed to enumerate CacheStorage for host ${host}:`, ex);
+      console.warn(`Failed to enumerate CacheStorage for host ${host}: ${ex}`);
     }
     this.hostVsStores.set(host, storeMap);
   }),
