@@ -1,0 +1,52 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test ObjectWithText rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - ObjectWithText</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { ObjectWithText } = browserRequire("devtools/client/shared/components/reps/object-with-text");
+
+    let gripStub = {
+      "type": "object",
+      "class": "CSSStyleRule",
+      "actor": "server1.conn3.obj273",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 0,
+      "preview": {
+        "kind": "ObjectWithText",
+        "text": ".Shadow"
+      }
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, ObjectWithText.rep, `Rep correctly selects ${ObjectWithText.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(ObjectWithText.rep, { object: gripStub });
+    is(renderedComponent.textContent, ".Shadow", "ObjectWithText rep has expected text content");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

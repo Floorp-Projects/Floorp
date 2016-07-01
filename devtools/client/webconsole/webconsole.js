@@ -44,17 +44,7 @@ var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Security/MixedContent";
-
-const TRACKING_PROTECTION_LEARN_MORE = "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection";
-
-const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Security/InsecurePasswords";
-
-const PUBLIC_KEY_PINS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Public_Key_Pinning";
-
-const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
-
-const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Security/Weak_Signature_Algorithm";
+const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";
 
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
@@ -1487,7 +1477,9 @@ WebConsoleFrame.prototype = {
     let msgBody = node.getElementsByClassName("message-body")[0];
 
     // Add the more info link node to messages that belong to certain categories
-    this.addMoreInfoLink(msgBody, scriptError);
+    if (scriptError.exceptionDocURL) {
+      this.addLearnMoreWarningNode(msgBody, scriptError.exceptionDocURL);
+    }
 
     // Collect telemetry data regarding JavaScript errors
     this._telemetry.logKeyed("DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED",
@@ -1667,48 +1659,6 @@ WebConsoleFrame.prototype = {
     });
   },
 
-  /**
-   * Adds a more info link node to messages based on the nsIScriptError object
-   * that we need to report to the console
-   *
-   * @param node
-   *        The node to which we will be adding the more info link node
-   * @param scriptError
-   *        The script error object that we are reporting to the console
-   */
-  addMoreInfoLink: function (node, scriptError) {
-    let url;
-    switch (scriptError.category) {
-      case "Insecure Password Field":
-        url = INSECURE_PASSWORDS_LEARN_MORE;
-        break;
-      case "Mixed Content Message":
-      case "Mixed Content Blocker":
-        url = MIXED_CONTENT_LEARN_MORE;
-        break;
-      case "Invalid HPKP Headers":
-        url = PUBLIC_KEY_PINS_LEARN_MORE;
-        break;
-      case "Invalid HSTS Headers":
-        url = STRICT_TRANSPORT_SECURITY_LEARN_MORE;
-        break;
-      case "SHA-1 Signature":
-        url = WEAK_SIGNATURE_ALGORITHM_LEARN_MORE;
-        break;
-      case "Tracking Protection":
-        url = TRACKING_PROTECTION_LEARN_MORE;
-        break;
-      default:
-        // If all else fails check for an error doc URL.
-        url = ErrorDocs.GetURL(scriptError.errorMessageName);
-        break;
-    }
-
-    if (url) {
-      this.addLearnMoreWarningNode(node, url);
-    }
-  },
-
   /*
    * Appends a clickable warning node to the node passed
    * as a parameter to the function. When a user clicks on the appended
@@ -1725,7 +1675,7 @@ WebConsoleFrame.prototype = {
     let moreInfoLabel = "[" + l10n.getStr("webConsoleMoreInfoLabel") + "]";
 
     let warningNode = this.document.createElementNS(XHTML_NS, "a");
-    warningNode.title = url;
+    warningNode.title = url.split("?")[0];
     warningNode.href = url;
     warningNode.draggable = false;
     warningNode.textContent = moreInfoLabel;

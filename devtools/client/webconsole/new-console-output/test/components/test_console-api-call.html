@@ -20,14 +20,42 @@ window.onload = Task.async(function* () {
   const message = prepareMessage(packet);
   const rendered = renderComponent(ConsoleApiCall, {message});
 
-  const queryPath = "div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace";
-  const messageBody = rendered.querySelectorAll(queryPath);
-  const consoleStringNodes = messageBody[0].querySelectorAll("span.console-string");
+  const messageBody = getMessageBody(rendered);
+  const consoleStringNodes = getConsoleStringNodes(messageBody);
   is(consoleStringNodes.length, 2, "ConsoleApiCall outputs expected HTML structure");
-  is(messageBody[0].textContent, "foobar test", "ConsoleApiCall outputs expected text");
+  is(messageBody.textContent, "foobar test", "ConsoleApiCall outputs expected text");
+
+  for (let i = 0; i < 3; i++) {
+    const countPacket = yield getPacket("console.count('bar')", "consoleAPICall");
+    const countMessage = prepareMessage(countPacket);
+    const countRendered = renderComponent(ConsoleApiCall, {message: countMessage});
+    testConsoleCountRenderedElement(countRendered, `bar: ${i + 1}`);
+  }
 
   SimpleTest.finish()
 });
+
+function getMessageBody(renderedComponent) {
+  const queryPath = "div.message.cm-s-mozilla span span.message-flex-body " +
+    "span.message-body.devtools-monospace";
+  return renderedComponent.querySelector(queryPath);
+}
+
+function getConsoleStringNodes(messageBody) {
+  return messageBody.querySelectorAll("span.console-string");
+}
+
+function testConsoleCountRenderedElement(renderedComponent, expectedTextContent) {
+  info("Testing console.count rendered element");
+
+  const messageBody = getMessageBody(renderedComponent);
+  const consoleStringNodes = getConsoleStringNodes(messageBody);
+
+  is(consoleStringNodes.length, 1,
+    "console.count rendered element has the expected HTML structure");
+  is(messageBody.textContent, expectedTextContent,
+    "console.count rendered element has the expected text content");
+}
 </script>
 </body>
 </html>

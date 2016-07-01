@@ -8,9 +8,12 @@
 
 "use strict";
 
-const TEST_URI = "http://tracking.example.org/browser/devtools/client/webconsole/test/test-trackingprotection-securityerrors.html";
-const LEARN_MORE_URI = "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection";
+const TEST_URI = "http://tracking.example.org/browser/devtools/client/" +
+                 "webconsole/test/test-trackingprotection-securityerrors.html";
+const LEARN_MORE_URI = "https://developer.mozilla.org/Firefox/Privacy/" +
+                       "Tracking_Protection" + DOCS_GA_PARAMS;
 const PREF = "privacy.trackingprotection.enabled";
+
 const {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function () {
@@ -31,7 +34,8 @@ add_task(function* testMessagesAppear() {
     messages: [
       {
         name: "Was blocked because tracking protection is enabled",
-        text: "The resource at \u201chttp://tracking.example.com/\u201d was blocked because tracking protection is enabled",
+        text: "The resource at \u201chttp://tracking.example.com/\u201d was " +
+              "blocked because tracking protection is enabled",
         category: CATEGORY_SECURITY,
         severity: SEVERITY_WARNING,
         objects: true,

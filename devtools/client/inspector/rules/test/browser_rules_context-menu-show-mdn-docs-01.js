@@ -58,11 +58,12 @@ function* testMdnContextMenuItemVisibility(view) {
   let root = rootElement(view);
   for (let node of iterateNodes(root)) {
     info("Setting " + node + " as popupNode");
-    view.styleDocument.popupNode = node;
+    info("Creating context menu with " + node + " as popupNode");
+    let allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
+    let menuitemShowMdnDocs = allMenuItems.find(item => item.label ===
+      _STRINGS.GetStringFromName("styleinspector.contextmenu.showMdnDocs"));
 
-    info("Updating context menu state");
-    view._contextmenu._updateMenuItems();
-    let isVisible = !view._contextmenu.menuitemShowMdnDocs.hidden;
+    let isVisible = menuitemShowMdnDocs.visible;
     let shouldBeVisible = isPropertyNameNode(node);
     let message = shouldBeVisible ? "shown" : "hidden";
     is(isVisible, shouldBeVisible,
