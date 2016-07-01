@@ -353,10 +353,6 @@ public:
 
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
 
-    CompositorWidget* NewCompositorWidget() override {
-      return nullptr;
-    }
-
 protected:
   virtual ~nsCocoaWindow();
 
