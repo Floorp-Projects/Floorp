@@ -127,14 +127,13 @@ add_task(function*() {
   do_check_eq(addon.type, "extension");
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  // test that an unpacked add-on works too
   let tempdir = gTmpD.clone();
 
+  // test that an unpacked add-on works too
   writeInstallRDFToDir({
     id: ID,
-    version: "2.0",
+    version: "3.0",
     bootstrap: true,
-    unpack: true,
     targetApplications: [{
           id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -150,14 +149,14 @@ add_task(function*() {
 
   yield AddonManager.installTemporaryAddon(unpacked_addon);
 
-  BootstrapMonitor.checkAddonInstalled(ID, "2.0");
-  BootstrapMonitor.checkAddonStarted(ID, "2.0");
+  BootstrapMonitor.checkAddonInstalled(ID, "3.0");
+  BootstrapMonitor.checkAddonStarted(ID, "3.0");
 
   addon = yield promiseAddonByID(ID);
 
   // temporary add-on is installed and started
   do_check_neq(addon, null);
-  do_check_eq(addon.version, "2.0");
+  do_check_eq(addon.version, "3.0");
   do_check_eq(addon.name, "Test Bootstrap 1 (temporary)");
   do_check_true(addon.isCompatible);
   do_check_false(addon.appDisabled);
@@ -183,6 +182,130 @@ add_task(function*() {
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   unpacked_addon.remove(true);
+
+  // on Windows XPI files will be locked by the JAR cache, skip this test there.
+  if (!("nsIWindowsRegKey" in Components.interfaces)) {
+    // test that a packed (XPI) add-on works
+    writeInstallRDFToXPI({
+      id: ID,
+      version: "2.0",
+      bootstrap: true,
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1"
+      }],
+      name: "Test Bootstrap 1 (temporary)",
+    }, tempdir, "bootstrap1@tests.mozilla.org");
+
+    let packed_addon = tempdir.clone();
+    packed_addon.append(ID + ".xpi");
+
+    yield AddonManager.installTemporaryAddon(packed_addon);
+
+    addon = yield promiseAddonByID(ID);
+
+    // temporary add-on is installed and started
+    do_check_neq(addon, null);
+    do_check_eq(addon.version, "2.0");
+    do_check_eq(addon.name, "Test Bootstrap 1 (temporary)");
+    do_check_true(addon.isCompatible);
+    do_check_false(addon.appDisabled);
+    do_check_true(addon.isActive);
+    do_check_eq(addon.type, "extension");
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+
+    restartManager();
+
+    BootstrapMonitor.checkAddonInstalled(ID, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID, "1.0");
+
+    addon = yield promiseAddonByID(ID);
+
+    // existing add-on is back
+    do_check_neq(addon, null);
+    do_check_eq(addon.version, "1.0");
+    do_check_eq(addon.name, "Test Bootstrap 1");
+    do_check_true(addon.isCompatible);
+    do_check_false(addon.appDisabled);
+    do_check_true(addon.isActive);
+    do_check_eq(addon.type, "extension");
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+
+    packed_addon.remove(false);
+
+    // test that a webextension works
+    let webext = createTempWebExtensionFile({
+      manifest: {
+        version: "4.0",
+        name: "Test WebExtension 1 (temporary)",
+        applications: {
+          gecko: {
+            id: ID
+          }
+        }
+      }
+    });
+
+    yield AddonManager.installTemporaryAddon(webext);
+    addon = yield promiseAddonByID(ID);
+
+    // temporary add-on is installed and started
+    do_check_neq(addon, null);
+    do_check_eq(addon.version, "4.0");
+    do_check_eq(addon.name, "Test WebExtension 1 (temporary)");
+    do_check_true(addon.isCompatible);
+    do_check_false(addon.appDisabled);
+    do_check_true(addon.isActive);
+    do_check_eq(addon.type, "extension");
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+
+    // test that re-loading a webextension works, using the same filename
+    webext.remove(false);
+    webext = createTempWebExtensionFile({
+      manifest: {
+        version: "5.0",
+        name: "Test WebExtension 1 (temporary)",
+        applications: {
+          gecko: {
+            id: ID
+          }
+        }
+      }
+    });
+
+    yield AddonManager.installTemporaryAddon(webext);
+    addon = yield promiseAddonByID(ID);
+
+    // temporary add-on is installed and started
+    do_check_neq(addon, null);
+    do_check_eq(addon.version, "5.0");
+    do_check_eq(addon.name, "Test WebExtension 1 (temporary)");
+    do_check_true(addon.isCompatible);
+    do_check_false(addon.appDisabled);
+    do_check_true(addon.isActive);
+    do_check_eq(addon.type, "extension");
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+
+    restartManager();
+
+    BootstrapMonitor.checkAddonInstalled(ID, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID, "1.0");
+
+    addon = yield promiseAddonByID(ID);
+
+    // existing add-on is back
+    do_check_neq(addon, null);
+    do_check_eq(addon.version, "1.0");
+    do_check_eq(addon.name, "Test Bootstrap 1");
+    do_check_true(addon.isCompatible);
+    do_check_false(addon.appDisabled);
+    do_check_true(addon.isActive);
+    do_check_eq(addon.type, "extension");
+    do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  }
+
+  // remove original add-on
   addon.uninstall();
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
