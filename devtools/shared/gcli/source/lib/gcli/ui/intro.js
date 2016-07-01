@@ -36,7 +36,8 @@ exports.items = [
 /**
  * Called when the UI is ready to add a welcome message to the output
  */
-exports.maybeShowIntro = function(commandOutputManager, conversionContext) {
+exports.maybeShowIntro = function (commandOutputManager, conversionContext,
+                                   outputPanel) {
   var hideIntro = conversionContext.system.settings.get('hideIntro');
   if (hideIntro.value) {
     return;
@@ -46,7 +47,7 @@ exports.maybeShowIntro = function(commandOutputManager, conversionContext) {
   output.type = 'view';
   commandOutputManager.onOutput({ output: output });
 
-  var viewData = this.createView(null, conversionContext, true);
+  var viewData = this.createView(null, conversionContext, true, outputPanel);
 
   output.complete({ isTypedData: true, type: 'view', data: viewData });
 };
@@ -54,7 +55,8 @@ exports.maybeShowIntro = function(commandOutputManager, conversionContext) {
 /**
  * Called when the UI is ready to add a welcome message to the output
  */
-exports.createView = function(ignoreArgs, conversionContext, showHideButton) {
+exports.createView = function (ignoreArgs, conversionContext, showHideButton,
+                               outputPanel) {
   return view.createView({
     html:
       '<div save="${mainDiv}">\n' +
@@ -81,7 +83,7 @@ exports.createView = function(ignoreArgs, conversionContext, showHideButton) {
         var settings = conversionContext.system.settings;
         var hideIntro = settings.get('hideIntro');
         hideIntro.value = true;
-        this.mainDiv.style.display = 'none';
+        outputPanel.remove();
       }
     }
   });
