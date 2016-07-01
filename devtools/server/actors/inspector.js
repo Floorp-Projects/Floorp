@@ -3028,22 +3028,15 @@ var imageToImageData = Task.async(function* (node, maxDim) {
   }
 
   // Extract the image data
-  let imageData;
-  // The image may already be a data-uri, in which case, save ourselves the
-  // trouble of converting via the canvas.drawImage.toDataURL method
-  if (isImg && node.src.startsWith("data:")) {
-    imageData = node.src;
-  } else {
-    // Create a canvas to copy the rawNode into and get the imageData from
-    let canvas = node.ownerDocument.createElementNS(XHTML_NS, "canvas");
-    canvas.width = imgWidth * resizeRatio;
-    canvas.height = imgHeight * resizeRatio;
-    let ctx = canvas.getContext("2d");
+  // Create a canvas to copy the rawNode into and get the imageData from
+  let canvas = node.ownerDocument.createElementNS(XHTML_NS, "canvas");
+  canvas.width = imgWidth * resizeRatio;
+  canvas.height = imgHeight * resizeRatio;
+  let ctx = canvas.getContext("2d");
 
-    // Copy the rawNode image or canvas in the new canvas and extract data
-    ctx.drawImage(node, 0, 0, canvas.width, canvas.height);
-    imageData = canvas.toDataURL("image/png");
-  }
+  // Copy the rawNode image or canvas in the new canvas and extract data
+  ctx.drawImage(node, 0, 0, canvas.width, canvas.height);
+  let imageData = canvas.toDataURL("image/png");
 
   return {
     data: imageData,
