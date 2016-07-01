@@ -165,7 +165,6 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "hidden", NS_FORM_INPUT_HIDDEN },
   { "reset", NS_FORM_INPUT_RESET },
   { "image", NS_FORM_INPUT_IMAGE },
-  { "month", NS_FORM_INPUT_MONTH },
   { "number", NS_FORM_INPUT_NUMBER },
   { "password", NS_FORM_INPUT_PASSWORD },
   { "radio", NS_FORM_INPUT_RADIO },
@@ -180,7 +179,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[17];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[16];
 
 static const uint8_t NS_INPUT_INPUTMODE_AUTO              = 0;
 static const uint8_t NS_INPUT_INPUTMODE_NUMERIC           = 1;
@@ -2137,9 +2136,9 @@ HTMLInputElement::GetValue(nsAString& aValue)
     return rv;
   }
 
-  // Don't return non-sanitized value for types that are experimental on mobile
-  // or datetime types
-  if (IsExperimentalMobileType(mType) || IsDateTimeInputType(mType)) {
+  // Don't return non-sanitized value for types that are experimental on mobile.
+  //  or date types
+  if (IsExperimentalMobileType(mType) || mType == NS_FORM_INPUT_DATE) {
     SanitizeValue(aValue);
   }
 
@@ -2777,19 +2776,9 @@ HTMLInputElement::ApplyStep(int32_t aStep)
 bool
 HTMLInputElement::IsExperimentalMobileType(uint8_t aType)
 {
-  return (aType == NS_FORM_INPUT_DATE &&
-    !Preferences::GetBool("dom.forms.datetime", false) &&
-    !Preferences::GetBool("dom.forms.datepicker", false)) ||
-    (aType == NS_FORM_INPUT_TIME &&
-     !Preferences::GetBool("dom.forms.datetime", false));
-}
-
-bool
-HTMLInputElement::IsDateTimeInputType(uint8_t aType)
-{
-  return aType == NS_FORM_INPUT_DATE || aType == NS_FORM_INPUT_TIME ||
-    aType == NS_FORM_INPUT_MONTH;
-
+  return aType == NS_FORM_INPUT_TIME ||
+    (aType == NS_FORM_INPUT_DATE &&
+     !Preferences::GetBool("dom.forms.datepicker", false));
 }
 
 NS_IMETHODIMP
@@ -2980,8 +2969,8 @@ HTMLInputElement::MozSetDirectory(const nsAString& aDirectoryPath,
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
-  // TODO: temporary until bug 888320 is fixed.
-  if (IsExperimentalMobileType(mType) || IsDateTimeInputType(mType)) {
+  // TODO: temporary until bug 773205 is fixed.
+  if (IsExperimentalMobileType(mType) || mType == NS_FORM_INPUT_DATE) {
     return false;
   }
 
@@ -4019,7 +4008,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     // Experimental mobile types rely on the system UI to prevent users to not
     // set invalid values but we have to be extra-careful. Especially if the
     // option has been enabled on desktop.
-    if (IsExperimentalMobileType(mType) || IsDateTimeInputType(mType)) {
+    if (IsExperimentalMobileType(mType) || mType == NS_FORM_INPUT_DATE) {
       nsAutoString aValue;
       GetValueInternal(aValue);
       nsresult rv =
@@ -4719,7 +4708,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                (IsSingleLineTextControl(false, mType) ||
                 mType == NS_FORM_INPUT_NUMBER ||
                 IsExperimentalMobileType(mType) ||
-                IsDateTimeInputType(mType))) {
+                mType == NS_FORM_INPUT_DATE)) {
             FireChangeEventIfNeeded();
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -5516,20 +5505,6 @@ HTMLInputElement::ParseTime(const nsAString& aValue, uint32_t* aResult)
   return true;
 }
 
-static bool
-IsDateTimeEnabled(int32_t aNewType)
-{
-  return (aNewType == NS_FORM_INPUT_DATE &&
-          (Preferences::GetBool("dom.forms.datetime", false) ||
-           Preferences::GetBool("dom.experimental_forms", false) ||
-           Preferences::GetBool("dom.forms.datepicker", false))) ||
-         (aNewType == NS_FORM_INPUT_TIME &&
-          (Preferences::GetBool("dom.forms.datetime", false) ||
-           Preferences::GetBool("dom.experimental_forms", false))) ||
-         (aNewType == NS_FORM_INPUT_MONTH &&
-          Preferences::GetBool("dom.forms.datetime", false));
-}
-
 bool
 HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
                                  nsIAtom* aAttribute,
@@ -5549,8 +5524,7 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
             (newType == NS_FORM_INPUT_NUMBER &&
              !Preferences::GetBool("dom.forms.number", false)) ||
             (newType == NS_FORM_INPUT_COLOR &&
-             !Preferences::GetBool("dom.forms.color", false)) ||
-            (IsDateTimeInputType(newType) && !IsDateTimeEnabled(newType))) {
+             !Preferences::GetBool("dom.forms.color", false))) {
           newType = kInputDefaultType->value;
           aResult.SetTo(newType, &aValue);
         }
@@ -6936,7 +6910,6 @@ HTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_DATE:
     case NS_FORM_INPUT_TIME:
     case NS_FORM_INPUT_COLOR:
-    case NS_FORM_INPUT_MONTH:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -6982,7 +6955,6 @@ HTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_NUMBER:
     case NS_FORM_INPUT_DATE:
     case NS_FORM_INPUT_TIME:
-    case NS_FORM_INPUT_MONTH:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -7020,7 +6992,6 @@ HTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_NUMBER:
     case NS_FORM_INPUT_DATE:
     case NS_FORM_INPUT_TIME:
-    case NS_FORM_INPUT_MONTH:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -7035,7 +7006,8 @@ HTMLInputElement::DoesRequiredApply() const
 bool
 HTMLInputElement::PlaceholderApplies() const
 {
-  if (IsDateTimeInputType(mType)) {
+  if (mType == NS_FORM_INPUT_DATE ||
+      mType == NS_FORM_INPUT_TIME) {
     return false;
   }
 
@@ -7046,7 +7018,7 @@ bool
 HTMLInputElement::DoesPatternApply() const
 {
   // TODO: temporary until bug 773205 is fixed.
-  if (IsExperimentalMobileType(mType) || IsDateTimeInputType(mType)) {
+  if (IsExperimentalMobileType(mType)) {
     return false;
   }
 
@@ -7062,7 +7034,6 @@ HTMLInputElement::DoesMinMaxApply() const
     case NS_FORM_INPUT_DATE:
     case NS_FORM_INPUT_TIME:
     case NS_FORM_INPUT_RANGE:
-    case NS_FORM_INPUT_MONTH:
     // TODO:
     // All date/time types.
       return true;
@@ -7110,7 +7081,6 @@ HTMLInputElement::DoesAutocompleteApply() const
     case NS_FORM_INPUT_NUMBER:
     case NS_FORM_INPUT_RANGE:
     case NS_FORM_INPUT_COLOR:
-    case NS_FORM_INPUT_MONTH:
       return true;
 #ifdef DEBUG
     case NS_FORM_INPUT_RESET:
@@ -7288,8 +7258,7 @@ HTMLInputElement::HasPatternMismatch() const
 bool
 HTMLInputElement::IsRangeOverflow() const
 {
-  // TODO: this is temporary until bug 888324 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_MONTH) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -7309,8 +7278,7 @@ HTMLInputElement::IsRangeOverflow() const
 bool
 HTMLInputElement::IsRangeUnderflow() const
 {
-  // TODO: this is temporary until bug 888324 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_MONTH) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -8289,8 +8257,7 @@ HTMLInputElement::UpdateHasRange()
 
   mHasRange = false;
 
-  // TODO: this is temporary until bug 888324 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_MONTH) {
+  if (!DoesMinMaxApply()) {
     return;
   }
 
