@@ -163,7 +163,7 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
         *valueSlot(i) = fp->slots()[i];
 
     if (fp->isDebuggee()) {
-        JSContext* cx = GetJSContextFromJitCode();
+        JSContext* cx = GetJSContextFromMainThread();
 
         // For debuggee frames, update any Debugger.Frame objects for the
         // InterpreterFrame to point to the BaselineFrame.

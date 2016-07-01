@@ -122,7 +122,8 @@ KeyShortcuts.parseElectronKey = function (window, str) {
     } else if (mod === "Shift") {
       shortcut.shift = true;
     } else {
-      throw new Error("Unsupported modifier: " + mod);
+      console.error("Unsupported modifier:", mod, "from key:", str);
+      return null;
     }
   }
 
@@ -142,7 +143,8 @@ KeyShortcuts.parseElectronKey = function (window, str) {
     // Used only to stringify the shortcut
     shortcut.keyCodeString = key;
   } else {
-    throw new Error("Unsupported key: " + key);
+    console.error("Unsupported key:", key);
+    return null;
   }
 
   return shortcut;
@@ -220,6 +222,10 @@ KeyShortcuts.prototype = {
     }
     if (!this.keys.has(key)) {
       let shortcut = KeyShortcuts.parseElectronKey(this.window, key);
+      // The key string is wrong and we were unable to compute the key shortcut
+      if (!shortcut) {
+        return;
+      }
       this.keys.set(key, shortcut);
     }
     this.eventEmitter.on(key, listener);

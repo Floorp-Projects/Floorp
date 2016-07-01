@@ -1021,9 +1021,7 @@ pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox
 pref("identity.fxaccounts.skipDeviceRegistration", true);
 
 // Enable mapped array buffer.
-#ifndef XP_WIN
 pref("dom.mapped_arraybuffer.enabled", true);
-#endif
 
 // SystemUpdate API
 pref("dom.system_update.enabled", true);

@@ -637,7 +637,8 @@ struct nsStyleImageLayers {
     Position      mPosition;      // [reset] See nsStyleConsts.h
     Size          mSize;          // [reset]
     uint8_t       mClip;          // [reset] See nsStyleConsts.h
-    uint8_t       mOrigin;        // [reset] See nsStyleConsts.h
+    MOZ_INIT_OUTSIDE_CTOR
+      uint8_t     mOrigin;        // [reset] See nsStyleConsts.h
     uint8_t       mAttachment;    // [reset] See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer

@@ -11,7 +11,7 @@ LDFLAGS += $(SANITIZER_LDFLAGS)
 # ASan needs frame pointers to save stack traces for allocation/free sites.
 # (Warning: some platforms, like ARM Linux in Thumb mode, don't have useful
 # frame pointers even with this option.)
-SANITIZER_CFLAGS += -fno-omit-frame-pointer
+SANITIZER_CFLAGS += -fno-omit-frame-pointer -fno-optimize-sibling-calls
 
 # You probably want to be able to get debug info for failures, even with an
 # optimized build.

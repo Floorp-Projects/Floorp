@@ -14,6 +14,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "gfxPoint.h"
 #include "nsRect.h"
 
 namespace skia {

@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='UTF-8'/>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+    <script src='../webgl-util.js'></script>
+    <script id='vs' type='x-shader/x-vertex'>
+
+attribute vec2 aPosition;
+
+void main(void) {
+  gl_PointSize = 16.0;
+  gl_Position = vec4(aPosition, 0, 1);
+}
+
+    </script>
+    <script id='fs' type='x-shader/x-fragment'>
+
+precision mediump float;
+
+uniform vec4 uColor;
+
+void main(void) {
+  gl_FragColor = uColor;
+}
+
+    </script>
+  </head>
+  <body>
+    <script>
+
+function GetPixel(gl, x, y) {
+  var pixel = new Uint8Array(4);
+  gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  return pixel;
+}
+
+function ColorStr(arr) {
+  return '{' + arr.map(function(x) { return '' + x; }).join(', ') + '}';
+}
+
+function PixelShouldBe(gl, x, y, ref, prefix) {
+  if (prefix) {
+    prefix += ': ';
+  }
+
+  var test = GetPixel(gl, x, y);
+
+  var testStr = ColorStr(test);
+  var refStr = ColorStr(ref.map(x => x * 255));
+  ok(testStr == refStr, prefix + 'Should be ' + refStr + ', was ' + testStr + '.');
+}
+
+function GetProgram(gl) {
+  var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+
+  prog.aPosition = gl.getAttribLocation(prog, 'aPosition');
+  ok(prog.aPosition >= 0, '`aPosition` should be valid.');
+
+  prog.uColor = gl.getUniformLocation(prog, 'uColor');
+  ok(prog.uColor, '`uColor` should be valid.');
+
+  return prog;
+}
+
+// Give ourselves a scope to return early from:
+(function () {
+  var c = document.createElement('canvas');
+  document.body.appendChild(c);
+  var gl = c.getContext('webgl', { depth: false, antialias: false });
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  ////////
+
+  // With default culling, it works fine.
+  // The problem seems to be that the virtual quads generated from points are wound 'backwards'.
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK); // Cull back faces.
+
+  ////////
+
+  var vertArr = new Float32Array([
+    -1, -1,
+    +1, -1,
+    -1, +1,
+  ]);
+
+  var vbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  gl.bufferData(gl.ARRAY_BUFFER, vertArr, gl.STATIC_DRAW);
+
+  ////////
+
+  var triProg = GetProgram(gl);
+  var pointProg = GetProgram(gl);
+  if (!triProg || !pointProg) {
+    ok(false, 'Program linking should succeed.');
+    return;
+  }
+
+  ok(triProg.aPosition == pointProg.aPosition, 'aPosition should match.');
+  gl.enableVertexAttribArray(triProg.aPosition);
+  gl.vertexAttribPointer(triProg.aPosition, 2, gl.FLOAT, false, 0, 0);
+
+  ////////
+
+  gl.useProgram(triProg);
+  var triColor = [1, 0, 0, 1];
+  gl.uniform4fv(triProg.uColor, triColor);
+
+  gl.useProgram(pointProg);
+  var pointColor = [0, 1, 0, 1];
+  gl.uniform4fv(pointProg.uColor, pointColor);
+
+  ////////
+
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.useProgram(triProg);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  gl.useProgram(pointProg);
+  gl.drawArrays(gl.POINTS, 0, 3);
+
+  ////////
+
+  PixelShouldBe(gl, 32, 32, triColor, 'Tri');
+  PixelShouldBe(gl, 0, 0, pointColor, 'Point');
+
+  ok(true, 'Test complete');
+})();
+
+    </script>
+  </body>
+</html>

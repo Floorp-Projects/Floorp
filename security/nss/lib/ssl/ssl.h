@@ -222,6 +222,26 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  */
 #define SSL_REQUIRE_DH_NAMED_GROUPS 32
 
+/* Allow 0-RTT data (for TLS 1.3).
+ *
+ * When this option is set, the server's session tickets will contain
+ * a flag indicating that it accepts 0-RTT. When resuming such a
+ * session, PR_Write() on the client will be allowed immediately after
+ * starting the handshake and PR_Read() on the server will be allowed
+ * on the server to read that data. Calls to
+ * SSL_GetPreliminaryChannelInfo() and SSL_GetNextProto()
+ * can be made used during this period to learn about the channel
+ * parameters [TODO(ekr@rtfm.com): This hasn't landed yet].
+ *
+ * The transition between the 0-RTT and 1-RTT modes is marked by the
+ * handshake callback.
+ *
+ * WARNING: 0-RTT data has different anti-replay and PFS properties than
+ * the rest of the TLS data. See [draft-ietf-tls-tls13; Section 6.2.3]
+ * for more details.
+ */
+#define SSL_ENABLE_0RTT_DATA 33
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
@@ -283,10 +303,11 @@ SSL_IMPORT SECStatus SSL_SetNextProtoNego(PRFileDesc *fd,
                                           unsigned int length);
 
 typedef enum SSLNextProtoState {
-    SSL_NEXT_PROTO_NO_SUPPORT = 0, /* No peer support                */
-    SSL_NEXT_PROTO_NEGOTIATED = 1, /* Mutual agreement               */
-    SSL_NEXT_PROTO_NO_OVERLAP = 2, /* No protocol overlap found      */
-    SSL_NEXT_PROTO_SELECTED = 3    /* Server selected proto (ALPN)   */
+    SSL_NEXT_PROTO_NO_SUPPORT = 0, /* No peer support                   */
+    SSL_NEXT_PROTO_NEGOTIATED = 1, /* Mutual agreement                  */
+    SSL_NEXT_PROTO_NO_OVERLAP = 2, /* No protocol overlap found         */
+    SSL_NEXT_PROTO_SELECTED = 3,   /* Server selected proto (ALPN)      */
+    SSL_NEXT_PROTO_EARLY_VALUE = 4 /* We are in 0-RTT using this value. */
 } SSLNextProtoState;
 
 /* SSL_GetNextProto can be used in the HandshakeCallback or any time after

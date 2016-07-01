@@ -3600,13 +3600,8 @@ nsWindow::HasPendingInputEvent()
 LayerManager*
 nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,
-                          LayerManagerPersistence aPersistence,
-                          bool* aAllowRetaining)
+                          LayerManagerPersistence aPersistence)
 {
-  if (aAllowRetaining) {
-    *aAllowRetaining = true;
-  }
-
   RECT windowRect;
   ::GetClientRect(mWnd, &windowRect);
 

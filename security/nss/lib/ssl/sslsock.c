@@ -260,6 +260,7 @@ ssl_DupSocket(sslSocket *os)
 
     ss->opt = os->opt;
     ss->opt.useSocks = PR_FALSE;
+    SECITEM_CopyItem(NULL, &ss->opt.nextProtoNego, &os->opt.nextProtoNego);
     ss->vrange = os->vrange;
 
     ss->peerID = !os->peerID ? NULL : PORT_Strdup(os->peerID);
@@ -325,6 +326,8 @@ ssl_DupSocket(sslSocket *os)
         ss->canFalseStartCallback = os->canFalseStartCallback;
         ss->canFalseStartCallbackData = os->canFalseStartCallbackData;
         ss->pkcs11PinArg = os->pkcs11PinArg;
+        ss->nextProtoCallback = os->nextProtoCallback;
+        ss->nextProtoArg = os->nextProtoArg;
 
         /* Create security data */
         rv = ssl_CopySecurityInfo(ss, os);
@@ -813,6 +816,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
             ss->opt.requireDHENamedGroups = on;
             break;
 
+        case SSL_ENABLE_0RTT_DATA:
+            ss->opt.enable0RttData = on;
+            break;
+
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
@@ -943,7 +950,9 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
         case SSL_REQUIRE_DH_NAMED_GROUPS:
             on = ss->opt.requireDHENamedGroups;
             break;
-
+        case SSL_ENABLE_0RTT_DATA:
+            on = ss->opt.enable0RttData;
+            break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
@@ -1058,7 +1067,9 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
         case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
             on = ssl_defaults.enableSignedCertTimestamps;
             break;
-
+        case SSL_ENABLE_0RTT_DATA:
+            on = ssl_defaults.enable0RttData;
+            break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
@@ -1249,6 +1260,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 
         case SSL_ENABLE_SIGNED_CERT_TIMESTAMPS:
             ssl_defaults.enableSignedCertTimestamps = on;
+            break;
+
+        case SSL_ENABLE_0RTT_DATA:
+            ssl_defaults.enable0RttData = on;
             break;
 
         default:
@@ -2325,6 +2340,10 @@ SSL_VersionRangeGetSupported(SSLProtocolVariant protocolVariant,
         case ssl_variant_stream:
             vrange->min = SSL_LIBRARY_VERSION_3_0;
             vrange->max = SSL_LIBRARY_VERSION_MAX_SUPPORTED;
+            // We don't allow SSLv3 and TLSv1.3 together.
+            if (vrange->max == SSL_LIBRARY_VERSION_TLS_1_3) {
+                vrange->min = SSL_LIBRARY_VERSION_TLS_1_0;
+            }
             break;
         case ssl_variant_datagram:
             vrange->min = SSL_LIBRARY_VERSION_TLS_1_1;
@@ -3715,7 +3734,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     PR_INIT_CLIST(&ss->ssl3.hs.lastMessageFlight);
     PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
     PR_INIT_CLIST(&ss->ssl3.hs.cipherSpecs);
-
+    PR_INIT_CLIST(&ss->ssl3.hs.bufferedEarlyData);
     if (makeLocks) {
         rv = ssl_MakeLocks(ss);
         if (rv != SECSuccess)

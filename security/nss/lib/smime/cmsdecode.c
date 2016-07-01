@@ -301,8 +301,7 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
 loser:
     if (mark)
 	PORT_ArenaRelease(poolp, mark);
-    if (childp7dcx)
-	PORT_Free(childp7dcx);
+    PORT_Free(childp7dcx);
     p7dcx->childp7dcx = NULL;
     return SECFailure;
 }

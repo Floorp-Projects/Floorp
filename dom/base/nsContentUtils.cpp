@@ -6422,15 +6422,13 @@ nsContentUtils::WidgetForDocument(const nsIDocument* aDoc)
 }
 
 static already_AddRefed<LayerManager>
-LayerManagerForDocumentInternal(const nsIDocument *aDoc, bool aRequirePersistent,
-                                bool* aAllowRetaining)
+LayerManagerForDocumentInternal(const nsIDocument *aDoc, bool aRequirePersistent)
 {
   nsIWidget *widget = nsContentUtils::WidgetForDocument(aDoc);
   if (widget) {
     RefPtr<LayerManager> manager =
       widget->GetLayerManager(aRequirePersistent ? nsIWidget::LAYER_MANAGER_PERSISTENT : 
-                              nsIWidget::LAYER_MANAGER_CURRENT,
-                              aAllowRetaining);
+                              nsIWidget::LAYER_MANAGER_CURRENT);
     return manager.forget();
   }
 
@@ -6438,15 +6436,15 @@ LayerManagerForDocumentInternal(const nsIDocument *aDoc, bool aRequirePersistent
 }
 
 already_AddRefed<LayerManager>
-nsContentUtils::LayerManagerForDocument(const nsIDocument *aDoc, bool *aAllowRetaining)
+nsContentUtils::LayerManagerForDocument(const nsIDocument *aDoc)
 {
-  return LayerManagerForDocumentInternal(aDoc, false, aAllowRetaining);
+  return LayerManagerForDocumentInternal(aDoc, false);
 }
 
 already_AddRefed<LayerManager>
-nsContentUtils::PersistentLayerManagerForDocument(nsIDocument *aDoc, bool *aAllowRetaining)
+nsContentUtils::PersistentLayerManagerForDocument(nsIDocument *aDoc)
 {
-  return LayerManagerForDocumentInternal(aDoc, true, aAllowRetaining);
+  return LayerManagerForDocumentInternal(aDoc, true);
 }
 
 bool

@@ -419,9 +419,28 @@ class PluginModuleChromeParent
     virtual ~PluginModuleChromeParent();
 
     /*
+     * Takes a full multi-process dump including the plugin process and the
+     * content process. If aBrowserDumpId is not empty then the browser dump
+     * associated with it will be paired to the resulting minidump.
+     * Takes ownership of the file associated with aBrowserDumpId.
+     *
+     * @param aContentPid PID of the e10s content process from which a hang was
+     *   reported. May be kInvalidProcessId if not applicable.
+     * @param aBrowserDumpId (optional) previously taken browser dump id. If
+     *   provided TakeFullMinidump will use this dump file instead of
+     *   generating a new one. If not provided a browser dump will be taken at
+     *   the time of this call.
+     * @param aDumpId Returns the ID of the newly generated crash dump. Left
+     *   untouched upon failure.
+     */
+    void TakeFullMinidump(base::ProcessId aContentPid,
+                          const nsAString& aBrowserDumpId,
+                          nsString& aDumpId);
+
+    /*
      * Terminates the plugin process associated with this plugin module. Also
-     * generates appropriate crash reports. Takes ownership of the file
-     * associated with aBrowserDumpId on success.
+     * generates appropriate crash reports unless an existing one is provided.
+     * Takes ownership of the file associated with aDumpId on success.
      *
      * @param aMsgLoop the main message pump associated with the module
      *   protocol.
@@ -430,15 +449,15 @@ class PluginModuleChromeParent
      * @param aMonitorDescription a string describing the hang monitor that
      *   is making this call. This string is added to the crash reporter
      *   annotations for the plugin process.
-     * @param aBrowserDumpId (optional) previously taken browser dump id. If
-     *   provided TerminateChildProcess will use this browser dump file in
-     *   generating a multi-process crash report. If not provided a browser
-     *   dump will be taken at the time of this call.
+     * @param aDumpId (optional) previously taken dump id. If provided
+     *   TerminateChildProcess will use this dump file instead of generating a
+     *   multi-process crash report. If not provided a multi-process dump will
+     *   be taken at the time of this call.
      */
     void TerminateChildProcess(MessageLoop* aMsgLoop,
                                base::ProcessId aContentPid,
                                const nsCString& aMonitorDescription,
-                               const nsAString& aBrowserDumpId);
+                               const nsAString& aDumpId);
 
 #ifdef XP_WIN
     /**

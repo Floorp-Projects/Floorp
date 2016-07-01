@@ -41,6 +41,7 @@ CK_MECHANISM_TYPE tls13_GetHkdfMechanism(sslSocket *ss);
 void tls13_FatalError(sslSocket *ss, PRErrorCode prError,
                       SSL3AlertDescription desc);
 SECStatus tls13_SetupClientHello(sslSocket *ss);
+SECStatus tls13_MaybeDo0RTTHandshake(sslSocket *ss);
 PRBool tls13_AllowPskCipher(const sslSocket *ss,
                             const ssl3CipherSuiteDef *cipher_def);
 PRBool tls13_PskSuiteEnabled(sslSocket *ss);
@@ -54,11 +55,9 @@ SECStatus tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
 SECStatus tls13_HandleClientKeyShare(sslSocket *ss);
 SECStatus tls13_SendServerHelloSequence(sslSocket *ss);
 SECStatus tls13_HandleServerKeyShare(sslSocket *ss);
-SECStatus tls13_AddContextToHashes(sslSocket *ss,
-                                   SSL3Hashes *hashes /* IN/OUT */,
-                                   SSLHashType algorithm, PRBool sending);
 void tls13_DestroyKeyShareEntry(TLS13KeyShareEntry *entry);
 void tls13_DestroyKeyShares(PRCList *list);
+void tls13_DestroyEarlyData(PRCList *list);
 void tls13_CipherSpecAddRef(ssl3CipherSpec *spec);
 void tls13_CipherSpecRelease(ssl3CipherSpec *spec);
 void tls13_DestroyCipherSpecs(PRCList *list);
@@ -69,5 +68,9 @@ SECStatus tls13_ProtectRecord(sslSocket *ss,
                               const SSL3Opaque *pIn,
                               PRUint32 contentLen,
                               sslBuffer *wrBuf);
+PRInt32 tls13_Read0RttData(sslSocket *ss, void *buf, PRInt32 len);
+SECStatus tls13_HandleEndOfEarlyData(sslSocket *ss);
+SECStatus tls13_HandleEarlyApplicationData(sslSocket *ss, sslBuffer *origBuf);
+PRBool tls13_ClientAllow0Rtt(sslSocket *ss, const sslSessionID *sid);
 
 #endif /* __tls13con_h_ */
