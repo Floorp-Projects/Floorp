@@ -43,12 +43,6 @@ public:
 private:
   ~NextFrameSeekTask();
 
-  bool IsVideoDecoding() const;
-
-  void EnsureVideoDecodeTaskQueued();
-
-  const char* VideoRequestStatus();
-
   void RequestVideoData();
 
   bool NeedMoreVideo() const;
