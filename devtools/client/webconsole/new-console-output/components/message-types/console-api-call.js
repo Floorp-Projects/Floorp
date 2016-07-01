@@ -25,7 +25,7 @@ function ConsoleApiCall(props) {
   const { message } = props;
   const messageBody =
     dom.span({className: "message-body devtools-monospace"},
-      formatTextContent(message.data.arguments));
+      formatTextContent(message.data));
   const icon = MessageIcon({severity: message.severity});
   const repeat = MessageRepeat({repeat: message.repeat});
   const children = [
@@ -53,8 +53,13 @@ function ConsoleApiCall(props) {
   );
 }
 
-function formatTextContent(args) {
-  return args.map(function (arg, i, arr) {
+function formatTextContent(data) {
+  return data.arguments.map(function (arg, i, arr) {
+    if (data.counter) {
+      let {label, count} = data.counter;
+      arg = `${label}: ${count}`;
+    }
+
     const str = dom.span({className: "console-string"}, arg);
     if (i < arr.length - 1) {
       return [str, " "];

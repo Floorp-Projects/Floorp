@@ -92,5 +92,26 @@ var Authentication = {
     } catch (error) {
       throw new Error("signIn() failed with: " + error.message);
     }
+  },
+
+  /**
+   * Sign out of Firefox Accounts. It also clears out the device ID, if we find one.
+   */
+  signOut() {
+    if (Authentication.isLoggedIn) {
+      let user = Authentication.getSignedInUser();
+      if (!user) {
+        throw new Error("Failed to get signed in user!");
+      }
+      let fxc = new FxAccountsClient();
+      let { sessionToken, deviceId } = user;
+      if (deviceId) {
+        Logger.logInfo("Destroying device " + deviceId);
+        Async.promiseSpinningly(fxc.signOutAndDestroyDevice(sessionToken, deviceId, { service: "sync" }));
+      } else {
+        Logger.logError("No device found.");
+        Async.promiseSpinningly(fxc.signOut(sessionToken, { service: "sync" }));
+      }
+    }
   }
 };

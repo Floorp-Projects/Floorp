@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console HPKP invalid " +
 const SJS_URL = "https://example.com/browser/devtools/client/webconsole/" +
                 "test/test_hpkp-invalid-headers.sjs";
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Web/Security/" +
-                       "Public_Key_Pinning";
+                       "Public_Key_Pinning" + DOCS_GA_PARAMS;
 const NON_BUILTIN_ROOT_PREF = "security.cert_pinning.process_headers_from_" +
                               "non_builtin_roots";
 

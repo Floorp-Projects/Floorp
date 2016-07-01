@@ -97,7 +97,6 @@ var TPS = {
   _currentPhase: -1,
   _enabledEngines: null,
   _errors: 0,
-  _finalPhase: false,
   _isTracking: false,
   _operations_pending: 0,
   _phaseFinished: false,
@@ -164,13 +163,6 @@ var TPS = {
           break;
 
         case "quit-application-requested":
-          // Ensure that we eventually wipe the data on the server
-          if (this._errors || !this._phaseFinished || this._finalPhase) {
-            try {
-              this.WipeServer();
-            } catch (ex) {}
-          }
-
           OBSERVER_TOPICS.forEach(function(topic) {
             Services.obs.removeObserver(this, topic);
           }, this);
@@ -586,7 +578,18 @@ var TPS = {
     Logger.logInfo("mozmill setTest: " + obj.name);
   },
 
-
+  Cleanup() {
+    try {
+      this.WipeServer();
+    } catch (ex) {
+      Logger.logError("Failed to wipe server: " + Log.exceptionStr(ex));
+    }
+    try {
+      Authentication.signOut();
+    } catch (e) {
+      Logger.logError("Failed to sign out: " + Log.exceptionStr(e));
+    }
+  },
 
   /**
    * Use Sync's bookmark validation code to see if we've corrupted the tree.
@@ -656,7 +659,7 @@ var TPS = {
   RunNextTestAction: function() {
     try {
       if (this._currentAction >=
-          this._phaselist["phase" + this._currentPhase].length) {
+          this._phaselist[this._currentPhase].length) {
         if (this.shouldValidateBookmarks) {
           // Run bookmark validation and then finish up
           this.ValidateBookmarks();
@@ -676,7 +679,7 @@ var TPS = {
         return;
       }
 
-      let phase = this._phaselist["phase" + this._currentPhase];
+      let phase = this._phaselist[this._currentPhase];
       let action = phase[this._currentAction];
       Logger.logInfo("starting action: " + action[0].name);
       action[0].apply(this, action.slice(1));
@@ -773,14 +776,21 @@ var TPS = {
       // parse the test file
       Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
-      let this_phase = this._phaselist["phase" + this._currentPhase];
+      if (this._currentPhase.startsWith("cleanup-")) {
+        let profileToClean = Cc["@mozilla.org/toolkit/profile-service;1"]
+                             .getService(Ci.nsIToolkitProfileService)
+                             .selectedProfile.name;
+        this.phases[this._currentPhase] = profileToClean;
+        this.Phase(this._currentPhase, [[this.Cleanup]]);
+      }
+      let this_phase = this._phaselist[this._currentPhase];
 
       if (this_phase == undefined) {
         this.DumpError("invalid phase " + this._currentPhase);
         return;
       }
 
-      if (this.phases["phase" + this._currentPhase] == undefined) {
+      if (this.phases[this._currentPhase] == undefined) {
         this.DumpError("no profile defined for phase " + this._currentPhase);
         return;
       }
@@ -800,26 +810,10 @@ var TPS = {
           }
         }
       }
+      Logger.logInfo("Starting phase " + this._currentPhase);
 
-      Logger.logInfo("Starting phase " + parseInt(phase, 10) + "/" +
-                     Object.keys(this._phaselist).length);
-
-      Logger.logInfo("setting client.name to " + this.phases["phase" + this._currentPhase]);
-      Weave.Svc.Prefs.set("client.name", this.phases["phase" + this._currentPhase]);
-
-      // TODO Phases should be defined in a data type that has strong
-      // ordering, not by lexical sorting.
-      let currentPhase = parseInt(this._currentPhase, 10);
-
-      // Login at the beginning of the test.
-      if (currentPhase <= 1) {
-        this_phase.unshift([this.Login]);
-      }
-
-      // Wipe the server at the end of the final test phase.
-      if (currentPhase >= Object.keys(this.phases).length) {
-        this._finalPhase = true;
-      }
+      Logger.logInfo("setting client.name to " + this.phases[this._currentPhase]);
+      Weave.Svc.Prefs.set("client.name", this.phases[this._currentPhase]);
 
       // If a custom server was specified, set it now
       if (this.config["serverURL"]) {
@@ -859,6 +853,10 @@ var TPS = {
    *         Array of functions/actions to perform.
    */
   Phase: function Test__Phase(phasename, fnlist) {
+    if (Object.keys(this._phaselist).length === 0) {
+      // This is the first phase, add that we need to login.
+      fnlist.unshift([this.Login]);
+    }
     this._phaselist[phasename] = fnlist;
   },
 
