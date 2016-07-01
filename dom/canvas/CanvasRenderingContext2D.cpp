@@ -5134,9 +5134,13 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   RefPtr<DrawTarget> drawDT;
   // Rendering directly is faster and can be done if mTarget supports Azure
   // and does not need alpha blending.
+  // Since the pre-transaction callback calls ReturnTarget, we can't have a
+  // gfxContext wrapped around it when using a shared buffer provider because
+  // the DrawTarget's shared buffer may be unmapped in ReturnTarget.
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget) &&
       GlobalAlpha() == 1.0f &&
-      UsedOperation() == CompositionOp::OP_OVER)
+      UsedOperation() == CompositionOp::OP_OVER &&
+      (!mBufferProvider || mBufferProvider->GetType() != LayersBackend::LAYERS_CLIENT))
   {
     thebes = gfxContext::CreateOrNull(mTarget);
     MOZ_ASSERT(thebes); // already checked the draw target above
