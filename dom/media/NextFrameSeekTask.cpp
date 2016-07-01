@@ -135,13 +135,6 @@ void
 NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
 {
   AssertOwnerThread();
-  SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
-             IsVideoDecoding(), VideoRequestStatus());
-
-  if (!IsVideoDecoding()) {
-    return;
-  }
-
   RequestVideoData();
 }
 
