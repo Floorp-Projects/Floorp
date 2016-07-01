@@ -353,11 +353,6 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
     mReader->WaitForData(MediaData::VIDEO_DATA);
-
-    // We are out of data to decode and will enter buffering mode soon.
-    // We want to play the frames we have already decoded, so we stop pre-rolling
-    // and ensure that loadeddata is fired as required.
-    mNeedToStopPrerollingVideo = true;
     return;
   }
 
