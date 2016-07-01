@@ -5,7 +5,7 @@ task:
   payload:
     maxRunTime: 7200
     command:
-      - --test-suite={{suite}}{{chunk}}
+      - --test-suite=mochitest-gl-{{chunk}}
   metadata:
     name: '[TC] Android 4.3 API15+ mochitest-gl-{{chunk}}'
     description: Mochitest WebGL run {{chunk}}
@@ -13,7 +13,8 @@ task:
     chunks:
       total: 10
     suite:
-      name: mochitest-gl-{{chunk}}
+      name: mochitest
+      flavor: mochitest-gl
     treeherder:
       groupSymbol: tc-M
       symbol: gl{{chunk}}

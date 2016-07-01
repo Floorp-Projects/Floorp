@@ -3,9 +3,6 @@ $inherits:
   from: 'tasks/tests/fx_android-api-15_generic.yml'
 task:
   workerType: desktop-test-xlarge
-  payload:
-    command:
-      - --test-suite={{suite}}{{chunk}}
   metadata:
     name: '[TC] Android 4.3 API15+ crashtest-{{chunk}}'
     description: Crashtest run {{chunk}}
@@ -13,7 +10,8 @@ task:
     chunks:
       total: 4
     suite:
-      name: crashtest-{{chunk}}
+      name: crashtest
+      flavor: crashtest
     treeherder:
       groupSymbol: tc-R
       symbol: C{{chunk}}
