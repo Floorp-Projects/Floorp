@@ -1281,9 +1281,6 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    MOZ_ASSERT(!cx->isExceptionPending());
-    cx->runtime()->hadOutOfMemory = false;
-
     RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
 
     bool verbose = EnvVarIsDefined("OOM_VERBOSE");
@@ -1302,6 +1299,16 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
         threadStart = threadOption;
         threadEnd = threadOption + 1;
     }
+
+    JSRuntime* rt = cx->runtime();
+    if (rt->runningOOMTest) {
+        JS_ReportError(cx, "Nested call to oomTest() is not allowed.");
+        return false;
+    }
+    rt->runningOOMTest = true;
+
+    MOZ_ASSERT(!cx->isExceptionPending());
+    rt->hadOutOfMemory = false;
 
     JS_SetGCZeal(cx->runtime(), 0, JS_DEFAULT_ZEAL_FREQ);
 
@@ -1358,6 +1365,7 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
+    rt->runningOOMTest = false;
     args.rval().setUndefined();
     return true;
 }
