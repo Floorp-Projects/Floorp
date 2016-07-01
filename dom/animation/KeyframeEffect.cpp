@@ -271,7 +271,9 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
       // The animation isn't active or filling at this time.
       return result;
     }
-    activeTime = result.mActiveDuration;
+    activeTime = std::max(std::min(result.mActiveDuration,
+                                   result.mActiveDuration + aTiming.mEndDelay),
+                          zeroDuration);
   } else if (localTime <
                std::min(StickyTimeDuration(aTiming.mDelay), result.mEndTime)) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
@@ -321,9 +323,19 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 
   // When we finish exactly at the end of an iteration we need to report
   // the end of the final iteration and not the start of the next iteration.
+  // We *don't* want to do this when we have a zero-iteration animation or
+  // when the animation has been effectively made into a zero-duration animation
+  // using a negative end-delay, however.
   if (result.mPhase == ComputedTiming::AnimationPhase::After &&
       progress == 0.0 &&
-      result.mIterations != 0.0) {
+      result.mIterations != 0.0 &&
+      (activeTime != zeroDuration || result.mDuration == zeroDuration)) {
+    // The only way we can be in the after phase with a progress of zero and
+    // a current iteration of zero, is if we have a zero iteration count or
+    // were clipped using a negative end delay--both of which we should have
+    // detected above.
+    MOZ_ASSERT(result.mCurrentIteration != 0,
+               "Should not have zero current iteration");
     progress = 1.0;
     if (result.mCurrentIteration != UINT64_MAX) {
       result.mCurrentIteration--;
