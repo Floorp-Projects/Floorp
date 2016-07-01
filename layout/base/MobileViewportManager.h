@@ -29,8 +29,12 @@ public:
 
   /* Provide a resolution to use during the first paint instead of the default
    * resolution computed from the viewport info metadata. This is in the same
-   * "units" as the argument to nsDOMWindowUtils::SetResolutionAndScaleTo. */
-  void SetRestoreResolution(float aResolution);
+   * "units" as the argument to nsDOMWindowUtils::SetResolutionAndScaleTo.
+   * Also takes the previous display dimensions as they were at the time the
+   * resolution was stored in order to correctly adjust the resolution if the
+   * device was rotated in the meantime. */
+  void SetRestoreResolution(float aResolution,
+                            mozilla::LayoutDeviceIntSize aDisplaySize);
 
   /* Notify the MobileViewportManager that a reflow was requested in the
    * presShell.*/
@@ -86,6 +90,7 @@ private:
   mozilla::LayoutDeviceIntSize mDisplaySize;
   mozilla::CSSSize mMobileViewportSize;
   mozilla::Maybe<float> mRestoreResolution;
+  mozilla::Maybe<mozilla::ScreenIntSize> mRestoreDisplaySize;
 };
 
 #endif

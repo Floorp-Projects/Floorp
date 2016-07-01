@@ -48,6 +48,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsMargin.h"
 #include "nsFrameState.h"
+#include "Units.h"
 
 #ifdef MOZ_B2G
 #include "nsIHardwareKeyHandler.h"
@@ -1428,7 +1429,8 @@ public:
    * Used by session restore code to restore a resolution before the first
    * paint.
    */
-  virtual void SetRestoreResolution(float aResolution) = 0;
+  virtual void SetRestoreResolution(float aResolution,
+                                    mozilla::LayoutDeviceIntSize aDisplaySize) = 0;
 
   /**
    * Returns whether we are in a DrawWindow() call that used the

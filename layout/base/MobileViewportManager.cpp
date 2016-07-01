@@ -85,9 +85,13 @@ MobileViewportManager::Destroy()
 }
 
 void
-MobileViewportManager::SetRestoreResolution(float aResolution)
+MobileViewportManager::SetRestoreResolution(float aResolution,
+                                            LayoutDeviceIntSize aDisplaySize)
 {
   mRestoreResolution = Some(aResolution);
+  ScreenIntSize restoreDisplaySize = ViewAs<ScreenPixel>(aDisplaySize,
+    PixelCastJustification::LayoutDeviceIsScreenForBounds);
+  mRestoreDisplaySize = Some(restoreDisplaySize);
 }
 
 void
@@ -195,7 +199,19 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
   if (mIsFirstPaint) {
     CSSToScreenScale defaultZoom;
     if (mRestoreResolution) {
-      defaultZoom = CSSToScreenScale(mRestoreResolution.value() * cssToDev.scale);
+    LayoutDeviceToLayerScale restoreResolution(mRestoreResolution.value());
+      if (mRestoreDisplaySize) {
+        CSSSize prevViewport = mDocument->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
+        float restoreDisplayWidthChangeRatio = (mRestoreDisplaySize.value().width > 0)
+          ? (float)aDisplaySize.width / (float)mRestoreDisplaySize.value().width : 1.0f;
+
+        restoreResolution =
+          ScaleResolutionWithDisplayWidth(restoreResolution,
+                                          restoreDisplayWidthChangeRatio,
+                                          aViewport,
+                                          prevViewport);
+      }
+      defaultZoom = CSSToScreenScale(restoreResolution.scale * cssToDev.scale);
       MVM_LOG("%p: restored zoom is %f\n", this, defaultZoom.scale);
       defaultZoom = ClampZoom(defaultZoom, aViewportInfo);
     } else {
