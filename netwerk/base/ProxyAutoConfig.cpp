@@ -11,7 +11,6 @@
 #include "nsIDNSService.h"
 #include "nsThreadUtils.h"
 #include "nsIConsoleService.h"
-#include "nsIURLParser.h"
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
 #include "prnetdb.h"
@@ -736,8 +735,7 @@ ProxyAutoConfig::SetThreadLocalIndex(uint32_t index)
 
 nsresult
 ProxyAutoConfig::Init(const nsCString &aPACURI,
-                      const nsCString &aPACScript,
-                      bool aIncludePath)
+                      const nsCString &aPACScript)
 {
   mPACURI = aPACURI;
   mPACScript = sPacUtils;
@@ -746,7 +744,6 @@ ProxyAutoConfig::Init(const nsCString &aPACURI,
   if (!GetRunning())
     return SetupJS();
 
-  mIncludePath = aIncludePath;
   mJSNeedsSetup = true;
   return NS_OK;
 }
@@ -844,29 +841,7 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
   mRunningIsInIsolatedMozBrowser = aIsInIsolatedMozBrowser;
 
   nsresult rv = NS_ERROR_FAILURE;
-  uint32_t schemePos;
-  int32_t schemeLen;
-  uint32_t authorityPos;
-  int32_t authorityLen;
-  uint32_t pathPos;
-  int32_t pathLen;
-
-  nsCString clensedURI = aTestURI;
-
-  if (!mIncludePath) {
-    nsCOMPtr<nsIURLParser> urlParser =
-      do_GetService(NS_STDURLPARSER_CONTRACTID, &rv);
-    rv = urlParser->ParseURL(aTestURI.get(), aTestURI.Length(),
-                             &schemePos, &schemeLen,
-                             &authorityPos, &authorityLen,
-                             &pathPos, &pathLen);
-    if (NS_SUCCEEDED(rv)) {
-      // cut off the path
-      aTestURI.Left(clensedURI, aTestURI.Length() - pathLen);
-    }
-  }
-
-  JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, clensedURI.get()));
+  JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
   JS::RootedString hostString(cx, JS_NewStringCopyZ(cx, aTestHost.get()));
 
   if (uriString && hostString) {
