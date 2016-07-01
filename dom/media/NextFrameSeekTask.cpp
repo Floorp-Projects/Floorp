@@ -222,15 +222,11 @@ NextFrameSeekTask::RequestVideoData()
 }
 
 bool
-NextFrameSeekTask::IsAudioSeekComplete()
+NextFrameSeekTask::IsAudioSeekComplete() const
 {
   AssertOwnerThread();
-  SAMPLE_LOG("IsAudioSeekComplete() curTarVal=%d aqFin=%d aqSz=%d req=%d wait=%d",
-    mSeekJob.Exists(), mIsAudioQueueFinished, !!mSeekedAudioData,
-    mReader->IsRequestingAudioData(), mReader->IsWaitingAudioData());
-
-  // Just make sure that we are not requesting or waiting for audio data. We
-  // don't really need to get an decoded audio data or get EOS here.
+  // Don't finish seek until there are no pending requests. Otherwise, we might
+  // lose audio samples for the promise is resolved asynchronously.
   return !mReader->IsRequestingAudioData() && !mReader->IsWaitingAudioData();
 }
 
