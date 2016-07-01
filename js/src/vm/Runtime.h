@@ -1206,6 +1206,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool handlingInitFailure;
 #endif
 
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    /* We are currently running a simulated OOM test. */
+    bool runningOOMTest;
+#endif
+
     /*
      * Allow relazifying functions in compartments that are active. This is
      * only used by the relazifyFunctions() testing function.
