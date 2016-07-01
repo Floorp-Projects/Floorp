@@ -169,8 +169,23 @@ protected:
   nsresult mEarlyRv;
   bool mEarlyComplete;
 
-  WebCryptoTask();
-  virtual ~WebCryptoTask();
+  WebCryptoTask()
+    : mEarlyRv(NS_OK)
+    , mEarlyComplete(false)
+    , mOriginalThread(nullptr)
+    , mReleasedNSSResources(false)
+    , mRv(NS_ERROR_NOT_INITIALIZED)
+  {}
+
+  virtual ~WebCryptoTask()
+  {
+    MOZ_ASSERT(mReleasedNSSResources);
+
+    nsNSSShutDownPreventionLock lock;
+    if (!isAlreadyShutDown()) {
+      shutdown(calledFromObject);
+    }
+  }
 
   bool IsOnOriginalThread() {
     return !mOriginalThread || NS_GetCurrentThread() == mOriginalThread;
@@ -196,7 +211,6 @@ protected:
 
 private:
   NS_IMETHOD Run() override final;
-  NS_IMETHOD Cancel() override final;
 
   virtual void
   virtualDestroyNSSReference() override final
@@ -209,10 +223,7 @@ private:
     }
   }
 
-  class InternalWorkerHolder;
-
   nsCOMPtr<nsIThread> mOriginalThread;
-  RefPtr<InternalWorkerHolder> mWorkerHolder;
   bool mReleasedNSSResources;
   nsresult mRv;
 };
