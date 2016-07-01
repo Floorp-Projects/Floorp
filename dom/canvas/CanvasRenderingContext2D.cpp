@@ -85,6 +85,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
@@ -120,6 +121,7 @@
 #include "CanvasUtils.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/layers/CanvasClient.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -223,10 +225,32 @@ protected:
   Point mEnd;
 };
 
+bool
+CanvasRenderingContext2D::PatternIsOpaque(CanvasRenderingContext2D::Style aStyle) const
+{
+  const ContextState& state = CurrentState();
+  if (state.globalAlpha < 1.0) {
+    return false;
+  }
+
+  if (state.patternStyles[aStyle] && state.patternStyles[aStyle]->mSurface) {
+    return IsOpaqueFormat(state.patternStyles[aStyle]->mSurface->GetFormat());
+  }
+
+  // TODO: for gradient patterns we could check that all stops are opaque
+  // colors.
+
+  if (!state.gradientStyles[aStyle]) {
+    // it's a color pattern.
+    return Color::FromABGR(state.colorStyles[aStyle]).a >= 1.0;
+  }
+
+  return false;
+}
+
 // This class is named 'GeneralCanvasPattern' instead of just
 // 'GeneralPattern' to keep Windows PGO builds from confusing the
 // GeneralPattern class in gfxContext.cpp with this one.
-
 class CanvasGeneralPattern
 {
 public:
@@ -1276,6 +1300,8 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 
   RefPtr<SourceSurface> snapshot;
   Matrix transform;
+  RefPtr<PersistentBufferProvider> oldBufferProvider = mBufferProvider;
+  AutoReturnSnapshot autoReturn(nullptr);
 
   if (mTarget) {
     snapshot = mTarget->Snapshot();
@@ -1285,14 +1311,16 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
     // When mBufferProvider is true but we have no mTarget, our current state's
     // transform is always valid. See ReturnTarget().
     transform = CurrentState().transform;
-    snapshot = mBufferProvider->GetSnapshot();
+    snapshot = mBufferProvider->BorrowSnapshot();
+    autoReturn.mBufferProvider = mBufferProvider;
+    autoReturn.mSnapshot = &snapshot;
   }
   mTarget = nullptr;
   mBufferProvider = nullptr;
   mResetLayer = true;
 
   // Recreate target using the new rendering mode
-  RenderingMode attemptedMode = EnsureTarget(aRenderingMode);
+  RenderingMode attemptedMode = EnsureTarget(nullptr, aRenderingMode);
   if (!IsTargetValid())
     return false;
 
@@ -1425,7 +1453,8 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize aSize) {
 }
 
 CanvasRenderingContext2D::RenderingMode
-CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
+CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
+                                       RenderingMode aRenderingMode)
 {
   // This would make no sense, so make sure we don't get ourselves in a mess
   MOZ_ASSERT(mRenderingMode != RenderingMode::DefaultBackendMode);
@@ -1437,8 +1466,21 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
   }
 
   if (mBufferProvider && mode == mRenderingMode) {
-    mTarget = mBufferProvider->GetDT(IntRect(IntPoint(), IntSize(mWidth, mHeight)));
+    gfx::Rect rect(0, 0, mWidth, mHeight);
+    if (aCoveredRect && CurrentState().transform.TransformBounds(*aCoveredRect).Contains(rect)) {
+      mTarget = mBufferProvider->BorrowDrawTarget(IntRect());
+    } else {
+      mTarget = mBufferProvider->BorrowDrawTarget(IntRect(0, 0, mWidth, mHeight));
+    }
+
     if (mTarget) {
+      // Restore clip and transform.
+      mTarget->SetTransform(CurrentState().transform);
+      for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
+        for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
+          mTarget->PushClip(mStyleStack[i].clipsPushed[c]);
+        }
+      }
       return mRenderingMode;
     } else {
       mBufferProvider = nullptr;
@@ -1495,7 +1537,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     }
 
     if (mBufferProvider) {
-      mTarget = mBufferProvider->GetDT(IntRect(IntPoint(), IntSize(mWidth, mHeight)));
+      mTarget = mBufferProvider->BorrowDrawTarget(IntRect(IntPoint(), IntSize(mWidth, mHeight)));
     } else if (!mTarget) {
       mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
       mode = RenderingMode::SoftwareBackendMode;
@@ -1623,7 +1665,12 @@ CanvasRenderingContext2D::ReturnTarget()
 {
   if (mTarget && mBufferProvider) {
     CurrentState().transform = mTarget->GetTransform();
-    mBufferProvider->ReturnAndUseDT(mTarget.forget());
+    for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
+      for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
+        mTarget->PopClip();
+      }
+    }
+    mBufferProvider->ReturnDrawTarget(mTarget.forget());
   }
 }
 
@@ -2598,9 +2645,11 @@ CanvasRenderingContext2D::ClearRect(double aX, double aY, double aW,
     return;
   }
 
-  EnsureTarget();
+  gfx::Rect clearRect(aX, aY, aW, aH);
 
-  mTarget->ClearRect(gfx::Rect(aX, aY, aW, aH));
+  EnsureTarget(&clearRect);
+
+  mTarget->ClearRect(clearRect);
 
   RedrawUser(gfxRect(aX, aY, aW, aH));
 }
@@ -2661,18 +2710,22 @@ CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
     }
   }
 
-  gfx::Rect bounds;
+  CompositionOp op = UsedOperation();
+  bool discardContent = PatternIsOpaque(Style::FILL)
+    && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_DEST_OUT);
 
-  EnsureTarget();
+  const gfx::Rect fillRect(aX, aY, aW, aH);
+  EnsureTarget(discardContent ? &fillRect : nullptr);
+
+  gfx::Rect bounds;
   if (NeedToCalculateBounds()) {
-    bounds = gfx::Rect(aX, aY, aW, aH);
-    bounds = mTarget->GetTransform().TransformBounds(bounds);
+    bounds = mTarget->GetTransform().TransformBounds(fillRect);
   }
 
   AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
     FillRect(gfx::Rect(aX, aY, aW, aH),
              CanvasGeneralPattern().ForStyle(this, Style::FILL, mTarget),
-             DrawOptions(state.globalAlpha, UsedOperation()));
+             DrawOptions(state.globalAlpha, op));
 
   RedrawUser(gfxRect(aX, aY, aW, aH));
 }
@@ -5646,7 +5699,14 @@ CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
     return nullptr;
   }
 
-  mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+  if (aManager) {
+    mBufferProvider = aManager->CreatePersistentBufferProvider(gfx::IntSize(mWidth, mHeight),
+                                                               GetSurfaceFormat());
+  }
+
+  if (!mBufferProvider) {
+    mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+  }
 
   return mBufferProvider;
 }
