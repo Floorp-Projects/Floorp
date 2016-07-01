@@ -43,13 +43,13 @@ NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
                                    SeekJob&& aSeekJob,
                                    const MediaInfo& aInfo,
                                    const media::TimeUnit& aDuration,
-                                   int64_t aCurrentMediaTime,
+                                   int64_t aCurrentTime,
                                    MediaQueue<MediaData>& aAudioQueue,
                                    MediaQueue<MediaData>& aVideoQueue)
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
-  , mCurrentTimeBeforeSeek(aCurrentMediaTime)
+  , mCurrentTime(aCurrentTime)
   , mDuration(aDuration)
 {
   AssertOwnerThread();
@@ -89,56 +89,20 @@ NextFrameSeekTask::NeedToResetMDSM() const
   return false;
 }
 
-static int64_t
-FindNextFrame(MediaQueue<MediaData>& aQueue, int64_t aTime)
+/*
+ * Remove samples from the queue until aCompare() returns false.
+ * aCompare A function object with the signature bool(int64_t) which returns
+ *          true for samples that should be removed.
+ */
+template <typename Function> static void
+DiscardFrames(MediaQueue<MediaData>& aQueue, const Function& aCompare)
 {
-  AutoTArray<RefPtr<MediaData>, 16> frames;
-  aQueue.GetFirstElements(aQueue.GetSize(), &frames);
-  for (auto&& frame : frames) {
-    if (frame->mTime > aTime) {
-      return frame->mTime;
-    }
-  }
-  return -1;
-}
-
-static void
-DropFramesUntil(MediaQueue<MediaData>& aQueue, int64_t aTime) {
-  while (aQueue.GetSize() > 0) {
-    if (aQueue.PeekFront()->mTime < aTime) {
+  while(aQueue.GetSize() > 0) {
+    if (aCompare(aQueue.PeekFront()->mTime)) {
       RefPtr<MediaData> releaseMe = aQueue.PopFront();
       continue;
     }
     break;
-  }
-}
-
-static void
-DropAllFrames(MediaQueue<MediaData>& aQueue) {
-  while(aQueue.GetSize() > 0) {
-    RefPtr<MediaData> releaseMe = aQueue.PopFront();
-  }
-}
-
-static void
-DropAllMediaDataBeforeCurrentPosition(MediaQueue<MediaData>& aAudioQueue,
-                                      MediaQueue<MediaData>& aVideoQueue,
-                                      int64_t const aCurrentTimeBeforeSeek)
-{
-  // Drop all audio/video data before GetMediaTime();
-  int64_t newPos = FindNextFrame(aVideoQueue, aCurrentTimeBeforeSeek);
-  if (newPos < 0) {
-    // In this case, we cannot find the next frame in the video queue, so
-    // the NextFrameSeekTask needs to decode video data.
-    DropAllFrames(aVideoQueue);
-    if (aVideoQueue.IsFinished()) {
-      DropAllFrames(aAudioQueue);
-    }
-  } else {
-    DropFramesUntil(aVideoQueue, newPos);
-    DropFramesUntil(aAudioQueue, newPos);
-    // So now, the 1st data in the video queue should be the target of the
-    // NextFrameSeekTask.
   }
 }
 
@@ -147,19 +111,17 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
 {
   AssertOwnerThread();
 
-  DropAllMediaDataBeforeCurrentPosition(mAudioQueue, mVideoQueue,
-                                        mCurrentTimeBeforeSeek);
+  auto currentTime = mCurrentTime;
+  DiscardFrames(mVideoQueue, [currentTime] (int64_t aSampleTime) {
+    return aSampleTime <= currentTime;
+  });
 
+  RefPtr<SeekTaskPromise> promise = mSeekTaskPromise.Ensure(__func__);
   if (NeedMoreVideo()) {
     EnsureVideoDecodeTaskQueued();
   }
-  if (!IsAudioSeekComplete() || !IsVideoSeekComplete()) {
-    return mSeekTaskPromise.Ensure(__func__);
-  }
-
-  UpdateSeekTargetTime();
-  SeekTaskResolveValue val = {};  // Zero-initialize data members.
-  return SeekTask::SeekTaskPromise::CreateAndResolve(val, __func__);
+  MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+  return promise;
 }
 
 bool
@@ -249,6 +211,12 @@ NextFrameSeekTask::MaybeFinishSeek()
   AssertOwnerThread();
   if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
     UpdateSeekTargetTime();
+
+    auto time = mSeekJob.mTarget.GetTime().ToMicroseconds();
+    DiscardFrames(mAudioQueue, [time] (int64_t aSampleTime) {
+      return aSampleTime < time;
+    });
+
     Resolve(__func__); // Call to MDSM::SeekCompleted();
   }
 }
@@ -304,7 +272,7 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
              aVideoSample->GetEndTime(),
              aVideoSample->mDiscontinuity);
 
-  if (aVideoSample->mTime > mCurrentTimeBeforeSeek) {
+  if (aVideoSample->mTime > mCurrentTime) {
     mSeekedVideoData = aVideoSample;
   }
 
