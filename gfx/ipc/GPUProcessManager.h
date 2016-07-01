@@ -61,7 +61,7 @@ public:
   void EnsureGPUReady();
 
   already_AddRefed<layers::CompositorSession> CreateTopLevelCompositor(
-    widget::CompositorWidget* aWidget,
+    nsIWidget* aWidget,
     layers::ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
