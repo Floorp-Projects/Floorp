@@ -26,11 +26,11 @@ add_task(function* () {
   let {inspector, view} = yield openRuleView();
 
   yield selectNode("#testid", inspector);
-  is(view.element.querySelectorAll("#noResults").length, 0,
+  is(view.element.querySelectorAll("#ruleview-no-results").length, 0,
     "After a highlight, no longer has a no-results element.");
 
   yield clearCurrentNodeSelection(inspector);
-  is(view.element.querySelectorAll("#noResults").length, 1,
+  is(view.element.querySelectorAll("#ruleview-no-results").length, 1,
     "After highlighting null, has a no-results element again.");
 
   yield selectNode("#testid", inspector);
