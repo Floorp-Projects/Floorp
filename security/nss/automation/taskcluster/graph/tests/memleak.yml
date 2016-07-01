@@ -7,10 +7,13 @@
     payload:
       env:
         NSS_MEMLEAK_TESTS: ocsp
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         symbol: ocsp
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -19,14 +22,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_server"
-        NSS_CYCLES: "standard"
+        NSS_MEMLEAK_TESTS: ssl_server
+        NSS_CYCLES: standard
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Server
         groupName: MemLeak tests (ssl_server)
         symbol: standard
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -35,14 +41,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_server"
-        NSS_CYCLES: "pkix"
+        NSS_MEMLEAK_TESTS: ssl_server
+        NSS_CYCLES: pkix
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Server
         groupName: MemLeak tests (ssl_server)
         symbol: pkix
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -51,14 +60,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_server"
-        NSS_CYCLES: "sharedb"
+        NSS_MEMLEAK_TESTS: ssl_server
+        NSS_CYCLES: sharedb
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Server
         groupName: MemLeak tests (ssl_server)
         symbol: sharedb
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -67,14 +79,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_server"
-        NSS_CYCLES: "upgradedb"
+        NSS_MEMLEAK_TESTS: ssl_server
+        NSS_CYCLES: upgradedb
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Server
         groupName: MemLeak tests (ssl_server)
         symbol: upgradedb
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -83,14 +98,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_client"
-        NSS_CYCLES: "standard"
+        NSS_MEMLEAK_TESTS: ssl_client
+        NSS_CYCLES: standard
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Client
         groupName: MemLeak tests (ssl_client)
         symbol: standard
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -99,14 +117,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_client"
-        NSS_CYCLES: "pkix"
+        NSS_MEMLEAK_TESTS: ssl_client
+        NSS_TESTS: memleak
+        NSS_CYCLES: pkix
 
     extra:
       treeherder:
         groupSymbol: Client
         groupName: MemLeak tests (ssl_client)
         symbol: pkix
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -115,14 +136,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_client"
-        NSS_CYCLES: "sharedb"
+        NSS_MEMLEAK_TESTS: ssl_client
+        NSS_CYCLES: sharedb
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Client
         groupName: MemLeak tests (ssl_client)
         symbol: sharedb
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -131,14 +155,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "ssl_client"
-        NSS_CYCLES: "upgradedb"
+        NSS_MEMLEAK_TESTS: ssl_client
+        NSS_CYCLES: upgradedb
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Client
         groupName: MemLeak tests (ssl_client)
         symbol: upgradedb
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -147,14 +174,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "chains"
-        NSS_CYCLES: "standard"
+        NSS_MEMLEAK_TESTS: chains
+        NSS_CYCLES: standard
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Chains
         groupName: MemLeak tests (chains)
         symbol: standard
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -163,14 +193,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "chains"
-        NSS_CYCLES: "pkix"
+        NSS_MEMLEAK_TESTS: chains
+        NSS_TESTS: memleak
+        NSS_CYCLES: pkix
 
     extra:
       treeherder:
         groupSymbol: Chains
         groupName: MemLeak tests (chains)
         symbol: pkix
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -179,14 +212,17 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "chains"
-        NSS_CYCLES: "sharedb"
+        NSS_MEMLEAK_TESTS: chains
+        NSS_CYCLES: sharedb
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Chains
         groupName: MemLeak tests (chains)
         symbol: sharedb
+        collection:
+          memleak: true
 
 - task:
     metadata:
@@ -195,11 +231,14 @@
 
     payload:
       env:
-        NSS_MEMLEAK_TESTS: "chains"
-        NSS_CYCLES: "upgradedb"
+        NSS_MEMLEAK_TESTS: chains
+        NSS_CYCLES: upgradedb
+        NSS_TESTS: memleak
 
     extra:
       treeherder:
         groupSymbol: Chains
         groupName: MemLeak tests (chains)
         symbol: upgradedb
+        collection:
+          memleak: true

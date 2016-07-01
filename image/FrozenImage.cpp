@@ -8,6 +8,8 @@
 namespace mozilla {
 
 using namespace gfx;
+using layers::ImageContainer;
+using layers::LayerManager;
 
 namespace image {
 

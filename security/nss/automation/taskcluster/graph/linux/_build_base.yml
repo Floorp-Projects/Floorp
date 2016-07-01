@@ -14,7 +14,7 @@ task:
 
   payload:
     maxRunTime: 3600
-    image: ttaubert/nss-ci:0.0.16
+    image: ttaubert/nss-ci:0.0.17
 
     artifacts:
       public:
@@ -35,6 +35,4 @@ task:
 
   extra:
     treeherder:
-      revision: !env TC_REVISION
-      revision_hash: !env TC_REVISION_HASH
       symbol: B

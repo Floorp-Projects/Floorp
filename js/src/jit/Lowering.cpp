@@ -265,22 +265,13 @@ LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject* ins)
 void
 LIRGenerator::visitNewCallObject(MNewCallObject* ins)
 {
-    LInstruction* lir;
-    if (ins->templateObject()->isSingleton()) {
-        LNewSingletonCallObject* singletonLir = new(alloc()) LNewSingletonCallObject(temp());
-        define(singletonLir, ins);
-        lir = singletonLir;
-    } else {
-        LNewCallObject* normalLir = new(alloc()) LNewCallObject(temp());
-        define(normalLir, ins);
-        lir = normalLir;
-    }
-
+    LNewCallObject* lir = new(alloc()) LNewCallObject(temp());
+    define(lir, ins);
     assignSafepoint(lir, ins);
 }
 
 void
-LIRGenerator::visitNewRunOnceCallObject(MNewRunOnceCallObject* ins)
+LIRGenerator::visitNewSingletonCallObject(MNewSingletonCallObject* ins)
 {
     LNewSingletonCallObject* lir = new(alloc()) LNewSingletonCallObject(temp());
     define(lir, ins);

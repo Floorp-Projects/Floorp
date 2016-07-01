@@ -19,19 +19,16 @@ add_task(function* () {
 
 function* addNewRuleFromContextMenu(inspector, view) {
   info("Waiting for context menu to be shown");
-  let onPopup = once(view._contextmenu._menupopup, "popupshown");
-  let win = view.styleWindow;
 
-  EventUtils.synthesizeMouseAtCenter(view.element,
-    {button: 2, type: "contextmenu"}, win);
-  yield onPopup;
+  let allMenuItems = openStyleContextMenuAndGetAllItems(view, view.element);
+  let menuitemAddRule = allMenuItems.find(item => item.label ===
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.addNewRule"));
 
-  ok(!view._contextmenu.menuitemAddRule.hidden, "Add rule is visible");
+  ok(menuitemAddRule.visible, "Add rule is visible");
 
   info("Adding the new rule and expecting a ruleview-changed event");
   let onRuleViewChanged = view.once("ruleview-changed");
-  view._contextmenu.menuitemAddRule.click();
-  view._contextmenu._menupopup.hidePopup();
+  menuitemAddRule.click();
   yield onRuleViewChanged;
 }
 

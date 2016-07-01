@@ -1744,7 +1744,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
 {
     // The caller pushes R0 and R1 on the stack without rooting them.
     // Since GC here is very unlikely just suppress it.
-    JSContext* cx = GetJSContextFromJitCode();
+    JSContext* cx = GetJSContextFromMainThread();
     js::gc::AutoSuppressGC suppressGC(cx);
 
     JitSpew(JitSpew_BaselineBailouts, "  Done restoring frames");

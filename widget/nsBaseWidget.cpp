@@ -1376,8 +1376,7 @@ bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
 
 LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                                             LayersBackend aBackendHint,
-                                            LayerManagerPersistence aPersistence,
-                                            bool* aAllowRetaining)
+                                            LayerManagerPersistence aPersistence)
 {
   if (!mLayerManager) {
     if (!mShutdownObserver) {
@@ -1395,9 +1394,6 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManag
     if (!mLayerManager) {
       mLayerManager = CreateBasicLayerManager();
     }
-  }
-  if (aAllowRetaining) {
-    *aAllowRetaining = true;
   }
   return mLayerManager;
 }

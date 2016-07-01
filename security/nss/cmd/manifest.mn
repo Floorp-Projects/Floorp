@@ -58,7 +58,6 @@ NSS_SRCDIRS = \
  pk11gcmtest \
  pk11mode \
  pk1sign  \
- pkix-errcodes \
  pp  \
  pwdecrypt \
  rsaperf \
@@ -76,6 +75,13 @@ NSS_SRCDIRS = \
  vfyserv \
  modutil \
  $(NULL)
+
+ifndef NSS_DISABLE_LIBPKIX
+NSS_SRCDIRS += \
+ pkix-errcodes \
+ $(NULL)
+endif
+
 endif
 endif
 

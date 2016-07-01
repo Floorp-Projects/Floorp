@@ -691,8 +691,7 @@ main(int argc, char **argv)
             goto cleanup;
     }
 
-    if (pSlotList)
-        free(pSlotList);
+    free(pSlotList);
 
     /* demonstrate how an application can be in Hybrid mode */
     /* PKM_HybridMode shows how to switch between NONFIPS */
@@ -1897,8 +1896,7 @@ PKM_ShowInfo(CK_FUNCTION_LIST_PTR pFunctionList, CK_ULONG slotID)
         PKM_LogIt("    current time: %.16s\n", tokenInfo.utcTime);
     }
     PKM_LogIt("PKM_ShowInfo done \n\n");
-    if (pSlotList)
-        free(pSlotList);
+    free(pSlotList);
     return crv;
 }
 

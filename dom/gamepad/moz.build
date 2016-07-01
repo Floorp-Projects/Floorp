@@ -4,71 +4,72 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.mozilla.dom += [
-    'Gamepad.h',
-    'GamepadButton.h',
-    'GamepadManager.h',
-    'GamepadMonitoring.h',
-    'GamepadPlatformService.h',
-    'GamepadServiceTest.h',
-    'ipc/GamepadEventChannelChild.h',
-    'ipc/GamepadEventChannelParent.h',
-    'ipc/GamepadTestChannelChild.h',
-    'ipc/GamepadTestChannelParent.h'
-    ]
-
-UNIFIED_SOURCES = [
-    'Gamepad.cpp',
-    'GamepadButton.cpp',
-    'GamepadManager.cpp',
-    'GamepadMonitoring.cpp',
-    'GamepadPlatformService.cpp',
-    'GamepadServiceTest.cpp',
-    'ipc/GamepadEventChannelChild.cpp',
-    'ipc/GamepadEventChannelParent.cpp',
-    'ipc/GamepadTestChannelChild.cpp',
-    'ipc/GamepadTestChannelParent.cpp'
-    ]
-
-if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
-    UNIFIED_SOURCES += [
-        'fallback/FallbackGamepad.cpp'
-    ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'cocoa':
-    UNIFIED_SOURCES += [
-        'cocoa/CocoaGamepad.cpp'
-    ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'windows':
-    UNIFIED_SOURCES += [
-        'windows/WindowsGamepad.cpp'
-    ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'linux':
-    UNIFIED_SOURCES += [
-        'linux/LinuxGamepad.cpp'
-    ]
-elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'android':
-    UNIFIED_SOURCES += [
-        'android/AndroidGamepad.cpp'
-    ]
-
-LOCAL_INCLUDES += [
-    'ipc',
-]
-
 IPDL_SOURCES += [
     'ipc/GamepadEventTypes.ipdlh',
     'ipc/PGamepadEventChannel.ipdl',
     'ipc/PGamepadTestChannel.ipdl'
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+if CONFIG['MOZ_GAMEPAD']:
+    EXPORTS.mozilla.dom += [
+        'Gamepad.h',
+        'GamepadButton.h',
+        'GamepadManager.h',
+        'GamepadMonitoring.h',
+        'GamepadPlatformService.h',
+        'GamepadServiceTest.h',
+        'ipc/GamepadEventChannelChild.h',
+        'ipc/GamepadEventChannelParent.h',
+        'ipc/GamepadTestChannelChild.h',
+        'ipc/GamepadTestChannelParent.h'
+        ]
 
-FINAL_LIBRARY = 'xul'
-LOCAL_INCLUDES += [
-    '/dom/base',
-]
+    UNIFIED_SOURCES = [
+        'Gamepad.cpp',
+        'GamepadButton.cpp',
+        'GamepadManager.cpp',
+        'GamepadMonitoring.cpp',
+        'GamepadPlatformService.cpp',
+        'GamepadServiceTest.cpp',
+        'ipc/GamepadEventChannelChild.cpp',
+        'ipc/GamepadEventChannelParent.cpp',
+        'ipc/GamepadTestChannelChild.cpp',
+        'ipc/GamepadTestChannelParent.cpp'
+        ]
 
-CFLAGS += CONFIG['GLIB_CFLAGS']
-CFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
-CXXFLAGS += CONFIG['GLIB_CFLAGS']
-CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+    if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
+        UNIFIED_SOURCES += [
+            'fallback/FallbackGamepad.cpp'
+        ]
+    elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'cocoa':
+        UNIFIED_SOURCES += [
+            'cocoa/CocoaGamepad.cpp'
+        ]
+    elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'windows':
+        UNIFIED_SOURCES += [
+            'windows/WindowsGamepad.cpp'
+        ]
+    elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'linux':
+        UNIFIED_SOURCES += [
+            'linux/LinuxGamepad.cpp'
+        ]
+    elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'android':
+        UNIFIED_SOURCES += [
+            'android/AndroidGamepad.cpp'
+        ]
+
+    LOCAL_INCLUDES += [
+        'ipc',
+    ]
+
+    include('/ipc/chromium/chromium-config.mozbuild')
+
+    FINAL_LIBRARY = 'xul'
+    LOCAL_INCLUDES += [
+        '/dom/base',
+    ]
+
+    CFLAGS += CONFIG['GLIB_CFLAGS']
+    CFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+    CXXFLAGS += CONFIG['GLIB_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

@@ -560,10 +560,8 @@ PK11_FindSlotsByNames(const char *dllName, const char* slotName,
                       (0==PORT_Strcmp(tmpSlot->token_name, tokenName)) ) &&
                     ( (!slotName) ||
                       (0==PORT_Strcmp(tmpSlot->slot_name, slotName)) ) ) {
-                    if (tmpSlot) {
-                        PK11_AddSlotToList(slotList, tmpSlot, PR_TRUE);
-                        slotcount++;
-                    }
+                    PK11_AddSlotToList(slotList, tmpSlot, PR_TRUE);
+                    slotcount++;
                 }
             }
         }

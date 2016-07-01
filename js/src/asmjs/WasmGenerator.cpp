@@ -85,7 +85,7 @@ ModuleGenerator::~ModuleGenerator()
                 if (!outstanding_)
                     break;
 
-                HelperThreadState().wait(GlobalHelperThreadState::CONSUMER);
+                HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
             }
         }
 
@@ -182,7 +182,7 @@ ModuleGenerator::finishOutstandingTask()
                 break;
             }
 
-            HelperThreadState().wait(GlobalHelperThreadState::CONSUMER);
+            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
         }
     }
 

@@ -1244,10 +1244,8 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 	crv = CKR_FUNCTION_NOT_SUPPORTED;
     }
 
-    if (ck_id) {
-	SECITEM_FreeItem(ck_id, PR_TRUE);
-	ck_id = NULL;
-    }
+    SECITEM_FreeItem(ck_id, PR_TRUE);
+    ck_id = NULL;
 
     if (crv != CKR_OK) {
 	/* we couldn't unwrap the key, use the internal module to do the

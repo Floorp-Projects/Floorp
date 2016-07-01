@@ -422,17 +422,14 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
         rootFrame == nsLayoutUtils::GetDisplayRootFrame(rootFrame)) {
       nsCOMPtr<nsIWidget> widget = GetWidget();
       if (widget) {
-        bool isRetainingManager;
-        LayerManager* manager = widget->GetLayerManager(&isRetainingManager);
-        if (isRetainingManager) {
-          manager->BeginTransaction();
-          using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
-          nsLayoutUtils::PaintFrame(nullptr, rootFrame, nsRegion(),
-                                    NS_RGB(255, 255, 255),
-                                    nsDisplayListBuilderMode::PAINTING,
-                                    PaintFrameFlags::PAINT_WIDGET_LAYERS |
-                                    PaintFrameFlags::PAINT_EXISTING_TRANSACTION);
-        }
+        LayerManager* manager = widget->GetLayerManager();
+        manager->BeginTransaction();
+        using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
+        nsLayoutUtils::PaintFrame(nullptr, rootFrame, nsRegion(),
+                                  NS_RGB(255, 255, 255),
+                                  nsDisplayListBuilderMode::PAINTING,
+                                  PaintFrameFlags::PAINT_WIDGET_LAYERS |
+                                  PaintFrameFlags::PAINT_EXISTING_TRANSACTION);
       }
     }
   }

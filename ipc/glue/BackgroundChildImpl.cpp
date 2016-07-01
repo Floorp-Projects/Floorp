@@ -24,8 +24,10 @@
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#ifdef MOZ_GAMEPAD
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
+#endif
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/NuwaChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
@@ -496,23 +498,29 @@ BackgroundChildImpl::AllocPGamepadEventChannelChild()
 bool
 BackgroundChildImpl::DeallocPGamepadEventChannelChild(PGamepadEventChannelChild* aActor)
 {
+#ifdef MOZ_GAMEPAD
   MOZ_ASSERT(aActor);
   delete static_cast<dom::GamepadEventChannelChild*>(aActor);
+#endif
   return true;
 }
 
 dom::PGamepadTestChannelChild*
 BackgroundChildImpl::AllocPGamepadTestChannelChild()
 {
+#ifdef MOZ_GAMEPAD
   MOZ_CRASH("PGamepadTestChannelChild actor should be manually constructed!");
+#endif
   return nullptr;
 }
 
 bool
 BackgroundChildImpl::DeallocPGamepadTestChannelChild(PGamepadTestChannelChild* aActor)
 {
+#ifdef MOZ_GAMEPAD
   MOZ_ASSERT(aActor);
   delete static_cast<dom::GamepadTestChannelChild*>(aActor);
+#endif
   return true;
 }
 

@@ -39,6 +39,7 @@
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
 #include "jit/AtomicOperations.h"
+#include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 
@@ -358,11 +359,15 @@ class CachePage
 
 // Protects the icache() and redirection() properties of the
 // Simulator.
-class AutoLockSimulatorCache
+class AutoLockSimulatorCache : public LockGuard<Mutex>
 {
+    using Base = LockGuard<Mutex>;
+
   public:
-    explicit AutoLockSimulatorCache(Simulator* sim) : sim_(sim) {
-        PR_Lock(sim_->cacheLock_);
+    explicit AutoLockSimulatorCache(Simulator* sim)
+      : Base(sim->cacheLock_)
+      , sim_(sim)
+    {
         MOZ_ASSERT(!sim_->cacheLockHolder_);
 #ifdef DEBUG
         sim_->cacheLockHolder_ = PR_GetCurrentThread();
@@ -374,7 +379,6 @@ class AutoLockSimulatorCache
 #ifdef DEBUG
         sim_->cacheLockHolder_ = nullptr;
 #endif
-        PR_Unlock(sim_->cacheLock_);
     }
 
   private:
@@ -1124,7 +1128,6 @@ Simulator::Simulator()
 
     lastDebuggerInput_ = nullptr;
 
-    cacheLock_ = nullptr;
 #ifdef DEBUG
     cacheLockHolder_ = nullptr;
 #endif
@@ -1136,10 +1139,6 @@ Simulator::Simulator()
 bool
 Simulator::init()
 {
-    cacheLock_ = PR_NewLock();
-    if (!cacheLock_)
-        return false;
-
     if (!icache_.init())
         return false;
 
@@ -1226,7 +1225,6 @@ class Redirection
 Simulator::~Simulator()
 {
     js_free(stack_);
-    PR_DestroyLock(cacheLock_);
     Redirection* r = redirection_;
     while (r) {
         Redirection* next = r->next_;

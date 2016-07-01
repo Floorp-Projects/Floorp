@@ -67,16 +67,23 @@ static SECStatus
 crlgen_RmEntry(CRLGENGeneratorData *crlGenData, SECItem *certId)
 {
     CRLGENEntryData *data = NULL;
+    SECStatus rv = SECSuccess;
 
-    if (!crlGenData->entryDataHashTable)
+    if (!crlGenData->entryDataHashTable) {
         return SECSuccess;
+    }
+
     data = crlgen_FindEntry(crlGenData, certId);
-    if (!data)
+    if (!data) {
         return SECSuccess;
-    if (PL_HashTableRemove(crlGenData->entryDataHashTable, certId))
-        return SECSuccess;
+    }
+
+    if (!PL_HashTableRemove(crlGenData->entryDataHashTable, certId)) {
+        rv = SECFailure;
+    }
+
     destroyEntryData(data);
-    return SECFailure;
+    return rv;
 }
 
 /* Stores CRLGENEntryData in hashtable according to certId
@@ -483,7 +490,6 @@ crlgen_AddCrlNumber(CRLGENGeneratorData *crlGenData, const char **dataArr)
 {
     PLArenaPool *arena = NULL;
     SECItem encodedItem;
-    void *extHandle = crlGenData->crlExtHandle;
     void *dummy;
     SECStatus rv = SECFailure;
     int code = 0;
@@ -517,7 +523,8 @@ crlgen_AddCrlNumber(CRLGENGeneratorData *crlGenData, const char **dataArr)
         goto loser;
     }
 
-    rv = CERT_AddExtension(extHandle, SEC_OID_X509_CRL_NUMBER, &encodedItem,
+    rv = CERT_AddExtension(crlGenData->crlExtHandle, SEC_OID_X509_CRL_NUMBER,
+                           &encodedItem,
                            (*dataArr[1] == '1') ? PR_TRUE : PR_FALSE,
                            PR_TRUE);
 

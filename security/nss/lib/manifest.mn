@@ -27,7 +27,7 @@ ifndef NSS_BUILD_SOFTOKEN_ONLY
 # the rest of nss
 NSS_SRCDIRS = \
 	base dev pki \
-	libpkix \
+	$(LIBPKIX_SRCDIR) \
 	certdb certhigh pk11wrap cryptohi nss \
 	$(ZLIB_SRCDIR) ssl \
 	pkcs7 pkcs12 smime \

@@ -6,11 +6,12 @@
 /* This is a Cross-Platform ICO Decoder, which should work everywhere, including
  * Big-Endian machines like the PowerPC. */
 
+#include "nsICODecoder.h"
+
 #include <stdlib.h>
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Move.h"
-#include "nsICODecoder.h"
 
 #include "RasterImage.h"
 

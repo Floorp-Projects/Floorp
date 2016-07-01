@@ -2442,7 +2442,7 @@ GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, s
 
         for (size_t i = 0; i < bgTaskCount && !bgArenas.done(); i++) {
             bgTasks[i].emplace(rt, &bgArenas, lock);
-            startTask(*bgTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS);
+            startTask(*bgTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS, lock);
             tasksStarted = i;
         }
     }
@@ -2453,7 +2453,7 @@ GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, s
         AutoLockHelperThreadState lock;
 
         for (size_t i = 0; i < tasksStarted; i++)
-            joinTask(*bgTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS);
+            joinTask(*bgTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS, lock);
     }
 }
 
@@ -4802,9 +4802,9 @@ GCRuntime::endMarkingZoneGroup()
 
 class GCSweepTask : public GCParallelTask
 {
-    virtual void runFromHelperThread() override {
+    virtual void runFromHelperThread(AutoLockHelperThreadState& locked) override {
         AutoSetThreadIsSweeping threadIsSweeping;
-        GCParallelTask::runFromHelperThread();
+        GCParallelTask::runFromHelperThread(locked);
     }
     GCSweepTask(const GCSweepTask&) = delete;
 
@@ -4898,21 +4898,21 @@ SweepMiscTask::run()
 }
 
 void
-GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase)
+GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked)
 {
     MOZ_ASSERT(HelperThreadState().isLocked());
     if (!task.startWithLockHeld()) {
-        AutoUnlockHelperThreadState unlock;
+        AutoUnlockHelperThreadState unlock(locked);
         gcstats::AutoPhase ap(stats, phase);
         task.runFromMainThread(rt);
     }
 }
 
 void
-GCRuntime::joinTask(GCParallelTask& task, gcstats::Phase phase)
+GCRuntime::joinTask(GCParallelTask& task, gcstats::Phase phase, AutoLockHelperThreadState& locked)
 {
     gcstats::AutoPhase ap(stats, task, phase);
-    task.joinWithLockHeld();
+    task.joinWithLockHeld(locked);
 }
 
 using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPolicy>;
@@ -5015,7 +5015,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
     if (sweepingAtoms) {
         AutoLockHelperThreadState helperLock;
-        startTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS);
+        startTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS, helperLock);
     }
 
     {
@@ -5024,13 +5024,13 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
         {
             AutoLockHelperThreadState helperLock;
-            startTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS);
-            startTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER);
-            startTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT);
-            startTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP);
-            startTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC);
+            startTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS, helperLock);
+            startTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
+            startTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
+            startTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
+            startTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
             for (auto& task : sweepCacheTasks)
-                startTask(task, gcstats::PHASE_SWEEP_MISC);
+                startTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
         }
 
         // The remainder of the of the tasks run in parallel on the main
@@ -5096,7 +5096,7 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
     // Rejoin our off-main-thread tasks.
     if (sweepingAtoms) {
         AutoLockHelperThreadState helperLock;
-        joinTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS);
+        joinTask(sweepAtomsTask, gcstats::PHASE_SWEEP_ATOMS, helperLock);
     }
 
     {
@@ -5104,13 +5104,13 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
 
         AutoLockHelperThreadState helperLock;
-        joinTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS);
-        joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER);
-        joinTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT);
-        joinTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP);
-        joinTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC);
+        joinTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS, helperLock);
+        joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
+        joinTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
+        joinTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
+        joinTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC, helperLock);
         for (auto& task : sweepCacheTasks)
-            joinTask(task, gcstats::PHASE_SWEEP_MISC);
+            joinTask(task, gcstats::PHASE_SWEEP_MISC, helperLock);
     }
 
     /*
@@ -6114,7 +6114,10 @@ class AutoScheduleZonesForGC
 MOZ_NEVER_INLINE bool
 GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason)
 {
+    // Note that the following is allowed to re-enter GC in the finalizer.
     AutoNotifyGCActivity notify(*this);
+
+    gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, budget, reason);
 
     evictNursery(reason);
 
@@ -6277,12 +6280,9 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
     AutoEnqueuePendingParseTasksAfterGC aept(*this);
     AutoScheduleZonesForGC asz(rt);
-    gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, budget, reason);
 
     bool repeat = false;
-    unsigned cycleCount = 0;
     do {
-        cycleCount++;
         poked = false;
         bool wasReset = gcCycle(nonincrementalByAPI, budget, reason);
 
@@ -6315,8 +6315,6 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
          */
         repeat = (poked && cleanUpEverything) || wasReset || repeatForDeadZone;
     } while (repeat);
-
-    agc.setCycleCount(cycleCount);
 
 #ifdef JS_GC_ZEAL
     if (shouldCompact() && rt->hasZealMode(ZealMode::CheckHeapOnMovingGC)) {

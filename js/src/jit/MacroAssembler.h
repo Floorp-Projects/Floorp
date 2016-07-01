@@ -1261,7 +1261,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadStringChar(Register str, Register index, Register output);
 
     void loadJSContext(Register dest) {
-        loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfJSContext()), dest);
+        movePtr(ImmPtr(GetJitContext()->runtime->getJSContext()), dest);
     }
     void loadJitActivation(Register dest) {
         loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfActivation()), dest);

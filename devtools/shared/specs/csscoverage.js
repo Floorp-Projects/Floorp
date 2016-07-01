@@ -5,6 +5,8 @@
 
 const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
+require("devtools/shared/specs/stylesheets");
+
 const cssUsageSpec = generateActorSpec({
   typeName: "cssUsage",
 
@@ -24,6 +26,10 @@ const cssUsageSpec = generateActorSpec({
     oneshot: {},
     createEditorReport: {
       request: { url: Arg(0, "string") },
+      response: { reports: RetVal("array:json") }
+    },
+    createEditorReportForSheet: {
+      request: { url: Arg(0, "stylesheet") },
       response: { reports: RetVal("array:json") }
     },
     createPageReport: {
