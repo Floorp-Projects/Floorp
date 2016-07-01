@@ -669,9 +669,6 @@ RegisterExtensionInterpositions(nsINIParser &parser)
 
     if (!xpc::SetAddonInterposition(addonId, interposition))
       continue;
-
-    if (!xpc::AllowCPOWsInAddon(addonId, true))
-      continue;
   }
   while (true);
 }
