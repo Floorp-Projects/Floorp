@@ -29,7 +29,7 @@ using mozilla::IsInRange;
 uint32_t
 jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
 {
-    JSContext* cx = GetJSContextFromJitCode();
+    JSContext* cx = GetJSContextFromMainThread();
     MOZ_ASSERT(bailoutInfo);
 
     // We don't have an exit frame.
@@ -105,7 +105,7 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
 {
     sp->checkInvariants();
 
-    JSContext* cx = GetJSContextFromJitCode();
+    JSContext* cx = GetJSContextFromMainThread();
 
     // We don't have an exit frame.
     cx->runtime()->jitTop = FAKE_JIT_TOP_FOR_BAILOUT;

@@ -15,8 +15,6 @@
 #include "nsCOMPtr.h"
 #include "SurfaceFlags.h"
 
-class nsACString;
-
 namespace mozilla {
 namespace image {
 

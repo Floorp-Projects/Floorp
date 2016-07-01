@@ -200,7 +200,7 @@ input {
 .remove-button {
   width: 16px;
   height: 16px;
-  background: url(chrome://devtools/skin/images/close@2x.png);
+  background: url(chrome://devtools/skin/images/close.svg);
   background-size: cover;
   font-size: 0;
   border: none;

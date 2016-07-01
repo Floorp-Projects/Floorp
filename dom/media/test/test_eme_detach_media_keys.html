@@ -19,7 +19,7 @@ const keysystem = 'org.w3.clearkey';
 function createAndSet() {
   return new Promise(function(resolve, reject) {
     var m;
-    navigator.requestMediaKeySystemAccess(keysystem, [{initDataType: 'cenc'}])
+    navigator.requestMediaKeySystemAccess(keysystem, [{initDataTypes: ['cenc']}])
     .then(function (access) {
       return access.createMediaKeys();
     }).then(function (mediaKeys) {

@@ -917,7 +917,9 @@ sftk_freeObjectData(SFTKObject *object) {
 static void
 sftk_InitFreeList(SFTKObjectFreeList *list)
 {
-    list->lock = PZ_NewLock(nssILockObject);
+    if (!list->lock) {
+        list->lock = PZ_NewLock(nssILockObject);
+    }
 }
 
 void sftk_InitFreeLists(void)
@@ -1929,11 +1931,8 @@ sftk_NewTokenObject(SFTKSlot *slot, SECItem *dbKey, CK_OBJECT_HANDLE handle)
 
     return object;
 loser:
-    if (object) {
-	(void) sftk_DestroyObject(object);
-    }
+    (void) sftk_DestroyObject(object);
     return NULL;
-
 }
 
 SFTKTokenObject *

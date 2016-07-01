@@ -166,17 +166,9 @@ ssl_FindServerCertByAuthType(const sslSocket *ss, SSLAuthType authType)
 {
     sslServerCertType certType;
     certType.authType = authType;
-    switch (authType) {
-        /* Setting the named curve to NULL ensures that all EC certificates
-         * are matched when searching for this slot. */
-        case ssl_auth_ecdsa:
-        case ssl_auth_ecdh_rsa:
-        case ssl_auth_ecdh_ecdsa:
-            certType.namedCurve = NULL;
-            break;
-        default:
-            break;
-    }
+    /* Setting the named curve to NULL ensures that all EC certificates
+     * are matched when searching for this slot. */
+    certType.namedCurve = NULL;
     return ssl_FindServerCert(ss, &certType);
 }
 
@@ -642,17 +634,9 @@ ssl_FindOrMakeCertType(sslSocket *ss, SSLAuthType authType)
     sslServerCertType certType;
 
     certType.authType = authType;
-    switch (authType) {
-        case ssl_auth_ecdsa:
-        case ssl_auth_ecdh_rsa:
-        case ssl_auth_ecdh_ecdsa:
-            /* Setting the named curve to NULL ensures that all EC certificates
-             * are matched when searching for this slot. */
-            certType.namedCurve = NULL;
-            break;
-        default:
-            break;
-    }
+    /* Setting the named curve to NULL ensures that all EC certificates
+     * are matched when searching for this slot. */
+    certType.namedCurve = NULL;
     sc = ssl_FindServerCert(ss, &certType);
     if (sc) {
         PR_REMOVE_LINK(&sc->link);

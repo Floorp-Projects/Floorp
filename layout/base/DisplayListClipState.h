@@ -269,6 +269,24 @@ public:
     Restore();
   }
 
+  bool SavedStateHasRoundedCorners()
+  {
+    const DisplayItemScrollClip* scrollClip = mSavedState.GetCurrentInnermostScrollClip();
+    if (scrollClip && scrollClip->HasRoundedCorners()) {
+      return true;
+    }
+    const DisplayItemClip* clip = mSavedState.GetClipForContainingBlockDescendants();
+    if (clip && clip->GetRoundedRectCount() > 0) {
+      return true;
+    }
+
+    clip = mSavedState.GetClipForContentDescendants();
+    if (clip && clip->GetRoundedRectCount() > 0) {
+      return true;
+    }
+    return false;
+  }
+
   void TurnClipIntoScrollClipForContentDescendants(nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
   {
     NS_ASSERTION(!mRestored, "Already restored!");

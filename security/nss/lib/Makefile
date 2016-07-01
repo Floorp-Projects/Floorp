@@ -50,6 +50,10 @@ ifeq ($(NSS_BUILD_UTIL_ONLY),1)
 SYSINIT_SRCDIR=
 endif
 
+ifndef NSS_DISABLE_LIBPKIX
+LIBPKIX_SRCDIR = libpkix  # Add the libpkix directory to DIRS.
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

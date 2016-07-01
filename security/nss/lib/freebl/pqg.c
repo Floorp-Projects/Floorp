@@ -1326,19 +1326,6 @@ pqg_ParamGen(unsigned int L, unsigned int N, pqgGenType type,
     verify->arena = arena;
     seed = &verify->seed;
     arena = NULL;
-    /* Initialize bignums */
-    MP_DIGITS(&P) = 0;
-    MP_DIGITS(&Q) = 0;
-    MP_DIGITS(&G) = 0;
-    MP_DIGITS(&H) = 0;
-    MP_DIGITS(&l) = 0;
-    MP_DIGITS(&p0) = 0;
-    CHECK_MPI_OK( mp_init(&P) );
-    CHECK_MPI_OK( mp_init(&Q) );
-    CHECK_MPI_OK( mp_init(&G) );
-    CHECK_MPI_OK( mp_init(&H) );
-    CHECK_MPI_OK( mp_init(&l) );
-    CHECK_MPI_OK( mp_init(&p0) );
 
     /* Select Hash and Compute lengths. */
     /* getFirstHash gives us the smallest acceptable hash for this key

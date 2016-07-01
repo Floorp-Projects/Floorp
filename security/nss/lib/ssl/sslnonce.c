@@ -203,6 +203,8 @@ ssl_DestroySID(sslSessionID *sid)
         CERT_DestroyCertificate(sid->localCert);
     }
 
+    SECITEM_FreeItem(&sid->u.ssl3.alpnSelection, PR_FALSE);
+
     PORT_ZFree(sid, sizeof(sslSessionID));
 }
 

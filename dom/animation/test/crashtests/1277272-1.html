@@ -1,0 +1,26 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+<script>
+var count = 0;
+
+function start() {
+  if (++count > 10) {
+    document.documentElement.className = "";
+    return;
+  }
+
+  var frame = document.getElementById("frame");
+  frame.src = "./1277272-1-inner.html";
+}
+
+function continueTest() {
+  setTimeout(start.bind(window), 1);
+}
+
+</script>
+</head>
+<body onload="start()"></body>
+<iframe id="frame">
+</html>
+

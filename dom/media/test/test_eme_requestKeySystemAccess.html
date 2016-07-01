@@ -528,50 +528,6 @@ var tests = [
     ],
     shouldPass: false
   },
-
-  // Test legacy support. Remove when we remove backwards compatibility.
-  {
-    name: 'Legacy CENC',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        initDataType: 'cenc',
-      }
-    ],
-    expectedConfig: {
-      label: ''
-    },
-    shouldPass: true,
-  },
-  {
-    name: 'Legacy CENC + MP4 video',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        initDataType: 'cenc',
-        videoType: 'video/mp4; codecs="avc1.42E01E"',
-      }
-    ],
-    expectedConfig: {
-      label: ''
-    },
-    shouldPass: true,
-  },
-  {
-    name: 'Legacy CENC + MP4 video + MP4 audio',
-    keySystem: CLEARKEY_ID,
-    options: [
-      {
-        initDataType: 'cenc',
-        videoType: 'video/mp4; codecs="avc1.42E01E"',
-        audioType: 'audio/mp4; codecs="mp4a.40.2"',
-      }
-    ],
-    expectedConfig: {
-      label: ''
-    },
-    shouldPass: true,
-  },
 ];
 
 function beginTest() {
