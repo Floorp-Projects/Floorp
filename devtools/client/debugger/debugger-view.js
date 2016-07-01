@@ -55,7 +55,7 @@ var DebuggerView = {
    * @return object
    *         A promise that is resolved when the view finishes initializing.
    */
-  initialize: function () {
+  initialize: function (isWorker) {
     if (this._startup) {
       return this._startup;
     }
@@ -70,7 +70,7 @@ var DebuggerView = {
     this.StackFrames.initialize();
     this.StackFramesClassicList.initialize();
     this.Workers.initialize();
-    this.Sources.initialize();
+    this.Sources.initialize(isWorker);
     this.VariableBubble.initialize();
     this.WatchExpressions.initialize();
     this.EventListeners.initialize();
