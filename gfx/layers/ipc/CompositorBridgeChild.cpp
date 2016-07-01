@@ -117,6 +117,15 @@ CompositorBridgeChild::Destroy()
     layers->Destroy();
   }
 
+  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
+  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
+    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
+
+    if (texture) {
+      texture->Destroy();
+    }
+  }
+
   SendWillClose();
   mCanSend = false;
 
@@ -132,16 +141,6 @@ CompositorBridgeChild::Destroy()
   // From now on we can't send any message message.
   MessageLoop::current()->PostTask(
              NewRunnableFunction(DeferredDestroyCompositor, mCompositorBridgeParent, selfRef));
-
-  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
-  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
-
-    if (texture) {
-      texture->Destroy();
-    }
-  }
-
 }
 
 // static
