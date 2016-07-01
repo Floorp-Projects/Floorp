@@ -12,40 +12,22 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
 extern LazyLogModule gMediaSampleLog;
 
-// avoid redefined macro in unified build
-#undef LOG
-#undef DECODER_LOG
-#undef VERBOSE_LOG
-
-#define LOG(m, l, x, ...) \
-  MOZ_LOG(m, l, ("[NextFrameSeekTask] Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
-#define DECODER_LOG(x, ...) \
-  LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
-#define VERBOSE_LOG(x, ...) \
-  LOG(gMediaDecoderLog, LogLevel::Verbose, x, ##__VA_ARGS__)
-#define SAMPLE_LOG(x, ...) \
-  LOG(gMediaSampleLog, LogLevel::Debug, x, ##__VA_ARGS__)
-
-// Somehow MSVC doesn't correctly delete the comma before ##__VA_ARGS__
-// when __VA_ARGS__ expands to nothing. This is a workaround for it.
-#define DECODER_WARN_HELPER(a, b) NS_WARNING b
-#define DECODER_WARN(x, ...) \
-  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get()))
+#define SAMPLE_LOG(x, ...) MOZ_LOG(gMediaSampleLog, LogLevel::Debug, \
+  ("[NextFrameSeekTask] Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
 
 namespace media {
 
 NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
-                                   AbstractThread* aThread,
-                                   MediaDecoderReaderWrapper* aReader,
-                                   SeekJob&& aSeekJob,
-                                   const MediaInfo& aInfo,
-                                   const media::TimeUnit& aDuration,
-                                   int64_t aCurrentTime,
-                                   MediaQueue<MediaData>& aAudioQueue,
-                                   MediaQueue<MediaData>& aVideoQueue)
+                                     AbstractThread* aThread,
+                                     MediaDecoderReaderWrapper* aReader,
+                                     SeekJob&& aSeekJob,
+                                     const MediaInfo& aInfo,
+                                     const media::TimeUnit& aDuration,
+                                     int64_t aCurrentTime,
+                                     MediaQueue<MediaData>& aAudioQueue,
+                                     MediaQueue<MediaData>& aVideoQueue)
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
