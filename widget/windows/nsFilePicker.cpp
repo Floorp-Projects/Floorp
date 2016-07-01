@@ -1049,6 +1049,10 @@ nsFilePicker::ShowW(int16_t *aReturnVal)
   mUnicodeFile.Truncate();
   mFiles.Clear();
 
+  // On Win10, the picker doesn't support per-monitor DPI, so we open it
+  // with our context set temporarily to system-dpi-aware
+  WinUtils::AutoSystemDpiAware dpiAwareness;
+
   // Launch the XP file/folder picker on XP and as a fallback on Vista+. 
   // The CoCreateInstance call to CLSID_FileOpenDialog fails with "(0x80040111)
   // ClassFactory cannot supply requested class" when the checkbox for
