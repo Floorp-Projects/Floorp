@@ -15,7 +15,7 @@ class InProcessCompositorSession final : public CompositorSession
 {
 public:
   InProcessCompositorSession(
-    widget::CompositorWidgetProxy* aWidgetProxy,
+    widget::CompositorWidget* aWidget,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
@@ -33,7 +33,7 @@ private:
 };
 
 already_AddRefed<CompositorSession>
-CompositorSession::CreateInProcess(widget::CompositorWidgetProxy* aWidgetProxy,
+CompositorSession::CreateInProcess(widget::CompositorWidget* aWidget,
                                    ClientLayerManager* aLayerManager,
                                    CSSToLayoutDeviceScale aScale,
                                    bool aUseAPZ,
@@ -41,7 +41,7 @@ CompositorSession::CreateInProcess(widget::CompositorWidgetProxy* aWidgetProxy,
                                    const gfx::IntSize& aSurfaceSize)
 {
   RefPtr<InProcessCompositorSession> session = new InProcessCompositorSession(
-    aWidgetProxy,
+    aWidget,
     aLayerManager,
     aScale,
     aUseAPZ,
@@ -64,7 +64,7 @@ CompositorSession::GetCompositorBridgeChild()
   return mCompositorBridgeChild;
 }
 
-InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidgetProxy* aWidgetProxy,
+InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidget* aWidget,
                                                        ClientLayerManager* aLayerManager,
                                                        CSSToLayoutDeviceScale aScale,
                                                        bool aUseAPZ,
@@ -72,7 +72,7 @@ InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidgetP
                                                        const gfx::IntSize& aSurfaceSize)
 {
   mCompositorBridgeParent = new CompositorBridgeParent(
-    aWidgetProxy,
+    aWidget,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
