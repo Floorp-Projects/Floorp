@@ -478,6 +478,12 @@ DrawTargetRecording::Snapshot()
 }
 
 void
+DrawTargetRecording::DetachAllSnapshots()
+{
+  mFinalDT->DetachAllSnapshots();
+}
+
+void
 DrawTargetRecording::DrawSurface(SourceSurface *aSurface,
                                  const Rect &aDest,
                                  const Rect &aSource,
