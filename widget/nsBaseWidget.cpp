@@ -72,7 +72,6 @@
 #endif
 #include "gfxConfig.h"
 #include "mozilla/layers/CompositorSession.h"
-#include "InProcessCompositorWidget.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -1413,12 +1412,6 @@ uint32_t
 nsBaseWidget::GetGLFrameBufferFormat()
 {
   return LOCAL_GL_RGBA;
-}
-
-mozilla::widget::CompositorWidget*
-nsBaseWidget::NewCompositorWidget()
-{
-  return new mozilla::widget::InProcessCompositorWidget(this);
 }
 
 //-------------------------------------------------------------------------
