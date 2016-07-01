@@ -20,7 +20,7 @@
 #include "nsITimer.h"
 
 class nsIThread;
-class nsINode;
+class nsIPrincipal;
 
 // The SDK shipping with VC11 has renamed IAsyncOperation to
 // IDataObjectAsyncCapability.  We try to detect this, and rename this in our
@@ -251,7 +251,7 @@ protected:
       CStream();
       nsresult Init(nsIURI *pSourceURI,
                     uint32_t aContentPolicyType,
-                    nsINode* aRequestingNode);
+                    nsIPrincipal* aRequestingPrincipal);
 
       NS_DECL_ISUPPORTS
       NS_DECL_NSIREQUESTOBSERVER
@@ -294,4 +294,3 @@ protected:
 
 
 #endif  // _NSDATAOBJ_H_
-
