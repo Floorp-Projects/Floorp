@@ -300,6 +300,10 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
   if (NeedMoreVideo()) {
     switch (aReason) {
       case MediaDecoderReader::DECODE_ERROR:
+        // We might lose the audio sample after canceling the callbacks.
+        // However it doesn't really matter because MDSM is gonna shut down
+        // when seek fails.
+        CancelCallbacks();
         // Reject the promise since we can't finish video seek anyway.
         RejectIfExist(__func__);
         break;
@@ -359,6 +363,7 @@ NextFrameSeekTask::SetCallbacks()
         EnsureVideoDecodeTaskQueued();
       } else {
         // Reject if we can't finish video seeking.
+        CancelCallbacks();
         RejectIfExist(__func__);
       }
       return;
@@ -371,10 +376,10 @@ void
 NextFrameSeekTask::CancelCallbacks()
 {
   AssertOwnerThread();
-  mAudioCallback.Disconnect();
-  mVideoCallback.Disconnect();
-  mAudioWaitCallback.Disconnect();
-  mVideoWaitCallback.Disconnect();
+  mAudioCallback.DisconnectIfExists();
+  mVideoCallback.DisconnectIfExists();
+  mAudioWaitCallback.DisconnectIfExists();
+  mVideoWaitCallback.DisconnectIfExists();
 }
 
 void
