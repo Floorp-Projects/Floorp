@@ -118,47 +118,16 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
 
   RefPtr<SeekTaskPromise> promise = mSeekTaskPromise.Ensure(__func__);
   if (!IsVideoRequestPending() && NeedMoreVideo()) {
-    EnsureVideoDecodeTaskQueued();
+    RequestVideoData();
   }
   MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
   return promise;
-}
-
-bool
-NextFrameSeekTask::IsVideoDecoding() const
-{
-  AssertOwnerThread();
-  return !mIsVideoQueueFinished;
-}
-
-void
-NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
-{
-  AssertOwnerThread();
-  RequestVideoData();
-}
-
-const char*
-NextFrameSeekTask::VideoRequestStatus()
-{
-  AssertOwnerThread();
-
-  if (mReader->IsRequestingVideoData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingVideoData());
-    return "pending";
-  } else if (mReader->IsWaitingVideoData()) {
-    return "waiting";
-  }
-  return "idle";
 }
 
 void
 NextFrameSeekTask::RequestVideoData()
 {
   AssertOwnerThread();
-  SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o",
-             !!mSeekedVideoData, mReader->SizeOfVideoQueueInFrames());
-
   mReader->RequestVideoData(false, media::TimeUnit());
 }
 
@@ -270,7 +239,7 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   }
 
   if (NeedMoreVideo()) {
-    EnsureVideoDecodeTaskQueued();
+    RequestVideoData();
     return;
   }
 
@@ -304,7 +273,7 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
         mReader->WaitForData(MediaData::VIDEO_DATA);
         break;
       case MediaDecoderReader::CANCELED:
-        EnsureVideoDecodeTaskQueued();
+        RequestVideoData();
         break;
       case MediaDecoderReader::END_OF_STREAM:
         MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
@@ -353,7 +322,7 @@ NextFrameSeekTask::SetCallbacks()
     OwnerThread(), [this] (WaitCallbackData aData) {
     if (NeedMoreVideo()) {
       if (aData.is<MediaData::Type>()) {
-        EnsureVideoDecodeTaskQueued();
+        RequestVideoData();
       } else {
         // Reject if we can't finish video seeking.
         CancelCallbacks();
