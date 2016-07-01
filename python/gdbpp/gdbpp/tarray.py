@@ -8,7 +8,10 @@ import gdb
 import itertools
 from gdbpp import GeckoPrettyPrinter
 
-@GeckoPrettyPrinter('TArray', '.*TArray<.*>$')
+@GeckoPrettyPrinter('InfallibleTArray', '^InfallibleTArray<.*>$')
+@GeckoPrettyPrinter('FallibleTArray', '^FallibleTArray<.*>$')
+@GeckoPrettyPrinter('AutoTArray', '^AutoTArray<.*>$')
+@GeckoPrettyPrinter('nsTArray', '^nsTArray<.*>$')
 class tarray_printer(object):
     def __init__(self, value):
         self.value = value

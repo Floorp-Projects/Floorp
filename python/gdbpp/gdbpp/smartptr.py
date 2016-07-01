@@ -24,9 +24,9 @@ class weak_ptr_printer(object):
 
         return '[(%s) %s]' % (weak_ptr.dynamic_type, weak_ptr)
 
-@GeckoPrettyPrinter('nsAutoPtr', 'nsAutoPtr<.*>')
-@GeckoPrettyPrinter('nsCOMPtr', 'nsCOMPtr<.*>')
-@GeckoPrettyPrinter('RefPtr', 'RefPtr<.*>')
+@GeckoPrettyPrinter('nsAutoPtr', '^nsAutoPtr<.*>$')
+@GeckoPrettyPrinter('nsCOMPtr', '^nsCOMPtr<.*>$')
+@GeckoPrettyPrinter('RefPtr', '^RefPtr<.*>$')
 class smartptr_printer(object):
     def __init__(self, value):
         self.value = value['mRawPtr']
