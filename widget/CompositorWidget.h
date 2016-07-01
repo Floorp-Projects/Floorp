@@ -38,6 +38,19 @@ class CompositorWidgetInitData;
 // here.
 class CompositorWidgetDelegate;
 
+// Platforms that support out-of-process widgets.
+#if defined(XP_WIN)
+// CompositorWidgetParent should implement CompositorWidget and
+// PCompositorWidgetParent.
+class CompositorWidgetParent;
+
+// CompositorWidgetChild should implement CompositorWidgetDelegate and
+// PCompositorWidgetChild.
+class CompositorWidgetChild;
+
+# define MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+#endif
+
 /**
  * Access to a widget from the compositor is restricted to these methods.
  */
