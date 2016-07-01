@@ -19,44 +19,86 @@ extern "C" {
 
     This is the documentation for the <tt>libcubeb</tt> C API.
     <tt>libcubeb</tt> is a callback-based audio API library allowing the
-    authoring of portable multiplatform audio playback.
+    authoring of portable multiplatform audio playback and recording.
 
     @section example Example code
+
+    This example shows how to create a duplex stream that pipes the microphone
+    to the speakers, with minimal latency and the proper sample-rate for the
+    platform.
 
     @code
     cubeb * app_ctx;
     cubeb_init(&app_ctx, "Example Application");
+    int rv;
+    int rate;
+    int latency_ms;
+    uint64_t ts;
 
-    cubeb_stream_params params;
-    params.format = CUBEB_SAMPLE_S16NE;
-    params.rate = 48000;
-    params.channels = 2;
+    rv = cubeb_get_min_latency(app_ctx, output_params, &latency_ms);
+    if (rv != CUBEB_OK) {
+      fprintf(stderr, "Could not get minimum latency");
+      return rv;
+    }
 
-    unsigned int latency_ms = 250;
+    rv = cubeb_get_preferred_sample_rate(app_ctx, output_params, &rate);
+    if (rv != CUBEB_OK) {
+      fprintf(stderr, "Could not get preferred sample-rate");
+      return rv;
+    }
+
+    cubeb_stream_params output_params;
+    output_params.format = CUBEB_SAMPLE_FLOAT32NE;
+    output_params.rate = rate;
+    output_params.channels = 2;
+
+    cubeb_stream_params input_params;
+    output_params.format = CUBEB_SAMPLE_FLOAT32NE;
+    output_params.rate = rate;
+    output_params.channels = 1;
 
     cubeb_stream * stm;
-    cubeb_stream_init(app_ctx, &stm, "Example Stream 1", params,
-                      latency_ms, data_cb, state_cb, NULL);
+    rv = cubeb_stream_init(app_ctx, &stm, "Example Stream 1",
+                           NULL, input_params,
+                           NULL, output_params,
+                           latency_ms,
+                           data_cb, state_cb,
+                           NULL);
+    if (rv != CUBEB_OK) {
+      fprintf(stderr, "Could not open the stream");
+      return rv;
+    }
 
-    cubeb_stream_start(stm);
+    rv = cubeb_stream_start(stm);
+    if (rv != CUBEB_OK) {
+      fprintf(stderr, "Could not start the stream");
+      return rv;
+    }
     for (;;) {
       cubeb_stream_get_position(stm, &ts);
       printf("time=%llu\n", ts);
       sleep(1);
     }
-    cubeb_stream_stop(stm);
+    rv = cubeb_stream_stop(stm);
+    if (rv != CUBEB_OK) {
+      fprintf(stderr, "Could not stop the stream");
+      return rv;
+    }
 
     cubeb_stream_destroy(stm);
     cubeb_destroy(app_ctx);
     @endcode
 
     @code
-    long data_cb(cubeb_stream * stm, void * user, void * buffer, long nframes)
+    long data_cb(cubeb_stream * stm, void * user,
+                 void * input_buffer, void * output_buffer, long nframes)
     {
-      short * buf = buffer;
+      float * in  = input_buffer;
+      float * out = output_buffer;
+
       for (i = 0; i < nframes; ++i) {
-        for (c = 0; c < params.channels; ++c) {
-          buf[i][c] = 0;
+        for (c = 0; c < 2; ++c) {
+          buf[i][c] = in[i];
         }
       }
       return nframes;
@@ -101,6 +143,10 @@ typedef enum {
 } cubeb_sample_format;
 
 #if defined(__ANDROID__)
+/**
+ * This maps to the underlying stream types on supported platforms, e.g.
+ * Android.
+ */
 typedef enum {
     CUBEB_STREAM_TYPE_VOICE_CALL = 0,
     CUBEB_STREAM_TYPE_SYSTEM = 1,
@@ -133,7 +179,7 @@ typedef struct {
 #endif
 } cubeb_stream_params;
 
-/** Output device description */
+/** Audio device description */
 typedef struct {
   char * output_name; /**< The name of the output device */
   char * input_name; /**< The name of the input device */
@@ -249,15 +295,21 @@ typedef struct {
 } cubeb_device_collection;
 
 /** User supplied data callback.
-    @param stream The stream for which this callback fired
-    @param user_ptr The pointer passed to cubeb_stream_create
+    - Calling other cubeb functions from this callback is unsafe.
+    - The code in the callback should be non-blocking.
+    - Returning less than the number of frames this callback asks for or
+      provides puts the stream in drain mode. This callback will not be called
+      again, and the state callback will be called with CUBEB_STATE_DRAINED when
+      all the frames have been output.
+    @param stream The stream for which this callback fired.
+    @param user_ptr The pointer passed to cubeb_stream_init.
     @param input_buffer A pointer containing the input data, or nullptr
                         if this is an output-only stream.
-    @param output_buffer A pointer containing the output data, or nullptr
-                         if this is an input -only stream.
+    @param output_buffer A pointer to a buffer to be filled with audio samples,
+                         or nullptr if this is an input-only stream.
     @param nframes The number of frames of the two buffer.
-    @retval Number of frames written to the output buffer, which must equal
-            nframes except at end of stream.
+    @retval Number of frames written to the output buffer. If this number is
+            less than nframes, then the stream will start to drain.
     @retval CUBEB_ERROR on error, in which case the data callback will stop
             and the stream will enter a shutdown state. */
 typedef long (* cubeb_data_callback)(cubeb_stream * stream,
@@ -267,39 +319,43 @@ typedef long (* cubeb_data_callback)(cubeb_stream * stream,
                                      long nframes);
 
 /** User supplied state callback.
-    @param stream
-    @param user_ptr
-    @param state */
+    @param stream The stream for this this callback fired.
+    @param user_ptr The pointer passed to cubeb_stream_init.
+    @param state The new state of the stream. */
 typedef void (* cubeb_state_callback)(cubeb_stream * stream,
                                       void * user_ptr,
                                       cubeb_state state);
 
 /**
  * User supplied callback called when the underlying device changed.
- * @param user */
+ * @param user The pointer passed to cubeb_stream_init. */
 typedef void (* cubeb_device_changed_callback)(void * user_ptr);
 
 /**
  * User supplied callback called when the underlying device collection changed.
- * @param context
- * @param user_ptr */
-typedef void (* cubeb_device_collection_changed_callback)(cubeb * context, void * user_ptr);
+ * @param context A pointer to the cubeb context.
+ * @param user_ptr The pointer passed to cubeb_stream_init. */
+typedef void (* cubeb_device_collection_changed_callback)(cubeb * context,
+                                                          void * user_ptr);
 
 /** Initialize an application context.  This will perform any library or
     application scoped initialization.
-    @param context
-    @param context_name
-    @retval CUBEB_OK
-    @retval CUBEB_ERROR */
+    @param context A out param where an opaque pointer to the application
+                   context will be returned.
+    @param context_name A name for the context. Depending on the platform this
+                        can appear in different locations.
+    @retval CUBEB_OK in case of success.
+    @retval CUBEB_ERROR in case of error, for example because the host
+                        has no audio hardware. */
 int cubeb_init(cubeb ** context, char const * context_name);
 
 /** Get a read-only string identifying this context's current backend.
-    @param context
+    @param context A pointer to the cubeb context.
     @retval Read-only string identifying current backend. */
 char const * cubeb_get_backend_id(cubeb * context);
 
 /** Get the maximum possible number of channels.
-    @param context
+    @param context A pointer to the cubeb context.
     @param max_channels The maximum number of channels.
     @retval CUBEB_OK
     @retval CUBEB_ERROR_INVALID_PARAMETER
@@ -308,9 +364,9 @@ char const * cubeb_get_backend_id(cubeb * context);
 int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
 
 /** Get the minimal latency value, in milliseconds, that is guaranteed to work
-    when creating a stream for the specified sample rate. This is platform and
-    backend dependant.
-    @param context
+    when creating a stream for the specified sample rate. This is platform,
+    hardware and backend dependant.
+    @param context A pointer to the cubeb context.
     @param params On some backends, the minimum achievable latency depends on
                   the characteristics of the stream.
     @param latency_ms The latency value, in ms, to pass to cubeb_stream_init.
@@ -323,26 +379,28 @@ int cubeb_get_min_latency(cubeb * context,
 
 /** Get the preferred sample rate for this backend: this is hardware and
     platform dependant, and can avoid resampling, and/or trigger fastpaths.
-    @param context
+    @param context A pointer to the cubeb context.
     @param rate The samplerate (in Hz) the current configuration prefers.
     @retval CUBEB_OK
     @retval CUBEB_ERROR_INVALID_PARAMETER
     @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate);
 
-/** Destroy an application context.
-    @param context */
+/** Destroy an application context. This must be called after all stream have
+ *  been destroyed.
+    @param context A pointer to the cubeb context.*/
 void cubeb_destroy(cubeb * context);
 
 /** Initialize a stream associated with the supplied application context.
-    @param context
-    @param stream
-    @param stream_name
-    @param input_device Device for the input side of the stream. If NULL
+    @param context A pointer to the cubeb context.
+    @param stream An out parameter to be filled with the an opaque pointer to a
+                  cubeb stream.
+    @param stream_name A name for this stream. 
+    @param input_device Device for the input side of the stream. If NULL the
                         default input device is used.
     @param input_stream_params Parameters for the input side of the stream, or
                                NULL if this stream is output only.
-    @param output_device Device for the output side of the stream. If NULL
+    @param output_device Device for the output side of the stream. If NULL the
                          default output device is used.
     @param output_stream_params Parameters for the output side of the stream, or
                                 NULL if this stream is input only.
@@ -350,8 +408,9 @@ void cubeb_destroy(cubeb * context);
                    is [1, 2000].
     @param data_callback Will be called to preroll data before playback is
                          started by cubeb_stream_start.
-    @param state_callback
-    @param user_ptr
+    @param state_callback A pointer to a state callback.
+    @param user_ptr A pointer that will be passed to the callbacks. This pointer
+                    must outlive the life time of the stream.
     @retval CUBEB_OK
     @retval CUBEB_ERROR
     @retval CUBEB_ERROR_INVALID_FORMAT
@@ -368,8 +427,9 @@ int cubeb_stream_init(cubeb * context,
                       cubeb_state_callback state_callback,
                       void * user_ptr);
 
-/** Destroy a stream.
-    @param stream */
+/** Destroy a stream. `cubeb_stream_stop` MUST be called before destroying a
+    stream.
+    @param stream The stream to destroy. */
 void cubeb_stream_destroy(cubeb_stream * stream);
 
 /** Start playback.
