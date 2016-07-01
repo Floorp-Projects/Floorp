@@ -39,9 +39,6 @@ config = {
         "repo": "https://hg.mozilla.org/%(user_repo_override)s/tools",
         "branch": "default",
         "dest": "tools"
-    }, {
-        "repo": "https://hg.mozilla.org/%(user_repo_override)s/compare-locales",
-        "revision": "RELEASE_AUTOMATION"
     }],
     "hg_l10n_base": "https://hg.mozilla.org/%(user_repo_override)s/",
     "hg_l10n_tag": "default",
