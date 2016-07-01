@@ -38,6 +38,8 @@ typedef UniquePtr<Module> UniqueModule;
 typedef UniquePtr<Instance> UniqueInstance;
 
 // Return whether WebAssembly can be compiled on this platform.
+// This must be checked and must be true to call any of the top-level wasm
+// eval/compile methods.
 
 bool
 HasCompilerSupport(ExclusiveContext* cx);
@@ -51,12 +53,20 @@ Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
 
 } // namespace wasm
 
-// The class of the Wasm global namespace object.
+// 'Wasm' and its one function 'instantiateModule' are transitional APIs and
+// will be removed (replaced by 'WebAssembly') before release.
 
 extern const Class WasmClass;
 
 JSObject*
 InitWasmClass(JSContext* cx, HandleObject global);
+
+// The class of the WebAssembly global namespace object.
+
+extern const Class WebAssemblyClass;
+
+JSObject*
+InitWebAssemblyClass(JSContext* cx, HandleObject global);
 
 // The class of wasm module object wrappers. Each WasmModuleObject owns a
 // wasm::Module. These objects are currently not exposed directly to JS.
@@ -70,7 +80,9 @@ class WasmModuleObject : public NativeObject
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
 
-    static WasmModuleObject* create(ExclusiveContext* cx, wasm::UniqueModule module);
+    static WasmModuleObject* create(ExclusiveContext* cx,
+                                    wasm::UniqueModule module,
+                                    HandleObject proto = nullptr);
     wasm::Module& module() const;
 };
 
@@ -93,7 +105,8 @@ class WasmInstanceObject : public NativeObject
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
 
-    static WasmInstanceObject* create(ExclusiveContext* cx);
+    static WasmInstanceObject* create(ExclusiveContext* cx,
+                                      HandleObject proto = nullptr);
     void init(wasm::UniqueInstance module);
     void initExportsObject(HandleObject exportObj);
     wasm::Instance& instance() const;
