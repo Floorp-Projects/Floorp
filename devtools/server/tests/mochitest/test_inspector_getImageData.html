@@ -47,7 +47,7 @@ addTest(function testLargeImage() {
 
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
-        runNextTest();
+        testResizing(imageData, str);
       });
     });
   });
@@ -68,7 +68,7 @@ addTest(function testLargeCanvas() {
 
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
-        runNextTest();
+        testResizing(imageData, str);
       });
     });
   });
@@ -89,7 +89,28 @@ addTest(function testSmallImage() {
 
       imageData.data.string().then(str => {
         ok(str, "We have an image data string!");
-        runNextTest();
+        testResizing(imageData, str);
+      });
+    });
+  });
+});
+
+addTest(function testDataImage() {
+  // Select the data image node from the test page
+  gWalker.querySelector(gWalker.rootNode, ".data").then(img => {
+    ok(img, "Image node found in the test page");
+    ok(img.getImageData, "Image node has the getImageData function");
+
+    img.getImageData(14).then(imageData => {
+      ok(imageData.data, "Image data actor was sent back");
+      ok(imageData.size, "Image size info was sent back too");
+      is(imageData.size.naturalWidth, 28, "Natural width of the image correct");
+      is(imageData.size.naturalHeight, 28, "Natural width of the image correct");
+      ok(imageData.size.resized, "Image was resized");
+
+      imageData.data.string().then(str => {
+        ok(str, "We have an image data string!");
+        testResizing(imageData, str);
       });
     });
   });
@@ -105,6 +126,20 @@ addTest(function cleanup() {
   delete gWalker;
   runNextTest();
 });
+
+/**
+ * Checks if the server told the truth about resizing the image
+ */
+function testResizing(imageData, str) {
+  let img = document.createElement("img");
+  img.addEventListener("load", () => {
+    let resized = !(img.naturalWidth == imageData.size.naturalWidth &&
+                    img.naturalHeight == imageData.size.naturalHeight);
+    is(imageData.size.resized, resized, "Server told the truth about resizing");
+    runNextTest();
+  }, false);
+  img.src = str;
+}
 
 /**
  * Asserts that the given promise rejects.
