@@ -330,35 +330,21 @@ class SoftwareUpdate(BaseLib):
             f.write('failed: 6\n')
 
     def get_update_url(self, force=False):
-        """Retrieve the AUS update URL the update snippet is retrieved from
+        """Retrieve the AUS update URL the update snippet is retrieved from.
 
         :param force: Boolean flag to force an update check
 
         :returns: The URL of the update snippet
         """
         url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL_OVERRIDE)
-
         if not url:
             url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL)
 
-            # get the next two prefs from the default branch
-            dist = self.prefs.get_pref(self.PREF_APP_DISTRIBUTION, True) or 'default'
-            dist_version = self.prefs.get_pref(self.PREF_APP_DISTRIBUTION_VERSION,
-                                               True) or 'default'
-
-            # Not all placeholders are getting replaced correctly by formatURL
-            url = url.replace('%PRODUCT%', self.app_info.name)
-            url = url.replace('%BUILD_ID%', self.app_info.appBuildID)
-            url = url.replace('%BUILD_TARGET%', self.app_info.OS + '_' + self.ABI)
-            url = url.replace('%OS_VERSION%', self.os_version)
-            url = url.replace('%CHANNEL%', self.update_channel.channel)
-            url = url.replace('%DISTRIBUTION%', dist)
-            url = url.replace('%DISTRIBUTION_VERSION%', dist_version)
-
-            url = self.marionette.execute_script("""
-              Components.utils.import("resource://gre/modules/Services.jsm");
-              return Services.urlFormatter.formatURL(arguments[0]);
-            """, script_args=[url])
+        # Format the URL by replacing placeholders
+        url = self.marionette.execute_script("""
+          Components.utils.import("resource://gre/modules/UpdateUtils.jsm")
+          return UpdateUtils.formatUpdateURL(arguments[0]);
+        """, script_args=[url])
 
         if force:
             if '?' in url:
