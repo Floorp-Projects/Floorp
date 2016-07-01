@@ -2747,18 +2747,6 @@ ToCString(const MediaKeySystemConfiguration& aConfig)
     str.Append(ToCString(aConfig.mVideoCapabilities.Value()));
   }
 
-  if (!aConfig.mAudioType.IsEmpty()) {
-    str.AppendPrintf(", audioType='%s'",
-      NS_ConvertUTF16toUTF8(aConfig.mAudioType).get());
-  }
-  if (!aConfig.mInitDataType.IsEmpty()) {
-    str.AppendPrintf(", initDataType='%s'",
-      NS_ConvertUTF16toUTF8(aConfig.mInitDataType).get());
-  }
-  if (!aConfig.mVideoType.IsEmpty()) {
-    str.AppendPrintf(", videoType='%s'",
-      NS_ConvertUTF16toUTF8(aConfig.mVideoType).get());
-  }
   str.AppendLiteral("}");
 
   return str;

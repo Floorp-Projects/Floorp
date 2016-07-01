@@ -12,9 +12,13 @@
 #include "certdb.h"
 #include "certi.h"
 #include "cryptohi.h"
+
+#ifndef NSS_DISABLE_LIBPKIX
 #include "pkix.h"
-/*#include "pkix_sample_modules.h" */
 #include "pkix_pl_cert.h"
+#else
+#include "nss.h"
+#endif /* NSS_DISABLE_LIBPKIX */
 
 #include "nsspki.h"
 #include "pkitm.h"

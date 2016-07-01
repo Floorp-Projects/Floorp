@@ -338,15 +338,14 @@ Statistics::formatCompactSliceMessage() const
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
 
     const char* format =
-        "GC Slice %u - Pause: %.3fms of %s budget (@ %.3fms); Reason: %s; Reset: %s%s; Cycles: %u "
-        "Times: ";
+        "GC Slice %u - Pause: %.3fms of %s budget (@ %.3fms); Reason: %s; Reset: %s%s; Times: ";
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     JS_snprintf(buffer, sizeof(buffer), format, index,
                 t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
                 ExplainReason(slice.reason),
-                slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "",
-                slice.cycleCount);
+                slice.resetReason ? "yes - " : "no",
+                slice.resetReason ? slice.resetReason : "");
 
     FragmentVector fragments;
     if (!fragments.append(DuplicateString(buffer)) ||
@@ -524,7 +523,6 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
     State: %s -> %s\n\
     Page Faults: %ld\n\
     Pause: %.3fms of %s budget (@ %.3fms)\n\
-    Cycles: %u\n\
 ";
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
@@ -533,8 +531,7 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
                 slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "",
                 gc::StateName(slice.initialState), gc::StateName(slice.finalState),
                 uint64_t(slice.endFaults - slice.startFaults),
-                t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
-                slice.cycleCount);
+                t(slice.duration()), budgetDescription, t(slice.start - slices[0].start));
     return DuplicateString(buffer);
 }
 
@@ -697,8 +694,7 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
         "\"budget\":\"%s\","
         "\"page_faults\":%llu,"
         "\"start_timestamp\":%llu,"
-        "\"end_timestamp\":%llu,"
-        "\"cycle_count\":%u,";
+        "\"end_timestamp\":%llu,";
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     JS_snprintf(buffer, sizeof(buffer), format,
@@ -711,8 +707,7 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
                 budgetDescription,
                 pageFaults,
                 slice.start,
-                slice.end,
-                slice.cycleCount);
+                slice.end);
     return DuplicateString(buffer);
 }
 
@@ -1052,13 +1047,6 @@ Statistics::endSlice()
 
     gcDepth--;
     MOZ_ASSERT(gcDepth >= 0);
-}
-
-void
-Statistics::setSliceCycleCount(unsigned cycleCount)
-{
-    if (!aborted)
-        slices.back().cycleCount = cycleCount;
 }
 
 bool

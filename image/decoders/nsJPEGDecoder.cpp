@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLogging.h"
-#include "imgFrame.h"
 #include "nsJPEGDecoder.h"
+
+#include "imgFrame.h"
 #include "Orientation.h"
 #include "EXIF.h"
 

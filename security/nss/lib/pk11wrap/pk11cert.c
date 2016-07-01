@@ -2151,6 +2151,7 @@ PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, const SECItem *inDerCert,
     NSSToken *tok;
     nssCryptokiObject *co = NULL;
     SECStatus rv;
+    CERTCertificate *cert = NULL;
 
     tok = PK11Slot_GetNSSToken(slot);
     NSSITEM_FROM_SECITEM(&derCert, inDerCert);
@@ -2163,9 +2164,13 @@ PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, const SECItem *inDerCert,
     co = nssToken_FindCertificateByEncodedCertificate(tok, NULL, &derCert,
                                           nssTokenSearchType_TokenOnly, NULL);
 
-    return co ? PK11_MakeCertFromHandle(slot, co->handle, NULL) : NULL;
+    if (co) {
+	cert = PK11_MakeCertFromHandle(slot, co->handle, NULL);
+	nssCryptokiObject_Destroy(co);
+    }
 
-} 
+    return cert;
+}
 
 /*
  * import a cert for a private key we have already generated. Set the label

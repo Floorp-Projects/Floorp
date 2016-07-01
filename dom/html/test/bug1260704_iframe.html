@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript">
+    var noDefault = (location.search.indexOf("noDefault=true") !== -1);
+    var isMap = (location.search.indexOf("isMap=true") !== -1);
+
+    window.addEventListener("load", () => {
+      let image = document.getElementById("testImage");
+      isMap ? image.setAttribute("ismap", "") : image.removeAttribute("ismap");
+      image.addEventListener("click", event => {
+        if (noDefault) {
+          ok(true, "image element prevents default");
+          event.preventDefault();
+        }
+      }, false);
+
+      window.addEventListener("click", event => {
+        ok(true, "expected prevent default = " + noDefault);
+        ok(true, "actual prevent default = " + event.defaultPrevented);
+        ok(event.defaultPrevented == noDefault, "PreventDefault should work fine");
+        if (noDefault) {
+          window.parent.postMessage("finished", "http://mochi.test:8888");
+        }
+      }, false);
+      window.parent.postMessage("started", "http://mochi.test:8888");
+    }, false);
+  </script>
+</head>
+<body>
+<a href="bug1260704_iframe_empty.html">
+  <img id="testImage" src="file_bug1260704.png" width="100" height="100"/>
+</a>
+</body>
+</html>

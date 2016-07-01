@@ -150,9 +150,9 @@ namespace ThisThread {
 // Return the thread id of the calling thread.
 Thread::Id GetId();
 
-// Set the current thread name. Returns true if successful. Note that setting
-// the thread name may not be available on all platforms; on these platforms
-// setName() will simply do nothing.
+// Set the current thread name. Note that setting the thread name may not be
+// available on all platforms; on these platforms setName() will simply do
+// nothing.
 void SetName(const char* name);
 
 } // namespace ThisThread

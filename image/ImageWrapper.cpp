@@ -13,6 +13,7 @@
 namespace mozilla {
 
 using gfx::DataSourceSurface;
+using gfx::IntSize;
 using gfx::SamplingFilter;
 using gfx::SourceSurface;
 using layers::LayerManager;

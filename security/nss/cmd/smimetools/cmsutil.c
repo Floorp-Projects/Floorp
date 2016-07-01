@@ -1169,7 +1169,7 @@ main(int argc, char **argv)
                     Usage(progName);
                     exit(1);
                 }
-                signOptions.nickname = strdup(optstate->value);
+                signOptions.nickname = PORT_Strdup(optstate->value);
                 break;
             case 'O':
                 mode = CERTSONLY;
@@ -1537,6 +1537,11 @@ main(int argc, char **argv)
             Usage(progName);
             exitstatus = 1;
     }
+
+    if (signOptions.nickname) {
+        PORT_Free(signOptions.nickname);
+    }
+
     if ((mode == SIGN || mode == ENVELOPE || mode == CERTSONLY) &&
         (!exitstatus)) {
         PLArenaPool *arena = PORT_NewArena(1024);

@@ -7,7 +7,6 @@
 
 #include "nsMimeTypes.h"
 #include "mozilla/RefPtr.h"
-#include "nsString.h"
 
 #include "Decoder.h"
 #include "IDecodingTask.h"

@@ -8,6 +8,10 @@
 #include "imgINotificationObserver.h"
 
 namespace mozilla {
+
+using gfx::IntSize;
+using gfx::SourceSurface;
+
 namespace image {
 
 ///////////////////////////////////////////////////////////////////////////////
