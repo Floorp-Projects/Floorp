@@ -146,16 +146,7 @@ ToPreserveAspectRatio(const nsAString &aString,
   nsresult rv;
   SVGPreserveAspectRatio val;
 
-  val.SetDefer(token.EqualsLiteral("defer"));
-
-  if (val.GetDefer()) {
-    if (!tokenizer.hasMoreTokens()) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-    rv = val.SetAlign(GetAlignForString(tokenizer.nextToken()));
-  } else {
-    rv = val.SetAlign(GetAlignForString(token));
-  }
+  rv = val.SetAlign(GetAlignForString(token));
 
   if (NS_FAILED(rv)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
@@ -215,10 +206,6 @@ SVGAnimatedPreserveAspectRatio::GetBaseValueString(
   nsAutoString tmpString;
 
   aValueAsString.Truncate();
-
-  if (mBaseVal.mDefer) {
-    aValueAsString.AppendLiteral("defer ");
-  }
 
   GetAlignString(tmpString, mBaseVal.mAlign);
   aValueAsString.Append(tmpString);
