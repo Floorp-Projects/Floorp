@@ -83,7 +83,11 @@ function prepareMessage(packet) {
       break;
     case "evaluationResult":
     default:
-      data = Object.assign({}, packet.result);
+      if (typeof packet.result === "object") {
+        data = Object.assign({}, packet.result);
+      } else {
+        data = packet.result;
+      }
       allowRepeating = true;
       category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_OUTPUT];
       messageType = "EvaluationResult";
