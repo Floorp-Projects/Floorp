@@ -78,6 +78,27 @@ class nsWindow;
 class nsWindowBase;
 struct KeyPair;
 
+#ifndef DPI_AWARENESS_CONTEXT_DECLARED
+
+DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
+
+typedef enum DPI_AWARENESS {
+  DPI_AWARENESS_INVALID = -1,
+  DPI_AWARENESS_UNAWARE = 0,
+  DPI_AWARENESS_SYSTEM_AWARE = 1,
+  DPI_AWARENESS_PER_MONITOR_AWARE = 2
+} DPI_AWARENESS;
+
+#define DPI_AWARENESS_CONTEXT_UNAWARE           ((DPI_AWARENESS_CONTEXT)-1)
+#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE      ((DPI_AWARENESS_CONTEXT)-2)
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
+
+#define DPI_AWARENESS_CONTEXT_DECLARED
+#endif // (DPI_AWARENESS_CONTEXT_DECLARED)
+
+typedef DPI_AWARENESS_CONTEXT(WINAPI * SetThreadDpiAwarenessContextProc)(DPI_AWARENESS_CONTEXT);
+typedef BOOL(WINAPI * EnableNonClientDpiScalingProc)(HWND);
+
 namespace mozilla {
 namespace widget {
 
@@ -126,7 +147,33 @@ public:
 
 class WinUtils
 {
+  // Function pointers for APIs that may not be available depending on
+  // the Win10 update version -- will be set up in Initialize().
+  static SetThreadDpiAwarenessContextProc sSetThreadDpiAwarenessContext;
+  static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling;
+
 public:
+  class AutoSystemDpiAware
+  {
+  public:
+    AutoSystemDpiAware()
+    {
+      if (sSetThreadDpiAwarenessContext) {
+        mPrevContext = sSetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+      }
+    }
+
+    ~AutoSystemDpiAware()
+    {
+      if (sSetThreadDpiAwarenessContext) {
+        sSetThreadDpiAwarenessContext(mPrevContext);
+      }
+    }
+
+  private:
+    DPI_AWARENESS_CONTEXT mPrevContext;
+  };
+
   /**
    * Get the system's default logical-to-physical DPI scaling factor,
    * which is based on the primary display. Note however that unlike

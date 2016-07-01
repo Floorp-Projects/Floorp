@@ -449,6 +449,8 @@ struct CoTaskMemFreePolicy
   }
 };
 
+SetThreadDpiAwarenessContextProc WinUtils::sSetThreadDpiAwarenessContext = NULL;
+EnableNonClientDpiScalingProc WinUtils::sEnableNonClientDpiScaling = NULL;
 
 /* static */
 void
@@ -471,6 +473,16 @@ WinUtils::Initialize()
       dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDll, "DwmDefWindowProc");
       dwmGetCompositionTimingInfoPtr = (DwmGetCompositionTimingInfoProc)::GetProcAddress(sDwmDll, "DwmGetCompositionTimingInfo");
       dwmFlushProcPtr = (DwmFlushProc)::GetProcAddress(sDwmDll, "DwmFlush");
+    }
+  }
+
+  if (IsWin10OrLater()) {
+    HMODULE user32Dll = ::GetModuleHandleW(L"user32");
+    if (user32Dll) {
+      sEnableNonClientDpiScaling = (EnableNonClientDpiScalingProc)
+        ::GetProcAddress(user32Dll, "EnableNonClientDpiScaling");
+      sSetThreadDpiAwarenessContext = (SetThreadDpiAwarenessContextProc)
+        ::GetProcAddress(user32Dll, "SetThreadDpiAwarenessContext");
     }
   }
 }
