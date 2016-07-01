@@ -19,8 +19,8 @@ const INSECURE_FORM_ACTION_MSG = "Password fields present in a form with an " +
 const INSECURE_IFRAME_MSG = "Password fields present on an insecure " +
                  "(http://) iframe. This is a security risk that allows " +
                  "user login credentials to be stolen.";
-const INSECURE_PASSWORDS_URI = "https://developer.mozilla.org/docs/Security/" +
-                 "InsecurePasswords";
+const INSECURE_PASSWORDS_URI = "https://developer.mozilla.org/docs/Web/" +
+                               "Security/Insecure_passwords" + DOCS_GA_PARAMS;
 
 add_task(function* () {
   yield loadTab(TEST_URI);

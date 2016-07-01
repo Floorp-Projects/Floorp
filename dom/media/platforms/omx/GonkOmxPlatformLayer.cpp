@@ -16,6 +16,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 
 #include "ImageContainer.h"
 #include "MediaInfo.h"

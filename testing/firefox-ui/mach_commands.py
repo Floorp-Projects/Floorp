@@ -30,6 +30,7 @@ def setup_argument_parser_update():
 
 def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
+    from argparse import Namespace
     import firefox_ui_harness
 
     if testtype == 'functional':
@@ -67,8 +68,7 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
     kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
                                                  {"mach": sys.stdout})
 
-    # pass tests to parse_args to avoid rereading sys.argv
-    args = parser.parse_args(args=kwargs['tests'])
+    args = Namespace()
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
