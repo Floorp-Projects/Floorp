@@ -40,8 +40,9 @@ def run_marionette(tests, testtype=None, address=None, binary=None, topsrcdir=No
         tests = [os.path.join(topsrcdir,
                  'testing/marionette/harness/marionette/tests/unit-tests.ini')]
 
-    args = parser.parse_args(args=tests)
+    args = argparse.Namespace(tests=tests)
 
+    args.address = address
     args.binary = binary
 
     for k, v in kwargs.iteritems():
@@ -83,7 +84,7 @@ def run_session(tests, testtype=None, address=None, binary=None, topsrcdir=None,
         tests = [os.path.join(topsrcdir,
                  'testing/marionette/harness/session/tests/unit-tests.ini')]
 
-    args = parser.parse_args(args=tests)
+    args = argparse.Namespace(tests=tests)
 
     args.binary = binary
 
