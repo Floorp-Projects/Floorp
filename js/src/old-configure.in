@@ -215,6 +215,12 @@ case "$target" in
         AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
 
         case "$CC_VERSION" in
+        18*)
+            _CC_SUITE=12
+            MSVS_VERSION=2013
+            MSVC_C_RUNTIME_DLL=msvcr120.dll
+            MSVC_CXX_RUNTIME_DLL=msvcp120.dll
+            ;;
         19*)
             _CC_SUITE=14
             MSVS_VERSION=2015
@@ -1909,6 +1915,7 @@ if test "$MOZ_MEMORY"; then
     ;;
   esac
 fi
+AC_SUBST(MOZ_CRT)
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 
