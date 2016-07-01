@@ -305,6 +305,9 @@ public:
 
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
+  PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
+  bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
+
   virtual base::ProcessId GetChildProcessId() override
   {
     return OtherPid();
