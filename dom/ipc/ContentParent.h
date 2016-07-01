@@ -1004,6 +1004,7 @@ private:
 
   virtual bool RecvLoadURIExternal(const URIParams& uri,
                                    PBrowserParent* windowContext) override;
+  virtual bool RecvExtProtocolChannelConnectParent(const uint32_t& registrarId) override;
 
   virtual bool RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
