@@ -117,7 +117,7 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
   });
 
   RefPtr<SeekTaskPromise> promise = mSeekTaskPromise.Ensure(__func__);
-  if (NeedMoreVideo()) {
+  if (!IsVideoRequestPending() && NeedMoreVideo()) {
     EnsureVideoDecodeTaskQueued();
   }
   MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
@@ -138,7 +138,7 @@ NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
   SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
              IsVideoDecoding(), VideoRequestStatus());
 
-  if (!IsVideoDecoding() || IsVideoRequestPending()) {
+  if (!IsVideoDecoding()) {
     return;
   }
 
