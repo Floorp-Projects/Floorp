@@ -29,6 +29,7 @@ class SourceSurface;
 namespace widget {
 
 class WinCompositorWidget;
+class CompositorWidgetInitData;
 
 /**
  * Access to a widget from the compositor is restricted to these methods.
@@ -37,6 +38,12 @@ class CompositorWidget
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(mozilla::widget::CompositorWidget)
+
+  /**
+   * Create an in-process compositor widget. aWidget may be ignored if the
+   * platform does not require it.
+   */
+  static RefPtr<CompositorWidget> CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget);
 
   /**
    * Called before rendering using OMTC. Returns false when the widget is

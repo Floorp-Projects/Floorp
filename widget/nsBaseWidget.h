@@ -354,8 +354,6 @@ public:
 
   void Shutdown();
 
-  virtual mozilla::widget::CompositorWidget* NewCompositorWidget() override;
-
 protected:
   // These are methods for CompositorWidgetWrapper, and should only be
   // accessed from that class. Derived widgets can choose which methods to

@@ -7,20 +7,25 @@
 #include "nsWindow.h"
 #include "VsyncDispatcher.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
 
 namespace mozilla {
 namespace widget {
 
 using namespace mozilla::gfx;
 
-WinCompositorWidget::WinCompositorWidget(HWND aWnd,
-                                         uintptr_t aWidgetKey,
-                                         nsTransparencyMode aMode,
+/* static */ RefPtr<CompositorWidget>
+CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
+{
+  return new WinCompositorWidget(aInitData, static_cast<nsWindow*>(aWidget));
+}
+
+WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitData,
                                          nsWindow* aWindow)
  : mWindow(aWindow),
-   mWidgetKey(aWidgetKey),
-   mWnd(aWnd),
-   mTransparencyMode(aMode),
+   mWidgetKey(aInitData.widgetKey()),
+   mWnd(reinterpret_cast<HWND>(aInitData.hWnd())),
+   mTransparencyMode(static_cast<nsTransparencyMode>(aInitData.transparencyMode())),
    mMemoryDC(nullptr),
    mCompositeDC(nullptr),
    mLockedBackBufferData(nullptr)
