@@ -274,16 +274,13 @@ void nsBaseWidget::DestroyCompositor()
   if (mCompositorSession) {
     ReleaseContentController();
     mAPZC = nullptr;
+    mCompositorWidget = nullptr;
     mCompositorBridgeChild = nullptr;
 
     // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
     // ClientLayerManager destructor. See bug 1133426.
     RefPtr<CompositorSession> session = mCompositorSession.forget();
     session->Shutdown();
-
-    // Widget is used in CompositorBridgeParent, so we can't release it until
-    // it has acknowledged shutdown.
-    mCompositorWidget = nullptr;
   }
 
   // Can have base widgets that are things like tooltips
@@ -1307,21 +1304,18 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
-  if (!mCompositorWidget) {
-    mCompositorWidget = NewCompositorWidget();
-  }
-
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
-    mCompositorWidget,
+    this,
     lm,
     GetDefaultScale(),
     UseAPZ(),
     UseExternalCompositingSurface(),
     gfx::IntSize(aWidth, aHeight));
   mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
+  mCompositorWidget = mCompositorSession->GetCompositorWidget();
 
   mAPZC = mCompositorSession->GetAPZCTreeManager();
   if (mAPZC) {

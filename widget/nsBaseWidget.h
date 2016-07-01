@@ -354,8 +354,7 @@ public:
 
   void Shutdown();
 
-  // Return a new CompositorWidget for this widget.
-  virtual CompositorWidget* NewCompositorWidget();
+  virtual mozilla::widget::CompositorWidget* NewCompositorWidget() override;
 
 protected:
   // These are methods for CompositorWidgetWrapper, and should only be

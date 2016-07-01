@@ -3617,13 +3617,15 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 
   if (!mLayerManager) {
     MOZ_ASSERT(!mCompositorSession && !mCompositorBridgeChild);
+    MOZ_ASSERT(!mCompositorWidget);
 
     // Ensure we have a widget proxy even if we're not using the compositor,
-    // since that's where we handle transparent windows.
-    if (!mCompositorWidget) {
-      mCompositorWidget= NewCompositorWidget();
-    }
-
+    // since all our transparent window handling lives there.
+    mCompositorWidget = new WinCompositorWidget(
+      mWnd,
+      reinterpret_cast<uintptr_t>(this),
+      mTransparencyMode,
+      this);
     mLayerManager = CreateBasicLayerManager();
   }
 
