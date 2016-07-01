@@ -3026,6 +3026,13 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    if (cx->runtime()->runningOOMTest) {
+        JS_ReportError(cx, "Can't create workers while running simulated OOM test");
+        return false;
+    }
+#endif
+
     if (!args[0].toString()->ensureLinear(cx))
         return false;
 
