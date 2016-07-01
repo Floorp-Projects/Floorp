@@ -5,8 +5,6 @@ task:
   workerType: desktop-test-xlarge
   payload:
     maxRunTime: 7200
-    command:
-      - --test-suite={{suite}}{{chunk}}
   metadata:
     name: '[TC] Android 4.3 API15+ jsreftest-{{chunk}}'
     description: jsreftest run {{chunk}}
@@ -14,7 +12,8 @@ task:
     chunks:
       total: 6
     suite:
-      name: jsreftest-{{chunk}}
+      name: reftest
+      flavor: jsreftest
     treeherder:
       groupSymbol: tc-R
       symbol: J{{chunk}}

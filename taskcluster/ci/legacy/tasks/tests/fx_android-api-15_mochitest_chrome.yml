@@ -6,13 +6,14 @@ task:
   payload:
     maxRunTime: 5400
     command:
-      - --test-suite={{suite}}
+      - --test-suite=mochitest-chrome
   metadata:
     name: '[TC] Android API 15 mochitest-chrome'
     description: Mochitest chrome run
   extra:
     suite:
-      name: mochitest-chrome
+      name: mochitest
+      flavor: chrome
     treeherder:
       groupSymbol: tc-M
       symbol: c

@@ -6,7 +6,7 @@ task:
   payload:
     maxRunTime: 7200
     command:
-      - --test-suite={{suite}}{{chunk}}
+      - --test-suite=xpcshell-{{chunk}}
   metadata:
     name: '[TC] Android 4.3 API15+ xpcshell-{{chunk}}'
     description: XPCShell run {{chunk}}
@@ -14,7 +14,8 @@ task:
     chunks:
       total: 3
     suite:
-      name: xpcshell-{{chunk}}
+      name: xpcshell
+      flavor: xpcshell
     treeherder:
       groupSymbol: tc-X
       symbol: {{chunk}}
