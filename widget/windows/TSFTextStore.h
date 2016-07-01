@@ -570,9 +570,10 @@ protected:
     bool mDirty;
   };
   // Don't access mSelection directly except at calling MarkDirty().
-  // Use CurrentSelection() instead.  This is marked as dirty when the
-  // selection or content is changed without document lock.
-  Selection mSelection;
+  // Use CurrentSelection() instead.  This is modified immediately when
+  // TSF requests to set selection and not updated by selection change in
+  // content until mContentForTSF is cleared.
+  Selection mSelectionForTSF;
 
   // Get "current selection".  If the document is locked, this initializes
   // mSelection with the selection at the first call during a lock and returns
