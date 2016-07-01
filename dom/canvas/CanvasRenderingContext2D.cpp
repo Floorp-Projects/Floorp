@@ -42,6 +42,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsDisplayList.h"
 #include "nsFocusManager.h"
+#include "nsContentUtils.h"
 
 #include "nsTArray.h"
 
@@ -1065,6 +1066,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mResetLayer(true)
   , mIPC(false)
   , mIsSkiaGL(false)
+  , mHasPendingStableStateCallback(false)
   , mDrawObserver(nullptr)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false)
@@ -1509,6 +1511,27 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize aSize) {
   return threshold < 0 || (aSize.width * aSize.height) <= threshold;
 }
 
+void
+CanvasRenderingContext2D::ScheduleStableStateCallback()
+{
+  if (mHasPendingStableStateCallback) {
+    return;
+  }
+  mHasPendingStableStateCallback = true;
+
+  nsContentUtils::RunInStableState(
+    NewRunnableMethod(this, &CanvasRenderingContext2D::OnStableState)
+  );
+}
+
+void
+CanvasRenderingContext2D::OnStableState()
+{
+  ReturnTarget();
+
+  mHasPendingStableStateCallback = false;
+}
+
 CanvasRenderingContext2D::RenderingMode
 CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
                                        RenderingMode aRenderingMode)
@@ -1536,6 +1559,8 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
     } else {
       mTarget = mBufferProvider->BorrowDrawTarget(IntRect(0, 0, mWidth, mHeight));
     }
+
+    ScheduleStableStateCallback();
 
     if (mTarget) {
       // Restore clip and transform.
