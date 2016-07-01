@@ -611,50 +611,48 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
     {
         // Enable Activation.
         //
-        // This sequence requires four registers, and needs to preserve the 'callee'
-        // register, so there are five live registers.
+        // This sequence requires three registers, and needs to preserve the 'callee'
+        // register, so there are four live registers.
         MOZ_ASSERT(callee == AsmJSIonExitRegCallee);
         Register reg0 = AsmJSIonExitRegE0;
         Register reg1 = AsmJSIonExitRegE1;
         Register reg2 = AsmJSIonExitRegE2;
-        Register reg3 = AsmJSIonExitRegE3;
 
         // The following is inlined:
         //   JSContext* cx = activation->cx();
-        //   Activation* act = cx->runtime()->activation();
+        //   Activation* act = cx->activation();
         //   act.active_ = true;
-        //   act.prevJitTop_ = cx->runtime()->jitTop;
-        //   act.prevJitActivation_ = cx->runtime()->jitActivation;
-        //   cx->runtime()->jitActivation = act;
-        //   act.prevProfilingActivation_ = cx->runtime()->profilingActivation;
-        //   cx->runtime()->profilingActivation_ = act;
+        //   act.prevJitTop_ = cx->jitTop;
+        //   act.prevJitActivation_ = cx->jitActivation;
+        //   cx->jitActivation = act;
+        //   act.prevProfilingActivation_ = cx->profilingActivation;
+        //   cx->profilingActivation_ = act;
         // On the ARM store8() uses the secondScratchReg (lr) as a temp.
-        size_t offsetOfActivation = JSRuntime::offsetOfActivation();
-        size_t offsetOfJitTop = offsetof(JSRuntime, jitTop);
-        size_t offsetOfJitActivation = offsetof(JSRuntime, jitActivation);
-        size_t offsetOfProfilingActivation = JSRuntime::offsetOfProfilingActivation();
+        size_t offsetOfActivation = JSContext::offsetOfActivation();
+        size_t offsetOfJitTop = offsetof(JSContext, jitTop);
+        size_t offsetOfJitActivation = offsetof(JSContext, jitActivation);
+        size_t offsetOfProfilingActivation = JSContext::offsetOfProfilingActivation();
         masm.loadWasmActivation(reg0);
-        masm.loadPtr(Address(reg0, WasmActivation::offsetOfContext()), reg3);
-        masm.loadPtr(Address(reg3, JSContext::offsetOfRuntime()), reg0);
+        masm.loadPtr(Address(reg0, WasmActivation::offsetOfContext()), reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
 
         //   act.active_ = true;
         masm.store8(Imm32(1), Address(reg1, JitActivation::offsetOfActiveUint8()));
 
-        //   act.prevJitTop_ = cx->runtime()->jitTop;
+        //   act.prevJitTop_ = cx->jitTop;
         masm.loadPtr(Address(reg0, offsetOfJitTop), reg2);
         masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitTop()));
 
-        //   act.prevJitActivation_ = cx->runtime()->jitActivation;
+        //   act.prevJitActivation_ = cx->jitActivation;
         masm.loadPtr(Address(reg0, offsetOfJitActivation), reg2);
         masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitActivation()));
-        //   cx->runtime()->jitActivation = act;
+        //   cx->jitActivation = act;
         masm.storePtr(reg1, Address(reg0, offsetOfJitActivation));
 
-        //   act.prevProfilingActivation_ = cx->runtime()->profilingActivation;
+        //   act.prevProfilingActivation_ = cx->profilingActivation;
         masm.loadPtr(Address(reg0, offsetOfProfilingActivation), reg2);
         masm.storePtr(reg2, Address(reg1, Activation::offsetOfPrevProfiling()));
-        //   cx->runtime()->profilingActivation_ = act;
+        //   cx->profilingActivation_ = act;
         masm.storePtr(reg1, Address(reg0, offsetOfProfilingActivation));
     }
 
