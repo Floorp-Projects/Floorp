@@ -16,6 +16,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsContainerFrame.h"
 #include "nsIListControlFrame.h"
@@ -498,19 +499,15 @@ HTMLComboboxAccessible::SetCurrentItem(Accessible* aItem)
 Accessible*
 HTMLComboboxAccessible::SelectedOption() const
 {
-  nsIFrame* frame = GetFrame();
-  nsIComboboxControlFrame* comboboxFrame = do_QueryFrame(frame);
-  if (!comboboxFrame)
-    return nullptr;
+  HTMLSelectElement* select = HTMLSelectElement::FromContent(mContent);
+  int32_t selectedIndex = select->SelectedIndex();
 
-  nsIListControlFrame* listControlFrame =
-    do_QueryFrame(comboboxFrame->GetDropDown());
-  if (listControlFrame) {
-    nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
-    if (activeOptionNode) {
+  if (selectedIndex >= 0) {
+    HTMLOptionElement* option = select->Item(selectedIndex);
+    if (option) {
       DocAccessible* document = Document();
       if (document)
-        return document->GetAccessible(activeOptionNode);
+        return document->GetAccessible(option);
     }
   }
 
