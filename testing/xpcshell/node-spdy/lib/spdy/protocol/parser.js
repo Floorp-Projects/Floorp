@@ -59,6 +59,40 @@ parser.create = function create(connection) {
 Parser.prototype.destroy = function destroy() {
 };
 
+Parser.prototype._slice = function _slice(waiting) {
+  var buffer = new Buffer(waiting);
+  var sliced = 0;
+  var offset = 0;
+
+  while (waiting > offset && sliced < this.buffer.length) {
+    var chunk = this.buffer[sliced++],
+        overmatched = false;
+
+    // Copy chunk into `buffer`
+    if (chunk.length > waiting - offset) {
+      chunk.copy(buffer, offset, 0, waiting - offset);
+
+      this.buffer[--sliced] = chunk.slice(waiting - offset);
+      this.buffered += this.buffer[sliced].length;
+
+      overmatched = true;
+    } else {
+      chunk.copy(buffer, offset);
+    }
+
+    // Move offset and decrease amount of buffered data
+    offset += chunk.length;
+    this.buffered -= chunk.length;
+
+    if (overmatched) break;
+  }
+
+  // Remove used buffers
+  this.buffer = this.buffer.slice(sliced);
+
+  return buffer;
+};
+
 //
 // ### function _write (data, encoding, cb)
 // #### @data {Buffer} chunk of data
@@ -83,48 +117,36 @@ Parser.prototype._write = function write(data, encoding, cb) {
     return false;
   }
 
+  if (this.needDrain) {
+    // Mark parser as drained
+    this.needDrain = false;
+    this.emit('drain');
+  }
+
   // We shall not do anything until we get all expected data
   if (this.buffered < this.waiting) {
-    if (this.needDrain) {
-      // Mark parser as drained
-      this.needDrain = false;
-      this.emit('drain');
+    // Emit DATA by chunks as they come
+    if (this.buffered !== 0 &&
+        this.state.header &&
+        !this.state.header.control) {
+      var buffer = this._slice(this.buffered);
+      this.waiting -= buffer.length;
+
+      this.emit('frame', {
+        type: 'DATA',
+        id: this.state.header.id,
+        fin: false,
+        compressed: (this.state.header.flags & 0x02) === 0x02,
+        data: buffer
+      });
     }
 
     cb();
     return;
   }
 
-  var self = this,
-      buffer = new Buffer(this.waiting),
-      sliced = 0,
-      offset = 0;
-
-  while (this.waiting > offset && sliced < this.buffer.length) {
-    var chunk = this.buffer[sliced++],
-        overmatched = false;
-
-    // Copy chunk into `buffer`
-    if (chunk.length > this.waiting - offset) {
-      chunk.copy(buffer, offset, 0, this.waiting - offset);
-
-      this.buffer[--sliced] = chunk.slice(this.waiting - offset);
-      this.buffered += this.buffer[sliced].length;
-
-      overmatched = true;
-    } else {
-      chunk.copy(buffer, offset);
-    }
-
-    // Move offset and decrease amount of buffered data
-    offset += chunk.length;
-    this.buffered -= chunk.length;
-
-    if (overmatched) break;
-  }
-
-  // Remove used buffers
-  this.buffer = this.buffer.slice(sliced);
+  var self = this;
+  var buffer = this._slice(this.waiting);
 
   // Executed parser for buffered data
   this.paused = true;
@@ -232,6 +254,7 @@ Parser.prototype.execute = function execute(state, data, callback) {
       self.emit('frame', frame);
 
       state.type = 'frame-head';
+      state.header = null;
       callback(null, 8);
     };
   }
