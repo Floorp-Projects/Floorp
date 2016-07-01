@@ -4,13 +4,14 @@ $inherits:
 task:
   payload:
     command:
-      - --test-suite={{suite}}
+      - --test-suite=mochitest-plain-gpu
   metadata:
     name: '[TC] Android 4.3 API15+ mochitest-gpu'
     description: Mochitest GPU run
   extra:
     suite:
-      name: mochitest-plain-gpu
+      name: mochitest
+      flavor: plain-gpu
     treeherder:
       groupSymbol: tc-M
       symbol: gpu
