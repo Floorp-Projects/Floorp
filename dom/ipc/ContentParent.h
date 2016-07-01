@@ -185,6 +185,11 @@ public:
 
     ContentParentIterator begin()
     {
+      // Move the cursor to the first element that matches the policy.
+      while (mPolicy != eAll && mCurrent && !mCurrent->mIsAlive) {
+        mCurrent = mCurrent->LinkedListElement<ContentParent>::getNext();
+      }
+
       return *this;
     }
     ContentParentIterator end()
