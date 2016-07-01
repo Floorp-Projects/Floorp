@@ -76,7 +76,7 @@ enum {
     JSSLOT_DEBUGFRAME_COUNT
 };
 
-const ClassOps DebuggerFrame::classOps_ = {
+static const ClassOps DebuggerFrame_classOps = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
     nullptr,    /* getProperty */
@@ -91,10 +91,10 @@ const ClassOps DebuggerFrame::classOps_ = {
     nullptr,    /* trace   */
 };
 
-const Class DebuggerFrame::class_ = {
+static const Class DebuggerFrame_class = {
     "Frame",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
-    &DebuggerFrame::classOps_
+    &DebuggerFrame_classOps
 };
 
 enum {
@@ -692,7 +692,7 @@ JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) == unsigned(DebuggerEnvironme
 /* static */ Debugger*
 Debugger::fromChildJSObject(JSObject* obj)
 {
-    MOZ_ASSERT(obj->getClass() == &DebuggerFrame::class_ ||
+    MOZ_ASSERT(obj->getClass() == &DebuggerFrame_class ||
                obj->getClass() == &DebuggerScript_class ||
                obj->getClass() == &DebuggerSource_class ||
                obj->getClass() == &DebuggerObject::class_ ||
@@ -715,35 +715,45 @@ Debugger::memory() const
 }
 
 bool
-Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
+Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
                                  const ScriptFrameIter* maybeIter, MutableHandleValue vp)
 {
-    MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == referent);
-    MOZ_ASSERT(!referent.script()->selfHosted());
+    MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == frame);
+    MOZ_ASSERT(!frame.script()->selfHosted());
 
-    if (!referent.script()->ensureHasAnalyzedArgsUsage(cx))
+    if (!frame.script()->ensureHasAnalyzedArgsUsage(cx))
         return false;
 
-    FrameMap::AddPtr p = frames.lookupForAdd(referent);
+    FrameMap::AddPtr p = frames.lookupForAdd(frame);
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
         RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
-        RootedNativeObject debugger(cx, object);
-
-        RootedNativeObject frame(cx, DebuggerFrame::create(cx, proto, referent, maybeIter,
-                                                           debugger));
-        if (!frame)
+        RootedNativeObject frameobj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class,
+                                                                      proto));
+        if (!frameobj)
             return false;
 
-        if (!ensureExecutionObservabilityOfFrame(cx, referent))
+        // Eagerly copy ScriptFrameIter data if we've already walked the
+        // stack.
+        if (maybeIter) {
+            AbstractFramePtr data = maybeIter->copyDataAsAbstractFramePtr();
+            if (!data)
+                return false;
+            frameobj->setPrivate(data.raw());
+        } else {
+            frameobj->setPrivate(frame.raw());
+        }
+
+        frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
+
+        if (!ensureExecutionObservabilityOfFrame(cx, frame))
             return false;
 
-        if (!frames.add(p, referent, frame)) {
+        if (!frames.add(p, frame, frameobj)) {
             ReportOutOfMemory(cx);
             return false;
         }
     }
-
     vp.setObject(*p->value());
     return true;
 }
@@ -7004,38 +7014,6 @@ static const JSFunctionSpec DebuggerSource_methods[] = {
 
 /*** Debugger.Frame ******************************************************************************/
 
-/* static */ NativeObject*
-DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto)
-{
-    return InitClass(cx, dbgCtor, objProto, &class_, construct, 0, properties_,
-                     methods_, nullptr, nullptr);
-}
-
-/* static */ DebuggerFrame*
-DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
-                      const ScriptFrameIter* maybeIter, HandleNativeObject debugger)
-{
-  JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerFrame::class_, proto, TenuredObject);
-  if (!obj)
-    return nullptr;
-
-  DebuggerFrame& frame = obj->as<DebuggerFrame>();
-
-  // Eagerly copy ScriptFrameIter data if we've already walked the stack.
-  if (maybeIter) {
-      AbstractFramePtr data = maybeIter->copyDataAsAbstractFramePtr();
-      if (!data)
-          return false;
-      frame.setPrivate(data.raw());
-  } else {
-      frame.setPrivate(referent.raw());
-  }
-
-  frame.setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*debugger));
-
-  return &frame;
-}
-
 static void
 UpdateFrameIterPc(FrameIter& iter)
 {
@@ -7097,22 +7075,22 @@ DebuggerFrame_finalize(FreeOp* fop, JSObject* obj)
     DebuggerFrame_freeScriptFrameIterData(fop, obj);
 }
 
-/* static */ DebuggerFrame*
-DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname, bool checkLive)
+static NativeObject*
+CheckThisFrame(JSContext* cx, const CallArgs& args, const char* fnname, bool checkLive)
 {
     JSObject* thisobj = NonNullObject(cx, args.thisv());
     if (!thisobj)
         return nullptr;
-    if (thisobj->getClass() != &DebuggerFrame::class_) {
+    if (thisobj->getClass() != &DebuggerFrame_class) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Frame", fnname, thisobj->getClass()->name);
         return nullptr;
     }
 
-    DebuggerFrame* nthisobj = &thisobj->as<DebuggerFrame>();
+    NativeObject* nthisobj = &thisobj->as<NativeObject>();
 
     /*
-     * Forbid Debugger.Frame.prototype, which is of class DebuggerFrame::class_
+     * Forbid Debugger.Frame.prototype, which is of class DebuggerFrame_class
      * but isn't really a working Debugger.Frame object. The prototype object
      * is distinguished by having a nullptr private value. Also, forbid popped
      * frames.
@@ -7149,10 +7127,10 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
  * Methods that need a ScriptFrameIterator should use THIS_FRAME_ITER.
  */
 
-#define THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj)                       \
-    CallArgs args = CallArgsFromVp(argc, vp);                                         \
-    RootedNativeObject thisobj(cx, DebuggerFrame::checkThis(cx, args, fnname, true)); \
-    if (!thisobj)                                                                     \
+#define THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj)                \
+    CallArgs args = CallArgsFromVp(argc, vp);                                  \
+    RootedNativeObject thisobj(cx, CheckThisFrame(cx, args, fnname, true));    \
+    if (!thisobj)                                                              \
         return false
 
 #define THIS_FRAME(cx, argc, vp, fnname, args, thisobj, frame)                 \
@@ -7480,7 +7458,7 @@ static bool
 DebuggerFrame_getLive(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    NativeObject* thisobj = DebuggerFrame::checkThis(cx, args, "get live", false);
+    NativeObject* thisobj = CheckThisFrame(cx, args, "get live", false);
     if (!thisobj)
         return false;
     bool hasFrame = !!thisobj->getPrivate();
@@ -7780,15 +7758,15 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
     return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, nullptr, &iter);
 }
 
-/* static */ bool
-DebuggerFrame::construct(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DebuggerFrame_construct(JSContext* cx, unsigned argc, Value* vp)
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NO_CONSTRUCTOR,
                          "Debugger.Frame");
     return false;
 }
 
-const JSPropertySpec DebuggerFrame::properties_[] = {
+static const JSPropertySpec DebuggerFrame_properties[] = {
     JS_PSG("arguments", DebuggerFrame_getArguments, 0),
     JS_PSG("callee", DebuggerFrame_getCallee, 0),
     JS_PSG("constructing", DebuggerFrame_getConstructing, 0),
@@ -7806,7 +7784,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PS_END
 };
 
-const JSFunctionSpec DebuggerFrame::methods_[] = {
+static const JSFunctionSpec DebuggerFrame_methods[] = {
     JS_FN("eval", DebuggerFrame_eval, 1, 0),
     JS_FN("evalWithBindings", DebuggerFrame_evalWithBindings, 1, 0),
     JS_FS_END
@@ -10217,7 +10195,10 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
     if (!debugProto)
         return false;
 
-    frameProto = DebuggerFrame::initClass(cx, debugCtor, obj);
+    frameProto = InitClass(cx, debugCtor, objProto, &DebuggerFrame_class,
+                           DebuggerFrame_construct, 0,
+                           DebuggerFrame_properties, DebuggerFrame_methods,
+                           nullptr, nullptr);
     if (!frameProto)
         return false;
 
