@@ -55,7 +55,6 @@ enum InputElementTypes {
   NS_FORM_INPUT_HIDDEN,
   NS_FORM_INPUT_RESET,
   NS_FORM_INPUT_IMAGE,
-  NS_FORM_INPUT_MONTH,
   NS_FORM_INPUT_NUMBER,
   NS_FORM_INPUT_PASSWORD,
   NS_FORM_INPUT_RADIO,
@@ -267,7 +266,6 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
          // TODO: those are temporary until bug 773205 is fixed.
          aType == NS_FORM_INPUT_DATE ||
          aType == NS_FORM_INPUT_TIME ||
-         aType == NS_FORM_INPUT_MONTH ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
 }
 

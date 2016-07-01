@@ -29,8 +29,7 @@ var data = [
   { type: 'password', apply: false },
   { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
-  // TODO: temporary set to false until bug 888324 is fixed.
-  { type: 'month', apply: false },
+  { type: 'month', apply: true, todo: true },
   { type: 'week', apply: true, todo: true },
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
@@ -720,9 +719,6 @@ for (var test of data) {
         }
       }
 
-      break;
-    case 'month':
-      // TODO: this is temporary until bug 888324 is fixed.
       break;
     default:
       ok(false, "Implement the tests for <input type='" + test.type + " >");
