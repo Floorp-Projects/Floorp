@@ -3621,7 +3621,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     // Ensure we have a widget proxy even if we're not using the compositor,
     // since that's where we handle transparent windows.
     if (!mCompositorWidgetProxy) {
-      mCompositorWidgetProxy = new WinCompositorWidgetProxy(this);
+      mCompositorWidgetProxy = NewCompositorWidgetProxy();
     }
 
     mLayerManager = CreateBasicLayerManager();
@@ -3687,7 +3687,11 @@ nsWindow::OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect)
 mozilla::widget::CompositorWidgetProxy*
 nsWindow::NewCompositorWidgetProxy()
 {
-  return new WinCompositorWidgetProxy(this);
+  return new WinCompositorWidgetProxy(
+    mWnd,
+    reinterpret_cast<uintptr_t>(this),
+    mTransparencyMode,
+    this);
 }
 
 mozilla::widget::WinCompositorWidgetProxy*
