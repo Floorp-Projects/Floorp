@@ -66,7 +66,7 @@ lazy_static! {
         ("browser.tabs.remote.autostart.2", Pref::new(false)),
     ];
 
-    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 44] = [
+    pub static ref FIREFOX_DEFAULT_PREFERENCES: [(&'static str, Pref); 45] = [
         ("app.update.auto", Pref::new(false)),
         ("app.update.enabled", Pref::new(false)),
         ("browser.displayedE10SPrompt.1", Pref::new(5)),
@@ -105,6 +105,7 @@ lazy_static! {
         ("security.warn_submit_insecure", Pref::new(false)),
         ("security.warn_viewing_mixed", Pref::new(false)),
         ("security.warn_viewing_mixed.show_once", Pref::new(false)),
+        ("signon.autofillForms", Pref::new(false)),
         ("signon.rememberSignons", Pref::new(false)),
         ("startup.homepage_welcome_url", Pref::new("about:blank")),
         ("toolkit.networkmanager.disable", Pref::new(true)),
