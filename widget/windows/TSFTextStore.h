@@ -570,17 +570,19 @@ protected:
     bool mDirty;
   };
   // Don't access mSelection directly except at calling MarkDirty().
-  // Use CurrentSelection() instead.  This is modified immediately when
+  // Use SelectionForTSFRef() instead.  This is modified immediately when
   // TSF requests to set selection and not updated by selection change in
   // content until mContentForTSF is cleared.
   Selection mSelectionForTSF;
 
-  // Get "current selection".  If the document is locked, this initializes
-  // mSelection with the selection at the first call during a lock and returns
-  // it.  However, mSelection is NOT modified immediately.  When pending
-  // changes are flushed at unlocking the document, cached mSelection is
-  // modified.  Note that this is also called by ContentForTSFRef().
-  Selection& CurrentSelection();
+  /**
+   * Get the selection expected by TSF.  If mSelectionForTSF is already valid,
+   * this just return the reference to it.  Otherwise, this initializes it
+   * with eQuerySelectedText.  Please check if the result is valid before
+   * actually using it.
+   * Note that this is also called by ContentForTSFRef().
+   */
+  Selection& SelectionForTSFRef();
 
   struct PendingAction final
   {
