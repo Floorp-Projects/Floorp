@@ -254,8 +254,6 @@ class RemoteReftest(RefTest):
         prefs["extensions.getAddons.getWithPerformance.url"] = "http://127.0.0.1:8888/extensions-dummy/repositoryGetWithPerformanceURL"
         prefs["extensions.getAddons.search.browseURL"] = "http://127.0.0.1:8888/extensions-dummy/repositoryBrowseURL"
         prefs["extensions.getAddons.search.url"] = "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL"
-        # Make sure that opening the plugins check page won't hit the network
-        prefs["plugins.update.url"] = "http://127.0.0.1:8888/plugins-dummy/updateCheckURL"
         # Make sure the GMPInstallManager won't hit the network
         prefs["media.gmp-manager.url.override"] = "http://127.0.0.1:8888/dummy-gmp-manager.xml";
         prefs["layout.css.devPixelsPerPx"] = "1.0"
