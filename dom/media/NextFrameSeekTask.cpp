@@ -352,8 +352,6 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mReader->WaitForData(MediaData::VIDEO_DATA);
 
     // We are out of data to decode and will enter buffering mode soon.
