@@ -44,6 +44,8 @@ uint8_t kBogusClientKeyExchange[] = {
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 };
 
+typedef std::function<void(void)> VoidFunction;
+
 // When we see the ClientKeyExchange from |client|, increment the
 // ClientHelloVersion on |server|.
 class TlsInspectorClientHelloVersionChanger : public TlsHandshakeFilter {
@@ -232,7 +234,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicket) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGenericPre13, ConnectResumeClientServerTicketOnly) {
+TEST_P(TlsConnectGeneric, ConnectResumeClientServerTicketOnly) {
   // This causes no resumption because the client needs the
   // session cache to resume even with tickets.
   ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
@@ -246,7 +248,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumeClientServerTicketOnly) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGenericPre13, ConnectResumeClientBothServerNone) {
+TEST_P(TlsConnectGeneric, ConnectResumeClientBothServerNone) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_NONE);
   Connect();
   SendReceive();
@@ -258,7 +260,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumeClientBothServerNone) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGenericPre13, ConnectResumeClientNoneServerBoth) {
+TEST_P(TlsConnectGeneric, ConnectResumeClientNoneServerBoth) {
   ConfigureSessionCache(RESUME_NONE, RESUME_BOTH);
   Connect();
   SendReceive();
@@ -479,8 +481,13 @@ TEST_P(TlsConnectTls12, RequestClientAuthWithSha384) {
 TEST_P(TlsConnectGeneric, ConnectAlpn) {
   EnableAlpn();
   Connect();
-  client_->CheckAlpn(SSL_NEXT_PROTO_SELECTED, "a");
-  server_->CheckAlpn(SSL_NEXT_PROTO_NEGOTIATED, "a");
+  CheckAlpn("a");
+}
+
+TEST_P(TlsConnectGeneric, ConnectAlpnClone) {
+  EnsureModelSockets();
+  Connect();
+  CheckAlpn("a");
 }
 
 TEST_P(TlsConnectDatagram, ConnectSrtp) {
@@ -1099,6 +1106,256 @@ TEST_F(TlsConnectTest, DisableServerPSKAndFailToResume) {
   EXPECT_EQ(0U, serverCapture->extension().len());
 }
 
+TEST_F(TlsConnectTest, DamageSecretHandleClientFinished) {
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->StartConnect();
+  client_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();
+  std::cerr << "Damaging HS secret\n";
+  SSLInt_DamageHsTrafficSecret(server_->ssl_fd());
+  client_->Handshake();
+  server_->Handshake();
+  // The client thinks it has connected.
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
+  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+}
+
+// Read record N, process it, and then run the indicated function.
+// Records are numbered from 0.
+class AfterRecordN : public TlsRecordFilter {
+ public:
+  AfterRecordN(TlsAgent *src, TlsAgent *dest, unsigned int record,
+               VoidFunction func) :
+      src_(src),
+      dest_(dest),
+      record_(record),
+      func_(func),
+      counter_(0) {}
+
+  virtual PacketFilter::Action FilterRecord(
+      const RecordHeader& header, const DataBuffer& body, DataBuffer* out) {
+    if (counter_++ == record_) {
+      DataBuffer buf;
+      header.Write(&buf, 0, body);
+      src_->SendDirect(buf);
+      dest_->Handshake();
+      func_();
+      return DROP;
+    }
+
+    return KEEP;
+  }
+
+ private:
+  TlsAgent *src_;
+  TlsAgent *dest_;
+  unsigned int record_;
+  VoidFunction func_;
+  unsigned int counter_;
+};
+
+TEST_F(TlsConnectTest, DamageSecretHandleServerFinished) {
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetPacketFilter(new AfterRecordN(
+      server_,
+      client_,
+      0, // ServerHello.
+      [this]() {
+        SSLInt_DamageHsTrafficSecret(client_->ssl_fd());
+      }));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+  server_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+}
+
+TEST_F(TlsConnectTest, DamageSecretHandleZeroRttClientFinished) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  client_->SetPacketFilter(new AfterRecordN(
+      client_,
+      server_,
+      0, // ClientHello.
+      [this]() {
+        SSLInt_DamageEarlyTrafficSecret(server_->ssl_fd());
+      }));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+}
+
+TEST_F(TlsConnectTest, ZeroRttServerRejectByOption) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(false);
+  Handshake();
+  CheckConnected();
+  SendReceive();
+}
+
+TEST_F(TlsConnectTest, ZeroRttServerForgetTicket) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ClearServerCache();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_NONE);
+  ZeroRttSendReceive(false);
+  Handshake();
+  CheckConnected();
+  SendReceive();
+}
+
+TEST_F(TlsConnectTest, ZeroRttServerOnly) {
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectResumption(RESUME_NONE);
+  server_->Set0RttEnabled(true);
+  client_->StartConnect();
+  server_->StartConnect();
+
+  // Client sends ordinary ClientHello.
+  client_->Handshake();
+
+  // Verify that the server doesn't get data.
+  uint8_t buf[100];
+  PRInt32 rv = PR_Read(server_->ssl_fd(), buf, sizeof(buf));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
+
+  // Now make sure that things complete.
+  Handshake();
+  CheckConnected();
+  SendReceive();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+}
+
+TEST_F(TlsConnectTest, ZeroRtt) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true);
+  Handshake();
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+  SendReceive();
+}
+
+TEST_F(TlsConnectTest, TestTls13ZeroRttAlpn) {
+  EnableAlpn();
+  SetupForZeroRtt();
+  EnableAlpn();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ExpectEarlyDataAccepted(true);
+  ZeroRttSendReceive(true, [this]() {
+      client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
+      return true;
+    });
+  Handshake();
+  CheckConnected();
+  SendReceive();
+  CheckAlpn("a");
+}
+
+// Remove the old ALPN value and so the client will not offer ALPN.
+TEST_F(TlsConnectTest, TestTls13ZeroRttAlpnChangeBoth) {
+  EnableAlpn();
+  SetupForZeroRtt();
+  static const uint8_t alpn[] = { 0x01, 0x62 };  // "b"
+  EnableAlpn(alpn, sizeof(alpn));
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(false, [this]() {
+      client_->CheckAlpn(SSL_NEXT_PROTO_NO_SUPPORT);
+      return false;
+    });
+  Handshake();
+  CheckConnected();
+  SendReceive();
+  CheckAlpn("b");
+}
+
+// Have the server negotiate a different ALPN value, and therefore
+// reject 0-RTT.
+TEST_F(TlsConnectTest, TestTls13ZeroRttAlpnChangeServer) {
+  EnableAlpn();
+  SetupForZeroRtt();
+  static const uint8_t client_alpn[] = { 0x01, 0x61, 0x01, 0x62 }; // "a", "b"
+  static const uint8_t server_alpn[] = { 0x01, 0x62 };  // "b"
+  client_->EnableAlpn(client_alpn, sizeof(client_alpn));
+  server_->EnableAlpn(server_alpn, sizeof(server_alpn));
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(false, [this]() {
+      client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
+      return true;
+    });
+  Handshake();
+  CheckConnected();
+  SendReceive();
+  CheckAlpn("b");
+}
+
+// Check that the client validates the ALPN selection of the server.
+// Stomp the ALPN on the client after sending the ClientHello so
+// that the server selection appears to be incorrect. The client
+// should then fail the connection.
+TEST_F(TlsConnectTest, TestTls13ZeroRttNoAlpnServer) {
+  EnableAlpn();
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  EnableAlpn();
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, [this]() {
+      PRUint8 b[] = {'b'};
+      client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "a");
+      EXPECT_EQ(SECSuccess, SSLInt_Set0RttAlpn(client_->ssl_fd(), b,
+                                               sizeof(b)));
+      client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "b");
+      return true;
+    });
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+// Set up with no ALPN and then set the client so it thinks it has ALPN.
+// The server responds without the extension and the client returns an
+// error.
+TEST_F(TlsConnectTest, TestTls13ZeroRttNoAlpnClient) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, [this]() {
+      PRUint8 b[] = {'b'};
+      EXPECT_EQ(SECSuccess, SSLInt_Set0RttAlpn(client_->ssl_fd(), b, 1));
+      client_->CheckAlpn(SSL_NEXT_PROTO_EARLY_VALUE, "b");
+      return true;
+    });
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
 TEST_P(TlsConnectDatagram, TestDtlsHolddownExpiry) {
   Connect();
   std::cerr << "Expiring holddown timer\n";
@@ -1106,7 +1363,8 @@ TEST_P(TlsConnectDatagram, TestDtlsHolddownExpiry) {
   SSLInt_ForceTimerExpiry(server_->ssl_fd());
   SendReceive();
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
-    EXPECT_EQ(1, SSLInt_CountTls13CipherSpecs(client_->ssl_fd()));
+    // One for send, one for receive.
+    EXPECT_EQ(2, SSLInt_CountTls13CipherSpecs(client_->ssl_fd()));
   }
 }
 
@@ -1119,7 +1377,6 @@ class BeforeFinished : public TlsRecordFilter {
     AFTER_CCS,
     DONE
   };
-  typedef std::function<void(void)> VoidFunction;
 
  public:
   BeforeFinished(TlsAgent* client, TlsAgent* server,
@@ -1286,7 +1543,6 @@ class BeforeFinished13 : public PacketFilter {
     BEFORE_SECOND_FRAGMENT,
     DONE
   };
-  typedef std::function<void(void)> VoidFunction;
 
  public:
   BeforeFinished13(TlsAgent* client, TlsAgent *server,

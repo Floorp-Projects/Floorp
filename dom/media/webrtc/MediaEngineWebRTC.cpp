@@ -6,7 +6,6 @@
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "CamerasUtils.h"
 
 #include "CSFLog.h"
 #include "prenv.h"

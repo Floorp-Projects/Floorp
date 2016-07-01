@@ -11,6 +11,7 @@
 #define mozilla_image_src_ImageCacheKey_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 
 class nsIDocument;
 class nsIURI;

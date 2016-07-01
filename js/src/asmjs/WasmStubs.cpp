@@ -624,8 +624,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
         //   Activation* act = cx->runtime()->activation();
         //   act.active_ = true;
         //   act.prevJitTop_ = cx->runtime()->jitTop;
-        //   act.prevJitJSContext_ = cx->runtime()->jitJSContext;
-        //   cx->runtime()->jitJSContext = cx;
         //   act.prevJitActivation_ = cx->runtime()->jitActivation;
         //   cx->runtime()->jitActivation = act;
         //   act.prevProfilingActivation_ = cx->runtime()->profilingActivation;
@@ -633,7 +631,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
         // On the ARM store8() uses the secondScratchReg (lr) as a temp.
         size_t offsetOfActivation = JSRuntime::offsetOfActivation();
         size_t offsetOfJitTop = offsetof(JSRuntime, jitTop);
-        size_t offsetOfJitJSContext = offsetof(JSRuntime, jitJSContext);
         size_t offsetOfJitActivation = offsetof(JSRuntime, jitActivation);
         size_t offsetOfProfilingActivation = JSRuntime::offsetOfProfilingActivation();
         masm.loadWasmActivation(reg0);
@@ -647,12 +644,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
         //   act.prevJitTop_ = cx->runtime()->jitTop;
         masm.loadPtr(Address(reg0, offsetOfJitTop), reg2);
         masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitTop()));
-
-        //   act.prevJitJSContext_ = cx->runtime()->jitJSContext;
-        masm.loadPtr(Address(reg0, offsetOfJitJSContext), reg2);
-        masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitJSContext()));
-        //   cx->runtime()->jitJSContext = cx;
-        masm.storePtr(reg3, Address(reg0, offsetOfJitJSContext));
 
         //   act.prevJitActivation_ = cx->runtime()->jitActivation;
         masm.loadPtr(Address(reg0, offsetOfJitActivation), reg2);
@@ -686,12 +677,10 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
         //   rt->profilingActivation = prevProfilingActivation_;
         //   rt->activation()->active_ = false;
         //   rt->jitTop = prevJitTop_;
-        //   rt->jitJSContext = prevJitJSContext_;
         //   rt->jitActivation = prevJitActivation_;
         // On the ARM store8() uses the secondScratchReg (lr) as a temp.
         size_t offsetOfActivation = JSRuntime::offsetOfActivation();
         size_t offsetOfJitTop = offsetof(JSRuntime, jitTop);
-        size_t offsetOfJitJSContext = offsetof(JSRuntime, jitJSContext);
         size_t offsetOfJitActivation = offsetof(JSRuntime, jitActivation);
         size_t offsetOfProfilingActivation = JSRuntime::offsetOfProfilingActivation();
 
@@ -708,10 +697,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
 
         //   rt->activation()->active_ = false;
         masm.store8(Imm32(0), Address(reg1, JitActivation::offsetOfActiveUint8()));
-
-        //   rt->jitJSContext = prevJitJSContext_;
-        masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitJSContext()), reg2);
-        masm.storePtr(reg2, Address(reg0, offsetOfJitJSContext));
 
         //   rt->jitActivation = prevJitActivation_;
         masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitActivation()), reg2);

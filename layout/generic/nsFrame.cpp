@@ -2518,9 +2518,19 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                       opacityItemForEventsOnly, containerItemScrollClip, hasPreserve3DChildren);
   }
 
+  /* If we're creating an nsDisplayTransform item that is going to combine its transform
+   * with its children (preserve-3d or perspective), then we can't have an intermediate
+   * surface. Mask layers force an intermediate surface, so if we're going to need both
+   * then create a separate wrapping layer for the mask.
+   */
+  bool needsLayerForMask = isTransformed && (Extend3DContext() || HasPerspective()) &&
+                           clipState.SavedStateHasRoundedCorners();
+  NS_ASSERTION(!Combines3DTransformWithAncestors() || !clipState.SavedStateHasRoundedCorners(),
+               "Can't support mask layers on intermediate preserve-3d frames");
+
   if (isTransformed && !resultList.IsEmpty()) {
     // Restore clip state now so nsDisplayTransform is clipped properly.
-    if (!HasPerspective() && !useFixedPosition && !useStickyPosition) {
+    if (!HasPerspective() && !useFixedPosition && !useStickyPosition && !needsLayerForMask) {
       clipState.ExitStackingContextContents(&containerItemScrollClip);
     }
     // Revert to the dirtyrect coming in from the parent, without our transform
@@ -2549,7 +2559,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
 
     if (HasPerspective()) {
-      if (!useFixedPosition && !useStickyPosition) {
+      if (!useFixedPosition && !useStickyPosition && !needsLayerForMask) {
         clipState.ExitStackingContextContents(&containerItemScrollClip);
       }
       resultList.AppendNewToTop(
@@ -2559,8 +2569,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  if (useFixedPosition || useStickyPosition) {
+  if (useFixedPosition || useStickyPosition || needsLayerForMask) {
     clipState.ExitStackingContextContents(&containerItemScrollClip);
+  }
+
+  if (needsLayerForMask) {
+    resultList.AppendNewToTop(
+      new (aBuilder) nsDisplayOwnLayer(aBuilder, this, &resultList, 0,
+                                       mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
+                                       0.0f, /* aForceActive = */ false));
   }
 
   /* If we have sticky positioning, wrap it in a sticky position item.

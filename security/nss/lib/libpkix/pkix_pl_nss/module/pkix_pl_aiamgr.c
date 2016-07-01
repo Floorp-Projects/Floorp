@@ -366,7 +366,7 @@ pkix_pl_AIAMgr_GetHTTPCerts(
 cleanup:
         /* Session and request cleanup in case of error. Passing through without cleanup
          * if interrupted by blocked IO. */
-        if (PKIX_ERROR_RECEIVED && aiaMgr) {
+        if (PKIX_ERROR_RECEIVED) {
             if (aiaMgr->client.hdata.requestSession != NULL) {
                 (*hcv1->freeFcn)(aiaMgr->client.hdata.requestSession);
                 aiaMgr->client.hdata.requestSession = NULL;

@@ -870,7 +870,7 @@ ExclusiveContext::recoverFromOutOfMemory()
 
 JSContext::JSContext(JSRuntime* parentRuntime)
   : ExclusiveContext(this, &this->JSRuntime::mainThread, Context_JS),
-    JSRuntime(this, parentRuntime),
+    JSRuntime(parentRuntime),
     throwing(false),
     unwrappedException_(this),
     overRecursed_(false),
