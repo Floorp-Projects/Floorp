@@ -34,7 +34,8 @@
 
 /* Responsive sidebar */
 @media (max-width: 700px) {
-  #storage-tree {
+  #storage-tree,
+  #storage-sidebar {
     max-width: 100%;
   }
 

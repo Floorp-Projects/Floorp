@@ -973,6 +973,9 @@ function getObjectForLocalOrSessionStorage(type) {
 
     getValuesForHost(host, name) {
       let storage = this.hostVsStores.get(host);
+      if (!storage) {
+        return [];
+      }
       if (name) {
         return [{name: name, value: storage.getItem(name)}];
       }
