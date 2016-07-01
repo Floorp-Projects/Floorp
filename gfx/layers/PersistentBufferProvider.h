@@ -60,6 +60,8 @@ public:
   virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
 
   virtual TextureClient* GetTextureClient() { return nullptr; }
+
+  virtual void OnShutdown() {}
 };
 
 
@@ -121,12 +123,16 @@ public:
 
   virtual void NotifyInactive() override;
 
+  virtual void OnShutdown() override { Destroy(); }
+
 protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  CompositableForwarder* aFwd,
                                  RefPtr<TextureClient>& aTexture);
 
   ~PersistentBufferProviderShared();
+
+  void Destroy();
 
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
