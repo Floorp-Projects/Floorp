@@ -111,7 +111,7 @@
           <html:div id="propertyContainer">
           </html:div>
 
-          <html:div id="noResults" hidden="">
+          <html:div id="computedview-no-results" hidden="">
             &noPropertiesFound;
           </html:div>
         </tabpanel>
