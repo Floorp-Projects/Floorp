@@ -72,6 +72,7 @@
 #endif
 #include "gfxConfig.h"
 #include "mozilla/layers/CompositorSession.h"
+#include "InProcessCompositorWidget.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
