@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=793875
 import unittest
 import talos.utils
 
+
 class TestURLParsing(unittest.TestCase):
 
     def test_http_url(self):
@@ -30,7 +31,6 @@ class TestURLParsing(unittest.TestCase):
         parsed = talos.utils.urlsplit(url)
         self.assertEqual(parsed,
                          ['file', '', '/foo/bar', '', ''])
-
 
         # windows-like file path
         url = r'file://c:\foo\bar'
