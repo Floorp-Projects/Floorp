@@ -3551,11 +3551,6 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
     const char* const nodeType =
       usage.mNodeType ? usage.mNodeType : "<unknown>";
 
-    nsPrintfCString domNodePath("explicit/webaudio/audio-node/%s/dom-nodes",
-                                nodeType);
-    REPORT(domNodePath, usage.mDomNode,
-           "Memory used by AudioNode DOM objects (Web Audio).");
-
     nsPrintfCString enginePath("explicit/webaudio/audio-node/%s/engine-objects",
                                nodeType);
     REPORT(enginePath, usage.mEngine,
