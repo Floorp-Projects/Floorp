@@ -31,7 +31,7 @@ var server = spdy.createServer(options, function(req, res) {
   res.end('hello world!');
 });
 
-server.listen(443);
+server.listen(3000);
 ```
 
 Client:
@@ -80,7 +80,7 @@ app.use(/* your favorite middleware */);
 
 var server = spdy.createServer(options, app);
 
-server.listen(443);
+server.listen(3000);
 ```
 
 ## API
@@ -120,8 +120,34 @@ spdy.createServer(options, function(req, res) {
   stream.end('alert("hello from push stream!");');
 
   res.end('<script src="/main.js"></script>');
-}).listen(443);
+}).listen(3000);
 ```
+
+The method is also avaliable when using SPDY with an Express server:
+
+```javascript
+var app = express();
+
+var server = spdy.createServer(options, app);
+
+app.get('/', function(req, res) {
+  var headers = { 'content-type': 'application/javascript' };
+  res.push('/main.js', headers, function(err, stream) {
+    stream.on('acknowledge', function() {
+    });
+
+    stream.on('error', function() {
+    });
+
+    stream.end('alert("hello from push stream!");');
+  });
+
+  res.end('<script src="/main.js"></script>');
+});
+
+server.listen(3000);
+```
+
 
 Push is accomplished via the `push()` method invoked on the current response
 object (this works for express.js response objects as well).  The format of the
