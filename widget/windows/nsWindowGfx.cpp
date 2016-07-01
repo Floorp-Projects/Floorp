@@ -239,7 +239,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     ::EndPaint(mWnd, &ps);
 
     // We're guaranteed to have a widget proxy since we called GetLayerManager().
-    aDC = GetCompositorWidgetProxy()->GetTransparentDC();
+    aDC = GetCompositorWidget()->GetTransparentDC();
   }
 #endif
 
@@ -313,7 +313,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
           if (eTransparencyTransparent == mTransparencyMode) {
-            targetSurface = GetCompositorWidgetProxy()->EnsureTransparentSurface();
+            targetSurface = GetCompositorWidget()->EnsureTransparentSurface();
           }
 #endif
 
@@ -378,7 +378,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             // Data from offscreen drawing surface was copied to memory bitmap of transparent
             // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
             // that displayed on the screen.
-            GetCompositorWidgetProxy()->RedrawTransparentWindow();
+            GetCompositorWidget()->RedrawTransparentWindow();
           }
 #endif
         }

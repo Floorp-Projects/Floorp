@@ -21,7 +21,6 @@
 #include "nsIWidgetListener.h"
 #include "nsPIDOMWindow.h"
 #include "nsWeakReference.h"
-#include "CompositorWidgetProxy.h"
 #include <algorithm>
 class nsIContent;
 class nsAutoRollup;
@@ -49,6 +48,11 @@ class APZEventState;
 class CompositorSession;
 struct ScrollableLayerGuid;
 } // namespace layers
+
+namespace widget {
+class CompositorWidget;
+class InProcessCompositorWidget;
+} // namespace widget
 
 class CompositorVsyncDispatcher;
 } // namespace mozilla
@@ -95,7 +99,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference
 {
   friend class nsAutoRollup;
   friend class DispatchWheelEventOnMainThread;
-  friend class mozilla::widget::CompositorWidgetProxyWrapper;
+  friend class mozilla::widget::InProcessCompositorWidget;
 
 protected:
   typedef base::Thread Thread;
@@ -112,7 +116,7 @@ protected:
   typedef mozilla::CSSIntRect CSSIntRect;
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenRotation ScreenRotation;
-  typedef mozilla::widget::CompositorWidgetProxy CompositorWidgetProxy;
+  typedef mozilla::widget::CompositorWidget CompositorWidget;
   typedef mozilla::layers::CompositorSession CompositorSession;
 
   virtual ~nsBaseWidget();
@@ -350,11 +354,11 @@ public:
 
   void Shutdown();
 
-  // Return a new CompositorWidgetProxy for this widget.
-  virtual CompositorWidgetProxy* NewCompositorWidgetProxy();
+  // Return a new CompositorWidget for this widget.
+  virtual CompositorWidget* NewCompositorWidget();
 
 protected:
-  // These are methods for CompositorWidgetProxyWrapper, and should only be
+  // These are methods for CompositorWidgetWrapper, and should only be
   // accessed from that class. Derived widgets can choose which methods to
   // implement, or none if supporting out-of-process compositing.
   virtual bool PreRender(mozilla::layers::LayerManagerComposite* aManager) {
@@ -587,7 +591,7 @@ protected:
   nsPopupType       mPopupType;
   SizeConstraints   mSizeConstraints;
 
-  RefPtr<CompositorWidgetProxy> mCompositorWidgetProxy;
+  RefPtr<CompositorWidget> mCompositorWidget;
 
   bool              mUpdateCursor;
   bool              mUseAttachedEvents;
