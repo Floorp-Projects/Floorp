@@ -504,9 +504,6 @@ bool
 SetAddonInterposition(const nsACString& addonId, nsIAddonInterposition* interposition);
 
 bool
-AllowCPOWsInAddon(const nsACString& addonId, bool allow);
-
-bool
 ExtraWarningsForSystemJS();
 
 class ErrorReport {

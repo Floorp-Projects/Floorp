@@ -997,10 +997,6 @@ public:
                         js::PointerHasher<JSAddonId*, 3>,
                         js::SystemAllocPolicy> InterpositionMap;
 
-    typedef js::HashSet<JSAddonId*,
-                        js::PointerHasher<JSAddonId*, 3>,
-                        js::SystemAllocPolicy> AddonSet;
-
     // Gets the appropriate scope object for XBL in this scope. The context
     // must be same-compartment with the global upon entering, and the scope
     // object is wrapped into the compartment of the global.
@@ -1032,8 +1028,6 @@ public:
     void SetAddonCallInterposition() { mHasCallInterpositions = true; }
     bool HasCallInterposition() { return mHasCallInterpositions; };
 
-    static bool AllowCPOWsInAddon(JSContext* cx, JSAddonId* addonId, bool allow);
-
 protected:
     virtual ~XPCWrappedNativeScope();
 
@@ -1051,9 +1045,7 @@ private:
     static XPCWrappedNativeScope* gScopes;
     static XPCWrappedNativeScope* gDyingScopes;
 
-    static bool                      gShutdownObserverInitialized;
     static InterpositionMap*         gInterpositionMap;
-    static AddonSet*                 gAllowCPOWAddonSet;
 
     static InterpositionWhitelistArray* gInterpositionWhitelists;
 
