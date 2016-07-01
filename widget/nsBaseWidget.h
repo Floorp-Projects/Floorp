@@ -50,7 +50,7 @@ struct ScrollableLayerGuid;
 } // namespace layers
 
 namespace widget {
-class CompositorWidget;
+class CompositorWidgetDelegate;
 class InProcessCompositorWidget;
 } // namespace widget
 
@@ -116,7 +116,7 @@ protected:
   typedef mozilla::CSSIntRect CSSIntRect;
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenRotation ScreenRotation;
-  typedef mozilla::widget::CompositorWidget CompositorWidget;
+  typedef mozilla::widget::CompositorWidgetDelegate CompositorWidgetDelegate;
   typedef mozilla::layers::CompositorSession CompositorSession;
 
   virtual ~nsBaseWidget();
@@ -588,7 +588,7 @@ protected:
   nsPopupType       mPopupType;
   SizeConstraints   mSizeConstraints;
 
-  RefPtr<CompositorWidget> mCompositorWidget;
+  CompositorWidgetDelegate* mCompositorWidgetDelegate;
 
   bool              mUpdateCursor;
   bool              mUseAttachedEvents;
