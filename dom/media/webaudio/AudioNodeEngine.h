@@ -396,13 +396,10 @@ public:
   {
     aUsage.mEngine = SizeOfIncludingThis(aMallocSizeOf);
     aUsage.mNodeType = mNodeType;
-    if (mNode) {
-      aUsage.mDomNode = mNode->SizeOfIncludingThis(aMallocSizeOf);
-    }
   }
 
 private:
-  dom::AudioNode* mNode;
+  dom::AudioNode* mNode; // main thread only
   const char* const mNodeType;
   const uint16_t mInputCount;
   const uint16_t mOutputCount;
