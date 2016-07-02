@@ -428,13 +428,13 @@ CodeGeneratorX86Shared::visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck)
 }
 
 void
-CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access,
+CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access,
                                                    const MInstruction* mir,
                                                    Register ptr, Label* maybeFail)
 {
     // Emit a bounds-checking branch for |access|.
 
-    MOZ_ASSERT(gen->needsAsmJSBoundsCheckBranch(access));
+    MOZ_ASSERT(gen->needsBoundsCheckBranch(access));
 
     Label* pass = nullptr;
 
@@ -467,11 +467,11 @@ CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* acces
 }
 
 bool
-CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess* access,
+CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MWasmMemoryAccess* access,
                                                           const MInstruction* mir,
                                                           const LAllocation* ptr)
 {
-    if (!gen->needsAsmJSBoundsCheckBranch(access))
+    if (!gen->needsBoundsCheckBranch(access))
         return false;
 
     emitAsmJSBoundsCheckBranch(access, mir, ToRegister(ptr), nullptr);
@@ -485,7 +485,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir,
     MOZ_ASSERT(!Scalar::isSimdType(mir->accessType()));
     *ool = nullptr;
 
-    if (!gen->needsAsmJSBoundsCheckBranch(mir))
+    if (!gen->needsBoundsCheckBranch(mir))
         return false;
 
     Label* rejoin = nullptr;
@@ -507,7 +507,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mi
     MOZ_ASSERT(!Scalar::isSimdType(mir->accessType()));
 
     *rejoin = nullptr;
-    if (!gen->needsAsmJSBoundsCheckBranch(mir))
+    if (!gen->needsBoundsCheckBranch(mir))
         return false;
 
     if (!mir->isAtomicAccess())
@@ -518,12 +518,12 @@ CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mi
 }
 
 void
-CodeGeneratorX86Shared::cleanupAfterAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access,
+CodeGeneratorX86Shared::cleanupAfterAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access,
                                                            Register ptr)
 {
     // Clean up after performing a heap access checked by a branch.
 
-    MOZ_ASSERT(gen->needsAsmJSBoundsCheckBranch(access));
+    MOZ_ASSERT(gen->needsBoundsCheckBranch(access));
 
 #ifdef JS_CODEGEN_X64
     // If the offset is 0, we don't use an OffsetBoundsCheck.

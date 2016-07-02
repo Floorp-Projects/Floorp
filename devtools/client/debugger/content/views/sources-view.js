@@ -83,7 +83,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
-  initialize: function () {
+  initialize: function (isWorker) {
     dumpn("Initializing the SourcesView");
 
     this.widget = new SideMenuWidget(document.getElementById("sources"), {
@@ -111,7 +111,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._noResultsFoundToolTip = new Tooltip(document);
     this._noResultsFoundToolTip.defaultPosition = FUNCTION_SEARCH_POPUP_POSITION;
 
-    if (Prefs.prettyPrintEnabled) {
+    // We don't show the pretty print button if debugger a worker
+    // because it simply doesn't work yet. (bug 1273730)
+    if (Prefs.prettyPrintEnabled && !isWorker) {
       this._prettyPrintButton.removeAttribute("hidden");
     }
 

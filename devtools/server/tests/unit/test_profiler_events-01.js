@@ -8,7 +8,7 @@
  */
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-const { ProfilerFront } = require("devtools/server/actors/profiler");
+const { ProfilerFront } = require("devtools/shared/fronts/profiler");
 
 function run_test() {
   run_next_test();

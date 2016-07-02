@@ -470,14 +470,9 @@ Instance::create(JSContext* cx,
                  HandleArrayBufferObjectMaybeShared heap,
                  Handle<FunctionVector> funcImports,
                  const ExportMap& exportMap,
-                 MutableHandleWasmInstanceObject instanceObj)
+                 HandleWasmInstanceObject instanceObj)
 {
-    // Ensure that the Instance is traceable via WasmInstanceObject before any
-    // GC can occur.
-
-    instanceObj.set(WasmInstanceObject::create(cx));
-    if (!instanceObj)
-        return false;
+    // Ensure that the Instance is traceable via 'instanceObj' before any GC.
 
     {
         auto instance = cx->make_unique<Instance>(Move(codeSegment), metadata, maybeBytecode,

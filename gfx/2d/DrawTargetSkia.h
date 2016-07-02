@@ -125,6 +125,7 @@ public:
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
   virtual void SetTransform(const Matrix &aTransform) override;
   virtual void *GetNativeSurface(NativeSurfaceType aType) override;
+  virtual void DetachAllSnapshots() override { MarkChanged(); }
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);

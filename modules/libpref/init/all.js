@@ -3762,9 +3762,9 @@ pref("font.name.monospace.x-math", "Courier");
 pref("font.name.cursive.x-math", "Apple Chancery");
 pref("font.name.fantasy.x-math", "Papyrus");
 
-// individual font faces to be treated as independent families
-// names are Postscript names of each face
-pref("font.single-face-list", "Osaka-Mono");
+// Individual font faces to be treated as independent families,
+// listed as <Postscript name of face:Owning family name>
+pref("font.single-face-list", "Osaka-Mono:Osaka");
 
 // optimization hint for fonts with localized names to be read in at startup, otherwise read in at lookup miss
 // names are canonical family names (typically English names)
@@ -4408,6 +4408,7 @@ pref("gl.multithreaded", true);
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
 pref("webgl.disable-angle", false);
+pref("webgl.disable-wgl", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
 pref("webgl.msaa-force", false);
@@ -4445,7 +4446,7 @@ pref("webgl.vendor-string-override", "");
 pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);
 pref("webgl.angle.force-warp", false);
-pref("webgl.dxgl.enabled", false);
+pref("webgl.dxgl.enabled", true);
 pref("webgl.dxgl.needs-finish", false);
 #endif
 

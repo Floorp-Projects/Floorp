@@ -364,6 +364,8 @@ void TextureClient::Destroy(bool aForceSync)
     mActor->Lock();
   }
 
+  mReadLock = nullptr;
+
   CancelWaitFenceHandleOnImageBridge();
   RefPtr<TextureChild> actor = mActor;
   mActor = nullptr;
@@ -494,7 +496,6 @@ TextureClient::Unlock()
   }
 
   if (mBorrowedDrawTarget) {
-    MOZ_ASSERT(mBorrowedDrawTarget->refCount() <= mExpectedDtRefs);
     if (mOpenMode & OpenMode::OPEN_WRITE) {
       mBorrowedDrawTarget->Flush();
       if (mReadbackSink && !mData->ReadBack(mReadbackSink)) {
@@ -505,6 +506,12 @@ TextureClient::Unlock()
         mReadbackSink->ProcessReadback(dataSurf);
       }
     }
+
+    mBorrowedDrawTarget->DetachAllSnapshots();
+    // If this assertion is hit, it means something is holding a strong reference
+    // to our DrawTarget externally, which is not allowed.
+    MOZ_ASSERT(mBorrowedDrawTarget->refCount() <= mExpectedDtRefs);
+
     mBorrowedDrawTarget = nullptr;
   }
 
@@ -1164,7 +1171,6 @@ TextureClient::CreateForYCbCr(ClientIPCAllocator* aAllocator,
 // static
 already_AddRefed<TextureClient>
 TextureClient::CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
-                                            gfx::SurfaceFormat aFormat,
                                             size_t aSize,
                                             TextureFlags aTextureFlags)
 {
@@ -1175,7 +1181,7 @@ TextureClient::CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
   }
 
   TextureData* data =
-    BufferTextureData::CreateForYCbCrWithBufferSize(aAllocator, aFormat, aSize,
+    BufferTextureData::CreateForYCbCrWithBufferSize(aAllocator, aSize,
                                                     aTextureFlags);
   if (!data) {
     return nullptr;

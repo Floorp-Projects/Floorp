@@ -571,6 +571,7 @@ private:
 #ifdef MOZ_EME
   RefPtr<CDMProxy> mCDMProxy;
 #endif
+  RefPtr<GMPCrashHelper> mCrashHelper;
 };
 
 } // namespace mozilla

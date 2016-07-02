@@ -251,8 +251,6 @@ alsa_set_stream_state(cubeb_stream * stm, enum stream_state state)
 static enum stream_state
 alsa_refill_stream(cubeb_stream * stm)
 {
-  int r;
-  unsigned short revents;
   snd_pcm_sframes_t avail;
   long got;
   void * p;
@@ -261,15 +259,6 @@ alsa_refill_stream(cubeb_stream * stm)
   draining = 0;
 
   pthread_mutex_lock(&stm->mutex);
-
-  r = snd_pcm_poll_descriptors_revents(stm->pcm, stm->fds, stm->nfds, &revents);
-  if (r < 0 || revents != POLLOUT) {
-    /* This should be a stream error; it makes no sense for poll(2) to wake
-       for this stream and then have the stream report that it's not ready.
-       Unfortunately, this does happen, so just bail out and try again. */
-    pthread_mutex_unlock(&stm->mutex);
-    return RUNNING;
-  }
 
   avail = snd_pcm_avail_update(stm->pcm);
   if (avail == -EPIPE) {

@@ -33,7 +33,6 @@ public:
   // This creates a half-initialized texture since we don't know the sizes and
   // offsets in the buffer.
   static BufferTextureData* CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
-                                                         gfx::SurfaceFormat aFormat,
                                                          int32_t aSize,
                                                          TextureFlags aTextureFlags);
 

@@ -1260,7 +1260,7 @@ nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
       "FROM moz_anno_attributes n "
       "JOIN moz_annos a ON a.anno_attribute_id = n.id "
       "JOIN moz_places h ON h.id = a.place_id "
-      "WHERE h.url = :page_url"
+      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
     );
   }
   NS_ENSURE_STATE(statement);
@@ -1382,7 +1382,8 @@ nsAnnotationService::RemoveAnnotationInternal(nsIURI* aURI,
   else {
     statement = mDB->GetStatement(
       "DELETE FROM moz_annos "
-      "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
+      "WHERE place_id = "
+          "(SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url) "
         "AND anno_attribute_id = "
           "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name)"
     );
@@ -1445,7 +1446,7 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
   // Should this be precompiled or a getter?
   nsCOMPtr<mozIStorageStatement> statement = mDB->GetStatement(
     "DELETE FROM moz_annos WHERE place_id = "
-      "(SELECT id FROM moz_places WHERE url = :page_url)"
+      "(SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url)"
   );
   NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
@@ -1508,7 +1509,7 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
     "JOIN moz_annos a ON a.place_id = h.id "
     "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
     "LEFT JOIN moz_annos a2 ON a2.place_id = "
-      "(SELECT id FROM moz_places WHERE url = :dest_url) "
+      "(SELECT id FROM moz_places WHERE url_hash = hash(:dest_url) AND url = :dest_url) "
                           "AND a2.anno_attribute_id = n.id "
     "WHERE url = :source_url"
   );
@@ -1524,7 +1525,7 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
     "INSERT INTO moz_annos "
     "(place_id, anno_attribute_id, content, flags, expiration, "
      "type, dateAdded, lastModified) "
-    "SELECT (SELECT id FROM moz_places WHERE url = :page_url), "
+    "SELECT (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url), "
            "anno_attribute_id, content, flags, expiration, type, "
            ":date, :date "
     "FROM moz_annos "
@@ -1703,7 +1704,7 @@ nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
       "FROM moz_places h "
       "LEFT JOIN moz_annos a ON a.place_id = h.id "
                            "AND a.anno_attribute_id = nameid "
-      "WHERE h.url = :page_url"
+      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
     );
   }
   NS_ENSURE_STATE(stmt);
@@ -1770,7 +1771,7 @@ nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
       "FROM moz_anno_attributes n "
       "JOIN moz_annos a ON n.id = a.anno_attribute_id "
       "JOIN moz_places h ON h.id = a.place_id "
-      "WHERE h.url = :page_url "
+      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url "
         "AND n.name = :anno_name"
     );
   }
@@ -1864,7 +1865,7 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
       "FROM moz_places h "
       "LEFT JOIN moz_annos a ON a.place_id = h.id "
                            "AND a.anno_attribute_id = nameid "
-      "WHERE h.url = :page_url"
+      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
     );
   }
   NS_ENSURE_STATE(stmt);

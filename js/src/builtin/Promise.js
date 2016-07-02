@@ -85,7 +85,7 @@ function CreateResolvingFunctions(promise) {
         }
 
         // Step 12.
-        EnqueuePromiseResolveThenableJob(promise, resolution, then);
+        _EnqueuePromiseResolveThenableJob(promise, resolution, then);
 
         // Step 13.
         return undefined;
@@ -227,22 +227,15 @@ function TriggerPromiseReactions(reactions, argument) {
 // ES6, 25.4.2.1.
 function EnqueuePromiseReactionJob(reaction, argument) {
     let capabilities = reaction.capabilities;
-    _EnqueuePromiseReactionJob([reaction.handler,
-                                argument,
-                                capabilities.resolve,
-                                capabilities.reject
-                               ],
-                               capabilities.promise);
+    _EnqueuePromiseReactionJob(reaction.handler,
+                               argument,
+                               capabilities.resolve,
+                               capabilities.reject,
+                               capabilities.promise,
+                               reaction.incumbentGlobal || null);
 }
 
-// ES6, 25.4.2.2.
-function EnqueuePromiseResolveThenableJob(promiseToResolve, thenable, then) {
-    _EnqueuePromiseResolveThenableJob([then,
-                                       thenable,
-                                       promiseToResolve
-                                      ],
-                                      promiseToResolve);
-}
+// ES6, 25.4.2.2. (Implemented in C++).
 
 // ES6, 25.4.3.1. (Implemented in C++).
 
@@ -877,18 +870,21 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     if (!IsCallable(onRejected))
         onRejected = PROMISE_HANDLER_THROWER;
 
+    let incumbentGlobal = _GetObjectFromIncumbentGlobal();
     // Step 5.
     let fulfillReaction = {
         __proto__: PromiseReactionRecordProto,
         capabilities: resultCapability,
-        handler: onFulfilled
+        handler: onFulfilled,
+        incumbentGlobal
     };
 
     // Step 6.
     let rejectReaction = {
         __proto__: PromiseReactionRecordProto,
         capabilities: resultCapability,
-        handler: onRejected
+        handler: onRejected,
+        incumbentGlobal
     };
 
     // Step 7.

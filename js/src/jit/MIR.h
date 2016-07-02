@@ -12912,7 +12912,7 @@ class MAsmJSNeg
     }
 };
 
-class MAsmJSHeapAccess
+class MWasmMemoryAccess
 {
     uint32_t offset_;
     uint32_t align_;
@@ -12923,11 +12923,11 @@ class MAsmJSHeapAccess
     MemoryBarrierBits barrierAfter_;
 
   public:
-    explicit MAsmJSHeapAccess(Scalar::Type accessType, unsigned numSimdElems = 0,
-                              MemoryBarrierBits barrierBefore = MembarNobits,
-                              MemoryBarrierBits barrierAfter = MembarNobits)
+    explicit MWasmMemoryAccess(Scalar::Type accessType, uint32_t align, unsigned numSimdElems = 0,
+                               MemoryBarrierBits barrierBefore = MembarNobits,
+                               MemoryBarrierBits barrierAfter = MembarNobits)
       : offset_(0),
-        align_(Scalar::byteSize(accessType)),
+        align_(align),
         accessType_(accessType),
         needsBoundsCheck_(true),
         numSimdElems_(numSimdElems),
@@ -12935,6 +12935,7 @@ class MAsmJSHeapAccess
         barrierAfter_(barrierAfter)
     {
         MOZ_ASSERT(numSimdElems <= ScalarTypeToLength(accessType));
+        MOZ_ASSERT(mozilla::IsPowerOfTwo(align));
     }
 
     uint32_t offset() const { return offset_; }
@@ -12958,20 +12959,19 @@ class MAsmJSHeapAccess
 
 class MAsmJSLoadHeap
   : public MUnaryInstruction,
-    public MAsmJSHeapAccess,
+    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSLoadHeap(MDefinition* base, const MAsmJSHeapAccess& access)
+    MAsmJSLoadHeap(MDefinition* base, const MWasmMemoryAccess& access)
       : MUnaryInstruction(base),
-        MAsmJSHeapAccess(access)
+        MWasmMemoryAccess(access)
     {
-        if (access.barrierBefore()|access.barrierAfter())
-            setGuard();         // Not removable
+        if (access.barrierBefore() | access.barrierAfter())
+            setGuard(); // Not removable
         else
             setMovable();
 
-        MOZ_ASSERT(access.accessType() != Scalar::Uint8Clamped,
-                   "unexpected load heap in asm.js");
+        MOZ_ASSERT(access.accessType() != Scalar::Uint8Clamped, "unexpected load heap in asm.js");
         setResultType(ScalarTypeToMIRType(access.accessType()));
     }
 
@@ -12995,16 +12995,15 @@ class MAsmJSLoadHeap
 
 class MAsmJSStoreHeap
   : public MBinaryInstruction,
-    public MAsmJSHeapAccess,
+    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSStoreHeap(MDefinition* base, const MAsmJSHeapAccess& access,
-                    MDefinition* v)
+    MAsmJSStoreHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
       : MBinaryInstruction(base, v),
-        MAsmJSHeapAccess(access)
+        MWasmMemoryAccess(access)
     {
-        if (access.barrierBefore()|access.barrierAfter())
-            setGuard();         // Not removable
+        if (access.barrierBefore() | access.barrierAfter())
+            setGuard(); // Not removable
     }
 
   public:
@@ -13022,13 +13021,13 @@ class MAsmJSStoreHeap
 
 class MAsmJSCompareExchangeHeap
   : public MTernaryInstruction,
-    public MAsmJSHeapAccess,
+    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSCompareExchangeHeap(MDefinition* base, const MAsmJSHeapAccess& access,
+    MAsmJSCompareExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
                               MDefinition* oldv, MDefinition* newv)
         : MTernaryInstruction(base, oldv, newv),
-          MAsmJSHeapAccess(access)
+          MWasmMemoryAccess(access)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -13049,13 +13048,13 @@ class MAsmJSCompareExchangeHeap
 
 class MAsmJSAtomicExchangeHeap
   : public MBinaryInstruction,
-    public MAsmJSHeapAccess,
+    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSAtomicExchangeHeap(MDefinition* base, const MAsmJSHeapAccess& access,
+    MAsmJSAtomicExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
                              MDefinition* value)
         : MBinaryInstruction(base, value),
-          MAsmJSHeapAccess(access)
+          MWasmMemoryAccess(access)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -13075,15 +13074,15 @@ class MAsmJSAtomicExchangeHeap
 
 class MAsmJSAtomicBinopHeap
   : public MBinaryInstruction,
-    public MAsmJSHeapAccess,
+    public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
     AtomicOp op_;
 
-    MAsmJSAtomicBinopHeap(AtomicOp op, MDefinition* base, const MAsmJSHeapAccess& access,
+    MAsmJSAtomicBinopHeap(AtomicOp op, MDefinition* base, const MWasmMemoryAccess& access,
                           MDefinition* v)
         : MBinaryInstruction(base, v),
-          MAsmJSHeapAccess(access),
+          MWasmMemoryAccess(access),
           op_(op)
     {
         setGuard();         // Not removable

@@ -377,7 +377,7 @@ GfxInfo::Init()
             // Again, assume the worst
             mDriverDate.AssignLiteral("01-01-1970");
           }
-          RegCloseKey(key); 
+          RegCloseKey(key);
           break;
         }
       }
@@ -898,17 +898,9 @@ GfxInfo::GetGfxDriverInfo()
       nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_OGL_ATI_DIS" );
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
-      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
-      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
-      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_WEBGL_ATI_DIS" );
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAMD), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_OGL_AMD_DIS" );
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
-      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAMD), GfxDriverInfo::allDevices,
-      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
-      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_WEBGL_AMD_DIS" );
 
     /*
      * Intel entries
@@ -1002,10 +994,6 @@ GfxInfo::GetGfxDriverInfo()
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_DISCOURAGED,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_INTEL_OGL_DIS" );
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
-      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), GfxDriverInfo::allDevices,
-      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
-      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_INTEL_WEBGL_DIS" );
 
     /**
      * Disable acceleration on Intel HD 3000 for graphics drivers <= 8.15.10.2321.
@@ -1129,6 +1117,27 @@ GfxInfo::GetGfxDriverInfo()
       (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelGMAX4500HD),
       nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_BUG_1153381");
+
+    ////////////////////////////////////
+    // WebGL
+
+    // Older than 5-15-2016
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAMD), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED, DRIVER_LESS_THAN,
+      V(16,200,1010,1002), "WEBGL_NATIVE_GL_OLD_AMD");
+
+    // Older than 11-18-2015
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED, DRIVER_LESS_THAN,
+      V(20,19,15,4331), "WEBGL_NATIVE_GL_OLD_INTEL");
+
+    // Older than 2-23-2016
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED, DRIVER_LESS_THAN,
+      V(10,18,13,6200), "WEBGL_NATIVE_GL_OLD_NVIDIA");
 
   }
   return *mDriverInfo;

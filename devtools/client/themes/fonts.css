@@ -33,7 +33,7 @@
   border: 1px solid black;
   margin: 3px;
   cursor: pointer;
-  position: fixed;
+  position: absolute;
   bottom: 0;
   right: 0;
 }

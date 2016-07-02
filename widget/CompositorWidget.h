@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_widget_CompositorWidgetProxy_h__
-#define mozilla_widget_CompositorWidgetProxy_h__
+#ifndef mozilla_widget_CompositorWidget_h__
+#define mozilla_widget_CompositorWidget_h__
 
 #include "nsISupports.h"
 #include "mozilla/RefPtr.h"
@@ -28,15 +28,42 @@ class SourceSurface;
 } // namespace gfx
 namespace widget {
 
-class WinCompositorWidgetProxy;
+class WinCompositorWidget;
+class CompositorWidgetInitData;
+
+// Gecko widgets usually need to communicate with the CompositorWidget with
+// platform-specific messages (for example to update the window size or
+// transparency). This functionality is controlled through a "host". Since
+// this functionality is platform-dependent, it is only forward declared
+// here.
+class CompositorWidgetDelegate;
+
+// Platforms that support out-of-process widgets.
+#if defined(XP_WIN)
+// CompositorWidgetParent should implement CompositorWidget and
+// PCompositorWidgetParent.
+class CompositorWidgetParent;
+
+// CompositorWidgetChild should implement CompositorWidgetDelegate and
+// PCompositorWidgetChild.
+class CompositorWidgetChild;
+
+# define MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+#endif
 
 /**
  * Access to a widget from the compositor is restricted to these methods.
  */
-class CompositorWidgetProxy
+class CompositorWidget
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(mozilla::widget::CompositorWidgetProxy)
+  NS_INLINE_DECL_REFCOUNTING(mozilla::widget::CompositorWidget)
+
+  /**
+   * Create an in-process compositor widget. aWidget may be ignored if the
+   * platform does not require it.
+   */
+  static RefPtr<CompositorWidget> CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget);
 
   /**
    * Called before rendering using OMTC. Returns false when the widget is
@@ -200,51 +227,22 @@ public:
    */
   virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() = 0;
 
-  virtual WinCompositorWidgetProxy* AsWindowsProxy() {
+  virtual WinCompositorWidget* AsWindows() {
+    return nullptr;
+  }
+
+  /**
+   * Return the platform-specific delegate for the widget, if any.
+   */
+  virtual CompositorWidgetDelegate* AsDelegate() {
     return nullptr;
   }
 
 protected:
-  virtual ~CompositorWidgetProxy();
+  virtual ~CompositorWidget();
 
   // Back buffer of BasicCompositor
   RefPtr<gfx::DrawTarget> mLastBackBuffer;
-};
-
-// This version of CompositorWidgetProxy implements a wrapper around
-// nsBaseWidget.
-class CompositorWidgetProxyWrapper : public CompositorWidgetProxy
-{
-public:
-  explicit CompositorWidgetProxyWrapper(nsBaseWidget* aWidget);
-
-  virtual bool PreRender(layers::LayerManagerComposite* aManager) override;
-  virtual void PostRender(layers::LayerManagerComposite* aManager) override;
-  virtual void DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
-                                  LayoutDeviceIntRect aRect) override;
-  virtual void DrawWindowOverlay(layers::LayerManagerComposite* aManager,
-                                 LayoutDeviceIntRect aRect) override;
-  virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
-  virtual already_AddRefed<gfx::DrawTarget>
-  StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
-                             layers::BufferMode* aBufferMode) override;
-  virtual void EndRemoteDrawing() override;
-  virtual void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
-                                        LayoutDeviceIntRegion& aInvalidRegion) override;
-  virtual void CleanupRemoteDrawing() override;
-  virtual void CleanupWindowEffects() override;
-  virtual bool InitCompositor(layers::Compositor* aCompositor) override;
-  virtual LayoutDeviceIntSize GetClientSize() override;
-  virtual uint32_t GetGLFrameBufferFormat() override;
-  virtual layers::Composer2D* GetComposer2D() override;
-  virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
-  virtual uintptr_t GetWidgetKey() override;
-
-  // If you can override this method, inherit from CompositorWidgetProxy instead.
-  nsIWidget* RealWidget() override;
-
-private:
-  nsBaseWidget* mWidget;
 };
 
 } // namespace widget
