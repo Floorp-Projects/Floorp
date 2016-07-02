@@ -39,12 +39,14 @@ static Enum StringToEnum(const EnumValuesStrings& aStrings,
 struct NormalizedConstraintSet
 {
   template<class ValueType>
-  struct Range
+  class Range
   {
+  public:
     ValueType mMin, mMax;
     Maybe<ValueType> mIdeal;
 
-    Range(ValueType aMin, ValueType aMax) : mMin(aMin), mMax(aMax) {}
+    Range(ValueType aMin, ValueType aMax)
+      : mMin(aMin), mMax(aMax), mMergeDenominator(0) {}
 
     template<class ConstrainRange>
     void SetFrom(const ConstrainRange& aOther);
@@ -60,6 +62,32 @@ struct NormalizedConstraintSet
       mMin = std::max(mMin, aOther.mMin);
       mMax = std::min(mMax, aOther.mMax);
     }
+    bool Merge(const Range& aOther) {
+      if (!Intersects(aOther)) {
+        return false;
+      }
+      Intersect(aOther);
+
+      if (aOther.mIdeal.isSome()) {
+        if (mIdeal.isNothing()) {
+          mIdeal.emplace(aOther.mIdeal.value());
+          mMergeDenominator = 1;
+        } else {
+          *mIdeal += aOther.mIdeal.value();
+          mMergeDenominator = std::max(2U, mMergeDenominator + 1);
+        }
+      }
+      return true;
+    }
+    void FinalizeMerge()
+    {
+      if (mMergeDenominator) {
+        *mIdeal /= mMergeDenominator;
+        mMergeDenominator = 0;
+      }
+    }
+  private:
+    uint32_t mMergeDenominator;
   };
 
   struct LongRange : public Range<int32_t>
@@ -95,6 +123,21 @@ struct NormalizedConstraintSet
     }
     bool Intersects(const StringRange& aOther) const;
     void Intersect(const StringRange& aOther);
+    bool Merge(const StringRange& aOther)
+    {
+      if (!Intersects(aOther)) {
+        return false;
+      }
+      Intersect(aOther);
+
+      for (auto& entry : aOther.mIdeal) {
+        if (mIdeal.find(entry) == mIdeal.end()) {
+          mIdeal.insert(entry);
+        }
+      }
+      return true;
+    }
+    void FinalizeMerge() {}
   };
 
   // All new constraints should be added here whether they use flattening or not
@@ -129,11 +172,18 @@ struct NormalizedConstraintSet
   , mMozAutoGainControl(aOther.mMozAutoGainControl, advanced) {}
 };
 
+template<> bool NormalizedConstraintSet::Range<bool>::Merge(const Range& aOther);
+template<> void NormalizedConstraintSet::Range<bool>::FinalizeMerge();
+
 // Used instead of MediaTrackConstraints in lower-level code.
 struct NormalizedConstraints : public NormalizedConstraintSet
 {
   explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther);
+  explicit NormalizedConstraints(
+      const nsTArray<const NormalizedConstraints*>& aOthers);
+
   nsTArray<NormalizedConstraintSet> mAdvanced;
+  bool mOverconstrained;
 };
 
 // Flattened version is used in low-level code with orthogonal constraints only.
