@@ -431,7 +431,7 @@ IonBuilder::inlineMathFunction(CallInfo& callInfo, MMathFunction::Function funct
     if (!IsNumberType(callInfo.getArg(0)->type()))
         return InliningStatus_NotInlined;
 
-    const MathCache* cache = compartment->runtime()->maybeGetMathCache();
+    const MathCache* cache = GetJSContextFromMainThread()->caches.maybeGetMathCache();
 
     callInfo.fun()->setImplicitlyUsedUnchecked();
     callInfo.thisArg()->setImplicitlyUsedUnchecked();

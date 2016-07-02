@@ -891,7 +891,7 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       case JOF_SCOPECOORD: {
         RootedValue v(cx,
-            StringValue(ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc)));
+            StringValue(ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc)));
         JSAutoByteString bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
@@ -1143,7 +1143,7 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         return write("(intermediate value)");
       }
       case JSOP_GETALIASEDVAR: {
-        JSAtom* atom = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
+        JSAtom* atom = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc);
         MOZ_ASSERT(atom);
         return write(atom);
       }

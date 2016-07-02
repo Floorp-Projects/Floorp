@@ -88,8 +88,6 @@ class CompileRuntime
     // DOM callbacks must be threadsafe (and will hopefully be removed soon).
     const DOMCallbacks* DOMcallbacks();
 
-    const MathCache* maybeGetMathCache();
-
     const Nursery& gcNursery();
     void setMinorGCShouldCancelIonCompilations();
 };

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Runtime_inl_h
-#define vm_Runtime_inl_h
+#ifndef vm_Caches_inl_h
+#define vm_Caches_inl_h
 
-#include "vm/Runtime.h"
+#include "vm/Caches.h"
 
 #include "jscompartment.h"
 
@@ -79,4 +79,4 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
 
 }  /* namespace js */
 
-#endif /* vm_Runtime_inl_h */
+#endif /* vm_Caches_inl_h */

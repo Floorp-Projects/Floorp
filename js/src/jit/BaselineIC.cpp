@@ -290,7 +290,7 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
         MOZ_ASSERT(obj->isNative() || obj->is<UnboxedPlainObject>());
         jsbytecode* pc = stub->getChainFallback()->icEntry()->pc(script);
         if (*pc == JSOP_SETALIASEDVAR || *pc == JSOP_INITALIASEDLEXICAL)
-            id = NameToId(ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc));
+            id = NameToId(ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc));
         else
             id = NameToId(script->getName(pc));
         AddTypePropertyId(cx, obj, id, value);
@@ -4495,7 +4495,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
 
     RootedPropertyName name(cx);
     if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL)
-        name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
+        name = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc);
     else
         name = script->getName(pc);
     RootedId id(cx, NameToId(name));

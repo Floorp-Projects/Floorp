@@ -3222,7 +3222,7 @@ CASE(JSOP_GETALIASEDVAR)
 #ifdef DEBUG
     // Only the .this slot can hold the TDZ MagicValue.
     if (IsUninitializedLexical(val)) {
-        PropertyName* name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache,
+        PropertyName* name = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache,
                                                  script, REGS.pc);
         MOZ_ASSERT(name == cx->names().dotThis);
         JSOp next = JSOp(*GetNextPc(REGS.pc));
@@ -4944,7 +4944,7 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
         name = script->getName(pc);
     } else {
         MOZ_ASSERT(IsAliasedVarOp(op));
-        name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
+        name = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc);
     }
 
     ReportRuntimeLexicalError(cx, errorNumber, name);
