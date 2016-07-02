@@ -9,3 +9,10 @@ task:
       description: 'MacOSX64 Opt'
 
   workerType: opt-macosx64
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+      tier: 2

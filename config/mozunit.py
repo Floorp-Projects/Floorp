@@ -185,7 +185,7 @@ class MockedOpen(object):
         if p in self.files:
             return True
 
-        abspath = os.path.abspath(p)
+        abspath = normcase(os.path.abspath(p))
         if abspath in self.files:
             return True
 
@@ -197,7 +197,7 @@ class MockedOpen(object):
         if any(f.startswith(p) for f in self.files):
             return True
 
-        abspath = os.path.abspath(p) + os.sep
+        abspath = normcase(os.path.abspath(p) + os.sep)
         if any(f.startswith(abspath) for f in self.files):
             return True
 

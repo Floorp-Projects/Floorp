@@ -15,6 +15,7 @@
 #include "nsIMIMEInfo.h"
 #include "Navigator.h"
 #include "nsServiceManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsPluginTags.h"
 
 using namespace mozilla;
@@ -38,6 +39,12 @@ nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindowInner* aWindow)
 
 nsMimeTypeArray::~nsMimeTypeArray()
 {
+}
+
+static bool
+ResistFingerprinting() {
+  return !nsContentUtils::ThreadsafeIsCallerChrome() &&
+         nsContentUtils::ResistFingerprinting();
 }
 
 JSObject*
@@ -78,6 +85,10 @@ nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound)
 {
   aFound = false;
 
+  if (ResistFingerprinting()) {
+    return nullptr;
+  }
+
   EnsurePluginMimeTypes();
 
   if (aIndex >= mMimeTypes.Length()) {
@@ -108,6 +119,10 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
 {
   aFound = false;
 
+  if (ResistFingerprinting()) {
+    return nullptr;
+  }
+
   EnsurePluginMimeTypes();
 
   nsString lowerName(aName);
@@ -125,6 +140,10 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
 uint32_t
 nsMimeTypeArray::Length()
 {
+  if (ResistFingerprinting()) {
+    return 0;
+  }
+
   EnsurePluginMimeTypes();
 
   return mMimeTypes.Length();

@@ -1869,8 +1869,6 @@ int wasapi_stream_stop(cubeb_stream * stm)
   XASSERT(stm);
   HRESULT hr;
 
-  XASSERT(stm->output_client || stm->input_client);
-
   {
     auto_lock lock(stm->stream_reset_lock);
 

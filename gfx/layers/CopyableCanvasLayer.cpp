@@ -85,10 +85,21 @@ CopyableCanvasLayer::IsDataValid(const Data& aData)
 void
 CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 {
+  AutoReturnSnapshot autoReturn;
+
   if (mAsyncRenderer) {
     mSurface = mAsyncRenderer->GetSurface();
   } else if (!mGLFrontbuffer && mBufferProvider) {
-    mSurface = mBufferProvider->GetSnapshot();
+    mSurface = mBufferProvider->BorrowSnapshot();
+    if (aDestTarget) {
+      // If !aDestTarget we'll end up painting using mSurface later,
+      // so we can't return it to the provider (note that this will trigger a
+      // copy of the snapshot behind the scenes when the provider is unlocked).
+      autoReturn.mSnapshot = &mSurface;
+    }
+    // Either way we need to call ReturnSnapshot because ther may be an
+    // underlying TextureClient that has to be unlocked.
+    autoReturn.mBufferProvider = mBufferProvider;
   }
 
   if (!mGLContext && aDestTarget) {
@@ -99,6 +110,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
                                IntPoint(0, 0));
       mSurface = nullptr;
     }
+
     return;
   }
 

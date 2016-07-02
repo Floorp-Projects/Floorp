@@ -217,9 +217,11 @@ private:
   static void LargeAllocationFailureCallback(void* aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
                               void* aData);
+  static JSObject* GetIncumbentGlobalCallback(JSContext* aCx);
   static bool EnqueuePromiseJobCallback(JSContext* aCx,
                                         JS::HandleObject aJob,
                                         JS::HandleObject aAllocationSite,
+                                        JS::HandleObject aIncumbentGlobal,
                                         void* aData);
 #ifdef SPIDERMONKEY_PROMISE
   static void PromiseRejectionTrackerCallback(JSContext* aCx,

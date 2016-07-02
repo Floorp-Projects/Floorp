@@ -98,6 +98,22 @@ BytesPerPixel(SurfaceFormat aFormat)
   }
 }
 
+static inline bool
+IsOpaqueFormat(SurfaceFormat aFormat) {
+  switch (aFormat) {
+    case SurfaceFormat::B8G8R8X8:
+    case SurfaceFormat::R8G8B8X8:
+    case SurfaceFormat::X8R8G8B8:
+    case SurfaceFormat::YUV:
+    case SurfaceFormat::NV12:
+    case SurfaceFormat::YUV422:
+    case SurfaceFormat::R5G6B5_UINT16:
+      return true;
+    default:
+      return false;
+  }
+}
+
 template<typename T, int alignment = 16>
 struct AlignedArray
 {

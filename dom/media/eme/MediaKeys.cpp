@@ -284,6 +284,26 @@ MediaKeys::ResolvePromise(PromiseId aId)
   MOZ_ASSERT(!mPromises.Contains(aId));
 }
 
+class MediaKeysGMPCrashHelper : public GMPCrashHelper
+{
+public:
+  explicit MediaKeysGMPCrashHelper(MediaKeys* aMediaKeys)
+    : mMediaKeys(aMediaKeys)
+  {
+    MOZ_ASSERT(NS_IsMainThread()); // WeakPtr isn't thread safe.
+  }
+  already_AddRefed<nsPIDOMWindowInner>
+  GetPluginCrashedEventTarget() override
+  {
+    MOZ_ASSERT(NS_IsMainThread()); // WeakPtr isn't thread safe.
+    EME_LOG("MediaKeysGMPCrashHelper::GetPluginCrashedEventTarget()");
+    return (mMediaKeys && mMediaKeys->GetParentObject()) ?
+      do_AddRef(mMediaKeys->GetParentObject()) : nullptr;
+  }
+private:
+  WeakPtr<MediaKeys> mMediaKeys;
+};
+
 already_AddRefed<DetailedPromise>
 MediaKeys::Init(ErrorResult& aRv)
 {
@@ -367,7 +387,8 @@ MediaKeys::Init(ErrorResult& aRv)
                origin,
                topLevelOrigin,
                KeySystemToGMPName(mKeySystem),
-               inPrivateBrowsing);
+               inPrivateBrowsing,
+               new MediaKeysGMPCrashHelper(this));
 
   return promise.forget();
 }
@@ -390,21 +411,6 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
   MediaKeySystemAccess::NotifyObservers(mParent,
                                         mKeySystem,
                                         MediaKeySystemStatus::Cdm_created);
-
-  if (aPluginId) {
-    // Prepare plugin crash reporter.
-    RefPtr<gmp::GeckoMediaPluginService> service =
-      gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
-    if (NS_WARN_IF(!service)) {
-      return;
-    }
-    if (NS_WARN_IF(!mParent)) {
-      return;
-    }
-    service->AddPluginCrashedEventTarget(aPluginId, mParent);
-    EME_LOG("MediaKeys[%p]::OnCDMCreated() registered crash handler for pluginId '%i'",
-            this, aPluginId);
-  }
 }
 
 already_AddRefed<MediaKeySession>

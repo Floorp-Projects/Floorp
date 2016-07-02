@@ -67,11 +67,36 @@ class PromiseObject : public NativeObject
     }
 };
 
-// ES6, 25.4.2.1.
-bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
+/**
+ * Tells the embedding to enqueue a Promise reaction job, based on six
+ * parameters:
+ * reaction handler - The callback to invoke for this job.
+   argument - The first and only argument to pass to the handler.
+   resolve - The Promise cabability's resolve hook, called upon normal
+             completion of the handler.
+   reject -  The Promise cabability's reject hook, called if the handler
+             throws.
+   promise - The associated Promise, or null for some internal uses.
+   objectFromIncumbentGlobal - An object from the global that was the
+                               incumbent global when the Promise reaction job
+                               was created (not enqueued). Not the global
+                               itself because unwrapping that might unwrap an
+                               inner to an outer window, which we never want
+                               to happen.
+ */
+bool EnqueuePromiseReactionJob(JSContext* cx, HandleValue handler, HandleValue handlerArg,
+                               HandleObject resolve, HandleObject reject,
+                               HandleObject promise, HandleObject objectFromIncumbentGlobal);
 
-// ES6, 25.4.2.2.
-bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp);
+/**
+ * Tells the embedding to enqueue a Promise resolve thenable job, based on six
+ * parameters:
+ * promiseToResolve - The promise to resolve, obviously.
+ * thenable - The thenable to resolve the Promise with.
+ * then - The `then` function to invoke with the `thenable` as the receiver.
+ */
+bool EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve,
+                                      HandleValue thenable, HandleValue then);
 
 } // namespace js
 

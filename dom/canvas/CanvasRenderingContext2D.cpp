@@ -42,6 +42,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsDisplayList.h"
 #include "nsFocusManager.h"
+#include "nsContentUtils.h"
 
 #include "nsTArray.h"
 
@@ -85,6 +86,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
@@ -120,6 +122,7 @@
 #include "CanvasUtils.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/layers/CanvasClient.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -223,10 +226,32 @@ protected:
   Point mEnd;
 };
 
+bool
+CanvasRenderingContext2D::PatternIsOpaque(CanvasRenderingContext2D::Style aStyle) const
+{
+  const ContextState& state = CurrentState();
+  if (state.globalAlpha < 1.0) {
+    return false;
+  }
+
+  if (state.patternStyles[aStyle] && state.patternStyles[aStyle]->mSurface) {
+    return IsOpaqueFormat(state.patternStyles[aStyle]->mSurface->GetFormat());
+  }
+
+  // TODO: for gradient patterns we could check that all stops are opaque
+  // colors.
+
+  if (!state.gradientStyles[aStyle]) {
+    // it's a color pattern.
+    return Color::FromABGR(state.colorStyles[aStyle]).a >= 1.0;
+  }
+
+  return false;
+}
+
 // This class is named 'GeneralCanvasPattern' instead of just
 // 'GeneralPattern' to keep Windows PGO builds from confusing the
 // GeneralPattern class in gfxContext.cpp with this one.
-
 class CanvasGeneralPattern
 {
 public:
@@ -721,6 +746,36 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CanvasPattern, Release)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPattern, mContext)
 
+class CanvasShutdownObserver final : public nsIObserver
+{
+public:
+  explicit CanvasShutdownObserver(CanvasRenderingContext2D* aCanvas)
+  : mCanvas(aCanvas)
+  {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+private:
+  ~CanvasShutdownObserver() {}
+
+  CanvasRenderingContext2D* mCanvas;
+};
+
+NS_IMPL_ISUPPORTS(CanvasShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+CanvasShutdownObserver::Observe(nsISupports *aSubject,
+                                const char *aTopic,
+                                const char16_t *aData)
+{
+  if (mCanvas && strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    mCanvas->OnShutdown();
+    nsContentUtils::UnregisterShutdownObserver(this);
+  }
+
+  return NS_OK;
+}
+
 class CanvasDrawObserver
 {
 public:
@@ -1011,6 +1066,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mResetLayer(true)
   , mIPC(false)
   , mIsSkiaGL(false)
+  , mHasPendingStableStateCallback(false)
   , mDrawObserver(nullptr)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false)
@@ -1019,6 +1075,9 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   , mInvalidateCount(0)
 {
   sNumLivingContexts++;
+
+  mShutdownObserver = new CanvasShutdownObserver(this);
+  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 
   // The default is to use OpenGL mode
   if (gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
@@ -1032,6 +1091,7 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 {
   RemoveDrawObserver();
   RemovePostRefreshObserver();
+  RemoveShutdownObserver();
   Reset();
   // Drop references from all CanvasRenderingContext2DUserData to this context
   for (uint32_t i = 0; i < mUserDatas.Length(); ++i) {
@@ -1122,6 +1182,29 @@ CanvasRenderingContext2D::Reset()
   mIsCapturedFrameInvalid = false;
 
   return NS_OK;
+}
+
+void
+CanvasRenderingContext2D::OnShutdown()
+{
+  mShutdownObserver = nullptr;
+
+  RefPtr<PersistentBufferProvider> provider = mBufferProvider;
+
+  Reset();
+
+  if (provider) {
+    provider->OnShutdown();
+  }
+}
+
+void
+CanvasRenderingContext2D::RemoveShutdownObserver()
+{
+  if (mShutdownObserver) {
+    nsContentUtils::UnregisterShutdownObserver(mShutdownObserver);
+    mShutdownObserver = nullptr;
+  }
 }
 
 void
@@ -1276,6 +1359,8 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
 
   RefPtr<SourceSurface> snapshot;
   Matrix transform;
+  RefPtr<PersistentBufferProvider> oldBufferProvider = mBufferProvider;
+  AutoReturnSnapshot autoReturn(nullptr);
 
   if (mTarget) {
     snapshot = mTarget->Snapshot();
@@ -1285,14 +1370,16 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
     // When mBufferProvider is true but we have no mTarget, our current state's
     // transform is always valid. See ReturnTarget().
     transform = CurrentState().transform;
-    snapshot = mBufferProvider->GetSnapshot();
+    snapshot = mBufferProvider->BorrowSnapshot();
+    autoReturn.mBufferProvider = mBufferProvider;
+    autoReturn.mSnapshot = &snapshot;
   }
   mTarget = nullptr;
   mBufferProvider = nullptr;
   mResetLayer = true;
 
   // Recreate target using the new rendering mode
-  RenderingMode attemptedMode = EnsureTarget(aRenderingMode);
+  RenderingMode attemptedMode = EnsureTarget(nullptr, aRenderingMode);
   if (!IsTargetValid())
     return false;
 
@@ -1424,9 +1511,38 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize aSize) {
   return threshold < 0 || (aSize.width * aSize.height) <= threshold;
 }
 
-CanvasRenderingContext2D::RenderingMode
-CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
+void
+CanvasRenderingContext2D::ScheduleStableStateCallback()
 {
+  if (mHasPendingStableStateCallback) {
+    return;
+  }
+  mHasPendingStableStateCallback = true;
+
+  nsContentUtils::RunInStableState(
+    NewRunnableMethod(this, &CanvasRenderingContext2D::OnStableState)
+  );
+}
+
+void
+CanvasRenderingContext2D::OnStableState()
+{
+  ReturnTarget();
+
+  mHasPendingStableStateCallback = false;
+}
+
+CanvasRenderingContext2D::RenderingMode
+CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
+                                       RenderingMode aRenderingMode)
+{
+  if (AlreadyShutDown()) {
+    gfxCriticalError() << "Attempt to render into a Canvas2d after shutdown.";
+    EnsureErrorTarget();
+    mTarget = sErrorTarget;
+    return aRenderingMode;
+  }
+
   // This would make no sense, so make sure we don't get ourselves in a mess
   MOZ_ASSERT(mRenderingMode != RenderingMode::DefaultBackendMode);
 
@@ -1437,8 +1553,23 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
   }
 
   if (mBufferProvider && mode == mRenderingMode) {
-    mTarget = mBufferProvider->GetDT(IntRect(IntPoint(), IntSize(mWidth, mHeight)));
+    gfx::Rect rect(0, 0, mWidth, mHeight);
+    if (aCoveredRect && CurrentState().transform.TransformBounds(*aCoveredRect).Contains(rect)) {
+      mTarget = mBufferProvider->BorrowDrawTarget(IntRect());
+    } else {
+      mTarget = mBufferProvider->BorrowDrawTarget(IntRect(0, 0, mWidth, mHeight));
+    }
+
+    ScheduleStableStateCallback();
+
     if (mTarget) {
+      // Restore clip and transform.
+      mTarget->SetTransform(CurrentState().transform);
+      for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
+        for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
+          mTarget->PushClip(mStyleStack[i].clipsPushed[c]);
+        }
+      }
       return mRenderingMode;
     } else {
       mBufferProvider = nullptr;
@@ -1495,7 +1626,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     }
 
     if (mBufferProvider) {
-      mTarget = mBufferProvider->GetDT(IntRect(IntPoint(), IntSize(mWidth, mHeight)));
+      mTarget = mBufferProvider->BorrowDrawTarget(IntRect(IntPoint(), IntSize(mWidth, mHeight)));
     } else if (!mTarget) {
       mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
       mode = RenderingMode::SoftwareBackendMode;
@@ -1623,7 +1754,12 @@ CanvasRenderingContext2D::ReturnTarget()
 {
   if (mTarget && mBufferProvider) {
     CurrentState().transform = mTarget->GetTransform();
-    mBufferProvider->ReturnAndUseDT(mTarget.forget());
+    for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
+      for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
+        mTarget->PopClip();
+      }
+    }
+    mBufferProvider->ReturnDrawTarget(mTarget.forget());
   }
 }
 
@@ -2598,9 +2734,11 @@ CanvasRenderingContext2D::ClearRect(double aX, double aY, double aW,
     return;
   }
 
-  EnsureTarget();
+  gfx::Rect clearRect(aX, aY, aW, aH);
 
-  mTarget->ClearRect(gfx::Rect(aX, aY, aW, aH));
+  EnsureTarget(&clearRect);
+
+  mTarget->ClearRect(clearRect);
 
   RedrawUser(gfxRect(aX, aY, aW, aH));
 }
@@ -2661,18 +2799,22 @@ CanvasRenderingContext2D::FillRect(double aX, double aY, double aW,
     }
   }
 
-  gfx::Rect bounds;
+  CompositionOp op = UsedOperation();
+  bool discardContent = PatternIsOpaque(Style::FILL)
+    && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_DEST_OUT);
 
-  EnsureTarget();
+  const gfx::Rect fillRect(aX, aY, aW, aH);
+  EnsureTarget(discardContent ? &fillRect : nullptr);
+
+  gfx::Rect bounds;
   if (NeedToCalculateBounds()) {
-    bounds = gfx::Rect(aX, aY, aW, aH);
-    bounds = mTarget->GetTransform().TransformBounds(bounds);
+    bounds = mTarget->GetTransform().TransformBounds(fillRect);
   }
 
   AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
     FillRect(gfx::Rect(aX, aY, aW, aH),
              CanvasGeneralPattern().ForStyle(this, Style::FILL, mTarget),
-             DrawOptions(state.globalAlpha, UsedOperation()));
+             DrawOptions(state.globalAlpha, op));
 
   RedrawUser(gfxRect(aX, aY, aW, aH));
 }
@@ -4992,9 +5134,13 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   RefPtr<DrawTarget> drawDT;
   // Rendering directly is faster and can be done if mTarget supports Azure
   // and does not need alpha blending.
+  // Since the pre-transaction callback calls ReturnTarget, we can't have a
+  // gfxContext wrapped around it when using a shared buffer provider because
+  // the DrawTarget's shared buffer may be unmapped in ReturnTarget.
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget) &&
       GlobalAlpha() == 1.0f &&
-      UsedOperation() == CompositionOp::OP_OVER)
+      UsedOperation() == CompositionOp::OP_OVER &&
+      (!mBufferProvider || mBufferProvider->GetType() != LayersBackend::LAYERS_CLIENT))
   {
     thebes = gfxContext::CreateOrNull(mTarget);
     MOZ_ASSERT(thebes); // already checked the draw target above
@@ -5638,6 +5784,10 @@ void CanvasRenderingContext2D::RemoveDrawObserver()
 PersistentBufferProvider*
 CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
 {
+  if (AlreadyShutDown()) {
+    return nullptr;
+  }
+
   if (mBufferProvider) {
     return mBufferProvider;
   }
@@ -5646,7 +5796,14 @@ CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
     return nullptr;
   }
 
-  mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+  if (aManager) {
+    mBufferProvider = aManager->CreatePersistentBufferProvider(gfx::IntSize(mWidth, mHeight),
+                                                               GetSurfaceFormat());
+  }
+
+  if (!mBufferProvider) {
+    mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+  }
 
   return mBufferProvider;
 }

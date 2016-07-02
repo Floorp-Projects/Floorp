@@ -111,6 +111,7 @@ GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
   , mAdapter(nullptr)
   , mImageContainer(aParams.mImageContainer)
   , mLayersBackend(aParams.mLayersBackend)
+  , mCrashHelper(aParams.mCrashHelper)
 {}
 
 GMPVideoDecoderParams&
@@ -140,6 +141,7 @@ GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
   , mHost(nullptr)
   , mAdapter(aParams.mAdapter)
   , mConvertNALUnitLengths(false)
+  , mCrashHelper(aParams.mCrashHelper)
 {
   MOZ_ASSERT(!mAdapter || mCallback == mAdapter->Callback());
   if (!mAdapter) {
@@ -281,7 +283,7 @@ GMPVideoDecoder::Init()
   nsTArray<nsCString> tags;
   InitTags(tags);
   UniquePtr<GetGMPVideoDecoderCallback> callback(new GMPInitDoneCallback(this));
-  if (NS_FAILED(mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), Move(callback)))) {
+  if (NS_FAILED(mMPS->GetGMPVideoDecoder(mCrashHelper, &tags, GetNodeId(), Move(callback)))) {
     mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
   }
 

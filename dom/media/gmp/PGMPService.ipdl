@@ -15,10 +15,13 @@ sync protocol PGMPService
   parent spawns PGMP as child;
 
 parent:
-  sync LoadGMP(nsCString nodeId, nsCString api, nsCString[] tags,
-               ProcessId[] alreadyBridgedTo)
-    returns (ProcessId id, nsCString displayName, uint32_t pluginId,
-             nsresult aResult);
+
+  sync SelectGMP(nsCString nodeId, nsCString api, nsCString[] tags)
+    returns (uint32_t pluginId, nsresult aResult);
+
+  sync LaunchGMP(uint32_t pluginId, ProcessId[] alreadyBridgedTo)
+    returns (ProcessId id, nsCString displayName, nsresult aResult);
+
   sync GetGMPNodeId(nsString origin, nsString topLevelOrigin,
                     nsString gmpName,
                     bool inPrivateBrowsing)

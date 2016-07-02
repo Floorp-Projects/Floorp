@@ -119,7 +119,7 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   }
 
   mTextureClient = TextureClient::CreateForYCbCrWithBufferSize(mCompositable->GetForwarder(),
-                                                               gfx::SurfaceFormat::YUV, size,
+                                                               size,
                                                                mCompositable->GetTextureFlags());
 
   // get new buffer _without_ setting mBuffer.

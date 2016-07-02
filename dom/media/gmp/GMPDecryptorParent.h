@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "gmp-decryption.h"
 #include "GMPDecryptorProxy.h"
+#include "GMPCrashHelperHolder.h"
 
 namespace mozilla {
 
@@ -21,6 +22,7 @@ class GMPContentParent;
 
 class GMPDecryptorParent final : public GMPDecryptorProxy
                                , public PGMPDecryptorParent
+                               , public GMPCrashHelperHolder
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPDecryptorParent)

@@ -45,6 +45,10 @@ DrawTargetCaptureImpl::Snapshot()
   return dt->Snapshot();
 }
 
+void
+DrawTargetCaptureImpl::DetachAllSnapshots()
+{}
+
 #define AppendCommand(arg) new (AppendToCommandList<arg>()) arg
 
 void

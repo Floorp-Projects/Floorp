@@ -95,13 +95,13 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
   private:
     void
-    emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* mir, const MInstruction* ins,
+    emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* mir, const MInstruction* ins,
                                Register ptr, Label* fail);
 
   public:
     // For SIMD and atomic loads and stores (which throw on out-of-bounds):
     bool
-    maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess* mir, const MInstruction* ins,
+    maybeEmitThrowingAsmJSBoundsCheck(const MWasmMemoryAccess* mir, const MInstruction* ins,
                                       const LAllocation* ptr);
 
     // For asm.js plain and atomic loads that possibly require a bounds check:
@@ -113,7 +113,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool
     maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins, Label** rejoin);
 
-    void cleanupAfterAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* mir, Register ptr);
+    void cleanupAfterAsmJSBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr);
 
     NonAssertingLabel deoptLabel_;
 

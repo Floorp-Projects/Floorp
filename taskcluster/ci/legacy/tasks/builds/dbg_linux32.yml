@@ -1,12 +1,12 @@
 $inherits:
   from: 'tasks/builds/base_linux32.yml'
   variables:
-    build_name: 'linux32'
-    build_type: 'dbg'
+    build_name: 'linux'
+    build_type: 'debug'
 task:
   metadata:
-      name: '[TC] Linux32 Dbg'
-      description: 'Linux32 Dbg'
+      name: '[TC] Linux32 Debug'
+      description: 'Linux32 Debug'
 
   routes:
     - 'coalesce.v1.builds.{{project}}.dbg_linux32'
