@@ -443,20 +443,86 @@ PromiseObject::onSettled(JSContext* cx)
     JS::dbg::onPromiseSettled(cx, promise);
 }
 
+enum ReactionJobSlots {
+    ReactionJobSlot_Handler = 0,
+    ReactionJobSlot_JobData,
+};
+
+enum ReactionJobDataSlots {
+    ReactionJobDataSlot_HandlerArg = 0,
+    ReactionJobDataSlot_ResolveHook,
+    ReactionJobDataSlot_RejectHook,
+    ReactionJobDataSlotsCount,
+};
+
 // ES6, 25.4.2.1.
-bool
+/**
+ * Callback triggering the fulfill/reject reaction for a resolved Promise,
+ * to be invoked by the embedding during its processing of the Promise job
+ * queue.
+ *
+ * See http://www.ecma-international.org/ecma-262/6.0/index.html#sec-jobs-and-job-queues
+ *
+ * A PromiseReactionJob is set as the native function of an extended
+ * JSFunction object, with all information required for the job's
+ * execution stored in the function's extended slots.
+ *
+ * Usage of the function's extended slots is as follows:
+ * ReactionJobSlot_Handler: The handler to use as the Promise reaction.
+ *                          This can be PROMISE_HANDLER_IDENTITY,
+ *                          PROMISE_HANDLER_THROWER, or a callable. In the
+ *                          latter case, it's guaranteed to be an object from
+ *                          the same compartment as the PromiseReactionJob.
+ * ReactionJobSlot_JobData: JobData - a, potentially CCW-wrapped, dense list
+ *                          containing data required for proper execution of
+ *                          the reaction.
+ *
+ * The JobData list has the following entries:
+ * ReactionJobDataSlot_HandlerArg: Value passed as argument when invoking the
+ *                                 reaction handler.
+ * ReactionJobDataSlot_ResolveHook: The Promise's resolve hook, invoked if the
+ *                                  handler is PROMISE_HANDLER_IDENTITY or
+ *                                  upon successful execution of a callable
+ *                                  handler.
+ *  ReactionJobDataSlot_RejectHook: The Promise's reject hook, invoked if the
+ *                                  handler is PROMISE_HANDLER_THROWER or if
+ *                                  execution of a callable handler aborts
+ *                                  abnormally.
+ */
+static bool
 PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction job(cx, &args.callee().as<JSFunction>());
-    RootedNativeObject jobArgs(cx, &job->getExtendedSlot(0).toObject().as<NativeObject>());
 
-    RootedValue argument(cx, jobArgs->getDenseElement(1));
+    RootedFunction job(cx, &args.callee().as<JSFunction>());
+
+    RootedValue handlerVal(cx, job->getExtendedSlot(ReactionJobSlot_Handler));
+    RootedObject jobDataObj(cx, &job->getExtendedSlot(ReactionJobSlot_JobData).toObject());
+
+    // To ensure that the embedding ends up with the right entry global, we're
+    // guaranteeing that the reaction job function gets created in the same
+    // compartment as the handler function. That's not necessarily the global
+    // that the job was triggered from, though. To be able to find the
+    // triggering global, we always create the jobArgs object in that global
+    // and wrap it into the handler's. So to go back, we check if jobArgsObj
+    // is a wrapper and if so, unwrap it, enter its compartment, and wrap
+    // the handler into that compartment.
+    //
+    // See the doc comment for PromiseReactionJob for how this information is
+    // stored.
+    mozilla::Maybe<AutoCompartment> ac;
+    if (IsWrapper(jobDataObj)) {
+        jobDataObj = UncheckedUnwrap(jobDataObj);
+        ac.emplace(cx, jobDataObj);
+        if (!cx->compartment()->wrap(cx, &handlerVal))
+            return false;
+    }
+    RootedNativeObject jobData(cx, &jobDataObj->as<NativeObject>());
+    RootedValue argument(cx, jobData->getDenseElement(ReactionJobDataSlot_HandlerArg));
 
     // Step 1 (omitted).
 
     // Steps 2-3.
-    RootedValue handlerVal(cx, jobArgs->getDenseElement(0));
     RootedValue handlerResult(cx);
     bool shouldReject = false;
 
@@ -486,31 +552,163 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 7-9.
+    size_t hookSlot = shouldReject
+                      ? ReactionJobDataSlot_RejectHook
+                      : ReactionJobDataSlot_ResolveHook;
+    RootedObject callee(cx, &jobData->getDenseElement(hookSlot).toObject());
+
     FixedInvokeArgs<1> args2(cx);
     args2[0].set(handlerResult);
-    RootedValue calleeOrRval(cx);
-    if (shouldReject) {
-        calleeOrRval = jobArgs->getDenseElement(3);
-    } else {
-        calleeOrRval = jobArgs->getDenseElement(2);
-    }
+    RootedValue calleeOrRval(cx, ObjectValue(*callee));
     bool result = Call(cx, calleeOrRval, UndefinedHandleValue, args2, &calleeOrRval);
 
     args.rval().set(calleeOrRval);
     return result;
 }
 
-// ES6, 25.4.2.2.
 bool
+EnqueuePromiseReactionJob(JSContext* cx, HandleValue handler_, HandleValue handlerArg,
+                          HandleObject resolve, HandleObject reject,
+                          HandleObject promise_, HandleObject objectFromIncumbentGlobal_)
+{
+    // Create a dense array to hold the data needed for the reaction job to
+    // work.
+    // See doc comment for PromiseReactionJob for layout details.
+    RootedArrayObject data(cx, NewDenseFullyAllocatedArray(cx, ReactionJobDataSlotsCount));
+    if (!data ||
+        data->ensureDenseElements(cx, 0, ReactionJobDataSlotsCount) != DenseElementResult::Success)
+    {
+        return false;
+    }
+
+    // Store the handler argument.
+    data->setDenseElement(ReactionJobDataSlot_HandlerArg, handlerArg);
+
+    // Store the resolve hook.
+    data->setDenseElement(ReactionJobDataSlot_ResolveHook, ObjectValue(*resolve));
+
+    // Store the reject hook.
+    data->setDenseElement(ReactionJobDataSlot_RejectHook, ObjectValue(*reject));
+
+    RootedValue dataVal(cx, ObjectValue(*data));
+
+    // Re-rooting because we might need to unwrap it.
+    RootedValue handler(cx, handler_);
+
+    // If we have a handler callback, we enter that handler's compartment so
+    // that the promise reaction job function is created in that compartment.
+    // That guarantees that the embedding ends up with the right entry global.
+    // This is relevant for some html APIs like fetch that derive information
+    // from said global.
+    mozilla::Maybe<AutoCompartment> ac;
+    if (handler.isObject()) {
+        RootedObject handlerObj(cx, &handler.toObject());
+
+        // The unwrapping has to be unchecked because we specifically want to
+        // be able to use handlers with wrappers that would only allow calls.
+        // E.g., it's ok to have a handler from a chrome compartment in a
+        // reaction to a content compartment's Promise instance.
+        handlerObj = UncheckedUnwrap(handlerObj);
+        MOZ_ASSERT(handlerObj);
+        ac.emplace(cx, handlerObj);
+        handler = ObjectValue(*handlerObj);
+
+        // We need to wrap the |data| array to store it on the job function.
+        if (!cx->compartment()->wrap(cx, &dataVal))
+            return false;
+    }
+
+    // Create the JS function to call when the job is triggered.
+    RootedAtom funName(cx, cx->names().empty);
+    RootedFunction job(cx, NewNativeFunction(cx, PromiseReactionJob, 0, funName,
+                                             gc::AllocKind::FUNCTION_EXTENDED));
+    if (!job)
+        return false;
+
+    // Store the handler and the data array on the reaction job.
+    job->setExtendedSlot(ReactionJobSlot_Handler, handler);
+    job->setExtendedSlot(ReactionJobSlot_JobData, dataVal);
+
+    // When using JS::AddPromiseReactions, no actual promise is created, so we
+    // might not have one here.
+    // If we do, Wrap it in case we entered the handler's compartment above,
+    // because we should pass objects from a single compartment to the
+    // enqueuePromiseJob callback.
+    RootedObject promise(cx, promise_);
+    if (!cx->compartment()->wrap(cx, &promise))
+        return false;
+
+    // Using objectFromIncumbentGlobal, we can derive the incumbent global by
+    // unwrapping and then getting the global. This is very convoluted, but
+    // much better than having to store the original global as a private value
+    // because we couldn't wrap it to store it as a normal JS value.
+    RootedObject global(cx);
+    RootedObject objectFromIncumbentGlobal(cx, objectFromIncumbentGlobal_);
+    if (objectFromIncumbentGlobal) {
+        objectFromIncumbentGlobal = CheckedUnwrap(objectFromIncumbentGlobal);
+        MOZ_ASSERT(objectFromIncumbentGlobal);
+        global = &objectFromIncumbentGlobal->global();
+    }
+
+    // Note: the global we pass here might be from a different compartment
+    // than job and promise. While it's somewhat unusual to pass objects
+    // from multiple compartments, in this case we specifically need the
+    // global to be unwrapped because wrapping and unwrapping aren't
+    // necessarily symmetric for globals.
+    return cx->runtime()->enqueuePromiseJob(cx, job, promise, global);
+}
+
+enum ThenableJobSlots {
+    ThenableJobSlot_Handler = 0,
+    ThenableJobSlot_JobData,
+};
+
+enum ThenableJobDataSlots {
+    ThenableJobDataSlot_Promise = 0,
+    ThenableJobDataSlot_Thenable,
+    ThenableJobDataSlotsCount,
+};
+// ES6, 25.4.2.2.
+/**
+ * Callback for resolving a thenable, to be invoked by the embedding during
+ * its processing of the Promise job queue.
+ *
+ * See http://www.ecma-international.org/ecma-262/6.0/index.html#sec-jobs-and-job-queues
+ *
+ * A PromiseResolveThenableJob is set as the native function of an extended
+ * JSFunction object, with all information required for the job's
+ * execution stored in the function's extended slots.
+ *
+ * Usage of the function's extended slots is as follows:
+ * ThenableJobSlot_Handler: The handler to use as the Promise reaction.
+ *                          This can be PROMISE_HANDLER_IDENTITY,
+ *                          PROMISE_HANDLER_THROWER, or a callable. In the
+ *                          latter case, it's guaranteed to be an object
+ *                          from the same compartment as the
+ *                          PromiseReactionJob.
+ * ThenableJobSlot_JobData: JobData - a, potentially CCW-wrapped, dense list
+ *                          containing data required for proper execution of
+ *                          the reaction.
+ *
+ * The JobData list has the following entries:
+ * ThenableJobDataSlot_Promise: The Promise to resolve using the given
+ *                              thenable.
+ * ThenableJobDataSlot_Thenable: The thenable to use as the receiver when
+ *                               calling the `then` function.
+ */
+static bool
 PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction job(cx, &args.callee().as<JSFunction>());
-    RootedNativeObject jobArgs(cx, &job->getExtendedSlot(0).toObject().as<NativeObject>());
 
-    RootedValue promise(cx, jobArgs->getDenseElement(2));
-    RootedValue then(cx, jobArgs->getDenseElement(0));
-    RootedValue thenable(cx, jobArgs->getDenseElement(1));
+    RootedFunction job(cx, &args.callee().as<JSFunction>());
+    RootedValue then(cx, job->getExtendedSlot(ThenableJobSlot_Handler));
+    MOZ_ASSERT(!IsWrapper(&then.toObject()));
+    RootedNativeObject jobArgs(cx, &job->getExtendedSlot(ThenableJobSlot_JobData)
+                                    .toObject().as<NativeObject>());
+
+    RootedValue promise(cx, jobArgs->getDenseElement(ThenableJobDataSlot_Promise));
+    RootedValue thenable(cx, jobArgs->getDenseElement(ThenableJobDataSlot_Thenable));
 
     // Step 1.
     RootedValue resolveVal(cx);
@@ -536,6 +734,64 @@ PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
     rejectArgs[0].set(rval);
 
     return Call(cx, rejectVal, UndefinedHandleValue, rejectArgs, &rval);
+}
+
+bool
+EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
+                                 HandleValue thenable_, HandleValue thenVal)
+{
+    // Need to re-root these to enable wrapping them below.
+    RootedValue promiseToResolve(cx, promiseToResolve_);
+    RootedValue thenable(cx, thenable_);
+
+    // We enter the `then` callable's compartment so that the job function is
+    // created in that compartment.
+    // That guarantees that the embedding ends up with the right entry global.
+    // This is relevant for some html APIs like fetch that derive information
+    // from said global.
+    RootedObject then(cx, CheckedUnwrap(&thenVal.toObject()));
+    AutoCompartment ac(cx, then);
+
+    RootedAtom funName(cx, cx->names().empty);
+    if (!funName)
+        return false;
+    RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
+                                             gc::AllocKind::FUNCTION_EXTENDED));
+    if (!job)
+        return false;
+
+    // Store the `then` function on the callback.
+    job->setExtendedSlot(ThenableJobSlot_Handler, ObjectValue(*then));
+
+    // Create a dense array to hold the data needed for the reaction job to
+    // work.
+    // See the doc comment for PromiseResolveThenableJob for the layout.
+    RootedArrayObject data(cx, NewDenseFullyAllocatedArray(cx, ThenableJobDataSlotsCount));
+    if (!data ||
+        data->ensureDenseElements(cx, 0, ThenableJobDataSlotsCount) != DenseElementResult::Success)
+    {
+        return false;
+    }
+
+    // Wrap and set the `promiseToResolve` argument.
+    if (!cx->compartment()->wrap(cx, &promiseToResolve))
+        return false;
+    data->setDenseElement(ThenableJobDataSlot_Promise, promiseToResolve);
+    // At this point the promise is guaranteed to be wrapped into the job's
+    // compartment.
+    RootedObject promise(cx, &promiseToResolve.toObject());
+
+    // Wrap and set the `thenable` argument.
+    MOZ_ASSERT(thenable.isObject());
+    if (!cx->compartment()->wrap(cx, &thenable))
+        return false;
+    data->setDenseElement(ThenableJobDataSlot_Thenable, thenable);
+
+    // Store the data array on the reaction job.
+    job->setExtendedSlot(ThenableJobSlot_JobData, ObjectValue(*data));
+
+    RootedObject incumbentGlobal(cx, cx->runtime()->getIncumbentGlobal(cx));
+    return cx->runtime()->enqueuePromiseJob(cx, job, promise, incumbentGlobal);
 }
 
 } // namespace js
