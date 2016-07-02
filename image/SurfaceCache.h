@@ -269,9 +269,8 @@ struct SurfaceCache
    * directly. (They couldn't, since placeholders don't have an associated
    * surface.)
    *
-   * Once inserted, placeholders can be removed using RemoveEntry() or
-   * RemoveImage(), just like a real cache entry.  They're automatically removed
-   * when a real entry that matches the placeholder is inserted with Insert().
+   * Placeholders are automatically removed when a real entry that matches the
+   * placeholder is inserted with Insert(), or when RemoveImage() is called.
    *
    * @param aImageKey       Key data identifying which image the cache entry
    *                        belongs to.
@@ -317,9 +316,8 @@ struct SurfaceCache
    * until the next UnlockImage() or UnlockSurfaces() call for that image. Any
    * other cache entries owned by the image may expire at any time.
    *
-   * Regardless of locking, any of an image's cache entries may be removed using
-   * RemoveEntry(), and all of an image's cache entries are removed by
-   * RemoveImage(), whether the image is locked or not.
+   * All of an image's cache entries are removed by RemoveImage(), whether the
+   * image is locked or not.
    *
    * It's safe to call LockImage() on an image that's already locked; this has
    * no effect.
@@ -366,22 +364,6 @@ struct SurfaceCache
   static void UnlockEntries(const ImageKey aImageKey);
 
   /**
-   * Removes a cache entry (either a real or placeholder) from the cache, if
-   * it's present. If it's not present, RemoveEntry() has no effect.
-   *
-   * Use this function to remove individual cache entries that have become
-   * invalid.  Prefer RemoveImage() or DiscardAll() when they're applicable, as
-   * they have much better performance than calling this function repeatedly.
-   *
-   * @param aImageKey       Key data identifying which image the cache entry
-   *                        belongs to.
-   * @param aSurfaceKey     Key data which uniquely identifies the requested
-   *                        cache entry.
-   */
-  static void RemoveEntry(const ImageKey    aImageKey,
-                          const SurfaceKey& aSurfaceKey);
-
-  /**
    * Removes all cache entries (both real and placeholder) associated with the
    * given image from the cache.  If the image is locked, it is automatically
    * unlocked.
@@ -398,8 +380,7 @@ struct SurfaceCache
    * Evicts all evictable entries from the cache.
    *
    * All entries are evictable except for entries associated with locked images.
-   * Non-evictable entries can only be removed by RemoveEntry() or
-   * RemoveImage().
+   * Non-evictable entries can only be removed by RemoveImage().
    */
   static void DiscardAll();
 
