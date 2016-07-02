@@ -5,7 +5,7 @@
 import re
 import urllib
 
-from marionette import MarionetteTestCase
+from marionette import MarionetteTestCase, skip
 from marionette_driver.marionette import HTMLElement
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException, InvalidSelectorException
@@ -30,14 +30,20 @@ r"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 
 
 id_html = inline("<p id=foo></p>", doctype="html")
+id_xhtml = inline('<p id="foo"></p>', doctype="xhtml")
 parent_child_html = inline("<div id=parent><p id=child></p></div>", doctype="html")
+parent_child_xhtml = inline('<div id="parent"><p id="child"></p></div>', doctype="xhtml")
 children_html = inline("<div><p>foo <p>bar</div>", doctype="html")
+children_xhtml = inline("<div><p>foo</p> <p>bar</p></div>", doctype="xhtml")
 class_html = inline("<p class='foo bar'>", doctype="html")
+class_xhtml = inline('<p class="foo bar"></p>', doctype="xhtml")
 name_html = inline("<p name=foo>", doctype="html")
+name_xhtml = inline('<p name="foo"></p>', doctype="xhtml")
 link_html = inline("<p><a href=#>foo bar</a>", doctype="html")
+link_xhtml = inline('<p><a href="#">foo bar</a></p>', doctype="xhtml")
 
 
-class TestFindElement(MarionetteTestCase):
+class TestFindElementHTML(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_search_timeout(0)
@@ -198,7 +204,90 @@ class TestFindElement(MarionetteTestCase):
         self.assertEqual(active, self.marionette.get_active_element())
 
 
-class TestFindElements(MarionetteTestCase):
+class TestFindElementXHTML(MarionetteTestCase):
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        self.marionette.set_search_timeout(0)
+
+    def test_id(self):
+        self.marionette.navigate(id_xhtml)
+        expected = self.marionette.execute_script("return document.querySelector('p')")
+        found = self.marionette.find_element(By.ID, "foo")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(expected, found)
+
+    def test_child_element(self):
+        self.marionette.navigate(parent_child_xhtml)
+        parent = self.marionette.find_element(By.ID, "parent")
+        child = self.marionette.find_element(By.ID, "child")
+        found = parent.find_element(By.TAG_NAME, "p")
+        self.assertEqual(found.tag_name, "p")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(child, found)
+
+    def test_tag_name(self):
+        self.marionette.navigate(children_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('p')")
+        found = self.marionette.find_element(By.TAG_NAME, "p")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_class_name(self):
+        self.marionette.navigate(class_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('.foo')")
+        found = self.marionette.find_element(By.CLASS_NAME, "foo")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_by_name(self):
+        self.marionette.navigate(name_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('[name=foo]')")
+        found = self.marionette.find_element(By.NAME, "foo")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_css_selector(self):
+        self.marionette.navigate(children_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('p')")
+        found = self.marionette.find_element(By.CSS_SELECTOR, "p")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_link_text(self):
+        self.marionette.navigate(link_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('a')")
+        found = self.marionette.find_element(By.LINK_TEXT, "foo bar")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_partial_link_text(self):
+        self.marionette.navigate(link_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('a')")
+        found = self.marionette.find_element(By.PARTIAL_LINK_TEXT, "foo")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_xpath(self):
+        self.marionette.navigate(id_xhtml)
+        el = self.marionette.execute_script("return document.querySelector('#foo')")
+        found = self.marionette.find_element(By.XPATH, "id('foo')")
+        self.assertIsInstance(found, HTMLElement)
+        self.assertEqual(el, found)
+
+    def test_css_selector_scope_does_not_start_at_rootnode(self):
+        self.marionette.navigate(parent_child_xhtml)
+        el = self.marionette.find_element(By.ID, "child")
+        parent = self.marionette.find_element(By.ID, "parent")
+        found = parent.find_element(By.CSS_SELECTOR, "p")
+        self.assertEqual(el, found)
+
+    def test_active_element(self):
+        self.marionette.navigate(id_xhtml)
+        active = self.marionette.execute_script("return document.activeElement")
+        self.assertEqual(active, self.marionette.get_active_element())
+
+
+class TestFindElementsHTML(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_search_timeout(0)
@@ -300,3 +389,78 @@ class TestFindElements(MarionetteTestCase):
         with self.assertRaises(InvalidSelectorException):
             parent = self.marionette.execute_script("return document.documentElement")
             parent.find_elements(By.CSS_SELECTOR, "")
+
+
+class TestFindElementsXHTML(MarionetteTestCase):
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        self.marionette.set_search_timeout(0)
+
+    def assertItemsIsInstance(self, items, typ):
+        for item in items:
+            self.assertIsInstance(item, typ)
+
+    def test_child_elements(self):
+        self.marionette.navigate(children_xhtml)
+        parent = self.marionette.find_element(By.TAG_NAME, "div")
+        children = self.marionette.find_elements(By.TAG_NAME, "p")
+        found = parent.find_elements(By.TAG_NAME, "p")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(found, children)
+
+    def test_tag_name(self):
+        self.marionette.navigate(children_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('p')")
+        found = self.marionette.find_elements(By.TAG_NAME, "p")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    def test_class_name(self):
+        self.marionette.navigate(class_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('.foo')")
+        found = self.marionette.find_elements(By.CLASS_NAME, "foo")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    def test_by_name(self):
+        self.marionette.navigate(name_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('[name=foo]')")
+        found = self.marionette.find_elements(By.NAME, "foo")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    def test_css_selector(self):
+        self.marionette.navigate(children_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('p')")
+        found = self.marionette.find_elements(By.CSS_SELECTOR, "p")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    def test_link_text(self):
+        self.marionette.navigate(link_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('a')")
+        found = self.marionette.find_elements(By.LINK_TEXT, "foo bar")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    def test_partial_link_text(self):
+        self.marionette.navigate(link_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('a')")
+        found = self.marionette.find_elements(By.PARTIAL_LINK_TEXT, "foo")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    @skip("XHTML namespace not yet supported")
+    def test_xpath(self):
+        self.marionette.navigate(children_xhtml)
+        els = self.marionette.execute_script("return document.querySelectorAll('p')")
+        found = self.marionette.find_elements(By.XPATH, "//xhtml:p")
+        self.assertItemsIsInstance(found, HTMLElement)
+        self.assertSequenceEqual(els, found)
+
+    def test_css_selector_scope_doesnt_start_at_rootnode(self):
+        self.marionette.navigate(parent_child_xhtml)
+        els = self.marionette.find_elements(By.ID, "child")
+        parent = self.marionette.find_element(By.ID, "parent")
+        found = parent.find_elements(By.CSS_SELECTOR, "p")
+        self.assertSequenceEqual(els, found)
