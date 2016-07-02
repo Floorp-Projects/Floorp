@@ -925,7 +925,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 }
 
 static void
-MaybeAddAtomicsBoundsCheck(MacroAssemblerX64& masm, MAsmJSHeapAccess* mir, Register ptr)
+MaybeAddAtomicsBoundsCheck(MacroAssemblerX64& masm, MWasmMemoryAccess* mir, Register ptr)
 {
     if (!mir->needsBoundsCheck())
         return;

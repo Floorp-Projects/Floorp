@@ -547,6 +547,8 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   SetDOMCallbacks(mJSRuntime, &DOMcallbacks);
   js::SetScriptEnvironmentPreparer(mJSRuntime, &mEnvironmentPreparer);
 
+  JS::SetGetIncumbentGlobalCallback(mJSRuntime, GetIncumbentGlobalCallback);
+
 #ifdef SPIDERMONKEY_PROMISE
   JS::SetEnqueuePromiseJobCallback(mJSRuntime, EnqueuePromiseJobCallback, this);
   JS::SetPromiseRejectionTrackerCallback(mJSRuntime, PromiseRejectionTrackerCallback, this);
@@ -920,8 +922,9 @@ CycleCollectedJSRuntime::LargeAllocationFailureCallback(void* aData)
 class PromiseJobRunnable final : public Runnable
 {
 public:
-  PromiseJobRunnable(JS::HandleObject aCallback, JS::HandleObject aAllocationSite)
-    : mCallback(new PromiseJobCallback(aCallback, aAllocationSite, nullptr))
+  PromiseJobRunnable(JS::HandleObject aCallback, JS::HandleObject aAllocationSite,
+                     nsIGlobalObject* aIncumbentGlobal)
+    : mCallback(new PromiseJobCallback(aCallback, aAllocationSite, aIncumbentGlobal))
   {
   }
 
@@ -945,17 +948,33 @@ private:
 };
 
 /* static */
+JSObject*
+CycleCollectedJSRuntime::GetIncumbentGlobalCallback(JSContext* aCx)
+{
+  nsIGlobalObject* global = mozilla::dom::GetIncumbentGlobal();
+  if (global) {
+    return global->GetGlobalJSObject();
+  }
+  return nullptr;
+}
+
+/* static */
 bool
 CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
                                                    JS::HandleObject aJob,
                                                    JS::HandleObject aAllocationSite,
+                                                   JS::HandleObject aIncumbentGlobal,
                                                    void* aData)
 {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
   MOZ_ASSERT(JS_GetRuntime(aCx) == self->Runtime());
   MOZ_ASSERT(Get() == self);
 
-  nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite);
+  nsIGlobalObject* global = nullptr;
+  if (aIncumbentGlobal) {
+    global = xpc::NativeGlobal(aIncumbentGlobal);
+  }
+  nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite, global);
   self->DispatchToMicroTask(runnable);
   return true;
 }

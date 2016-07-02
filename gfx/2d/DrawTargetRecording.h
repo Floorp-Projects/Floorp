@@ -37,6 +37,8 @@ public:
 
   virtual already_AddRefed<SourceSurface> Snapshot() override;
 
+  virtual void DetachAllSnapshots() override;
+
   virtual IntSize GetSize() override { return mFinalDT->GetSize(); }
 
   /* Ensure that the DrawTarget backend has flushed all drawing operations to

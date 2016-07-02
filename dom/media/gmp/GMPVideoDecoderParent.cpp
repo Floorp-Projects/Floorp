@@ -300,6 +300,7 @@ GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
     mPlugin = nullptr;
   }
   mVideoHost.ActorDestroyed();
+  MaybeDisconnect(aWhy == AbnormalShutdown);
 }
 
 bool

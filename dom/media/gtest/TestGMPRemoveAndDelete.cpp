@@ -323,7 +323,7 @@ GMPRemoveTest::gmp_GetVideoDecoder(nsCString aNodeId,
   UniquePtr<GetGMPVideoDecoderCallback>
     cb(new Callback(&mTestMonitor, aOutDecoder, aOutHost));
 
-  if (NS_FAILED(GetService()->GetGMPVideoDecoder(&tags, aNodeId, Move(cb)))) {
+  if (NS_FAILED(GetService()->GetGMPVideoDecoder(nullptr, &tags, aNodeId, Move(cb)))) {
     mTestMonitor.SetFinished();
   }
 }

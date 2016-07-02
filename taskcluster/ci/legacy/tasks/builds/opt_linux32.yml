@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/base_linux32.yml'
   variables:
-    build_name: 'linux32'
+    build_name: 'linux'
     build_type: 'opt'
 task:
   metadata:

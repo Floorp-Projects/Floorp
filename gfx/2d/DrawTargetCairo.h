@@ -177,6 +177,8 @@ public:
 
   virtual void SetTransform(const Matrix& aTransform) override;
 
+  virtual void DetachAllSnapshots() override { MarkSnapshotIndependent(); }
+
   // Call to set up aContext for drawing (with the current transform, etc).
   // Pass the path you're going to be using if you have one.
   // Implicitly calls WillChange(aPath).

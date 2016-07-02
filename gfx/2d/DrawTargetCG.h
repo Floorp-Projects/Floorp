@@ -128,6 +128,7 @@ public:
   virtual DrawTargetType GetType() const override;
   virtual BackendType GetBackendType() const override;
   virtual already_AddRefed<SourceSurface> Snapshot() override;
+  virtual void DetachAllSnapshots() override { MarkChanged(); }
 
   virtual void DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,

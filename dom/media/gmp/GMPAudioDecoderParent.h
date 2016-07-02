@@ -12,6 +12,7 @@
 #include "mozilla/gmp/PGMPAudioDecoderParent.h"
 #include "GMPMessageUtils.h"
 #include "GMPAudioDecoderProxy.h"
+#include "GMPCrashHelperHolder.h"
 
 namespace mozilla {
 namespace gmp {
@@ -20,6 +21,7 @@ class GMPContentParent;
 
 class GMPAudioDecoderParent final : public GMPAudioDecoderProxy
                                   , public PGMPAudioDecoderParent
+                                  , public GMPCrashHelperHolder
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPAudioDecoderParent)

@@ -87,6 +87,13 @@ public:
 };
 
 void
+DrawTargetDual::DetachAllSnapshots()
+{
+  mA->DetachAllSnapshots();
+  mB->DetachAllSnapshots();
+}
+
+void
 DrawTargetDual::DrawSurface(SourceSurface *aSurface, const Rect &aDest, const Rect &aSource,
                             const DrawSurfaceOptions &aSurfOptions, const DrawOptions &aOptions)
 {

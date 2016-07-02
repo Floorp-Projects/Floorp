@@ -57,6 +57,7 @@ struct GMPAudioDecoderParams {
   TaskQueue* mTaskQueue;
   MediaDataDecoderCallbackProxy* mCallback;
   AudioCallbackAdapter* mAdapter;
+  RefPtr<GMPCrashHelper> mCrashHelper;
 };
 
 class GMPAudioDecoder : public MediaDataDecoder {
@@ -103,6 +104,7 @@ private:
   GMPAudioDecoderProxy* mGMP;
   nsAutoPtr<AudioCallbackAdapter> mAdapter;
   MozPromiseHolder<InitPromise> mInitPromise;
+  RefPtr<GMPCrashHelper> mCrashHelper;
 };
 
 } // namespace mozilla

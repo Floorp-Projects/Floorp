@@ -524,7 +524,8 @@ TextTrackManager::DispatchTimeMarchesOn()
   // enqueue the current playback position and whether only that changed
   // through its usual monotonic increase during normal playback; current
   // executing call upon completion will check queue for further 'work'.
-  if (!mTimeMarchesOnDispatched && !mShutdown) {
+  if (!mTimeMarchesOnDispatched && !mShutdown &&
+      (mMediaElement->GetHasUserInteraction() || mMediaElement->IsCurrentlyPlaying())) {
     NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::TimeMarchesOn));
     mTimeMarchesOnDispatched = true;
   }
@@ -570,6 +571,7 @@ TextTrackManager::TimeMarchesOn()
     TextTrack* ttrack = mTextTracks->IndexedGetter(index, dummy);
     if (ttrack && dummy) {
       // TODO: call GetCueListByTimeInterval on mNewCues?
+      ttrack->UpdateActiveCueList();
       TextTrackCueList* activeCueList = ttrack->GetActiveCues();
       if (activeCueList) {
         for (uint32_t i = 0; i < activeCueList->Length(); ++i) {

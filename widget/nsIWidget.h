@@ -65,6 +65,8 @@ class SourceSurface;
 namespace widget {
 class TextEventDispatcher;
 class TextEventDispatcherListener;
+class CompositorWidget;
+class CompositorWidgetInitData;
 } // namespace widget
 } // namespace mozilla
 
@@ -1625,6 +1627,11 @@ class nsIWidget : public nsISupports
     virtual nsresult ClearNativeTouchSequence(nsIObserver* aObserver);
 
     virtual void StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) = 0;
+
+    // If this widget supports out-of-process compositing, it can override
+    // this method to provide additional information to the compositor.
+    virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
+    {}
 
 private:
   class LongTapInfo
