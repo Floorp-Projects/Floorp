@@ -934,6 +934,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     JSInterruptCallback interruptCallback;
 
+    JSGetIncumbentGlobalCallback getIncumbentGlobalCallback;
     JSEnqueuePromiseJobCallback enqueuePromiseJobCallback;
     void* enqueuePromiseJobCallbackData;
 
@@ -1051,7 +1052,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     inline JSContext* unsafeContextFromAnyThread();
     inline JSContext* contextFromMainThread();
 
-    bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
+    JSObject* getIncumbentGlobal(JSContext* cx);
+    bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise,
+                           js::HandleObject incumbentGlobal);
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
