@@ -64,7 +64,7 @@ add_task(function* () {
     let msg = [...result.matched][0];
     ok(msg, "message element found for: " + result.text);
     ok(!msg.classList.contains("filtered-by-type"), "message element is not filtered");
-    let selector = ".message > .message-location .frame-link-source";
+    let selector = ".message .message-location .frame-link-source";
     let locationNode = msg.querySelector(selector);
     ok(locationNode, "message location element found");
 

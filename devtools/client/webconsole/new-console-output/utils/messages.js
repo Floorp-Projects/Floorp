@@ -21,6 +21,22 @@ const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
+function convertCachedPacket(packet) {
+  // The devtools server provides cached message packets in a different shape
+  // from those of consoleApiCalls, so we prepare them for preparation here.
+  let convertPacket = {};
+  if (packet._type === "ConsoleAPI") {
+    convertPacket.message = packet;
+    convertPacket.type = "consoleAPICall";
+  } else if (packet._type === "PageError") {
+    convertPacket.pageError = packet;
+    convertPacket.type = "pageError";
+  } else {
+    throw new Error("Unexpected packet type");
+  }
+  return convertPacket;
+}
+
 function prepareMessage(packet) {
   // @TODO turn this into an Immutable Record.
   let allowRepeating;
@@ -30,6 +46,10 @@ function prepareMessage(packet) {
   let repeat;
   let repeatId;
   let severity;
+
+  if (packet._type) {
+    packet = convertCachedPacket(packet);
+  }
 
   switch (packet.type) {
     case "consoleAPICall":

@@ -231,7 +231,7 @@ var DebuggerController = {
       return;
     }
 
-    yield DebuggerView.initialize();
+    yield DebuggerView.initialize(this._target.isWorkerTarget);
     this._startup = true;
   }),
 

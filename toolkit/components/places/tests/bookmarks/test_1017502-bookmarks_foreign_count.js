@@ -15,7 +15,8 @@ function* getForeignCountForURL(conn, url) {
   yield PlacesTestUtils.promiseAsyncUpdates();
   url = url instanceof Ci.nsIURI ? url.spec : url;
   let rows = yield conn.executeCached(
-      "SELECT foreign_count FROM moz_places WHERE url = :t_url ", { t_url: url });
+    `SELECT foreign_count FROM moz_places WHERE url_hash = hash(:t_url)
+                                            AND url = :t_url`, { t_url: url });
   return rows[0].getResultByName("foreign_count");
 }
 
@@ -68,7 +69,8 @@ add_task(function* maintenance_foreign_count_test() {
   // Adjust the foreign_count for the added entry to an incorrect value
   let deferred = Promise.defer();
   let stmt = DBConn().createAsyncStatement(
-    "UPDATE moz_places SET foreign_count = 10 WHERE url = :t_url ");
+    `UPDATE moz_places SET foreign_count = 10 WHERE url_hash = hash(:t_url)
+                                                AND url = :t_url `);
   stmt.params.t_url = T_URI.spec;
   stmt.executeAsync({
     handleCompletion: function(){

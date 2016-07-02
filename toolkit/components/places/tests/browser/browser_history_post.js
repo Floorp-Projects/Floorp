@@ -18,11 +18,6 @@ add_task(function* () {
     });
     let visited = yield promiseIsURIVisited(SJS_URI);
     ok(!visited, "The POST page should not be added to history");
-    let db = yield PlacesUtils.promiseDBConnection();
-    let rows = yield db.execute(
-      "SELECT 1 FROM moz_places WHERE url = :page_url",
-      {page_url: SJS_URI.spec});
-    is(rows.length, 0, "The page should not be in the database");
-    yield db.close();
+    ok(!(yield PlacesTestUtils.isPageInDB(SJS_URI.spec)), "The page should not be in the database");
   }));
 });

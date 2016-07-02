@@ -24,7 +24,7 @@ add_task(function* test_ignore_invalid_uri() {
   // Now update moz_places with an invalid url.
   yield PlacesUtils.withConnectionWrapper("test_ignore_invalid_uri", Task.async(function* (db) {
     yield db.execute(
-      `UPDATE moz_places SET url = :url
+      `UPDATE moz_places SET url = :url, url_hash = hash(:url)
        WHERE id = (SELECT b.fk FROM moz_bookmarks b
        WHERE b.id = :id LIMIT 1)`,
       { id: bmid, url: "<invalid url>" });

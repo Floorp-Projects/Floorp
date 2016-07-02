@@ -4324,6 +4324,23 @@
     "releaseChannelCollection": "opt-out",
     "description": "Where automatic migration was attempted, indicates to what degree we succeeded. Values 0-25 indicate progress through the automatic migration sequence, with 25 indicating the migration finished. 26 is only used when the migration produced errors before it finished."
   },
+  "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_UNDO": {
+    "bug_numbers": [1283565],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 31,
+    "releaseChannelCollection": "opt-out",
+    "description": "Where undo of the automatic migration was attempted, indicates to what degree we succeeded to undo. 0 means we started to undo, 5 means we bailed out from the undo because it was not possible to complete it (there was nothing to undo or the user was signed in to sync). All higher values indicate progression through the undo sequence, with 30 indicating we finished the undo without exceptions in the middle."
+  },
+  "FX_STARTUP_MIGRATION_CANT_UNDO_BECAUSE_SYNC": {
+    "bug_numbers": [1283565],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Where undo of the automatic migration was requested and denied because the user was logged into sync."
+  },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
