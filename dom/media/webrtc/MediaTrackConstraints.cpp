@@ -30,6 +30,49 @@ NormalizedConstraintSet::Range<ValueType>::SetFrom(const ConstrainRange& aOther)
   }
 }
 
+// The Range code works surprisingly well for bool, except when averaging ideals.
+template<>
+bool
+NormalizedConstraintSet::Range<bool>::Merge(const Range& aOther) {
+  if (!Intersects(aOther)) {
+    return false;
+  }
+  Intersect(aOther);
+
+  // To avoid "unsafe use of type 'bool'", we keep counter in mMergeDenominator
+  uint32_t counter = mMergeDenominator >> 16;
+  uint32_t denominator = mMergeDenominator & 0xffff;
+
+  if (aOther.mIdeal.isSome()) {
+    if (mIdeal.isNothing()) {
+      mIdeal.emplace(aOther.mIdeal.value());
+      counter = aOther.mIdeal.value();
+      denominator = 1;
+    } else {
+      if (!denominator) {
+        counter = mIdeal.value();
+      }
+      counter += aOther.mIdeal.value();
+      denominator = std::max(2U, denominator + 1);
+    }
+  }
+  mMergeDenominator = ((counter & 0xffff) << 16) + (denominator & 0xffff);
+  return true;
+}
+
+template<>
+void
+NormalizedConstraintSet::Range<bool>::FinalizeMerge()
+{
+  if (mMergeDenominator) {
+    uint32_t counter = mMergeDenominator >> 16;
+    uint32_t denominator = mMergeDenominator & 0xffff;
+
+    *mIdeal = !!(counter / denominator);
+    mMergeDenominator = 0;
+  }
+}
+
 NormalizedConstraintSet::LongRange::LongRange(
     const dom::OwningLongOrConstrainLongRange& aOther, bool advanced)
 : Range<int32_t>(1 + INT32_MIN, INT32_MAX) // +1 avoids Windows compiler bug
@@ -179,13 +222,59 @@ NormalizedConstraintSet::StringRange::Intersect(const StringRange& aOther)
 }
 
 NormalizedConstraints::NormalizedConstraints(const dom::MediaTrackConstraints& aOther)
-: NormalizedConstraintSet(aOther, false)
+: NormalizedConstraintSet(aOther, false), mOverconstrained(false)
 {
   if (aOther.mAdvanced.WasPassed()) {
     for (auto& entry : aOther.mAdvanced.Value()) {
       mAdvanced.AppendElement(NormalizedConstraintSet(entry, true));
     }
   }
+}
+
+// Merge constructor. Create net constraints out of merging a set of others.
+
+NormalizedConstraints::NormalizedConstraints(
+    const nsTArray<const NormalizedConstraints*>& aOthers)
+  : NormalizedConstraintSet(*aOthers[0])
+  , mOverconstrained(false)
+{
+  // Do intersection of all required constraints, and average of ideals.
+
+  for (uint32_t i = 1; i < aOthers.Length(); i++) {
+    auto& set = *aOthers[i];
+
+    if (!mWidth.Merge(set.mWidth) ||
+        !mHeight.Merge(set.mHeight) ||
+        !mFrameRate.Merge(set.mFrameRate) ||
+        !mFacingMode.Merge(set.mFacingMode) ||
+        mMediaSource != set.mMediaSource ||
+        mBrowserWindow != set.mBrowserWindow ||
+        !mViewportOffsetX.Merge(set.mViewportOffsetX) ||
+        !mViewportOffsetY.Merge(set.mViewportOffsetY) ||
+        !mViewportWidth.Merge(set.mViewportWidth) ||
+        !mViewportHeight.Merge(set.mViewportHeight) ||
+        !mEchoCancellation.Merge(set.mEchoCancellation) ||
+        !mMozNoiseSuppression.Merge(set.mMozNoiseSuppression) ||
+        !mMozAutoGainControl.Merge(set.mMozAutoGainControl)) {
+      mOverconstrained = true;
+      return;
+    }
+
+    for (auto& entry : set.mAdvanced) {
+      mAdvanced.AppendElement(entry);
+    }
+  }
+  mWidth.FinalizeMerge();
+  mHeight.FinalizeMerge();
+  mFrameRate.FinalizeMerge();
+  mFacingMode.FinalizeMerge();
+  mViewportOffsetX.FinalizeMerge();
+  mViewportOffsetY.FinalizeMerge();
+  mViewportWidth.FinalizeMerge();
+  mViewportHeight.FinalizeMerge();
+  mEchoCancellation.FinalizeMerge();
+  mMozNoiseSuppression.FinalizeMerge();
+  mMozAutoGainControl.FinalizeMerge();
 }
 
 FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
