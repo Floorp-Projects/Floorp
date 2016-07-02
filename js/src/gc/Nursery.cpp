@@ -451,7 +451,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TIME_END(markDebugger);
 
     TIME_START(clearNewObjectCache);
-    rt->newObjectCache.clearNurseryObjects(rt);
+    rt->contextFromMainThread()->caches.newObjectCache.clearNurseryObjects(rt);
     TIME_END(clearNewObjectCache);
 
     // Most of the work is done here. This loop iterates over objects that have
