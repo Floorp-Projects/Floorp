@@ -77,7 +77,7 @@ CompileRuntime::addressOfActivation()
 const void*
 CompileRuntime::addressOfLastCachedNativeIterator()
 {
-    return &runtime()->nativeIterCache.last;
+    return &static_cast<JSContext*>(runtime())->caches.nativeIterCache.last;
 }
 
 #ifdef JS_GC_ZEAL
@@ -185,12 +185,6 @@ const DOMCallbacks*
 CompileRuntime::DOMcallbacks()
 {
     return GetDOMCallbacks(runtime());
-}
-
-const MathCache*
-CompileRuntime::maybeGetMathCache()
-{
-    return runtime()->maybeGetMathCache();
 }
 
 const Nursery&

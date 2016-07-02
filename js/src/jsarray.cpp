@@ -42,9 +42,9 @@
 
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"
+#include "vm/Caches-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/Runtime-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
@@ -3386,8 +3386,7 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
     bool isCachable = NewObjectWithTaggedProtoIsCachable(cxArg, taggedProto, newKind, &ArrayObject::class_);
     if (isCachable) {
         JSContext* cx = cxArg->asJSContext();
-        JSRuntime* rt = cx->runtime();
-        NewObjectCache& cache = rt->newObjectCache;
+        NewObjectCache& cache = cx->caches.newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         if (cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry)) {
             gc::InitialHeap heap = GetInitialHeap(newKind, &ArrayObject::class_);
@@ -3441,7 +3440,7 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
         return nullptr;
 
     if (isCachable) {
-        NewObjectCache& cache = cxArg->asJSContext()->runtime()->newObjectCache;
+        NewObjectCache& cache = cxArg->asJSContext()->caches.newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry);
         cache.fillProto(entry, &ArrayObject::class_, taggedProto, allocKind, arr);
