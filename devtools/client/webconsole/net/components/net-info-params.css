@@ -17,3 +17,7 @@
   width: 100%;
   word-wrap: break-word;
 }
+
+.netInfoBody .netInfoParamValue > code {
+  font-family: var(--monospace-font-family);
+}

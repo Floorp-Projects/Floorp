@@ -9,30 +9,27 @@
  */
 
 .frame-link {
-  margin-left: 7px;
   display: flex;
+  justify-content: space-between;
+}
+
+.frame-link-async-cause {
+  color: var(--theme-body-color-inactive);
 }
 
 .frame-link .frame-link-source {
-  display: flex;
+  flex: initial;
+  color: var(--theme-highlight-blue);
 }
+
 .frame-link a.frame-link-source {
   cursor: pointer;
   text-decoration: none;
-}
-.frame-link a.frame-link-source:hover {
-  text-decoration: underline;
+  font-style: normal;
 }
 
-.frame-link .frame-link-filename {
-  color: var(--theme-highlight-blue);
-  text-overflow: ellipsis;
-  overflow: hidden;
-  flex: 1;
-  text-align: right;
-  /* overrides styling some tools have with anchors */
-  text-decoration: none;
-  font-style: normal;
+.frame-link a.frame-link-source:hover {
+  text-decoration: underline;
 }
 
 .frame-link .frame-link-host {
@@ -45,17 +42,12 @@
   margin-inline-end: 5px;
 }
 
-.frame-link .frame-link-column,
-.frame-link .frame-link-line,
-.frame-link .frame-link-colon {
+.frame-link .frame-link-line {
   color: var(--theme-highlight-orange);
-  display: block;
 }
 
-.focused .frame-link .frame-link-filename,
-.focused .frame-link .frame-link-column,
+.focused .frame-link .frame-link-source,
 .focused .frame-link .frame-link-line,
-.focused .frame-link .frame-link-host,
-.focused .frame-link .frame-link-colon {
+.focused .frame-link .frame-link-host {
   color: var(--theme-selection-color);
 }

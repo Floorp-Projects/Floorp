@@ -120,31 +120,10 @@ function* checkHistoryItems() {
     let visitedUri = visitedURIs[i];
     ok((yield promiseIsURIVisited(visitedUri)), "");
     if (/embed/.test(visitedUri.spec)) {
-      is(!!pageInDatabase(visitedUri), false, "Check if URI is in database");
+      is((yield PlacesTestUtils.isPageInDB(visitedUri)), false, "Check if URI is in database");
     } else {
-      ok(!!pageInDatabase(visitedUri), "Check if URI is in database");
+      ok((yield PlacesTestUtils.isPageInDB(visitedUri)), "Check if URI is in database");
     }
-  }
-}
-
-/**
- * Checks if an address is found in the database.
- * @param aURI
- *        nsIURI or address to look for.
- * @return place id of the page or 0 if not found
- */
-function pageInDatabase(aURI) {
-  let url = (aURI instanceof Ci.nsIURI ? aURI.spec : aURI);
-  let stmt = DBConn().createStatement(
-    "SELECT id FROM moz_places WHERE url = :url"
-  );
-  stmt.params.url = url;
-  try {
-    if (!stmt.executeStep())
-      return 0;
-    return stmt.getInt64(0);
-  } finally {
-    stmt.finalize();
   }
 }
 

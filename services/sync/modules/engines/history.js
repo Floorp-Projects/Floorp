@@ -105,7 +105,7 @@ HistoryStore.prototype = {
     return this._getStmt(
       "UPDATE moz_places " +
       "SET guid = :guid " +
-      "WHERE url = :page_url");
+      "WHERE url_hash = hash(:page_url) AND url = :page_url");
   },
 
   // Some helper functions to handle GUIDs
@@ -127,7 +127,7 @@ HistoryStore.prototype = {
     return this._getStmt(
       "SELECT guid " +
       "FROM moz_places " +
-      "WHERE url = :page_url");
+      "WHERE url_hash = hash(:page_url) AND url = :page_url");
   },
   _guidCols: ["guid"],
 
@@ -146,12 +146,12 @@ HistoryStore.prototype = {
   },
 
   get _visitStm() {
-    return this._getStmt(
-      "/* do not warn (bug 599936) */ " +
-      "SELECT visit_type type, visit_date date " +
-      "FROM moz_historyvisits " +
-      "WHERE place_id = (SELECT id FROM moz_places WHERE url = :url) " +
-      "ORDER BY date DESC LIMIT 20");
+    return this._getStmt(`/* do not warn (bug 599936) */
+      SELECT visit_type type, visit_date date
+      FROM moz_historyvisits
+      JOIN moz_places h ON h.id = place_id
+      WHERE url_hash = hash(:url) AND url = :url
+      ORDER BY date DESC LIMIT 20`);
   },
   _visitCols: ["date", "type"],
 

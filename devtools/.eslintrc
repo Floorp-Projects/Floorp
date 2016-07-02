@@ -16,11 +16,13 @@
     "isWorker": true,
     "loader": true,
     "module": true,
+    "reportError": true,
     "require": true,
     "setInterval": true,
     "setTimeout": true,
-    "XMLHttpRequest": true,
+    "uneval": true,
     "URL": true,
+    "XMLHttpRequest": true,
     "_Iterator": true,
   },
   "rules": {
@@ -331,8 +333,10 @@
     "padded-blocks": [2, "never"],
     // Don't require quotes around object literal property names.
     "quote-props": 0,
-    // Double quotes should be used.
-    "quotes": [2, "double", "avoid-escape"],
+    // Double quotes should be used.  Other quote characters can be used around strings
+    // with embedded double quotes to avoid escaping them.  Template literals are allowed
+    // mainly for building multi-line messages where only some lines use substitution.
+    "quotes": [2, "double", {"avoidEscape": true, "allowTemplateLiterals": true}],
     // Require use of the second argument for parseInt().
     "radix": 2,
     // Always require use of semicolons wherever they are valid.

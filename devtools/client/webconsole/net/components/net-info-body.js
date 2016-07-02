@@ -13,6 +13,7 @@ const ResponseTab = React.createFactory(require("./response-tab"));
 const ParamsTab = React.createFactory(require("./params-tab"));
 const CookiesTab = React.createFactory(require("./cookies-tab"));
 const PostTab = React.createFactory(require("./post-tab"));
+const StackTraceTab = React.createFactory(require("./stacktrace-tab"));
 const NetUtils = require("../utils/net");
 
 // Shortcuts
@@ -66,6 +67,11 @@ var NetInfoBody = React.createClass({
     let {request, response} = this.state.data;
     return NetUtils.getHeaderValue(request.headers, "Cookie") ||
       NetUtils.getHeaderValue(response.headers, "Cookie");
+  },
+
+  hasStackTrace() {
+    let {cause} = this.state.data;
+    return cause && cause.stacktrace && cause.stacktrace.length > 0;
   },
 
   getTabPanels() {
@@ -130,6 +136,21 @@ var NetInfoBody = React.createClass({
           key: "cookies",
           title: Locale.$STR("netRequest.cookies")},
           CookiesTab({
+            data: data,
+            actions: actions
+          })
+        )
+      );
+    }
+
+    // Stacktrace tab
+    if (this.hasStackTrace()) {
+      panels.push(
+        TabPanel({
+          className: "stacktrace-tab",
+          key: "stacktrace",
+          title: Locale.$STR("netRequest.callstack")},
+          StackTraceTab({
             data: data,
             actions: actions
           })

@@ -132,7 +132,7 @@ const SQL_SWITCHTAB_QUERY =
   `SELECT :query_type, t.url, t.url, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
           t.open_count, NULL
    FROM moz_openpages_temp t
-   LEFT JOIN moz_places h ON h.url = t.url
+   LEFT JOIN moz_places h ON h.url_hash = hash(t.url) AND h.url = t.url
    WHERE h.id IS NULL
      AND AUTOCOMPLETE_MATCH(:searchString, t.url, t.url, NULL,
                             NULL, NULL, NULL, t.open_count,
