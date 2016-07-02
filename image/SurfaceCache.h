@@ -12,6 +12,7 @@
 #define mozilla_image_SurfaceCache_h
 
 #include "mozilla/Maybe.h"           // for Maybe
+#include "mozilla/NotNull.h"
 #include "mozilla/MemoryReporting.h" // for MallocSizeOf
 #include "mozilla/HashFunctions.h"   // for HashGeneric and AddToHash
 #include "gfx2DGlue.h"
@@ -26,7 +27,7 @@ namespace mozilla {
 namespace image {
 
 class Image;
-class imgFrame;
+class ISurfaceProvider;
 class LookupResult;
 struct SurfaceMemoryCounter;
 
@@ -249,7 +250,7 @@ struct SurfaceCache
    *         FAILURE_ALREADY_PRESENT if a surface with the same ImageKey and
    *           SurfaceKey already exists in the cache.
    */
-  static InsertOutcome Insert(imgFrame*         aSurface,
+  static InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider,
                               const ImageKey    aImageKey,
                               const SurfaceKey& aSurfaceKey);
 
