@@ -437,7 +437,7 @@ public:
                        const SurfaceKey& aSurfaceKey)
   {
     // If this is a duplicate surface, refuse to replace the original.
-    // XXX(seth): Calling Lookup() and then RemoveSurface() does the lookup
+    // XXX(seth): Calling Lookup() and then RemoveEntry() does the lookup
     // twice. We'll make this more efficient in bug 1185137.
     LookupResult result = Lookup(aImageKey, aSurfaceKey, /* aMarkUsed = */ false);
     if (MOZ_UNLIKELY(result)) {
@@ -445,7 +445,7 @@ public:
     }
 
     if (result.Type() == MatchType::PENDING) {
-      RemoveSurface(aImageKey, aSurfaceKey);
+      RemoveEntry(aImageKey, aSurfaceKey);
     }
 
     MOZ_ASSERT(result.Type() == MatchType::NOT_FOUND ||
@@ -655,8 +655,8 @@ public:
     return LookupResult(Move(ref), matchType);
   }
 
-  void RemoveSurface(const ImageKey    aImageKey,
-                     const SurfaceKey& aSurfaceKey)
+  void RemoveEntry(const ImageKey    aImageKey,
+                   const SurfaceKey& aSurfaceKey)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -701,7 +701,7 @@ public:
     DoUnlockSurfaces(cache);
   }
 
-  void UnlockSurfaces(const ImageKey aImageKey)
+  void UnlockEntries(const ImageKey aImageKey)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache || !cache->IsLocked()) {
@@ -1087,21 +1087,21 @@ SurfaceCache::UnlockImage(Image* aImageKey)
 }
 
 /* static */ void
-SurfaceCache::UnlockSurfaces(const ImageKey aImageKey)
+SurfaceCache::UnlockEntries(const ImageKey aImageKey)
 {
   if (sInstance) {
     MutexAutoLock lock(sInstance->GetMutex());
-    return sInstance->UnlockSurfaces(aImageKey);
+    return sInstance->UnlockEntries(aImageKey);
   }
 }
 
 /* static */ void
-SurfaceCache::RemoveSurface(const ImageKey    aImageKey,
-                            const SurfaceKey& aSurfaceKey)
+SurfaceCache::RemoveEntry(const ImageKey    aImageKey,
+                          const SurfaceKey& aSurfaceKey)
 {
   if (sInstance) {
     MutexAutoLock lock(sInstance->GetMutex());
-    sInstance->RemoveSurface(aImageKey, aSurfaceKey);
+    sInstance->RemoveEntry(aImageKey, aSurfaceKey);
   }
 }
 

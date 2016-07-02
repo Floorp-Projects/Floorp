@@ -32,14 +32,15 @@ class LookupResult;
 struct SurfaceMemoryCounter;
 
 /*
- * ImageKey contains the information we need to look up all cached surfaces for
- * a particular image.
+ * ImageKey contains the information we need to look up all SurfaceCache entries
+ * for a particular image.
  */
 typedef Image* ImageKey;
 
 /*
- * SurfaceKey contains the information we need to look up a specific cached
- * surface. Together with an ImageKey, this uniquely identifies the surface.
+ * SurfaceKey contains the information we need to look up a specific
+ * SurfaceCache entry. Together with an ImageKey, this uniquely identifies the
+ * surface.
  *
  * Callers should construct a SurfaceKey using the appropriate helper function
  * for their image type - either RasterSurfaceKey or VectorSurfaceKey.
@@ -124,16 +125,19 @@ enum class InsertOutcome : uint8_t {
 };
 
 /**
- * SurfaceCache is an imagelib-global service that allows caching of temporary
- * surfaces. Surfaces normally expire from the cache automatically if they go
+ * SurfaceCache is an ImageLib-global service that allows caching of decoded
+ * image surfaces, temporary surfaces (e.g. for caching rotated or clipped
+ * versions of images), or dynamically generated surfaces (e.g. for animations).
+ * SurfaceCache entries normally expire from the cache automatically if they go
  * too long without being accessed.
  *
- * SurfaceCache does not hold surfaces directly; instead, it holds imgFrame
- * objects, which hold surfaces but also layer on additional features specific
- * to imagelib's needs like animation, padding support, and transparent support
- * for volatile buffers.
+ * Because SurfaceCache must support both normal surfaces and dynamically
+ * generated surfaces, it does not actually hold surfaces directly. Instead, it
+ * holds ISurfaceProvider objects which can provide access to a surface when
+ * requested; SurfaceCache doesn't care about the details of how this is
+ * accomplished.
  *
- * Sometime it's useful to temporarily prevent surfaces from expiring from the
+ * Sometime it's useful to temporarily prevent entries from expiring from the
  * cache. This is most often because losing the data could harm the user
  * experience (for example, we often don't want to allow surfaces that are
  * currently visible to expire) or because it's not possible to rematerialize
@@ -159,95 +163,94 @@ struct SurfaceCache
   static void Shutdown();
 
   /**
-   * Look up the imgFrame containing a surface in the cache and returns a
-   * drawable reference to that imgFrame.
+   * Looks up the requested cache entry and returns a drawable reference to its
+   * associated surface.
    *
-   * If the image associated with the surface is locked, then the surface will
+   * If the image associated with the cache entry is locked, then the entry will
    * be locked before it is returned.
    *
-   * If the imgFrame was found in the cache, but had stored its surface in a
-   * volatile buffer which was discarded by the OS, then it is automatically
-   * removed from the cache and an empty LookupResult is returned. Note that
-   * this will never happen to surfaces associated with a locked image; the
-   * cache keeps a strong reference to such surfaces internally.
+   * If a matching ISurfaceProvider was found in the cache, but SurfaceCache
+   * couldn't obtain a surface from it (e.g. because it had stored its surface
+   * in a volatile buffer which was discarded by the OS) then it is
+   * automatically removed from the cache and an empty LookupResult is returned.
+   * Note that this will never happen to ISurfaceProviders associated with a
+   * locked image; SurfaceCache tells such ISurfaceProviders to keep a strong
+   * references to their data internally.
    *
-   * @param aImageKey       Key data identifying which image the surface belongs
-   *                        to.
-   *
+   * @param aImageKey       Key data identifying which image the cache entry
+   *                        belongs to.
    * @param aSurfaceKey     Key data which uniquely identifies the requested
-   *                        surface.
-   *
+   *                        cache entry.
    * @return                a LookupResult, which will either contain a
-   *                        DrawableFrameRef to the requested surface, or an
-   *                        empty DrawableFrameRef if the surface was not found.
+   *                        DrawableFrameRef to a surface, or an empty
+   *                        DrawableFrameRef if the cache entry was not found.
    */
   static LookupResult Lookup(const ImageKey    aImageKey,
                              const SurfaceKey& aSurfaceKey);
 
   /**
-   * Looks up the best matching surface in the cache and returns a drawable
-   * reference to the imgFrame containing it.
+   * Looks up the best matching cache entry and returns a drawable reference to
+   * its associated surface.
    *
-   * Returned surfaces may vary from the requested surface only in terms of
-   * size.
+   * The result may vary from the requested cache entry only in terms of size.
    *
-   * @param aImageKey    Key data identifying which image the surface belongs
-   *                     to.
-   *
-   * @param aSurfaceKey  Key data which identifies the ideal surface to return.
-   *
+   * @param aImageKey       Key data identifying which image the cache entry
+   *                        belongs to.
+   * @param aSurfaceKey     Key data which uniquely identifies the requested
+   *                        cache entry.
    * @return                a LookupResult, which will either contain a
    *                        DrawableFrameRef to a surface similar to the
-   *                        requested surface, or an empty DrawableFrameRef if
-   *                        the surface was not found. Callers can use
-   *                        LookupResult::IsExactMatch() to check whether the
-   *                        returned surface exactly matches @aSurfaceKey.
+   *                        the one the caller requested, or an empty
+   *                        DrawableFrameRef if no acceptable match was found.
+   *                        Callers can use LookupResult::IsExactMatch() to check
+   *                        whether the returned surface exactly matches
+   *                        @aSurfaceKey.
    */
   static LookupResult LookupBestMatch(const ImageKey    aImageKey,
                                       const SurfaceKey& aSurfaceKey);
 
   /**
-   * Insert a surface into the cache. If a surface with the same ImageKey and
-   * SurfaceKey is already in the cache, Insert returns FAILURE_ALREADY_PRESENT.
-   * If a matching placeholder is already present, the placeholder is removed.
+   * Insert an ISurfaceProvider into the cache. If an entry with the same
+   * ImageKey and SurfaceKey is already in the cache, Insert returns
+   * FAILURE_ALREADY_PRESENT. If a matching placeholder is already present, the
+   * placeholder is removed.
    *
-   * Surfaces will never expire as long as they remain locked, but if they
+   * Cache entries will never expire as long as they remain locked, but if they
    * become unlocked, they can expire either because the SurfaceCache runs out
    * of capacity or because they've gone too long without being used.  When it
-   * is first inserted, a surface is locked if its associated image is locked.
-   * When that image is later unlocked, the surface becomes unlocked too. To
-   * become locked again at that point, two things must happen: the image must
-   * become locked again (via LockImage()), and the surface must be touched
-   * again (via one of the Lookup() functions).
+   * is first inserted, a cache entry is locked if its associated image is
+   * locked.  When that image is later unlocked, the cache entry becomes
+   * unlocked too. To become locked again at that point, two things must happen:
+   * the image must become locked again (via LockImage()), and the cache entry
+   * must be touched again (via one of the Lookup() functions).
    *
    * All of this means that a very particular procedure has to be followed for
-   * surfaces which cannot be rematerialized. First, they must be inserted
+   * cache entries which cannot be rematerialized. First, they must be inserted
    * *after* the image is locked with LockImage(); if you use the other order,
-   * the surfaces might expire before LockImage() gets called or before the
-   * surface is touched again by Lookup(). Second, the image they are associated
+   * the cache entry might expire before LockImage() gets called or before the
+   * entry is touched again by Lookup(). Second, the image they are associated
    * with must never be unlocked.
    *
-   * If a surface cannot be rematerialized, it may be important to know whether
-   * it was inserted into the cache successfully. Insert() returns FAILURE if it
-   * failed to insert the surface, which could happen because of capacity
-   * reasons, or because it was already freed by the OS. If the surface isn't
-   * associated with a locked image, checking for SUCCESS or FAILURE is useless:
-   * the surface might expire immediately after being inserted, even though
-   * Insert() returned SUCCESS. Thus, many callers do not need to check the
-   * result of Insert() at all.
+   * If a cache entry cannot be rematerialized, it may be important to know
+   * whether it was inserted into the cache successfully. Insert() returns
+   * FAILURE if it failed to insert the cache entry, which could happen because
+   * of capacity reasons, or because it was already freed by the OS. If the
+   * cache entry isn't associated with a locked image, checking for SUCCESS or
+   * FAILURE is useless: the entry might expire immediately after being
+   * inserted, even though Insert() returned SUCCESS. Thus, many callers do not
+   * need to check the result of Insert() at all.
    *
-   * @param aTarget      The new surface (wrapped in an imgFrame) to insert into
-   *                     the cache.
-   * @param aImageKey    Key data identifying which image the surface belongs
-   *                     to.
-   * @param aSurfaceKey  Key data which uniquely identifies the requested
-   *                     surface.
-   * @return SUCCESS if the surface was inserted successfully. (But see above
+   * @param aProvider    The new cache entry to insert into the cache.
+   * @param aImageKey       Key data identifying which image the cache entry
+   *                        belongs to.
+   * @param aSurfaceKey     Key data which uniquely identifies the requested
+   *                        cache entry.
+   * @return SUCCESS if the cache entry was inserted successfully. (But see above
    *           for more information about when you should check this.)
-   *         FAILURE if the surface could not be inserted, e.g. for capacity
+   *         FAILURE if the cache entry could not be inserted, e.g. for capacity
    *           reasons. (But see above for more information about when you
    *           should check this.)
-   *         FAILURE_ALREADY_PRESENT if a surface with the same ImageKey and
+   *         FAILURE_ALREADY_PRESENT if an entry with the same ImageKey and
    *           SurfaceKey already exists in the cache.
    */
   static InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider,
@@ -255,27 +258,28 @@ struct SurfaceCache
                               const SurfaceKey& aSurfaceKey);
 
   /**
-   * Insert a placeholder for a surface into the cache. If a surface with the
-   * same ImageKey and SurfaceKey is already in the cache, InsertPlaceholder()
+   * Insert a placeholder entry into the cache. If an entry with the same
+   * ImageKey and SurfaceKey is already in the cache, InsertPlaceholder()
    * returns FAILURE_ALREADY_PRESENT.
    *
    * Placeholders exist to allow lazy allocation of surfaces. The Lookup*()
-   * methods will report whether a placeholder for an exactly matching surface
-   * existed by returning a MatchType of PENDING or SUBSTITUTE_BECAUSE_PENDING,
-   * but they will never return a placeholder directly. (They couldn't, since
-   * placeholders don't have an associated surface.)
+   * methods will report whether a placeholder for an exactly matching cache
+   * entry existed by returning a MatchType of PENDING or
+   * SUBSTITUTE_BECAUSE_PENDING, but they will never return a placeholder
+   * directly. (They couldn't, since placeholders don't have an associated
+   * surface.)
    *
-   * Once inserted, placeholders can be removed using RemoveSurface() or
-   * RemoveImage(), just like a surface.  They're automatically removed when a
-   * real surface that matches the placeholder is inserted with Insert().
+   * Once inserted, placeholders can be removed using RemoveEntry() or
+   * RemoveImage(), just like a real cache entry.  They're automatically removed
+   * when a real entry that matches the placeholder is inserted with Insert().
    *
-   * @param aImageKey    Key data identifying which image the placeholder
-   *                     belongs to.
-   * @param aSurfaceKey  Key data which uniquely identifies the surface the
-   *                     placeholder stands in for.
+   * @param aImageKey       Key data identifying which image the cache entry
+   *                        belongs to.
+   * @param aSurfaceKey     Key data which uniquely identifies the requested
+   *                        cache entry.
    * @return SUCCESS if the placeholder was inserted successfully.
    *         FAILURE if the placeholder could not be inserted for some reason.
-   *         FAILURE_ALREADY_PRESENT if a surface with the same ImageKey and
+   *         FAILURE_ALREADY_PRESENT if an entry with the same ImageKey and
    *           SurfaceKey already exists in the cache.
    */
   static InsertOutcome InsertPlaceholder(const ImageKey    aImageKey,
@@ -302,19 +306,19 @@ struct SurfaceCache
   static bool CanHold(size_t aSize);
 
   /**
-   * Locks an image. Any of the image's surfaces which are either inserted or
-   * accessed while the image is locked will not expire.
+   * Locks an image. Any of the image's cache entries which are either inserted
+   * or accessed while the image is locked will not expire.
    *
-   * Locking an image does not automatically lock that image's existing
-   * surfaces. A call to LockImage() guarantees that surfaces which are inserted
+   * Locking an image does not automatically lock that image's existing cache
+   * entries. A call to LockImage() guarantees that entries which are inserted
    * afterward will not expire before the next call to UnlockImage() or
-   * UnlockSurfaces() for that image. Surfaces that are accessed via Lookup() or
-   * LookupBestMatch() after a LockImage() call will also not expire until the
-   * next UnlockImage() or UnlockSurfaces() call for that image. Any other
-   * surfaces owned by the image may expire at any time.
+   * UnlockSurfaces() for that image. Cache entries that are accessed via
+   * Lookup() or LookupBestMatch() after a LockImage() call will also not expire
+   * until the next UnlockImage() or UnlockSurfaces() call for that image. Any
+   * other cache entries owned by the image may expire at any time.
    *
-   * Regardless of locking, any of an image's surfaces may be removed using
-   * RemoveSurface(), and all of an image's surfaces are removed by
+   * Regardless of locking, any of an image's cache entries may be removed using
+   * RemoveEntry(), and all of an image's cache entries are removed by
    * RemoveImage(), whether the image is locked or not.
    *
    * It's safe to call LockImage() on an image that's already locked; this has
@@ -331,7 +335,7 @@ struct SurfaceCache
   static void LockImage(const ImageKey aImageKey);
 
   /**
-   * Unlocks an image, allowing any of its surfaces to expire at any time.
+   * Unlocks an image, allowing any of its cache entries to expire at any time.
    *
    * It's OK to call UnlockImage() on an image that's already unlocked; this has
    * no effect.
@@ -341,49 +345,49 @@ struct SurfaceCache
   static void UnlockImage(const ImageKey aImageKey);
 
   /**
-   * Unlocks the existing surfaces of an image, allowing them to expire at any
-   * time.
+   * Unlocks the existing cache entries of an image, allowing them to expire at
+   * any time.
    *
-   * This does not unlock the image itself, so accessing the surfaces via
+   * This does not unlock the image itself, so accessing the cache entries via
    * Lookup() or LookupBestMatch() will lock them again, and prevent them from
    * expiring.
    *
    * This is intended to be used in situations where it's no longer clear that
-   * all of the surfaces owned by an image are needed. Calling UnlockSurfaces()
-   * and then taking some action that will cause Lookup() to touch any surfaces
-   * that are still useful will permit the remaining surfaces to expire from the
-   * cache.
+   * all of the cache entries owned by an image are needed. Calling
+   * UnlockSurfaces() and then taking some action that will cause Lookup() to
+   * touch any cache entries that are still useful will permit the remaining
+   * entries to expire from the cache.
    *
    * If the image is unlocked, this has no effect.
    *
-   * @param aImageKey    The image which should have its existing surfaces
+   * @param aImageKey    The image which should have its existing cache entries
    *                     unlocked.
    */
-  static void UnlockSurfaces(const ImageKey aImageKey);
+  static void UnlockEntries(const ImageKey aImageKey);
 
   /**
-   * Removes a surface or placeholder from the cache, if it's present. If it's
-   * not present, RemoveSurface() has no effect.
+   * Removes a cache entry (either a real or placeholder) from the cache, if
+   * it's present. If it's not present, RemoveEntry() has no effect.
    *
-   * Use this function to remove individual surfaces that have become invalid.
-   * Prefer RemoveImage() or DiscardAll() when they're applicable, as they have
-   * much better performance than calling this function repeatedly.
+   * Use this function to remove individual cache entries that have become
+   * invalid.  Prefer RemoveImage() or DiscardAll() when they're applicable, as
+   * they have much better performance than calling this function repeatedly.
    *
-   * @param aImageKey    Key data identifying which image the surface belongs
-                         to.
-   * @param aSurfaceKey  Key data which uniquely identifies the requested
-                         surface.
+   * @param aImageKey       Key data identifying which image the cache entry
+   *                        belongs to.
+   * @param aSurfaceKey     Key data which uniquely identifies the requested
+   *                        cache entry.
    */
-  static void RemoveSurface(const ImageKey    aImageKey,
-                            const SurfaceKey& aSurfaceKey);
+  static void RemoveEntry(const ImageKey    aImageKey,
+                          const SurfaceKey& aSurfaceKey);
 
   /**
-   * Removes all cached surfaces and placeholders associated with the given
-   * image from the cache.  If the image is locked, it is automatically
+   * Removes all cache entries (both real and placeholder) associated with the
+   * given image from the cache.  If the image is locked, it is automatically
    * unlocked.
    *
    * This MUST be called, at a minimum, when an Image which could be storing
-   * surfaces in the surface cache is destroyed. If another image were allocated
+   * entries in the surface cache is destroyed. If another image were allocated
    * at the same address it could result in subtle, difficult-to-reproduce bugs.
    *
    * @param aImageKey  The image which should be removed from the cache.
@@ -391,10 +395,10 @@ struct SurfaceCache
   static void RemoveImage(const ImageKey aImageKey);
 
   /**
-   * Evicts all evictable surfaces from the cache.
+   * Evicts all evictable entries from the cache.
    *
-   * All surfaces are evictable except for surfaces associated with locked
-   * images. Non-evictable surfaces can only be removed by RemoveSurface() or
+   * All entries are evictable except for entries associated with locked images.
+   * Non-evictable entries can only be removed by RemoveEntry() or
    * RemoveImage().
    */
   static void DiscardAll();
