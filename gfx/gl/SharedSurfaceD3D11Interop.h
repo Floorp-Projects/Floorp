@@ -60,8 +60,8 @@ protected:
 public:
     virtual ~SharedSurface_D3D11Interop();
 
-    virtual void LockProdImpl() override;
-    virtual void UnlockProdImpl() override;
+    virtual void LockProdImpl() override { }
+    virtual void UnlockProdImpl() override { }
 
     virtual void ProducerAcquireImpl() override;
     virtual void ProducerReleaseImpl() override;

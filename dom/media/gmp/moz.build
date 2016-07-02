@@ -38,6 +38,7 @@ EXPORTS += [
     'GMPChild.h',
     'GMPContentChild.h',
     'GMPContentParent.h',
+    'GMPCrashHelperHolder.h',
     'GMPDecryptorChild.h',
     'GMPDecryptorParent.h',
     'GMPDecryptorProxy.h',

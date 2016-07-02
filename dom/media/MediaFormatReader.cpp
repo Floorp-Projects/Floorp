@@ -178,6 +178,10 @@ MediaFormatReader::Init()
   mVideo.mTaskQueue =
     new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
 
+  // Note: GMPCrashHelper must be created on main thread, as it may use
+  // weak references, which aren't threadsafe.
+  mCrashHelper = mDecoder->GetCrashHelper();
+
   return NS_OK;
 }
 
@@ -411,7 +415,8 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
       decoder.mDecoder = mPlatform->CreateDecoder({
         decoder.mInfo ? *decoder.mInfo->GetAsAudioInfo() : mInfo.mAudio,
         decoder.mTaskQueue,
-        decoder.mCallback.get()
+        decoder.mCallback.get(),
+        mCrashHelper
       });
       break;
     }
@@ -425,6 +430,7 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
         decoder.mCallback.get(),
         mLayersBackendType,
         GetImageContainer(),
+        mCrashHelper
       });
       break;
     }

@@ -693,6 +693,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     friend void js::AssertCurrentThreadCanLock(js::RuntimeLock which);
 #endif
 
+  protected:
     /*
      * Points to the most recent activation running on the thread.
      * See Activation comment in vm/Stack.h.
@@ -933,6 +934,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     JSInterruptCallback interruptCallback;
 
+    JSGetIncumbentGlobalCallback getIncumbentGlobalCallback;
     JSEnqueuePromiseJobCallback enqueuePromiseJobCallback;
     void* enqueuePromiseJobCallbackData;
 
@@ -1050,7 +1052,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     inline JSContext* unsafeContextFromAnyThread();
     inline JSContext* contextFromMainThread();
 
-    bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
+    JSObject* getIncumbentGlobal(JSContext* cx);
+    bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise,
+                           js::HandleObject incumbentGlobal);
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
@@ -1204,6 +1208,11 @@ struct JSRuntime : public JS::shadow::Runtime,
 #ifdef DEBUG
     /* We are currently deleting an object due to an initialization failure. */
     bool handlingInitFailure;
+#endif
+
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    /* We are currently running a simulated OOM test. */
+    bool runningOOMTest;
 #endif
 
     /*

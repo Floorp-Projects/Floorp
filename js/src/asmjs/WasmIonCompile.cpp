@@ -589,104 +589,85 @@ class FunctionCompiler
         curBlock_->setSlot(info().localSlot(slot), def);
     }
 
-    MDefinition* loadHeap(MDefinition* base, const MAsmJSHeapAccess& access)
+  private:
+    MDefinition* loadHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access)
     {
         if (inDeadCode())
             return nullptr;
+        MAsmJSLoadHeap* load = MAsmJSLoadHeap::New(alloc(), base, access);
+        curBlock_->add(load);
+        return load;
+    }
 
+    void storeHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
+    {
+        if (inDeadCode())
+            return;
+        MAsmJSStoreHeap* store = MAsmJSStoreHeap::New(alloc(), base, access, v);
+        curBlock_->add(store);
+    }
+
+  public:
+    MDefinition* loadHeap(MDefinition* base, const MWasmMemoryAccess& access)
+    {
         MOZ_ASSERT(!Scalar::isSimdType(access.accessType()), "SIMD loads should use loadSimdHeap");
-        MAsmJSLoadHeap* load = MAsmJSLoadHeap::New(alloc(), base, access);
-        curBlock_->add(load);
-        return load;
+        return loadHeapPrivate(base, access);
     }
-
-    MDefinition* loadSimdHeap(MDefinition* base, const MAsmJSHeapAccess& access)
+    MDefinition* loadSimdHeap(MDefinition* base, const MWasmMemoryAccess& access)
     {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(Scalar::isSimdType(access.accessType()),
-                   "loadSimdHeap can only load from a SIMD view");
-        MAsmJSLoadHeap* load = MAsmJSLoadHeap::New(alloc(), base, access);
-        curBlock_->add(load);
-        return load;
+        MOZ_ASSERT(Scalar::isSimdType(access.accessType()), "non-SIMD loads should use loadHeap");
+        return loadHeapPrivate(base, access);
     }
-
-    void storeHeap(MDefinition* base, const MAsmJSHeapAccess& access, MDefinition* v)
+    MDefinition* loadAtomicHeap(MDefinition* base, const MWasmMemoryAccess& access)
     {
-        if (inDeadCode())
-            return;
-
-        MOZ_ASSERT(!Scalar::isSimdType(access.accessType()),
-                   "SIMD stores should use storeSimdHeap");
-        MAsmJSStoreHeap* store = MAsmJSStoreHeap::New(alloc(), base, access, v);
-        curBlock_->add(store);
+        return loadHeapPrivate(base, access);
     }
 
-    void storeSimdHeap(MDefinition* base, const MAsmJSHeapAccess& access, MDefinition* v)
+    void storeHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
     {
-        if (inDeadCode())
-            return;
-
-        MOZ_ASSERT(Scalar::isSimdType(access.accessType()),
-                   "storeSimdHeap can only load from a SIMD view");
-        MAsmJSStoreHeap* store = MAsmJSStoreHeap::New(alloc(), base, access, v);
-        curBlock_->add(store);
+        MOZ_ASSERT(!Scalar::isSimdType(access.accessType()), "SIMD store should use storeSimdHeap");
+        storeHeapPrivate(base, access, v);
     }
-
-    MDefinition* atomicLoadHeap(MDefinition* base, const MAsmJSHeapAccess& access)
+    void storeSimdHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
     {
-        if (inDeadCode())
-            return nullptr;
-
-        MAsmJSLoadHeap* load = MAsmJSLoadHeap::New(alloc(), base, access);
-        curBlock_->add(load);
-        return load;
+        MOZ_ASSERT(Scalar::isSimdType(access.accessType()), "non-SIMD stores should use storeHeap");
+        storeHeapPrivate(base, access, v);
     }
-
-    void atomicStoreHeap(MDefinition* base, const MAsmJSHeapAccess& access,
-                         MDefinition* v)
+    void storeAtomicHeap(MDefinition* base, const MWasmMemoryAccess& access, MDefinition* v)
     {
-        if (inDeadCode())
-            return;
-
-        MAsmJSStoreHeap* store = MAsmJSStoreHeap::New(alloc(), base, access, v);
-        curBlock_->add(store);
+        storeHeapPrivate(base, access, v);
     }
 
-    MDefinition* atomicCompareExchangeHeap(MDefinition* base, const MAsmJSHeapAccess& access,
+    MDefinition* atomicCompareExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
                                            MDefinition* oldv, MDefinition* newv)
     {
         if (inDeadCode())
             return nullptr;
 
-        MAsmJSCompareExchangeHeap* cas =
-            MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv);
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv);
         curBlock_->add(cas);
         return cas;
     }
 
-    MDefinition* atomicExchangeHeap(MDefinition* base, const MAsmJSHeapAccess& access,
+    MDefinition* atomicExchangeHeap(MDefinition* base, const MWasmMemoryAccess& access,
                                     MDefinition* value)
     {
         if (inDeadCode())
             return nullptr;
 
-        MAsmJSAtomicExchangeHeap* cas =
-            MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value);
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value);
         curBlock_->add(cas);
         return cas;
     }
 
     MDefinition* atomicBinopHeap(js::jit::AtomicOp op,
-                                 MDefinition* base, const MAsmJSHeapAccess& access,
+                                 MDefinition* base, const MWasmMemoryAccess& access,
                                  MDefinition* v)
     {
         if (inDeadCode())
             return nullptr;
 
-        MAsmJSAtomicBinopHeap* binop =
-            MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v);
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v);
         curBlock_->add(binop);
         return binop;
     }
@@ -695,8 +676,8 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MAsmJSLoadGlobalVar* load = MAsmJSLoadGlobalVar::New(alloc(), type, globalDataOffset,
-                                                             isConst);
+
+        auto* load = MAsmJSLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst);
         curBlock_->add(load);
         return load;
     }
@@ -2080,8 +2061,8 @@ enum class IsAtomic {
 };
 
 static bool
-SetHeapAccessOffset(FunctionCompiler& f, uint32_t offset, MAsmJSHeapAccess* access, MDefinition** base,
-                    IsAtomic atomic = IsAtomic::No)
+SetHeapAccessOffset(FunctionCompiler& f, uint32_t offset, MWasmMemoryAccess* access,
+                    MDefinition** base, IsAtomic atomic = IsAtomic::No)
 {
     // TODO Remove this after implementing non-wraparound offset semantics.
     uint32_t endOffset = offset + access->byteSize();
@@ -2107,8 +2088,7 @@ EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
     if (!f.iter().readLoad(type, Scalar::byteSize(viewType), &addr))
         return false;
 
-    MAsmJSHeapAccess access(viewType);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base))
@@ -2126,8 +2106,7 @@ EmitStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
     if (!f.iter().readStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
-    MAsmJSHeapAccess access(viewType);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base))
@@ -2152,8 +2131,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type view
     else
         MOZ_CRASH("unexpected coerced store");
 
-    MAsmJSHeapAccess access(viewType);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base))
@@ -2229,14 +2207,13 @@ EmitAtomicsLoad(FunctionCompiler& f)
     if (!f.iter().readAtomicLoad(&addr, &viewType))
         return false;
 
-    MAsmJSHeapAccess access(viewType, 0, MembarBeforeLoad, MembarAfterLoad);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align, 0, MembarBeforeLoad, MembarAfterLoad);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
-    f.iter().setResult(f.atomicLoadHeap(base, access));
+    f.iter().setResult(f.loadAtomicHeap(base, access));
     return true;
 }
 
@@ -2249,14 +2226,13 @@ EmitAtomicsStore(FunctionCompiler& f)
     if (!f.iter().readAtomicStore(&addr, &viewType, &value))
         return false;
 
-    MAsmJSHeapAccess access(viewType, 0, MembarBeforeStore, MembarAfterStore);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align, 0, MembarBeforeStore, MembarAfterStore);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
-    f.atomicStoreHeap(base, access, value);
+    f.storeAtomicHeap(base, access, value);
     f.iter().setResult(value);
     return true;
 }
@@ -2271,8 +2247,7 @@ EmitAtomicsBinOp(FunctionCompiler& f)
     if (!f.iter().readAtomicBinOp(&addr, &viewType, &op, &value))
         return false;
 
-    MAsmJSHeapAccess access(viewType);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base, IsAtomic::Yes))
@@ -2292,8 +2267,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f)
     if (!f.iter().readAtomicCompareExchange(&addr, &viewType, &oldValue, &newValue))
         return false;
 
-    MAsmJSHeapAccess access(viewType);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base, IsAtomic::Yes))
@@ -2312,8 +2286,7 @@ EmitAtomicsExchange(FunctionCompiler& f)
     if (!f.iter().readAtomicExchange(&addr, &viewType, &value))
         return false;
 
-    MAsmJSHeapAccess access(viewType);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base, IsAtomic::Yes))
@@ -2540,8 +2513,7 @@ EmitSimdLoad(FunctionCompiler& f, ValType resultType, unsigned numElems)
     if (!f.iter().readLoad(resultType, Scalar::byteSize(viewType), &addr))
         return false;
 
-    MAsmJSHeapAccess access(viewType, numElems);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align, numElems);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base))
@@ -2565,8 +2537,7 @@ EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
     if (!f.iter().readStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
-    MAsmJSHeapAccess access(viewType, numElems);
-    access.setAlign(addr.align);
+    MWasmMemoryAccess access(viewType, addr.align, numElems);
 
     MDefinition* base = addr.base;
     if (!SetHeapAccessOffset(f, addr.offset, &access, &base))

@@ -24,6 +24,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/NativeObject-inl.h"
+
 using namespace js;
 using namespace js::wasm;
 
@@ -39,6 +41,23 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
     return true;
 #endif
 }
+
+static bool
+CheckCompilerSupport(JSContext* cx)
+{
+    if (!HasCompilerSupport(cx)) {
+#ifdef JS_MORE_DETERMINISTIC
+        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
+#endif
+        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
+        return false;
+    }
+
+    return true;
+}
+
+// ============================================================================
+// (Temporary) Wasm class and static methods
 
 static bool
 Throw(JSContext* cx, const char* str)
@@ -93,32 +112,31 @@ bool
 wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
            MutableHandleWasmInstanceObject instanceObj)
 {
-    if (!HasCompilerSupport(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
+    if (!CheckCompilerSupport(cx))
         return false;
-    }
 
     Bytes bytecode;
     if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength()))
         return false;
 
-    JS::AutoFilename filename;
-    if (!DescribeScriptedCaller(cx, &filename))
-        return false;
+    UniqueChars filename;
+    JS::AutoFilename af;
+    if (DescribeScriptedCaller(cx, &af)) {
+        filename = DuplicateString(cx, af.get());
+        if (!filename)
+            return false;
+    }
 
-    UniqueChars file = DuplicateString(filename.get());
-    if (!file)
-        return false;
-
-    UniqueModule module = Compile(cx, Move(file), Move(bytecode));
+    UniqueModule module = Compile(cx, Move(filename), Move(bytecode));
     if (!module)
         return false;
 
     Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
     if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
+        return false;
+
+    instanceObj.set(WasmInstanceObject::create(cx));
+    if (!instanceObj)
         return false;
 
     return module->instantiate(cx, funcImports, nullptr, instanceObj);
@@ -203,6 +221,9 @@ js::InitWasmClass(JSContext* cx, HandleObject global)
     return Wasm;
 }
 
+// ============================================================================
+// WebAssembly.Module class and methods
+
 const ClassOps WasmModuleObject::classOps_ =
 {
     nullptr, /* addProperty */
@@ -217,7 +238,7 @@ const ClassOps WasmModuleObject::classOps_ =
 
 const Class WasmModuleObject::class_ =
 {
-    "WasmModuleObject",
+    "WebAssembly.Module",
     JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS),
     &WasmModuleObject::classOps_,
@@ -230,15 +251,85 @@ WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 }
 
 /* static */ WasmModuleObject*
-WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module)
+WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module, HandleObject proto)
 {
     AutoSetNewObjectMetadata metadata(cx);
-    auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, nullptr);
+    auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, proto);
     if (!obj)
         return nullptr;
 
     obj->setReservedSlot(MODULE_SLOT, PrivateValue((void*)module.release()));
     return obj;
+}
+
+static JSObject&
+GetConstructorPrototype(JSContext* cx, Native native, CallArgs args)
+{
+    RootedObject callee(cx, &args.callee());
+    MOZ_ASSERT(callee->as<JSFunction>().native() == native);
+
+    RootedValue proto(cx);
+    if (!GetProperty(cx, callee, callee, cx->names().prototype, &proto))
+        MOZ_CRASH("non-configurable data property of known constructor");
+
+    if (!proto.isObject())
+        MOZ_CRASH("readonly property of known constructor");
+
+    return proto.toObject();
+}
+
+static bool
+ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!ThrowIfNotConstructing(cx, args, "Module"))
+        return false;
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Module", 1))
+        return false;
+
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        return false;
+    }
+
+    Bytes bytecode;
+    if (args[0].toObject().is<TypedArrayObject>()) {
+        TypedArrayObject& view = args[0].toObject().as<TypedArrayObject>();
+        if (!bytecode.append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
+            return false;
+    } else if (args[0].toObject().is<ArrayBufferObject>()) {
+        ArrayBufferObject& buffer = args[0].toObject().as<ArrayBufferObject>();
+        if (!bytecode.append(buffer.dataPointer(), buffer.byteLength()))
+            return false;
+    } else {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        return false;
+    }
+
+    UniqueChars filename;
+    JS::AutoFilename af;
+    if (DescribeScriptedCaller(cx, &af)) {
+        filename = DuplicateString(cx, af.get());
+        if (!filename)
+            return false;
+    }
+
+    if (!CheckCompilerSupport(cx))
+        return false;
+
+    UniqueModule module = Compile(cx, Move(filename), Move(bytecode));
+    if (!module)
+        return false;
+
+    RootedObject proto(cx, &GetConstructorPrototype(cx, ModuleConstructor, args));
+    RootedObject moduleObj(cx, WasmModuleObject::create(cx, Move(module), proto));
+    if (!moduleObj)
+        return false;
+
+    args.rval().setObject(*moduleObj);
+    return true;
 }
 
 Module&
@@ -247,6 +338,9 @@ WasmModuleObject::module() const
     MOZ_ASSERT(is<WasmModuleObject>());
     return *(Module*)getReservedSlot(MODULE_SLOT).toPrivate();
 }
+
+// ============================================================================
+// WebAssembly.Instance class and methods
 
 const ClassOps WasmInstanceObject::classOps_ =
 {
@@ -266,7 +360,7 @@ const ClassOps WasmInstanceObject::classOps_ =
 
 const Class WasmInstanceObject::class_ =
 {
-    "WasmInstanceObject",
+    "WebAssembly.Instance",
     JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS),
     &WasmInstanceObject::classOps_,
@@ -294,10 +388,10 @@ WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmInstanceObject*
-WasmInstanceObject::create(ExclusiveContext* cx)
+WasmInstanceObject::create(ExclusiveContext* cx, HandleObject proto)
 {
     AutoSetNewObjectMetadata metadata(cx);
-    auto obj = NewObjectWithGivenProto<WasmInstanceObject>(cx, nullptr);
+    auto* obj = NewObjectWithGivenProto<WasmInstanceObject>(cx, proto);
     if (!obj)
         return nullptr;
 
@@ -319,6 +413,49 @@ WasmInstanceObject::initExportsObject(HandleObject exportObj)
     initReservedSlot(EXPORTS_SLOT, ObjectValue(*exportObj));
 }
 
+static bool
+InstanceConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!ThrowIfNotConstructing(cx, args, "Instance"))
+        return false;
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Instance", 1))
+        return false;
+
+    if (!args.get(0).isObject() || !args[0].toObject().is<WasmModuleObject>()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
+        return false;
+    }
+
+    const Module& module = args[0].toObject().as<WasmModuleObject>().module();
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args[1].isObject()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
+    if (!ImportFunctions(cx, importObj, module.importNames(), &funcImports))
+        return false;
+
+    RootedObject proto(cx, &GetConstructorPrototype(cx, InstanceConstructor, args));
+    RootedWasmInstanceObject instanceObj(cx, WasmInstanceObject::create(cx, proto));
+    if (!instanceObj)
+        return false;
+
+    if (!module.instantiate(cx, funcImports, nullptr, instanceObj))
+        return false;
+
+    args.rval().setObject(*instanceObj);
+    return true;
+}
+
 Instance&
 WasmInstanceObject::instance() const
 {
@@ -332,3 +469,88 @@ WasmInstanceObject::exportsObject() const
     MOZ_ASSERT(!isNewborn());
     return getReservedSlot(EXPORTS_SLOT).toObject();
 }
+
+// ============================================================================
+// WebAssembly class and static methods
+
+#if JS_HAS_TOSOURCE
+static bool
+WebAssembly_toSource(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(cx->names().WebAssembly);
+    return true;
+}
+#endif
+
+static const JSFunctionSpec WebAssembly_static_methods[] =
+{
+#if JS_HAS_TOSOURCE
+    JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
+#endif
+    JS_FS_END
+};
+
+const Class js::WebAssemblyClass =
+{
+    js_WebAssembly_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly)
+};
+
+template <class Class>
+static bool
+InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const char* name,
+                Native native)
+{
+    RootedObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
+    if (!proto)
+        return false;
+
+    RootedAtom className(cx, Atomize(cx, name, strlen(name)));
+    if (!className)
+        return false;
+
+    RootedFunction ctor(cx, NewNativeConstructor(cx, native, 1, className));
+    if (!ctor)
+        return false;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+        return false;
+
+    RootedId id(cx, AtomToId(className));
+    RootedValue ctorValue(cx, ObjectValue(*ctor));
+    return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
+}
+
+JSObject*
+js::InitWebAssemblyClass(JSContext* cx, HandleObject global)
+{
+    MOZ_ASSERT(cx->runtime()->options().wasm());
+
+    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    if (!proto)
+        return nullptr;
+
+    RootedObject wasm(cx, NewObjectWithGivenProto(cx, &WebAssemblyClass, proto, SingletonObject));
+    if (!wasm)
+        return nullptr;
+
+    if (!JS_DefineProperty(cx, global, js_WebAssembly_str, wasm, JSPROP_RESOLVING))
+        return nullptr;
+
+    // This property will be removed before the initial WebAssembly release.
+    if (!JS_DefineProperty(cx, wasm, "experimentalVersion", EncodingVersion, JSPROP_RESOLVING))
+        return nullptr;
+
+    if (!InitConstructor<WasmModuleObject>(cx, global, wasm, "Module", ModuleConstructor))
+        return nullptr;
+    if (!InitConstructor<WasmInstanceObject>(cx, global, wasm, "Instance", InstanceConstructor))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))
+        return nullptr;
+
+    global->as<GlobalObject>().setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));
+    return wasm;
+}
+

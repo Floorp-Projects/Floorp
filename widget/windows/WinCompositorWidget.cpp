@@ -3,39 +3,45 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WinCompositorWidgetProxy.h"
+#include "WinCompositorWidget.h"
 #include "nsWindow.h"
 #include "VsyncDispatcher.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
 
 namespace mozilla {
 namespace widget {
 
 using namespace mozilla::gfx;
 
-WinCompositorWidgetProxy::WinCompositorWidgetProxy(nsWindow* aWindow)
+/* static */ RefPtr<CompositorWidget>
+CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
+{
+  return new WinCompositorWidget(aInitData, static_cast<nsWindow*>(aWidget));
+}
+
+WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitData,
+                                         nsWindow* aWindow)
  : mWindow(aWindow),
-   mWidgetKey(reinterpret_cast<uintptr_t>(aWindow)),
-   mWnd(reinterpret_cast<HWND>(aWindow->GetNativeData(NS_NATIVE_WINDOW))),
-   mTransparencyMode(aWindow->GetTransparencyMode()),
+   mWidgetKey(aInitData.widgetKey()),
+   mWnd(reinterpret_cast<HWND>(aInitData.hWnd())),
+   mTransparencyMode(static_cast<nsTransparencyMode>(aInitData.transparencyMode())),
    mMemoryDC(nullptr),
    mCompositeDC(nullptr),
    mLockedBackBufferData(nullptr)
 {
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(!aWindow->Destroyed());
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
 }
 
 void
-WinCompositorWidgetProxy::OnDestroyWindow()
+WinCompositorWidget::OnDestroyWindow()
 {
   mTransparentSurface = nullptr;
   mMemoryDC = nullptr;
 }
 
 bool
-WinCompositorWidgetProxy::PreRender(layers::LayerManagerComposite* aManager)
+WinCompositorWidget::PreRender(layers::LayerManagerComposite* aManager)
 {
   // This can block waiting for WM_SETTEXT to finish
   // Using PreRender is unnecessarily pessimistic because
@@ -46,19 +52,20 @@ WinCompositorWidgetProxy::PreRender(layers::LayerManagerComposite* aManager)
 }
 
 void
-WinCompositorWidgetProxy::PostRender(layers::LayerManagerComposite* aManager)
+WinCompositorWidget::PostRender(layers::LayerManagerComposite* aManager)
 {
   mPresentLock.Leave();
 }
 
 nsIWidget*
-WinCompositorWidgetProxy::RealWidget()
+WinCompositorWidget::RealWidget()
 {
+  MOZ_ASSERT(mWindow);
   return mWindow;
 }
 
 LayoutDeviceIntSize
-WinCompositorWidgetProxy::GetClientSize()
+WinCompositorWidget::GetClientSize()
 {
   RECT r;
   if (!::GetClientRect(mWnd, &r)) {
@@ -70,7 +77,7 @@ WinCompositorWidgetProxy::GetClientSize()
 }
 
 already_AddRefed<gfx::DrawTarget>
-WinCompositorWidgetProxy::StartRemoteDrawing()
+WinCompositorWidget::StartRemoteDrawing()
 {
   MOZ_ASSERT(!mCompositeDC);
 
@@ -106,7 +113,7 @@ WinCompositorWidgetProxy::StartRemoteDrawing()
 }
 
 void
-WinCompositorWidgetProxy::EndRemoteDrawing()
+WinCompositorWidget::EndRemoteDrawing()
 {
   MOZ_ASSERT(!mLockedBackBufferData);
 
@@ -121,14 +128,14 @@ WinCompositorWidgetProxy::EndRemoteDrawing()
 }
 
 already_AddRefed<gfx::DrawTarget>
-WinCompositorWidgetProxy::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
-                                                  const LayoutDeviceIntRect& aRect,
-                                                  const LayoutDeviceIntRect& aClearRect)
+WinCompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
+                                             const LayoutDeviceIntRect& aRect,
+                                             const LayoutDeviceIntRect& aClearRect)
 {
   MOZ_ASSERT(!mLockedBackBufferData);
 
   RefPtr<gfx::DrawTarget> target =
-    CompositorWidgetProxy::GetBackBufferDrawTarget(aScreenTarget, aRect, aClearRect);
+    CompositorWidget::GetBackBufferDrawTarget(aScreenTarget, aRect, aClearRect);
   if (!target) {
     return nullptr;
   }
@@ -156,49 +163,49 @@ WinCompositorWidgetProxy::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget
 }
 
 already_AddRefed<gfx::SourceSurface>
-WinCompositorWidgetProxy::EndBackBufferDrawing()
+WinCompositorWidget::EndBackBufferDrawing()
 {
   if (mLockedBackBufferData) {
     MOZ_ASSERT(mLastBackBuffer);
     mLastBackBuffer->ReleaseBits(mLockedBackBufferData);
     mLockedBackBufferData = nullptr;
   }
-  return CompositorWidgetProxy::EndBackBufferDrawing();
+  return CompositorWidget::EndBackBufferDrawing();
 }
 
 already_AddRefed<CompositorVsyncDispatcher>
-WinCompositorWidgetProxy::GetCompositorVsyncDispatcher()
+WinCompositorWidget::GetCompositorVsyncDispatcher()
 {
   RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher();
   return cvd.forget();
 }
 
 uintptr_t
-WinCompositorWidgetProxy::GetWidgetKey()
+WinCompositorWidget::GetWidgetKey()
 {
   return mWidgetKey;
 }
 
 void
-WinCompositorWidgetProxy::EnterPresentLock()
+WinCompositorWidget::EnterPresentLock()
 {
   mPresentLock.Enter();
 }
 
 void
-WinCompositorWidgetProxy::LeavePresentLock()
+WinCompositorWidget::LeavePresentLock()
 {
   mPresentLock.Leave();
 }
 
 RefPtr<gfxASurface>
-WinCompositorWidgetProxy::EnsureTransparentSurface()
+WinCompositorWidget::EnsureTransparentSurface()
 {
   MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
 
   if (!mTransparentSurface) {
     LayoutDeviceIntSize size = GetClientSize();
-    CreateTransparentSurface(size.width, size.height);
+    CreateTransparentSurface(IntSize(size.width, size.height));
   }
 
   RefPtr<gfxASurface> surface = mTransparentSurface;
@@ -206,17 +213,16 @@ WinCompositorWidgetProxy::EnsureTransparentSurface()
 }
 
 void
-WinCompositorWidgetProxy::CreateTransparentSurface(int32_t aWidth, int32_t aHeight)
+WinCompositorWidget::CreateTransparentSurface(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mTransparentSurface && !mMemoryDC);
-  RefPtr<gfxWindowsSurface> surface =
-    new gfxWindowsSurface(IntSize(aWidth, aHeight), SurfaceFormat::A8R8G8B8_UINT32);
+  RefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface(aSize, SurfaceFormat::A8R8G8B8_UINT32);
   mTransparentSurface = surface;
   mMemoryDC = surface->GetDC();
 }
 
 void
-WinCompositorWidgetProxy::UpdateTransparency(nsTransparencyMode aMode)
+WinCompositorWidget::UpdateTransparency(nsTransparencyMode aMode)
 {
   if (mTransparencyMode == aMode) {
     return;
@@ -232,7 +238,7 @@ WinCompositorWidgetProxy::UpdateTransparency(nsTransparencyMode aMode)
 }
 
 void
-WinCompositorWidgetProxy::ClearTransparentWindow()
+WinCompositorWidget::ClearTransparentWindow()
 {
   if (!mTransparentSurface) {
     return;
@@ -246,13 +252,11 @@ WinCompositorWidgetProxy::ClearTransparentWindow()
 }
 
 void
-WinCompositorWidgetProxy::ResizeTransparentWindow(int32_t aNewWidth, int32_t aNewHeight)
+WinCompositorWidget::ResizeTransparentWindow(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
 
-  if (mTransparentSurface &&
-      mTransparentSurface->GetSize() == IntSize(aNewWidth, aNewHeight))
-  {
+  if (mTransparentSurface && mTransparentSurface->GetSize() == aSize) {
     return;
   }
 
@@ -260,11 +264,11 @@ WinCompositorWidgetProxy::ResizeTransparentWindow(int32_t aNewWidth, int32_t aNe
   mTransparentSurface = nullptr;
   mMemoryDC = nullptr;
 
-  CreateTransparentSurface(aNewWidth, aNewHeight);
+  CreateTransparentSurface(aSize);
 }
 
 bool
-WinCompositorWidgetProxy::RedrawTransparentWindow()
+WinCompositorWidget::RedrawTransparentWindow()
 {
   MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
 
@@ -286,7 +290,7 @@ WinCompositorWidgetProxy::RedrawTransparentWindow()
 }
 
 HDC
-WinCompositorWidgetProxy::GetWindowSurface()
+WinCompositorWidget::GetWindowSurface()
 {
   return eTransparencyTransparent == mTransparencyMode
          ? mMemoryDC
@@ -294,7 +298,7 @@ WinCompositorWidgetProxy::GetWindowSurface()
 }
 
 void
-WinCompositorWidgetProxy::FreeWindowSurface(HDC dc)
+WinCompositorWidget::FreeWindowSurface(HDC dc)
 {
   if (eTransparencyTransparent != mTransparencyMode)
     ::ReleaseDC(mWnd, dc);

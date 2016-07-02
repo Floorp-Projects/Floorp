@@ -2599,6 +2599,7 @@ HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
       break;
     case nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA:
     case nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA:
+      FireTimeUpdate(false);
       DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
       break;
     }

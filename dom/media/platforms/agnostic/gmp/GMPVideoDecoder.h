@@ -62,6 +62,7 @@ struct GMPVideoDecoderParams {
   VideoCallbackAdapter* mAdapter;
   layers::ImageContainer* mImageContainer;
   layers::LayersBackend mLayersBackend;
+  RefPtr<GMPCrashHelper> mCrashHelper;
 };
 
 class GMPVideoDecoder : public MediaDataDecoder {
@@ -111,6 +112,7 @@ private:
   nsAutoPtr<VideoCallbackAdapter> mAdapter;
   bool mConvertNALUnitLengths;
   MozPromiseHolder<InitPromise> mInitPromise;
+  RefPtr<GMPCrashHelper> mCrashHelper;
 };
 
 } // namespace mozilla

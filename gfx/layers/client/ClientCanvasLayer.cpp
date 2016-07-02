@@ -130,7 +130,11 @@ ClientCanvasLayer::RenderLayer()
   Painted();
 
   FirePreTransactionCallback();
-  mCanvasClient->Update(gfx::IntSize(mBounds.width, mBounds.height), this);
+  if (mBufferProvider && mBufferProvider->GetTextureClient()) {
+    mCanvasClient->UpdateFromTexture(mBufferProvider->GetTextureClient());
+  } else {
+    mCanvasClient->Update(gfx::IntSize(mBounds.width, mBounds.height), this);
+  }
 
   FireDidTransactionCallback();
 

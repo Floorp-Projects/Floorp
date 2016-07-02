@@ -582,9 +582,13 @@ typedef void
 typedef bool
 (* JSInterruptCallback)(JSContext* cx);
 
+typedef JSObject*
+(* JSGetIncumbentGlobalCallback)(JSContext* cx);
+
 typedef bool
 (* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job,
-                                JS::HandleObject allocationSite, void* data);
+                                JS::HandleObject allocationSite, JS::HandleObject incumbentGlobal,
+                                void* data);
 
 enum class PromiseRejectionHandlingState {
     Unhandled,
@@ -4313,6 +4317,16 @@ extern JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSRuntime* rt);
 
 namespace JS {
+
+/**
+ * Sets the callback that's invoked whenever an incumbent global is required.
+ *
+ * SpiderMonkey doesn't itself have a notion of incumbent globals as defined
+ * by the html spec, so we need the embedding to provide this.
+ * See dom/base/ScriptSettings.h for details.
+ */
+extern JS_PUBLIC_API(void)
+SetGetIncumbentGlobalCallback(JSRuntime* rt, JSGetIncumbentGlobalCallback callback);
 
 /**
  * Sets the callback that's invoked whenever a Promise job should be enqeued.

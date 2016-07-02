@@ -13,6 +13,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
+#include "mozilla/layers/PersistentBufferProvider.h"
 
 // Fix X11 header brain damage that conflicts with MaybeOneOf::None
 #undef None
@@ -76,6 +77,8 @@ public:
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) {}
 
+  virtual void UpdateFromTexture(TextureClient* aTexture) {}
+
   virtual void Updated() { }
 
 protected:
@@ -104,9 +107,10 @@ public:
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) override;
 
+  virtual void UpdateFromTexture(TextureClient* aBuffer) override;
+
   virtual bool AddTextureClient(TextureClient* aTexture) override
   {
-    MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
     return CanvasClient::AddTextureClient(aTexture);
   }
 

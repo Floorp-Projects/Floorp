@@ -46,7 +46,7 @@ private:
 class X11BasicCompositor : public BasicCompositor
 {
 public:
-  explicit X11BasicCompositor(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
+  explicit X11BasicCompositor(CompositorBridgeParent* aParent, widget::CompositorWidget* aWidget)
     : BasicCompositor(aParent, aWidget)
   {}
 

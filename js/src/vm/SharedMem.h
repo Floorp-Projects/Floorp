@@ -16,8 +16,8 @@ class SharedMem
                   "SharedMem encapsulates pointer types");
 
     enum Sharedness {
-	IsUnshared,
-	IsShared
+        IsUnshared,
+        IsShared
     };
 
     T ptr_;

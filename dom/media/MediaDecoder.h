@@ -243,6 +243,8 @@ public:
   // If the MediaDecoder is shutting down, OwnerHasError will return true.
   bool OwnerHasError() const;
 
+  already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
+
 protected:
   // Updates the media duration. This is called while the media is being
   // played, calls before the media has reached loaded metadata are ignored.

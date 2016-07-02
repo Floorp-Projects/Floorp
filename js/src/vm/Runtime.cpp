@@ -156,6 +156,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     handlingSegFault(false),
     handlingJitInterrupt_(false),
     interruptCallback(nullptr),
+    getIncumbentGlobalCallback(nullptr),
     enqueuePromiseJobCallback(nullptr),
     enqueuePromiseJobCallbackData(nullptr),
     promiseRejectionTrackerCallback(nullptr),
@@ -203,6 +204,9 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     hadOutOfMemory(false),
 #ifdef DEBUG
     handlingInitFailure(false),
+#endif
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    runningOOMTest(false),
 #endif
     allowRelazificationForTesting(false),
     data(nullptr),
@@ -764,17 +768,35 @@ FreeOp::~FreeOp()
         jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
 }
 
+JSObject*
+JSRuntime::getIncumbentGlobal(JSContext* cx)
+{
+    MOZ_ASSERT(cx->runtime()->getIncumbentGlobalCallback,
+               "Must set a callback using JS_SetGetIncumbentGlobalCallback before using Promises");
+
+    return cx->runtime()->getIncumbentGlobalCallback(cx);
+}
+
 bool
-JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject promise)
+JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject promise,
+                             HandleObject incumbentGlobal)
 {
     MOZ_ASSERT(cx->runtime()->enqueuePromiseJobCallback,
                "Must set a callback using JS_SetEnqeueuPromiseJobCallback before using Promises");
+    MOZ_ASSERT_IF(incumbentGlobal, !IsWrapper(incumbentGlobal) && !IsWindowProxy(incumbentGlobal));
 
     void* data = cx->runtime()->enqueuePromiseJobCallbackData;
     RootedObject allocationSite(cx);
-    if (promise)
-        allocationSite = JS::GetPromiseAllocationSite(promise);
-    return cx->runtime()->enqueuePromiseJobCallback(cx, job, allocationSite, data);
+    if (promise) {
+        RootedObject unwrappedPromise(cx, promise);
+        // While the job object is guaranteed to be unwrapped, the promise
+        // might be wrapped. See the comments in
+        // intrinsic_EnqueuePromiseReactionJob for details.
+        if (IsWrapper(promise))
+            unwrappedPromise = UncheckedUnwrap(promise);
+        allocationSite = JS::GetPromiseAllocationSite(unwrappedPromise);
+    }
+    return cx->runtime()->enqueuePromiseJobCallback(cx, job, allocationSite, incumbentGlobal, data);
 }
 
 void

@@ -15,6 +15,7 @@
 #include "GMPVideoHost.h"
 #include "GMPVideoDecoderProxy.h"
 #include "VideoUtils.h"
+#include "GMPCrashHelperHolder.h"
 
 namespace mozilla {
 namespace gmp {
@@ -24,6 +25,7 @@ class GMPContentParent;
 class GMPVideoDecoderParent final : public PGMPVideoDecoderParent
                                   , public GMPVideoDecoderProxy
                                   , public GMPSharedMemManager
+                                  , public GMPCrashHelperHolder
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoDecoderParent)

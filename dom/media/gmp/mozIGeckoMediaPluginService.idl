@@ -15,6 +15,7 @@ class GMPDecryptorProxy;
 class GMPVideoDecoderProxy;
 class GMPVideoEncoderProxy;
 class GMPVideoHost;
+class GMPCrashHelper;
 
 template<class T>
 class GMPGetterCallback
@@ -51,6 +52,7 @@ native GetGMPAudioDecoderCallback(mozilla::UniquePtr<GetGMPAudioDecoderCallback>
 native GetGMPVideoDecoderCallback(mozilla::UniquePtr<GetGMPVideoDecoderCallback>&&);
 native GetGMPVideoEncoderCallback(mozilla::UniquePtr<GetGMPVideoEncoderCallback>&&);
 native GetNodeIdCallback(mozilla::UniquePtr<GetNodeIdCallback>&&);
+native GMPCrashHelperPtr(GMPCrashHelper*);
 
 [scriptable, uuid(44d362ae-937a-4803-bee6-f2512a0149d1)]
 interface mozIGeckoMediaPluginService : nsISupports
@@ -94,7 +96,8 @@ interface mozIGeckoMediaPluginService : nsISupports
    * callback object will not be called at all.
    */
   [noscript]
-  void getGMPVideoDecoder(in TagArray tags,
+  void getGMPVideoDecoder(in GMPCrashHelperPtr helper,
+                          in TagArray tags,
                           [optional] in ACString nodeId,
                           in GetGMPVideoDecoderCallback callback);
 
@@ -110,7 +113,8 @@ interface mozIGeckoMediaPluginService : nsISupports
    * callback object will not be called at all.
    */
   [noscript]
-  void getGMPVideoEncoder(in TagArray tags,
+  void getGMPVideoEncoder(in GMPCrashHelperPtr helper,
+                          in TagArray tags,
                           [optional] in ACString nodeId,
                           in GetGMPVideoEncoderCallback callback);
 
@@ -126,7 +130,8 @@ interface mozIGeckoMediaPluginService : nsISupports
    * callback object will not be called at all.
    */
   [noscript]
-  void getGMPAudioDecoder(in TagArray tags,
+  void getGMPAudioDecoder(in GMPCrashHelperPtr helper,
+                          in TagArray tags,
                           [optional] in ACString nodeId,
                           in GetGMPAudioDecoderCallback callback);
 
@@ -142,7 +147,9 @@ interface mozIGeckoMediaPluginService : nsISupports
    * callback object will not be called at all.
    */
   [noscript]
-  void getGMPDecryptor(in TagArray tags, in ACString nodeId,
+  void getGMPDecryptor(in GMPCrashHelperPtr helper,
+                       in TagArray tags,
+                       in ACString nodeId,
                        in GetGMPDecryptorCallback callback);
 
   /**
