@@ -339,6 +339,58 @@ function findByXPathAll(root, value, node) {
 }
 
 /**
+ * Find all hyperlinks dscendant of |node| which link text is |s|.
+ *
+ * @param {DOMElement} node
+ *     Where in the DOM hierarchy to being searching.
+ * @param {string} s
+ *     Link text to search for.
+ *
+ * @return {Array.<DOMAnchorElement>}
+ *     Sequence of link elements which text is |s|.
+ */
+element.findByLinkText = function(node, s) {
+  return filterLinks(node, link => link.text === s);
+};
+
+/**
+ * Find all hyperlinks descendant of |node| which link text contains |s|.
+ *
+ * @param {DOMElement} node
+ *     Where in the DOM hierachy to begin searching.
+ * @param {string} s
+ *     Link text to search for.
+ *
+ * @return {Array.<DOMAnchorElement>}
+ *     Sequence of link elements which text containins |s|.
+ */
+element.findByPartialLinkText = function(node, s) {
+  return filterLinks(node, link => link.text.indexOf(s) != -1);
+};
+
+/**
+ * Filters all hyperlinks that are descendant of |node| by |predicate|.
+ *
+ * @param {DOMElement} node
+ *     Where in the DOM hierarchy to begin searching.
+ * @param {function(DOMAnchorElement): boolean} predicate
+ *     Function that determines if given link should be included in
+ *     return value or filtered away.
+ *
+ * @return {Array.<DOMAnchorElement>}
+ *     Sequence of link elements matching |predicate|.
+ */
+function filterLinks(node, predicate) {
+  let rv = [];
+  for (let link of node.getElementsByTagName("a")) {
+    if (predicate(link)) {
+      rv.push(link);
+    }
+  }
+  return rv;
+}
+
+/**
  * Finds a single element.
  *
  * @param {element.Strategy} using
@@ -383,22 +435,21 @@ function findElement(using, value, rootNode, startNode) {
     case element.Strategy.XPath:
       return  findByXPath(rootNode, value, startNode);
 
-    // TODO(ato): Rewrite this, it's hairy:
     case element.Strategy.LinkText:
-    case element.Strategy.PartialLinkText:
-      let el;
-      let allLinks = startNode.getElementsByTagName("A");
-      for (let i = 0; i < allLinks.length && !el; i++) {
-        let text = allLinks[i].text;
-        if (using == element.Strategy.PartialLinkText) {
-          if (text.indexOf(value) != -1) {
-            el = allLinks[i];
-          }
-        } else if (text == value) {
-          el = allLinks[i];
+      for (let link of startNode.getElementsByTagName("a")) {
+        if (link.text === value) {
+          return link;
         }
       }
-      return el;
+      break;
+
+    case element.Strategy.PartialLinkText:
+      for (let link of startNode.getElementsByTagName("a")) {
+        if (link.text.indexOf(value) != -1) {
+          return link;
+        }
+      }
+      break;
 
     case element.Strategy.Selector:
       try {
@@ -461,20 +512,10 @@ function findElements(using, value, rootNode, startNode) {
       return startNode.getElementsByTagName(value);
 
     case element.Strategy.LinkText:
+      return element.findByLinkText(startNode, value);
+
     case element.Strategy.PartialLinkText:
-      let els = [];
-      let allLinks = startNode.getElementsByTagName("A");
-      for (let i = 0; i < allLinks.length; i++) {
-        let text = allLinks[i].text;
-        if (using == element.Strategy.PartialLinkText) {
-          if (text.indexOf(value) != -1) {
-            els.push(allLinks[i]);
-          }
-        } else if (text == value) {
-          els.push(allLinks[i]);
-        }
-      }
-      return els;
+      return element.findByPartialLinkText(startNode, value);
 
     case element.Strategy.Selector:
       return startNode.querySelectorAll(value);
