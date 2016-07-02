@@ -718,8 +718,14 @@ this.PlacesDBUtils = {
     // L.4 recalculate foreign_count.
     let fixForeignCount = DBConn.createAsyncStatement(
       `UPDATE moz_places SET foreign_count =
-       (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id )`);
+         (SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id ) +
+         (SELECT count(*) FROM moz_keywords WHERE place_id = moz_places.id )`);
     cleanupStatements.push(fixForeignCount);
+
+    // L.5 recalculate missing hashes.
+    let fixMissingHashes = DBConn.createAsyncStatement(
+      `UPDATE moz_places SET url_hash = hash(url) WHERE url_hash = 0`);
+    cleanupStatements.push(fixMissingHashes);
 
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 

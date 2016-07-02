@@ -47,6 +47,7 @@ interface mozIStorageAsyncConnection : nsISupports {
 
   /**
    * Clone a database and make the clone read only if needed.
+   * SQL Functions and attached on-disk databases are applied to the new clone.
    *
    * @param aReadOnly
    *        If true, the returned database should be put into read-only mode.

@@ -1116,9 +1116,10 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
         return fnLoadForFeature(list, feature);
     };
 
-    bool hasRobustness = false;
-    if (SupportsRobustness()) {
-        if (IsExtensionSupported(ARB_robustness)) {
+    if (IsSupported(GLFeature::robustness)) {
+        bool hasRobustness = false;
+
+        if (!hasRobustness && IsExtensionSupported(ARB_robustness)) {
             const SymLoadStruct symbols[] = {
                 { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nullptr } },
                 END_SYMBOLS
@@ -1137,9 +1138,10 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
                 hasRobustness = true;
             }
         }
-    }
-    if (!hasRobustness) {
-        MarkUnsupported(GLFeature::robustness);
+
+        if (!hasRobustness) {
+            MarkUnsupported(GLFeature::robustness);
+        }
     }
 
     if (IsSupported(GLFeature::sync)) {

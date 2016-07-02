@@ -1175,6 +1175,17 @@ public:
     return mPermitSubpixelAA;
   }
 
+  /**
+   * Ensures that no snapshot is still pointing to this DrawTarget's surface data.
+   *
+   * This can be useful if the DrawTarget is wrapped around data that it does not
+   * own, and for some reason the owner of the data has to make it temporarily
+   * unavailable without the DrawTarget knowing about it.
+   * This can cause costly surface copies, so it should not be used without a
+   * a good reason.
+   */
+  virtual void DetachAllSnapshots() = 0;
+
 #ifdef USE_SKIA_GPU
   virtual bool InitWithGrContext(GrContext* aGrContext,
                                  const IntSize &aSize,

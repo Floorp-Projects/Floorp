@@ -18,29 +18,15 @@ add_task(function* () {
   yield testManuallyDeleteSelectedNode();
   yield testAutomaticallyDeleteSelectedNode();
   yield testDeleteSelectedNodeContainerFrame();
+  yield testDeleteWithNonElementNode();
 
   function* testManuallyDeleteSelectedNode() {
     info("Selecting a node, deleting it via context menu and checking that " +
           "its parent node is selected and breadcrumbs are updated.");
 
-    yield selectNode("#deleteManually", inspector);
+    yield deleteNodeWithContextMenu("#deleteManually");
 
-    info("Getting the node container in the markup view.");
-    let container = yield getContainerForSelector("#deleteManually", inspector);
-
-    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
-      target: container.tagLine,
-    });
-    let menuItem = allMenuItems.find(item => item.id === "node-menu-delete");
-
-    info("Clicking 'Delete Node' in the context menu.");
-    is(menuItem.disabled, false, "delete menu item is enabled");
-    menuItem.click();
-
-    info("Waiting for inspector to update.");
-    yield inspector.once("inspector-updated");
-
-    info("Inspector updated, performing checks.");
+    info("Performing checks.");
     yield assertNodeSelectedAndPanelsUpdated("#selectedAfterDelete",
                                              "li#selectedAfterDelete");
   }
@@ -83,12 +69,73 @@ add_task(function* () {
     yield assertNodeSelectedAndPanelsUpdated("body", "body");
   }
 
+  function* testDeleteWithNonElementNode() {
+    info("Selecting a node, deleting it via context menu and checking that " +
+         "its parent node is selected and breadcrumbs are updated " +
+         "when the node is followed by a non-element node");
+
+    yield deleteNodeWithContextMenu("#deleteWithNonElement");
+
+    let expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
+    yield assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
+                                             Node.TEXT_NODE);
+
+    // Delete node with key, as cannot delete text node with
+    // context menu at this time.
+    inspector.markup._frame.focus();
+    EventUtils.synthesizeKey("VK_DELETE", {});
+    yield inspector.once("inspector-updated");
+
+    expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
+    yield assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
+                                             Node.ELEMENT_NODE);
+  }
+
+  function* deleteNodeWithContextMenu(selector) {
+    yield selectNode(selector, inspector);
+
+    info("Getting the node container in the markup view.");
+    let container = yield getContainerForSelector(selector, inspector);
+
+    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+      target: container.tagLine,
+    });
+    let menuItem = allMenuItems.find(item => item.id === "node-menu-delete");
+
+    info("Clicking 'Delete Node' in the context menu.");
+    is(menuItem.disabled, false, "delete menu item is enabled");
+    menuItem.click();
+
+    // close the open context menu
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+
+    info("Waiting for inspector to update.");
+    yield inspector.once("inspector-updated");
+    return menuItem;
+  }
+
+  function* assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
+                                               expectedNodeType) {
+    info("Performing checks");
+    let actualNodeType = inspector.selection.nodeFront.nodeType;
+    is(actualNodeType, expectedNodeType, "The node has the right type");
+
+    let breadcrumbs = inspector.panelDoc.querySelectorAll(
+      "#inspector-breadcrumbs .html-arrowscrollbox-inner > *");
+    is(breadcrumbs.length, expectedCrumbs.length,
+       "Have the correct number of breadcrumbs");
+    for (let i = 0; i < breadcrumbs.length; i++) {
+      is(breadcrumbs[i].textContent, expectedCrumbs[i],
+         "Text content for button " + i + " is correct");
+    }
+  }
+
   function* assertNodeSelectedAndPanelsUpdated(selector, crumbLabel) {
     let nodeFront = yield getNodeFront(selector, inspector);
     is(inspector.selection.nodeFront, nodeFront, "The right node is selected");
 
-    let breadcrumbs = inspector.panelDoc.getElementById(
-      "inspector-breadcrumbs");
+    let breadcrumbs = inspector.panelDoc.querySelector(
+      "#inspector-breadcrumbs .html-arrowscrollbox-inner");
     is(breadcrumbs.querySelector("button[checked=true]").textContent,
        crumbLabel,
        "The right breadcrumb is selected");

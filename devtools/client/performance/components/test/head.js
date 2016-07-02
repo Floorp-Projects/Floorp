@@ -128,7 +128,7 @@ function checkOptimizationHeader(name, file, line) {
     "correct optimization header function name");
   is($(".optimization-header .frame-link-filename").textContent, file,
     "correct optimization header file name");
-  is($(".optimization-header .frame-link-line").textContent, line,
+  is($(".optimization-header .frame-link-line").textContent, `:${line}`,
     "correct optimization header line");
 }
 

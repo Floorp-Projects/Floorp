@@ -3,25 +3,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _widget_windows_WinCompositorWidget_h__
-#define _widget_windows_WinCompositorWidget_h__
+#ifndef widget_windows_CompositorWidgetParent_h
+#define widget_windows_CompositorWidgetParent_h
 
-#include "CompositorWidgetProxy.h"
+#include "CompositorWidget.h"
+#include "gfxASurface.h"
 #include "mozilla/gfx/CriticalSection.h"
+#include "mozilla/gfx/Point.h"
+#include "nsIWidget.h"
 
 class nsWindow;
 
 namespace mozilla {
 namespace widget {
+
+class CompositorWidgetDelegate
+{
+public:
+  // Callbacks for nsWindow.
+  virtual void EnterPresentLock() = 0;
+  virtual void LeavePresentLock() = 0;
+  virtual void OnDestroyWindow() = 0;
+
+  // Transparency handling.
+  virtual void UpdateTransparency(nsTransparencyMode aMode) = 0;
+  virtual void ClearTransparentWindow() = 0;
+
+  // Update the bounds of the transparent surface.
+  virtual void ResizeTransparentWindow(const gfx::IntSize& aSize) = 0;
+
+  // If in-process and using software rendering, return the backing transparent
+  // DC.
+  virtual HDC GetTransparentDC() const = 0;
+};
  
-// This is the Windows-specific implementation of CompositorWidgetProxy. For
+// This is the Windows-specific implementation of CompositorWidget. For
 // the most part it only requires an HWND, however it maintains extra state
 // for transparent windows, as well as for synchronizing WM_SETTEXT messages
 // with the compositor.
-class WinCompositorWidgetProxy : public CompositorWidgetProxy
+class WinCompositorWidget
+ : public CompositorWidget,
+   public CompositorWidgetDelegate
 {
 public:
-  WinCompositorWidgetProxy(nsWindow* aWindow);
+  WinCompositorWidget(const CompositorWidgetInitData& aInitData,
+                      nsWindow* aWindow = nullptr);
 
   bool PreRender(layers::LayerManagerComposite*) override;
   void PostRender(layers::LayerManagerComposite*) override;
@@ -35,27 +61,27 @@ public:
   already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
   uintptr_t GetWidgetKey() override;
   nsIWidget* RealWidget() override;
-  WinCompositorWidgetProxy* AsWindowsProxy() override {
+  WinCompositorWidget* AsWindows() override {
+    return this;
+  }
+  CompositorWidgetDelegate* AsDelegate() override {
     return this;
   }
 
-  // Callbacks for nsWindow.
-  void EnterPresentLock();
-  void LeavePresentLock();
-  void OnDestroyWindow();
+  // CompositorWidgetDelegate overrides.
+  void EnterPresentLock() override;
+  void LeavePresentLock() override;
+  void OnDestroyWindow() override;
+  void UpdateTransparency(nsTransparencyMode aMode) override;
+  void ClearTransparentWindow() override;
+  void ResizeTransparentWindow(const gfx::IntSize& aSize) override;
 
-  // Transparency handling.
-  void UpdateTransparency(nsTransparencyMode aMode);
-  void ClearTransparentWindow();
   bool RedrawTransparentWindow();
-
-  // Update the bounds of the transparent surface.
-  void ResizeTransparentWindow(int32_t aNewWidth, int32_t aNewHeight);
 
   // Ensure that a transparent surface exists, then return it.
   RefPtr<gfxASurface> EnsureTransparentSurface();
 
-  HDC GetTransparentDC() const {
+  HDC GetTransparentDC() const override {
     return mMemoryDC;
   }
   HWND GetHwnd() const {
@@ -66,7 +92,7 @@ private:
   HDC GetWindowSurface();
   void FreeWindowSurface(HDC dc);
 
-  void CreateTransparentSurface(int32_t aWidth, int32_t aHeight);
+  void CreateTransparentSurface(const gfx::IntSize& aSize);
 
 private:
   nsWindow* mWindow;
@@ -87,4 +113,4 @@ private:
 } // namespace widget
 } // namespace mozilla
 
-#endif // _widget_windows_WinCompositorWidget_h__
+#endif // widget_windows_CompositorWidgetParent_h

@@ -233,7 +233,8 @@ WebrtcGmpVideoEncoder::InitEncode_g(
   UniquePtr<GetGMPVideoEncoderCallback> callback(
     new InitDoneCallback(aThis, aInitDone, aCodecParams, aMaxPayloadSize));
   aThis->mInitting = true;
-  nsresult rv = aThis->mMPS->GetGMPVideoEncoder(&tags,
+  nsresult rv = aThis->mMPS->GetGMPVideoEncoder(nullptr,
+                                                &tags,
                                                 NS_LITERAL_CSTRING(""),
                                                 Move(callback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -364,7 +365,8 @@ WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
   mInitting = true;
-  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoEncoder(&tags,
+  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoEncoder(nullptr,
+                                                    &tags,
                                                     NS_LITERAL_CSTRING(""),
                                                     Move(callback))))) {
     aInitDone->Dispatch(WEBRTC_VIDEO_CODEC_ERROR,
@@ -718,7 +720,8 @@ WebrtcGmpVideoDecoder::InitDecode_g(
   UniquePtr<GetGMPVideoDecoderCallback> callback(
     new InitDoneCallback(aThis, aInitDone));
   aThis->mInitting = true;
-  nsresult rv = aThis->mMPS->GetGMPVideoDecoder(&tags,
+  nsresult rv = aThis->mMPS->GetGMPVideoDecoder(nullptr,
+                                                &tags,
                                                 NS_LITERAL_CSTRING(""),
                                                 Move(callback));
   if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -226,6 +226,7 @@ GMPAudioDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
     mPlugin->AudioDecoderDestroyed(this);
     mPlugin = nullptr;
   }
+  MaybeDisconnect(aWhy == AbnormalShutdown);
 }
 
 bool

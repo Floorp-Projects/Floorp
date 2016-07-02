@@ -1182,11 +1182,18 @@ XMLHttpRequestMainThread::GetAllResponseHeaders(nsACString& aResponseHeaders,
     aResponseHeaders.AppendLiteral("\r\n");
   }
 
-  int64_t length;
-  if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
-    aResponseHeaders.AppendLiteral("Content-Length: ");
-    aResponseHeaders.AppendInt(length);
-    aResponseHeaders.AppendLiteral("\r\n");
+  // Don't provide Content-Length for data URIs
+  nsCOMPtr<nsIURI> uri;
+  bool isDataURI;
+  if (NS_FAILED(mChannel->GetURI(getter_AddRefs(uri))) ||
+      NS_FAILED(uri->SchemeIs("data", &isDataURI)) ||
+      !isDataURI) {
+    int64_t length;
+    if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
+      aResponseHeaders.AppendLiteral("Content-Length: ");
+      aResponseHeaders.AppendInt(length);
+      aResponseHeaders.AppendLiteral("\r\n");
+    }
   }
 }
 
@@ -1965,6 +1972,9 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
                                          nullptr, getter_AddRefs(listener),
                                          !isCrossSite);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // the spec requires the response document.referrer to be the empty string
+    mResponseXML->SetReferrer(NS_LITERAL_CSTRING(""));
 
     mXMLParserStreamListener = listener;
     rv = mXMLParserStreamListener->OnStartRequest(request, ctxt);

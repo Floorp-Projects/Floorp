@@ -623,9 +623,15 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 }
 
 #ifdef SPIDERMONKEY_PROMISE
+static JSObject*
+ShellGetIncumbentGlobalCallback(JSContext* cx)
+{
+    return JS::CurrentGlobalOrNull(cx);
+}
+
 static bool
 ShellEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job, JS::HandleObject allocationSite,
-                               void* data)
+                               JS::HandleObject incumbentGlobal, void* data)
 {
     ShellRuntime* sr = GetShellRuntime(cx);
     MOZ_ASSERT(job);
@@ -2954,6 +2960,7 @@ WorkerMain(void* arg)
 #ifdef SPIDERMONKEY_PROMISE
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
+    JS::SetGetIncumbentGlobalCallback(rt, ShellGetIncumbentGlobalCallback);
 #endif // SPIDERMONKEY_PROMISE
 
     EnvironmentPreparer environmentPreparer(cx);
@@ -2986,6 +2993,7 @@ WorkerMain(void* arg)
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
 
 #ifdef SPIDERMONKEY_PROMISE
+    JS::SetGetIncumbentGlobalCallback(rt, nullptr);
     JS::SetEnqueuePromiseJobCallback(rt, nullptr);
     sr->jobQueue.reset();
 #endif // SPIDERMONKEY_PROMISE
@@ -3025,6 +3033,13 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportError(cx, "Invalid arguments to evalInWorker");
         return false;
     }
+
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    if (cx->runtime()->runningOOMTest) {
+        JS_ReportError(cx, "Can't create workers while running simulated OOM test");
+        return false;
+    }
+#endif
 
     if (!args[0].toString()->ensureLinear(cx))
         return false;
@@ -7397,6 +7412,7 @@ main(int argc, char** argv, char** envp)
 #ifdef SPIDERMONKEY_PROMISE
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
+    JS::SetGetIncumbentGlobalCallback(rt, ShellGetIncumbentGlobalCallback);
 #endif // SPIDERMONKEY_PROMISE
 
     EnvironmentPreparer environmentPreparer(cx);
@@ -7428,6 +7444,7 @@ main(int argc, char** argv, char** envp)
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
 
 #ifdef SPIDERMONKEY_PROMISE
+    JS::SetGetIncumbentGlobalCallback(rt, nullptr);
     JS::SetEnqueuePromiseJobCallback(rt, nullptr);
     sr->jobQueue.reset();
 #endif // SPIDERMONKEY_PROMISE

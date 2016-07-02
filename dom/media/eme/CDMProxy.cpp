@@ -19,6 +19,7 @@
 #include "mozilla/CDMCallbackProxy.h"
 #include "MediaData.h"
 #include "nsPrintfCString.h"
+#include "GMPService.h"
 
 namespace mozilla {
 
@@ -43,7 +44,8 @@ CDMProxy::Init(PromiseId aPromiseId,
                const nsAString& aOrigin,
                const nsAString& aTopLevelOrigin,
                const nsAString& aGMPName,
-               bool aInPrivateBrowsing)
+               bool aInPrivateBrowsing,
+               GMPCrashHelper* aCrashHelper)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
@@ -82,6 +84,7 @@ CDMProxy::Init(PromiseId aPromiseId,
   data->mTopLevelOrigin = aTopLevelOrigin;
   data->mGMPName = aGMPName;
   data->mInPrivateBrowsing = aInPrivateBrowsing;
+  data->mCrashHelper = aCrashHelper;
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<nsAutoPtr<InitData>>(this,
                                            &CDMProxy::gmp_Init,
@@ -226,9 +229,12 @@ CDMProxy::gmp_InitGetGMPDecryptor(nsresult aResult,
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
 
+  // Note: must capture helper refptr here, before the Move()
+  // when we create the GetGMPDecryptorCallback below.
+  RefPtr<GMPCrashHelper> crashHelper = Move(aData->mCrashHelper);
   UniquePtr<GetGMPDecryptorCallback> callback(new gmp_InitDoneCallback(this,
                                                                        Move(aData)));
-  nsresult rv = mps->GetGMPDecryptor(&tags, GetNodeId(), Move(callback));
+  nsresult rv = mps->GetGMPDecryptor(crashHelper, &tags, GetNodeId(), Move(callback));
   if (NS_FAILED(rv)) {
     RejectPromise(promiseID, NS_ERROR_DOM_INVALID_STATE_ERR,
                   NS_LITERAL_CSTRING("Call to GetGMPDecryptor() failed early"));

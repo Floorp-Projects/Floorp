@@ -58,7 +58,8 @@ public:
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
             const nsAString& aGMPName,
-            bool aInPrivateBrowsing);
+            bool aInPrivateBrowsing,
+            GMPCrashHelper* aHelper);
 
   // Main thread only.
   // Uses the CDM to create a key session.
@@ -188,6 +189,7 @@ private:
     nsString mOrigin;
     nsString mTopLevelOrigin;
     nsString mGMPName;
+    RefPtr<GMPCrashHelper> mCrashHelper;
     bool mInPrivateBrowsing;
   };
 

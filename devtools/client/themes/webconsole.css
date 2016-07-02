@@ -24,7 +24,6 @@ a {
 
 .message {
   display: flex;
-  flex: none;
   padding: 0 7px;
   width: 100%;
   box-sizing: border-box;
@@ -79,7 +78,8 @@ a {
 }
 
 .message > .message-body-wrapper {
-  flex: 1 1 100%;
+  flex: auto;
+  min-width: 0px;
   margin: 3px;
 }
 
@@ -107,29 +107,22 @@ a {
 }
 
 .message-location {
-  display: flex;
-  flex: none;
-  align-self: flex-start;
-  justify-content: flex-end;
-  width: 10em;
-  margin-top: 3px;
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
+  max-width: 40%;
+}
+
+.stack-trace .frame-link-source,
+.message-location .frame-link-source {
+  direction: rtl;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* More space for the location data for location URL */
-.theme-firebug .message-location {
-  width: 13em;
-}
-
-.message-location:hover,
-.message-location:focus {
-  text-decoration: underline;
-}
-
-.message-location > .frame-link .frame-link-source {
-  width: 10em;
+.stack-trace .frame-link-function-display-name {
+  max-width: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .message-flex-body {
@@ -143,12 +136,7 @@ a {
 
 .message-flex-body > .message-body {
   display: block;
-  flex: 1 1 auto;
-  vertical-align: middle;
-}
-
-.message-flex-body > .message-location {
-  margin-top: 0;
+  flex: auto;
 }
 
 #output-wrapper {
@@ -499,10 +487,8 @@ a {
 
 .stacktrace {
   display: none;
-  list-style: none;
-  padding: 0 1em 0 1.5em;
+  padding: 5px 10px;
   margin: 5px 0 0 0;
-  max-height: 10em;
   overflow-y: auto;
   border: 1px solid var(--theme-splitter-color);
   border-radius: 3px;
@@ -529,16 +515,6 @@ a {
   vertical-align: middle;
   margin: 3px 0 0 0;
   flex-shrink: 0;
-}
-
-.stacktrace li {
-  display: flex;
-  margin: 0;
-}
-
-.stacktrace .function {
-  display: block;
-  flex: 1 1 auto;
 }
 
 .cm-s-mozilla a[class] {

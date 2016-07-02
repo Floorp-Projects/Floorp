@@ -328,7 +328,7 @@ bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
                     Handle<ArrayBufferObjectMaybeShared*> asmJSHeap,
-                    MutableHandleWasmInstanceObject instanceObj) const
+                    HandleWasmInstanceObject instanceObj) const
 {
     MOZ_ASSERT(funcImports.length() == metadata_->imports.length());
     MOZ_ASSERT_IF(asmJSHeap, metadata_->isAsmJS());

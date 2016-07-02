@@ -9,6 +9,7 @@
 #include "secerr.h"
 #include "ScopedNSSTypes.h"
 #include "nsNSSComponent.h"
+#include "nsProxyRelease.h"
 
 #include "jsapi.h"
 #include "mozilla/Telemetry.h"
@@ -19,6 +20,8 @@
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
 #include "mozilla/dom/WebCryptoThreadPool.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 // Template taken from security/nss/lib/util/templates.c
 // This (or SGN_EncodeDigestInfo) would ideally be exported
@@ -36,6 +39,11 @@ const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
 
 namespace mozilla {
 namespace dom {
+
+using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
+using mozilla::dom::workers::Status;
+using mozilla::dom::workers::WorkerHolder;
+using mozilla::dom::workers::WorkerPrivate;
 
 // Pre-defined identifiers for telemetry histograms
 
@@ -131,6 +139,46 @@ public:
 
 private:
   JSContext* mCx;
+};
+
+class WebCryptoTask::InternalWorkerHolder final : public WorkerHolder
+{
+  InternalWorkerHolder()
+  { }
+
+  ~InternalWorkerHolder()
+  {
+    NS_ASSERT_OWNINGTHREAD(InternalWorkerHolder);
+    // Nothing to do here since the parent destructor releases the
+    // worker automatically.
+  }
+
+public:
+  static already_AddRefed<InternalWorkerHolder>
+  Create()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    RefPtr<InternalWorkerHolder> ref = new InternalWorkerHolder();
+    if (NS_WARN_IF(!ref->HoldWorker(workerPrivate))) {
+      return nullptr;
+    }
+    return ref.forget();
+  }
+
+  virtual bool
+  Notify(Status aStatus) override
+  {
+    NS_ASSERT_OWNINGTHREAD(InternalWorkerHolder);
+    // Do nothing here.  Since WebCryptoTask dispatches back to
+    // the worker thread using nsThread::Dispatch() instead of
+    // WorkerRunnable it will always be able to execute its
+    // runnables.
+    return true;
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(WebCryptoTask::InternalWorkerHolder)
 };
 
 template<class OOS>
@@ -335,8 +383,24 @@ WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
     return;
   }
 
-  // Store calling thread and dispatch to thread pool.
+  // Store calling thread
   mOriginalThread = NS_GetCurrentThread();
+
+  // If we are running on a worker thread we must hold the worker
+  // alive while we work on the thread pool.  Otherwise the worker
+  // private may get torn down before we dispatch back to complete
+  // the transaction.
+  if (!NS_IsMainThread()) {
+    mWorkerHolder = InternalWorkerHolder::Create();
+    // If we can't register a holder then the worker is already
+    // shutting down.  Don't start new work.
+    if (!mWorkerHolder) {
+      mEarlyRv = NS_BINDING_ABORTED;
+    }
+  }
+  MAYBE_EARLY_FAIL(mEarlyRv);
+
+  // dispatch to thread pool
   mEarlyRv = WebCryptoThreadPool::Dispatch(this);
   MAYBE_EARLY_FAIL(mEarlyRv)
 }
@@ -368,6 +432,18 @@ WebCryptoTask::Run()
 
   CallCallback(mRv);
 
+  // Stop holding the worker thread alive now that the async work has
+  // been completed.
+  mWorkerHolder = nullptr;
+
+  return NS_OK;
+}
+
+nsresult
+WebCryptoTask::Cancel()
+{
+  MOZ_ASSERT(IsOnOriginalThread());
+  FailWithError(NS_BINDING_ABORTED);
   return NS_OK;
 }
 
@@ -382,6 +458,7 @@ WebCryptoTask::FailWithError(nsresult aRv)
   mResultPromise->MaybeReject(aRv);
   // Manually release mResultPromise while we're on the main thread
   mResultPromise = nullptr;
+  mWorkerHolder = nullptr;
   Cleanup();
 }
 
@@ -3629,6 +3706,29 @@ WebCryptoTask::CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+}
+
+WebCryptoTask::WebCryptoTask()
+  : mEarlyRv(NS_OK)
+  , mEarlyComplete(false)
+  , mOriginalThread(nullptr)
+  , mReleasedNSSResources(false)
+  , mRv(NS_ERROR_NOT_INITIALIZED)
+{
+}
+
+WebCryptoTask::~WebCryptoTask()
+{
+  MOZ_ASSERT(mReleasedNSSResources);
+
+  nsNSSShutDownPreventionLock lock;
+  if (!isAlreadyShutDown()) {
+    shutdown(calledFromObject);
+  }
+
+  if (mWorkerHolder) {
+    NS_ProxyRelease(mOriginalThread, mWorkerHolder.forget());
+  }
 }
 
 } // namespace dom

@@ -15,7 +15,7 @@ function watchFiles(path, onFileChanged) {
     // chrome). This means that this system will only work when built
     // files are symlinked, so that these URIs actually read from
     // local sources. There might be a better way to do this.
-    const { newPath } = event.data;
+    const { path: newPath } = event.data;
     onFileChanged(newPath);
   };
 

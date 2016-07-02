@@ -648,7 +648,7 @@ FloorPOT(int32_t x)
 }
 
 bool
-WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* const out_failureId)
+WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 {
     MOZ_RELEASE_ASSERT(gl, "GFX: GL not initialized");
 
@@ -657,18 +657,17 @@ WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* co
     // formats back into the authority.
     mFormatUsage = CreateFormatUsage(gl);
     if (!mFormatUsage) {
-        *out_failureId = "FEATURE_FAILURE_WEBGL_FORMAT";
-        out_failReason->AssignLiteral("Failed to create mFormatUsage.");
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_FORMAT",
+                            "Failed to create mFormatUsage." };
         return false;
     }
 
     GLenum error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
-        *out_failureId = "FEATURE_FAILURE_WEBGL_GLERR_1";
         const nsPrintfCString reason("GL error 0x%x occurred during OpenGL context"
                                      " initialization, before WebGL initialization!",
                                      error);
-        out_failReason->Assign(reason);
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_GLERR_1", reason };
         return false;
     }
 
@@ -757,10 +756,9 @@ WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* co
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
 
     if (mGLMaxVertexAttribs < 8) {
-        *out_failureId = "FEATURE_FAILURE_WEBGL_V_ATRB";
         const nsPrintfCString reason("GL_MAX_VERTEX_ATTRIBS: %d is < 8!",
                                      mGLMaxVertexAttribs);
-        out_failReason->Assign(reason);
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_V_ATRB", reason };
         return false;
     }
 
@@ -773,10 +771,9 @@ WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* co
         gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
 
     if (mGLMaxTextureUnits < 8) {
-        *out_failureId = "FEATURE_FAILURE_WEBGL_T_UNIT";
         const nsPrintfCString reason("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d is < 8!",
                                      mGLMaxTextureUnits);
-        out_failReason->Assign(reason);
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_T_UNIT", reason };
         return false;
     }
 
@@ -932,8 +929,8 @@ WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* co
 
     // initialize shader translator
     if (!ShInitialize()) {
-        *out_failureId = "FEATURE_FAILURE_WEBGL_GLSL";
-        out_failReason->AssignLiteral("GLSL translator initialization failed!");
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_GLSL",
+                            "GLSL translator initialization failed!" };
         return false;
     }
 
@@ -947,16 +944,15 @@ WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* co
     // getError call will give the correct result.
     error = gl->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {
-        *out_failureId = "FEATURE_FAILURE_WEBGL_GLERR_2";
         const nsPrintfCString reason("GL error 0x%x occurred during WebGL context"
                                      " initialization!",
                                      error);
-        out_failReason->Assign(reason);
+        *out_failReason = { "FEATURE_FAILURE_WEBGL_GLERR_2", reason };
         return false;
     }
 
     if (IsWebGL2() &&
-        !InitWebGL2(out_failReason, out_failureId))
+        !InitWebGL2(out_failReason))
     {
         // Todo: Bug 898404: Only allow WebGL2 on GL>=3.0 on desktop GL.
         return false;

@@ -102,7 +102,6 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = ecx;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = edi;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = eax;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = ebx;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = edx;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = edx;

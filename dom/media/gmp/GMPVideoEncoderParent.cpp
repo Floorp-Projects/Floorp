@@ -269,6 +269,7 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
     mPlugin = nullptr;
   }
   mVideoHost.ActorDestroyed(); // same as DoneWithAPI
+  MaybeDisconnect(aWhy == AbnormalShutdown);
 }
 
 static void

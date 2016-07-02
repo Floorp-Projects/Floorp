@@ -1126,8 +1126,8 @@ MacroAssemblerARM::ma_strb(Register rt, DTRAddr addr, Index mode, Condition cc)
 // Specialty for moving N bits of data, where n == 8,16,32,64.
 BufferOffset
 MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
-                          Register rn, Register rm, Register rt,
-                          Index mode, Assembler::Condition cc, unsigned shiftAmount)
+                                    Register rn, Register rm, Register rt,
+                                    Index mode, Assembler::Condition cc, unsigned shiftAmount)
 {
     if (size == 32 || (size == 8 && !IsSigned))
         return as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrRegImmShift(rm, LSL, shiftAmount)), cc);
@@ -1782,7 +1782,8 @@ MacroAssemblerARM::ma_vldr(const Address& addr, VFPRegister dest, Condition cc)
 }
 
 BufferOffset
-MacroAssemblerARM::ma_vldr(VFPRegister src, Register base, Register index, int32_t shift, Condition cc)
+MacroAssemblerARM::ma_vldr(VFPRegister src, Register base, Register index, int32_t shift,
+                           Condition cc)
 {
     ScratchRegisterScope scratch(asMasm());
     as_add(scratch, base, lsl(index, shift), LeaveCC, cc);
