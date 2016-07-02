@@ -9,7 +9,7 @@
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 const MAX_PROFILER_ENTRIES = 10000000;
-const { ProfilerFront } = require("devtools/server/actors/profiler");
+const { ProfilerFront } = require("devtools/shared/fronts/profiler");
 const { waitForTime } = DevToolsUtils;
 
 function run_test() {

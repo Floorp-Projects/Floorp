@@ -16,9 +16,9 @@
 /**
  * moz_places
  */
-#define CREATE_IDX_MOZ_PLACES_URL \
+#define CREATE_IDX_MOZ_PLACES_URL_HASH \
   CREATE_PLACES_IDX( \
-    "url_uniqueindex", "moz_places", "url", "UNIQUE" \
+    "url_hashindex", "moz_places", "url_hash", "" \
   )
 
 #define CREATE_IDX_MOZ_PLACES_FAVICON \

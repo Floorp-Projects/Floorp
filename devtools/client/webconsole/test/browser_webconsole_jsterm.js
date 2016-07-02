@@ -149,21 +149,21 @@ function* testJSTerm(hud) {
   jsterm.clearOutput();
   yield jsterm.execute("throw '';");
   yield checkResult((node) => {
-    return node.parentNode.getAttribute("severity") === "error" &&
+    return node.closest(".message").getAttribute("severity") === "error" &&
       node.textContent === new Error("").toString();
   }, "thrown empty string generates error message");
 
   jsterm.clearOutput();
   yield jsterm.execute("throw 'tomatoes';");
   yield checkResult((node) => {
-    return node.parentNode.getAttribute("severity") === "error" &&
+    return node.closest(".message").getAttribute("severity") === "error" &&
       node.textContent === new Error("tomatoes").toString();
   }, "thrown non-empty string generates error message");
 
   jsterm.clearOutput();
   yield jsterm.execute("throw { foo: 'bar' };");
   yield checkResult((node) => {
-    return node.parentNode.getAttribute("severity") === "error" &&
+    return node.closest(".message").getAttribute("severity") === "error" &&
       node.textContent === Object.prototype.toString();
   }, "thrown object generates error message");
 

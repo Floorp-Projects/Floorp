@@ -638,7 +638,8 @@ var clear = Task.async(function* (db) {
   yield db.execute(
     `UPDATE moz_places SET frecency =
      (CASE
-      WHEN url BETWEEN 'place:' AND 'place;'
+      WHEN url_hash BETWEEN hash("place", "prefix_lo") AND
+                            hash("place", "prefix_hi")
       THEN 0
       ELSE -1
       END)
@@ -862,10 +863,12 @@ var removeVisitsByFilter = Task.async(function*(db, filter, onResult = null) {
 var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
   // 1. Find out what needs to be removed
   let query =
-    `SELECT id, url, guid, foreign_count, title, frecency FROM moz_places
+    `SELECT id, url, guid, foreign_count, title, frecency
+     FROM moz_places
      WHERE guid IN (${ sqlList(guids) })
-        OR url  IN (${ sqlList(urls)  })
-     `;
+        OR (url_hash IN (${ urls.map(u => "hash(" + JSON.stringify(u) + ")").join(",") })
+            AND url IN (${ sqlList(urls) }))
+    `;
 
   let onResultData = onResult ? [] : null;
   let pages = [];

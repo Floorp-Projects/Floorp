@@ -1036,7 +1036,7 @@ function waitForMessages(options) {
       return false;
     }
 
-    if ("line" in rule.source && location.line === rule.source.line) {
+    if ("line" in rule.source && location.line != rule.source.line) {
       return false;
     }
 
@@ -1054,7 +1054,7 @@ function waitForMessages(options) {
 
   function checkStacktrace(rule, element) {
     let stack = rule.stacktrace;
-    let frames = element.querySelectorAll(".stacktrace > li");
+    let frames = element.querySelectorAll(".stacktrace > .stack-trace > .frame-link");
     if (!frames.length) {
       return false;
     }
@@ -1068,7 +1068,7 @@ function waitForMessages(options) {
       }
 
       if (expected.file) {
-        let url = getRenderedSource(frame).url;
+        let url = frame.getAttribute("data-url");
         if (!checkText(expected.file, url)) {
           ok(false, "frame #" + i + " does not match file name: " +
                     expected.file + " != " + url);
@@ -1078,7 +1078,7 @@ function waitForMessages(options) {
       }
 
       if (expected.fn) {
-        let fn = frame.querySelector(".function").textContent;
+        let fn = frame.querySelector(".frame-link-function-display-name").textContent;
         if (!checkText(expected.fn, fn)) {
           ok(false, "frame #" + i + " does not match the function name: " +
                     expected.fn + " != " + fn);
@@ -1088,7 +1088,7 @@ function waitForMessages(options) {
       }
 
       if (expected.line) {
-        let line = getRenderedSource(frame).line;
+        let line = frame.getAttribute("data-line");
         if (!checkText(expected.line, line)) {
           ok(false, "frame #" + i + " does not match the line number: " +
                     expected.line + " != " + line);

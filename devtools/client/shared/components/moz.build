@@ -15,6 +15,7 @@ DevToolsModules(
     'h-split-box.js',
     'notification-box.css',
     'notification-box.js',
+    'stack-trace.js',
     'tree.js',
 )
 
