@@ -27,6 +27,7 @@
 #include "gfxPrefs.h"
 #include "imgFrame.h"
 #include "Image.h"
+#include "ISurfaceProvider.h"
 #include "LookupResult.h"
 #include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
@@ -130,11 +131,11 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(CachedSurface)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CachedSurface)
 
-  CachedSurface(imgFrame*          aSurface,
+  CachedSurface(ISurfaceProvider*  aProvider,
                 const Cost         aCost,
                 const ImageKey     aImageKey,
                 const SurfaceKey&  aSurfaceKey)
-    : mSurface(aSurface)
+    : mProvider(aProvider)
     , mCost(aCost)
     , mImageKey(aImageKey)
     , mSurfaceKey(aSurfaceKey)
@@ -151,7 +152,7 @@ public:
       return DrawableFrameRef();
     }
 
-    return mSurface->DrawableRef();
+    return mProvider->DrawableRef();
   }
 
   void SetLocked(bool aLocked)
@@ -160,18 +161,11 @@ public:
       return;  // Can't lock a placeholder.
     }
 
-    if (aLocked) {
-      // This may fail, and that's OK. We make no guarantees about whether
-      // locking is successful if you call SurfaceCache::LockImage() after
-      // SurfaceCache::Insert().
-      mDrawableRef = mSurface->DrawableRef();
-    } else {
-      mDrawableRef.reset();
-    }
+    mProvider->SetLocked(aLocked);
   }
 
-  bool IsPlaceholder() const { return !bool(mSurface); }
-  bool IsLocked() const { return bool(mDrawableRef); }
+  bool IsPlaceholder() const { return !mProvider || mProvider->IsPlaceholder(); }
+  bool IsLocked() const { return !IsPlaceholder() && mProvider->IsLocked(); }
 
   ImageKey GetImageKey() const { return mImageKey; }
   SurfaceKey GetSurfaceKey() const { return mSurfaceKey; }
@@ -180,7 +174,7 @@ public:
 
   bool IsDecoded() const
   {
-    return !IsPlaceholder() && mSurface->IsFinished();
+    return !IsPlaceholder() && mProvider->IsFinished();
   }
 
   // A helper type used by SurfaceCacheImpl::CollectSizeOfSurfaces.
@@ -199,14 +193,16 @@ public:
       SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
                                    aCachedSurface->IsLocked());
 
-      if (aCachedSurface->mSurface) {
-        counter.SubframeSize() = Some(aCachedSurface->mSurface->GetSize());
+      if (!aCachedSurface->IsPlaceholder()) {
+        DrawableFrameRef surfaceRef = aCachedSurface->DrawableRef();
+        if (surfaceRef) {
+          counter.SubframeSize() = Some(surfaceRef->GetSize());
 
-        size_t heap = 0, nonHeap = 0;
-        aCachedSurface->mSurface->AddSizeOfExcludingThis(mMallocSizeOf,
-                                                         heap, nonHeap);
-        counter.Values().SetDecodedHeap(heap);
-        counter.Values().SetDecodedNonHeap(nonHeap);
+          size_t heap = 0, nonHeap = 0;
+          surfaceRef->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
+          counter.Values().SetDecodedHeap(heap);
+          counter.Values().SetDecodedNonHeap(nonHeap);
+        }
       }
 
       mCounters.AppendElement(counter);
@@ -219,7 +215,7 @@ public:
 
 private:
   nsExpirationState  mExpirationState;
-  RefPtr<imgFrame> mSurface;
+  RefPtr<ISurfaceProvider> mProvider;
   DrawableFrameRef   mDrawableRef;
   const Cost         mCost;
   const ImageKey     mImageKey;
@@ -435,7 +431,7 @@ public:
 
   Mutex& GetMutex() { return mMutex; }
 
-  InsertOutcome Insert(imgFrame*         aSurface,
+  InsertOutcome Insert(ISurfaceProvider* aProvider,
                        const Cost        aCost,
                        const ImageKey    aImageKey,
                        const SurfaceKey& aSurfaceKey)
@@ -480,7 +476,7 @@ public:
     }
 
     RefPtr<CachedSurface> surface =
-      new CachedSurface(aSurface, aCost, aImageKey, aSurfaceKey);
+      new CachedSurface(aProvider, aCost, aImageKey, aSurfaceKey);
 
     // We require that locking succeed if the image is locked and we're not
     // inserting a placeholder; the caller may need to know this to handle
@@ -1026,23 +1022,17 @@ SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
 }
 
 /* static */ InsertOutcome
-SurfaceCache::Insert(imgFrame*         aSurface,
-                     const ImageKey    aImageKey,
-                     const SurfaceKey& aSurfaceKey)
+SurfaceCache::Insert(NotNull<ISurfaceProvider*> aProvider,
+                     const ImageKey             aImageKey,
+                     const SurfaceKey&          aSurfaceKey)
 {
   if (!sInstance) {
     return InsertOutcome::FAILURE;
   }
 
-  // Refuse null surfaces.
-  if (!aSurface) {
-    gfxDevCrash(LogReason::InvalidCacheSurface) << "Null surface in SurfaceCache::Insert";
-    return InsertOutcome::FAILURE;
-  }
-
   MutexAutoLock lock(sInstance->GetMutex());
-  Cost cost = ComputeCost(aSurface->GetSize(), aSurface->GetBytesPerPixel());
-  return sInstance->Insert(aSurface, cost, aImageKey, aSurfaceKey);
+  Cost cost = aProvider->LogicalSizeInBytes();
+  return sInstance->Insert(aProvider.get(), cost, aImageKey, aSurfaceKey);
 }
 
 /* static */ InsertOutcome
