@@ -1,9 +1,4 @@
 /**
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
-
-/**
  * One-time observer callback.
  */
 function promiseObserve(name, checkFn) {
@@ -26,6 +21,7 @@ function getColumn(table, column, fromColumnName, fromColumnValue) {
   let sql = `SELECT ${column}
              FROM ${table}
              WHERE ${fromColumnName} = :val
+             ${fromColumnName == "url" ? "AND url_hash = hash(:val)" : ""}
              LIMIT 1`;
   let stmt = conn.createStatement(sql);
   try {

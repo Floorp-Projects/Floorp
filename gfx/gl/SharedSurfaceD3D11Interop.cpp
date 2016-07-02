@@ -314,14 +314,6 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 }
 
 void
-SharedSurface_D3D11Interop::LockProdImpl()
-{ }
-
-void
-SharedSurface_D3D11Interop::UnlockProdImpl()
-{ }
-
-void
 SharedSurface_D3D11Interop::ProducerAcquireImpl()
 {
     MOZ_ASSERT(!mLockedForGL);

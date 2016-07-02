@@ -29,6 +29,10 @@
 #if defined(XP_WIN)
 #include "WinUtils.h"
 #endif
+#include "mozilla/widget/CompositorWidget.h"
+#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+# include "mozilla/widget/CompositorWidgetChild.h"
+#endif
 
 using mozilla::layers::LayerTransactionChild;
 using mozilla::dom::TabChildBase;
@@ -113,6 +117,15 @@ CompositorBridgeChild::Destroy()
     layers->Destroy();
   }
 
+  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
+  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
+    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
+
+    if (texture) {
+      texture->Destroy();
+    }
+  }
+
   SendWillClose();
   mCanSend = false;
 
@@ -128,16 +141,6 @@ CompositorBridgeChild::Destroy()
   // From now on we can't send any message message.
   MessageLoop::current()->PostTask(
              NewRunnableFunction(DeferredDestroyCompositor, mCompositorBridgeParent, selfRef));
-
-  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
-  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
-
-    if (texture) {
-      texture->Destroy();
-    }
-  }
-
 }
 
 // static
@@ -951,6 +954,31 @@ void
 CompositorBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 {
     PCompositorBridgeChild::DeallocShmem(aShmem);
+}
+
+widget::PCompositorWidgetChild*
+CompositorBridgeChild::AllocPCompositorWidgetChild(const CompositorWidgetInitData& aInitData)
+{
+  // We send the constructor manually.
+  MOZ_CRASH("Should not be called");
+  return nullptr;
+}
+
+bool
+CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor)
+{
+#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+  delete aActor;
+  return true;
+#else
+  return false;
+#endif
+}
+
+void
+CompositorBridgeChild::ProcessingError(Result aCode, const char* aReason)
+{
+  MOZ_CRASH("Processing error in CompositorBridgeChild");
 }
 
 } // namespace layers

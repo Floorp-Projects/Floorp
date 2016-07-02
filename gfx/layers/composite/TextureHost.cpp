@@ -640,6 +640,56 @@ BufferTextureHost::EnsureWrappingTextureSource()
   return true;
 }
 
+static
+bool IsCompatibleTextureSource(TextureSource* aTexture,
+                               const BufferDescriptor& aDescriptor,
+                               Compositor* aCompositor)
+{
+  if (!aCompositor) {
+    return false;
+  }
+
+  switch (aDescriptor.type()) {
+    case BufferDescriptor::TYCbCrDescriptor: {
+      const YCbCrDescriptor& ycbcr = aDescriptor.get_YCbCrDescriptor();
+
+      if (!aCompositor->SupportsEffect(EffectTypes::YCBCR)) {
+        return aTexture->GetFormat() == gfx::SurfaceFormat::B8G8R8X8
+            && aTexture->GetSize() == ycbcr.ySize();
+      }
+
+      if (aTexture->GetFormat() != gfx::SurfaceFormat::A8
+          || aTexture->GetSize() != ycbcr.ySize()) {
+        return false;
+      }
+
+      auto cbTexture = aTexture->GetSubSource(1);
+      if (!cbTexture
+          || cbTexture->GetFormat() != gfx::SurfaceFormat::A8
+          || cbTexture->GetSize() != ycbcr.cbCrSize()) {
+        return false;
+      }
+
+      auto crTexture = aTexture->GetSubSource(2);
+      if (!crTexture
+          || crTexture->GetFormat() != gfx::SurfaceFormat::A8
+          || crTexture->GetSize() != ycbcr.cbCrSize()) {
+        return false;
+      }
+
+      return true;
+    }
+    case BufferDescriptor::TRGBDescriptor: {
+      const RGBDescriptor& rgb = aDescriptor.get_RGBDescriptor();
+      return aTexture->GetFormat() == rgb.format()
+          && aTexture->GetSize() == rgb.size();
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
 void
 BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
 {
@@ -658,22 +708,14 @@ BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
   mFirstSource = nullptr;
 
   DataTextureSource* texture = aTexture.get() ? aTexture->AsDataTextureSource() : nullptr;
-  bool compatibleFormats = texture
-                         && (mFormat == texture->GetFormat()
-                             || (mFormat == gfx::SurfaceFormat::YUV
-                                 && mCompositor
-                                 && mCompositor->SupportsEffect(EffectTypes::YCBCR)
-                                 && texture->GetNextSibling()
-                                 && texture->GetNextSibling()->GetNextSibling())
-                             || (mFormat == gfx::SurfaceFormat::YUV
-                                 && mCompositor
-                                 && !mCompositor->SupportsEffect(EffectTypes::YCBCR)
-                                 && texture->GetFormat() == gfx::SurfaceFormat::B8G8R8X8));
+
+  bool compatibleFormats = texture && IsCompatibleTextureSource(texture,
+                                                                mDescriptor,
+                                                                mCompositor);
 
   bool shouldCreateTexture = !compatibleFormats
                            || texture->NumCompositableRefs() > 1
-                           || texture->HasOwner()
-                           || texture->GetSize() != mSize;
+                           || texture->HasOwner();
 
   if (!shouldCreateTexture) {
     mFirstSource = texture;

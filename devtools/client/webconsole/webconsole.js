@@ -235,6 +235,7 @@ function WebConsoleFrame(webConsoleOwner) {
   this.React = require("devtools/client/shared/vendor/react");
   this.ReactDOM = require("devtools/client/shared/vendor/react-dom");
   this.FrameView = this.React.createFactory(require("devtools/client/shared/components/frame"));
+  this.StackTraceView = this.React.createFactory(require("devtools/client/shared/components/stack-trace"));
 
   this._telemetry = new Telemetry();
 
@@ -1623,7 +1624,7 @@ WebConsoleFrame.prototype = {
 
     if (this.window.NetRequest) {
       this.window.NetRequest.onNetworkEvent({
-        client: this.webConsoleClient,
+        consoleFrame: this,
         response: networkInfo,
         node: messageNode,
         update: false
@@ -2290,10 +2291,16 @@ WebConsoleFrame.prototype = {
    *        The message node you want to clean up.
    */
   unmountMessage(node) {
-    // Select all `.message-location` within this node to ensure we get
-    // messages of stacktraces, which contain multiple location nodes.
-    for (let locationNode of node.querySelectorAll(".message-location")) {
+    // Unmount the Frame component with the message location
+    let locationNode = node.querySelector(".message-location");
+    if (locationNode) {
       this.ReactDOM.unmountComponentAtNode(locationNode);
+    }
+
+    // Unmount the StackTrace component if present in the message
+    let stacktraceNode = node.querySelector(".stacktrace");
+    if (stacktraceNode) {
+      this.ReactDOM.unmountComponentAtNode(stacktraceNode);
     }
   },
 
@@ -2514,26 +2521,25 @@ WebConsoleFrame.prototype = {
    *         The new anchor element, ready to be added to the message node.
    */
   createLocationNode: function ({url, line, column}) {
+    let locationNode = this.document.createElementNS(XHTML_NS, "div");
+    locationNode.className = "message-location devtools-monospace";
+
     if (!url) {
       url = "";
     }
 
     let fullURL = url.split(" -> ").pop();
-    let locationNode = this.document.createElementNS(XHTML_NS, "a");
-    locationNode.draggable = false;
-    locationNode.className = "message-location devtools-monospace";
-
     // Make the location clickable.
     let onClick = () => {
-      let category = locationNode.parentNode.category;
+      let category = locationNode.closest(".message").category;
       let target = null;
 
-      if (category === CATEGORY_CSS) {
+      if (/^Scratchpad\/\d+$/.test(url)) {
+        target = "scratchpad";
+      } else if (category === CATEGORY_CSS) {
         target = "styleeditor";
       } else if (category === CATEGORY_JS || category === CATEGORY_WEBDEV) {
         target = "jsdebugger";
-      } else if (/^Scratchpad\/\d+$/.test(url)) {
-        target = "scratchpad";
       } else if (/\.js$/.test(fullURL)) {
         // If it ends in .js, let's attempt to open in debugger
         // anyway, as this falls back to normal view-source.
@@ -2559,9 +2565,9 @@ WebConsoleFrame.prototype = {
       frame: {
         source: fullURL,
         line,
-        column,
-        showEmptyPathAsHost: true,
+        column
       },
+      showEmptyPathAsHost: true,
       onClick,
     }), locationNode);
 
@@ -3222,10 +3228,15 @@ WebConsoleConnectionProxy.prototype = {
       response.messages.concat(...this.webConsoleClient.getNetworkEvents());
     messages.sort((a, b) => a.timeStamp - b.timeStamp);
 
-    this.webConsoleFrame.displayCachedMessages(messages);
-
-    if (!this._hasNativeConsoleAPI) {
-      this.webConsoleFrame.logWarningAboutReplacedAPI();
+    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+      for (let packet of messages) {
+        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+      }
+    } else {
+      this.webConsoleFrame.displayCachedMessages(messages);
+      if (!this._hasNativeConsoleAPI) {
+        this.webConsoleFrame.logWarningAboutReplacedAPI();
+      }
     }
 
     this.connected = true;

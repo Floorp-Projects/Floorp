@@ -56,7 +56,7 @@
   list-style-image: var(--filter-image);
 }
 
-#performance-filter-menupopup > menuitem:before {
+#performance-filter-menupopup > menuitem .menu-iconic-left::after {
   content: "";
   display: block;
   width: 8px;
@@ -583,53 +583,53 @@
  * Marker colors
  */
 
-menuitem.marker-color-graphs-full-red:before,
+menuitem.marker-color-graphs-full-red .menu-iconic-left::after,
 .marker-color-graphs-full-red {
   background-color: var(--theme-graphs-full-red);
   border-color: var(--theme-graphs-full-red);
 }
-menuitem.marker-color-graphs-full-blue:before,
+menuitem.marker-color-graphs-full-blue .menu-iconic-left::after,
 .marker-color-graphs-full-blue {
   background-color: var(--theme-graphs-full-blue);
   border-color: var(--theme-graphs-full-blue);
 }
 
-menuitem.marker-color-graphs-green:before,
+menuitem.marker-color-graphs-green .menu-iconic-left::after,
 .marker-color-graphs-green {
   background-color: var(--theme-graphs-green);
   border-color: var(--theme-graphs-green);
 }
-menuitem.marker-color-graphs-blue:before,
+menuitem.marker-color-graphs-blue .menu-iconic-left::after,
 .marker-color-graphs-blue {
   background-color: var(--theme-graphs-blue);
   border-color: var(--theme-graphs-blue);
 }
-menuitem.marker-color-graphs-bluegrey:before,
+menuitem.marker-color-graphs-bluegrey .menu-iconic-left::after,
 .marker-color-graphs-bluegrey {
   background-color: var(--theme-graphs-bluegrey);
   border-color: var(--theme-graphs-bluegrey);
 }
-menuitem.marker-color-graphs-purple:before,
+menuitem.marker-color-graphs-purple .menu-iconic-left::after,
 .marker-color-graphs-purple {
   background-color: var(--theme-graphs-purple);
   border-color: var(--theme-graphs-purple);
 }
-menuitem.marker-color-graphs-yellow:before,
+menuitem.marker-color-graphs-yellow .menu-iconic-left::after,
 .marker-color-graphs-yellow {
   background-color: var(--theme-graphs-yellow);
   border-color: var(--theme-graphs-yellow);
 }
-menuitem.marker-color-graphs-orange:before,
+menuitem.marker-color-graphs-orange .menu-iconic-left::after,
 .marker-color-graphs-orange {
   background-color: var(--theme-graphs-orange);
   border-color: var(--theme-graphs-orange);
 }
-menuitem.marker-color-graphs-red:before,
+menuitem.marker-color-graphs-red .menu-iconic-left::after,
 .marker-color-graphs-red {
   background-color: var(--theme-graphs-red);
   border-color: var(--theme-graphs-red);
 }
-menuitem.marker-color-graphs-grey:before,
+menuitem.marker-color-graphs-grey .menu-iconic-left::after,
 .marker-color-graphs-grey{
   background-color: var(--theme-graphs-grey);
   border-color: var(--theme-graphs-grey);

@@ -100,9 +100,9 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
     last->block()->insertAfter(last, eaddr);
 }
 
-template<typename MAsmJSHeapAccessType>
+template<typename MWasmMemoryAccessType>
 bool
-EffectiveAddressAnalysis::tryAddDisplacement(MAsmJSHeapAccessType* ins, int32_t o)
+EffectiveAddressAnalysis::tryAddDisplacement(MWasmMemoryAccessType* ins, int32_t o)
 {
     // Compute the new offset. Check for overflow.
     uint32_t oldOffset = ins->offset();
@@ -127,9 +127,9 @@ EffectiveAddressAnalysis::tryAddDisplacement(MAsmJSHeapAccessType* ins, int32_t 
     return true;
 }
 
-template<typename MAsmJSHeapAccessType>
+template<typename MWasmMemoryAccessType>
 void
-EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
+EffectiveAddressAnalysis::analyzeAsmHeapAccess(MWasmMemoryAccessType* ins)
 {
     MDefinition* base = ins->base();
 

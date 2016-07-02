@@ -54,6 +54,7 @@ template<typename T> class Optional;
 struct CanvasBidiProcessor;
 class CanvasRenderingContext2DUserData;
 class CanvasDrawObserver;
+class CanvasShutdownObserver;
 
 /**
  ** CanvasRenderingContext2D
@@ -545,6 +546,7 @@ public:
   // return true and fills in the bound rect if element has a hit region.
   bool GetHitRegionRect(Element* aElement, nsRect& aRect) override;
 
+  void OnShutdown();
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
@@ -635,7 +637,21 @@ protected:
    *
    * Returns the actual rendering mode being used by the created target.
    */
-  RenderingMode EnsureTarget(RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
+  RenderingMode EnsureTarget(const gfx::Rect* aCoveredRect = nullptr,
+                             RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
+
+  /**
+   * This method is run at the end of the event-loop spin where
+   * ScheduleStableStateCallback was called.
+   *
+   * We use it to unlock resources that need to be locked while drawing.
+   */
+  void OnStableState();
+
+  /**
+   * Cf. OnStableState.
+   */
+  void ScheduleStableStateCallback();
 
   /**
    * Disposes an old target and prepares to lazily create a new target.
@@ -660,6 +676,12 @@ protected:
     * into account mOpaque, platform requirements, etc.
     */
   mozilla::gfx::SurfaceFormat GetSurfaceFormat() const;
+
+  /**
+   * Returns true if we know for sure that the pattern for a given style is opaque.
+   * Usefull to know if we can discard the content below in certain situations.
+   */
+  bool PatternIsOpaque(Style aStyle) const;
 
   /**
    * Update CurrentState().filter with the filter description for
@@ -722,6 +744,8 @@ protected:
   // requesting the DT from mBufferProvider to check.
   bool mIsSkiaGL;
 
+  bool mHasPendingStableStateCallback;
+
   nsTArray<CanvasRenderingContext2DUserData*> mUserDatas;
 
   // If mCanvasElement is not provided, then a docshell is
@@ -741,6 +765,10 @@ protected:
   // what it thinks is best
   CanvasDrawObserver* mDrawObserver;
   void RemoveDrawObserver();
+
+  RefPtr<CanvasShutdownObserver> mShutdownObserver;
+  void RemoveShutdownObserver();
+  bool AlreadyShutDown() const { return !mShutdownObserver; }
 
   /**
     * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever

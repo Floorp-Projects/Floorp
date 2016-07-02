@@ -88,7 +88,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'widget'
 
 EXPORTS += [
-    'CompositorWidgetProxy.h',
     'GfxDriverInfo.h',
     'GfxInfoBase.h',
     'GfxInfoCollector.h',
@@ -129,18 +128,21 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.widget += [
+    'CompositorWidget.h',
     'IMEData.h',
+    'InProcessCompositorWidget.h',
     'PuppetBidiKeyboard.h',
     'WidgetMessageUtils.h',
 ]
 
 UNIFIED_SOURCES += [
-    'CompositorWidgetProxy.cpp',
+    'CompositorWidget.cpp',
     'ContentCache.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
     'GfxInfoWebGL.cpp',
+    'InProcessCompositorWidget.cpp',
     'InputData.cpp',
     'nsBaseAppShell.cpp',
     'nsBaseScreen.cpp',
@@ -239,6 +241,17 @@ LOCAL_INCLUDES += [
     '/view',
     '/widget',
 ]
+
+if toolkit == 'windows':
+    IPDL_SOURCES = [
+        'windows/PCompositorWidget.ipdl',
+        'windows/PlatformWidgetTypes.ipdlh',
+    ]
+else:
+    IPDL_SOURCES = [
+        'PCompositorWidget.ipdl',
+        'PlatformWidgetTypes.ipdlh',
+    ]
 
 widget_dir = toolkit
 if widget_dir in ('gtk3', 'gtk2'):

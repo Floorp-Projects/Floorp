@@ -12,6 +12,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
+#include "GMPService.h"
 #include <queue>
 
 namespace mozilla {
@@ -62,6 +63,7 @@ struct CreateDecoderParams {
   DecoderDoctorDiagnostics* mDiagnostics = nullptr;
   layers::ImageContainer* mImageContainer = nullptr;
   layers::LayersBackend mLayersBackend = layers::LayersBackend::LAYERS_NONE;
+  RefPtr<GMPCrashHelper> mCrashHelper;
 
 private:
   void Set(TaskQueue* aTaskQueue) { mTaskQueue = aTaskQueue; }
@@ -69,6 +71,7 @@ private:
   void Set(DecoderDoctorDiagnostics* aDiagnostics) { mDiagnostics = aDiagnostics; }
   void Set(layers::ImageContainer* aImageContainer) { mImageContainer = aImageContainer; }
   void Set(layers::LayersBackend aLayersBackend) { mLayersBackend = aLayersBackend; }
+  void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   template <typename T1, typename T2, typename... Ts>
   void Set(T1 a1, T2 a2, Ts... as)
   {

@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/1281963
+-->
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Test for Bug 1281963</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content"></div>
+
+<script class="testbody" type="application/javascript;version=1.7">
+
+// __setPref(key, value)__.
+// Set a pref value asynchronously, returning a promise that resolves
+// when it succeeds.
+let setPref = function* (key, value) {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({"set": [[key, value]]}, resolve);
+  });
+};
+
+// Run a test to see that we don't expose the supported mimeTypes
+// or installed plugins when "privacy.resistFingerprinting" is active.
+add_task(function* () {
+  let exampleMimeType = undefined,
+      examplePlugin = undefined;
+  // Disable fingerprinting resistance.
+  yield setPref("privacy.resistFingerprinting", false);
+  // Depending on the testing platform, we may have at least
+  // one mimeType and plugin available.
+  exampleMimeType = navigator.mimeTypes[0];
+  examplePlugin = navigator.plugins[0];
+
+  // First check that we can retrieve mimeType or plugin by name and that
+  // the array length is nonzero.
+  if (exampleMimeType) {
+    isnot(navigator.mimeTypes[exampleMimeType.type], undefined, "Should reveal mime type");
+    isnot(navigator.mimeTypes.length, 0, "navigator.mimeTypes.length should be nonzero");
+  }
+  if (examplePlugin) {
+    isnot(navigator.plugins[examplePlugin.name], undefined, "Should reveal plugin");
+    isnot(navigator.plugins.length, 0, "navigator.plugins.length should be nonzero");
+  }
+
+  // Now test with fingerprinting resistance enabled
+  yield setPref("privacy.resistFingerprinting", true);
+  if (exampleMimeType) {
+    is(navigator.mimeTypes[exampleMimeType.type], undefined, "Don't reveal mime type");
+  }
+  is(navigator.mimeTypes[0], undefined, "Don't reveal mime type");
+  is(navigator.mimeTypes.length, 0, "navigator.mimeTypes.length should be 0");
+  if (examplePlugin) {
+    is(navigator.plugins[examplePlugin.name], undefined, "Don't reveal plugin");
+  }
+  is(navigator.plugins[0], undefined, "Don't reveal plugin");
+  is(navigator.plugins.length, 0, "navigator.plugins.length should be 0");
+});
+
+</script>
+
+</body>
+</html>

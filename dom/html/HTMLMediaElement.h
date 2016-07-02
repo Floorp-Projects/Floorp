@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TextTrackManager.h"
+#include "mozilla/WeakPtr.h"
 #include "MediaDecoder.h"
 #ifdef MOZ_EME
 #include "mozilla/dom/MediaKeys.h"
@@ -81,7 +82,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMediaElement,
                          public MediaDecoderOwner,
                          public nsIAudioChannelAgentCallback,
-                         public PrincipalChangeObserver<DOMMediaStream>
+                         public PrincipalChangeObserver<DOMMediaStream>,
+                         public SupportsWeakPtr<HTMLMediaElement>
 {
   friend AutoNotifyAudioChannelAgent;
 
@@ -93,6 +95,8 @@ public:
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
   typedef mozilla::MetadataTags MetadataTags;
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HTMLMediaElement)
 
   CORSMode GetCORSMode() {
     return mCORSMode;
@@ -709,6 +713,14 @@ public:
     }
   }
 
+  bool GetHasUserInteraction()
+  {
+    return mHasUserInteraction;
+  }
+
+  // A method to check whether we are currently playing.
+  bool IsCurrentlyPlaying() const;
+
   /**
    * A public wrapper for FinishDecoderSetup()
    */
@@ -1133,9 +1145,6 @@ protected:
 
   // A method to check if we are playing through the AudioChannel.
   bool IsPlayingThroughTheAudioChannel() const;
-
-  // A method to check whether we are currently playing.
-  bool IsCurrentlyPlaying() const;
 
   // Update the audio channel playing state
   void UpdateAudioChannelPlayingState();

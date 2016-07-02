@@ -7,12 +7,6 @@
 
 :root {
   --net-border: #d7d7d7;
-  --net-font-family: monospace;
-  --net-font-size: 11px;
-}
-
-:root.theme-firebug {
-  --net-font-family: Lucida Grande, Tahoma, sans-serif;
 }
 
 :root.theme-dark {
