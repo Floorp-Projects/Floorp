@@ -58,14 +58,23 @@ private:
   mozilla::CSSToScreenScale ClampZoom(const mozilla::CSSToScreenScale& aZoom,
                                       const nsViewportInfo& aViewportInfo);
 
+  /* Helper to update the given resolution according to changed display and viewport widths. */
+  mozilla::LayoutDeviceToLayerScale
+  ScaleResolutionWithDisplayWidth(const mozilla::LayoutDeviceToLayerScale& aRes,
+                                  const float& aDisplayWidthChangeRatio,
+                                  const mozilla::CSSSize& aNewViewport,
+                                  const mozilla::CSSSize& aOldViewport);
+
   /* Updates the presShell resolution and returns the new zoom. */
   mozilla::CSSToScreenScale UpdateResolution(const nsViewportInfo& aViewportInfo,
                                              const mozilla::ScreenIntSize& aDisplaySize,
                                              const mozilla::CSSSize& aViewport,
                                              const mozilla::Maybe<float>& aDisplayWidthChangeRatio);
+
   /* Updates the scroll-position-clamping scrollport size */
   void UpdateSPCSPS(const mozilla::ScreenIntSize& aDisplaySize,
                     const mozilla::CSSToScreenScale& aZoom);
+
   /* Updates the displayport margins for the presShell's root scrollable frame */
   void UpdateDisplayPortMargins();
 
