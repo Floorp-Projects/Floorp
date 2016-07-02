@@ -1282,7 +1282,7 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   // image is locked, any surfaces that are still useful will become locked
   // again when LookupFrame touches them, and the remainder will eventually
   // expire.
-  SurfaceCache::UnlockSurfaces(ImageKey(this));
+  SurfaceCache::UnlockEntries(ImageKey(this));
 
   Maybe<IntSize> targetSize = mSize != aSize ? Some(aSize) : Nothing();
 
