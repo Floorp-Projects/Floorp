@@ -112,6 +112,7 @@ private:
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   RefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
+  RefPtr<SourceBuffer> mContainedSourceBuffer;  // SourceBuffer for mContainedDecoder.
   UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
   char mBIHraw[bmp::InfoHeaderLength::WIN_ICO]; // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
