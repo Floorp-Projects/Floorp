@@ -220,7 +220,7 @@ add_task(function* test_search_input() {
 });
 
 add_task(function* test_datetime_month_week_datetimelocal_input_todos() {
-  for (let type of ["datetime", "month", "week", "datetime-local"]) {
+  for (let type of ["datetime", "week", "datetime-local"]) {
     let returnedType = yield ContentTask.spawn(gBrowser.selectedBrowser, type, function*(type) {
       let doc = content.document;
       let input = doc.getElementById("input_" + type);
