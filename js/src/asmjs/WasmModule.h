@@ -75,9 +75,6 @@ struct LinkData : LinkDataCacheablePod
         FuncTable(uint32_t globalDataOffset, Uint32Vector&& elemOffsets)
           : globalDataOffset(globalDataOffset), elemOffsets(Move(elemOffsets))
         {}
-        FuncTable(FuncTable&& rhs)
-          : globalDataOffset(rhs.globalDataOffset), elemOffsets(Move(rhs.elemOffsets))
-        {}
         FuncTable() = default;
         WASM_DECLARE_SERIALIZABLE(FuncTable)
     };
