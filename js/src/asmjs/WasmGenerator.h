@@ -44,10 +44,6 @@ struct TableModuleGeneratorData
     TableModuleGeneratorData()
       : globalDataOffset(0), numElems(0)
     {}
-    TableModuleGeneratorData(TableModuleGeneratorData&& rhs)
-      : globalDataOffset(rhs.globalDataOffset), numElems(rhs.numElems),
-        elemFuncIndices(Move(rhs.elemFuncIndices))
-    {}
 };
 
 typedef Vector<TableModuleGeneratorData, 0, SystemAllocPolicy> TableModuleGeneratorDataVector;
