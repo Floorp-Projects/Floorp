@@ -133,12 +133,10 @@ public:
 
   /**
    * Set an iterator to the SourceBuffer which will feed data to this decoder.
+   * This must always be called before calling Init(). (And only before Init().)
    *
-   * This should be called for almost all decoders; the exceptions are the
-   * contained decoders of an nsICODecoder, which will be fed manually via Write
-   * instead.
-   *
-   * This must be called before Init() is called.
+   * XXX(seth): We should eliminate this method and pass a SourceBufferIterator
+   * to the various decoder constructors instead.
    */
   void SetIterator(SourceBufferIterator&& aIterator)
   {
@@ -272,17 +270,6 @@ public:
                          : RawAccessFrameRef();
   }
 
-  /**
-   * Writes data to the decoder. Only public for the benefit of nsICODecoder;
-   * other callers should use Decode().
-   *
-   * @param aBuffer buffer containing the data to be written
-   * @param aCount the number of bytes to write
-   *
-   * Any errors are reported by setting the appropriate state on the decoder.
-   */
-  void Write(const char* aBuffer, uint32_t aCount);
-
 
 protected:
   friend class nsICODecoder;
@@ -371,6 +358,16 @@ protected:
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
+
+  /**
+   * Called by Decode() to write data to the decoder.
+   *
+   * @param aBuffer A buffer containing the data to be written.
+   * @param aCount The number of bytes to write.
+   *
+   * Any errors are reported by setting the appropriate state on the decoder.
+   */
+  void Write(const char* aBuffer, uint32_t aCount);
 
   /**
    * CompleteDecode() finishes up the decoding process after Decode() determines
