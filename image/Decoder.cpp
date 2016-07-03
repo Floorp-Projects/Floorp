@@ -240,6 +240,12 @@ Decoder::SetTargetSize(const nsIntSize& aSize)
   return NS_OK;
 }
 
+Maybe<IntSize>
+Decoder::GetTargetSize()
+{
+  return mDownscaler ? Some(mDownscaler->TargetSize()) : Nothing();
+}
+
 nsresult
 Decoder::AllocateFrame(uint32_t aFrameNum,
                        const nsIntSize& aTargetSize,
