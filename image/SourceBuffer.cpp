@@ -138,6 +138,13 @@ SourceBuffer::Compact()
     length += mChunks[i].Length();
   }
 
+  // If our total length is zero (which means ExpectLength() got called, but no
+  // data ever actually got written) then just empty our chunk list.
+  if (MOZ_UNLIKELY(length == 0)) {
+    mChunks.Clear();
+    return NS_OK;
+  }
+
   Maybe<Chunk> newChunk = CreateChunk(length, /* aRoundUp = */ false);
   if (MOZ_UNLIKELY(!newChunk || newChunk->AllocationFailed())) {
     NS_WARNING("Failed to allocate chunk for SourceBuffer compacting - OOM?");
