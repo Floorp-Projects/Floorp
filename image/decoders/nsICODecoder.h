@@ -10,10 +10,11 @@
 #include "StreamingLexer.h"
 #include "Decoder.h"
 #include "imgFrame.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/NotNull.h"
 #include "nsBMPDecoder.h"
 #include "nsPNGDecoder.h"
 #include "ICOFileHeaders.h"
-#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace image {
@@ -110,9 +111,22 @@ private:
   LexerTransition<ICOState> FinishMask();
   LexerTransition<ICOState> FinishResource();
 
+  // A helper implementation of IResumable which just does nothing; see
+  // WriteToContainedDecoder() for more details.
+  class DoNotResume final : public IResumable
+  {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DoNotResume, override)
+    void Resume() override { }
+
+  private:
+    virtual ~DoNotResume() { }
+  };
+
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   RefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
   RefPtr<SourceBuffer> mContainedSourceBuffer;  // SourceBuffer for mContainedDecoder.
+  NotNull<RefPtr<IResumable>> mDoNotResume;  // IResumable helper for SourceBuffer.
   UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
   char mBIHraw[bmp::InfoHeaderLength::WIN_ICO]; // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
