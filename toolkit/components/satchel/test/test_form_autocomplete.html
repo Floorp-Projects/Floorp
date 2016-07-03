@@ -117,6 +117,13 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with input type='month' -->
+  <form id="form18" onsubmit="return false;">
+    <input  type="month" name="field15">
+    <button type="submit">Submit</button>
+  </form>
+
+
 </div>
 
 <pre id="test">
@@ -163,7 +170,7 @@ function setupFormHistory(aCallback) {
 }
 
 // All these non-implemeted types might need autocomplete tests in the future.
-var todoTypes = [ "datetime", "month", "week", "datetime-local" ];
+var todoTypes = [ "datetime", "week", "datetime-local" ];
 var todoInput = document.createElement("input");
 for (var type of todoTypes) {
   todoInput.type = type;
