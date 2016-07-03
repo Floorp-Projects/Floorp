@@ -291,14 +291,11 @@ nsICODecoder::SniffResource(const char* aData)
                        PNGSIGNATURESIZE);
   if (isPNG) {
     // Create a PNG decoder which will do the rest of the work for us.
-    mContainedDecoder = new nsPNGDecoder(mImage);
-    mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
-    mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
-    mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
-    if (mDownscaler) {
-      mContainedDecoder->SetTargetSize(mDownscaler->TargetSize());
-    }
-    mContainedDecoder->Init();
+    mContainedSourceBuffer = new SourceBuffer();
+    mContainedDecoder =
+      DecoderFactory::CreateDecoderForICOResource(DecoderType::PNG,
+                                                  WrapNotNull(mContainedSourceBuffer),
+                                                  WrapNotNull(this));
 
     if (!WriteToContainedDecoder(aData, PNGSIGNATURESIZE)) {
       return Transition::TerminateFailure();
@@ -371,15 +368,14 @@ nsICODecoder::ReadBIH(const char* aData)
 
   // Create a BMP decoder which will do most of the work for us; the exception
   // is the AND mask, which isn't present in standalone BMPs.
-  RefPtr<nsBMPDecoder> bmpDecoder = new nsBMPDecoder(mImage, dataOffset);
-  mContainedDecoder = bmpDecoder;
-  mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
-  mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
-  mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
-  if (mDownscaler) {
-    mContainedDecoder->SetTargetSize(mDownscaler->TargetSize());
-  }
-  mContainedDecoder->Init();
+  mContainedSourceBuffer = new SourceBuffer();
+  mContainedDecoder =
+    DecoderFactory::CreateDecoderForICOResource(DecoderType::BMP,
+                                                WrapNotNull(mContainedSourceBuffer),
+                                                WrapNotNull(this),
+                                                Some(dataOffset));
+  RefPtr<nsBMPDecoder> bmpDecoder =
+    static_cast<nsBMPDecoder*>(mContainedDecoder.get());
 
   // Verify that the BIH width and height values match the ICO directory entry,
   // and fix the BIH height value to compensate for the fact that the underlying
