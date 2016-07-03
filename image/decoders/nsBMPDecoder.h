@@ -156,7 +156,6 @@ public:
 
 private:
   friend class DecoderFactory;
-  friend class nsICODecoder;
 
   enum class State {
     FILE_HEADER,
@@ -172,12 +171,10 @@ private:
     RLE_ABSOLUTE
   };
 
-  // This is the constructor used by DecoderFactory.
+  // This is the constructor used for normal BMP images.
   explicit nsBMPDecoder(RasterImage* aImage);
 
-  // This is the constructor used by nsICODecoder.
-  // XXX(seth): nsICODecoder is temporarily an exception to the rule that
-  //            decoders should only be instantiated via DecoderFactory.
+  // This is the constructor used for BMP resources in ICO images.
   nsBMPDecoder(RasterImage* aImage, uint32_t aDataOffset);
 
   // Helper constructor called by the other two.
