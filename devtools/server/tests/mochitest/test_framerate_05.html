@@ -31,7 +31,7 @@ window.onload = function() {
 
   SimpleTest.waitForExplicitFinish();
 
-  var {FramerateFront} = require("devtools/server/actors/framerate");
+  var {FramerateFront} = require("devtools/shared/fronts/framerate");
 
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();

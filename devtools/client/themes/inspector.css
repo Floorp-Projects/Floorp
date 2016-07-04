@@ -101,3 +101,12 @@
 #inspector-element-add-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
 }
+
+/* "no results" warning message displayed in the ruleview and in the computed view */
+
+#ruleview-no-results,
+#computedview-no-results {
+  color: var(--theme-body-color-inactive);
+  text-align: center;
+  margin: 5px;
+}
