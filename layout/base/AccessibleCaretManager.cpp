@@ -948,6 +948,7 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   }
 
   MOZ_ASSERT(GetCaretMode() == CaretMode::Selection);
+  MOZ_ASSERT(aOutOffset, "aOutOffset shouldn't be nullptr!");
 
   nsRange* range = nullptr;
   RefPtr<nsINode> startNode;
@@ -977,6 +978,34 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   nsIFrame* startFrame =
     fs->GetFrameForNodeOffset(startContent, nodeOffset, hint, aOutOffset);
 
+  if (!startFrame) {
+    ErrorResult err;
+    RefPtr<TreeWalker> walker = mPresShell->GetDocument()->CreateTreeWalker(
+      *startNode, nsIDOMNodeFilter::SHOW_ALL, nullptr, err);
+
+    if (!walker) {
+      return nullptr;
+    }
+
+    startFrame = startContent ? startContent->GetPrimaryFrame() : nullptr;
+    while (!startFrame && startNode != endNode) {
+      startNode = findInFirstRangeStart ? walker->NextNode(err)
+                                        : walker->PreviousNode(err);
+
+      if (!startNode) {
+        break;
+      }
+
+      startContent = startNode->AsContent();
+      startFrame = startContent ? startContent->GetPrimaryFrame() : nullptr;
+    }
+
+    // We are walking among the nodes in the content tree, so the node offset
+    // relative to startNode should be set to 0.
+    nodeOffset = 0;
+    *aOutOffset = 0;
+  }
+
   if (startFrame) {
     if (aOutNode) {
       *aOutNode = startNode.get();
@@ -984,29 +1013,8 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
     if (aOutNodeOffset) {
       *aOutNodeOffset = nodeOffset;
     }
-    return startFrame;
   }
 
-  ErrorResult err;
-  RefPtr<TreeWalker> walker = mPresShell->GetDocument()->CreateTreeWalker(
-    *startNode, nsIDOMNodeFilter::SHOW_ALL, nullptr, err);
-
-  if (!walker) {
-    return nullptr;
-  }
-
-  startFrame = startContent ? startContent->GetPrimaryFrame() : nullptr;
-  while (!startFrame && startNode != endNode) {
-    startNode = findInFirstRangeStart ? walker->NextNode(err)
-                                      : walker->PreviousNode(err);
-
-    if (!startNode) {
-      break;
-    }
-
-    startContent = startNode->AsContent();
-    startFrame = startContent ? startContent->GetPrimaryFrame() : nullptr;
-  }
   return startFrame;
 }
 
