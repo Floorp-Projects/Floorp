@@ -1224,10 +1224,13 @@ WebGLContext::DoReadPixelsAndConvert(GLint x, GLint y, GLsizei width, GLsizei he
 
     if (gl->WorkAroundDriverBugs() &&
         gl->IsANGLE() &&
+        gl->Version() < 300 && // ANGLE ES2 doesn't support HALF_FLOAT reads properly.
         readType == LOCAL_GL_FLOAT &&
         auxReadFormat == destFormat &&
         auxReadType == LOCAL_GL_HALF_FLOAT)
     {
+        MOZ_RELEASE_ASSERT(!IsWebGL2());
+
         readType = auxReadType;
 
         const auto readBytesPerPixel = webgl::BytesPerPixel({readFormat, readType});
