@@ -1418,7 +1418,10 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   nsCOMPtr<nsIURI> triggeringURI;
   bool isCrossOrigin = true;
   if (mLoadInfo) {
-    mLoadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(triggeringURI));
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal = mLoadInfo->TriggeringPrincipal();
+    if (triggeringPrincipal) {
+      triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
+    }
   }
   if (triggeringURI) {
     if (LOG_ENABLED()) {
