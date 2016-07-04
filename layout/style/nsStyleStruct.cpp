@@ -1461,8 +1461,7 @@ nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
 
   mFallbackColor = aSource.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
-    mPaint.mPaintServer = aSource.mPaint.mPaintServer;
-    NS_IF_ADDREF(mPaint.mPaintServer);
+    mPaint.mPaintServer = new FragmentOrURL(*aSource.mPaint.mPaintServer);
   } else {
     mPaint.mColor = aSource.mPaint.mColor;
   }
@@ -1483,7 +1482,7 @@ void
 nsStyleSVGPaint::SetType(nsStyleSVGPaintType aType)
 {
   if (mType == eStyleSVGPaintType_Server) {
-    NS_IF_RELEASE(mPaint.mPaintServer);
+    delete mPaint.mPaintServer;
     mPaint.mPaintServer = nullptr;
   } else {
     mPaint.mColor = NS_RGB(0, 0, 0);
@@ -1502,8 +1501,7 @@ nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther)
 
   mFallbackColor = aOther.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
-    mPaint.mPaintServer = aOther.mPaint.mPaintServer;
-    NS_IF_ADDREF(mPaint.mPaintServer);
+    mPaint.mPaintServer = new FragmentOrURL(*aOther.mPaint.mPaintServer);
   } else {
     mPaint.mColor = aOther.mPaint.mColor;
   }

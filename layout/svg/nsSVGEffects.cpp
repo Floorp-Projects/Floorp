@@ -595,10 +595,12 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 }
 
 nsSVGPaintServerFrame *
-nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPaint,
+nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame,
+                             nsStyleSVGPaint nsStyleSVG::* aPaint,
                              PaintingPropertyDescriptor aType)
 {
-  if (aPaint->mType != eStyleSVGPaintType_Server)
+  const nsStyleSVG* svgStyle = aTargetFrame->StyleSVG();
+  if ((svgStyle->*aPaint).mType != eStyleSVGPaintType_Server)
     return nullptr;
 
   // If we're looking at a frame within SVG text, then we need to look up
@@ -613,8 +615,10 @@ nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPai
       frame = grandparent;
     }
   }
+
+  nsCOMPtr<nsIURI> paintServerURL = nsSVGEffects::GetPaintURI(frame, aPaint);
   nsSVGPaintingProperty *property =
-    nsSVGEffects::GetPaintingProperty(aPaint->mPaint.mPaintServer, frame, aType);
+    nsSVGEffects::GetPaintingProperty(paintServerURL, frame, aType);
   if (!property)
     return nullptr;
   nsIFrame *result = property->GetReferencedFrame();
@@ -946,4 +950,15 @@ nsSVGEffects::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
   MOZ_ASSERT(aFilter.GetType() == NS_STYLE_FILTER_URL);
 
   return ResolveFragmentOrURL(aFrame, aFilter.GetURL());
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetPaintURI(nsIFrame* aFrame,
+                          nsStyleSVGPaint nsStyleSVG::* aPaint)
+{
+  const nsStyleSVG* svgStyle = aFrame->StyleSVG();
+  MOZ_ASSERT((svgStyle->*aPaint).mType ==
+             nsStyleSVGPaintType::eStyleSVGPaintType_Server);
+
+  return ResolveFragmentOrURL(aFrame, (svgStyle->*aPaint).mPaint.mPaintServer);
 }

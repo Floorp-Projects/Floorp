@@ -465,7 +465,7 @@ public:
    * Get the paint server for a aTargetFrame.
    */
   static nsSVGPaintServerFrame *GetPaintServer(nsIFrame *aTargetFrame,
-                                               const nsStyleSVGPaint *aPaint,
+                                               nsStyleSVGPaint nsStyleSVG::* aPaint,
                                                PaintingPropertyDescriptor aProperty);
 
   struct EffectProperties {
@@ -618,6 +618,12 @@ public:
    */
   static already_AddRefed<nsIURI>
   GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
+
+  /**
+   * A helper function to resolve paint-server URL.
+   */
+  static already_AddRefed<nsIURI>
+  GetPaintURI(nsIFrame* aFrame, nsStyleSVGPaint nsStyleSVG::* aPaint);
 };
 
 #endif /*NSSVGEFFECTS_H_*/
