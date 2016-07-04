@@ -1176,8 +1176,8 @@ template <>
 struct ParamTraits<APZStateChange>
   : public ContiguousEnumSerializer<
              APZStateChange,
-             APZStateChange::TransformBegin,
-             APZStateChange::APZStateChangeSentinel>
+             APZStateChange::eTransformBegin,
+             APZStateChange::eSentinel>
 {};
 
 template<>

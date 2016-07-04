@@ -89,30 +89,33 @@ public:
     return false;
   }
 
-  enum APZStateChange {
+  enum class APZStateChange {
     /**
      * APZ started modifying the view (including panning, zooming, and fling).
      */
-    TransformBegin,
+    eTransformBegin,
     /**
      * APZ finished modifying the view.
      */
-    TransformEnd,
+    eTransformEnd,
     /**
      * APZ started a touch.
      * |aArg| is 1 if touch can be a pan, 0 otherwise.
      */
-    StartTouch,
+    eStartTouch,
     /**
      * APZ started a pan.
      */
-    StartPanning,
+    eStartPanning,
     /**
      * APZ finished processing a touch.
      * |aArg| is 1 if touch was a click, 0 otherwise.
      */
-    EndTouch,
-    APZStateChangeSentinel
+    eEndTouch,
+
+    // Sentinel value for IPC, this must be the last item in the enum and
+    // should not be used as an actual message value.
+    eSentinel
   };
   /**
    * General notices of APZ state changes for consumers.
