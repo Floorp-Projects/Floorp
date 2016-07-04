@@ -1609,7 +1609,7 @@ void
 TSFTextStore::FlushPendingActions()
 {
   if (!mWidget || mWidget->Destroyed()) {
-    // Note that don't clear the locked contents because TIP may try to commit
+    // Note that don't clear mContentForTSF because TIP may try to commit
     // composition with a document lock.  In such case, TSFTextStore needs to
     // behave as expected by TIP.
     mPendingActions.Clear();
@@ -1663,7 +1663,7 @@ TSFTextStore::FlushPendingActions()
 
         // eCompositionStart always causes
         // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.  Therefore, we should
-        // wait to clear the locked content until it's notified.
+        // wait to clear mContentForTSF until it's notified.
         mDeferClearingContentForTSF = true;
 
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -1695,7 +1695,7 @@ TSFTextStore::FlushPendingActions()
 
         // eCompositionChange causes a DOM text event, the IME will be notified
         // of NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.  In this case, we
-        // should not clear the locked content until we notify the IME of the
+        // should not clear mContentForTSF until we notify the IME of the
         // composition update.
         mDeferClearingContentForTSF = true;
 
@@ -1735,7 +1735,7 @@ TSFTextStore::FlushPendingActions()
 
         // Dispatching eCompositionCommit causes a DOM text event, then,
         // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
-        // In this case, we should not clear the locked content until we notify
+        // In this case, we should not clear mContentForTSFuntil we notify
         // the IME of the composition update.
         mDeferClearingContentForTSF = true;
 
