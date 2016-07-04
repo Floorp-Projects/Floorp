@@ -141,7 +141,7 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   if (bHaveEventListener) {
     // If content has set an EventHandler to be notified of VR display events
     // we must continually refresh the VR display enumeration to check
-    // for events that we must fire such as Window.onvrdisplayconnected
+    // for events that we must fire such as Window.onvrdisplayconnect
     // Note that enumeration itself may activate display hardware, such
     // as Oculus, so we only do this when we know we are displaying content
     // that is looking for VR displays.
