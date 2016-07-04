@@ -5811,8 +5811,14 @@ CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
 already_AddRefed<Layer>
 CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer *aOldLayer,
-                                         LayerManager *aManager)
+                                         LayerManager *aManager,
+                                         bool aMirror /* = false */)
 {
+  if (aMirror) {
+    // Not supported for CanvasRenderingContext2D
+    return nullptr;
+  }
+
   if (mOpaque || mIsSkiaGL) {
     // If we're opaque then make sure we have a surface so we paint black
     // instead of transparent.
