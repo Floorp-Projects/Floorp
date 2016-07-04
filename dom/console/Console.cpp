@@ -313,17 +313,14 @@ private:
   JSContext* mCx;
 };
 
-class ConsoleRunnable : public Runnable
-                      , public WorkerHolder
+class ConsoleRunnable : public WorkerProxyToMainThreadRunnable
                       , public StructuredCloneHolderBase
 {
 public:
   explicit ConsoleRunnable(Console* aConsole)
-    : mWorkerPrivate(GetCurrentThreadWorkerPrivate())
+    : WorkerProxyToMainThreadRunnable(GetCurrentThreadWorkerPrivate())
     , mConsole(aConsole)
-  {
-    MOZ_ASSERT(mWorkerPrivate);
-  }
+  {}
 
   virtual
   ~ConsoleRunnable()
@@ -335,24 +332,24 @@ public:
   bool
   Dispatch(JSContext* aCx)
   {
-    if (!DispatchInternal(aCx)) {
-      ReleaseData();
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    if (NS_WARN_IF(!PreDispatch(aCx))) {
+      RunBackOnWorkerThread();
+      return false;
+    }
+
+    if (NS_WARN_IF(!WorkerProxyToMainThreadRunnable::Dispatch())) {
+      RunBackOnWorkerThread();
       return false;
     }
 
     return true;
   }
 
-  virtual bool Notify(workers::Status aStatus) override
-  {
-    // We don't care about the notification. We just want to keep the
-    // mWorkerPrivate alive.
-    return true;
-  }
-
-private:
-  NS_IMETHOD
-  Run() override
+protected:
+  void
+  RunOnMainThread() override
   {
     AssertIsOnMainThread();
 
@@ -368,77 +365,6 @@ private:
     } else {
       RunWithWindow(window);
     }
-
-    PostDispatch();
-    return NS_OK;
-  }
-
-  bool
-  DispatchInternal(JSContext* aCx)
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    if (NS_WARN_IF(!PreDispatch(aCx))) {
-      return false;
-    }
-
-    if (NS_WARN_IF(!HoldWorker(mWorkerPrivate))) {
-      return false;
-    }
-
-    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
-      return false;
-    }
-
-    return true;
-  }
-
-  void
-  PostDispatch()
-  {
-    class ConsoleReleaseRunnable final : public MainThreadWorkerControlRunnable
-    {
-      RefPtr<ConsoleRunnable> mRunnable;
-
-    public:
-      ConsoleReleaseRunnable(WorkerPrivate* aWorkerPrivate,
-                             ConsoleRunnable* aRunnable)
-        : MainThreadWorkerControlRunnable(aWorkerPrivate)
-        , mRunnable(aRunnable)
-      {
-        MOZ_ASSERT(aRunnable);
-      }
-
-      // If something goes wrong, we still need to release the ConsoleCallData
-      // object. For this reason we have a custom Cancel method.
-      nsresult
-      Cancel() override
-      {
-        WorkerRun(nullptr, mWorkerPrivate);
-        return NS_OK;
-      }
-
-      virtual bool
-      WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override
-      {
-        MOZ_ASSERT(aWorkerPrivate);
-        aWorkerPrivate->AssertIsOnWorkerThread();
-
-        mRunnable->ReleaseData();
-        mRunnable->mConsole = nullptr;
-
-        mRunnable->ReleaseWorker();
-        return true;
-      }
-
-    private:
-      ~ConsoleReleaseRunnable()
-      {}
-    };
-
-    RefPtr<WorkerControlRunnable> runnable =
-      new ConsoleReleaseRunnable(mWorkerPrivate, this);
-    NS_WARN_IF(!runnable->Dispatch());
   }
 
   void
@@ -491,7 +417,14 @@ private:
     RunConsole(cx, nullptr, nullptr);
   }
 
-protected:
+  void
+  RunBackOnWorkerThread() override
+  {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    ReleaseData();
+    mConsole = nullptr;
+  }
+
   // This method is called in the owning thread of the Console object.
   virtual bool
   PreDispatch(JSContext* aCx) = 0;
@@ -563,8 +496,6 @@ protected:
 
     return true;
   }
-
-  WorkerPrivate* mWorkerPrivate;
 
   // This must be released on the worker thread.
   RefPtr<Console> mConsole;

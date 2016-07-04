@@ -129,7 +129,7 @@
   <project name="platform/external/yaffs2" path="external/yaffs2" revision="b2aadfdf9482777530efac1fb13a25ff401e78ee"/>
   <project name="platform/external/zlib" path="external/zlib" revision="a9dc8ffc4b43f0ff455d52fc5a889e92794962a4"/>
   <project name="platform/external/zopfli" path="external/zopfli" revision="8b994159cf3fc74a58e42fca72bc6849e6027912"/>
-  <project name="platform/frameworks/native" path="frameworks/native" revision="c39bd4ee1f4b3ef92bf7a45824b77703f40a5fd4"/>
+  <project name="platform_frameworks_native" path="frameworks/native" remote="b2g" revision="77c23f8067bca84476f96d663efaae636817edd5"/>
   <project name="platform/frameworks/opt/emoji" path="frameworks/opt/emoji" revision="2293192ed15b88ebe962fb5377dd197200e6472b"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="f5feb2aa2047fbaf13be448fe8d06bff3ccf7b84"/>
   <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="8d075b4d5e9e032b18fbc8b5def63827d1b4a30d"/>

@@ -1019,10 +1019,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   outline: 1px dotted -moz-DialogText;
 }
 
-.indexedDB-icon {
-  list-style-image: url(moz-icon://stock/gtk-dialog-question?size=16);
-}
-
 /* Translation infobar */
 
 %include ../shared/translation/infobar.inc.css

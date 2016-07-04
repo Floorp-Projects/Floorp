@@ -75,10 +75,10 @@ LinkData::SymbolicLinkArray::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-LinkData::SymbolicLinkArray::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+LinkData::SymbolicLinkArray::deserialize(const uint8_t* cursor)
 {
     for (Uint32Vector& offsets : *this) {
-        cursor = DeserializePodVector(cx, cursor, &offsets);
+        cursor = DeserializePodVector(cursor, &offsets);
         if (!cursor)
             return nullptr;
     }
@@ -110,10 +110,10 @@ LinkData::FuncTable::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-LinkData::FuncTable::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+LinkData::FuncTable::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
-    (cursor = DeserializePodVector(cx, cursor, &elemOffsets));
+    (cursor = DeserializePodVector(cursor, &elemOffsets));
     return cursor;
 }
 
@@ -143,12 +143,12 @@ LinkData::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-LinkData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+LinkData::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializePodVector(cx, cursor, &internalLinks)) &&
-    (cursor = symbolicLinks.deserialize(cx, cursor)) &&
-    (cursor = DeserializeVector(cx, cursor, &funcTables));
+    (cursor = DeserializePodVector(cursor, &internalLinks)) &&
+    (cursor = symbolicLinks.deserialize(cursor)) &&
+    (cursor = DeserializeVector(cursor, &funcTables));
     return cursor;
 }
 
@@ -176,10 +176,10 @@ ImportName::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-ImportName::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+ImportName::deserialize(const uint8_t* cursor)
 {
-    (cursor = module.deserialize(cx, cursor)) &&
-    (cursor = func.deserialize(cx, cursor));
+    (cursor = module.deserialize(cursor)) &&
+    (cursor = func.deserialize(cursor));
     return cursor;
 }
 
@@ -206,10 +206,10 @@ ExportMap::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-ExportMap::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+ExportMap::deserialize(const uint8_t* cursor)
 {
-    (cursor = DeserializeVector(cx, cursor, &fieldNames)) &&
-    (cursor = DeserializePodVector(cx, cursor, &fieldsToExports));
+    (cursor = DeserializeVector(cursor, &fieldNames)) &&
+    (cursor = DeserializePodVector(cursor, &fieldsToExports));
     return cursor;
 }
 
@@ -246,31 +246,30 @@ Module::serialize(uint8_t* cursor) const
 }
 
 /* static */ const uint8_t*
-Module::deserialize(ExclusiveContext* cx, const uint8_t* cursor, UniquePtr<Module>* module,
-                    Metadata* maybeMetadata)
+Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* maybeMetadata)
 {
     Bytes code;
-    cursor = DeserializePodVector(cx, cursor, &code);
+    cursor = DeserializePodVector(cursor, &code);
     if (!cursor)
         return nullptr;
 
     LinkData linkData;
-    cursor = linkData.deserialize(cx, cursor);
+    cursor = linkData.deserialize(cursor);
     if (!cursor)
         return nullptr;
 
     ImportNameVector importNames;
-    cursor = DeserializeVector(cx, cursor, &importNames);
+    cursor = DeserializeVector(cursor, &importNames);
     if (!cursor)
         return nullptr;
 
     ExportMap exportMap;
-    cursor = exportMap.deserialize(cx, cursor);
+    cursor = exportMap.deserialize(cursor);
     if (!cursor)
         return nullptr;
 
     DataSegmentVector dataSegments;
-    cursor = DeserializePodVector(cx, cursor, &dataSegments);
+    cursor = DeserializePodVector(cursor, &dataSegments);
     if (!cursor)
         return nullptr;
 
@@ -278,29 +277,29 @@ Module::deserialize(ExclusiveContext* cx, const uint8_t* cursor, UniquePtr<Modul
     if (maybeMetadata) {
         metadata = maybeMetadata;
     } else {
-        metadata = cx->new_<Metadata>();
+        metadata = js_new<Metadata>();
         if (!metadata)
             return nullptr;
     }
-    cursor = metadata->deserialize(cx, cursor);
+    cursor = metadata->deserialize(cursor);
     if (!cursor)
         return nullptr;
     MOZ_RELEASE_ASSERT(!!maybeMetadata == metadata->isAsmJS());
 
-    MutableBytes bytecode = cx->new_<ShareableBytes>();
+    MutableBytes bytecode = js_new<ShareableBytes>();
     if (!bytecode)
         return nullptr;
-    cursor = DeserializePodVector(cx, cursor, &bytecode->bytes);
+    cursor = DeserializePodVector(cursor, &bytecode->bytes);
     if (!cursor)
         return nullptr;
 
-    *module = cx->make_unique<Module>(Move(code),
-                                      Move(linkData),
-                                      Move(importNames),
-                                      Move(exportMap),
-                                      Move(dataSegments),
-                                      *metadata,
-                                      *bytecode);
+    *module = js::MakeUnique<Module>(Move(code),
+                                     Move(linkData),
+                                     Move(importNames),
+                                     Move(exportMap),
+                                     Move(dataSegments),
+                                     *metadata,
+                                     *bytecode);
     if (!*module)
         return nullptr;
 

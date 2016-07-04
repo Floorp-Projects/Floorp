@@ -107,7 +107,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         if (wrappedProto)
             ac.emplace(cx, usedProto);
 
-        promise = &NewObjectWithClassProto(cx, &class_, usedProto)->as<PromiseObject>();
+        promise = NewObjectWithClassProto<PromiseObject>(cx, usedProto);
         if (!promise)
             return nullptr;
 

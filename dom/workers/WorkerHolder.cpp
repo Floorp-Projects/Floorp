@@ -45,6 +45,7 @@ void
 WorkerHolder::ReleaseWorkerInternal()
 {
   if (mWorkerPrivate) {
+    mWorkerPrivate->AssertIsOnWorkerThread();
     mWorkerPrivate->RemoveHolder(this);
     mWorkerPrivate = nullptr;
   }

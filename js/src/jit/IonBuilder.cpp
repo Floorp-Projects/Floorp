@@ -2824,7 +2824,10 @@ IonBuilder::createBreakCatchBlock(DeferredEdge* edge, jsbytecode* pc)
 
     // Finish up remaining breaks.
     while (edge) {
-        edge->block->end(MGoto::New(alloc(), successor));
+        MGoto* brk = MGoto::New(alloc().fallible(), successor);
+        if (!brk)
+            return nullptr;
+        edge->block->end(brk);
         if (!successor->addPredecessor(alloc(), edge->block))
             return nullptr;
         edge = edge->next;
@@ -6590,7 +6593,8 @@ IonBuilder::jsop_funapplyarray(uint32_t argc)
     MDefinition* nativeFunc = current->pop();
     nativeFunc->setImplicitlyUsedUnchecked();
 
-    MApplyArray* apply = MApplyArray::New(alloc(), target, argFunc, elements, argThis);
+    WrappedFunction* wrappedTarget = target ? new(alloc()) WrappedFunction(target) : nullptr;
+    MApplyArray* apply = MApplyArray::New(alloc(), wrappedTarget, argFunc, elements, argThis);
     current->add(apply);
     current->push(apply);
     if (!resumeAfter(apply))
@@ -6637,7 +6641,8 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
         MArgumentsLength* numArgs = MArgumentsLength::New(alloc());
         current->add(numArgs);
 
-        MApplyArgs* apply = MApplyArgs::New(alloc(), target, argFunc, numArgs, argThis);
+        WrappedFunction* wrappedTarget = target ? new(alloc()) WrappedFunction(target) : nullptr;
+        MApplyArgs* apply = MApplyArgs::New(alloc(), wrappedTarget, argFunc, numArgs, argThis);
         current->add(apply);
         current->push(apply);
         if (!resumeAfter(apply))
@@ -6940,7 +6945,7 @@ IonBuilder::makeCall(JSFunction* target, CallInfo& callInfo)
     TemporaryTypeSet* types = bytecodeTypes(pc);
 
     if (call->isCallDOMNative())
-        return pushDOMTypeBarrier(call, types, call->getSingleTarget());
+        return pushDOMTypeBarrier(call, types, call->getSingleTarget()->rawJSFunction());
 
     return pushTypeBarrier(call, types, BarrierKind::TypeSet);
 }

@@ -437,6 +437,7 @@ struct IonScript
         return hasProfilingInstrumentation_;
     }
     MOZ_MUST_USE bool addTraceLoggerEvent(TraceLoggerEvent& event) {
+        MOZ_ASSERT(event.hasPayload());
         return traceLoggerEvents_.append(Move(event));
     }
     const uint8_t* snapshots() const {

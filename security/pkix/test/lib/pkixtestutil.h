@@ -376,6 +376,8 @@ ByteString CreateEncodedEKUExtension(Input eku, Critical critical);
 class OCSPResponseExtension final
 {
 public:
+  OCSPResponseExtension();
+
   ByteString id;
   bool critical;
   ByteString value;
@@ -412,7 +414,10 @@ public:
 
   std::time_t producedAt;
 
-  OCSPResponseExtension* extensions;
+  // SingleResponse extensions (for the certID given in the constructor).
+  OCSPResponseExtension* singleExtensions;
+  // ResponseData extensions.
+  OCSPResponseExtension* responseExtensions;
   bool includeEmptyExtensions; // If true, include the extension wrapper
                                // regardless of if there are any actual
                                // extensions.
