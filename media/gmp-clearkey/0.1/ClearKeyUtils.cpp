@@ -521,7 +521,7 @@ ClearKeyUtils::SessionTypeToString(GMPSessionType aSessionType)
 {
   switch (aSessionType) {
     case kGMPTemporySession: return "temporary";
-    case kGMPPersistentSession: return "persistent";
+    case kGMPPersistentSession: return "persistent-license";
     default: {
       assert(false); // Should not reach here.
       return "invalid";
