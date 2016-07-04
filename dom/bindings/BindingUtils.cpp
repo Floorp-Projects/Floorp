@@ -3297,46 +3297,23 @@ namespace {
 
 // This runnable is used to write a deprecation message from a worker to the
 // console running on the main-thread.
-class DeprecationWarningRunnable final : public Runnable
-                                       , public WorkerHolder
+class DeprecationWarningRunnable final : public WorkerProxyToMainThreadRunnable
 {
-  WorkerPrivate* mWorkerPrivate;
   nsIDocument::DeprecatedOperations mOperation;
 
 public:
   DeprecationWarningRunnable(WorkerPrivate* aWorkerPrivate,
                              nsIDocument::DeprecatedOperations aOperation)
-    : mWorkerPrivate(aWorkerPrivate)
+    : WorkerProxyToMainThreadRunnable(aWorkerPrivate)
     , mOperation(aOperation)
   {
     MOZ_ASSERT(aWorkerPrivate);
-  }
-
-  void
-  Dispatch()
-  {
-    if (NS_WARN_IF(!HoldWorker(mWorkerPrivate))) {
-      return;
-    }
-
-    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
-      ReleaseWorker();
-      return;
-    }
-  }
-
-  virtual bool
-  Notify(Status aStatus) override
-  {
-    // We don't care about the notification. We just want to keep the
-    // mWorkerPrivate alive.
-    return true;
+    aWorkerPrivate->AssertIsOnWorkerThread();
   }
 
 private:
-
-  NS_IMETHOD
-  Run() override
+  void
+  RunOnMainThread() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -3350,40 +3327,11 @@ private:
     if (window && window->GetExtantDoc()) {
       window->GetExtantDoc()->WarnOnceAbout(mOperation);
     }
-
-    ReleaseWorkerHolder();
-    return NS_OK;
   }
 
   void
-  ReleaseWorkerHolder()
-  {
-    class ReleaseRunnable final : public MainThreadWorkerRunnable
-    {
-      RefPtr<DeprecationWarningRunnable> mRunnable;
-
-    public:
-      ReleaseRunnable(WorkerPrivate* aWorkerPrivate,
-                      DeprecationWarningRunnable* aRunnable)
-        : MainThreadWorkerRunnable(aWorkerPrivate)
-        , mRunnable(aRunnable)
-      {}
-
-      virtual bool
-      WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-      {
-        MOZ_ASSERT(aWorkerPrivate);
-        aWorkerPrivate->AssertIsOnWorkerThread();
-
-        mRunnable->ReleaseWorker();
-        return true;
-      }
-    };
-
-    RefPtr<ReleaseRunnable> runnable =
-      new ReleaseRunnable(mWorkerPrivate, this);
-    NS_WARN_IF(!runnable->Dispatch());
-  }
+  RunBackOnWorkerThread() override
+  {}
 };
 
 } // anonymous namespace
