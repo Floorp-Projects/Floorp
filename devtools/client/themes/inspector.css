@@ -78,24 +78,6 @@
   font: message-box;
 }
 
-/* Expand/collapse panel toolbar button */
-
-#inspector-pane-toggle::before {
-  background-image: var(--theme-pane-collapse-image);
-}
-
-#inspector-pane-toggle[pane-collapsed]::before {
-  background-image: var(--theme-pane-expand-image);
-}
-
-/* Rotate button icon 90deg if the toolbox container is
-  in vertical mode (sidebar displayed under the main panel) */
-@media (max-width: 700px) {
-  #inspector-pane-toggle::before {
-    transform: rotate(90deg);
-  }
-}
-
 /* Add element toolbar button */
 
 #inspector-element-add-button::before {
