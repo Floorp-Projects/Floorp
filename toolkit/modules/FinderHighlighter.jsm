@@ -200,6 +200,7 @@ FinderHighlighter.prototype = {
       let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
       sel.removeAllRanges();
 
+      this.hide();
       this.clear();
 
       // Next, check our editor cache, for editors belonging to this
