@@ -573,8 +573,9 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
   result.mFilter = GetOrCreateFilterProperty(aFrame);
 
   if (style->mClipPath.GetType() == StyleClipPathType::URL) {
+    nsCOMPtr<nsIURI> pathURI = nsSVGEffects::GetClipPathURI(aFrame);
     result.mClipPath =
-      GetPaintingProperty(style->mClipPath.GetURL(), aFrame, ClipPathProperty());
+      GetPaintingProperty(pathURI, aFrame, ClipPathProperty());
   } else {
     result.mClipPath = nullptr;
   }
@@ -909,4 +910,14 @@ nsSVGEffects::GetMarkerURI(nsIFrame* aFrame,
                            FragmentOrURL nsStyleSVG::* aMarker)
 {
   return ResolveFragmentOrURL(aFrame, &(aFrame->StyleSVG()->*aMarker));
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetClipPathURI(nsIFrame *aFrame)
+{
+  const nsStyleSVGReset* svgResetStyle = aFrame->StyleSVGReset();
+  MOZ_ASSERT(svgResetStyle->mClipPath.GetType() == NS_STYLE_CLIP_PATH_URL);
+
+  FragmentOrURL* url = svgResetStyle->mClipPath.GetURL();
+  return ResolveFragmentOrURL(aFrame, url);
 }
