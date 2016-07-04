@@ -197,8 +197,7 @@ class Module
 
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor) const;
-    static const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor,
-                                      UniquePtr<Module>* module,
+    static const uint8_t* deserialize(const uint8_t* cursor, UniquePtr<Module>* module,
                                       Metadata* maybeMetadata = nullptr);
 
     // about:memory reporting:

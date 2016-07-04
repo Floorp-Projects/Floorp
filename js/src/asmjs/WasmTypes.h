@@ -72,19 +72,19 @@ typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
 #define WASM_DECLARE_SERIALIZABLE(Type)                                         \
     size_t serializedSize() const;                                              \
     uint8_t* serialize(uint8_t* cursor) const;                                  \
-    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);    \
+    const uint8_t* deserialize(const uint8_t* cursor);                          \
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 #define WASM_DECLARE_SERIALIZABLE_VIRTUAL(Type)                                 \
     virtual size_t serializedSize() const;                                      \
     virtual uint8_t* serialize(uint8_t* cursor) const;                          \
-    virtual const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);\
+    virtual const uint8_t* deserialize(const uint8_t* cursor);                  \
     virtual size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 #define WASM_DECLARE_SERIALIZABLE_OVERRIDE(Type)                                \
     size_t serializedSize() const override;                                     \
     uint8_t* serialize(uint8_t* cursor) const override;                         \
-    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor) override;\
+    const uint8_t* deserialize(const uint8_t* cursor) override;                 \
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
 // ValType/ExprType utilities

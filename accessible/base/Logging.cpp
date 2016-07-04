@@ -648,7 +648,7 @@ logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
   if (IsEnabledAll(logging::eTree | aExtraFlags)) {
     MsgBegin("TREE", "%s; doc: %p", aMsg, aAcc ? aAcc->Document() : nullptr);
     AccessibleInfo(aMsg1, aAcc);
-    Accessible* acc = aAcc->Document()->GetAccessible(aNode);
+    Accessible* acc = aAcc ? aAcc->Document()->GetAccessible(aNode) : nullptr;
     if (acc) {
       AccessibleInfo(aMsg2, acc);
     }
