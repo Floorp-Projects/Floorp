@@ -2,7 +2,6 @@
 
     <panel id="notification-popup"
            type="arrow"
-           footertype="promobox"
            position="after_start"
            hidden="true"
            orient="vertical"
