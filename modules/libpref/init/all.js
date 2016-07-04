@@ -4525,7 +4525,6 @@ pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 pref("layers.enable-tiles", false);
 pref("layers.single-tile.enabled", true);
-pref("layers.tiled-drawtarget.enabled", false);
 pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
 pref("layers.tile-width", 256);
@@ -4550,16 +4549,10 @@ pref("layers.offmainthreadcomposition.frame-rate", -1);
 pref("layers.enable-tiles", true);
 pref("layers.tile-width", 512);
 pref("layers.tile-height", 512);
-pref("layers.tiled-drawtarget.enabled", true);
 pref("layers.tiles.edge-padding", false);
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-pref("layers.tiled-drawtarget.enabled", true);
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
-pref("layers.tiled-drawtarget.enabled", true);
 pref("layers.tiles.edge-padding", true);
 #endif
 

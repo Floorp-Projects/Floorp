@@ -443,9 +443,6 @@ private:
   // completed then this is identical to mValidRegion.
   nsIntRegion mNewValidRegion;
 
-  // The DrawTarget we use when UseSinglePaintBuffer() above is true.
-  RefPtr<gfx::DrawTarget>       mSinglePaintDrawTarget;
-  nsIntPoint                    mSinglePaintBufferOffset;
   SharedFrameMetricsHelper*  mSharedFrameMetricsHelper;
   // When using Moz2D's CreateTiledDrawTarget we maintain a list of gfx::Tiles
   std::vector<gfx::Tile> mMoz2DTiles;
