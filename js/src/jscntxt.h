@@ -13,6 +13,7 @@
 
 #include "js/GCVector.h"
 #include "js/Vector.h"
+#include "vm/Caches.h"
 #include "vm/Runtime.h"
 
 #ifdef _MSC_VER
@@ -359,6 +360,8 @@ struct JSContext : public js::ExclusiveContext,
     js::jit::DebugModeOSRVolatileJitFrameIterator* liveVolatileJitFrameIterators_;
 
   public:
+    js::ContextCaches caches;
+
     int32_t             reportGranularity;  /* see vm/Probes.h */
 
     js::AutoResolving*  resolvingList;

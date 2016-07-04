@@ -5521,6 +5521,12 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     // preserveAspectRatio attribute, and always do non-uniform stretch.
     uint32_t drawFlags = ConvertImageRendererToDrawFlags(mFlags) |
                            imgIContainer::FLAG_FORCE_PRESERVEASPECTRATIO_NONE;
+    // For those SVG image sources which don't have fixed aspect ratio (i.e.
+    // without viewport size and viewBox), we should scale the source uniformly
+    // after the viewport size is decided by "Default Sizing Algorithm".
+    if (!ComputeIntrinsicSize().HasRatio()) {
+      drawFlags = drawFlags | imgIContainer::FLAG_FORCE_UNIFORM_SCALING;
+    }
     // Retrieve or create the subimage we'll draw.
     nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
     if (mType == eStyleImageType_Image) {

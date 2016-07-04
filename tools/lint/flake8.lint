@@ -126,7 +126,7 @@ LINTER = {
         'tools/lint',
         'taskcluster',
         'testing/marionette/client',
-        'testing/talos/talos',
+        'testing/talos/',
     ],
     'exclude': [],
     'type': 'external',

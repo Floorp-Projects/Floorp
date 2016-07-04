@@ -316,6 +316,7 @@ UNIFIED_SOURCES += [
     'proxy/Wrapper.cpp',
     'vm/ArgumentsObject.cpp',
     'vm/ArrayBufferObject.cpp',
+    'vm/Caches.cpp',
     'vm/CallNonGenericMethod.cpp',
     'vm/CharacterEncoding.cpp',
     'vm/CodeCoverage.cpp',

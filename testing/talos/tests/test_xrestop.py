@@ -6,12 +6,12 @@ Tests for talos.xrestop
 
 import os
 import subprocess
-import sys
 import unittest
 from talos.cmanager_linux import xrestop
 
 here = os.path.dirname(os.path.abspath(__file__))
 xrestop_output = os.path.join(here, 'xrestop_output.txt')
+
 
 class TestXrestop(unittest.TestCase):
 
@@ -27,8 +27,9 @@ class TestXrestop(unittest.TestCase):
             """
             def __init__(self, *args, **kwargs):
                 self.returncode = 0
+
             def communicate(self):
-                stdout = file(xrestop_output).read()
+                stdout = open(xrestop_output).read()
                 return stdout, ''
 
         # monkey-patch subprocess.Popen
@@ -40,10 +41,10 @@ class TestXrestop(unittest.TestCase):
 
         # ensure that the parsed output is equal to what is in
         # xrestop_output.txt
-        self.assertEqual(len(output), 7) # seven windows with PIDs
+        self.assertEqual(len(output), 7)  # seven windows with PIDs
 
         # the first window is Thunderbird
-        pid = 2035 # thundrbird's pid
+        pid = 2035  # thundrbird's pid
         self.assertTrue(pid in output)
         thunderbird = output[pid]
         self.assertEqual(thunderbird['index'], 0)

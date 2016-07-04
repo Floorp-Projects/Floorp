@@ -312,6 +312,8 @@ private:
   const SVGPreserveAspectRatio* GetPreserveAspectRatioProperty() const;
   bool ClearPreserveAspectRatioProperty();
 
+  void SetIsPaintingForSVGImageElement(bool aIsPaintingSVGImageElement);
+
   bool IsRoot() const {
     NS_ASSERTION((IsInUncomposedDoc() && !GetParent()) ==
                  (OwnerDoc() && (OwnerDoc()->GetRootElement() == this)),
@@ -441,6 +443,8 @@ public:
       // and overflow properties here, too. See bug 272288 comment 36.
       mRootElem->SetImageOverridePreserveAspectRatio(
           *aSVGContext->GetPreserveAspectRatio());
+      mRootElem->SetIsPaintingForSVGImageElement(
+          aSVGContext->IsPaintingForSVGImageElement());
     }
 
     mOriginalTime = mRootElem->GetCurrentTime();
@@ -452,6 +456,7 @@ public:
     mRootElem->SetCurrentTime(mOriginalTime);
     if (mHaveOverrides) {
       mRootElem->ClearImageOverridePreserveAspectRatio();
+      mRootElem->SetIsPaintingForSVGImageElement(false);
     }
   }
 

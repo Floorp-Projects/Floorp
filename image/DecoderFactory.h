@@ -54,6 +54,8 @@ public:
    *               notifications as decoding progresses.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
+   * @param aIntrinsicSize The intrinsic size of the image, normally obtained
+   *                       during the metadata decode.
    * @param aTargetSize If not Nothing(), the target size which the image should
    *                    be scaled to during decoding. It's an error to specify
    *                    a target size for a decoder type which doesn't support
@@ -68,6 +70,7 @@ public:
   CreateDecoder(DecoderType aType,
                 NotNull<RasterImage*> aImage,
                 NotNull<SourceBuffer*> aSourceBuffer,
+                const gfx::IntSize& aIntrinsicSize,
                 const Maybe<gfx::IntSize>& aTargetSize,
                 DecoderFlags aDecoderFlags,
                 SurfaceFlags aSurfaceFlags,
@@ -82,6 +85,8 @@ public:
    *               notifications as decoding progresses.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
+   * @param aIntrinsicSize The intrinsic size of the image, normally obtained
+   *                       during the metadata decode.
    * @param aDecoderFlags Flags specifying the behavior of this decoder.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
@@ -90,6 +95,7 @@ public:
   CreateAnimationDecoder(DecoderType aType,
                          NotNull<RasterImage*> aImage,
                          NotNull<SourceBuffer*> aSourceBuffer,
+                         const gfx::IntSize& aIntrinsicSize,
                          DecoderFlags aDecoderFlags,
                          SurfaceFlags aSurfaceFlags);
 
