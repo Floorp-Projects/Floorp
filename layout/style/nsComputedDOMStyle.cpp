@@ -5562,10 +5562,12 @@ nsComputedDOMStyle::GetSVGPaintFor(bool aFill)
     }
     case eStyleSVGPaintType_Server:
     {
+      // Bug 1288812 - we should only serialize fragment for local-ref URL.
       RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
       RefPtr<nsROCSSPrimitiveValue> fallback = new nsROCSSPrimitiveValue;
-
-      val->SetURI(paint->mPaint.mPaintServer);
+      nsCOMPtr<nsIURI> paintServerURI =
+        paint->mPaint.mPaintServer->GetSourceURL();
+      val->SetURI(paintServerURI);
       SetToRGBAColor(fallback, paint->mFallbackColor);
 
       valueList->AppendCSSValue(val.forget());
