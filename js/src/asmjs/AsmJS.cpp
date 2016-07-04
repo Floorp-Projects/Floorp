@@ -8049,10 +8049,10 @@ AsmJSGlobal::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-AsmJSGlobal::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+AsmJSGlobal::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod, sizeof(pod))) &&
-    (cursor = field_.deserialize(cx, cursor));
+    (cursor = field_.deserialize(cursor));
     return cursor;
 }
 
@@ -8092,17 +8092,17 @@ AsmJSMetadata::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-AsmJSMetadata::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+AsmJSMetadata::deserialize(const uint8_t* cursor)
 {
-    (cursor = Metadata::deserialize(cx, cursor)) &&
+    (cursor = Metadata::deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializeVector(cx, cursor, &asmJSGlobals)) &&
-    (cursor = DeserializePodVector(cx, cursor, &asmJSImports)) &&
-    (cursor = DeserializePodVector(cx, cursor, &asmJSExports)) &&
-    (cursor = DeserializeVector(cx, cursor, &asmJSFuncNames)) &&
-    (cursor = globalArgumentName.deserialize(cx, cursor)) &&
-    (cursor = importArgumentName.deserialize(cx, cursor)) &&
-    (cursor = bufferArgumentName.deserialize(cx, cursor));
+    (cursor = DeserializeVector(cursor, &asmJSGlobals)) &&
+    (cursor = DeserializePodVector(cursor, &asmJSImports)) &&
+    (cursor = DeserializePodVector(cursor, &asmJSExports)) &&
+    (cursor = DeserializeVector(cursor, &asmJSFuncNames)) &&
+    (cursor = globalArgumentName.deserialize(cursor)) &&
+    (cursor = importArgumentName.deserialize(cursor)) &&
+    (cursor = bufferArgumentName.deserialize(cursor));
     cacheResult = CacheResult::Hit;
     return cursor;
 }
@@ -8216,7 +8216,7 @@ class ModuleCharsForLookup : ModuleChars
     Vector<char16_t, 0, SystemAllocPolicy> chars_;
 
   public:
-    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor) {
+    const uint8_t* deserialize(const uint8_t* cursor) {
         uint32_t uncompressedSize;
         cursor = ReadScalar<uint32_t>(cursor, &uncompressedSize);
 
@@ -8235,7 +8235,7 @@ class ModuleCharsForLookup : ModuleChars
 
         cursor = ReadScalar<uint32_t>(cursor, &isFunCtor_);
         if (isFunCtor_)
-            cursor = DeserializeVector(cx, cursor, &funCtorArgs_);
+            cursor = DeserializeVector(cursor, &funCtorArgs_);
 
         return cursor;
     }
@@ -8374,14 +8374,14 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     const uint8_t* cursor = entry.memory;
 
     MachineId cachedMachineId;
-    cursor = cachedMachineId.deserialize(cx, cursor);
+    cursor = cachedMachineId.deserialize(cursor);
     if (!cursor)
         return false;
     if (machineId != cachedMachineId)
         return true;
 
     ModuleCharsForLookup moduleChars;
-    cursor = moduleChars.deserialize(cx, cursor);
+    cursor = moduleChars.deserialize(cursor);
     if (!moduleChars.match(parser))
         return true;
 
@@ -8389,9 +8389,11 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     if (!asmJSMetadata)
         return false;
 
-    cursor = Module::deserialize(cx, cursor, module, asmJSMetadata.get());
-    if (!cursor)
+    cursor = Module::deserialize(cursor, module, asmJSMetadata.get());
+    if (!cursor) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     // See AsmJSMetadata comment as well as ModuleValidator::init().
     asmJSMetadata->srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;

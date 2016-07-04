@@ -2328,7 +2328,10 @@ NS_IMETHODIMP
 ServiceWorkerManager::GetDocumentController(nsPIDOMWindowInner* aWindow,
                                             nsISupports** aServiceWorker)
 {
-  MOZ_ASSERT(aWindow);
+  if (NS_WARN_IF(!aWindow)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
   nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
   if (!doc) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;

@@ -79,15 +79,14 @@ SerializeVector(uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>&
 
 template <class T, size_t N>
 static inline const uint8_t*
-DeserializeVector(ExclusiveContext* cx, const uint8_t* cursor,
-                  mozilla::Vector<T, N, SystemAllocPolicy>* vec)
+DeserializeVector(const uint8_t* cursor, mozilla::Vector<T, N, SystemAllocPolicy>* vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
     if (!vec->resize(length))
         return nullptr;
     for (size_t i = 0; i < vec->length(); i++) {
-        if (!(cursor = (*vec)[i].deserialize(cx, cursor)))
+        if (!(cursor = (*vec)[i].deserialize(cursor)))
             return nullptr;
     }
     return cursor;
@@ -123,8 +122,7 @@ SerializePodVector(uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolic
 
 template <class T, size_t N>
 static inline const uint8_t*
-DeserializePodVector(ExclusiveContext* cx, const uint8_t* cursor,
-                     mozilla::Vector<T, N, SystemAllocPolicy>* vec)
+DeserializePodVector(const uint8_t* cursor, mozilla::Vector<T, N, SystemAllocPolicy>* vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -198,9 +196,9 @@ class MachineId
         return cursor;
     }
 
-    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor) {
+    const uint8_t* deserialize(const uint8_t* cursor) {
         (cursor = ReadScalar<uint32_t>(cursor, &cpuId_)) &&
-        (cursor = DeserializePodVector(cx, cursor, &buildId_));
+        (cursor = DeserializePodVector(cursor, &buildId_));
         return cursor;
     }
 

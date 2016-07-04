@@ -9823,9 +9823,6 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
     TimeDuration elapsed = TimeStamp::Now() - timerStart;
     int32_t intElapsed = int32_t(elapsed.ToMilliseconds());
 
-    if (!mDocument->GetRootElement()->IsXULElement() && mIsActive) {
-      Telemetry::Accumulate(Telemetry::HTML_FOREGROUND_REFLOW_MS_2, intElapsed);
-    }
     if (intElapsed > NS_LONG_REFLOW_TIME_MS) {
       Telemetry::Accumulate(Telemetry::LONG_REFLOW_INTERRUPTIBLE,
                             aInterruptible ? 1 : 0);
