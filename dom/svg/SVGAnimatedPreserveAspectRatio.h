@@ -28,7 +28,6 @@ public:
   void Init() {
     mBaseVal.mAlign = SVG_PRESERVEASPECTRATIO_XMIDYMID;
     mBaseVal.mMeetOrSlice = SVG_MEETORSLICE_MEET;
-    mBaseVal.mDefer = false;
     mAnimVal = mBaseVal;
     mIsAnimated = false;
     mIsBaseSet = false;
@@ -46,8 +45,7 @@ public:
       return NS_ERROR_FAILURE;
     }
     SetBaseValue(SVGPreserveAspectRatio(
-                   static_cast<SVGAlign>(aAlign), mBaseVal.GetMeetOrSlice(),
-                   mBaseVal.GetDefer()),
+                   static_cast<SVGAlign>(aAlign), mBaseVal.GetMeetOrSlice()),
                  aSVGElement);
     return NS_OK;
   }
@@ -57,8 +55,7 @@ public:
       return NS_ERROR_FAILURE;
     }
     SetBaseValue(SVGPreserveAspectRatio(
-                   mBaseVal.GetAlign(), static_cast<SVGMeetOrSlice>(aMeetOrSlice),
-                   mBaseVal.GetDefer()),
+                   mBaseVal.GetAlign(), static_cast<SVGMeetOrSlice>(aMeetOrSlice)),
                  aSVGElement);
     return NS_OK;
   }
