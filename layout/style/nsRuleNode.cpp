@@ -9255,8 +9255,8 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
 
     if (pair.mXValue.GetUnit() == eCSSUnit_URL) {
       aResult.SetType(eStyleSVGPaintType_Server);
-      aResult.mPaint.mPaintServer = pair.mXValue.GetURLValue();
-      NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+      aResult.mPaint.mPaintServer = new FragmentOrURL();
+      aResult.mPaint.mPaintServer->SetValue(&pair.mXValue);
     } else if (pair.mXValue.GetUnit() == eCSSUnit_Enumerated) {
 
       switch (pair.mXValue.GetIntValue()) {
