@@ -261,6 +261,13 @@ nsWebShellWindow::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y)
     pm->AdjustPopupsOnWindowChange(window);
   }
 
+  // If the window has moved, don't allow popup retargeting during this
+  // mousedown-mousemoves-moseup session
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell) {
+    presShell->SetPreventPopupRetargeting(true);
+  }
+
   // Notify all tabs that the widget moved.
   if (mDocShell && mDocShell->GetWindow()) {
     nsCOMPtr<EventTarget> eventTarget = mDocShell->GetWindow()->GetTopWindowRoot();
@@ -283,6 +290,14 @@ nsWebShellWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHei
   if (shellAsWin) {
     shellAsWin->SetPositionAndSize(0, 0, aWidth, aHeight, 0);
   }
+
+  // If the window has resized, don't allow popup retargeting during this
+  // mousedown-mousemoves-moseup session
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell) {
+    presShell->SetPreventPopupRetargeting(true);
+  }
+
   // Persist size, but not immediately, in case this OS is firing
   // repeated size events as the user drags the sizing handle
   if (!IsLocked())
