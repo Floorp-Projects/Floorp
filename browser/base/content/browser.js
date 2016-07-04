@@ -2252,6 +2252,26 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     let inTab = Services.prefs.getBoolPref("view_source.tab");
     if (inTab) {
       let tabBrowser = gBrowser;
+      let forceNotRemote = false;
+      if (!tabBrowser) {
+        if (!args.browser) {
+          throw new Error("BrowserViewSourceOfDocument should be passed the " +
+                          "subject browser if called from a window without " +
+                          "gBrowser defined.");
+        }
+        forceNotRemote = !args.browser.isRemoteBrowser;
+      } else {
+        // Some internal URLs (such as specific chrome: and about: URLs that are
+        // not yet remote ready) cannot be loaded in a remote browser.  View
+        // source in tab expects the new view source browser's remoteness to match
+        // that of the original URL, so disable remoteness if necessary for this
+        // URL.
+        let contentProcess = Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
+        forceNotRemote =
+          gMultiProcessBrowser &&
+          !E10SUtils.canLoadURIInProcess(args.URL, contentProcess)
+      }
+
       // In the case of sidebars and chat windows, gBrowser is defined but null,
       // because no #content element exists.  For these cases, we need to find
       // the most recent browser window.
@@ -2261,15 +2281,7 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
         let browserWindow = RecentWindow.getMostRecentBrowserWindow();
         tabBrowser = browserWindow.gBrowser;
       }
-      // Some internal URLs (such as specific chrome: and about: URLs that are
-      // not yet remote ready) cannot be loaded in a remote browser.  View
-      // source in tab expects the new view source browser's remoteness to match
-      // that of the original URL, so disable remoteness if necessary for this
-      // URL.
-      let contentProcess = Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-      let forceNotRemote =
-        gMultiProcessBrowser &&
-        !E10SUtils.canLoadURIInProcess(args.URL, contentProcess);
+
       // `viewSourceInBrowser` will load the source content from the page
       // descriptor for the tab (when possible) or fallback to the network if
       // that fails.  Either way, the view source module will manage the tab's
