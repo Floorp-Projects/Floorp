@@ -163,8 +163,12 @@ context.
 Taskgraph JSON Format
 ---------------------
 
-Each task in the graph is represented as a JSON object.  The output is suitable
-for processing with the `jq <https://stedolan.github.io/jq/>`_ utility.
+Task graphs -- both the graph artifacts produced by the decision task and those
+output by the ``--json`` option to the ``mach taskgraph`` commands -- are JSON
+objects, keyed by label, or for optimized task graphs, by taskId.  For
+convenience, the decision task also writes out ``label-to-taskid.json``
+containing a mapping from label to taskId.  Each task in the graph is
+represented as a JSON object.
 
 Each task has the following properties:
 
@@ -202,7 +206,11 @@ in the content:
   array is populated with the full list of dependency taskIds.  All task
   references are resolved in the optimized graph.
 
-The graph artifacts produced by the decision task are JSON objects, keyed by
-label (``full-task-graph.json`` and ``target-tasks``) or by taskId
-(``task-graph.json``).  For convenience, the decision task also writes out
-``label-to-taskid.json`` containing a mapping from label to taskId.
+The output of the ``mach taskgraph`` commands are suitable for processing with
+the `jq <https://stedolan.github.io/jq/>`_ utility.  For example, to extract all
+tasks' labels and their dependencies:
+
+.. code-block:: shell
+
+    jq 'to_entries | map({label: .value.label, dependencies: .value.dependencies})'
+

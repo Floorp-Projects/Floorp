@@ -37,7 +37,7 @@ class ShowTaskGraphSubCommand(SubCommand):
                             help="include debug-level logging output"),
             CommandArgument('--json', '-J', action="store_const",
                             dest="format", const="json",
-                            help="Output each task in the task graph as a JSON object"),
+                            help="Output task graph as a JSON object"),
             CommandArgument('--labels', '-L', action="store_const",
                             dest="format", const="labels",
                             help="Output the label for each task in the task graph (default)"),
@@ -199,10 +199,8 @@ class MachCommands(MachCommandBase):
             print(label)
 
     def show_taskgraph_json(self, taskgraph):
-        # JSON output is a sequence of JSON objects, rather than a single object, so
-        # disassemble the dictionary
-        for task in taskgraph.to_json().itervalues():
-            print(json.dumps(task))
+        print(json.dumps(taskgraph.to_json(),
+              sort_keys=True, indent=2, separators=(',', ': ')))
 
 
 @CommandProvider
