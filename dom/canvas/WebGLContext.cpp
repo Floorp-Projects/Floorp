@@ -1265,6 +1265,7 @@ WebGLContext::UpdateLastUseIndex()
 }
 
 static uint8_t gWebGLLayerUserData;
+static uint8_t gWebGLMirrorLayerUserData;
 
 class WebGLContextUserData : public LayerUserData
 {
@@ -1307,13 +1308,14 @@ private:
 already_AddRefed<layers::Layer>
 WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
                              Layer* oldLayer,
-                             LayerManager* manager)
+                             LayerManager* manager,
+                             bool aMirror /*= false*/)
 {
     if (IsContextLost())
         return nullptr;
 
     if (!mResetLayer && oldLayer &&
-        oldLayer->HasUserData(&gWebGLLayerUserData)) {
+        oldLayer->HasUserData(aMirror ? &gWebGLMirrorLayerUserData : &gWebGLLayerUserData)) {
         RefPtr<layers::Layer> ret = oldLayer;
         return ret.forget();
     }
@@ -1325,7 +1327,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
     }
 
     WebGLContextUserData* userData = nullptr;
-    if (builder->IsPaintingToWindow() && mCanvasElement) {
+    if (builder->IsPaintingToWindow() && mCanvasElement && !aMirror) {
         // Make the layer tell us whenever a transaction finishes (including
         // the current transaction), so we can clear our invalidation state and
         // start invalidating again. We need to do this for the layer that is
@@ -1345,13 +1347,14 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
             WebGLContextUserData::PreTransactionCallback, userData);
     }
 
-    canvasLayer->SetUserData(&gWebGLLayerUserData, userData);
+    canvasLayer->SetUserData(aMirror ? &gWebGLMirrorLayerUserData : &gWebGLLayerUserData, userData);
 
     CanvasLayer::Data data;
     data.mGLContext = gl;
     data.mSize = nsIntSize(mWidth, mHeight);
     data.mHasAlpha = gl->Caps().alpha;
     data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
+    data.mIsMirror = aMirror;
 
     canvasLayer->Initialize(data);
     uint32_t flags = gl->Caps().alpha ? 0 : Layer::CONTENT_OPAQUE;
