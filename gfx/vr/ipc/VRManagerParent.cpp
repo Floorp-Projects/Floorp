@@ -246,6 +246,14 @@ VRManagerParent::RecvRefreshDisplays()
 }
 
 bool
+VRManagerParent::RecvGetDisplays(nsTArray<VRDisplayInfo> *aDisplays)
+{
+  VRManager* vm = VRManager::Get();
+  vm->GetVRDisplayInfo(*aDisplays);
+  return true;
+}
+
+bool
 VRManagerParent::RecvResetSensor(const uint32_t& aDisplayID)
 {
   VRManager* vm = VRManager::Get();
