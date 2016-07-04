@@ -1305,6 +1305,8 @@ BookmarksStore.prototype = {
 };
 
 function BookmarksTracker(name, engine) {
+  this._batchDepth = 0;
+  this._batchSawScoreIncrement = false;
   Tracker.call(this, name, engine);
 
   Svc.Obs.add("places-shutdown", this);
@@ -1368,9 +1370,14 @@ BookmarksTracker.prototype = {
       this._upScore();
   },
 
-  /* Every add/remove/change will trigger a sync for MULTI_DEVICE. */
+  /* Every add/remove/change will trigger a sync for MULTI_DEVICE (except in
+     a batch operation, where we do it at the end of the batch) */
   _upScore: function BMT__upScore() {
-    this.score += SCORE_INCREMENT_XLARGE;
+    if (this._batchDepth == 0) {
+      this.score += SCORE_INCREMENT_XLARGE;
+    } else {
+      this._batchSawScoreIncrement = true;
+    }
   },
 
   /**
@@ -1523,7 +1530,13 @@ BookmarksTracker.prototype = {
     PlacesUtils.annotations.removeItemAnnotation(itemId, BookmarkAnnos.PARENT_ANNO);
   },
 
-  onBeginUpdateBatch: function () {},
-  onEndUpdateBatch: function () {},
+  onBeginUpdateBatch: function () {
+    ++this._batchDepth;
+  },
+  onEndUpdateBatch: function () {
+    if (--this._batchDepth === 0 && this._batchSawScoreIncrement) {
+      this.score += SCORE_INCREMENT_XLARGE;
+    }
+  },
   onItemVisited: function () {}
 };
