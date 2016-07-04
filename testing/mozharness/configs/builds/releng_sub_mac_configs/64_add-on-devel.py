@@ -17,7 +17,7 @@ config = {
     'publish_nightly_en_US_routes': False,
     'build_type': 'add-on-devel',
     'platform_supports_post_upload_to_latest': False,
-    'objdir': 'obj-firefox',
+    'objdir': 'obj-add-on-devel',
     'enable_signing': False,
     'enable_talos_sendchange': False,
     #### 64 bit build specific #####
@@ -25,7 +25,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_AUTOMATION': '1',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': 'obj-add-on-devel',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
