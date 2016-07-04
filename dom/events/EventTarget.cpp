@@ -58,7 +58,7 @@ EventTarget::SetEventHandler(nsIAtom* aType, const nsAString& aTypeString,
 }
 
 bool
-EventTarget::HasApzAwareListeners() const
+EventTarget::IsApzAware() const
 {
   EventListenerManager* elm = GetExistingListenerManager();
   return elm && elm->HasApzAwareListeners();

@@ -12,7 +12,7 @@
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
 
-#include "vm/Runtime-inl.h"
+#include "vm/Caches-inl.h"
 
 namespace js {
 

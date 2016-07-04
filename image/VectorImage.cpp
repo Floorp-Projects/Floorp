@@ -27,6 +27,7 @@
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
 #include "nsWindowMemoryReporter.h"
 #include "ImageRegion.h"
+#include "ISurfaceProvider.h"
 #include "LookupResult.h"
 #include "Orientation.h"
 #include "SVGDocumentWrapper.h"
@@ -919,11 +920,11 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   // invalidation. If this image is locked, any surfaces that are still useful
   // will become locked again when Draw touches them, and the remainder will
   // eventually expire.
-  SurfaceCache::UnlockSurfaces(ImageKey(this));
+  SurfaceCache::UnlockEntries(ImageKey(this));
 
   // Try to create an imgFrame, initializing the surface it contains by drawing
   // our gfxDrawable into it. (We use FILTER_NEAREST since we never scale here.)
-  RefPtr<imgFrame> frame = new imgFrame;
+  NotNull<RefPtr<imgFrame>> frame = WrapNotNull(new imgFrame);
   nsresult rv =
     frame->InitWithDrawable(svgDrawable, aParams.size,
                             SurfaceFormat::B8G8R8A8,
@@ -944,7 +945,9 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   }
 
   // Attempt to cache the frame.
-  SurfaceCache::Insert(frame, ImageKey(this),
+  NotNull<RefPtr<ISurfaceProvider>> provider =
+    WrapNotNull(new SimpleSurfaceProvider(frame));
+  SurfaceCache::Insert(provider, ImageKey(this),
                        VectorSurfaceKey(aParams.size,
                                         aParams.svgContext,
                                         aParams.animationTime));
