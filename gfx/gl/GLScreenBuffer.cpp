@@ -72,23 +72,33 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
                               const RefPtr<layers::CompositableForwarder>& forwarder,
                               const layers::TextureFlags& flags)
 {
+  return CreateFactory(gl, caps, forwarder, forwarder->GetCompositorBackendType(), flags);
+}
+
+/* static */ UniquePtr<SurfaceFactory>
+GLScreenBuffer::CreateFactory(GLContext* gl,
+                              const SurfaceCaps& caps,
+                              const RefPtr<layers::ClientIPCAllocator>& allocator,
+                              const mozilla::layers::LayersBackend backend,
+                              const layers::TextureFlags& flags)
+{
     UniquePtr<SurfaceFactory> factory = nullptr;
     if (!gfxPrefs::WebGLForceLayersReadback()) {
-        switch (forwarder->GetCompositorBackendType()) {
+        switch (backend) {
             case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
 #if defined(XP_MACOSX)
-                factory = SurfaceFactory_IOSurface::Create(gl, caps, forwarder, flags);
+                factory = SurfaceFactory_IOSurface::Create(gl, caps, allocator, flags);
 #elif defined(MOZ_WIDGET_GONK)
-                factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, forwarder, flags);
+                factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, allocator, flags);
 #elif defined(GL_PROVIDER_GLX)
                 if (sGLXLibrary.UseTextureFromPixmap())
-                  factory = SurfaceFactory_GLXDrawable::Create(gl, caps, forwarder, flags);
+                  factory = SurfaceFactory_GLXDrawable::Create(gl, caps, allocator, flags);
 #elif defined(MOZ_WIDGET_UIKIT)
-                factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, forwarder, mFlags);
+                factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, allocator, mFlags);
 #else
                 if (gl->GetContextType() == GLContextType::EGL) {
                     if (XRE_IsParentProcess()) {
-                        factory = SurfaceFactory_EGLImage::Create(gl, caps, forwarder, flags);
+                        factory = SurfaceFactory_EGLImage::Create(gl, caps, allocator, flags);
                     }
                 }
 #endif
@@ -102,11 +112,11 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
                     (gl->IsWARP() == gfxWindowsPlatform::GetPlatform()->IsWARP()) &&
                     gfxWindowsPlatform::GetPlatform()->CompositorD3D11TextureSharingWorks())
                 {
-                    factory = SurfaceFactory_ANGLEShareHandle::Create(gl, caps, forwarder, flags);
+                    factory = SurfaceFactory_ANGLEShareHandle::Create(gl, caps, allocator, flags);
                 }
 
                 if (!factory && gfxPrefs::WebGLDXGLEnabled()) {
-                  factory = SurfaceFactory_D3D11Interop::Create(gl, caps, forwarder, flags);
+                  factory = SurfaceFactory_D3D11Interop::Create(gl, caps, allocator, flags);
                 }
 #endif
               break;
@@ -117,7 +127,7 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
 
 #ifdef GL_PROVIDER_GLX
         if (!factory && sGLXLibrary.UseTextureFromPixmap()) {
-            factory = SurfaceFactory_GLXDrawable::Create(gl, caps, forwarder, flags);
+            factory = SurfaceFactory_GLXDrawable::Create(gl, caps, allocator, flags);
         }
 #endif
     }
