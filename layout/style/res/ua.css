@@ -76,23 +76,23 @@
 /* Ruby */
 *|*::-moz-ruby {
   display: ruby;
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 *|*::-moz-ruby-base {
   display: ruby-base;
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 *|*::-moz-ruby-text {
   display: ruby-text;
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 *|*::-moz-ruby-base-container {
   display: ruby-base-container;
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 *|*::-moz-ruby-text-container {
   display: ruby-text-container;
-  unicode-bidi: -moz-isolate;
+  unicode-bidi: isolate;
 }
 
 /* Lists */

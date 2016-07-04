@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <rect width="100" height="100" fill="blue"/>
+  <image xlink:href="defer-unsupported-1-helper.svg" width="200" height="100"
+         preserveAspectRatio="defer xMinYMin"/>
+</svg>
