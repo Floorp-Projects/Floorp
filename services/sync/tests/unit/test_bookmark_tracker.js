@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-sync/bookmark_utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
@@ -109,6 +110,62 @@ add_task(function* test_tracking() {
     _("Clean up.");
     yield cleanup();
   }
+});
+
+add_task(function* test_batch_tracking() {
+  _("Test tracker does the correct thing during and after a places 'batch'");
+
+  yield startTracking();
+
+  PlacesUtils.bookmarks.runInBatchMode({
+    runBatched: function() {
+      let folder = PlacesUtils.bookmarks.createFolder(
+        PlacesUtils.bookmarks.bookmarksMenuFolder,
+        "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
+      // We should be tracking the new folder and its parent (and need to jump
+      // through blocking hoops...)
+      Async.promiseSpinningly(Task.spawn(verifyTrackedCount(2)));
+      // But not have bumped the score.
+      do_check_eq(tracker.score, 0);
+    }
+  }, null);
+
+  // Out of batch mode - tracker should be the same, but score should be up.
+  yield verifyTrackedCount(2);
+  do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+  yield cleanup();
+});
+
+add_task(function* test_nested_batch_tracking() {
+  _("Test tracker does the correct thing if a places 'batch' is nested");
+
+  yield startTracking();
+
+  PlacesUtils.bookmarks.runInBatchMode({
+    runBatched: function() {
+
+      PlacesUtils.bookmarks.runInBatchMode({
+        runBatched: function() {
+          let folder = PlacesUtils.bookmarks.createFolder(
+            PlacesUtils.bookmarks.bookmarksMenuFolder,
+            "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
+          // We should be tracking the new folder and its parent (and need to jump
+          // through blocking hoops...)
+          Async.promiseSpinningly(Task.spawn(verifyTrackedCount(2)));
+          // But not have bumped the score.
+          do_check_eq(tracker.score, 0);
+        }
+      }, null);
+      _("inner batch complete.");
+      // should still not have a score as the outer batch is pending.
+      do_check_eq(tracker.score, 0);
+    }
+  }, null);
+
+  // Out of both batches - tracker should be the same, but score should be up.
+  yield verifyTrackedCount(2);
+  do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+  yield cleanup();
 });
 
 add_task(function* test_onItemAdded() {
@@ -981,13 +1038,13 @@ add_task(function* test_onItemMoved_setItemIndex() {
     _("Execute the sort folder transaction");
     txn.doTransaction();
     yield verifyTrackedItems([folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
     yield resetTracker();
 
     _("Undo the sort folder transaction");
     txn.undoTransaction();
     yield verifyTrackedItems([folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
