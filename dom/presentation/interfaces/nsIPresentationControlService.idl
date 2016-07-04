@@ -65,19 +65,13 @@ interface nsIPresentationControlService: nsISupports
   void startServer([optional] in uint16_t aPort);
 
   /**
-   * Request session to designated remote presentation control receiver.
+   * Request connection to designated remote presentation control receiver.
    * @param   aDeviceInfo
    *          The remtoe device info for establish connection.
-   * @param   aUrl
-   *          The URL requested to open by remote device.
-   * @param   aPresentationId
-   *          The Id for representing this session.
    * @returns The control channel for this session.
    * @throws  NS_ERROR_FAILURE if the Id hasn't been inited.
    */
-  nsIPresentationControlChannel requestSession(in nsITCPDeviceInfo aDeviceInfo,
-                                               in DOMString aUrl,
-                                               in DOMString aPresentationId);
+  nsIPresentationControlChannel connect(in nsITCPDeviceInfo aDeviceInfo);
 
   /**
    * Check the compatibility to remote presentation control server.

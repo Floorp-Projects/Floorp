@@ -425,11 +425,9 @@ function handleSessionRequest() {
 
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
-    requestSession: function(deviceInfo, url, presentationId) {
+    connect: function(deviceInfo) {
       this.request = {
         deviceInfo: deviceInfo,
-        url: url,
-        presentationId: presentationId,
       };
       return {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
@@ -455,13 +453,11 @@ function handleSessionRequest() {
 
   provider.listener = listener;
 
-  let controlChannel = listener.device.establishControlChannel(testUrl, testPresentationId);
+  let controlChannel = listener.device.establishControlChannel();
 
   Assert.equal(mockServerObj.request.deviceInfo.id, mockDevice.host);
   Assert.equal(mockServerObj.request.deviceInfo.address, mockDevice.host);
   Assert.equal(mockServerObj.request.deviceInfo.port, mockDevice.port);
-  Assert.equal(mockServerObj.request.url, testUrl);
-  Assert.equal(mockServerObj.request.presentationId, testPresentationId);
   Assert.equal(mockServerObj.id, testDeviceName);
 
   provider.listener = null;

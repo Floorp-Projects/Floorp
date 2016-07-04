@@ -314,10 +314,8 @@ MulticastDNSDeviceProvider::StopDiscovery(nsresult aReason)
 }
 
 nsresult
-MulticastDNSDeviceProvider::RequestSession(Device* aDevice,
-                                           const nsAString& aUrl,
-                                           const nsAString& aPresentationId,
-                                           nsIPresentationControlChannel** aRetVal)
+MulticastDNSDeviceProvider::Connect(Device* aDevice,
+                                    nsIPresentationControlChannel** aRetVal)
 {
   MOZ_ASSERT(aDevice);
   MOZ_ASSERT(mPresentationService);
@@ -326,7 +324,7 @@ MulticastDNSDeviceProvider::RequestSession(Device* aDevice,
                                                        aDevice->Address(),
                                                        aDevice->Port());
 
-  return mPresentationService->RequestSession(deviceInfo, aUrl, aPresentationId, aRetVal);
+  return mPresentationService->Connect(deviceInfo, aRetVal);
 }
 
 bool
@@ -1041,15 +1039,14 @@ MulticastDNSDeviceProvider::Device::GetType(nsACString& aType)
 }
 
 NS_IMETHODIMP
-MulticastDNSDeviceProvider::Device::EstablishControlChannel(const nsAString& aUrl,
-                                                            const nsAString& aPresentationId,
-                                                            nsIPresentationControlChannel** aRetVal)
+MulticastDNSDeviceProvider::Device::EstablishControlChannel(
+                                        nsIPresentationControlChannel** aRetVal)
 {
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->RequestSession(this, aUrl, aPresentationId, aRetVal);
+  return mProvider->Connect(this, aRetVal);
 }
 
 NS_IMETHODIMP

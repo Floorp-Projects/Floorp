@@ -183,11 +183,14 @@ const mockControlChannelOfSender = {
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .onAnswer(answer);
   },
-  close: function(reason) {
+  launch: function(presentationId, url) {
+    sendAsyncMessage('sender-launch', url);
+  },
+  disconnect: function(reason) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyClosed(reason);
-    mockControlChannelOfReceiver.close();
+    mockControlChannelOfReceiver.disconnect();
   }
 };
 
@@ -202,12 +205,21 @@ const mockControlChannelOfReceiver = {
       debug('set listener for mockControlChannelOfReceiver with null');
     }
     this._listener = listener;
+
+    if (this._pendingOpened) {
+      this._pendingOpened = false;
+      this.notifyOpened();
+    }
   },
   get listener() {
     return this._listener;
   },
   notifyOpened: function() {
     // do nothing
+    if (!this._listener) {
+      this._pendingOpened = true;
+      return;
+    }
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyOpened();
@@ -223,7 +235,7 @@ const mockControlChannelOfReceiver = {
         .notifyTransportReady();
     sendAsyncMessage('answer-sent');
   },
-  close: function(reason) {
+  disconnect: function(reason) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .notifyClosed(reason);
