@@ -409,6 +409,34 @@ private:
   NS_IMETHOD Run() override;
 };
 
+// This runnable is an helper class for dispatching something from a worker
+// thread to the main-thread and back to the worker-thread. During this
+// operation, this class will keep the worker alive.
+class WorkerProxyToMainThreadRunnable : public Runnable
+{
+protected:
+  explicit WorkerProxyToMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
+
+  virtual ~WorkerProxyToMainThreadRunnable();
+
+  // First this method is called on the main-thread.
+  virtual void RunOnMainThread() = 0;
+
+  // After this second method is called on the worker-thread.
+  virtual void RunBackOnWorkerThread() = 0;
+
+public:
+  bool Dispatch();
+
+private:
+  NS_IMETHOD Run() override;
+
+  void PostDispatchOnMainThread();
+
+protected:
+  WorkerPrivate* mWorkerPrivate;
+};
+
 // Class for checking API exposure.  This totally violates the "MUST" in the
 // comments on WorkerMainThreadRunnable::Dispatch, because API exposure checks
 // can't throw.  Maybe we should change it so they _could_ throw.  But for now
