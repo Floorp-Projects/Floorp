@@ -3269,24 +3269,6 @@
     "n_values": 6,
     "description": "Network identification (0=None, 1=New, 2=Same)"
   },
-  "IDLE_NOTIFY_BACK_MS": {
-    "alert_emails": ["froydnj@mozilla.com"],
-    "bug_numbers": [731004],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 10,
-    "description": "Time spent checking for and notifying listeners that the user is back (ms)"
-  },
-  "IDLE_NOTIFY_BACK_LISTENERS": {
-    "alert_emails": ["froydnj@mozilla.com"],
-    "bug_numbers": [731004],
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 20,
-    "description": "Number of listeners notified that the user is back"
-  },
   "IDLE_NOTIFY_IDLE_MS": {
     "alert_emails": ["froydnj@mozilla.com"],
     "bug_numbers": [731004],
@@ -3295,15 +3277,6 @@
     "high": 5000,
     "n_buckets": 10,
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
-  },
-  "IDLE_NOTIFY_IDLE_LISTENERS": {
-    "alert_emails": ["froydnj@mozilla.com"],
-    "bug_numbers": [731004],
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 20,
-    "description": "Number of listeners notified that the user is idle"
   },
   "URLCLASSIFIER_LOOKUP_TIME": {
     "expires_in_version": "never",
