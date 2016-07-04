@@ -1,0 +1,11 @@
+<Application xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+  <VisualElements
+      DisplayName='Mozilla Firefox'
+      Logo='VisualElements\VisualElements_150.png'
+      SmallLogo='VisualElements\VisualElements_70.png'
+      ForegroundText='light'
+      BackgroundColor='#0996f8'/>
+      <DefaultTile ShowName='allLogos'/>
+      <SplashScreen Image='DummyFileNameRequiredByWindows.png'/>
+  </VisualElements>
+</Application>

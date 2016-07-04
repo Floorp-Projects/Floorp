@@ -657,7 +657,7 @@ JSTerm.prototype = {
       }
     } else {
       this.sidebar.once("variablesview-ready", onTabReady);
-      this.sidebar.addTab("variablesview", VARIABLES_VIEW_URL, true);
+      this.sidebar.addTab("variablesview", VARIABLES_VIEW_URL, {selected: true});
     }
 
     return deferred.promise;
