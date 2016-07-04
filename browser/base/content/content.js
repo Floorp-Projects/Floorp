@@ -230,6 +230,7 @@ const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE         = SEC_ERROR_BASE + 30;
 const SEC_ERROR_OCSP_FUTURE_RESPONSE               = SEC_ERROR_BASE + 131;
 const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
+const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
 
 const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
 
@@ -272,10 +273,10 @@ var AboutNetAndCertErrorListener = {
   onCertErrorDetails(msg) {
     let div = content.document.getElementById("certificateErrorText");
     div.textContent = msg.data.info;
+    let learnMoreLink = content.document.getElementById("learnMoreLink");
 
     switch (msg.data.code) {
       case SEC_ERROR_UNKNOWN_ISSUER:
-        let learnMoreLink = content.document.getElementById("learnMoreLink");
         learnMoreLink.href = "https://support.mozilla.org/kb/troubleshoot-SEC_ERROR_UNKNOWN_ISSUER";
         break;
 
@@ -286,6 +287,7 @@ var AboutNetAndCertErrorListener = {
       case SEC_ERROR_OCSP_FUTURE_RESPONSE:
       case SEC_ERROR_OCSP_OLD_RESPONSE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
+      case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
         // use blocklist stats if available
         if (Services.prefs.getPrefType(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS)) {
@@ -311,7 +313,8 @@ var AboutNetAndCertErrorListener = {
               .style.display = "block";
           }
         }
-
+        let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "time-errors";
+        learnMoreLink.setAttribute("href", url);
         break;
     }
   },
