@@ -121,7 +121,7 @@ PluginContent.prototype = {
   },
 
   observe: function observe(aSubject, aTopic, aData) {
-    let pluginTag = aSubject.QueryInterface(Ci.nsIPluginTag);
+    let pluginTag = aSubject;
     if (aTopic == "Plugin::HiddenPluginTouched") {
       this._showClickToPlayNotification(pluginTag, false);
     } else {
@@ -207,7 +207,7 @@ PluginContent.prototype = {
            };
   },
 
-  _getPluginInfoForTag: function (pluginTag, tagMimetype) {
+  _getPluginInfoForTag: function (pluginTag, tagMimetype, fallbackType) {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
     let pluginName = gNavigatorBundle.GetStringFromName("pluginInfo.unknownPlugin");
@@ -241,7 +241,7 @@ PluginContent.prototype = {
              pluginName: pluginName,
              pluginTag: pluginTag,
              permissionString: permissionString,
-             fallbackType: null,
+             fallbackType: fallbackType,
              blocklistState: blocklistState,
            };
   },
@@ -762,13 +762,7 @@ PluginContent.prototype = {
     let location = this.content.document.location.href;
 
     for (let p of plugins) {
-      let pluginInfo;
-      if (p instanceof Ci.nsIPluginTag) {
-        let mimeType = p.getMimeTypes() > 0 ? p.getMimeTypes()[0] : null;
-        pluginInfo = this._getPluginInfoForTag(p, mimeType);
-      } else {
-        pluginInfo = this._getPluginInfo(p);
-      }
+      let pluginInfo = this._getPluginInfo(p);
       if (pluginInfo.permissionString === null) {
         Cu.reportError("No permission string for active plugin.");
         continue;
