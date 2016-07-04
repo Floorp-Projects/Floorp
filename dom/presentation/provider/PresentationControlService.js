@@ -1,12 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* jshint esnext:true, globalstrict:true, moz:true, undef:true, unused:true */
+/* globals Components, dump */
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+/* globals XPCOMUtils */
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+/* globals Services */
 Cu.import("resource://gre/modules/Services.jsm");
+/* globals NetUtil */
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const DEBUG = Services.prefs.getBoolPref("dom.presentation.tcp_server.debug");
@@ -36,7 +41,7 @@ PresentationControlService.prototype = {
 
   startServer: function(aPort) {
     if (this._isServiceInit()) {
-      DEBUG && log("PresentationControlService - server socket has been initialized");
+      DEBUG && log("PresentationControlService - server socket has been initialized");  // jshint ignore:line
       throw Cr.NS_ERROR_FAILURE;
     }
 
@@ -50,7 +55,7 @@ PresentationControlService.prototype = {
                          .createInstance(Ci.nsIServerSocket);
 
     if (!this._serverSocket) {
-      DEBUG && log("PresentationControlService - create server socket fail.");
+      DEBUG && log("PresentationControlService - create server socket fail."); // jshint ignore:line
       throw Cr.NS_ERROR_FAILURE;
     }
 
@@ -59,13 +64,13 @@ PresentationControlService.prototype = {
       this._serverSocket.asyncListen(this);
     } catch (e) {
       // NS_ERROR_SOCKET_ADDRESS_IN_USE
-      DEBUG && log("PresentationControlService - init server socket fail: " + e);
+      DEBUG && log("PresentationControlService - init server socket fail: " + e); // jshint ignore:line
       throw Cr.NS_ERROR_FAILURE;
     }
 
     this._port = this._serverSocket.port;
 
-    DEBUG && log("PresentationControlService - service start on port: " + this._port);
+    DEBUG && log("PresentationControlService - service start on port: " + this._port); // jshint ignore:line
 
     // Monitor network interface change to restart server socket.
     // Only B2G has nsINetworkManager
@@ -99,14 +104,13 @@ PresentationControlService.prototype = {
 
   requestSession: function(aDeviceInfo, aUrl, aPresentationId) {
     if (!this.id) {
-      DEBUG && log("PresentationControlService - Id has not initialized; requestSession fails");
+      DEBUG && log("PresentationControlService - Id has not initialized; requestSession fails"); // jshint ignore:line
       return null;
     }
-    DEBUG && log("PresentationControlService - requestSession to " + aDeviceInfo.id
-                 + ": " + aUrl + ", " + aPresentationId);
+    DEBUG && log("PresentationControlService - requestSession to " + aDeviceInfo.id); // jshint ignore:line
 
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
-                .getService(Ci.nsISocketTransportService)
+                .getService(Ci.nsISocketTransportService);
 
     let socketTransport;
     try {
@@ -116,7 +120,7 @@ PresentationControlService.prototype = {
                                             aDeviceInfo.port,
                                             null);
     } catch (e) {
-      DEBUG && log("PresentationControlService - createTransport throws: " + e);
+      DEBUG && log("PresentationControlService - createTransport throws: " + e);  // jshint ignore:line
       // Pop the exception to |TCPDevice.establishControlChannel|
       throw Cr.NS_ERROR_FAILURE;
     }
@@ -131,11 +135,11 @@ PresentationControlService.prototype = {
   responseSession: function(aDeviceInfo, aSocketTransport) {
     if (!this._isServiceInit()) {
       DEBUG && log("PresentationControlService - should never receive remote " +
-                   "session request before server socket initialization");
+                   "session request before server socket initialization"); // jshint ignore:line
       return null;
     }
-    DEBUG && log("PresentationControlService - responseSession to "
-                 + JSON.stringify(aDeviceInfo));
+    DEBUG && log("PresentationControlService - responseSession to " +
+                 JSON.stringify(aDeviceInfo)); // jshint ignore:line
     return new TCPControlChannel(this,
                                  aSocketTransport,
                                  aDeviceInfo,
@@ -147,8 +151,8 @@ PresentationControlService.prototype = {
 
   // Triggered by TCPControlChannel
   onSessionRequest: function(aDeviceInfo, aUrl, aPresentationId, aControlChannel) {
-    DEBUG && log("PresentationControlService - onSessionRequest: "
-                 + aDeviceInfo.address + ":" + aDeviceInfo.port);
+    DEBUG && log("PresentationControlService - onSessionRequest: " +
+                 aDeviceInfo.address + ":" + aDeviceInfo.port); // jshint ignore:line
     this.listener.onSessionRequest(aDeviceInfo,
                                    aUrl,
                                    aPresentationId,
@@ -158,8 +162,8 @@ PresentationControlService.prototype = {
 
   // nsIServerSocketListener (Triggered by nsIServerSocket.init)
   onSocketAccepted: function(aServerSocket, aClientSocket) {
-    DEBUG && log("PresentationControlService - onSocketAccepted: "
-                 + aClientSocket.host + ":" + aClientSocket.port);
+    DEBUG && log("PresentationControlService - onSocketAccepted: " +
+                 aClientSocket.host + ":" + aClientSocket.port); // jshint ignore:line
     let deviceInfo = new TCPDeviceInfo(aClientSocket.host, aClientSocket.port);
     this.holdControlChannel(this.responseSession(deviceInfo, aClientSocket));
   },
@@ -177,13 +181,13 @@ PresentationControlService.prototype = {
 
   // nsIServerSocketListener (Triggered by nsIServerSocket.init)
   onStopListening: function(aServerSocket, aStatus) {
-    DEBUG && log("PresentationControlService - onStopListening: " + aStatus);
+    DEBUG && log("PresentationControlService - onStopListening: " + aStatus); // jshint ignore:line
   },
 
   close: function() {
-    DEBUG && log("PresentationControlService - close");
+    DEBUG && log("PresentationControlService - close"); // jshint ignore:line
     if (this._isServiceInit()) {
-      DEBUG && log("PresentationControlService - close server socket");
+      DEBUG && log("PresentationControlService - close server socket"); // jshint ignore:line
       this._serverSocket.close();
       this._serverSocket = null;
 
@@ -195,11 +199,11 @@ PresentationControlService.prototype = {
 
   // nsIObserver
   observe: function(aSubject, aTopic, aData) {
-    DEBUG && log("PresentationControlService - observe: " + aTopic);
+    DEBUG && log("PresentationControlService - observe: " + aTopic); // jshint ignore:line
     switch (aTopic) {
       case "network-active-changed": {
         if (!aSubject) {
-          DEBUG && log("No active network");
+          DEBUG && log("No active network"); // jshint ignore:line
           return;
         }
 
@@ -214,7 +218,7 @@ PresentationControlService.prototype = {
       }
       case "network:offline-status-changed": {
         if (aData == "offline") {
-          DEBUG && log("network offline");
+          DEBUG && log("network offline"); // jshint ignore:line
           return;
         }
         this._restartServer();
@@ -224,7 +228,7 @@ PresentationControlService.prototype = {
   },
 
   _restartServer: function() {
-    DEBUG && log("PresentationControlService - restart service");
+    DEBUG && log("PresentationControlService - restart service"); // jshint ignore:line
 
     // restart server socket
     if (this._isServiceInit()) {
@@ -237,7 +241,7 @@ PresentationControlService.prototype = {
            this._listener.onPortChange(this._port);
         }
       } catch (e) {
-        DEBUG && log("PresentationControlService - restart service fail: " + e);
+        DEBUG && log("PresentationControlService - restart service fail: " + e); // jshint ignore:line
       }
     }
   },
@@ -322,15 +326,15 @@ function TCPControlChannel(presentationService,
                            presentationId,
                            direction,
                            url) {
-  DEBUG && log("create TCPControlChannel: " + presentationId + " with role: "
-               + direction);
+  DEBUG && log("create TCPControlChannel: " + presentationId + " with role: " +
+               direction); // jshint ignore:line
   this._deviceInfo = deviceInfo;
   this._presentationId = presentationId;
   this._direction = direction;
   this._transport = transport;
   this._url = url;
 
-  this._presentationService =  presentationService;
+  this._presentationService = presentationService;
 
   let currentThread = Services.tm.currentThread;
   transport.setEventSink(this, currentThread);
@@ -362,7 +366,7 @@ TCPControlChannel.prototype = {
 
   _sendMessage: function(aType, aJSONData, aOnThrow) {
     if (!aOnThrow) {
-      aOnThrow = function(e) {throw e.result;}
+      aOnThrow = function(e) {throw e.result;};
     }
 
     if (!aType || !aJSONData) {
@@ -371,12 +375,12 @@ TCPControlChannel.prototype = {
     }
 
     if (!this._connected) {
-      DEBUG && log("TCPControlChannel - send" + aType + " fails");
+      DEBUG && log("TCPControlChannel - send" + aType + " fails"); // jshint ignore:line
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    DEBUG && log("TCPControlChannel - send" + aType + ": "
-                 + JSON.stringify(aJSONData));
+    DEBUG && log("TCPControlChannel - send" + aType + ": " +
+                 JSON.stringify(aJSONData)); // jshint ignore:line
     try {
       this._send(aJSONData);
     } catch (e) {
@@ -427,7 +431,7 @@ TCPControlChannel.prototype = {
   },
   // may throw an exception
   _send: function(aMsg) {
-    DEBUG && log("TCPControlChannel - Send: " + JSON.stringify(aMsg, null, 2));
+    DEBUG && log("TCPControlChannel - Send: " + JSON.stringify(aMsg, null, 2)); // jshint ignore:line
 
     /**
      * XXX In TCP streaming, it is possible that more than one message in one
@@ -440,7 +444,7 @@ TCPControlChannel.prototype = {
     try {
       this._output.write(message, message.length);
     } catch(e) {
-      DEBUG && log("TCPControlChannel - Failed to send message: " + e.name);
+      DEBUG && log("TCPControlChannel - Failed to send message: " + e.name); // jshint ignore:line
       throw e;
     }
   },
@@ -451,16 +455,16 @@ TCPControlChannel.prototype = {
     try {
       aStream.available();
     } catch (e) {
-      DEBUG && log("TCPControlChannel - onInputStreamReady error: " + e.name);
+      DEBUG && log("TCPControlChannel - onInputStreamReady error: " + e.name); // jshint ignore:line
       // NS_ERROR_CONNECTION_REFUSED
       this._listener.notifyClosed(e.result);
     }
   },
 
   // nsITransportEventSink (Triggered by nsISocketTransport.setEventSink)
-  onTransportStatus: function(aTransport, aStatus, aProg, aProgMax) {
-    DEBUG && log("TCPControlChannel - onTransportStatus: "
-                 + aStatus.toString(16) + " with role: " + this._direction);
+  onTransportStatus: function(aTransport, aStatus) {
+    DEBUG && log("TCPControlChannel - onTransportStatus: " + aStatus.toString(16) +
+                 " with role: " + this._direction); // jshint ignore:line
     if (aStatus === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
       this._connected = true;
 
@@ -481,23 +485,23 @@ TCPControlChannel.prototype = {
 
   // nsIRequestObserver (Triggered by nsIInputStreamPump.asyncRead)
   onStartRequest: function() {
-    DEBUG && log("TCPControlChannel - onStartRequest with role: "
-                 + this._direction);
+    DEBUG && log("TCPControlChannel - onStartRequest with role: " +
+                 this._direction); // jshint ignore:line
   },
 
   // nsIRequestObserver (Triggered by nsIInputStreamPump.asyncRead)
   onStopRequest: function(aRequest, aContext, aStatus) {
-    DEBUG && log("TCPControlChannel - onStopRequest: " + aStatus
-                 + " with role: " + this._direction);
     this.close(aStatus);
     this._notifyClosed(aStatus);
+    DEBUG && log("TCPControlChannel - onStopRequest: " + aStatus +
+                 " with role: " + this._direction); // jshint ignore:line
   },
 
   // nsIStreamListener (Triggered by nsIInputStreamPump.asyncRead)
-  onDataAvailable: function(aRequest, aContext, aInputStream, aOffset, aCount) {
+  onDataAvailable: function(aRequest, aContext, aInputStream) {
     let data = NetUtil.readInputStreamToString(aInputStream,
                                                aInputStream.available());
-    DEBUG && log("TCPControlChannel - onDataAvailable: " + data);
+    DEBUG && log("TCPControlChannel - onDataAvailable: " + data); // jshint ignore:line
 
     // Parser of line delimited JSON. Please see |_send| for more informaiton.
     let jsonArray = data.split("\n");
@@ -507,7 +511,7 @@ TCPControlChannel.prototype = {
       try {
         msg = JSON.parse(json);
       } catch (e) {
-        DEBUG && log("TCPSignalingChannel - error in parsing json: " + e);
+        DEBUG && log("TCPSignalingChannel - error in parsing json: " + e); // jshint ignore:line
       }
 
       this._handleMessage(msg);
@@ -515,8 +519,8 @@ TCPControlChannel.prototype = {
   },
 
   _createInputStreamPump: function() {
-    DEBUG && log("TCPControlChannel - create pump with role: "
-                 + this._direction);
+    DEBUG && log("TCPControlChannel - create pump with role: " +
+                 this._direction); // jshint ignore:line
     this._pump = Cc["@mozilla.org/network/input-stream-pump;1"].
                createInstance(Ci.nsIInputStreamPump);
     this._pump.init(this._input, -1, -1, 0, 0, false);
@@ -525,8 +529,6 @@ TCPControlChannel.prototype = {
 
   // Handle command from remote side
   _handleMessage: function(aMsg) {
-    DEBUG && log("TCPControlChannel - handleMessage from "
-                 + JSON.stringify(this._deviceInfo) + ": " + JSON.stringify(aMsg));
     switch (aMsg.type) {
       case "requestSession:Init": {
         this._deviceInfo.id = aMsg.id;
@@ -556,6 +558,8 @@ TCPControlChannel.prototype = {
         break;
       }
     }
+    DEBUG && log("TCPControlChannel - handleMessage from " +
+                 JSON.stringify(this._deviceInfo) + ": " + JSON.stringify(aMsg)); // jshint ignore:line
   },
 
   get listener() {
@@ -563,7 +567,7 @@ TCPControlChannel.prototype = {
   },
 
   set listener(aListener) {
-    DEBUG && log("TCPControlChannel - set listener: " + aListener);
+    DEBUG && log("TCPControlChannel - set listener: " + aListener); // jshint ignore:line
     if (!aListener) {
       this._listener = null;
       return;
@@ -572,28 +576,28 @@ TCPControlChannel.prototype = {
     this._listener = aListener;
     if (this._pendingOpen) {
       this._pendingOpen = false;
-      DEBUG && log("TCPControlChannel - notify pending opened");
+      DEBUG && log("TCPControlChannel - notify pending opened"); // jshint ignore:line
       this._listener.notifyOpened();
     }
 
     if (this._pendingOffer) {
       let offer = this._pendingOffer;
-      DEBUG && log("TCPControlChannel - notify pending offer: "
-                   + JSON.stringify(offer));
+      DEBUG && log("TCPControlChannel - notify pending offer: " +
+                   JSON.stringify(offer)); // jshint ignore:line
       this._listener.onOffer(new ChannelDescription(offer));
       this._pendingOffer = null;
     }
 
     if (this._pendingAnswer) {
       let answer = this._pendingAnswer;
-      DEBUG && log("TCPControlChannel - notify pending answer: "
-                   + JSON.stringify(answer));
+      DEBUG && log("TCPControlChannel - notify pending answer: " +
+                   JSON.stringify(answer)); // jshint ignore:line
       this._listener.onAnswer(new ChannelDescription(answer));
       this._pendingAnswer = null;
     }
 
     if (this._pendingClose) {
-      DEBUG && log("TCPControlChannel - notify pending closed");
+      DEBUG && log("TCPControlChannel - notify pending closed"); // jshint ignore:line
       this._notifyClosed(this._pendingCloseReason);
       this._pendingClose = null;
     }
@@ -611,8 +615,8 @@ TCPControlChannel.prototype = {
       this._pendingOffer = aOffer;
       return;
     }
-    DEBUG && log("TCPControlChannel - notify offer: "
-                 + JSON.stringify(aOffer));
+    DEBUG && log("TCPControlChannel - notify offer: " +
+                 JSON.stringify(aOffer)); // jshint ignore:line
     this._listener.onOffer(new ChannelDescription(aOffer));
   },
 
@@ -624,8 +628,8 @@ TCPControlChannel.prototype = {
       this._pendingAnswer = aAnswer;
       return;
     }
-    DEBUG && log("TCPControlChannel - notify answer: "
-                 + JSON.stringify(aAnswer));
+    DEBUG && log("TCPControlChannel - notify answer: " +
+                 JSON.stringify(aAnswer)); // jshint ignore:line
     this._listener.onAnswer(new ChannelDescription(aAnswer));
   },
 
@@ -639,8 +643,8 @@ TCPControlChannel.prototype = {
       return;
     }
 
-    DEBUG && log("TCPControlChannel - notify opened with role: "
-                 + this._direction);
+    DEBUG && log("TCPControlChannel - notify opened with role: " +
+                 this._direction); // jshint ignore:line
     this._listener.notifyOpened();
   },
 
@@ -661,13 +665,13 @@ TCPControlChannel.prototype = {
       return;
     }
 
-    DEBUG && log("TCPControlChannel - notify closed with role: "
-                 + this._direction);
+    DEBUG && log("TCPControlChannel - notify closed with role: " +
+                 this._direction); // jshint ignore:line
     this._listener.notifyClosed(aReason);
   },
 
   close: function(aReason) {
-    DEBUG && log("TCPControlChannel - close with reason: " + aReason);
+    DEBUG && log("TCPControlChannel - close with reason: " + aReason); // jshint ignore:line
 
     if (this._connected) {
       // default reason is NS_OK
@@ -697,4 +701,4 @@ TCPControlChannel.prototype = {
                                          Ci.nsIStreamListener]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationControlService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationControlService]); // jshint ignore:line
