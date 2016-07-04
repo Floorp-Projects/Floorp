@@ -40,6 +40,7 @@
 
 #include "asmjs/WasmSignalHandlers.h"
 #include "builtin/Promise.h"
+#include "gc/GCInternals.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/IonBuilder.h"
@@ -378,6 +379,13 @@ JSRuntime::destroyRuntime()
     fx.destroyInstance();
 
     if (gcInitialized) {
+        /*
+         * Finish any in-progress GCs first. This ensures the parseWaitingOnGC
+         * list is empty in CancelOffThreadParses.
+         */
+        if (JS::IsIncrementalGCInProgress(this))
+            FinishGC(this);
+
         /* Free source hook early, as its destructor may want to delete roots. */
         sourceHook = nullptr;
 
