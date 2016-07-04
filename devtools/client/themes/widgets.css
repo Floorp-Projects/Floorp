@@ -351,6 +351,7 @@
 .theme-firebug .breadcrumbs-widget-item {
   margin-inline-start: 10px;
   margin-inline-end: 1px;
+  background-image: none;
   border: 1px solid transparent;
   color: #141414;
   border-radius: 2px;

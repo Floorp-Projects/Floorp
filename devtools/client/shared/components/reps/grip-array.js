@@ -50,16 +50,13 @@ define(function (require, exports, module) {
         return items;
       }
 
-      let provider = this.props.provider;
-      if (!provider) {
-        return items;
-      }
-
       let delim;
+      let provider = this.props.provider;
 
       for (let i = 0; i < array.length && i <= max; i++) {
         try {
-          let value = provider.getValue(array[i]);
+          let itemGrip = array[i];
+          let value = provider ? provider.getValue(itemGrip) : itemGrip;
 
           delim = (i == array.length - 1 ? "" : ", ");
 

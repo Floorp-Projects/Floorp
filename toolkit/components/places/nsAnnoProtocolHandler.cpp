@@ -336,8 +336,7 @@ nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
   nsCOMPtr<nsIOutputStream> outputStream;
   nsresult rv = NS_NewPipe(getter_AddRefs(inputStream),
                            getter_AddRefs(outputStream),
-                           MAX_FAVICON_SIZE, MAX_FAVICON_SIZE, true,
-                           true);
+                           0, nsIFaviconService::MAX_FAVICON_SIZE, true, true);
   NS_ENSURE_SUCCESS(rv, GetDefaultIcon(aLoadInfo, _channel));
 
   // Create our channel.  We'll call SetContentType with the right type when
