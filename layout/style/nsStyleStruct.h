@@ -3551,11 +3551,11 @@ struct nsStyleClipPath
     return mType;
   }
 
-  nsIURI* GetURL() const {
+  FragmentOrURL* GetURL() const {
     NS_ASSERTION(mType == mozilla::StyleClipPathType::URL, "wrong clip-path type");
     return mURL;
   }
-  void SetURL(nsIURI* aURL);
+  bool SetURL(const nsCSSValue* aValue);
 
   nsStyleBasicShape* GetBasicShape() const {
     NS_ASSERTION(mType == mozilla::StyleClipPathType::Shape, "wrong clip-path type");
@@ -3571,11 +3571,13 @@ struct nsStyleClipPath
 
 private:
   void ReleaseRef();
+  void CopyURL(const nsStyleClipPath& aOther);
+
   void* operator new(size_t) = delete;
 
   union {
     nsStyleBasicShape* mBasicShape;
-    nsIURI* mURL;
+    FragmentOrURL* mURL;
   };
   mozilla::StyleClipPathType    mType;
   mozilla::StyleClipShapeSizing mSizingBox;
