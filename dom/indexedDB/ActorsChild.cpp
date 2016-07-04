@@ -903,7 +903,6 @@ protected:
 };
 
 class WorkerPermissionChallenge final : public Runnable
-                                      , public WorkerHolder
 {
 public:
   WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
@@ -921,6 +920,22 @@ public:
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
 
+  bool
+  Dispatch()
+  {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    if (NS_WARN_IF(!mWorkerPrivate->ModifyBusyCountFromWorker(true))) {
+      return false;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
+      mWorkerPrivate->ModifyBusyCountFromWorker(false);
+      return false;
+    }
+
+    return true;
+  }
+
   NS_IMETHOD
   Run() override
   {
@@ -930,14 +945,6 @@ public:
     }
 
     return NS_OK;
-  }
-
-  virtual bool
-  Notify(workers::Status aStatus) override
-  {
-    // We don't care about the notification. We just want to keep the
-    // mWorkerPrivate alive.
-    return true;
   }
 
   void
@@ -963,7 +970,7 @@ public:
     mActor = nullptr;
 
     mWorkerPrivate->AssertIsOnWorkerThread();
-    ReleaseWorker();
+    mWorkerPrivate->ModifyBusyCountFromWorker(false);
   }
 
 private:
@@ -1414,13 +1421,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     RefPtr<WorkerPermissionChallenge> challenge =
       new WorkerPermissionChallenge(workerPrivate, this, mFactory,
                                     aPrincipalInfo);
-
-    if (NS_WARN_IF(!challenge->HoldWorker(workerPrivate))) {
-      return false;
-    }
-
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(challenge));
-    return true;
+    return challenge->Dispatch();
   }
 
   nsresult rv;
