@@ -53,8 +53,6 @@ PluginContent.prototype = {
     global.addMessageListener("BrowserPlugins:NPAPIPluginProcessCrashed", this);
     global.addMessageListener("BrowserPlugins:CrashReportSubmitted", this);
     global.addMessageListener("BrowserPlugins:Test:ClearCrashData", this);
-
-    Services.obs.addObserver(this, "Plugin::HiddenPluginTouched", false);
   },
 
   uninit: function() {
@@ -77,8 +75,6 @@ PluginContent.prototype = {
     global.removeMessageListener("BrowserPlugins:Test:ClearCrashData", this);
     delete this.global;
     delete this.content;
-
-    Services.obs.removeObserver(this, "Plugin::HiddenPluginTouched");
   },
 
   receiveMessage: function (msg) {
@@ -117,15 +113,6 @@ PluginContent.prototype = {
         if (Services.prefs.getBoolPref("plugins.testmode")) {
           this.pluginCrashData.clear();
         }
-    }
-  },
-
-  observe: function observe(aSubject, aTopic, aData) {
-    let pluginTag = aSubject;
-    if (aTopic == "Plugin::HiddenPluginTouched") {
-      this._showClickToPlayNotification(pluginTag, false);
-    } else {
-      Cu.reportError("unknown topic observed: " + aTopic);
     }
   },
 
@@ -189,45 +176,6 @@ PluginContent.prototype = {
       permissionString = pluginHost.getPermissionStringForType(pluginElement.actualType);
       fallbackType = pluginElement.defaultFallbackType;
       blocklistState = pluginHost.getBlocklistStateForType(pluginElement.actualType);
-      // Make state-softblocked == state-notblocked for our purposes,
-      // they have the same UI. STATE_OUTDATED should not exist for plugin
-      // items, but let's alias it anyway, just in case.
-      if (blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED ||
-          blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
-        blocklistState = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-      }
-    }
-
-    return { mimetype: tagMimetype,
-             pluginName: pluginName,
-             pluginTag: pluginTag,
-             permissionString: permissionString,
-             fallbackType: fallbackType,
-             blocklistState: blocklistState,
-           };
-  },
-
-  _getPluginInfoForTag: function (pluginTag, tagMimetype, fallbackType) {
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-
-    let pluginName = gNavigatorBundle.GetStringFromName("pluginInfo.unknownPlugin");
-    let permissionString = null;
-    let blocklistState = null;
-
-    if (pluginTag) {
-      pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
-
-      permissionString = pluginHost.getPermissionStringForTag(pluginTag);
-      blocklistState = pluginTag.blocklistState;
-
-      // Convert this from nsIPluginTag so it can be serialized.
-      let properties = ["name", "description", "filename", "version", "enabledState", "niceName"];
-      let pluginTagCopy = {};
-      for (let prop of properties) {
-        pluginTagCopy[prop] = pluginTag[prop];
-      }
-      pluginTag = pluginTagCopy;
-
       // Make state-softblocked == state-notblocked for our purposes,
       // they have the same UI. STATE_OUTDATED should not exist for plugin
       // items, but let's alias it anyway, just in case.
