@@ -1088,14 +1088,12 @@ nsContextMenu.prototype = {
   },
 
   viewInfo: function() {
-    BrowserPageInfo();
+    BrowserPageInfo(gContextMenuContentData.docLocation, null, null, null, this.browser);
   },
 
   viewImageInfo: function() {
-    // Don't need to pass in ownerDocument.defaultView.top.document here;
-    // window.gBrowser.selectedBrowser.currentURI.spec does the job without
-    // using CPOWs
-    BrowserPageInfo(null, "mediaTab", this.target);
+    BrowserPageInfo(gContextMenuContentData.docLocation, "mediaTab",
+                    this.target, null, this.browser);
   },
 
   viewImageDesc: function(e) {
@@ -1108,7 +1106,7 @@ nsContextMenu.prototype = {
 
   viewFrameInfo: function() {
     BrowserPageInfo(gContextMenuContentData.docLocation, null, null,
-                    this.frameOuterWindowID);
+                    this.frameOuterWindowID, this.browser);
   },
 
   reloadImage: function() {
