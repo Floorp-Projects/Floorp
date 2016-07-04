@@ -48,7 +48,7 @@ add_task(function* () {
   info("Adding 10 tabs to the sidebar widget");
   for (let nb = 0; nb < 10; nb++) {
     let url = `data:text/html;charset=utf8,<title>tab ${nb}</title><p>Test tab ${nb}</p>`;
-    sidebar.addTab("tab" + nb, url, nb === 0);
+    sidebar.addTab("tab" + nb, url, {selected: nb === 0});
   }
 
   info("Fake an overflow event so that the all-tabs menu is visible");

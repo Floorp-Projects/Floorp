@@ -407,19 +407,19 @@ InspectorPanel.prototype = {
 
     this.ruleview = new RuleViewTool(this, this.panelWin);
     this.computedview = new ComputedViewTool(this, this.panelWin);
-
-    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
-        this.canGetUsedFontFaces) {
-      this.fontInspector = new FontInspector(this, this.panelWin);
-      this.sidebar.toggleTab(true, "fontinspector");
-    }
-
     this.layoutview = new LayoutView(this, this.panelWin);
 
     if (this.target.form.animationsActor) {
       this.sidebar.addTab("animationinspector",
                           "chrome://devtools/content/animationinspector/animation-inspector.xhtml",
-                          defaultTab == "animationinspector");
+                          {selected: defaultTab == "animationinspector",
+                           insertBefore: "fontinspector"});
+    }
+
+    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
+        this.canGetUsedFontFaces) {
+      this.fontInspector = new FontInspector(this, this.panelWin);
+      this.sidebar.toggleTab(true, "fontinspector");
     }
 
     this.sidebar.show(defaultTab);
