@@ -1,0 +1,24 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.sidebar-toggle {
+  display: block;
+}
+
+.sidebar-toggle::before {
+  background-image: var(--theme-pane-collapse-image);
+}
+
+.sidebar-toggle.pane-collapsed::before {
+  background-image: var(--theme-pane-expand-image);
+}
+
+/* Rotate button icon 90deg if the toolbox container is
+  in vertical mode (sidebar displayed under the main panel) */
+@media (max-width: 700px) {
+  .sidebar-toggle::before {
+    transform: rotate(90deg);
+  }
+}

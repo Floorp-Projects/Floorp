@@ -19,7 +19,7 @@ add_task(function* () {
   });
 
   let { inspector, toolbox } = yield openInspectorForURL("about:blank");
-  let button = inspector.panelDoc.getElementById("inspector-pane-toggle");
+  let button = inspector.panelDoc.querySelector(".sidebar-toggle");
   let panel = inspector.panelDoc.querySelector("#inspector-sidebar");
 
   info("Changing toolbox host to a window.");
@@ -33,15 +33,15 @@ add_task(function* () {
   hostWindow.resizeTo(800, 300);
 
   // Check the sidebar is expanded when the test starts.
-  ok(!panel.hasAttribute("pane-collapsed"), "The panel is in expanded state");
+  ok(!panel.classList.contains("pane-collapsed"), "The panel is in expanded state");
 
   info("Collapse the inspector sidebar.");
   let onTransitionEnd = once(panel, "transitionend");
-  EventUtils.synthesizeMouseAtCenter(button, {type: "mousedown"},
+  EventUtils.synthesizeMouseAtCenter(button, {},
     inspector.panelDoc.defaultView);
   yield onTransitionEnd;
 
-  ok(panel.hasAttribute("pane-collapsed"), "The panel is in collapsed state");
+  ok(panel.classList.contains("pane-collapsed"), "The panel is in collapsed state");
   let currentPanelHeight = panel.getBoundingClientRect().height;
   let currentPanelMarginBottom = panel.style.marginBottom;
 
@@ -49,7 +49,7 @@ add_task(function* () {
   hostWindow.resizeTo(300, 800);
 
   // Check the panel is collapsed, and still has the same dimensions.
-  ok(panel.hasAttribute("pane-collapsed"), "The panel is still collapsed");
+  ok(panel.classList.contains("pane-collapsed"), "The panel is still collapsed");
   is(panel.getBoundingClientRect().height, currentPanelHeight,
     "The panel height has not been modified when changing the layout.");
   is(panel.style.marginBottom, currentPanelMarginBottom,
