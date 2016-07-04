@@ -25,7 +25,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_AUTOMATION': '1',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-add-on-devel',
+        'MOZ_OBJDIR': 'obj-firefox',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
