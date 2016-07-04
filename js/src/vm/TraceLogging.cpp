@@ -795,14 +795,14 @@ TraceLoggerThreadState::enableTextId(JSContext* cx, uint32_t textId)
     if (enabledTextIds[textId])
         return;
 
+    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
+
     enabledTextIds[textId] = true;
     if (textId == TraceLogger_Engine) {
         enabledTextIds[TraceLogger_IonMonkey] = true;
         enabledTextIds[TraceLogger_Baseline] = true;
         enabledTextIds[TraceLogger_Interpreter] = true;
     }
-
-    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
 
     if (textId == TraceLogger_Scripts)
         jit::ToggleBaselineTraceLoggerScripts(cx->runtime(), true);
@@ -818,14 +818,14 @@ TraceLoggerThreadState::disableTextId(JSContext* cx, uint32_t textId)
     if (!enabledTextIds[textId])
         return;
 
+    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
+
     enabledTextIds[textId] = false;
     if (textId == TraceLogger_Engine) {
         enabledTextIds[TraceLogger_IonMonkey] = false;
         enabledTextIds[TraceLogger_Baseline] = false;
         enabledTextIds[TraceLogger_Interpreter] = false;
     }
-
-    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
 
     if (textId == TraceLogger_Scripts)
         jit::ToggleBaselineTraceLoggerScripts(cx->runtime(), false);

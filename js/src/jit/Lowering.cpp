@@ -488,8 +488,7 @@ LIRGenerator::visitCall(MCall* call)
         return;
     }
 
-    // Height of the current argument vector.
-    JSFunction* target = call->getSingleTarget();
+    WrappedFunction* target = call->getSingleTarget();
 
     LInstruction* lir;
 

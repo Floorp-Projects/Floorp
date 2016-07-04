@@ -93,8 +93,6 @@ class CodeSegment
     bool containsCodePC(void* pc) const {
         return pc >= code() && pc < (code() + codeLength_);
     }
-
-    WASM_DECLARE_SERIALIZABLE(CodeSegment)
 };
 
 // This reusable base class factors out the logic for a resource that is shared

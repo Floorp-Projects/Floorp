@@ -1856,17 +1856,27 @@ MParameter::congruentTo(const MDefinition* ins) const
     return ins->toParameter()->index() == index_;
 }
 
+WrappedFunction::WrappedFunction(JSFunction* fun)
+  : fun_(fun),
+    nargs_(fun->nargs()),
+    isNative_(fun->isNative()),
+    isConstructor_(fun->isConstructor()),
+    isClassConstructor_(fun->isClassConstructor()),
+    isSelfHostedBuiltin_(fun->isSelfHostedBuiltin())
+{}
+
 MCall*
 MCall::New(TempAllocator& alloc, JSFunction* target, size_t maxArgc, size_t numActualArgs,
            bool construct, bool isDOMCall)
 {
+    WrappedFunction* wrappedTarget = target ? new(alloc) WrappedFunction(target) : nullptr;
     MOZ_ASSERT(maxArgc >= numActualArgs);
     MCall* ins;
     if (isDOMCall) {
         MOZ_ASSERT(!construct);
-        ins = new(alloc) MCallDOMNative(target, numActualArgs);
+        ins = new(alloc) MCallDOMNative(wrappedTarget, numActualArgs);
     } else {
-        ins = new(alloc) MCall(target, numActualArgs, construct);
+        ins = new(alloc) MCall(wrappedTarget, numActualArgs, construct);
     }
     if (!ins->init(alloc, maxArgc + NumNonArgumentOperands))
         return nullptr;
@@ -2069,6 +2079,13 @@ MTableSwitch::New(TempAllocator& alloc, MDefinition* ins, int32_t low, int32_t h
 
 MGoto*
 MGoto::New(TempAllocator& alloc, MBasicBlock* target)
+{
+    MOZ_ASSERT(target);
+    return new(alloc) MGoto(target);
+}
+
+MGoto*
+MGoto::New(TempAllocator::Fallible alloc, MBasicBlock* target)
 {
     MOZ_ASSERT(target);
     return new(alloc) MGoto(target);

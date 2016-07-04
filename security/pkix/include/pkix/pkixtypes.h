@@ -105,6 +105,21 @@ enum class TrustLevel
   InheritsTrust = 3       // certificate must chain to a trust anchor
 };
 
+// Extensions extracted during the verification flow.
+// See TrustDomain::NoteAuxiliaryExtension.
+enum class AuxiliaryExtension
+{
+  // Certificate Transparency data, specifically Signed Certificate
+  // Timestamps (SCTs). See RFC 6962.
+
+  // SCT list embedded in the end entity certificate. Called by BuildCertChain
+  // after the certificate containing the SCTs has passed the revocation checks.
+  EmbeddedSCTList = 1,
+  // SCT list from OCSP response. Called by VerifyEncodedOCSPResponse
+  // when its result is a success and the SCT list is present.
+  SCTListFromOCSPResponse = 2
+};
+
 // CertID references the information needed to do revocation checking for the
 // certificate issued by the given issuer with the given serial number.
 //
@@ -336,6 +351,13 @@ public:
   // in question.
   virtual Result NetscapeStepUpMatchesServerAuth(Time notBefore,
                                                  /*out*/ bool& matches) = 0;
+
+  // Some certificate or OCSP response extensions do not directly participate
+  // in the verification flow, but might still be of interest to the clients
+  // (notably Certificate Transparency data, RFC 6962). Such extensions are
+  // extracted and passed to this function for further processing.
+  virtual void NoteAuxiliaryExtension(AuxiliaryExtension extension,
+                                      Input extensionData) = 0;
 
   // Compute a digest of the data in item using the given digest algorithm.
   //
