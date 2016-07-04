@@ -198,8 +198,7 @@
   border-left: solid 10px;
 }
 
-.ruleview-rule,
-#noResults {
+.ruleview-rule {
   padding: 2px 4px;
 }
 
@@ -265,11 +264,6 @@
 
 .theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-computedlist * {
   color: #CCCCCC;
-}
-
-#noResults {
-  font: message-box;
-  color: GrayText;
 }
 
 .ruleview-rule + .ruleview-rule {

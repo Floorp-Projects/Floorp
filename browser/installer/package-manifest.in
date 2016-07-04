@@ -113,6 +113,10 @@
 ; [Base Browser Files]
 #ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
+@BINPATH@/firefox.VisualElementsManifest.xml
+@BINPATH@/VisualElementsManifest.xml
+@BINPATH@/browser/VisualElements/VisualElements_150.png
+@BINPATH@/browser/VisualElements/VisualElements_70.png
 #else
 @BINPATH@/@MOZ_APP_NAME@-bin
 @BINPATH@/@MOZ_APP_NAME@
@@ -438,6 +442,7 @@
 @RESPATH@/components/nsTaggingService.js
 @RESPATH@/components/UnifiedComplete.js
 @RESPATH@/components/nsPlacesExpiration.js
+@RESPATH@/components/PageIconProtocolHandler.js
 @RESPATH@/components/PlacesCategoriesStarter.js
 @RESPATH@/components/ColorAnalyzer.js
 @RESPATH@/components/PageThumbsProtocol.js

@@ -16,7 +16,7 @@ Bug 1171489 - Tests if the framerate actor does not record timestamps from multi
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
-  var {FramerateFront} = require("devtools/server/actors/framerate");
+  var {FramerateFront} = require("devtools/shared/fronts/framerate");
   var {TargetFactory} = require("devtools/client/framework/target");
 
   var url = document.getElementById("testContent").href;

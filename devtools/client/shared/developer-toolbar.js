@@ -534,7 +534,8 @@ DeveloperToolbar.prototype.show = function (focus) {
           if (!DeveloperToolbar.introShownThisSession) {
             let intro = require("gcli/ui/intro");
             intro.maybeShowIntro(this.requisition.commandOutputManager,
-                                 this.requisition.conversionContext);
+                                 this.requisition.conversionContext,
+                                 this.outputPanel);
             DeveloperToolbar.introShownThisSession = true;
           }
 
