@@ -2085,6 +2085,13 @@ MGoto::New(TempAllocator& alloc, MBasicBlock* target)
 }
 
 MGoto*
+MGoto::New(TempAllocator::Fallible alloc, MBasicBlock* target)
+{
+    MOZ_ASSERT(target);
+    return new(alloc) MGoto(target);
+}
+
+MGoto*
 MGoto::NewAsm(TempAllocator& alloc)
 {
     return new(alloc) MGoto(nullptr);
