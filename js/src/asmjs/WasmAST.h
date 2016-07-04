@@ -149,10 +149,6 @@ class AstSig : public AstBase
         args_(Move(rhs.args_)),
         ret_(rhs.ret_)
     {}
-    void operator=(AstSig&& rhs) {
-        args_ = Move(rhs.args_);
-        ret_ = rhs.ret_;
-    }
     const AstValTypeVector& args() const {
         return args_;
     }
@@ -577,8 +573,7 @@ class AstMemory : public AstNode
     AstSegmentVector segments_;
 
   public:
-    explicit AstMemory(uint32_t initialSize, Maybe<uint32_t> maxSize,
-                           AstSegmentVector&& segments)
+    explicit AstMemory(uint32_t initialSize, Maybe<uint32_t> maxSize, AstSegmentVector&& segments)
       : initialSize_(initialSize),
         maxSize_(maxSize),
         segments_(Move(segments))

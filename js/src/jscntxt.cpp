@@ -93,6 +93,9 @@ JSContext::init(uint32_t maxBytes, uint32_t maxNurseryBytes)
     if (!JSRuntime::init(maxBytes, maxNurseryBytes))
         return false;
 
+    if (!caches.init())
+        return false;
+
     return true;
 }
 

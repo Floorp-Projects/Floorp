@@ -356,23 +356,14 @@ class Sig
     ValTypeVector args_;
     ExprType ret_;
 
-    Sig(const Sig&) = delete;
-    Sig& operator=(const Sig&) = delete;
-
   public:
     Sig() : args_(), ret_(ExprType::Void) {}
-    Sig(Sig&& rhs) : args_(Move(rhs.args_)), ret_(rhs.ret_) {}
     Sig(ValTypeVector&& args, ExprType ret) : args_(Move(args)), ret_(ret) {}
 
     MOZ_MUST_USE bool clone(const Sig& rhs) {
         ret_ = rhs.ret_;
         MOZ_ASSERT(args_.empty());
         return args_.appendAll(rhs.args_);
-    }
-    Sig& operator=(Sig&& rhs) {
-        ret_ = rhs.ret_;
-        args_ = Move(rhs.args_);
-        return *this;
     }
 
     ValType arg(unsigned i) const { return args_[i]; }
@@ -421,9 +412,8 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 struct DeclaredSig : Sig
 {
     DeclaredSig() = default;
-    DeclaredSig(DeclaredSig&& rhs) : Sig(Move(rhs)) {}
     explicit DeclaredSig(Sig&& sig) : Sig(Move(sig)) {}
-    void operator=(Sig&& rhs) { Sig& base = *this; base = Move(rhs); }
+    void operator=(Sig&& rhs) { Sig::operator=(Move(rhs)); }
 };
 
 typedef Vector<DeclaredSig, 0, SystemAllocPolicy> DeclaredSigVector;
