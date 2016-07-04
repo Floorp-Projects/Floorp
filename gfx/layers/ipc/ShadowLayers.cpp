@@ -1096,19 +1096,27 @@ ShadowLayerForwarder::DestroySurfaceDescriptor(SurfaceDescriptor* aSurface)
 void
 ShadowLayerForwarder::UpdateFwdTransactionId()
 {
-  GetCompositorBridgeChild()->UpdateFwdTransactionId();
+  auto compositorBridge = GetCompositorBridgeChild();
+  if (compositorBridge) {
+    compositorBridge->UpdateFwdTransactionId();
+  }
 }
 
 uint64_t
 ShadowLayerForwarder::GetFwdTransactionId()
 {
-  return GetCompositorBridgeChild()->GetFwdTransactionId();
+  auto compositorBridge = GetCompositorBridgeChild();
+  MOZ_DIAGNOSTIC_ASSERT(compositorBridge);
+  return compositorBridge ? compositorBridge->GetFwdTransactionId() : 0;
 }
 
 void
 ShadowLayerForwarder::CancelWaitForRecycle(uint64_t aTextureId)
 {
-  GetCompositorBridgeChild()->CancelWaitForRecycle(aTextureId);
+  auto compositorBridge = GetCompositorBridgeChild();
+  if (compositorBridge) {
+    compositorBridge->CancelWaitForRecycle(aTextureId);
+  }
 }
 
 CompositorBridgeChild*
@@ -1116,6 +1124,9 @@ ShadowLayerForwarder::GetCompositorBridgeChild()
 {
   if (mCompositorBridgeChild) {
     return mCompositorBridgeChild;
+  }
+  if (!mShadowManager) {
+    return nullptr;
   }
   mCompositorBridgeChild = static_cast<CompositorBridgeChild*>(mShadowManager->Manager());
   return mCompositorBridgeChild;
