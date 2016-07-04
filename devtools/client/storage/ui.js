@@ -253,15 +253,47 @@ StorageUI.prototype = {
   /**
    * Event handler for "stores-cleared" event coming from the storage actor.
    *
-   * @param {object} argument0
+   * @param {object} response
    *        An object containing which storage types were cleared
    */
   onCleared: function (response) {
-    let [type, host] = this.tree.selectedItem;
-    if (response.hasOwnProperty(type) && response[type].indexOf(host) > -1) {
-      this.table.clear();
-      this.hideSidebar();
-      this.emit("store-objects-cleared");
+    function* enumPaths() {
+      for (let type in response) {
+        if (Array.isArray(response[type])) {
+          // Handle the legacy response with array of hosts
+          for (let host of response[type]) {
+            yield [type, host];
+          }
+        } else {
+          // Handle the new format that supports clearing sub-stores in a host
+          for (let host in response[type]) {
+            let paths = response[type][host];
+
+            if (!paths.length) {
+              yield [type, host];
+            } else {
+              for (let path of paths) {
+                try {
+                  path = JSON.parse(path);
+                  yield [type, host, ...path];
+                } catch (ex) {
+                  // ignore
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (let path of enumPaths()) {
+      // Find if the path is selected (there is max one) and clear it
+      if (this.tree.isSelected(path)) {
+        this.table.clear();
+        this.hideSidebar();
+        this.emit("store-objects-cleared");
+        break;
+      }
     }
   },
 
