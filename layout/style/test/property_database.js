@@ -6890,8 +6890,8 @@ if (SupportsMaskShorthand()) {
       "repeat-y",
       "no-repeat",
       "none repeat-y alpha add 0% 0%",
-      "substract",
-      "0% top substract alpha repeat none",
+      "subtract",
+      "0% top subtract alpha repeat none",
       "top",
       "left",
       "50% 50%",
@@ -6918,9 +6918,9 @@ if (SupportsMaskShorthand()) {
       "-moz-element(#test) alpha",
       /* multiple mask-image */
       "url(404.png), url(404.png)",
-      "repeat-x, substract, none",
+      "repeat-x, subtract, none",
       "0% top url(404.png), url(404.png) 0% top",
-      "substract repeat-y top left url(404.png), repeat-x alpha",
+      "subtract repeat-y top left url(404.png), repeat-x alpha",
       "url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green), -moz-element(#a) alpha",
       "top left / contain, bottom right / cover",
       /* test cases with clip+origin in the shorthand */
@@ -6988,8 +6988,8 @@ if (SupportsMaskShorthand()) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "add" ],
-    other_values: [ "substract", "intersect", "exclude", "add, add", "substract, intersect", "substract, substract, add"],
-    invalid_values: [ "add substract", "intersect exclude" ]
+    other_values: [ "subtract", "intersect", "exclude", "add, add", "subtract, intersect", "subtract, subtract, add"],
+    invalid_values: [ "add subtract", "intersect exclude" ]
   };
   gCSSProperties["mask-origin"] = {
     domProp: "maskOrigin",
