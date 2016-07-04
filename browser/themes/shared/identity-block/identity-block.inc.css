@@ -5,8 +5,6 @@
 %endif
 
 #identity-box {
-  --identity-box-hover-background-color: rgb(231,230,230);
-  --identity-box-selected-background-color: rgb(211,210,210);
   --identity-box-verified-color: hsl(92,100%,30%);
 %ifdef MOZ_OFFICIAL_BRANDING
   --identity-box-chrome-color: rgb(229,115,0);
@@ -18,33 +16,12 @@
 %endif
 %endif
 
-  border-inline-end: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%,
-                                var(--urlbar-separator-color) 15%,
-                                var(--urlbar-separator-color) 85%,
-                                transparent 85%);
-  border-image-slice: 1;
   font-size: .9em;
   padding: 3px 5px;
-  margin-inline-end: 4px;
   overflow: hidden;
   /* The latter two properties have a transition to handle the delayed hiding of
      the forward button when hovered. */
   transition: background-color 150ms ease, padding-left, padding-right;
-}
-
-#identity-box:hover,
-#identity-box[open=true] {
-  border-image-source: none;
-}
-
-#identity-box:hover {
-  background-color: var(--identity-box-hover-background-color);
-}
-
-#identity-box:hover:active,
-#identity-box[open=true] {
-  background-color: var(--identity-box-selected-background-color);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
@@ -63,27 +40,18 @@
   padding-right: 2px;
 }
 
-#notification-popup-box:not([hidden]) + #identity-box {
-  padding-inline-start: 10px;
-  border-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar > #identity-box {
-  border-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #identity-box {
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5px);
 }
 
-@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
+@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #identity-box {
   /* Forward button hiding is delayed when hovered, so we should use the same
      delay for the identity box. We handle both horizontal paddings (for LTR and
      RTL), the latter two delays here are for padding-left and padding-right. */
   transition-delay: 0s, 100s, 100s;
 }
 
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #identity-box {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5.01px);
 }
@@ -96,7 +64,7 @@
   list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
 }
 
-#identity-box:hover > #identity-icon,
+#identity-box:hover > #identity-icon:not(.no-hover),
 #identity-box[open=true] > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
 }
@@ -105,7 +73,7 @@
   list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
 }
 
-#identity-box.grantedPermissions:hover > #identity-icon,
+#identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover),
 #identity-box.grantedPermissions[open=true] > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
 }
