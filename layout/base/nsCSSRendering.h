@@ -795,13 +795,12 @@ struct nsCSSRendering {
 
   static CompositionOp GetGFXCompositeMode(uint8_t aCompositeMode) {
     switch (aCompositeMode) {
-      case NS_STYLE_MASK_COMPOSITE_ADD:        return CompositionOp::OP_OVER;
-      case NS_STYLE_MASK_COMPOSITE_SUBSTRACT:  return CompositionOp::OP_OUT;
-      case NS_STYLE_MASK_COMPOSITE_INTERSECT:  return CompositionOp::OP_IN;
-      case NS_STYLE_MASK_COMPOSITE_EXCLUDE:    return CompositionOp::OP_XOR;
-      default:              MOZ_ASSERT(false); return CompositionOp::OP_OVER;
+      case NS_STYLE_MASK_COMPOSITE_ADD:       return CompositionOp::OP_OVER;
+      case NS_STYLE_MASK_COMPOSITE_SUBTRACT:  return CompositionOp::OP_OUT;
+      case NS_STYLE_MASK_COMPOSITE_INTERSECT: return CompositionOp::OP_IN;
+      case NS_STYLE_MASK_COMPOSITE_EXCLUDE:   return CompositionOp::OP_XOR;
+      default: MOZ_ASSERT(false);             return CompositionOp::OP_OVER;
     }
-
   }
 protected:
   static gfxRect GetTextDecorationRectInternal(
