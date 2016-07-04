@@ -41,7 +41,7 @@ struct DecryptResult {
 class CDMProxy {
 protected:
   typedef dom::PromiseId PromiseId;
-  typedef dom::SessionType SessionType;
+  typedef dom::MediaKeySessionType MediaKeySessionType;
 public:
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
@@ -68,7 +68,7 @@ public:
   // Calls MediaKeys::OnSessionActivated() when session is created.
   // Assumes ownership of (Move()s) aInitData's contents.
   virtual void CreateSession(uint32_t aCreateSessionToken,
-                             dom::SessionType aSessionType,
+                             MediaKeySessionType aSessionType,
                              PromiseId aPromiseId,
                              const nsAString& aInitDataType,
                              nsTArray<uint8_t>& aInitData) = 0;
