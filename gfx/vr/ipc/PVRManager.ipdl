@@ -50,7 +50,7 @@ parent:
 
   sync GetSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
   sync GetImmediateSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
-  async SetHaveEventListener(bool aHaveEventListener);
+  sync SetHaveEventListener(bool aHaveEventListener);
 
 child:
 

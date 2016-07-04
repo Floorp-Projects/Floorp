@@ -2044,6 +2044,9 @@ Navigator::GetVRDisplays(ErrorResult& aRv)
     return nullptr;
   }
 
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  win->NotifyVREventListenerAdded();
+
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   RefPtr<Promise> p = Promise::Create(go, aRv);
   if (aRv.Failed()) {

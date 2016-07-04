@@ -123,6 +123,7 @@ class Selection;
 class SpeechSynthesis;
 class U2F;
 class VRDisplay;
+class VREventObserver;
 class WakeLock;
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 class WindowOrientationObserver;
@@ -496,6 +497,8 @@ public:
 
   // Inner windows only.
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
+  void NotifyVREventListenerAdded();
+  virtual void EventListenerAdded(nsIAtom* aType) override;
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -800,6 +803,11 @@ public:
   // Enable/disable updates for gamepad input.
   void EnableGamepadUpdates();
   void DisableGamepadUpdates();
+
+  // Inner windows only.
+  // Enable/disable updates for VR
+  void EnableVRUpdates();
+  void DisableVRUpdates();
 
   // Update the VR displays for this window
   bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
@@ -1766,6 +1774,10 @@ protected:
   // Inner windows only.
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
+
+  // Inner windows only.
+  // Indicates whether this window wants VR events
+  bool                   mHasVREvents : 1;
 #ifdef MOZ_GAMEPAD
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
@@ -1910,6 +1922,8 @@ protected:
 
   // The VR Displays for this window
   nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
+
+  nsAutoPtr<mozilla::dom::VREventObserver> mVREventObserver;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

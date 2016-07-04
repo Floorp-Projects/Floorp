@@ -19,6 +19,7 @@ namespace mozilla {
 namespace dom {
 class Navigator;
 class VRDisplay;
+class VREventObserver;
 } // namespace dom
 namespace layers {
 class PCompositableChild;
@@ -34,6 +35,11 @@ class VRManagerChild : public PVRManagerChild
 {
 public:
   static VRManagerChild* Get();
+
+  // Indicate that an observer wants to receive VR events.
+  void AddListener(dom::VREventObserver* aObserver);
+  // Indicate that an observer should no longer receive VR events.
+  void RemoveListener(dom::VREventObserver* aObserver);
 
   int GetInputFrameID();
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient> >& aDisplays);
@@ -66,8 +72,8 @@ public:
   void CancelFrameRequestCallback(int32_t aHandle);
   void RunFrameRequestCallbacks();
 
-  void FireDOMVRDisplayConnectedEvent();
-  void FireDOMVRDisplayDisconnectedEvent();
+  void FireDOMVRDisplayConnectEvent();
+  void FireDOMVRDisplayDisconnectEvent();
   void FireDOMVRDisplayPresentChangeEvent();
 
 protected:
@@ -124,6 +130,10 @@ protected:
 
 private:
 
+  void FireDOMVRDisplayConnectEventInternal();
+  void FireDOMVRDisplayDisconnectEventInternal();
+  void FireDOMVRDisplayPresentChangeEventInternal();
+
   void DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle);
   /**
   * Notify id of Texture When host side end its use. Transaction id is used to
@@ -146,6 +156,9 @@ private:
   */
   int32_t mFrameRequestCallbackCounter;
   mozilla::TimeStamp mStartTimeStamp;
+
+  // Array of Weak pointers, instance is owned by nsGlobalWindow::mVREventObserver.
+  nsTArray<dom::VREventObserver*> mListeners;
 
   /**
   * Hold TextureClients refs until end of their usages on host side.

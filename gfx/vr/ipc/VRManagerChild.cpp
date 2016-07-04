@@ -11,10 +11,17 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/VREventObserver.h"
 #include "mozilla/dom/WindowBinding.h" // for FrameRequestCallback
 #include "mozilla/layers/TextureClient.h"
+#include "nsContentUtils.h"
 
 using layers::TextureClient;
+
+namespace {
+const nsTArray<RefPtr<dom::VREventObserver>>::index_type kNoIndex =
+  nsTArray<RefPtr<dom::VREventObserver> >::NoIndex;
+} // namespace
 
 namespace mozilla {
 namespace gfx {
@@ -241,10 +248,10 @@ VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
   mNavigatorCallbacks.Clear();
 
   if (bDisplayConnected) {
-    FireDOMVRDisplayConnectedEvent();
+    FireDOMVRDisplayConnectEvent();
   }
   if (bDisplayDisconnected) {
-    FireDOMVRDisplayDisconnectedEvent();
+    FireDOMVRDisplayDisconnectEvent();
   }
 
   return true;
@@ -461,18 +468,75 @@ VRManagerChild::RunFrameRequestCallbacks()
 }
 
 void
-VRManagerChild::FireDOMVRDisplayConnectedEvent()
+VRManagerChild::FireDOMVRDisplayConnectEvent()
 {
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(this,
+    &VRManagerChild::FireDOMVRDisplayConnectEventInternal));
 }
 
 void
-VRManagerChild::FireDOMVRDisplayDisconnectedEvent()
+VRManagerChild::FireDOMVRDisplayDisconnectEvent()
 {
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(this,
+    &VRManagerChild::FireDOMVRDisplayDisconnectEventInternal));
 }
 
 void
 VRManagerChild::FireDOMVRDisplayPresentChangeEvent()
 {
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(this,
+    &VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal));
 }
+
+void
+VRManagerChild::FireDOMVRDisplayConnectEventInternal()
+{
+  for (auto& listener : mListeners) {
+    listener->NotifyVRDisplayConnect();
+  }
+}
+
+void
+VRManagerChild::FireDOMVRDisplayDisconnectEventInternal()
+{
+  for (auto& listener : mListeners) {
+    listener->NotifyVRDisplayDisconnect();
+  }
+}
+
+void
+VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal()
+{
+  for (auto& listener : mListeners) {
+    listener->NotifyVRDisplayPresentChange();
+  }
+}
+
+void
+VRManagerChild::AddListener(dom::VREventObserver* aObserver)
+{
+  MOZ_ASSERT(aObserver);
+
+  if (mListeners.IndexOf(aObserver) != kNoIndex) {
+    return; // already exists
+  }
+
+  mListeners.AppendElement(aObserver);
+  if (mListeners.Length() == 1) {
+    Unused << SendSetHaveEventListener(true);
+  }
+}
+
+void
+VRManagerChild::RemoveListener(dom::VREventObserver* aObserver)
+{
+  MOZ_ASSERT(aObserver);
+
+  mListeners.RemoveElement(aObserver);
+  if (mListeners.IsEmpty()) {
+    Unused << SendSetHaveEventListener(false);
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla
