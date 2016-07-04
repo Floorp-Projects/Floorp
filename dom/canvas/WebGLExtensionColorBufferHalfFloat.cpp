@@ -43,11 +43,7 @@ WebGLExtensionColorBufferHalfFloat::~WebGLExtensionColorBufferHalfFloat()
 bool
 WebGLExtensionColorBufferHalfFloat::IsSupported(const WebGLContext* webgl)
 {
-    gl::GLContext* gl = webgl->GL();
-
-    // ANGLE doesn't support ReadPixels from a RGBA16F with RGBA/FLOAT.
-    return gl->IsSupported(gl::GLFeature::renderbuffer_color_half_float) ||
-           gl->IsANGLE();
+    return webgl->GL()->IsSupported(gl::GLFeature::renderbuffer_color_half_float);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferHalfFloat, EXT_color_buffer_half_float)
