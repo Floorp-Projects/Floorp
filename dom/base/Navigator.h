@@ -257,7 +257,7 @@ public:
   GamepadServiceTest* RequestGamepadServiceTest();
 #endif // MOZ_GAMEPAD
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
-  void NotifyVRDisplaysUpdated();
+  void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
 #ifdef MOZ_B2G_FM
   FMRadio* GetMozFMRadio(ErrorResult& aRv);
 #endif
@@ -329,6 +329,10 @@ public:
 private:
   RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
 #endif
+
+public:
+  void NotifyVRDisplaysUpdated();
+  void NotifyActiveVRDisplaysChanged();
 
 private:
   virtual ~Navigator();

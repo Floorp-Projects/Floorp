@@ -38,6 +38,7 @@ public:
   void NotifyVRVsync(const uint32_t& aDisplayID);
   void RefreshVRDisplays(bool aMustDispatch = false);
   RefPtr<gfx::VRDisplayHost> GetDisplay(const uint32_t& aDisplayID);
+  void GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo);
 
   void SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
                    layers::PTextureParent* aTexture, const gfx::Rect& aLeftEyeRect,
