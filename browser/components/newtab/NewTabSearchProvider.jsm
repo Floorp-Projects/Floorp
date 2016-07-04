@@ -27,27 +27,18 @@ function SearchProvider() {
 SearchProvider.prototype = {
 
   observe(subject, topic, data) { // jshint unused:false
-    switch (data) {
-      case "engine-current":
-        if (topic === CURRENT_ENGINE) {
-          Task.spawn(function* () {
-            try {
-              let state = yield ContentSearch.currentStateObj(true);
-              let engine = state.currentEngine;
-              this.emit(CURRENT_ENGINE, engine);
-            } catch (e) {
-              Cu.reportError(e);
-            }
-          }.bind(this));
+    // all other topics are not relevant to content searches and can be
+    // ignored by NewTabSearchProvider
+    if (data === "engine-current" && topic === CURRENT_ENGINE) {
+      Task.spawn(function* () {
+        try {
+          let state = yield ContentSearch.currentStateObj(true);
+          let engine = state.currentEngine;
+          this.emit(CURRENT_ENGINE, engine);
+        } catch (e) {
+          Cu.reportError(e);
         }
-        break;
-      case "engine-default":
-        // engine-default is always sent with engine-current and isn't
-        // relevant to content searches.
-        break;
-      default:
-        Cu.reportError(new Error("NewTabSearchProvider observing unknown topic"));
-        break;
+      }.bind(this));
     }
   },
 

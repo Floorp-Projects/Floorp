@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/css" href="data:text/css,
-treechildren::-moz-tree-cell, label { unicode-bidi: -moz-plaintext; }
+treechildren::-moz-tree-cell, label { unicode-bidi: plaintext; }
 tree { height: 100px; }
 "?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

@@ -3903,7 +3903,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "normal" ],
-    other_values: [ "embed", "bidi-override", "-moz-isolate", "-moz-plaintext", "-moz-isolate-override" ],
+    other_values: [ "embed", "bidi-override", "isolate", "plaintext", "isolate-override", "-moz-isolate", "-moz-plaintext", "-moz-isolate-override" ],
     invalid_values: [ "auto", "none" ]
   },
   "vertical-align": {
