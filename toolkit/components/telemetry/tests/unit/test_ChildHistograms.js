@@ -2,6 +2,7 @@
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
+Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
@@ -27,10 +28,6 @@ function run_child_test() {
   countKeyed.add("a");
   countKeyed.add("b");
   countKeyed.add("b");
-
-  // Check payload values.
-  const payload = TelemetrySession.getPayload("test-ping");
-  check_histogram_values(payload);
 }
 
 function check_histogram_values(payload) {
@@ -61,8 +58,6 @@ add_task(function*() {
     run_child_test();
     dump("... done with child test\n");
     do_send_remote_message(MESSAGE_CHILD_TEST_DONE);
-    dump("... waiting for child payload collection\n");
-    yield do_await_remote_message(MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD);
     return;
   }
 
@@ -80,20 +75,20 @@ add_task(function*() {
   let childPromise = run_test_in_child("test_ChildHistograms.js");
   yield do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
 
-  // Gather payload from child.
-  dump("... requesting child payloads\n");
-  let promiseMessage = do_await_remote_message(MESSAGE_TELEMETRY_PAYLOAD);
-  TelemetrySession.requestChildPayloads();
-  yield promiseMessage;
-  dump("... received child payload\n");
-
-  // Check child payload.
+  yield ContentTaskUtils.waitForCondition(() => {
+    let payload = TelemetrySession.getPayload("test-ping");
+    return payload &&
+           "processes" in payload &&
+           "content" in payload.processes &&
+           "histograms" in payload.processes.content &&
+           "TELEMETRY_TEST_COUNT" in payload.processes.content.histograms;
+  });
   const payload = TelemetrySession.getPayload("test-ping");
-  Assert.ok("childPayloads" in payload, "Should have child payloads.");
-  Assert.equal(payload.childPayloads.length, 1, "Should have received one child payload so far.");
-  Assert.ok("histograms" in payload.childPayloads[0], "Child payload should have histograms.");
-  Assert.ok("keyedHistograms" in payload.childPayloads[0], "Child payload should have keyed histograms.");
-  check_histogram_values(payload.childPayloads[0]);
+  Assert.ok("processes" in payload, "Should have processes section");
+  Assert.ok("content" in payload.processes,"Should have child process section");
+  Assert.ok("histograms" in payload.processes.content, "Child process section should have histograms.");
+  Assert.ok("keyedHistograms" in payload.processes.content, "Child process section should have keyed histograms.");
+  check_histogram_values(payload.processes.content);
 
   do_test_finished();
 });
