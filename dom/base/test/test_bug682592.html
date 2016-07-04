@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682592
 <body>
 <p id="display"></p>
 <div id="content">
-<iframe id="iframe-ref" src="bug682592-subframe-ref.html"></iframe>
+<iframe id="iframe-ref"></iframe>
 <iframe id="iframe-test"></iframe>
 </div>
 <pre id="test">
@@ -39,11 +39,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682592
 */
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestLongerTimeout(2);
+SimpleTest.requestLongerTimeout(3);
 if (navigator.platform.startsWith("Linux arm")) { /* bugs 982875, 999429 */
   SimpleTest.expectAssertions(0, 4);
 }
 
+var page = `data:text/html;charset=UTF-8,<!DOCTYPE html>
+<html><body><p id="content"></p></body></html>`;
 var refFrame = document.getElementById("iframe-ref")
 var testFrame = document.getElementById("iframe-test");
 
@@ -60,8 +62,9 @@ refFrame.addEventListener("load", function() {
       SimpleTest.finish();
     }
   }, false);
-  testFrame.src = "bug682592-subframe.html"
+  testFrame.src = page;
 }, false);
+refFrame.src = page;
 
 var rtl = "עִבְרִית";
 var non8bit =  "ʃ";
