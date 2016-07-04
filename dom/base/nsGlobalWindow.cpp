@@ -193,6 +193,7 @@
 #endif
 
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/VREventObserver.h"
 
 #include "nsRefreshDriver.h"
 #include "Layers.h"
@@ -1200,6 +1201,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
     mHasGamepad(false),
+    mHasVREvents(false),
 #ifdef MOZ_GAMEPAD
     mHasSeenGamepadInput(false),
 #endif
@@ -1599,11 +1601,14 @@ nsGlobalWindow::CleanUp()
   if (IsInnerWindow()) {
     DisableGamepadUpdates();
     mHasGamepad = false;
+    DisableVRUpdates();
+    mHasVREvents = false;
 #ifdef MOZ_B2G
     DisableTimeChangeNotifications();
 #endif
   } else {
     MOZ_ASSERT(!mHasGamepad);
+    MOZ_ASSERT(!mHasVREvents);
   }
 
   if (mCleanMessageManager) {
@@ -1743,6 +1748,8 @@ nsGlobalWindow::FreeInnerObjects()
   mHasGamepad = false;
   mGamepads.Clear();
 #endif
+  DisableVRUpdates();
+  mHasVREvents = false;
   mVRDisplays.Clear();
 }
 
@@ -9884,6 +9891,24 @@ nsGlobalWindow::DisableGamepadUpdates()
 }
 
 void
+nsGlobalWindow::EnableVRUpdates()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  if (mHasVREvents && !mVREventObserver) {
+    mVREventObserver = new VREventObserver(this);
+  }
+}
+
+void
+nsGlobalWindow::DisableVRUpdates()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  mVREventObserver = nullptr;
+}
+
+void
 nsGlobalWindow::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 {
   MOZ_ASSERT(IsOuterWindow());
@@ -12933,6 +12958,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
         ac->RemoveWindowListener(mEnabledSensors[i], this);
     }
     DisableGamepadUpdates();
+    DisableVRUpdates();
 
     // Freeze or suspend all of the workers for this window.
     if (aFreezeWorkers) {
@@ -13019,6 +13045,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren, bool aThawWorkers)
         ac->AddWindowListener(mEnabledSensors[i], this);
     }
     EnableGamepadUpdates();
+    EnableVRUpdates();
 
     // Resume all of the AudioContexts for this window
     for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
@@ -13207,6 +13234,25 @@ nsGlobalWindow::SetHasGamepadEventListener(bool aHasGamepad/* = true*/)
   if (aHasGamepad) {
     EnableGamepadUpdates();
   }
+}
+
+
+void
+nsGlobalWindow::EventListenerAdded(nsIAtom* aType)
+{
+  if (aType == nsGkAtoms::onvrdisplayconnect ||
+      aType == nsGkAtoms::onvrdisplaydisconnect ||
+      aType == nsGkAtoms::onvrdisplaypresentchange) {
+    NotifyVREventListenerAdded();
+  }
+}
+
+void
+nsGlobalWindow::NotifyVREventListenerAdded()
+{
+  MOZ_ASSERT(IsInnerWindow());
+  mHasVREvents = true;
+  EnableVRUpdates();
 }
 
 void
