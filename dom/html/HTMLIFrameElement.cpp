@@ -204,11 +204,7 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify)
 {
-  if ((aName == nsGkAtoms::sandbox ||
-       // The allowfullscreen attribute affects the sandboxed fullscreen
-       // flag, thus we should also reapply it if that is changed.
-       aName == nsGkAtoms::allowfullscreen ||
-       aName == nsGkAtoms::mozallowfullscreen) &&
+  if (aName == nsGkAtoms::sandbox &&
       aNameSpaceID == kNameSpaceID_None && mFrameLoader) {
     // If we have an nsFrameLoader, apply the new sandbox flags.
     // Since this is called after the setter, the sandbox flags have
@@ -244,15 +240,7 @@ HTMLIFrameElement::GetSandboxFlags()
   if (!sandboxAttr) {
     return SANDBOXED_NONE;
   }
-
-  uint32_t out = nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
-
-  if (GetParsedAttr(nsGkAtoms::allowfullscreen) ||
-      GetParsedAttr(nsGkAtoms::mozallowfullscreen)) {
-    out &= ~SANDBOXED_FULLSCREEN;
-  }
-
-  return out;
+  return nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
 }
 
 JSObject*
