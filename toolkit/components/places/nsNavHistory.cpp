@@ -1145,17 +1145,18 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd)
 
   // now check for all bad things
   if (scheme.EqualsLiteral("about") ||
+      scheme.EqualsLiteral("blob") ||
+      scheme.EqualsLiteral("chrome") ||
+      scheme.EqualsLiteral("data") ||
       scheme.EqualsLiteral("imap") ||
-      scheme.EqualsLiteral("news") ||
+      scheme.EqualsLiteral("javascript") ||
       scheme.EqualsLiteral("mailbox") ||
       scheme.EqualsLiteral("moz-anno") ||
-      scheme.EqualsLiteral("view-source") ||
-      scheme.EqualsLiteral("chrome") ||
+      scheme.EqualsLiteral("news") ||
+      scheme.EqualsLiteral("page-icon") ||
       scheme.EqualsLiteral("resource") ||
-      scheme.EqualsLiteral("data") ||
-      scheme.EqualsLiteral("wyciwyg") ||
-      scheme.EqualsLiteral("javascript") ||
-      scheme.EqualsLiteral("blob")) {
+      scheme.EqualsLiteral("view-source") ||
+      scheme.EqualsLiteral("wyciwyg")) {
     return NS_OK;
   }
   *canAdd = true;

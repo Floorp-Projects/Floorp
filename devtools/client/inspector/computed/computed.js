@@ -194,7 +194,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this.searchClearButton.hidden = true;
 
   // No results text.
-  this.noResults = this.styleDocument.getElementById("noResults");
+  this.noResults = this.styleDocument.getElementById("computedview-no-results");
 
   // Refresh panel when color unit changed.
   this._handlePrefChange = this._handlePrefChange.bind(this);
