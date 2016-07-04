@@ -2556,10 +2556,6 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
       // neither iframe nor embed
       return NS_OK;
     }
-    nsIDocument* doc = frameElement->GetUncomposedDoc();
-    if (!doc || !doc->FullscreenEnabledInternal()) {
-      return NS_OK;
-    }
   }
 
   // If we have no parent then we're the root docshell; no ancestor of the
@@ -3835,13 +3831,6 @@ nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell)
 
   // Otherwise, we are sandboxed from aTargetDocShell.
   return true;
-}
-
-void
-nsDocShell::ApplySandboxAndFullscreenFlags(nsIDocument* aDoc)
-{
-  aDoc->SetSandboxFlags(mSandboxFlags);
-  aDoc->SetFullscreenEnabled(GetFullscreenAllowed());
 }
 
 NS_IMETHODIMP
@@ -8062,9 +8051,9 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
       blankDoc->SetContainer(this);
 
-      // Apply the sandbox and fullscreen enabled flags to the document.
-      // These are immutable after being set here.
-      ApplySandboxAndFullscreenFlags(blankDoc);
+      // Copy our sandbox flags to the document. These are immutable
+      // after being set here.
+      blankDoc->SetSandboxFlags(mSandboxFlags);
 
       // create a content viewer for us and the new document
       docFactory->CreateInstanceForDocument(
