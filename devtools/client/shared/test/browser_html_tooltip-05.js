@@ -104,4 +104,6 @@ add_task(function* () {
   yield hideTooltip(tooltip);
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
+
+  tooltip.destroy();
 });
