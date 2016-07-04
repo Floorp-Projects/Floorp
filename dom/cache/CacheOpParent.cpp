@@ -57,7 +57,9 @@ CacheOpParent::Execute(ManagerId* aManagerId)
   RefPtr<Manager> manager;
   nsresult rv = Manager::GetOrCreate(aManagerId, getter_AddRefs(manager));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    Unused << Send__delete__(this, ErrorResult(rv), void_t());
+    ErrorResult result(rv);
+    Unused << Send__delete__(this, result, void_t());
+    result.SuppressException();
     return;
   }
 
@@ -145,7 +147,9 @@ CacheOpParent::OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId)
   mVerifier = nullptr;
 
   if (NS_WARN_IF(NS_FAILED(aRv))) {
-    Unused << Send__delete__(this, ErrorResult(aRv), void_t());
+    ErrorResult result(aRv);
+    Unused << Send__delete__(this, result, void_t());
+    result.SuppressException();
     return;
   }
 

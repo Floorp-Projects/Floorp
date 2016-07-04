@@ -10,6 +10,10 @@ test talos results parsing
 http://hg.mozilla.org/build/talos/file/tip/talos/results.py
 """
 
+import unittest
+import talos.filter
+import talos.results
+
 # example page load test results string
 results_string = """_x_x_mozilla_page_load
 _x_x_mozilla_page_load_details
@@ -28,9 +32,6 @@ _x_x_mozilla_page_load_details
 |11;hixie-007.xml;1628;1623;1623;1617;1622
 """
 
-import unittest
-import talos.filter
-import talos.results
 
 class TestPageloaderResults(unittest.TestCase):
 
@@ -47,7 +48,7 @@ class TestPageloaderResults(unittest.TestCase):
 
         # test some pages
         pages = [i['page'] for i in results.results]
-        comparison = ['hixie-00%d.xml' % i for i in range(1,8)]
+        comparison = ['hixie-00%d.xml' % i for i in range(1, 8)]
         self.assertEqual(pages[-len(comparison):], comparison)
 
         # test a few values
@@ -58,10 +59,6 @@ class TestPageloaderResults(unittest.TestCase):
 
     def test_filter(self):
         """test PageloaderResults.filter function"""
-
-        # sample data
-        first = [74., 65., 68., 66., 62.]
-        last = [1628., 1623., 1623, 1617., 1622.]
 
         # parse the data
         results = talos.results.PageloaderResults(results_string)

@@ -1,6 +1,5 @@
 from talos import utils
 import unittest
-import time
 import os
 
 
@@ -25,10 +24,9 @@ class TestInterpolate(unittest.TestCase):
         self.assertEquals(utils.interpolate('${talos}'), utils.here)
 
     def test_interpolate_custom_placeholders(self):
-        self.assertEquals(
-        utils.interpolate('${talos} ${foo} abc', foo='bar', unused=1),
-        utils.here + ' bar abc'
-    )
+        self.assertEquals(utils.interpolate('${talos} ${foo} abc', foo='bar', unused=1),
+                          utils.here + ' bar abc')
+
 
 class TestParsePref(unittest.TestCase):
     def test_parse_string(self):

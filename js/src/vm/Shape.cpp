@@ -24,8 +24,8 @@
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/Caches-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/Runtime-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1572,7 +1572,7 @@ EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleOb
      */
     if (cx->isJSContext()) {
         JSContext* ncx = cx->asJSContext();
-        ncx->runtime()->newObjectCache.invalidateEntriesForShape(ncx, shape, proto);
+        ncx->caches.newObjectCache.invalidateEntriesForShape(ncx, shape, proto);
     }
 }
 
