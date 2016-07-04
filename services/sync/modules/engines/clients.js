@@ -644,7 +644,7 @@ ClientsTracker.prototype = {
         break;
       case "weave:engine:stop-tracking":
         if (this._enabled) {
-          Svc.Prefs.ignore("clients.name", this);
+          Svc.Prefs.ignore("client.name", this);
           this._enabled = false;
         }
         break;
