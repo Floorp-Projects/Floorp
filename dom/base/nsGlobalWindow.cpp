@@ -13407,6 +13407,17 @@ nsGlobalWindow::UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDev
   return true;
 }
 
+void
+nsGlobalWindow::NotifyActiveVRDisplaysChanged()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  if (mNavigator) {
+    mNavigator->NotifyActiveVRDisplaysChanged();
+  }
+}
+
+
 // nsGlobalChromeWindow implementation
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)

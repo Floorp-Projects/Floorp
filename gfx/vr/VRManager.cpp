@@ -215,13 +215,25 @@ void
 VRManager::DispatchVRDisplayInfoUpdate()
 {
   nsTArray<VRDisplayInfo> update;
-  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRDisplayHost* display = iter.UserData();
-    update.AppendElement(VRDisplayInfo(display->GetDisplayInfo()));
-  }
+  GetVRDisplayInfo(update);
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendUpdateDisplayInfo(update);
+  }
+}
+
+
+/**
+ * Get any VR displays that have already been enumerated without
+ * activating any new devices.
+ */
+void
+VRManager::GetVRDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayInfo)
+{
+  aDisplayInfo.Clear();
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
+    gfx::VRDisplayHost* display = iter.UserData();
+    aDisplayInfo.AppendElement(VRDisplayInfo(display->GetDisplayInfo()));
   }
 }
 
