@@ -549,12 +549,22 @@ public:
   bool IsAddedToCompositableClient() const { return mAddedToCompositableClient; }
 
   /**
-   * Create and init the TextureChild/Parent IPDL actor pair.
+  * Create and init the TextureChild/Parent IPDL actor pair
+  * with a CompositableForwarder.
+  *
+  * Should be called only once per TextureClient.
+  * The TextureClient must not be locked when calling this method.
+  */
+  bool InitIPDLActor(CompositableForwarder* aForwarder);
+
+  /**
+   * Create and init the TextureChild/Parent IPDL actor pair
+   * with a TextureForwarder.
    *
    * Should be called only once per TextureClient.
    * The TextureClient must not be locked when calling this method.
    */
-  bool InitIPDLActor(CompositableForwarder* aForwarder);
+  bool InitIPDLActor(TextureForwarder* aForwarder, LayersBackend aBackendType);
 
   /**
    * Return a pointer to the IPDLActor.
