@@ -29,6 +29,8 @@ add_task(function* () {
       ["iframe-u-ss1", "iframe-u-ss2"]],
     [["sessionStorage", "https://sectest1.example.org"],
       ["iframe-s-ss1"]],
+    [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
+      [1, 2, 3]],
   ];
 
   yield checkState(beforeState);
@@ -37,6 +39,7 @@ add_task(function* () {
   const deleteHosts = [
     [["localStorage", "https://sectest1.example.org"], "iframe-s-ls1"],
     [["sessionStorage", "https://sectest1.example.org"], "iframe-s-ss1"],
+    [["indexedDB", "http://test1.example.org", "idb1", "obj1"], 1],
   ];
 
   for (let [store, rowName] of deleteHosts) {
@@ -70,6 +73,8 @@ add_task(function* () {
     [["sessionStorage", "http://sectest1.example.org"],
       ["iframe-u-ss1", "iframe-u-ss2"]],
     [["sessionStorage", "https://sectest1.example.org"],
+      []],
+    [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
       []],
   ];
 

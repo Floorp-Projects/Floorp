@@ -144,7 +144,9 @@ ToolSidebar.prototype = {
     // Add menuitems to the alltabs menu if there are already tabs in the
     // sidebar
     for (let [id, tab] of this._tabs) {
-      let item = this._addItemToAllTabsMenu(id, tab, tab.hasAttribute("selected"));
+      let item = this._addItemToAllTabsMenu(id, tab, {
+        selected: tab.hasAttribute("selected")
+      });
       if (tab.hidden) {
         item.hidden = true;
       }
@@ -179,23 +181,30 @@ ToolSidebar.prototype = {
   /**
    * Add an item in the allTabs menu for a given tab.
    */
-  _addItemToAllTabsMenu: function (id, tab, selected = false) {
+  _addItemToAllTabsMenu: function (id, tab, options) {
     if (!this._allTabsBtn) {
       return;
     }
 
     let item = this._panelDoc.createElementNS(XULNS, "menuitem");
-    item.setAttribute("id", "sidebar-alltabs-item-" + id);
+    let idPrefix = "sidebar-alltabs-item-";
+    item.setAttribute("id", idPrefix + id);
     item.setAttribute("label", tab.getAttribute("label"));
     item.setAttribute("type", "checkbox");
-    if (selected) {
+    if (options.selected) {
       item.setAttribute("checked", true);
     }
     // The auto-checking of menuitems in this menu doesn't work, so let's do
     // it manually
     item.setAttribute("autocheck", false);
 
-    this._allTabsBtn.querySelector("menupopup").appendChild(item);
+    let menu = this._allTabsBtn.querySelector("menupopup");
+    if (options.insertBefore) {
+      let referenceItem = menu.querySelector(`#${idPrefix}${options.insertBefore}`);
+      menu.insertBefore(item, referenceItem);
+    } else {
+      menu.appendChild(item);
+    }
 
     item.addEventListener("click", () => {
       this._tabbox.selectedTab = tab;
@@ -210,10 +219,14 @@ ToolSidebar.prototype = {
    * Register a tab. A tab is a document.
    * The document must have a title, which will be used as the name of the tab.
    *
-   * @param {string} tab uniq id
-   * @param {string} url
+   * @param {string} id The unique id for this tab.
+   * @param {string} url The URL of the document to load in this new tab.
+   * @param {Object} options A set of options for this new tab:
+   * - {Boolean} selected Set to true to make this new tab selected by default.
+   * - {String} insertBefore By default, the new tab is appended at the end of the
+   * tabbox, pass the ID of an existing tab to insert it before that tab instead.
    */
-  addTab: function (id, url, selected = false) {
+  addTab: function (id, url, options = {}) {
     let iframe = this._panelDoc.createElementNS(XULNS, "iframe");
     iframe.className = "iframe-" + id;
     iframe.setAttribute("flex", "1");
@@ -222,13 +235,21 @@ ToolSidebar.prototype = {
 
     // Creating the tab and adding it to the tabbox
     let tab = this._panelDoc.createElementNS(XULNS, "tab");
-    this._tabbox.tabs.appendChild(tab);
-    tab.setAttribute("label", ""); // Avoid showing "undefined" while the tab is loading
+
     tab.setAttribute("id", this.TAB_ID_PREFIX + id);
     tab.setAttribute("crop", "end");
+    // Avoid showing "undefined" while the tab is loading
+    tab.setAttribute("label", "");
+
+    if (options.insertBefore) {
+      let referenceTab = this.getTab(options.insertBefore);
+      this._tabbox.tabs.insertBefore(tab, referenceTab);
+    } else {
+      this._tabbox.tabs.appendChild(tab);
+    }
 
     // Add the tab to the allTabs menu if exists
-    let allTabsItem = this._addItemToAllTabsMenu(id, tab, selected);
+    let allTabsItem = this._addItemToAllTabsMenu(id, tab, options);
 
     let onIFrameLoaded = (event) => {
       let doc = event.target;
@@ -251,7 +272,13 @@ ToolSidebar.prototype = {
     let tabpanel = this._panelDoc.createElementNS(XULNS, "tabpanel");
     tabpanel.setAttribute("id", this.TABPANEL_ID_PREFIX + id);
     tabpanel.appendChild(iframe);
-    this._tabbox.tabpanels.appendChild(tabpanel);
+
+    if (options.insertBefore) {
+      let referenceTabpanel = this.getTabPanel(options.insertBefore);
+      this._tabbox.tabpanels.insertBefore(tabpanel, referenceTabpanel);
+    } else {
+      this._tabbox.tabpanels.appendChild(tabpanel);
+    }
 
     this._tooltip = this._panelDoc.createElementNS(XULNS, "tooltip");
     this._tooltip.id = "aHTMLTooltip";
@@ -263,7 +290,7 @@ ToolSidebar.prototype = {
     // We store the index of this tab.
     this._tabs.set(id, tab);
 
-    if (selected) {
+    if (options.selected) {
       this._selectTabSoon(id);
     }
 

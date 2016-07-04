@@ -26,3 +26,7 @@ contract @mozilla.org/places/colorAnalyzer;1 {d056186c-28a0-494e-aacc-9e433772b1
 # UnifiedComplete.js
 component {f964a319-397a-4d21-8be6-5cdd1ee3e3ae} UnifiedComplete.js
 contract @mozilla.org/autocomplete/search;1?name=unifiedcomplete {f964a319-397a-4d21-8be6-5cdd1ee3e3ae}
+
+# PageIconProtocolHandler.js
+component {60a1f7c6-4ff9-4a42-84d3-5a185faa6f32} PageIconProtocolHandler.js
+contract @mozilla.org/network/protocol;1?name=page-icon {60a1f7c6-4ff9-4a42-84d3-5a185faa6f32}

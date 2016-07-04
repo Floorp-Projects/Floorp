@@ -58,13 +58,13 @@
         <tab id="sidebar-tab-computedview"
              label="&computedViewTitle;"
              crop="end"/>
+        <tab id="sidebar-tab-layoutview"
+             label="&layoutViewTitle;"
+             crop="end"/>
         <tab id="sidebar-tab-fontinspector"
              label="&fontInspectorTitle;"
              crop="end"
              hidden="true"/>
-        <tab id="sidebar-tab-layoutview"
-             label="&layoutViewTitle;"
-             crop="end"/>
       </tabs>
       <tabpanels flex="1">
         <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
@@ -111,43 +111,8 @@
           <html:div id="propertyContainer">
           </html:div>
 
-          <html:div id="noResults" hidden="">
+          <html:div id="computedview-no-results" hidden="">
             &noPropertiesFound;
-          </html:div>
-        </tabpanel>
-
-        <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div class="devtools-toolbar">
-            <html:div class="devtools-searchbox">
-              <html:input id="font-preview-text-input"
-                          class="devtools-textinput"
-                          type="search"
-                          placeholder="&previewHint;"/>
-            </html:div>
-          </html:div>
-
-          <html:div id="font-container">
-            <html:ul id="all-fonts"></html:ul>
-            <html:button id="font-showall">&showAllFonts;</html:button>
-          </html:div>
-
-          <html:div id="font-template">
-            <html:section class="font">
-              <html:div class="font-preview-container">
-                <html:img class="font-preview"></html:img>
-              </html:div>
-              <html:div class="font-info">
-                <html:h1 class="font-name"></html:h1>
-                <html:span class="font-is-local">&system;</html:span>
-                <html:span class="font-is-remote">&remote;</html:span>
-                <html:p class="font-format-url">
-                  <html:input readonly="readonly" class="font-url"></html:input>
-                  <html:span class="font-format"></html:span>
-                </html:p>
-                <html:p class="font-css">&usedAs; "<html:span class="font-css-name"></html:span>"</html:p>
-                <html:pre class="font-css-code"></html:pre>
-              </html:div>
-            </html:section>
           </html:div>
         </tabpanel>
 
@@ -197,6 +162,41 @@
                 <html:p id="layout-dummy"></html:p>
               </html:div>
             </html:div>
+          </html:div>
+        </tabpanel>
+
+        <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
+          <html:div class="devtools-toolbar">
+            <html:div class="devtools-searchbox">
+              <html:input id="font-preview-text-input"
+                          class="devtools-textinput"
+                          type="search"
+                          placeholder="&previewHint;"/>
+            </html:div>
+          </html:div>
+
+          <html:div id="font-container">
+            <html:ul id="all-fonts"></html:ul>
+            <html:button id="font-showall">&showAllFonts;</html:button>
+          </html:div>
+
+          <html:div id="font-template">
+            <html:section class="font">
+              <html:div class="font-preview-container">
+                <html:img class="font-preview"></html:img>
+              </html:div>
+              <html:div class="font-info">
+                <html:h1 class="font-name"></html:h1>
+                <html:span class="font-is-local">&system;</html:span>
+                <html:span class="font-is-remote">&remote;</html:span>
+                <html:p class="font-format-url">
+                  <html:input readonly="readonly" class="font-url"></html:input>
+                  <html:span class="font-format"></html:span>
+                </html:p>
+                <html:p class="font-css">&usedAs; "<html:span class="font-css-name"></html:span>"</html:p>
+                <html:pre class="font-css-code"></html:pre>
+              </html:div>
+            </html:section>
           </html:div>
         </tabpanel>
       </tabpanels>

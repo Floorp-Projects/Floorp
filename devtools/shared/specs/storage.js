@@ -187,7 +187,21 @@ createStorageSpec({
         name: Arg(1, "string"),
       },
       response: RetVal("idbdeleteresult")
-    }
+    },
+    removeAll: {
+      request: {
+        host: Arg(0, "string"),
+        name: Arg(1, "string"),
+      },
+      response: {}
+    },
+    removeItem: {
+      request: {
+        host: Arg(0, "string"),
+        name: Arg(1, "string"),
+      },
+      response: {}
+    },
   }
 });
 
