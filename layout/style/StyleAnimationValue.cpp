@@ -3955,10 +3955,13 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
 
           if (type == StyleClipPathType::URL) {
             nsIDocument* doc = aStyleContext->PresContext()->Document();
+            nsString pathString;
+            clipPath.GetURL()->GetSourceString(pathString);
             RefPtr<nsStringBuffer> uriAsStringBuffer =
-              GetURIAsUtf16StringBuffer(clipPath.GetURL());
+              nsCSSValue::BufferFromString(pathString);
+
             RefPtr<mozilla::css::URLValue> url =
-              new mozilla::css::URLValue(clipPath.GetURL(),
+              new mozilla::css::URLValue(clipPath.GetURL()->GetSourceURL(),
                                          uriAsStringBuffer,
                                          doc->GetDocumentURI(),
                                          doc->NodePrincipal());
