@@ -348,8 +348,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     let hasAnonChildren = rawNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
                           rawNode.ownerDocument.getAnonymousNodes(rawNode);
 
-    if (numChildren === 0 &&
-        (rawNode.contentDocument || rawNode.getSVGDocument)) {
+    let hasContentDocument = rawNode.contentDocument;
+    let hasSVGDocument = rawNode.getSVGDocument && rawNode.getSVGDocument();
+    if (numChildren === 0 && (hasContentDocument || hasSVGDocument)) {
       // This might be an iframe with virtual children.
       numChildren = 1;
     }
