@@ -14,6 +14,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 /* globals NetUtil */
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
+/* globals ControllerStateMachine */
+XPCOMUtils.defineLazyModuleGetter(this, "ControllerStateMachine", // jshint ignore:line
+                                  "resource://gre/modules/presentation/ControllerStateMachine.jsm");
+/* global ReceiverStateMachine */
+XPCOMUtils.defineLazyModuleGetter(this, "ReceiverStateMachine", // jshint ignore:line
+                                  "resource://gre/modules/presentation/ReceiverStateMachine.jsm");
+
 const kProtocolVersion = 1; // need to review isCompatibleServer while fiddling the version number.
 
 const DEBUG = Services.prefs.getBoolPref("dom.presentation.tcp_server.debug");
@@ -113,12 +120,12 @@ PresentationControlService.prototype = {
     return this._serverSocket !== null;
   },
 
-  requestSession: function(aDeviceInfo, aUrl, aPresentationId) {
+  connect: function(aDeviceInfo) {
     if (!this.id) {
-      DEBUG && log("PresentationControlService - Id has not initialized; requestSession fails"); // jshint ignore:line
+      DEBUG && log("PresentationControlService - Id has not initialized; connect fails"); // jshint ignore:line
       return null;
     }
-    DEBUG && log("PresentationControlService - requestSession to " + aDeviceInfo.id); // jshint ignore:line
+    DEBUG && log("PresentationControlService - connect to " + aDeviceInfo.id); // jshint ignore:line
 
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
                 .getService(Ci.nsISocketTransportService);
@@ -138,9 +145,7 @@ PresentationControlService.prototype = {
     return new TCPControlChannel(this,
                                  socketTransport,
                                  aDeviceInfo,
-                                 aPresentationId,
-                                 "sender",
-                                 aUrl);
+                                 "sender");
   },
 
   responseSession: function(aDeviceInfo, aSocketTransport) {
@@ -154,10 +159,7 @@ PresentationControlService.prototype = {
     return new TCPControlChannel(this,
                                  aSocketTransport,
                                  aDeviceInfo,
-                                 null, // presentation ID
-                                 "receiver",
-                                 null // url
-                                 );
+                                 "receiver");
   },
 
   // Triggered by TCPControlChannel
@@ -334,16 +336,11 @@ function discriptionAsJson(aDescription) {
 function TCPControlChannel(presentationService,
                            transport,
                            deviceInfo,
-                           presentationId,
-                           direction,
-                           url) {
-  DEBUG && log("create TCPControlChannel: " + presentationId + " with role: " +
-               direction); // jshint ignore:line
+                           direction) {
+  DEBUG && log("create TCPControlChannel for : " + direction); // jshint ignore:line
   this._deviceInfo = deviceInfo;
-  this._presentationId = presentationId;
   this._direction = direction;
   this._transport = transport;
-  this._url = url;
 
   this._presentationService = presentationService;
 
@@ -360,6 +357,9 @@ function TCPControlChannel(presentationService,
   this._output = this._transport
                      .openOutputStream(Ci.nsITransport.OPEN_UNBUFFERED, 0, 0);
 
+  this._stateMachine =
+    (direction === "sender") ? new ControllerStateMachine(this, presentationService.id)
+                             : new ReceiverStateMachine(this);
   // Since the transport created by server socket is already CONNECTED_TO
   if (this._direction === "receiver") {
     this._createInputStreamPump();
@@ -373,73 +373,23 @@ TCPControlChannel.prototype = {
   _pendingAnswer: null,
   _pendingClose: null,
   _pendingCloseReason: null,
-  _sendingMessageType: null,
-
-  _sendMessage: function(aType, aJSONData, aOnThrow) {
-    if (!aOnThrow) {
-      aOnThrow = function(e) {throw e.result;};
-    }
-
-    if (!aType || !aJSONData) {
-      aOnThrow();
-      return;
-    }
-
-    if (!this._connected) {
-      DEBUG && log("TCPControlChannel - send" + aType + " fails"); // jshint ignore:line
-      throw Cr.NS_ERROR_FAILURE;
-    }
-
-    DEBUG && log("TCPControlChannel - send" + aType + ": " +
-                 JSON.stringify(aJSONData)); // jshint ignore:line
-    try {
-      this._send(aJSONData);
-    } catch (e) {
-      aOnThrow(e);
-    }
-    this._sendingMessageType = aType;
-  },
-
-  _sendInit: function() {
-    let msg = {
-      type: "requestSession:Init",
-      presentationId: this._presentationId,
-      url: this._url,
-      id: this._presentationService.id,
-    };
-
-    this._sendMessage("init", msg, function(e) {
-      this.close();
-      this._notifyClosed(e.result);
-    });
-  },
 
   sendOffer: function(aOffer) {
-    let msg = {
-      type: "requestSession:Offer",
-      presentationId: this.presentationId,
-      offer: discriptionAsJson(aOffer),
-    };
-    this._sendMessage("offer", msg);
+    this._stateMachine.sendOffer(discriptionAsJson(aOffer));
   },
 
   sendAnswer: function(aAnswer) {
-    let msg = {
-      type: "requestSession:Answer",
-      presentationId: this.presentationId,
-      answer: discriptionAsJson(aAnswer),
-    };
-    this._sendMessage("answer", msg);
+    this._stateMachine.sendAnswer(discriptionAsJson(aAnswer));
   },
 
   sendIceCandidate: function(aCandidate) {
-    let msg = {
-      type: "requestSession:IceCandidate",
-      presentationId: this.presentationId,
-      iceCandidate: aCandidate,
-    };
-    this._sendMessage("iceCandidate", msg);
+    this._stateMachine.updateIceCandidate(aCandidate);
   },
+
+  launch: function(aPresentationId, aUrl) {
+    this._stateMachine.launch(aPresentationId, aUrl);
+  },
+
   // may throw an exception
   _send: function(aMsg) {
     DEBUG && log("TCPControlChannel - Send: " + JSON.stringify(aMsg, null, 2)); // jshint ignore:line
@@ -482,15 +432,6 @@ TCPControlChannel.prototype = {
       if (!this._pump) {
         this._createInputStreamPump();
       }
-
-      if (this._direction === "sender") {
-        this._sendInit();
-      }
-    } else if (aStatus === Ci.nsISocketTransport.STATUS_SENDING_TO) {
-      if (this._sendingMessageType === "init") {
-        this._notifyOpened();
-      }
-      this._sendingMessageType = null;
     }
   },
 
@@ -502,10 +443,9 @@ TCPControlChannel.prototype = {
 
   // nsIRequestObserver (Triggered by nsIInputStreamPump.asyncRead)
   onStopRequest: function(aRequest, aContext, aStatus) {
-    this.close(aStatus);
-    this._notifyClosed(aStatus);
     DEBUG && log("TCPControlChannel - onStopRequest: " + aStatus +
                  " with role: " + this._direction); // jshint ignore:line
+    this._stateMachine.onChannelClosed(aStatus, true);
   },
 
   // nsIStreamListener (Triggered by nsIInputStreamPump.asyncRead)
@@ -536,41 +476,14 @@ TCPControlChannel.prototype = {
                createInstance(Ci.nsIInputStreamPump);
     this._pump.init(this._input, -1, -1, 0, 0, false);
     this._pump.asyncRead(this, null);
+    this._stateMachine.onChannelReady();
   },
 
   // Handle command from remote side
   _handleMessage: function(aMsg) {
-    switch (aMsg.type) {
-      case "requestSession:Init": {
-        this._deviceInfo.id = aMsg.id;
-        this._url = aMsg.url;
-        this._presentationId = aMsg.presentationId;
-        this._presentationService.onSessionRequest(this._deviceInfo,
-                                                   aMsg.url,
-                                                   aMsg.presentationId,
-                                                   this);
-        this._notifyOpened();
-        break;
-      }
-      case "requestSession:Offer": {
-        this._onOffer(aMsg.offer);
-        break;
-      }
-      case "requestSession:Answer": {
-        this._onAnswer(aMsg.answer);
-        break;
-      }
-      case "requestSession:IceCandidate": {
-        this._listener.onIceCandidate(aMsg.iceCandidate);
-        break;
-      }
-      case "requestSession:CloseReason": {
-        this._pendingCloseReason = aMsg.reason;
-        break;
-      }
-    }
     DEBUG && log("TCPControlChannel - handleMessage from " +
                  JSON.stringify(this._deviceInfo) + ": " + JSON.stringify(aMsg)); // jshint ignore:line
+    this._stateMachine.onCommand(aMsg);
   },
 
   get listener() {
@@ -681,30 +594,72 @@ TCPControlChannel.prototype = {
     this._listener.notifyClosed(aReason);
   },
 
-  close: function(aReason) {
-    DEBUG && log("TCPControlChannel - close with reason: " + aReason); // jshint ignore:line
-
+  _closeTransport: function() {
     if (this._connected) {
-      // default reason is NS_OK
-      if (typeof aReason !== "undefined" && aReason !== Cr.NS_OK) {
-        let msg = {
-          type: "requestSession:CloseReason",
-          presentationId: this.presentationId,
-          reason: aReason,
-        };
-        this._sendMessage("close", msg);
-        this._pendingCloseReason = aReason;
-      }
-
       this._transport.setEventSink(null, null);
       this._pump = null;
 
       this._input.close();
       this._output.close();
       this._presentationService.releaseControlChannel(this);
+    }
+  },
+
+  disconnect: function(aReason) {
+    DEBUG && log("TCPControlChannel - disconnect with reason: " + aReason); // jshint ignore:line
+
+    if (this._connected) {
+      // default reason is NS_OK
+      aReason = !aReason ? Cr.NS_OK : aReason;
+      this._stateMachine.onChannelClosed(aReason, false);
+
+      this._closeTransport();
 
       this._connected = false;
     }
+  },
+
+  // callback from state machine
+  sendCommand: function(command) {
+    this._send(command);
+  },
+
+  notifyDeviceConnected: function(deviceId) {
+    switch (this._direction) {
+      case "receiver":
+        this._deviceInfo.id = deviceId;
+        break;
+    }
+    this._notifyOpened();
+  },
+
+  notifyClosed: function(reason) {
+    this._notifyClosed(reason);
+    this._closeTransport();
+    this._connected = false;
+  },
+
+  notifyLaunch: function(presentationId, url) {
+    switch (this._direction) {
+      case "receiver":
+        this._presentationService.onSessionRequest(this._deviceInfo,
+                                                   url,
+                                                   presentationId,
+                                                   this);
+      break;
+    }
+  },
+
+  notifyOffer: function(offer) {
+    this._onOffer(offer);
+  },
+
+  notifyAnswer: function(answer) {
+    this._onAnswer(answer);
+  },
+
+  notifyIceCandidate: function(candidate) {
+    this._listener.onIceCandidate(candidate);
   },
 
   classID: Components.ID("{fefb8286-0bdc-488b-98bf-0c11b485c955}"),

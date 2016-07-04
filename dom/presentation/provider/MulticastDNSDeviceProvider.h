@@ -140,10 +140,8 @@ private:
   nsresult RegisterService();
   nsresult UnregisterService(nsresult aReason);
   nsresult StopDiscovery(nsresult aReason);
-  nsresult RequestSession(Device* aDevice,
-                          const nsAString& aUrl,
-                          const nsAString& aPresentationId,
-                          nsIPresentationControlChannel** aRetVal);
+  nsresult Connect(Device* aDevice,
+                   nsIPresentationControlChannel** aRetVal);
   bool IsCompatibleServer(nsIDNSServiceInfo* aServiceInfo);
 
   // device manipulation
