@@ -350,9 +350,10 @@ function onLoadPageInfo()
             .notifyObservers(window, "page-info-dialog-loaded", null);
 }
 
-function loadPageInfo(frameOuterWindowID, imageElement)
+function loadPageInfo(frameOuterWindowID, imageElement, browser)
 {
-  let mm = window.opener.gBrowser.selectedBrowser.messageManager;
+  browser = browser || window.opener.gBrowser.selectedBrowser;
+  let mm = browser.messageManager;
 
   gStrings["application/rss+xml"]  = gBundle.getString("feedRss");
   gStrings["application/atom+xml"] = gBundle.getString("feedAtom");
@@ -486,11 +487,11 @@ function loadTab(args)
   // If the "View Image Info" context menu item was used, the related image
   // element is provided as an argument. This can't be a background image.
   let imageElement = args && args.imageElement;
-
   let frameOuterWindowID = args && args.frameOuterWindowID;
+  let browser = args && args.browser;
 
   /* Load the page info */
-  loadPageInfo(frameOuterWindowID, imageElement);
+  loadPageInfo(frameOuterWindowID, imageElement, browser);
 
   var initialTab = (args && args.initialTab) || "generalTab";
   var radioGroup = document.getElementById("viewGroup");
