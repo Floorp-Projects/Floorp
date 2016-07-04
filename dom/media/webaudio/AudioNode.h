@@ -217,6 +217,8 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
+  // Returns a string from constant static storage identifying the dom node
+  // type.
   virtual const char* NodeType() const = 0;
 
 private:
