@@ -2322,7 +2322,8 @@ function BrowserViewSource(browser) {
 // initialTab - name of the initial tab to display, or null for the first tab
 // imageElement - image to load in the Media Tab of the Page Info window; can be null/omitted
 // frameOuterWindowID - the id of the frame that the context menu opened in; can be null/omitted
-function BrowserPageInfo(documentURL, initialTab, imageElement, frameOuterWindowID) {
+// browser - the browser containing the document we're interested in inspecting; can be null/omitted
+function BrowserPageInfo(documentURL, initialTab, imageElement, frameOuterWindowID, browser) {
   if (documentURL instanceof HTMLDocument) {
     Deprecated.warning("Please pass the location URL instead of the document " +
                        "to BrowserPageInfo() as the first argument.",
@@ -2330,7 +2331,7 @@ function BrowserPageInfo(documentURL, initialTab, imageElement, frameOuterWindow
     documentURL = documentURL.location;
   }
 
-  let args = { initialTab, imageElement, frameOuterWindowID };
+  let args = { initialTab, imageElement, frameOuterWindowID, browser };
   var windows = Services.wm.getEnumerator("Browser:page-info");
 
   documentURL = documentURL || window.gBrowser.selectedBrowser.currentURI.spec;
