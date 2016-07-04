@@ -153,7 +153,7 @@ struct AudioNodeSizes
   size_t mDomNode;
   size_t mStream;
   size_t mEngine;
-  nsCString mNodeType;
+  const char* mNodeType;
 };
 
 class AudioNodeEngine;
