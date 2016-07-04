@@ -3506,6 +3506,11 @@ NS_IMETHODIMP
 MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                                      nsISupports* aData, bool aAnonymize)
 {
+  if (mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
+    // Shutting down, nothing to report.
+    return NS_OK;
+  }
+
   // Clears out the report array after we're done with it.
   ArrayClearer reportCleanup(mAudioStreamSizes);
 
@@ -3520,11 +3525,6 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
       if (!CurrentDriver()->AsOfflineClockDriver()) {
         CurrentDriver()->WakeUp();
       }
-    }
-
-    if (mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
-      // Shutting down, nothing to report.
-      return NS_OK;
     }
 
     // Wait for up to one second for the report to complete.
