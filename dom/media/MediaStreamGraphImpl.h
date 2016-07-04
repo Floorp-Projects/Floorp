@@ -744,6 +744,9 @@ public:
     // realtime graph when it has no streams.
     LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION
   };
+  /**
+   * Modified only on the main thread in mMonitor.
+   */
   LifecycleState mLifecycleState;
   /**
    * The graph should stop processing at or after this time.
