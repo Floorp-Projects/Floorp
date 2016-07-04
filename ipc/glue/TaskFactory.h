@@ -62,8 +62,9 @@ public:
   inline already_AddRefed<Runnable> NewRunnableMethod(Method method) {
     typedef TaskWrapper<RunnableMethod<Method, Tuple0> > TaskWrapper;
 
-    RefPtr<TaskWrapper> task = new TaskWrapper(this);
-    task->Init(object_, method, base::MakeTuple());
+    RefPtr<TaskWrapper> task = new TaskWrapper(this, object_, method,
+                                               base::MakeTuple());
+
     return task.forget();
   }
 
@@ -71,8 +72,9 @@ public:
   inline already_AddRefed<Runnable> NewRunnableMethod(Method method, const A& a) {
     typedef TaskWrapper<RunnableMethod<Method, Tuple1<A> > > TaskWrapper;
 
-    RefPtr<TaskWrapper> task = new TaskWrapper(this);
-    task->Init(object_, method, base::MakeTuple(a));
+    RefPtr<TaskWrapper> task = new TaskWrapper(this, object_, method,
+                                               base::MakeTuple(a));
+
     return task.forget();
   }
 
@@ -80,12 +82,11 @@ protected:
   template <class Method, class Params>
   class RunnableMethod : public Runnable {
    public:
-    RunnableMethod() { }
+    RunnableMethod(T* obj, Method meth, const Params& params)
+      : obj_(obj)
+      , meth_(meth)
+      , params_(params) {
 
-    void Init(T* obj, Method meth, const Params& params) {
-      obj_ = obj;
-      meth_ = meth;
-      params_ = params;
     }
 
     NS_IMETHOD Run() override {

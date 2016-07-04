@@ -345,15 +345,6 @@ private:
   void CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
                                 webrtc::VideoCodec& cinst);
 
-  // Function to copy a codec structure to Conduit's database
-  bool CopyCodecToDB(const VideoCodecConfig* codecInfo);
-
-  // Functions to verify if the codec passed is already in
-  // conduits database
-  bool CheckCodecForMatch(const VideoCodecConfig* codecInfo) const;
-  bool CheckCodecsForMatch(const VideoCodecConfig* curCodecConfig,
-                           const VideoCodecConfig* codecInfo) const;
-
   //Checks the codec to be applied
   MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo, bool send);
 
@@ -388,7 +379,6 @@ private:
 
   int mChannel; // Video Channel for this conduit
   int mCapId;   // Capturer for this conduit
-  RecvCodecList    mRecvCodecList;
 
   Mutex mCodecMutex; // protects mCurrSendCodecConfig
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;

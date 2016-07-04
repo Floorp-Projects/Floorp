@@ -14,7 +14,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
-#include "OpusDecoder.h"
 #include "VideoUtils.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
@@ -25,6 +24,8 @@
 #include <vector>
 
 #ifdef MOZ_RUST_MP4PARSE
+// OpusDecoder header is really needed only by MP4 in rust
+#include "OpusDecoder.h"
 #include "mp4parse.h"
 
 struct FreeMP4Parser { void operator()(mp4parse_parser* aPtr) { mp4parse_free(aPtr); } };
