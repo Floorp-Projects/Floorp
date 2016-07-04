@@ -537,7 +537,12 @@ StorageActors.createActor({
         break;
 
       case "cleared":
-        this.storageActor.update("cleared", "cookies", hosts);
+        if (hosts.length) {
+          for (let host of hosts) {
+            data[host] = [];
+          }
+          this.storageActor.update("cleared", "cookies", data);
+        }
         break;
     }
     return null;
@@ -2239,16 +2244,13 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
    *             <host2>: [<store_names34>...],
    *           }
    *           Where host1, host2 are the host in which this change happened and
-   *           [<store_namesX] is an array of the names of the changed store
-   *           objects. Leave it empty if the host was completely removed.
-   *        When the action is "cleared", `data` is an array of
-   *        hosts for which the stores were cleared.
+   *           [<store_namesX] is an array of the names of the changed store objects.
+   *           Pass an empty array if the host itself was affected: either completely
+   *           removed or cleared.
    */
   update(action, storeType, data) {
     if (action == "cleared") {
-      let toSend = {};
-      toSend[storeType] = data;
-      events.emit(this, "stores-" + action, toSend);
+      events.emit(this, "stores-cleared", { [storeType]: data });
       return null;
     }
 
