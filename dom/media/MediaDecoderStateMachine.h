@@ -120,7 +120,9 @@ enum class MediaEventType : int8_t {
   PlaybackEnded,
   SeekStarted,
   DecodeError,
-  Invalidate
+  Invalidate,
+  EnterVideoSuspend,
+  ExitVideoSuspend
 };
 
 /*
