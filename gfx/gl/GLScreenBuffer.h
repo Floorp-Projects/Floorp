@@ -139,6 +139,12 @@ public:
                   const SurfaceCaps& caps,
                   const RefPtr<layers::CompositableForwarder>& forwarder,
                   const layers::TextureFlags& flags);
+    static UniquePtr<SurfaceFactory>
+    CreateFactory(GLContext* gl,
+                  const SurfaceCaps& caps,
+                  const RefPtr<layers::ClientIPCAllocator>& allocator,
+                  const mozilla::layers::LayersBackend backend,
+                  const layers::TextureFlags& flags);
 
 protected:
     GLContext* const mGL; // Owns us.
