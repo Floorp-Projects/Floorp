@@ -229,6 +229,13 @@ class ReftestRunner(MozbuildObject):
         kwargs["extraProfileFiles"].append(
             os.path.join(self.topsrcdir, "mobile", "android", "fonts"))
 
+        hyphenation_path = os.path.join(self.topsrcdir, "intl", "locales")
+
+        for (dirpath, dirnames, filenames) in os.walk(hyphenation_path):
+            for filename in filenames:
+                if filename.endswith('.dic'):
+                    kwargs["extraProfileFiles"].append(os.path.join(dirpath, filename))
+
         if not kwargs["httpdPath"]:
             kwargs["httpdPath"] = os.path.join(self.tests_dir, "modules")
         if not kwargs["symbolsPath"]:
