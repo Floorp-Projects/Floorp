@@ -1723,6 +1723,13 @@ public:
 
   void SyncWindowProperties(nsView* aView);
 
+  /**
+   * Prevents retargeting of mouse events to a descendant popup.
+   */
+  void SetPreventPopupRetargeting(bool aValue) {
+    mPreventPopupRetargeting = aValue;
+  }
+
 #ifdef ANDROID
   virtual nsIDocument* GetTouchEventTargetDocument() = 0;
 #endif
@@ -1856,6 +1863,9 @@ protected:
   // to true, so we can avoid any paint calls for widget related to this
   // presshell.
   bool mIsNeverPainting;
+
+  // Prevents retargeting of mouse events to a descendant popup.
+  bool mPreventPopupRetargeting;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell, NS_IPRESSHELL_IID)

@@ -7763,11 +7763,17 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // If the popupFrame is an ancestor of the 'frame', the frame should
       // handle the event, otherwise, the popup should handle it.
       if (popupFrame &&
+          !mPreventPopupRetargeting &&
           !nsContentUtils::ContentIsCrossDocDescendantOf(
              framePresContext->GetPresShell()->GetDocument(),
              popupFrame->GetContent())) {
         frame = popupFrame;
       }
+    }
+
+    if (aEvent->mClass == eMouseEventClass &&
+        aEvent->mMessage == eMouseUp) {
+      mPreventPopupRetargeting = false;
     }
 
     bool captureRetarget = false;
