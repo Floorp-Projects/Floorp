@@ -3548,8 +3548,8 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   for (size_t i = 0; i < mAudioStreamSizes.Length(); i++) {
     const AudioNodeSizes& usage = mAudioStreamSizes[i];
-    const char* const nodeType =  usage.mNodeType.IsEmpty() ?
-                                  "<unknown>" : usage.mNodeType.get();
+    const char* const nodeType =
+      usage.mNodeType ? usage.mNodeType : "<unknown>";
 
     nsPrintfCString domNodePath("explicit/webaudio/audio-node/%s/dom-nodes",
                                 nodeType);
