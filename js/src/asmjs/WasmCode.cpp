@@ -247,37 +247,6 @@ CodeSegment::~CodeSegment()
     DeallocateExecutableMemory(bytes_, totalLength(), gc::SystemPageSize());
 }
 
-size_t
-CodeSegment::serializedSize() const
-{
-    return sizeof(uint32_t) +
-           sizeof(uint32_t) +
-           codeLength_;
-}
-
-uint8_t*
-CodeSegment::serialize(uint8_t* cursor) const
-{
-    cursor = WriteScalar<uint32_t>(cursor, codeLength_);
-    cursor = WriteScalar<uint32_t>(cursor, globalDataLength_);
-    cursor = WriteBytes(cursor, bytes_, codeLength_);
-    return cursor;
-}
-
-const uint8_t*
-CodeSegment::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
-{
-    cursor = ReadScalar<uint32_t>(cursor, &codeLength_);
-    cursor = ReadScalar<uint32_t>(cursor, &globalDataLength_);
-
-    bytes_ = AllocateCodeSegment(cx, codeLength_ + globalDataLength_);
-    if (!bytes_)
-        return nullptr;
-
-    cursor = ReadBytes(cursor, bytes_, codeLength_);
-    return cursor;
-}
-
 static size_t
 SerializedSigSize(const Sig& sig)
 {
@@ -294,13 +263,13 @@ SerializeSig(uint8_t* cursor, const Sig& sig)
 }
 
 static const uint8_t*
-DeserializeSig(ExclusiveContext* cx, const uint8_t* cursor, Sig* sig)
+DeserializeSig(const uint8_t* cursor, Sig* sig)
 {
     ExprType ret;
     cursor = ReadScalar<ExprType>(cursor, &ret);
 
     ValTypeVector args;
-    cursor = DeserializePodVector(cx, cursor, &args);
+    cursor = DeserializePodVector(cursor, &args);
     if (!cursor)
         return nullptr;
 
@@ -330,9 +299,9 @@ Export::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-Export::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+Export::deserialize(const uint8_t* cursor)
 {
-    (cursor = DeserializeSig(cx, cursor, &sig_)) &&
+    (cursor = DeserializeSig(cursor, &sig_)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
@@ -359,9 +328,9 @@ Import::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-Import::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+Import::deserialize(const uint8_t* cursor)
 {
-    (cursor = DeserializeSig(cx, cursor, &sig_)) &&
+    (cursor = DeserializeSig(cursor, &sig_)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
@@ -451,13 +420,13 @@ CacheableChars::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-CacheableChars::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+CacheableChars::deserialize(const uint8_t* cursor)
 {
     uint32_t lengthWithNullChar;
     cursor = ReadBytes(cursor, &lengthWithNullChar, sizeof(uint32_t));
 
     if (lengthWithNullChar) {
-        reset(cx->pod_malloc<char>(lengthWithNullChar));
+        reset(js_pod_malloc<char>(lengthWithNullChar));
         if (!get())
             return nullptr;
 
@@ -507,18 +476,18 @@ Metadata::serialize(uint8_t* cursor) const
 }
 
 /* static */ const uint8_t*
-Metadata::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializeVector(cx, cursor, &imports)) &&
-    (cursor = DeserializeVector(cx, cursor, &exports)) &&
-    (cursor = DeserializePodVector(cx, cursor, &memoryAccesses)) &&
-    (cursor = DeserializePodVector(cx, cursor, &boundsChecks)) &&
-    (cursor = DeserializePodVector(cx, cursor, &codeRanges)) &&
-    (cursor = DeserializePodVector(cx, cursor, &callSites)) &&
-    (cursor = DeserializePodVector(cx, cursor, &callThunks)) &&
-    (cursor = DeserializePodVector(cx, cursor, &funcNames)) &&
-    (cursor = filename.deserialize(cx, cursor));
+    (cursor = DeserializeVector(cursor, &imports)) &&
+    (cursor = DeserializeVector(cursor, &exports)) &&
+    (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
+    (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
+    (cursor = DeserializePodVector(cursor, &codeRanges)) &&
+    (cursor = DeserializePodVector(cursor, &callSites)) &&
+    (cursor = DeserializePodVector(cursor, &callThunks)) &&
+    (cursor = DeserializePodVector(cursor, &funcNames)) &&
+    (cursor = filename.deserialize(cursor));
     return cursor;
 }
 
