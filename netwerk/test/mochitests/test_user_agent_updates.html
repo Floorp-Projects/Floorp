@@ -132,6 +132,8 @@ function testDownload(callback) {
   var url = getUpdateURL();
   isnot(navigator.userAgent, UA_OVERRIDE, 'UA already overridden');
   info('Waiting for UA update: ' + url);
+
+  chromeScript.sendAsyncMessage("notify-on-update");
   SpecialPowers.pushPrefEnv({
     set: [
       [PREF_UPDATES_ENABLED, true],
@@ -139,7 +141,10 @@ function testDownload(callback) {
       [PREF_UPDATES_TIMEOUT, 10000],
       [PREF_UPDATES_INTERVAL, 1] // 1 second interval
     ]
-  }, function waitForUpdate() { setTimeout( function() {
+  });
+
+  function waitForUpdate() {
+    info("Update Happened");
     testUAIFrameNoNav(location.origin, UA_OVERRIDE, true, 'Header UA not overridden', function() {
       var updateTime = parseInt(getUA('http://example.org'));
       todo(startTime <= updateTime, 'Update was before start time');
@@ -157,7 +162,9 @@ function testDownload(callback) {
         }
       })();
     });
-  }, 1500); });  // Timeout should be slightly larger than the update interval.
+  }
+
+  chromeScript.addMessageListener("useragent-update-complete", waitForUpdate);
 }
 
 function testBadUpdate(callback) {
@@ -208,6 +215,9 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
     Components.interfaces.nsIObserver).observe(null, "utm-test-init", "");
 
   Components.utils.import("resource://gre/modules/UserAgentOverrides.jsm");
+
+  var _notifyOnUpdate = false;
+
   var UAO = UserAgentOverrides;
   UAO.uninit();
 
@@ -226,6 +236,15 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 
   const PREF_UPDATES = "general.useragent.updates.";
   const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
+  const PREF_UPDATES_LASTUPDATED = PREF_UPDATES + "lastupdated";
+
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services.prefs.addObserver(PREF_UPDATES_LASTUPDATED, () => {
+    if (_notifyOnUpdate) {
+      _notifyOnUpdate = false; // Only notify once, for the first update.
+      sendAsyncMessage("useragent-update-complete");
+    }
+  } , false);
 
   var OVERRIDES = null;
 
@@ -297,6 +316,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   addMessageListener("set-overrides", function(overrides) { OVERRIDES = overrides});
   addMessageListener("UAO-init", function() { UAO.init(); });
   addMessageListener("UAO-uninit", function() { UAO.uninit(); });
+  addMessageListener("notify-on-update", () => { _notifyOnUpdate = true });
 });
 
 chromeScript.addMessageListener("testProfileSaveDone", SimpleTest.finish);
