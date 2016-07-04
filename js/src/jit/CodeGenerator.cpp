@@ -9357,7 +9357,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     for (uint32_t i = 0; i < patchableTLEvents_.length(); i++) {
         // Create an event on the mainthread.
         TraceLoggerEvent event(logger, patchableTLEvents_[i].event);
-        if (!ionScript->addTraceLoggerEvent(event)) {
+        if (!event.hasPayload() || !ionScript->addTraceLoggerEvent(event)) {
             TLFailed = true;
             break;
         }
@@ -9369,7 +9369,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     if (!TLFailed && patchableTLScripts_.length() > 0) {
         MOZ_ASSERT(TraceLogTextIdEnabled(TraceLogger_Scripts));
         TraceLoggerEvent event(logger, TraceLogger_Scripts, script);
-        if (!ionScript->addTraceLoggerEvent(event))
+        if (!event.hasPayload() || !ionScript->addTraceLoggerEvent(event))
             TLFailed = true;
         if (!TLFailed) {
             uint32_t textId = event.payload()->textId();
