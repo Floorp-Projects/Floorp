@@ -854,7 +854,7 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
       (mAudioContextState == aNewState))) {
     fprintf(stderr,
             "Invalid transition: mAudioContextState: %d -> aNewState %d\n",
-            mAudioContextState, aNewState);
+            static_cast<int>(mAudioContextState), static_cast<int>(aNewState));
     MOZ_ASSERT(false);
   }
 
