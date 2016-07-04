@@ -115,6 +115,7 @@ pref(dom.webcomponents.enabled,true) load 1017798-1.html
 load 1028514-1.html
 load 1066089-1.html
 load 1074651-1.html
+load 1135534.html
 pref(dom.webcomponents.enabled,true) load 1089463-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1136010-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1146101-1.html

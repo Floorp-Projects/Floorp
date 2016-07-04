@@ -56,6 +56,7 @@ WIN_LIBS=                                       \
 #include <dlgs.h>
 
 #include "nsWindowsHelpers.h"
+#include "WinUtils.h"
 
 // Default labels for the radio buttons
 static const char* kAsLaidOutOnScreenStr = "As &laid out on the screen";
@@ -665,7 +666,11 @@ ShowNativePrintDialog(HWND              aHWnd,
     prntdlg.Flags            |= PD_ENABLEPRINTHOOK;
   }
 
-  BOOL result = ::PrintDlgW(&prntdlg);
+  BOOL result;
+  {
+    mozilla::widget::WinUtils::AutoSystemDpiAware dpiAwareness;
+    result = ::PrintDlgW(&prntdlg);
+  }
 
   if (TRUE == result) {
     // check to make sure we don't have any nullptr pointers

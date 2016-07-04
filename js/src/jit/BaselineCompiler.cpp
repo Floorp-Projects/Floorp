@@ -47,7 +47,7 @@ BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript
 bool
 BaselineCompiler::init()
 {
-    if (!analysis_.init(alloc_, cx->runtime()->gsnCache))
+    if (!analysis_.init(alloc_, cx->caches.gsnCache))
         return false;
 
     if (!labels_.init(alloc_, script->length()))

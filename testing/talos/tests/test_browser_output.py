@@ -13,6 +13,7 @@ from talos.utils import TalosError
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestBrowserOutput(unittest.TestCase):
 
     def test_ts_format(self):
@@ -88,7 +89,9 @@ class TestBrowserOutput(unittest.TestCase):
 
         garbage = "hjksdfhkhasdfjkhsdfkhdfjklasd"
         input = self.end_report() + garbage + self.start_report()
-        self.compare_error_message(input, "End token '%s' occurs before start token" % self.end_report())
+        self.compare_error_message(input,
+                                   "End token '%s' occurs before start token" %
+                                   self.end_report())
 
     def test_missing_timestamps(self):
         """what if the timestamps are missing?"""
@@ -108,15 +111,22 @@ class TestBrowserOutput(unittest.TestCase):
         # Let's see if the parser notices
         bad_report = """__start_report392__end_report
 
-Failed to load native module at path '/home/jhammel/firefox/components/libmozgnome.so': (80004005) libnotify.so.1: cannot open shared object file: No such file or directory
-Could not read chrome manifest 'file:///home/jhammel/firefox/extensions/%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D/chrome.manifest'.
-[JavaScript Warning: "Use of enablePrivilege is deprecated.  Please use code that runs with the system principal (e.g. an extension) instead." {file: "http://localhost:15707/startup_test/startup_test.html?begin=1333663595557" line: 0}]
+Failed to load native module at path '/home/jhammel/firefox/components/libmozgnome.so':
+(80004005) libnotify.so.1: cannot open shared object file: No such file or directory
+Could not read chrome manifest
+'file:///home/jhammel/firefox/extensions/%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D/chrome.manifest'.
+[JavaScript Warning: "Use of enablePrivilege is deprecated.
+Please use code that runs with the system principal (e.g. an extension) instead.
+" {file: "http://localhost:15707/startup_test/startup_test.html?begin=1333663595557" line: 0}]
 __startTimestamp1333663595953__endTimestamp
 __startAfterTerminationTimestamp1333663596551__endAfterTerminationTimestamp
 __startBeforeLaunchTimestamp1333663595557__endBeforeLaunchTimestamp
 """
 
-        self.compare_error_message(bad_report, "] found before ('__startBeforeLaunchTimestamp', '__endBeforeLaunchTimestamp') [character position:")
+        self.compare_error_message(bad_report, "] found before " +
+                                   "('__startBeforeLaunchTimestamp', " +
+                                   "'__endBeforeLaunchTimestamp') " +
+                                   "[character position:")
 
     def test_multiple_reports(self):
         """you're only allowed to have one report in a file"""
@@ -124,28 +134,31 @@ __startBeforeLaunchTimestamp1333663595557__endBeforeLaunchTimestamp
         # this one works fine
         good_report = """__start_report392__end_report
 
-Failed to load native module at path '/home/jhammel/firefox/components/libmozgnome.so': (80004005) libnotify.so.1: cannot open shared object file: No such file or directory
-Could not read chrome manifest 'file:///home/jhammel/firefox/extensions/%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D/chrome.manifest'.
-[JavaScript Warning: "Use of enablePrivilege is deprecated.  Please use code that runs with the system principal (e.g. an extension) instead." {file: "http://localhost:15707/startup_test/startup_test.html?begin=1333663595557" line: 0}]
+Failed to load native module at path '/home/jhammel/firefox/components/libmozgnome.so':
+(80004005) libnotify.so.1: cannot open shared object file: No such file or directory
+Could not read chrome manifest
+'file:///home/jhammel/firefox/extensions/%7B972ce4c6-7e08-4474-a285-3208198ce6fd%7D/chrome.manifest'.
+[JavaScript Warning: "Use of enablePrivilege is deprecated.
+Please use code that runs with the system principal (e.g. an extension) instead.
+" {file: "http://localhost:15707/startup_test/startup_test.html?begin=1333663595557" line: 0}]
 __startTimestamp1333663595953__endTimestamp
 __startBeforeLaunchTimestamp1333663595557__endBeforeLaunchTimestamp
 __startAfterTerminationTimestamp1333663596551__endAfterTerminationTimestamp
 """
 
-        b = BrowserLogResults(results_raw=good_report)
-
         # but there's no hope for this one
-        bad_report = good_report + good_report # interesting math
+        bad_report = good_report + good_report  # interesting math
 
-        self.compare_error_message(bad_report, "Multiple matches for %s,%s" % (self.start_report(), self.end_report()))
+        self.compare_error_message(bad_report, "Multiple matches for %s,%s" %
+                                   (self.start_report(), self.end_report()))
 
     def start_report(self):
         """return a start report token"""
-        return BrowserLogResults.report_tokens[0][1][0] # start token
+        return BrowserLogResults.report_tokens[0][1][0]  # start token
 
     def end_report(self):
         """return a start report token"""
-        return BrowserLogResults.report_tokens[0][1][-1] # end token
+        return BrowserLogResults.report_tokens[0][1][-1]  # end token
 
     def compare_error_message(self, browser_log, substr):
         """
@@ -154,22 +167,24 @@ __startAfterTerminationTimestamp1333663596551__endAfterTerminationTimestamp
         - substr : substring of the error message
         """
 
-        error = None
         try:
             BrowserLogResults(results_raw=browser_log)
-        except TalosError, e:
+        except TalosError as e:
             if substr not in str(e):
-                import pdb; pdb.set_trace()
+                import pdb
+                pdb.set_trace()
             self.assertTrue(substr in str(e))
+
+
 class TestTalosError(unittest.TestCase):
     """
     test TalosError class
     """
     def test_browser_log_results(self):
-        #an example that should fail
-        #passing invalid value for argument result_raw
+        # an example that should fail
+        # passing invalid value for argument result_raw
         with self.assertRaises(TalosError):
-            BrowserLogResults(results_raw = "__FAIL<bad test>__FAIL")
+            BrowserLogResults(results_raw="__FAIL<bad test>__FAIL")
 
 if __name__ == '__main__':
     unittest.main()
