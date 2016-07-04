@@ -1587,6 +1587,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   AddStatesSilently(NS_EVENT_STATE_ENABLED |
                     NS_EVENT_STATE_OPTIONAL |
                     NS_EVENT_STATE_VALID);
+  UpdateApzAwareFlag();
 }
 
 HTMLInputElement::~HTMLInputElement()
@@ -3744,6 +3745,16 @@ HTMLInputElement::Focus(ErrorResult& aError)
   return;
 }
 
+#if defined(XP_WIN) || defined(XP_LINUX)
+bool
+HTMLInputElement::IsNodeApzAwareInternal() const
+{
+  // Tell APZC we may handle mouse wheel event and do preventDefault when input
+  // type is number.
+  return (mType == NS_FORM_INPUT_NUMBER) || nsINode::IsNodeApzAwareInternal();
+}
+#endif
+
 bool
 HTMLInputElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
@@ -4832,6 +4843,26 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           }
           break;
         }
+#if defined(XP_WIN) || defined(XP_LINUX)
+        case eWheel: {
+          // Handle wheel events as increasing / decreasing the input element's
+          // value when it's focused and it's type is number.
+          WidgetWheelEvent* wheelEvent = aVisitor.mEvent->AsWheelEvent();
+          if (!aVisitor.mEvent->DefaultPrevented() &&
+              aVisitor.mEvent->IsTrusted() && IsMutable() && wheelEvent &&
+              wheelEvent->mDeltaY != 0 &&
+              wheelEvent->mDeltaMode != nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
+              mType == NS_FORM_INPUT_NUMBER) {
+            nsNumberControlFrame* numberControlFrame =
+              do_QueryFrame(GetPrimaryFrame());
+            if (numberControlFrame && numberControlFrame->IsFocused()) {
+              StepNumberControlForUserEvent(wheelEvent->mDeltaY > 0 ? -1 : 1);
+              aVisitor.mEvent->PreventDefault();
+            }
+          }
+          break;
+        }
+#endif
         default:
           break;
       }
@@ -5180,6 +5211,8 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
 
   // Do not notify, it will be done after if needed.
   UpdateAllValidityStates(false);
+
+  UpdateApzAwareFlag();
 }
 
 void
@@ -6263,6 +6296,16 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
   return NS_OK;
 }
 #endif
+
+void
+HTMLInputElement::UpdateApzAwareFlag()
+{
+#if defined(XP_WIN) || defined(XP_LINUX)
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    SetMayBeApzAware();
+  }
+#endif
+}
 
 nsresult
 HTMLInputElement::SetDefaultValueAsValue()

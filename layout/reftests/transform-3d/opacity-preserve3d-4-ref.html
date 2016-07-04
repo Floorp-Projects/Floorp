@@ -2,23 +2,31 @@
 <html><head>
 <style>
     .first {
+        transform: translateZ(10px);
         background-color: blue;
+        top: 0px;
     }
     .second {
         background-color: green;
-        top: 48px;
+        top: 40px;
+    }
+    .preserve {
+        transform-style: preserve-3d;
     }
     .leaf {
         width: 100px;
         height: 100px;
         position:absolute;
-        opacity: 0.5;
     }
 </style>
 </head><body>
 
-<canvas class="leaf second" width="100px" height="100px" id="canvas"></canvas>
-<div class="leaf first"></div>
+<div class="preserve">
+    <div style="opacity:0.5">
+        <div class="leaf first"></div>
+        <canvas class="leaf second" width="100px" height="100px" id="canvas"></canvas>
+    </div>
+</div>
 <script>
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");

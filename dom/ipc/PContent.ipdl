@@ -833,6 +833,7 @@ parent:
     async SetURITitle(URIParams uri, nsString title);
 
     async LoadURIExternal(URIParams uri, PBrowser windowContext);
+    async ExtProtocolChannelConnectParent(uint32_t registrarId);
 
     // PrefService message
     sync ReadPrefsArray() returns (PrefSetting[] prefs) verify;

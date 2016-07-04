@@ -3054,10 +3054,13 @@ nsINode::AddAnimationObserverUnlessExists(
 }
 
 bool
-nsINode::HasApzAwareListeners() const
+nsINode::IsApzAware() const
 {
-  if (NodeMayHaveApzAwareListeners()) {
-    return EventTarget::HasApzAwareListeners();
-  }
-  return false;
+  return IsNodeApzAware();
+}
+
+bool
+nsINode::IsNodeApzAwareInternal() const
+{
+  return EventTarget::IsApzAware();
 }

@@ -17,6 +17,7 @@ import urlparse
 import sys
 import os
 
+
 def main():
     '''
     This script downloads a talos.json file which indicates which files to download
@@ -30,36 +31,38 @@ def main():
     (options, args) = parser.parse_args()
 
     # 1) check that the url was passed
-    if options.talos_json_url == None:
-        print "You need to specify --talos-json-url."
+    if options.talos_json_url is None:
+        print("You need to specify --talos-json-url.")
         sys.exit(1)
 
     # 2) try to download the talos.json file
     try:
         jsonFilename = download_file(options.talos_json_url)
-    except Exception, e:
-        print "ERROR: We tried to download the talos.json file but something failed."
-        print "ERROR: %s" % str(e)
+    except Exception as e:
+        print("ERROR: We tried to download the talos.json file but something failed.")
+        print("ERROR: %s" % str(e))
         sys.exit(1)
 
     # 3) download the necessary files
-    print "INFO: talos.json URL: %s" % options.talos_json_url
+    print("INFO: talos.json URL: %s" % options.talos_json_url)
     try:
         key = 'talos.zip'
         entity = get_value(jsonFilename, key)
         if passesRestrictions(options.talos_json_url, entity["url"]):
             # the key is at the same time the filename e.g. talos.zip
-            print "INFO: Downloading %s as %s" % (entity["url"], os.path.join(entity["path"], key))
+            print("INFO: Downloading %s as %s" %
+                  (entity["url"], os.path.join(entity["path"], key)))
             download_file(entity["url"], entity["path"], key)
         else:
-            print "ERROR: You have tried to download a file " + \
-                  "from: %s " % entity["url"] + \
-                  "which is a location different than http://talos-bundles.pvt.build.mozilla.org/"
-            print "ERROR: This is only allowed for the certain branches."
+            print("ERROR: You have tried to download a file " +
+                  "from: %s " % entity["url"] +
+                  "which is a location different than http://talos-bundles.pvt.build.mozilla.org/")
+            print("ERROR: This is only allowed for the certain branches.")
             sys.exit(1)
-    except Exception, e:
-        print "ERROR: %s" % str(e)
+    except Exception as e:
+        print("ERROR: %s" % str(e))
         sys.exit(1)
+
 
 def passesRestrictions(talosJsonUrl, fileUrl):
     '''
@@ -76,9 +79,10 @@ def passesRestrictions(talosJsonUrl, fileUrl):
     else:
         p = re.compile('^http://talos-bundles.pvt.build.mozilla.org/')
         m = p.match(fileUrl)
-        if m == None:
+        if m is None:
             return False
         return True
+
 
 def get_filename_from_url(url):
     '''
@@ -88,9 +92,10 @@ def get_filename_from_url(url):
     if parsed.path != '':
         return parsed.path.rsplit('/', 1)[-1]
     else:
-        print "ERROR: We were trying to download a file from %s " + \
-              "but the URL seems to be incorrect."
+        print("ERROR: We were trying to download a file from %s " +
+              "but the URL seems to be incorrect.")
         sys.exit(1)
+
 
 def download_file(url, path="", saveAs=None):
     '''
@@ -101,15 +106,16 @@ def download_file(url, path="", saveAs=None):
     if path != "" and not os.path.isdir(path):
         try:
             os.makedirs(path)
-            print "INFO: directory %s created" % path
-        except Exception, e:
-            print "ERROR: %s" % str(e)
+            print("INFO: directory %s created" % path)
+        except Exception as e:
+            print("ERROR: %s" % str(e))
             sys.exit(1)
     filename = saveAs if saveAs else get_filename_from_url(url)
     local_file = open(os.path.join(path, filename), 'wb')
     local_file.write(f.read())
     local_file.close()
     return filename
+
 
 def get_value(json_filename, key):
     '''
