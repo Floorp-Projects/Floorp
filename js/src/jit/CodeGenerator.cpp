@@ -3703,7 +3703,7 @@ CodeGenerator::visitPostWriteElementBarrierV(LPostWriteElementBarrierV* lir)
 void
 CodeGenerator::visitCallNative(LCallNative* call)
 {
-    JSFunction* target = call->getSingleTarget();
+    WrappedFunction* target = call->getSingleTarget();
     MOZ_ASSERT(target);
     MOZ_ASSERT(target->isNative());
 
@@ -3732,7 +3732,7 @@ CodeGenerator::visitCallNative(LCallNative* call)
 
     // Push a Value containing the callee object: natives are allowed to access their callee before
     // setitng the return value. The StackPointer is moved to &vp[0].
-    masm.Push(ObjectValue(*target));
+    masm.Push(ObjectValue(*target->rawJSFunction()));
 
     // Preload arguments into registers.
     masm.loadJSContext(argContextReg);
@@ -3798,7 +3798,7 @@ LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv)
 void
 CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
 {
-    JSFunction* target = call->getSingleTarget();
+    WrappedFunction* target = call->getSingleTarget();
     MOZ_ASSERT(target);
     MOZ_ASSERT(target->isNative());
     MOZ_ASSERT(target->jitInfo());
@@ -3833,7 +3833,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
 
     // Push a Value containing the callee object: natives are allowed to access their callee before
     // setitng the return value. After this the StackPointer points to &vp[0].
-    masm.Push(ObjectValue(*target));
+    masm.Push(ObjectValue(*target->rawJSFunction()));
 
     // Now compute the argv value.  Since StackPointer is pointing to &vp[0] and
     // argv is &vp[2] we just need to add 2*sizeof(Value) to the current
@@ -4049,7 +4049,7 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     Register calleereg = ToRegister(call->getFunction());
     Register objreg    = ToRegister(call->getTempObject());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
-    JSFunction* target = call->getSingleTarget();
+    WrappedFunction* target = call->getSingleTarget();
     Label end, uncompiled;
 
     // Native single targets are handled by LCallNative.
