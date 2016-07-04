@@ -274,6 +274,8 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return OperatingSystem::OSX10_10;
   else if (os.EqualsLiteral("Darwin 15"))
     return OperatingSystem::OSX10_11;
+  else if (os.EqualsLiteral("Darwin 16"))
+    return OperatingSystem::OSX10_12;
   else if (os.EqualsLiteral("Android"))
     return OperatingSystem::Android;
   // For historical reasons, "All" in blocklist means "All Windows"
