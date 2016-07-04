@@ -56,4 +56,6 @@ function* runTests(doc) {
   is(panelRect.width, 150, "Tooltip panel has the expected width.");
 
   yield hideTooltip(tooltip);
+
+  tooltip.destroy();
 }

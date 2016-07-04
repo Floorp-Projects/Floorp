@@ -66,4 +66,6 @@ add_task(function* () {
 
   info("Hide tooltip before leaving test");
   yield hideTooltip(tooltip);
+
+  tooltip.destroy();
 });

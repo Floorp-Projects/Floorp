@@ -64,6 +64,8 @@ function* testNoAutoFocus(doc) {
 
   yield hideTooltip(tooltip);
   yield blurNode(doc, "#box4-input");
+
+  tooltip.destroy();
 }
 
 function* testAutoFocus(doc) {
@@ -82,6 +84,8 @@ function* testAutoFocus(doc) {
 
   info("Blur the textbox before moving to the next test to reset the state.");
   yield blurNode(doc, "#box4-input");
+
+  tooltip.destroy();
 }
 
 function* testAutoFocusPreservesFocusChange(doc) {
@@ -104,6 +108,8 @@ function* testAutoFocusPreservesFocusChange(doc) {
 
   info("Blur the textbox before moving to the next test to reset the state.");
   yield blurNode(doc, "#box3-input");
+
+  tooltip.destroy();
 }
 
 /**
