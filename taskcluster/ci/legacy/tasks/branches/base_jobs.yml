@@ -261,38 +261,22 @@ tests:
         task: tasks/tests/fx_linux64_external_media_tests_dbg.yml
       tasks/builds/opt_linux64_pgo.yml:
         task: tasks/tests/fx_linux64_external_media_tests_opt.yml
-  firefox-ui-functional-local:
+  firefox-ui-functional:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_local_opt.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_opt.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_local_dbg.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_dbg.yml
       tasks/builds/opt_linux64_pgo.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_local_opt.yml
-  firefox-ui-functional-local-e10s:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_opt.yml
+  firefox-ui-functional-e10s:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_local_e10s_opt.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_opt.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_local_e10s_dbg.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_dbg.yml
       tasks/builds/opt_linux64_pgo.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_local_e10s_opt.yml
-  firefox-ui-functional-remote:
-    allowed_build_tasks:
-      tasks/builds/opt_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_remote_opt.yml
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_remote_dbg.yml
-      tasks/builds/opt_linux64_pgo.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_remote_opt.yml
-  firefox-ui-functional-remote-e10s:
-    allowed_build_tasks:
-      tasks/builds/opt_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_remote_e10s_opt.yml
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_remote_e10s_dbg.yml
-      tasks/builds/opt_linux64_pgo.yml:
-        task: tasks/tests/fx_linux64_fxui_functional_remote_e10s_opt.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_opt.yml
   gtest:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
