@@ -4679,13 +4679,6 @@
     "kind": "flag",
     "description": "Whether the decoder for ISO-8859-5 has been instantiated in this session."
   },
-  "HTML_FOREGROUND_REFLOW_MS_2": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "HTML reflows in foreground windows (ms)"
-  },
   "LONG_REFLOW_INTERRUPTIBLE": {
     "expires_in_version": "never",
     "kind": "boolean",
