@@ -659,7 +659,7 @@ var DebuggerView = {
    * @return boolean
    */
   get instrumentsPaneHidden() {
-    return this._instrumentsPane.hasAttribute("pane-collapsed");
+    return this._instrumentsPane.classList.contains("pane-collapsed");
   },
 
   /**
@@ -689,10 +689,10 @@ var DebuggerView = {
     ViewHelpers.togglePane(aFlags, pane);
 
     if (aFlags.visible) {
-      button.removeAttribute("pane-collapsed");
+      button.classList.remove("pane-collapsed");
       button.setAttribute("tooltiptext", this._collapsePaneString);
     } else {
-      button.setAttribute("pane-collapsed", "");
+      button.classList.add("pane-collapsed");
       button.setAttribute("tooltiptext", this._expandPaneString);
     }
 
