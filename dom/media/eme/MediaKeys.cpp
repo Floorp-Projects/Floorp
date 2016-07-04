@@ -414,7 +414,7 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
 
 already_AddRefed<MediaKeySession>
 MediaKeys::CreateSession(JSContext* aCx,
-                         SessionType aSessionType,
+                         MediaKeySessionType aSessionType,
                          ErrorResult& aRv)
 {
   if (!mProxy) {

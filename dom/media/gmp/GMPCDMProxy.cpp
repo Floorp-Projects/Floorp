@@ -263,7 +263,7 @@ GMPCDMProxy::OnCDMCreated(uint32_t aPromiseId)
 
 void
 GMPCDMProxy::CreateSession(uint32_t aCreateSessionToken,
-                           dom::SessionType aSessionType,
+                           dom::MediaKeySessionType aSessionType,
                            PromiseId aPromiseId,
                            const nsAString& aInitDataType,
                            nsTArray<uint8_t>& aInitData)
@@ -284,10 +284,10 @@ GMPCDMProxy::CreateSession(uint32_t aCreateSessionToken,
 }
 
 GMPSessionType
-ToGMPSessionType(dom::SessionType aSessionType) {
+ToGMPSessionType(dom::MediaKeySessionType aSessionType) {
   switch (aSessionType) {
-    case dom::SessionType::Temporary: return kGMPTemporySession;
-    case dom::SessionType::Persistent: return kGMPPersistentSession;
+    case dom::MediaKeySessionType::Temporary: return kGMPTemporySession;
+    case dom::MediaKeySessionType::Persistent_license: return kGMPPersistentSession;
     default: return kGMPTemporySession;
   };
 };
