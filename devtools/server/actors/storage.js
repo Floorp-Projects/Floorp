@@ -539,10 +539,6 @@ StorageActors.createActor({
       case "cleared":
         this.storageActor.update("cleared", "cookies", hosts);
         break;
-
-      case "reload":
-        this.storageActor.update("reloaded", "cookies", hosts);
-        break;
     }
     return null;
   },
@@ -2245,11 +2241,11 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
    *           Where host1, host2 are the host in which this change happened and
    *           [<store_namesX] is an array of the names of the changed store
    *           objects. Leave it empty if the host was completely removed.
-   *        When the action is "reloaded" or "cleared", `data` is an array of
-   *        hosts for which the stores were cleared or reloaded.
+   *        When the action is "cleared", `data` is an array of
+   *        hosts for which the stores were cleared.
    */
   update(action, storeType, data) {
-    if (action == "cleared" || action == "reloaded") {
+    if (action == "cleared") {
       let toSend = {};
       toSend[storeType] = data;
       events.emit(this, "stores-" + action, toSend);
