@@ -103,8 +103,16 @@ interface nsIPresentationControlChannel: nsISupports
   void sendIceCandidate(in DOMString candidate);
 
   /*
-   * Close the transport channel.
-   * @param reason The reason of channel close; NS_OK represents normal.
+   * Launch a presentation on remote endpoint.
+   * @param presentationId The Id for representing this session.
+   * @param url The URL requested to open by remote device.
+   * @throws NS_ERROR_FAILURE on failure
    */
-  void close(in nsresult reason);
+  void launch(in DOMString presentationId, in DOMString url);
+
+  /*
+   * Disconnect the control channel.
+   * @param reason The reason of disconnecting channel; NS_OK represents normal.
+   */
+  void disconnect(in nsresult reason);
 };

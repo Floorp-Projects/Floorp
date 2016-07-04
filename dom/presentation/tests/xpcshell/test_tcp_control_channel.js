@@ -109,7 +109,7 @@ function testPresentationServer() {
               Assert.equal(recvCandidate[key], candidate[key], "key " + key + " should match.");
             }
           }
-          controllerControlChannel.close(CLOSE_CONTROL_CHANNEL_REASON);
+          controllerControlChannel.disconnect(CLOSE_CONTROL_CHANNEL_REASON);
         },
         notifyOpened: function() {
           Assert.equal(this.status, 'created', '0. controllerControlChannel: opened');
@@ -117,7 +117,7 @@ function testPresentationServer() {
         },
         notifyClosed: function(aReason) {
           Assert.equal(this.status, 'onOffer', '4. controllerControlChannel: closed');
-          Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, 'presenterControlChannel notify closed');
+          Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, 'controllerControlChannel notify closed');
           this.status = 'closed';
           yayFuncs.controllerControlChannelClose();
         },
@@ -135,9 +135,7 @@ function testPresentationServer() {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
   };
 
-  let presenterControlChannel = tps.requestSession(presenterDeviceInfo,
-                                                   'http://example.com',
-                                                   'testPresentationId');
+  let presenterControlChannel = tps.connect(presenterDeviceInfo);
 
   presenterControlChannel.listener = {
     status: 'created',
@@ -164,6 +162,7 @@ function testPresentationServer() {
     },
     notifyOpened: function() {
       Assert.equal(this.status, 'created', '0. presenterControlChannel: opened, send offer');
+      presenterControlChannel.launch('testPresentationId', 'http://example.com');
       this.status = 'opened';
       try {
         let tcpType = Ci.nsIPresentationChannelDescription.TYPE_TCP;

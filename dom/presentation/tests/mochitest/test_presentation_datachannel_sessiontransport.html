@@ -109,7 +109,7 @@ const clientListener = {
   sendIceCandidate: function(aCandidate) {
     setTimeout(()=>this._remoteBuilder.onIceCandidate(aCandidate), 0);
   },
-  close: function(aReason) {
+  disconnect: function(aReason) {
     setTimeout(()=>this._localBuilder.notifyClosed(aReason), 0);
     setTimeout(()=>this._remoteBuilder.notifyClosed(aReason), 0);
   },
@@ -141,7 +141,7 @@ const serverListener = {
   sendIceCandidate: function(aCandidate) {
     setTimeout(()=>this._remoteBuilder.onIceCandidate(aCandidate), 0);
   },
-  close: function(aReason) {
+  disconnect: function(aReason) {
     setTimeout(()=>this._localBuilder.notifyClosed(aReason), 0);
     setTimeout(()=>this._remoteBuilder.notifyClosed(aReason), 0);
   },
