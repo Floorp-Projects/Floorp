@@ -3822,6 +3822,35 @@ class MInitElemGetterSetter
 
 };
 
+// WrappedFunction wraps a JSFunction so it can safely be used off-thread.
+// In particular, a function's flags can be modified on the main thread as
+// functions are relazified and delazified, so we must be careful not to access
+// these flags off-thread.
+class WrappedFunction : public TempObject
+{
+    CompilerFunction fun_;
+    uint16_t nargs_;
+    bool isNative_ : 1;
+    bool isConstructor_ : 1;
+    bool isClassConstructor_ : 1;
+    bool isSelfHostedBuiltin_ : 1;
+
+  public:
+    explicit WrappedFunction(JSFunction* fun);
+    size_t nargs() const { return nargs_; }
+    bool isNative() const { return isNative_; }
+    bool isConstructor() const { return isConstructor_; }
+    bool isClassConstructor() const { return isClassConstructor_; }
+    bool isSelfHostedBuiltin() const { return isSelfHostedBuiltin_; }
+
+    // fun->native() and fun->jitInfo() can safely be called off-thread: these
+    // fields never change.
+    JSNative native() const { return fun_->native(); }
+    const JSJitInfo* jitInfo() const { return fun_->jitInfo(); }
+
+    JSFunction* rawJSFunction() const { return fun_; }
+};
+
 class MCall
   : public MVariadicInstruction,
     public CallPolicy::Data
@@ -3834,7 +3863,7 @@ class MCall
 
   protected:
     // Monomorphic cache of single target from TI, or nullptr.
-    CompilerFunction target_;
+    WrappedFunction* target_;
 
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
@@ -3844,7 +3873,7 @@ class MCall
 
     bool needsArgCheck_;
 
-    MCall(JSFunction* target, uint32_t numActualArgs, bool construct)
+    MCall(WrappedFunction* target, uint32_t numActualArgs, bool construct)
       : target_(target),
         numActualArgs_(numActualArgs),
         construct_(construct),
@@ -3893,7 +3922,7 @@ class MCall
     }
 
     // For TI-informed monomorphic callsites.
-    JSFunction* getSingleTarget() const {
+    WrappedFunction* getSingleTarget() const {
         return target_;
     }
 
@@ -3937,7 +3966,7 @@ class MCallDOMNative : public MCall
     // isCall() to check for calls and all we really want is to overload a few
     // virtual things from MCall.
   protected:
-    MCallDOMNative(JSFunction* target, uint32_t numActualArgs)
+    MCallDOMNative(WrappedFunction* target, uint32_t numActualArgs)
         : MCall(target, numActualArgs, false)
     {
         MOZ_ASSERT(getJitInfo()->type() != JSJitInfo::InlinableNative);
@@ -3996,9 +4025,9 @@ class MApplyArgs
 {
   protected:
     // Monomorphic cache of single target from TI, or nullptr.
-    CompilerFunction target_;
+    WrappedFunction* target_;
 
-    MApplyArgs(JSFunction* target, MDefinition* fun, MDefinition* argc, MDefinition* self)
+    MApplyArgs(WrappedFunction* target, MDefinition* fun, MDefinition* argc, MDefinition* self)
       : target_(target)
     {
         initOperand(0, fun);
@@ -4013,7 +4042,7 @@ class MApplyArgs
     NAMED_OPERANDS((0, getFunction), (1, getArgc), (2, getThis))
 
     // For TI-informed monomorphic callsites.
-    JSFunction* getSingleTarget() const {
+    WrappedFunction* getSingleTarget() const {
         return target_;
     }
 
@@ -4029,9 +4058,9 @@ class MApplyArray
 {
   protected:
     // Monomorphic cache of single target from TI, or nullptr.
-    CompilerFunction target_;
+    WrappedFunction* target_;
 
-    MApplyArray(JSFunction* target, MDefinition* fun, MDefinition* elements, MDefinition* self)
+    MApplyArray(WrappedFunction* target, MDefinition* fun, MDefinition* elements, MDefinition* self)
       : target_(target)
     {
         initOperand(0, fun);
@@ -4046,7 +4075,7 @@ class MApplyArray
     NAMED_OPERANDS((0, getFunction), (1, getElements), (2, getThis))
 
     // For TI-informed monomorphic callsites.
-    JSFunction* getSingleTarget() const {
+    WrappedFunction* getSingleTarget() const {
         return target_;
     }
 

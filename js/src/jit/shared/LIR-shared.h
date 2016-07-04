@@ -1819,7 +1819,7 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     bool hasSingleTarget() const {
         return getSingleTarget() != nullptr;
     }
-    JSFunction* getSingleTarget() const {
+    WrappedFunction* getSingleTarget() const {
         return mir()->getSingleTarget();
     }
 
@@ -2083,7 +2083,7 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     bool hasSingleTarget() const {
         return getSingleTarget() != nullptr;
     }
-    JSFunction* getSingleTarget() const {
+    WrappedFunction* getSingleTarget() const {
         return mir()->getSingleTarget();
     }
 
@@ -2126,7 +2126,7 @@ class LApplyArrayGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES 
     bool hasSingleTarget() const {
         return getSingleTarget() != nullptr;
     }
-    JSFunction* getSingleTarget() const {
+    WrappedFunction* getSingleTarget() const {
         return mir()->getSingleTarget();
     }
 
