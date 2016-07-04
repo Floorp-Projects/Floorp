@@ -83,4 +83,6 @@ function* runTests(doc) {
   EventUtils.synthesizeMouse(tooltip.container, 100, CONTAINER_HEIGHT + 10,
     {}, doc.defaultView);
   yield onHidden;
+
+  tooltip.destroy();
 }

@@ -65,6 +65,8 @@ add_task(function* () {
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 
+  tooltip.destroy();
+
   info("Restore original window dimensions.");
   win.top.resizeTo(originalWidth, originalHeight);
 });

@@ -95,4 +95,6 @@ function* runTests(doc) {
       "The tooltip arrow remains inside the tooltip panel horizontally");
     yield hideTooltip(tooltip);
   }
+
+  tooltip.destroy();
 }
