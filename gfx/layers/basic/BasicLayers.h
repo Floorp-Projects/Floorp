@@ -152,7 +152,10 @@ public:
     gfx::Matrix mMaskTransform;
   };
 
-  PushedGroup PushGroupForLayer(gfxContext* aContext, Layer* aLayerContext, const nsIntRegion& aRegion);
+  // Construct a PushedGroup for a specific layer.
+  // Return false if it has some errors in PushGroupForLayer(). Then, the
+  // "aGroupResult" is unavailable for future using.
+  bool PushGroupForLayer(gfxContext* aContext, Layer* aLayerContext, const nsIntRegion& aRegion, PushedGroup& aGroupResult);
 
   void PopGroupForLayer(PushedGroup& aGroup);
 
