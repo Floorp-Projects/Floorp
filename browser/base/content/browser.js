@@ -2967,7 +2967,7 @@ var BrowserOnClick = {
         anchorTarget.classList.contains("newtab-link")) {
       event.preventDefault();
       let where = whereToOpenLink(event, false, false);
-      openLinkIn(anchorTarget.href, where, { charset: ownerDoc.characterSet });
+      openLinkIn(anchorTarget.href, where, { charset: ownerDoc.characterSet, referrerURI: ownerDoc.documentURIObject });
     }
   },
 
