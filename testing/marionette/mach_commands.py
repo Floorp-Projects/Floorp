@@ -19,12 +19,15 @@ from mach.decorators import (
     Command,
 )
 
+def is_firefox_or_android(cls):
+    """Must have Firefox build or Android build."""
+    return conditions.is_firefox(cls) or conditions.is_android(cls)
 
 def setup_marionette_argument_parser():
     from marionette.runner.base import BaseMarionetteArguments
     return BaseMarionetteArguments()
 
-def run_marionette(tests, testtype=None, address=None, binary=None, topsrcdir=None, **kwargs):
+def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
 
     from marionette.runtests import (
@@ -42,7 +45,6 @@ def run_marionette(tests, testtype=None, address=None, binary=None, topsrcdir=No
 
     args = argparse.Namespace(tests=tests)
 
-    args.address = address
     args.binary = binary
 
     for k, v in kwargs.iteritems():
@@ -138,7 +140,7 @@ class B2GCommands(MachCommandBase):
 class MachCommands(MachCommandBase):
     @Command('marionette-test', category='testing',
         description='Run a Marionette test (Check UI or the internal JavaScript using marionette).',
-        conditions=[conditions.is_firefox],
+        conditions=[is_firefox_or_android],
         parser=setup_marionette_argument_parser,
     )
     def run_marionette_test(self, tests, **kwargs):
@@ -148,10 +150,11 @@ class MachCommands(MachCommandBase):
                 tests.append(obj['file_relpath'])
             del kwargs['test_objects']
 
-        bin_path = self.get_binary_path('app')
-        if kwargs.get('binary') is not None:
-            print "Warning: ignoring '--binary' option, using binary at " + bin_path
-        kwargs['binary'] = bin_path
+        if conditions.is_firefox(self):
+            bin_path = self.get_binary_path('app')
+            if kwargs.get('binary') is not None:
+                print "Warning: ignoring '--binary' option, using binary at " + bin_path
+            kwargs['binary'] = bin_path
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
 
     @Command('session-test', category='testing',
