@@ -27,7 +27,7 @@ public:
   NextFrameSeekTask(const void* aDecoderID,
                    AbstractThread* aThread,
                    MediaDecoderReaderWrapper* aReader,
-                   SeekJob& aSeekJob,
+                   const SeekTarget& aTarget,
                    const MediaInfo& aInfo,
                    const media::TimeUnit& aDuration,
                    int64_t aCurrentTime,

@@ -1432,7 +1432,7 @@ void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(TrackSet aTracks)
   mCurrentSeek = Move(seekJob);
   // Create a new SeekTask instance for the incoming seek task.
   mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
-                                   mReader.get(), mCurrentSeek,
+                                   mReader.get(), mCurrentSeek.mTarget,
                                    mInfo, Duration(), GetMediaTime());
 
   mOnSeekingStart.Notify(MediaDecoderEventVisibility::Suppressed);
@@ -1637,11 +1637,11 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   mCurrentSeek = Move(aSeekJob);
   if (mCurrentSeek.mTarget.IsAccurate() || mCurrentSeek.mTarget.IsFast()) {
     mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
-                                     mReader.get(), mCurrentSeek,
+                                     mReader.get(), mCurrentSeek.mTarget,
                                      mInfo, Duration(), GetMediaTime());
   } else if (mCurrentSeek.mTarget.IsNextFrame()) {
     mSeekTask = new NextFrameSeekTask(mDecoderID, OwnerThread(), mReader.get(),
-                                      mCurrentSeek, mInfo, Duration(),
+                                      mCurrentSeek.mTarget, mInfo, Duration(),
                                       GetMediaTime(), AudioQueue(), VideoQueue());
   } else {
     MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
@@ -1651,9 +1651,14 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   // dispatching SeekingStarted, playback doesn't advance and mess with
   // mCurrentPosition that we've setting to seekTime here.
   StopPlayback();
+
+  // mCurrentSeek.mTarget.mTime might be different from
+  // mSeekTask->GetSeekTarget().mTime because the seek task might clamp the seek
+  // target to [0, duration]. We want to update the playback position to the
+  // clamped value.
   UpdatePlaybackPositionInternal(mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
 
-  mOnSeekingStart.Notify(mSeekTask->GetSeekTarget().mEventVisibility);
+  mOnSeekingStart.Notify(mCurrentSeek.mTarget.mEventVisibility);
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) { Reset(); }
