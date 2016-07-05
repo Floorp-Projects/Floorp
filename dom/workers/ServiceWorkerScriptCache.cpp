@@ -19,6 +19,7 @@
 #include "nsIThreadRetargetableRequest.h"
 
 #include "nsIPrincipal.h"
+#include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
@@ -289,7 +290,7 @@ public:
     return NS_OK;
   }
 
-  const nsAString&
+  const nsString&
   URL() const
   {
     AssertIsOnMainThread();
@@ -737,6 +738,18 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   }
 
   if (NS_WARN_IF(!requestSucceeded)) {
+    // Get the stringified numeric status code, not statusText which could be
+    // something misleading like OK for a 404.
+    uint32_t status = 0;
+    httpChannel->GetResponseStatus(&status); // don't care if this fails, use 0.
+    nsAutoString statusAsText;
+    statusAsText.AppendInt(status);
+
+    RefPtr<ServiceWorkerRegistrationInfo> registration = mManager->GetRegistration();
+    ServiceWorkerManager::LocalizeAndReportToAllClients(
+      registration->mScope, "ServiceWorkerRegisterNetworkError",
+      nsTArray<nsString> { NS_ConvertUTF8toUTF16(registration->mScope),
+        statusAsText, mManager->URL() });
     mManager->NetworkFinished(NS_ERROR_FAILURE);
     return NS_OK;
   }
