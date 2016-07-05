@@ -2697,7 +2697,7 @@ Promise::ResolveInternal(JSContext* aCx,
         new PromiseInit(nullptr, thenObj, mozilla::dom::GetIncumbentGlobal());
       RefPtr<PromiseResolveThenableJob> task =
         new PromiseResolveThenableJob(this, valueObj, thenCallback);
-      runtime->DispatchToMicroTask(task);
+      runtime->DispatchToMicroTask(task.forget());
       return;
     }
   }
@@ -2812,7 +2812,7 @@ Promise::TriggerPromiseReactions()
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     RefPtr<PromiseReactionJob> task =
       new PromiseReactionJob(this, callbacks[i], mResult);
-    runtime->DispatchToMicroTask(task);
+    runtime->DispatchToMicroTask(task.forget());
   }
 }
 
