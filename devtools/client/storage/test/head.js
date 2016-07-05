@@ -793,3 +793,37 @@ function* checkState(state) {
     }
   }
 }
+
+/**
+ * Checks if document's active element is within the given element.
+ * @param  {HTMLDocument}  doc document with active element in question
+ * @param  {DOMNode}       container element tested on focus containment
+ * @return {Boolean}
+ */
+function containsFocus(doc, container) {
+  let elm = doc.activeElement;
+  while (elm) {
+    if (elm === container) {
+      return true;
+    }
+    elm = elm.parentNode;
+  }
+  return false;
+}
+
+var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
+  info("Focusing search box");
+  let searchBox = panelWin.document.getElementById("storage-searchbox");
+  let focused = once(searchBox, "focus");
+
+  panelWin.focus();
+  let strings = Services.strings.createBundle(
+    "chrome://devtools/locale/storage.properties");
+  synthesizeKeyShortcut(strings.GetStringFromName("storage.filter.key"));
+
+  yield focused;
+
+  if (callback) {
+    callback();
+  }
+});
