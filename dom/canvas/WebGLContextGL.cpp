@@ -1621,6 +1621,11 @@ ValidateReadPixelsFormatAndType(const webgl::FormatInfo* srcFormat,
         return false;
     }
 
+    if (pi.type == LOCAL_GL_UNSIGNED_INT_24_8) {
+        webgl->ErrorInvalidEnum("readPixels: Invalid type: 0x%04x", pi.type);
+        return false;
+    }
+
     MOZ_ASSERT(gl->IsCurrent());
     if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
         const auto auxFormat = gl->GetIntAs<GLenum>(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT);
