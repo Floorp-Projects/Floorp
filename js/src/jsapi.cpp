@@ -1356,51 +1356,51 @@ JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data)
 }
 
 JS_PUBLIC_API(void)
-JS_SetObjectsTenuredCallback(JSRuntime* rt, JSObjectsTenuredCallback cb,
+JS_SetObjectsTenuredCallback(JSContext* cx, JSObjectsTenuredCallback cb,
                              void* data)
 {
-    AssertHeapIsIdle(rt);
-    rt->gc.setObjectsTenuredCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    cx->gc.setObjectsTenuredCallback(cb, data);
 }
 
 JS_PUBLIC_API(bool)
-JS_AddFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb, void* data)
+JS_AddFinalizeCallback(JSContext* cx, JSFinalizeCallback cb, void* data)
 {
-    AssertHeapIsIdle(rt);
-    return rt->gc.addFinalizeCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    return cx->gc.addFinalizeCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb)
+JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb)
 {
-    rt->gc.removeFinalizeCallback(cb);
+    cx->gc.removeFinalizeCallback(cb);
 }
 
 JS_PUBLIC_API(bool)
-JS_AddWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb, void* data)
+JS_AddWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb, void* data)
 {
-    AssertHeapIsIdle(rt);
-    return rt->gc.addWeakPointerZoneGroupCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    return cx->gc.addWeakPointerZoneGroupCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb)
+JS_RemoveWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb)
 {
-    rt->gc.removeWeakPointerZoneGroupCallback(cb);
+    cx->gc.removeWeakPointerZoneGroupCallback(cb);
 }
 
 JS_PUBLIC_API(bool)
-JS_AddWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb,
+JS_AddWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb,
                                      void* data)
 {
-    AssertHeapIsIdle(rt);
-    return rt->gc.addWeakPointerCompartmentCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    return cx->gc.addWeakPointerCompartmentCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb)
+JS_RemoveWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb)
 {
-    rt->gc.removeWeakPointerCompartmentCallback(cb);
+    cx->gc.removeWeakPointerCompartmentCallback(cb);
 }
 
 
@@ -6507,10 +6507,10 @@ JS::SetLargeAllocationFailureCallback(JSRuntime* rt, JS::LargeAllocationFailureC
 }
 
 JS_PUBLIC_API(void)
-JS::SetOutOfMemoryCallback(JSRuntime* rt, OutOfMemoryCallback cb, void* data)
+JS::SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data)
 {
-    rt->oomCallback = cb;
-    rt->oomCallbackData = data;
+    cx->oomCallback = cb;
+    cx->oomCallbackData = data;
 }
 
 JS_PUBLIC_API(bool)
