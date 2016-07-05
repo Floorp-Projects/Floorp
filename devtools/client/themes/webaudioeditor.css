@@ -149,7 +149,7 @@ text {
   height: 16px;
 }
 
-#inspector-pane-toggle[pane-collapsed] {
+#inspector-pane-toggle.pane-collapsed {
   list-style-image: var(--theme-pane-expand-image);
 }
 
