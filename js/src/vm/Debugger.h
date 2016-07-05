@@ -1149,8 +1149,6 @@ class DebuggerFrame : public NativeObject
 
     static MOZ_MUST_USE bool getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
                                        MutableHandle<DebuggerObject*> result);
-    static MOZ_MUST_USE bool getIsConstructing(JSContext* cx, Handle<DebuggerFrame*> frame,
-                                               bool& result);
 
   private:
     static const ClassOps classOps_;
@@ -1158,13 +1156,9 @@ class DebuggerFrame : public NativeObject
     static const JSPropertySpec properties_[];
     static const JSFunctionSpec methods_[];
 
-    static MOZ_MUST_USE bool getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
-                                                mozilla::Maybe<ScriptFrameIter>& result);
-
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
     static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc, Value* vp);
 
     AbstractFramePtr referent() const;
     Debugger* owner() const;
