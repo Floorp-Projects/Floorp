@@ -1566,6 +1566,52 @@ struct nsGridContainerFrame::Tracks
     return size;
   }
 
+  nsTArray<nsString> GetLineNamesAtIndex(
+    const nsStyleGridTemplate& aGridTemplate,
+    const TrackSizingFunctions& aFunctions,
+    uint32_t aIndex)
+  {
+    nsTArray<nsString> lineNames;
+
+    bool hasRepeatAuto = aGridTemplate.HasRepeatAuto();
+    const nsTArray<nsTArray<nsString>>& lineNameLists(
+        aGridTemplate.mLineNameLists);
+
+    if (!hasRepeatAuto) {
+      if (aIndex < lineNameLists.Length()) {
+        lineNames.AppendElements(lineNameLists[aIndex]);
+      }
+    } else {
+      const uint32_t repeatTrackCount = aFunctions.NumRepeatTracks();
+      const uint32_t repeatAutoStart = aGridTemplate.mRepeatAutoIndex;
+      const uint32_t repeatAutoEnd = (repeatAutoStart + repeatTrackCount);
+      const int32_t repeatEndDelta = int32_t(repeatTrackCount - 1);
+
+      if (aIndex < repeatAutoEnd && aIndex >= repeatAutoStart) {
+        lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListBefore);
+      } else if (aIndex <= repeatAutoEnd && aIndex > repeatAutoStart) {
+        lineNames.AppendElements(aGridTemplate.mRepeatAutoLineNameListAfter);
+      } else if (aIndex <= repeatAutoStart) {
+        if (aIndex < lineNameLists.Length()) {
+          lineNames.AppendElements(lineNameLists[aIndex]);
+        }
+        if (aIndex == repeatAutoEnd) {
+          uint32_t i = aIndex + 1;
+          if (i < lineNameLists.Length()) {
+            lineNames.AppendElements(lineNameLists[i]);
+          }
+        }
+      } else if (aIndex >= repeatAutoEnd) {
+        uint32_t i = aIndex - repeatEndDelta;
+        if (i < lineNameLists.Length()) {
+          lineNames.AppendElements(lineNameLists[i]);
+        }
+      }
+    }
+
+    return lineNames;
+  }
+
 #ifdef DEBUG
   void Dump() const
   {
@@ -1613,6 +1659,7 @@ struct nsGridContainerFrame::SharedGridData
   nsTArray<RowData> mOriginalRowData;
   nsTArray<GridItemInfo> mGridItems;
   nsTArray<GridItemInfo> mAbsPosItems;
+  bool mGenerateComputedGridInfo;
 
   /**
    * Only set on the first-in-flow.  Continuations will Initialize() their
@@ -1731,6 +1778,11 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
         }
       }
       MOZ_ASSERT(mAbsPosItems.Length() == len + 1, "can't find GridItemInfo");
+    }
+
+    // Copy in the computed grid info state bit
+    if (mSharedGridData->mGenerateComputedGridInfo) {
+      aGridContainerFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
     }
   }
 
@@ -5579,85 +5631,136 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     aDesiredSize.SetSize(wm, desiredSize);
   }
 
-  // Now that we know column and row sizes and positions, set
-  // the ComputedGridTrackInfo.
+  if (HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES)) {
+    // This state bit will never be cleared, since reflow can be called
+    // multiple times in fragmented grids, and it's challenging to scope
+    // the bit to only that sequence of calls. This is relatively harmless
+    // since this bit is only set by accessing a ChromeOnly property, and
+    // therefore can't unduly slow down normal web browsing.
 
-  // FIXME bug 1229180: Instead of doing this on every reflow, we should only
-  // set these properties if they are needed.
-  uint32_t colTrackCount = gridReflowState.mCols.mSizes.Length();
-  nsTArray<nscoord> colTrackPositions(colTrackCount);
-  nsTArray<nscoord> colTrackSizes(colTrackCount);
-  nsTArray<uint32_t> colTrackStates(colTrackCount);
-  uint32_t col = 0;
-  for (const TrackSize& sz : gridReflowState.mCols.mSizes) {
-    colTrackPositions.AppendElement(sz.mPosition);
-    colTrackSizes.AppendElement(sz.mBase);
-    bool isRepeat = ((col >= gridReflowState.mColFunctions.mRepeatAutoStart) &&
-                     (col < gridReflowState.mColFunctions.mRepeatAutoEnd));
-    colTrackStates.AppendElement(
+    // Now that we know column and row sizes and positions, set
+    // the ComputedGridTrackInfo and related properties
+
+    uint32_t colTrackCount = gridReflowState.mCols.mSizes.Length();
+    nsTArray<nscoord> colTrackPositions(colTrackCount);
+    nsTArray<nscoord> colTrackSizes(colTrackCount);
+    nsTArray<uint32_t> colTrackStates(colTrackCount);
+    uint32_t col = 0;
+    for (const TrackSize& sz : gridReflowState.mCols.mSizes) {
+      colTrackPositions.AppendElement(sz.mPosition);
+      colTrackSizes.AppendElement(sz.mBase);
+      bool isRepeat = ((col >= gridReflowState.mColFunctions.mRepeatAutoStart) &&
+                       (col < gridReflowState.mColFunctions.mRepeatAutoEnd));
+      colTrackStates.AppendElement(
+          isRepeat ?
+          (uint32_t)mozilla::dom::GridTrackState::Repeat :
+          (uint32_t)mozilla::dom::GridTrackState::Static
+      );
+
+      col++;
+    }
+    ComputedGridTrackInfo* colInfo = new ComputedGridTrackInfo(
+      gridReflowState.mColFunctions.mExplicitGridOffset,
+      gridReflowState.mColFunctions.NumExplicitTracks(),
+      0,
+      col,
+      Move(colTrackPositions),
+      Move(colTrackSizes),
+      Move(colTrackStates));
+    Properties().Set(GridColTrackInfo(), colInfo);
+
+    uint32_t rowTrackCount = gridReflowState.mRows.mSizes.Length();
+    nsTArray<nscoord> rowTrackPositions(rowTrackCount);
+    nsTArray<nscoord> rowTrackSizes(rowTrackCount);
+    nsTArray<uint32_t> rowTrackStates(rowTrackCount);
+    uint32_t row = 0;
+    for (const TrackSize& sz : gridReflowState.mRows.mSizes) {
+      rowTrackPositions.AppendElement(sz.mPosition);
+      rowTrackSizes.AppendElement(sz.mBase);
+      bool isRepeat = ((row >= gridReflowState.mRowFunctions.mRepeatAutoStart) &&
+                       (row < gridReflowState.mRowFunctions.mRepeatAutoEnd));
+      rowTrackStates.AppendElement(
         isRepeat ?
         (uint32_t)mozilla::dom::GridTrackState::Repeat :
         (uint32_t)mozilla::dom::GridTrackState::Static
-    );
+      );
 
-    col++;
-  }
-  ComputedGridTrackInfo* colInfo = new ComputedGridTrackInfo(
-    gridReflowState.mColFunctions.mExplicitGridOffset,
-    gridReflowState.mColFunctions.NumExplicitTracks(),
-    0,
-    col,
-    Move(colTrackPositions),
-    Move(colTrackSizes),
-    Move(colTrackStates));
-  Properties().Set(GridColTrackInfo(), colInfo);
-
-  uint32_t rowTrackCount = gridReflowState.mRows.mSizes.Length();
-  nsTArray<nscoord> rowTrackPositions(rowTrackCount);
-  nsTArray<nscoord> rowTrackSizes(rowTrackCount);
-  nsTArray<uint32_t> rowTrackStates(rowTrackCount);
-  uint32_t row = 0;
-  for (const TrackSize& sz : gridReflowState.mRows.mSizes) {
-    rowTrackPositions.AppendElement(sz.mPosition);
-    rowTrackSizes.AppendElement(sz.mBase);
-    bool isRepeat = ((row >= gridReflowState.mRowFunctions.mRepeatAutoStart) &&
-                     (row < gridReflowState.mRowFunctions.mRepeatAutoEnd));
-    rowTrackStates.AppendElement(
-      isRepeat ?
-      (uint32_t)mozilla::dom::GridTrackState::Repeat :
-      (uint32_t)mozilla::dom::GridTrackState::Static
-    );
-
-    row++;
-  }
-  // Row info has to accomodate fragmentation of the grid, which may happen in
-  // later calls to Reflow. For now, presume that no more fragmentation will
-  // occur.
-  ComputedGridTrackInfo* rowInfo = new ComputedGridTrackInfo(
-    gridReflowState.mRowFunctions.mExplicitGridOffset,
-    gridReflowState.mRowFunctions.NumExplicitTracks(),
-    gridReflowState.mStartRow,
-    row,
-    Move(rowTrackPositions),
-    Move(rowTrackSizes),
-    Move(rowTrackStates));
-  Properties().Set(GridRowTrackInfo(), rowInfo);
-
-  if (prevInFlow) {
-    // This frame is fragmenting rows from a previous frame, so patch up
-    // the prior GridRowTrackInfo with a new end row.
-
-    ComputedGridTrackInfo* priorRowInfo =
-      prevInFlow->Properties().Get(GridRowTrackInfo());
-    ComputedGridTrackInfo* revisedPriorRowInfo = new ComputedGridTrackInfo(
-      priorRowInfo->mNumLeadingImplicitTracks,
-      priorRowInfo->mNumExplicitTracks,
-      priorRowInfo->mStartFragmentTrack,
+      row++;
+    }
+    // Row info has to accomodate fragmentation of the grid, which may happen in
+    // later calls to Reflow. For now, presume that no more fragmentation will
+    // occur.
+    ComputedGridTrackInfo* rowInfo = new ComputedGridTrackInfo(
+      gridReflowState.mRowFunctions.mExplicitGridOffset,
+      gridReflowState.mRowFunctions.NumExplicitTracks(),
       gridReflowState.mStartRow,
-      Move(priorRowInfo->mPositions),
-      Move(priorRowInfo->mSizes),
-      Move(priorRowInfo->mStates));
-    prevInFlow->Properties().Set(GridRowTrackInfo(), revisedPriorRowInfo);
+      row,
+      Move(rowTrackPositions),
+      Move(rowTrackSizes),
+      Move(rowTrackStates));
+    Properties().Set(GridRowTrackInfo(), rowInfo);
+
+    if (prevInFlow) {
+      // This frame is fragmenting rows from a previous frame, so patch up
+      // the prior GridRowTrackInfo with a new end row.
+
+      // FIXME: This can be streamlined and/or removed when bug 1151204 lands.
+
+      ComputedGridTrackInfo* priorRowInfo =
+        prevInFlow->Properties().Get(GridRowTrackInfo());
+
+      // Adjust track positions based on the first track in this fragment.
+      MOZ_ASSERT(priorRowInfo->mPositions.Length() >
+                 priorRowInfo->mStartFragmentTrack);
+      nscoord delta =
+        priorRowInfo->mPositions[priorRowInfo->mStartFragmentTrack];
+      for (nscoord& pos : priorRowInfo->mPositions) {
+        pos -= delta;
+      }
+
+      ComputedGridTrackInfo* revisedPriorRowInfo = new ComputedGridTrackInfo(
+        priorRowInfo->mNumLeadingImplicitTracks,
+        priorRowInfo->mNumExplicitTracks,
+        priorRowInfo->mStartFragmentTrack,
+        gridReflowState.mStartRow,
+        Move(priorRowInfo->mPositions),
+        Move(priorRowInfo->mSizes),
+        Move(priorRowInfo->mStates));
+      prevInFlow->Properties().Set(GridRowTrackInfo(), revisedPriorRowInfo);
+    }
+
+    // Generate the line info properties. We need to provide the number of
+    // repeat tracks produced in the reflow.
+
+    // Generate column lines first.
+    uint32_t capacity = gridReflowState.mColFunctions.NumRepeatTracks() +
+                        gridReflowState.mCols.mSizes.Length();
+    nsTArray<nsTArray<nsString>> columnLineNames(capacity);
+    for (col = 0; col <= gridReflowState.mCols.mSizes.Length(); col++) {
+      columnLineNames.AppendElement(
+        gridReflowState.mCols.GetLineNamesAtIndex(
+          gridReflowState.mGridStyle->mGridTemplateColumns,
+          gridReflowState.mColFunctions,
+          col));
+    }
+    ComputedGridLineInfo* columnLineInfo = new ComputedGridLineInfo(
+      Move(columnLineNames));
+    Properties().Set(GridColumnLineInfo(), columnLineInfo);
+
+    // Generate row lines next.
+    capacity = gridReflowState.mRowFunctions.NumRepeatTracks() +
+               gridReflowState.mRows.mSizes.Length();
+    nsTArray<nsTArray<nsString>> rowLineNames(capacity);
+    for (row = 0; row <= gridReflowState.mRows.mSizes.Length(); row++) {
+      rowLineNames.AppendElement(
+        gridReflowState.mRows.GetLineNamesAtIndex(
+          gridReflowState.mGridStyle->mGridTemplateRows,
+          gridReflowState.mRowFunctions,
+          row));
+    }
+    ComputedGridLineInfo* rowLineInfo = new ComputedGridLineInfo(
+      Move(rowLineNames));
+    Properties().Set(GridRowLineInfo(), rowLineInfo);
   }
 
   if (!prevInFlow) {
@@ -5696,6 +5799,9 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       sharedGridData->mGridItems.SwapElements(gridReflowState.mGridItems);
       sharedGridData->mAbsPosItems.Clear();
       sharedGridData->mAbsPosItems.SwapElements(gridReflowState.mAbsPosItems);
+
+      sharedGridData->mGenerateComputedGridInfo =
+          HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
     } else if (sharedGridData && !GetNextInFlow()) {
       Properties().Delete(SharedGridData::Prop());
     }
@@ -5991,3 +6097,57 @@ nsGridContainerFrame::TrackSize::Dump() const
 }
 
 #endif // DEBUG
+
+nsGridContainerFrame*
+nsGridContainerFrame::GetGridFrameWithComputedInfo(nsIFrame* aFrame)
+{
+  // Prepare a lambda function that we may need to call multiple times.
+  auto GetGridContainerFrame = [](nsIFrame *aFrame) {
+    // Return the aFrame's content insertion frame, iff it is
+    // a grid container.
+    nsGridContainerFrame* gridFrame = nullptr;
+
+    if (aFrame) {
+      nsIFrame* contentFrame = aFrame->GetContentInsertionFrame();
+      if (contentFrame &&
+          (contentFrame->GetType() == nsGkAtoms::gridContainerFrame)) {
+        gridFrame = static_cast<nsGridContainerFrame*>(contentFrame);
+      }
+    }
+    return gridFrame;
+  };
+
+  nsGridContainerFrame* gridFrame = GetGridContainerFrame(aFrame);
+  if (gridFrame) {
+    // if any of our properties are missing, generate them
+    bool reflowNeeded = (!gridFrame->Properties().Has(GridColTrackInfo()) ||
+                         !gridFrame->Properties().Has(GridRowTrackInfo()) ||
+                         !gridFrame->Properties().Has(GridColumnLineInfo()) ||
+                         !gridFrame->Properties().Has(GridRowLineInfo()));
+
+    if (reflowNeeded) {
+      // Trigger a reflow that generates additional grid property data.
+      nsIPresShell* shell = gridFrame->PresContext()->PresShell();
+      gridFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
+      shell->FrameNeedsReflow(gridFrame,
+                              nsIPresShell::eResize,
+                              NS_FRAME_IS_DIRTY);
+      shell->FlushPendingNotifications(Flush_Layout);
+
+      // Since the reflow may have side effects, get the grid frame again.
+      gridFrame = GetGridContainerFrame(aFrame);
+
+      // Assert the grid properties are present
+      MOZ_ASSERT(!gridFrame ||
+                  gridFrame->Properties().Has(GridColTrackInfo()));
+      MOZ_ASSERT(!gridFrame ||
+                  gridFrame->Properties().Has(GridRowTrackInfo()));
+      MOZ_ASSERT(!gridFrame ||
+                  gridFrame->Properties().Has(GridColumnLineInfo()));
+      MOZ_ASSERT(!gridFrame ||
+                  gridFrame->Properties().Has(GridRowLineInfo()));
+    }
+  }
+
+  return gridFrame;
+}
