@@ -651,6 +651,18 @@ public:
     mLoadInfo.mCSP = aCSP;
   }
 
+  net::ReferrerPolicy
+  GetReferrerPolicy() const
+  {
+    return mLoadInfo.mReferrerPolicy;
+  }
+
+  void
+  SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy)
+  {
+    mLoadInfo.mReferrerPolicy = aReferrerPolicy;
+  }
+
   bool
   IsEvalAllowed() const
   {
