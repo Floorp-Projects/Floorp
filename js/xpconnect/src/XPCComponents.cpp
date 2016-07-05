@@ -3026,7 +3026,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::SetGCZeal(int32_t aValue, JSContext* cx)
 {
 #ifdef JS_GC_ZEAL
-    JS_SetGCZeal(JS_GetRuntime(cx), uint8_t(aValue), JS_DEFAULT_ZEAL_FREQ);
+    JS_SetGCZeal(cx, uint8_t(aValue), JS_DEFAULT_ZEAL_FREQ);
 #endif
     return NS_OK;
 }
