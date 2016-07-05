@@ -487,7 +487,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'notifications/WhatsNewReceiver.java',
     'NotificationService.java',
     'NSSBridge.java',
-    'OrderedBroadcastHelper.java',
     'overlays/OverlayConstants.java',
     'overlays/service/OverlayActionService.java',
     'overlays/service/ShareData.java',
