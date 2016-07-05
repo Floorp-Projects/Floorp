@@ -532,8 +532,8 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
       mJSRuntime, GCNurseryCollectionCallback);
   }
 
-  JS_SetObjectsTenuredCallback(mJSRuntime, JSObjectsTenuredCb, this);
-  JS::SetOutOfMemoryCallback(mJSRuntime, OutOfMemoryCallback, this);
+  JS_SetObjectsTenuredCallback(mJSContext, JSObjectsTenuredCb, this);
+  JS::SetOutOfMemoryCallback(mJSContext, OutOfMemoryCallback, this);
   JS::SetLargeAllocationFailureCallback(mJSRuntime,
                                         LargeAllocationFailureCallback, this);
   JS_SetDestroyZoneCallback(mJSContext, XPCStringConvert::FreeZoneCache);

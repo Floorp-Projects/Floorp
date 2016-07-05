@@ -147,13 +147,13 @@ virtual bool init() override
     if (!JSAPITest::init())
         return false;
 
-    JS_AddFinalizeCallback(rt, FinalizeCallback, nullptr);
+    JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     return true;
 }
 
 virtual void uninit() override
 {
-    JS_RemoveFinalizeCallback(rt, FinalizeCallback);
+    JS_RemoveFinalizeCallback(cx, FinalizeCallback);
     JSAPITest::uninit();
 }
 
