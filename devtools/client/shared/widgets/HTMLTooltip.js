@@ -285,9 +285,8 @@ HTMLTooltip.prototype = {
    *        - {Number} width: preferred width for the tooltip container. If not specified
    *          the tooltip container will be measured before being displayed, and the
    *          measured width will be used as preferred width.
-   *        - {Number} height: optional, preferred height for the tooltip container. This
-   *          parameter acts as a max-height for the tooltip content. If not specified,
-   *          the tooltip will be able to use all the height available.
+   *        - {Number} height: optional, preferred height for the tooltip container. If
+   *          not specified, the tooltip will be able to use all the height available.
    */
   setContent: function (content, {width = "auto", height = Infinity} = {}) {
     this.preferredWidth = width;
@@ -332,6 +331,12 @@ HTMLTooltip.prototype = {
     let isTop = computedPosition === POSITION.TOP;
     this.container.classList.toggle("tooltip-top", isTop);
     this.container.classList.toggle("tooltip-bottom", !isTop);
+
+    // If the preferred height is set to Infinity, the tooltip container should grow based
+    // on its content's height and use as much height as possible.
+    this.container.classList.toggle("tooltip-flexible-height",
+      this.preferredHeight === Infinity);
+
     this.container.style.height = height + "px";
 
     let preferredWidth;
