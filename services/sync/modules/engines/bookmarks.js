@@ -509,6 +509,57 @@ BookmarksEngine.prototype = {
     }
     return guids;
   },
+
+  // Called when _findDupe returns a dupe item and the engine has decided to
+  // switch the existing item to the new incoming item.
+  _switchItemToDupe(localDupeGUID, incomingItem) {
+    // We unconditionally change the item's ID in case the engine knows of
+    // an item but doesn't expose it through itemExists. If the API
+    // contract were stronger, this could be changed.
+    this._log.debug("Switching local ID to incoming: " + localDupeGUID + " -> " +
+                    incomingItem.id);
+    this._store.changeItemID(localDupeGUID, incomingItem.id);
+
+    // And mark the parent as being modified. Given we de-dupe based on the
+    // parent *name* it's possible the item having its GUID changed has a
+    // different parent from the incoming record.
+    // So we need to find the GUID of the local parent.
+    let now = this._tracker._now();
+    let localID = this._store.idForGUID(incomingItem.id);
+    let localParentID = PlacesUtils.bookmarks.getFolderIdForItem(localID);
+    let localParentGUID = this._store.GUIDForId(localParentID);
+    this._modified.set(localParentGUID, { modified: now, deleted: false });
+
+    // And we also add the parent as reflected in the incoming record as the
+    // de-dupe process might have used an existing item in a different folder.
+    // But only if the parent exists, otherwise we will upload a deleted item
+    // when it might actually be valid, just unknown to us. Note that this
+    // scenario will still leave us with inconsistent client and server states;
+    // the incoming record on the server references a parent that isn't the
+    // actual parent locally - see bug 1297955.
+    if (localParentGUID != incomingItem.parentid) {
+      let remoteParentID = this._store.idForGUID(incomingItem.parentid);
+      if (remoteParentID > 0) {
+        // The parent specified in the record does exist, so we are going to
+        // attempt a move when we come to applying the record. Mark the parent
+        // as being modified so we will later upload it with the new child
+        // reference.
+        this._modified.set(incomingItem.parentid, { modified: now, deleted: false });
+      } else {
+        // We aren't going to do a move as we don't have the parent (yet?).
+        // When applying the record we will add our special PARENT_ANNO
+        // annotation, so if it arrives in the future (either this Sync or a
+        // later one) it will be reparented.
+        this._log.debug(`Incoming duplicate item ${incomingItem.id} specifies ` +
+                        `non-existing parent ${incomingItem.parentid}`);
+      }
+    }
+
+    // The local, duplicate ID is always deleted on the server - but for
+    // bookmarks it is a logical delete.
+    // Simply adding this (now non-existing) ID to the tracker is enough.
+    this._modified.set(localDupeGUID, { modified: now, deleted: true });
+  },
 };
 
 function BookmarksStore(name, engine) {
@@ -565,7 +616,7 @@ BookmarksStore.prototype = {
     if (!parentGUID) {
       throw "Record " + record.id + " has invalid parentid: " + parentGUID;
     }
-    this._log.debug("Local parent is " + parentGUID);
+    this._log.debug("Remote parent is " + parentGUID);
 
     // Do the normal processing of incoming records
     Store.prototype.applyIncoming.call(this, record);
