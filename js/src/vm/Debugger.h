@@ -1133,12 +1133,6 @@ class DebuggerEnvironment : public NativeObject
 class DebuggerFrame : public NativeObject
 {
   public:
-    enum {
-        OWNER_SLOT
-    };
-
-    static const unsigned RESERVED_SLOTS = 1;
-
     static const Class class_;
 
     static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
@@ -1147,9 +1141,6 @@ class DebuggerFrame : public NativeObject
     static DebuggerFrame* checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
                                     bool checkLive);
 
-    static MOZ_MUST_USE bool getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
-                                       MutableHandle<DebuggerObject*> result);
-
   private:
     static const ClassOps classOps_;
 
@@ -1157,11 +1148,6 @@ class DebuggerFrame : public NativeObject
     static const JSFunctionSpec methods_[];
 
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
-
-    static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc, Value* vp);
-
-    AbstractFramePtr referent() const;
-    Debugger* owner() const;
 };
 
 class DebuggerObject : public NativeObject
