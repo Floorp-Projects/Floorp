@@ -11,7 +11,7 @@ static bool IsCompartmentGCBuffer[BufferSize];
 
 BEGIN_TEST(testGCFinalizeCallback)
 {
-    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+    JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
 
     /* Full GC, non-incremental. */
     FinalizeCalls = 0;
