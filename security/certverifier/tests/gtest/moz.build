@@ -5,13 +5,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+    'CTLogVerifierTest.cpp',
+    'CTObjectsExtractorTest.cpp',
     'CTSerializationTest.cpp',
     'CTTestUtils.cpp',
+    'MultiLogCTVerifierTest.cpp',
 ]
 
 LOCAL_INCLUDES += [
     '/security/certverifier',
     '/security/pkix/include',
+    '/security/pkix/lib',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
