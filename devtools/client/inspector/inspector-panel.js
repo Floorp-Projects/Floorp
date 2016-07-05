@@ -383,6 +383,18 @@ InspectorPanel.prototype = {
     this.searchResultsLabel.textContent = str;
   },
 
+  get React() {
+    return this._toolbox.React;
+  },
+
+  get ReactDOM() {
+    return this._toolbox.ReactDOM;
+  },
+
+  get browserRequire() {
+    return this._toolbox.browserRequire;
+  },
+
   /**
    * Build the sidebar.
    */
@@ -431,11 +443,18 @@ InspectorPanel.prototype = {
    * Add the expand/collapse behavior for the sidebar panel.
    */
   setupSidebarToggle: function () {
-    this._paneToggleButton = this.panelDoc.getElementById("inspector-pane-toggle");
-    this._paneToggleButton.setAttribute("tooltiptext",
-      strings.GetStringFromName("inspector.collapsePane"));
-    this._paneToggleButton.addEventListener("mousedown",
-      this.onPaneToggleButtonClicked);
+    let SidebarToggle = this.React.createFactory(this.browserRequire(
+      "devtools/client/shared/components/sidebar-toggle"));
+
+    let sidebarToggle = SidebarToggle({
+      onClick: this.onPaneToggleButtonClicked,
+      collapsed: false,
+      expandPaneTitle: strings.GetStringFromName("inspector.expandPane"),
+      collapsePaneTitle: strings.GetStringFromName("inspector.collapsePane"),
+    });
+
+    let parentBox = this.panelDoc.getElementById("inspector-sidebar-toggle-box");
+    this._sidebarToggle = this.ReactDOM.render(sidebarToggle, parentBox);
   },
 
   /**
@@ -689,9 +708,6 @@ InspectorPanel.prototype = {
 
     this.addNodeButton.removeEventListener("click", this.addNode);
     this.breadcrumbs.destroy();
-    this._paneToggleButton.removeEventListener("mousedown",
-      this.onPaneToggleButtonClicked);
-    this._paneToggleButton = null;
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
     this.selection.off("before-new-node-front", this.onBeforeNewSelection);
@@ -1143,8 +1159,7 @@ InspectorPanel.prototype = {
    */
   onPaneToggleButtonClicked: function (e) {
     let sidePane = this.panelDoc.querySelector("#inspector-sidebar");
-    let button = this._paneToggleButton;
-    let isVisible = !button.hasAttribute("pane-collapsed");
+    let isVisible = !this._sidebarToggle.state.collapsed;
 
     // Make sure the sidebar has width and height attributes before collapsing
     // because ViewHelpers needs it.
@@ -1165,11 +1180,9 @@ InspectorPanel.prototype = {
     }, sidePane);
 
     if (isVisible) {
-      button.setAttribute("pane-collapsed", "");
-      button.setAttribute("tooltiptext", strings.GetStringFromName("inspector.expandPane"));
+      this._sidebarToggle.setState({collapsed: true});
     } else {
-      button.removeAttribute("pane-collapsed");
-      button.setAttribute("tooltiptext", strings.GetStringFromName("inspector.collapsePane"));
+      this._sidebarToggle.setState({collapsed: false});
     }
   },
 
