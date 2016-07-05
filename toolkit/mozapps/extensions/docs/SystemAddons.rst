@@ -87,11 +87,11 @@ Update Behavior
 After receiving the update response, Firefox modifies the **update** add-ons
 according to the following algorithm:
 
-1. If the ``<addons>`` tag is missing in the response,
+1. If the ``<addons>`` tag is empty (``<addons></addons>``) in the response,
    **disable all system add-ons**, including both the **update** and **default**
    sets.
-2. If no add-ons were specified in the response (i.e. the ``<addons>`` tag has
-   no children but is present), do nothing and finish.
+2. If no add-ons were specified in the response (i.e. the ``<addons>`` tag
+   is not present), do nothing and finish.
 3. If the **update** add-on set is equal to the set of add-ons specified in the
    update response, do nothing and finish.
 4. If the set of **default** add-ons is equal to the set of add-ons specified in
