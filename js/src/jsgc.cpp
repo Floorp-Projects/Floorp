@@ -3510,7 +3510,7 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
             if (callback)
                 callback(fop, comp);
             if (comp->principals())
-                JS_DropPrincipals(rt, comp->principals());
+                JS_DropPrincipals(rt->contextFromMainThread(), comp->principals());
             js_delete(comp);
         } else {
             *write++ = comp;
