@@ -130,7 +130,7 @@ JSSecurityCallbacks StructuredCloneTestPrincipals::securityCallbacks = {
 
 BEGIN_TEST(testStructuredClone_SavedFrame)
 {
-    JS_SetSecurityCallbacks(rt, &StructuredCloneTestPrincipals::securityCallbacks);
+    JS_SetSecurityCallbacks(cx, &StructuredCloneTestPrincipals::securityCallbacks);
     JS_InitDestroyPrincipalsCallback(rt, StructuredCloneTestPrincipals::destroy);
     JS_InitReadPrincipalsCallback(rt, StructuredCloneTestPrincipals::read);
 
