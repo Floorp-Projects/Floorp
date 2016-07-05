@@ -359,9 +359,9 @@ protected:
       EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, CSSPoint(10, 10), 0, apzc->GetGuid(), blockId)).Times(1);
       EXPECT_CALL(check, Call("postHandleLongTap"));
 
-      EXPECT_CALL(check, Call("preHandleSingleTap"));
-      EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, CSSPoint(10, 10), 0, apzc->GetGuid(), _)).Times(1);
-      EXPECT_CALL(check, Call("postHandleSingleTap"));
+      EXPECT_CALL(check, Call("preHandleLongTapUp"));
+      EXPECT_CALL(*mcc, HandleTap(TapType::eLongTapUp, CSSPoint(10, 10), 0, apzc->GetGuid(), _)).Times(1);
+      EXPECT_CALL(check, Call("postHandleLongTapUp"));
     }
 
     // Manually invoke the longpress while the touch is currently down.
@@ -379,11 +379,11 @@ protected:
 
     // Finally, simulate lifting the finger. Since the long-press wasn't
     // prevent-defaulted, we should get a long-tap-up event.
-    check.Call("preHandleSingleTap");
+    check.Call("preHandleLongTapUp");
     status = TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());
     mcc->RunThroughDelayedTasks();
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
-    check.Call("postHandleSingleTap");
+    check.Call("postHandleLongTapUp");
 
     apzc->AssertStateIsReset();
   }
