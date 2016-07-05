@@ -440,24 +440,28 @@ FormatInfo::GetCopyDecayFormat(UnsizedFormat uf) const
     return FindOrNull(this->copyDecayFormats, uf);
 }
 
-uint8_t
-BytesPerPixel(const PackingInfo& packing)
+bool
+GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes)
 {
     uint8_t bytesPerChannel;
+
     switch (packing.type) {
     case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
     case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
     case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-        return 2;
+        *out_bytes = 2;
+        return true;
 
     case LOCAL_GL_UNSIGNED_INT_10F_11F_11F_REV:
     case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
     case LOCAL_GL_UNSIGNED_INT_24_8:
     case LOCAL_GL_UNSIGNED_INT_5_9_9_9_REV:
-        return 4;
+        *out_bytes = 4;
+        return true;
 
     case LOCAL_GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-        return 8;
+        *out_bytes = 8;
+        return true;
 
     // Alright, that's all the fixed-size unpackTypes.
 
@@ -480,11 +484,20 @@ BytesPerPixel(const PackingInfo& packing)
         break;
 
     default:
-        MOZ_CRASH("GFX: invalid PackingInfo");
+        return false;
     }
 
     uint8_t channels;
+
     switch (packing.format) {
+    case LOCAL_GL_RED:
+    case LOCAL_GL_RED_INTEGER:
+    case LOCAL_GL_LUMINANCE:
+    case LOCAL_GL_ALPHA:
+    case LOCAL_GL_DEPTH_COMPONENT:
+        channels = 1;
+        break;
+
     case LOCAL_GL_RG:
     case LOCAL_GL_RG_INTEGER:
     case LOCAL_GL_LUMINANCE_ALPHA:
@@ -493,23 +506,36 @@ BytesPerPixel(const PackingInfo& packing)
 
     case LOCAL_GL_RGB:
     case LOCAL_GL_RGB_INTEGER:
+    case LOCAL_GL_SRGB:
         channels = 3;
         break;
 
+    case LOCAL_GL_BGRA:
     case LOCAL_GL_RGBA:
     case LOCAL_GL_RGBA_INTEGER:
+    case LOCAL_GL_SRGB_ALPHA:
         channels = 4;
         break;
 
     default:
-        channels = 1;
-        break;
+        return false;
     }
 
-    return bytesPerChannel * channels;
+    *out_bytes = bytesPerChannel * channels;
+    return true;
 }
 
+uint8_t
+BytesPerPixel(const PackingInfo& packing)
+{
+    uint8_t ret;
+    if (MOZ_LIKELY(GetBytesPerPixel(packing, &ret)))
+        return ret;
 
+    gfxCriticalError() << "Bad `packing`: " << gfx::hexa(packing.format) << ", "
+                       << gfx::hexa(packing.type);
+    MOZ_CRASH("Bad `packing`.");
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
