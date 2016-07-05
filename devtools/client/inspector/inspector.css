@@ -33,3 +33,7 @@
    */
   -moz-user-focus: normal;
 }
+
+#inspector-sidebar-toggle-box {
+  line-height: initial;
+}

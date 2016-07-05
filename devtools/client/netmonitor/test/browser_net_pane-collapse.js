@@ -13,8 +13,8 @@ function test() {
     let detailsPane = document.getElementById("details-pane");
     let detailsPaneToggleButton = document.getElementById("details-pane-toggle");
 
-    ok(detailsPane.hasAttribute("pane-collapsed") &&
-       detailsPaneToggleButton.hasAttribute("pane-collapsed"),
+    ok(detailsPane.classList.contains("pane-collapsed") &&
+       detailsPaneToggleButton.classList.contains("pane-collapsed"),
       "The details pane should initially be hidden.");
 
     NetMonitorView.toggleDetailsPane({ visible: true, animated: false });
@@ -28,8 +28,8 @@ function test() {
       "The details pane has an incorrect right margin.");
     ok(!detailsPane.hasAttribute("animated"),
       "The details pane has an incorrect animated attribute.");
-    ok(!detailsPane.hasAttribute("pane-collapsed") &&
-       !detailsPaneToggleButton.hasAttribute("pane-collapsed"),
+    ok(!detailsPane.classList.contains("pane-collapsed") &&
+       !detailsPaneToggleButton.classList.contains("pane-collapsed"),
       "The details pane should at this point be visible.");
 
     NetMonitorView.toggleDetailsPane({ visible: false, animated: true });
@@ -43,8 +43,8 @@ function test() {
       "The details pane has an incorrect right margin after collapsing.");
     ok(detailsPane.hasAttribute("animated"),
       "The details pane has an incorrect attribute after an animated collapsing.");
-    ok(detailsPane.hasAttribute("pane-collapsed") &&
-       detailsPaneToggleButton.hasAttribute("pane-collapsed"),
+    ok(detailsPane.classList.contains("pane-collapsed") &&
+       detailsPaneToggleButton.classList.contains("pane-collapsed"),
       "The details pane should not be visible after collapsing.");
 
     NetMonitorView.toggleDetailsPane({ visible: true, animated: false });
@@ -57,8 +57,8 @@ function test() {
       "The details pane has an incorrect right margin after uncollapsing.");
     ok(!detailsPane.hasAttribute("animated"),
       "The details pane has an incorrect attribute after an unanimated uncollapsing.");
-    ok(!detailsPane.hasAttribute("pane-collapsed") &&
-       !detailsPaneToggleButton.hasAttribute("pane-collapsed"),
+    ok(!detailsPane.classList.contains("pane-collapsed") &&
+       !detailsPaneToggleButton.classList.contains("pane-collapsed"),
       "The details pane should be visible again after uncollapsing.");
 
     teardown(aMonitor).then(finish);

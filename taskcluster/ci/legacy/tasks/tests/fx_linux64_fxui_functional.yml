@@ -18,9 +18,7 @@ task:
   extra:
     suite:
       name: firefox-ui
-      flavor: functional
     treeherder:
       groupName: Desktop firefox-ui-tests
       groupSymbol: tc-Fxfn
       symbol: en-US
-      tier: 2

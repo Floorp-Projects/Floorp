@@ -41,8 +41,8 @@ function testPanesState() {
   let instrumentsPaneToggleButton =
     gDebugger.document.getElementById("instruments-pane-toggle");
 
-  ok(instrumentsPane.hasAttribute("pane-collapsed") &&
-     instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(instrumentsPane.classList.contains("pane-collapsed") &&
+     instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The debugger view instruments pane should initially be hidden.");
   is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view instruments pane should initially be preffed as hidden.");
@@ -65,8 +65,8 @@ function testInstrumentsPaneCollapse() {
     "The instruments pane has an incorrect right margin.");
   ok(!instrumentsPane.hasAttribute("animated"),
     "The instruments pane has an incorrect animated attribute.");
-  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(!instrumentsPane.classList.contains("pane-collapsed") &&
+     !instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The instruments pane should at this point be visible.");
 
   gDebugger.DebuggerView.toggleInstrumentsPane({ visible: false, animated: true });
@@ -85,8 +85,8 @@ function testInstrumentsPaneCollapse() {
     "The instruments pane has an incorrect right margin after collapsing.");
   ok(instrumentsPane.hasAttribute("animated"),
     "The instruments pane has an incorrect attribute after an animated collapsing.");
-  ok(instrumentsPane.hasAttribute("pane-collapsed") &&
-     instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(instrumentsPane.classList.contains("pane-collapsed") &&
+     instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The instruments pane should not be visible after collapsing.");
 
   gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
@@ -104,8 +104,8 @@ function testInstrumentsPaneCollapse() {
     "The instruments pane has an incorrect right margin after uncollapsing.");
   ok(!instrumentsPane.hasAttribute("animated"),
     "The instruments pane has an incorrect attribute after an unanimated uncollapsing.");
-  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(!instrumentsPane.classList.contains("pane-collapsed") &&
+     !instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The instruments pane should be visible again after uncollapsing.");
 }
 
@@ -118,8 +118,8 @@ function testPanesStartupPref() {
   is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should still initially be preffed as hidden.");
 
-  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(!instrumentsPane.classList.contains("pane-collapsed") &&
+     !instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The debugger instruments pane should at this point be visible.");
   is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should initially be preffed as hidden.");
@@ -129,8 +129,8 @@ function testPanesStartupPref() {
   gOptions._showPanesOnStartupItem.setAttribute("checked", "true");
   gOptions._toggleShowPanesOnStartup();
 
-  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(!instrumentsPane.classList.contains("pane-collapsed") &&
+     !instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The debugger instruments pane should at this point be visible.");
   is(gPrefs.panesVisibleOnStartup, true,
     "The debugger view panes should now be preffed as visible.");
@@ -140,8 +140,8 @@ function testPanesStartupPref() {
   gOptions._showPanesOnStartupItem.setAttribute("checked", "false");
   gOptions._toggleShowPanesOnStartup();
 
-  ok(!instrumentsPane.hasAttribute("pane-collapsed") &&
-     !instrumentsPaneToggleButton.hasAttribute("pane-collapsed"),
+  ok(!instrumentsPane.classList.contains("pane-collapsed") &&
+     !instrumentsPaneToggleButton.classList.contains("pane-collapsed"),
     "The debugger instruments pane should at this point be visible.");
   is(gPrefs.panesVisibleOnStartup, false,
     "The debugger view panes should now be preffed as hidden.");
