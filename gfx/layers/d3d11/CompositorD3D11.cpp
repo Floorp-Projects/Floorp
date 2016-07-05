@@ -195,7 +195,7 @@ CompositorD3D11::~CompositorD3D11()
 }
 
 bool
-CompositorD3D11::Initialize()
+CompositorD3D11::Initialize(nsCString* const out_failureReason)
 {
   ScopedGfxFeatureReporter reporter("D3D11 Layers");
 
@@ -204,6 +204,7 @@ CompositorD3D11::Initialize()
   HRESULT hr;
 
   if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&mDevice)) {
+    *out_failureReason = "FEATURE_FAILURE_D3D11_NO_DEVICE";
     return false;
   }
 
@@ -211,6 +212,7 @@ CompositorD3D11::Initialize()
 
   if (!mContext) {
     gfxCriticalNote << "[D3D11] failed to get immediate context";
+    *out_failureReason = "FEATURE_FAILURE_D3D11_CONTEXT";
     return false;
   }
 
@@ -250,6 +252,7 @@ CompositorD3D11::Initialize()
                                     getter_AddRefs(mAttachments->mInputLayout));
 
     if (Failed(hr, "CreateInputLayout")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
       return false;
     }
 
@@ -261,10 +264,12 @@ CompositorD3D11::Initialize()
     hr = mDevice->CreateBuffer(&bufferDesc, &data, getter_AddRefs(mAttachments->mVertexBuffer));
 
     if (Failed(hr, "create vertex buffer")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
       return false;
     }
 
     if (!mAttachments->CreateShaders()) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_CREATE_SHADERS";
       return false;
     }
 
@@ -275,12 +280,14 @@ CompositorD3D11::Initialize()
 
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mAttachments->mVSConstantBuffer));
     if (Failed(hr, "create vs buffer")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_VS_BUFFER";
       return false;
     }
 
     cBufferDesc.ByteWidth = sizeof(PixelShaderConstants);
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mAttachments->mPSConstantBuffer));
     if (Failed(hr, "create ps buffer")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_PS_BUFFER";
       return false;
     }
 
@@ -290,18 +297,21 @@ CompositorD3D11::Initialize()
 
     hr = mDevice->CreateRasterizerState(&rastDesc, getter_AddRefs(mAttachments->mRasterizerState));
     if (Failed(hr, "create rasterizer")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_RASTERIZER";
       return false;
     }
 
     CD3D11_SAMPLER_DESC samplerDesc(D3D11_DEFAULT);
     hr = mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mAttachments->mLinearSamplerState));
     if (Failed(hr, "create linear sampler")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_LINEAR_SAMPLER";
       return false;
     }
 
     samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
     hr = mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mAttachments->mPointSamplerState));
     if (Failed(hr, "create point sampler")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_POINT_SAMPLER";
       return false;
     }
 
@@ -315,6 +325,7 @@ CompositorD3D11::Initialize()
     blendDesc.RenderTarget[0] = rtBlendPremul;
     hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mPremulBlendState));
     if (Failed(hr, "create pm blender")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_PM_BLENDER";
       return false;
     }
 
@@ -327,6 +338,7 @@ CompositorD3D11::Initialize()
     blendDesc.RenderTarget[0] = rtBlendNonPremul;
     hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mNonPremulBlendState));
     if (Failed(hr, "create npm blender")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_NPM_BLENDER";
       return false;
     }
 
@@ -344,6 +356,7 @@ CompositorD3D11::Initialize()
       blendDesc.RenderTarget[0] = rtBlendComponent;
       hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mComponentBlendState));
       if (Failed(hr, "create component blender")) {
+        *out_failureReason = "FEATURE_FAILURE_D3D11_COMP_BLENDER";
         return false;
       }
     }
@@ -357,13 +370,15 @@ CompositorD3D11::Initialize()
     blendDesc.RenderTarget[0] = rtBlendDisabled;
     hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mDisabledBlendState));
     if (Failed(hr, "create null blender")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_NULL_BLENDER";
       return false;
     }
 
     if (!mAttachments->InitSyncObject()) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_OBJ_SYNC";
       return false;
     }
-    
+
     //
     // VR additions
     //
@@ -389,6 +404,7 @@ CompositorD3D11::Initialize()
     cBufferDesc.ByteWidth = sizeof(gfx::VRDistortionConstants);
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mAttachments->mVRDistortionConstants));
     if (Failed(hr, "create vr buffer ")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_VR_BUFFER";
       return false;
     }
   }
@@ -427,7 +443,8 @@ CompositorD3D11::Initialize()
      */
     hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
     if (Failed(hr, "create swap chain")) {
-     return false;
+      *out_failureReason = "FEATURE_FAILURE_D3D11_SWAP_CHAIN";
+      return false;
     }
 
     // We need this because we don't want DXGI to respond to Alt+Enter.
@@ -436,10 +453,12 @@ CompositorD3D11::Initialize()
   }
 
   if (!mWidget->InitCompositor(this)) {
+    *out_failureReason = "FEATURE_FAILURE_D3D11_INIT_COMPOSITOR";
     return false;
   }
 
   reporter.SetSuccessful();
+
   return true;
 }
 

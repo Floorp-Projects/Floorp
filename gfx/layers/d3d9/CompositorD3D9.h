@@ -26,7 +26,7 @@ public:
 
   virtual CompositorD3D9* AsCompositorD3D9() override { return this; }
 
-  virtual bool Initialize() override;
+  virtual bool Initialize(nsCString* const out_failureReason) override;
 
   virtual TextureFactoryIdentifier
     GetTextureFactoryIdentifier() override;
