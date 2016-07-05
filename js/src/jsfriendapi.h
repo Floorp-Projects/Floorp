@@ -1129,10 +1129,10 @@ struct JSDOMCallbacks {
 typedef struct JSDOMCallbacks DOMCallbacks;
 
 extern JS_FRIEND_API(void)
-SetDOMCallbacks(JSRuntime* rt, const DOMCallbacks* callbacks);
+SetDOMCallbacks(JSContext* cx, const DOMCallbacks* callbacks);
 
 extern JS_FRIEND_API(const DOMCallbacks*)
-GetDOMCallbacks(JSRuntime* rt);
+GetDOMCallbacks(JSContext* cx);
 
 extern JS_FRIEND_API(JSObject*)
 GetTestingFunctions(JSContext* cx);
@@ -2877,7 +2877,7 @@ ConvertArgsToArray(JSContext* cx, const JS::CallArgs& args);
  * functions below.
  */
 extern JS_FRIEND_API(void)
-SetWindowProxyClass(JSRuntime* rt, const Class* clasp);
+SetWindowProxyClass(JSContext* cx, const Class* clasp);
 
 /**
  * Associates a WindowProxy with a Window (global object). `windowProxy` must
