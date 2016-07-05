@@ -7067,6 +7067,26 @@ DebuggerFrame::getIsConstructing(JSContext* cx, Handle<DebuggerFrame*> frame, bo
     return true;
 }
 
+/* static */ bool
+DebuggerFrame::getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                  Maybe<ScriptFrameIter>& result)
+{
+    AbstractFramePtr referent = frame->referent();
+    if (referent.isScriptFrameIterData()) {
+        result.emplace(*reinterpret_cast<ScriptFrameIter::Data*>(referent.raw()));
+    } else {
+        result.emplace(cx, ScriptFrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK);
+        ScriptFrameIter& iter = *result;
+        while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != referent)
+            ++iter;
+        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+        if (!data)
+            return false;
+        frame->setPrivate(data.raw());
+    }
+    return true;
+}
+
 static void
 UpdateFrameIterPc(FrameIter& iter)
 {
@@ -7102,49 +7122,6 @@ UpdateFrameIterPc(FrameIter& iter)
     }
 
     iter.updatePcQuadratic();
-}
-
-/* static */ bool
-DebuggerFrame::getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
-                              MutableHandle<DebuggerEnvironment*> result)
-{
-    Debugger* dbg = frame->owner();
-
-    Maybe<ScriptFrameIter> maybeIter;
-    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
-        return false;
-    ScriptFrameIter& iter = *maybeIter;
-
-    Rooted<Env*> env(cx);
-    {
-        AutoCompartment ac(cx, iter.abstractFramePtr().scopeChain());
-        UpdateFrameIterPc(iter);
-        env = GetDebugScopeForFrame(cx, iter.abstractFramePtr(), iter.pc());
-        if (!env)
-            return false;
-    }
-
-    return dbg->wrapEnvironment(cx, env, result);
-}
-
-/* static */ bool
-DebuggerFrame::getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
-                                  Maybe<ScriptFrameIter>& result)
-{
-    AbstractFramePtr referent = frame->referent();
-    if (referent.isScriptFrameIterData()) {
-        result.emplace(*reinterpret_cast<ScriptFrameIter::Data*>(referent.raw()));
-    } else {
-        result.emplace(cx, ScriptFrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK);
-        ScriptFrameIter& iter = *result;
-        while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != referent)
-            ++iter;
-        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
-        if (!data)
-            return false;
-        frame->setPrivate(data.raw());
-    }
-    return true;
 }
 
 static void
@@ -7316,17 +7293,21 @@ DebuggerFrame_getImplementation(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* static */ bool
-DebuggerFrame::environmentGetter(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DebuggerFrame_getEnvironment(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGGER_FRAME(cx, argc, vp, "get environment", args, frame);
+    THIS_FRAME_OWNER_ITER(cx, argc, vp, "get environment", args, thisobj, _, iter, dbg);
 
-    Rooted<DebuggerEnvironment*> result(cx);
-    if (!DebuggerFrame::getEnvironment(cx, frame, &result))
-        return false;
+    Rooted<Env*> env(cx);
+    {
+        AutoCompartment ac(cx, iter.abstractFramePtr().scopeChain());
+        UpdateFrameIterPc(iter);
+        env = GetDebugScopeForFrame(cx, iter.abstractFramePtr(), iter.pc());
+        if (!env)
+            return false;
+    }
 
-    args.rval().setObject(*result);
-    return true;
+    return dbg->wrapEnvironment(cx, env, args.rval());
 }
 
 /* static */ bool
@@ -7875,7 +7856,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("arguments", DebuggerFrame_getArguments, 0),
     JS_PSG("callee", DebuggerFrame::calleeGetter, 0),
     JS_PSG("constructing", DebuggerFrame::constructingGetter, 0),
-    JS_PSG("environment", DebuggerFrame::environmentGetter, 0),
+    JS_PSG("environment", DebuggerFrame_getEnvironment, 0),
     JS_PSG("generator", DebuggerFrame_getGenerator, 0),
     JS_PSG("live", DebuggerFrame_getLive, 0),
     JS_PSG("offset", DebuggerFrame_getOffset, 0),
