@@ -1085,7 +1085,7 @@ Sync11Service.prototype = {
         return false;
       }
 
-      if (!this.recordManager.response.success || !newMeta) {
+      if (this.recordManager.response.status == 404) {
         this._log.debug("No meta/global record on the server. Creating one.");
         newMeta = new WBORecord("meta", "global");
         newMeta.payload.syncID = this.syncID;
@@ -1101,6 +1101,10 @@ Sync11Service.prototype = {
           this.errorHandler.checkServerError(uploadRes);
           return false;
         }
+      } else if (!newMeta) {
+        this._log.warn("Unable to get meta/global. Failing remote setup.");
+        this.errorHandler.checkServerError(this.recordManager.response);
+        return false;
       } else {
         // If newMeta, then it stands to reason that meta != null.
         newMeta.isNew   = meta.isNew;

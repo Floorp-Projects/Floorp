@@ -9,30 +9,30 @@
 add_task(function* () {
   let {inspector} = yield openInspectorForURL("about:blank");
 
-  let button = inspector.panelDoc.getElementById("inspector-pane-toggle");
+  let button = inspector.panelDoc.querySelector(".sidebar-toggle");
   let panel = inspector.panelDoc.querySelector("#inspector-sidebar");
 
-  ok(!button.hasAttribute("pane-collapsed"), "The button is in expanded state");
+  ok(!button.classList.contains("pane-collapsed"), "The button is in expanded state");
 
   info("Listen to the end of the animation on the sidebar panel");
   let onTransitionEnd = once(panel, "transitionend");
 
   info("Click on the toggle button");
-  EventUtils.synthesizeMouseAtCenter(button, {type: "mousedown"},
+  EventUtils.synthesizeMouseAtCenter(button, {},
     inspector.panelDoc.defaultView);
 
   yield onTransitionEnd;
-  ok(button.hasAttribute("pane-collapsed"), "The button is in collapsed state");
-  ok(panel.hasAttribute("pane-collapsed"), "The panel is in collapsed state");
+  ok(button.classList.contains("pane-collapsed"), "The button is in collapsed state");
+  ok(panel.classList.contains("pane-collapsed"), "The panel is in collapsed state");
 
   info("Listen again to the end of the animation on the sidebar panel");
   onTransitionEnd = once(panel, "transitionend");
 
   info("Click on the toggle button again");
-  EventUtils.synthesizeMouseAtCenter(button, {type: "mousedown"},
+  EventUtils.synthesizeMouseAtCenter(button, {},
     inspector.panelDoc.defaultView);
 
   yield onTransitionEnd;
-  ok(!button.hasAttribute("pane-collapsed"), "The button is in expanded state");
-  ok(!panel.hasAttribute("pane-collapsed"), "The panel is in expanded state");
+  ok(!button.classList.contains("pane-collapsed"), "The button is in expanded state");
+  ok(!panel.classList.contains("pane-collapsed"), "The panel is in expanded state");
 });
