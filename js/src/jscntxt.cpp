@@ -117,8 +117,7 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
 void
 js::DestroyContext(JSContext* cx)
 {
-    JSRuntime* rt = cx->runtime();
-    JS_AbortIfWrongThread(rt);
+    JS_AbortIfWrongThread(cx);
 
     if (cx->outstandingRequests != 0)
         MOZ_CRASH("Attempted to destroy a context while it is in a request.");
@@ -130,7 +129,7 @@ js::DestroyContext(JSContext* cx)
      * Dump remaining type inference results while we still have a context.
      * This printing depends on atoms still existing.
      */
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+    for (CompartmentsIter c(cx, SkipAtoms); !c.done(); c.next())
         PrintTypes(cx, c, false);
 
     js_delete_poison(cx);
