@@ -52,15 +52,15 @@ PerThreadDataFriendFields::PerThreadDataFriendFields()
 }
 
 JS_FRIEND_API(void)
-js::SetSourceHook(JSRuntime* rt, mozilla::UniquePtr<SourceHook> hook)
+js::SetSourceHook(JSContext* cx, mozilla::UniquePtr<SourceHook> hook)
 {
-    rt->sourceHook = Move(hook);
+    cx->sourceHook = Move(hook);
 }
 
 JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
-js::ForgetSourceHook(JSRuntime* rt)
+js::ForgetSourceHook(JSContext* cx)
 {
-    return Move(rt->sourceHook);
+    return Move(cx->sourceHook);
 }
 
 JS_FRIEND_API(void)

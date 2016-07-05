@@ -446,17 +446,17 @@ class SourceHook {
 };
 
 /**
- * Have |rt| use |hook| to retrieve lazily-retrieved source code. See the
- * comments for SourceHook. The runtime takes ownership of the hook, and
- * will delete it when the runtime itself is deleted, or when a new hook is
+ * Have |cx| use |hook| to retrieve lazily-retrieved source code. See the
+ * comments for SourceHook. The context takes ownership of the hook, and
+ * will delete it when the context itself is deleted, or when a new hook is
  * set.
  */
 extern JS_FRIEND_API(void)
-SetSourceHook(JSRuntime* rt, mozilla::UniquePtr<SourceHook> hook);
+SetSourceHook(JSContext* cx, mozilla::UniquePtr<SourceHook> hook);
 
-/** Remove |rt|'s source hook, and return it. The caller now owns the hook. */
+/** Remove |cx|'s source hook, and return it. The caller now owns the hook. */
 extern JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
-ForgetSourceHook(JSRuntime* rt);
+ForgetSourceHook(JSContext* cx);
 
 extern JS_FRIEND_API(JS::Zone*)
 GetCompartmentZone(JSCompartment* comp);
