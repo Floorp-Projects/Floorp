@@ -713,11 +713,33 @@ public class ActivityHandler extends HandlerThread implements IActivityHandler {
     }
 
     private void readActivityState() {
-        activityState = Util.readObject(adjustConfig.context, ACTIVITY_STATE_FILENAME, ACTIVITY_STATE_NAME);
+        try {
+	    /**
+             * Mozilla:
+             * readObject is a generic object, and can therefore return arbitrary generic objects
+             * that might not match the expected type. Therefore there will be an implicit cast
+	     * here, which can fail. Therefore we have to add the catch (ClassCastException)
+             * Note: this has been fixed in upstream, we only need this for the version we are still shipping.
+             */
+            activityState = Util.readObject(adjustConfig.context, ACTIVITY_STATE_FILENAME, ACTIVITY_STATE_NAME);
+        } catch (ClassCastException e) {
+            activityState = null;
+        }
     }
 
     private void readAttribution() {
-        attribution = Util.readObject(adjustConfig.context, ATTRIBUTION_FILENAME, ATTRIBUTION_NAME);
+        try {
+	    /**
+             * Mozilla: (same as in readActivityState() )
+             * readObject is a generic object, and can therefore return arbitrary generic objects
+             * that might not match the expected type. Therefore there will be an implicit cast
+	     * here, which can fail. Therefore we have to add the catch (ClassCastException)
+             * Note: this has been fixed in upstream, we only need this for the version we are still shipping.
+             */
+            attribution = Util.readObject(adjustConfig.context, ATTRIBUTION_FILENAME, ATTRIBUTION_NAME);
+        } catch (ClassCastException e) {
+            activityState = null;
+        }
     }
 
     private void writeActivityState() {
