@@ -17,8 +17,8 @@ mv $WORKSPACE/B2G/upload/b2g-*.linux-androideabi-arm.tar.gz $HOME/artifacts/b2g-
 mv $WORKSPACE/B2G/upload/${TARGET}.zip $HOME/artifacts/${TARGET}.zip
 mv $WORKSPACE/B2G/upload/gaia.zip $HOME/artifacts/gaia.zip
 
-# Upload public images as public artifacts on Nexus 4 KK and Nexus 5 L
-if [ "${TARGET}" = "nexus-4-kk" -o "${TARGET}" = "nexus-5-l" ]; then
+# Upload public images as public artifacts for Nexus 5 L
+if [ "${TARGET}" = "nexus-5-l" ]; then
   mv $HOME/artifacts/${TARGET}.zip $HOME/artifacts-public/
 fi
 
