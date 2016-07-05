@@ -153,6 +153,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_CLEAR_PRIVATE_DATA_EXIT = NON_PREF_PREFIX + "history.clear_on_exit";
     private static final String PREFS_SCREEN_ADVANCED = NON_PREF_PREFIX + "advanced_screen";
     public static final String PREFS_HOMEPAGE = NON_PREF_PREFIX + "homepage";
+    public static final String PREFS_HOMEPAGE_PARTNER_COPY = GeckoPreferences.PREFS_HOMEPAGE + ".partner";
     public static final String PREFS_HISTORY_SAVED_SEARCH = NON_PREF_PREFIX + "search.search_history.enabled";
     private static final String PREFS_FAQ_LINK = NON_PREF_PREFIX + "faq.link";
     private static final String PREFS_FEEDBACK_LINK = NON_PREF_PREFIX + "feedback.link";
@@ -160,6 +161,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_NOTIFICATIONS_CONTENT_LEARN_MORE = NON_PREF_PREFIX + "notifications.content.learn_more";
     public static final String PREFS_NOTIFICATIONS_WHATS_NEW = NON_PREF_PREFIX + "notifications.whats_new";
     public static final String PREFS_APP_UPDATE_LAST_BUILD_ID = "app.update.last_build_id";
+    public static final String PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_customizations_provider";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
