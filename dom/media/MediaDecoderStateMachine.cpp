@@ -1156,13 +1156,13 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     if (mState == DECODER_STATE_SEEKING) {
       if (mQueuedSeek.Exists()) {
         // Keep latest seek target
-      } else if (mSeekTask && mSeekTask->Exists()) {
+      } else if (mCurrentSeek.Exists()) {
         // Because both audio and video decoders are going to be reset in this
         // method later, we treat a VideoOnly seek task as a normal Accurate
         // seek task so that while it is resumed, both audio and video playback
         // are handled.
-        if (mSeekTask->GetSeekTarget().IsVideoOnly()) {
-          mSeekTask->GetSeekTarget().SetType(SeekTarget::Accurate);
+        if (mCurrentSeek.mTarget.IsVideoOnly()) {
+          mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
         }
         mQueuedSeek = Move(mCurrentSeek);
         mSeekTaskRequest.DisconnectIfExists();
