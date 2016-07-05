@@ -306,7 +306,8 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         *out_error = DoTexOrSubImage(isSubImage, gl, target.get(), level, dui, xOffset,
                                      yOffset, zOffset, mWidth, mHeight, mDepth,
                                      nullptr);
-        return true;
+        if (*out_error)
+            return false;
     }
 
     do {
