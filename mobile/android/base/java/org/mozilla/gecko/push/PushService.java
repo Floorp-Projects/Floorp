@@ -66,9 +66,9 @@ public class PushService implements BundleEventListener {
             "History:GetPrePathLastVisitedTimeMilliseconds",
     };
 
-    public static synchronized PushService getInstance() {
+    public static synchronized PushService getInstance(Context context) {
         if (sInstance == null) {
-            throw new IllegalStateException("PushService not yet created!");
+            onCreate(context);
         }
         return sInstance;
     }
