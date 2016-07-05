@@ -10029,5 +10029,13 @@
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
+  },
+  "FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE": {
+    "alert_emails": ["jh+bugzilla@buttercookie.de"],
+    "expires_in_version": "56",
+    "kind": "flag",
+    "bug_numbers": [1284017],
+    "description": "When restoring tabs on startup, reading from sessionstore.js failed, even though the file exists and is not containing an explicitly empty window.",
+    "cpp_guard": "ANDROID"
   }
 }

@@ -76,6 +76,7 @@ public final class GeckoProfile {
     private static final String SESSION_FILE = "sessionstore.js";
     private static final String SESSION_FILE_BACKUP = "sessionstore.bak";
     private static final long MAX_BACKUP_FILE_AGE = 1000 * 3600 * 24; // 24 hours
+    private static final int SESSION_STORE_EMPTY_JSON_LENGTH = 14; // length of {"windows":[]}
 
     private boolean mOldSessionDataProcessed = false;
 
@@ -651,6 +652,19 @@ public final class GeckoProfile {
             Log.e(LOGTAG, "Unable to read session file", ioe);
         }
         return null;
+    }
+
+    /**
+     * Checks whether the session store file exists and that its length
+     * doesn't match the known length of a session store file containing
+     * only an empty window.
+     */
+    public boolean sessionFileExistsAndNotEmptyWindow() {
+        File sessionFile = getFile(SESSION_FILE);
+
+        return sessionFile != null &&
+               sessionFile.exists() &&
+               sessionFile.length() != SESSION_STORE_EMPTY_JSON_LENGTH;
     }
 
     /**
