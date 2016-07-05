@@ -289,8 +289,6 @@ public class BrowserApp extends GeckoApp
 
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
-    private OrderedBroadcastHelper mOrderedBroadcastHelper;
-
     private ReadingListHelper mReadingListHelper;
 
     private AccountsHelper mAccountsHelper;
@@ -699,7 +697,6 @@ public class BrowserApp extends GeckoApp
 
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
-        mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
         mReadingListHelper = new ReadingListHelper(appContext, profile);
         mAccountsHelper = new AccountsHelper(appContext, profile);
 
@@ -1362,11 +1359,6 @@ public class BrowserApp extends GeckoApp
         if (mSharedPreferencesHelper != null) {
             mSharedPreferencesHelper.uninit();
             mSharedPreferencesHelper = null;
-        }
-
-        if (mOrderedBroadcastHelper != null) {
-            mOrderedBroadcastHelper.uninit();
-            mOrderedBroadcastHelper = null;
         }
 
         if (mReadingListHelper != null) {
