@@ -22,13 +22,13 @@ namespace media {
 NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
                                      AbstractThread* aThread,
                                      MediaDecoderReaderWrapper* aReader,
-                                     SeekJob&& aSeekJob,
+                                     SeekJob& aSeekJob,
                                      const MediaInfo& aInfo,
                                      const media::TimeUnit& aDuration,
                                      int64_t aCurrentTime,
                                      MediaQueue<MediaData>& aAudioQueue,
                                      MediaQueue<MediaData>& aVideoQueue)
-  : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
+  : SeekTask(aDecoderID, aThread, aReader, aSeekJob)
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
   , mCurrentTime(aCurrentTime)
