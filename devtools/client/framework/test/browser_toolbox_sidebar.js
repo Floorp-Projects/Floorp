@@ -83,7 +83,7 @@ function test() {
         allTabsReady(panel);
       });
 
-      panel.sidebar.addTab("tab1", tab1URL, true);
+      panel.sidebar.addTab("tab1", tab1URL, {selected: true});
       panel.sidebar.addTab("tab2", tab2URL);
       panel.sidebar.addTab("tab3", tab3URL);
 

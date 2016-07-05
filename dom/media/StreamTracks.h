@@ -303,6 +303,11 @@ public:
    */
   void ForgetUpTo(StreamTime aTime);
   /**
+   * Clears out all Tracks and the data they are holding.
+   * MediaStreamGraph calls this during forced shutdown.
+   */
+  void Clear();
+  /**
    * Returns the latest time passed to ForgetUpTo.
    */
   StreamTime GetForgottenDuration()

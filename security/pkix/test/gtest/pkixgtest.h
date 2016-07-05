@@ -178,6 +178,11 @@ public:
     return NotReached("NetscapeStepUpMatchesServerAuth should not be called",
                       Result::FATAL_ERROR_LIBRARY_FAILURE);
   }
+
+  virtual void NoteAuxiliaryExtension(AuxiliaryExtension, Input) override
+  {
+    ADD_FAILURE();
+  }
 };
 
 class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
@@ -227,6 +232,10 @@ class DefaultCryptoTrustDomain : public EverythingFailsByDefaultTrustDomain
   {
     matches = true;
     return Success;
+  }
+
+  void NoteAuxiliaryExtension(AuxiliaryExtension, Input) override
+  {
   }
 };
 

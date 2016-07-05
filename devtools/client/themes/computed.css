@@ -141,10 +141,8 @@
   opacity: 0.5;
 }
 
-#noResults {
-  font-size: 110%;
-  margin: 5px;
-  text-align: center;
+#computedview-no-results {
+  height: 100%;
 }
 
 .onlyuserstyles {

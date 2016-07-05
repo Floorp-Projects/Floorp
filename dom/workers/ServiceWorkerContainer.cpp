@@ -69,6 +69,7 @@ ServiceWorkerContainer::~ServiceWorkerContainer()
 void
 ServiceWorkerContainer::DisconnectFromOwner()
 {
+  mControllerWorker = nullptr;
   RemoveReadyPromise();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
@@ -221,7 +222,6 @@ already_AddRefed<workers::ServiceWorker>
 ServiceWorkerContainer::GetController()
 {
   if (!mControllerWorker) {
-    nsresult rv;
     nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
     if (!swm) {
       return nullptr;
@@ -231,8 +231,8 @@ ServiceWorkerContainer::GetController()
     //       In theory the DOM ServiceWorker object can exist without the worker
     //       thread running, but it seems our design does not expect that.
     nsCOMPtr<nsISupports> serviceWorker;
-    rv = swm->GetDocumentController(GetOwner(),
-                                    getter_AddRefs(serviceWorker));
+    nsresult rv = swm->GetDocumentController(GetOwner(),
+                                             getter_AddRefs(serviceWorker));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }

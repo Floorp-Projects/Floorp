@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test sidebar toggle button
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Sidebar toggle button test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let SidebarToggle = browserRequire("devtools/client/shared/components/sidebar-toggle.js");
+
+  try {
+    yield test();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function test() {
+    const output1 = shallowRenderComponent(SidebarToggle, {
+      collapsed: false,
+      collapsePaneTitle: "Expand",
+      expandPaneTitle: "Collapse"
+    });
+
+    is(output1.type, "button", "Output is a button element");
+    is(output1.props.title, "Expand", "Proper title is set");
+    is(output1.props.className.indexOf("pane-collapsed"), -1,
+      "Proper class name is set");
+
+    const output2 = shallowRenderComponent(SidebarToggle, {
+      collapsed: true,
+      collapsePaneTitle: "Expand",
+      expandPaneTitle: "Collapse"
+    });
+
+    is(output2.props.title, "Collapse", "Proper title is set");
+    ok(output2.props.className.indexOf("pane-collapsed") >= 0,
+      "Proper class name is set");
+  }
+});
+</script>
+</pre>
+</body>
+</html>

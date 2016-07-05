@@ -613,7 +613,7 @@ AsyncFetchAndSetIconForPage::OnStopRequest(nsIRequest* aRequest,
 
   // If over the maximum size allowed, don't save data to the database to
   // avoid bloating it.
-  if (mIcon.data.Length() > MAX_FAVICON_SIZE) {
+  if (mIcon.data.Length() > nsIFaviconService::MAX_FAVICON_SIZE) {
     return NS_OK;
   }
 

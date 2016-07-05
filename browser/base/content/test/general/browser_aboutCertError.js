@@ -125,12 +125,14 @@ add_task(function* checkWrongSystemTimeWarning() {
       let div = doc.getElementById("wrongSystemTimePanel");
       let systemDateDiv = doc.getElementById("wrongSystemTime_systemDate");
       let actualDateDiv = doc.getElementById("wrongSystemTime_actualDate");
+      let learnMoreLink = doc.getElementById("learnMoreLink");
 
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: div.textContent,
         systemDate: systemDateDiv.textContent,
-        actualDate: actualDateDiv.textContent
+        actualDate: actualDateDiv.textContent,
+        learnMoreLink: learnMoreLink.href
       };
     });
   }
@@ -155,6 +157,7 @@ add_task(function* checkWrongSystemTimeWarning() {
   ok(message.text.includes("expired.example.com"), "URL found in error message");
   ok(message.systemDate.includes(localDateFmt), "correct local date displayed");
   ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
+  ok(message.learnMoreLink.includes("time-errors"), "time-errors in the Learn More URL");
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 

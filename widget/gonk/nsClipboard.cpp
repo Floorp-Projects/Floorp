@@ -272,12 +272,18 @@ nsClipboard::GetData(nsITransferable *aTransferable,
         nsCOMPtr<imgITools> imgTool = do_GetService(NS_IMGTOOLS_CID);
 
         nsCOMPtr<nsIInputStream> byteStream;
-        imgTool->EncodeImage(imageContainer, flavorStr, EmptyString(), getter_AddRefs(byteStream));
+        nsresult rv = imgTool->EncodeImage(imageContainer,
+                                           flavorStr,
+                                           EmptyString(),
+                                           getter_AddRefs(byteStream));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          continue;
+        }
 
         // Set transferable.
-        nsresult rv = aTransferable->SetTransferData(flavorStr,
-                                                     byteStream,
-                                                     sizeof(nsIInputStream*));
+        rv = aTransferable->SetTransferData(flavorStr,
+                                            byteStream,
+                                            sizeof(nsIInputStream*));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           continue;
         }
