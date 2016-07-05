@@ -72,6 +72,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 #ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"
 #endif
@@ -1519,8 +1520,22 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
       compositor = new CompositorD3D9(this, mWidget);
 #endif
     }
-
-    if (compositor && compositor->Initialize()) {
+    nsCString failureReason;
+    if (compositor && compositor->Initialize(&failureReason)) {
+      if (failureReason.IsEmpty()){
+        failureReason = "SUCCESS";
+      }
+      if (compositor->GetBackendType() == LayersBackend::LAYERS_OPENGL){
+        Telemetry::Accumulate(Telemetry::OPENGL_COMPOSITING_FAILURE_ID, failureReason);
+      }
+#ifdef XP_WIN
+      else if (compositor->GetBackendType() == LayersBackend::LAYERS_D3D9){
+        Telemetry::Accumulate(Telemetry::D3D9_COMPOSITING_FAILURE_ID, failureReason);
+      }
+      else if (compositor->GetBackendType() == LayersBackend::LAYERS_D3D11){
+        Telemetry::Accumulate(Telemetry::D3D11_COMPOSITING_FAILURE_ID, failureReason);
+      }
+#endif
       compositor->SetCompositorID(mCompositorID);
       return compositor;
     }
