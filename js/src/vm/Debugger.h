@@ -1130,6 +1130,26 @@ class DebuggerEnvironment : public NativeObject
     static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc, Value* vp);
 };
 
+class DebuggerFrame : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
+    static DebuggerFrame* create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
+                                 const ScriptFrameIter* maybeIter, HandleNativeObject debugger);
+    static DebuggerFrame* checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
+                                    bool checkLive);
+
+  private:
+    static const ClassOps classOps_;
+
+    static const JSPropertySpec properties_[];
+    static const JSFunctionSpec methods_[];
+
+    static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+};
+
 class DebuggerObject : public NativeObject
 {
   public:
