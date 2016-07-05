@@ -1321,15 +1321,15 @@ JS_strdup(JSRuntime* rt, const char* s)
 #undef JS_AddRoot
 
 JS_PUBLIC_API(bool)
-JS_AddExtraGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
+JS_AddExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    return rt->gc.addBlackRootsTracer(traceOp, data);
+    return cx->gc.addBlackRootsTracer(traceOp, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveExtraGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
+JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    return rt->gc.removeBlackRootsTracer(traceOp, data);
+    return cx->gc.removeBlackRootsTracer(traceOp, data);
 }
 
 JS_PUBLIC_API(void)

@@ -513,7 +513,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   }
   mJSContext = JS_GetContext(mJSRuntime);
 
-  if (!JS_AddExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this)) {
+  if (!JS_AddExtraGCRootsTracer(mJSContext, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
