@@ -1349,10 +1349,10 @@ JS_MaybeGC(JSContext* cx)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data)
+JS_SetGCCallback(JSContext* cx, JSGCCallback cb, void* data)
 {
-    AssertHeapIsIdle(rt);
-    rt->gc.setGCCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    cx->gc.setGCCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
@@ -1418,11 +1418,11 @@ JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCParameter(JSRuntime* rt, JSGCParamKey key, uint32_t value)
+JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value)
 {
-    rt->gc.waitBackgroundSweepEnd();
-    AutoLockGC lock(rt);
-    MOZ_ALWAYS_TRUE(rt->gc.setParameter(key, value, lock));
+    cx->gc.waitBackgroundSweepEnd();
+    AutoLockGC lock(cx);
+    MOZ_ALWAYS_TRUE(cx->gc.setParameter(key, value, lock));
 }
 
 JS_PUBLIC_API(uint32_t)
@@ -1439,7 +1439,7 @@ struct JSGCConfig {
 };
 
 JS_PUBLIC_API(void)
-JS_SetGCParametersBasedOnAvailableMemory(JSRuntime* rt, uint32_t availMem)
+JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx, uint32_t availMem)
 {
     static const JSGCConfig minimal[NumGCConfigs] = {
         {JSGC_MAX_MALLOC_BYTES, 6 * 1024 * 1024},
@@ -1481,7 +1481,7 @@ JS_SetGCParametersBasedOnAvailableMemory(JSRuntime* rt, uint32_t availMem)
     }
 
     for (size_t i = 0; i < NumGCConfigs; i++)
-        JS_SetGCParameter(rt, config[i].key, config[i].value);
+        JS_SetGCParameter(cx, config[i].key, config[i].value);
 }
 
 
@@ -6499,11 +6499,11 @@ JSAutoByteString::encodeLatin1(ExclusiveContext* cx, JSString* str)
 }
 
 JS_PUBLIC_API(void)
-JS::SetLargeAllocationFailureCallback(JSRuntime* rt, JS::LargeAllocationFailureCallback lafc,
+JS::SetLargeAllocationFailureCallback(JSContext* cx, JS::LargeAllocationFailureCallback lafc,
                                       void* data)
 {
-    rt->largeAllocationFailureCallback = lafc;
-    rt->largeAllocationFailureCallbackData = data;
+    cx->largeAllocationFailureCallback = lafc;
+    cx->largeAllocationFailureCallbackData = data;
 }
 
 JS_PUBLIC_API(void)
