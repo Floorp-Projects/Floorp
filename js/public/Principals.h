@@ -55,7 +55,7 @@ extern JS_PUBLIC_API(void)
 JS_HoldPrincipals(JSPrincipals* principals);
 
 extern JS_PUBLIC_API(void)
-JS_DropPrincipals(JSRuntime* rt, JSPrincipals* principals);
+JS_DropPrincipals(JSContext* cx, JSPrincipals* principals);
 
 // Return whether the first principal subsumes the second. The exact meaning of
 // 'subsumes' is left up to the browser. Subsumption is checked inside the JS

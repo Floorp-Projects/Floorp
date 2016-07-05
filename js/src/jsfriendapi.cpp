@@ -169,7 +169,7 @@ JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals
 
     // Clear out the old principals, if any.
     if (compartment->principals()) {
-        JS_DropPrincipals(compartment->runtimeFromMainThread(), compartment->principals());
+        JS_DropPrincipals(compartment->contextFromMainThread(), compartment->principals());
         compartment->setPrincipals(nullptr);
         // We'd like to assert that our new principals is always same-origin
         // with the old one, but JSPrincipals doesn't give us a way to do that.
