@@ -3268,11 +3268,11 @@ JS_HoldPrincipals(JSPrincipals* principals)
 }
 
 JS_PUBLIC_API(void)
-JS_DropPrincipals(JSRuntime* rt, JSPrincipals* principals)
+JS_DropPrincipals(JSContext* cx, JSPrincipals* principals)
 {
     int rc = --principals->refcount;
     if (rc == 0)
-        rt->destroyPrincipals(principals);
+        cx->destroyPrincipals(principals);
 }
 
 JS_PUBLIC_API(void)

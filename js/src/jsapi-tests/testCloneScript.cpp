@@ -79,7 +79,7 @@ class AutoDropPrincipals
 
     ~AutoDropPrincipals()
     {
-        JS_DropPrincipals(rt, principals);
+        JS_DropPrincipals(JS_GetContext(rt), principals);
     }
 };
 
