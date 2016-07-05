@@ -462,10 +462,6 @@ BlacklistEntryToDriverInfo(nsCString& aBlacklistEntry,
       uint64_t version;
       if (ParseDriverVersion(dataValue, &version))
         aDriverInfo.mDriverVersionMax = version;
-    } else if (key.EqualsLiteral("driverVersionMax")) {
-      uint64_t version;
-      if (ParseDriverVersion(dataValue, &version))
-        aDriverInfo.mDriverVersionMax = version;
     } else if (key.EqualsLiteral("driverVersionComparator")) {
       aDriverInfo.mComparisonOp = BlacklistComparatorToComparisonOp(dataValue);
     } else if (key.EqualsLiteral("model")) {
