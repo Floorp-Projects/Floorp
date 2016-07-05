@@ -43,10 +43,14 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
     if test -n "$CLANG_CC" -a "$CPU_ARCH" = arm; then
       CFLAGS="-no-integrated-as $CFLAGS"
     fi
-    if test "$CROSS_COMPILE"; then
-      export CPPFLAGS CFLAGS LDFLAGS
-    fi
     ac_configure_args="$ac_configure_args --build=$build --host=$target"
+    if test "$CROSS_COMPILE"; then
+      ac_configure_args="$ac_configure_args \
+                         CFLAGS=\"$CFLAGS\" \
+                         CPPFLAGS=\"$CPPFLAGS\" \
+                         LDFLAGS=\"$LDFLAGS\""
+    fi
+    CFLAGS="$old_cflags"
     if test "$_MSC_VER"; then
       # Use a wrapper script for cl and ml that looks more like gcc.
       # autotools can't quite handle an MSVC build environment yet.
@@ -83,7 +87,6 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
     AC_OUTPUT_SUBDIRS(js/src/ctypes/libffi)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
     CONFIG_FILES=$old_config_files
-    CFLAGS="$old_cflags"
   fi
 
 fi

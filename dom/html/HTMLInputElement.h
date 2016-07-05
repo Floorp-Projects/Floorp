@@ -1022,7 +1022,11 @@ protected:
   /**
    * Returns if the step attribute apply for the current type.
    */
-  bool DoesStepApply() const { return DoesMinMaxApply(); }
+  bool DoesStepApply() const
+  {
+    // TODO: this is temporary until bug 888324 is fixed.
+    return DoesMinMaxApply() && mType != NS_FORM_INPUT_MONTH;
+  }
 
   /**
    * Returns if stepDown and stepUp methods apply for the current type.
@@ -1032,7 +1036,11 @@ protected:
   /**
    * Returns if valueAsNumber attribute applies for the current type.
    */
-  bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+  bool DoesValueAsNumberApply() const
+  {
+    // TODO: this is temporary until bug 888324 is fixed.
+    return DoesMinMaxApply() && mType != NS_FORM_INPUT_MONTH;
+  }
 
   /**
    * Returns if autocomplete attribute applies for the current type.
@@ -1255,6 +1263,12 @@ protected:
    * Returns if the current type is an experimental mobile type.
    */
   static bool IsExperimentalMobileType(uint8_t aType);
+
+  /*
+   * Returns if the current type is one of the date/time input types: date,
+   * time and month. TODO: week and datetime-local.
+   */
+  static bool IsDateTimeInputType(uint8_t aType);
 
   /**
    * Flushes the layout frame tree to make sure we have up-to-date frames.

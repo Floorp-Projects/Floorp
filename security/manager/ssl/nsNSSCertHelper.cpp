@@ -116,31 +116,36 @@ ProcessVersion(SECItem* versionItem, nsINSSComponent* nssComponent,
   return NS_OK;
 }
 
-static nsresult 
-ProcessSerialNumberDER(SECItem         *serialItem, 
-                       nsINSSComponent *nssComponent,
-                       nsIASN1PrintableItem **retItem)
+static nsresult
+ProcessSerialNumberDER(const SECItem& serialItem,
+                       NotNull<nsINSSComponent*> nssComponent,
+               /*out*/ nsCOMPtr<nsIASN1PrintableItem>& retItem)
 {
-  nsresult rv;
   nsAutoString text;
+  nsresult rv = nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", text);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
-
-  rv = nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", text); 
-  if (NS_FAILED(rv))
-    return rv;
-
   rv = printableItem->SetDisplayName(text);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
-  nsXPIDLCString serialNumber;
-  serialNumber.Adopt(CERT_Hexify(serialItem, 1));
-  if (!serialNumber)
+  UniquePORTString serialNumber(
+    CERT_Hexify(const_cast<SECItem*>(&serialItem), 1));
+  if (!serialNumber) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUTF16(serialNumber));
-  printableItem.forget(retItem);
-  return rv;
+  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUTF16(serialNumber.get()));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  retItem = printableItem.forget();
+  return NS_OK;
 }
 
 static nsresult
@@ -1815,6 +1820,9 @@ nsresult
 nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                                  nsINSSComponent *nssComponent)
 {
+  MOZ_ASSERT(nssComponent);
+  NS_ENSURE_ARG(nssComponent);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -1858,10 +1866,9 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     return rv;
 
   asn1Objects->AppendElement(printableItem, false);
-  
-  rv = ProcessSerialNumberDER(&mCert->serialNumber, nssComponent,
-                              getter_AddRefs(printableItem));
 
+  rv = ProcessSerialNumberDER(mCert->serialNumber, WrapNotNull(nssComponent),
+                              printableItem);
   if (NS_FAILED(rv))
     return rv;
   asn1Objects->AppendElement(printableItem, false);

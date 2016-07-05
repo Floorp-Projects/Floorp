@@ -12,7 +12,6 @@ flags:
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit
     - nexus-5l-eng
-    - aries
     - aries-eng
     - android-api-15
     - android-api-15-frontend
@@ -35,8 +34,10 @@ flags:
     - crashtest
     - crashtest-e10s
     - external-media-tests
-    - firefox-ui-functional
-    - firefox-ui-functional-e10s
+    - firefox-ui-functional-local
+    - firefox-ui-functional-local-e10s
+    - firefox-ui-functional-remote
+    - firefox-ui-functional-remote-e10s
     - gaia-build
     - gaia-build-unit
     - gaia-js-integration

@@ -4985,6 +4985,18 @@ void HTMLMediaElement::FireTimeUpdate(bool aPeriodic)
   }
 }
 
+MediaStream* HTMLMediaElement::GetSrcMediaStream() const
+{
+  if (!mSrcStream) {
+    return nullptr;
+  }
+  if (mSrcStream->GetCameraStream()) {
+    // XXX Remove this check with CameraPreviewMediaStream per bug 1124630.
+    return mSrcStream->GetCameraStream();
+  }
+  return mSrcStream->GetPlaybackStream();
+}
+
 void HTMLMediaElement::GetCurrentSpec(nsCString& aString)
 {
   if (mLoadingSrc) {
@@ -5820,5 +5832,71 @@ HTMLMediaElement::IsAudible() const
   return true;
 }
 
+static const char* VisibilityString(Visibility aVisibility) {
+  switch(aVisibility) {
+    case Visibility::UNTRACKED: {
+      return "UNTRACKED";
+    }
+    case Visibility::NONVISIBLE: {
+      return "NONVISIBLE";
+    }
+    case Visibility::MAY_BECOME_VISIBLE: {
+      return "MAY_BECOME_VISIBLE";
+    }
+    case Visibility::IN_DISPLAYPORT: {
+      return "IN_DISPLAYPORT";
+    }
+  }
+
+  return "NAN";
+}
+
+// The visibility enumeration contains three states:
+// {NONVISIBLE, MAY_BECOME_VISIBLE, IN_DISPLAYPORT}.
+// Here, I implement a conservative mechanism:
+// (1) {MAY_BECOME_VISIBLE, IN_DISPLAYPORT} -> NONVISIBLE:
+//     notify the decoder to suspend.
+// (2) {NONVISIBLE, MAY_BECOME_VISIBLE} -> IN_DISPLAYPORT:
+//     notify the decoder to resume.
+// (3) IN_DISPLAYPORT -> MAY_BECOME_VISIBLE:
+//     do nothing here because users might scroll back immediately.
+// (4) NONVISIBLE -> MAY_BECOME_VISIBLE:
+//     notify the decoder to resume because users might continue their scroll
+//     direction and the video might be IN_DISPLAYPORT soon.
+void
+HTMLMediaElement::OnVisibilityChange(Visibility aOldVisibility,
+                                     Visibility aNewVisibility)
+{
+  LOG(LogLevel::Debug, ("OnVisibilityChange(): %s -> %s\n",
+      VisibilityString(aOldVisibility),VisibilityString(aNewVisibility)));
+
+  if (!mDecoder) {
+    return;
+  }
+
+  switch (aNewVisibility) {
+    case Visibility::UNTRACKED: {
+        MOZ_ASSERT_UNREACHABLE("Shouldn't notify for untracked visibility");
+        break;
+    }
+    case Visibility::NONVISIBLE: {
+      mDecoder->NotifyOwnerActivityChanged(false);
+      break;
+    }
+    case Visibility::MAY_BECOME_VISIBLE: {
+      if (aOldVisibility == Visibility::NONVISIBLE) {
+        mDecoder->NotifyOwnerActivityChanged(true);
+      } else if (aOldVisibility == Visibility::IN_DISPLAYPORT) {
+        // Do nothing.
+      }
+      break;
+    }
+    case Visibility::IN_DISPLAYPORT: {
+      mDecoder->NotifyOwnerActivityChanged(true);
+      break;
+    }
+  }
+
+}
 } // namespace dom
 } // namespace mozilla

@@ -720,7 +720,7 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    JS_SetGCZeal(cx->runtime(), (uint8_t)zeal, frequency);
+    JS_SetGCZeal(cx, (uint8_t)zeal, frequency);
     args.rval().setUndefined();
     return true;
 }
@@ -1310,7 +1310,7 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(!cx->isExceptionPending());
     rt->hadOutOfMemory = false;
 
-    JS_SetGCZeal(cx->runtime(), 0, JS_DEFAULT_ZEAL_FREQ);
+    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
 
     for (unsigned thread = threadStart; thread < threadEnd; thread++) {
         if (verbose)
@@ -1985,7 +1985,7 @@ SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    JS_SetGlobalJitCompilerOption(cx->runtime(), opt, uint32_t(number));
+    JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
 
     args.rval().setUndefined();
     return true;
@@ -2003,7 +2003,7 @@ GetJitCompilerOptions(JSContext* cx, unsigned argc, Value* vp)
 
 #define JIT_COMPILER_MATCH(key, string)                                \
     opt = JSJITCOMPILER_ ## key;                                       \
-    value.setInt32(JS_GetGlobalJitCompilerOption(cx->runtime(), opt)); \
+    value.setInt32(JS_GetGlobalJitCompilerOption(cx, opt));            \
     if (!JS_SetProperty(cx, info, string, value))                      \
         return false;
 
