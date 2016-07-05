@@ -42,7 +42,8 @@ public:
   GridTracks* Tracks() const;
 
   void SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo);
-  void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo);
+  void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
+                   const ComputedGridLineInfo* aLineInfo);
 
 protected:
   RefPtr<Grid> mParent;
