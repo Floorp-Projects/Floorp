@@ -52,9 +52,6 @@ NextFrameSeekTask::Discard()
 {
   AssertOwnerThread();
 
-  // Disconnect MediaDecoder.
-  mSeekJob.RejectIfExists(__func__);
-
   // Disconnect MDSM.
   RejectIfExist(__func__);
 
