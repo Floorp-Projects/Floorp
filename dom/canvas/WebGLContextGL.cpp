@@ -1242,7 +1242,8 @@ WebGLContext::DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat, GLint x
         MOZ_RELEASE_ASSERT(!IsWebGL2()); // No SKIP_PIXELS, etc.
         MOZ_ASSERT(!mBoundPixelPackBuffer); // Let's be real clear.
 
-        const GLenum readType = LOCAL_GL_HALF_FLOAT_OES;
+        // You'd think ANGLE would want HALF_FLOAT_OES, but it rejects that.
+        const GLenum readType = LOCAL_GL_HALF_FLOAT;
 
         const char funcName[] = "readPixels";
         const auto readBytesPerPixel = webgl::BytesPerPixel({format, readType});
