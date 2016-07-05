@@ -21,11 +21,10 @@
 
 "use strict";
 
-const {CssDocsTooltip} = require("devtools/client/shared/widgets/Tooltip");
-const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
-
-// frame to load the tooltip into
-const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
+const {
+  setBaseCssDocsUrl,
+  MdnDocsWidget
+} = require("devtools/client/shared/widgets/MdnDocsWidget");
 
 const BASIC_EXPECTED_SUMMARY = "A summary of the property.";
 const BASIC_EXPECTED_SYNTAX = [{type: "comment", text: "/* The part we want   */"},
@@ -100,8 +99,9 @@ add_task(function* () {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
   yield addTab("about:blank");
-  let [host, win, doc] = yield createHost("bottom", MDN_DOCS_TOOLTIP_FRAME);
-  let widget = new MdnDocsWidget(win.document);
+  let [host, win] = yield createHost("bottom", "data:text/html," +
+    "<div class='mdn-container'></div>");
+  let widget = new MdnDocsWidget(win.document.querySelector("div"));
 
   for (let {desc, docsPageUrl, expectedContents} of TEST_DATA) {
     info(desc);
@@ -112,21 +112,10 @@ add_task(function* () {
   gBrowser.removeCurrentTab();
 });
 
-function* testNonExistentPage(widget) {
-  info("Test a property for which we don't have a page");
-  yield widget.loadCssDocs("i-dont-exist.html");
-  checkTooltipContents(widget.elements, {
-    propertyName: "i-dont-exist.html",
-    summary: ERROR_MESSAGE,
-    syntax: ""
-  });
-}
-
 /*
  * Utility function to check content of the tooltip.
  */
 function checkTooltipContents(doc, expected) {
-
   is(doc.heading.textContent,
      expected.propertyName,
      "Property name is correct");

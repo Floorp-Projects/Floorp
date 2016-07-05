@@ -29,6 +29,8 @@ const defer = require("devtools/shared/defer");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+
 // Parameters for the XHR request
 // see https://developer.mozilla.org/en-US/docs/MDN/Kuma/API#Document_parameters
 const XHR_PARAMS = "?raw&macros";
@@ -87,7 +89,7 @@ function appendSyntaxHighlightedCSS(cssText, parentElement) {
    * Create a SPAN node with the given text content and class.
    */
   function createStyledNode(textContent, className) {
-    let newNode = doc.createElement("span");
+    let newNode = doc.createElementNS(XHTML_NS, "span");
     newNode.classList.add(className);
     newNode.textContent = textContent;
     return newNode;
@@ -224,9 +226,7 @@ exports.getCssDocs = getCssDocs;
 
 /**
  * The MdnDocsWidget is used by tooltip code that needs to display docs
- * from MDN in a tooltip. The tooltip code loads a document that contains the
- * basic structure of a docs tooltip (loaded from mdn-docs-frame.xhtml),
- * and passes this document into the widget's constructor.
+ * from MDN in a tooltip.
  *
  * In the constructor, the widget does some general setup that's not
  * dependent on the particular item we need docs for.
@@ -234,21 +234,30 @@ exports.getCssDocs = getCssDocs;
  * After that, when the tooltip code needs to display docs for an item, it
  * asks the widget to retrieve the docs and update the document with them.
  *
- * @param {Document} tooltipDocument
- * A DOM document. The widget expects the document to have a particular
- * structure.
+ * @param {Element} tooltipContainer
+ * A DOM element where the MdnDocs widget markup should be created.
  */
-function MdnDocsWidget(tooltipDocument) {
+function MdnDocsWidget(tooltipContainer) {
+  tooltipContainer.innerHTML =
+    `<header>
+       <h1 class="mdn-property-name theme-fg-color5"></h1>
+     </header>
+     <div class="mdn-property-info">
+       <div class="mdn-summary"></div>
+       <pre class="mdn-syntax devtools-monospace"></pre>
+     </div>
+     <footer>
+       <a class="mdn-visit-page theme-link" href="#">Visit MDN (placeholder)</a>
+     </footer>`;
+
   // fetch all the bits of the document that we will manipulate later
   this.elements = {
-    heading: tooltipDocument.getElementById("property-name"),
-    summary: tooltipDocument.getElementById("summary"),
-    syntax: tooltipDocument.getElementById("syntax"),
-    info: tooltipDocument.getElementById("property-info"),
-    linkToMdn: tooltipDocument.getElementById("visit-mdn-page")
+    heading: tooltipContainer.querySelector(".mdn-property-name"),
+    summary: tooltipContainer.querySelector(".mdn-summary"),
+    syntax: tooltipContainer.querySelector(".mdn-syntax"),
+    info: tooltipContainer.querySelector(".mdn-property-info"),
+    linkToMdn: tooltipContainer.querySelector(".mdn-visit-page")
   };
-
-  this.doc = tooltipDocument;
 
   // get the localized string for the link text
   this.elements.linkToMdn.textContent =
@@ -357,7 +366,6 @@ MdnDocsWidget.prototype = {
 
   destroy: function () {
     this.elements = null;
-    this.doc = null;
   }
 };
 
