@@ -1080,7 +1080,6 @@ class Operand
     Tag_ Tag : 3;
     uint32_t reg : 5;
     int32_t offset;
-    uint32_t data;
 
   public:
     explicit Operand(Register reg_)
