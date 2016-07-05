@@ -544,7 +544,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   static js::DOMCallbacks DOMcallbacks = {
     InstanceClassHasProtoAtDepth
   };
-  SetDOMCallbacks(mJSRuntime, &DOMcallbacks);
+  SetDOMCallbacks(mJSContext, &DOMcallbacks);
   js::SetScriptEnvironmentPreparer(mJSRuntime, &mEnvironmentPreparer);
 
   JS::SetGetIncumbentGlobalCallback(mJSRuntime, GetIncumbentGlobalCallback);

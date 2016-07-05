@@ -6578,7 +6578,7 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
         static const js::DOMCallbacks DOMcallbacks = {
             InstanceClassHasProtoAtDepth
         };
-        SetDOMCallbacks(cx->runtime(), &DOMcallbacks);
+        SetDOMCallbacks(cx, &DOMcallbacks);
 
         RootedObject domProto(cx, JS_InitClass(cx, glob, nullptr, &dom_class, dom_constructor,
                                                0, dom_props, dom_methods, nullptr, nullptr));
