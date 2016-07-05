@@ -7019,7 +7019,7 @@ SetWorkerRuntimeOptions(JSRuntime* rt)
     }
 #endif
 
-    JS_SetNativeStackQuota(rt, gMaxStackSize);
+    JS_SetNativeStackQuota(JS_GetContext(rt), gMaxStackSize);
 }
 
 static int
@@ -7404,7 +7404,7 @@ main(int argc, char** argv, char** envp)
     JS::SetBuildIdOp(cx, ShellBuildId);
     JS::SetAsmJSCacheOps(cx, &asmJSCacheOps);
 
-    JS_SetNativeStackQuota(rt, gMaxStackSize);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
 
     JS::dbg::SetDebuggerMallocSizeOf(rt, moz_malloc_size_of);
 
