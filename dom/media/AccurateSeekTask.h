@@ -33,13 +33,9 @@ public:
 private:
   ~AccurateSeekTask();
 
-  void EnsureVideoDecodeTaskQueued();
+  void RequestVideoData();
 
-  void EnsureAudioDecodeTaskQueued();
-
-  const char* AudioRequestStatus();
-
-  const char* VideoRequestStatus();
+  void RequestAudioData();
 
   nsresult DropAudioUpToSeekTarget(MediaData* aSample);
 
