@@ -914,7 +914,7 @@ extern JS_PUBLIC_API(JS::Value)
 JS_GetEmptyStringValue(JSContext* cx);
 
 extern JS_PUBLIC_API(JSString*)
-JS_GetEmptyString(JSRuntime* rt);
+JS_GetEmptyString(JSContext* cx);
 
 extern JS_PUBLIC_API(bool)
 JS_ValueToObject(JSContext* cx, JS::HandleValue v, JS::MutableHandleObject objp);
@@ -1008,7 +1008,7 @@ extern JS_PUBLIC_API(void)
 JS_EndRequest(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
-JS_SetFutexCanWait(JSRuntime* rt);
+JS_SetFutexCanWait(JSContext* cx);
 
 namespace js {
 
@@ -1251,23 +1251,23 @@ extern JS_PUBLIC_API(const char*)
 JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API(void)
-JS_SetDestroyCompartmentCallback(JSRuntime* rt, JSDestroyCompartmentCallback callback);
+JS_SetDestroyCompartmentCallback(JSContext* cx, JSDestroyCompartmentCallback callback);
 
 extern JS_PUBLIC_API(void)
-JS_SetSizeOfIncludingThisCompartmentCallback(JSRuntime* rt,
+JS_SetSizeOfIncludingThisCompartmentCallback(JSContext* cx,
                                              JSSizeOfIncludingThisCompartmentCallback callback);
 
 extern JS_PUBLIC_API(void)
-JS_SetDestroyZoneCallback(JSRuntime* rt, JSZoneCallback callback);
+JS_SetDestroyZoneCallback(JSContext* cx, JSZoneCallback callback);
 
 extern JS_PUBLIC_API(void)
-JS_SetSweepZoneCallback(JSRuntime* rt, JSZoneCallback callback);
+JS_SetSweepZoneCallback(JSContext* cx, JSZoneCallback callback);
 
 extern JS_PUBLIC_API(void)
-JS_SetCompartmentNameCallback(JSRuntime* rt, JSCompartmentNameCallback callback);
+JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback);
 
 extern JS_PUBLIC_API(void)
-JS_SetWrapObjectCallbacks(JSRuntime* rt, const JSWrapObjectCallbacks* callbacks);
+JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks);
 
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentPrivate(JSCompartment* compartment, void* data);
@@ -5219,10 +5219,10 @@ typedef void
 (* WarningReporter)(JSContext* cx, const char* message, JSErrorReport* report);
 
 extern JS_PUBLIC_API(WarningReporter)
-SetWarningReporter(JSRuntime* rt, WarningReporter reporter);
+SetWarningReporter(JSContext* cx, WarningReporter reporter);
 
 extern JS_PUBLIC_API(WarningReporter)
-GetWarningReporter(JSRuntime* rt);
+GetWarningReporter(JSContext* cx);
 
 extern JS_PUBLIC_API(bool)
 CreateError(JSContext* cx, JSExnType type, HandleObject stack,
@@ -5502,17 +5502,17 @@ extern JS_PUBLIC_API(intptr_t)
 JS_GetCurrentThread();
 
 /**
- * A JS runtime always has an "owner thread". The owner thread is set when the
- * runtime is created (to the current thread) and practically all entry points
- * into the JS engine check that a runtime (or anything contained in the
- * runtime: context, compartment, object, etc) is only touched by its owner
+ * A JS context always has an "owner thread". The owner thread is set when the
+ * context is created (to the current thread) and practically all entry points
+ * into the JS engine check that a context (or anything contained in the
+ * context: runtime, compartment, object, etc) is only touched by its owner
  * thread. Embeddings may check this invariant outside the JS engine by calling
  * JS_AbortIfWrongThread (which will abort if not on the owner thread, even for
  * non-debug builds).
  */
 
 extern JS_PUBLIC_API(void)
-JS_AbortIfWrongThread(JSRuntime* rt);
+JS_AbortIfWrongThread(JSContext* cx);
 
 /************************************************************************/
 
@@ -5533,17 +5533,17 @@ extern JS_PUBLIC_API(void)
 JS_GetGCZealBits(JSContext* cx, uint32_t* zealBits, uint32_t* frequency, uint32_t* nextScheduled);
 
 extern JS_PUBLIC_API(void)
-JS_SetGCZeal(JSRuntime* rt, uint8_t zeal, uint32_t frequency);
+JS_SetGCZeal(JSContext* cx, uint8_t zeal, uint32_t frequency);
 
 extern JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext* cx, uint32_t count);
 #endif
 
 extern JS_PUBLIC_API(void)
-JS_SetParallelParsingEnabled(JSRuntime* rt, bool enabled);
+JS_SetParallelParsingEnabled(JSContext* cx, bool enabled);
 
 extern JS_PUBLIC_API(void)
-JS_SetOffthreadIonCompilationEnabled(JSRuntime* rt, bool enabled);
+JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
 
 #define JIT_COMPILER_OPTIONS(Register)                                     \
     Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger")           \
@@ -5568,9 +5568,9 @@ typedef enum JSJitCompilerOption {
 } JSJitCompilerOption;
 
 extern JS_PUBLIC_API(void)
-JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t value);
+JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t value);
 extern JS_PUBLIC_API(int)
-JS_GetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt);
+JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt);
 
 /**
  * Convert a uint32_t index into a jsid.
@@ -5780,10 +5780,10 @@ struct AsmJSCacheOps
 };
 
 extern JS_PUBLIC_API(void)
-SetAsmJSCacheOps(JSRuntime* rt, const AsmJSCacheOps* callbacks);
+SetAsmJSCacheOps(JSContext* cx, const AsmJSCacheOps* callbacks);
 
 extern JS_PUBLIC_API(void)
-SetBuildIdOp(JSRuntime* rt, BuildIdOp buildIdOp);
+SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
 
 /**
  * Convenience class for imitating a JS level for-of loop. Typical usage:

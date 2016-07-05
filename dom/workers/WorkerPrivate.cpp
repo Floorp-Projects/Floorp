@@ -1872,6 +1872,7 @@ NS_IMPL_ISUPPORTS(TimerThreadEventTarget, nsIEventTarget)
 WorkerLoadInfo::WorkerLoadInfo()
   : mWindowID(UINT64_MAX)
   , mServiceWorkerID(0)
+  , mReferrerPolicy(net::RP_Default)
   , mFromWindow(false)
   , mEvalAllowed(false)
   , mReportCSPViolations(false)
@@ -1931,6 +1932,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mServiceWorkerCacheName = aOther.mServiceWorkerCacheName;
   mWindowID = aOther.mWindowID;
   mServiceWorkerID = aOther.mServiceWorkerID;
+  mReferrerPolicy = aOther.mReferrerPolicy;
   mFromWindow = aOther.mFromWindow;
   mEvalAllowed = aOther.mEvalAllowed;
   mReportCSPViolations = aOther.mReportCSPViolations;
@@ -3566,6 +3568,16 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
   if (mLoadInfo.mCSP) {
     mLoadInfo.mCSP->GetAllowsEval(&mLoadInfo.mReportCSPViolations,
                                   &mLoadInfo.mEvalAllowed);
+    // Set ReferrerPolicy
+    bool hasReferrerPolicy = false;
+    uint32_t rp = mozilla::net::RP_Default;
+
+    nsresult rv = mLoadInfo.mCSP->GetReferrerPolicy(&rp, &hasReferrerPolicy);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (hasReferrerPolicy) {
+      mLoadInfo.mReferrerPolicy = static_cast<net::ReferrerPolicy>(rp);
+    }
   } else {
     mLoadInfo.mEvalAllowed = true;
     mLoadInfo.mReportCSPViolations = false;
@@ -5104,7 +5116,7 @@ WorkerPrivate::ClearMainEventQueue(WorkerRanOrNot aRanOrNot)
 {
   AssertIsOnWorkerThread();
 
-  MOZ_ASSERT(!mSyncLoopStack.Length());
+  MOZ_ASSERT(mSyncLoopStack.IsEmpty());
   MOZ_ASSERT(!mCancelAllPendingRunnables);
   mCancelAllPendingRunnables = true;
 
@@ -5502,7 +5514,7 @@ WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex, nsIThreadInternal* aThread)
 
   MOZ_ALWAYS_SUCCEEDS(aThread->PopEventQueue(nestedEventTarget));
 
-  if (!mSyncLoopStack.Length() && mPendingEventQueueClearing) {
+  if (mSyncLoopStack.IsEmpty() && mPendingEventQueueClearing) {
     ClearMainEventQueue(WorkerRan);
     mPendingEventQueueClearing = false;
   }
@@ -5802,7 +5814,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
   if (previousStatus == Running) {
     // NB: If we're in a sync loop, we can't clear the queue immediately,
     // because this is the wrong queue. So we have to defer it until later.
-    if (mSyncLoopStack.Length()) {
+    if (!mSyncLoopStack.IsEmpty()) {
       mPendingEventQueueClearing = true;
     } else {
       ClearMainEventQueue(WorkerRan);
@@ -6366,7 +6378,7 @@ WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal,
 {
   AssertIsOnWorkerThread();
 
-  JS_SetGCZeal(JS_GetRuntime(aCx), aGCZeal, aFrequency);
+  JS_SetGCZeal(aCx, aGCZeal, aFrequency);
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateGCZeal(aGCZeal, aFrequency);

@@ -186,7 +186,7 @@ a {
   height: 8px;
   width: 8px;
   border-radius: 50%;
-  margin-left: 5px;
+  margin-inline-start: 5px;
   border-width: 1px;
   border-style: solid;
 }
@@ -565,7 +565,7 @@ a.learn-more-link.webconsole-learn-more-link {
   .webconsole-filter-button > .toolbarbutton-menubutton-button:before {
     width: 12px;
     height: 12px;
-    margin-left: 1px;
+    margin-inline-start: 1px;
   }
   .toolbarbutton-menubutton-dropmarker {
     margin: 0px;

@@ -800,7 +800,7 @@ TableWidget.prototype = {
    * Removes the row associated with the `item` object.
    */
   remove: function (item) {
-    if (typeof item == "string") {
+    if (typeof item != "object") {
       item = this.items.get(item);
     }
     if (!item) {

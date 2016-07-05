@@ -510,7 +510,7 @@
   list-style-image: var(--theme-pane-collapse-image);
 }
 
-#details-pane-toggle[pane-collapsed] {
+#details-pane-toggle.pane-collapsed {
   list-style-image: var(--theme-pane-expand-image);
 }
 

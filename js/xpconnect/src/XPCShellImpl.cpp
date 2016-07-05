@@ -244,7 +244,7 @@ ReadLine(JSContext* cx, unsigned argc, Value* vp)
         if (!str)
             return false;
     } else {
-        str = JS_GetEmptyString(JS_GetRuntime(cx));
+        str = JS_GetEmptyString(cx);
     }
 
     /* Get a line from the infile */
@@ -447,7 +447,7 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
     if (!ToUint32(cx, args.get(0), &zeal))
         return false;
 
-    JS_SetGCZeal(JS_GetRuntime(cx), uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ);
+    JS_SetGCZeal(cx, uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ);
     args.rval().setUndefined();
     return true;
 }

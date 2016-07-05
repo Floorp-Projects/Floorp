@@ -962,12 +962,12 @@ CssRuleView.prototype = {
    * Show the user that the rule view has no node selected.
    */
   _showEmpty: function () {
-    if (this.styleDocument.getElementById("noResults") > 0) {
+    if (this.styleDocument.getElementById("ruleview-no-results")) {
       return;
     }
 
     createChild(this.element, "div", {
-      id: "noResults",
+      id: "ruleview-no-results",
       textContent: l10n("rule.empty")
     });
   },

@@ -29,7 +29,7 @@ namespace mozilla {
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
                                  Flags aFlags,
                                  TrackRate aSampleRate)
-  : ProcessedMediaStream(nullptr),
+  : ProcessedMediaStream(),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
     mFlags(aFlags),
