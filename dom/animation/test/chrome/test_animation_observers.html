@@ -1540,12 +1540,13 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
     yield await_frame();
     assert_records([], "records after assigning same value");
 
-    anim.currentTime = 500 * MS_PER_SEC;
+    anim.currentTime = anim.effect.timing.duration * 2;
+    anim.finish();
     yield await_frame();
     assert_records([{ added: [], changed: [], removed: [anim] }],
                    "records after animation end");
 
-    anim.effect.timing.duration = 1000 * MS_PER_SEC;
+    anim.effect.timing.duration = anim.effect.timing.duration * 3;
     yield await_frame();
     assert_records([{ added: [anim], changed: [], removed: [] }],
                    "records after animation restarted");
