@@ -733,8 +733,11 @@ MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
                   const MemoryAccess* memoryAccess, const Instance& instance)
 {
-    // TODO: Implement unaligned accesses.
-    return instance.codeSegment().outOfBoundsCode();
+    // We forbid ARM instruction sets below ARMv7, so that solves unaligned
+    // integer memory accesses. So the only way to land here is because of a
+    // non-default configured kernel or an unaligned floating-point access.
+    // TODO Handle FPU unaligned accesses on ARM (bug 1283121).
+    return instance.codeSegment().unalignedAccessCode();
 }
 
 #endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
@@ -1097,16 +1100,28 @@ MachExceptionHandler::install(JSRuntime* rt)
 
 #else  // If not Windows or Mac, assume Unix
 
+enum class Signal {
+    SegFault,
+    BusError
+};
+
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
+template<Signal signal>
 static bool
 HandleFault(int signum, siginfo_t* info, void* ctx)
 {
     // The signals we're expecting come from access violations, accessing
     // mprotected memory. If the signal originates anywhere else, don't try
     // to handle it.
-    MOZ_RELEASE_ASSERT(signum == SIGSEGV);
-    if (info->si_code != SEGV_ACCERR)
+    if (signal == Signal::SegFault)
+        MOZ_RELEASE_ASSERT(signum == SIGSEGV);
+    else
+        MOZ_RELEASE_ASSERT(signum == SIGBUS);
+
+    if (signal == Signal::SegFault && info->si_code != SEGV_ACCERR)
+        return false;
+    if (signal == Signal::BusError && info->si_code != BUS_ADRALN)
         return false;
 
     CONTEXT* context = (CONTEXT*)ctx;
@@ -1135,7 +1150,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
 
     const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
-    if (!memoryAccess)
+    if (signal == Signal::SegFault && !memoryAccess)
         return false;
 
     *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, instance);
@@ -1144,12 +1159,18 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
 }
 
 static struct sigaction sPrevSEGVHandler;
+static struct sigaction sPrevSIGBUSHandler;
 
+template<Signal signal>
 static void
 AsmJSFaultHandler(int signum, siginfo_t* info, void* context)
 {
-    if (HandleFault(signum, info, context))
+    if (HandleFault<signal>(signum, info, context))
         return;
+
+    struct sigaction* previousSignal = signal == Signal::SegFault
+                                       ? &sPrevSEGVHandler
+                                       : &sPrevSIGBUSHandler;
 
     // This signal is not for any asm.js code we expect, so we need to forward
     // the signal to the next handler. If there is no next handler (SIG_IGN or
@@ -1163,15 +1184,14 @@ AsmJSFaultHandler(int signum, siginfo_t* info, void* context)
     // signal to it's original disposition and returning.
     //
     // Note: the order of these tests matter.
-    if (sPrevSEGVHandler.sa_flags & SA_SIGINFO)
-        sPrevSEGVHandler.sa_sigaction(signum, info, context);
-    else if (sPrevSEGVHandler.sa_handler == SIG_DFL || sPrevSEGVHandler.sa_handler == SIG_IGN)
-        sigaction(signum, &sPrevSEGVHandler, nullptr);
+    if (previousSignal->sa_flags & SA_SIGINFO)
+        previousSignal->sa_sigaction(signum, info, context);
+    else if (previousSignal->sa_handler == SIG_DFL || previousSignal->sa_handler == SIG_IGN)
+        sigaction(signum, previousSignal, nullptr);
     else
-        sPrevSEGVHandler.sa_handler(signum);
+        previousSignal->sa_handler(signum);
 }
-#endif
-
+# endif // XP_WIN || XP_DARWIN || assume unix
 #endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
 
 static void
@@ -1303,12 +1323,22 @@ wasm::EnsureSignalHandlersInstalled(JSRuntime* rt)
     // SA_NODEFER allows us to reenter the signal handler if we crash while
     // handling the signal, and fall through to the Breakpad handler by testing
     // handlingSegFault.
+
+#  if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     struct sigaction faultHandler;
     faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
-    faultHandler.sa_sigaction = &AsmJSFaultHandler;
+    faultHandler.sa_sigaction = &AsmJSFaultHandler<Signal::SegFault>;
     sigemptyset(&faultHandler.sa_mask);
     if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler))
         MOZ_CRASH("unable to install segv handler");
+#  elif defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
+    struct sigaction busHandler;
+    busHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
+    busHandler.sa_sigaction = &AsmJSFaultHandler<Signal::BusError>;
+    sigemptyset(&busHandler.sa_mask);
+    if (sigaction(SIGBUS, &busHandler, &sPrevSIGBUSHandler))
+        MOZ_CRASH("unable to install sigbus handler");
+#  endif
 # endif
 #endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
 
