@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/tests/fx_android-api-15_mochitest_plain.yml'
 task:
   payload:
-    maxRunTime: 7200
+    maxRunTime: 10800
     command:
       - --download-symbols=true
   extra:
