@@ -129,11 +129,13 @@ AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
               uint8_t d, uint8_t s, UnsizedFormat unsizedFormat, bool isSRGB,
               ComponentType componentType)
 {
+#ifdef DEBUG
     uint8_t totalBits = r + g + b + a + d + s;
     if (format == EffectiveFormat::RGB9_E5) {
         totalBits = 9 + 9 + 9 + 5;
     }
     MOZ_ASSERT(totalBits == bytesPerPixel*8);
+#endif
 
     bool isColorFormat = false;
     bool hasAlpha = false;
