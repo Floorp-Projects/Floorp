@@ -227,6 +227,12 @@ BufferOffset Assembler::b(Label* label, Condition cond) {
   return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), cond);
 }
 
+void Assembler::br(Instruction* at, const Register& xn) {
+  VIXL_ASSERT(xn.Is64Bits());
+  // No need for EmitBranch(): no immediate offset needs fixing.
+  Emit(at, BR | Rn(xn));
+}
+
 
 void Assembler::blr(Instruction* at, const Register& xn) {
   VIXL_ASSERT(xn.Is64Bits());
