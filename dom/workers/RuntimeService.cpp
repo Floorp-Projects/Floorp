@@ -756,6 +756,8 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
   JSSettings settings;
   aWorkerPrivate->CopyJSSettings(settings);
 
+  JSContext* workerCx = JS_GetContext(aRuntime);
+
   JS::RuntimeOptionsRef(aRuntime) = settings.runtimeOptions;
 
   JSSettings::JSGCSettingsArray& gcSettings = settings.gcSettings;
@@ -784,9 +786,8 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     AsmJSCacheOpenEntryForWrite,
     asmjscache::CloseEntryForWrite
   };
-  JS::SetAsmJSCacheOps(aRuntime, &asmJSCacheOps);
+  JS::SetAsmJSCacheOps(workerCx, &asmJSCacheOps);
 
-  JSContext* workerCx = JS_GetContext(aRuntime);
   if (!JS::InitSelfHostedCode(workerCx)) {
     NS_WARNING("Could not init self-hosted code!");
     return nullptr;
