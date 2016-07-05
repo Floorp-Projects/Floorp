@@ -18,10 +18,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamAudioSourceNode)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaStreamAudioSourceNode)
-  if (tmp->mInputStream) {
-    tmp->mInputStream->UnregisterTrackListener(tmp);
-  }
-  tmp->DetachFromTrack();
+  tmp->Destroy();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInputStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInputTrack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode)
@@ -80,7 +77,20 @@ MediaStreamAudioSourceNode::Init(DOMMediaStream* aMediaStream, ErrorResult& aRv)
   AttachToFirstTrack(mInputStream);
 }
 
-MediaStreamAudioSourceNode::~MediaStreamAudioSourceNode() {}
+void
+MediaStreamAudioSourceNode::Destroy()
+{
+  if (mInputStream) {
+    mInputStream->UnregisterTrackListener(this);
+    mInputStream = nullptr;
+  }
+  DetachFromTrack();
+}
+
+MediaStreamAudioSourceNode::~MediaStreamAudioSourceNode()
+{
+  Destroy();
+}
 
 void
 MediaStreamAudioSourceNode::AttachToTrack(const RefPtr<MediaStreamTrack>& aTrack)
@@ -123,8 +133,12 @@ MediaStreamAudioSourceNode::AttachToFirstTrack(const RefPtr<DOMMediaStream>& aMe
     }
 
     AttachToTrack(track);
+    MarkActive();
     return;
   }
+
+  // There was no track available. We'll allow the node to be garbage collected.
+  MarkInactive();
 }
 
 void

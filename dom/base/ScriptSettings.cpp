@@ -305,7 +305,7 @@ AutoJSAPI::~AutoJSAPI()
   ReportException();
 
   if (mOldWarningReporter.isSome()) {
-    JS::SetWarningReporter(JS_GetRuntime(cx()), mOldWarningReporter.value());
+    JS::SetWarningReporter(cx(), mOldWarningReporter.value());
   }
 
   // Leave the request before popping.
@@ -345,10 +345,9 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
 
   ScriptSettingsStack::Push(this);
 
-  JSRuntime* rt = JS_GetRuntime(aCx);
-  mOldWarningReporter.emplace(JS::GetWarningReporter(rt));
+  mOldWarningReporter.emplace(JS::GetWarningReporter(aCx));
 
-  JS::SetWarningReporter(rt, WarningOnlyErrorReporter);
+  JS::SetWarningReporter(aCx, WarningOnlyErrorReporter);
 
 #ifdef DEBUG
   if (haveException) {

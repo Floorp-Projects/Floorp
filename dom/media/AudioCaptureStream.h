@@ -23,7 +23,7 @@ class AudioCaptureStream : public ProcessedMediaStream,
                            public MixerCallbackReceiver
 {
 public:
-  explicit AudioCaptureStream(DOMMediaStream* aWrapper, TrackID aTrackId);
+  explicit AudioCaptureStream(TrackID aTrackId);
   virtual ~AudioCaptureStream();
 
   void Start();
