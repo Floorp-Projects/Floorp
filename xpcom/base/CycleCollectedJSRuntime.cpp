@@ -516,7 +516,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   if (!JS_AddExtraGCRootsTracer(mJSContext, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
   }
-  JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
+  JS_SetGrayGCRootsTracer(mJSContext, TraceGrayJS, this);
   JS_SetGCCallback(mJSContext, GCCallback, this);
   mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
 

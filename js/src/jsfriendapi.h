@@ -45,7 +45,7 @@ class InterpreterFrame;
 } /* namespace js */
 
 extern JS_FRIEND_API(void)
-JS_SetGrayGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data);
+JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data);
 
 extern JS_FRIEND_API(JSObject*)
 JS_FindCompilationScope(JSContext* cx, JS::HandleObject obj);
@@ -145,7 +145,7 @@ typedef void
 (*JSAccumulateTelemetryDataCallback)(int id, uint32_t sample, const char* key);
 
 extern JS_FRIEND_API(void)
-JS_SetAccumulateTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback);
+JS_SetAccumulateTelemetryCallback(JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
 extern JS_FRIEND_API(bool)
 JS_GetIsSecureContext(JSCompartment* compartment);
@@ -978,7 +978,7 @@ JS_FRIEND_API(bool)
 StringIsArrayIndex(JSLinearString* str, uint32_t* indexp);
 
 JS_FRIEND_API(void)
-SetPreserveWrapperCallback(JSRuntime* rt, PreserveWrapperCallback callback);
+SetPreserveWrapperCallback(JSContext* cx, PreserveWrapperCallback callback);
 
 JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
@@ -1118,7 +1118,7 @@ typedef void
  * idle and a request begins.
  */
 JS_FRIEND_API(void)
-SetActivityCallback(JSRuntime* rt, ActivityCallback cb, void* arg);
+SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg);
 
 typedef bool
 (* DOMInstanceClassHasProtoAtDepth)(const Class* instanceClass,
