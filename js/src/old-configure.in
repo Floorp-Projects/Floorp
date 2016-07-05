@@ -2040,7 +2040,7 @@ elif test "$CPU_ARCH" = "arm"; then
         JS_DISASM_ARM=1
     fi
 
-    dnl ARM platforms may trap on unalinged accesses; catch the signal and
+    dnl ARM platforms may trap on unaligned accesses; catch the signal and
     dnl recover.
     AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS)
     AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
