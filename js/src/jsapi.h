@@ -1617,14 +1617,14 @@ extern JS_PUBLIC_API(void)
 JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data);
 
 extern JS_PUBLIC_API(void)
-JS_SetObjectsTenuredCallback(JSRuntime* rt, JSObjectsTenuredCallback cb,
+JS_SetObjectsTenuredCallback(JSContext* cx, JSObjectsTenuredCallback cb,
                              void* data);
 
 extern JS_PUBLIC_API(bool)
-JS_AddFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb, void* data);
+JS_AddFinalizeCallback(JSContext* cx, JSFinalizeCallback cb, void* data);
 
 extern JS_PUBLIC_API(void)
-JS_RemoveFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb);
+JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb);
 
 /*
  * Weak pointers and garbage collection
@@ -1661,17 +1661,17 @@ JS_RemoveFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb);
  */
 
 extern JS_PUBLIC_API(bool)
-JS_AddWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb, void* data);
+JS_AddWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb, void* data);
 
 extern JS_PUBLIC_API(void)
-JS_RemoveWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb);
+JS_RemoveWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb);
 
 extern JS_PUBLIC_API(bool)
-JS_AddWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb,
+JS_AddWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb,
                                      void* data);
 
 extern JS_PUBLIC_API(void)
-JS_RemoveWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb);
+JS_RemoveWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb);
 
 extern JS_PUBLIC_API(void)
 JS_UpdateWeakPointerAfterGC(JS::Heap<JSObject*>* objp);
@@ -5892,8 +5892,7 @@ typedef void
 (* OutOfMemoryCallback)(JSContext* cx, void* data);
 
 extern JS_PUBLIC_API(void)
-SetOutOfMemoryCallback(JSRuntime* rt, OutOfMemoryCallback cb, void* data);
-
+SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data);
 
 /**
  * Capture the current call stack as a chain of SavedFrame JSObjects, and set
