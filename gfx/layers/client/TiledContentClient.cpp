@@ -316,8 +316,7 @@ ClientTiledLayerBuffer::GetContentType(SurfaceMode* aMode) const
     mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
 #else
     if (!mPaintedLayer->GetParent() ||
-        !mPaintedLayer->GetParent()->SupportsComponentAlphaChildren() ||
-        !gfxPrefs::TiledDrawTargetEnabled()) {
+        !mPaintedLayer->GetParent()->SupportsComponentAlphaChildren()) {
       mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
     } else {
       content = gfxContentType::COLOR;
@@ -776,50 +775,6 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   long start = PR_IntervalNow();
 #endif
 
-  if (!gfxPrefs::TiledDrawTargetEnabled()) {
-    if (!aPaintRegion.IsEmpty()) {
-
-      RefPtr<gfxContext> ctxt;
-
-      const IntRect bounds = aPaintRegion.GetBounds();
-      {
-        PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferAlloc",
-          js::ProfileEntry::Category::GRAPHICS);
-
-        mSinglePaintDrawTarget =
-          gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-            gfx::IntSize(ceilf(bounds.width * mResolution),
-                         ceilf(bounds.height * mResolution)),
-            gfxPlatform::GetPlatform()->Optimal2DFormatForContent(
-              GetContentType()));
-
-        if (!mSinglePaintDrawTarget || !mSinglePaintDrawTarget->IsValid()) {
-          return;
-        }
-
-        ctxt = gfxContext::CreateOrNull(mSinglePaintDrawTarget);
-        MOZ_ASSERT(ctxt); // already checked draw target above
-
-        mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
-      }
-      ctxt->NewPath();
-      ctxt->SetMatrix(
-        ctxt->CurrentMatrix().Scale(mResolution, mResolution).
-                              Translate(-bounds.x, -bounds.y));
-#ifdef GFX_TILEDLAYER_PREF_WARNINGS
-      if (PR_IntervalNow() - start > 3) {
-        printf_stderr("Slow alloc %i\n", PR_IntervalNow() - start);
-      }
-      start = PR_IntervalNow();
-#endif
-      PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferDraw",
-        js::ProfileEntry::Category::GRAPHICS);
-
-      mCallback(mPaintedLayer, ctxt, aPaintRegion, aDirtyRegion,
-                DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
-    }
-  }
-
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (PR_IntervalNow() - start > 30) {
     const IntRect bounds = aPaintRegion.GetBounds();
@@ -852,7 +807,6 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mLastPaintContentType = GetContentType(&mLastPaintSurfaceMode);
   mCallback = nullptr;
   mCallbackData = nullptr;
-  mSinglePaintDrawTarget = nullptr;
 }
 
 void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &region)
@@ -1011,7 +965,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
     }
 
-    if (gfxPrefs::TiledDrawTargetEnabled() && mMoz2DTiles.size() > 0) {
+    if (mMoz2DTiles.size() > 0) {
       gfx::TileSet tileset;
       for (size_t i = 0; i < mMoz2DTiles.size(); ++i) {
         mMoz2DTiles[i].mTileOrigin -= mTilingOrigin;
@@ -1109,9 +1063,6 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
   offsetScaledDirtyRegion.ScaleRoundOut(mResolution, mResolution);
 
-  bool usingTiledDrawTarget = gfxPrefs::TiledDrawTargetEnabled();
-  MOZ_ASSERT(usingTiledDrawTarget || !!mSinglePaintDrawTarget);
-
   nsIntRegion extraPainted;
   RefPtr<TextureClient> backBufferOnWhite;
   RefPtr<TextureClient> backBuffer =
@@ -1130,119 +1081,50 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     return false;
   }
 
-  if (usingTiledDrawTarget) {
-    gfx::Tile moz2DTile;
-    RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
-    RefPtr<DrawTarget> dtOnWhite;
-    if (backBufferOnWhite) {
-      dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
-      moz2DTile.mDrawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
-    } else {
-      moz2DTile.mDrawTarget = dt;
-    }
-    moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
-    if (!dt || (backBufferOnWhite && !dtOnWhite)) {
-      aTile.DiscardBuffers();
-      return false;
-    }
-
-    mMoz2DTiles.push_back(moz2DTile);
-    mTilingOrigin.x = std::min(mTilingOrigin.x, moz2DTile.mTileOrigin.x);
-    mTilingOrigin.y = std::min(mTilingOrigin.y, moz2DTile.mTileOrigin.y);
-
-    for (auto iter = aDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& dirtyRect = iter.Get();
-      gfx::Rect drawRect(dirtyRect.x - aTileOrigin.x,
-                         dirtyRect.y - aTileOrigin.y,
-                         dirtyRect.width,
-                         dirtyRect.height);
-      drawRect.Scale(mResolution);
-
-      // Mark the newly updated area as invalid in the front buffer
-      aTile.mInvalidFront.Or(aTile.mInvalidFront,
-        IntRect(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y),
-                  drawRect.width, drawRect.height));
-
-      if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-        dt->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-        dtOnWhite->FillRect(drawRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-      } else if (content == gfxContentType::COLOR_ALPHA) {
-        dt->ClearRect(drawRect);
-      }
-    }
-
-    // The new buffer is now validated, remove the dirty region from it.
-    aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);
-
-    aTile.Flip();
-
-    return true;
+  gfx::Tile moz2DTile;
+  RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
+  RefPtr<DrawTarget> dtOnWhite;
+  if (backBufferOnWhite) {
+    dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
+    moz2DTile.mDrawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
+  } else {
+    moz2DTile.mDrawTarget = dt;
+  }
+  moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+  if (!dt || (backBufferOnWhite && !dtOnWhite)) {
+    aTile.DiscardBuffers();
+    return false;
   }
 
-  // Single paint buffer case:
+  mMoz2DTiles.push_back(moz2DTile);
+  mTilingOrigin.x = std::min(mTilingOrigin.x, moz2DTile.mTileOrigin.x);
+  mTilingOrigin.y = std::min(mTilingOrigin.y, moz2DTile.mTileOrigin.y);
 
-  MOZ_ASSERT(!backBufferOnWhite, "Component alpha only supported with TiledDrawTarget");
-
-  // We must not keep a reference to the DrawTarget after it has been unlocked,
-  // make sure these are null'd before unlocking as destruction of the context
-  // may cause the target to be flushed.
-  RefPtr<DrawTarget> drawTarget = backBuffer->BorrowDrawTarget();
-  drawTarget->SetTransform(Matrix());
-
-  // XXX Perhaps we should just copy the bounding rectangle here?
-  RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
   for (auto iter = aDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect& dirtyRect = iter.Get();
-#ifdef GFX_TILEDLAYER_PREF_WARNINGS
-    printf_stderr(" break into subdirtyRect %i, %i, %i, %i\n",
-                  dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-#endif
     gfx::Rect drawRect(dirtyRect.x - aTileOrigin.x,
                        dirtyRect.y - aTileOrigin.y,
                        dirtyRect.width,
                        dirtyRect.height);
     drawRect.Scale(mResolution);
 
-    gfx::IntRect copyRect(NS_lroundf((dirtyRect.x - mSinglePaintBufferOffset.x) * mResolution),
-                          NS_lroundf((dirtyRect.y - mSinglePaintBufferOffset.y) * mResolution),
-                          drawRect.width,
-                          drawRect.height);
-    gfx::IntPoint copyTarget(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y));
-    drawTarget->CopySurface(source, copyRect, copyTarget);
-
     // Mark the newly updated area as invalid in the front buffer
-    aTile.mInvalidFront.Or(aTile.mInvalidFront, IntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
+    aTile.mInvalidFront.Or(aTile.mInvalidFront,
+      IntRect(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y),
+                drawRect.width, drawRect.height));
+
+    if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
+      dt->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
+      dtOnWhite->FillRect(drawRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    } else if (content == gfxContentType::COLOR_ALPHA) {
+      dt->ClearRect(drawRect);
+    }
   }
 
   // The new buffer is now validated, remove the dirty region from it.
   aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);
 
-#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
-  DrawDebugOverlay(drawTarget, aTileOrigin.x * mResolution,
-                   aTileOrigin.y * GetPresShellResolution(), GetTileLength(), GetTileLength());
-#endif
-
-  drawTarget = nullptr;
-
-  nsIntRegion tileRegion =
-    IntRect(aTileOrigin.x, aTileOrigin.y,
-              GetScaledTileSize().width, GetScaledTileSize().height);
-  // Intersect this area with the portion that's invalid.
-  tileRegion.SubOut(GetValidRegion());
-  tileRegion.SubOut(aDirtyRegion); // Has now been validated
-
-  backBuffer->SetWaste(tileRegion.Area() * mResolution * mResolution);
-
   aTile.Flip();
-
-  // Note, we don't call UpdatedTexture. The Updated function is called manually
-  // by the TiledContentHost before composition.
-
-  if (backBuffer->HasIntermediateBuffer()) {
-    // If our new buffer has an internal buffer, we don't want to keep another
-    // TextureClient around unnecessarily, so discard the back-buffer.
-    aTile.DiscardBackBuffer();
-  }
 
   return true;
 }

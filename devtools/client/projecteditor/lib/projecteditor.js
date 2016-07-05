@@ -706,7 +706,7 @@ var ProjectEditor = Class({
   },
 
   get sourcesVisible() {
-    return this.sourceToggle.hasAttribute("pane-collapsed");
+    return this.sourceToggle.classList.contains("pane-collapsed");
   },
 
   get currentShell() {

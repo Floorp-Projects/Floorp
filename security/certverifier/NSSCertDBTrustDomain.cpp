@@ -958,6 +958,12 @@ NSSCertDBTrustDomain::NetscapeStepUpMatchesServerAuth(Time notBefore,
   return Result::FATAL_ERROR_LIBRARY_FAILURE;
 }
 
+void
+NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension /*extension*/,
+                                             Input /*extensionData*/)
+{
+}
+
 SECStatus
 InitializeNSS(const char* dir, bool readOnly, bool loadPKCS11Modules)
 {

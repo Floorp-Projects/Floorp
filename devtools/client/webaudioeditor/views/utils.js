@@ -65,7 +65,7 @@ var ToggleMixin = {
    * is currently being shown.
    */
   isVisible: function () {
-    return !this.el.hasAttribute("pane-collapsed");
+    return !this.el.classList.contains("pane-collapsed");
   },
 
   /**
@@ -88,11 +88,11 @@ var ToggleMixin = {
     ViewHelpers.togglePane(flags, this.el);
 
     if (flags.visible) {
-      this.button.removeAttribute("pane-collapsed");
+      this.button.classList.remove("pane-collapsed");
       this.button.setAttribute("tooltiptext", this._collapseString);
     }
     else {
-      this.button.setAttribute("pane-collapsed", "");
+      this.button.classList.add("pane-collapsed");
       this.button.setAttribute("tooltiptext", this._expandString);
     }
   },

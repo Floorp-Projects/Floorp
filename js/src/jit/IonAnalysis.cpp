@@ -1947,11 +1947,10 @@ IsRegExpHoistableCall(MCall* call, MDefinition* def)
         return false;
 
     JSAtom* name;
-    JSFunction* fun = call->getSingleTarget();
-    if (fun) {
+    if (WrappedFunction* fun = call->getSingleTarget()) {
         if (!fun->isSelfHostedBuiltin())
             return false;
-        name = GetSelfHostedFunctionName(fun);
+        name = GetSelfHostedFunctionName(fun->rawJSFunction());
     } else {
         MDefinition* funDef = call->getFunction();
         if (funDef->isDebugCheckSelfHosted())

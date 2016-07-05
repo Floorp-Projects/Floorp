@@ -244,6 +244,20 @@ PathBuildingStep::Check(Input potentialIssuerDER,
     if (rv != Success) {
       return RecordResult(rv, keepGoing);
     }
+
+    if (subject.endEntityOrCA == EndEntityOrCA::MustBeEndEntity) {
+      const Input* sctExtension = subject.GetSignedCertificateTimestamps();
+      if (sctExtension) {
+        Input sctList;
+        rv = ExtractSignedCertificateTimestampListFromExtension(*sctExtension,
+                                                                sctList);
+        if (rv != Success) {
+          return RecordResult(rv, keepGoing);
+        }
+        trustDomain.NoteAuxiliaryExtension(AuxiliaryExtension::EmbeddedSCTList,
+                                           sctList);
+      }
+    }
   }
 
   return RecordResult(Success, keepGoing);

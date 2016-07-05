@@ -756,6 +756,8 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
   JSSettings settings;
   aWorkerPrivate->CopyJSSettings(settings);
 
+  JSContext* workerCx = JS_GetContext(aRuntime);
+
   JS::RuntimeOptionsRef(aRuntime) = settings.runtimeOptions;
 
   JSSettings::JSGCSettingsArray& gcSettings = settings.gcSettings;
@@ -784,9 +786,8 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     AsmJSCacheOpenEntryForWrite,
     asmjscache::CloseEntryForWrite
   };
-  JS::SetAsmJSCacheOps(aRuntime, &asmJSCacheOps);
+  JS::SetAsmJSCacheOps(workerCx, &asmJSCacheOps);
 
-  JSContext* workerCx = JS_GetContext(aRuntime);
   if (!JS::InitSelfHostedCode(workerCx)) {
     NS_WARNING("Could not init self-hosted code!");
     return nullptr;
@@ -797,7 +798,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
   js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
 
 #ifdef JS_GC_ZEAL
-  JS_SetGCZeal(aRuntime, settings.gcZeal, settings.gcZealFrequency);
+  JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
 #endif
 
   return workerCx;
@@ -888,11 +889,13 @@ public:
 
     JS_SetRuntimePrivate(rt, new WorkerThreadRuntimePrivate(mWorkerPrivate));
 
+    JSContext* cx = JS_GetContext(rt);
+
     js::SetPreserveWrapperCallback(rt, PreserveWrapper);
     JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
-    JS_SetWrapObjectCallbacks(rt, &WrapObjectCallbacks);
+    JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     if (mWorkerPrivate->IsDedicatedWorker()) {
-      JS_SetFutexCanWait(rt);
+      JS_SetFutexCanWait(cx);
     }
 
     return NS_OK;

@@ -2309,7 +2309,7 @@ ScratchpadSidebar.prototype = {
     }
     else {
       this._sidebar.once("variablesview-ready", onTabReady);
-      this._sidebar.addTab("variablesview", VARIABLES_VIEW_URL, true);
+      this._sidebar.addTab("variablesview", VARIABLES_VIEW_URL, {selected: true});
     }
 
     return deferred.promise;
