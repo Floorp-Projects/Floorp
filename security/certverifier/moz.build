@@ -13,7 +13,10 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'BRNameMatchingPolicy.cpp',
     'CertVerifier.cpp',
+    'CTLogVerifier.cpp',
+    'CTObjectsExtractor.cpp',
     'CTSerialization.cpp',
+    'MultiLogCTVerifier.cpp',
     'NSSCertDBTrustDomain.cpp',
     'OCSPCache.cpp',
     'OCSPRequestor.cpp',
@@ -29,6 +32,7 @@ if not CONFIG['NSS_NO_EV_CERTS']:
 LOCAL_INCLUDES += [
     '/security/manager/ssl',
     '/security/pkix/include',
+    '/security/pkix/lib',
 ]
 
 DIRS += [
