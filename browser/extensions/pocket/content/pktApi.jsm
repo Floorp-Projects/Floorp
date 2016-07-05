@@ -609,23 +609,31 @@ var pktApi = (function() {
     /**
      * Helper function to get current signup AB group the user is in
      */
-    function getSignupAB() {
-        var setting = getSetting('signupAB');
-        if (!setting || setting.includes('hero'))
-        {
-            var rand = (Math.floor(Math.random()*100+1));
-            if (rand > 90)
-            {
-                setting = 'storyboard_nlm';
-            }
-            else
-            {
-                setting = 'storyboard_lm';
-            }
-            setSetting('signupAB',setting);
-        }
-        return setting;
+    function getSignupPanelTabTestVariant() {
+        return getSimpleTestOption('panelTab', 0.1, 'tab');
     }
+
+    function getSimpleTestOption(testName, threshold, testOptionName) {
+        // Get the test from preferences if we've already assigned the user to a test
+        var settingName = 'test.' + testName;
+        var assignedValue = getSetting(settingName);
+
+        // If not assigned yet, pick and store a value
+        if (!assignedValue)
+        {
+            if (Math.random() <= threshold) {
+                assignedValue = testOptionName;
+            }
+            else {
+                assignedValue = 'control';
+            }
+
+            setSetting('test.'+testName, assignedValue);
+        }
+
+        return assignedValue;
+    }
+
 
     /**
      * Public functions
@@ -641,6 +649,6 @@ var pktApi = (function() {
         isPremiumUser: isPremiumUser,
         getSuggestedTagsForItem: getSuggestedTagsForItem,
         getSuggestedTagsForURL: getSuggestedTagsForURL,
-        getSignupAB: getSignupAB
+        getSignupPanelTabTestVariant: getSignupPanelTabTestVariant,
     };
 }());
