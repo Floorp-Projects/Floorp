@@ -64,6 +64,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DOMStorage.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/TabParent.h"
+#include "nsIXULWindow.h"
+#include "nsIXULBrowserWindow.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -368,7 +371,7 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             /* calledFromJS = */ false, dialog,
-                            /* navigate = */ true, nullptr, argv,
+                            /* navigate = */ true, argv,
                             /* openerFullZoom = */ nullptr, aResult);
 }
 
@@ -425,7 +428,6 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
                              bool aCalledFromScript,
                              bool aDialog,
                              bool aNavigate,
-                             nsITabParent* aOpeningTab,
                              nsISupports* aArguments,
                              float aOpenerFullZoom,
                              uint8_t aOptionalArgc,
@@ -448,7 +450,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
                             aCalledFromScript, dialog,
-                            aNavigate, aOpeningTab, argv,
+                            aNavigate, argv,
                             aOptionalArgc >= 1 ? &aOpenerFullZoom : nullptr,
                             aResult);
 }
@@ -486,6 +488,154 @@ CheckUserContextCompatibility(nsIDocShell* aDocShell)
   return principalUserContextId == userContextId;
 }
 
+NS_IMETHODIMP
+nsWindowWatcher::OpenWindowWithoutParent(nsITabParent** aResult)
+{
+  return OpenWindowWithTabParent(nullptr, "", true, 1.0f, aResult);
+}
+
+NS_IMETHODIMP
+nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
+                                         const char* aFeatures,
+                                         bool aCalledFromJS,
+                                         float aOpenerFullZoom,
+                                         nsITabParent** aResult)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(mWindowCreator);
+
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    nsContentUtils::WarnScriptWasIgnored(nullptr);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!mWindowCreator)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  bool isPrivateBrowsingWindow =
+    Preferences::GetBool("browser.privatebrowsing.autostart");
+
+  nsCOMPtr<nsPIDOMWindowOuter> parentWindowOuter;
+  if (aOpeningTabParent) {
+    // We need to examine the window that aOpeningTabParent belongs to in
+    // order to inform us of what kind of window we're going to open.
+    TabParent* openingTab = TabParent::GetFrom(aOpeningTabParent);
+    parentWindowOuter = openingTab->GetParentWindowOuter();
+
+    // Propagate the privacy status of the parent window, if
+    // available, to the child.
+    if (!isPrivateBrowsingWindow) {
+      nsCOMPtr<nsILoadContext> parentContext = openingTab->GetLoadContext();
+      if (parentContext) {
+        isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
+      }
+    }
+  }
+
+  if (!parentWindowOuter) {
+    // We couldn't find a browser window for the opener, so either we
+    // never were passed aOpeningTabParent, the window is closed,
+    // or it's in the process of closing. Either way, we'll use
+    // the most recently opened browser window instead.
+    parentWindowOuter = nsContentUtils::GetMostRecentNonPBWindow();
+  }
+
+  if (NS_WARN_IF(!parentWindowOuter)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+  GetWindowTreeOwner(parentWindowOuter, getter_AddRefs(parentTreeOwner));
+  if (NS_WARN_IF(!parentTreeOwner)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
+  if (NS_WARN_IF(!windowCreator2)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  uint32_t contextFlags = 0;
+  if (parentWindowOuter->IsLoadingOrRunningTimeout()) {
+    contextFlags |=
+            nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
+  }
+
+  // B2G multi-screen support. mozDisplayId is returned from the
+  // "display-changed" event, it is also platform-dependent.
+#ifdef MOZ_WIDGET_GONK
+  int retval = WinHasOption(features, "mozDisplayId", 0, nullptr);
+  windowCreator2->SetScreenId(retval);
+#endif
+
+  nsAutoCString features(aFeatures);
+  uint32_t chromeFlags = CalculateChromeFlagsForChild(features);
+
+  // A content process has asked for a new window, which implies
+  // that the new window will need to be remote.
+  chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+
+  bool cancel = false;
+  nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
+  nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
+
+  nsresult rv =
+    windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags, contextFlags,
+                                        aOpeningTabParent, &cancel,
+                                        getter_AddRefs(newWindowChrome));
+
+  if (NS_SUCCEEDED(rv) && cancel) {
+    newWindowChrome = nullptr; // just in case
+    return NS_ERROR_ABORT;
+  }
+
+  if (NS_WARN_IF(!newWindowChrome)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> chromeTreeItem = do_GetInterface(newWindowChrome);
+  if (NS_WARN_IF(!chromeTreeItem)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> chromeTreeOwner;
+  chromeTreeItem->GetTreeOwner(getter_AddRefs(chromeTreeOwner));
+  if (NS_WARN_IF(!chromeTreeOwner)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsILoadContext> chromeContext = do_QueryInterface(chromeTreeItem);
+  if (NS_WARN_IF(!chromeContext)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  chromeContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
+
+  // Tabs opened from a content process can only open new windows
+  // that will also run with out-of-process tabs.
+  chromeContext->SetRemoteTabs(true);
+
+  if (PL_strcasestr(features.get(), "width=") ||
+      PL_strcasestr(features.get(), "height=")) {
+    chromeTreeOwner->SetPersistence(false, false, false);
+  }
+
+  SizeSpec sizeSpec;
+  CalcSizeSpec(features, sizeSpec);
+  SizeOpenedDocShellItem(chromeTreeItem, parentWindowOuter, false, sizeSpec,
+                         &aOpenerFullZoom);
+
+  nsCOMPtr<nsITabParent> newTabParent;
+  chromeTreeOwner->GetPrimaryTabParent(getter_AddRefs(newTabParent));
+  if (NS_WARN_IF(!newTabParent)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  newTabParent.forget(aResult);
+  return NS_OK;
+}
+
 nsresult
 nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     const char* aUrl,
@@ -494,7 +644,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
                                     bool aCalledFromJS,
                                     bool aDialog,
                                     bool aNavigate,
-                                    nsITabParent* aOpeningTab,
                                     nsIArray* aArgv,
                                     float* aOpenerFullZoom,
                                     mozIDOMWindowProxy** aResult)
@@ -507,10 +656,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   bool uriToLoadIsChrome = false;
   bool windowIsModalContentDialog = false;
 
-  // Opening tabs are only ever passed to OpenWindowInternal if we're opening
-  // a window from a remote tab.
-  bool openedFromRemoteTab = !!aOpeningTab;
-
   uint32_t chromeFlags;
   nsAutoString name;          // string version of aName
   nsAutoCString features;     // string version of aFeatures
@@ -521,10 +666,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   nsCOMPtr<nsPIDOMWindowOuter> parent =
     aParent ? nsPIDOMWindowOuter::From(aParent) : nullptr;
 
-  // When the opener is a remote tab, the url passed from the child process
-  // isn't actually used. This code needs some serious refactoring.
-  MOZ_ASSERT_IF(openedFromRemoteTab, !aUrl);
-  MOZ_ASSERT_IF(openedFromRemoteTab, XRE_IsParentProcess());
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = 0;
 
@@ -538,7 +679,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   // We expect TabParent to have provided us the absolute URI of the window
   // we're to open, so there's no need to call URIfromURL (or more importantly,
   // to check for a chrome URI, which cannot be opened from a remote tab).
-  if (aUrl && !openedFromRemoteTab) {
+  if (aUrl) {
     rv = URIfromURL(aUrl, aParent, getter_AddRefs(uriToLoad));
     if (NS_FAILED(rv)) {
       return rv;
@@ -554,26 +695,16 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     name.SetIsVoid(true);
   }
 
-  bool featuresSpecified = false;
   if (aFeatures) {
     features.Assign(aFeatures);
-    featuresSpecified = true;
     features.StripWhitespace();
   } else {
     features.SetIsVoid(true);
   }
 
-  // We only want to check for existing named windows if:
-  // a) We're the child process
-  // b) We're the parent process, and aOpeningTab wasn't passed
-  //    in.
-  // This is because when using child processes, the parent process shouldn't
-  // know or care about names - unless we're opening named windows from chrome.
-  if (!aOpeningTab) {
-    // try to find an extant window with the given name
-    nsCOMPtr<nsPIDOMWindowOuter> foundWindow = SafeGetWindowByName(name, aParent);
-    GetWindowTreeItem(foundWindow, getter_AddRefs(newDocShellItem));
-  }
+  // try to find an extant window with the given name
+  nsCOMPtr<nsPIDOMWindowOuter> foundWindow = SafeGetWindowByName(name, aParent);
+  GetWindowTreeItem(foundWindow, getter_AddRefs(newDocShellItem));
 
   // Do sandbox checks here, instead of waiting until nsIDocShell::LoadURI.
   // The state of the window can change before this call and if we are blocked
@@ -598,23 +729,29 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   if (aParent) {
     // Check if the parent document has chrome privileges.
     nsIDocument* doc = parentWindow->GetDoc();
-    hasChromeParent =
-      doc && nsContentUtils::IsChromeDoc(doc) && !openedFromRemoteTab;
+    hasChromeParent = doc && nsContentUtils::IsChromeDoc(doc);
   }
 
-  // Make sure we call CalculateChromeFlags() *before* we push the
-  // callee context onto the context stack so that
-  // CalculateChromeFlags() sees the actual caller when doing its
-  // security checks.
-  chromeFlags = CalculateChromeFlags(aParent, features, featuresSpecified,
-                                     aDialog, uriToLoadIsChrome,
-                                     hasChromeParent, aCalledFromJS,
-                                     openedFromRemoteTab);
+  bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
 
-  // If we are opening a window from a remote browser, the resulting window
-  // should also be remote.
-  MOZ_ASSERT_IF(openedFromRemoteTab,
-                chromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+  // Make sure we calculate the chromeFlags *before* we push the
+  // callee context onto the context stack so that
+  // the calculation sees the actual caller when doing its
+  // security checks.
+  if (isCallerChrome && XRE_IsParentProcess()) {
+    chromeFlags = CalculateChromeFlagsForParent(aParent, features,
+                                                aDialog, uriToLoadIsChrome,
+                                                hasChromeParent, aCalledFromJS);
+  } else {
+    chromeFlags = CalculateChromeFlagsForChild(features);
+
+    // Until ShowModalDialog is removed, it's still possible for content to
+    // request dialogs, but only in single-process mode.
+    if (aDialog) {
+      MOZ_ASSERT(XRE_IsParentProcess());
+      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
+    }
+  }
 
   // If we're not called through our JS version of the API, and we got
   // our internal modal option, treat the window we're opening as a
@@ -638,8 +775,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   nsCOMPtr<nsIScriptSecurityManager> sm(
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
 
-  bool isCallerChrome =
-    nsContentUtils::LegacyIsCallerChromeOrNativeCode() && !openedFromRemoteTab;
 
   // XXXbz Why is an AutoJSAPI good enough here?  Wouldn't AutoEntryScript (so
   // we affect the entry global) make more sense?  Or do we just want to affect
@@ -837,9 +972,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
 
         bool cancel = false;
         rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                                                 contextFlags, uriToLoad,
-                                                 aOpeningTab, &cancel,
-                                                 getter_AddRefs(newChrome));
+                                                 contextFlags, nullptr,
+                                                 &cancel, getter_AddRefs(newChrome));
         if (NS_SUCCEEDED(rv) && cancel) {
           newChrome = 0; // just in case
           rv = NS_ERROR_ABORT;
@@ -850,6 +984,14 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       }
 
       if (newChrome) {
+        nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(newChrome);
+        if (xulWin) {
+          nsCOMPtr<nsIXULBrowserWindow> xulBrowserWin;
+          xulWin->GetXULBrowserWindow(getter_AddRefs(xulBrowserWin));
+          if (xulBrowserWin) {
+            xulBrowserWin->ForceInitialBrowserNonRemote();
+          }
+        }
         /* It might be a chrome nsXULWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
             be able to hand over an nsIDocShellTreeItem directly. */
@@ -1541,110 +1683,41 @@ nsWindowWatcher::URIfromURL(const char* aURL,
   return NS_NewURI(aURI, aURL, baseURI);
 }
 
-#define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)                            \
-  prefBranch->GetBoolPref(feature, &forceEnable);                              \
-  if (forceEnable && !(aDialog && !openedFromContentScript) &&                 \
-      !(!openedFromContentScript && aHasChromeParent) && !aChromeURL) {        \
-    chromeFlags |= flag;                                                       \
-  } else {                                                                     \
-    chromeFlags |=                                                             \
-      WinHasOption(aFeatures, feature, 0, &presenceFlag) ? flag : 0;           \
+#define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)                       \
+  prefBranch->GetBoolPref(feature, &forceEnable);                     \
+  if (forceEnable && !aDialog && !aHasChromeParent && !aChromeURL) {  \
+    chromeFlags |= flag;                                              \
+  } else {                                                            \
+    chromeFlags |=                                                    \
+      WinHasOption(aFeatures, feature, 0, &presenceFlag) ? flag : 0;  \
   }
 
-/**
- * Calculate the chrome bitmask from a string list of features.
- * @param aParent the opener window
- * @param aFeatures a string containing a list of named chrome features
- * @param aNullFeatures true if aFeatures was a null pointer (which fact
- *                      is lost by its conversion to a string in the caller)
- * @param aDialog affects the assumptions made about unnamed features
- * @return the chrome bitmask
- */
 // static
 uint32_t
-nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
-                                      const nsACString& aFeatures,
-                                      bool aFeaturesSpecified,
-                                      bool aDialog,
-                                      bool aChromeURL,
-                                      bool aHasChromeParent,
-                                      bool aCalledFromJS,
-                                      bool aOpenedFromRemoteTab)
+nsWindowWatcher::CalculateChromeFlagsHelper(uint32_t aInitialFlags,
+                                            const nsACString& aFeatures,
+                                            bool& presenceFlag,
+                                            bool aDialog,
+                                            bool aHasChromeParent,
+                                            bool aChromeURL)
 {
-  const bool inContentProcess = XRE_IsContentProcess();
-  uint32_t chromeFlags = 0;
-
-  // The features string is made void by OpenWindowInternal
-  // if nullptr was originally passed as the features string.
-  if (aFeatures.IsVoid()) {
-    chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
-    if (aDialog) {
-      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-                     nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-    }
-
-    if (inContentProcess) {
-      return chromeFlags;
-    }
-  } else {
-    chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_BORDERS;
-  }
-
-  bool openedFromContentScript =
-    aOpenedFromRemoteTab ? aCalledFromJS
-                         : !nsContentUtils::LegacyIsCallerChromeOrNativeCode();
-
-  /* This function has become complicated since browser windows and
-     dialogs diverged. The difference is, browser windows assume all
-     chrome not explicitly mentioned is off, if the features string
-     is not null. Exceptions are some OS border chrome new with Mozilla.
-     Dialogs interpret a (mostly) empty features string to mean
-     "OS's choice," and also support an "all" flag explicitly disallowed
-     in the standards-compliant window.(normal)open. */
-
-  bool presenceFlag = false;
-  if (aDialog && WinHasOption(aFeatures, "all", 0, &presenceFlag)) {
-    chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
-  }
-
-  /* Next, allow explicitly named options to override the initial settings */
-
-  if (!inContentProcess && !openedFromContentScript) {
-    // Determine whether the window is a private browsing window
-    chromeFlags |= WinHasOption(aFeatures, "private", 0, &presenceFlag) ?
-      nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW : 0;
-    chromeFlags |= WinHasOption(aFeatures, "non-private", 0, &presenceFlag) ?
-      nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW : 0;
-  }
-
-  if (!inContentProcess) {
-    // Determine whether the window should have remote tabs.
-    bool remote = BrowserTabsRemoteAutostart();
-
-    if (!openedFromContentScript) {
-      if (remote) {
-        remote = !WinHasOption(aFeatures, "non-remote", 0, &presenceFlag);
-      } else {
-        remote = WinHasOption(aFeatures, "remote", 0, &presenceFlag);
-      }
-    }
-
-    if (remote) {
-      chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
-    }
-  }
+  uint32_t chromeFlags = aInitialFlags;
 
   nsresult rv;
-
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, true);
+
+  NS_ENSURE_SUCCESS(rv, nsIWebBrowserChrome::CHROME_DEFAULT);
 
   rv = prefs->GetBranch("dom.disable_window_open_feature.",
                         getter_AddRefs(prefBranch));
-  NS_ENSURE_SUCCESS(rv, true);
 
+  NS_ENSURE_SUCCESS(rv, nsIWebBrowserChrome::CHROME_DEFAULT);
+
+  // NS_CALCULATE_CHROME_FLAG_FOR requires aFeatures, forceEnable, aDialog
+  // aHasChromeParent, aChromeURL, presenceFlag and chromeFlags to be in
+  // scope.
   bool forceEnable = false;
 
   NS_CALCULATE_CHROME_FLAG_FOR("titlebar",
@@ -1669,6 +1742,130 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
   // default scrollbar to "on," unless explicitly turned off
   if (WinHasOption(aFeatures, "scrollbars", 1, &presenceFlag) || !presenceFlag) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
+  }
+
+  return chromeFlags;
+}
+
+// static
+uint32_t
+nsWindowWatcher::EnsureFlagsSafeForContent(uint32_t aChromeFlags,
+                                           bool aChromeURL)
+{
+  aChromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+  aChromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+  aChromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
+  aChromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
+  aChromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
+  /* Untrusted script is allowed to pose modal windows with a chrome
+     scheme. This check could stand to be better. But it effectively
+     prevents untrusted script from opening modal windows in general
+     while still allowing alerts and the like. */
+  if (!aChromeURL) {
+    aChromeFlags &= ~(nsIWebBrowserChrome::CHROME_MODAL |
+                     nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
+  }
+
+  if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
+    aChromeFlags &= ~nsIWebBrowserChrome::CHROME_DEPENDENT;
+  }
+
+  return aChromeFlags;
+}
+
+/**
+ * Calculate the chrome bitmask from a string list of features requested
+ * from a child process. Feature strings that are restricted to the parent
+ * process are ignored here.
+ * @param aFeatures a string containing a list of named features
+ * @return the chrome bitmask
+ */
+// static
+uint32_t
+nsWindowWatcher::CalculateChromeFlagsForChild(const nsACString& aFeatures)
+{
+  if (aFeatures.IsVoid()) {
+    return nsIWebBrowserChrome::CHROME_ALL;
+  }
+
+  bool presenceFlag = false;
+  uint32_t chromeFlags = CalculateChromeFlagsHelper(
+    nsIWebBrowserChrome::CHROME_WINDOW_BORDERS, aFeatures, presenceFlag);
+
+  return EnsureFlagsSafeForContent(chromeFlags);
+}
+
+/**
+ * Calculate the chrome bitmask from a string list of features for a new
+ * privileged window.
+ * @param aParent the opener window
+ * @param aFeatures a string containing a list of named chrome features
+ * @param aDialog affects the assumptions made about unnamed features
+ * @param aChromeURL true if the window is being sent to a chrome:// URL
+ * @param aHasChromeParent true if the parent window is privileged
+ * @param aCalledFromJS true if the window open request came from script.
+ * @return the chrome bitmask
+ */
+// static
+uint32_t
+nsWindowWatcher::CalculateChromeFlagsForParent(mozIDOMWindowProxy* aParent,
+                                               const nsACString& aFeatures,
+                                               bool aDialog,
+                                               bool aChromeURL,
+                                               bool aHasChromeParent,
+                                               bool aCalledFromJS)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
+
+  uint32_t chromeFlags = 0;
+
+  // The features string is made void by OpenWindowInternal
+  // if nullptr was originally passed as the features string.
+  if (aFeatures.IsVoid()) {
+    chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
+    if (aDialog) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                     nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+    }
+  } else {
+    chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_BORDERS;
+  }
+
+  /* This function has become complicated since browser windows and
+     dialogs diverged. The difference is, browser windows assume all
+     chrome not explicitly mentioned is off, if the features string
+     is not null. Exceptions are some OS border chrome new with Mozilla.
+     Dialogs interpret a (mostly) empty features string to mean
+     "OS's choice," and also support an "all" flag explicitly disallowed
+     in the standards-compliant window.(normal)open. */
+
+  bool presenceFlag = false;
+  if (aDialog && WinHasOption(aFeatures, "all", 0, &presenceFlag)) {
+    chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
+  }
+
+  /* Next, allow explicitly named options to override the initial settings */
+  chromeFlags = CalculateChromeFlagsHelper(chromeFlags, aFeatures, presenceFlag,
+                                           aDialog, aHasChromeParent, aChromeURL);
+
+  // Determine whether the window is a private browsing window
+  chromeFlags |= WinHasOption(aFeatures, "private", 0, &presenceFlag) ?
+    nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW : 0;
+  chromeFlags |= WinHasOption(aFeatures, "non-private", 0, &presenceFlag) ?
+    nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW : 0;
+
+  // Determine whether the window should have remote tabs.
+  bool remote = BrowserTabsRemoteAutostart();
+
+  if (remote) {
+    remote = !WinHasOption(aFeatures, "non-remote", 0, &presenceFlag);
+  } else {
+    remote = WinHasOption(aFeatures, "remote", 0, &presenceFlag);
+  }
+
+  if (remote) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
   }
 
   chromeFlags |= WinHasOption(aFeatures, "popup", 0, &presenceFlag) ?
@@ -1724,15 +1921,10 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
      does not provide any affordance for dialog windows. This does not interfere
      with dialog windows created through openDialog. */
   bool disableDialogFeature = false;
-  nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+  nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
   branch->GetBoolPref("dom.disable_window_open_dialog_feature",
                       &disableDialogFeature);
-
-  if (openedFromContentScript) {
-    // If the caller context is content, we do not support the
-    // dialog feature. See bug 1095236.
-    disableDialogFeature = true;
-  }
 
   if (!disableDialogFeature) {
     chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nullptr) ?
@@ -1755,27 +1947,8 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
    */
 
   // Check security state for use in determing window dimensions
-  if (openedFromContentScript || !aHasChromeParent) {
-    // If priv check fails (or if we're called from chrome, but the
-    // parent is not a chrome window), set all elements to minimum
-    // reqs., else leave them alone.
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
-    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
-    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
-    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
-    /* Untrusted script is allowed to pose modal windows with a chrome
-       scheme. This check could stand to be better. But it effectively
-       prevents untrusted script from opening modal windows in general
-       while still allowing alerts and the like. */
-    if (!aChromeURL)
-      chromeFlags &= ~(nsIWebBrowserChrome::CHROME_MODAL |
-                       nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
-  }
-
-  if (!(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
-    // Remove the dependent flag if we're not opening as chrome
-    chromeFlags &= ~nsIWebBrowserChrome::CHROME_DEPENDENT;
+  if (!aHasChromeParent) {
+    chromeFlags = EnsureFlagsSafeForContent(chromeFlags, aChromeURL);
   }
 
   // Disable CHROME_OPENAS_DIALOG if the window is inside <iframe mozbrowser>.
