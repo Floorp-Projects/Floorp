@@ -3548,7 +3548,7 @@ XPCJSRuntime::Initialize()
     // default.
     (void) kDefaultStackQuota;
 
-    JS_SetNativeStackQuota(runtime,
+    JS_SetNativeStackQuota(cx,
                            kStackQuota,
                            kStackQuota - kSystemCodeBuffer,
                            kStackQuota - kSystemCodeBuffer - kTrustedScriptBuffer);

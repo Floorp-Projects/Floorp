@@ -771,7 +771,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     }
   }
 
-  JS_SetNativeStackQuota(aRuntime, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
+  JS_SetNativeStackQuota(workerCx, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
 
   // Security policy:
   static const JSSecurityCallbacks securityCallbacks = {

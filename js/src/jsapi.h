@@ -1812,7 +1812,7 @@ JS_GetExternalStringFinalizer(JSString* str);
  * and before any code is executed and/or interrupts requested.
  */
 extern JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSRuntime* cx, size_t systemCodeStackSize,
+JS_SetNativeStackQuota(JSContext* cx, size_t systemCodeStackSize,
                        size_t trustedScriptStackSize = 0,
                        size_t untrustedScriptStackSize = 0);
 
