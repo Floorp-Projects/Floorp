@@ -3,8 +3,10 @@
 taskId: {{taskId}}
 
 task:
-  created: '{{now}}'
-  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  created:
+    relative-datestamp: '0 seconds'
+  deadline:
+    relative-datestamp: '24 hours'
   metadata:
     source: '{{source}}'
     owner: amiyaguchi@mozilla.com

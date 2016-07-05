@@ -4,8 +4,10 @@
 taskId: '{{image_slugid}}'
 
 task:
-  created: '{{now}}'
-  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  created:
+    relative-datestamp: '0 seconds'
+  deadline:
+    relative-datestamp: '24 hours'
   metadata:
     name: 'Docker Artifact Image Builder'
     description: 'Builder for docker images as artifacts'
@@ -40,7 +42,8 @@ task:
       '{{artifact_path}}':
         type: 'file'
         path: '/artifacts/image.tar'
-        expires: '{{#from_now}}1 year{{/from_now}}'
+        expires:
+          relative-datestamp: '1 year'
   extra:
     treeherderEnv:
       - staging
