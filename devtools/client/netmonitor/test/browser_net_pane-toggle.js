@@ -18,7 +18,7 @@ function test() {
       .hasAttribute("disabled"), true,
       "The pane toggle button should be disabled when the frontend is opened.");
     is(document.querySelector("#details-pane-toggle")
-      .hasAttribute("pane-collapsed"), true,
+      .classList.contains("pane-collapsed"), true,
       "The pane toggle button should indicate that the details pane is " +
       "collapsed when the frontend is opened.");
     is(NetMonitorView.detailsPaneHidden, true,
@@ -31,7 +31,7 @@ function test() {
         .hasAttribute("disabled"), false,
         "The pane toggle button should be enabled after the first request.");
       is(document.querySelector("#details-pane-toggle")
-        .hasAttribute("pane-collapsed"), true,
+        .classList.contains("pane-collapsed"), true,
         "The pane toggle button should still indicate that the details pane is " +
         "collapsed after the first request.");
       is(NetMonitorView.detailsPaneHidden, true,
@@ -46,7 +46,7 @@ function test() {
         .hasAttribute("disabled"), false,
         "The pane toggle button should still be enabled after being pressed.");
       is(document.querySelector("#details-pane-toggle")
-        .hasAttribute("pane-collapsed"), false,
+        .classList.contains("pane-collapsed"), false,
         "The pane toggle button should now indicate that the details pane is " +
         "not collapsed anymore after being pressed.");
       is(NetMonitorView.detailsPaneHidden, false,
@@ -63,7 +63,7 @@ function test() {
         .hasAttribute("disabled"), false,
         "The pane toggle button should still be enabled after being pressed again.");
       is(document.querySelector("#details-pane-toggle")
-        .hasAttribute("pane-collapsed"), true,
+        .classList.contains("pane-collapsed"), true,
         "The pane toggle button should now indicate that the details pane is " +
         "collapsed after being pressed again.");
       is(NetMonitorView.detailsPaneHidden, true,

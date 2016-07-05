@@ -11,6 +11,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/computed.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/fonts.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/layout.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/sidebar-toggle.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
@@ -39,9 +40,8 @@
           timeout="50"
           class="devtools-searchinput"
           placeholder="&inspectorSearchHTML.label3;"/>
-        <html:button id="inspector-pane-toggle"
-          class="devtools-button"
-          tabindex="0" />
+        <div xmlns="http://www.w3.org/1999/xhtml"
+             id="inspector-sidebar-toggle-box" />
       </html:div>
       <vbox flex="1" id="markup-box">
       </vbox>
