@@ -219,8 +219,8 @@ KeymapWrapper::InitXKBExtension()
     int xkbMinorVer = XkbMinorVersion;
     if (!XkbLibraryVersion(&xkbMajorVer, &xkbMinorVer)) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-               ("%p InitXKBExtension failed due to failure of "
-                "XkbLibraryVersion()", this));
+            ("%p InitXKBExtension failed due to failure of "
+             "XkbLibraryVersion()", this));
         return;
     }
 
@@ -237,16 +237,16 @@ KeymapWrapper::InitXKBExtension()
     if (!XkbQueryExtension(display, &opcode, &mXKBBaseEventCode, &baseErrorCode,
                            &xkbMajorVer, &xkbMinorVer)) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-               ("%p InitXKBExtension failed due to failure of "
-                "XkbQueryExtension(), display=0x%p", this, display));
+            ("%p InitXKBExtension failed due to failure of "
+             "XkbQueryExtension(), display=0x%p", this, display));
         return;
     }
 
     if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbStateNotify,
                                XkbModifierStateMask, XkbModifierStateMask)) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-               ("%p InitXKBExtension failed due to failure of "
-                "XkbSelectEventDetails() for XModifierStateMask, display=0x%p",
+            ("%p InitXKBExtension failed due to failure of "
+             "XkbSelectEventDetails() for XModifierStateMask, display=0x%p",
                 this, display));
         return;
     }
@@ -254,30 +254,30 @@ KeymapWrapper::InitXKBExtension()
     if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbControlsNotify,
                                XkbPerKeyRepeatMask, XkbPerKeyRepeatMask)) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-               ("%p InitXKBExtension failed due to failure of "
-                "XkbSelectEventDetails() for XkbControlsNotify, display=0x%p",
-                this, display));
+            ("%p InitXKBExtension failed due to failure of "
+             "XkbSelectEventDetails() for XkbControlsNotify, display=0x%p",
+             this, display));
         return;
     }
 
     if (!XGetKeyboardControl(display, &mKeyboardState)) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-               ("%p InitXKBExtension failed due to failure of "
-                "XGetKeyboardControl(), display=0x%p",
-                this, display));
+            ("%p InitXKBExtension failed due to failure of "
+             "XGetKeyboardControl(), display=0x%p",
+             this, display));
         return;
     }
 
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-           ("%p InitXKBExtension, Succeeded", this));
+        ("%p InitXKBExtension, Succeeded", this));
 }
 
 void
 KeymapWrapper::InitBySystemSettings()
 {
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-      ("%p InitBySystemSettings, mGdkKeymap=%p",
-       this, mGdkKeymap));
+        ("%p InitBySystemSettings, mGdkKeymap=%p",
+         this, mGdkKeymap));
 
     Display* display =
         gdk_x11_display_get_xdisplay(gdk_display_get_default());
@@ -508,9 +508,9 @@ KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
             if (!XGetKeyboardControl(xkbEvent->any.display,
                                      &self->mKeyboardState)) {
                 MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-                       ("%p FilterEvents failed due to failure "
-                        "of XGetKeyboardControl(), display=0x%p",
-                        self, xkbEvent->any.display));
+                    ("%p FilterEvents failed due to failure "
+                     "of XGetKeyboardControl(), display=0x%p",
+                     self, xkbEvent->any.display));
             }
             break;
         }
