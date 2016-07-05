@@ -3592,7 +3592,7 @@ XPCJSRuntime::Initialize()
     // JS::CompileFunction). In practice, this means content scripts and event
     // handlers.
     UniquePtr<XPCJSSourceHook> hook(new XPCJSSourceHook);
-    js::SetSourceHook(runtime, Move(hook));
+    js::SetSourceHook(cx, Move(hook));
 
     // Set up locale information and callbacks for the newly-created runtime so
     // that the various toLocaleString() methods, localeCompare(), and other

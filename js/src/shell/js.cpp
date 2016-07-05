@@ -4462,12 +4462,12 @@ WithSourceHook(JSContext* cx, unsigned argc, Value* vp)
     if (!hook)
         return false;
 
-    mozilla::UniquePtr<SourceHook> savedHook = js::ForgetSourceHook(cx->runtime());
-    js::SetSourceHook(cx->runtime(), Move(hook));
+    mozilla::UniquePtr<SourceHook> savedHook = js::ForgetSourceHook(cx);
+    js::SetSourceHook(cx, Move(hook));
 
     RootedObject fun(cx, &args[1].toObject());
     bool result = Call(cx, UndefinedHandleValue, fun, JS::HandleValueArray::empty(), args.rval());
-    js::SetSourceHook(cx->runtime(), Move(savedHook));
+    js::SetSourceHook(cx, Move(savedHook));
     return result;
 }
 
