@@ -46,13 +46,13 @@ Structure::
         addons: <string>, // obsolete, use ``environment.addons``
       },
 
+      processes: {...},
       childPayloads: [...], // only present with e10s; reduced payloads from content processes, null on failure
       simpleMeasurements: {...},
 
       // The following properties may all be null if we fail to collect them.
       histograms: {...},
       keyedHistograms: {...},
-      scalars: {...},
       chromeHangs: {...},
       threadHangStats: [...],
       log: [...],
@@ -83,6 +83,23 @@ The length of this subsession in seconds.
 This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic (e.g. based on Date.now()).
 
 If ``sessionLength`` is ``-1``, the monotonic clock is not working.
+
+processes
+---------
+This section contains per-process data.
+
+Structure::
+
+    "processes" : {
+      ... other processes ...
+      "parent": {
+        scalars: {...},
+      },
+    }
+
+scalars
+~~~~~~~
+This section contains the :doc:`scalars` that are valid for the current platform. Scalars are not created nor submitted if no data was added to them, and are only reported with subsession pings. Scalar data is only currently reported for the main process. Their type and format is described by the ``Scalars.yaml`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
 
 childPayloads
 -------------
@@ -182,10 +199,6 @@ keyedHistograms
 This section contains the keyed histograms available for the current platform.
 
 As of Firefox 48, this section does not contain empty keyed histograms anymore.
-
-scalars
-----------
-This section contains the :doc:`scalars` that are valid for the current platform. Scalars are not created nor submitted if no data was added to them, and are only reported with subsession pings. Their type and format is described by the ``Scalars.yaml`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
 
 threadHangStats
 ---------------
