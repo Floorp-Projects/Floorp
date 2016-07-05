@@ -84,15 +84,4 @@ SeekTask::GetSeekTarget()
   return mTarget;
 }
 
-bool
-SeekTask::Exists() const
-{
-  AssertOwnerThread();
-
-  // mSeekTaskPromise communicates SeekTask and MDSM;
-  // mSeekJob communicates MDSM and MediaDecoder;
-  // Either one exists means the current seek task has yet finished.
-  return !mSeekTaskPromise.IsEmpty() || mSeekJob.Exists();
-}
-
 } // namespace mozilla

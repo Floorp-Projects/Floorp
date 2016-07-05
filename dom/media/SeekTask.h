@@ -58,8 +58,6 @@ public:
 
   SeekTarget& GetSeekTarget();
 
-  bool Exists() const;
-
 protected:
   SeekTask(const void* aDecoderID,
            AbstractThread* aThread,
