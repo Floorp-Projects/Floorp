@@ -90,9 +90,6 @@ bdi, output {
   unicode-bidi: isolate;
 }
 bdo, bdo[dir] {
-  unicode-bidi: bidi-override;
-}
-bdo[dir="auto"] {
   unicode-bidi: isolate-override;
 }
 textarea[dir="auto"], pre[dir="auto"] { unicode-bidi: plaintext; }

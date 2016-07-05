@@ -963,7 +963,7 @@ const KTableEntry nsCSSProps::kImageLayerModeKTable[] = {
 
 const KTableEntry nsCSSProps::kImageLayerCompositeKTable[] = {
   { eCSSKeyword_add, NS_STYLE_MASK_COMPOSITE_ADD },
-  { eCSSKeyword_substract, NS_STYLE_MASK_COMPOSITE_SUBSTRACT },
+  { eCSSKeyword_subtract, NS_STYLE_MASK_COMPOSITE_SUBTRACT },
   { eCSSKeyword_intersect, NS_STYLE_MASK_COMPOSITE_INTERSECT },
   { eCSSKeyword_exclude, NS_STYLE_MASK_COMPOSITE_EXCLUDE },
   { eCSSKeyword_UNKNOWN, -1 }
