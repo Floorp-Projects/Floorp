@@ -892,7 +892,7 @@ public:
     JSContext* cx = JS_GetContext(rt);
 
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
-    JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
+    JS_InitDestroyPrincipalsCallback(cx, DestroyWorkerPrincipals);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     if (mWorkerPrivate->IsDedicatedWorker()) {
       JS_SetFutexCanWait(cx);
