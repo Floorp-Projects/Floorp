@@ -3276,16 +3276,16 @@ JS_DropPrincipals(JSContext* cx, JSPrincipals* principals)
 }
 
 JS_PUBLIC_API(void)
-JS_SetSecurityCallbacks(JSRuntime* rt, const JSSecurityCallbacks* scb)
+JS_SetSecurityCallbacks(JSContext* cx, const JSSecurityCallbacks* scb)
 {
     MOZ_ASSERT(scb != &NullSecurityCallbacks);
-    rt->securityCallbacks = scb ? scb : &NullSecurityCallbacks;
+    cx->securityCallbacks = scb ? scb : &NullSecurityCallbacks;
 }
 
 JS_PUBLIC_API(const JSSecurityCallbacks*)
-JS_GetSecurityCallbacks(JSRuntime* rt)
+JS_GetSecurityCallbacks(JSContext* cx)
 {
-    return (rt->securityCallbacks != &NullSecurityCallbacks) ? rt->securityCallbacks : nullptr;
+    return (cx->securityCallbacks != &NullSecurityCallbacks) ? cx->securityCallbacks : nullptr;
 }
 
 JS_PUBLIC_API(void)
