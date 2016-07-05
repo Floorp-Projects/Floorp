@@ -2273,9 +2273,9 @@ IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString)
 
     if (NS_WARN_IF(!mLastFocusedWindow)) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
-                ("%p EnsureToCacheSelection(), FAILED, due to "
-                 "no focused window",
-                 this));
+            ("%p EnsureToCacheSelection(), FAILED, due to "
+             "no focused window",
+             this));
         return false;
     }
 
@@ -2286,18 +2286,18 @@ IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString)
     mLastFocusedWindow->DispatchEvent(&selection, status);
     if (NS_WARN_IF(!selection.mSucceeded)) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
-                ("%p EnsureToCacheSelection(), FAILED, due to "
-                 "failure of query selection event",
-                 this));
+            ("%p EnsureToCacheSelection(), FAILED, due to "
+             "failure of query selection event",
+             this));
         return false;
     }
 
     mSelection.Assign(selection);
     if (!mSelection.IsValid()) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
-                ("%p EnsureToCacheSelection(), FAILED, due to "
-                 "failure of query selection event (invalid result)",
-                 this));
+            ("%p EnsureToCacheSelection(), FAILED, due to "
+             "failure of query selection event (invalid result)",
+             this));
         return false;
     }
 
@@ -2306,10 +2306,10 @@ IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString)
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
-            ("%p EnsureToCacheSelection(), Succeeded, mSelection="
-             "{ mOffset=%u, mLength=%u, mWritingMode=%s }",
-             this, mSelection.mOffset, mSelection.mLength,
-             GetWritingModeName(mSelection.mWritingMode).get()));
+        ("%p EnsureToCacheSelection(), Succeeded, mSelection="
+         "{ mOffset=%u, mLength=%u, mWritingMode=%s }",
+         this, mSelection.mOffset, mSelection.mLength,
+         GetWritingModeName(mSelection.mWritingMode).get()));
     return true;
 }
 
