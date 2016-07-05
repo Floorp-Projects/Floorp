@@ -40,11 +40,16 @@ public:
   /**
    * Different types of tap-related events that can be sent in
    * the HandleTap function. The names should be relatively self-explanatory.
+   * Note that the eLongTapUp will always be preceded by an eLongTap, but not
+   * all eLongTap notifications will be followed by an eLongTapUp (for instance,
+   * if the user moves their finger after triggering the long-tap but before
+   * lifting it).
    */
   enum class TapType {
     eSingleTap,
     eDoubleTap,
     eLongTap,
+    eLongTapUp,
 
     eSentinel,
   };
