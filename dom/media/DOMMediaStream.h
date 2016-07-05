@@ -34,6 +34,8 @@ class MediaStreamDirectListener;
 class MediaStreamGraph;
 class ProcessedMediaStream;
 
+enum class BlockingMode;
+
 namespace dom {
 class AudioNode;
 class HTMLCanvasElement;
@@ -304,7 +306,8 @@ public:
      * destroyed. Returns a pledge that gets resolved when the MediaStreamGraph
      * has applied the block in the playback stream.
      */
-    already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId);
+    already_AddRefed<media::Pledge<bool, nsresult>>
+    BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode);
 
   private:
     RefPtr<MediaInputPort> mInputPort;
@@ -360,6 +363,8 @@ public:
   /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
   already_AddRefed<DOMMediaStream> Clone();
 
+  IMPL_EVENT_HANDLER(addtrack)
+
   // NON-WebIDL
 
   /**
@@ -390,10 +395,17 @@ public:
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mOwnedStream.
-   * aInputTrackID should match the track's TrackID in its input stream.
+   * aInputTrackID should match the track's TrackID in its input stream,
+   * and aTrackID the TrackID in mOwnedStream.
+   *
+   * When aTrackID is not supplied or set to TRACK_ANY, we return the first
+   * MediaStreamTrack that matches the given input track. Note that there may
+   * be multiple MediaStreamTracks matching the same input track, but that they
+   * in that case all share the same MediaStreamTrackSource.
    */
   MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aInputStream,
-                                      TrackID aInputTrackID) const;
+                                      TrackID aInputTrackID,
+                                      TrackID aTrackID = TRACK_ANY) const;
 
   /**
    * Returns the TrackPort connecting aTrack's input stream to mOwnedStream,
@@ -466,17 +478,6 @@ public:
    */
   bool RemovePrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
 
-  /**
-   * Called when this stream's MediaStreamGraph has been shut down. Normally
-   * MSGs are only shut down when all streams have been removed, so this
-   * will only be called during a forced shutdown due to application exit.
-   */
-  void NotifyMediaStreamGraphShutdown();
-  /**
-   * Called when the main-thread state of the MediaStream goes to finished.
-   */
-  void NotifyStreamFinished();
-
   // Webrtc allows the remote side to name a stream whatever it wants, and we
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
@@ -513,7 +514,12 @@ public:
    * Called for each track in our owned stream to indicate to JS that we
    * are carrying that track.
    *
-   * Creates a MediaStreamTrack, adds it to mTracks and returns it.
+   * Creates a MediaStreamTrack, adds it to mTracks, raises "addtrack" and
+   * returns it.
+   *
+   * Note that "addtrack" is raised synchronously and only has an effect if
+   * this MediaStream is already exposed to script. For spec compliance this is
+   * to be called from an async task.
    */
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
                                    MediaStreamTrackSource* aSource);
@@ -538,13 +544,11 @@ public:
 
   /**
    * Add an nsISupports object that this stream will keep alive as long as
-   * the stream is not finished.
+   * the stream itself is alive.
    */
   void AddConsumerToKeepAlive(nsISupports* aConsumer)
   {
-    if (!IsFinished() && !mNotifiedOfMediaStreamGraphShutdown) {
-      mConsumersToKeepAlive.AppendElement(aConsumer);
-    }
+    mConsumersToKeepAlive.AppendElement(aConsumer);
   }
 
   // Registers a track listener to this MediaStream, for listening to changes
@@ -593,6 +597,10 @@ protected:
 
   // Dispatches NotifyTrackRemoved() to all registered track listeners.
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
+
+  // Dispatches "addtrack" or "removetrack".
+  nsresult DispatchTrackEvent(const nsAString& aName,
+                              const RefPtr<MediaStreamTrack>& aTrack);
 
   class OwnedStreamListener;
   friend class OwnedStreamListener;
@@ -664,7 +672,12 @@ protected:
   // track sources.
   RefPtr<MediaStreamTrackSourceGetter> mTrackSourceGetter;
 
+  // Listener tracking changes to mOwnedStream. We use this to notify the
+  // MediaStreamTracks we own about state changes.
   RefPtr<OwnedStreamListener> mOwnedListener;
+
+  // Listener tracking changes to mPlaybackStream. This drives state changes
+  // in this DOMMediaStream and notifications to mTrackListeners.
   RefPtr<PlaybackStreamListener> mPlaybackListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
@@ -674,8 +687,8 @@ protected:
 
   nsString mID;
 
-  // Keep these alive until the stream finishes
-  nsTArray<nsCOMPtr<nsISupports> > mConsumersToKeepAlive;
+  // Keep these alive while the stream is alive.
+  nsTArray<nsCOMPtr<nsISupports>> mConsumersToKeepAlive;
 
   bool mNotifiedOfMediaStreamGraphShutdown;
 

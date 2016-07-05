@@ -1814,7 +1814,7 @@ TabChild::NotifyAPZStateChange(const ViewID& aViewId,
                                const int& aArg)
 {
   mAPZEventState->ProcessAPZStateChange(GetDocument(), aViewId, aChange, aArg);
-  if (aChange == layers::GeckoContentController::APZStateChange::TransformEnd) {
+  if (aChange == layers::GeckoContentController::APZStateChange::eTransformEnd) {
     // This is used by tests to determine when the APZ is done doing whatever
     // it's doing. XXX generify this as needed when writing additional tests.
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();

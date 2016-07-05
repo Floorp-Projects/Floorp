@@ -380,8 +380,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     return NS_ERROR_NOT_AVAILABLE;
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("trust is %d\n", trustBits));
-  nsXPIDLCString nickname;
-  nickname.Adopt(CERT_MakeCANickname(tmpCert.get()));
+  UniquePORTString nickname(CERT_MakeCANickname(tmpCert.get()));
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Created nick \"%s\"\n", nickname.get()));
 
@@ -1407,8 +1406,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char* aBase64,
     return SetCertTrustFromString(newCert, aTrust);
   }
 
-  nsXPIDLCString nickname;
-  nickname.Adopt(CERT_MakeCANickname(tmpCert.get()));
+  UniquePORTString nickname(CERT_MakeCANickname(tmpCert.get()));
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Created nick \"%s\"\n", nickname.get()));
 
