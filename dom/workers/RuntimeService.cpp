@@ -891,7 +891,7 @@ public:
 
     JSContext* cx = JS_GetContext(rt);
 
-    js::SetPreserveWrapperCallback(rt, PreserveWrapper);
+    js::SetPreserveWrapperCallback(cx, PreserveWrapper);
     JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     if (mWorkerPrivate->IsDedicatedWorker()) {

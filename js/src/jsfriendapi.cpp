@@ -64,9 +64,9 @@ js::ForgetSourceHook(JSRuntime* rt)
 }
 
 JS_FRIEND_API(void)
-JS_SetGrayGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
+JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    rt->gc.setGrayRootsTracer(traceOp, data);
+    cx->gc.setGrayRootsTracer(traceOp, data);
 }
 
 JS_FRIEND_API(JSObject*)
@@ -540,9 +540,9 @@ js::SetReservedOrProxyPrivateSlotWithBarrier(JSObject* obj, size_t slot, const j
 }
 
 void
-js::SetPreserveWrapperCallback(JSRuntime* rt, PreserveWrapperCallback callback)
+js::SetPreserveWrapperCallback(JSContext* cx, PreserveWrapperCallback callback)
 {
-    rt->preserveWrapperCallback = callback;
+    cx->preserveWrapperCallback = callback;
 }
 
 /*
@@ -647,9 +647,9 @@ js::StringToLinearStringSlow(JSContext* cx, JSString* str)
 }
 
 JS_FRIEND_API(void)
-JS_SetAccumulateTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback)
+JS_SetAccumulateTelemetryCallback(JSContext* cx, JSAccumulateTelemetryDataCallback callback)
 {
-    rt->setTelemetryCallback(rt, callback);
+    cx->setTelemetryCallback(cx, callback);
 }
 
 JS_FRIEND_API(JSObject*)
@@ -1134,10 +1134,10 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
 }
 
 JS_FRIEND_API(void)
-js::SetActivityCallback(JSRuntime* rt, ActivityCallback cb, void* arg)
+js::SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg)
 {
-    rt->activityCallback = cb;
-    rt->activityCallbackArg = arg;
+    cx->activityCallback = cb;
+    cx->activityCallbackArg = arg;
 }
 
 JS_FRIEND_API(void)
