@@ -975,7 +975,7 @@ CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
     global = xpc::NativeGlobal(aIncumbentGlobal);
   }
   nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite, global);
-  self->DispatchToMicroTask(runnable);
+  self->DispatchToMicroTask(runnable.forget());
   return true;
 }
 
@@ -1680,12 +1680,14 @@ CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
 }
 
 void
-CycleCollectedJSRuntime::DispatchToMicroTask(nsIRunnable* aRunnable)
+CycleCollectedJSRuntime::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
+  RefPtr<nsIRunnable> runnable(aRunnable);
 
-  mPromiseMicroTaskQueue.push(aRunnable);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(runnable);
+
+  mPromiseMicroTaskQueue.push(runnable.forget());
 }
 
 void
