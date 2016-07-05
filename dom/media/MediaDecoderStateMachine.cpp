@@ -1741,6 +1741,7 @@ void
 MediaDecoderStateMachine::DiscardSeekTaskIfExist()
 {
   if (mSeekTask) {
+    mCurrentSeek.RejectIfExists(__func__);
     mSeekTask->Discard();
     mSeekTask = nullptr;
 
