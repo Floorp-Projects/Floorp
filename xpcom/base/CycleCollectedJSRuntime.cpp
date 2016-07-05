@@ -539,7 +539,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   JS_SetDestroyZoneCallback(mJSContext, XPCStringConvert::FreeZoneCache);
   JS_SetSweepZoneCallback(mJSContext, XPCStringConvert::ClearZoneCache);
   JS::SetBuildIdOp(mJSRuntime, GetBuildId);
-  JS::SetWarningReporter(mJSRuntime, MozCrashWarningReporter);
+  JS::SetWarningReporter(mJSContext, MozCrashWarningReporter);
 
   static js::DOMCallbacks DOMcallbacks = {
     InstanceClassHasProtoAtDepth

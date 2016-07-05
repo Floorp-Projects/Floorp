@@ -73,7 +73,7 @@ main(int argc, const char** argv)
 
     JSContext* cx = JS_GetContext(runtime);
     checkBool(JS::InitSelfHostedCode(cx));
-    JS::SetWarningReporter(runtime, reportWarning);
+    JS::SetWarningReporter(cx, reportWarning);
 
     JSAutoRequest ar(cx);
 
