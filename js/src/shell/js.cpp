@@ -2943,14 +2943,15 @@ WorkerMain(void* arg)
         return;
     }
 
+    JSContext* cx = JS_GetContext(rt);
+
     sr->isWorker = true;
     JS_SetRuntimePrivate(rt, sr.get());
-    JS_SetFutexCanWait(rt);
+    JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(rt, WarningReporter);
     JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
-    JSContext* cx = JS_GetContext(rt);
     if (!JS::InitSelfHostedCode(cx)) {
         JS_DestroyRuntime(rt);
         js_delete(input);
@@ -7380,9 +7381,11 @@ main(int argc, char** argv, char** envp)
     if (!sr)
         return 1;
 
+    JSContext* cx = JS_GetContext(rt);
+
     JS_SetRuntimePrivate(rt, sr.get());
     // Waiting is allowed on the shell's main thread, for now.
-    JS_SetFutexCanWait(rt);
+    JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(rt, WarningReporter);
     if (!SetRuntimeOptions(rt, op))
         return 1;
@@ -7405,7 +7408,6 @@ main(int argc, char** argv, char** envp)
 
     JS::dbg::SetDebuggerMallocSizeOf(rt, moz_malloc_size_of);
 
-    JSContext* cx = JS_GetContext(rt);
     if (!JS::InitSelfHostedCode(cx))
         return 1;
 

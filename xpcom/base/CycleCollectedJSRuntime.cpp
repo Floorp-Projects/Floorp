@@ -536,8 +536,8 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   JS::SetOutOfMemoryCallback(mJSRuntime, OutOfMemoryCallback, this);
   JS::SetLargeAllocationFailureCallback(mJSRuntime,
                                         LargeAllocationFailureCallback, this);
-  JS_SetDestroyZoneCallback(mJSRuntime, XPCStringConvert::FreeZoneCache);
-  JS_SetSweepZoneCallback(mJSRuntime, XPCStringConvert::ClearZoneCache);
+  JS_SetDestroyZoneCallback(mJSContext, XPCStringConvert::FreeZoneCache);
+  JS_SetSweepZoneCallback(mJSContext, XPCStringConvert::ClearZoneCache);
   JS::SetBuildIdOp(mJSRuntime, GetBuildId);
   JS::SetWarningReporter(mJSRuntime, MozCrashWarningReporter);
 
