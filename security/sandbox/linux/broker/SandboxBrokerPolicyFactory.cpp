@@ -120,7 +120,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
 {
   // Allow overriding "unsupported"ness with a pref, for testing.
   if (!IsSystemSupported() &&
-      Preferences::GetInt("security.sandbox.content.level") <= 1) {
+      Preferences::GetInt("security.sandbox.content.level") <= 0) {
     return nullptr;
   }
 
