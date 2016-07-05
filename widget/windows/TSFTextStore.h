@@ -53,6 +53,12 @@ class TSFTextStore final : public ITextStoreACP
                          , public ITfContextOwnerCompositionSink
                          , public ITfMouseTrackerACP
 {
+private:
+  typedef IMENotification::SelectionChangeDataBase SelectionChangeDataBase;
+  typedef IMENotification::SelectionChangeData SelectionChangeData;
+  typedef IMENotification::TextChangeDataBase TextChangeDataBase;
+  typedef IMENotification::TextChangeData TextChangeData;
+
 public: /*IUnknown*/
   STDMETHODIMP          QueryInterface(REFIID, void**);
 
@@ -108,7 +114,6 @@ public:
   static void     ProcessMessage(nsWindowBase* aWindow, UINT aMessage,
                                  WPARAM& aWParam, LPARAM& aLParam,
                                  MSGResult& aResult);
-
 
   static void     SetIMEOpenState(bool);
   static bool     GetIMEOpenState(void);
@@ -276,9 +281,6 @@ protected:
   bool     InsertTextAtSelectionInternal(const nsAString& aInsertStr,
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
-  nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
-  nsresult OnSelectionChangeInternal(const IMENotification& aIMENotification);
-  nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
                                TF_DISPLAYATTRIBUTE* aResult);
@@ -310,10 +312,23 @@ protected:
   // MaybeFlushPendingNotifications() performs pending notifications to TSF.
   void     MaybeFlushPendingNotifications();
 
+  nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
+  nsresult OnSelectionChangeInternal(const IMENotification& aIMENotification);
+  nsresult OnMouseButtonEventInternal(const IMENotification& aIMENotification);
   nsresult OnLayoutChangeInternal();
   nsresult OnUpdateCompositionInternal();
 
-  void     NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange);
+  // mPendingSelectionChangeData stores selection change data until notifying
+  // TSF of selection change.  If two or more selection changes occur, this
+  // stores the latest selection change data because only it is necessary.
+  SelectionChangeData mPendingSelectionChangeData;
+
+  // mPendingTextChangeData stores one or more text change data until notifying
+  // TSF of text change.  If two or more text changes occur, this merges
+  // every text change data.
+  TextChangeData mPendingTextChangeData;
+
+  void     NotifyTSFOfTextChange();
   void     NotifyTSFOfSelectionChange();
   bool     NotifyTSFOfLayoutChange();
   void     NotifyTSFOfLayoutChangeAgain();
@@ -406,6 +421,14 @@ protected:
   // locked.  With mComposition, query methods can returns the text content
   // information.
   Composition mComposition;
+
+  /**
+   * IsComposingInContent() returns true if there is a composition in the
+   * focused editor and it's caused by native IME (either TIP of TSF or IME of
+   * IMM).  I.e., returns true between eCompositionStart and
+   * eCompositionCommit(AsIs).
+   */
+  bool IsComposingInContent() const;
 
   class Selection
   {
@@ -531,22 +554,35 @@ protected:
       return mWritingMode;
     }
 
+    bool EqualsExceptDirection(const TS_SELECTION_ACP& aACP) const
+    {
+      if (mACP.style.ase == aACP.style.ase) {
+        return mACP.acpStart == aACP.acpStart &&
+               mACP.acpEnd == aACP.acpEnd;
+      }
+      return mACP.acpStart == aACP.acpEnd &&
+             mACP.acpEnd == aACP.acpStart;
+    }
+
   private:
     TS_SELECTION_ACP mACP;
     WritingMode mWritingMode;
     bool mDirty;
   };
   // Don't access mSelection directly except at calling MarkDirty().
-  // Use CurrentSelection() instead.  This is marked as dirty when the
-  // selection or content is changed without document lock.
-  Selection mSelection;
+  // Use SelectionForTSFRef() instead.  This is modified immediately when
+  // TSF requests to set selection and not updated by selection change in
+  // content until mContentForTSF is cleared.
+  Selection mSelectionForTSF;
 
-  // Get "current selection".  If the document is locked, this initializes
-  // mSelection with the selection at the first call during a lock and returns
-  // it.  However, mSelection is NOT modified immediately.  When pending
-  // changes are flushed at unlocking the document, cached mSelection is
-  // modified.  Note that this is also called by LockedContent().
-  Selection& CurrentSelection();
+  /**
+   * Get the selection expected by TSF.  If mSelectionForTSF is already valid,
+   * this just return the reference to it.  Otherwise, this initializes it
+   * with eQuerySelectedText.  Please check if the result is valid before
+   * actually using it.
+   * Note that this is also called by ContentForTSFRef().
+   */
+  Selection& SelectionForTSFRef();
 
   struct PendingAction final
   {
@@ -785,18 +821,24 @@ protected:
 
     bool mInitialized;
   };
-  // mLockedContent starts to cache content of the document at first query of
-  // the content during a document lock.  This is abandoned after document is
-  // unlocked and dispatched events are handled.  This is initialized by
-  // LockedContent() automatically.  So, don't access this member directly
-  // except at calling Clear(), IsInitialized(), IsLayoutChangedAfter() or
-  // IsLayoutChanged().
-  Content mLockedContent;
+  // mContentForTSF is cache of content.  The information is expected by TSF
+  // and TIP.  Therefore, this is useful for answering the query from TSF or
+  // TIP.
+  // This is initialized by ContentForTSFRef() automatically (therefore, don't
+  // access this member directly except at calling Clear(), IsInitialized(),
+  // IsLayoutChangeAfter() or IsLayoutChanged()).
+  // This is cleared when:
+  //  - When there is no composition, the document is unlocked.
+  //  - When there is a composition, all dispatched events are handled by
+  //    the focused editor which may be in a remote process.
+  // So, if two compositions are created very quickly, this cache may not be
+  // cleared between eCompositionCommit(AsIs) and eCompositionStart.
+  Content mContentForTSF;
 
-  Content& LockedContent();
+  Content& ContentForTSFRef();
 
-  // While the documet is locked, this returns the text stored by
-  // mLockedContent.  Otherwise, return the current text content.
+  // While mContentForTSF is valid, this returns the text stored by it.
+  // Otherwise, return the current text content retrieved by eQueryTextContent.
   bool GetCurrentText(nsAString& aTextContent);
 
   class MouseTracker final
@@ -863,14 +905,6 @@ protected:
   // If edit actions are being recorded without document lock, this is true.
   // Otherwise, false.
   bool                         mIsRecordingActionsWithoutLock;
-  // During recording actions, we shouldn't call mSink->OnSelectionChange()
-  // because it may cause TSF request new lock.  This is a problem if the
-  // selection change is caused by a call of On*Composition() without document
-  // lock since RequestLock() tries to flush the pending actions again (which
-  // are flushing).  Therefore, OnSelectionChangeInternal() sets this true
-  // during recoding actions and then, RequestLock() will call
-  // mSink->OnSelectionChange() after mLock becomes 0.
-  bool                         mPendingOnSelectionChange;
   // If GetTextExt() or GetACPFromPoint() is called and the layout hasn't been
   // calculated yet, these methods return TS_E_NOLAYOUT.  At that time,
   // mHasReturnedNoLayoutError is set to true.
@@ -884,8 +918,8 @@ protected:
   // If this is true, the instance will be destroyed after unlocked.
   bool                         mPendingDestroy;
   // If this is false, MaybeFlushPendingNotifications() will clear the
-  // mLockedContent.
-  bool                         mDeferClearingLockedContent;
+  // mContentForTSF.
+  bool                         mDeferClearingContentForTSF;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
   // While the instance is dispatching events, the event may not be handled
