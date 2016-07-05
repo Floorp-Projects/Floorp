@@ -49,9 +49,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define NS_IMPL_REFCNT_LOGGING
-
-#ifdef NS_IMPL_REFCNT_LOGGING
 #include "plhash.h"
 #include "prmem.h"
 
@@ -519,12 +516,10 @@ public:
   }
 };
 
-#endif /* NS_IMPL_REFCNT_LOGGING */
 
 nsresult
 nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   if (!gBloatLog || !gBloatView) {
     return NS_ERROR_FAILURE;
   }
@@ -578,7 +573,6 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
     fprintf(aOut, "\nSerial Numbers of Leaked Objects:\n");
     PL_HashTableEnumerateEntries(gSerialNumbers, DumpSerialNumbers, aOut);
   }
-#endif
 
   return NS_OK;
 }
@@ -586,16 +580,13 @@ nsTraceRefcnt::DumpStatistics(StatisticsType aType, FILE* aOut)
 void
 nsTraceRefcnt::ResetStatistics()
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   AutoTraceLogLock lock;
   if (gBloatView) {
     PL_HashTableDestroy(gBloatView);
     gBloatView = nullptr;
   }
-#endif
 }
 
-#ifdef NS_IMPL_REFCNT_LOGGING
 static bool
 LogThisType(const char* aTypeName)
 {
@@ -640,7 +631,7 @@ GetRefCount(void* aPtr)
   }
 }
 
-#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 static int32_t*
 GetCOMPtrCount(void* aPtr)
 {
@@ -876,7 +867,6 @@ InitTraceLog()
   }
 }
 
-#endif
 
 extern "C" {
 
@@ -973,11 +963,9 @@ NS_LogInit()
 #ifdef MOZ_STACKWALKING
   StackWalkInitCriticalAddress();
 #endif
-#ifdef NS_IMPL_REFCNT_LOGGING
   if (++gInitCount) {
     nsTraceRefcnt::SetActivityIsLegal(true);
   }
-#endif
 }
 
 EXPORT_XPCOM_API(void)
@@ -1048,10 +1036,8 @@ LogTerm()
       nsTraceRefcnt::ResetStatistics();
     }
     nsTraceRefcnt::Shutdown();
-#ifdef NS_IMPL_REFCNT_LOGGING
     nsTraceRefcnt::SetActivityIsLegal(false);
     gActivityTLS = BAD_TLS_INDEX;
-#endif
 
 #ifdef MOZ_DMD
     LogDMDFile();
@@ -1065,7 +1051,6 @@ EXPORT_XPCOM_API(void)
 NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
              const char* aClass, uint32_t aClassSize)
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
@@ -1114,13 +1099,11 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
       fflush(gRefcntsLog);
     }
   }
-#endif
 }
 
 EXPORT_XPCOM_API(void)
 NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
@@ -1174,13 +1157,11 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
       RecycleSerialNumberPtr(aPtr);
     }
   }
-#endif
 }
 
 EXPORT_XPCOM_API(void)
 NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
@@ -1209,14 +1190,12 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
       WalkTheStackCached(gAllocLog);
     }
   }
-#endif
 }
 
 
 EXPORT_XPCOM_API(void)
 NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized) {
     InitTraceLog();
@@ -1249,14 +1228,13 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
       WalkTheStackCached(gAllocLog);
     }
   }
-#endif
 }
 
 
 EXPORT_XPCOM_API(void)
 NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
 {
-#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   // Get the most-derived object.
   void* object = dynamic_cast<void*>(aObject);
 
@@ -1297,7 +1275,7 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
 EXPORT_XPCOM_API(void)
 NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
 {
-#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   // Get the most-derived object.
   void* object = dynamic_cast<void*>(aObject);
 
@@ -1337,7 +1315,6 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
 void
 nsTraceRefcnt::Shutdown()
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
 #ifdef MOZ_STACKWALKING
   gCodeAddressService = nullptr;
 #endif
@@ -1361,17 +1338,14 @@ nsTraceRefcnt::Shutdown()
   maybeUnregisterAndCloseFile(gRefcntsLog);
   maybeUnregisterAndCloseFile(gAllocLog);
   maybeUnregisterAndCloseFile(gCOMPtrLog);
-#endif
 }
 
 void
 nsTraceRefcnt::SetActivityIsLegal(bool aLegal)
 {
-#ifdef NS_IMPL_REFCNT_LOGGING
   if (gActivityTLS == BAD_TLS_INDEX) {
     PR_NewThreadPrivateIndex(&gActivityTLS, nullptr);
   }
 
   PR_SetThreadPrivate(gActivityTLS, reinterpret_cast<void*>(!aLegal));
-#endif
 }
