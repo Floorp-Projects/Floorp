@@ -12,6 +12,7 @@
 #include "ThreeDPoint.h"
 #include "mozilla/WeakPtr.h"
 #include "WebAudioUtils.h"
+#include <limits>
 #include <set>
 
 namespace mozilla {
@@ -69,6 +70,11 @@ public:
 
   void SetPosition(double aX, double aY, double aZ)
   {
+    if (fabs(aX) > std::numeric_limits<float>::max() ||
+        fabs(aY) > std::numeric_limits<float>::max() ||
+        fabs(aZ) > std::numeric_limits<float>::max()) {
+      return;
+    }
     mPositionX->SetValue(aX);
     mPositionY->SetValue(aY);
     mPositionZ->SetValue(aZ);
@@ -77,6 +83,11 @@ public:
 
   void SetOrientation(double aX, double aY, double aZ)
   {
+    if (fabs(aX) > std::numeric_limits<float>::max() ||
+        fabs(aY) > std::numeric_limits<float>::max() ||
+        fabs(aZ) > std::numeric_limits<float>::max()) {
+      return;
+    }
     mOrientationX->SetValue(aX);
     mOrientationY->SetValue(aY);
     mOrientationZ->SetValue(aZ);
