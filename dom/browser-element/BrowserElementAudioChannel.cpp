@@ -21,7 +21,9 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#ifdef MOZ_B2G
 #include "nsISystemMessagesInternal.h"
+#endif
 #include "nsITabParent.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -523,6 +525,8 @@ BrowserElementAudioChannel::NotifyChannel(const nsAString& aEvent,
     return request.forget().downcast<DOMRequest>();
   }
 
+// TODO: We need this until bug 1254282 reaches m-c
+#ifdef MOZ_B2G
   nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
     do_GetService("@mozilla.org/system-message-internal;1");
   MOZ_ASSERT(systemMessenger);
@@ -551,6 +555,9 @@ BrowserElementAudioChannel::NotifyChannel(const nsAString& aEvent,
   RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
   RefPtr<RespondSuccessHandler> handler = new RespondSuccessHandler(request);
   promiseIns->AppendNativeHandler(handler);
+#else
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+#endif
 
   return request.forget();
 }
