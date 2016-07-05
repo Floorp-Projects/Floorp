@@ -3289,25 +3289,25 @@ JS_GetSecurityCallbacks(JSContext* cx)
 }
 
 JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime* rt, JSPrincipals* prin)
+JS_SetTrustedPrincipals(JSContext* cx, JSPrincipals* prin)
 {
-    rt->setTrustedPrincipals(prin);
+    cx->setTrustedPrincipals(prin);
 }
 
 extern JS_PUBLIC_API(void)
-JS_InitDestroyPrincipalsCallback(JSRuntime* rt, JSDestroyPrincipalsOp destroyPrincipals)
+JS_InitDestroyPrincipalsCallback(JSContext* cx, JSDestroyPrincipalsOp destroyPrincipals)
 {
     MOZ_ASSERT(destroyPrincipals);
-    MOZ_ASSERT(!rt->destroyPrincipals);
-    rt->destroyPrincipals = destroyPrincipals;
+    MOZ_ASSERT(!cx->destroyPrincipals);
+    cx->destroyPrincipals = destroyPrincipals;
 }
 
 extern JS_PUBLIC_API(void)
-JS_InitReadPrincipalsCallback(JSRuntime* rt, JSReadPrincipalsOp read)
+JS_InitReadPrincipalsCallback(JSContext* cx, JSReadPrincipalsOp read)
 {
     MOZ_ASSERT(read);
-    MOZ_ASSERT(!rt->readPrincipals);
-    rt->readPrincipals = read;
+    MOZ_ASSERT(!cx->readPrincipals);
+    cx->readPrincipals = read;
 }
 
 JS_PUBLIC_API(JSFunction*)

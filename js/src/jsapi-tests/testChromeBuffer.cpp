@@ -48,7 +48,7 @@ CallTrusted(JSContext* cx, unsigned argc, JS::Value* vp)
 
 BEGIN_TEST(testChromeBuffer)
 {
-    JS_SetTrustedPrincipals(rt, &system_principals);
+    JS_SetTrustedPrincipals(cx, &system_principals);
 
     JS::CompartmentOptions options;
     trusted_glob.init(cx, JS_NewGlobalObject(cx, &global_class, &system_principals,

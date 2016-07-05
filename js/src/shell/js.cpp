@@ -2949,7 +2949,7 @@ WorkerMain(void* arg)
     JS_SetRuntimePrivate(rt, sr.get());
     JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(cx, WarningReporter);
-    JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
+    JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
     if (!JS::InitSelfHostedCode(cx)) {
@@ -7396,9 +7396,9 @@ main(int argc, char** argv, char** envp)
     if (availMem > 0)
         JS_SetGCParametersBasedOnAvailableMemory(cx, availMem);
 
-    JS_SetTrustedPrincipals(rt, &ShellPrincipals::fullyTrusted);
+    JS_SetTrustedPrincipals(cx, &ShellPrincipals::fullyTrusted);
     JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
-    JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
+    JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
     JS_SetInterruptCallback(rt, ShellInterruptCallback);
     JS::SetBuildIdOp(cx, ShellBuildId);

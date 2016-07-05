@@ -87,14 +87,14 @@ JS_GetSecurityCallbacks(JSContext* cx);
  * untrusted script has exhausted the stack. This function sets the
  * runtime-wide trusted principal.
  *
- * This principals is not held (via JS_HoldPrincipals/JS_DropPrincipals) since
- * there is no available JSContext. Instead, the caller must ensure that the
- * given principals stays valid for as long as 'rt' may point to it. If the
- * principals would be destroyed before 'rt', JS_SetTrustedPrincipals must be
- * called again, passing nullptr for 'prin'.
+ * This principals is not held (via JS_HoldPrincipals/JS_DropPrincipals).
+ * Instead, the caller must ensure that the given principals stays valid for as
+ * long as 'cx' may point to it. If the principals would be destroyed before
+ * 'cx', JS_SetTrustedPrincipals must be called again, passing nullptr for
+ * 'prin'.
  */
 extern JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime* rt, JSPrincipals* prin);
+JS_SetTrustedPrincipals(JSContext* cx, JSPrincipals* prin);
 
 typedef void
 (* JSDestroyPrincipalsOp)(JSPrincipals* principals);
@@ -105,7 +105,7 @@ typedef void
  * only once per JS runtime.
  */
 extern JS_PUBLIC_API(void)
-JS_InitDestroyPrincipalsCallback(JSRuntime* rt, JSDestroyPrincipalsOp destroyPrincipals);
+JS_InitDestroyPrincipalsCallback(JSContext* cx, JSDestroyPrincipalsOp destroyPrincipals);
 
 /*
  * Read a JSPrincipals instance from the given |reader| and initialize the out
@@ -126,7 +126,7 @@ using JSReadPrincipalsOp = bool (*)(JSContext* cx, JSStructuredCloneReader* read
  * buffer. The initialization can be done only once per JS runtime.
  */
 extern JS_PUBLIC_API(void)
-JS_InitReadPrincipalsCallback(JSRuntime* rt, JSReadPrincipalsOp read);
+JS_InitReadPrincipalsCallback(JSContext* cx, JSReadPrincipalsOp read);
 
 
 #endif  /* js_Principals_h */
