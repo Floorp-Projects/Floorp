@@ -11,6 +11,7 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/LoadTainting.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsIContentPolicy.h"
 #include "nsIInputStream.h"
@@ -95,6 +96,7 @@ public:
     , mContentPolicyType(nsIContentPolicy::TYPE_FETCH)
     , mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR))
     , mReferrerPolicy(ReferrerPolicy::_empty)
+    , mEnvironmentReferrerPolicy(net::RP_Default)
     , mMode(RequestMode::No_cors)
     , mCredentialsMode(RequestCredentials::Omit)
     , mResponseTainting(LoadTainting::Basic)
@@ -132,6 +134,7 @@ public:
     , mContentPolicyType(aContentPolicyType)
     , mReferrer(aReferrer)
     , mReferrerPolicy(aReferrerPolicy)
+    , mEnvironmentReferrerPolicy(net::RP_Default)
     , mMode(aMode)
     , mCredentialsMode(aRequestCredentials)
     , mResponseTainting(LoadTainting::Basic)
@@ -264,6 +267,18 @@ public:
   SetReferrerPolicy(ReferrerPolicy aReferrerPolicy)
   {
     mReferrerPolicy = aReferrerPolicy;
+  }
+
+  net::ReferrerPolicy
+  GetEnvironmentReferrerPolicy() const
+  {
+    return mEnvironmentReferrerPolicy;
+  }
+
+  void
+  SetEnvironmentReferrerPolicy(net::ReferrerPolicy aReferrerPolicy)
+  {
+    mEnvironmentReferrerPolicy = aReferrerPolicy;
   }
 
   bool
@@ -491,6 +506,13 @@ private:
   // URL: an URL
   nsString mReferrer;
   ReferrerPolicy mReferrerPolicy;
+
+  // This will be used for request created from Window or Worker contexts
+  // In case there's no Referrer Policy in Request, this will be passed to
+  // channel.
+  // The Environment Referrer Policy should be net::ReferrerPolicy so that it
+  // could be associated with nsIHttpChannel.
+  net::ReferrerPolicy mEnvironmentReferrerPolicy;
 
   RequestMode mMode;
   RequestCredentials mCredentialsMode;

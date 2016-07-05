@@ -91,7 +91,7 @@ BEGIN_TEST(testBug604087)
         CHECK(next);
     }
 
-    JS_SetWrapObjectCallbacks(JS_GetRuntime(cx), &WrapObjectCallbacks);
+    JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     CHECK(JS_TransplantObject(cx, outerObj, next));
     return true;
 }

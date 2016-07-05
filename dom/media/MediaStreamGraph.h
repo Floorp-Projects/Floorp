@@ -23,7 +23,6 @@
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include <speex/speex_resampler.h>
-#include "DOMMediaStream.h"
 
 class nsIRunnable;
 
@@ -79,7 +78,16 @@ namespace media {
  * reprocess it. This is triggered automatically by the MediaStreamGraph.
  */
 
+class AudioNodeEngine;
+class AudioNodeExternalInputStream;
+class AudioNodeStream;
+class CameraPreviewMediaStream;
+class MediaInputPort;
+class MediaStream;
 class MediaStreamGraph;
+class MediaStreamGraphImpl;
+class ProcessedMediaStream;
+class SourceMediaStream;
 
 /**
  * This is a base class for media graph thread listener callbacks.
@@ -439,15 +447,6 @@ struct AudioNodeSizes
   nsCString mNodeType;
 };
 
-class MediaStreamGraphImpl;
-class SourceMediaStream;
-class ProcessedMediaStream;
-class MediaInputPort;
-class AudioNodeEngine;
-class AudioNodeExternalInputStream;
-class AudioNodeStream;
-class CameraPreviewMediaStream;
-
 /**
  * Helper struct for binding a track listener to a specific TrackID.
  */
@@ -533,7 +532,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream>
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
-  explicit MediaStream(DOMMediaStream* aWrapper);
+  MediaStream();
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -798,12 +797,6 @@ public:
 
   virtual void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
 
-  DOMMediaStream* GetWrapper()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Only use DOMMediaStream on main thread");
-    return mWrapper;
-  }
-
   // Return true if the main thread needs to observe updates from this stream.
   virtual bool MainThreadNeedsUpdates() const
   {
@@ -938,8 +931,6 @@ protected:
    */
   bool mNotifiedHasCurrentData;
 
-  // This state is only used on the main thread.
-  DOMMediaStream* mWrapper;
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
   bool mMainThreadFinished;
@@ -962,8 +953,8 @@ protected:
 class SourceMediaStream : public MediaStream
 {
 public:
-  explicit SourceMediaStream(DOMMediaStream* aWrapper) :
-    MediaStream(aWrapper),
+  explicit SourceMediaStream() :
+    MediaStream(),
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
     mPullEnabled(false),
@@ -1185,6 +1176,23 @@ protected:
 };
 
 /**
+ * The blocking mode decides how a track should be blocked in a MediaInputPort.
+ */
+enum class BlockingMode
+{
+  /**
+   * BlockingMode CREATION blocks the source track from being created
+   * in the destination. It'll end if it already exists.
+   */
+  CREATION,
+  /**
+   * BlockingMode END_EXISTING allows a track to be created in the destination
+   * but will end it before any data has been passed through.
+   */
+  END_EXISTING,
+};
+
+/**
  * Represents a connection between a ProcessedMediaStream and one of its
  * input streams.
  * We make these refcounted so that stream-related messages with MediaInputPort*
@@ -1265,16 +1273,39 @@ public:
    * Returns a pledge that resolves on the main thread after the track block has
    * been applied by the MSG.
    */
-  already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId);
+  already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId,
+                                                                     BlockingMode aBlockingMode);
 private:
-  void BlockSourceTrackIdImpl(TrackID aTrackId);
+  void BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode);
 
 public:
-  // Returns true if aTrackId has not been blocked and this port has not
-  // been locked to another track.
+  // Returns true if aTrackId has not been blocked for any reason and this port
+  // has not been locked to another track.
   bool PassTrackThrough(TrackID aTrackId) {
-    return !mBlockedTracks.Contains(aTrackId) &&
-           (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
+    bool blocked = false;
+    for (auto pair : mBlockedTracks) {
+      if (pair.first() == aTrackId &&
+          (pair.second() == BlockingMode::CREATION ||
+           pair.second() == BlockingMode::END_EXISTING)) {
+        blocked = true;
+        break;
+      }
+    }
+    return !blocked && (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
+  }
+
+  // Returns true if aTrackId has not been blocked for track creation and this
+  // port has not been locked to another track.
+  bool AllowCreationOf(TrackID aTrackId) {
+    bool blocked = false;
+    for (auto pair : mBlockedTracks) {
+      if (pair.first() == aTrackId &&
+          pair.second() == BlockingMode::CREATION) {
+        blocked = true;
+        break;
+      }
+    }
+    return !blocked && (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
   }
 
   uint16_t InputNumber() const { return mInputNumber; }
@@ -1329,7 +1360,9 @@ private:
   // Web Audio.
   const uint16_t mInputNumber;
   const uint16_t mOutputNumber;
-  nsTArray<TrackID> mBlockedTracks;
+
+  typedef Pair<TrackID, BlockingMode> BlockedTrack;
+  nsTArray<BlockedTrack> mBlockedTracks;
 
   // Our media stream graph
   MediaStreamGraphImpl* mGraph;
@@ -1343,8 +1376,8 @@ private:
 class ProcessedMediaStream : public MediaStream
 {
 public:
-  explicit ProcessedMediaStream(DOMMediaStream* aWrapper)
-    : MediaStream(aWrapper), mAutofinish(false), mCycleMarker(0)
+  explicit ProcessedMediaStream()
+    : MediaStream(), mAutofinish(false), mCycleMarker(0)
   {}
 
   // Control API.
@@ -1405,6 +1438,8 @@ public:
   {
     return mInputs.Length();
   }
+  virtual MediaStream* GetInputStreamFor(TrackID aTrackID) { return nullptr; }
+  virtual TrackID GetInputTrackIDFor(TrackID aTrackID) { return TRACK_NONE; }
   void DestroyImpl() override;
   /**
    * This gets called after we've computed the blocking states for all
@@ -1501,7 +1536,7 @@ public:
    * Create a stream that a media decoder (or some other source of
    * media data, such as a camera) can write to.
    */
-  SourceMediaStream* CreateSourceStream(DOMMediaStream* aWrapper);
+  SourceMediaStream* CreateSourceStream();
   /**
    * Create a stream that will form the union of the tracks of its input
    * streams.
@@ -1516,12 +1551,11 @@ public:
    * TODO at some point we will probably need to add API to select
    * particular tracks of each input stream.
    */
-  ProcessedMediaStream* CreateTrackUnionStream(DOMMediaStream* aWrapper);
+  ProcessedMediaStream* CreateTrackUnionStream();
   /**
    * Create a stream that will mix all its audio input.
    */
-  ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper,
-                                                 TrackID aTrackId);
+  ProcessedMediaStream* CreateAudioCaptureStream(TrackID aTrackId);
 
   /**
    * Add a new stream to the graph.  Main thread.

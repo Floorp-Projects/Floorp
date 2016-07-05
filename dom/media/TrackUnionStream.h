@@ -17,12 +17,15 @@ namespace mozilla {
  */
 class TrackUnionStream : public ProcessedMediaStream {
 public:
-  explicit TrackUnionStream(DOMMediaStream* aWrapper);
+  explicit TrackUnionStream();
 
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
   void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override;
+
+  MediaStream* GetInputStreamFor(TrackID aTrackID) override;
+  TrackID GetInputTrackIDFor(TrackID aTrackID) override;
 
 protected:
   // Only non-ended tracks are allowed to persist in this map.
