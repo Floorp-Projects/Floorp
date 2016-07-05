@@ -7397,7 +7397,7 @@ main(int argc, char** argv, char** envp)
         JS_SetGCParametersBasedOnAvailableMemory(cx, availMem);
 
     JS_SetTrustedPrincipals(rt, &ShellPrincipals::fullyTrusted);
-    JS_SetSecurityCallbacks(rt, &ShellPrincipals::securityCallbacks);
+    JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
     JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
 
     JS_SetInterruptCallback(rt, ShellInterruptCallback);

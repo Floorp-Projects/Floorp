@@ -76,10 +76,10 @@ struct JSSecurityCallbacks {
 };
 
 extern JS_PUBLIC_API(void)
-JS_SetSecurityCallbacks(JSRuntime* rt, const JSSecurityCallbacks* callbacks);
+JS_SetSecurityCallbacks(JSContext* cx, const JSSecurityCallbacks* callbacks);
 
 extern JS_PUBLIC_API(const JSSecurityCallbacks*)
-JS_GetSecurityCallbacks(JSRuntime* rt);
+JS_GetSecurityCallbacks(JSContext* cx);
 
 /*
  * Code running with "trusted" principals will be given a deeper stack

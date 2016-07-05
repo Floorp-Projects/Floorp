@@ -1386,8 +1386,8 @@ nsresult nsScriptSecurityManager::Init()
         JSPrincipalsSubsume,
     };
 
-    MOZ_ASSERT(!JS_GetSecurityCallbacks(sRuntime));
-    JS_SetSecurityCallbacks(sRuntime, &securityCallbacks);
+    MOZ_ASSERT(!JS_GetSecurityCallbacks(JS_GetContext(sRuntime)));
+    JS_SetSecurityCallbacks(JS_GetContext(sRuntime), &securityCallbacks);
     JS_InitDestroyPrincipalsCallback(sRuntime, nsJSPrincipals::Destroy);
 
     JS_SetTrustedPrincipals(sRuntime, system);
@@ -1414,7 +1414,7 @@ void
 nsScriptSecurityManager::Shutdown()
 {
     if (sRuntime) {
-        JS_SetSecurityCallbacks(sRuntime, nullptr);
+        JS_SetSecurityCallbacks(JS_GetContext(sRuntime), nullptr);
         JS_SetTrustedPrincipals(sRuntime, nullptr);
         sRuntime = nullptr;
     }
