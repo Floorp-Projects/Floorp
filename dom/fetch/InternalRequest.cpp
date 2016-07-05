@@ -40,6 +40,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   copy->mPreserveContentCodings = true;
   // The default referrer is already about:client.
   copy->mReferrerPolicy = mReferrerPolicy;
+  copy->mEnvironmentReferrerPolicy = mEnvironmentReferrerPolicy;
 
   copy->mContentPolicyType = mContentPolicyTypeOverridden ?
                              mContentPolicyType :
@@ -84,6 +85,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mContentPolicyType(aOther.mContentPolicyType)
   , mReferrer(aOther.mReferrer)
   , mReferrerPolicy(aOther.mReferrerPolicy)
+  , mEnvironmentReferrerPolicy(aOther.mEnvironmentReferrerPolicy)
   , mMode(aOther.mMode)
   , mCredentialsMode(aOther.mCredentialsMode)
   , mResponseTainting(aOther.mResponseTainting)

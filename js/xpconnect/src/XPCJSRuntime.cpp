@@ -1562,6 +1562,7 @@ ReloadPrefsCallback(const char* pref, void* data)
 {
     XPCJSRuntime* runtime = reinterpret_cast<XPCJSRuntime*>(data);
     JSRuntime* rt = runtime->Runtime();
+    JSContext* cx = runtime->Context();
 
     bool safeMode = false;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -1611,7 +1612,7 @@ ReloadPrefsCallback(const char* pref, void* data)
         Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal.frequency",
                             JS_DEFAULT_ZEAL_FREQ);
     if (zeal >= 0) {
-        JS_SetGCZeal(rt, (uint8_t)zeal, zeal_frequency);
+        JS_SetGCZeal(cx, (uint8_t)zeal, zeal_frequency);
     }
 #endif // JS_GC_ZEAL
 
@@ -1628,11 +1629,11 @@ ReloadPrefsCallback(const char* pref, void* data)
                              .setWerror(werror)
                              .setExtraWarnings(extraWarnings);
 
-    JS_SetParallelParsingEnabled(rt, parallelParsing);
-    JS_SetOffthreadIonCompilationEnabled(rt, offthreadIonCompilation);
-    JS_SetGlobalJitCompilerOption(rt, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
+    JS_SetParallelParsingEnabled(cx, parallelParsing);
+    JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
                                   useBaselineEager ? 0 : -1);
-    JS_SetGlobalJitCompilerOption(rt, JSJITCOMPILER_ION_WARMUP_TRIGGER,
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_WARMUP_TRIGGER,
                                   useIonEager ? 0 : -1);
 }
 
@@ -3454,6 +3455,8 @@ XPCJSRuntime::Initialize()
     MOZ_ASSERT(Runtime());
     JSRuntime* runtime = Runtime();
 
+    JSContext* cx = JS_GetContext(runtime);
+
     mUnprivilegedJunkScope.init(runtime, nullptr);
     mPrivilegedJunkScope.init(runtime, nullptr);
     mCompilationScope.init(runtime, nullptr);
@@ -3550,14 +3553,14 @@ XPCJSRuntime::Initialize()
                            kStackQuota - kSystemCodeBuffer,
                            kStackQuota - kSystemCodeBuffer - kTrustedScriptBuffer);
 
-    JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
-    JS_SetSizeOfIncludingThisCompartmentCallback(runtime, CompartmentSizeOfIncludingThisCallback);
-    JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
+    JS_SetDestroyCompartmentCallback(cx, CompartmentDestroyedCallback);
+    JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
+    JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_AddFinalizeCallback(runtime, FinalizeCallback, nullptr);
     JS_AddWeakPointerZoneGroupCallback(runtime, WeakPointerZoneGroupCallback, this);
     JS_AddWeakPointerCompartmentCallback(runtime, WeakPointerCompartmentCallback, this);
-    JS_SetWrapObjectCallbacks(runtime, &WrapObjectCallbacks);
+    JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (PseudoStack* stack = mozilla_get_pseudo_stack())

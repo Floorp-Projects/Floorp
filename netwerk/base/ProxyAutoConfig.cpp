@@ -673,15 +673,16 @@ private:
 
   nsresult Init()
   {
+    mContext = JS_GetContext(mRuntime);
+
     /*
      * Not setting this will cause JS_CHECK_RECURSION to report false
      * positives
      */
     JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024);
 
-    JS::SetWarningReporter(mRuntime, PACWarningReporter);
+    JS::SetWarningReporter(mContext, PACWarningReporter);
 
-    mContext = JS_GetContext(mRuntime);
     if (!JS::InitSelfHostedCode(mContext)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
