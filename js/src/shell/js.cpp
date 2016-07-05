@@ -5873,7 +5873,7 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
     if (report->exnType == JSEXN_WARN)
         nameStr = JS_NewStringCopyZ(cx, "Warning");
     else
-        nameStr = GetErrorTypeName(cx->runtime(), report->exnType);
+        nameStr = GetErrorTypeName(cx, report->exnType);
     if (!nameStr)
         return false;
     RootedValue nameVal(cx, StringValue(nameStr));
