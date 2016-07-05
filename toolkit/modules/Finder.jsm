@@ -299,7 +299,7 @@ Finder.prototype = {
   onFindbarClose: function() {
     this.focusContent();
     this.enableSelection();
-    this.highlighter.hide();
+    this.highlighter.highlight(false);
   },
 
   onModalHighlightChange(useModalHighlight) {
