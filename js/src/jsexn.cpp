@@ -249,13 +249,13 @@ struct SuppressErrorsGuard
 
     explicit SuppressErrorsGuard(JSContext* cx)
       : cx(cx),
-        prevReporter(JS::SetWarningReporter(cx->runtime(), nullptr)),
+        prevReporter(JS::SetWarningReporter(cx, nullptr)),
         prevState(cx)
     {}
 
     ~SuppressErrorsGuard()
     {
-        JS::SetWarningReporter(cx->runtime(), prevReporter);
+        JS::SetWarningReporter(cx, prevReporter);
     }
 };
 

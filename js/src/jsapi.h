@@ -5219,10 +5219,10 @@ typedef void
 (* WarningReporter)(JSContext* cx, const char* message, JSErrorReport* report);
 
 extern JS_PUBLIC_API(WarningReporter)
-SetWarningReporter(JSRuntime* rt, WarningReporter reporter);
+SetWarningReporter(JSContext* cx, WarningReporter reporter);
 
 extern JS_PUBLIC_API(WarningReporter)
-GetWarningReporter(JSRuntime* rt);
+GetWarningReporter(JSContext* cx);
 
 extern JS_PUBLIC_API(bool)
 CreateError(JSContext* cx, JSExnType type, HandleObject stack,

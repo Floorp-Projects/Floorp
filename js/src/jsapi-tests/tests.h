@@ -289,7 +289,7 @@ class JSAPITest
         JSRuntime* rt = JS_NewRuntime(8L * 1024 * 1024);
         if (!rt)
             return nullptr;
-        JS::SetWarningReporter(rt, &reportWarning);
+        JS::SetWarningReporter(JS_GetContext(rt), &reportWarning);
         setNativeStackQuota(rt);
         return rt;
     }

@@ -2948,7 +2948,7 @@ WorkerMain(void* arg)
     sr->isWorker = true;
     JS_SetRuntimePrivate(rt, sr.get());
     JS_SetFutexCanWait(cx);
-    JS::SetWarningReporter(rt, WarningReporter);
+    JS::SetWarningReporter(cx, WarningReporter);
     JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
@@ -7386,7 +7386,7 @@ main(int argc, char** argv, char** envp)
     JS_SetRuntimePrivate(rt, sr.get());
     // Waiting is allowed on the shell's main thread, for now.
     JS_SetFutexCanWait(cx);
-    JS::SetWarningReporter(rt, WarningReporter);
+    JS::SetWarningReporter(cx, WarningReporter);
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
