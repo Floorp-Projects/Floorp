@@ -19,7 +19,7 @@ public:
   AccurateSeekTask(const void* aDecoderID,
                    AbstractThread* aThread,
                    MediaDecoderReaderWrapper* aReader,
-                   SeekJob&& aSeekJob,
+                   SeekJob& aSeekJob,
                    const MediaInfo& aInfo,
                    const media::TimeUnit& aEnd,
                    int64_t aCurrentMediaTime);
