@@ -29,32 +29,9 @@ public class Preferences {
 
     private static final String switchBoardSettings = "com.keepsafe.switchboard.settings";
 
-    private static final String kDynamicConfigServerUrl = "dynamic-config-server-url";
-    private static final String kDynamicConfig = "dynamic-config";
-
+    private static final String CONFIG_JSON = "config-json";
     private static final String OVERRIDE_PREFIX = "experiment.override.";
 
-    /**
-     * Returns the stored config server URL.
-     * @param c Context
-     * @return URL for config endpoint.
-     */
-    @Nullable public static String getDynamicConfigServerUrl(Context c) {
-        final SharedPreferences prefs = c.getApplicationContext().getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE);
-        return prefs.getString(kDynamicConfigServerUrl, null);
-    }
-
-    /**
-     * Stores the config servers URL.
-     * @param c Context
-     * @param configServerUrl URL for config endpoint.
-     */
-    public static void setDynamicConfigServerUrl(Context c, String configServerUrl) {
-        final SharedPreferences.Editor editor = c.getApplicationContext().
-                getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
-        editor.putString(kDynamicConfigServerUrl, configServerUrl);
-        editor.apply();
-    }
 
     /**
      * Gets the user config as a JSON string.
@@ -63,7 +40,7 @@ public class Preferences {
      */
     @Nullable public static String getDynamicConfigJson(Context c) {
         final SharedPreferences prefs = c.getApplicationContext().getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE);
-        return prefs.getString(kDynamicConfig, null);
+        return prefs.getString(CONFIG_JSON, null);
     }
 
     /**
@@ -74,7 +51,7 @@ public class Preferences {
     public static void setDynamicConfigJson(Context c, String configJson) {
         final SharedPreferences.Editor editor = c.getApplicationContext().
                 getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
-        editor.putString(kDynamicConfig, configJson);
+        editor.putString(CONFIG_JSON, configJson);
         editor.apply();
     }
 
