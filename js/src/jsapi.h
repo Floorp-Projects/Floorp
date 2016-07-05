@@ -5540,10 +5540,10 @@ JS_ScheduleGC(JSContext* cx, uint32_t count);
 #endif
 
 extern JS_PUBLIC_API(void)
-JS_SetParallelParsingEnabled(JSRuntime* rt, bool enabled);
+JS_SetParallelParsingEnabled(JSContext* cx, bool enabled);
 
 extern JS_PUBLIC_API(void)
-JS_SetOffthreadIonCompilationEnabled(JSRuntime* rt, bool enabled);
+JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
 
 #define JIT_COMPILER_OPTIONS(Register)                                     \
     Register(BASELINE_WARMUP_TRIGGER, "baseline.warmup.trigger")           \
@@ -5568,9 +5568,9 @@ typedef enum JSJitCompilerOption {
 } JSJitCompilerOption;
 
 extern JS_PUBLIC_API(void)
-JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t value);
+JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t value);
 extern JS_PUBLIC_API(int)
-JS_GetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt);
+JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt);
 
 /**
  * Convert a uint32_t index into a jsid.
