@@ -606,7 +606,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   // callee context onto the context stack so that
   // CalculateChromeFlags() sees the actual caller when doing its
   // security checks.
-  chromeFlags = CalculateChromeFlags(aParent, features.get(), featuresSpecified,
+  chromeFlags = CalculateChromeFlags(aParent, features, featuresSpecified,
                                      aDialog, uriToLoadIsChrome,
                                      hasChromeParent, aCalledFromJS,
                                      openedFromRemoteTab);
@@ -620,7 +620,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   // our internal modal option, treat the window we're opening as a
   // modal content window (and set the modal chrome flag).
   if (!aCalledFromJS && aArgv &&
-      WinHasOption(features.get(), "-moz-internal-modal", 0, nullptr)) {
+      WinHasOption(features, "-moz-internal-modal", 0, nullptr)) {
     windowIsModalContentDialog = true;
 
     // CHROME_MODAL gets inherited by dependent windows, which affects various
@@ -633,7 +633,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   }
 
   SizeSpec sizeSpec;
-  CalcSizeSpec(features.get(), sizeSpec);
+  CalcSizeSpec(features, sizeSpec);
 
   nsCOMPtr<nsIScriptSecurityManager> sm(
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
@@ -830,7 +830,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
         // B2G multi-screen support. mozDisplayId is returned from the
         // "display-changed" event, it is also platform-dependent.
 #ifdef MOZ_WIDGET_GONK
-        int retval = WinHasOption(features.get(), "mozDisplayId", 0, nullptr);
+        int retval = WinHasOption(features, "mozDisplayId", 0, nullptr);
         windowCreator2->SetScreenId(retval);
 #endif
 
@@ -1563,7 +1563,7 @@ nsWindowWatcher::URIfromURL(const char* aURL,
 // static
 uint32_t
 nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
-                                      const char* aFeatures,
+                                      const nsACString& aFeatures,
                                       bool aFeaturesSpecified,
                                       bool aDialog,
                                       bool aChromeURL,
@@ -1574,7 +1574,9 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
   const bool inContentProcess = XRE_IsContentProcess();
   uint32_t chromeFlags = 0;
 
-  if (!aFeaturesSpecified || !aFeatures) {
+  // The features string is made void by OpenWindowInternal
+  // if nullptr was originally passed as the features string.
+  if (aFeatures.IsVoid()) {
     chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
     if (aDialog) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
@@ -1681,15 +1683,15 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
 
   // default titlebar and closebox to "on," if not mentioned at all
   if (!(chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)) {
-    if (!PL_strcasestr(aFeatures, "titlebar")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "titlebar")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
     }
-    if (!PL_strcasestr(aFeatures, "close")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "close")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
     }
   }
 
-  if (aDialog && aFeaturesSpecified && !presenceFlag) {
+  if (aDialog && !aFeatures.IsVoid() && !presenceFlag) {
     chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
   }
 
@@ -1740,10 +1742,10 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
   /* and dialogs need to have the last word. assume dialogs are dialogs,
      and opened as chrome, unless explicitly told otherwise. */
   if (aDialog) {
-    if (!PL_strcasestr(aFeatures, "dialog")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "dialog")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
     }
-    if (!PL_strcasestr(aFeatures, "chrome")) {
+    if (!PL_strcasestr(aFeatures.BeginReading(), "chrome")) {
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
     }
   }
@@ -1788,33 +1790,33 @@ nsWindowWatcher::CalculateChromeFlags(mozIDOMWindowProxy* aParent,
 
 // static
 int32_t
-nsWindowWatcher::WinHasOption(const char* aOptions, const char* aName,
+nsWindowWatcher::WinHasOption(const nsACString& aOptions, const char* aName,
                               int32_t aDefault, bool* aPresenceFlag)
 {
-  if (!aOptions) {
+  if (aOptions.IsEmpty()) {
     return 0;
   }
 
+  const char* options = aOptions.BeginReading();
   char* comma;
   char* equal;
   int32_t found = 0;
 
 #ifdef DEBUG
-  nsAutoCString options(aOptions);
-  NS_ASSERTION(options.FindCharInSet(" \n\r\t") == kNotFound,
+  NS_ASSERTION(nsAutoCString(aOptions).FindCharInSet(" \n\r\t") == kNotFound,
                "There should be no whitespace in this string!");
 #endif
 
   while (true) {
-    comma = PL_strchr(aOptions, ',');
+    comma = PL_strchr(options, ',');
     if (comma) {
       *comma = '\0';
     }
-    equal = PL_strchr(aOptions, '=');
+    equal = PL_strchr(options, '=');
     if (equal) {
       *equal = '\0';
     }
-    if (nsCRT::strcasecmp(aOptions, aName) == 0) {
+    if (nsCRT::strcasecmp(options, aName) == 0) {
       if (aPresenceFlag) {
         *aPresenceFlag = true;
       }
@@ -1839,7 +1841,7 @@ nsWindowWatcher::WinHasOption(const char* aOptions, const char* aName,
     if (found || !comma) {
       break;
     }
-    aOptions = comma + 1;
+    options = comma + 1;
   }
   return found;
 }
@@ -1998,7 +2000,7 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
 
 // static
 void
-nsWindowWatcher::CalcSizeSpec(const char* aFeatures, SizeSpec& aResult)
+nsWindowWatcher::CalcSizeSpec(const nsACString& aFeatures, SizeSpec& aResult)
 {
   // Parse position spec, if any, from aFeatures
   bool present;
