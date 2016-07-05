@@ -24,6 +24,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.HeaderViewListAdapter;
 import android.widget.ListAdapter;
+
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.util.NetworkUtils;
 
 /**
@@ -169,7 +171,16 @@ public class BookmarksListView extends HomeListView
             // Otherwise, just open the URL
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL));
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "bookmarks");
+            final SavedReaderViewHelper rvh = SavedReaderViewHelper.getSavedReaderViewHelper(getContext());
+
+            final String extra;
+            if (rvh.isURLCached(url)) {
+                extra = "bookmarks-reader";
+            } else {
+                extra = "bookmarks";
+            }
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, extra);
             Telemetry.addToHistogram("FENNEC_LOAD_SAVED_PAGE", NetworkUtils.isConnected(getContext()) ? 2 : 3);
 
             // This item is a TwoLinePageRow, so we allow switch-to-tab.
