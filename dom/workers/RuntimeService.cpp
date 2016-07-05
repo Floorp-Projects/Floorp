@@ -948,10 +948,12 @@ public:
     }
   }
 
-  virtual void DispatchToMicroTask(nsIRunnable* aRunnable) override
+  virtual void DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable) override
   {
+    RefPtr<nsIRunnable> runnable(aRunnable);
+
     MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(aRunnable);
+    MOZ_ASSERT(runnable);
 
     std::queue<nsCOMPtr<nsIRunnable>>* microTaskQueue = nullptr;
 
@@ -973,7 +975,7 @@ public:
       microTaskQueue = &mDebuggerPromiseMicroTaskQueue;
     }
 
-    microTaskQueue->push(aRunnable);
+    microTaskQueue->push(runnable.forget());
   }
 
 private:

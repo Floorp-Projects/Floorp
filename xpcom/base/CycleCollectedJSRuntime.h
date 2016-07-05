@@ -372,7 +372,7 @@ public:
   void PrepareWaitingZonesForGC();
 
   // Queue an async microtask to the current main or worker thread.
-  virtual void DispatchToMicroTask(nsIRunnable* aRunnable);
+  virtual void DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable);
 
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.
