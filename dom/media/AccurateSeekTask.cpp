@@ -104,7 +104,7 @@ AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
 }
 
 void
-AccurateSeekTask::EnsureAudioDecodeTaskQueued()
+AccurateSeekTask::RequestAudioData()
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mDoneAudioSeeking);
@@ -114,41 +114,13 @@ AccurateSeekTask::EnsureAudioDecodeTaskQueued()
 }
 
 void
-AccurateSeekTask::EnsureVideoDecodeTaskQueued()
+AccurateSeekTask::RequestVideoData()
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mDoneVideoSeeking);
   MOZ_ASSERT(!mReader->IsRequestingVideoData());
   MOZ_ASSERT(!mReader->IsWaitingVideoData());
   mReader->RequestVideoData(false, media::TimeUnit());
-}
-
-const char*
-AccurateSeekTask::AudioRequestStatus()
-{
-  AssertOwnerThread();
-
-  if (mReader->IsRequestingAudioData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingAudioData());
-    return "pending";
-  } else if (mReader->IsWaitingAudioData()) {
-    return "waiting";
-  }
-  return "idle";
-}
-
-const char*
-AccurateSeekTask::VideoRequestStatus()
-{
-  AssertOwnerThread();
-
-  if (mReader->IsRequestingVideoData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingVideoData());
-    return "pending";
-  } else if (mReader->IsWaitingVideoData()) {
-    return "waiting";
-  }
-  return "idle";
 }
 
 nsresult
@@ -288,10 +260,10 @@ AccurateSeekTask::OnSeekResolved(media::TimeUnit)
   // We must decode the first samples of active streams, so we can determine
   // the new stream time. So dispatch tasks to do that.
   if (!mDoneVideoSeeking) {
-    EnsureVideoDecodeTaskQueued();
+    RequestVideoData();
   }
   if (!mDoneAudioSeeking) {
-    EnsureAudioDecodeTaskQueued();
+    RequestAudioData();
   }
 }
 
@@ -354,7 +326,7 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   }
 
   if (!mDoneAudioSeeking) {
-    EnsureAudioDecodeTaskQueued();
+    RequestAudioData();
     return;
   }
   MaybeFinishSeek();
@@ -384,9 +356,9 @@ AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
 
   if (aReason == MediaDecoderReader::CANCELED) {
     if (aType == MediaData::AUDIO_DATA) {
-      EnsureAudioDecodeTaskQueued();
+      RequestAudioData();
     } else {
-      EnsureVideoDecodeTaskQueued();
+      RequestVideoData();
     }
     return;
   }
@@ -440,7 +412,7 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   }
 
   if (!mDoneVideoSeeking) {
-    EnsureVideoDecodeTaskQueued();
+    RequestVideoData();
     return;
   }
   MaybeFinishSeek();
@@ -475,14 +447,14 @@ AccurateSeekTask::SetCallbacks()
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      EnsureAudioDecodeTaskQueued();
+      RequestAudioData();
     }
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      EnsureVideoDecodeTaskQueued();
+      RequestVideoData();
     }
   });
 }
