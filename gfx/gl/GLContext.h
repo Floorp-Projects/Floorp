@@ -1228,6 +1228,14 @@ public:
         fGetIntegerv(pname, reinterpret_cast<GLint*>(params));
     }
 
+    template<typename T>
+    T GetIntAs(GLenum pname) {
+        static_assert(sizeof(T) == sizeof(GLint), "Invalid T.");
+        T ret = 0;
+        fGetIntegerv(pname, (GLint*)&ret);
+        return ret;
+    }
+
     void fGetFloatv(GLenum pname, GLfloat* params) {
         BEFORE_GL_CALL;
         mSymbols.fGetFloatv(pname, params);

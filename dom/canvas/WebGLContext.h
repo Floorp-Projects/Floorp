@@ -539,9 +539,12 @@ public:
     void PixelStorei(GLenum pname, GLint param);
     void PolygonOffset(GLfloat factor, GLfloat units);
 protected:
-    bool DoReadPixelsAndConvert(GLint x, GLint y, GLsizei width, GLsizei height,
-                                GLenum destFormat, GLenum destType, void* destBytes,
-                                GLenum auxReadFormat, GLenum auxReadType);
+    bool ReadPixels_SharedPrecheck(ErrorResult* const out_error);
+    void ReadPixelsImpl(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                        GLenum type, void* data, uint32_t dataLen);
+    bool DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat, GLint x, GLint y,
+                                GLsizei width, GLsizei height, GLenum format,
+                                GLenum destType, void* dest);
 public:
     void ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
