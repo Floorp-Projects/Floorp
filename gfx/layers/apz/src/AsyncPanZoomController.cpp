@@ -2005,10 +2005,11 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
 
 nsEventStatus AsyncPanZoomController::OnLongPressUp(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a long-tap-up in state %d\n", this, mState);
-  return GenerateSingleTap(aEvent.mPoint, aEvent.modifiers);
+  return GenerateSingleTap(TapType::eLongTapUp, aEvent.mPoint, aEvent.modifiers);
 }
 
-nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers) {
+nsEventStatus AsyncPanZoomController::GenerateSingleTap(TapType aType,
+      const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers) {
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
     CSSPoint geckoScreenPoint;
@@ -2038,7 +2039,7 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aP
         NewRunnableMethod<TapType, CSSPoint, mozilla::Modifiers,
                           ScrollableLayerGuid, uint64_t>(controller,
                             &GeckoContentController::HandleTap,
-                            TapType::eSingleTap, geckoScreenPoint,
+                            aType, geckoScreenPoint,
                             aModifiers, GetGuid(),
                             touch ? touch->GetBlockId() : 0);
 
@@ -2061,14 +2062,14 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
   // If mZoomConstraints.mAllowDoubleTapZoom is true we wait for a call to OnSingleTapConfirmed before
   // sending event to content
   if (!(mZoomConstraints.mAllowDoubleTapZoom && CurrentTouchBlock()->TouchActionAllowsDoubleTapZoom())) {
-    return GenerateSingleTap(aEvent.mPoint, aEvent.modifiers);
+    return GenerateSingleTap(TapType::eSingleTap, aEvent.mPoint, aEvent.modifiers);
   }
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a single-tap-confirmed in state %d\n", this, mState);
-  return GenerateSingleTap(aEvent.mPoint, aEvent.modifiers);
+  return GenerateSingleTap(TapType::eSingleTap, aEvent.mPoint, aEvent.modifiers);
 }
 
 nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent) {
