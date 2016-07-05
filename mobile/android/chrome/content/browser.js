@@ -2678,6 +2678,12 @@ var NativeWindow = {
         return;
       }
 
+      // If the event was already defaultPrevented by somebody (web content, or
+      // some other part of gecko), then don't do anything with it.
+      if (event.defaultPrevented) {
+        return;
+      }
+
       // Use the highlighted element for the context menu target. When accessibility is
       // enabled, elements may not be highlighted so use the event target instead.
       this._target = BrowserEventHandler._highlightElement || event.target;
