@@ -84,7 +84,6 @@ protected:
   /*
    * Internal state.
    */
-  SeekJob& mSeekJob;
   SeekTarget& mTarget;
   MozPromiseHolder<SeekTaskPromise> mSeekTaskPromise;
   bool mIsDiscarded;
