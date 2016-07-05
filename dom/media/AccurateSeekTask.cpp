@@ -45,7 +45,7 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   : SeekTask(aDecoderID, aThread, aReader, aSeekJob)
   , mCurrentTimeBeforeSeek(media::TimeUnit::FromMicroseconds(aCurrentMediaTime))
   , mAudioRate(aInfo.mAudio.mRate)
-  , mDoneAudioSeeking(!aInfo.HasAudio() || mSeekJob.mTarget.IsVideoOnly())
+  , mDoneAudioSeeking(!aInfo.HasAudio() || mTarget.IsVideoOnly())
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
   AssertOwnerThread();
@@ -125,7 +125,7 @@ AccurateSeekTask::DropAudioUpToSeekTarget(MediaData* aSample)
   AssertOwnerThread();
 
   RefPtr<AudioData> audio(aSample->As<AudioData>());
-  MOZ_ASSERT(audio && mSeekJob.Exists() && mTarget.IsAccurate());
+  MOZ_ASSERT(audio && mTarget.IsAccurate());
 
   CheckedInt64 sampleDuration = FramesToUsecs(audio->mFrames, mAudioRate);
   if (!sampleDuration.isValid()) {
@@ -208,7 +208,6 @@ AccurateSeekTask::DropVideoUpToSeekTarget(MediaData* aSample)
   MOZ_ASSERT(video);
   DECODER_LOG("DropVideoUpToSeekTarget() frame [%lld, %lld]",
               video->mTime, video->GetEndTime());
-  MOZ_ASSERT(mSeekJob.Exists());
   const int64_t target = mTarget.GetTime().ToMicroseconds();
 
   // If the frame end time is less than the seek target, we won't want
@@ -308,7 +307,7 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   // Video-only seek doesn't reset audio decoder. There might be pending audio
   // requests when AccurateSeekTask::Seek() begins. We will just store the data
   // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
-  if (mSeekJob.mTarget.IsVideoOnly()) {
+  if (mTarget.IsVideoOnly()) {
     mSeekedAudioData = audio.forget();
     return;
   }
@@ -346,7 +345,7 @@ AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
   SAMPLE_LOG("OnNotDecoded type=%d reason=%u", aType, aReason);
 
   // Ignore pending requests from video-only seek.
-  if (aType == MediaData::AUDIO_DATA && mSeekJob.mTarget.IsVideoOnly()) {
+  if (aType == MediaData::AUDIO_DATA && mTarget.IsVideoOnly()) {
     return;
   }
 
@@ -456,7 +455,7 @@ AccurateSeekTask::SetCallbacks()
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
     // Ignore pending requests from video-only seek.
-    if (mSeekJob.mTarget.IsVideoOnly()) {
+    if (mTarget.IsVideoOnly()) {
       return;
     }
     if (aData.is<MediaData::Type>()) {
