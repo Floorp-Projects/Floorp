@@ -13,11 +13,11 @@ namespace mozilla {
 SeekTask::SeekTask(const void* aDecoderID,
                    AbstractThread* aThread,
                    MediaDecoderReaderWrapper* aReader,
-                   SeekJob& aSeekJob)
+                   const SeekTarget& aTarget)
   : mDecoderID(aDecoderID)
   , mOwnerThread(aThread)
   , mReader(aReader)
-  , mTarget(aSeekJob.mTarget)
+  , mTarget(aTarget)
   , mIsDiscarded(false)
   , mIsAudioQueueFinished(false)
   , mIsVideoQueueFinished(false)
@@ -76,7 +76,7 @@ SeekTask::OwnerThread() const
   return mOwnerThread;
 }
 
-SeekTarget&
+const SeekTarget&
 SeekTask::GetSeekTarget()
 {
   AssertOwnerThread();

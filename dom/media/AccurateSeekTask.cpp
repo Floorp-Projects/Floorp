@@ -38,14 +38,14 @@ extern LazyLogModule gMediaSampleLog;
 AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
                                    AbstractThread* aThread,
                                    MediaDecoderReaderWrapper* aReader,
-                                   SeekJob& aSeekJob,
+                                   const SeekTarget& aTarget,
                                    const MediaInfo& aInfo,
                                    const media::TimeUnit& aEnd,
                                    int64_t aCurrentMediaTime)
-  : SeekTask(aDecoderID, aThread, aReader, aSeekJob)
+  : SeekTask(aDecoderID, aThread, aReader, aTarget)
   , mCurrentTimeBeforeSeek(media::TimeUnit::FromMicroseconds(aCurrentMediaTime))
   , mAudioRate(aInfo.mAudio.mRate)
-  , mDoneAudioSeeking(!aInfo.HasAudio() || mTarget.IsVideoOnly())
+  , mDoneAudioSeeking(!aInfo.HasAudio() || aTarget.IsVideoOnly())
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
   AssertOwnerThread();
