@@ -517,7 +517,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
-  JS_SetGCCallback(mJSRuntime, GCCallback, this);
+  JS_SetGCCallback(mJSContext, GCCallback, this);
   mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
 
   if (NS_IsMainThread()) {
@@ -534,7 +534,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
 
   JS_SetObjectsTenuredCallback(mJSContext, JSObjectsTenuredCb, this);
   JS::SetOutOfMemoryCallback(mJSContext, OutOfMemoryCallback, this);
-  JS::SetLargeAllocationFailureCallback(mJSRuntime,
+  JS::SetLargeAllocationFailureCallback(mJSContext,
                                         LargeAllocationFailureCallback, this);
   JS_SetDestroyZoneCallback(mJSContext, XPCStringConvert::FreeZoneCache);
   JS_SetSweepZoneCallback(mJSContext, XPCStringConvert::ClearZoneCache);

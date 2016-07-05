@@ -1614,7 +1614,7 @@ extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data);
+JS_SetGCCallback(JSContext* cx, JSGCCallback cb, void* data);
 
 extern JS_PUBLIC_API(void)
 JS_SetObjectsTenuredCallback(JSContext* cx, JSObjectsTenuredCallback cb,
@@ -1764,13 +1764,13 @@ typedef enum JSGCParamKey {
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
-JS_SetGCParameter(JSRuntime* rt, JSGCParamKey key, uint32_t value);
+JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value);
 
 extern JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSRuntime* rt, JSGCParamKey key);
 
 extern JS_PUBLIC_API(void)
-JS_SetGCParametersBasedOnAvailableMemory(JSRuntime* rt, uint32_t availMem);
+JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx, uint32_t availMem);
 
 /**
  * Create a new JSString whose chars member refers to external memory, i.e.,
@@ -5875,7 +5875,7 @@ typedef void
 (* LargeAllocationFailureCallback)(void* data);
 
 extern JS_PUBLIC_API(void)
-SetLargeAllocationFailureCallback(JSRuntime* rt, LargeAllocationFailureCallback afc, void* data);
+SetLargeAllocationFailureCallback(JSContext* cx, LargeAllocationFailureCallback afc, void* data);
 
 /**
  * Unlike the error reporter, which is only called if the exception for an OOM
