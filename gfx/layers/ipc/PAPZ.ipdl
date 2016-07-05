@@ -16,6 +16,7 @@ using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
+using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
@@ -91,9 +92,12 @@ child:
   // The following methods correspond to functions on the GeckoContentController
   // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
   // in that file for these functions.
-  async HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
-  async HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid, bool aCallTakeFocusForClickFromTap);
-  async HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+  // The aCallTakeFocusForClickFromTap argument is used for eSingleTap types,
+  // to request that the child take focus before dispatching the mouse events
+  // for the tap (otherwise the resulting focus behaviour is incorrect).
+  async HandleTap(TapType aType, CSSPoint point, Modifiers aModifiers,
+                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
+                  bool aCallTakeFocusForClickFromTap);
   async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
   async NotifyFlushComplete();
 
