@@ -4,7 +4,6 @@ $inherits:
     build_name: 'nexus-5-l-eng'
     build_type: 'opt'
 task:
-  workerType: flame-kk
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-eng'
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-eng-objdir-gecko'
@@ -12,6 +11,7 @@ task:
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
   metadata:
     name: '[TC] B2G Nexus 5-L Eng'
+
   payload:
     cache:
       level-{{level}}-{{project}}-build-nexus-5-l-eng: /home/worker/object-folder

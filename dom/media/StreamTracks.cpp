@@ -103,15 +103,15 @@ StreamTracks::ForgetUpTo(StreamTime aTime)
 
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     Track* track = mTracks[i];
-    if (track->IsEnded() && track->GetEnd() <= aTime) {
-      mTracks.RemoveElementAt(i);
-      mTracksDirty = true;
-      --i;
-      continue;
-    }
     StreamTime forgetTo = std::min(track->GetEnd() - 1, aTime);
     track->ForgetUpTo(forgetTo);
   }
+}
+
+void
+StreamTracks::Clear()
+{
+  mTracks.Clear();
 }
 
 } // namespace mozilla

@@ -299,10 +299,10 @@ JS_GetEmptyStringValue(JSContext* cx)
 }
 
 JS_PUBLIC_API(JSString*)
-JS_GetEmptyString(JSRuntime* rt)
+JS_GetEmptyString(JSContext* cx)
 {
-    MOZ_ASSERT(rt->emptyString);
-    return rt->emptyString;
+    MOZ_ASSERT(cx->emptyString());
+    return cx->emptyString();
 }
 
 namespace js {
@@ -493,9 +493,9 @@ JS_SetRuntimePrivate(JSRuntime* rt, void* data)
 }
 
 JS_PUBLIC_API(void)
-JS_SetFutexCanWait(JSRuntime* rt)
+JS_SetFutexCanWait(JSContext* cx)
 {
-    rt->fx.setCanWait(true);
+    cx->fx.setCanWait(true);
 }
 
 static void
@@ -657,40 +657,40 @@ JS_GetImplementationVersion(void)
 }
 
 JS_PUBLIC_API(void)
-JS_SetDestroyCompartmentCallback(JSRuntime* rt, JSDestroyCompartmentCallback callback)
+JS_SetDestroyCompartmentCallback(JSContext* cx, JSDestroyCompartmentCallback callback)
 {
-    rt->destroyCompartmentCallback = callback;
+    cx->destroyCompartmentCallback = callback;
 }
 
 JS_PUBLIC_API(void)
-JS_SetSizeOfIncludingThisCompartmentCallback(JSRuntime* rt,
+JS_SetSizeOfIncludingThisCompartmentCallback(JSContext* cx,
                                              JSSizeOfIncludingThisCompartmentCallback callback)
 {
-    rt->sizeOfIncludingThisCompartmentCallback = callback;
+    cx->sizeOfIncludingThisCompartmentCallback = callback;
 }
 
 JS_PUBLIC_API(void)
-JS_SetDestroyZoneCallback(JSRuntime* rt, JSZoneCallback callback)
+JS_SetDestroyZoneCallback(JSContext* cx, JSZoneCallback callback)
 {
-    rt->destroyZoneCallback = callback;
+    cx->destroyZoneCallback = callback;
 }
 
 JS_PUBLIC_API(void)
-JS_SetSweepZoneCallback(JSRuntime* rt, JSZoneCallback callback)
+JS_SetSweepZoneCallback(JSContext* cx, JSZoneCallback callback)
 {
-    rt->sweepZoneCallback = callback;
+    cx->sweepZoneCallback = callback;
 }
 
 JS_PUBLIC_API(void)
-JS_SetCompartmentNameCallback(JSRuntime* rt, JSCompartmentNameCallback callback)
+JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback)
 {
-    rt->compartmentNameCallback = callback;
+    cx->compartmentNameCallback = callback;
 }
 
 JS_PUBLIC_API(void)
-JS_SetWrapObjectCallbacks(JSRuntime* rt, const JSWrapObjectCallbacks* callbacks)
+JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks)
 {
-    rt->wrapObjectCallbacks = callbacks;
+    cx->wrapObjectCallbacks = callbacks;
 }
 
 JS_PUBLIC_API(JSCompartment*)
@@ -4126,7 +4126,7 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
     Parser<frontend::FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                               options, chars, length,
                                               /* foldConstants = */ true, nullptr, nullptr);
-    JS::WarningReporter older = JS::SetWarningReporter(cx->runtime(), nullptr);
+    JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
     if (!parser.checkOptions() || !parser.parse()) {
         // We ran into an error. If it was because we ran out of source, we
         // return false so our caller knows to try to collect more buffered
@@ -4136,7 +4136,7 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
 
         cx->clearPendingException();
     }
-    JS::SetWarningReporter(cx->runtime(), older);
+    JS::SetWarningReporter(cx, older);
 
     js_free(chars);
     return result;
@@ -5636,16 +5636,16 @@ JS_ReportAllocationOverflow(JSContext* cx)
 }
 
 JS_PUBLIC_API(JS::WarningReporter)
-JS::GetWarningReporter(JSRuntime* rt)
+JS::GetWarningReporter(JSContext* cx)
 {
-    return rt->warningReporter;
+    return cx->warningReporter;
 }
 
 JS_PUBLIC_API(JS::WarningReporter)
-JS::SetWarningReporter(JSRuntime* rt, JS::WarningReporter reporter)
+JS::SetWarningReporter(JSContext* cx, JS::WarningReporter reporter)
 {
-    WarningReporter older = rt->warningReporter;
-    rt->warningReporter = reporter;
+    WarningReporter older = cx->warningReporter;
+    cx->warningReporter = reporter;
     return older;
 }
 
@@ -6000,11 +6000,11 @@ JS_GetCurrentThread()
 }
 
 extern MOZ_NEVER_INLINE JS_PUBLIC_API(void)
-JS_AbortIfWrongThread(JSRuntime* rt)
+JS_AbortIfWrongThread(JSContext* cx)
 {
-    if (!CurrentThreadCanAccessRuntime(rt))
+    if (!CurrentThreadCanAccessRuntime(cx))
         MOZ_CRASH();
-    if (!js::TlsPerThreadData.get()->associatedWith(rt))
+    if (!js::TlsPerThreadData.get()->associatedWith(cx))
         MOZ_CRASH();
 }
 
@@ -6016,9 +6016,9 @@ JS_GetGCZealBits(JSContext* cx, uint32_t* zealBits, uint32_t* frequency, uint32_
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSRuntime* rt, uint8_t zeal, uint32_t frequency)
+JS_SetGCZeal(JSContext* cx, uint8_t zeal, uint32_t frequency)
 {
-    rt->gc.setZeal(zeal, frequency);
+    cx->gc.setZeal(zeal, frequency);
 }
 
 JS_PUBLIC_API(void)
@@ -6029,20 +6029,21 @@ JS_ScheduleGC(JSContext* cx, uint32_t count)
 #endif
 
 JS_PUBLIC_API(void)
-JS_SetParallelParsingEnabled(JSRuntime* rt, bool enabled)
+JS_SetParallelParsingEnabled(JSContext* cx, bool enabled)
 {
-    rt->setParallelParsingEnabled(enabled);
+    cx->setParallelParsingEnabled(enabled);
 }
 
 JS_PUBLIC_API(void)
-JS_SetOffthreadIonCompilationEnabled(JSRuntime* rt, bool enabled)
+JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled)
 {
-    rt->setOffthreadIonCompilationEnabled(enabled);
+    cx->setOffthreadIonCompilationEnabled(enabled);
 }
 
 JS_PUBLIC_API(void)
-JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t value)
+JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t value)
 {
+    JSRuntime* rt = cx->runtime();
     switch (opt) {
       case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
         if (value == uint32_t(-1)) {
@@ -6132,9 +6133,10 @@ JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t v
 }
 
 JS_PUBLIC_API(int)
-JS_GetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt)
+JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
 {
 #ifndef JS_CODEGEN_NONE
+    JSRuntime* rt = cx->runtime();
     switch (opt) {
       case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
         return jit::JitOptions.baselineWarmUpThreshold;
@@ -6478,15 +6480,15 @@ JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length)
 }
 
 JS_PUBLIC_API(void)
-JS::SetBuildIdOp(JSRuntime* rt, JS::BuildIdOp buildIdOp)
+JS::SetBuildIdOp(JSContext* cx, JS::BuildIdOp buildIdOp)
 {
-    rt->buildIdOp = buildIdOp;
+    cx->runtime()->buildIdOp = buildIdOp;
 }
 
 JS_PUBLIC_API(void)
-JS::SetAsmJSCacheOps(JSRuntime* rt, const JS::AsmJSCacheOps* ops)
+JS::SetAsmJSCacheOps(JSContext* cx, const JS::AsmJSCacheOps* ops)
 {
-    rt->asmJSCacheOps = *ops;
+    cx->runtime()->asmJSCacheOps = *ops;
 }
 
 char*

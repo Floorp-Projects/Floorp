@@ -1110,19 +1110,11 @@ nsPluginHost::GetPermissionStringForType(const nsACString &aMimeType,
   nsresult rv = GetPluginTagForType(aMimeType, aExcludeFlags,
                                     getter_AddRefs(tag));
   NS_ENSURE_SUCCESS(rv, rv);
-  return GetPermissionStringForTag(tag, aExcludeFlags, aPermissionString);
-}
-
-NS_IMETHODIMP
-nsPluginHost::GetPermissionStringForTag(nsIPluginTag* aTag,
-                                        uint32_t aExcludeFlags,
-                                        nsACString &aPermissionString)
-{
-  NS_ENSURE_TRUE(aTag, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(tag, NS_ERROR_FAILURE);
 
   aPermissionString.Truncate();
   uint32_t blocklistState;
-  nsresult rv = aTag->GetBlocklistState(&blocklistState);
+  rv = tag->GetBlocklistState(&blocklistState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE ||
@@ -1134,7 +1126,7 @@ nsPluginHost::GetPermissionStringForTag(nsIPluginTag* aTag,
   }
 
   nsCString niceName;
-  rv = aTag->GetNiceName(niceName);
+  rv = tag->GetNiceName(niceName);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(!niceName.IsEmpty(), NS_ERROR_FAILURE);
 

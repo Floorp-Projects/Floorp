@@ -1167,7 +1167,7 @@ enum class FillMode : uint32_t;
 
 // composite
 #define NS_STYLE_MASK_COMPOSITE_ADD                 0
-#define NS_STYLE_MASK_COMPOSITE_SUBSTRACT           1
+#define NS_STYLE_MASK_COMPOSITE_SUBTRACT            1
 #define NS_STYLE_MASK_COMPOSITE_INTERSECT           2
 #define NS_STYLE_MASK_COMPOSITE_EXCLUDE             3
 

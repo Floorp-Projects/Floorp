@@ -25,7 +25,6 @@
 #include "mozilla/dom/AudioContextBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
-#include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
 #include "mozilla/unused.h"
 #include "mozilla/media/MediaUtils.h"
@@ -1622,10 +1621,6 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
   stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
 
   if (stream->ShouldNotifyStreamFinished()) {
-    if (stream->mWrapper) {
-      stream->mWrapper->NotifyStreamFinished();
-    }
-
     stream->NotifyMainThreadListeners();
   }
 }
@@ -1700,10 +1695,13 @@ public:
       NS_ASSERTION(mGraph->mForceShutDown || !mGraph->mRealtime,
                    "Not in forced shutdown?");
       for (MediaStream* stream : mGraph->AllStreams()) {
-        DOMMediaStream* s = stream->GetWrapper();
-        if (s) {
-          s->NotifyMediaStreamGraphShutdown();
+        // Clean up all MediaSegments since we cannot release Images too
+        // late during shutdown.
+        if (SourceMediaStream* source = stream->AsSourceStream()) {
+          // Finishing a SourceStream prevents new data from being appended.
+          source->Finish();
         }
+        stream->GetStreamTracks().Clear();
       }
 
       mGraph->mLifecycleState =
@@ -1983,7 +1981,7 @@ MediaStreamGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage)
   EnsureRunInStableState();
 }
 
-MediaStream::MediaStream(DOMMediaStream* aWrapper)
+MediaStream::MediaStream()
   : mTracksStartTime(0)
   , mStartBlocking(GRAPH_TIME_MAX)
   , mSuspendedCount(0)
@@ -1992,7 +1990,6 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   , mNotifiedBlocked(false)
   , mHasCurrentData(false)
   , mNotifiedHasCurrentData(false)
-  , mWrapper(aWrapper)
   , mMainThreadCurrentTime(0)
   , mMainThreadFinished(false)
   , mFinishedNotificationSent(false)
@@ -2002,11 +1999,6 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   , mAudioChannelType(dom::AudioChannel::Normal)
 {
   MOZ_COUNT_CTOR(MediaStream);
-  // aWrapper should not already be connected to a MediaStream! It needs
-  // to be hooked up to this stream, and since this stream is only just
-  // being created now, aWrapper must not be connected to anything.
-  NS_ASSERTION(!aWrapper || !aWrapper->GetPlaybackStream(),
-               "Wrapper already has another media stream hooked up to it!");
 }
 
 size_t
@@ -2018,7 +2010,6 @@ MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // - mGraph - Not reported here
   // - mConsumers - elements
   // Future:
-  // - mWrapper
   // - mVideoOutputs - elements
   // - mLastPlayedVideoFrame
   // - mListeners - elements
@@ -2165,7 +2156,6 @@ MediaStream::Destroy()
     void RunDuringShutdown() override
     { Run(); }
   };
-  mWrapper = nullptr;
   GraphImpl()->AppendMessage(MakeUnique<Message>(this));
   // Message::RunDuringShutdown may have removed this stream from the graph,
   // but our kungFuDeathGrip above will have kept this stream alive if
@@ -2375,6 +2365,31 @@ MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
   MediaStreamListener* listener = *mListeners.AppendElement() = aListener;
   listener->NotifyBlockingChanged(GraphImpl(),
     mNotifiedBlocked ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
+
+  for (StreamTracks::TrackIter it(mTracks); !it.IsEnded(); it.Next()) {
+    MediaStream* inputStream = nullptr;
+    TrackID inputTrackID = TRACK_INVALID;
+    if (ProcessedMediaStream* ps = AsProcessedStream()) {
+      // The only ProcessedMediaStream where we should have listeners is
+      // TrackUnionStream - it's what's used as owned stream in DOMMediaStream,
+      // the only main-thread exposed stream type.
+      // TrackUnionStream guarantees that each of its tracks has an input track.
+      // Other types do not implement GetInputStreamFor() and will return null.
+      inputStream = ps->GetInputStreamFor(it->GetID());
+      MOZ_ASSERT(inputStream);
+      inputTrackID = ps->GetInputTrackIDFor(it->GetID());
+      MOZ_ASSERT(IsTrackIDExplicit(inputTrackID));
+    }
+
+    uint32_t flags = MediaStreamListener::TRACK_EVENT_CREATED;
+    if (it->IsEnded()) {
+      flags |= MediaStreamListener::TRACK_EVENT_ENDED;
+    }
+    nsAutoPtr<MediaSegment> segment(it->GetSegment()->CreateEmptyClone());
+    listener->NotifyQueuedTrackChanges(Graph(), it->GetID(), it->GetEnd(),
+                                       flags, *segment,
+                                       inputStream, inputTrackID);
+  }
   if (mNotifiedFinished) {
     listener->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_FINISHED);
   }
@@ -3147,24 +3162,26 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 }
 
 void
-MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId)
+MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode)
 {
-  mBlockedTracks.AppendElement(aTrackId);
+  mBlockedTracks.AppendElement(Pair<TrackID, BlockingMode>(aTrackId, aBlockingMode));
 }
 
 already_AddRefed<Pledge<bool>>
-MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
+MediaInputPort::BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode)
 {
   class Message : public ControlMessage {
   public:
     explicit Message(MediaInputPort* aPort,
                      TrackID aTrackId,
+                     BlockingMode aBlockingMode,
                      already_AddRefed<nsIRunnable> aRunnable)
       : ControlMessage(aPort->GetDestination()),
-        mPort(aPort), mTrackId(aTrackId), mRunnable(aRunnable) {}
+        mPort(aPort), mTrackId(aTrackId), mBlockingMode(aBlockingMode),
+        mRunnable(aRunnable) {}
     void Run() override
     {
-      mPort->BlockSourceTrackIdImpl(mTrackId);
+      mPort->BlockSourceTrackIdImpl(mTrackId, mBlockingMode);
       if (mRunnable) {
         mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(mRunnable.forget());
       }
@@ -3175,6 +3192,7 @@ MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
     }
     RefPtr<MediaInputPort> mPort;
     TrackID mTrackId;
+    BlockingMode mBlockingMode;
     nsCOMPtr<nsIRunnable> mRunnable;
   };
 
@@ -3187,7 +3205,7 @@ MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
     pledge->Resolve(true);
     return NS_OK;
   });
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, runnable.forget()));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, aBlockingMode, runnable.forget()));
   return pledge.forget();
 }
 
@@ -3230,7 +3248,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
                        aInputNumber, aOutputNumber);
   if (aBlockedTracks) {
     for (TrackID trackID : *aBlockedTracks) {
-      port->BlockSourceTrackIdImpl(trackID);
+      port->BlockSourceTrackIdImpl(trackID, BlockingMode::CREATION);
     }
   }
   port->SetGraphImpl(GraphImpl());
@@ -3524,26 +3542,25 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 SourceMediaStream*
-MediaStreamGraph::CreateSourceStream(DOMMediaStream* aWrapper)
+MediaStreamGraph::CreateSourceStream()
 {
-  SourceMediaStream* stream = new SourceMediaStream(aWrapper);
+  SourceMediaStream* stream = new SourceMediaStream();
   AddStream(stream);
   return stream;
 }
 
 ProcessedMediaStream*
-MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
+MediaStreamGraph::CreateTrackUnionStream()
 {
-  TrackUnionStream* stream = new TrackUnionStream(aWrapper);
+  TrackUnionStream* stream = new TrackUnionStream();
   AddStream(stream);
   return stream;
 }
 
 ProcessedMediaStream*
-MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper,
-                                           TrackID aTrackId)
+MediaStreamGraph::CreateAudioCaptureStream(TrackID aTrackId)
 {
-  AudioCaptureStream* stream = new AudioCaptureStream(aWrapper, aTrackId);
+  AudioCaptureStream* stream = new AudioCaptureStream(aTrackId);
   AddStream(stream);
   return stream;
 }

@@ -1202,6 +1202,16 @@ private:
           mWorkerPrivate->SetCSP(csp);
           mWorkerPrivate->SetEvalAllowed(evalAllowed);
           mWorkerPrivate->SetReportCSPViolations(reportEvalViolations);
+
+          // Set ReferrerPolicy, default value is set in GetReferrerPolicy
+          bool hasReferrerPolicy = false;
+          uint32_t rp = mozilla::net::RP_Default;
+          rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          if (hasReferrerPolicy) {
+            mWorkerPrivate->SetReferrerPolicy(static_cast<net::ReferrerPolicy>(rp));
+          }
         }
       }
       if (parent) {
