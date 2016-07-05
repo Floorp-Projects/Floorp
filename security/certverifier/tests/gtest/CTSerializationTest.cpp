@@ -6,8 +6,8 @@
 
 #include "CTSerialization.h"
 #include "CTTestUtils.h"
-
 #include "gtest/gtest.h"
+#include "mozilla/Move.h"
 
 namespace mozilla { namespace ct {
 
@@ -175,6 +175,32 @@ TEST_F(CTSerializationTest, FailsDecodingInvalidSCTList)
   EXPECT_EQ(Success, ReadSCTListItem(listReader, decoded1));
   Input decoded2;
   EXPECT_NE(Success, ReadSCTListItem(listReader, decoded2));
+}
+
+TEST_F(CTSerializationTest, EncodesSCTList)
+{
+  const uint8_t SCT_1[] = { 0x61, 0x62, 0x63 };
+  const uint8_t SCT_2[] = { 0x64, 0x65, 0x66 };
+
+  Vector<Input> list;
+  ASSERT_TRUE(list.append(Move(Input(SCT_1))));
+  ASSERT_TRUE(list.append(Move(Input(SCT_2))));
+
+  Buffer encodedList;
+  ASSERT_EQ(Success, EncodeSCTList(list, encodedList));
+
+  Reader listReader;
+  ASSERT_EQ(Success, DecodeSCTList(InputForBuffer(encodedList), listReader));
+
+  Input decoded1;
+  ASSERT_EQ(Success, ReadSCTListItem(listReader, decoded1));
+  EXPECT_TRUE(InputsAreEqual(decoded1, Input(SCT_1)));
+
+  Input decoded2;
+  ASSERT_EQ(Success, ReadSCTListItem(listReader, decoded2));
+  EXPECT_TRUE(InputsAreEqual(decoded2, Input(SCT_2)));
+
+  EXPECT_TRUE(listReader.AtEnd());
 }
 
 TEST_F(CTSerializationTest, DecodesSignedCertificateTimestamp)

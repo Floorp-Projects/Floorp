@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla { namespace ct {
@@ -241,6 +242,24 @@ WriteEncodedBytes(const Buffer& source, Buffer& output)
   return Success;
 }
 
+// A variable-length byte array is prefixed by its length when serialized.
+// This writes the length prefix.
+// |prefixLength| indicates the number of bytes needed to represent the length.
+// |dataLength| is the length of the byte array following the prefix.
+// Fails if |dataLength| is more than 2^|prefixLength| - 1.
+template <size_t prefixLength>
+static Result
+WriteVariableBytesPrefix(size_t dataLength, Buffer& output)
+{
+  const size_t maxAllowedInputSize =
+    static_cast<size_t>(((1 << (prefixLength * 8)) - 1));
+  if (dataLength > maxAllowedInputSize) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
+  }
+
+  return WriteUint<prefixLength>(dataLength, output);
+}
+
 // Writes a variable-length array to |output|.
 // |prefixLength| indicates the number of bytes needed to represent the length.
 // |input| is the array itself.
@@ -249,14 +268,7 @@ template <size_t prefixLength>
 static Result
 WriteVariableBytes(Input input, Buffer& output)
 {
-  size_t inputSize = input.GetLength();
-  const size_t maxAllowedInputSize =
-    static_cast<size_t>(((1 << (prefixLength * 8)) - 1));
-  if (inputSize > maxAllowedInputSize) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  Result rv = WriteUint<prefixLength>(inputSize, output);
+  Result rv = WriteVariableBytesPrefix<prefixLength>(input.GetLength(), output);
   if (rv != Success) {
     return rv;
   }
@@ -498,6 +510,38 @@ DecodeSignedCertificateTimestamp(Reader& reader,
   result.timestamp = timestamp;
 
   output = Move(result);
+  return Success;
+}
+
+Result
+EncodeSCTList(const Vector<pkix::Input>& scts, Buffer& output)
+{
+  // Find out the total size of the SCT list to be written so we can
+  // write the prefix for the list before writing its contents.
+  size_t sctListLength = 0;
+  for (auto& sct : scts) {
+    sctListLength +=
+      /* data size */ sct.GetLength() +
+      /* length prefix size */ kSerializedSCTLengthBytes;
+  }
+
+  if (!output.reserve(kSCTListLengthBytes + sctListLength)) {
+    return Result::FATAL_ERROR_NO_MEMORY;
+  }
+
+  // Write the prefix for the SCT list.
+  Result rv = WriteVariableBytesPrefix<kSCTListLengthBytes>(sctListLength,
+                                                            output);
+  if (rv != Success) {
+    return rv;
+  }
+  // Now write each SCT from the list.
+  for (auto& sct : scts) {
+    rv = WriteVariableBytes<kSerializedSCTLengthBytes>(sct, output);
+    if (rv != Success) {
+      return rv;
+    }
+  }
   return Success;
 }
 
