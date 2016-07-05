@@ -28,7 +28,7 @@ public class GcmInstanceIDListenerService extends InstanceIDListenerService {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                PushService.getInstance().onRefresh();
+                PushService.getInstance(GcmInstanceIDListenerService.this).onRefresh();
             }
         });
     }
