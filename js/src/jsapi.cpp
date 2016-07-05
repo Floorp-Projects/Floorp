@@ -1530,9 +1530,10 @@ SetNativeStackQuotaAndLimit(JSRuntime* rt, StackKind kind, size_t stackSize)
 }
 
 JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSRuntime* rt, size_t systemCodeStackSize, size_t trustedScriptStackSize,
+JS_SetNativeStackQuota(JSContext* cx, size_t systemCodeStackSize, size_t trustedScriptStackSize,
                        size_t untrustedScriptStackSize)
 {
+    JSRuntime* rt = cx->runtime();
     MOZ_ASSERT(rt->requestDepth == 0);
 
     if (!trustedScriptStackSize)
