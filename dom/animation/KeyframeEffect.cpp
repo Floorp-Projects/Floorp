@@ -524,20 +524,34 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   nsTArray<AnimationProperty> properties;
   if (mTarget) {
+    // When GetComputedKeyframeValues or GetAnimationPropertiesFromKeyframes
+    // calculate computed values from |mKeyframes|, they could possibly
+    // trigger a subsequent restyle in which we rebuild animations. If that
+    // happens case we could find that |mKeyframes| is overwritten while it is
+    // being iterated over. Normally that shouldn't happen, (and we have an
+    // assertion below to detect if it does) but just in case we make a copy of
+    // |mKeyframes| first and iterate over that instead.
+    auto keyframesCopy(mKeyframes);
+
     nsTArray<ComputedKeyframeValues> computedValues =
-      KeyframeUtils::GetComputedKeyframeValues(mKeyframes, mTarget->mElement,
+      KeyframeUtils::GetComputedKeyframeValues(keyframesCopy,
+                                               mTarget->mElement,
                                                aStyleContext);
 
     if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
-      KeyframeUtils::ApplySpacing(mKeyframes, SpacingMode::paced,
+      KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
                                   mEffectOptions.mPacedProperty,
                                   computedValues);
     }
 
     properties =
-      KeyframeUtils::GetAnimationPropertiesFromKeyframes(mKeyframes,
+      KeyframeUtils::GetAnimationPropertiesFromKeyframes(keyframesCopy,
                                                          computedValues,
                                                          aStyleContext);
+
+    MOZ_ASSERT(keyframesCopy == mKeyframes,
+               "Keyframes should not be modified while we are iterating"
+               " over them");
   }
 
   if (mProperties == properties) {
