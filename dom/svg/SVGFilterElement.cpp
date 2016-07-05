@@ -43,8 +43,9 @@ nsSVGElement::EnumInfo SVGFilterElement::sEnumInfo[2] =
   }
 };
 
-nsSVGElement::StringInfo SVGFilterElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGFilterElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, true },
   { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
@@ -104,7 +105,9 @@ SVGFilterElement::PrimitiveUnits()
 already_AddRefed<SVGAnimatedString>
 SVGFilterElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
