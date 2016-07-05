@@ -7248,8 +7248,9 @@ var gIdentityHandler = {
     label.textContent = aPermission.label;
 
     let img = document.createElement("image");
+    let isBlocked = (aPermission.state == SitePermissions.BLOCK) ? " blocked" : "";
     img.setAttribute("class",
-      "identity-popup-permission-icon " + aPermission.id + "-icon");
+      "identity-popup-permission-icon " + aPermission.id + "-icon" + isBlocked);
 
     let container = document.createElement("hbox");
     container.setAttribute("align", "center");

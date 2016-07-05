@@ -112,6 +112,10 @@
   list-style-image: url(chrome://browser/skin/glyphs.svg#desktop-notification);
 }
 
+.desktop-notification-icon.blocked {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#desktop-notification-blocked);
+}
+
 .geo-icon {
 %ifdef XP_MACOSX
   list-style-image: url(chrome://browser/skin/glyphs.svg#geo-osx);
@@ -119,6 +123,16 @@
   list-style-image: url(chrome://browser/skin/glyphs.svg#geo-linux);
 %else
   list-style-image: url(chrome://browser/skin/glyphs.svg#geo-windows);
+%endif
+}
+
+.geo-icon.blocked {
+%ifdef XP_MACOSX
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-osx-blocked);
+%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-linux-blocked);
+%else
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-windows-blocked);
 %endif
 }
 
@@ -135,6 +149,10 @@
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .indexedDB-icon {
   list-style-image: url(chrome://browser/skin/glyphs.svg#indexedDB);
+}
+
+.indexedDB-icon.blocked {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#indexedDB-blocked);
 }
 
 .login-icon {
@@ -158,10 +176,18 @@
   list-style-image: url(chrome://browser/skin/glyphs.svg#camera);
 }
 
+.camera-icon.blocked {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#camera-blocked);
+}
+
 /* The first selector is used by socialchat.xml (bug 1275558). */
 .webRTC-sharingMicrophone-notification-icon,
 .microphone-icon {
   list-style-image: url(chrome://browser/skin/glyphs.svg#microphone);
+}
+
+.microphone-icon.blocked {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone-blocked);
 }
 
 .popup-notification-icon[popupid="webRTC-shareMicrophone"],
@@ -175,11 +201,20 @@
   list-style-image: url(chrome://browser/skin/glyphs.svg#screen);
 }
 
+.screen-icon.blocked {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#screen-blocked);
+}
+
 .popup-notification-icon[popupid="pointerLock"],
 .pointerLock-icon {
   list-style-image: url(chrome://browser/skin/glyphs.svg#pointerLock);
 }
 
+.pointerLock-icon.blocked {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#pointerLock-blocked);
+}
+
+/* This icon has a block sign in it, so we don't need a blocked version. */
 .popup-icon {
   list-style-image: url("chrome://browser/skin/glyphs.svg#popup");
 }
