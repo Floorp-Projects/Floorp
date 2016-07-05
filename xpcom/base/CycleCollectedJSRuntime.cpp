@@ -538,7 +538,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
                                         LargeAllocationFailureCallback, this);
   JS_SetDestroyZoneCallback(mJSContext, XPCStringConvert::FreeZoneCache);
   JS_SetSweepZoneCallback(mJSContext, XPCStringConvert::ClearZoneCache);
-  JS::SetBuildIdOp(mJSRuntime, GetBuildId);
+  JS::SetBuildIdOp(mJSContext, GetBuildId);
   JS::SetWarningReporter(mJSContext, MozCrashWarningReporter);
 
   static js::DOMCallbacks DOMcallbacks = {
