@@ -82,7 +82,6 @@ protected:
                               bool aCalledFromJS,
                               bool aDialog,
                               bool aNavigate,
-                              nsITabParent* aOpeningTab,
                               nsIArray* aArgv,
                               float* aOpenerFullZoom,
                               mozIDOMWindowProxy** aResult);
@@ -91,14 +90,15 @@ protected:
                              mozIDOMWindowProxy* aParent,
                              nsIURI** aURI);
 
-  static uint32_t CalculateChromeFlags(mozIDOMWindowProxy* aParent,
-                                       const nsACString& aFeatures,
-                                       bool aFeaturesSpecified,
-                                       bool aDialog,
-                                       bool aChromeURL,
-                                       bool aHasChromeParent,
-                                       bool aCalledFromJS,
-                                       bool aOpenedFromRemoteTab);
+  static uint32_t CalculateChromeFlagsForChild(const nsACString& aFeaturesStr);
+
+  static uint32_t CalculateChromeFlagsForParent(mozIDOMWindowProxy* aParent,
+                                                const nsACString& aFeaturesStr,
+                                                bool aDialog,
+                                                bool aChromeURL,
+                                                bool aHasChromeParent,
+                                                bool aCalledFromJS);
+
   static int32_t WinHasOption(const nsACString& aOptions, const char* aName,
                               int32_t aDefault, bool* aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
@@ -117,6 +117,17 @@ protected:
   static void GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,
                                  nsIDocShellTreeOwner** aResult);
 
+private:
+  static uint32_t CalculateChromeFlagsHelper(uint32_t aInitialFlags,
+                                             const nsACString& aFeatures,
+                                             bool &presenceFlag,
+                                             bool aDialog = false,
+                                             bool aHasChromeParent = false,
+                                             bool aChromeURL = false);
+  static uint32_t EnsureFlagsSafeForContent(uint32_t aChromeFlags,
+                                            bool aChromeURL = false);
+
+protected:
   nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
   nsWatcherWindowEntry* mOldestWindow;
   mozilla::Mutex mListLock;
