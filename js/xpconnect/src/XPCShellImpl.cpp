@@ -244,7 +244,7 @@ ReadLine(JSContext* cx, unsigned argc, Value* vp)
         if (!str)
             return false;
     } else {
-        str = JS_GetEmptyString(JS_GetRuntime(cx));
+        str = JS_GetEmptyString(cx);
     }
 
     /* Get a line from the infile */

@@ -914,7 +914,7 @@ extern JS_PUBLIC_API(JS::Value)
 JS_GetEmptyStringValue(JSContext* cx);
 
 extern JS_PUBLIC_API(JSString*)
-JS_GetEmptyString(JSRuntime* rt);
+JS_GetEmptyString(JSContext* cx);
 
 extern JS_PUBLIC_API(bool)
 JS_ValueToObject(JSContext* cx, JS::HandleValue v, JS::MutableHandleObject objp);

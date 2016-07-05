@@ -299,10 +299,10 @@ JS_GetEmptyStringValue(JSContext* cx)
 }
 
 JS_PUBLIC_API(JSString*)
-JS_GetEmptyString(JSRuntime* rt)
+JS_GetEmptyString(JSContext* cx)
 {
-    MOZ_ASSERT(rt->emptyString);
-    return rt->emptyString;
+    MOZ_ASSERT(cx->emptyString());
+    return cx->emptyString();
 }
 
 namespace js {
