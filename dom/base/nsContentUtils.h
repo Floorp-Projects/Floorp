@@ -974,6 +974,17 @@ public:
   }
 
   /**
+   * Fill (with the parameters given) the localized string named |aKey| in
+   * properties file |aFile| consuming an nsTArray of nsString parameters rather
+   * than a char16_t** for the sake of avoiding use-after-free errors involving
+   * temporaries.
+   */
+  static nsresult FormatLocalizedString(PropertiesFile aFile,
+                                        const char* aKey,
+                                        const nsTArray<nsString>& aParamArray,
+                                        nsXPIDLString& aResult);
+
+  /**
    * Returns true if aDocument is a chrome document
    */
   static bool IsChromeDoc(nsIDocument *aDocument);
