@@ -92,17 +92,17 @@ protected:
                              nsIURI** aURI);
 
   static uint32_t CalculateChromeFlags(mozIDOMWindowProxy* aParent,
-                                       const char* aFeatures,
+                                       const nsACString& aFeatures,
                                        bool aFeaturesSpecified,
                                        bool aDialog,
                                        bool aChromeURL,
                                        bool aHasChromeParent,
                                        bool aCalledFromJS,
                                        bool aOpenedFromRemoteTab);
-  static int32_t WinHasOption(const char* aOptions, const char* aName,
+  static int32_t WinHasOption(const nsACString& aOptions, const char* aName,
                               int32_t aDefault, bool* aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
-  static void CalcSizeSpec(const char* aFeatures, SizeSpec& aResult);
+  static void CalcSizeSpec(const nsACString& aFeatures, SizeSpec& aResult);
   static nsresult ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
                                           nsPIDOMWindowOuter* aParent,
                                           bool aWindowIsNew,
