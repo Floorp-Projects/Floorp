@@ -275,4 +275,32 @@ public class StringUtils {
                 Math.max(0, start),
                 Math.min(end, str.length()));
     }
+
+    /**
+     * Check if this might be a RTL (right-to-left) text by looking at the first character.
+     */
+    public static boolean isRTL(String text) {
+        if (TextUtils.isEmpty(text)) {
+            return false;
+        }
+
+        final char character = text.charAt(0);
+        final byte directionality = Character.getDirectionality(character);
+
+        return directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT
+                || directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
+                || directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
+                || directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE;
+    }
+
+    /**
+     * Force LTR (left-to-right) by prepending the text with the "left-to-right mark" (U+200E) if needed.
+     */
+    public static String forceLTR(String text) {
+        if (!isRTL(text)) {
+            return text;
+        }
+
+        return "\u200E" + text;
+    }
 }
