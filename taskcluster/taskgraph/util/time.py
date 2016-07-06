@@ -82,10 +82,11 @@ def value_of(input_str):
     return ALIASES[unit](value)
 
 
-def json_time_from_now(input_str, now=None):
+def json_time_from_now(input_str, now=None, datetime_format=False):
     '''
     :param str input_str: Input string (see value of)
     :param datetime now: Optionally set the definition of `now`
+    :param boolean datetime_format: Set `True` to get a `datetime` output
     :returns: JSON string representation of time in future.
     '''
 
@@ -94,14 +95,20 @@ def json_time_from_now(input_str, now=None):
 
     time = now + value_of(input_str)
 
-    # Sorta a big hack but the json schema validator for date does not like the
-    # ISO dates until 'Z' (for timezone) is added...
-    return time.isoformat() + 'Z'
+    if datetime_format is True:
+        return time
+    else:
+        # Sorta a big hack but the json schema validator for date does not like the
+        # ISO dates until 'Z' (for timezone) is added...
+        return time.isoformat() + 'Z'
 
 
-def current_json_time():
+def current_json_time(datetime_format=False):
     '''
+    :param boolean datetime_format: Set `True` to get a `datetime` output
     :returns: JSON string representation of the current time.
     '''
-
-    return datetime.datetime.utcnow().isoformat() + 'Z'
+    if datetime_format is True:
+        return datetime.datetime.utcnow()
+    else:
+        return datetime.datetime.utcnow().isoformat() + 'Z'
