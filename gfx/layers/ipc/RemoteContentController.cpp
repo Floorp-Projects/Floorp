@@ -53,80 +53,37 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 }
 
 void
-RemoteContentController::HandleDoubleTap(const CSSPoint& aPoint,
-                                         Modifiers aModifiers,
-                                         const ScrollableLayerGuid& aGuid)
+RemoteContentController::HandleTap(TapType aTapType,
+                                   const CSSPoint& aPoint,
+                                   Modifiers aModifiers,
+                                   const ScrollableLayerGuid& aGuid,
+                                   uint64_t aInputBlockId)
 {
   if (MessageLoop::current() != mUILoop) {
     // We have to send this message from the "UI thread" (main
     // thread).
-    mUILoop->PostTask(NewRunnableMethod<CSSPoint,
-                                        Modifiers,
-                                        ScrollableLayerGuid>(this,
-                                                             &RemoteContentController::HandleDoubleTap,
-                                                             aPoint, aModifiers, aGuid));
-    return;
-  }
-  if (CanSend()) {
-    Unused << SendHandleDoubleTap(mBrowserParent->AdjustTapToChildWidget(aPoint),
-            aModifiers, aGuid);
-  }
-}
-
-void
-RemoteContentController::HandleSingleTap(const CSSPoint& aPoint,
-                                         Modifiers aModifiers,
-                                         const ScrollableLayerGuid& aGuid)
-{
-  if (MessageLoop::current() != mUILoop) {
-    // We have to send this message from the "UI thread" (main
-    // thread).
-    mUILoop->PostTask(NewRunnableMethod<CSSPoint,
-                                        Modifiers,
-                                        ScrollableLayerGuid>(this,
-                                                             &RemoteContentController::HandleSingleTap,
-                                                             aPoint, aModifiers, aGuid));
+    mUILoop->PostTask(NewRunnableMethod<TapType, CSSPoint, Modifiers,
+                                        ScrollableLayerGuid, uint64_t>(this,
+                                          &RemoteContentController::HandleTap,
+                                          aTapType, aPoint, aModifiers, aGuid,
+                                          aInputBlockId));
     return;
   }
 
-  bool callTakeFocusForClickFromTap;
-  layout::RenderFrameParent* frame;
-  if (mBrowserParent && (frame = mBrowserParent->GetRenderFrame()) &&
-      mLayersId == frame->GetLayersId()) {
-    // Avoid going over IPC and back for calling TakeFocusForClickFromTap,
-    // since the right RenderFrameParent is living in this process.
-    frame->TakeFocusForClickFromTap();
-    callTakeFocusForClickFromTap = false;
-  } else {
-    callTakeFocusForClickFromTap = true;
+  bool callTakeFocusForClickFromTap = (aTapType == TapType::eSingleTap);
+  if (callTakeFocusForClickFromTap && mBrowserParent) {
+    layout::RenderFrameParent* frame = mBrowserParent->GetRenderFrame();
+    if (frame && mLayersId == frame->GetLayersId()) {
+      // Avoid going over IPC and back for calling TakeFocusForClickFromTap,
+      // since the right RenderFrameParent is living in this process.
+      frame->TakeFocusForClickFromTap();
+      callTakeFocusForClickFromTap = false;
+    }
   }
 
   if (CanSend()) {
-    Unused << SendHandleSingleTap(mBrowserParent->AdjustTapToChildWidget(aPoint),
-            aModifiers, aGuid, callTakeFocusForClickFromTap);
-  }
-}
-
-void
-RemoteContentController::HandleLongTap(const CSSPoint& aPoint,
-                                       Modifiers aModifiers,
-                                       const ScrollableLayerGuid& aGuid,
-                                       uint64_t aInputBlockId)
-{
-  if (MessageLoop::current() != mUILoop) {
-    // We have to send this message from the "UI thread" (main
-    // thread).
-    mUILoop->PostTask(NewRunnableMethod<CSSPoint,
-                                        Modifiers,
-                                        ScrollableLayerGuid,
-                                        uint64_t>(this,
-                                                  &RemoteContentController::HandleLongTap,
-                                                  aPoint, aModifiers, aGuid, aInputBlockId));
-    return;
-  }
-  if (CanSend()) {
-    Unused << SendHandleLongTap(mBrowserParent->AdjustTapToChildWidget(aPoint),
-            aModifiers, aGuid, aInputBlockId);
+    Unused << SendHandleTap(aTapType, mBrowserParent->AdjustTapToChildWidget(aPoint),
+            aModifiers, aGuid, aInputBlockId, callTakeFocusForClickFromTap);
   }
 }
 

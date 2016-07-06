@@ -27,7 +27,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
   MOZ_ASSERT(mTarget);
   RefPtr<Event> event =
     EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString());
-  mEvent = do_QueryInterface(event);
+  mEvent = event.forget();
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();
   mEvent->SetTrusted(aEvent.IsTrusted());

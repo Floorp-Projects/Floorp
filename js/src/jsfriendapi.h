@@ -45,7 +45,7 @@ class InterpreterFrame;
 } /* namespace js */
 
 extern JS_FRIEND_API(void)
-JS_SetGrayGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data);
+JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data);
 
 extern JS_FRIEND_API(JSObject*)
 JS_FindCompilationScope(JSContext* cx, JS::HandleObject obj);
@@ -145,7 +145,7 @@ typedef void
 (*JSAccumulateTelemetryDataCallback)(int id, uint32_t sample, const char* key);
 
 extern JS_FRIEND_API(void)
-JS_SetAccumulateTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback);
+JS_SetAccumulateTelemetryCallback(JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
 extern JS_FRIEND_API(bool)
 JS_GetIsSecureContext(JSCompartment* compartment);
@@ -446,17 +446,17 @@ class SourceHook {
 };
 
 /**
- * Have |rt| use |hook| to retrieve lazily-retrieved source code. See the
- * comments for SourceHook. The runtime takes ownership of the hook, and
- * will delete it when the runtime itself is deleted, or when a new hook is
+ * Have |cx| use |hook| to retrieve lazily-retrieved source code. See the
+ * comments for SourceHook. The context takes ownership of the hook, and
+ * will delete it when the context itself is deleted, or when a new hook is
  * set.
  */
 extern JS_FRIEND_API(void)
-SetSourceHook(JSRuntime* rt, mozilla::UniquePtr<SourceHook> hook);
+SetSourceHook(JSContext* cx, mozilla::UniquePtr<SourceHook> hook);
 
-/** Remove |rt|'s source hook, and return it. The caller now owns the hook. */
+/** Remove |cx|'s source hook, and return it. The caller now owns the hook. */
 extern JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
-ForgetSourceHook(JSRuntime* rt);
+ForgetSourceHook(JSContext* cx);
 
 extern JS_FRIEND_API(JS::Zone*)
 GetCompartmentZone(JSCompartment* comp);
@@ -978,7 +978,7 @@ JS_FRIEND_API(bool)
 StringIsArrayIndex(JSLinearString* str, uint32_t* indexp);
 
 JS_FRIEND_API(void)
-SetPreserveWrapperCallback(JSRuntime* rt, PreserveWrapperCallback callback);
+SetPreserveWrapperCallback(JSContext* cx, PreserveWrapperCallback callback);
 
 JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
@@ -1118,7 +1118,7 @@ typedef void
  * idle and a request begins.
  */
 JS_FRIEND_API(void)
-SetActivityCallback(JSRuntime* rt, ActivityCallback cb, void* arg);
+SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg);
 
 typedef bool
 (* DOMInstanceClassHasProtoAtDepth)(const Class* instanceClass,
@@ -1129,10 +1129,10 @@ struct JSDOMCallbacks {
 typedef struct JSDOMCallbacks DOMCallbacks;
 
 extern JS_FRIEND_API(void)
-SetDOMCallbacks(JSRuntime* rt, const DOMCallbacks* callbacks);
+SetDOMCallbacks(JSContext* cx, const DOMCallbacks* callbacks);
 
 extern JS_FRIEND_API(const DOMCallbacks*)
-GetDOMCallbacks(JSRuntime* rt);
+GetDOMCallbacks(JSContext* cx);
 
 extern JS_FRIEND_API(JSObject*)
 GetTestingFunctions(JSContext* cx);
@@ -1155,7 +1155,7 @@ CastToJSFreeOp(FreeOp* fop)
  * Returns nullptr for invalid arguments and JSEXN_INTERNALERR
  */
 extern JS_FRIEND_API(JSFlatString*)
-GetErrorTypeName(JSRuntime* rt, int16_t exnType);
+GetErrorTypeName(JSContext* cx, int16_t exnType);
 
 #ifdef JS_DEBUG
 extern JS_FRIEND_API(unsigned)
@@ -2877,7 +2877,7 @@ ConvertArgsToArray(JSContext* cx, const JS::CallArgs& args);
  * functions below.
  */
 extern JS_FRIEND_API(void)
-SetWindowProxyClass(JSRuntime* rt, const Class* clasp);
+SetWindowProxyClass(JSContext* cx, const Class* clasp);
 
 /**
  * Associates a WindowProxy with a Window (global object). `windowProxy` must

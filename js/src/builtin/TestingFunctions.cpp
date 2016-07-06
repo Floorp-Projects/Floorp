@@ -3349,13 +3349,13 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (gcCallback::prevMajorGC) {
-        JS_SetGCCallback(cx->runtime(), nullptr, nullptr);
+        JS_SetGCCallback(cx, nullptr, nullptr);
         js_delete<gcCallback::MajorGC>(gcCallback::prevMajorGC);
         gcCallback::prevMajorGC = nullptr;
     }
 
     if (gcCallback::prevMinorGC) {
-        JS_SetGCCallback(cx->runtime(), nullptr, nullptr);
+        JS_SetGCCallback(cx, nullptr, nullptr);
         js_delete<gcCallback::MinorGC>(gcCallback::prevMinorGC);
         gcCallback::prevMinorGC = nullptr;
     }
@@ -3369,7 +3369,7 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
 
         info->phases = phases;
         info->active = true;
-        JS_SetGCCallback(cx->runtime(), gcCallback::minorGC, info);
+        JS_SetGCCallback(cx, gcCallback::minorGC, info);
     } else if (strcmp(action.ptr(), "majorGC") == 0) {
         if (!JS_GetProperty(cx, opts, "depth", &v))
             return false;
@@ -3391,7 +3391,7 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
 
         info->phases = phases;
         info->depth = depth;
-        JS_SetGCCallback(cx->runtime(), gcCallback::majorGC, info);
+        JS_SetGCCallback(cx, gcCallback::majorGC, info);
     } else {
         JS_ReportError(cx, "Unknown GC callback action");
         return false;

@@ -153,10 +153,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
   const AudioTimelineEvent* previous = nullptr;
 
   // Let's remove old events except the last one: we need it to calculate some curves.
-  while (mEvents.Length() > 1 &&
-         aTime > TimeOf(mEvents[1])) {
-    mEvents.RemoveElementAt(0);
-  }
+  CleanupEventsOlderThan(aTime);
 
   for (size_t bufferIndex = 0; bufferIndex < aSize; ++bufferIndex, ++aTime) {
 
