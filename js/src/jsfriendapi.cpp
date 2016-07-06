@@ -1255,15 +1255,15 @@ js::PrepareScriptEnvironmentAndInvoke(JSContext* cx, HandleObject scope, ScriptE
 }
 
 JS_FRIEND_API(void)
-js::SetScriptEnvironmentPreparer(JSRuntime* rt, ScriptEnvironmentPreparer* preparer)
+js::SetScriptEnvironmentPreparer(JSContext* cx, ScriptEnvironmentPreparer* preparer)
 {
-    rt->scriptEnvironmentPreparer = preparer;
+    cx->scriptEnvironmentPreparer = preparer;
 }
 
 JS_FRIEND_API(void)
-js::SetCTypesActivityCallback(JSRuntime* rt, CTypesActivityCallback cb)
+js::SetCTypesActivityCallback(JSContext* cx, CTypesActivityCallback cb)
 {
-    rt->ctypesActivityCallback = cb;
+    cx->ctypesActivityCallback = cb;
 }
 
 js::AutoCTypesActivityCallback::AutoCTypesActivityCallback(JSContext* cx,
