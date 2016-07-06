@@ -81,7 +81,7 @@ AudioStreamAnalyser.prototype = {
       c.clearRect(0, 0, cvs.width, cvs.height);
       var array = self.getByteFrequencyData();
       for (var i = 0; i < array.length; i++) {
-        c.fillRect(i, (cvs.height - (array[i])), 1, cvs.height);
+        c.fillRect(i, (cvs.height - (array[i] / 2)), 1, cvs.height);
       }
       if (!cvs.stopDrawing) {
         requestAnimationFrame(render);
