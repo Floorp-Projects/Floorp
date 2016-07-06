@@ -135,7 +135,8 @@
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon {
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-secure.svg);
   visibility: visible;
 }
@@ -150,11 +151,6 @@
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
-  visibility: visible;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
-  list-style-image: url(chrome://browser/skin/identity-mixed-active-blocked.svg);
   visibility: visible;
 }
 
