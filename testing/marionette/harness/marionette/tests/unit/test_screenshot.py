@@ -6,6 +6,7 @@ import base64
 import hashlib
 import imghdr
 import struct
+import time
 import urllib
 
 from unittest import skip
@@ -92,6 +93,10 @@ class Chrome(ScreenCaptureTestCase):
             'chrome');
             """)
         self.marionette.switch_to_window("foo")
+        # there can be a race between opening and registering the window
+        # and switching to it. Waiting a tiny amount of time is enough not to
+        # break anything.
+        time.sleep(0.002)
         ss = self.marionette.screenshot()
         size = self.get_image_dimensions(ss)
         self.assert_png(ss)
