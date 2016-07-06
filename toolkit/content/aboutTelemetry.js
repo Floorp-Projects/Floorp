@@ -1559,7 +1559,11 @@ var Scalars = {
     let scalarsSection = document.getElementById("scalars");
     removeAllChildNodes(scalarsSection);
 
-    let scalars = aPayload.scalars;
+    if (!aPayload.processes || !aPayload.processes.parent) {
+      return;
+    }
+
+    let scalars = aPayload.processes.parent.scalars;
     const hasData = scalars && Object.keys(scalars).length > 0;
     setHasData("scalars-section", hasData);
     if (!hasData) {
