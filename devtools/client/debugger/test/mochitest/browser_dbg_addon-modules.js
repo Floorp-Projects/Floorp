@@ -5,14 +5,16 @@
 
 // Make sure the add-on actor can see loaded JS Modules from an add-on
 
-const ADDON_URL = EXAMPLE_URL + "addon4.xpi";
+const ADDON_ID = "browser_dbg_addon4@tests.mozilla.org";
+const ADDON_PATH = "addon4.xpi";
+const ADDON_URL = getTemporaryAddonURLFromPath(ADDON_PATH);
 
 function test() {
   Task.spawn(function* () {
-    let addon = yield addAddon(ADDON_URL);
+    let addon = yield addTemporaryAddon(ADDON_PATH);
     let tab1 = yield addTab("chrome://browser_dbg_addon4/content/test.xul");
 
-    let addonDebugger = yield initAddonDebugger(ADDON_URL);
+    let addonDebugger = yield initAddonDebugger(ADDON_ID);
 
     is(addonDebugger.title, `Developer Tools - Test add-on with JS Modules - ${ADDON_URL}`,
        "Saw the right toolbox title.");
@@ -25,7 +27,7 @@ function test() {
 
     let sources = groups[0].sources;
     is(sources.length, 3, "Should be three sources");
-    ok(sources[0].url.endsWith("/browser_dbg_addon4@tests.mozilla.org.xpi!/bootstrap.js"), "correct url for bootstrap code");
+    ok(sources[0].url.endsWith("/addon4.xpi!/bootstrap.js"), "correct url for bootstrap code");
     is(sources[0].label, "bootstrap.js", "correct label for bootstrap code");
     is(sources[1].url, "resource://browser_dbg_addon4/test.jsm", "correct url for addon code");
     is(sources[1].label, "test.jsm", "correct label for addon code");
@@ -43,7 +45,7 @@ function test() {
 
     sources = groups[0].sources;
     is(sources.length, 5, "Should be five sources");
-    ok(sources[0].url.endsWith("/browser_dbg_addon4@tests.mozilla.org.xpi!/bootstrap.js"), "correct url for bootstrap code");
+    ok(sources[0].url.endsWith("/addon4.xpi!/bootstrap.js"), "correct url for bootstrap code");
     is(sources[0].label, "bootstrap.js", "correct label for bootstrap code");
     is(sources[1].url, "resource://browser_dbg_addon4/test.jsm", "correct url for addon code");
     is(sources[1].label, "test.jsm", "correct label for addon code");

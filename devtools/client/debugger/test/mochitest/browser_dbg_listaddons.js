@@ -6,8 +6,10 @@
 /**
  * Make sure the listAddons request works as specified.
  */
-const ADDON1_URL = EXAMPLE_URL + "addon1.xpi";
-const ADDON2_URL = EXAMPLE_URL + "addon2.xpi";
+const ADDON1_ID = "jid1-oBAwBoE5rSecNg@jetpack";
+const ADDON1_PATH = "addon1.xpi";
+const ADDON2_ID = "jid1-qjtzNGV8xw5h2A@jetpack";
+const ADDON2_PATH = "addon2.xpi";
 
 var gAddon1, gAddon1Actor, gAddon2, gAddon2Actor, gClient;
 
@@ -42,10 +44,10 @@ function testFirstAddon() {
     addonListChanged = true;
   });
 
-  return addAddon(ADDON1_URL).then(aAddon => {
+  return addTemporaryAddon(ADDON1_PATH).then(aAddon => {
     gAddon1 = aAddon;
 
-    return getAddonActorForUrl(gClient, ADDON1_URL).then(aGrip => {
+    return getAddonActorForId(gClient, ADDON1_ID).then(aGrip => {
       ok(!addonListChanged, "Should not yet be notified that list of addons changed.");
       ok(aGrip, "Should find an addon actor for addon1.");
       gAddon1Actor = aGrip.actor;
@@ -59,11 +61,11 @@ function testSecondAddon() {
     addonListChanged = true;
   });
 
-  return addAddon(ADDON2_URL).then(aAddon => {
+  return addTemporaryAddon(ADDON2_PATH).then(aAddon => {
     gAddon2 = aAddon;
 
-    return getAddonActorForUrl(gClient, ADDON1_URL).then(aFirstGrip => {
-      return getAddonActorForUrl(gClient, ADDON2_URL).then(aSecondGrip => {
+    return getAddonActorForId(gClient, ADDON1_ID).then(aFirstGrip => {
+      return getAddonActorForId(gClient, ADDON2_ID).then(aSecondGrip => {
         ok(addonListChanged, "Should be notified that list of addons changed.");
         is(aFirstGrip.actor, gAddon1Actor, "First addon's actor shouldn't have changed.");
         ok(aSecondGrip, "Should find a addon actor for the second addon.");
@@ -79,8 +81,8 @@ function testRemoveFirstAddon() {
     addonListChanged = true;
   });
 
-  removeAddon(gAddon1).then(() => {
-    return getAddonActorForUrl(gClient, ADDON1_URL).then(aGrip => {
+  return removeAddon(gAddon1).then(() => {
+    return getAddonActorForId(gClient, ADDON1_ID).then(aGrip => {
       ok(addonListChanged, "Should be notified that list of addons changed.");
       ok(!aGrip, "Shouldn't find a addon actor for the first addon anymore.");
     });
@@ -93,8 +95,8 @@ function testRemoveSecondAddon() {
     addonListChanged = true;
   });
 
-  removeAddon(gAddon2).then(() => {
-    return getAddonActorForUrl(gClient, ADDON2_URL).then(aGrip => {
+  return removeAddon(gAddon2).then(() => {
+    return getAddonActorForId(gClient, ADDON2_ID).then(aGrip => {
       ok(addonListChanged, "Should be notified that list of addons changed.");
       ok(!aGrip, "Shouldn't find a addon actor for the second addon anymore.");
     });

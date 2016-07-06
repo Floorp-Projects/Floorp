@@ -8,7 +8,9 @@
 // Test that the Addon Debugger works when devtools.debugger.workers is enabled.
 // Workers controller cannot be used when debugging an Addon actor.
 
-const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
+const ADDON_ID = "jid1-ami3akps3baaeg@jetpack";
+const ADDON_PATH = "addon3.xpi";
+const ADDON_URL = getTemporaryAddonURLFromPath(ADDON_PATH);
 
 function test() {
   Task.spawn(function* () {
@@ -19,8 +21,8 @@ function test() {
       }, resolve);
     });
 
-    let addon = yield addAddon(ADDON_URL);
-    let addonDebugger = yield initAddonDebugger(ADDON_URL);
+    let addon = yield addTemporaryAddon(ADDON_PATH);
+    let addonDebugger = yield initAddonDebugger(ADDON_ID);
 
     is(addonDebugger.title,
        `Developer Tools - browser_dbg_addon3 - ${ADDON_URL}`,
