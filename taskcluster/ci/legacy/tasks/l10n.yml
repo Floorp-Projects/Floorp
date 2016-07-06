@@ -4,8 +4,10 @@
 taskId: {{build_slugid}}
 
 task:
-  created: '{{now}}'
-  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  created:
+    relative-datestamp: '0 seconds'
+  deadline:
+    relative-datestamp: '24 hours'
   metadata:
     source: '{{source}}'
     owner: mozilla-taskcluster-maintenance@mozilla.com
@@ -34,7 +36,8 @@ task:
       'public/build':
         type: directory
         path: '/home/worker/workspace/build/upload/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
+        expires:
+          relative-datestamp: '1 year'
 
 
     env:
