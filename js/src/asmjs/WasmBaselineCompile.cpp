@@ -6399,7 +6399,7 @@ js::wasm::BaselineCompileFunction(IonCompileTask* task)
 
     // The MacroAssembler will sometimes access the jitContext.
 
-    JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
+    JitContext jitContext(&results.alloc());
 
     // One-pass baseline compilation.
 

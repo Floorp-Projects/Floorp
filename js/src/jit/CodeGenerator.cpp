@@ -4739,7 +4739,7 @@ CodeGenerator::maybeCreateScriptCounts()
     // If scripts are being profiled, create a new IonScriptCounts for the
     // profiling data, which will be attached to the associated JSScript or
     // AsmJS module after code generation finishes.
-    if (!GetJitContext()->runtime->profilingScripts())
+    if (!GetJitContext()->hasProfilingScripts())
         return nullptr;
 
     // This test inhibits IonScriptCount creation for wasm code which is
