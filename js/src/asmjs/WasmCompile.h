@@ -39,7 +39,7 @@ struct CompileArgs
 };
 
 UniqueModule
-Compile(JSContext* cx, Bytes&& code, CompileArgs&& compileArgs);
+Compile(Bytes&& code, CompileArgs&& args, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

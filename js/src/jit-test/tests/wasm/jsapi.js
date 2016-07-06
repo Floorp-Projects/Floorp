@@ -29,8 +29,8 @@ assertEq(Module.name, "Module");
 assertErrorMessage(() => Module(), TypeError, /constructor without new is forbidden/);
 assertErrorMessage(() => new Module(1), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module({}), TypeError, "first argument must be an ArrayBuffer or typed array object");
-assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /wasm validation error/);
-assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /wasm validation error/);
+assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
+assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
 assertEq(new Module(emptyModule) instanceof Module, true);
 assertEq(new Module(emptyModule.buffer) instanceof Module, true);
 
