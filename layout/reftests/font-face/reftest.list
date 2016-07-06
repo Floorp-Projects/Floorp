@@ -165,6 +165,8 @@ HTTP(..) == font-redirect.html order-1-ref.html
 HTTP(..) == color-1a.html color-1-ref.html
 HTTP(..) != color-1a.html color-1-notref.html
 HTTP(..) == color-1b.html color-1-ref.html
+HTTP(..) == color-2a.html color-2-ref.html
+HTTP(..) != color-2a.html color-2-notref.html
 
 pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-1.html woff2-1-ref.html
 
