@@ -41,10 +41,14 @@ namespace JS {
 namespace ubi {
 
 template<>
-struct Concrete<FakeNode> : public Base
+class Concrete<FakeNode> : public Base
 {
-    static const char16_t concreteTypeName[];
-    const char16_t* typeName() const override { return concreteTypeName; }
+  protected:
+    explicit Concrete(FakeNode* ptr) : Base(ptr) { }
+    FakeNode& get() const { return *static_cast<FakeNode*>(ptr); }
+
+  public:
+    static void construct(void* storage, FakeNode* ptr) { new (storage) Concrete(ptr); }
 
     UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override {
         return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
@@ -54,11 +58,8 @@ struct Concrete<FakeNode> : public Base
         return 1;
     }
 
-    static void construct(void* storage, FakeNode* ptr) { new (storage) Concrete(ptr); }
-
-  protected:
-    explicit Concrete(FakeNode* ptr) : Base(ptr) { }
-    FakeNode& get() const { return *static_cast<FakeNode*>(ptr); }
+    static const char16_t concreteTypeName[];
+    const char16_t* typeName() const override { return concreteTypeName; }
 };
 
 const char16_t Concrete<FakeNode>::concreteTypeName[] = MOZ_UTF16("FakeNode");
