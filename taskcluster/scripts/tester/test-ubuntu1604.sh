@@ -4,6 +4,8 @@ set -x -e
 
 echo "running as" $(id)
 
+. /home/worker/scripts/xvfb.sh
+
 ####
 # Taskcluster friendly wrapper for performing fx desktop tests via mozharness.
 ####
@@ -43,13 +45,7 @@ cleanup() {
       # To share X issues
       cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
     fi
-    # When you call this script with START_VNC or TASKCLUSTER_INTERACTIVE
-    # we make sure we do not kill xvfb so you do not lose your connection
-    xvfb_pid=`pidof Xvfb`
-    if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] && [ $TASKCLUSTER_INTERACTIVE == false ] ; then
-        kill $xvfb_pid || true
-        screen -XS xvfb quit || true
-    fi
+    cleanup_xvfb
     exit $rv
 }
 trap cleanup EXIT INT
@@ -66,30 +62,9 @@ if ! [ -d mozharness ]; then
     fail "mozharness zip did not contain mozharness/"
 fi
 
-# run Xvfb in the background, if necessary
+# run XVfb in the background, if necessary
 if $NEED_XVFB; then
-    screen -dmS xvfb Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 \
-       > ~/artifacts/public/xvfb.log 2>&1
-    export DISPLAY=:0
-
-    # Only error code 255 matters, because it signifies that no
-    # display could be opened. As long as we can open the display
-    # tests should work. We'll retry a few times with a sleep before
-    # failing.
-    retry_count=0
-    max_retries=2
-    xvfb_test=0
-    until [ $retry_count -gt $max_retries ]; do
-        xvinfo || xvfb_test=$?
-        if [ $xvfb_test != 255 ]; then
-            retry_count=$(($max_retries + 1))
-        else
-            retry_count=$(($retry_count + 1))
-            echo "Failed to start Xvfb, retry: $retry_count"
-            sleep 2
-        fi
-    done
-    if [ $xvfb_test == 255 ]; then fail "xvfb did not start properly"; fi
+    start_xvfb '1600x1200x24' 0
 fi
 
 if $START_VNC; then
