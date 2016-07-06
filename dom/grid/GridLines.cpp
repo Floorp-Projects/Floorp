@@ -63,8 +63,7 @@ GridLines::IndexedGetter(uint32_t aIndex,
 }
 
 void
-GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                       const ComputedGridLineInfo* aLineInfo)
+GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo)
 {
   mLines.Clear();
 
@@ -90,18 +89,12 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
 
       GridLine* line = new GridLine(this);
       mLines.AppendElement(line);
-
-      nsTArray<nsString> lineNames;
-      if (aLineInfo) {
-        lineNames = aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>());
-      }
-
       line->SetLineValues(
         nsPresContext::AppUnitsToDoubleCSSPixels(endOfLastTrack),
         nsPresContext::AppUnitsToDoubleCSSPixels(startOfNextTrack -
                                                  endOfLastTrack),
         i + 1,
-        lineNames
+        nsTArray<nsString>()
       );
 
       if (i < aTrackInfo->mEndFragmentTrack) {

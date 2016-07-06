@@ -2732,15 +2732,14 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetGridTemplateColumns()
 {
   const ComputedGridTrackInfo* info = nullptr;
-
-  nsGridContainerFrame* gridFrame =
-    nsGridContainerFrame::GetGridFrameWithComputedInfo(
-      mContent->GetPrimaryFrame());
-
-  if (gridFrame) {
-    info = gridFrame->GetComputedTemplateColumns();
+  if (mInnerFrame) {
+    nsIFrame* gridContainerCandidate = mInnerFrame->GetContentInsertionFrame();
+    if (gridContainerCandidate &&
+        gridContainerCandidate->GetType() == nsGkAtoms::gridContainerFrame) {
+      info = static_cast<nsGridContainerFrame*>(gridContainerCandidate)->
+        GetComputedTemplateColumns();
+    }
   }
-
   return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateColumns, info);
 }
 
@@ -2748,15 +2747,14 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetGridTemplateRows()
 {
   const ComputedGridTrackInfo* info = nullptr;
-
-  nsGridContainerFrame* gridFrame =
-    nsGridContainerFrame::GetGridFrameWithComputedInfo(
-      mContent->GetPrimaryFrame());
-
-  if (gridFrame) {
-    info = gridFrame->GetComputedTemplateRows();
+  if (mInnerFrame) {
+    nsIFrame* gridContainerCandidate = mInnerFrame->GetContentInsertionFrame();
+    if (gridContainerCandidate &&
+        gridContainerCandidate->GetType() == nsGkAtoms::gridContainerFrame) {
+      info = static_cast<nsGridContainerFrame*>(gridContainerCandidate)->
+        GetComputedTemplateRows();
+     }
   }
-
   return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateRows, info);
 }
 

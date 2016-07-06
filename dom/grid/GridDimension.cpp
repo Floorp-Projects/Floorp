@@ -60,10 +60,9 @@ GridDimension::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
 }
 
 void
-GridDimension::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                           const ComputedGridLineInfo* aLineInfo)
+GridDimension::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo)
 {
-  mLines->SetLineInfo(aTrackInfo, aLineInfo);
+  mLines->SetLineInfo(aTrackInfo);
 }
 
 } // namespace dom
