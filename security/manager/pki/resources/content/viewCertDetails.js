@@ -3,17 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const nsIX509Cert = Components.interfaces.nsIX509Cert;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
+const nsIX509Cert = Ci.nsIX509Cert;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+const nsIX509CertDB = Ci.nsIX509CertDB;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
-const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
-const nsIASN1Object = Components.interfaces.nsIASN1Object;
-const nsIASN1Sequence = Components.interfaces.nsIASN1Sequence;
-const nsIASN1PrintableItem = Components.interfaces.nsIASN1PrintableItem;
-const nsIASN1Tree = Components.interfaces.nsIASN1Tree;
+const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
+const nsIASN1Object = Ci.nsIASN1Object;
+const nsIASN1Sequence = Ci.nsIASN1Sequence;
+const nsIASN1PrintableItem = Ci.nsIASN1PrintableItem;
+const nsIASN1Tree = Ci.nsIASN1Tree;
 const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1";
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
 
 var bundle;
 
@@ -54,11 +57,10 @@ function AddCertChain(node, chain)
  *
  * @param {String} usage
  *        Verified usage to add.
- * @param {Node} verifyInfoBox
- *        Parent node to append to.
  */
-function AddUsage(usage, verifyInfoBox)
+function AddUsage(usage)
 {
+  let verifyInfoBox = document.getElementById("verify_info_box");
   let text = document.createElement("textbox");
   text.setAttribute("value", usage);
   text.setAttribute("style", "margin: 2px 5px");
@@ -93,7 +95,140 @@ function setWindowName()
   AddCertChain("treesetDump", cert.getChain());
   DisplayGeneralDataFromCert(cert);
   BuildPrettyPrint(cert);
-  cert.requestUsagesArrayAsync(new listener());
+
+  asyncDetermineUsages(cert);
+}
+
+// Certificate usages we care about in the certificate viewer.
+const certificateUsageSSLClient              = 0x0001;
+const certificateUsageSSLServer              = 0x0002;
+const certificateUsageSSLCA                  = 0x0008;
+const certificateUsageEmailSigner            = 0x0010;
+const certificateUsageEmailRecipient         = 0x0020;
+const certificateUsageObjectSigner           = 0x0040;
+
+// A map from the name of a certificate usage to the value of the usage.
+// Useful for printing debugging information and for enumerating all supported
+// usages.
+const certificateUsages = {
+  certificateUsageSSLClient,
+  certificateUsageSSLServer,
+  certificateUsageSSLCA,
+  certificateUsageEmailSigner,
+  certificateUsageEmailRecipient,
+  certificateUsageObjectSigner,
+};
+
+// Map of certificate usage name to localization identifier.
+const certificateUsageToStringBundleName = {
+  certificateUsageSSLClient: "VerifySSLClient",
+  certificateUsageSSLServer: "VerifySSLServer",
+  certificateUsageSSLCA: "VerifySSLCA",
+  certificateUsageEmailSigner: "VerifyEmailSigner",
+  certificateUsageEmailRecipient: "VerifyEmailRecip",
+  certificateUsageObjectSigner: "VerifyObjSign",
+};
+
+const PRErrorCodeSuccess = 0;
+
+const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
+const SEC_ERROR_EXPIRED_CERTIFICATE                     = SEC_ERROR_BASE + 11;
+const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE + 12;
+const SEC_ERROR_UNKNOWN_ISSUER                          = SEC_ERROR_BASE + 13;
+const SEC_ERROR_UNTRUSTED_ISSUER                        = SEC_ERROR_BASE + 20;
+const SEC_ERROR_UNTRUSTED_CERT                          = SEC_ERROR_BASE + 21;
+const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE + 30;
+const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
+
+/**
+ * Kicks off asynchronous verifications of the given certificate to determine
+ * what usages it is currently valid for. Updates the usage display area when
+ * complete.
+ *
+ * @param {nsIX509Cert} cert
+ *        The certificate to determine valid usages for.
+ */
+function asyncDetermineUsages(cert) {
+  let promises = [];
+  let now = Date.now() / 1000;
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                 .getService(Ci.nsIX509CertDB);
+  Object.keys(certificateUsages).forEach(usageString => {
+    promises.push(new Promise((resolve, reject) => {
+      let usage = certificateUsages[usageString];
+      certdb.asyncVerifyCertAtTime(cert, usage, 0, null, now,
+        (aPRErrorCode, aVerifiedChain, aHasEVPolicy) => {
+          resolve({ usageString: usageString, errorCode: aPRErrorCode });
+        });
+    }));
+  });
+  Promise.all(promises).then(displayUsages);
+}
+
+/**
+ * Updates the usage display area given the results from asyncDetermineUsages.
+ *
+ * @param {Array} results
+ *        An array of objects with the properties "usageString" and "errorCode".
+ *        usageString is a string that is a key in the certificateUsages map.
+ *        errorCode is either an NSPR error code or PRErrorCodeSuccess (which is
+ *        a pseudo-NSPR error code with the value 0 that indicates success).
+ */
+function displayUsages(results) {
+  document.getElementById("verify_pending").setAttribute("hidden", "true");
+  let verified = document.getElementById("verified");
+  let someSuccess = results.some(result =>
+    result.errorCode == PRErrorCodeSuccess
+  );
+  if (someSuccess) {
+    let verifystr = bundle.getString("certVerified");
+    verified.textContent = verifystr;
+    let pipnssBundle = Services.strings.createBundle(
+      "chrome://pipnss/locale/pipnss.properties");
+    results.forEach(result => {
+      if (result.errorCode != PRErrorCodeSuccess) {
+        return;
+      }
+      let bundleName = certificateUsageToStringBundleName[result.usageString];
+      let usage = pipnssBundle.GetStringFromName(bundleName);
+      AddUsage(usage);
+    });
+  } else {
+    const errorRankings = [
+      { error: SEC_ERROR_REVOKED_CERTIFICATE,
+        bundleString: "certNotVerified_CertRevoked" },
+      { error: SEC_ERROR_UNTRUSTED_CERT,
+        bundleString: "certNotVerified_CertNotTrusted" },
+      { error: SEC_ERROR_UNTRUSTED_ISSUER,
+        bundleString: "certNotVerified_IssuerNotTrusted" },
+      { error: SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED,
+        bundleString: "certNotVerified_AlgorithmDisabled" },
+      { error: SEC_ERROR_EXPIRED_CERTIFICATE,
+        bundleString: "certNotVerified_CertExpired" },
+      { error: SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE,
+        bundleString: "certNotVerified_CAInvalid" },
+      { error: SEC_ERROR_UNKNOWN_ISSUER,
+        bundleString: "certNotVerified_IssuerUnknown" },
+    ];
+    let verifystr;
+    for (let errorRanking of errorRankings) {
+      let errorPresent = results.some(result =>
+        result.errorCode == errorRanking.error
+      );
+      if (errorPresent) {
+        verifystr = bundle.getString(errorRanking.bundleString);
+        break;
+      }
+    }
+    if (!verifystr) {
+      verifystr = bundle.getString("certNotVerified_Unknown");
+    }
+    verified.textContent = verifystr;
+  }
+  // Notify that we are done determining the certificate's valid usages (this
+  // should be treated as an implementation detail that enables tests to run
+  // efficiently - other code in the browser probably shouldn't rely on this).
+  Services.obs.notifyObservers(window, "ViewCertDetails:CertUsagesDone", null);
 }
 
 function addChildrenToTree(parentTree, label, value, addTwistie)
@@ -152,82 +287,6 @@ function addAttributeFromCert(nodeName, value)
     value = bundle.getString('notPresent');
   }
   node.setAttribute('value', value);
-}
-
-
-
-function listener() {
-}
-
-listener.prototype.QueryInterface =
-  function(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsICertVerificationListener)) {
-      return this;
-    }
-
-    throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
-  };
-
-listener.prototype.notify =
-  function(cert, result) {
-    DisplayVerificationData(cert, result);
-  };
-
-function DisplayVerificationData(cert, result)
-{
-  document.getElementById("verify_pending").setAttribute("hidden", "true");
-
-  if (!result || !cert) {
-    return; // no results could be produced
-  }
-
-  if (!(cert instanceof Components.interfaces.nsIX509Cert)) {
-    return;
-  }
-
-  //  Verification and usage
-  var verifystr = "";
-  var o1 = {};
-  var o2 = {};
-  var o3 = {};
-
-  if (!(result instanceof Components.interfaces.nsICertVerificationResult)) {
-    return;
-  }
-
-  result.getUsagesArrayResult(o1, o2, o3);
-
-  var verifystate = o1.value;
-  var count = o2.value;
-  var usageList = o3.value;
-  if (verifystate == cert.VERIFIED_OK) {
-    verifystr = bundle.getString('certVerified');
-  } else if (verifystate == cert.CERT_REVOKED) {
-    verifystr = bundle.getString('certNotVerified_CertRevoked');
-  } else if (verifystate == cert.CERT_EXPIRED) {
-    verifystr = bundle.getString('certNotVerified_CertExpired');
-  } else if (verifystate == cert.CERT_NOT_TRUSTED) {
-    verifystr = bundle.getString('certNotVerified_CertNotTrusted');
-  } else if (verifystate == cert.ISSUER_NOT_TRUSTED) {
-    verifystr = bundle.getString('certNotVerified_IssuerNotTrusted');
-  } else if (verifystate == cert.ISSUER_UNKNOWN) {
-    verifystr = bundle.getString('certNotVerified_IssuerUnknown');
-  } else if (verifystate == cert.INVALID_CA) {
-    verifystr = bundle.getString('certNotVerified_CAInvalid');
-  } else if (verifystate == cert.SIGNATURE_ALGORITHM_DISABLED) {
-    verifystr = bundle.getString('certNotVerified_AlgorithmDisabled');
-  } else { /* if (verifystate == cert.NOT_VERIFIED_UNKNOWN || == USAGE_NOT_ALLOWED) */
-    verifystr = bundle.getString('certNotVerified_Unknown');
-  }
-  let verified = document.getElementById("verified");
-  verified.textContent = verifystr;
-  if (count > 0) {
-    var verifyInfoBox = document.getElementById('verify_info_box');
-    for (let i = 0; i < count; i++) {
-      AddUsage(usageList[i], verifyInfoBox);
-    }
-  }
 }
 
 /**
