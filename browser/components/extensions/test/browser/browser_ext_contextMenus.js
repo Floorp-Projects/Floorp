@@ -27,36 +27,15 @@ add_task(function* () {
   yield extension.startup();
   yield extension.awaitFinish();
 
-  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#img1", {
-    type: "contextmenu",
-    button: 2,
-  }, gBrowser.selectedBrowser);
-  yield popupShownPromise;
-
+  let contentAreaContextMenu = yield openContextMenu("#img1");
   let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
   is(item.length, 1, "contextMenu item for image was found");
+  yield closeContextMenu();
 
-  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
-  EventUtils.synthesizeMouseAtCenter(item[0], {});
-  yield popupHiddenPromise;
-
-  contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter("body", {
-    type: "contextmenu",
-    button: 2,
-  }, gBrowser.selectedBrowser);
-  yield popupShownPromise;
-
+  contentAreaContextMenu = yield openContextMenu("body");
   item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
   is(item.length, 0, "no contextMenu item for image was found");
-
-  // click something to close the context menu
-  popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
-  EventUtils.synthesizeMouseAtCenter(document.getElementById("context-selectall"), {});
-  yield popupHiddenPromise;
+  yield closeContextMenu();
 
   yield extension.unload();
 
@@ -142,207 +121,64 @@ add_task(function* () {
       browser.contextMenus.remove(parentToDel);
 
       browser.contextMenus.create({
-        title: "radio-group-1",
-        type: "radio",
-        checked: true,
-        onclick: genericOnClick,
-      });
-
-      browser.contextMenus.create({
-        title: "Checkbox",
-        type: "checkbox",
-        onclick: genericOnClick,
-      });
-
-      browser.contextMenus.create({
-        title: "radio-group-2",
-        type: "radio",
-        onclick: genericOnClick,
-      });
-
-      browser.contextMenus.create({
-        title: "radio-group-2",
-        type: "radio",
-        onclick: genericOnClick,
-      });
-
-      browser.contextMenus.create({
-        type: "separator",
-      });
-
-      browser.contextMenus.create({
-        title: "Checkbox",
-        type: "checkbox",
-        checked: true,
-        onclick: genericOnClick,
-      });
-
-      browser.contextMenus.create({
-        title: "Checkbox",
-        type: "checkbox",
-        onclick: genericOnClick,
-      });
-
-      browser.contextMenus.create({
         title: "Without onclick property",
         id: "ext-without-onclick",
       });
 
       browser.contextMenus.update(parent, {parentId: child2}).then(
         () => {
-          browser.test.notifyFail();
+          browser.test.notifyFail("contextmenus");
         },
         () => {
-          browser.test.notifyPass();
+          browser.test.notifyPass("contextmenus");
         }
       );
     },
   });
 
   yield extension.startup();
-  yield extension.awaitFinish();
+  yield extension.awaitFinish("contextmenus");
 
-  let contentAreaContextMenu;
+  let expectedClickInfo = {
+    menuItemId: "ext-image",
+    mediaType: "image",
+    srcUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/ctxmenu-image.png",
+    pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
+  };
 
-  function getTop() {
-    contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-    let items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");
-    is(items.length, 1, "top level item was found (context=selection)");
-    let topItem = items[0];
-    return topItem.childNodes[0];
-  }
-
-  function* openExtensionMenu() {
-    contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-    let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#img1", {
-      type: "contextmenu",
-      button: 2,
-    }, gBrowser.selectedBrowser);
-    yield popupShownPromise;
-
-    popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(getTop(), {});
-    yield popupShownPromise;
-  }
-
-  function* closeContextMenu(itemToSelect, expectedClickInfo, hasOnclickProperty = true) {
-    function checkClickInfo(info, tab) {
-      for (let i of Object.keys(expectedClickInfo)) {
-        is(info[i], expectedClickInfo[i],
-           "click info " + i + " expected to be: " + expectedClickInfo[i] + " but was: " + info[i]);
-      }
-      is(expectedClickInfo.pageSrc, tab.url);
+  function checkClickInfo(result) {
+    for (let i of Object.keys(expectedClickInfo)) {
+      is(result.info[i], expectedClickInfo[i],
+         "click info " + i + " expected to be: " + expectedClickInfo[i] + " but was: " + info[i]);
     }
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
-    EventUtils.synthesizeMouseAtCenter(itemToSelect, {});
-
-    if (hasOnclickProperty) {
-      let {info, tab} = yield extension.awaitMessage("onclick");
-      if (expectedClickInfo) {
-        checkClickInfo(info, tab);
-      }
-    }
-
-    let {info, tab} = yield extension.awaitMessage("browser.contextMenus.onClicked");
-    if (expectedClickInfo) {
-      checkClickInfo(info, tab);
-    }
-
-    yield popupHiddenPromise;
+    is(expectedClickInfo.pageSrc, result.tab.url);
   }
 
-  function confirmRadioGroupStates(expectedStates) {
-    let top = getTop();
-
-    let radioItems = top.getElementsByAttribute("type", "radio");
-    let radioGroup1 = top.getElementsByAttribute("label", "radio-group-1");
-    let radioGroup2 = top.getElementsByAttribute("label", "radio-group-2");
-
-    is(radioItems.length, 3, "there should be 3 radio items in the context menu");
-    is(radioGroup1.length, 1, "the first radio group should only have 1 radio item");
-    is(radioGroup2.length, 2, "the second radio group should only have 2 radio items");
-
-    is(radioGroup1[0].hasAttribute("checked"), expectedStates[0], `radio item 1 has state (checked=${expectedStates[0]})`);
-    is(radioGroup2[0].hasAttribute("checked"), expectedStates[1], `radio item 2 has state (checked=${expectedStates[1]})`);
-    is(radioGroup2[1].hasAttribute("checked"), expectedStates[2], `radio item 3 has state (checked=${expectedStates[2]})`);
-  }
-
-  function confirmCheckboxStates(expectedStates) {
-    let checkboxItems = getTop().getElementsByAttribute("type", "checkbox");
-
-    is(checkboxItems.length, 3, "there should be 3 checkbox items in the context menu");
-
-    is(checkboxItems[0].hasAttribute("checked"), expectedStates[0], `checkbox item 1 has state (checked=${expectedStates[0]})`);
-    is(checkboxItems[1].hasAttribute("checked"), expectedStates[1], `checkbox item 2 has state (checked=${expectedStates[1]})`);
-    is(checkboxItems[2].hasAttribute("checked"), expectedStates[2], `checkbox item 3 has state (checked=${expectedStates[2]})`);
-  }
-
-  yield openExtensionMenu();
+  let extensionMenuRoot = yield openExtensionContextMenu();
 
   // Check some menu items
-  let top = getTop();
-  let items = top.getElementsByAttribute("label", "image");
+  let items = extensionMenuRoot.getElementsByAttribute("label", "image");
   is(items.length, 1, "contextMenu item for image was found (context=image)");
   let image = items[0];
 
-  items = top.getElementsByAttribute("label", "selection-edited");
+  items = extensionMenuRoot.getElementsByAttribute("label", "selection-edited");
   is(items.length, 0, "contextMenu item for selection was not found (context=image)");
 
-  items = top.getElementsByAttribute("label", "parentToDel");
+  items = extensionMenuRoot.getElementsByAttribute("label", "parentToDel");
   is(items.length, 0, "contextMenu item for removed parent was not found (context=image)");
 
-  items = top.getElementsByAttribute("label", "parent");
+  items = extensionMenuRoot.getElementsByAttribute("label", "parent");
   is(items.length, 1, "contextMenu item for parent was found (context=image)");
 
   is(items[0].childNodes[0].childNodes.length, 2, "child items for parent were found (context=image)");
 
   // Click on ext-image item and check the click results
-  yield closeContextMenu(image, {
-    menuItemId: "ext-image",
-    mediaType: "image",
-    srcUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/ctxmenu-image.png",
-    pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
-  });
+  yield closeExtensionContextMenu(image);
 
-  // Test radio groups
-  yield openExtensionMenu();
-  confirmRadioGroupStates([true, false, false]);
-  items = getTop().getElementsByAttribute("type", "radio");
-  yield closeContextMenu(items[1]);
-
-  yield openExtensionMenu();
-  confirmRadioGroupStates([true, true, false]);
-  items = getTop().getElementsByAttribute("type", "radio");
-  yield closeContextMenu(items[2]);
-
-  yield openExtensionMenu();
-  confirmRadioGroupStates([true, false, true]);
-  items = getTop().getElementsByAttribute("type", "radio");
-  yield closeContextMenu(items[0]);
-
-  yield openExtensionMenu();
-  confirmRadioGroupStates([true, false, true]);
-
-  // Test checkboxes
-  items = getTop().getElementsByAttribute("type", "checkbox");
-  confirmCheckboxStates([false, true, false]);
-  yield closeContextMenu(items[0]);
-
-  yield openExtensionMenu();
-  confirmCheckboxStates([true, true, false]);
-  items = getTop().getElementsByAttribute("type", "checkbox");
-  yield closeContextMenu(items[2]);
-
-  yield openExtensionMenu();
-  confirmCheckboxStates([true, true, true]);
-  items = getTop().getElementsByAttribute("type", "checkbox");
-  yield closeContextMenu(items[0]);
-
-  yield openExtensionMenu();
-  confirmCheckboxStates([false, true, true]);
-  items = getTop().getElementsByAttribute("type", "checkbox");
-  yield closeContextMenu(items[2]);
+  let result = yield extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
 
   // Select some text
   yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
@@ -357,40 +193,51 @@ add_task(function* () {
   });
 
   // Bring up context menu again
-  yield openExtensionMenu();
+  extensionMenuRoot = yield openExtensionContextMenu();
 
   // Check some menu items
-  top = getTop();
-  items = top.getElementsByAttribute("label", "Without onclick property");
+  items = extensionMenuRoot.getElementsByAttribute("label", "Without onclick property");
   is(items.length, 1, "contextMenu item was found (context=page)");
 
-  yield closeContextMenu(items[0], {
+  yield closeExtensionContextMenu(items[0]);
+
+  expectedClickInfo = {
     menuItemId: "ext-without-onclick",
     pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
-  }, false /* hasOnclickProperty */);
+  };
+
+  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
 
   // Bring up context menu again
-  yield openExtensionMenu();
+  extensionMenuRoot = yield openExtensionContextMenu();
 
   // Check some menu items
-  top = getTop();
-  items = top.getElementsByAttribute("label", "selection is: 'just some text 123456789012345678901234567890...'");
+  items = extensionMenuRoot.getElementsByAttribute("label", "selection is: 'just some text 123456789012345678901234567890...'");
   is(items.length, 1, "contextMenu item for selection was found (context=selection)");
   let selectionItem = items[0];
 
-  items = top.getElementsByAttribute("label", "selection");
+  items = extensionMenuRoot.getElementsByAttribute("label", "selection");
   is(items.length, 0, "contextMenu item label update worked (context=selection)");
 
-  yield closeContextMenu(selectionItem, {
+  yield closeExtensionContextMenu(selectionItem);
+
+  expectedClickInfo = {
     menuItemId: "ext-selection",
     pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
     selectionText: "just some text 1234567890123456789012345678901234567890123456789012345678901234567890123456789012",
-  });
+  };
 
+  result = yield extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+
+  let contentAreaContextMenu = yield openContextMenu("#img1");
   items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   is(items.length, 0, "top level item was not found (after removeAll()");
+  yield closeContextMenu();
 
   yield extension.unload();
-
   yield BrowserTestUtils.removeTab(tab1);
 });
