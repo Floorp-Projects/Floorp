@@ -556,7 +556,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   mConsumedRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
 #endif // SPIDERMONKEY_PROMISE
 
-  JS::dbg::SetDebuggerMallocSizeOf(mJSRuntime, moz_malloc_size_of);
+  JS::dbg::SetDebuggerMallocSizeOf(mJSContext, moz_malloc_size_of);
 
   nsCycleCollector_registerJSRuntime(this);
 
