@@ -48,8 +48,9 @@ class JitContext
     JitContext(JSContext* cx, TempAllocator* temp);
     JitContext(ExclusiveContext* cx, TempAllocator* temp);
     JitContext(CompileRuntime* rt, CompileCompartment* comp, TempAllocator* temp);
-    explicit JitContext(CompileRuntime* rt);
     JitContext(CompileRuntime* rt, TempAllocator* temp);
+    explicit JitContext(CompileRuntime* rt);
+    explicit JitContext(TempAllocator* temp);
     ~JitContext();
 
     // Running context when executing on the main thread. Not available during
@@ -63,6 +64,13 @@ class JitContext
     // during compilation.
     CompileRuntime* runtime;
     CompileCompartment* compartment;
+
+    bool onMainThread() const {
+        return runtime && runtime->onMainThread();
+    }
+    bool hasProfilingScripts() const {
+        return runtime && !!runtime->profilingScripts();
+    }
 
     int getNextAssemblerId() {
         return assemblerCount_++;
