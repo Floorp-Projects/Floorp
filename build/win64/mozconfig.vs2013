@@ -1,0 +1,23 @@
+_VSPATH="/c/tools/vs2013"
+export WIN32_REDIST_DIR=${_VSPATH}/VC/redist/x64/Microsoft.VC120.CRT
+
+## includes: win8.1 sdk includes, msvc std library, directx sdk for d3d9 ##
+export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/um:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/winrt:${_VSPATH}/vc/include:${_VSPATH}/vc/atlmfc/include:/c/tools/sdks/dx10/include
+
+## libs: win8.1 sdk x64 (64-bit) libs, msvc (64-bit) std library, msvc atl libs, directx sdk (64-bit) for d3d9  ##
+export LIBPATH=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/Lib/winv6.3/um/x64:${_VSPATH}/vc/lib/amd64:${_VSPATH}/vc/atlmfc/lib/amd64:/c/tools/sdks/dx10/lib/x64
+export LIB=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/Lib/winv6.3/um/x64:${_VSPATH}/vc/lib/amd64:${_VSPATH}/vc/atlmfc/lib/amd64:/c/tools/sdks/dx10/lib/x64
+
+## paths: win8.1 sdk x64 (64-bit) tools, msvc (64-bit) build toolchain, moz tools  ##
+export PATH="/c/Program Files (x86)/Windows Kits/8.1/bin/x64:${_VSPATH}/Common7/IDE:${_VSPATH}/VC/BIN/amd64:${_VSPATH}/VC/BIN/x86_amd64:${_VSPATH}/VC/BIN:${_VSPATH}/Common7/Tools:${_VSPATH}/VC/VCPackages:${PATH}"
+
+## WindowsSDKDir ##
+export WINDOWSSDKDIR="/c/Program Files (x86)/Windows Kits/8.1/"
+
+. $topsrcdir/build/mozconfig.vs-common
+
+mk_export_correct_style LIB
+mk_export_correct_style LIBPATH
+mk_export_correct_style PATH
+mk_export_correct_style INCLUDE
+mk_export_correct_style WIN32_REDIST_DIR

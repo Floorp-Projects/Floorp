@@ -38,13 +38,17 @@ def get_id(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
 
 def visual_studio_product_to_solution_version(version):
-    if version == '2015':
+    if version == '2013':
+        return '12.00', '12'
+    elif version == '2015':
         return '12.00', '14'
     else:
         raise Exception('Unknown version seen: %s' % version)
 
 def visual_studio_product_to_platform_toolset_version(version):
-    if version == '2015':
+    if version == '2013':
+        return 'v120'
+    elif version == '2015':
         return 'v140'
     else:
         raise Exception('Unknown version seen: %s' % version)
