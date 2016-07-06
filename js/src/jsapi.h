@@ -6160,19 +6160,19 @@ using PerformanceGroupVector = mozilla::Vector<RefPtr<js::PerformanceGroup>, 0, 
  * to the outside world and can cancelled with a call to `ResetMonitoring`.
  */
 extern JS_PUBLIC_API(bool)
-FlushPerformanceMonitoring(JSRuntime*);
+FlushPerformanceMonitoring(JSContext*);
 
 /**
  * Cancel any measurement that hasn't been committed.
  */
 extern JS_PUBLIC_API(void)
-ResetPerformanceMonitoring(JSRuntime*);
+ResetPerformanceMonitoring(JSContext*);
 
 /**
  * Cleanup any memory used by performance monitoring.
  */
 extern JS_PUBLIC_API(void)
-DisposePerformanceMonitoring(JSRuntime*);
+DisposePerformanceMonitoring(JSContext*);
 
 /**
  * Turn on/off stopwatch-based CPU monitoring.
@@ -6182,20 +6182,17 @@ DisposePerformanceMonitoring(JSRuntime*);
  * happen if we are out of memory.
  */
 extern JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringCPOW(JSRuntime*, bool);
+SetStopwatchIsMonitoringCPOW(JSContext*, bool);
 extern JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringCPOW(JSRuntime*);
+GetStopwatchIsMonitoringCPOW(JSContext*);
 extern JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringJank(JSRuntime*, bool);
+SetStopwatchIsMonitoringJank(JSContext*, bool);
 extern JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringJank(JSRuntime*);
-
-extern JS_PUBLIC_API(bool)
-IsStopwatchActive(JSRuntime*);
+GetStopwatchIsMonitoringJank(JSContext*);
 
 // Extract the CPU rescheduling data.
 extern JS_PUBLIC_API(void)
-GetPerfMonitoringTestCpuRescheduling(JSRuntime*, uint64_t* stayed, uint64_t* moved);
+GetPerfMonitoringTestCpuRescheduling(JSContext*, uint64_t* stayed, uint64_t* moved);
 
 
 /**
@@ -6203,22 +6200,22 @@ GetPerfMonitoringTestCpuRescheduling(JSRuntime*, uint64_t* stayed, uint64_t* mov
  * since process start.
  */
 extern JS_PUBLIC_API(void)
-AddCPOWPerformanceDelta(JSRuntime*, uint64_t delta);
+AddCPOWPerformanceDelta(JSContext*, uint64_t delta);
 
 typedef bool
 (*StopwatchStartCallback)(uint64_t, void*);
 extern JS_PUBLIC_API(bool)
-SetStopwatchStartCallback(JSRuntime*, StopwatchStartCallback, void*);
+SetStopwatchStartCallback(JSContext*, StopwatchStartCallback, void*);
 
 typedef bool
 (*StopwatchCommitCallback)(uint64_t, PerformanceGroupVector&, void*);
 extern JS_PUBLIC_API(bool)
-SetStopwatchCommitCallback(JSRuntime*, StopwatchCommitCallback, void*);
+SetStopwatchCommitCallback(JSContext*, StopwatchCommitCallback, void*);
 
 typedef bool
 (*GetGroupsCallback)(JSContext*, PerformanceGroupVector&, void*);
 extern JS_PUBLIC_API(bool)
-SetGetPerformanceGroupsCallback(JSRuntime*, GetGroupsCallback, void*);
+SetGetPerformanceGroupsCallback(JSContext*, GetGroupsCallback, void*);
 
 } /* namespace js */
 
