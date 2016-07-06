@@ -299,5 +299,24 @@ TextTrack::NotifyCueUpdated(TextTrackCue *aCue)
   SetDirty();
 }
 
+void
+TextTrack::GetLabel(nsAString& aLabel) const
+{
+  if (mTrackElement) {
+    mTrackElement->GetLabel(aLabel);
+  } else {
+    aLabel = mLabel;
+  }
+}
+void
+TextTrack::GetLanguage(nsAString& aLanguage) const
+{
+  if (mTrackElement) {
+    mTrackElement->GetSrclang(aLanguage);
+  } else {
+    aLanguage = mLanguage;
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

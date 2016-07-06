@@ -33,7 +33,7 @@ BEGIN_TEST(testPinAcrossGC)
     sw.str = JS_AtomizeAndPinString(cx, "wrapped chars that another test shouldn't be using");
     sw.strOk = false;
     CHECK(sw.str);
-    JS_AddFinalizeCallback(rt, FinalizeCallback, nullptr);
+    JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     JS_GC(rt);
     CHECK(sw.strOk);
     return true;

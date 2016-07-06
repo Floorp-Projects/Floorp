@@ -65,14 +65,8 @@ public:
   {
     return mKind;
   }
-  void GetLabel(nsAString& aLabel) const
-  {
-    aLabel = mLabel;
-  }
-  void GetLanguage(nsAString& aLanguage) const
-  {
-    aLanguage = mLanguage;
-  }
+  void GetLabel(nsAString& aLabel) const;
+  void GetLanguage(nsAString& aLanguage) const;
   void GetInBandMetadataTrackDispatchType(nsAString& aType) const
   {
     aType = mType;

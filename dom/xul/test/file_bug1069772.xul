@@ -41,6 +41,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1069772
     .then(browser => verifyBrowser(browser, false, false))
     .then(browser => verifyVisibility(browser, 'visible'))
 
+    // test the transition:
+    // prerender => visible => hidden => visible
+    // on a remote browser
+    .then(() => createPrerenderedBrowser(true))
+    .then(browser => verifyBrowser(browser, true, true))
+    .then(browser => verifyVisibility(browser, 'prerender'))
+    .then(browser => makePrerenderedBrowserActive(browser))
+    .then(browser => verifyBrowser(browser, false, true))
+    .then(browser => verifyVisibility(browser, 'visible'))
+    .then(browser => hideBrowser(browser))
+    .then(browser => verifyBrowser(browser, false, true))
+    .then(browser => verifyVisibility(browser, 'hidden'))
+    .then(browser => showBrowser(browser))
+    .then(browser => verifyBrowser(browser, false, true))
+    .then(browser => verifyVisibility(browser, 'visible'))
+
     // finish test
     .then(() => {
       window.close();
