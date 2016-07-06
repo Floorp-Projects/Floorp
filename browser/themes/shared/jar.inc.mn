@@ -64,7 +64,6 @@
   skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
   skin/classic/browser/identity-not-secure.svg                 (../shared/identity-block/identity-not-secure.svg)
   skin/classic/browser/identity-secure.svg                     (../shared/identity-block/identity-secure.svg)
-  skin/classic/browser/identity-mixed-active-blocked.svg       (../shared/identity-block/identity-mixed-active-blocked.svg)
   skin/classic/browser/identity-mixed-passive-loaded.svg       (../shared/identity-block/identity-mixed-passive-loaded.svg)
   skin/classic/browser/identity-mixed-active-loaded.svg        (../shared/identity-block/identity-mixed-active-loaded.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
