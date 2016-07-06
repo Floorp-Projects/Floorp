@@ -2114,7 +2114,7 @@ CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
                     RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape();
     masm.loadPtr(Address(temp, offset), temp);
 
-    masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
+    masm.loadPtr(Address(object, ShapedObject::offsetOfShape()), output);
     masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
     masm.move32(Imm32(0x1), output);
 
@@ -2183,7 +2183,7 @@ CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
                     RegExpCompartment::offsetOfOptimizableRegExpInstanceShape();
     masm.loadPtr(Address(temp, offset), temp);
 
-    masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
+    masm.loadPtr(Address(object, ShapedObject::offsetOfShape()), output);
     masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
     masm.move32(Imm32(0x1), output);
 
@@ -3776,7 +3776,7 @@ LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv)
     MOZ_ASSERT(obj != priv);
 
     // Check shape->numFixedSlots != 0.
-    masm.loadPtr(Address(obj, JSObject::offsetOfShape()), priv);
+    masm.loadPtr(Address(obj, ShapedObject::offsetOfShape()), priv);
 
     Label hasFixedSlots, done;
     masm.branchTest32(Assembler::NonZero,
