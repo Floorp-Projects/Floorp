@@ -412,9 +412,9 @@ typedef Vector<char16_t, 64> TwoByteName;
 struct MetadataCacheablePod
 {
     ModuleKind            kind;
+    SignalUsage           usesSignal;
     HeapUsage             heapUsage;
     uint32_t              initialHeapLength;
-    CompileArgs           compileArgs;
 
     MetadataCacheablePod() { mozilla::PodZero(this); }
 };

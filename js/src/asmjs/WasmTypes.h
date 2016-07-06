@@ -768,19 +768,19 @@ enum class JumpTarget
 
 typedef EnumeratedArray<JumpTarget, JumpTarget::Limit, Uint32Vector> JumpSiteArray;
 
-// The CompileArgs struct captures global parameters that affect all wasm code
+// The SignalUsage struct captures global parameters that affect all wasm code
 // generation. It also currently is the single source of truth for whether or
 // not to use signal handlers for different purposes.
 
-struct CompileArgs
+struct SignalUsage
 {
-    bool useSignalHandlersForOOB;
-    bool useSignalHandlersForInterrupt;
+    bool forOOB;
+    bool forInterrupt;
 
-    CompileArgs() = default;
-    explicit CompileArgs(ExclusiveContext* cx);
-    bool operator==(CompileArgs rhs) const;
-    bool operator!=(CompileArgs rhs) const { return !(*this == rhs); }
+    SignalUsage() = default;
+    explicit SignalUsage(ExclusiveContext* cx);
+    bool operator==(SignalUsage rhs) const;
+    bool operator!=(SignalUsage rhs) const { return !(*this == rhs); }
 };
 
 // A Module can either be asm.js or wasm.

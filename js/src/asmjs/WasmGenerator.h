@@ -61,8 +61,8 @@ typedef Vector<ImportModuleGeneratorData, 0, SystemAllocPolicy> ImportModuleGene
 
 struct ModuleGeneratorData
 {
-    CompileArgs                     args;
     ModuleKind                      kind;
+    SignalUsage                     usesSignal;
     mozilla::Atomic<uint32_t>       minHeapLength;
 
     DeclaredSigVector               sigs;
@@ -78,7 +78,7 @@ struct ModuleGeneratorData
     }
 
     explicit ModuleGeneratorData(ExclusiveContext* cx, ModuleKind kind = ModuleKind::Wasm)
-      : args(cx), kind(kind), minHeapLength(0)
+      : kind(kind), usesSignal(cx), minHeapLength(0)
     {}
 };
 
@@ -145,7 +145,7 @@ class MOZ_STACK_CLASS ModuleGenerator
                            Metadata* maybeMetadata = nullptr);
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
-    CompileArgs args() const { return metadata_->compileArgs; }
+    SignalUsage usesSignal() const { return metadata_->usesSignal; }
     jit::MacroAssembler& masm() { return masm_; }
 
     // Heap usage:
@@ -241,7 +241,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     }
 
     bool usesSignalsForInterrupts() const {
-        return m_->args().useSignalHandlersForInterrupt;
+        return m_->usesSignal().forInterrupt;
     }
 
     Bytes& bytes() {
