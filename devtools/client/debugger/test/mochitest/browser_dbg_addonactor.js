@@ -5,7 +5,8 @@
 
 // Make sure we can attach to addon actors.
 
-const ADDON3_URL = EXAMPLE_URL + "addon3.xpi";
+const ADDON3_PATH = "addon3.xpi";
+const ADDON3_ID = "jid1-ami3akps3baaeg@jetpack";
 const ADDON_MODULE_URL = "resource://jid1-ami3akps3baaeg-at-jetpack/browser_dbg_addon3/lib/main.js";
 
 var gAddon, gClient, gThreadClient;
@@ -23,7 +24,7 @@ function test() {
       "Root actor should identify itself as a browser.");
 
     installAddon()
-      .then(attachAddonActorForUrl.bind(null, gClient, ADDON3_URL))
+      .then(attachAddonActorForId.bind(null, gClient, ADDON3_ID))
       .then(attachAddonThread)
       .then(testDebugger)
       .then(testSources)
@@ -37,13 +38,13 @@ function test() {
 }
 
 function installAddon() {
-  return addAddon(ADDON3_URL).then(aAddon => {
+  return addTemporaryAddon(ADDON3_PATH).then(aAddon => {
     gAddon = aAddon;
   });
 }
 
 function attachAddonThread([aGrip, aResponse]) {
-  info("attached addon actor for URL");
+  info("attached addon actor for Addon ID");
   let deferred = promise.defer();
 
   gClient.attachThread(aResponse.threadActor, (aResponse, aThreadClient) => {

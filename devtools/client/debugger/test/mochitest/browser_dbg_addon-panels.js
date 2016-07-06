@@ -6,7 +6,8 @@
 // Ensure that only panels that are relevant to the addon debugger
 // display in the toolbox
 
-const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
+const ADDON_ID = "jid1-ami3akps3baaeg@jetpack";
+const ADDON_PATH = "addon3.xpi";
 
 var gAddon, gClient, gThreadClient, gDebugger, gSources;
 var PREFS = [
@@ -21,8 +22,8 @@ function test() {
     // Store and enable all optional dev tools panels
     yield pushPrefs(...PREFS);
 
-    let addon = yield addAddon(ADDON_URL);
-    let addonDebugger = yield initAddonDebugger(ADDON_URL);
+    let addon = yield addTemporaryAddon(ADDON_PATH);
+    let addonDebugger = yield initAddonDebugger(ADDON_ID);
 
     // Check only valid tabs are shown
     let tabs = addonDebugger.frame.contentDocument.getElementById("toolbox-tabs").children;
