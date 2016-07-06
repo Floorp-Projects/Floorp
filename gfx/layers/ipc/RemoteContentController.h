@@ -31,6 +31,7 @@ class APZCTreeManager;
 class RemoteContentController : public GeckoContentController
                               , public PAPZParent
 {
+  using GeckoContentController::TapType;
   using GeckoContentController::APZStateChange;
 
 public:
@@ -42,18 +43,11 @@ public:
   // Needs to be called on the main thread.
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
 
-  virtual void HandleDoubleTap(const CSSPoint& aPoint,
-                               Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) override;
-
-  virtual void HandleSingleTap(const CSSPoint& aPoint,
-                               Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) override;
-
-  virtual void HandleLongTap(const CSSPoint& aPoint,
-                             Modifiers aModifiers,
-                             const ScrollableLayerGuid& aGuid,
-                             uint64_t aInputBlockId) override;
+  virtual void HandleTap(TapType aTapType,
+                         const CSSPoint& aPoint,
+                         Modifiers aModifiers,
+                         const ScrollableLayerGuid& aGuid,
+                         uint64_t aInputBlockId) override;
 
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
 

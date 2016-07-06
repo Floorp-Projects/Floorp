@@ -1215,7 +1215,7 @@ GlobalHelperThreadState::finishModuleParseTask(JSContext* maybecx, JSRuntime* rt
     JSContext* cx = maybecx;
     RootedModuleObject module(cx, script->module());
     module->fixScopesAfterCompartmentMerge(cx);
-    if (!ModuleObject::FreezeArrayProperties(cx, module))
+    if (!ModuleObject::Freeze(cx, module))
         return nullptr;
 
     return module;

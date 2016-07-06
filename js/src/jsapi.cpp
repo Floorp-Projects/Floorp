@@ -1321,15 +1321,15 @@ JS_strdup(JSRuntime* rt, const char* s)
 #undef JS_AddRoot
 
 JS_PUBLIC_API(bool)
-JS_AddExtraGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
+JS_AddExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    return rt->gc.addBlackRootsTracer(traceOp, data);
+    return cx->gc.addBlackRootsTracer(traceOp, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveExtraGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
+JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    return rt->gc.removeBlackRootsTracer(traceOp, data);
+    return cx->gc.removeBlackRootsTracer(traceOp, data);
 }
 
 JS_PUBLIC_API(void)
@@ -1349,58 +1349,58 @@ JS_MaybeGC(JSContext* cx)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data)
+JS_SetGCCallback(JSContext* cx, JSGCCallback cb, void* data)
 {
-    AssertHeapIsIdle(rt);
-    rt->gc.setGCCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    cx->gc.setGCCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_SetObjectsTenuredCallback(JSRuntime* rt, JSObjectsTenuredCallback cb,
+JS_SetObjectsTenuredCallback(JSContext* cx, JSObjectsTenuredCallback cb,
                              void* data)
 {
-    AssertHeapIsIdle(rt);
-    rt->gc.setObjectsTenuredCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    cx->gc.setObjectsTenuredCallback(cb, data);
 }
 
 JS_PUBLIC_API(bool)
-JS_AddFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb, void* data)
+JS_AddFinalizeCallback(JSContext* cx, JSFinalizeCallback cb, void* data)
 {
-    AssertHeapIsIdle(rt);
-    return rt->gc.addFinalizeCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    return cx->gc.addFinalizeCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb)
+JS_RemoveFinalizeCallback(JSContext* cx, JSFinalizeCallback cb)
 {
-    rt->gc.removeFinalizeCallback(cb);
+    cx->gc.removeFinalizeCallback(cb);
 }
 
 JS_PUBLIC_API(bool)
-JS_AddWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb, void* data)
+JS_AddWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb, void* data)
 {
-    AssertHeapIsIdle(rt);
-    return rt->gc.addWeakPointerZoneGroupCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    return cx->gc.addWeakPointerZoneGroupCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb)
+JS_RemoveWeakPointerZoneGroupCallback(JSContext* cx, JSWeakPointerZoneGroupCallback cb)
 {
-    rt->gc.removeWeakPointerZoneGroupCallback(cb);
+    cx->gc.removeWeakPointerZoneGroupCallback(cb);
 }
 
 JS_PUBLIC_API(bool)
-JS_AddWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb,
+JS_AddWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb,
                                      void* data)
 {
-    AssertHeapIsIdle(rt);
-    return rt->gc.addWeakPointerCompartmentCallback(cb, data);
+    AssertHeapIsIdle(cx);
+    return cx->gc.addWeakPointerCompartmentCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
-JS_RemoveWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb)
+JS_RemoveWeakPointerCompartmentCallback(JSContext* cx, JSWeakPointerCompartmentCallback cb)
 {
-    rt->gc.removeWeakPointerCompartmentCallback(cb);
+    cx->gc.removeWeakPointerCompartmentCallback(cb);
 }
 
 
@@ -1418,11 +1418,11 @@ JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCParameter(JSRuntime* rt, JSGCParamKey key, uint32_t value)
+JS_SetGCParameter(JSContext* cx, JSGCParamKey key, uint32_t value)
 {
-    rt->gc.waitBackgroundSweepEnd();
-    AutoLockGC lock(rt);
-    MOZ_ALWAYS_TRUE(rt->gc.setParameter(key, value, lock));
+    cx->gc.waitBackgroundSweepEnd();
+    AutoLockGC lock(cx);
+    MOZ_ALWAYS_TRUE(cx->gc.setParameter(key, value, lock));
 }
 
 JS_PUBLIC_API(uint32_t)
@@ -1439,7 +1439,7 @@ struct JSGCConfig {
 };
 
 JS_PUBLIC_API(void)
-JS_SetGCParametersBasedOnAvailableMemory(JSRuntime* rt, uint32_t availMem)
+JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx, uint32_t availMem)
 {
     static const JSGCConfig minimal[NumGCConfigs] = {
         {JSGC_MAX_MALLOC_BYTES, 6 * 1024 * 1024},
@@ -1481,7 +1481,7 @@ JS_SetGCParametersBasedOnAvailableMemory(JSRuntime* rt, uint32_t availMem)
     }
 
     for (size_t i = 0; i < NumGCConfigs; i++)
-        JS_SetGCParameter(rt, config[i].key, config[i].value);
+        JS_SetGCParameter(cx, config[i].key, config[i].value);
 }
 
 
@@ -1530,9 +1530,10 @@ SetNativeStackQuotaAndLimit(JSRuntime* rt, StackKind kind, size_t stackSize)
 }
 
 JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSRuntime* rt, size_t systemCodeStackSize, size_t trustedScriptStackSize,
+JS_SetNativeStackQuota(JSContext* cx, size_t systemCodeStackSize, size_t trustedScriptStackSize,
                        size_t untrustedScriptStackSize)
 {
+    JSRuntime* rt = cx->runtime();
     MOZ_ASSERT(rt->requestDepth == 0);
 
     if (!trustedScriptStackSize)
@@ -3267,46 +3268,46 @@ JS_HoldPrincipals(JSPrincipals* principals)
 }
 
 JS_PUBLIC_API(void)
-JS_DropPrincipals(JSRuntime* rt, JSPrincipals* principals)
+JS_DropPrincipals(JSContext* cx, JSPrincipals* principals)
 {
     int rc = --principals->refcount;
     if (rc == 0)
-        rt->destroyPrincipals(principals);
+        cx->destroyPrincipals(principals);
 }
 
 JS_PUBLIC_API(void)
-JS_SetSecurityCallbacks(JSRuntime* rt, const JSSecurityCallbacks* scb)
+JS_SetSecurityCallbacks(JSContext* cx, const JSSecurityCallbacks* scb)
 {
     MOZ_ASSERT(scb != &NullSecurityCallbacks);
-    rt->securityCallbacks = scb ? scb : &NullSecurityCallbacks;
+    cx->securityCallbacks = scb ? scb : &NullSecurityCallbacks;
 }
 
 JS_PUBLIC_API(const JSSecurityCallbacks*)
-JS_GetSecurityCallbacks(JSRuntime* rt)
+JS_GetSecurityCallbacks(JSContext* cx)
 {
-    return (rt->securityCallbacks != &NullSecurityCallbacks) ? rt->securityCallbacks : nullptr;
+    return (cx->securityCallbacks != &NullSecurityCallbacks) ? cx->securityCallbacks : nullptr;
 }
 
 JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime* rt, JSPrincipals* prin)
+JS_SetTrustedPrincipals(JSContext* cx, JSPrincipals* prin)
 {
-    rt->setTrustedPrincipals(prin);
+    cx->setTrustedPrincipals(prin);
 }
 
 extern JS_PUBLIC_API(void)
-JS_InitDestroyPrincipalsCallback(JSRuntime* rt, JSDestroyPrincipalsOp destroyPrincipals)
+JS_InitDestroyPrincipalsCallback(JSContext* cx, JSDestroyPrincipalsOp destroyPrincipals)
 {
     MOZ_ASSERT(destroyPrincipals);
-    MOZ_ASSERT(!rt->destroyPrincipals);
-    rt->destroyPrincipals = destroyPrincipals;
+    MOZ_ASSERT(!cx->destroyPrincipals);
+    cx->destroyPrincipals = destroyPrincipals;
 }
 
 extern JS_PUBLIC_API(void)
-JS_InitReadPrincipalsCallback(JSRuntime* rt, JSReadPrincipalsOp read)
+JS_InitReadPrincipalsCallback(JSContext* cx, JSReadPrincipalsOp read)
 {
     MOZ_ASSERT(read);
-    MOZ_ASSERT(!rt->readPrincipals);
-    rt->readPrincipals = read;
+    MOZ_ASSERT(!cx->readPrincipals);
+    cx->readPrincipals = read;
 }
 
 JS_PUBLIC_API(JSFunction*)
@@ -6499,18 +6500,18 @@ JSAutoByteString::encodeLatin1(ExclusiveContext* cx, JSString* str)
 }
 
 JS_PUBLIC_API(void)
-JS::SetLargeAllocationFailureCallback(JSRuntime* rt, JS::LargeAllocationFailureCallback lafc,
+JS::SetLargeAllocationFailureCallback(JSContext* cx, JS::LargeAllocationFailureCallback lafc,
                                       void* data)
 {
-    rt->largeAllocationFailureCallback = lafc;
-    rt->largeAllocationFailureCallbackData = data;
+    cx->largeAllocationFailureCallback = lafc;
+    cx->largeAllocationFailureCallbackData = data;
 }
 
 JS_PUBLIC_API(void)
-JS::SetOutOfMemoryCallback(JSRuntime* rt, OutOfMemoryCallback cb, void* data)
+JS::SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data)
 {
-    rt->oomCallback = cb;
-    rt->oomCallbackData = data;
+    cx->oomCallback = cb;
+    cx->oomCallbackData = data;
 }
 
 JS_PUBLIC_API(bool)

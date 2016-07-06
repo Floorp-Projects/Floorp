@@ -138,6 +138,7 @@ using namespace mozilla::layout;
 using namespace mozilla::docshell;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
+using mozilla::layers::GeckoContentController;
 
 NS_IMPL_ISUPPORTS(ContentListener, nsIDOMEventListener)
 
@@ -1784,27 +1785,39 @@ TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
 }
 
 void
-TabChild::HandleSingleTap(const CSSPoint& aPoint,
-                          const Modifiers& aModifiers,
-                          const ScrollableLayerGuid& aGuid,
-                          bool aCallTakeFocusForClickFromTap)
+TabChild::HandleTap(GeckoContentController::TapType aType,
+                    const CSSPoint& aPoint, const Modifiers& aModifiers,
+                    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
+                    bool aCallTakeFocusForClickFromTap)
 {
-  if (aCallTakeFocusForClickFromTap && mRemoteFrame) {
-    mRemoteFrame->SendTakeFocusForClickFromTap();
-  }
-  if (mGlobal && mTabChildGlobal) {
-    mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
-  }
-}
-
-void
-TabChild::HandleLongTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
-                        const ScrollableLayerGuid& aGuid,
-                        const uint64_t& aInputBlockId)
-{
-  if (mGlobal && mTabChildGlobal) {
-    mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
-        aInputBlockId);
+  switch (aType) {
+  case GeckoContentController::TapType::eSingleTap:
+    if (aCallTakeFocusForClickFromTap && mRemoteFrame) {
+      mRemoteFrame->SendTakeFocusForClickFromTap();
+    }
+    if (mGlobal && mTabChildGlobal) {
+      mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
+    }
+    break;
+  case GeckoContentController::TapType::eDoubleTap:
+    HandleDoubleTap(aPoint, aModifiers, aGuid);
+    break;
+  case GeckoContentController::TapType::eLongTap:
+    if (mGlobal && mTabChildGlobal) {
+      mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
+          aInputBlockId);
+    }
+    break;
+  case GeckoContentController::TapType::eLongTapUp:
+    if (mGlobal && mTabChildGlobal) {
+      mAPZEventState->ProcessLongTapUp();
+    }
+    break;
+  case GeckoContentController::TapType::eSentinel:
+    // Should never happen, but we need to handle this case to make the compiler
+    // happy.
+    MOZ_ASSERT(false);
+    break;
   }
 }
 

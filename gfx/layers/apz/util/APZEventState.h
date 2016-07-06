@@ -54,6 +54,7 @@ public:
                       Modifiers aModifiers,
                       const ScrollableLayerGuid& aGuid,
                       uint64_t aInputBlockId);
+  void ProcessLongTapUp();
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId,

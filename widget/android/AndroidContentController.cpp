@@ -44,16 +44,17 @@ AndroidContentController::NotifyDefaultPrevented(APZCTreeManager* aManager,
 }
 
 void
-AndroidContentController::HandleSingleTap(const CSSPoint& aPoint,
-                                          Modifiers aModifiers,
-                                          const ScrollableLayerGuid& aGuid)
+AndroidContentController::HandleTap(TapType aType, const CSSPoint& aPoint,
+                                    Modifiers aModifiers,
+                                    const ScrollableLayerGuid& aGuid,
+                                    uint64_t aInputBlockId)
 {
     // This function will get invoked first on the Java UI thread, and then
     // again on the main thread (because of the code in ChromeProcessController::
-    // HandleSingleTap). We want to post the SingleTap message once; it can be
+    // HandleTap). We want to post the SingleTap message once; it can be
     // done from either thread but we need access to the callback transform
     // so we do it from the main thread.
-    if (NS_IsMainThread()) {
+    if (NS_IsMainThread() && aType == TapType::eSingleTap) {
         CSSPoint point = mozilla::layers::APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
 
         nsIContent* content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
@@ -83,7 +84,7 @@ AndroidContentController::HandleSingleTap(const CSSPoint& aPoint,
         });
     }
 
-    ChromeProcessController::HandleSingleTap(aPoint, aModifiers, aGuid);
+    ChromeProcessController::HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
 }
 
 void

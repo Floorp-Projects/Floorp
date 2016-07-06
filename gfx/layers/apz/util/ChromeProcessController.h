@@ -40,13 +40,10 @@ public:
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override;
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
-  virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) override;
-  virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) override;
-  virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid,
-                               uint64_t aInputBlockId) override;
+  virtual void HandleTap(TapType aType,
+                         const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
+                         const ScrollableLayerGuid& aGuid,
+                         uint64_t aInputBlockId) override;
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                     APZStateChange aChange,
                                     int aArg) override;
@@ -63,6 +60,8 @@ private:
   nsIPresShell* GetPresShell() const;
   nsIDocument* GetRootDocument() const;
   nsIDocument* GetRootContentDocument(const FrameMetrics::ViewID& aScrollId) const;
+  void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
+                       const ScrollableLayerGuid& aGuid);
 };
 
 } // namespace layers
