@@ -1688,8 +1688,31 @@ public abstract class GeckoApp
                 final JSONArray tabs = new JSONArray();
                 final JSONObject windowObject = new JSONObject();
                 SessionParser parser = new SessionParser() {
+                    private boolean selectNextTab;
+
                     @Override
                     public void onTabRead(final SessionTab sessionTab) {
+                        if (sessionTab.isAboutHomeWithoutHistory()) {
+                            // This is a tab pointing to about:home with no history. We won't restore
+                            // this tab. If we end up restoring no tabs then the browser will decide
+                            // whether it needs to open about:home or a different 'homepage'. If we'd
+                            // always restore about:home only tabs then we'd never open the homepage.
+                            // See bug 1261008.
+
+                            if (sessionTab.isSelected()) {
+                                // Unfortunately this tab is the selected tab. Let's just try to select
+                                // the first tab. If we haven't restored any tabs so far then remember
+                                // to select the next tab that gets restored.
+
+                                if (!Tabs.getInstance().selectLastTab()) {
+                                    selectNextTab = true;
+                                }
+                            }
+
+                            // Do not restore this tab.
+                            return;
+                        }
+
                         JSONObject tabObject = sessionTab.getTabObject();
 
                         int flags = Tabs.LOADURL_NEW_TAB;
@@ -1698,6 +1721,13 @@ public abstract class GeckoApp
                         flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
 
                         final Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
+
+                        if (selectNextTab) {
+                            // We did not restore the selected tab previously. Now let's select this tab.
+                            Tabs.getInstance().selectTab(tab.getId());
+                            selectNextTab = false;
+                        }
+
                         ThreadUtils.postToUiThread(new Runnable() {
                             @Override
                             public void run() {
