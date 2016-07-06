@@ -1628,7 +1628,7 @@ CodeGeneratorMIPSShared::visitGuardShape(LGuardShape* guard)
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
 
-    masm.loadPtr(Address(obj, JSObject::offsetOfShape()), tmp);
+    masm.loadPtr(Address(obj, ShapedObject::offsetOfShape()), tmp);
     bailoutCmpPtr(Assembler::NotEqual, tmp, ImmGCPtr(guard->mir()->shape()),
                   guard->snapshot());
 }
