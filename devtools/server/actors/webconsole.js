@@ -608,7 +608,9 @@ WebConsoleActor.prototype =
             this.stackTraceCollector = new StackTraceCollector({ window, appId });
             this.stackTraceCollector.init();
 
-            if (appId || messageManager) {
+            let processBoundary = Services.appinfo.processType !=
+                                  Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+            if ((appId || messageManager) && processBoundary) {
               // Start a network monitor in the parent process to listen to
               // most requests than happen in parent
               this.networkMonitor =

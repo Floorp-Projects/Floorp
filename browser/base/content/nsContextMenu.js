@@ -597,14 +597,10 @@ nsContextMenu.prototype = {
       // browser is remote or not.
       let onNewNode = inspector.selection.once("new-node-front");
 
-      if (this.isRemote) {
-        this.browser.messageManager.sendAsyncMessage("debug:inspect", {}, {node: this.target});
-        inspector.walker.findInspectingNode().then(nodeFront => {
-          inspector.selection.setNodeFront(nodeFront, "browser-context-menu");
-        });
-      } else {
-        inspector.selection.setNode(this.target, "browser-context-menu");
-      }
+      this.browser.messageManager.sendAsyncMessage("debug:inspect", {}, {node: this.target});
+      inspector.walker.findInspectingNode().then(nodeFront => {
+        inspector.selection.setNodeFront(nodeFront, "browser-context-menu");
+      });
 
       return onNewNode.then(() => {
         // Now that the node has been selected, wait until the inspector is

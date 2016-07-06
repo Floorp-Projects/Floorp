@@ -23,7 +23,6 @@ function init(msg) {
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
-    DebuggerServer.isInChildProcess = true;
   }
 
   // In case of apps being loaded in parent process, DebuggerServer is already

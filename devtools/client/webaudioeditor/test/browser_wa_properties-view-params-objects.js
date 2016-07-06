@@ -14,12 +14,12 @@ add_task(function* () {
 
   let started = once(gFront, "start-context");
 
-  reload(target);
-
-  let [actors] = yield Promise.all([
+  let events = Promise.all([
     getN(gFront, "create-node", 3),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
