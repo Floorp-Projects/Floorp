@@ -1425,11 +1425,12 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         // reason to bother.
         sScriptedInterruptCallback = new PersistentRootedValue;
         sScriptedInterruptCallback->init(rt, UndefinedValue());
-        JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
 
         AutoJSAPI jsapi;
         jsapi.Init();
         cx = jsapi.cx();
+
+        JS_SetInterruptCallback(cx, XPCShellInterruptCallback);
 
         argc--;
         argv++;
