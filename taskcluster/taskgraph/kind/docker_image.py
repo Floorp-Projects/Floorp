@@ -17,10 +17,6 @@ from taskgraph.util.docker import (
     generate_context_hash
 )
 from taskgraph.util.templates import Templates
-from taskgraph.util.time import (
-    json_time_from_now,
-    current_json_time,
-)
 
 logger = logging.getLogger(__name__)
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
