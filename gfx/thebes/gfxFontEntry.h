@@ -265,6 +265,7 @@ public:
 
     bool     TryGetColorGlyphs();
     bool     GetColorLayersInfo(uint32_t aGlyphId,
+                                const mozilla::gfx::Color& aDefaultColor,
                                 nsTArray<uint16_t>& layerGlyphs,
                                 nsTArray<mozilla::gfx::Color>& layerColors);
 

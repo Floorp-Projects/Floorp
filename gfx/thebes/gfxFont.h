@@ -2155,6 +2155,7 @@ protected:
                         bool& aEmittedGlyphs) const;
 
     bool RenderColorGlyph(DrawTarget* aDrawTarget,
+                          gfxContext* aContext,
                           mozilla::gfx::ScaledFont* scaledFont,
                           mozilla::gfx::GlyphRenderingOptions* renderingOptions,
                           mozilla::gfx::DrawOptions drawOptions,
