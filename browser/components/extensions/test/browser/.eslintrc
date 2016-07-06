@@ -19,8 +19,12 @@
 
     "clickBrowserAction": true,
     "clickPageAction": true,
-    "CustomizableUI": true,
+    "closeContextMenu": true,
+    "closeExtensionContextMenu": true,
     "focusWindow": true,
     "makeWidgetId": true,
+    "openContextMenu": true,
+    "openExtensionContextMenu": true,
+    "CustomizableUI": true,
   }
 }
