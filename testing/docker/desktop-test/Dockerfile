@@ -19,6 +19,10 @@ RUN chmod u+x /home/worker/bin/buildbot_step
 ADD            https://s3-us-west-2.amazonaws.com/test-caching/packages/linux64-stackwalk /usr/local/bin/linux64-minidump_stackwalk
 RUN chmod +x /usr/local/bin/linux64-minidump_stackwalk
 
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+
 # allow the worker user to access video devices
 RUN usermod -a -G video worker
 
