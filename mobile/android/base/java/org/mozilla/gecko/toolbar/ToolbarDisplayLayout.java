@@ -278,6 +278,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             strippedURL = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(strippedURL));
         }
 
+        // The URL bar does not support RTL currently (See bug 928688 and meta bug 702845).
+        // Displaying a URL using RTL (or mixed) characters can lead to an undesired reordering
+        // of elements of the URL. That's why we are forcing the URL to use LTR (bug 1284372).
+        strippedURL = StringUtils.forceLTR(strippedURL);
+
         // This value is not visible to screen readers but we rely on it when running UI tests. Screen
         // readers will instead focus BrowserToolbar and read the "base domain" from there. UI tests
         // will read the content description to obtain the full URL for performing assertions.
