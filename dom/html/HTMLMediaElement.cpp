@@ -2128,16 +2128,16 @@ NS_IMETHODIMP HTMLMediaElement::SetMuted(bool aMuted)
   return NS_OK;
 }
 
-class HTMLMediaElement::CaptureStreamTrackSource :
+class HTMLMediaElement::DecoderCaptureTrackSource :
   public MediaStreamTrackSource,
   public DecoderPrincipalChangeObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CaptureStreamTrackSource,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DecoderCaptureTrackSource,
                                            MediaStreamTrackSource)
 
-  explicit CaptureStreamTrackSource(HTMLMediaElement* aElement)
+  explicit DecoderCaptureTrackSource(HTMLMediaElement* aElement)
     : MediaStreamTrackSource(nsCOMPtr<nsIPrincipal>(aElement->GetCurrentPrincipal()).get(),
                              true,
                              nsString())
@@ -2191,20 +2191,20 @@ public:
   }
 
 protected:
-  virtual ~CaptureStreamTrackSource()
+  virtual ~DecoderCaptureTrackSource()
   {
   }
 
   RefPtr<HTMLMediaElement> mElement;
 };
 
-NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::CaptureStreamTrackSource,
+NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource,
                          MediaStreamTrackSource)
-NS_IMPL_RELEASE_INHERITED(HTMLMediaElement::CaptureStreamTrackSource,
+NS_IMPL_RELEASE_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource,
                           MediaStreamTrackSource)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::CaptureStreamTrackSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource)
 NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSource)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::CaptureStreamTrackSource,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource,
                                    MediaStreamTrackSource,
                                    mElement)
 
@@ -2228,7 +2228,7 @@ public:
     // If this changes (after implementing Stop()?) we'll have to ensure we
     // return the same source for all requests to the same TrackID, and only
     // have one getter.
-    return do_AddRef(new CaptureStreamTrackSource(mElement));
+    return do_AddRef(new DecoderCaptureTrackSource(mElement));
   }
 
 protected:
