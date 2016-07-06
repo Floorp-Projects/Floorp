@@ -635,6 +635,11 @@ public:
 
 #endif // DESKTOP
 
+#ifdef __NR_getrandom
+    case __NR_getrandom:
+      return Allow();
+#endif
+
       // nsSystemInfo uses uname (and we cache an instance, so
       // the info remains present even if we block the syscall)
     case __NR_uname:

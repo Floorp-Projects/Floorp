@@ -38,7 +38,7 @@ JavaScriptParent::JavaScriptParent(JSRuntime* rt)
 
 JavaScriptParent::~JavaScriptParent()
 {
-    JS_RemoveExtraGCRootsTracer(rt_, TraceParent, this);
+    JS_RemoveExtraGCRootsTracer(JS_GetContext(rt_), TraceParent, this);
 }
 
 bool
@@ -47,7 +47,7 @@ JavaScriptParent::init()
     if (!WrapperOwner::init())
         return false;
 
-    JS_AddExtraGCRootsTracer(rt_, TraceParent, this);
+    JS_AddExtraGCRootsTracer(JS_GetContext(rt_), TraceParent, this);
     return true;
 }
 
