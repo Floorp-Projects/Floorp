@@ -12,7 +12,6 @@
      SimpleTest.waitForExplicitFinish();
      "use strict";
      function onLoad () {
-       let youtube_changed_url_noquery = "https://mochitest.youtube.com/embed/Xm5i5kbIXzc";
        let youtube_changed_url_query = "https://mochitest.youtube.com/embed/Xm5i5kbIXzc?start=10&end=20";
 
        function testEmbed(embed, expected_url) {
@@ -22,8 +21,8 @@
        }
        info("Running youtube rewrite query test");
        testEmbed(document.getElementById("testembed-correct"), youtube_changed_url_query);
-       testEmbed(document.getElementById("testembed-wrong"), youtube_changed_url_noquery);
-       testEmbed(document.getElementById("testembed-whywouldyouevendothat"), youtube_changed_url_noquery);
+       testEmbed(document.getElementById("testembed-wrong"), youtube_changed_url_query);
+       testEmbed(document.getElementById("testembed-whywouldyouevendothat"), youtube_changed_url_query);
        SimpleTest.finish();
      }
     </script>
