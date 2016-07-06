@@ -169,20 +169,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute boolean isSelfSigned;
 
   /**
-   *  Constants for certificate verification results.
-   */
-  const unsigned long VERIFIED_OK          =      0;
-  const unsigned long NOT_VERIFIED_UNKNOWN = 1 << 0;
-  const unsigned long CERT_REVOKED         = 1 << 1;
-  const unsigned long CERT_EXPIRED         = 1 << 2;
-  const unsigned long CERT_NOT_TRUSTED     = 1 << 3;
-  const unsigned long ISSUER_NOT_TRUSTED   = 1 << 4;
-  const unsigned long ISSUER_UNKNOWN       = 1 << 5;
-  const unsigned long INVALID_CA           = 1 << 6;
-  const unsigned long USAGE_NOT_ALLOWED    = 1 << 7;
-  const unsigned long SIGNATURE_ALGORITHM_DISABLED = 1 << 8;
-
-  /**
    *  Constants for specifying the chain mode when exporting a certificate
    */
   const unsigned long CMS_CHAIN_MODE_CertOnly = 1;
@@ -197,40 +183,6 @@ interface nsIX509Cert : nsISupports {
    *  @return The chain of certifficates including the issuers.
    */
   nsIArray getChain();
-
-  /**
-   *  Obtain an array of human readable strings describing
-   *  the certificate's certified usages.
-   *
-   *  @param localOnly Do not hit the network, even if revocation information
-   *                   downloading is currently activated.
-   *  @param verified The certificate verification result, see constants.
-   *  @param count The number of human readable usages returned.
-   *  @param usages The array of human readable usages.
-   */
-  void getUsagesArray(in boolean localOnly,
-                      out uint32_t verified,
-                      out uint32_t count,
-                      [array, size_is(count)] out wstring usages);
-
-  /**
-   *  Async version of nsIX509Cert::getUsagesArray()
-   *
-   *  Will not block, will request results asynchronously,
-   *  availability of results will be notified on the main thread.
-   */
-  void requestUsagesArrayAsync(in nsICertVerificationListener cvl);
-
-  /**
-   *  Obtain a single comma separated human readable string describing
-   *  the certificate's certified usages.
-   *
-   *  @param localOnly Do not hit the network, even if revocation information
-   *                   downloading is currently activated.
-   *  @param verified The certificate verification result, see constants.
-   *  @param purposes The string listing the usages.
-   */
-  void getUsagesString(in boolean localOnly, out uint32_t verified, out AString usages);
 
   /**
    * A comma separated list of localized strings representing the contents of
@@ -306,44 +258,4 @@ interface nsIX509Cert : nsISupports {
    * or mark it as untrusted.
    */
   void markForPermDeletion();
-};
-
-[scriptable, uuid(2fd0a785-9f2d-4327-8871-8c3e0783891d)]
-interface nsICertVerificationResult : nsISupports {
-
-  /**
-   *  This interface reflects a container of
-   *  verification results. Call will not block.
-   *
-   *  Obtain an array of human readable strings describing
-   *  the certificate's certified usages.
-   *
-   *  Mirrors the results produced by
-   *  nsIX509Cert::getUsagesArray()
-   *
-   *  As of today, this function is a one-shot object,
-   *  only the first call will succeed.
-   *  This allows an optimization in the implementation,
-   *  ownership of result data will be transfered to caller.
-   *
-   *  @param cert The certificate that was verified.
-   *  @param verified The certificate verification result,
-   *         see constants in nsIX509Cert.
-   *  @param count The number of human readable usages returned.
-   *  @param usages The array of human readable usages.
-   */
-  void getUsagesArrayResult(out uint32_t verified,
-                            out uint32_t count,
-                            [array, size_is(count)] out wstring usages);
-};
-
-[scriptable, uuid(6684bce9-50db-48e1-81b7-98102bf81357)]
-interface nsICertVerificationListener : nsISupports {
-
-  /**
-   *  Notify that results are ready, that have been requested
-   *  using nsIX509Cert::requestUsagesArrayAsync()
-   */
-  void notify(in nsIX509Cert verifiedCert,
-              in nsICertVerificationResult result);
 };
