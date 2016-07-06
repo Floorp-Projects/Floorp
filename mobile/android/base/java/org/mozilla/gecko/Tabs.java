@@ -260,6 +260,15 @@ public class Tabs implements GeckoEventListener {
         return tab;
     }
 
+    public synchronized boolean selectLastTab() {
+        if (mOrder.isEmpty()) {
+            return false;
+        }
+
+        selectTab(mOrder.get(mOrder.size() - 1).getId());
+        return true;
+    }
+
     private int getIndexOf(Tab tab) {
         return mOrder.lastIndexOf(tab);
     }
