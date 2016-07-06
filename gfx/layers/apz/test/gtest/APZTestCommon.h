@@ -40,6 +40,7 @@ using ::testing::AtLeast;
 using ::testing::AtMost;
 using ::testing::MockFunction;
 using ::testing::InSequence;
+typedef mozilla::layers::GeckoContentController::TapType TapType;
 
 template<class T>
 class ScopedGfxPref {
@@ -76,9 +77,7 @@ public:
   MOCK_METHOD1(RequestContentRepaint, void(const FrameMetrics&));
   MOCK_METHOD2(RequestFlingSnap, void(const FrameMetrics::ViewID& aScrollId, const mozilla::CSSPoint& aDestination));
   MOCK_METHOD2(AcknowledgeScrollUpdate, void(const FrameMetrics::ViewID&, const uint32_t& aScrollGeneration));
-  MOCK_METHOD3(HandleDoubleTap, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&));
-  MOCK_METHOD3(HandleSingleTap, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&));
-  MOCK_METHOD4(HandleLongTap, void(const CSSPoint&, Modifiers, const ScrollableLayerGuid&, uint64_t));
+  MOCK_METHOD5(HandleTap, void(TapType, const CSSPoint&, Modifiers, const ScrollableLayerGuid&, uint64_t));
   // Can't use the macros with already_AddRefed :(
   void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) {
     RefPtr<Runnable> task = aTask;

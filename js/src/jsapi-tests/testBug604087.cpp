@@ -54,7 +54,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 
 BEGIN_TEST(testBug604087)
 {
-    js::SetWindowProxyClass(cx->runtime(), &OuterWrapperClass);
+    js::SetWindowProxyClass(cx, &OuterWrapperClass);
 
     js::WrapperOptions options;
     options.setClass(&OuterWrapperClass);

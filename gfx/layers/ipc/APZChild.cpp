@@ -100,32 +100,15 @@ APZChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
-APZChild::RecvHandleDoubleTap(const CSSPoint& aPoint,
-                              const Modifiers& aModifiers,
-                              const ScrollableLayerGuid& aGuid)
+APZChild::RecvHandleTap(const TapType& aType,
+                        const CSSPoint& aPoint,
+                        const Modifiers& aModifiers,
+                        const ScrollableLayerGuid& aGuid,
+                        const uint64_t& aInputBlockId,
+                        const bool& aCallTakeFocusForClickFromTap)
 {
-  mBrowser->HandleDoubleTap(aPoint, aModifiers, aGuid);
-  return true;
-}
-
-bool
-APZChild::RecvHandleSingleTap(const CSSPoint& aPoint,
-                              const Modifiers& aModifiers,
-                              const ScrollableLayerGuid& aGuid,
-                              const bool& aCallTakeFocusForClickFromTap)
-{
-  mBrowser->HandleSingleTap(aPoint, aModifiers, aGuid,
-                            aCallTakeFocusForClickFromTap);
-  return true;
-}
-
-bool
-APZChild::RecvHandleLongTap(const CSSPoint& aPoint,
-                            const Modifiers& aModifiers,
-                            const ScrollableLayerGuid& aGuid,
-                            const uint64_t& aInputBlockId)
-{
-  mBrowser->HandleLongTap(aPoint, aModifiers, aGuid, aInputBlockId);
+  mBrowser->HandleTap(aType, aPoint, aModifiers, aGuid,
+      aInputBlockId, aCallTakeFocusForClickFromTap);
   return true;
 }
 
