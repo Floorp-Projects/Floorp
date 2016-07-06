@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/tests/fx_docker_desktop_generic.yml'
+  from: 'tasks/tests/fx_docker_android_generic.yml'
 task:
   payload:
     cache:
@@ -19,7 +19,6 @@ task:
           mozharness/configs/remove_executables.py
           mozharness/configs/android/androidarm_4_3-tc.py
         MOZHARNESS_ACTIONS: 'get-secrets'
-        MOZ_NODE_PATH: None
     features:
       relengAPIProxy: true
   scopes:
