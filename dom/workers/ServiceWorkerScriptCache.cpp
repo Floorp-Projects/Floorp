@@ -779,6 +779,10 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   nsAutoCString mimeType;
   rv = httpChannel->GetContentType(mimeType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    // We should only end up here if !mResponseHead in the channel.  If headers
+    // were received but no content type was specified, we'll be given
+    // UNKNOWN_CONTENT_TYPE "application/x-unknown-content-type" and so fall
+    // into the next case with its better error message.
     mManager->NetworkFinished(NS_ERROR_DOM_SECURITY_ERR);
     return rv;
   }
@@ -786,6 +790,11 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   if (!mimeType.LowerCaseEqualsLiteral("text/javascript") &&
       !mimeType.LowerCaseEqualsLiteral("application/x-javascript") &&
       !mimeType.LowerCaseEqualsLiteral("application/javascript")) {
+    RefPtr<ServiceWorkerRegistrationInfo> registration = mManager->GetRegistration();
+    ServiceWorkerManager::LocalizeAndReportToAllClients(
+      registration->mScope, "ServiceWorkerRegisterMimeTypeError",
+      nsTArray<nsString> { NS_ConvertUTF8toUTF16(registration->mScope),
+        NS_ConvertUTF8toUTF16(mimeType), mManager->URL() });
     mManager->NetworkFinished(NS_ERROR_DOM_SECURITY_ERR);
     return rv;
   }
