@@ -2583,7 +2583,7 @@ WorkerThreadPrimaryRunnable::Run()
 
     // Perform a full GC. This will collect the main worker global and CC,
     // which should break all cycles that touch JS.
-    JS_GC(JS_GetRuntime(cx));
+    JS_GC(cx);
 
     // Before shutting down the cycle collector we need to do one more pass
     // through the event loop to clean up any C++ objects that need deferred

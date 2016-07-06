@@ -16,8 +16,8 @@ MinimizeHeap(JSRuntime* rt)
 {
     // The second collection is to force us to wait for the background
     // sweeping that the first GC started to finish.
-    JS_GC(rt);
-    JS_GC(rt);
+    JS_GC(JS_GetContext(rt));
+    JS_GC(JS_GetContext(rt));
     js::gc::FinishGC(rt);
 }
 
