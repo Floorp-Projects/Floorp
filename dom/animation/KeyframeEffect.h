@@ -106,14 +106,6 @@ struct Keyframe
     return *this;
   }
 
-  bool operator==(const Keyframe& aOther) const
-  {
-    return mOffset         == aOther.mOffset &&
-           mComputedOffset == aOther.mComputedOffset &&
-           mTimingFunction == aOther.mTimingFunction &&
-           mPropertyValues == aOther.mPropertyValues;
-  }
-
   Maybe<double>                 mOffset;
   static MOZ_CONSTEXPR_VAR double kComputedOffsetNotSet = -1.0;
   double                        mComputedOffset = kComputedOffsetNotSet;
