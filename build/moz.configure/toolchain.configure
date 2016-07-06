@@ -641,4 +641,48 @@ def debug_flags(env_debug_flags, enable_debug_flags, default_debug_flags):
 set_config('MOZ_DEBUG_FLAGS', debug_flags)
 add_old_configure_assignment('MOZ_DEBUG_FLAGS', debug_flags)
 
+# Some standard library headers (notably bionic on Android) declare standard
+# functions (e.g. getchar()) and also #define macros for those standard
+# functions.  libc++ deals with this by doing something like the following
+# (explanatory comments added):
+#
+#   #ifdef FUNC
+#   // Capture the definition of FUNC.
+#   inline _LIBCPP_INLINE_VISIBILITY int __libcpp_FUNC(...) { return FUNC(...); }
+#   #undef FUNC
+#   // Use a real inline definition.
+#   inline _LIBCPP_INLINE_VISIBILITY int FUNC(...) { return _libcpp_FUNC(...); }
+#   #endif
+#
+# _LIBCPP_INLINE_VISIBILITY is typically defined as:
+#
+#   __attribute__((__visibility__("hidden"), __always_inline__))
+#
+# Unfortunately, this interacts badly with our system header wrappers, as the:
+#
+#   #pragma GCC visibility push(default)
+#
+# that they do prior to including the actual system header is treated by the
+# compiler as an explicit declaration of visibility on every function declared
+# in the header.  Therefore, when the libc++ code above is encountered, it is
+# as though the compiler has effectively seen:
+#
+#   int FUNC(...) __attribute__((__visibility__("default")));
+#   int FUNC(...) __attribute__((__visibility__("hidden")));
+#
+# and the compiler complains about the mismatched visibility declarations.
+#
+# However, libc++ will only define _LIBCPP_INLINE_VISIBILITY if there is no
+# existing definition.  We can therefore define it to the empty string (since
+# we are properly managing visibility ourselves) and avoid this whole mess.
+# Note that we don't need to do this with gcc, as libc++ detects gcc and
+# effectively does the same thing we are doing here.
+@depends(c_compiler, target)
+def libcxx_inline_visibility(c_compiler, target):
+    if c_compiler.type == 'clang' and target.os == 'Android':
+        return ''
+
+set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_inline_visibility)
+set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49', libcxx_inline_visibility)
+
 include('rust.configure')
