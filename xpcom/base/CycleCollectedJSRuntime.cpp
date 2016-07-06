@@ -1325,8 +1325,7 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 void
 CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile)
 {
-  MOZ_ASSERT(mJSRuntime);
-  js::DumpHeap(Runtime(), aFile, js::CollectNurseryBeforeDump);
+  js::DumpHeap(Context(), aFile, js::CollectNurseryBeforeDump);
 }
 
 void
