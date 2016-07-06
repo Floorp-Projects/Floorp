@@ -83,9 +83,9 @@ HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
   if (aAttribute == nsGkAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
     int32_t oldRows = mNumRows;
     ParseRowCol(aValue, mNumRows, &mRowSpecs);
-    
+
     if (mNumRows != oldRows) {
-      mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
+      mCurrentRowColHint = nsChangeHint_ReconstructFrame;
     }
   } else if (aAttribute == nsGkAtoms::cols &&
              aNameSpaceID == kNameSpaceID_None) {
@@ -93,14 +93,14 @@ HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
     ParseRowCol(aValue, mNumCols, &mColSpecs);
 
     if (mNumCols != oldCols) {
-      mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
+      mCurrentRowColHint = nsChangeHint_ReconstructFrame;
     }
   }
-  
+
   rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aAttribute, aPrefix,
                                      aValue, aNotify);
   mCurrentRowColHint = NS_STYLE_HINT_REFLOW;
-  
+
   return rv;
 }
 
