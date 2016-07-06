@@ -140,12 +140,24 @@ toolbarbutton.bookmark-item:not(.subviewbutton):not(:hover):not(:active):not([op
   color: inherit;
 }
 
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  transition-property: background-color, border-color;
+  transition-duration: 150ms;
+}
+
+toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([open]) {
+  background-color: var(--toolbarbutton-hover-background);
+  border-color: var(--toolbarbutton-hover-bordercolor);
+}
+
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:active,
 toolbarbutton.bookmark-item[open="true"] {
-  padding-top: 3px;
-  padding-bottom: 1px;
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
+  background: var(--toolbarbutton-active-background);
+  box-shadow: var(--toolbarbutton-active-boxshadow);
+  border-color: var(--toolbarbutton-active-bordercolor);
 }
 
 .bookmark-item > .toolbarbutton-icon,
@@ -1670,7 +1682,7 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
 
-toolbar[brighttext] toolbarbutton.chevron:not(:hover):not([open="true"]) {
+toolbar[brighttext] toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron-inverted.png") !important;
 }
 
