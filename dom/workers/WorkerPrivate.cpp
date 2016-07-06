@@ -6363,7 +6363,7 @@ WorkerPrivate::UpdateJSWorkerMemoryParameterInternal(JSContext* aCx,
   // supported though. We really need some way to revert to a default value
   // here.
   if (aValue) {
-    JS_SetGCParameter(JS_GetRuntime(aCx), aKey, aValue);
+    JS_SetGCParameter(aCx, aKey, aValue);
   }
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {

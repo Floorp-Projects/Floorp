@@ -767,17 +767,17 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     const JSSettings::JSGCSetting& setting = gcSettings[index];
     if (setting.IsSet()) {
       NS_ASSERTION(setting.value, "Can't handle 0 values!");
-      JS_SetGCParameter(aRuntime, setting.key, setting.value);
+      JS_SetGCParameter(workerCx, setting.key, setting.value);
     }
   }
 
-  JS_SetNativeStackQuota(aRuntime, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
+  JS_SetNativeStackQuota(workerCx, WORKER_CONTEXT_NATIVE_STACK_LIMIT);
 
   // Security policy:
   static const JSSecurityCallbacks securityCallbacks = {
     ContentSecurityPolicyAllows
   };
-  JS_SetSecurityCallbacks(aRuntime, &securityCallbacks);
+  JS_SetSecurityCallbacks(workerCx, &securityCallbacks);
 
   // Set up the asm.js cache callbacks
   static const JS::AsmJSCacheOps asmJSCacheOps = {
@@ -891,8 +891,8 @@ public:
 
     JSContext* cx = JS_GetContext(rt);
 
-    js::SetPreserveWrapperCallback(rt, PreserveWrapper);
-    JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
+    js::SetPreserveWrapperCallback(cx, PreserveWrapper);
+    JS_InitDestroyPrincipalsCallback(cx, DestroyWorkerPrincipals);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     if (mWorkerPrivate->IsDedicatedWorker()) {
       JS_SetFutexCanWait(cx);
@@ -948,10 +948,12 @@ public:
     }
   }
 
-  virtual void DispatchToMicroTask(nsIRunnable* aRunnable) override
+  virtual void DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable) override
   {
+    RefPtr<nsIRunnable> runnable(aRunnable);
+
     MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(aRunnable);
+    MOZ_ASSERT(runnable);
 
     std::queue<nsCOMPtr<nsIRunnable>>* microTaskQueue = nullptr;
 
@@ -973,7 +975,7 @@ public:
       microTaskQueue = &mDebuggerPromiseMicroTaskQueue;
     }
 
-    microTaskQueue->push(aRunnable);
+    microTaskQueue->push(runnable.forget());
   }
 
 private:

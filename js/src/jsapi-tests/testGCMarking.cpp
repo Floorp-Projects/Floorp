@@ -162,7 +162,7 @@ BEGIN_TEST(testIncrementalRoots)
     // descendants. It shouldn't make it all the way through (it gets a budget
     // of 1000, and the graph is about 3000 objects deep).
     js::SliceBudget budget(js::WorkBudget(1000));
-    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+    JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     rt->gc.startDebugGC(GC_NORMAL, budget);
 
     // We'd better be between iGC slices now. There's always a risk that

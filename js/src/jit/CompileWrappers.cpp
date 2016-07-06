@@ -184,7 +184,7 @@ CompileRuntime::isInsideNursery(gc::Cell* cell)
 const DOMCallbacks*
 CompileRuntime::DOMcallbacks()
 {
-    return GetDOMCallbacks(runtime());
+    return runtime()->DOMcallbacks;
 }
 
 const Nursery&

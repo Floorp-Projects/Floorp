@@ -34,9 +34,8 @@ public:
 
     // ChromeProcessController methods
     virtual void Destroy() override;
-    void HandleSingleTap(const CSSPoint& aPoint,
-                         Modifiers aModifiers,
-                         const ScrollableLayerGuid& aGuid) override;
+    void HandleTap(TapType aType, const CSSPoint& aPoint, Modifiers aModifiers,
+                   const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId) override;
     void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
     void UpdateOverscrollVelocity(const float aX, const float aY) override;
     void UpdateOverscrollOffset(const float aX, const float aY) override;

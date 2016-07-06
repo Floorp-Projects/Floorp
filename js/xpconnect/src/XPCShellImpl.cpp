@@ -1463,10 +1463,10 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             }
         }
 
-        const JSSecurityCallbacks* scb = JS_GetSecurityCallbacks(rt);
+        const JSSecurityCallbacks* scb = JS_GetSecurityCallbacks(cx);
         MOZ_ASSERT(scb, "We are assuming that nsScriptSecurityManager::Init() has been run");
         shellSecurityCallbacks = *scb;
-        JS_SetSecurityCallbacks(rt, &shellSecurityCallbacks);
+        JS_SetSecurityCallbacks(cx, &shellSecurityCallbacks);
 
 #ifdef TEST_TranslateThis
         nsCOMPtr<nsIXPCFunctionThisTranslator>
@@ -1579,7 +1579,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
                 }
             }
 
-            JS_DropPrincipals(rt, gJSPrincipals);
+            JS_DropPrincipals(cx, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);
             JS_SetAllNonReservedSlotsToUndefined(cx, JS_GlobalLexicalScope(glob));
             JS_GC(rt);
