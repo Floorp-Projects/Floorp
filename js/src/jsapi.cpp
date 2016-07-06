@@ -1333,11 +1333,11 @@ JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 }
 
 JS_PUBLIC_API(void)
-JS_GC(JSRuntime* rt)
+JS_GC(JSContext* cx)
 {
-    AssertHeapIsIdle(rt);
-    JS::PrepareForFullGC(rt);
-    rt->gc.gc(GC_NORMAL, JS::gcreason::API);
+    AssertHeapIsIdle(cx);
+    JS::PrepareForFullGC(cx);
+    cx->gc.gc(GC_NORMAL, JS::gcreason::API);
 }
 
 JS_PUBLIC_API(void)

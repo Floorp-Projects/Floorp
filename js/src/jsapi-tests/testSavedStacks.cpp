@@ -102,7 +102,7 @@ BEGIN_TEST(testSavedStacks_RangeBasedForLoops)
 
     JS::Rooted<js::SavedFrame*> rf(cx, savedFrame);
     for (JS::Handle<js::SavedFrame*> frame : js::SavedFrame::RootedRange(cx, rf)) {
-        JS_GC(cx->runtime());
+        JS_GC(cx);
         CHECK(frame == rf);
         rf = rf->getParent();
     }
