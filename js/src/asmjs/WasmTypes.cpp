@@ -24,7 +24,8 @@
 #include "jsmath.h"
 
 #include "asmjs/WasmInstance.h"
-#include "jit/shared/Assembler-shared.h"
+#include "asmjs/WasmSerialize.h"
+#include "jit/MacroAssembler.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
 
@@ -289,4 +290,96 @@ bool
 SignalUsage::operator==(SignalUsage rhs) const
 {
     return forOOB == rhs.forOOB && forInterrupt == rhs.forInterrupt;
+}
+
+static inline MOZ_MUST_USE bool
+GetCPUID(uint32_t* cpuId)
+{
+    enum Arch {
+        X86 = 0x1,
+        X64 = 0x2,
+        ARM = 0x3,
+        MIPS = 0x4,
+        MIPS64 = 0x5,
+        ARCH_BITS = 3
+    };
+
+#if defined(JS_CODEGEN_X86)
+    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+    return true;
+#elif defined(JS_CODEGEN_X64)
+    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+    return true;
+#elif defined(JS_CODEGEN_ARM)
+    MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = ARM | (jit::GetARMFlags() << ARCH_BITS);
+    return true;
+#elif defined(JS_CODEGEN_MIPS32)
+    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = MIPS | (jit::GetMIPSFlags() << ARCH_BITS);
+    return true;
+#elif defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = MIPS64 | (jit::GetMIPSFlags() << ARCH_BITS);
+    return true;
+#else
+    return false;
+#endif
+}
+
+MOZ_MUST_USE bool
+Assumptions::init(SignalUsage usesSignal, JS::BuildIdOp buildIdOp)
+{
+    this->usesSignal = usesSignal;
+
+    if (!GetCPUID(&cpuId))
+        return false;
+
+    if (!buildIdOp || !buildIdOp(&buildId))
+        return false;
+
+    return true;
+}
+
+bool
+Assumptions::operator==(const Assumptions& rhs) const
+{
+    return usesSignal == rhs.usesSignal &&
+           cpuId == rhs.cpuId &&
+           buildId.length() == rhs.buildId.length() &&
+           PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
+}
+
+size_t
+Assumptions::serializedSize() const
+{
+    return sizeof(usesSignal) +
+           sizeof(uint32_t) +
+           SerializedPodVectorSize(buildId);
+}
+
+uint8_t*
+Assumptions::serialize(uint8_t* cursor) const
+{
+    cursor = WriteBytes(cursor, &usesSignal, sizeof(usesSignal));
+    cursor = WriteScalar<uint32_t>(cursor, cpuId);
+    cursor = SerializePodVector(cursor, buildId);
+    return cursor;
+}
+
+const uint8_t*
+Assumptions::deserialize(const uint8_t* cursor)
+{
+    (cursor = ReadBytes(cursor, &usesSignal, sizeof(usesSignal))) &&
+    (cursor = ReadScalar<uint32_t>(cursor, &cpuId)) &&
+    (cursor = DeserializePodVector(cursor, &buildId));
+    return cursor;
+}
+
+size_t
+Assumptions::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return buildId.sizeOfExcludingThis(mallocSizeOf);
 }
