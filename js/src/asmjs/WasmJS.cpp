@@ -324,6 +324,8 @@ ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
     if (!compileArgs.init(cx))
         return true;
 
+    compileArgs.assumptions.newFormat = true;
+
     JS::AutoFilename af;
     if (DescribeScriptedCaller(cx, &af)) {
         compileArgs.filename = DuplicateString(cx, af.get());

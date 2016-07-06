@@ -64,6 +64,12 @@ enum class TypeConstructor
     Function                             = 0x40
 };
 
+enum class DefinitionKind
+{
+    Function                             = 0x00,
+    Memory                               = 0x01
+};
+
 enum class Expr
 {
     // Control flow operators
