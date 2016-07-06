@@ -1109,12 +1109,12 @@ DumpHeapTracer::onChild(const JS::GCCellPtr& thing)
 }
 
 void
-js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
+js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
 {
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
-        rt->gc.evictNursery(JS::gcreason::API);
+        cx->gc.evictNursery(JS::gcreason::API);
 
-    DumpHeapTracer dtrc(fp, rt);
+    DumpHeapTracer dtrc(fp, cx);
     fprintf(dtrc.output, "# Roots.\n");
     TraceRuntime(&dtrc);
 
@@ -1124,7 +1124,7 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
     fprintf(dtrc.output, "==========\n");
 
     dtrc.prefix = "> ";
-    IterateZonesCompartmentsArenasCells(rt, &dtrc,
+    IterateZonesCompartmentsArenasCells(cx, &dtrc,
                                         DumpHeapVisitZone,
                                         DumpHeapVisitCompartment,
                                         DumpHeapVisitArena,
