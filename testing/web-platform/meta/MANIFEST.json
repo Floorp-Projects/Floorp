@@ -35306,6 +35306,12 @@
             "url": "/service-workers/service-worker/update-recovery.https.html"
           }
         ],
+        "service-workers/service-worker/controller-on-disconnect.https.html": [
+          {
+            "path": "service-workers/service-worker/controller-on-disconnect.https.html",
+            "url": "/service-workers/service-worker/controller-on-disconnect.https.html"
+          }
+        ],
         "web-animations/timing-model/active-time.html": [
           {
             "path": "web-animations/timing-model/active-time.html",
