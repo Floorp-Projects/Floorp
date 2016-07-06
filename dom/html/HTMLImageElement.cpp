@@ -343,11 +343,11 @@ HTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::usemap ||
       aAttribute == nsGkAtoms::ismap) {
-    retval |= nsChangeHint_ReconstructFrame;
+    retval |= NS_STYLE_HINT_FRAMECHANGE;
   } else if (aAttribute == nsGkAtoms::alt) {
     if (aModType == nsIDOMMutationEvent::ADDITION ||
         aModType == nsIDOMMutationEvent::REMOVAL) {
-      retval |= nsChangeHint_ReconstructFrame;
+      retval |= NS_STYLE_HINT_FRAMECHANGE;
     }
   }
   return retval;
