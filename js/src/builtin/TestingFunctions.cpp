@@ -517,10 +517,8 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject callee(cx, &args.callee());
 
-    if (args.length() != 1) {
-        ReportUsageError(cx, callee, "Wrong number of arguments");
+    if (!args.requireAtLeast(cx, "wasmTextToBinary", 1))
         return false;
-    }
 
     if (!args[0].isString()) {
         ReportUsageError(cx, callee, "First argument must be a String");
@@ -531,9 +529,28 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     if (!twoByteChars.initTwoByte(cx, args[0].toString()))
         return false;
 
+    bool newFormat = false;
+    if (args.hasDefined(1)) {
+        if (!args[1].isString()) {
+            ReportUsageError(cx, callee, "Second argument, if present, must be a String");
+            return false;
+        }
+
+        JSLinearString* str = args[1].toString()->ensureLinear(cx);
+        if (!str)
+            return false;
+
+        if (!StringEqualsAscii(str, "new-format")) {
+            ReportUsageError(cx, callee, "Unknown string value for second argument");
+            return false;
+        }
+
+        newFormat = true;
+    }
+
     wasm::Bytes bytes;
     UniqueChars error;
-    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
+    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), newFormat, &bytes, &error)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                              error.get() ? error.get() : "out of memory");
         return false;

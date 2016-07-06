@@ -668,17 +668,32 @@ MaybeDecodeName(Decoder& d)
 }
 
 static bool
-DecodeImport(Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
+DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
-    const DeclaredSig* sig = nullptr;
-    if (!DecodeSignatureIndex(d, *init, &sig))
-        return false;
+    if (!newFormat) {
+        const DeclaredSig* sig = nullptr;
+        if (!DecodeSignatureIndex(d, *init, &sig))
+            return false;
 
-    if (!init->imports.emplaceBack(sig))
-        return false;
+        if (!CheckTypeForJS(d, *sig))
+            return false;
 
-    if (!CheckTypeForJS(d, *sig))
-        return false;
+        if (!init->imports.emplaceBack(sig))
+            return false;
+
+        UniqueChars moduleName = MaybeDecodeName(d);
+        if (!moduleName)
+            return Fail(d, "expected valid import module name");
+
+        if (!strlen(moduleName.get()))
+            return Fail(d, "module name cannot be empty");
+
+        UniqueChars funcName = MaybeDecodeName(d);
+        if (!funcName)
+            return Fail(d, "expected valid import func name");
+
+        return importNames->emplaceBack(Move(moduleName), Move(funcName));
+    }
 
     UniqueChars moduleName = MaybeDecodeName(d);
     if (!moduleName)
@@ -691,11 +706,33 @@ DecodeImport(Decoder& d, ModuleGeneratorData* init, ImportNameVector* importName
     if (!funcName)
         return Fail(d, "expected valid import func name");
 
-    return importNames->emplaceBack(Move(moduleName), Move(funcName));
+    if (!importNames->emplaceBack(Move(moduleName), Move(funcName)))
+        return false;
+
+    uint32_t importKind;
+    if (!d.readVarU32(&importKind))
+        return Fail(d, "failed to read import kind");
+
+    switch (DefinitionKind(importKind)) {
+      case DefinitionKind::Function: {
+        const DeclaredSig* sig = nullptr;
+        if (!DecodeSignatureIndex(d, *init, &sig))
+            return false;
+        if (!CheckTypeForJS(d, *sig))
+            return false;
+        if (!init->imports.emplaceBack(sig))
+            return false;
+        break;
+      }
+      default:
+        return Fail(d, "unsupported import kind");
+    }
+
+    return true;
 }
 
 static bool
-DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
+DecodeImportSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(ImportSectionId, &sectionStart, &sectionSize))
@@ -711,7 +748,7 @@ DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportNameVector* imp
         return Fail(d, "too many imports");
 
     for (uint32_t i = 0; i < numImports; i++) {
-        if (!DecodeImport(d, init, importNames))
+        if (!DecodeImport(d, newFormat, init, importNames))
             return false;
     }
 
@@ -722,7 +759,7 @@ DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportNameVector* imp
 }
 
 static bool
-DecodeMemorySection(Decoder& d, ModuleGenerator& mg)
+DecodeMemorySection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(MemorySectionId, &sectionStart, &sectionSize))
@@ -755,14 +792,16 @@ DecodeMemorySection(Decoder& d, ModuleGenerator& mg)
     if (maxSize.value() < initialSize.value())
         return Fail(d, "maximum memory size less than initial memory size");
 
-    uint8_t exported;
-    if (!d.readFixedU8(&exported))
-        return Fail(d, "expected exported byte");
+    if (!newFormat) {
+        uint8_t exported;
+        if (!d.readFixedU8(&exported))
+            return Fail(d, "expected exported byte");
 
-    if (exported) {
-        UniqueChars fieldName = DuplicateString("memory");
-        if (!fieldName || !mg.addMemoryExport(Move(fieldName)))
-            return false;
+        if (exported) {
+            UniqueChars fieldName = DuplicateString("memory");
+            if (!fieldName || !mg.addMemoryExport(Move(fieldName)))
+                return false;
+        }
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -796,27 +835,67 @@ DecodeExportName(Decoder& d, CStringSet* dupSet)
 }
 
 static bool
-DecodeFunctionExport(Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
+DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet)
 {
-    uint32_t funcIndex;
-    if (!d.readVarU32(&funcIndex))
-        return Fail(d, "expected export internal index");
+    if (!newFormat) {
+        uint32_t funcIndex;
+        if (!d.readVarU32(&funcIndex))
+            return Fail(d, "expected export internal index");
 
-    if (funcIndex >= mg.numFuncSigs())
-        return Fail(d, "export function index out of range");
+        if (funcIndex >= mg.numFuncSigs())
+            return Fail(d, "export function index out of range");
 
-    if (!CheckTypeForJS(d, mg.funcSig(funcIndex)))
-        return false;
+        if (!CheckTypeForJS(d, mg.funcSig(funcIndex)))
+            return false;
+
+        UniqueChars fieldName = DecodeExportName(d, dupSet);
+        if (!fieldName)
+            return false;
+
+        return mg.declareExport(Move(fieldName), funcIndex);
+    }
 
     UniqueChars fieldName = DecodeExportName(d, dupSet);
     if (!fieldName)
         return false;
 
-    return mg.declareExport(Move(fieldName), funcIndex);
+    uint32_t exportKind;
+    if (!d.readVarU32(&exportKind))
+        return Fail(d, "failed to read export kind");
+
+    switch (DefinitionKind(exportKind)) {
+      case DefinitionKind::Function: {
+        uint32_t funcIndex;
+        if (!d.readVarU32(&funcIndex))
+            return Fail(d, "expected export internal index");
+
+        if (funcIndex >= mg.numFuncSigs())
+            return Fail(d, "export function index out of range");
+
+        if (!CheckTypeForJS(d, mg.funcSig(funcIndex)))
+            return false;
+
+        return mg.declareExport(Move(fieldName), funcIndex);
+      }
+      case DefinitionKind::Memory: {
+        uint32_t memoryIndex;
+        if (!d.readVarU32(&memoryIndex))
+            return Fail(d, "expected memory index");
+
+        if (memoryIndex > 0)
+            return Fail(d, "memory index out of bounds");
+
+        return mg.addMemoryExport(Move(fieldName));
+      }
+      default:
+        return Fail(d, "unexpected export kind");
+    }
+
+    MOZ_CRASH("unreachable");
 }
 
 static bool
-DecodeExportSection(Decoder& d, ModuleGenerator& mg)
+DecodeExportSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(ExportSectionId, &sectionStart, &sectionSize))
@@ -836,7 +915,7 @@ DecodeExportSection(Decoder& d, ModuleGenerator& mg)
         return Fail(d, "too many exports");
 
     for (uint32_t i = 0; i < numExports; i++) {
-        if (!DecodeFunctionExport(d, mg, &dupSet))
+        if (!DecodeExport(d, newFormat, mg, &dupSet))
             return false;
     }
 
@@ -1074,6 +1153,8 @@ CompileArgs::init(ExclusiveContext* cx)
 UniqueModule
 wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
 {
+    bool newFormat = args.assumptions.newFormat;
+
     auto init = js::MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal);
     if (!init)
         return nullptr;
@@ -1087,7 +1168,7 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
         return nullptr;
 
     ImportNameVector importNames;
-    if (!DecodeImportSection(d, init.get(), &importNames))
+    if (!DecodeImportSection(d, newFormat, init.get(), &importNames))
         return nullptr;
 
     if (!DecodeFunctionSection(d, init.get()))
@@ -1100,10 +1181,10 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
     if (!mg.init(Move(init), Move(args)))
         return nullptr;
 
-    if (!DecodeMemorySection(d, mg))
+    if (!DecodeMemorySection(d, newFormat, mg))
         return nullptr;
 
-    if (!DecodeExportSection(d, mg))
+    if (!DecodeExportSection(d, newFormat, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))

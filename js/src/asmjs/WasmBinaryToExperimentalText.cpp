@@ -1494,7 +1494,7 @@ PrintExport(WasmPrintContext& c, AstExport& export_, const AstModule::FuncVector
         return false;
     if (!c.buffer.append("export "))
         return false;
-    if (export_.kind() == AstExportKind::Memory) {
+    if (export_.kind() == DefinitionKind::Memory) {
         if (!c.buffer.append("memory"))
           return false;
     } else {
