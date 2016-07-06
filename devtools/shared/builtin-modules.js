@@ -21,6 +21,8 @@ const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const { PromiseDebugging, ChromeUtils, ThreadSafeChromeUtils, HeapSnapshot,
         atob, btoa, Iterator } = jsmScope;
+const { URL } = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+                           {wantGlobalProperties: ["URL"]});
 
 /**
  * Defines a getter on a specified object that will be created upon first use.
@@ -236,6 +238,7 @@ const globals = exports.globals = {
   reportError: Cu.reportError,
   atob: atob,
   btoa: btoa,
+  URL,
   _Iterator: Iterator,
   loader: {
     lazyGetter: defineLazyGetter,
@@ -274,7 +277,6 @@ const globals = exports.globals = {
 defineLazyGetter(globals, "console", () => {
   return Cu.import("resource://gre/modules/Console.jsm", {}).console;
 });
-
 defineLazyGetter(globals, "clearTimeout", () => {
   return Cu.import("resource://gre/modules/Timer.jsm", {}).clearTimeout;
 });
@@ -286,12 +288,6 @@ defineLazyGetter(globals, "clearInterval", () => {
 });
 defineLazyGetter(globals, "setInterval", () => {
   return Cu.import("resource://gre/modules/Timer.jsm", {}).setInterval;
-});
-defineLazyGetter(globals, "URL", () => {
-  let sandbox
-    = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
-                 {wantGlobalProperties: ["URL"]});
-  return sandbox.URL;
 });
 defineLazyGetter(globals, "CSSRule", () => Ci.nsIDOMCSSRule);
 defineLazyGetter(globals, "DOMParser", () => {
