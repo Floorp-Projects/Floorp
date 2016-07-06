@@ -316,7 +316,7 @@ public:
    */
   bool RemoveDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
 
-  class CaptureStreamTrackSource;
+  class DecoderCaptureTrackSource;
   class CaptureStreamTrackSourceGetter;
 
   // Update the visual size of the media. Called from the decoder on the
