@@ -579,7 +579,8 @@ def virtual_install_main_packages():
             plat_path = os.path.join(path, 'plat-%s' % sys.platform)
             if os.path.exists(plat_path):
                 paths.append(plat_path)
-    elif sys.platform == 'win32':
+    # MOZ: The MSYS2 and MinGW versions of Python have their main packages in the UNIX directory this checks specifically for the native win32 python
+    elif sys.platform == 'win32' and os.sep == '\\':
         paths = [os.path.join(sys.real_prefix, 'Lib'), os.path.join(sys.real_prefix, 'DLLs')]
     else:
         paths = [os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3])]
