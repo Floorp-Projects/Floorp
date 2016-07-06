@@ -9,7 +9,7 @@
  */
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const TEST_WINDOW_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
+const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   <?xml-stylesheet href="chrome://global/skin/global.css"?>
   <?xml-stylesheet href="chrome://devtools/skin/tooltips.css"?>
   <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -22,18 +22,10 @@ const TEST_WINDOW_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
     </vbox>
   </window>`;
 
-const TEST_PAGE_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
-  <?xml-stylesheet href="chrome://global/skin/global.css"?>
-  <?xml-stylesheet href="chrome://devtools/skin/tooltips.css"?>
-  <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   title="Tooltip test with document using a Page element">
-    <vbox flex="1">
-      <hbox id="box1" flex="1">test1</hbox>
-    </vbox>
-  </page>`;
-
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
+
+let useXulWrapper;
 
 function getTooltipContent(doc) {
   let div = doc.createElementNS(HTML_NS, "div");
@@ -44,18 +36,20 @@ function getTooltipContent(doc) {
 }
 
 add_task(function* () {
-  info("Test showing a basic tooltip in XUL document using <window>");
-  yield testTooltipForUri(TEST_WINDOW_URI);
+  let [,, doc] = yield createHost("bottom", TEST_URI);
 
-  info("Test showing a basic tooltip in XUL document using <page>");
-  yield testTooltipForUri(TEST_PAGE_URI);
+  info("Run tests for a Tooltip without using a XUL panel");
+  useXulWrapper = false;
+  yield runTests(doc);
+
+  info("Run tests for a Tooltip with a XUL panel");
+  useXulWrapper = true;
+  yield runTests(doc);
 });
 
-function* testTooltipForUri(uri) {
-  let tab = yield addTab("about:blank");
-  let [,, doc] = yield createHost("bottom", uri);
-
-  let tooltip = new HTMLTooltip({doc}, {});
+function* runTests(doc) {
+  yield addTab("about:blank");
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
 
   info("Set tooltip content");
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
@@ -90,5 +84,5 @@ function* testTooltipForUri(uri) {
   yield waitForReflow(tooltip);
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 
-  yield removeTab(tab);
+  tooltip.destroy();
 }
