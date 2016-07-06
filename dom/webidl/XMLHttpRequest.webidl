@@ -152,6 +152,9 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws, ChromeOnly, Exposed=Window]
   any getInterface(IID iid);
 
+  [ChromeOnly, Exposed=Window]
+  void setOriginAttributes(optional OriginAttributesDictionary originAttributes);
+
   readonly attribute boolean mozAnon;
   readonly attribute boolean mozSystem;
 };

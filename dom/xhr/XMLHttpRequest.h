@@ -165,6 +165,9 @@ public:
                JS::MutableHandle<JS::Value> aRetval,
                ErrorResult& aRv) = 0;
 
+  virtual void
+  SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) = 0;
+
   virtual bool
   MozAnon() const = 0;
 
