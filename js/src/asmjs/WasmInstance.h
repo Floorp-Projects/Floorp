@@ -66,7 +66,7 @@ class Instance
     CacheableCharsVector                 funcLabels_;
 
     // Internal helpers:
-    uint8_t** addressOfHeapPtr() const;
+    uint8_t** addressOfMemoryBase() const;
     ImportExit& importToExit(const Import& import);
     MOZ_MUST_USE bool toggleProfiling(JSContext* cx);
 
@@ -106,8 +106,8 @@ class Instance
 
     const CodeSegment& codeSegment() const { return *codeSegment_; }
     const Metadata& metadata() const { return *metadata_; }
-    SharedMem<uint8_t*> heap() const;
-    size_t heapLength() const;
+    SharedMem<uint8_t*> memoryBase() const;
+    size_t memoryLength() const;
 
     // Execute the given export given the JS call arguments, storing the return
     // value in args.rval.

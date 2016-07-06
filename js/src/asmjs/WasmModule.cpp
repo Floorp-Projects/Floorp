@@ -336,9 +336,9 @@ Module::instantiate(JSContext* cx,
     // and initialize the heap if one is requested.
 
     Rooted<ArrayBufferObjectMaybeShared*> heap(cx, asmJSHeap);
-    if (metadata_->usesHeap() && !heap) {
+    if (metadata_->usesMemory() && !heap) {
         MOZ_ASSERT(!metadata_->isAsmJS());
-        heap = ArrayBufferObject::createForWasm(cx, metadata_->initialHeapLength,
+        heap = ArrayBufferObject::createForWasm(cx, metadata_->minMemoryLength, 
                                                 metadata_->assumptions.usesSignal.forOOB);
         if (!heap)
             return false;

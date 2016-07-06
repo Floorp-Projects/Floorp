@@ -606,7 +606,7 @@ class MemoryAccess
       : nextInsOffset_(nextInsOffset)
     { }
 
-    void* patchHeapPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
+    void* patchMemoryPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
     void offsetBy(uint32_t offset) { nextInsOffset_ += offset; }
 };
 #elif defined(JS_CODEGEN_X64)

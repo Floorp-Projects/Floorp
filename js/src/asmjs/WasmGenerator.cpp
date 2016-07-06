@@ -114,7 +114,6 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
     }
 
     metadata_->kind = shared->kind;
-    metadata_->heapUsage = HeapUsage::None;
     metadata_->filename = Move(args.filename);
     metadata_->assumptions = Move(args.assumptions);
 
@@ -352,7 +351,7 @@ ModuleGenerator::finishCodegen()
         if (!entries.resize(numExports()))
             return false;
         for (uint32_t i = 0; i < numExports(); i++)
-            entries[i] = GenerateEntry(masm, metadata_->exports[i], usesHeap());
+            entries[i] = GenerateEntry(masm, metadata_->exports[i], usesMemory());
 
         if (!interpExits.resize(numImports()))
             return false;
@@ -360,7 +359,7 @@ ModuleGenerator::finishCodegen()
             return false;
         for (uint32_t i = 0; i < numImports(); i++) {
             interpExits[i] = GenerateInterpExit(masm, metadata_->imports[i], i);
-            jitExits[i] = GenerateJitExit(masm, metadata_->imports[i], usesHeap());
+            jitExits[i] = GenerateJitExit(masm, metadata_->imports[i], usesMemory());
         }
 
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
@@ -587,31 +586,6 @@ ModuleGenerator::allocateGlobal(ValType type, bool isConst, uint32_t* index)
 }
 
 void
-ModuleGenerator::initHeapUsage(HeapUsage heapUsage, uint32_t initialHeapLength)
-{
-    MOZ_ASSERT(metadata_->heapUsage == HeapUsage::None);
-    metadata_->heapUsage = heapUsage;
-    metadata_->initialHeapLength = initialHeapLength;
-    if (isAsmJS())
-        MOZ_ASSERT(initialHeapLength == 0);
-    else
-        shared_->minHeapLength = initialHeapLength;
-}
-
-bool
-ModuleGenerator::usesHeap() const
-{
-    return UsesHeap(metadata_->heapUsage);
-}
-
-uint32_t
-ModuleGenerator::initialHeapLength() const
-{
-    MOZ_ASSERT(!isAsmJS());
-    return metadata_->initialHeapLength;
-}
-
-void
 ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
     MOZ_ASSERT(isAsmJS());
@@ -639,12 +613,21 @@ ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 }
 
 void
-ModuleGenerator::bumpMinHeapLength(uint32_t newMinHeapLength)
+ModuleGenerator::initMemoryUsage(MemoryUsage memoryUsage)
 {
     MOZ_ASSERT(isAsmJS());
-    MOZ_ASSERT(newMinHeapLength >= shared_->minHeapLength);
+    MOZ_ASSERT(shared_->memoryUsage == MemoryUsage::None);
 
-    shared_->minHeapLength = newMinHeapLength;
+    shared_->memoryUsage = memoryUsage;
+}
+
+void
+ModuleGenerator::bumpMinMemoryLength(uint32_t newMinMemoryLength)
+{
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(newMinMemoryLength >= shared_->minMemoryLength);
+
+    shared_->minMemoryLength = newMinMemoryLength;
 }
 
 const DeclaredSig&
@@ -929,7 +912,7 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
     if (!metadata_->callSites.appendAll(masm_.callSites()))
         return nullptr;
 
-    // The MacroAssembler has accumulated all the heap accesses during codegen.
+    // The MacroAssembler has accumulated all the memory accesses during codegen.
     metadata_->memoryAccesses = masm_.extractMemoryAccesses();
     metadata_->boundsChecks = masm_.extractBoundsChecks();
 
@@ -940,6 +923,10 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
     metadata_->callThunks.podResizeToFit();
+
+    // Copy over data from the ModuleGeneratorData.
+    metadata_->memoryUsage = shared_->memoryUsage;
+    metadata_->minMemoryLength = shared_->minMemoryLength;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG

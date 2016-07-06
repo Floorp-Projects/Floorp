@@ -64,7 +64,8 @@ struct ModuleGeneratorData
 {
     ModuleKind                      kind;
     SignalUsage                     usesSignal;
-    mozilla::Atomic<uint32_t>       minHeapLength;
+    MemoryUsage                     memoryUsage;
+    mozilla::Atomic<uint32_t>       minMemoryLength;
 
     DeclaredSigVector               sigs;
     DeclaredSigPtrVector            funcSigs;
@@ -79,7 +80,7 @@ struct ModuleGeneratorData
     }
 
     explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind), usesSignal(usesSignal), minHeapLength(0)
+      : kind(kind), usesSignal(usesSignal), memoryUsage(MemoryUsage::None), minMemoryLength(0)
     {}
 };
 
@@ -151,10 +152,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     SignalUsage usesSignal() const { return metadata_->assumptions.usesSignal; }
     jit::MacroAssembler& masm() { return masm_; }
 
-    // Heap usage:
-    void initHeapUsage(HeapUsage heapUsage, uint32_t initialHeapLength = 0);
-    bool usesHeap() const;
-    uint32_t initialHeapLength() const;
+    // Memory:
+    bool usesMemory() const { return UsesMemory(shared_->memoryUsage); }
+    uint32_t minMemoryLength() const { return shared_->minMemoryLength; }
     MOZ_MUST_USE bool addDataSegment(DataSegment s) { return dataSegments_.append(s); }
 
     // Signatures:
@@ -194,7 +194,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initImport(uint32_t importIndex, uint32_t sigIndex);
     MOZ_MUST_USE bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
     void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
-    void bumpMinHeapLength(uint32_t newMinHeapLength);
+    void initMemoryUsage(MemoryUsage memoryUsage);
+    void bumpMinMemoryLength(uint32_t newMinMemoryLength);
 
     // Finish compilation, provided the list of imported names and source
     // bytecode. Both these Vectors may be empty (viz., b/c asm.js does
