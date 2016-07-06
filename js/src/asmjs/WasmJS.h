@@ -77,6 +77,7 @@ class WasmModuleObject : public NativeObject
     static const ClassOps classOps_;
     static void finalize(FreeOp* fop, JSObject* obj);
   public:
+    static const JSProtoKey KEY = JSProto_WasmModule;
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
 
@@ -102,6 +103,7 @@ class WasmInstanceObject : public NativeObject
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
   public:
+    static const JSProtoKey KEY = JSProto_WasmInstance;
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
 

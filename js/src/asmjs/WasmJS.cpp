@@ -270,24 +270,8 @@ WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module, HandleObject
     if (!obj)
         return nullptr;
 
-    obj->setReservedSlot(MODULE_SLOT, PrivateValue((void*)module.release()));
+    obj->initReservedSlot(MODULE_SLOT, PrivateValue((void*)module.release()));
     return obj;
-}
-
-static JSObject&
-GetConstructorPrototype(JSContext* cx, Native native, CallArgs args)
-{
-    RootedObject callee(cx, &args.callee());
-    MOZ_ASSERT(callee->as<JSFunction>().native() == native);
-
-    RootedValue proto(cx);
-    if (!GetProperty(cx, callee, callee, cx->names().prototype, &proto))
-        MOZ_CRASH("non-configurable data property of known constructor");
-
-    if (!proto.isObject())
-        MOZ_CRASH("readonly property of known constructor");
-
-    return proto.toObject();
 }
 
 static bool
@@ -346,7 +330,7 @@ ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedObject proto(cx, &GetConstructorPrototype(cx, ModuleConstructor, callArgs));
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, Move(module), proto));
     if (!moduleObj)
         return false;
@@ -426,7 +410,7 @@ void
 WasmInstanceObject::init(UniqueInstance instance)
 {
     MOZ_ASSERT(isNewborn());
-    setReservedSlot(INSTANCE_SLOT, PrivateValue((void*)instance.release()));
+    initReservedSlot(INSTANCE_SLOT, PrivateValue((void*)instance.release()));
     MOZ_ASSERT(!isNewborn());
 }
 
@@ -467,7 +451,7 @@ InstanceConstructor(JSContext* cx, unsigned argc, Value* vp)
     if (!ImportFunctions(cx, importObj, module.importNames(), &funcImports))
         return false;
 
-    RootedObject proto(cx, &GetConstructorPrototype(cx, InstanceConstructor, args));
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
     RootedWasmInstanceObject instanceObj(cx, WasmInstanceObject::create(cx, proto));
     if (!instanceObj)
         return false;
@@ -528,6 +512,9 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
     RootedObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
     if (!proto)
         return false;
+
+    MOZ_ASSERT(global->as<GlobalObject>().getPrototype(Class::KEY).isUndefined());
+    global->as<GlobalObject>().setPrototype(Class::KEY, ObjectValue(*proto));
 
     RootedAtom className(cx, Atomize(cx, name, strlen(name)));
     if (!className)
