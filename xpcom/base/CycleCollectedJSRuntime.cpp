@@ -547,11 +547,11 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   SetDOMCallbacks(mJSContext, &DOMcallbacks);
   js::SetScriptEnvironmentPreparer(mJSRuntime, &mEnvironmentPreparer);
 
-  JS::SetGetIncumbentGlobalCallback(mJSRuntime, GetIncumbentGlobalCallback);
+  JS::SetGetIncumbentGlobalCallback(mJSContext, GetIncumbentGlobalCallback);
 
 #ifdef SPIDERMONKEY_PROMISE
-  JS::SetEnqueuePromiseJobCallback(mJSRuntime, EnqueuePromiseJobCallback, this);
-  JS::SetPromiseRejectionTrackerCallback(mJSRuntime, PromiseRejectionTrackerCallback, this);
+  JS::SetEnqueuePromiseJobCallback(mJSContext, EnqueuePromiseJobCallback, this);
+  JS::SetPromiseRejectionTrackerCallback(mJSContext, PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
   mConsumedRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
 #endif // SPIDERMONKEY_PROMISE

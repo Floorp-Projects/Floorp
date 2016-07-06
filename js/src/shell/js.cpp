@@ -711,8 +711,7 @@ SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc, Value* vp)
     }
 
     GetShellRuntime(cx)->promiseRejectionTrackerCallback = args[0];
-    JS::SetPromiseRejectionTrackerCallback(cx->runtime(),
-                                           ForwardingPromiseRejectionTrackerCallback);
+    JS::SetPromiseRejectionTrackerCallback(cx, ForwardingPromiseRejectionTrackerCallback);
 
 #endif // SPIDERMONKEY_PROMISE
     args.rval().setUndefined();
@@ -2960,8 +2959,8 @@ WorkerMain(void* arg)
 
 #ifdef SPIDERMONKEY_PROMISE
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
-    JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
-    JS::SetGetIncumbentGlobalCallback(rt, ShellGetIncumbentGlobalCallback);
+    JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
+    JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
 #endif // SPIDERMONKEY_PROMISE
 
     EnvironmentPreparer environmentPreparer(cx);
@@ -2994,8 +2993,8 @@ WorkerMain(void* arg)
     JS::SetLargeAllocationFailureCallback(cx, nullptr, nullptr);
 
 #ifdef SPIDERMONKEY_PROMISE
-    JS::SetGetIncumbentGlobalCallback(rt, nullptr);
-    JS::SetEnqueuePromiseJobCallback(rt, nullptr);
+    JS::SetGetIncumbentGlobalCallback(cx, nullptr);
+    JS::SetEnqueuePromiseJobCallback(cx, nullptr);
     sr->jobQueue.reset();
 #endif // SPIDERMONKEY_PROMISE
 
@@ -7400,7 +7399,7 @@ main(int argc, char** argv, char** envp)
     JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
     JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
-    JS_SetInterruptCallback(rt, ShellInterruptCallback);
+    JS_SetInterruptCallback(cx, ShellInterruptCallback);
     JS::SetBuildIdOp(cx, ShellBuildId);
     JS::SetAsmJSCacheOps(cx, &asmJSCacheOps);
 
@@ -7413,8 +7412,8 @@ main(int argc, char** argv, char** envp)
 
 #ifdef SPIDERMONKEY_PROMISE
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
-    JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
-    JS::SetGetIncumbentGlobalCallback(rt, ShellGetIncumbentGlobalCallback);
+    JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
+    JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
 #endif // SPIDERMONKEY_PROMISE
 
     EnvironmentPreparer environmentPreparer(cx);
@@ -7446,8 +7445,8 @@ main(int argc, char** argv, char** envp)
     JS::SetLargeAllocationFailureCallback(cx, nullptr, nullptr);
 
 #ifdef SPIDERMONKEY_PROMISE
-    JS::SetGetIncumbentGlobalCallback(rt, nullptr);
-    JS::SetEnqueuePromiseJobCallback(rt, nullptr);
+    JS::SetGetIncumbentGlobalCallback(cx, nullptr);
+    JS::SetEnqueuePromiseJobCallback(cx, nullptr);
     sr->jobQueue.reset();
 #endif // SPIDERMONKEY_PROMISE
 

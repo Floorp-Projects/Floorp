@@ -4625,17 +4625,17 @@ JS_CheckForInterrupt(JSContext* cx)
 }
 
 JS_PUBLIC_API(JSInterruptCallback)
-JS_SetInterruptCallback(JSRuntime* rt, JSInterruptCallback callback)
+JS_SetInterruptCallback(JSContext* cx, JSInterruptCallback callback)
 {
-    JSInterruptCallback old = rt->interruptCallback;
-    rt->interruptCallback = callback;
+    JSInterruptCallback old = cx->interruptCallback;
+    cx->interruptCallback = callback;
     return old;
 }
 
 JS_PUBLIC_API(JSInterruptCallback)
-JS_GetInterruptCallback(JSRuntime* rt)
+JS_GetInterruptCallback(JSContext* cx)
 {
-    return rt->interruptCallback;
+    return cx->interruptCallback;
 }
 
 /************************************************************************/
@@ -4644,25 +4644,25 @@ JS_GetInterruptCallback(JSRuntime* rt)
  * Promises.
  */
 JS_PUBLIC_API(void)
-JS::SetGetIncumbentGlobalCallback(JSRuntime* rt, JSGetIncumbentGlobalCallback callback)
+JS::SetGetIncumbentGlobalCallback(JSContext* cx, JSGetIncumbentGlobalCallback callback)
 {
-    rt->getIncumbentGlobalCallback = callback;
+    cx->getIncumbentGlobalCallback = callback;
 }
 
 JS_PUBLIC_API(void)
-JS::SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback,
+JS::SetEnqueuePromiseJobCallback(JSContext* cx, JSEnqueuePromiseJobCallback callback,
                                  void* data /* = nullptr */)
 {
-    rt->enqueuePromiseJobCallback = callback;
-    rt->enqueuePromiseJobCallbackData = data;
+    cx->enqueuePromiseJobCallback = callback;
+    cx->enqueuePromiseJobCallbackData = data;
 }
 
 extern JS_PUBLIC_API(void)
-JS::SetPromiseRejectionTrackerCallback(JSRuntime* rt, JSPromiseRejectionTrackerCallback callback,
+JS::SetPromiseRejectionTrackerCallback(JSContext* cx, JSPromiseRejectionTrackerCallback callback,
                                        void* data /* = nullptr */)
 {
-    rt->promiseRejectionTrackerCallback = callback;
-    rt->promiseRejectionTrackerCallbackData = data;
+    cx->promiseRejectionTrackerCallback = callback;
+    cx->promiseRejectionTrackerCallbackData = data;
 }
 
 JS_PUBLIC_API(JSObject*)
