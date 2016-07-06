@@ -1,5 +1,5 @@
 # TODO remove VOLUME below when the base image is updated next.
-FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
+FROM          taskcluster/centos6-build-upd:0.1.8.20160812141800
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 # TODO remove when base image is updated
@@ -10,6 +10,10 @@ VOLUME /home/worker/tooltool-cache
 # operate on environment variables
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
+
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 
 # Add configuration
 COPY            dot-config                    /home/worker/.config
