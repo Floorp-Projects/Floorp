@@ -9876,7 +9876,7 @@ ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
   nsStyleChangeList *list = static_cast<nsStyleChangeList*>(aClosure);
   if (aFrame->GetType() == nsGkAtoms::imageBoxFrame) {
     list->AppendChange(aFrame, aFrame->GetContent(),
-                       nsChangeHint_ReconstructFrame);
+                       NS_STYLE_HINT_FRAMECHANGE);
     return false; // don't walk descendants
   }
   return true; // walk descendants
