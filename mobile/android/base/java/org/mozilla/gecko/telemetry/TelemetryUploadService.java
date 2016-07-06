@@ -12,8 +12,13 @@ import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 import android.util.Log;
+
+import ch.boye.httpclientandroidlib.HttpHeaders;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.background.BackgroundService;
@@ -24,11 +29,13 @@ import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.telemetry.pings.TelemetryCorePingBuilder;
 import org.mozilla.gecko.telemetry.pings.TelemetryPing;
+import org.mozilla.gecko.util.DateUtil;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.util.Calendar;
 
 /**
  * The service that handles uploading telemetry payloads to the server.
@@ -276,6 +283,12 @@ public class TelemetryUploadService extends BackgroundService {
         public void handleTransportException(final GeneralSecurityException e) {
             // We don't log the exception to prevent leaking user data.
             Log.w(LOGTAG, "Transport exception when trying to upload telemetry");
+        }
+
+        @Override
+        public void addHeaders(final HttpRequestBase request, final DefaultHttpClient client) {
+            super.addHeaders(request, client);
+            request.addHeader(HttpHeaders.DATE, DateUtil.getDateInHTTPFormat(Calendar.getInstance().getTime()));
         }
     }
 
