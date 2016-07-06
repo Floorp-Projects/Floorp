@@ -4755,7 +4755,8 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
     childElement = childElement->GetParentElement();
   }
   if (deepestStyle) {
-    *aOutBrNode = CreateBR(deepestStyle, 0);
+    RefPtr<Element> retVal = CreateBR(deepestStyle, 0);
+    retVal.forget(aOutBrNode);
     NS_ENSURE_STATE(*aOutBrNode);
   }
   return NS_OK;
