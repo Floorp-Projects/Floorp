@@ -261,6 +261,6 @@ partial interface Element {
    */
   [Throws, UnsafeInPrerendering, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   void requestFullscreen(optional any options);
-  [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen", Deprecated="PrefixedFullscreenAPI"]
+  [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen"]
   void mozRequestFullScreen(optional any options);
 };
