@@ -124,6 +124,7 @@ VS_2013u2 = VS('18.00.30501')
 VS_2013u3 = VS('18.00.30723')
 VS_2015 = VS('19.00.23026')
 VS_2015u1 = VS('19.00.23506')
+VS_2015u2 = VS('19.00.23918')
 
 # Note: In reality, the -std=gnu* options are only supported when preceded by
 # -Xclang.
@@ -532,30 +533,31 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/opt/VS_2013u2/bin/cl': VS_2013u2,
         '/opt/VS_2013u3/bin/cl': VS_2013u3,
         '/opt/VS_2015/bin/cl': VS_2015,
-        '/usr/bin/cl': VS_2015u1,
+        '/opt/VS_2015u1/bin/cl': VS_2015u1,
+        '/usr/bin/cl': VS_2015u2,
         '/usr/bin/clang-cl': CLANG_CL_3_9,
     }
     PATHS.update(LinuxToolchainTest.PATHS)
 
     VS_2013u2_RESULT = (
         'This version (18.00.30501) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, '
-        'or newer in order to build.\n'
+        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2013u3_RESULT = CompilerResult(
-        flags=[],
-        version='18.00.30723',
-        type='msvc',
-        compiler='/opt/VS_2013u3/bin/cl',
-    )
+    VS_2013u3_RESULT = (
+        'This version (18.00.30723) of the MSVC compiler is not supported.\n'
+        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
+        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015_RESULT = (
         'This version (19.00.23026) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, '
-        'or newer in order to build.\n'
+        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015u1_RESULT = CompilerResult(
+    VS_2015u1_RESULT = (
+        'This version (19.00.23506) of the MSVC compiler is not supported.\n'
+        'You must install Visual C++ 2015 Update 2 or newer in order to build.\n'
+        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
+    VS_2015u2_RESULT = CompilerResult(
         flags=[],
-        version='19.00.23506',
+        version='19.00.23918',
         type='msvc',
         compiler='/usr/bin/cl',
     )
@@ -582,33 +584,36 @@ class WindowsToolchainTest(BaseToolchainTest):
     GCC_5_RESULT = LinuxToolchainTest.GCC_5_RESULT
     GXX_5_RESULT = LinuxToolchainTest.GXX_5_RESULT
 
+    # VS2015u2 or greater is required.
     def test_msvc(self):
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2015u1_RESULT,
-            'cxx_compiler': self.VS_2015u1_RESULT,
-        })
-
-    def test_msvc_2013(self):
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2013u3_RESULT,
-            'cxx_compiler': self.VS_2013u3_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2013u3/bin/cl',
+            'c_compiler': self.VS_2015u2_RESULT,
+            'cxx_compiler': self.VS_2015u2_RESULT,
         })
 
     def test_unsupported_msvc(self):
-        # While 2013 is supported, update 3 or higher is needed.
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2013u2_RESULT,
+            'c_compiler': self.VS_2015u1_RESULT,
         }, environ={
-            'CC': '/opt/VS_2013u2/bin/cl',
+            'CC': '/opt/VS_2015u1/bin/cl',
         })
 
-        # Likewise with 2015, update 1 or higher is needed.
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.VS_2015_RESULT,
         }, environ={
             'CC': '/opt/VS_2015/bin/cl',
+        })
+
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.VS_2013u3_RESULT,
+        }, environ={
+            'CC': '/opt/VS_2013u3/bin/cl',
+        })
+
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.VS_2013u2_RESULT,
+        }, environ={
+            'CC': '/opt/VS_2013u2/bin/cl',
         })
 
     def test_clang_cl(self):
