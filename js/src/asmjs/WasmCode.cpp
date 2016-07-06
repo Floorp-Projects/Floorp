@@ -107,18 +107,18 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 }
 
 static void
-SpecializeToHeap(CodeSegment& cs, const Metadata& metadata, uint8_t* heapBase, uint32_t heapLength)
+SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, uint8_t* base, uint32_t length)
 {
     for (const BoundsCheck& check : metadata.boundsChecks)
-        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), heapLength);
+        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), length);
 
 #if defined(JS_CODEGEN_X86)
     for (const MemoryAccess& access : metadata.memoryAccesses) {
         // Patch memory pointer immediate.
-        void* addr = access.patchHeapPtrImmAt(cs.code());
+        void* addr = access.patchMemoryPtrImmAt(cs.code());
         uint32_t disp = reinterpret_cast<uint32_t>(X86Encoding::GetPointer(addr));
         MOZ_ASSERT(disp <= INT32_MAX);
-        X86Encoding::SetPointer(addr, (void*)(heapBase + disp));
+        X86Encoding::SetPointer(addr, (void*)(base + disp));
     }
 #endif
 }
@@ -194,8 +194,8 @@ CodeSegment::create(JSContext* cx,
                     const Bytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata,
-                    uint8_t* heapBase,
-                    uint32_t heapLength)
+                    uint8_t* memoryBase,
+                    uint32_t memoryLength)
 {
     MOZ_ASSERT(bytecode.length() % gc::SystemPageSize() == 0);
     MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
@@ -223,7 +223,7 @@ CodeSegment::create(JSContext* cx,
 
         memcpy(cs->code(), bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
-        SpecializeToHeap(*cs, metadata, heapBase, heapLength);
+        SpecializeToMemory(*cs, metadata, memoryBase, memoryLength);
     }
 
     if (!ExecutableAllocator::makeExecutable(cs->code(), cs->codeLength())) {

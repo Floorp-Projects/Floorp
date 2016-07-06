@@ -759,7 +759,7 @@ DecodeImportSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Impor
 }
 
 static bool
-DecodeMemorySection(Decoder& d, bool newFormat, ModuleGenerator& mg)
+DecodeMemorySection(Decoder& d, bool newFormat, ModuleGeneratorData* init, bool* exported)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(MemorySectionId, &sectionStart, &sectionSize))
@@ -793,21 +793,19 @@ DecodeMemorySection(Decoder& d, bool newFormat, ModuleGenerator& mg)
         return Fail(d, "maximum memory size less than initial memory size");
 
     if (!newFormat) {
-        uint8_t exported;
-        if (!d.readFixedU8(&exported))
+        uint8_t u8;
+        if (!d.readFixedU8(&u8))
             return Fail(d, "expected exported byte");
 
-        if (exported) {
-            UniqueChars fieldName = DuplicateString("memory");
-            if (!fieldName || !mg.addMemoryExport(Move(fieldName)))
-                return false;
-        }
+        *exported = u8;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
         return Fail(d, "memory section byte size mismatch");
 
-    mg.initHeapUsage(HeapUsage::Unshared, initialSize.value());
+    MOZ_ASSERT(init->memoryUsage == MemoryUsage::None);
+    init->memoryUsage = MemoryUsage::Unshared;
+    init->minMemoryLength = initialSize.value();
     return true;
 }
 
@@ -895,8 +893,14 @@ DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet
 }
 
 static bool
-DecodeExportSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
+DecodeExportSection(Decoder& d, bool newFormat, bool memoryExported, ModuleGenerator& mg)
 {
+    if (!newFormat && memoryExported) {
+        UniqueChars fieldName = DuplicateString("memory");
+        if (!fieldName || !mg.addMemoryExport(Move(fieldName)))
+            return false;
+    }
+
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(ExportSectionId, &sectionStart, &sectionSize))
         return Fail(d, "failed to start section");
@@ -1023,7 +1027,7 @@ DecodeDataSection(Decoder& d, ModuleGenerator& mg)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!mg.usesHeap())
+    if (!mg.usesMemory())
         return Fail(d, "data section requires a memory section");
 
     uint32_t numSegments;
@@ -1033,7 +1037,7 @@ DecodeDataSection(Decoder& d, ModuleGenerator& mg)
     if (numSegments > MaxDataSegments)
         return Fail(d, "too many data segments");
 
-    uint32_t max = mg.initialHeapLength();
+    uint32_t max = mg.minMemoryLength();
     for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
         DataSegment seg;
 
@@ -1177,14 +1181,15 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
     if (!DecodeTableSection(d, init.get()))
         return nullptr;
 
+    bool memoryExported = false;
+    if (!DecodeMemorySection(d, newFormat, init.get(), &memoryExported))
+        return nullptr;
+
     ModuleGenerator mg;
     if (!mg.init(Move(init), Move(args)))
         return nullptr;
 
-    if (!DecodeMemorySection(d, newFormat, mg))
-        return nullptr;
-
-    if (!DecodeExportSection(d, newFormat, mg))
+    if (!DecodeExportSection(d, newFormat, memoryExported, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))

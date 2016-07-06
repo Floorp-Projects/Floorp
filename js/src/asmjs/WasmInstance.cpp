@@ -43,7 +43,7 @@ using mozilla::BinarySearch;
 using mozilla::Swap;
 
 uint8_t**
-Instance::addressOfHeapPtr() const
+Instance::addressOfMemoryBase() const
 {
     return (uint8_t**)(codeSegment_->globalData() + HeapGlobalDataOffset);
 }
@@ -385,7 +385,7 @@ NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint
 static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
-                   HandleArrayBufferObjectMaybeShared heap,
+                   HandleArrayBufferObjectMaybeShared memoryObj,
                    const ExportMap& exportMap,
                    const ExportVector& exports,
                    MutableHandleObject exportObj)
@@ -398,8 +398,8 @@ CreateExportObject(JSContext* cx,
             MOZ_ASSERT(!exportObj);
             uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
             if (exportIndex == MemoryExport) {
-                MOZ_ASSERT(heap);
-                exportObj.set(heap);
+                MOZ_ASSERT(memoryObj);
+                exportObj.set(memoryObj);
             } else {
                 exportObj.set(NewExportedFunction(cx, instanceObj, exportIndex));
                 if (!exportObj)
@@ -435,7 +435,7 @@ CreateExportObject(JSContext* cx,
         RootedValue val(cx);
         uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
         if (exportIndex == MemoryExport)
-            val = ObjectValue(*heap);
+            val = ObjectValue(*memoryObj);
         else
             val = vals[exportIndex];
 
@@ -496,7 +496,7 @@ Instance::create(JSContext* cx,
     }
 
     if (heap)
-        *instance.addressOfHeapPtr() = heap->dataPointerEither().unwrap(/* wasm heap pointer */);
+        *instance.addressOfMemoryBase() = heap->dataPointerEither().unwrap(/* wasm heap pointer */);
 
     // Create the export object
 
@@ -542,15 +542,15 @@ Instance::trace(JSTracer* trc)
 }
 
 SharedMem<uint8_t*>
-Instance::heap() const
+Instance::memoryBase() const
 {
-    MOZ_ASSERT(metadata_->usesHeap());
-    MOZ_ASSERT(*addressOfHeapPtr() == heap_->dataPointerEither());
+    MOZ_ASSERT(metadata_->usesMemory());
+    MOZ_ASSERT(*addressOfMemoryBase() == heap_->dataPointerEither());
     return heap_->dataPointerEither();
 }
 
 size_t
-Instance::heapLength() const
+Instance::memoryLength() const
 {
     return heap_->byteLength();
 }

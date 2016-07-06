@@ -3389,7 +3389,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS));
     mir.initUsesSignalHandlersForAsmJSOOB(task->mg().usesSignal.forOOB);
-    mir.initMinAsmJSHeapLength(task->mg().minHeapLength);
+    mir.initMinAsmJSHeapLength(task->mg().minMemoryLength);
 
     // Build MIR graph
     {

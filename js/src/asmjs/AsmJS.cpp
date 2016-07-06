@@ -267,7 +267,6 @@ enum class CacheResult
 
 struct AsmJSMetadataCacheablePod
 {
-    uint32_t                minHeapLength;
     uint32_t                numFFIs;
     uint32_t                srcLength;
     uint32_t                srcLengthWithRightBrace;
@@ -1682,7 +1681,6 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!asmJSMetadata_)
             return false;
 
-        asmJSMetadata_->minHeapLength = RoundUpToNextValidAsmJSHeapLength(0);
         asmJSMetadata_->srcStart = moduleFunctionNode_->pn_body->pn_pos.begin;
         asmJSMetadata_->srcBodyStart = parser_.tokenStream.currentToken().pos.end;
         asmJSMetadata_->strict = parser_.pc->sc->strict() && !parser_.pc->sc->hasExplicitUseStrict();
@@ -1767,6 +1765,8 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         }
 
+        genData->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
+
         if (parser_.ss->filename()) {
             args.filename = DuplicateString(parser_.ss->filename());
             if (!args.filename)
@@ -1775,8 +1775,6 @@ class MOZ_STACK_CLASS ModuleValidator
 
         if (!mg_.init(Move(genData), Move(args), asmJSMetadata_.get()))
             return false;
-
-        mg_.bumpMinHeapLength(asmJSMetadata_->minHeapLength);
 
         return true;
     }
@@ -1792,7 +1790,7 @@ class MOZ_STACK_CLASS ModuleValidator
     RootedFunction& dummyFunction()          { return dummyFunction_; }
     bool supportsSimd() const                { return cx_->jitSupportsSimd(); }
     bool atomicsPresent() const              { return atomicsPresent_; }
-    uint32_t minHeapLength() const           { return asmJSMetadata_->minHeapLength; }
+    uint32_t minMemoryLength() const         { return mg_.minMemoryLength(); }
 
     void initModuleFunctionName(PropertyName* name) {
         MOZ_ASSERT(!moduleFunctionName_);
@@ -2138,10 +2136,8 @@ class MOZ_STACK_CLASS ModuleValidator
         if (len > uint64_t(INT32_MAX) + 1)
             return false;
         len = RoundUpToNextValidAsmJSHeapLength(len);
-        if (len > asmJSMetadata_->minHeapLength) {
-            asmJSMetadata_->minHeapLength = len;
-            mg_.bumpMinHeapLength(len);
-        }
+        if (len > mg_.minMemoryLength())
+            mg_.bumpMinMemoryLength(len);
         return true;
     }
 
@@ -2274,7 +2270,7 @@ class MOZ_STACK_CLASS ModuleValidator
     }
     UniqueModule finish() {
         if (!arrayViews_.empty())
-            mg_.initHeapUsage(atomicsPresent_ ? HeapUsage::Shared : HeapUsage::Unshared);
+            mg_.initMemoryUsage(atomicsPresent_ ? MemoryUsage::Shared : MemoryUsage::Unshared);
 
         MOZ_ASSERT(asmJSMetadata_->asmJSFuncNames.empty());
         for (const Func* func : functions_) {
@@ -7761,7 +7757,7 @@ static bool
 CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
             MutableHandle<ArrayBufferObjectMaybeShared*> buffer)
 {
-    if (metadata.heapUsage == HeapUsage::Shared) {
+    if (metadata.memoryUsage == MemoryUsage::Shared) {
         if (!IsSharedArrayBuffer(bufferVal))
             return LinkFail(cx, "shared views can only be constructed onto SharedArrayBuffer");
     } else {
@@ -7770,14 +7766,14 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
     }
 
     buffer.set(&AsAnyArrayBuffer(bufferVal));
-    uint32_t heapLength = buffer->byteLength();
+    uint32_t memoryLength = buffer->byteLength();
 
-    if (!IsValidAsmJSHeapLength(heapLength)) {
+    if (!IsValidAsmJSHeapLength(memoryLength)) {
         UniqueChars msg(
             JS_smprintf("ArrayBuffer byteLength 0x%x is not a valid heap length. The next "
                         "valid length is 0x%x",
-                        heapLength,
-                        RoundUpToNextValidAsmJSHeapLength(heapLength)));
+                        memoryLength,
+                        RoundUpToNextValidAsmJSHeapLength(memoryLength)));
         if (!msg)
             return false;
         return LinkFail(cx, msg.get());
@@ -7785,13 +7781,13 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
 
     // This check is sufficient without considering the size of the loaded datum because heap
     // loads and stores start on an aligned boundary and the heap byteLength has larger alignment.
-    MOZ_ASSERT((metadata.minHeapLength - 1) <= INT32_MAX);
-    if (heapLength < metadata.minHeapLength) {
+    MOZ_ASSERT((metadata.minMemoryLength - 1) <= INT32_MAX);
+    if (memoryLength < metadata.minMemoryLength) {
         UniqueChars msg(
             JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (the size implied "
                         "by const heap accesses).",
-                        heapLength,
-                        metadata.minHeapLength));
+                        memoryLength,
+                        metadata.minMemoryLength));
         if (!msg)
             return false;
         return LinkFail(cx, msg.get());
@@ -7816,7 +7812,7 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
     HandleValue bufferVal = args.get(2);
 
     Rooted<ArrayBufferObjectMaybeShared*> heap(cx);
-    if (module.metadata().usesHeap() && !CheckBuffer(cx, metadata, bufferVal, &heap))
+    if (module.metadata().usesMemory() && !CheckBuffer(cx, metadata, bufferVal, &heap))
         return false;
 
     Vector<Val> valImports(cx);
