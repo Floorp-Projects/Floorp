@@ -191,7 +191,7 @@ struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPrepare
     explicit EnvironmentPreparer(JSContext* cx)
       : cx(cx)
     {
-        js::SetScriptEnvironmentPreparer(JS_GetRuntime(cx), this);
+        js::SetScriptEnvironmentPreparer(cx, this);
     }
     void invoke(JS::HandleObject scope, Closure& closure) override;
 };
