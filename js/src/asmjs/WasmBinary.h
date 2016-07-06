@@ -572,6 +572,7 @@ class Decoder
     const uint8_t* const beg_;
     const uint8_t* const end_;
     const uint8_t* cur_;
+    UniqueChars* error_;
 
     template <class T>
     MOZ_MUST_USE bool read(T* out) {
@@ -647,18 +648,29 @@ class Decoder
     static const size_t ExprLimit = 2 * UINT8_MAX - 1;
 
   public:
-    Decoder(const uint8_t* begin, const uint8_t* end)
+    Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error = nullptr)
       : beg_(begin),
         end_(end),
-        cur_(begin)
+        cur_(begin),
+        error_(error)
     {
         MOZ_ASSERT(begin <= end);
     }
-    explicit Decoder(const Bytes& bytes)
+    explicit Decoder(const Bytes& bytes, UniqueChars* error = nullptr)
       : beg_(bytes.begin()),
         end_(bytes.end()),
-        cur_(bytes.begin())
+        cur_(bytes.begin()),
+        error_(error)
     {}
+
+    bool fail(const char* msg) {
+        error_->reset(strdup(msg));
+        return false;
+    }
+    bool fail(UniqueChars msg) {
+        *error_ = Move(msg);
+        return false;
+    }
 
     bool done() const {
         MOZ_ASSERT(cur_ <= end_);
@@ -759,8 +771,9 @@ class Decoder
     static const uint32_t NotStarted = UINT32_MAX;
 
     template <size_t IdSizeWith0>
-    MOZ_MUST_USE bool startSection(const char (&id)[IdSizeWith0], uint32_t* startOffset,
-                                             uint32_t* size) {
+    MOZ_MUST_USE bool startSection(const char (&id)[IdSizeWith0],
+                                   uint32_t* startOffset,
+                                   uint32_t* size) {
         static const size_t IdSize = IdSizeWith0 - 1;
         MOZ_ASSERT(id[IdSize] == '\0');
         const uint8_t* before = cur_;

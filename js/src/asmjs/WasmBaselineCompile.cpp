@@ -6195,7 +6195,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
                            const ValTypeVector& locals,
                            FuncCompileResults& compileResults)
     : mg_(mg),
-      iter_(BaseCompilePolicy(), decoder),
+      iter_(decoder),
       func_(func),
       lastReadCallSite_(0),
       alloc_(compileResults.alloc()),

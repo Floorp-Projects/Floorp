@@ -133,9 +133,15 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
             return false;
     }
 
-    UniqueModule module = Compile(cx, Move(bytecode), Move(compileArgs));
-    if (!module)
+    UniqueChars error;
+    UniqueModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    if (!module) {
+        if (error)
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
+        else
+            ReportOutOfMemory(cx);
         return false;
+    }
 
     Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
     if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
@@ -287,26 +293,26 @@ GetConstructorPrototype(JSContext* cx, Native native, CallArgs args)
 static bool
 ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    CallArgs callArgs = CallArgsFromVp(argc, vp);
 
-    if (!ThrowIfNotConstructing(cx, args, "Module"))
+    if (!ThrowIfNotConstructing(cx, callArgs, "Module"))
         return false;
 
-    if (!args.requireAtLeast(cx, "WebAssembly.Module", 1))
+    if (!callArgs.requireAtLeast(cx, "WebAssembly.Module", 1))
         return false;
 
-    if (!args.get(0).isObject()) {
+    if (!callArgs.get(0).isObject()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
     Bytes bytecode;
-    if (args[0].toObject().is<TypedArrayObject>()) {
-        TypedArrayObject& view = args[0].toObject().as<TypedArrayObject>();
+    if (callArgs[0].toObject().is<TypedArrayObject>()) {
+        TypedArrayObject& view = callArgs[0].toObject().as<TypedArrayObject>();
         if (!bytecode.append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
             return false;
-    } else if (args[0].toObject().is<ArrayBufferObject>()) {
-        ArrayBufferObject& buffer = args[0].toObject().as<ArrayBufferObject>();
+    } else if (callArgs[0].toObject().is<ArrayBufferObject>()) {
+        ArrayBufferObject& buffer = callArgs[0].toObject().as<ArrayBufferObject>();
         if (!bytecode.append(buffer.dataPointer(), buffer.byteLength()))
             return false;
     } else {
@@ -328,16 +334,22 @@ ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
     if (!CheckCompilerSupport(cx))
         return false;
 
-    UniqueModule module = Compile(cx, Move(bytecode), Move(compileArgs));
-    if (!module)
+    UniqueChars error;
+    UniqueModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    if (!module) {
+        if (error)
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
+        else
+            ReportOutOfMemory(cx);
         return false;
+    }
 
-    RootedObject proto(cx, &GetConstructorPrototype(cx, ModuleConstructor, args));
+    RootedObject proto(cx, &GetConstructorPrototype(cx, ModuleConstructor, callArgs));
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, Move(module), proto));
     if (!moduleObj)
         return false;
 
-    args.rval().setObject(*moduleObj);
+    callArgs.rval().setObject(*moduleObj);
     return true;
 }
 
