@@ -1356,7 +1356,6 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
         TraceLoggerThread* logger = TraceLoggerForCurrentThread();
         AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
 
-        PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->runtime());
         success = wasm::CompileFunction(task);
     }
 

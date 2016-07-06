@@ -768,9 +768,8 @@ ModuleGenerator::startFuncDefs()
 
     if (!tasks_.initCapacity(numTasks))
         return false;
-    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(rt, *shared_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(*shared_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;

@@ -137,6 +137,17 @@ JitContext::JitContext(CompileRuntime* rt)
     SetJitContext(this);
 }
 
+JitContext::JitContext(TempAllocator* temp)
+  : cx(nullptr),
+    temp(temp),
+    runtime(nullptr),
+    compartment(nullptr),
+    prev_(CurrentJitContext()),
+    assemblerCount_(0)
+{
+    SetJitContext(this);
+}
+
 JitContext::JitContext(CompileRuntime* rt, TempAllocator* temp)
   : cx(nullptr),
     temp(temp),
@@ -1481,7 +1492,7 @@ OptimizeMIR(MIRGenerator* mir)
     MIRGraph& graph = mir->graph();
     GraphSpewer& gs = mir->graphSpewer();
     TraceLoggerThread* logger;
-    if (GetJitContext()->runtime->onMainThread())
+    if (GetJitContext()->onMainThread())
         logger = TraceLoggerForMainThread(GetJitContext()->runtime);
     else
         logger = TraceLoggerForCurrentThread();
@@ -1883,7 +1894,7 @@ GenerateLIR(MIRGenerator* mir)
     GraphSpewer& gs = mir->graphSpewer();
 
     TraceLoggerThread* logger;
-    if (GetJitContext()->runtime->onMainThread())
+    if (GetJitContext()->onMainThread())
         logger = TraceLoggerForMainThread(GetJitContext()->runtime);
     else
         logger = TraceLoggerForCurrentThread();
@@ -1962,7 +1973,7 @@ CodeGenerator*
 GenerateCode(MIRGenerator* mir, LIRGraph* lir)
 {
     TraceLoggerThread* logger;
-    if (GetJitContext()->runtime->onMainThread())
+    if (GetJitContext()->onMainThread())
         logger = TraceLoggerForMainThread(GetJitContext()->runtime);
     else
         logger = TraceLoggerForCurrentThread();
