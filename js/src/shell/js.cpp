@@ -7405,7 +7405,7 @@ main(int argc, char** argv, char** envp)
 
     JS_SetNativeStackQuota(cx, gMaxStackSize);
 
-    JS::dbg::SetDebuggerMallocSizeOf(rt, moz_malloc_size_of);
+    JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
 
     if (!JS::InitSelfHostedCode(cx))
         return 1;
