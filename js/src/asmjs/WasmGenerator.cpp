@@ -95,21 +95,6 @@ ModuleGenerator::~ModuleGenerator()
     }
 }
 
-static bool
-ParallelCompilationEnabled(ExclusiveContext* cx)
-{
-    // Since there are a fixed number of helper threads and one is already being
-    // consumed by this parsing task, ensure that there another free thread to
-    // avoid deadlock. (Note: there is at most one thread used for parsing so we
-    // don't have to worry about general dining philosophers.)
-    if (HelperThreadState().threadCount <= 1 || !CanUseExtraThreads())
-        return false;
-
-    // If 'cx' isn't a JSContext, then we are already off the main thread so
-    // off-thread compilation must be enabled.
-    return !cx->isJSContext() || cx->asJSContext()->runtime()->canUseOffthreadIonCompilation();
-}
-
 bool
 ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Assumptions&& assumptions,
                       Metadata* maybeMetadata)
@@ -746,10 +731,22 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(!startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
+    // The wasmCompilationInProgress atomic ensures that there is only one
+    // parallel compilation in progress at a time. In the special case of
+    // asm.js, where the ModuleGenerator itself can be on a helper thread, this
+    // avoids the possibility of deadlock since at most 1 helper thread will be
+    // blocking on other helper threads and there are always >1 helper threads.
+    // With wasm, this restriction could be relaxed by moving the worklist state
+    // out of HelperThreadState since each independent compilation needs its own
+    // worklist pair. Alternatively, the deadlock could be avoided by having the
+    // ModuleGenerator thread make progress (on compile tasks) instead of
+    // blocking.
+
+    GlobalHelperThreadState& threads = HelperThreadState();
+    MOZ_ASSERT(threads.threadCount > 1);
+
     uint32_t numTasks;
-    if (ParallelCompilationEnabled(cx_) &&
-        HelperThreadState().wasmCompilationInProgress.compareExchange(false, true))
-    {
+    if (CanUseExtraThreads() && threads.wasmCompilationInProgress.compareExchange(false, true)) {
 #ifdef DEBUG
         {
             AutoLockHelperThreadState lock;
@@ -758,9 +755,8 @@ ModuleGenerator::startFuncDefs()
             MOZ_ASSERT(HelperThreadState().wasmFinishedList().empty());
         }
 #endif
-
         parallel_ = true;
-        numTasks = HelperThreadState().maxWasmCompilationThreads();
+        numTasks = threads.maxWasmCompilationThreads();
     } else {
         numTasks = 1;
     }
