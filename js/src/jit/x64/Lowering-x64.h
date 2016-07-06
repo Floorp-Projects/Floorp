@@ -56,6 +56,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins);
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
+    void visitWasmStore(MWasmStore* ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);

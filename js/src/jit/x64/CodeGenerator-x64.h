@@ -27,9 +27,13 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
                            Operand dest, MIRType slotType);
     void memoryBarrier(MemoryBarrierBits barrier);
 
+    void load(Scalar::Type type, const Operand& srcAddr, AnyRegister out);
     void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
-    void emitSimdLoad(LAsmJSLoadHeap* ins);
+
+    void store(Scalar::Type type, const LAllocation* value, const Operand& dstAddr);
     void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand& dstAddr);
+
+    void emitSimdLoad(LAsmJSLoadHeap* ins);
     void emitSimdStore(LAsmJSStoreHeap* ins);
   public:
     CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
@@ -64,6 +68,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir);
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
+    void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmStore(LWasmStore* ins);
     void visitAsmSelectI64(LAsmSelectI64* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
