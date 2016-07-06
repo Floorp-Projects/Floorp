@@ -36,6 +36,10 @@ body {
   background: none;
 }
 
+html.dragging {
+  overflow-x: hidden;
+}
+
 body.dragging .tag-line {
   cursor: grabbing;
 }
