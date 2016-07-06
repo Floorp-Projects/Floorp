@@ -268,6 +268,9 @@ namespace jit {
     _(IsObject)                                                             \
     _(HasClass)                                                             \
     _(CopySign)                                                             \
+    _(WasmBoundsCheck)                                                      \
+    _(WasmLoad)                                                             \
+    _(WasmStore)                                                            \
     _(WasmTruncateToInt32)                                                  \
     _(AsmJSNeg)                                                             \
     _(AsmJSUnsignedToDouble)                                                \

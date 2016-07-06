@@ -58,6 +58,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
+    void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmStore(LWasmStore* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
@@ -74,8 +76,8 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool);
 
   private:
-    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
-                                   uint32_t offset, uint32_t endOffset);
+    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg,
+                                   const MWasmMemoryAccess* access);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;
