@@ -1598,7 +1598,7 @@ CodeGeneratorARM::visitGuardShape(LGuardShape* guard)
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
 
-    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfShape())), tmp);
+    masm.ma_ldr(DTRAddr(obj, DtrOffImm(ShapedObject::offsetOfShape())), tmp);
     masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()));
 
     bailoutIf(Assembler::NotEqual, guard->snapshot());
