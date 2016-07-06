@@ -795,7 +795,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 
   JS_SetInterruptCallback(workerCx, InterruptCallback);
 
-  js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
+  js::SetCTypesActivityCallback(workerCx, CTypesActivityCallback);
 
 #ifdef JS_GC_ZEAL
   JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
