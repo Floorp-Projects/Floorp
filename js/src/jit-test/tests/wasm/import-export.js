@@ -72,3 +72,16 @@ var code = textToBinary('(module (memory 1 1) (export "foo" memory) (export "bar
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "foo,bar");
 assertEq(e.foo, e.bar);
+assertEq(e.foo.buffer.byteLength, 64*1024);
+
+var code = textToBinary('(module (memory 1 1) (func) (export "foo" 0) (export "bar" memory))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).join(), "foo,bar");
+assertEq(e.foo(), undefined);
+assertEq(e.bar.buffer.byteLength, 64*1024);
+
+var code = textToBinary('(module (memory 1 1) (func) (export "bar" memory) (export "foo" 0))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).join(), "bar,foo");
+assertEq(e.foo(), undefined);
+assertEq(e.bar.buffer.byteLength, 64*1024);

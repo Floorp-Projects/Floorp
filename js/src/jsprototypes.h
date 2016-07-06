@@ -119,7 +119,8 @@ IF_SAB(real,imaginary)(Atomics, 45,     InitAtomicsClass, OCLASP(Atomics)) \
     real(WebAssembly,           48,     InitWebAssemblyClass,   CLASP(WebAssembly)) \
     imaginary(WasmModule,       49,     dummy,                  dummy) \
     imaginary(WasmInstance,     50,     dummy,                  dummy) \
-IF_PROMISE(real,imaginary)(Promise,             51,     InitViaClassSpec, OCLASP(Promise)) \
+    imaginary(WasmMemory,       51,     dummy,                  dummy) \
+IF_PROMISE(real,imaginary)(Promise,             52,     InitViaClassSpec, OCLASP(Promise)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
