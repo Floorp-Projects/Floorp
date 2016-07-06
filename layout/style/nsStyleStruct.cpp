@@ -690,10 +690,10 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData) const
   if (mQuotes != aNewData.mQuotes &&
       (mQuotes || aNewData.mQuotes) &&
       GetQuotePairs() != aNewData.GetQuotePairs()) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
   if (mListStylePosition != aNewData.mListStylePosition) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
   if (EqualImages(mListStyleImage, aNewData.mListStyleImage) &&
       mCounterStyle == aNewData.mCounterStyle) {
@@ -760,7 +760,7 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const
     return NS_STYLE_HINT_NONE;
   }
   if (mBoxOrdinal != aNewData.mBoxOrdinal) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
   return NS_STYLE_HINT_REFLOW;
 }
@@ -813,7 +813,7 @@ nsStyleColumn::CalcDifference(const nsStyleColumn& aNewData) const
     // We force column count changes to do a reframe, because it's tricky to handle
     // some edge cases where the column count gets smaller and content overflows.
     // XXX not ideal
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
 
   if (mColumnWidth != aNewData.mColumnWidth ||
@@ -1754,7 +1754,7 @@ nsStyleTable::CalcDifference(const nsStyleTable& aNewData) const
 {
   if (mSpan != aNewData.mSpan ||
       mLayoutStrategy != aNewData.mLayoutStrategy) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
   return NS_STYLE_HINT_NONE;
 }
@@ -1795,7 +1795,7 @@ nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aNewData) const
   // conserve memory when using the separated border model (collapsed borders
   // require extra state to be stored).
   if (mBorderCollapse != aNewData.mBorderCollapse) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
 
   if ((mCaptionSide == aNewData.mCaptionSide) &&
@@ -3493,7 +3493,7 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
   if (mContentCount != aNewData.mContentCount ||
       mIncrementCount != aNewData.mIncrementCount ||
       mResetCount != aNewData.mResetCount) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
 
   uint32_t ix = mContentCount;
@@ -3502,21 +3502,21 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
       // Unfortunately we need to reframe here; a simple reflow
       // will not pick up different text or different image URLs,
       // since we set all that up in the CSSFrameConstructor
-      return NS_STYLE_HINT_FRAMECHANGE;
+      return nsChangeHint_ReconstructFrame;
     }
   }
   ix = mIncrementCount;
   while (0 < ix--) {
     if ((mIncrements[ix].mValue != aNewData.mIncrements[ix].mValue) ||
         (mIncrements[ix].mCounter != aNewData.mIncrements[ix].mCounter)) {
-      return NS_STYLE_HINT_FRAMECHANGE;
+      return nsChangeHint_ReconstructFrame;
     }
   }
   ix = mResetCount;
   while (0 < ix--) {
     if ((mResets[ix].mValue != aNewData.mResets[ix].mValue) ||
         (mResets[ix].mCounter != aNewData.mResets[ix].mCounter)) {
-      return NS_STYLE_HINT_FRAMECHANGE;
+      return nsChangeHint_ReconstructFrame;
     }
   }
   if (mMarkerOffset != aNewData.mMarkerOffset) {
@@ -3716,7 +3716,7 @@ nsStyleText::CalcDifference(const nsStyleText& aNewData) const
   if (WhiteSpaceOrNewlineIsSignificant() !=
       aNewData.WhiteSpaceOrNewlineIsSignificant()) {
     // This may require construction of suppressed text frames
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
 
   if (mTextCombineUpright != aNewData.mTextCombineUpright ||
@@ -3913,7 +3913,7 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
   if (mUserInput != aNewData.mUserInput) {
     if (NS_STYLE_USER_INPUT_NONE == mUserInput ||
         NS_STYLE_USER_INPUT_NONE == aNewData.mUserInput) {
-      hint |= NS_STYLE_HINT_FRAMECHANGE;
+      hint |= nsChangeHint_ReconstructFrame;
     } else {
       hint |= nsChangeHint_NeutralChange;
     }
@@ -3976,7 +3976,7 @@ nsStyleUIReset::CalcDifference(const nsStyleUIReset& aNewData) const
 {
   // ignore mIMEMode
   if (mForceBrokenImageIcon != aNewData.mForceBrokenImageIcon) {
-    return NS_STYLE_HINT_FRAMECHANGE;
+    return nsChangeHint_ReconstructFrame;
   }
   if (mWindowShadow != aNewData.mWindowShadow) {
     // We really need just an nsChangeHint_SyncFrameView, except
