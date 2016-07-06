@@ -2416,27 +2416,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   margin-inline-end: 5px;
 }
 
-/* Social toolbar item */
-
-#socialActivatedNotification .popup-notification-button-container {
-  margin-left: 6px;
-}
-
-.social-activation-icon {
-  width: auto;
-  height: auto;
-  max-height: 64px;
-  max-width: 64px;
-}
-
-#social-activation-message {
-  max-width: 250px;
-}
-
-#social-activation-message > label {
-  margin: 0;
-}
-
 /* social toolbar provider menu */
 .social-statusarea-popup {
   margin-top: 0;
