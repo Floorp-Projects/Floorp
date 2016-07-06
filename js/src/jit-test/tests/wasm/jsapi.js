@@ -1,7 +1,11 @@
 load(libdir + 'wasm.js');
 load(libdir + 'asserts.js');
 
-const emptyModule = wasmTextToBinary('(module)');
+// Explicitly opt into the new binary format for imports and exports until it
+// is used by default everywhere.
+const textToBinary = str => wasmTextToBinary(str, 'new-format');
+
+const emptyModule = textToBinary('(module)');
 
 // 'WebAssembly' property on global object
 const wasmDesc = Object.getOwnPropertyDescriptor(this, 'WebAssembly');
@@ -98,23 +102,4 @@ assertEq(exportsDesc.writable, true);
 assertEq(exportsDesc.enumerable, true);
 assertEq(exportsDesc.configurable, true);
 
-// Exports object:
-// Note: at some point the exports object should become an ES6 module namespace
-// exotic object. For now, don't probe too hard on the property descriptors or
-// the exports object itself.
-
-const e1 = i1.exports;
-assertEq(e1, exportsDesc.value);
-assertEq(Object.keys(e1).length, 0);
-
-var code = wasmTextToBinary('(module (func) (export "foo" 0))');
-var e = new Instance(new Module(code)).exports;
-assertEq(Object.keys(e).join(), "foo");
-assertEq(e.foo(), undefined);
-
-var code = wasmTextToBinary('(module (func) (export "foo" 0) (export "bar" 0))');
-var e = new Instance(new Module(code)).exports;
-assertEq(Object.keys(e).join(), "foo,bar");
-assertEq(e.foo(), undefined);
-assertEq(e.bar(), undefined);
-assertEq(e.foo, e.bar);
+// TODO: test export object objects are ES6 module namespace objects.

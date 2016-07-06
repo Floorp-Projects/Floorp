@@ -349,7 +349,8 @@ Assumptions::operator==(const Assumptions& rhs) const
     return usesSignal == rhs.usesSignal &&
            cpuId == rhs.cpuId &&
            buildId.length() == rhs.buildId.length() &&
-           PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
+           PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length()) &&
+           newFormat == rhs.newFormat;
 }
 
 size_t
@@ -357,7 +358,8 @@ Assumptions::serializedSize() const
 {
     return sizeof(usesSignal) +
            sizeof(uint32_t) +
-           SerializedPodVectorSize(buildId);
+           SerializedPodVectorSize(buildId) +
+           sizeof(bool);
 }
 
 uint8_t*
@@ -366,6 +368,7 @@ Assumptions::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &usesSignal, sizeof(usesSignal));
     cursor = WriteScalar<uint32_t>(cursor, cpuId);
     cursor = SerializePodVector(cursor, buildId);
+    cursor = WriteScalar<bool>(cursor, newFormat);
     return cursor;
 }
 
@@ -374,7 +377,8 @@ Assumptions::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &usesSignal, sizeof(usesSignal))) &&
     (cursor = ReadScalar<uint32_t>(cursor, &cpuId)) &&
-    (cursor = DeserializePodVector(cursor, &buildId));
+    (cursor = DeserializePodVector(cursor, &buildId)) &&
+    (cursor = ReadScalar<bool>(cursor, &newFormat));
     return cursor;
 }
 

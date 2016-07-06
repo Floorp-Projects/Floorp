@@ -794,7 +794,9 @@ struct Assumptions
     SignalUsage           usesSignal;
     uint32_t              cpuId;
     JS::BuildIdCharVector buildId;
+    bool                  newFormat;
 
+    Assumptions() : cpuId(0), newFormat(false) {}
     MOZ_MUST_USE bool init(SignalUsage usesSignal, JS::BuildIdOp buildIdOp);
 
     bool operator==(const Assumptions& rhs) const;
