@@ -558,6 +558,9 @@ ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& 
     if (UINT32_MAX - args_.length() <= vars_.length() + bodyLevelLexicals_.length())
         return ts.reportError(JSMSG_TOO_MANY_LOCALS);
 
+    if (blockScopeDepth >= Bindings::BLOCK_SCOPED_LIMIT)
+        return ts.reportError(JSMSG_TOO_MANY_LOCALS);
+
     // Fix up slots in non-global contexts. In global contexts all body-level
     // names are dynamically defined and do not live in either frame or
     // CallObject slots.
