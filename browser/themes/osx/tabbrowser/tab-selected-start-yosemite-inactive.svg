@@ -16,10 +16,6 @@
     <clipPath id="tab-curve-clip-path-start" clipPathUnits="objectBoundingBox">
       <path d="m 1,0.0625 0.05,0 0,0.938 -1,0 0,-0.028 C 0.32082458,0.95840561 0.4353096,0.81970962 0.48499998,0.5625 0.51819998,0.3905 0.535,0.0659 1,0.0625 z"/>
     </clipPath>
-
-    <clipPath id="tab-hover-clip-path" clipPathUnits="objectBoundingBox">
-      <path d="M 0,0.2 0,1 1,1, 1,0.2 z"/>
-    </clipPath>
   </defs>
 
   <foreignObject width="30" height="31" clip-path="url(#tab-curve-clip-path-start)">
