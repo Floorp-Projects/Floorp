@@ -226,20 +226,19 @@ partial interface Document {
   // versions hve it uppercase.
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute boolean fullscreenEnabled;
-  [BinaryName="fullscreenEnabled", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="fullscreenEnabled"]
   readonly attribute boolean mozFullScreenEnabled;
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute Element? fullscreenElement;
-  [BinaryName="fullscreenElement", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="fullscreenElement"]
   readonly attribute Element? mozFullScreenElement;
 
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   void exitFullscreen();
-  [BinaryName="exitFullscreen", Deprecated="PrefixedFullscreenAPI"]
+  [BinaryName="exitFullscreen"]
   void mozCancelFullScreen();
 
   // Gecko-specific fullscreen bits
-  [Deprecated="PrefixedFullscreenAPI"]
   readonly attribute boolean mozFullScreen;
 };
 
