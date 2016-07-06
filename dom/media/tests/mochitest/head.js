@@ -33,13 +33,19 @@ try {
 function AudioStreamAnalyser(ac, stream) {
   this.audioContext = ac;
   this.stream = stream;
-  this.sourceNodes = this.stream.getAudioTracks().map(
-    t => this.audioContext.createMediaStreamSource(new MediaStream([t])));
+  this.sourceNodes = [];
   this.analyser = this.audioContext.createAnalyser();
   // Setting values lower than default for speedier testing on emulators
   this.analyser.smoothingTimeConstant = 0.2;
   this.analyser.fftSize = 1024;
-  this.sourceNodes.forEach(n => n.connect(this.analyser));
+  this.connectTrack = t => {
+    let source = this.audioContext.createMediaStreamSource(new MediaStream([t]));
+    this.sourceNodes.push(source);
+    source.connect(this.analyser);
+  };
+  this.stream.getAudioTracks().forEach(t => this.connectTrack(t));
+  this.onaddtrack = ev => this.connectTrack(ev.track);
+  this.stream.addEventListener("addtrack", this.onaddtrack);
   this.data = new Uint8Array(this.analyser.frequencyBinCount);
 }
 
@@ -106,6 +112,7 @@ AudioStreamAnalyser.prototype = {
     this.disableDebugCanvas();
     this.sourceNodes.forEach(n => n.disconnect());
     this.sourceNodes = [];
+    this.stream.removeEventListener("addtrack", this.onaddtrack);
   },
 
   /**
