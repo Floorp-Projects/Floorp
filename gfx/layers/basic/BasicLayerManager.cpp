@@ -76,26 +76,24 @@ ClipToContain(gfxContext* aContext, const IntRect& aRect)
   return aContext->DeviceToUser(deviceRect).IsEqualInterior(userRect);
 }
 
-BasicLayerManager::PushedGroup
-BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const nsIntRegion& aRegion)
+bool
+BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const nsIntRegion& aRegion,  PushedGroup& aGroupResult)
 {
-  PushedGroup group;
-
-  group.mVisibleRegion = aRegion;
-  group.mFinalTarget = aContext;
-  group.mOperator = GetEffectiveOperator(aLayer);
-  group.mOpacity = aLayer->GetEffectiveOpacity();
+  aGroupResult.mVisibleRegion = aRegion;
+  aGroupResult.mFinalTarget = aContext;
+  aGroupResult.mOperator = GetEffectiveOperator(aLayer);
+  aGroupResult.mOpacity = aLayer->GetEffectiveOpacity();
 
   // If we need to call PushGroup, we should clip to the smallest possible
   // area first to minimize the size of the temporary surface.
   bool didCompleteClip = ClipToContain(aContext, aRegion.GetBounds());
 
-  bool canPushGroup = group.mOperator == CompositionOp::OP_OVER ||
-    (group.mOperator == CompositionOp::OP_SOURCE && (aLayer->CanUseOpaqueSurface() || aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
+  bool canPushGroup = aGroupResult.mOperator == CompositionOp::OP_OVER ||
+    (aGroupResult.mOperator == CompositionOp::OP_SOURCE && (aLayer->CanUseOpaqueSurface() || aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
 
   if (!canPushGroup) {
     aContext->Save();
-    gfxUtils::ClipToRegion(group.mFinalTarget, group.mVisibleRegion);
+    gfxUtils::ClipToRegion(aGroupResult.mFinalTarget, aGroupResult.mVisibleRegion);
 
     // PushGroup/PopGroup do not support non operator over.
     gfxMatrix oldMat = aContext->CurrentMatrix();
@@ -112,16 +110,16 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
       RefPtr<gfxContext> ctx =
         gfxContext::CreateOrNull(dt, ToRect(rect).TopLeft());
       if (!ctx) {
-        gfxDevCrash(LogReason::InvalidContext) << "BasicLayerManager context problem " << gfx::hexa(dt);
-        return group;
+        gfxCriticalNote << "BasicLayerManager context problem in PushGroupForLayer " << gfx::hexa(dt);
+        return false;
       }
       ctx->SetMatrix(oldMat);
 
-      group.mGroupOffset = surfRect.TopLeft();
-      group.mGroupTarget = ctx;
+      aGroupResult.mGroupOffset = surfRect.TopLeft();
+      aGroupResult.mGroupTarget = ctx;
 
-      group.mMaskSurface = GetMaskForLayer(aLayer, &group.mMaskTransform);
-      return group;
+      aGroupResult.mMaskSurface = GetMaskForLayer(aLayer, &aGroupResult.mMaskTransform);
+      return true;
     }
     aContext->Restore();
   }
@@ -134,7 +132,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
     // destination. Since the User->Device space transform will be applied
     // to the mask by PopGroupAndBlend we need to adjust the transform to
     // transform the mask to user space.
-    Matrix currentTransform = ToMatrix(group.mFinalTarget->CurrentMatrix());
+    Matrix currentTransform = ToMatrix(aGroupResult.mFinalTarget->CurrentMatrix());
     currentTransform.Invert();
     maskTransform = maskTransform * currentTransform;
   }
@@ -146,23 +144,24 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
     // group. We need to make sure that only pixels inside the layer's visible
     // region are copied back to the destination. Remember if we've already
     // clipped precisely to the visible region.
-    group.mNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
-    if (group.mNeedsClipToVisibleRegion) {
-      group.mFinalTarget->Save();
-      gfxUtils::ClipToRegion(group.mFinalTarget, group.mVisibleRegion);
+    aGroupResult.mNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
+    if (aGroupResult.mNeedsClipToVisibleRegion) {
+      aGroupResult.mFinalTarget->Save();
+      gfxUtils::ClipToRegion(aGroupResult.mFinalTarget, aGroupResult.mVisibleRegion);
     }
 
-    aContext->PushGroupForBlendBack(gfxContentType::COLOR, group.mOpacity, maskSurf, maskTransform);
+    aContext->PushGroupForBlendBack(gfxContentType::COLOR, aGroupResult.mOpacity, maskSurf, maskTransform);
   } else {
     if (aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) {
-      aContext->PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA, group.mOpacity, maskSurf, maskTransform);
+      aContext->PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA, aGroupResult.mOpacity, maskSurf, maskTransform);
     } else {
-      aContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, group.mOpacity, maskSurf, maskTransform);
+      aContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aGroupResult.mOpacity, maskSurf, maskTransform);
     }
   }
 
-  group.mGroupTarget = group.mFinalTarget;
-  return group;
+  aGroupResult.mGroupTarget = aGroupResult.mFinalTarget;
+
+  return true;
 }
 
 void
@@ -902,10 +901,11 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   if (is2D) {
     if (needsGroup) {
-      PushedGroup pushedGroup =
-        PushGroupForLayer(aTarget, aLayer, aLayer->GetLocalVisibleRegion().ToUnknownRegion());
-      PaintSelfOrChildren(paintLayerContext, pushedGroup.mGroupTarget);
-      PopGroupForLayer(pushedGroup);
+      PushedGroup pushedGroup;
+      if (PushGroupForLayer(aTarget, aLayer, aLayer->GetLocalVisibleRegion().ToUnknownRegion(), pushedGroup)) {
+        PaintSelfOrChildren(paintLayerContext, pushedGroup.mGroupTarget);
+        PopGroupForLayer(pushedGroup);
+      }
     } else {
       PaintSelfOrChildren(paintLayerContext, aTarget);
     }

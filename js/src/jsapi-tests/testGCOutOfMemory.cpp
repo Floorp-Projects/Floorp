@@ -58,7 +58,7 @@ virtual JSRuntime * createRuntime() override {
     JSRuntime* rt = JS_NewRuntime(768 * 1024, 128 * 1024);
     if (!rt)
         return nullptr;
-    setNativeStackQuota(rt);
+    setNativeStackQuota(JS_GetContext(rt));
     return rt;
 }
 

@@ -70,7 +70,7 @@ END_TEST(testWeakMap_basicOperations)
 
 BEGIN_TEST(testWeakMap_keyDelegates)
 {
-    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+    JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_GC(rt);
     JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
     CHECK(map);

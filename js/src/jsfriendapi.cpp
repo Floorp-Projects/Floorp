@@ -52,21 +52,21 @@ PerThreadDataFriendFields::PerThreadDataFriendFields()
 }
 
 JS_FRIEND_API(void)
-js::SetSourceHook(JSRuntime* rt, mozilla::UniquePtr<SourceHook> hook)
+js::SetSourceHook(JSContext* cx, mozilla::UniquePtr<SourceHook> hook)
 {
-    rt->sourceHook = Move(hook);
+    cx->sourceHook = Move(hook);
 }
 
 JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
-js::ForgetSourceHook(JSRuntime* rt)
+js::ForgetSourceHook(JSContext* cx)
 {
-    return Move(rt->sourceHook);
+    return Move(cx->sourceHook);
 }
 
 JS_FRIEND_API(void)
-JS_SetGrayGCRootsTracer(JSRuntime* rt, JSTraceDataOp traceOp, void* data)
+JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    rt->gc.setGrayRootsTracer(traceOp, data);
+    cx->gc.setGrayRootsTracer(traceOp, data);
 }
 
 JS_FRIEND_API(JSObject*)
@@ -169,7 +169,7 @@ JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals
 
     // Clear out the old principals, if any.
     if (compartment->principals()) {
-        JS_DropPrincipals(compartment->runtimeFromMainThread(), compartment->principals());
+        JS_DropPrincipals(compartment->contextFromMainThread(), compartment->principals());
         compartment->setPrincipals(nullptr);
         // We'd like to assert that our new principals is always same-origin
         // with the old one, but JSPrincipals doesn't give us a way to do that.
@@ -540,9 +540,9 @@ js::SetReservedOrProxyPrivateSlotWithBarrier(JSObject* obj, size_t slot, const j
 }
 
 void
-js::SetPreserveWrapperCallback(JSRuntime* rt, PreserveWrapperCallback callback)
+js::SetPreserveWrapperCallback(JSContext* cx, PreserveWrapperCallback callback)
 {
-    rt->preserveWrapperCallback = callback;
+    cx->preserveWrapperCallback = callback;
 }
 
 /*
@@ -647,9 +647,9 @@ js::StringToLinearStringSlow(JSContext* cx, JSString* str)
 }
 
 JS_FRIEND_API(void)
-JS_SetAccumulateTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback)
+JS_SetAccumulateTelemetryCallback(JSContext* cx, JSAccumulateTelemetryDataCallback callback)
 {
-    rt->setTelemetryCallback(rt, callback);
+    cx->setTelemetryCallback(cx, callback);
 }
 
 JS_FRIEND_API(JSObject*)
@@ -1134,10 +1134,10 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
 }
 
 JS_FRIEND_API(void)
-js::SetActivityCallback(JSRuntime* rt, ActivityCallback cb, void* arg)
+js::SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg)
 {
-    rt->activityCallback = cb;
-    rt->activityCallbackArg = arg;
+    cx->activityCallback = cb;
+    cx->activityCallbackArg = arg;
 }
 
 JS_FRIEND_API(void)
@@ -1195,15 +1195,15 @@ js::GetEnterCompartmentDepth(JSContext* cx)
 #endif
 
 JS_FRIEND_API(void)
-js::SetDOMCallbacks(JSRuntime* rt, const DOMCallbacks* callbacks)
+js::SetDOMCallbacks(JSContext* cx, const DOMCallbacks* callbacks)
 {
-    rt->DOMcallbacks = callbacks;
+    cx->DOMcallbacks = callbacks;
 }
 
 JS_FRIEND_API(const DOMCallbacks*)
-js::GetDOMCallbacks(JSRuntime* rt)
+js::GetDOMCallbacks(JSContext* cx)
 {
-    return rt->DOMcallbacks;
+    return cx->DOMcallbacks;
 }
 
 static const void* gDOMProxyHandlerFamily = nullptr;
@@ -1343,10 +1343,10 @@ js::GetPropertyNameFromPC(JSScript* script, jsbytecode* pc)
 }
 
 JS_FRIEND_API(void)
-js::SetWindowProxyClass(JSRuntime* rt, const js::Class* clasp)
+js::SetWindowProxyClass(JSContext* cx, const js::Class* clasp)
 {
-    MOZ_ASSERT(!rt->maybeWindowProxyClass());
-    rt->setWindowProxyClass(clasp);
+    MOZ_ASSERT(!cx->maybeWindowProxyClass());
+    cx->setWindowProxyClass(clasp);
 }
 
 JS_FRIEND_API(void)

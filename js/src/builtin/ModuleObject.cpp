@@ -722,35 +722,45 @@ FreezeObjectProperty(JSContext* cx, HandleNativeObject obj, uint32_t slot)
 }
 
 /* static */ bool
-ModuleObject::FreezeArrayProperties(JSContext* cx, HandleModuleObject self)
+ModuleObject::Freeze(JSContext* cx, HandleModuleObject self)
 {
     return FreezeObjectProperty(cx, self, RequestedModulesSlot) &&
            FreezeObjectProperty(cx, self, ImportEntriesSlot) &&
            FreezeObjectProperty(cx, self, LocalExportEntriesSlot) &&
            FreezeObjectProperty(cx, self, IndirectExportEntriesSlot) &&
-           FreezeObjectProperty(cx, self, StarExportEntriesSlot);
+           FreezeObjectProperty(cx, self, StarExportEntriesSlot) &&
+           FreezeObject(cx, self);
 }
 
-static inline void
-AssertObjectPropertyFrozen(JSContext* cx, HandleNativeObject obj, uint32_t slot)
-{
 #ifdef DEBUG
+
+static inline bool
+IsObjectFrozen(JSContext* cx, HandleObject obj)
+{
     bool frozen = false;
-    RootedObject property(cx, &obj->getSlot(slot).toObject());
-    MOZ_ALWAYS_TRUE(TestIntegrityLevel(cx, property, IntegrityLevel::Frozen, &frozen));
-    MOZ_ASSERT(frozen);
-#endif
+    MOZ_ALWAYS_TRUE(TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &frozen));
+    return frozen;
 }
 
-/* static */ inline void
-ModuleObject::AssertArrayPropertiesFrozen(JSContext* cx, HandleModuleObject self)
+static inline bool
+IsObjectPropertyFrozen(JSContext* cx, HandleNativeObject obj, uint32_t slot)
 {
-    AssertObjectPropertyFrozen(cx, self, RequestedModulesSlot);
-    AssertObjectPropertyFrozen(cx, self, ImportEntriesSlot);
-    AssertObjectPropertyFrozen(cx, self, LocalExportEntriesSlot);
-    AssertObjectPropertyFrozen(cx, self, IndirectExportEntriesSlot);
-    AssertObjectPropertyFrozen(cx, self, StarExportEntriesSlot);
+    RootedObject property(cx, &obj->getSlot(slot).toObject());
+    return IsObjectFrozen(cx, property);
 }
+
+/* static */ inline bool
+ModuleObject::IsFrozen(JSContext* cx, HandleModuleObject self)
+{
+    return IsObjectPropertyFrozen(cx, self, RequestedModulesSlot) &&
+           IsObjectPropertyFrozen(cx, self, ImportEntriesSlot) &&
+           IsObjectPropertyFrozen(cx, self, LocalExportEntriesSlot) &&
+           IsObjectPropertyFrozen(cx, self, IndirectExportEntriesSlot) &&
+           IsObjectPropertyFrozen(cx, self, StarExportEntriesSlot) &&
+           IsObjectFrozen(cx, self);
+}
+
+#endif
 
 inline static void
 AssertModuleScopesMatch(ModuleObject* module)
@@ -858,7 +868,7 @@ ModuleObject::noteFunctionDeclaration(ExclusiveContext* cx, HandleAtom name, Han
 /* static */ bool
 ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self)
 {
-    AssertArrayPropertiesFrozen(cx, self);
+    MOZ_ASSERT(IsFrozen(cx, self));
 
     FunctionDeclarationVector* funDecls = self->functionDeclarations();
     if (!funDecls) {
@@ -896,7 +906,7 @@ ModuleObject::setEvaluated()
 /* static */ bool
 ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
-    AssertArrayPropertiesFrozen(cx, self);
+    MOZ_ASSERT(IsFrozen(cx, self));
 
     RootedScript script(cx, self->script());
     RootedModuleEnvironmentObject scope(cx, self->environment());
