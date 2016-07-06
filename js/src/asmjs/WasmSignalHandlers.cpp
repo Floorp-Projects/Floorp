@@ -650,6 +650,13 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     MOZ_RELEASE_ASSERT(accessAddress + access.size() > instance.memoryBase() + instance.memoryLength(),
                        "Computed access address is not actually out of bounds");
 
+    // Wasm loads/stores don't wrap offsets at all, so hitting the guard page
+    // means we are out of bounds in any cases.
+    if (!memoryAccess->wrapOffset()) {
+        MOZ_ASSERT(memoryAccess->throwOnOOB());
+        return instance.codeSegment().outOfBoundsCode();
+    }
+
     // The basic sandbox model is that all heap accesses are a heap base
     // register plus an index, and the index is always computed with 32-bit
     // operations, so we know it can only be 4 GiB off of the heap base.
