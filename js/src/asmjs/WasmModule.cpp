@@ -338,8 +338,8 @@ Module::instantiate(JSContext* cx,
     Rooted<ArrayBufferObjectMaybeShared*> heap(cx, asmJSHeap);
     if (metadata_->usesHeap() && !heap) {
         MOZ_ASSERT(!metadata_->isAsmJS());
-        bool signalsForOOB = metadata_->compileArgs.useSignalHandlersForOOB;
-        heap = ArrayBufferObject::createForWasm(cx, metadata_->initialHeapLength, signalsForOOB);
+        heap = ArrayBufferObject::createForWasm(cx, metadata_->initialHeapLength,
+                                                metadata_->usesSignal.forOOB);
         if (!heap)
             return false;
     }

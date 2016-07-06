@@ -128,8 +128,8 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Metada
             return false;
     }
 
-    metadata_->compileArgs = shared->args;
     metadata_->kind = shared->kind;
+    metadata_->usesSignal = shared->usesSignal;
     metadata_->heapUsage = HeapUsage::None;
     metadata_->filename = Move(file);
 

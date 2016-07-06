@@ -691,7 +691,7 @@ class FunctionCompiler
 
     void addInterruptCheck()
     {
-        if (mg_.args.useSignalHandlersForInterrupt)
+        if (mg_.usesSignal.forInterrupt)
             return;
 
         if (inDeadCode())
@@ -3388,7 +3388,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
     CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS));
-    mir.initUsesSignalHandlersForAsmJSOOB(task->mg().args.useSignalHandlersForOOB);
+    mir.initUsesSignalHandlersForAsmJSOOB(task->mg().usesSignal.forOOB);
     mir.initMinAsmJSHeapLength(task->mg().minHeapLength);
 
     // Build MIR graph

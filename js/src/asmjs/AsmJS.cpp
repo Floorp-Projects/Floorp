@@ -7795,15 +7795,9 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
         return LinkFail(cx, msg.get());
     }
 
-    // Shell builtins may have disabled signal handlers since the module we're
-    // cloning was compiled. LookupAsmJSModuleInCache checks for signal handlers
-    // as well for the caching case.
-    if (metadata.compileArgs != CompileArgs(cx))
-        return LinkFail(cx, "Signals have been toggled since compilation");
-
     if (buffer->is<ArrayBufferObject>()) {
         Rooted<ArrayBufferObject*> abheap(cx, &buffer->as<ArrayBufferObject>());
-        bool useSignalHandlers = metadata.compileArgs.useSignalHandlersForOOB;
+        bool useSignalHandlers = metadata.usesSignal.forOOB;
         if (!ArrayBufferObject::prepareForAsmJS(cx, abheap, useSignalHandlers))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     }
@@ -8406,7 +8400,7 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     if (!atEnd)
         return true;
 
-    if (asmJSMetadata->compileArgs != CompileArgs(cx))
+    if (asmJSMetadata->usesSignal != SignalUsage(cx))
         return true;
 
     if (!parser.tokenStream.advance(asmJSMetadata->srcEndBeforeCurly()))
