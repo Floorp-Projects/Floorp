@@ -479,12 +479,13 @@ MediaStreamTrack::RemoveDirectListener(DirectMediaStreamTrackListener *aListener
 }
 
 already_AddRefed<MediaInputPort>
-MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream)
+MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream,
+                                         TrackID aDestinationTrackID)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aStream);
   RefPtr<MediaInputPort> port =
-    aStream->AllocateInputPort(GetOwnedStream(), mTrackID);
+    aStream->AllocateInputPort(GetOwnedStream(), mTrackID, aDestinationTrackID);
   return port.forget();
 }
 
