@@ -1064,6 +1064,13 @@ DecodeUnknownSections(Decoder& d)
     return true;
 }
 
+bool
+CompileArgs::init(ExclusiveContext* cx)
+{
+    alwaysBaseline = cx->compartment()->runtimeFromAnyThread()->options().wasmAlwaysBaseline();
+    return assumptions.init(SignalUsage(cx), cx->buildIdOp());
+}
+
 UniqueModule
 wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
 {

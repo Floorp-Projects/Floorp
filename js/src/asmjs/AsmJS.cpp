@@ -1754,7 +1754,7 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
 
         CompileArgs args;
-        if (!args.assumptions.init(SignalUsage(cx_), cx_->buildIdOp()))
+        if (!args.init(cx_))
             return false;
 
         auto genData = MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal, ModuleKind::AsmJS);
