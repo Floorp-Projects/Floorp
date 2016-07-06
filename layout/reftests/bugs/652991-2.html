@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <svg width="200" height="200">
+    <defs>
+      <clipPath id="myClip">
+        <circle cx="30" cy="30" r="20"/>
+        <circle cx="70" cy="70" r="20"/>
+      </clipPath>
+    </defs>
+    <rect id="drawPath" x="10" y="10" width="100" height="100" clip-path="url(#myClip)"/>
+  </svg>
+  <script>
+  function doTest() {
+    window.history.pushState(null, "", "new-page");
+
+    drawPath.style.display = "none";
+    window.setTimeout(() => {
+      drawPath.style.display = "inline";
+      document.documentElement.removeAttribute('class');
+    }, 0);
+  }
+
+  drawPath = document.getElementById("drawPath");
+  window.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</html>
