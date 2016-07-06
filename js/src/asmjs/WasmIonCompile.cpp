@@ -104,7 +104,7 @@ class FunctionCompiler
                      MIRGenerator& mirGen,
                      FuncCompileResults& compileResults)
       : mg_(mg),
-        iter_(IonCompilePolicy(), decoder),
+        iter_(decoder),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
