@@ -70,11 +70,8 @@ enum nsChangeHint {
 
   /**
    * Change requires frame change (e.g., display:).
-   * Reconstructs all frame descendants, including following placeholders
-   * to out-of-flows.
-   *
-   * Note that this subsumes all the other change hints. (see
-   * RestyleManager::ProcessRestyledFrames for details).
+   * This subsumes all the above. Reconstructs all frame descendants,
+   * including following placeholders to out-of-flows.
    */
   nsChangeHint_ReconstructFrame = 1 << 10,
 
