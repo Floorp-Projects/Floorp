@@ -24,19 +24,14 @@
  *
  * Unimplemented functionality:
  *
- *  - This is not actually a baseline compiler, as it performs no
- *    profiling and does not trigger ion compilation and function
- *    replacement (duh)
- *  - int64 load and store
+ *  - Tiered compilation (bug 1277562)
+ *  - int64 operations on 32-bit systems
  *  - SIMD
  *  - Atomics (very simple now, we have range checking)
  *  - current_memory, grow_memory
  *  - non-signaling interrupts
- *  - non-signaling bounds checks
  *  - profiler support (devtools)
- *  - Platform support:
- *      ARM-32
- *      ARM-64
+ *  - ARM-32 support (bug 1277011)
  *
  * There are lots of machine dependencies here but they are pretty
  * well isolated to a segment of the compiler.  Many dependencies
@@ -144,10 +139,11 @@ struct BaseCompilePolicy : ExprIterPolicy
 typedef ExprIter<BaseCompilePolicy> BaseExprIter;
 
 typedef bool IsUnsigned;
-typedef bool IsLoad;
 typedef bool ZeroOnOverflow;
 typedef bool IsKnownNotZero;
 typedef bool HandleNaNSpecially;
+typedef bool EscapesSandbox;
+typedef bool IsBuiltinCall;
 
 #ifdef JS_CODEGEN_ARM64
 // FIXME: This is not correct, indeed for ARM64 there is no reliable
@@ -1883,6 +1879,7 @@ class BaseCompiler
         explicit FunctionCall(uint32_t lineOrBytecode)
           : lineOrBytecode_(lineOrBytecode),
             callSavesMachineState_(false),
+            builtinCall_(false),
             machineStateAreaSize_(0),
             frameAlignAdjustment_(0),
             stackArgAreaSize_(0),
@@ -1892,6 +1889,7 @@ class BaseCompiler
         uint32_t lineOrBytecode_;
         ABIArgGenerator abi_;
         bool callSavesMachineState_;
+        bool builtinCall_;
         size_t machineStateAreaSize_;
         size_t frameAlignAdjustment_;
         size_t stackArgAreaSize_;
@@ -1902,10 +1900,10 @@ class BaseCompiler
         bool calleePopsArgs_;
     };
 
-    void beginCall(FunctionCall& call, bool escapesSandbox)
+    void beginCall(FunctionCall& call, bool escapesSandbox, bool builtinCall)
     {
         call.callSavesMachineState_ = escapesSandbox;
-        if (call.callSavesMachineState_) {
+        if (escapesSandbox) {
 #if defined(JS_CODEGEN_X64)
             call.machineStateAreaSize_ = 16; // Save HeapReg
 #elif defined(JS_CODEGEN_X86)
@@ -1913,6 +1911,12 @@ class BaseCompiler
 #else
             MOZ_CRASH("BaseCompiler platform hook: beginCall");
 #endif
+        }
+
+        call.builtinCall_ = builtinCall;
+        if (builtinCall) {
+            // Call-outs need to use the appropriate system ABI.
+            // ARM will have something here.
         }
 
         call.frameAlignAdjustment_ = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
@@ -1997,7 +2001,7 @@ class BaseCompiler
                 loadI32(scratch, arg);
                 masm.store32(scratch, Address(StackPointer, argLoc.offsetFromArgBase()));
             } else {
-                loadI32(argLoc.reg().gpr(), arg);
+                loadI32(argLoc.gpr(), arg);
             }
             break;
           }
@@ -2009,7 +2013,7 @@ class BaseCompiler
                 loadI64(Register64(scratch), arg);
                 masm.movq(scratch, Operand(StackPointer, argLoc.offsetFromArgBase()));
             } else {
-                loadI64(Register64(argLoc.reg().gpr()), arg);
+                loadI64(argLoc.gpr64(), arg);
             }
 #else
             MOZ_CRASH("BaseCompiler platform hook: passArg I64");
@@ -2018,23 +2022,52 @@ class BaseCompiler
           }
           case ValType::F64: {
             ABIArg argLoc = call.abi_.next(MIRType::Double);
-            if (argLoc.kind() == ABIArg::Stack) {
+            switch (argLoc.kind()) {
+              case ABIArg::Stack: {
                 ScratchF64 scratch(*this);
                 loadF64(scratch, arg);
                 masm.storeDouble(scratch, Address(StackPointer, argLoc.offsetFromArgBase()));
-            } else {
-                loadF64(argLoc.reg().fpu(), arg);
+                break;
+              }
+#if defined(JS_CODEGEN_REGISTER_PAIR)
+              case ABIArg::GPR_PAIR: {
+                MOZ_CRASH("BaseCompiler platform hook: passArg F64 pair");
+              }
+#endif
+              case ABIArg::FPU: {
+                loadF64(argLoc.fpu(), arg);
+                break;
+              }
+              case ABIArg::GPR: {
+                MOZ_CRASH("Unexpected parameter passing discipline");
+              }
             }
             break;
           }
           case ValType::F32: {
             ABIArg argLoc = call.abi_.next(MIRType::Float32);
-            if (argLoc.kind() == ABIArg::Stack) {
+            switch (argLoc.kind()) {
+              case ABIArg::Stack: {
                 ScratchF32 scratch(*this);
                 loadF32(scratch, arg);
                 masm.storeFloat32(scratch, Address(StackPointer, argLoc.offsetFromArgBase()));
-            } else {
-                loadF32(argLoc.reg().fpu(), arg);
+                break;
+              }
+              case ABIArg::GPR: {
+                ScratchF32 scratch(*this);
+                loadF32(scratch, arg);
+                masm.moveFloat32ToGPR(scratch, argLoc.gpr());
+                break;
+              }
+              case ABIArg::FPU: {
+                loadF32(argLoc.fpu(), arg);
+                break;
+              }
+#if defined(JS_CODEGEN_REGISTER_PAIR)
+              case ABIArg::GPR_PAIR: {
+                MOZ_CRASH("Unexpected parameter passing discipline");
+              }
+#endif
             }
             break;
           }
@@ -2160,40 +2193,36 @@ class BaseCompiler
 #ifdef JS_PUNBOX64
         moveI64(RegI64(ReturnReg64), dest);
 #else
-        MOZ_CRASH("BaseCompiler platform hook: pushReturned");
+        MOZ_CRASH("BaseCompiler platform hook: captureReturnedI64");
 #endif
     }
 
-    void captureReturnedF32(RegF32 dest) {
+    void captureReturnedF32(const FunctionCall& call, RegF32 dest) {
+#ifdef JS_CODEGEN_X86
+        if (call.builtinCall_) {
+            masm.reserveStack(sizeof(float));
+            Operand op(esp, 0);
+            masm.fstp32(op);
+            masm.loadFloat32(op, dest.reg);
+            masm.freeStack(sizeof(float));
+            return;
+        }
+#endif
         moveF32(RegF32(ReturnFloat32Reg), dest);
     }
 
-    void captureBuiltinReturnedF32(RegF32 dest) {
+    void captureReturnedF64(const FunctionCall& call, RegF64 dest) {
 #ifdef JS_CODEGEN_X86
-        masm.reserveStack(sizeof(float));
-        Operand op(esp, 0);
-        masm.fstp32(op);
-        masm.loadFloat32(op, dest.reg);
-        masm.freeStack(sizeof(float));
-#else
-        captureReturnedF32(dest);
+        if (call.builtinCall_) {
+            masm.reserveStack(sizeof(double));
+            Operand op(esp, 0);
+            masm.fstp(op);
+            masm.loadDouble(op, dest.reg);
+            masm.freeStack(sizeof(double));
+            return;
+        }
 #endif
-    }
-
-    void captureReturnedF64(RegF64 dest) {
         moveF64(RegF64(ReturnDoubleReg), dest);
-    }
-
-    void captureBuiltinReturnedF64(RegF64 dest) {
-#ifdef JS_CODEGEN_X86
-        masm.reserveStack(sizeof(double));
-        Operand op(esp, 0);
-        masm.fstp(op);
-        masm.loadDouble(op, dest.reg);
-        masm.freeStack(sizeof(double));
-#else
-        captureReturnedF64(dest);
-#endif
     }
 
     void returnVoid() {
@@ -2448,11 +2477,11 @@ class BaseCompiler
 #endif
     }
 
-    bool popcntNeedsTemp() {
+    bool popcnt32NeedsTemp() const {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         return !AssemblerX86Shared::HasPOPCNT();
 #else
-        return false;
+        MOZ_CRASH("BaseCompiler platform hook: popcnt32NeedsTemp");
 #endif
     }
 
@@ -2461,6 +2490,14 @@ class BaseCompiler
         masm.popcnt32(srcDest.reg, srcDest.reg, tmp.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: popcntI32");
+#endif
+    }
+
+    bool popcnt64NeedsTemp() const {
+#if defined(JS_CODEGEN_X64)
+        return !AssemblerX86Shared::HasPOPCNT();
+#else
+        MOZ_CRASH("BaseCompiler platform hook: popcnt64NeedsTemp");
 #endif
     }
 
@@ -2711,7 +2748,7 @@ class BaseCompiler
         CodeOffset label = masm.vmovsdWithPatch(PatchedAbsoluteAddress(), r.reg);
         masm.append(GlobalAccess(label, globalDataOffset));
 #else
-        MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarF32");
+        MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarF64");
 #endif
     }
 
@@ -3282,8 +3319,7 @@ class BaseCompiler
     void endIfThenElse();
 
     void doReturn(ExprType returnType);
-    void pushReturned(ExprType type);
-    void pushBuiltinReturned(ExprType type);
+    void pushReturned(const FunctionCall& call, ExprType type);
 
     void emitCompareI32(JSOp compareOp, MCompare::CompareType compareType);
     void emitCompareI64(JSOp compareOp, MCompare::CompareType compareType);
@@ -4134,7 +4170,7 @@ void
 BaseCompiler::emitPopcntI32()
 {
     RegI32 r0 = popI32();
-    if (popcntNeedsTemp()) {
+    if (popcnt32NeedsTemp()) {
         RegI32 tmp = needI32();
         popcntI32(r0, tmp);
         freeI32(tmp);
@@ -4148,7 +4184,7 @@ void
 BaseCompiler::emitPopcntI64()
 {
     RegI64 r0 = popI64();
-    if (popcntNeedsTemp()) {
+    if (popcnt64NeedsTemp()) {
         RegI64 tmp = needI64();
         popcntI64(r0, tmp);
         freeI64(tmp);
@@ -5051,7 +5087,7 @@ BaseCompiler::skipCall(const ValTypeVector& args, ExprType maybeReturnType)
 }
 
 void
-BaseCompiler::pushReturned(ExprType type)
+BaseCompiler::pushReturned(const FunctionCall& call, ExprType type)
 {
     switch (type) {
       case ExprType::Void: {
@@ -5072,39 +5108,18 @@ BaseCompiler::pushReturned(ExprType type)
       }
       case ExprType::F32: {
         RegF32 rv = needF32();
-        captureReturnedF32(rv);
+        captureReturnedF32(call, rv);
         pushF32(rv);
         break;
       }
       case ExprType::F64: {
         RegF64 rv = needF64();
-        captureReturnedF64(rv);
+        captureReturnedF64(call, rv);
         pushF64(rv);
         break;
       }
       default:
         MOZ_CRASH("Function return type");
-    }
-}
-
-void
-BaseCompiler::pushBuiltinReturned(ExprType type)
-{
-    switch (type) {
-      case ExprType::F32: {
-        RegF32 rv = needF32();
-        captureBuiltinReturnedF32(rv);
-        pushF32(rv);
-        break;
-      }
-      case ExprType::F64: {
-        RegF64 rv = needF64();
-        captureBuiltinReturnedF64(rv);
-        pushF64(rv);
-        break;
-      }
-      default:
-        MOZ_CRASH("Compiler bug: unexpected type");
     }
 }
 
@@ -5143,7 +5158,7 @@ BaseCompiler::emitCall(uint32_t callOffset)
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, false);
+    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(false));
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5161,7 +5176,7 @@ BaseCompiler::emitCall(uint32_t callOffset)
     popValueStackBy(numArgs);
     masm.freeStack(stackSpace);
 
-    pushReturned(sig.ret());
+    pushReturned(baselineCall, sig.ret());
 
     return true;
 }
@@ -5193,7 +5208,7 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
     size_t stackSpace = stackConsumed(numArgs+1);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, false);
+    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(false));
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5220,7 +5235,7 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
     popValueStackBy(numArgs+1);
     masm.freeStack(stackSpace);
 
-    pushReturned(sig.ret());
+    pushReturned(baselineCall, sig.ret());
 
     return true;
 }
@@ -5247,7 +5262,7 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, true);
+    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(false));
 
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
@@ -5265,7 +5280,7 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
     popValueStackBy(numArgs);
     masm.freeStack(stackSpace);
 
-    pushReturned(sig.ret());
+    pushReturned(baselineCall, sig.ret());
 
     return true;
 }
@@ -5293,7 +5308,7 @@ BaseCompiler::emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress call
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, false);
+    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(true));
 
     ExprType retType;
     switch (operandType) {
@@ -5324,7 +5339,7 @@ BaseCompiler::emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress call
     popValueStackBy(numArgs);
     masm.freeStack(stackSpace);
 
-    pushBuiltinReturned(retType);
+    pushReturned(baselineCall, retType);
 
     return true;
 }
@@ -5351,7 +5366,7 @@ BaseCompiler::emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress cal
     size_t stackSpace = stackConsumed(numArgs);
 
     FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, false);
+    beginCall(baselineCall, EscapesSandbox(false), IsBuiltinCall(true));
 
     ExprType retType = ExprType::F64;
     if (!emitCallArgs(SigDD_, baselineCall))
@@ -5370,7 +5385,7 @@ BaseCompiler::emitBinaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress cal
     popValueStackBy(numArgs);
     masm.freeStack(stackSpace);
 
-    pushBuiltinReturned(retType);
+    pushReturned(baselineCall, retType);
 
     return true;
 }
