@@ -14,12 +14,12 @@ add_task(function* () {
 
   let started = once(gFront, "start-context");
 
-  reload(target);
-
-  let [actors] = yield Promise.all([
+  let events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
@@ -32,13 +32,14 @@ add_task(function* () {
 
   // Setting width to new_inspector_width
   $("#web-audio-inspector").setAttribute("width", newInspectorWidth);
-  reload(target);
 
   // Width should be 500 after reloading
-  [actors] = yield Promise.all([
+  events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  [actors] = yield events;
   nodeIds = actors.map(actor => actor.actorID);
 
   // Open inspector pane

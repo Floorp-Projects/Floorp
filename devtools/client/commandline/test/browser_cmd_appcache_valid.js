@@ -12,12 +12,12 @@ function test() {
 
 function* spawnTest() {
   let options = yield helpers.openTab(TEST_URI);
-  yield helpers.openToolbar(options);
 
   info("adding cache listener.");
-
   // Wait for site to be cached.
   yield helpers.listenOnce(gBrowser.contentWindow.applicationCache, "cached");
+
+  yield helpers.openToolbar(options);
 
   // Pages containing an appcache the notification bar gives options to allow
   // or deny permission for the app to save data offline. Let's click Allow.
