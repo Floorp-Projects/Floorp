@@ -947,8 +947,8 @@ GLContextGLX::MakeCurrentImpl(bool aForce)
             // Many GLX implementations default to blocking until the next
             // VBlank when calling glXSwapBuffers. We want to run unthrottled
             // in ASAP mode. See bug 1280744.
-            int interval = gfxPlatform::IsInLayoutAsapMode() ? 0 : 1;
-            mGLX->xSwapInterval(mDisplay, mDrawable, interval);
+            const bool isASAP = (gfxPrefs::LayoutFrameRate() == 0);
+            mGLX->xSwapInterval(mDisplay, mDrawable, isASAP ? 0 : 1);
         }
     }
 
