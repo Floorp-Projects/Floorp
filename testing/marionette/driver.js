@@ -326,8 +326,8 @@ GeckoDriver.prototype.startBrowser = function(win, isNewSession=false) {
  *     True if this is the first time we're talking to this browser.
  */
 GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
-  try {
-    let mm = win.window.messageManager;
+  let mm = win.window.messageManager;
+  if (mm) {
     if (!isNewSession) {
       // Loading the frame script corresponds to a situation we need to
       // return to the server. If the messageManager is a message broadcaster
@@ -343,10 +343,9 @@ GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
       mm.loadFrameScript(FRAME_SCRIPT, true, true);
       Preferences.set(CONTENT_LISTENER_PREF, true);
     }
-  } catch (e) {
-    // there may not always be a content process
+  } else {
     logger.error(
-        `Could not load listener into content for page ${win.location.href}: ${e}`);
+        `Could not load listener into content for page ${win.location.href}`);
   }
 };
 
@@ -2265,7 +2264,13 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
 
     let winEn = Services.wm.getEnumerator(null);
     while (winEn.hasMoreElements()) {
-      winEn.getNext().messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
+      let win = winEn.getNext();
+      if (win.messageManager){
+        win.messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
+      } else {
+        logger.error(
+            `Could not remove listener from page ${win.location.href}`);
+      }
     }
 
     this.curBrowser.frameManager.removeMessageManagerListeners(
