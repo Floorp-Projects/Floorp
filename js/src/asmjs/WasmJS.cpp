@@ -256,6 +256,9 @@ const Class WasmModuleObject::class_ =
     &WasmModuleObject::classOps_,
 };
 
+const JSPropertySpec WasmModuleObject::properties[] =
+{ JS_PS_END };
+
 /* static */ void
 WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 {
@@ -373,6 +376,9 @@ const Class WasmInstanceObject::class_ =
     &WasmInstanceObject::classOps_,
 };
 
+const JSPropertySpec WasmInstanceObject::properties[] =
+{ JS_PS_END };
+
 bool
 WasmInstanceObject::isNewborn() const
 {
@@ -478,6 +484,111 @@ WasmInstanceObject::exportsObject() const
 }
 
 // ============================================================================
+// WebAssembly.Memory class and methods
+
+const Class WasmMemoryObject::class_ =
+{
+    "WebAssembly.Memory",
+    JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(WasmMemoryObject::RESERVED_SLOTS)
+};
+
+/* static */ WasmMemoryObject*
+WasmMemoryObject::create(ExclusiveContext* cx, HandleArrayBufferObjectMaybeShared buffer,
+                         HandleObject proto)
+{
+    AutoSetNewObjectMetadata metadata(cx);
+    auto* obj = NewObjectWithGivenProto<WasmMemoryObject>(cx, proto);
+    if (!obj)
+        return nullptr;
+
+    obj->initReservedSlot(BUFFER_SLOT, ObjectValue(*buffer));
+    return obj;
+}
+
+static bool
+MemoryConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!ThrowIfNotConstructing(cx, args, "Memory"))
+        return false;
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Memory", 1))
+        return false;
+
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MEM_ARG);
+        return false;
+    }
+
+    JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
+    if (!initialAtom)
+        return false;
+
+    RootedObject obj(cx, &args[0].toObject());
+    RootedId id(cx, AtomToId(initialAtom));
+    RootedValue initialVal(cx);
+    if (!GetProperty(cx, obj, obj, id, &initialVal))
+        return false;
+
+    double initialDbl;
+    if (!ToInteger(cx, initialVal, &initialDbl))
+        return false;
+
+    if (initialDbl < 0 || initialDbl > INT32_MAX / PageSize) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MEM_SIZE, "initial");
+        return false;
+    }
+
+    uint32_t bytes = uint32_t(initialDbl) * PageSize;
+    bool signalsForOOB = SignalUsage(cx).forOOB;
+    RootedArrayBufferObject buffer(cx, ArrayBufferObject::createForWasm(cx, bytes, signalsForOOB));
+    if (!buffer)
+        return false;
+
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
+    RootedWasmMemoryObject memoryObj(cx, WasmMemoryObject::create(cx, buffer, proto));
+    if (!memoryObj)
+        return false;
+
+    args.rval().setObject(*memoryObj);
+    return true;
+}
+
+static bool
+IsMemoryBuffer(HandleValue v)
+{
+    return v.isObject() && v.toObject().is<WasmMemoryObject>();
+}
+
+static bool
+MemoryBufferGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    args.rval().setObject(args.thisv().toObject().as<WasmMemoryObject>().buffer());
+    return true;
+}
+
+static bool
+MemoryBufferGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsMemoryBuffer, MemoryBufferGetterImpl>(cx, args);
+}
+
+const JSPropertySpec WasmMemoryObject::properties[] =
+{
+    JS_PSG("buffer", MemoryBufferGetter, 0),
+    JS_PS_END
+};
+
+ArrayBufferObjectMaybeShared&
+WasmMemoryObject::buffer() const
+{
+    return getReservedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObjectMaybeShared>();
+}
+
+// ============================================================================
 // WebAssembly class and static methods
 
 #if JS_HAS_TOSOURCE
@@ -511,6 +622,9 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
 {
     RootedObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
     if (!proto)
+        return false;
+
+    if (!JS_DefineProperties(cx, proto, Class::properties))
         return false;
 
     MOZ_ASSERT(global->as<GlobalObject>().getPrototype(Class::KEY).isUndefined());
@@ -555,6 +669,8 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject global)
     if (!InitConstructor<WasmModuleObject>(cx, global, wasm, "Module", ModuleConstructor))
         return nullptr;
     if (!InitConstructor<WasmInstanceObject>(cx, global, wasm, "Instance", InstanceConstructor))
+        return nullptr;
+    if (!InitConstructor<WasmMemoryObject>(cx, global, wasm, "Memory", MemoryConstructor))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))

@@ -68,8 +68,9 @@ extern const Class WebAssemblyClass;
 JSObject*
 InitWebAssemblyClass(JSContext* cx, HandleObject global);
 
-// The class of wasm module object wrappers. Each WasmModuleObject owns a
-// wasm::Module. These objects are currently not exposed directly to JS.
+// The class of WebAssembly.Module. Each WasmModuleObject owns a
+// wasm::Module. These objects are used both as content-facing JS objects and as
+// internal implementation details of asm.js.
 
 class WasmModuleObject : public NativeObject
 {
@@ -80,6 +81,7 @@ class WasmModuleObject : public NativeObject
     static const JSProtoKey KEY = JSProto_WasmModule;
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
+    static const JSPropertySpec properties[];
 
     static WasmModuleObject* create(ExclusiveContext* cx,
                                     wasm::UniqueModule module,
@@ -91,8 +93,9 @@ typedef Rooted<WasmModuleObject*> RootedWasmModuleObject;
 typedef Handle<WasmModuleObject*> HandleWasmModuleObject;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
 
-// The class of wasm instance object wrappers. Each WasmInstanceObject owns a
-// wasm::Instance. These objects are currently not exposed directly to JS.
+// The class of WebAssembly.Instance. Each WasmInstanceObject owns a
+// wasm::Instance. These objects are used both as content-facing JS objects and
+// as internal implementation details of asm.js.
 
 class WasmInstanceObject : public NativeObject
 {
@@ -106,6 +109,7 @@ class WasmInstanceObject : public NativeObject
     static const JSProtoKey KEY = JSProto_WasmInstance;
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
+    static const JSPropertySpec properties[];
 
     static WasmInstanceObject* create(ExclusiveContext* cx,
                                       HandleObject proto = nullptr);
@@ -119,6 +123,29 @@ typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;
 typedef Rooted<WasmInstanceObject*> RootedWasmInstanceObject;
 typedef Handle<WasmInstanceObject*> HandleWasmInstanceObject;
 typedef MutableHandle<WasmInstanceObject*> MutableHandleWasmInstanceObject;
+
+// The class of WebAssembly.Memory. A WasmMemoryObject references an ArrayBuffer
+// or SharedArrayBuffer object which owns the actual memory.
+
+class WasmMemoryObject : public NativeObject
+{
+    static const unsigned BUFFER_SLOT = 0;
+    static const ClassOps classOps_;
+  public:
+    static const JSProtoKey KEY = JSProto_WasmMemory;
+    static const unsigned RESERVED_SLOTS = 1;
+    static const Class class_;
+    static const JSPropertySpec properties[];
+
+    static WasmMemoryObject* create(ExclusiveContext* cx,
+                                    Handle<ArrayBufferObjectMaybeShared*> buffer,
+                                    HandleObject proto);
+    ArrayBufferObjectMaybeShared& buffer() const;
+};
+
+typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
+typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
+typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
 
 } // namespace js
 

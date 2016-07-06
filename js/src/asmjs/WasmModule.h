@@ -191,7 +191,7 @@ class Module
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
-                     Handle<ArrayBufferObjectMaybeShared*> asmJSHeap,
+                     HandleArrayBufferObjectMaybeShared asmJSBuffer,
                      HandleWasmInstanceObject instanceObj) const;
 
     // Structured clone support:

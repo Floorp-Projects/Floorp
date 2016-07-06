@@ -60,7 +60,7 @@ class Instance
     const SharedMetadata                 metadata_;
     const SharedBytes                    maybeBytecode_;
     const TypedFuncTableVector           typedFuncTables_;
-    GCPtr<ArrayBufferObjectMaybeShared*> heap_;
+    GCPtrWasmMemoryObject                memory_;
 
     bool                                 profilingEnabled_;
     CacheableCharsVector                 funcLabels_;
@@ -89,7 +89,7 @@ class Instance
              const Metadata& metadata,
              const ShareableBytes* maybeBytecode,
              TypedFuncTableVector&& typedFuncTables,
-             HandleArrayBufferObjectMaybeShared heap);
+             HandleWasmMemoryObject memory);
 
   public:
     static bool create(JSContext* cx,
@@ -97,7 +97,7 @@ class Instance
                        const Metadata& metadata,
                        const ShareableBytes* maybeBytecode,
                        TypedFuncTableVector&& typedFuncTables,
-                       HandleArrayBufferObjectMaybeShared heap,
+                       HandleWasmMemoryObject memoryObject,
                        Handle<FunctionVector> funcImports,
                        const ExportMap& exports,
                        HandleWasmInstanceObject instanceObj);
