@@ -371,37 +371,14 @@ Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& o
     return true;
 }
 
-template<> const char16_t TracerConcrete<JS::Symbol>::concreteTypeName[] =
-    MOZ_UTF16("JS::Symbol");
-template<> const char16_t TracerConcrete<JSScript>::concreteTypeName[] =
-    MOZ_UTF16("JSScript");
-template<> const char16_t TracerConcrete<js::LazyScript>::concreteTypeName[] =
-    MOZ_UTF16("js::LazyScript");
-template<> const char16_t TracerConcrete<js::jit::JitCode>::concreteTypeName[] =
-    MOZ_UTF16("js::jit::JitCode");
-template<> const char16_t TracerConcrete<js::Shape>::concreteTypeName[] =
-    MOZ_UTF16("js::Shape");
-template<> const char16_t TracerConcrete<js::BaseShape>::concreteTypeName[] =
-    MOZ_UTF16("js::BaseShape");
-template<> const char16_t TracerConcrete<js::ObjectGroup>::concreteTypeName[] =
-    MOZ_UTF16("js::ObjectGroup");
+const char16_t Concrete<JS::Symbol>::concreteTypeName[] = MOZ_UTF16("JS::Symbol");
+const char16_t Concrete<JSScript>::concreteTypeName[] = MOZ_UTF16("JSScript");
+const char16_t Concrete<js::LazyScript>::concreteTypeName[] = MOZ_UTF16("js::LazyScript");
+const char16_t Concrete<js::jit::JitCode>::concreteTypeName[] = MOZ_UTF16("js::jit::JitCode");
+const char16_t Concrete<js::Shape>::concreteTypeName[] = MOZ_UTF16("js::Shape");
+const char16_t Concrete<js::BaseShape>::concreteTypeName[] = MOZ_UTF16("js::BaseShape");
+const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = MOZ_UTF16("js::ObjectGroup");
 
-
-// Instantiate all the TracerConcrete and templates here, where
-// we have the member functions' definitions in scope.
-namespace JS {
-namespace ubi {
-template class TracerConcreteWithCompartment<JSObject>;
-template class TracerConcrete<JSString>;
-template class TracerConcrete<JS::Symbol>;
-template class TracerConcreteWithCompartment<JSScript>;
-template class TracerConcrete<js::LazyScript>;
-template class TracerConcrete<js::jit::JitCode>;
-template class TracerConcreteWithCompartment<js::Shape>;
-template class TracerConcreteWithCompartment<js::BaseShape>;
-template class TracerConcrete<js::ObjectGroup>;
-} // namespace ubi
-} // namespace JS
 
 namespace JS {
 namespace ubi {
