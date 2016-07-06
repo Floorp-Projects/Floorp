@@ -1,9 +1,7 @@
 ---
 task:
-  created:
-    relative-datestamp: "0 seconds"
-  deadline:
-    relative-datestamp: "24 hours"
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
     name: 'Docker Image Build: {{image_name}}'
     description: 'Build the docker image {{image_name}} for use by dependent tasks'
@@ -45,8 +43,7 @@ task:
       '{{artifact_path}}':
         type: 'file'
         path: '/artifacts/image.tar'
-        expires:
-          relative-datestamp: "1 year"
+        expires: '{{#from_now}}1 year{{/from_now}}'
   extra:
     treeherderEnv:
       - staging

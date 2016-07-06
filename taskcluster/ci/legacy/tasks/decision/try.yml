@@ -16,12 +16,9 @@ scopes:
 tasks:
   - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
     task:
-      created:
-        relative-datestamp: "0 seconds"
-      deadline:
-        relative-datestamp: "1 day"
-      expires:
-        relative-datestamp: "14 days"
+      created: '{{now}}'
+      deadline: '{{#from_now}}1 day{{/from_now}}'
+      expires: '{{#from_now}}14 day{{/from_now}}'
       metadata:
         owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
@@ -98,8 +95,7 @@ tasks:
           'public':
             type: 'directory'
             path: '/home/worker/artifacts'
-            expires:
-              relative-datestamp: '7 days'
+            expires: '{{#from_now}}7 days{{/from_now}}'
 
       extra:
         treeherder:

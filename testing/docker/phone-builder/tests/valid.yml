@@ -35,8 +35,7 @@ task:
       'private/build':
         type: directory
         path: '/home/worker/artifacts/'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     # Rather then enforcing particular conventions we require that all build

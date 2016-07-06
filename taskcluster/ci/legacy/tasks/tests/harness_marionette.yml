@@ -24,8 +24,7 @@ task:
       'public/logs/':
         type: directory
         path: '/home/worker/workspace/mozharness_workspace/upload/logs/'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
   extra:
     treeherder:
       symbol: Mn-h

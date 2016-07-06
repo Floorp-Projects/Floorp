@@ -7,10 +7,8 @@ task:
       -
         type: 'directory'
         path: 'public\logs'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
       -
         type: 'directory'
         path: 'public\test_info'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
