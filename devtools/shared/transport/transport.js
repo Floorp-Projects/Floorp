@@ -733,7 +733,16 @@
     },
 
     close: function () {
-      this._sender.removeMessageListener(this._messageName, this);
+      try {
+        this._sender.removeMessageListener(this._messageName, this);
+      } catch (e) {
+        if (e.result != Cr.NS_ERROR_NULL_POINTER) {
+          throw e;
+        }
+        // In some cases, especially when using messageManagers in non-e10s mode, we reach
+        // this point with a dead messageManager which only throws errors but does not
+        // seem to indicate in any other way that it is dead.
+      }
       this.emit("onClosed");
       this.hooks.onClosed();
     },
@@ -745,7 +754,16 @@
 
     send: function (packet) {
       this.emit("send", packet);
-      this._sender.sendAsyncMessage(this._messageName, packet);
+      try {
+        this._sender.sendAsyncMessage(this._messageName, packet);
+      } catch (e) {
+        if (e.result != Cr.NS_ERROR_NULL_POINTER) {
+          throw e;
+        }
+        // In some cases, especially when using messageManagers in non-e10s mode, we reach
+        // this point with a dead messageManager which only throws errors but does not
+        // seem to indicate in any other way that it is dead.
+      }
     },
 
     startBulkSend: function () {

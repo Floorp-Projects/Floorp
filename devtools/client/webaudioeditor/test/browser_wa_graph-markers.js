@@ -19,12 +19,12 @@ add_task(function* () {
 
   let started = once(gFront, "start-context");
 
-  reload(target);
-
-  let [actors] = yield Promise.all([
+  let events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  let [actors] = yield events;
 
   is(getFill($("#arrowhead")), MARKER_STYLING[currentTheme],
     "marker initially matches theme.");

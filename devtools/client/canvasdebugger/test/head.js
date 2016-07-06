@@ -158,6 +158,7 @@ function once(aTarget, aEventName, aUseCapture = false) {
   ]) {
     if ((add in aTarget) && (remove in aTarget)) {
       aTarget[add](aEventName, function onEvent(...aArgs) {
+        info("Got event: '" + aEventName + "' on " + aTarget + ".");
         aTarget[remove](aEventName, onEvent, aUseCapture);
         deferred.resolve(...aArgs);
       }, aUseCapture);

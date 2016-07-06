@@ -151,51 +151,6 @@ exports.setupParentProcess = function setupParentProcess({mm, prefix}) {
   }
 };
 
-// skip child setup if this actor module is not running in a child process
-if (DebuggerServer.isInChildProcess) {
-  setupChildProcess();
-}
-
-function setupChildProcess() {
-  const { sendSyncMessage } = DebuggerServer.parentMessageManager;
-
-  DebuggerServer.setupInParent({
-    module: "devtools/server/actors/director-registry",
-    setupParent: "setupParentProcess"
-  });
-
-  DirectorRegistry.install = notImplemented.bind(null, "install");
-  DirectorRegistry.uninstall = notImplemented.bind(null, "uninstall");
-  DirectorRegistry.clear = notImplemented.bind(null, "clear");
-
-  DirectorRegistry.get = callParentProcess.bind(null, "get");
-  DirectorRegistry.list = callParentProcess.bind(null, "list");
-
-  /* child process helpers */
-
-  function notImplemented(method) {
-    console.error(ERR_DIRECTOR_CHILD_NOTIMPLEMENTED_METHOD, method);
-    throw Error(ERR_DIRECTOR_CHILD_NOTIMPLEMENTED_METHOD);
-  }
-
-  function callParentProcess(method, ...args) {
-    var reply = sendSyncMessage("debug:director-registry-request", {
-      method: method,
-      args: args
-    });
-
-    if (reply.length === 0) {
-      console.error(ERR_DIRECTOR_CHILD_NO_REPLY);
-      throw Error(ERR_DIRECTOR_CHILD_NO_REPLY);
-    } else if (reply.length > 1) {
-      console.error(ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES);
-      throw Error(ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES);
-    }
-
-    return reply[0];
-  }
-}
-
 /**
  * The DirectorRegistry Actor is a global actor which manages install/uninstall of
  * director scripts definitions.
@@ -204,6 +159,7 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
   /* init & destroy methods */
   initialize: function (conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
+    this.maybeSetupChildProcess(conn);
   },
   destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
@@ -212,6 +168,51 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
 
   finalize: function () {
     // nothing to cleanup
+  },
+
+  maybeSetupChildProcess(conn) {
+    // skip child setup if this actor module is not running in a child process
+    if (!DebuggerServer.isInChildProcess) {
+      return;
+    }
+
+    const { sendSyncMessage } = conn.parentMessageManager;
+
+    conn.setupInParent({
+      module: "devtools/server/actors/director-registry",
+      setupParent: "setupParentProcess"
+    });
+
+    DirectorRegistry.install = notImplemented.bind(null, "install");
+    DirectorRegistry.uninstall = notImplemented.bind(null, "uninstall");
+    DirectorRegistry.clear = notImplemented.bind(null, "clear");
+
+    DirectorRegistry.get = callParentProcess.bind(null, "get");
+    DirectorRegistry.list = callParentProcess.bind(null, "list");
+
+    /* child process helpers */
+
+    function notImplemented(method) {
+      console.error(ERR_DIRECTOR_CHILD_NOTIMPLEMENTED_METHOD, method);
+      throw Error(ERR_DIRECTOR_CHILD_NOTIMPLEMENTED_METHOD);
+    }
+
+    function callParentProcess(method, ...args) {
+      var reply = sendSyncMessage("debug:director-registry-request", {
+        method: method,
+        args: args
+      });
+
+      if (reply.length === 0) {
+        console.error(ERR_DIRECTOR_CHILD_NO_REPLY);
+        throw Error(ERR_DIRECTOR_CHILD_NO_REPLY);
+      } else if (reply.length > 1) {
+        console.error(ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES);
+        throw Error(ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES);
+      }
+
+      return reply[0];
+    }
   },
 
   /**

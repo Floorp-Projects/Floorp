@@ -26,7 +26,7 @@ localStorage.setItem("ls1", "foobar");
 localStorage.setItem("ls2", "foobar-2");
 // ... and finally some session storage items too
 sessionStorage.setItem("ss1", "foobar-3");
-dump("added cookies and stuff from main page\n");
+dump("added cookies and storage from main page\n");
 
 let idbGenerator = function*() {
   let request = indexedDB.open("idb1", 1);
@@ -87,7 +87,7 @@ let idbGenerator = function*() {
   });
   db2.close();
 
-  dump("added cookies and stuff from main page\n");
+  dump("added indexedDB from main page\n");
 };
 
 function deleteDB(dbName) {

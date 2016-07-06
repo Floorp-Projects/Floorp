@@ -13,13 +13,12 @@ add_task(function* () {
 
   let started = once(gFront, "start-context");
 
-  reload(target);
-
-  let [actors, _] = yield Promise.all([
+  let events = Promise.all([
     getN(gFront, "create-node", 8),
     waitForGraphRendered(panel.panelWin, 8, 8)
   ]);
-
+  reload(target);
+  let [actors, _] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");

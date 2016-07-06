@@ -32,14 +32,14 @@ function assertEvent(event, data) {
       is(data.newURI, URL2, "newURI property is correct");
       break;
     case x++:
-      is(event, "tabNavigated", "Right after will-navigate, the client receive tabNavigated");
+      is(event, "request", "RDP is async with messageManager, the request happens after will-navigate");
+      is(data, URL2);
+      break;
+    case x++:
+      is(event, "tabNavigated", "After the request, the client receive tabNavigated");
       is(data.state, "start", "state is start");
       is(data.url, URL2, "url property is correct");
       is(data.nativeConsoleAPI, true, "nativeConsoleAPI is correct");
-      break;
-    case x++:
-      is(event, "request", "Given that locally, the Debugger protocol is sync, the request happens after tabNavigated");
-      is(data, URL2);
       break;
     case x++:
       is(event, "DOMContentLoaded");
@@ -106,8 +106,7 @@ function getServerTabActor(callback) {
     let actorID = form.actor;
     client.attachTab(actorID, function (aResponse, aTabClient) {
       // !Hack! Retrieve a server side object, the BrowserTabActor instance
-      let conn = transport._serverConnection;
-      let tabActor = conn.getActor(actorID);
+      let tabActor = DebuggerServer._searchAllConnectionsForActor(actorID);
       callback(tabActor);
     });
   });

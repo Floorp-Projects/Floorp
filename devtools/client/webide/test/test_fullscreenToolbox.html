@@ -28,7 +28,6 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function* () {
-          const { DebuggerServer } = require("devtools/server/main");
           let win = yield openWebIDE();
           let docProject = getProjectDocument(win);
           let docRuntime = getRuntimeDocument(win);
