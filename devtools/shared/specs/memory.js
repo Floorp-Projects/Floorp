@@ -111,6 +111,9 @@ const memorySpec = generateActorSpec({
       response: { value: RetVal("number") }
     },
     saveHeapSnapshot: {
+      request: {
+        boundaries: Arg(0, "nullable:json")
+      },
       response: {
         snapshotId: RetVal("string")
       }
