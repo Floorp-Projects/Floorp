@@ -20,8 +20,10 @@ task:
       'public/logs/':
         type: directory
         path: '/home/worker/workspace/build/upload/logs/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
+        expires:
+          relative-datestamp: '1 year'
       'public/test_info/':
         type: directory
         path: '/home/worker/workspace/build/blobber_upload_dir/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
+        expires:
+          relative-datestamp: '1 year'
