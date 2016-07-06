@@ -293,7 +293,7 @@ xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
     aString.Truncate();
     const char16_t* m = aReport->ucmessage;
     if (m) {
-        JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSRuntime::Get()->Runtime(), aReport->exnType);
+        JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSRuntime::Get()->Context(), aReport->exnType);
         if (name) {
             AssignJSFlatString(aString, name);
             aString.AppendLiteral(": ");

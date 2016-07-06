@@ -38,32 +38,31 @@ public:
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
 
   /**
-   * Requests handling of a double tap. |aPoint| is in CSS pixels, relative to
-   * the current scroll offset. This should eventually round-trip back to
-   * AsyncPanZoomController::ZoomToRect with the dimensions that we want to zoom
-   * to.
+   * Different types of tap-related events that can be sent in
+   * the HandleTap function. The names should be relatively self-explanatory.
+   * Note that the eLongTapUp will always be preceded by an eLongTap, but not
+   * all eLongTap notifications will be followed by an eLongTapUp (for instance,
+   * if the user moves their finger after triggering the long-tap but before
+   * lifting it).
    */
-  virtual void HandleDoubleTap(const CSSPoint& aPoint,
-                               Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) = 0;
+  enum class TapType {
+    eSingleTap,
+    eDoubleTap,
+    eLongTap,
+    eLongTapUp,
+
+    eSentinel,
+  };
 
   /**
-   * Requests handling a single tap. |aPoint| is in CSS pixels, relative to the
-   * current scroll offset. This should simulate and send to content a mouse
-   * button down, then mouse button up at |aPoint|.
-   */
-  virtual void HandleSingleTap(const CSSPoint& aPoint,
-                               Modifiers aModifiers,
-                               const ScrollableLayerGuid& aGuid) = 0;
-
-  /**
-   * Requests handling a long tap. |aPoint| is in CSS pixels, relative to the
+   * Requests handling of a tap event. |aPoint| is in CSS pixels, relative to the
    * current scroll offset.
    */
-  virtual void HandleLongTap(const CSSPoint& aPoint,
-                             Modifiers aModifiers,
-                             const ScrollableLayerGuid& aGuid,
-                             uint64_t aInputBlockId) = 0;
+  virtual void HandleTap(TapType aType,
+                         const CSSPoint& aPoint,
+                         Modifiers aModifiers,
+                         const ScrollableLayerGuid& aGuid,
+                         uint64_t aInputBlockId) = 0;
 
   /**
    * Schedules a runnable to run on the controller/UI thread at some time

@@ -163,6 +163,15 @@ AudioParam::SendEventToEngine(const AudioTimelineEvent& aEvent)
   }
 }
 
+void
+AudioParam::CleanupOldEvents()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  double currentTime = mNode->Context()->CurrentTime();
+
+  CleanupEventsOlderThan(currentTime);
+}
+
 float
 AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
 {

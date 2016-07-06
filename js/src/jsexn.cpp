@@ -510,7 +510,7 @@ ErrorObject::createConstructor(JSContext* cx, JSProtoKey key)
 }
 
 JS_FRIEND_API(JSFlatString*)
-js::GetErrorTypeName(JSRuntime* rt, int16_t exnType)
+js::GetErrorTypeName(JSContext* cx, int16_t exnType)
 {
     /*
      * JSEXN_INTERNALERR returns null to prevent that "InternalError: "
@@ -522,7 +522,7 @@ js::GetErrorTypeName(JSRuntime* rt, int16_t exnType)
         return nullptr;
     }
     JSProtoKey key = GetExceptionProtoKey(JSExnType(exnType));
-    return ClassName(key, rt->contextFromMainThread());
+    return ClassName(key, cx);
 }
 
 void
