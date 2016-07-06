@@ -1764,12 +1764,10 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            // Supported parameters:
+            // userContextId, remote, isPreloadBrowser, uriIsAboutBlank
 
-            let remote = aParams && aParams.remote;
-            let uriIsAboutBlank = aParams && aParams.uriIsAboutBlank;
-            let isPreloadBrowser = aParams && aParams.isPreloadBrowser;
-            let userContextId = aParams && aParams.userContextId;
+            const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
             let b = document.createElementNS(NS_XUL, "browser");
             b.permanentKey = {};
@@ -1779,19 +1777,21 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (userContextId) {
-              b.setAttribute("usercontextid", userContextId);
+            if (aParams.userContextId) {
+              b.setAttribute("usercontextid", aParams.userContextId);
             }
 
-            if (remote)
+            if (aParams.remote) {
               b.setAttribute("remote", "true");
+            }
 
             if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
-            if (!isPreloadBrowser && this.hasAttribute("autocompletepopup"))
+            if (!aParams.isPreloadBrowser && this.hasAttribute("autocompletepopup")) {
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+            }
 
             if (this.hasAttribute("selectmenulist"))
               b.setAttribute("selectmenulist", this.getAttribute("selectmenulist"));
@@ -1826,7 +1826,7 @@
 
             // Prevent the superfluous initial load of a blank document
             // if we're going to load something other than about:blank.
-            if (!uriIsAboutBlank) {
+            if (!aParams.uriIsAboutBlank) {
               b.setAttribute("nodefaultsrc", "true");
             }
 
@@ -1843,23 +1843,15 @@
           <![CDATA[
             "use strict";
 
-            let aReferrerURI          = aParams.referrerURI;
-            let aReferrerPolicy       = aParams.referrerPolicy;
-            let aCharset              = aParams.charset;
-            let aPostData             = aParams.postData;
-            let aAllowThirdPartyFixup = aParams.allowThirdPartyFixup;
-            let aFromExternal         = aParams.fromExternal;
-            let aAllowMixedContent    = aParams.allowMixedContent;
-            let aForceNotRemote       = aParams.forceNotRemote;
-            let aNoReferrer           = aParams.noReferrer;
-            let aUserContextId        = aParams.userContextId;
+            // Supported parameters:
+            // forceNotRemote, userContextId
 
             let uriIsAboutBlank = !aURI || aURI == "about:blank";
 
             // The new browser should be remote if this is an e10s window and
             // the uri to load can be loaded remotely.
             let remote = gMultiProcessBrowser &&
-                         !aForceNotRemote &&
+                         !aParams.forceNotRemote &&
                          E10SUtils.canLoadURIInProcess(aURI, Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT);
 
             let browser;
@@ -1869,7 +1861,8 @@
             // userContext, check if there is a preloaded browser ready.
             // Private windows are not included because both the label and the
             // icon for the tab would be set incorrectly (see bug 1195981).
-            if (aURI == BROWSER_NEW_TAB_URL && !aUserContextId &&
+            if (aURI == BROWSER_NEW_TAB_URL &&
+                !aParams.userContextId &&
                 !PrivateBrowsingUtils.isWindowPrivate(window)) {
               browser = this._getPreloadedBrowser();
               usingPreloadedContent = !!browser;
@@ -1879,7 +1872,7 @@
               // No preloaded browser found, create one.
               browser = this._createBrowser({remote: remote,
                                              uriIsAboutBlank: uriIsAboutBlank,
-                                             userContextId: aUserContextId});
+                                             userContextId: aParams.userContextId});
             }
 
             let notificationbox = this.getNotificationBox(browser);
@@ -2024,19 +2017,6 @@
 
             this.tabContainer.updateVisibility();
 
-            let options = {
-              referrerURI          : aReferrerURI,
-              referrerPolicy       : aReferrerPolicy,
-              charset              : aCharset,
-              postData             : aPostData,
-              allowThirdPartyFixup : aAllowThirdPartyFixup,
-              fromExternal         : aFromExternal,
-              allowMixedContent    : aAllowMixedContent,
-              forceNotRemote       : aForceNotRemote,
-              noReferrer           : aNoReferrer,
-              userContextId        : aUserContextId
-            };
-
             // Currently in this incarnation of bug 906076, we are forcing the
             // browser to immediately be linked.  In future incarnations of this
             // bug this will be removed so we can leave the tab in its "lazy"
@@ -2044,7 +2024,11 @@
             // now this must occur before "TabOpen" event is fired, as that will
             // trigger SessionStore.jsm to run code that expects the existence
             // of tab.linkedBrowser.
-            let { usingPreloadedContent } = this._linkBrowserToTab(t, aURI, options);
+            let browserParams = {
+              forceNotRemote: aForceNotRemote,
+              userContextId:  aUserContextId
+            };
+            let { usingPreloadedContent } = this._linkBrowserToTab(t, aURI, browserParams);
             let b = t.linkedBrowser;
 
             // Dispatch a new tab notification.  We do this once we're
