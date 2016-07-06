@@ -69,6 +69,7 @@ ServiceWorkerContainer::~ServiceWorkerContainer()
 void
 ServiceWorkerContainer::DisconnectFromOwner()
 {
+  mControllerWorker = nullptr;
   RemoveReadyPromise();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
