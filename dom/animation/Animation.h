@@ -69,7 +69,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Animation,
                                            DOMEventTargetHelper)
 
-  AnimationTimeline* GetParentObject() const { return mTimeline; }
+  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
