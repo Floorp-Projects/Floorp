@@ -513,11 +513,11 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   }
   mJSContext = JS_GetContext(mJSRuntime);
 
-  if (!JS_AddExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this)) {
+  if (!JS_AddExtraGCRootsTracer(mJSContext, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
   }
-  JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
-  JS_SetGCCallback(mJSRuntime, GCCallback, this);
+  JS_SetGrayGCRootsTracer(mJSContext, TraceGrayJS, this);
+  JS_SetGCCallback(mJSContext, GCCallback, this);
   mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
 
   if (NS_IsMainThread()) {
@@ -532,9 +532,9 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
       mJSRuntime, GCNurseryCollectionCallback);
   }
 
-  JS_SetObjectsTenuredCallback(mJSRuntime, JSObjectsTenuredCb, this);
-  JS::SetOutOfMemoryCallback(mJSRuntime, OutOfMemoryCallback, this);
-  JS::SetLargeAllocationFailureCallback(mJSRuntime,
+  JS_SetObjectsTenuredCallback(mJSContext, JSObjectsTenuredCb, this);
+  JS::SetOutOfMemoryCallback(mJSContext, OutOfMemoryCallback, this);
+  JS::SetLargeAllocationFailureCallback(mJSContext,
                                         LargeAllocationFailureCallback, this);
   JS_SetDestroyZoneCallback(mJSContext, XPCStringConvert::FreeZoneCache);
   JS_SetSweepZoneCallback(mJSContext, XPCStringConvert::ClearZoneCache);
@@ -544,7 +544,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   static js::DOMCallbacks DOMcallbacks = {
     InstanceClassHasProtoAtDepth
   };
-  SetDOMCallbacks(mJSRuntime, &DOMcallbacks);
+  SetDOMCallbacks(mJSContext, &DOMcallbacks);
   js::SetScriptEnvironmentPreparer(mJSRuntime, &mEnvironmentPreparer);
 
   JS::SetGetIncumbentGlobalCallback(mJSRuntime, GetIncumbentGlobalCallback);
@@ -975,7 +975,7 @@ CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
     global = xpc::NativeGlobal(aIncumbentGlobal);
   }
   nsCOMPtr<nsIRunnable> runnable = new PromiseJobRunnable(aJob, aAllocationSite, global);
-  self->DispatchToMicroTask(runnable);
+  self->DispatchToMicroTask(runnable.forget());
   return true;
 }
 
@@ -1680,12 +1680,14 @@ CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
 }
 
 void
-CycleCollectedJSRuntime::DispatchToMicroTask(nsIRunnable* aRunnable)
+CycleCollectedJSRuntime::DispatchToMicroTask(already_AddRefed<nsIRunnable> aRunnable)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
+  RefPtr<nsIRunnable> runnable(aRunnable);
 
-  mPromiseMicroTaskQueue.push(aRunnable);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(runnable);
+
+  mPromiseMicroTaskQueue.push(runnable.forget());
 }
 
 void

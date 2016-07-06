@@ -118,15 +118,7 @@ ChromeProcessController::HandleDoubleTap(const mozilla::CSSPoint& aPoint,
                                          Modifiers aModifiers,
                                          const ScrollableLayerGuid& aGuid)
 {
-  if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod
-                      <CSSPoint,
-                       Modifiers,
-                       ScrollableLayerGuid>(this,
-                                            &ChromeProcessController::HandleDoubleTap,
-                                            aPoint, aModifiers, aGuid));
-    return;
-  }
+  MOZ_ASSERT(MessageLoop::current() == mUILoop);
 
   nsCOMPtr<nsIDocument> document = GetRootContentDocument(aGuid.mScrollId);
   if (!document.get()) {
@@ -154,40 +146,39 @@ ChromeProcessController::HandleDoubleTap(const mozilla::CSSPoint& aPoint,
 }
 
 void
-ChromeProcessController::HandleSingleTap(const CSSPoint& aPoint,
-                                         Modifiers aModifiers,
-                                         const ScrollableLayerGuid& aGuid)
+ChromeProcessController::HandleTap(TapType aType,
+                                   const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
+                                   const ScrollableLayerGuid& aGuid,
+                                   uint64_t aInputBlockId)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod
-                      <CSSPoint,
-                       Modifiers,
-                      ScrollableLayerGuid>(this,
-                                           &ChromeProcessController::HandleSingleTap,
-                                           aPoint, aModifiers, aGuid));
+    mUILoop->PostTask(NewRunnableMethod<TapType, mozilla::CSSPoint, Modifiers,
+                                        ScrollableLayerGuid, uint64_t>(this,
+                        &ChromeProcessController::HandleTap,
+                        aType, aPoint, aModifiers, aGuid, aInputBlockId));
     return;
   }
 
-  mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
-}
-
-void
-ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                                       const ScrollableLayerGuid& aGuid,
-                                       uint64_t aInputBlockId)
-{
-  if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod
-                      <mozilla::CSSPoint,
-                       Modifiers,
-                       ScrollableLayerGuid,
-                       uint64_t>(this, &ChromeProcessController::HandleLongTap,
-                                 aPoint, aModifiers, aGuid, aInputBlockId));
-    return;
+  switch (aType) {
+  case TapType::eSingleTap:
+    mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
+    break;
+  case TapType::eDoubleTap:
+    HandleDoubleTap(aPoint, aModifiers, aGuid);
+    break;
+  case TapType::eLongTap:
+    mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
+        aInputBlockId);
+    break;
+  case TapType::eLongTapUp:
+    mAPZEventState->ProcessLongTapUp();
+    break;
+  case TapType::eSentinel:
+    // Should never happen, but we need to handle this case branch for the
+    // compiler to be happy.
+    MOZ_ASSERT(false);
+    break;
   }
-
-  mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
-      aInputBlockId);
 }
 
 void

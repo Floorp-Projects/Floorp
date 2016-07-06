@@ -45,7 +45,7 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
   JS_GC(rt);
 
   ASSERT_TRUE(array != nullptr);
-  JS_AddExtraGCRootsTracer(rt, TraceArray<ArrayT>, array);
+  JS_AddExtraGCRootsTracer(cx, TraceArray<ArrayT>, array);
 
   /*
    * Create the array and fill it with new JS objects. With GGC these will be
@@ -78,7 +78,7 @@ RunTest(JSRuntime* rt, JSContext* cx, ArrayT* array)
     ASSERT_EQ(static_cast<int32_t>(i), value.toInt32());
   }
 
-  JS_RemoveExtraGCRootsTracer(rt, TraceArray<ArrayT>, array);
+  JS_RemoveExtraGCRootsTracer(cx, TraceArray<ArrayT>, array);
 }
 
 static void

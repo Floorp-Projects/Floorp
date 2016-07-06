@@ -22,8 +22,8 @@ virtual JSRuntime * createRuntime() override
     JSRuntime* rt = JS_NewRuntime(0);
     if (!rt)
         return nullptr;
-    JS_SetGCParameter(rt, JSGC_MAX_BYTES, (uint32_t)-1);
-    setNativeStackQuota(rt);
+    JS_SetGCParameter(JS_GetContext(rt), JSGC_MAX_BYTES, (uint32_t)-1);
+    setNativeStackQuota(JS_GetContext(rt));
     return rt;
 }
 END_TEST(testOOM)

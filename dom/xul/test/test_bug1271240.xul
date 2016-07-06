@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=1069772
+https://bugzilla.mozilla.org/show_bug.cgi?id=1271240
 -->
-<window title="Mozilla Bug 1069772"
+<window title="Mozilla Bug 1271240"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="loadTest();">
   <script type="application/javascript"
@@ -13,18 +13,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1069772
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
-  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069772"
-     target="_blank">Mozilla Bug 1069772</a>
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1271240"
+     target="_blank">Mozilla Bug 1271240</a>
   </body>
 
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
 
-  /** Test for Bug 1069772 **/
+  /** Test for Bug 1271240 **/
   SimpleTest.waitForExplicitFinish();
+  window.addEventListener('message', (event) => {
+    if (event.data == 'finish') {
+      SimpleTest.finish();
+    }
+  });
+
   function loadTest() {
-    window.open("file_bug1069772_local.xul", "", "width=360,height=240,chrome");
+    window.open("file_bug1271240.xul", "", "chrome");
   }
 
   ]]>

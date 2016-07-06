@@ -170,16 +170,16 @@ TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
   MockFunction<void(std::string checkPointName)> check;
   {
     InSequence s;
-    EXPECT_CALL(*mcc, HandleSingleTap(_, _, left->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, left->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped on left"));
-    EXPECT_CALL(*mcc, HandleSingleTap(_, _, bottom->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, bottom->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped on bottom"));
-    EXPECT_CALL(*mcc, HandleSingleTap(_, _, root->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, root->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped on root"));
     EXPECT_CALL(check, Call("Tap pending on d-t-c region"));
-    EXPECT_CALL(*mcc, HandleSingleTap(_, _, bottom->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, bottom->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped on bottom again"));
-    EXPECT_CALL(*mcc, HandleSingleTap(_, _, left->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, left->GetGuid(), _)).Times(1);
     EXPECT_CALL(check, Call("Tapped on left this time"));
   }
 
@@ -221,7 +221,7 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   // parent layer's hit region. Verify that it comes out of the APZC's
   // content controller, which indicates the input events got routed correctly
   // to the APZC.
-  EXPECT_CALL(*mcc, HandleSingleTap(_, _, rootApzc->GetGuid())).Times(1);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, rootApzc->GetGuid(), _)).Times(1);
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
 }
 
@@ -264,7 +264,7 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   Tap(manager, ScreenIntPoint(55, 5), TimeDuration::FromMilliseconds(100), nullptr, &inputBlockId);
   // But now we tell the APZ that really it hit layers[2], and expect the tap
   // to be delivered at the correct coordinates.
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(55, 5), 0, apzc2->GetGuid())).Times(1);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, CSSPoint(55, 5), 0, apzc2->GetGuid(), _)).Times(1);
 
   nsTArray<ScrollableLayerGuid> targets;
   targets.AppendElement(apzc2->GetGuid());

@@ -32,6 +32,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1271240
     .then(browser => makePrerenderedBrowserActive(browser))
     .then(browser => verifyBrowser(browser, false, false))
 
+    // test remote, non-prerendered browser
+    .then(() => createBrowser(false, true))
+    .then(browser => verifyBrowser(browser, false, true))
+
+    // test remote, prerendered browser
+    .then(() => createBrowser(true, true))
+    .then(browser => verifyBrowser(browser, true, true))
+    .then(browser => makePrerenderedBrowserActive(browser))
+    .then(browser => verifyBrowser(browser, false, true))
+
     // finish test
     .then(() => {
       opener.postMessage('finish', '*');

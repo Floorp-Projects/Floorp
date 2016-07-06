@@ -623,8 +623,11 @@ protected:
 
   static AxisLockMode GetAxisLockMode();
 
-  // Helper function for OnSingleTapUp() and OnSingleTapConfirmed().
-  nsEventStatus GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers);
+  // Helper function for OnSingleTapUp(), OnSingleTapConfirmed(), and
+  // OnLongPressUp().
+  nsEventStatus GenerateSingleTap(GeckoContentController::TapType aType,
+                                  const ScreenIntPoint& aPoint,
+                                  mozilla::Modifiers aModifiers);
 
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();

@@ -55,7 +55,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::srclang, aSrclang);
   }
-  void GetSrclang(nsString& aSrclang) const
+  void GetSrclang(nsAString& aSrclang) const
   {
     GetHTMLAttr(nsGkAtoms::srclang, aSrclang);
   }
@@ -68,7 +68,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::label, aLabel);
   }
-  void GetLabel(nsString& aLabel) const
+  void GetLabel(nsAString& aLabel) const
   {
     GetHTMLAttr(nsGkAtoms::label, aLabel);
   }
