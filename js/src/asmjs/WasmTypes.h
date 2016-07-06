@@ -49,6 +49,7 @@ using mozilla::Move;
 using mozilla::MallocSizeOf;
 using mozilla::PodZero;
 using mozilla::PodCopy;
+using mozilla::PodEqual;
 using mozilla::RefCounted;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
@@ -774,6 +775,7 @@ typedef EnumeratedArray<JumpTarget, JumpTarget::Limit, Uint32Vector> JumpSiteArr
 
 struct SignalUsage
 {
+    // NB: these fields are serialized as a POD in Assumptions.
     bool forOOB;
     bool forInterrupt;
 
@@ -781,6 +783,24 @@ struct SignalUsage
     explicit SignalUsage(ExclusiveContext* cx);
     bool operator==(SignalUsage rhs) const;
     bool operator!=(SignalUsage rhs) const { return !(*this == rhs); }
+};
+
+// Assumptions captures ambient state that must be the same when compiling and
+// deserializing a module for the compiled code to be valid. If it's not, then
+// the module must be recompiled from scratch.
+
+struct Assumptions
+{
+    SignalUsage           usesSignal;
+    uint32_t              cpuId;
+    JS::BuildIdCharVector buildId;
+
+    MOZ_MUST_USE bool init(SignalUsage usesSignal, JS::BuildIdOp buildIdOp);
+
+    bool operator==(const Assumptions& rhs) const;
+    bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
+
+    WASM_DECLARE_SERIALIZABLE(Assumptions)
 };
 
 // A Module can either be asm.js or wasm.

@@ -604,7 +604,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
                   const MemoryAccess* memoryAccess, const Instance& instance)
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
-    MOZ_RELEASE_ASSERT(instance.metadata().usesSignal.forOOB);
+    MOZ_RELEASE_ASSERT(instance.metadata().assumptions.usesSignal.forOOB);
     MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeSegment().code()));
 
     // Disassemble the instruction which caused the trap so that we can extract
