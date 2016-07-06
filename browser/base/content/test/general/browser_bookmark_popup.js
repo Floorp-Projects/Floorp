@@ -13,7 +13,6 @@ let bookmarkStar = document.getElementById("bookmarks-menu-button");
 let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
 
 StarUI._closePanelQuickForTesting = true;
-Services.prefs.setBoolPref("browser.bookmarks.closePanelQuickForTesting", true);
 
 function* test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
                                 shouldAutoClose, popupHideFn, isBookmarkRemoved}) {
@@ -122,39 +121,26 @@ add_task(function* panel_shown_for_keyboardshortcut_on_new_bookmark_star_and_aut
   });
 });
 
-add_task(function* panel_shown_for_new_bookmarks_mouseover_mouseout() {
+add_task(function* panel_shown_for_new_bookmarks_mousemove_mouseout() {
   yield test_bookmarks_popup({
     isNewBookmark: true,
     popupShowFn() {
       bookmarkStar.click();
     },
     *popupEditFn() {
-      let mouseOverPromise = new Promise(resolve => {
-        bookmarkPanel.addEventListener("mouseover", function onmouseover() {
-          bookmarkPanel.removeEventListener("mouseover", onmouseover);
-          resolve();
-        });
-      });
-      yield new Promise(resolve => {
-        EventUtils.synthesizeNativeMouseMove(bookmarkPanel, 0, 0, resolve, window);
-      });
-      info("Waiting for mouseover event");
-      yield mouseOverPromise;
-      info("Got mouseover event");
+      let mouseMovePromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mousemove");
+      EventUtils.synthesizeMouseAtCenter(bookmarkPanel, {type: "mousemove"});
+      info("Waiting for mousemove event");
+      yield mouseMovePromise;
+      info("Got mousemove event");
 
       yield new Promise(resolve => setTimeout(resolve, 400));
-      is(bookmarkPanel.state, "open", "Panel should still be open on mouseover");
+      is(bookmarkPanel.state, "open", "Panel should still be open on mousemove");
     },
     *popupHideFn() {
-      let mouseOutPromise = new Promise(resolve => {
-        bookmarkPanel.addEventListener("mouseout", function onmouseout() {
-          bookmarkPanel.removeEventListener("mouseout", onmouseout);
-          resolve();
-        });
-      });
-      yield new Promise(resolve => {
-        EventUtils.synthesizeNativeMouseMove(bookmarkStar, 0, 0, resolve, window);
-      });
+      let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
+      EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
+      EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
       info("Waiting for mouseout event");
       yield mouseOutPromise;
       info("Got mouseout event, should autoclose now");
@@ -267,6 +253,5 @@ add_task(function* ctrl_d_edit_bookmark_remove_bookmark() {
 });
 
 registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("browser.bookmarks.closePanelQuickForTesting");
   delete StarUI._closePanelQuickForTesting;
 })
