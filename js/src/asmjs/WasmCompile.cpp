@@ -1083,9 +1083,9 @@ DecodeUnknownSections(JSContext* cx, Decoder& d)
 }
 
 static UniqueModule
-DecodeModule(JSContext* cx, UniqueChars file, Assumptions&& assumptions, const ShareableBytes& bytecode)
+DecodeModule(JSContext* cx, const ShareableBytes& bytecode, CompileArgs&& args)
 {
-    auto init = js::MakeUnique<ModuleGeneratorData>(assumptions.usesSignal);
+    auto init = js::MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal);
     if (!init)
         return nullptr;
 
@@ -1107,8 +1107,8 @@ DecodeModule(JSContext* cx, UniqueChars file, Assumptions&& assumptions, const S
     if (!DecodeTableSection(cx, d, init.get()))
         return nullptr;
 
-    ModuleGenerator mg(cx);
-    if (!mg.init(Move(init), Move(file), Move(assumptions)))
+    ModuleGenerator mg;
+    if (!mg.init(Move(init), Move(args)))
         return nullptr;
 
     if (!DecodeMemorySection(cx, d, mg))
@@ -1133,7 +1133,7 @@ DecodeModule(JSContext* cx, UniqueChars file, Assumptions&& assumptions, const S
 }
 
 UniqueModule
-wasm::Compile(JSContext* cx, UniqueChars file, Assumptions&& assumptions, Bytes&& bytecode)
+wasm::Compile(JSContext* cx, Bytes&& bytecode, CompileArgs&& args)
 {
     MOZ_ASSERT(HasCompilerSupport(cx));
 
@@ -1141,7 +1141,7 @@ wasm::Compile(JSContext* cx, UniqueChars file, Assumptions&& assumptions, Bytes&
     if (!sharedBytes)
         return nullptr;
 
-    UniqueModule module = DecodeModule(cx, Move(file), Move(assumptions), *sharedBytes);
+    UniqueModule module = DecodeModule(cx, *sharedBytes, Move(args));
     if (!module) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);

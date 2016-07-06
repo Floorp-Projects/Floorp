@@ -26,11 +26,20 @@
 namespace js {
 namespace wasm {
 
-// Compile the given WebAssembly bytecode with the given filename into a
-// wasm::Module.
+// Compile the given WebAssembly bytecode with the given assumptions, settings
+// and filename into a wasm::Module.
+
+struct CompileArgs
+{
+    Assumptions assumptions;
+    UniqueChars filename;
+    bool alwaysBaseline;
+
+    CompileArgs() : alwaysBaseline(false) {}
+};
 
 UniqueModule
-Compile(JSContext* cx, UniqueChars filename, Assumptions&& assumptions, Bytes&& code);
+Compile(JSContext* cx, Bytes&& code, CompileArgs&& compileArgs);
 
 }  // namespace wasm
 }  // namespace js

@@ -39,7 +39,7 @@ namespace wasm {
   class FuncIR;
   class FunctionCompileResults;
   class IonCompileTask;
-  typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskVector;
+  typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskPtrVector;
 } // namespace wasm
 
 enum class ParseTaskKind
@@ -78,7 +78,7 @@ class GlobalHelperThreadState
     IonBuilderVector ionWorklist_, ionFinishedList_;
 
     // wasm worklist and finished jobs.
-    wasm::IonCompileTaskVector wasmWorklist_, wasmFinishedList_;
+    wasm::IonCompileTaskPtrVector wasmWorklist_, wasmFinishedList_;
 
   public:
     // For now, only allow a single parallel asm.js compilation to happen at a
@@ -157,11 +157,11 @@ class GlobalHelperThreadState
         return ionFinishedList_;
     }
 
-    wasm::IonCompileTaskVector& wasmWorklist() {
+    wasm::IonCompileTaskPtrVector& wasmWorklist() {
         MOZ_ASSERT(isLocked());
         return wasmWorklist_;
     }
-    wasm::IonCompileTaskVector& wasmFinishedList() {
+    wasm::IonCompileTaskPtrVector& wasmFinishedList() {
         MOZ_ASSERT(isLocked());
         return wasmFinishedList_;
     }
@@ -392,7 +392,7 @@ PauseCurrentHelperThread();
 
 /* Perform MIR optimization and LIR generation on a single function. */
 bool
-StartOffThreadWasmCompile(ExclusiveContext* cx, wasm::IonCompileTask* task);
+StartOffThreadWasmCompile(wasm::IonCompileTask* task);
 
 /*
  * Schedule an Ion compilation for a script, given a builder which has been

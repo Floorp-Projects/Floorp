@@ -40,19 +40,16 @@ using mozilla::MakeEnumeratedRange;
 static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 
-ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
-  : cx_(cx),
+ModuleGenerator::ModuleGenerator()
+  : alwaysBaseline_(false),
     numSigs_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     masmAlloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
-    funcIndexToExport_(cx),
     lastPatchedCallsite_(0),
     startOfUnpatchedBranches_(0),
     parallel_(false),
     outstanding_(0),
-    tasks_(cx),
-    freeTasks_(cx),
     activeFunc_(nullptr),
     startedFuncDefs_(false),
     finishedFuncDefs_(false)
@@ -67,12 +64,12 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                IonCompileTaskVector& worklist = HelperThreadState().wasmWorklist();
+                IonCompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist();
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                IonCompileTaskVector& finished = HelperThreadState().wasmFinishedList();
+                IonCompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList();
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
@@ -96,17 +93,20 @@ ModuleGenerator::~ModuleGenerator()
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Assumptions&& assumptions,
-                      Metadata* maybeMetadata)
+ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
+                      Metadata* maybeAsmJSMetadata)
 {
+    alwaysBaseline_ = args.alwaysBaseline;
+
     if (!funcIndexToExport_.init())
         return false;
 
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));;
 
     // asm.js passes in an AsmJSMetadata subclass to use instead.
-    if (maybeMetadata) {
-        metadata_ = maybeMetadata;
+    if (maybeAsmJSMetadata) {
+        MOZ_ASSERT(shared->kind == ModuleKind::AsmJS);
+        metadata_ = maybeAsmJSMetadata;
     } else {
         metadata_ = js_new<Metadata>();
         if (!metadata_)
@@ -115,8 +115,8 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Assump
 
     metadata_->kind = shared->kind;
     metadata_->heapUsage = HeapUsage::None;
-    metadata_->filename = Move(file);
-    metadata_->assumptions = Move(assumptions);
+    metadata_->filename = Move(args.filename);
+    metadata_->assumptions = Move(args.assumptions);
 
     shared_ = Move(shared);
 
@@ -198,7 +198,7 @@ JumpRange()
     return Min(JitOptions.jumpThreshold, JumpImmediateRange);
 }
 
-typedef HashMap<uint32_t, uint32_t> OffsetMap;
+typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> OffsetMap;
 
 bool
 ModuleGenerator::convertOutOfRangeBranchesToThunks()
@@ -208,7 +208,7 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
     // Create thunks for callsites that have gone out of range. Use a map to
     // create one thunk for each callee since there is often high reuse.
 
-    OffsetMap alreadyThunked(cx_);
+    OffsetMap alreadyThunked;
     if (!alreadyThunked.init())
         return false;
 
@@ -327,6 +327,9 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     return true;
 }
 
+typedef Vector<Offsets, 0, SystemAllocPolicy> OffsetVector;
+typedef Vector<ProfilingOffsets, 0, SystemAllocPolicy> ProfilingOffsetVector;
+
 bool
 ModuleGenerator::finishCodegen()
 {
@@ -336,9 +339,9 @@ ModuleGenerator::finishCodegen()
     // larger than the JumpImmediateRange, even local uses of Label will fail
     // due to the large absolute offsets temporarily stored by Label::bind().
 
-    Vector<Offsets> entries(cx_);
-    Vector<ProfilingOffsets> interpExits(cx_);
-    Vector<ProfilingOffsets> jitExits(cx_);
+    OffsetVector entries;
+    ProfilingOffsetVector interpExits;
+    ProfilingOffsetVector jitExits;
     EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
     Offsets interruptExit;
 
@@ -800,13 +803,6 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
 bool
 ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 {
-    TraceLoggerThread* logger = nullptr;
-    if (cx_->isJSContext())
-        logger = TraceLoggerForMainThread(cx_->asJSContext()->runtime());
-    else
-        logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
     MOZ_ASSERT(activeFunc_ == fg);
 
     auto func = js::MakeUnique<FuncBytes>(Move(fg->bytes_),
@@ -817,14 +813,14 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
     if (!func)
         return false;
 
-    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
-    bool baselineCompile = rt->options().wasmAlwaysBaseline() && BaselineCanCompile(fg);
+    auto mode = alwaysBaseline_ && BaselineCanCompile(fg)
+                ? IonCompileTask::CompileMode::Baseline
+                : IonCompileTask::CompileMode::Ion;
 
-    fg->task_->init(Move(func), baselineCompile ? IonCompileTask::CompileMode::Baseline
-                                                : IonCompileTask::CompileMode::Ion);
+    fg->task_->init(Move(func), mode);
 
     if (parallel_) {
-        if (!StartOffThreadWasmCompile(cx_, fg->task_))
+        if (!StartOffThreadWasmCompile(fg->task_))
             return false;
         outstanding_++;
     } else {
@@ -957,11 +953,11 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
     if (!finishLinkData(code))
         return nullptr;
 
-    return cx_->make_unique<Module>(Move(code),
-                                    Move(linkData_),
-                                    Move(importNames),
-                                    Move(exportMap_),
-                                    Move(dataSegments_),
-                                    *metadata_,
-                                    bytecode);
+    return js::MakeUnique<Module>(Move(code),
+                                  Move(linkData_),
+                                  Move(importNames),
+                                  Move(exportMap_),
+                                  Move(dataSegments_),
+                                  *metadata_,
+                                  bytecode);
 }
