@@ -95,7 +95,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef HashMap<uint32_t, uint32_t> FuncIndexMap;
 
     ExclusiveContext*               cx_;
-    jit::JitContext                 jcx_;
 
     // Data that is moved into the result of finish()
     LinkData                        linkData_;
@@ -107,7 +106,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueModuleGeneratorData       shared_;
     uint32_t                        numSigs_;
     LifoAlloc                       lifo_;
-    jit::TempAllocator              alloc_;
+    jit::JitContext                 jcx_;
+    jit::TempAllocator              masmAlloc_;
     jit::MacroAssembler             masm_;
     Uint32Vector                    funcIndexToCodeRange_;
     FuncIndexMap                    funcIndexToExport_;

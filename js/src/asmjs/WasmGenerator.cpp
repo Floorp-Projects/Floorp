@@ -42,11 +42,10 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 
 ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
   : cx_(cx),
-    jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
     numSigs_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
-    alloc_(&lifo_),
-    masm_(MacroAssembler::AsmJSToken(), alloc_),
+    masmAlloc_(&lifo_),
+    masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
     funcIndexToExport_(cx),
     lastPatchedCallsite_(0),
     startOfUnpatchedBranches_(0),

@@ -51,6 +51,7 @@ class JitContext
     JitContext(CompileRuntime* rt, TempAllocator* temp);
     explicit JitContext(CompileRuntime* rt);
     explicit JitContext(TempAllocator* temp);
+    JitContext();
     ~JitContext();
 
     // Running context when executing on the main thread. Not available during
