@@ -242,13 +242,14 @@ function checkPayloadInfo(data) {
   Assert.ok(data.timezoneOffset <= 12*60, "The timezone must be in a valid range.");
 }
 
-function checkScalars(payload) {
+function checkScalars(processes) {
   // Check that the scalars section is available in the ping payload.
-  Assert.ok("scalars" in payload, "The scalars section must be available in the payload.");
-  Assert.equal(typeof payload.scalars, "object", "The scalars entry must be an object.");
+  const parentProcess = processes.parent;
+  Assert.ok("scalars" in parentProcess, "The scalars section must be available in the parent process.");
+  Assert.equal(typeof parentProcess.scalars, "object", "The scalars entry must be an object.");
 
   // Check that we have valid scalar entries.
-  const scalars = payload.scalars;
+  const scalars = parentProcess.scalars;
   for (let name in scalars) {
     Assert.equal(typeof name, "string", "Scalar names must be strings.");
     // Check if the value is of a supported type.
@@ -403,7 +404,9 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   };
   Assert.deepEqual(expected_keyed_count, keyedHistograms[TELEMETRY_TEST_KEYED_COUNT]);
 
-  checkScalars(payload);
+  Assert.ok("processes" in payload, "The payload must have a processes section.");
+  Assert.ok("parent" in payload.processes, "There must be at least a parent process.");
+  checkScalars(payload.processes);
 }
 
 function writeStringToFile(file, contents) {
@@ -608,25 +611,25 @@ add_task(function* test_checkSubsessionScalars() {
   const TEST_SCALARS = [ UINT_SCALAR, STRING_SCALAR ];
   for (let name of TEST_SCALARS) {
     // Scalar must be reported in subsession pings (e.g. main).
-    Assert.ok(name in subsession.scalars,
+    Assert.ok(name in subsession.processes.parent.scalars,
               name + " must be reported in a subsession ping.");
   }
   // No scalar must be reported in classic pings (e.g. saved-session).
-  Assert.ok(Object.keys(classic.scalars).length == 0,
+  Assert.ok(Object.keys(classic.processes.parent.scalars).length == 0,
             "Scalars must not be reported in a classic ping.");
 
   // And make sure that we're getting the right values in the
   // subsession ping.
-  Assert.equal(subsession.scalars[UINT_SCALAR], expectedUint,
+  Assert.equal(subsession.processes.parent.scalars[UINT_SCALAR], expectedUint,
                UINT_SCALAR + " must contain the expected value.");
-  Assert.equal(subsession.scalars[STRING_SCALAR], expectedString,
+  Assert.equal(subsession.processes.parent.scalars[STRING_SCALAR], expectedString,
                STRING_SCALAR + " must contain the expected value.");
 
   // Since we cleared the subsession in the last getPayload(), check that
   // breaking subsessions clears the scalars.
   subsession = TelemetrySession.getPayload("environment-change");
   for (let name of TEST_SCALARS) {
-    Assert.ok(!(name in subsession.scalars),
+    Assert.ok(!(name in subsession.processes.parent.scalars),
               name + " must be cleared with the new subsession.");
   }
 
@@ -636,9 +639,9 @@ add_task(function* test_checkSubsessionScalars() {
   Telemetry.scalarSet(UINT_SCALAR, expectedUint);
   Telemetry.scalarSet(STRING_SCALAR, expectedString);
   subsession = TelemetrySession.getPayload("environment-change");
-  Assert.equal(subsession.scalars[UINT_SCALAR], expectedUint,
+  Assert.equal(subsession.processes.parent.scalars[UINT_SCALAR], expectedUint,
                UINT_SCALAR + " must contain the expected value.");
-  Assert.equal(subsession.scalars[STRING_SCALAR], expectedString,
+  Assert.equal(subsession.processes.parent.scalars[STRING_SCALAR], expectedString,
                STRING_SCALAR + " must contain the expected value.");
 });
 
