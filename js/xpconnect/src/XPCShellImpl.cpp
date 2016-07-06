@@ -429,11 +429,9 @@ static bool
 GC(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSRuntime* rt = JS_GetRuntime(cx);
-    JS_GC(rt);
-#ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
-#endif
+
+    JS_GC(cx);
+
     args.rval().setUndefined();
     return true;
 }
@@ -1583,9 +1581,9 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             JS_DropPrincipals(cx, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);
             JS_SetAllNonReservedSlotsToUndefined(cx, JS_GlobalLexicalScope(glob));
-            JS_GC(rt);
+            JS_GC(cx);
         }
-        JS_GC(rt);
+        JS_GC(cx);
     } // this scopes the nsCOMPtrs
 
     if (!XRE_ShutdownTestShell())

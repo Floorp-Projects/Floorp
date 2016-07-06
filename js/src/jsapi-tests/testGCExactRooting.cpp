@@ -20,7 +20,7 @@ BEGIN_TEST(testGCExactRooting)
     JS::RootedObject rootCx(cx, JS_NewPlainObject(cx));
     JS::RootedObject rootRt(cx->runtime(), JS_NewPlainObject(cx));
 
-    JS_GC(cx->runtime());
+    JS_GC(cx);
 
     /* Use the objects we just created to ensure that they are still alive. */
     JS_DefineProperty(cx, rootCx, "foo", JS::UndefinedHandleValue, 0);
@@ -79,8 +79,8 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
     container.obj() = JS_NewObject(cx, nullptr);
     container.str() = JS_NewStringCopyZ(cx, "Hello");
 
-    JS_GC(cx->runtime());
-    JS_GC(cx->runtime());
+    JS_GC(cx);
+    JS_GC(cx);
 
     JS::RootedObject obj(cx, container.obj());
     JS::RootedValue val(cx, StringValue(container.str()));
@@ -107,8 +107,8 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
         obj = nullptr;
         actual = nullptr;
 
-        JS_GC(cx->runtime());
-        JS_GC(cx->runtime());
+        JS_GC(cx);
+        JS_GC(cx);
 
         obj = heap.obj();
         CHECK(JS_GetProperty(cx, obj, "foo", &val));
@@ -172,8 +172,8 @@ BEGIN_TEST(testGCRootedHashMap)
         CHECK(map.putNew(obj->as<NativeObject>().lastProperty(), obj));
     }
 
-    JS_GC(rt);
-    JS_GC(rt);
+    JS_GC(cx);
+    JS_GC(cx);
 
     for (auto r = map.all(); !r.empty(); r.popFront()) {
         RootedObject obj(cx, r.front().value());
@@ -222,8 +222,8 @@ BEGIN_TEST(testGCHandleHashMap)
 
     CHECK(FillMyHashMap(cx, &map));
 
-    JS_GC(rt);
-    JS_GC(rt);
+    JS_GC(cx);
+    JS_GC(cx);
 
     CHECK(CheckMyHashMap(cx, map));
 
@@ -249,8 +249,8 @@ BEGIN_TEST(testGCRootedVector)
         CHECK(shapes.append(obj->as<NativeObject>().lastProperty()));
     }
 
-    JS_GC(rt);
-    JS_GC(rt);
+    JS_GC(cx);
+    JS_GC(cx);
 
     for (size_t i = 0; i < 10; ++i) {
         // Check the shape to ensure it did not get collected.
@@ -327,8 +327,8 @@ BEGIN_TEST(testTraceableFifo)
 
     CHECK(shapes.length() == 10);
 
-    JS_GC(rt);
-    JS_GC(rt);
+    JS_GC(cx);
+    JS_GC(cx);
 
     for (size_t i = 0; i < 10; ++i) {
         // Check the shape to ensure it did not get collected.
@@ -404,8 +404,8 @@ BEGIN_TEST(testGCHandleVector)
 
     CHECK(FillVector(cx, &vec));
 
-    JS_GC(rt);
-    JS_GC(rt);
+    JS_GC(cx);
+    JS_GC(cx);
 
     CHECK(CheckVector(cx, vec));
 
