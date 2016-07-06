@@ -98,6 +98,25 @@ add_task(function* register_404() {
 
   yield wait_for_expected_message(expectedMessage);
 });
+
+/**
+ * Ensure an error is logged when the service worker is being served with a
+ * MIME type of text/plain rather than a JS type.
+ */
+add_task(function* register_bad_mime_type() {
+  let expectedMessage = expect_console_message(
+    "ServiceWorkerRegisterMimeTypeError",
+    [make_absolute_url("bad_mime_type/"), "text/plain",
+     make_absolute_url("sw_bad_mime_type.js")]);
+
+  // consume the expected rejection so it doesn't get thrown at us.
+  yield navigator.serviceWorker.register("sw_bad_mime_type.js", { scope: "bad_mime_type/" })
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "SecurityError", "bad MIME type failed as expected"); });
+
+  yield wait_for_expected_message(expectedMessage);
+});
 </script>
 
 </body>
