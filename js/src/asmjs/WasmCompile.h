@@ -36,6 +36,7 @@ struct CompileArgs
     bool alwaysBaseline;
 
     CompileArgs() : alwaysBaseline(false) {}
+    bool init(ExclusiveContext* cx);
 };
 
 UniqueModule
