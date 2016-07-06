@@ -1631,6 +1631,8 @@ private:
 
   // True if media element is audible for users.
   bool mAudible;
+
+  nsAutoCString mMimeType;
 };
 
 } // namespace dom
