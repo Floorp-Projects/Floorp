@@ -1,8 +1,8 @@
 <Application>
   <VisualElements
       DisplayName='Nightly'
-      Logo='VisualElements\VisualElements_150.png'
-      SmallLogo='VisualElements\VisualElements_70.png'
+      Logo='browser\VisualElements\VisualElements_150.png'
+      SmallLogo='browser\VisualElements\VisualElements_70.png'
       ForegroundText='light'
       BackgroundColor='#14171a'>
     <DefaultTile ShowName='allLogos'/>
