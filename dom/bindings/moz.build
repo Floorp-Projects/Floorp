@@ -74,7 +74,6 @@ LOCAL_INCLUDES += [
     '/dom/xul',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
-    '/layout/generic',
     '/layout/style',
     '/layout/xul/tree',
     '/media/mtransport',
