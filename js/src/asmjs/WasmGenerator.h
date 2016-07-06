@@ -20,6 +20,7 @@
 #define wasm_generator_h
 
 #include "asmjs/WasmBinary.h"
+#include "asmjs/WasmCompile.h"
 #include "asmjs/WasmModule.h"
 #include "jit/MacroAssembler.h"
 
@@ -92,9 +93,12 @@ typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
 
 class MOZ_STACK_CLASS ModuleGenerator
 {
-    typedef HashMap<uint32_t, uint32_t> FuncIndexMap;
+    typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> FuncIndexMap;
+    typedef Vector<IonCompileTask, 0, SystemAllocPolicy> IonCompileTaskVector;
+    typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskPtrVector;
 
-    ExclusiveContext*               cx_;
+    // Constant parameters
+    bool                            alwaysBaseline_;
 
     // Data that is moved into the result of finish()
     LinkData                        linkData_;
@@ -118,8 +122,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Parallel compilation
     bool                            parallel_;
     uint32_t                        outstanding_;
-    Vector<IonCompileTask>          tasks_;
-    Vector<IonCompileTask*>         freeTasks_;
+    IonCompileTaskVector            tasks_;
+    IonCompileTaskPtrVector         freeTasks_;
 
     // Assertions
     DebugOnly<FunctionGenerator*>   activeFunc_;
@@ -137,13 +141,11 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
 
   public:
-    explicit ModuleGenerator(ExclusiveContext* cx);
+    explicit ModuleGenerator();
     ~ModuleGenerator();
 
-    MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared,
-                           UniqueChars filename,
-                           Assumptions&& assumptions,
-                           Metadata* maybeMetadata = nullptr);
+    MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared, CompileArgs&& args,
+                           Metadata* maybeAsmJSMetadata = nullptr);
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
     SignalUsage usesSignal() const { return metadata_->assumptions.usesSignal; }

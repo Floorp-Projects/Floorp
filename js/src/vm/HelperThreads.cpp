@@ -81,7 +81,7 @@ js::SetFakeCPUCount(size_t count)
 }
 
 bool
-js::StartOffThreadWasmCompile(ExclusiveContext* cx, wasm::IonCompileTask* task)
+js::StartOffThreadWasmCompile(wasm::IonCompileTask* task)
 {
     AutoLockHelperThreadState lock;
 
@@ -1352,10 +1352,6 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
     wasm::IonCompileTask* task = wasmTask();
     {
         AutoUnlockHelperThreadState unlock(locked);
-
-        TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-        AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
         success = wasm::CompileFunction(task);
     }
 

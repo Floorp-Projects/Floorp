@@ -1661,7 +1661,6 @@ class MOZ_STACK_CLASS ModuleValidator
         importMap_(cx),
         arrayViews_(cx),
         atomicsPresent_(false),
-        mg_(cx),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false)
@@ -1754,11 +1753,11 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!dummyFunction_)
             return false;
 
-        Assumptions assumptions;
-        if (!assumptions.init(SignalUsage(cx_), cx_->buildIdOp()))
+        CompileArgs args;
+        if (!args.assumptions.init(SignalUsage(cx_), cx_->buildIdOp()))
             return false;
 
-        auto genData = MakeUnique<ModuleGeneratorData>(assumptions.usesSignal, ModuleKind::AsmJS);
+        auto genData = MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal, ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
@@ -1768,14 +1767,13 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         }
 
-        CacheableChars filename;
         if (parser_.ss->filename()) {
-            filename = DuplicateString(parser_.ss->filename());
-            if (!filename)
+            args.filename = DuplicateString(parser_.ss->filename());
+            if (!args.filename)
                 return false;
         }
 
-        if (!mg_.init(Move(genData), Move(filename), Move(assumptions), asmJSMetadata_.get()))
+        if (!mg_.init(Move(genData), Move(args), asmJSMetadata_.get()))
             return false;
 
         mg_.bumpMinHeapLength(asmJSMetadata_->minHeapLength);

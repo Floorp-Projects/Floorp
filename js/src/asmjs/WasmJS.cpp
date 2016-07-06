@@ -122,19 +122,18 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength()))
         return false;
 
-    UniqueChars filename;
+    CompileArgs compileArgs;
+    if (!compileArgs.assumptions.init(SignalUsage(cx), cx->buildIdOp()))
+        return true;
+
     JS::AutoFilename af;
     if (DescribeScriptedCaller(cx, &af)) {
-        filename = DuplicateString(cx, af.get());
-        if (!filename)
+        compileArgs.filename = DuplicateString(cx, af.get());
+        if (!compileArgs.filename)
             return false;
     }
 
-    Assumptions assumptions;
-    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp()))
-        return true;
-
-    UniqueModule module = Compile(cx, Move(filename), Move(assumptions), Move(bytecode));
+    UniqueModule module = Compile(cx, Move(bytecode), Move(compileArgs));
     if (!module)
         return false;
 
@@ -315,22 +314,21 @@ ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    UniqueChars filename;
+    CompileArgs compileArgs;
+    if (!compileArgs.assumptions.init(SignalUsage(cx), cx->buildIdOp()))
+        return true;
+
     JS::AutoFilename af;
     if (DescribeScriptedCaller(cx, &af)) {
-        filename = DuplicateString(cx, af.get());
-        if (!filename)
+        compileArgs.filename = DuplicateString(cx, af.get());
+        if (!compileArgs.filename)
             return false;
     }
-
-    Assumptions assumptions;
-    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp()))
-        return true;
 
     if (!CheckCompilerSupport(cx))
         return false;
 
-    UniqueModule module = Compile(cx, Move(filename), Move(assumptions), Move(bytecode));
+    UniqueModule module = Compile(cx, Move(bytecode), Move(compileArgs));
     if (!module)
         return false;
 
