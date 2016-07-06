@@ -9969,11 +9969,10 @@
   },
   "XHR_IN_WORKER": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "55",
     "kind": "count",
     "bug_numbers": [1280229],
-    "description": "Number of the use of XHR in workers.",
-    "releaseChannelCollection": "opt-out"
+    "description": "Number of the use of XHR in workers."
   },
   "BLINK_FILESYSTEM_USED": {
     "alert_emails": ["amarchesini@mozilla.com"],
