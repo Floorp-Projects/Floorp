@@ -112,7 +112,8 @@ ParallelCompilationEnabled(ExclusiveContext* cx)
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Metadata* maybeMetadata)
+ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Assumptions&& assumptions,
+                      Metadata* maybeMetadata)
 {
     if (!funcIndexToExport_.init())
         return false;
@@ -129,9 +130,9 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Metada
     }
 
     metadata_->kind = shared->kind;
-    metadata_->usesSignal = shared->usesSignal;
     metadata_->heapUsage = HeapUsage::None;
     metadata_->filename = Move(file);
+    metadata_->assumptions = Move(assumptions);
 
     shared_ = Move(shared);
 

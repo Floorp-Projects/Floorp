@@ -77,8 +77,8 @@ struct ModuleGeneratorData
         return funcSigs[funcIndex] - sigs.begin();
     }
 
-    explicit ModuleGeneratorData(ExclusiveContext* cx, ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind), usesSignal(cx), minHeapLength(0)
+    explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
+      : kind(kind), usesSignal(usesSignal), minHeapLength(0)
     {}
 };
 
@@ -142,10 +142,11 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared,
                            UniqueChars filename,
+                           Assumptions&& assumptions,
                            Metadata* maybeMetadata = nullptr);
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
-    SignalUsage usesSignal() const { return metadata_->usesSignal; }
+    SignalUsage usesSignal() const { return metadata_->assumptions.usesSignal; }
     jit::MacroAssembler& masm() { return masm_; }
 
     // Heap usage:

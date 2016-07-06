@@ -1754,7 +1754,11 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!dummyFunction_)
             return false;
 
-        UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(cx_, ModuleKind::AsmJS);
+        Assumptions assumptions;
+        if (!assumptions.init(SignalUsage(cx_), cx_->buildIdOp()))
+            return false;
+
+        auto genData = MakeUnique<ModuleGeneratorData>(assumptions.usesSignal, ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
@@ -1771,7 +1775,7 @@ class MOZ_STACK_CLASS ModuleValidator
                 return false;
         }
 
-        if (!mg_.init(Move(genData), Move(filename), asmJSMetadata_.get()))
+        if (!mg_.init(Move(genData), Move(filename), Move(assumptions), asmJSMetadata_.get()))
             return false;
 
         mg_.bumpMinHeapLength(asmJSMetadata_->minHeapLength);
@@ -7797,7 +7801,7 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
 
     if (buffer->is<ArrayBufferObject>()) {
         Rooted<ArrayBufferObject*> abheap(cx, &buffer->as<ArrayBufferObject>());
-        bool useSignalHandlers = metadata.usesSignal.forOOB;
+        bool useSignalHandlers = metadata.assumptions.usesSignal.forOOB;
         if (!ArrayBufferObject::prepareForAsmJS(cx, abheap, useSignalHandlers))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     }
@@ -8167,7 +8171,7 @@ class ModuleCharsForStore : ModuleChars
         // An unnamed function expression captures the same thing, sans 'f'.
         // Since asm.js modules do not contain any free variables, equality of
         // [beginOffset, endOffset) is sufficient to guarantee identical code
-        // generation, modulo MachineId.
+        // generation, modulo Assumptions.
         //
         // For functions created with 'new Function', function arguments are
         // not present in the source so we must manually explicitly serialize
@@ -8307,16 +8311,11 @@ struct ScopedCacheEntryOpenedForRead
 static JS::AsmJSCacheResult
 StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* cx)
 {
-    MachineId machineId;
-    if (!machineId.extractCurrentState(cx))
-        return JS::AsmJSCache_InternalError;
-
     ModuleCharsForStore moduleChars;
     if (!moduleChars.init(parser))
         return JS::AsmJSCache_InternalError;
 
-    size_t serializedSize = machineId.serializedSize() +
-                            moduleChars.serializedSize() +
+    size_t serializedSize = moduleChars.serializedSize() +
                             module.serializedSize();
 
     JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
@@ -8334,7 +8333,6 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
         return openResult;
 
     uint8_t* cursor = entry.memory;
-    cursor = machineId.serialize(cursor);
     cursor = moduleChars.serialize(cursor);
     cursor = module.serialize(cursor);
 
@@ -8350,10 +8348,6 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
 
     *loadedFromCache = false;
 
-    MachineId machineId;
-    if (!machineId.extractCurrentState(cx))
-        return true;
-
     JS::OpenAsmJSCacheEntryForReadOp open = cx->asmJSCacheOps().openEntryForRead;
     if (!open)
         return true;
@@ -8366,13 +8360,6 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
         return true;
 
     const uint8_t* cursor = entry.memory;
-
-    MachineId cachedMachineId;
-    cursor = cachedMachineId.deserialize(cursor);
-    if (!cursor)
-        return false;
-    if (machineId != cachedMachineId)
-        return true;
 
     ModuleCharsForLookup moduleChars;
     cursor = moduleChars.deserialize(cursor);
@@ -8400,7 +8387,11 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     if (!atEnd)
         return true;
 
-    if (asmJSMetadata->usesSignal != SignalUsage(cx))
+    Assumptions assumptions;
+    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp()))
+        return true;
+
+    if (assumptions != (*module)->metadata().assumptions)
         return true;
 
     if (!parser.tokenStream.advance(asmJSMetadata->srcEndBeforeCurly()))

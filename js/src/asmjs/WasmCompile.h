@@ -21,6 +21,7 @@
 
 #include "asmjs/WasmBinary.h"
 #include "asmjs/WasmJS.h"
+#include "asmjs/WasmTypes.h"
 
 namespace js {
 namespace wasm {
@@ -29,7 +30,7 @@ namespace wasm {
 // wasm::Module.
 
 UniqueModule
-Compile(JSContext* cx, UniqueChars filename, Bytes&& code);
+Compile(JSContext* cx, UniqueChars filename, Assumptions&& assumptions, Bytes&& code);
 
 }  // namespace wasm
 }  // namespace js

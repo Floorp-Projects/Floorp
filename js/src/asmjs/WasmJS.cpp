@@ -130,7 +130,11 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
             return false;
     }
 
-    UniqueModule module = Compile(cx, Move(filename), Move(bytecode));
+    Assumptions assumptions;
+    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp()))
+        return true;
+
+    UniqueModule module = Compile(cx, Move(filename), Move(assumptions), Move(bytecode));
     if (!module)
         return false;
 
@@ -319,10 +323,14 @@ ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
+    Assumptions assumptions;
+    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp()))
+        return true;
+
     if (!CheckCompilerSupport(cx))
         return false;
 
-    UniqueModule module = Compile(cx, Move(filename), Move(bytecode));
+    UniqueModule module = Compile(cx, Move(filename), Move(assumptions), Move(bytecode));
     if (!module)
         return false;
 

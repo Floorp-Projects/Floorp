@@ -412,7 +412,6 @@ typedef Vector<char16_t, 64> TwoByteName;
 struct MetadataCacheablePod
 {
     ModuleKind            kind;
-    SignalUsage           usesSignal;
     HeapUsage             heapUsage;
     uint32_t              initialHeapLength;
 
@@ -435,6 +434,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     CallThunkVector       callThunks;
     NameInBytecodeVector  funcNames;
     CacheableChars        filename;
+    Assumptions           assumptions;
 
     bool usesHeap() const { return UsesHeap(heapUsage); }
     bool hasSharedHeap() const { return heapUsage == HeapUsage::Shared; }
