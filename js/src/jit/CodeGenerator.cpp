@@ -5155,6 +5155,7 @@ CodeGenerator::generateBody()
             }
 
 #ifdef DEBUG
+            setElement(*iter); // needed to encode correct snapshot location.
             emitDebugForceBailing(*iter);
 #endif
 
