@@ -348,11 +348,13 @@ InitFormatInfo()
 #define SET_BY_SUFFIX(X) \
         SET_COPY_DECAY(   R##X, R##X,   MAX,    MAX,     MAX, Luminance##X,      MAX,                    MAX) \
         SET_COPY_DECAY(  RG##X, R##X, RG##X,    MAX,     MAX, Luminance##X,      MAX,                    MAX) \
+        SET_COPY_DECAY( RGB##X, R##X, RG##X, RGB##X,     MAX, Luminance##X,      MAX,                    MAX) \
         SET_COPY_DECAY(RGBA##X, R##X, RG##X, RGB##X, RGBA##X, Luminance##X, Alpha##X, Luminance##X##Alpha##X)
 
-    SET_BY_SUFFIX(8)
-    SET_BY_SUFFIX(16F)
-    SET_BY_SUFFIX(32F)
+    SET_BY_SUFFIX(8)   // WebGL decided that RGB8 should be guaranteed renderable.
+    SET_BY_SUFFIX(16F) // RGB16F is renderable in EXT_color_buffer_half_float, though not
+                       // EXT_color_buffer_float.
+    SET_BY_SUFFIX(32F) // Technically RGB32F is never renderable, but no harm here.
 
 #undef SET_BY_SUFFIX
 
@@ -376,7 +378,6 @@ InitFormatInfo()
 
     //////
 
-    SET_COPY_DECAY(      RGB8, R8, RG8,   RGB8,      MAX, Luminance8,    MAX,              MAX)
     SET_COPY_DECAY(    RGB565, R8, RG8, RGB565,      MAX, Luminance8,    MAX,              MAX)
     SET_COPY_DECAY(     RGBA4, R8, RG8, RGB565,    RGBA4, Luminance8, Alpha8, Luminance8Alpha8)
     SET_COPY_DECAY(   RGB5_A1, R8, RG8, RGB565,  RGB5_A1, Luminance8, Alpha8, Luminance8Alpha8)
@@ -641,7 +642,7 @@ FormatUsageInfo::SetRenderable()
     if (format->isColorFormat) {
         const auto& map = format->copyDecayFormats;
         const auto itr = map.find(format->unsizedFormat);
-        MOZ_ASSERT(itr != map.end());
+        MOZ_ASSERT(itr != map.end(), "Renderable formats must be in copyDecayFormats.");
         MOZ_ASSERT(itr->second == format);
     }
 #endif
