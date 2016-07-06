@@ -261,6 +261,7 @@ install nodejs
 install npm
 
 # enough X to run `make check` and do a PGO build
+install screen
 install Xvfb
 install xvinfo
 
