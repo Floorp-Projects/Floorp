@@ -19,10 +19,8 @@ tasks:
         - index.gecko.v2.{{project}}.latest.firefox.decision
         - tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
         - tc-treeherder-stage.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
-      created:
-        relative-datestamp: "0 seconds"
-      deadline:
-        relative-datestamp: "1 day"
+      created: '{{now}}'
+      deadline: '{{#from_now}}1 day{{/from_now}}'
       metadata:
         owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
@@ -92,8 +90,7 @@ tasks:
             # Arbitrary value for keeping these artifacts around.  They are just the
             # graph.json and context directories for now, so nothing that needs
             # to stay around for long.
-            expires:
-              relative-datestamp: "7 days"
+            expires: '{{#from_now}}7 days{{/from_now}}'
       extra:
         treeherder:
           symbol: D

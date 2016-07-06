@@ -8,8 +8,7 @@ task:
       -
         type: 'directory'
         path: 'public\build'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
   extra:
     treeherderEnv:
       - production

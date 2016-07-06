@@ -3,10 +3,8 @@
 taskId: {{build_slugid}}
 docker-image: builder
 task:
-  created:
-    relative-datestamp: '0 seconds'
-  deadline:
-    relative-datestamp: '24 hours'
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
     source: '{{source}}'
     owner: apoirot@mozilla.com
@@ -47,8 +45,7 @@ task:
       'public/build':
         type: directory
         path: '/home/worker/artifacts/'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
 
     env:
       GECKO_BASE_REPOSITORY: '{{base_repository}}'
