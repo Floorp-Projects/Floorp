@@ -793,7 +793,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     return nullptr;
   }
 
-  JS_SetInterruptCallback(aRuntime, InterruptCallback);
+  JS_SetInterruptCallback(workerCx, InterruptCallback);
 
   js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
 
