@@ -40,7 +40,7 @@ HTMLEditorEventListener::Connect(nsEditor* aEditor)
     do_QueryObject(aEditor);
   NS_PRECONDITION(htmlEditor && htmlInlineTableEditor,
                   "Set nsHTMLEditor or its sub class");
-  return nsEditorEventListener::Connect(aEditor);
+  return EditorEventListener::Connect(aEditor);
 }
 #endif
 
@@ -67,7 +67,7 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
   aMouseEvent->GetClientY(&clientY);
   htmlEditor->MouseUp(clientX, clientY, element);
 
-  return nsEditorEventListener::MouseUp(aMouseEvent);
+  return EditorEventListener::MouseUp(aMouseEvent);
 }
 
 nsresult
@@ -81,7 +81,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
     // is fired outside of the active editing host), we need to commit
     // composition because it will be change the selection to the clicked
     // point.  Then, we won't be able to commit the composition.
-    return nsEditorEventListener::MouseDown(aMouseEvent);
+    return EditorEventListener::MouseDown(aMouseEvent);
   }
 
   // Detect only "context menu" click
@@ -197,7 +197,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
     htmlEditor->MouseDown(clientX, clientY, element, aMouseEvent->AsEvent());
   }
 
-  return nsEditorEventListener::MouseDown(aMouseEvent);
+  return EditorEventListener::MouseDown(aMouseEvent);
 }
 
 nsresult
@@ -211,7 +211,7 @@ HTMLEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 
   GetHTMLEditor()->DoInlineTableEditingAction(element);
 
-  return nsEditorEventListener::MouseClick(aMouseEvent);
+  return EditorEventListener::MouseClick(aMouseEvent);
 }
 
 } // namespace mozilla

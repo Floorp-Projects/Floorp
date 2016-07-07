@@ -6,7 +6,7 @@
 #ifndef HTMLEditorEventListener_h
 #define HTMLEditorEventListener_h
 
-#include "nsEditorEventListener.h"
+#include "EditorEventListener.h"
 #include "nscore.h"
 
 class nsEditor;
@@ -14,7 +14,7 @@ class nsHTMLEditor;
 
 namespace mozilla {
 
-class HTMLEditorEventListener final : public nsEditorEventListener
+class HTMLEditorEventListener final : public EditorEventListener
 {
 public:
   HTMLEditorEventListener()

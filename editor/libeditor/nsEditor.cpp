@@ -17,6 +17,7 @@
 #include "DeleteRangeTransaction.h"     // for DeleteRangeTransaction
 #include "DeleteTextTransaction.h"      // for DeleteTextTransaction
 #include "EditAggregateTransaction.h"   // for EditAggregateTransaction
+#include "EditorEventListener.h"        // for EditorEventListener
 #include "EditorUtils.h"                // for AutoRules, etc
 #include "EditTransactionBase.h"        // for EditTransactionBase
 #include "InsertNodeTransaction.h"      // for InsertNodeTransaction
@@ -49,7 +50,6 @@
 #include "nsContentUtils.h"             // for nsContentUtils
 #include "nsDOMString.h"                // for DOMStringIsNull
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsEditorEventListener.h"      // for nsEditorEventListener
 #include "nsError.h"                    // for NS_OK, etc
 #include "nsFocusManager.h"             // for nsFocusManager
 #include "nsFrameSelection.h"           // for nsFrameSelection
@@ -318,8 +318,8 @@ nsEditor::PostCreate()
     // If the text control gets reframed during focus, Focus() would not be
     // called, so take a chance here to see if we need to spell check the text
     // control.
-    nsEditorEventListener* listener =
-      reinterpret_cast<nsEditorEventListener*> (mEventListener.get());
+    EditorEventListener* listener =
+      reinterpret_cast<EditorEventListener*>(mEventListener.get());
     listener->SpellCheckIfNeeded();
 
     IMEState newState;
@@ -341,7 +341,7 @@ nsEditor::CreateEventListeners()
 {
   // Don't create the handler twice
   if (!mEventListener) {
-    mEventListener = new nsEditorEventListener();
+    mEventListener = new EditorEventListener();
   }
 }
 
@@ -357,8 +357,8 @@ nsEditor::InstallEventListeners()
   mEventTarget = do_QueryInterface(rootContent->GetParent());
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_AVAILABLE);
 
-  nsEditorEventListener* listener =
-    reinterpret_cast<nsEditorEventListener*>(mEventListener.get());
+  EditorEventListener* listener =
+    reinterpret_cast<EditorEventListener*>(mEventListener.get());
   nsresult rv = listener->Connect(this);
   if (mComposition) {
     // Restart to handle composition with new editor contents.
@@ -373,7 +373,7 @@ nsEditor::RemoveEventListeners()
   if (!mDocWeak || !mEventListener) {
     return;
   }
-  reinterpret_cast<nsEditorEventListener*>(mEventListener.get())->Disconnect();
+  reinterpret_cast<EditorEventListener*>(mEventListener.get())->Disconnect();
   if (mComposition) {
     // Even if this is called, don't release mComposition because this is
     // may be reused after reframing.
