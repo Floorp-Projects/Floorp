@@ -578,6 +578,11 @@ class Base {
     // node owns exclusively that are not exposed as their own ubi::Nodes.
     // |mallocSizeOf| should be a malloc block sizing function; see
     // |mfbt/MemoryReporting.h|.
+    //
+    // Because we can use |JS::ubi::Node|s backed by a snapshot that was taken
+    // on a 64-bit platform when we are currently on a 32-bit platform, we
+    // cannot rely on |size_t| for node sizes. Instead, |Size| is uint64_t on
+    // all platforms.
     using Size = uint64_t;
     virtual Size size(mozilla::MallocSizeOf mallocSizeof) const { return 1; }
 
