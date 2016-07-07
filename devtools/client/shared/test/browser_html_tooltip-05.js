@@ -32,12 +32,11 @@ const TOOLTIP_WIDTH = 200;
 add_task(function* () {
   // Force the toolbox to be 200px high;
   yield pushPref("devtools.toolbox.footer.height", 200);
-
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
   info("Create HTML tooltip");
-  let tooltip = new HTMLTooltip({doc}, {});
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100%";
   tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
@@ -57,7 +56,7 @@ add_task(function* () {
   yield hideTooltip(tooltip);
 
   info("Try to display the tooltip on top of box1.");
-  yield showTooltip(tooltip, box1, "top");
+  yield showTooltip(tooltip, box1, {position: "top"});
   expectedTooltipGeometry = {position: "bottom", height: 150, width};
   checkTooltipGeometry(tooltip, box1, expectedTooltipGeometry);
   yield hideTooltip(tooltip);
@@ -105,4 +104,6 @@ add_task(function* () {
   yield hideTooltip(tooltip);
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
+
+  tooltip.destroy();
 });

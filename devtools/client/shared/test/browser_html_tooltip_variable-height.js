@@ -29,6 +29,8 @@ const TOOLTIP_HEIGHT = 50;
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
+let useXulWrapper;
+
 add_task(function* () {
   // Force the toolbox to be 400px tall => 50px for each box.
   yield pushPref("devtools.toolbox.footer.height", 400);
@@ -36,7 +38,17 @@ add_task(function* () {
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
-  let tooltip = new HTMLTooltip({doc}, {});
+  info("Run tests for a Tooltip without using a XUL panel");
+  useXulWrapper = false;
+  yield runTests(doc);
+
+  info("Run tests for a Tooltip with a XUL panel");
+  useXulWrapper = true;
+  yield runTests(doc);
+});
+
+function* runTests(doc) {
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
   info("Set tooltip content 50px tall, but request a container 200px tall");
   let tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: " + TOOLTIP_HEIGHT + "px; background: red;";
@@ -71,4 +83,6 @@ add_task(function* () {
   EventUtils.synthesizeMouse(tooltip.container, 100, CONTAINER_HEIGHT + 10,
     {}, doc.defaultView);
   yield onHidden;
-});
+
+  tooltip.destroy();
+}
