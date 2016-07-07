@@ -238,6 +238,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     wrapObjectCallbacks(&DefaultWrapObjectCallbacks),
     preserveWrapperCallback(nullptr),
     jitSupportsFloatingPoint(false),
+    jitSupportsUnalignedAccesses(false),
     jitSupportsSimd(false),
     ionPcScriptCache(nullptr),
     scriptEnvironmentPreparer(nullptr),
@@ -350,6 +351,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 #endif
 
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
+    jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();
     jitSupportsSimd = js::jit::JitSupportsSimd();
 
     signalHandlersInstalled_ = wasm::EnsureSignalHandlersInstalled(this);

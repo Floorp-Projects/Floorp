@@ -32,7 +32,7 @@ BEGIN_TEST(testGCOutOfMemory)
     CHECK(match);
     JS_ClearPendingException(cx);
 
-    JS_GC(rt);
+    JS_GC(cx);
 
     // The above GC should have discarded everything. Verify that we can now
     // allocate half as many objects without OOMing.

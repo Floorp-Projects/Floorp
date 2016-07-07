@@ -42,6 +42,14 @@
     "keyed": true,
     "description": "Reasons why add-on shims were used, keyed by add-on ID."
   },
+  "ADDON_FORBIDDEN_CPOW_USAGE": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Counts the number of times a given add-on used CPOWs when it was marked as e10s compatible.",
+    "bug_numbers": [1214824],
+    "alert_emails": ["wmccloskey@mozilla.com"]
+  },
   "BROWSER_SHIM_USAGE_BLOCKED": {
     "expires_in_version": "never",
     "kind": "count",
@@ -9985,11 +9993,10 @@
   },
   "XHR_IN_WORKER": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "55",
     "kind": "count",
     "bug_numbers": [1280229],
-    "description": "Number of the use of XHR in workers.",
-    "releaseChannelCollection": "opt-out"
+    "description": "Number of the use of XHR in workers."
   },
   "BLINK_FILESYSTEM_USED": {
     "alert_emails": ["amarchesini@mozilla.com"],

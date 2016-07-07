@@ -287,6 +287,7 @@ class Assembler : public vixl::Assembler
     }
 
     static bool SupportsFloatingPoint() { return true; }
+    static bool SupportsUnalignedAccesses() { return true; }
     static bool SupportsSimd() { return js::jit::SupportsSimd; }
 
     // Tracks a jump that is patchable after finalization.

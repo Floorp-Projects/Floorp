@@ -204,12 +204,6 @@ struct ExprIterPolicy
     // Should the iterator produce output values?
     static const bool Output = false;
 
-    // This function is called to report failures.
-    static bool fail(const char*, const Decoder&) {
-        MOZ_CRASH("unexpected validation failure");
-        return false;
-    }
-
     // These members allow clients to add additional information to the value
     // and control stacks, respectively. Using Nothing means that no additional
     // field is added.
@@ -414,8 +408,8 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     }
 
   public:
-    ExprIter(Policy policy, Decoder& decoder)
-      : Policy(policy), d_(decoder)
+    explicit ExprIter(Decoder& decoder)
+      : d_(decoder)
     {
         expr_ = Expr::Limit;
     }
@@ -594,8 +588,9 @@ ExprIter<Policy>::unrecognizedOpcode(Expr expr)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::fail(const char* msg) {
-    return Policy::fail(msg, d_);
+ExprIter<Policy>::fail(const char* msg)
+{
+    return d_.fail(msg);
 }
 
 template <typename Policy>

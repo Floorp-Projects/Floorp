@@ -47,10 +47,11 @@ class CodeSegment
     uint32_t codeLength_;
     uint32_t globalDataLength_;
 
-    // These are pointers into code for two stubs used for asynchronous
+    // These are pointers into code for stubs used for asynchronous
     // signal-handler control-flow transfer.
     uint8_t* interruptCode_;
     uint8_t* outOfBoundsCode_;
+    uint8_t* unalignedAccessCode_;
 
     // The profiling mode may be changed dynamically.
     bool profilingEnabled_;
@@ -68,8 +69,8 @@ class CodeSegment
                                     const Bytes& code,
                                     const LinkData& linkData,
                                     const Metadata& metadata,
-                                    uint8_t* heapBase,
-                                    uint32_t heapLength);
+                                    uint8_t* memoryBase,
+                                    uint32_t memoryLength);
     ~CodeSegment();
 
     uint8_t* code() const { return bytes_; }
@@ -80,6 +81,7 @@ class CodeSegment
 
     uint8_t* interruptCode() const { return interruptCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
+    uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
 
     // The range [0, functionBytes) is a subrange of [0, codeBytes) that
     // contains only function body code, not the stub code. This distinction is
@@ -369,10 +371,10 @@ struct CacheableChars : UniqueChars
 
 typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 
-// A wasm module can either use no heap, a unshared heap (ArrayBuffer) or shared
-// heap (SharedArrayBuffer).
+// A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
+// shared memory (SharedArrayBuffer).
 
-enum class HeapUsage
+enum class MemoryUsage
 {
     None = false,
     Unshared = 1,
@@ -380,9 +382,9 @@ enum class HeapUsage
 };
 
 static inline bool
-UsesHeap(HeapUsage heapUsage)
+UsesMemory(MemoryUsage memoryUsage)
 {
-    return bool(heapUsage);
+    return bool(memoryUsage);
 }
 
 // NameInBytecode represents a name that is embedded in the wasm bytecode.
@@ -410,9 +412,8 @@ typedef Vector<char16_t, 64> TwoByteName;
 struct MetadataCacheablePod
 {
     ModuleKind            kind;
-    HeapUsage             heapUsage;
-    uint32_t              initialHeapLength;
-    CompileArgs           compileArgs;
+    MemoryUsage           memoryUsage;
+    uint32_t              minMemoryLength;
 
     MetadataCacheablePod() { mozilla::PodZero(this); }
 };
@@ -433,9 +434,10 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     CallThunkVector       callThunks;
     NameInBytecodeVector  funcNames;
     CacheableChars        filename;
+    Assumptions           assumptions;
 
-    bool usesHeap() const { return UsesHeap(heapUsage); }
-    bool hasSharedHeap() const { return heapUsage == HeapUsage::Shared; }
+    bool usesMemory() const { return UsesMemory(memoryUsage); }
+    bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
 
     // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
     // encapsulated within AsmJS.cpp, but the additional virtual functions allow

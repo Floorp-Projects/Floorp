@@ -576,6 +576,7 @@ class VFPRegister
 typedef VFPRegister FloatRegister;
 
 uint32_t GetARMFlags();
+bool HasARMv7();
 bool HasMOVWT();
 bool HasLDSTREXBHD();           // {LD,ST}REX{B,H,D}
 bool HasDMBDSBISB();            // DMB, DSB, and ISB

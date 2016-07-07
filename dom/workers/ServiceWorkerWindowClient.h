@@ -46,6 +46,9 @@ public:
   already_AddRefed<Promise>
   Focus(ErrorResult& aRv) const;
 
+  already_AddRefed<Promise>
+  Navigate(const nsAString& aUrl,  ErrorResult& aRv);
+
 private:
   ~ServiceWorkerWindowClient()
   { }

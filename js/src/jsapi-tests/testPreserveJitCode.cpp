@@ -35,8 +35,8 @@ countIonScripts(JSObject* global)
 bool
 testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
 {
-    rt->options().setBaseline(true);
-    rt->options().setIon(true);
+    cx->options().setBaseline(true);
+    cx->options().setIon(true);
     rt->setOffthreadIonCompilationEnabled(false);
 
     RootedObject global(cx, createTestGlobal(preserveJitCode));

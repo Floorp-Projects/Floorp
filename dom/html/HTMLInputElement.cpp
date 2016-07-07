@@ -2253,7 +2253,7 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
     case NS_FORM_INPUT_DATE:
       {
         uint32_t year, month, day;
-        if (!GetValueAsDate(aValue, &year, &month, &day)) {
+        if (!ParseDate(aValue, &year, &month, &day)) {
           return false;
         }
 
@@ -2510,7 +2510,7 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
       uint32_t year, month, day;
       nsAutoString value;
       GetValueInternal(value);
-      if (!GetValueAsDate(value, &year, &month, &day)) {
+      if (!ParseDate(value, &year, &month, &day)) {
         return Nullable<Date>();
       }
 
@@ -5341,6 +5341,13 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
         }
       }
       break;
+    case NS_FORM_INPUT_MONTH:
+      {
+        if (!aValue.IsEmpty() && !IsValidMonth(aValue)) {
+          aValue.Truncate();
+        }
+      }
+      break;
     case NS_FORM_INPUT_COLOR:
       {
         if (IsValidSimpleColor(aValue)) {
@@ -5371,19 +5378,57 @@ bool HTMLInputElement::IsValidSimpleColor(const nsAString& aValue) const
 }
 
 bool
-HTMLInputElement::IsValidDate(const nsAString& aValue) const
+HTMLInputElement::IsValidMonth(const nsAString& aValue) const
 {
-  uint32_t year, month, day;
-  return GetValueAsDate(aValue, &year, &month, &day);
+  uint32_t year, month;
+  return ParseMonth(aValue, &year, &month);
 }
 
 bool
-HTMLInputElement::GetValueAsDate(const nsAString& aValue,
+HTMLInputElement::IsValidDate(const nsAString& aValue) const
+{
+  uint32_t year, month, day;
+  return ParseDate(aValue, &year, &month, &day);
+}
+
+bool HTMLInputElement::ParseYear(const nsAString& aValue, uint32_t* aYear) const
+{
+  if (aValue.Length() < 4) {
+    return false;
+  }
+
+  return DigitSubStringToNumber(aValue, 0, aValue.Length(), aYear) &&
+      *aYear > 0;
+}
+
+bool HTMLInputElement::ParseMonth(const nsAString& aValue,
+                                  uint32_t* aYear,
+                                  uint32_t* aMonth) const
+{
+  // Parse the year, month values out a string formatted as 'yyyy-mm'.
+  if (aValue.Length() < 7) {
+    return false;
+  }
+
+  uint32_t endOfYearOffset = aValue.Length() - 3;
+  if (aValue[endOfYearOffset] != '-') {
+    return false;
+  }
+
+  const nsAString& yearStr = Substring(aValue, 0, endOfYearOffset);
+  if (!ParseYear(yearStr, aYear)) {
+    return false;
+  }
+
+  return DigitSubStringToNumber(aValue, endOfYearOffset + 1, 2, aMonth) &&
+         *aMonth > 0 && *aMonth <= 12;
+}
+
+bool HTMLInputElement::ParseDate(const nsAString& aValue,
                                  uint32_t* aYear,
                                  uint32_t* aMonth,
                                  uint32_t* aDay) const
 {
-
 /*
  * Parse the year, month, day values out a date string formatted as 'yyyy-mm-dd'.
  * -The year must be 4 or more digits long, and year > 0
@@ -5391,29 +5436,21 @@ HTMLInputElement::GetValueAsDate(const nsAString& aValue,
  * -The day must be exactly 2 digit long, and 01 <= day <= maxday
  *  Where maxday is the number of days in the month 'month' and year 'year'
  */
-
   if (aValue.Length() < 10) {
     return false;
   }
 
-  uint32_t endOfYearOffset = aValue.Length() - 6;
-
-  if (aValue[endOfYearOffset]     != '-' ||
-      aValue[endOfYearOffset + 3] != '-') {
+  uint32_t endOfMonthOffset = aValue.Length() - 3;
+  if (aValue[endOfMonthOffset] != '-') {
     return false;
   }
 
-  if (!DigitSubStringToNumber(aValue, 0, endOfYearOffset, aYear) ||
-      *aYear < 1) {
+  const nsAString& yearMonthStr = Substring(aValue, 0, endOfMonthOffset);
+  if (!ParseMonth(yearMonthStr, aYear, aMonth)) {
     return false;
   }
 
-  if (!DigitSubStringToNumber(aValue, endOfYearOffset + 1, 2, aMonth) ||
-      *aMonth < 1 || *aMonth > 12) {
-    return false;
-  }
-
-  return DigitSubStringToNumber(aValue, endOfYearOffset + 4, 2, aDay) &&
+  return DigitSubStringToNumber(aValue, endOfMonthOffset + 1, 2, aDay) &&
          *aDay > 0 && *aDay <= NumberOfDaysInMonth(*aMonth, *aYear);
 }
 

@@ -5,6 +5,7 @@
 #include "TrackEncoder.h"
 #include "AudioChannelFormat.h"
 #include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
 
@@ -39,6 +40,14 @@ TrackEncoder::TrackEncoder()
   , mInitCounter(0)
   , mNotInitDuration(0)
 {
+}
+
+void TrackEncoder::NotifyEvent(MediaStreamGraph* aGraph,
+                 MediaStreamGraphEvent event)
+{
+  if (event == MediaStreamGraphEvent::EVENT_REMOVED) {
+    NotifyEndOfStream();
+  }
 }
 
 void
@@ -91,7 +100,7 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
 
   // The stream has stopped and reached the end of track.
-  if (aTrackEvents == MediaStreamListener::TRACK_EVENT_ENDED) {
+  if (aTrackEvents == TrackEventCommand::TRACK_EVENT_ENDED) {
     LOG("[AudioTrackEncoder]: Receive TRACK_EVENT_ENDED .");
     NotifyEndOfStream();
   }
@@ -232,7 +241,7 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
   AppendVideoSegment(video);
 
   // The stream has stopped and reached the end of track.
-  if (aTrackEvents == MediaStreamListener::TRACK_EVENT_ENDED) {
+  if (aTrackEvents == TrackEventCommand::TRACK_EVENT_ENDED) {
     LOG("[VideoTrackEncoder]: Receive TRACK_EVENT_ENDED .");
     NotifyEndOfStream();
   }

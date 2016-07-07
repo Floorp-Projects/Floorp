@@ -13,10 +13,6 @@
 
 #include <string.h>
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
-
 using namespace mozilla;
 
 // The presence of this address is the stack must stop the stack walk. If

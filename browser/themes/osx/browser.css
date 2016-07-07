@@ -2430,12 +2430,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-align: center;
 }
 
-@media (min-resolution: 1.1dppx) {
-  .tab-throbber[progress] {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-
 @media (-moz-mac-yosemite-theme) {
   /* image preloading hack from shared/tabs.inc.css */
   #tabbrowser-tabs::before {
