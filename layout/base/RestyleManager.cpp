@@ -4677,7 +4677,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
     if (display->mDisplay != aDisplay) {
       NS_ASSERTION(element, "Must have undisplayed content");
       mChangeList->AppendChange(nullptr, element,
-                                NS_STYLE_HINT_FRAMECHANGE);
+                                nsChangeHint_ReconstructFrame);
       // The node should be removed from the undisplayed map when
       // we reframe it.
     } else {
@@ -5172,11 +5172,7 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     hint = 0;
     any = true;
   } else {
-    if ((hint & NS_STYLE_HINT_FRAMECHANGE) == NS_STYLE_HINT_FRAMECHANGE) {
-      result.AppendLiteral("NS_STYLE_HINT_FRAMECHANGE");
-      hint = hint & ~NS_STYLE_HINT_FRAMECHANGE;
-      any = true;
-    } else if ((hint & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW) {
+    if ((hint & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW) {
       result.AppendLiteral("NS_STYLE_HINT_REFLOW");
       hint = hint & ~NS_STYLE_HINT_REFLOW;
       any = true;

@@ -1,0 +1,51 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIURI;
+interface nsIDOMWindow;
+interface nsIMessageSender;
+
+// Implemented by the contract id @mozilla.org/system-message-internal;1
+
+[scriptable, uuid(59b6beda-f911-4d47-a296-8c81e6abcfb9)]
+interface nsISystemMessagesInternal : nsISupports
+{
+  /*
+   * Allow any internal user to send a message of a given type to a given page
+   * of an app. The message will be sent to all the registered pages of the app
+   * when |pageURI| is not specified.
+   * @param type        The type of the message to be sent.
+   * @param message     The message payload.
+   * @param pageURI     The URI of the page that will be opened. Nullable.
+   * @param manifestURI The webapp's manifest URI.
+   * @param extra       Extra opaque information that will be passed around in the observer
+   *                    notification to open the page.
+   * returns a Promise
+   */
+  nsISupports sendMessage(in DOMString type, in jsval message,
+                          in nsIURI pageURI, in nsIURI manifestURI,
+                          [optional] in jsval extra);
+
+  /*
+   * Allow any internal user to broadcast a message of a given type.
+   * The application that registers the message will be launched.
+   * @param type        The type of the message to be sent.
+   * @param message     The message payload.
+   * @param extra       Extra opaque information that will be passed around in the observer
+   *                    notification to open the page.
+   * returns a Promise
+   */
+  nsISupports broadcastMessage(in DOMString type, in jsval message,
+                               [optional] in jsval extra);
+
+  /*
+   * Registration of a page that wants to be notified of a message type.
+   * @param type          The message type.
+   * @param pageURI       The URI of the page that will be opened.
+   * @param manifestURI   The webapp's manifest URI.
+   */
+  void registerPage(in DOMString type, in nsIURI pageURI, in nsIURI manifestURI);
+};

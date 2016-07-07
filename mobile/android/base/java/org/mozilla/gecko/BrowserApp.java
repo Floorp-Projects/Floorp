@@ -201,9 +201,10 @@ public class BrowserApp extends GeckoApp
     private static final int TABS_ANIMATION_DURATION = 450;
 
     // Intent String extras used to specify custom Switchboard configurations.
-    private static final String INTENT_KEY_SWITCHBOARD_HOST = "switchboard-host";
+    private static final String INTENT_KEY_SWITCHBOARD_SERVER = "switchboard-server";
 
-    private static final String DEFAULT_SWITCHBOARD_HOST = "switchboard.services.mozilla.com";
+    // TODO: Replace with kinto endpoint.
+    private static final String SWITCHBOARD_SERVER = "https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records";
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
 
@@ -786,21 +787,8 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        final String hostExtra = IntentUtils.getStringExtraSafe(intent, INTENT_KEY_SWITCHBOARD_HOST);
-        final String host = TextUtils.isEmpty(hostExtra) ? DEFAULT_SWITCHBOARD_HOST : hostExtra;
-
-        final String serverUrl;
-        try {
-            serverUrl = new URL("https", host, "v2").toString();
-        } catch (MalformedURLException e) {
-            Log.e(LOGTAG, "Error creating Switchboard server URL", e);
-            return;
-        }
-
-        // Loads the Switchboard config from the specified server URL. Eventually, we
-        // should use the endpoint returned by the server URL, to support migrating
-        // to a new endpoint. However, if we want to do that, we'll need to find a different
-        // solution for dynamically changing the server URL from the intent.
+        final String serverExtra = IntentUtils.getStringExtraSafe(intent, INTENT_KEY_SWITCHBOARD_SERVER);
+        final String serverUrl = TextUtils.isEmpty(serverExtra) ? SWITCHBOARD_SERVER : serverExtra;
         new AsyncConfigLoader(context, serverUrl).execute();
     }
 

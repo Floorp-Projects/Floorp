@@ -114,6 +114,7 @@ def FennecEmulatorRunner(avd='mozemulator-4.3',
         Defaults to None, which causes the device_class to guess based on PATH.
     :param app: Name of Fennec app (often org.mozilla.fennec_$USER)
         Defaults to 'org.mozilla.fennec'
+    :param cmdargs: Arguments to pass into binary.
     :returns: A DeviceRunner for Android emulators.
     """
     kwargs['app_ctx'] = get_app_context('fennec')(app, adb_path=adb_path,

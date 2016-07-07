@@ -107,9 +107,9 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRTC_HW_ACCELERATION_DECODE = 15;
   /* Whether Canvas acceleration is supported, starting in 45 */
   const long FEATURE_CANVAS2D_ACCELERATION = 16;
-  /* Whether hardware VP8 decoding is supported. */
+  /* Whether hardware VP8 decoding is supported, starting in 48. */
   const long FEATURE_VP8_HW_DECODE = 17;
-  /* Whether hardware VP9 decoding is supported. */
+  /* Whether hardware VP9 decoding is supported, starting in 48. */
   const long FEATURE_VP9_HW_DECODE = 18;
 
   /*
