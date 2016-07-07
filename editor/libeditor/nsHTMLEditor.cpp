@@ -13,9 +13,9 @@
 
 #include "nsUnicharUtils.h"
 
+#include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "nsHTMLEditRules.h"
-#include "nsHTMLEditUtils.h"
 
 #include "nsHTMLEditorEventListener.h"
 #include "TypeInState.h"
@@ -664,12 +664,12 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 
       bool handled = false;
       nsresult rv = NS_OK;
-      if (nsHTMLEditUtils::IsTableElement(blockParent)) {
+      if (HTMLEditUtils::IsTableElement(blockParent)) {
         rv = TabInTable(nativeKeyEvent->IsShift(), &handled);
         if (handled) {
           ScrollSelectionIntoView(false);
         }
-      } else if (nsHTMLEditUtils::IsListItem(blockParent)) {
+      } else if (HTMLEditUtils::IsListItem(blockParent)) {
         rv = Indent(nativeKeyEvent->IsShift()
                     ? NS_LITERAL_STRING("outdent")
                     : NS_LITERAL_STRING("indent"));
@@ -1087,7 +1087,7 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
 
     node = iter->GetCurrentNode();
 
-    if (node && nsHTMLEditUtils::IsTableCell(node) &&
+    if (node && HTMLEditUtils::IsTableCell(node) &&
         GetEnclosingTable(node) == table) {
       CollapseSelectionToDeepestNonTableFirstChild(nullptr, node);
       *outHandled = true;
@@ -1166,7 +1166,7 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(
        child;
        child = child->GetFirstChild()) {
     // Stop if we find a table, don't want to go into nested tables
-    if (nsHTMLEditUtils::IsTable(child) || !IsContainer(child)) {
+    if (HTMLEditUtils::IsTable(child) || !IsContainer(child)) {
       break;
     }
     node = child;
@@ -1535,8 +1535,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
       // Named Anchor is a special case,
       // We collapse to insert element BEFORE the selection
       // For all other tags, we insert AFTER the selection
-      if (nsHTMLEditUtils::IsNamedAnchor(node))
-      {
+      if (HTMLEditUtils::IsNamedAnchor(node)) {
         selection->CollapseToStart();
       } else {
         selection->CollapseToEnd();
@@ -1563,8 +1562,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
         NS_ENSURE_SUCCESS(res, res);
       }
       // check for inserting a whole table at the end of a block. If so insert a br after it.
-      if (nsHTMLEditUtils::IsTable(node))
-      {
+      if (HTMLEditUtils::IsTable(node)) {
         bool isLast;
         res = IsLastEditableChild(node, &isLast);
         NS_ENSURE_SUCCESS(res, res);
@@ -1619,7 +1617,7 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert
     if (parent->IsHTMLElement(nsGkAtoms::body) ||
-        nsHTMLEditUtils::IsTableElement(parent)) {
+        HTMLEditUtils::IsTableElement(parent)) {
       return NS_ERROR_FAILURE;
     }
     // Get the next parent
@@ -2283,18 +2281,18 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
 
   for (; current; current = current->GetParentElement()) {
     // Test if we have a link (an anchor with href set)
-    if ((getLink && nsHTMLEditUtils::IsLink(current)) ||
-        (getNamedAnchor && nsHTMLEditUtils::IsNamedAnchor(current))) {
+    if ((getLink && HTMLEditUtils::IsLink(current)) ||
+        (getNamedAnchor && HTMLEditUtils::IsNamedAnchor(current))) {
       return current.forget();
     }
     if (findList) {
       // Match "ol", "ul", or "dl" for lists
-      if (nsHTMLEditUtils::IsList(current)) {
+      if (HTMLEditUtils::IsList(current)) {
         return current.forget();
       }
     } else if (findTableCell) {
       // Table cells are another special case: match either "td" or "th"
-      if (nsHTMLEditUtils::IsTableCell(current)) {
+      if (HTMLEditUtils::IsTableCell(current)) {
         return current.forget();
       }
     } else if (current->NodeName().Equals(tagName,
@@ -2387,9 +2385,8 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
 
       // Test for appropriate node type requested
       if (anyTag || (TagName == domTagName) ||
-          (isLinkTag && nsHTMLEditUtils::IsLink(selectedNode)) ||
-          (isNamedAnchorTag && nsHTMLEditUtils::IsNamedAnchor(selectedNode)))
-      {
+          (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
+          (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
         bNodeFound = true;
         selectedElement = do_QueryInterface(selectedNode);
       }
@@ -2449,7 +2446,7 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
         {
           nsCOMPtr<nsIDOMNode> anchorChild;
           anchorChild = GetChildAt(anchorNode,anchorOffset);
-          if (anchorChild && nsHTMLEditUtils::IsLink(anchorChild) &&
+          if (anchorChild && HTMLEditUtils::IsLink(anchorChild) &&
               (anchorNode == focusNode) && focusOffset == (anchorOffset+1))
           {
             selectedElement = do_QueryInterface(anchorChild);
@@ -2499,9 +2496,10 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
             // The "A" tag is a pain,
             //  used for both link(href is set) and "Named Anchor"
             nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
-            if ( (isLinkTag && nsHTMLEditUtils::IsLink(selectedNode)) ||
-                (isNamedAnchorTag && nsHTMLEditUtils::IsNamedAnchor(selectedNode)) )
-            {
+            if ((isLinkTag &&
+                 HTMLEditUtils::IsLink(selectedNode)) ||
+                (isNamedAnchorTag &&
+                 HTMLEditUtils::IsNamedAnchor(selectedNode))) {
               bNodeFound = true;
             } else if (TagName == domTagName) { // All other tag names are handled here
               bNodeFound = true;
@@ -3472,7 +3470,7 @@ nsHTMLEditor::TagCanContainTag(nsIAtom& aParentTag, nsIAtom& aChildTag)
   }
 
   int32_t parentTagEnum = parserService->HTMLAtomTagToId(&aParentTag);
-  return nsHTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
+  return HTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
 }
 
 bool
@@ -3488,7 +3486,7 @@ nsHTMLEditor::IsContainer(nsINode* aNode) {
       nsContentUtils::GetParserService()->HTMLStringTagToId(aNode->NodeName());
   }
 
-  return nsHTMLEditUtils::IsContainer(tagEnum);
+  return HTMLEditUtils::IsContainer(tagEnum);
 }
 
 bool
@@ -3659,7 +3657,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 {
   nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
   if (!element || !element->IsHTMLElement() ||
-      !nsHTMLEditUtils::IsTableElement(element) ||
+      !HTMLEditUtils::IsTableElement(element) ||
       !IsDescendantOfEditorRoot(element)) {
     return false;
   }
@@ -3687,7 +3685,7 @@ nsHTMLEditor::GetEnclosingTable(nsINode* aNode)
   for (nsCOMPtr<Element> block = GetBlockNodeParent(aNode);
        block;
        block = GetBlockNodeParent(block)) {
-    if (nsHTMLEditUtils::IsTable(block)) {
+    if (HTMLEditUtils::IsTable(block)) {
       return block;
     }
   }
@@ -4322,18 +4320,18 @@ nsHTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
   // want to treat them as such.  Also, don't call ListItems or table
   // cells empty if caller desires.  Form Widgets not empty.
   if (!IsContainer(aNode->AsDOMNode())                      ||
-      (nsHTMLEditUtils::IsNamedAnchor(aNode) ||
-       nsHTMLEditUtils::IsFormWidget(aNode) ||
+      (HTMLEditUtils::IsNamedAnchor(aNode) ||
+       HTMLEditUtils::IsFormWidget(aNode) ||
        (aListOrCellNotEmpty &&
-        (nsHTMLEditUtils::IsListItem(aNode) ||
-         nsHTMLEditUtils::IsTableCell(aNode))))) {
+        (HTMLEditUtils::IsListItem(aNode) ||
+         HTMLEditUtils::IsTableCell(aNode))))) {
     *outIsEmptyNode = false;
     return NS_OK;
   }
 
   // need this for later
-  bool isListItemOrCell = nsHTMLEditUtils::IsListItem(aNode) ||
-                          nsHTMLEditUtils::IsTableCell(aNode);
+  bool isListItemOrCell = HTMLEditUtils::IsListItem(aNode) ||
+                          HTMLEditUtils::IsTableCell(aNode);
 
   // loop over children of node. if no children, or all children are either
   // empty text nodes or non-editable, then node qualifies as empty
@@ -4365,13 +4363,13 @@ nsHTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
           // if they contain other lists or tables
           if (child->IsElement()) {
             if (isListItemOrCell) {
-              if (nsHTMLEditUtils::IsList(child) ||
+              if (HTMLEditUtils::IsList(child) ||
                   child->IsHTMLElement(nsGkAtoms::table)) {
                 // break out if we find we aren't empty
                 *outIsEmptyNode = false;
                 return NS_OK;
               }
-            } else if (nsHTMLEditUtils::IsFormWidget(child)) {
+            } else if (HTMLEditUtils::IsFormWidget(child)) {
               // is it a form widget?
               // break out if we find we aren't empty
               *outIsEmptyNode = false;
@@ -4742,7 +4740,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
                                           : childNode->GetParentElement();
   }
   while (childElement && (childElement->AsDOMNode() != aPreviousBlock)) {
-    if (nsHTMLEditUtils::IsInlineStyle(childElement) ||
+    if (HTMLEditUtils::IsInlineStyle(childElement) ||
         childElement->IsHTMLElement(nsGkAtoms::span)) {
       if (newStyles) {
         newStyles = InsertContainerAbove(newStyles,

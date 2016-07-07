@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "EditorUtils.h"
+#include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
@@ -21,7 +22,6 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditRules.h"
-#include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsHTMLObjectResizer.h"
 #include "nsIContent.h"
@@ -519,7 +519,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
     mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::z_index,
                                      EmptyString());
 
-    if (!nsHTMLEditUtils::IsImage(aElement)) {
+    if (!HTMLEditUtils::IsImage(aElement)) {
       mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::width,
                                        EmptyString());
       mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::height,
