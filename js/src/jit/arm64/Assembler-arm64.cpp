@@ -13,7 +13,6 @@
 #include "jsutil.h"
 
 #include "gc/Marking.h"
-#include "gc/StoreBuffer-inl.h"
 
 #include "jit/arm64/Architecture-arm64.h"
 #include "jit/arm64/MacroAssembler-arm64.h"
