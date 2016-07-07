@@ -12,7 +12,7 @@ define(function (require, exports, module) {
 
   // Reps
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
+  const { ObjectLink } = createFactories(require("./object-link"));
   const { cropString } = require("./string");
 
   /**
@@ -25,15 +25,6 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired
     },
 
-    getTitle: function (grip) {
-      if (this.props.objectLink) {
-        return this.props.objectLink({
-          object: grip
-        }, "function");
-      }
-      return "";
-    },
-
     summarizeFunction: function (grip) {
       let name = grip.displayName || grip.name || "function";
       return cropString(name + "()", 100);
@@ -43,8 +34,7 @@ define(function (require, exports, module) {
       let grip = this.props.object;
 
       return (
-        ObjectBox({className: "function"},
-          this.getTitle(grip),
+        ObjectLink({className: "function"},
           this.summarizeFunction(grip)
         )
       );

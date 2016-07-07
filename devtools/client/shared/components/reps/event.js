@@ -12,7 +12,7 @@ define(function (require, exports, module) {
 
   // Reps
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectBox } = createFactories(require("./object-box"));
+  const { ObjectLink } = createFactories(require("./object-link"));
 
   /**
    * Renders DOM event objects.
@@ -24,17 +24,8 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired
     },
 
-    getTitle: function (grip) {
-      if (this.props.objectLink) {
-        return this.props.objectLink({
-          object: grip
-        }, grip.preview.type);
-      }
-      return grip.preview.type;
-    },
-
     summarizeEvent: function (grip) {
-      let info = [];
+      let info = [grip.preview.type, " "];
 
       let eventFamily = grip.class;
       let props = grip.preview.properties;
@@ -53,8 +44,7 @@ define(function (require, exports, module) {
     render: function () {
       let grip = this.props.object;
       return (
-        ObjectBox({className: "event"},
-          this.getTitle(grip),
+        ObjectLink({className: "event"},
           this.summarizeEvent(grip)
         )
       );
