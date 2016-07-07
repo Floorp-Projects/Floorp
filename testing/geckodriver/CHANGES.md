@@ -2,6 +2,14 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Changed
+- Disable autofilling of forms by default by @mythsunwind
+
+### Fixed
+- Attempt to deploy a single file from Travis when making a release
+
 
 ## 0.9.0 (2016-06-30)
 
