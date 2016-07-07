@@ -262,7 +262,7 @@ public:
           inputSamples = static_cast<const float*>(aInput.mChannelData[i]);
         }
       } else {
-        PodZero(alignedScaledInput);
+        PodZero(alignedScaledInput, WEBAUDIO_BLOCK_SIZE);
         inputSamples = alignedScaledInput;
       }
       float* outputBuffer = aOutput->ChannelFloatsForWrite(i);

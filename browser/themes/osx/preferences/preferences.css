@@ -15,79 +15,7 @@
   font: -moz-dialog;
 }
 
-.paneSelector {
-  list-style-image: url("chrome://browser/skin/preferences/Options.png");
-}
-
-/* ----- GENERAL BUTTON ----- */
-
-radio[pane=paneGeneral],
-radio[pane=paneMain] {
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
-} 
-
-/* ----- TABS BUTTON ----- */
-
-radio[pane=paneTabs] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
-}
-
-/* ----- SEARCH BUTTON ----- */
-
-radio[pane=paneSearch] {
-  list-style-image: url("chrome://browser/skin/search-pref.png");
-}
-
-/* ----- CONTENT BUTTON ----- */
-
-radio[pane=paneContent] {
-  -moz-image-region: rect(0px, 96px, 32px, 64px);
-}
-
-/* ----- APPLICATIONS BUTTON ----- */
-
-radio[pane=paneApplications] {
-  -moz-image-region: rect(0px, 128px, 32px, 96px);
-}
-
-/* ----- PRIVACY BUTTON ----- */
-
-radio[pane=panePrivacy] {
-  -moz-image-region: rect(0px, 160px, 32px, 128px);
-}
-
-/* ----- SECURITY BUTTON ----- */
-
-radio[pane=paneSecurity] {
-  -moz-image-region: rect(0px, 192px, 32px, 160px);
-}
-
-/* ----- ADVANCED BUTTON ----- */
-
-radio[pane=paneAdvanced] {
-  -moz-image-region: rect(0px, 224px, 32px, 192px);
-}
-
-/* ----- SYNC BUTTON ----- */
-
-radio[pane=paneSync] {
-  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png");
-}
-
-/* These lines should be removed as part of fixing bug 1140495 */
-label.small {
-  font-size: smaller;
-}
-
 /* ----- APPLICATIONS PREFPANE ----- */
-#BrowserPreferences[animated="true"] #handlersView {
-  height: 25em;
-}
-
-#BrowserPreferences[animated="false"] #handlersView {
-  -moz-box-flex: 1;
-}
-
 description {
   font: small-caption;
   font-weight: normal;
@@ -98,14 +26,6 @@ description {
 prefpane .groupbox-body {
   -moz-appearance: none;
   padding: 8px 4px 4px 4px;
-}
-
-#paneTabs > groupbox {
-  margin: 0;
-}
-
-#tabPrefsBox {
-  margin: 12px 4px;
 }
 
 prefpane .groupbox-title {
@@ -121,22 +41,6 @@ caption {
   padding-inline-start: 5px;
   padding-top: 4px;
   padding-bottom: 2px;
-}
-
-#paneMain description,
-#paneContent description,
-#paneAdvanced description,
-#paneSecurity description {
-  font: -moz-dialog;
-}
-
-#paneContent {
-  padding-top: 8px;
-}
-
-#paneContent row {
-  padding: 2px 4px;
-  -moz-box-align: center;
 }
 
 #popupPolicyRow {
@@ -181,24 +85,6 @@ caption {
 
 #isNotDefaultLabel {
   font-weight: bold;
-}
-
-/**
- * Privacy Pane
- */
-
-html|a.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-html|a.inline-link:hover {
-  text-decoration: underline;
-}
-
-html|a.inline-link:-moz-focusring {
-  outline-width: 0;
-  box-shadow: @focusRingShadow@;
 }
 
 /**

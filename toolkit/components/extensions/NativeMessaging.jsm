@@ -190,10 +190,18 @@ this.NativeApp = class extends EventEmitter {
           throw new Error(`This extension does not have permission to use native application ${application}`);
         }
 
+        let command = hostInfo.manifest.path;
+        if (AppConstants.platform == "win") {
+          // OS.Path.join() ignores anything before the last absolute path
+          // it sees, so if command is already absolute, it remains unchanged
+          // here.  If it is relative, we get the proper absolute path here.
+          command = OS.Path.join(OS.Path.dirname(hostInfo.path), command);
+        }
+
         let subprocessOpts = {
-          command: hostInfo.manifest.path,
+          command: command,
           arguments: [hostInfo.path],
-          workdir: OS.Path.dirname(hostInfo.manifest.path),
+          workdir: OS.Path.dirname(command),
         };
         return Subprocess.call(subprocessOpts);
       }).then(proc => {

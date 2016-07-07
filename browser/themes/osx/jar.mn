@@ -129,17 +129,11 @@ browser.jar:
   skin/classic/browser/places/livemark-item.png             (places/livemark-item.png)
   skin/classic/browser/preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png          (preferences/application.png)
-  skin/classic/browser/preferences/Options.png              (preferences/Options.png)
-  skin/classic/browser/preferences/Options-sync.png         (preferences/Options-sync.png)
   skin/classic/browser/preferences/saveFile.png             (preferences/saveFile.png)
 * skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
 * skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
 * skin/classic/browser/preferences/in-content/dialog.css      (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
-  skin/classic/browser/preferences/checkbox.png             (preferences/checkbox.png)
-  skin/classic/browser/preferences/checkbox@2x.png          (preferences/checkbox@2x.png)
-  skin/classic/browser/yosemite/preferences/checkbox.png    (preferences/checkbox-yosemite.png)
-  skin/classic/browser/yosemite/preferences/checkbox@2x.png (preferences/checkbox-yosemite@2x.png)
   skin/classic/browser/social/services-16.png               (social/services-16.png)
   skin/classic/browser/social/services-16@2x.png            (social/services-16@2x.png)
   skin/classic/browser/social/services-64.png               (social/services-64.png)
@@ -255,8 +249,6 @@ browser.jar:
 % override chrome://browser/skin/menuPanel-help@2x.png                     chrome://browser/skin/yosemite/menuPanel-help@2x.png                    os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-small.png                       chrome://browser/skin/yosemite/menuPanel-small.png                      os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-small@2x.png                    chrome://browser/skin/yosemite/menuPanel-small@2x.png                   os=Darwin osversion>=10.10
-% override chrome://browser/skin/preferences/checkbox.png                  chrome://browser/skin/yosemite/preferences/checkbox.png                 os=Darwin osversion>=10.10
-% override chrome://browser/skin/preferences/checkbox@2x.png               chrome://browser/skin/yosemite/preferences/checkbox@2x.png              os=Darwin osversion>=10.10
 % override chrome://browser/skin/reload-stop-go.png                        chrome://browser/skin/yosemite/reload-stop-go.png                       os=Darwin osversion>=10.10
 % override chrome://browser/skin/reload-stop-go@2x.png                     chrome://browser/skin/yosemite/reload-stop-go@2x.png                    os=Darwin osversion>=10.10
 % override chrome://browser/skin/sync-horizontalbar.png                    chrome://browser/skin/yosemite/sync-horizontalbar.png               os=Darwin osversion>=10.10

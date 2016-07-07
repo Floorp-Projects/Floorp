@@ -2877,4 +2877,10 @@ public abstract class GeckoApp
 
         return IntentHelper.getHandlersForIntent(intent);
     }
+
+    @Override
+    public String getDefaultChromeURI() {
+        // Use the chrome URI specified by Gecko's defaultChromeURI pref.
+        return null;
+    }
 }

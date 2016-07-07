@@ -183,12 +183,12 @@
                          onclick="document.getElementById('tos').focus();
                                   document.getElementById('tos').click()">
               &setup.tosAgree1.label;
-              <label class="text-link inline-link"
+              <label class="text-link"
                      onclick="event.stopPropagation();gSyncUtils.openToS();">
                 &setup.tosLink.label;
               </label>
               &setup.tosAgree2.label;
-              <label class="text-link inline-link"
+              <label class="text-link"
                      onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();">
                 &setup.ppLink.label;
               </label>
