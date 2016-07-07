@@ -50,8 +50,14 @@ public:
   typedef MozPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
 
   // Main thread only.
-  CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem)
-  : mKeys(aKeys), mKeySystem(aKeySystem)
+  CDMProxy(dom::MediaKeys* aKeys,
+           const nsAString& aKeySystem,
+           bool aDistinctiveIdentifierRequired,
+           bool aPersistentStateRequired)
+    : mKeys(aKeys)
+    , mKeySystem(aKeySystem)
+    , mDistinctiveIdentifierRequired(aDistinctiveIdentifierRequired)
+    , mPersistentStateRequired(aPersistentStateRequired)
   {}
 
   // Main thread only.
@@ -229,6 +235,9 @@ protected:
   nsCString mNodeId;
 
   CDMCaps mCapabilites;
+
+  const bool mDistinctiveIdentifierRequired;
+  const bool mPersistentStateRequired;
 };
 
 

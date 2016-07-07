@@ -16,7 +16,7 @@ public:
 
   explicit FakeDecryptor(GMPDecryptorHost* aHost);
 
-  void Init(GMPDecryptorCallback* aCallback) override {
+  void Init(GMPDecryptorCallback* aCallback, bool, bool) override {
     mCallback = aCallback;
   }
 

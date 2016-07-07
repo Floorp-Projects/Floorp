@@ -41,7 +41,9 @@ GMPDecryptorParent::~GMPDecryptorParent()
 }
 
 nsresult
-GMPDecryptorParent::Init(GMPDecryptorProxyCallback* aCallback)
+GMPDecryptorParent::Init(GMPDecryptorProxyCallback* aCallback,
+                         bool aDistinctiveIdentifierRequired,
+                         bool aPersistentStateRequired)
 {
   LOGD(("GMPDecryptorParent[%p]::Init()", this));
 
@@ -50,7 +52,7 @@ GMPDecryptorParent::Init(GMPDecryptorProxyCallback* aCallback)
     return NS_ERROR_FAILURE;
   }
   mCallback = aCallback;
-  if (!SendInit()) {
+  if (!SendInit(aDistinctiveIdentifierRequired, aPersistentStateRequired)) {
     return NS_ERROR_FAILURE;
   }
   mIsOpen = true;
