@@ -21,15 +21,26 @@
 
 #include "asmjs/WasmBinary.h"
 #include "asmjs/WasmJS.h"
+#include "asmjs/WasmTypes.h"
 
 namespace js {
 namespace wasm {
 
-// Compile the given WebAssembly bytecode with the given filename into a
-// wasm::Module.
+// Compile the given WebAssembly bytecode with the given assumptions, settings
+// and filename into a wasm::Module.
+
+struct CompileArgs
+{
+    Assumptions assumptions;
+    UniqueChars filename;
+    bool alwaysBaseline;
+
+    CompileArgs() : alwaysBaseline(false) {}
+    bool init(ExclusiveContext* cx);
+};
 
 UniqueModule
-Compile(JSContext* cx, UniqueChars filename, Bytes&& code);
+Compile(Bytes&& code, CompileArgs&& args, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

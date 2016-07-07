@@ -23,8 +23,6 @@ GMPContentChild::GMPContentChild(GMPChild* aChild)
 GMPContentChild::~GMPContentChild()
 {
   MOZ_COUNT_DTOR(GMPContentChild);
-  RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(GetTransport());
-  XRE_GetIOMessageLoop()->PostTask(task.forget());
 }
 
 MessageLoop*

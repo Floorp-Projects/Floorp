@@ -183,13 +183,6 @@ class JSObject : public js::gc::Cell
                                    js::HandleShape shape,
                                    js::HandleObjectGroup group);
 
-    // Set the shape of an object. This pointer is valid for native objects and
-    // some non-native objects. After creating an object, the objects for which
-    // the shape pointer is invalid need to overwrite this pointer before a GC
-    // can occur.
-    inline void setInitialShapeMaybeNonNative(js::Shape* shape);
-    inline void setShapeMaybeNonNative(js::Shape* shape);
-
     // Set the initial slots and elements of an object. These pointers are only
     // valid for native objects, but during initialization are set for all
     // objects. For non-native objects, these must not be dynamically allocated
@@ -569,7 +562,6 @@ class JSObject : public js::gc::Cell
     /* JIT Accessors */
 
     static size_t offsetOfGroup() { return offsetof(JSObject, group_); }
-    static size_t offsetOfShape() { return sizeof(JSObject); }
 
     // Maximum size in bytes of a JSObject.
     static const size_t MAX_BYTE_SIZE = 4 * sizeof(void*) + 16 * sizeof(JS::Value);

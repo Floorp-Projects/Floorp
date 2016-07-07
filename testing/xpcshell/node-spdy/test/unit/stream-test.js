@@ -368,4 +368,44 @@ suite('A SPDY Server / Stream', function() {
       pair.client.req.end();
     });
   }
+
+  test('it should not attempt to send empty arrays', function(done) {
+    var server = spdy.createServer(keys);
+    var agent;
+
+    server.on('request', function(req, res) {
+      setTimeout(function() {
+        res.end();
+        done();
+        server.close();
+        agent.close();
+      }, 100);
+    });
+
+    server.listen(PORT, function() {
+      agent = spdy.createAgent({
+        port: PORT,
+        rejectUnauthorized: false
+      }).on('error', function(err) {
+        done(err);
+      });
+
+      var body = new Buffer([1,2,3,4]);
+
+      var opts = {
+        method: 'POST',
+        headers: {
+          'Host': 'localhost',
+          'Content-Length': body.length
+        },
+        path: '/some-url',
+        agent: agent
+      };
+
+      var req = https.request(opts, function(res) {
+      }).on('error', function(err) {
+      });
+      req.end(body);
+    });
+  });
 });

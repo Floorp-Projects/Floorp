@@ -429,11 +429,9 @@ static bool
 GC(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSRuntime* rt = JS_GetRuntime(cx);
-    JS_GC(rt);
-#ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
-#endif
+
+    JS_GC(cx);
+
     args.rval().setUndefined();
     return true;
 }
@@ -487,7 +485,7 @@ static bool
 Options(JSContext* cx, unsigned argc, Value* vp)
 {
     JS::CallArgs args = CallArgsFromVp(argc, vp);
-    RuntimeOptions oldRuntimeOptions = RuntimeOptionsRef(cx);
+    ContextOptions oldContextOptions = ContextOptionsRef(cx);
 
     for (unsigned i = 0; i < args.length(); ++i) {
         JSString* str = ToString(cx, args[i]);
@@ -499,11 +497,11 @@ Options(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         if (strcmp(opt.ptr(), "strict") == 0)
-            RuntimeOptionsRef(cx).toggleExtraWarnings();
+            ContextOptionsRef(cx).toggleExtraWarnings();
         else if (strcmp(opt.ptr(), "werror") == 0)
-            RuntimeOptionsRef(cx).toggleWerror();
+            ContextOptionsRef(cx).toggleWerror();
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
-            RuntimeOptionsRef(cx).toggleStrictMode();
+            ContextOptionsRef(cx).toggleStrictMode();
         else {
             JS_ReportError(cx, "unknown option name '%s'. The valid names are "
                            "strict, werror, and strict_mode.", opt.ptr());
@@ -512,21 +510,21 @@ Options(JSContext* cx, unsigned argc, Value* vp)
     }
 
     char* names = nullptr;
-    if (oldRuntimeOptions.extraWarnings()) {
+    if (oldContextOptions.extraWarnings()) {
         names = JS_sprintf_append(names, "%s", "strict");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
-    if (oldRuntimeOptions.werror()) {
+    if (oldContextOptions.werror()) {
         names = JS_sprintf_append(names, "%s%s", names ? "," : "", "werror");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
-    if (names && oldRuntimeOptions.strictMode()) {
+    if (names && oldContextOptions.strictMode()) {
         names = JS_sprintf_append(names, "%s%s", names ? "," : "", "strict_mode");
         if (!names) {
             JS_ReportOutOfMemory(cx);
@@ -963,13 +961,13 @@ ProcessArgsForCompartment(JSContext* cx, char** argv, int argc)
                 return;
             break;
         case 'S':
-            RuntimeOptionsRef(cx).toggleWerror();
+            ContextOptionsRef(cx).toggleWerror();
             MOZ_FALLTHROUGH; // because -S implies -s
         case 's':
-            RuntimeOptionsRef(cx).toggleExtraWarnings();
+            ContextOptionsRef(cx).toggleExtraWarnings();
             break;
         case 'I':
-            RuntimeOptionsRef(cx).toggleIon()
+            ContextOptionsRef(cx).toggleIon()
                                  .toggleAsmJS()
                                  .toggleWasm();
             break;
@@ -1425,11 +1423,12 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         // reason to bother.
         sScriptedInterruptCallback = new PersistentRootedValue;
         sScriptedInterruptCallback->init(rt, UndefinedValue());
-        JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
 
         AutoJSAPI jsapi;
         jsapi.Init();
         cx = jsapi.cx();
+
+        JS_SetInterruptCallback(cx, XPCShellInterruptCallback);
 
         argc--;
         argv++;
@@ -1582,9 +1581,9 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             JS_DropPrincipals(cx, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);
             JS_SetAllNonReservedSlotsToUndefined(cx, JS_GlobalLexicalScope(glob));
-            JS_GC(rt);
+            JS_GC(cx);
         }
-        JS_GC(rt);
+        JS_GC(cx);
     } // this scopes the nsCOMPtrs
 
     if (!XRE_ShutdownTestShell())

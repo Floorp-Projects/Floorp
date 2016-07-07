@@ -33,6 +33,8 @@ const nodeConstants = require("devtools/shared/dom-node-constants");
 const MAX_STRING_GRIP_LENGTH = 36;
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
+const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
+
 // Constants for compatibility with the Web Console output implementation before
 // bug 778766.
 // TODO: remove these once bug 778766 is fixed.
@@ -2223,9 +2225,11 @@ Widgets.URLString.prototype = extend(Widgets.BaseWidget.prototype, {
    */
   _isURL: function (token) {
     try {
-      let url = new URL(token);
-      return ["http:", "https:", "ftp:", "data:", "javascript:",
-              "resource:", "chrome:"].includes(url.protocol);
+      if (!validProtocols.test(token)) {
+        return false;
+      }
+      new URL(token);
+      return true;
     } catch (e) {
       return false;
     }

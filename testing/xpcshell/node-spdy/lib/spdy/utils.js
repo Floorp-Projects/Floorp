@@ -12,6 +12,8 @@ if (utils.isLegacy)
 else
   utils.DuplexStream = stream.Duplex;
 
+utils.isArgvParser = !/^v(0\.12|0\.11|0\.10|0\.8|0\.9)\./.test(process.version);
+
 //
 // ### function createDeflate (version, compression)
 // #### @version {Number} SPDY version
@@ -44,7 +46,7 @@ utils.createInflate = function createInflate(version) {
   var inflate = zlib.createInflate({
     dictionary: spdy.protocol.dictionary[version],
     flush: zlib.Z_SYNC_FLUSH,
-    windowBits: 15
+    windowBits: 0
   });
 
   // Define lock information early

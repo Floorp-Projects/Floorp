@@ -13,6 +13,7 @@
 #include "MediaData.h"
 #include "MediaQueue.h"
 #include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "OutputStreamManager.h"
 #include "SharedBuffer.h"
 #include "VideoSegment.h"
@@ -30,7 +31,6 @@ struct PlaybackInfoInit {
 };
 
 class DecodedStreamGraphListener : public MediaStreamListener {
-  typedef MediaStreamListener::MediaStreamGraphEvent MediaStreamGraphEvent;
 public:
   DecodedStreamGraphListener(MediaStream* aStream,
                              MozPromiseHolder<GenericPromise>&& aPromise)
@@ -52,7 +52,7 @@ public:
 
   void NotifyEvent(MediaStreamGraph* aGraph, MediaStreamGraphEvent event) override
   {
-    if (event == EVENT_FINISHED) {
+    if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
       nsCOMPtr<nsIRunnable> event =
         NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());

@@ -154,15 +154,6 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
 
 PluginModuleChild::~PluginModuleChild()
 {
-    if (mTransport) {
-        // For some reason IPDL doesn't automatically delete the channel for a
-        // bridged protocol (bug 1090570). So we have to do it ourselves. This
-        // code is only invoked for PluginModuleChild instances created via
-        // bridging; otherwise mTransport is null.
-        RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
-        XRE_GetIOMessageLoop()->PostTask(task.forget());
-    }
-
     if (mIsChrome) {
         MOZ_ASSERT(gChromeInstance == this);
 

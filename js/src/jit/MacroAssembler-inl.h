@@ -451,13 +451,13 @@ MacroAssembler::branchTestObjClass(Condition cond, Register obj, Register scratc
 void
 MacroAssembler::branchTestObjShape(Condition cond, Register obj, const Shape* shape, Label* label)
 {
-    branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
+    branchPtr(cond, Address(obj, ShapedObject::offsetOfShape()), ImmGCPtr(shape), label);
 }
 
 void
 MacroAssembler::branchTestObjShape(Condition cond, Register obj, Register shape, Label* label)
 {
-    branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
+    branchPtr(cond, Address(obj, ShapedObject::offsetOfShape()), shape, label);
 }
 
 void

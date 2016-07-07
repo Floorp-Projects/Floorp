@@ -117,10 +117,16 @@ class ExclusiveContext : public ContextFriendFields,
   private:
     ContextKind contextKind_;
 
+  protected:
+    // Background threads get a read-only copy of the main thread's
+    // ContextOptions.
+    JS::ContextOptions options_;
+
   public:
     PerThreadData* perThreadData;
 
-    ExclusiveContext(JSRuntime* rt, PerThreadData* pt, ContextKind kind);
+    ExclusiveContext(JSRuntime* rt, PerThreadData* pt, ContextKind kind,
+                     const JS::ContextOptions& options);
 
     bool isJSContext() const {
         return contextKind_ == Context_JS;
@@ -151,6 +157,10 @@ class ExclusiveContext : public ContextFriendFields,
     bool shouldBeJSContext() const {
         MOZ_ASSERT(isJSContext());
         return isJSContext();
+    }
+
+    const JS::ContextOptions& options() const {
+        return options_;
     }
 
   protected:
@@ -210,6 +220,7 @@ class ExclusiveContext : public ContextFriendFields,
     size_t gcSystemPageSize() { return gc::SystemPageSize(); }
     bool canUseSignalHandlers() const { return runtime_->canUseSignalHandlers(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
+    bool jitSupportsUnalignedAccesses() const { return runtime_->jitSupportsUnalignedAccesses; }
     bool jitSupportsSimd() const { return runtime_->jitSupportsSimd; }
     bool lcovEnabled() const { return runtime_->lcovOutput.isEnabled(); }
 
@@ -383,6 +394,10 @@ struct JSContext : public js::ExclusiveContext,
      * Note: if this ever shows up in a profile, just add caching!
      */
     JSVersion findVersion() const;
+
+    JS::ContextOptions& options() {
+        return options_;
+    }
 
     js::LifoAlloc& tempLifoAlloc() { return runtime()->tempLifoAlloc; }
 

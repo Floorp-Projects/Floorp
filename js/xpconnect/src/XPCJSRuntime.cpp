@@ -1561,7 +1561,6 @@ static void
 ReloadPrefsCallback(const char* pref, void* data)
 {
     XPCJSRuntime* runtime = reinterpret_cast<XPCJSRuntime*>(data);
-    JSRuntime* rt = runtime->Runtime();
     JSContext* cx = runtime->Context();
 
     bool safeMode = false;
@@ -1616,7 +1615,7 @@ ReloadPrefsCallback(const char* pref, void* data)
     }
 #endif // JS_GC_ZEAL
 
-    JS::RuntimeOptionsRef(rt).setBaseline(useBaseline)
+    JS::ContextOptionsRef(cx).setBaseline(useBaseline)
                              .setIon(useIon)
                              .setAsmJS(useAsmJS)
                              .setWasm(useWasm)
@@ -3568,7 +3567,7 @@ XPCJSRuntime::Initialize()
 #endif
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryCallback);
     js::SetActivityCallback(cx, ActivityCallback, this);
-    JS_SetInterruptCallback(runtime, InterruptCallback);
+    JS_SetInterruptCallback(cx, InterruptCallback);
     js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
 #ifdef MOZ_CRASHREPORTER
     js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
@@ -3741,7 +3740,7 @@ XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
 
     // As we may be entering a nested event loop, we need to
     // cancel any ongoing performance measurement.
-    js::ResetPerformanceMonitoring(Get()->Runtime());
+    js::ResetPerformanceMonitoring(Get()->Context());
 
     CycleCollectedJSRuntime::BeforeProcessTask(aMightBlock);
 }
@@ -3760,7 +3759,7 @@ XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
 
     // Now that we are certain that the event is complete,
     // we can flush any ongoing performance measurement.
-    js::FlushPerformanceMonitoring(Get()->Runtime());
+    js::FlushPerformanceMonitoring(Get()->Context());
 }
 
 /***************************************************************************/

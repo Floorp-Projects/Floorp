@@ -19,6 +19,8 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
 
+#include "gc/StoreBuffer-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

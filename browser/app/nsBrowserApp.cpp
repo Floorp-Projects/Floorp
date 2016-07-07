@@ -36,9 +36,6 @@
 #define XRE_DONT_SUPPORT_XPSP2
 #endif
 #define XRE_WANT_ENVIRON
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-#define snprintf _snprintf
-#endif
 #define strcasecmp _stricmp
 #ifdef MOZ_SANDBOX
 #include "mozilla/sandboxing/SandboxInitialization.h"

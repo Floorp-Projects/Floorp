@@ -30,14 +30,26 @@ struct ComputedGridTrackInfo
 {
   ComputedGridTrackInfo(uint32_t aNumLeadingImplicitTracks,
                         uint32_t aNumExplicitTracks,
-                        nsTArray<nscoord>&& aSizes)
+                        uint32_t aStartFragmentTrack,
+                        uint32_t aEndFragmentTrack,
+                        nsTArray<nscoord>&& aPositions,
+                        nsTArray<nscoord>&& aSizes,
+                        nsTArray<uint32_t>&& aStates)
     : mNumLeadingImplicitTracks(aNumLeadingImplicitTracks)
     , mNumExplicitTracks(aNumExplicitTracks)
+    , mStartFragmentTrack(aStartFragmentTrack)
+    , mEndFragmentTrack(aEndFragmentTrack)
+    , mPositions(aPositions)
     , mSizes(aSizes)
+    , mStates(aStates)
   {}
   uint32_t mNumLeadingImplicitTracks;
   uint32_t mNumExplicitTracks;
+  uint32_t mStartFragmentTrack;
+  uint32_t mEndFragmentTrack;
+  nsTArray<nscoord> mPositions;
   nsTArray<nscoord> mSizes;
+  nsTArray<uint32_t> mStates;
 };
 } // namespace mozilla
 

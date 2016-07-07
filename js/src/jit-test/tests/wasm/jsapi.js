@@ -1,7 +1,11 @@
 load(libdir + 'wasm.js');
 load(libdir + 'asserts.js');
 
-const emptyModule = wasmTextToBinary('(module)');
+// Explicitly opt into the new binary format for imports and exports until it
+// is used by default everywhere.
+const textToBinary = str => wasmTextToBinary(str, 'new-format');
+
+const emptyModule = textToBinary('(module)');
 
 // 'WebAssembly' property on global object
 const wasmDesc = Object.getOwnPropertyDescriptor(this, 'WebAssembly');
@@ -29,8 +33,8 @@ assertEq(Module.name, "Module");
 assertErrorMessage(() => Module(), TypeError, /constructor without new is forbidden/);
 assertErrorMessage(() => new Module(1), TypeError, "first argument must be an ArrayBuffer or typed array object");
 assertErrorMessage(() => new Module({}), TypeError, "first argument must be an ArrayBuffer or typed array object");
-assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /wasm validation error/);
-assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /wasm validation error/);
+assertErrorMessage(() => new Module(new Uint8Array()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
+assertErrorMessage(() => new Module(new ArrayBuffer()), /* TODO: WebAssembly.CompileError */ TypeError, /compile error/);
 assertEq(new Module(emptyModule) instanceof Module, true);
 assertEq(new Module(emptyModule.buffer) instanceof Module, true);
 
@@ -98,23 +102,57 @@ assertEq(exportsDesc.writable, true);
 assertEq(exportsDesc.enumerable, true);
 assertEq(exportsDesc.configurable, true);
 
-// Exports object:
-// Note: at some point the exports object should become an ES6 module namespace
-// exotic object. For now, don't probe too hard on the property descriptors or
-// the exports object itself.
+// TODO: test export object objects are ES6 module namespace objects.
 
-const e1 = i1.exports;
-assertEq(e1, exportsDesc.value);
-assertEq(Object.keys(e1).length, 0);
+// 'WebAssembly.Memory' property
+const memoryDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Memory');
+assertEq(typeof memoryDesc.value, "function");
+assertEq(memoryDesc.writable, true);
+assertEq(memoryDesc.enumerable, false);
+assertEq(memoryDesc.configurable, true);
 
-var code = wasmTextToBinary('(module (func) (export "foo" 0))');
-var e = new Instance(new Module(code)).exports;
-assertEq(Object.keys(e).join(), "foo");
-assertEq(e.foo(), undefined);
+// 'WebAssembly.Memory' constructor function
+const Memory = WebAssembly.Memory;
+assertEq(Memory, memoryDesc.value);
+assertEq(Memory.length, 1);
+assertEq(Memory.name, "Memory");
+assertErrorMessage(() => Memory(), TypeError, /constructor without new is forbidden/);
+assertErrorMessage(() => new Memory(1), TypeError, "first argument must be a memory descriptor");
+assertErrorMessage(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
+assertErrorMessage(() => new Memory({initial:-1}), TypeError, /bad Memory initial size/);
+assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
+assertEq(new Memory({initial:1}) instanceof Memory, true);
 
-var code = wasmTextToBinary('(module (func) (export "foo" 0) (export "bar" 0))');
-var e = new Instance(new Module(code)).exports;
-assertEq(Object.keys(e).join(), "foo,bar");
-assertEq(e.foo(), undefined);
-assertEq(e.bar(), undefined);
-assertEq(e.foo, e.bar);
+// 'WebAssembly.Memory.prototype' property
+const memoryProtoDesc = Object.getOwnPropertyDescriptor(Memory, 'prototype');
+assertEq(typeof memoryProtoDesc.value, "object");
+assertEq(memoryProtoDesc.writable, false);
+assertEq(memoryProtoDesc.enumerable, false);
+assertEq(memoryProtoDesc.configurable, false);
+
+// 'WebAssembly.Memory.prototype' object
+const memoryProto = Memory.prototype;
+assertEq(memoryProto, memoryProtoDesc.value);
+assertEq(String(memoryProto), "[object Object]");
+assertEq(Object.getPrototypeOf(memoryProto), Object.prototype);
+
+// 'WebAssembly.Memory' instance objects
+const mem1 = new Memory({initial:1});
+assertEq(typeof mem1, "object");
+assertEq(String(mem1), "[object WebAssembly.Memory]");
+assertEq(Object.getPrototypeOf(mem1), memoryProto);
+
+// 'WebAssembly.Memory.prototype.buffer' accessor property
+const bufferDesc = Object.getOwnPropertyDescriptor(memoryProto, 'buffer');
+assertEq(typeof bufferDesc.get, "function");
+assertEq(bufferDesc.set, undefined);
+assertEq(bufferDesc.enumerable, false);
+assertEq(bufferDesc.configurable, true);
+
+// 'WebAssembly.Memory.prototype.buffer' getter
+const bufferGetter = bufferDesc.get;
+assertErrorMessage(() => bufferGetter.call(), TypeError, /called on incompatible undefined/);
+assertErrorMessage(() => bufferGetter.call({}), TypeError, /called on incompatible Object/);
+assertEq(bufferGetter.call(mem1) instanceof ArrayBuffer, true);
+assertEq(bufferGetter.call(mem1).byteLength, 64 * 1024);
+

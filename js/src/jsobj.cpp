@@ -751,55 +751,49 @@ NewObjectIsCachable(ExclusiveContext* cxArg, NewObjectKind newKind, const Class*
 }
 
 JSObject*
-js::NewObjectWithClassProtoCommon(ExclusiveContext* cxArg, const Class* clasp,
-                                  HandleObject protoArg,
+js::NewObjectWithClassProtoCommon(ExclusiveContext* cx, const Class* clasp, HandleObject protoArg,
                                   gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    if (protoArg) {
-        return NewObjectWithGivenTaggedProto(cxArg, clasp, AsTaggedProto(protoArg),
-                                             allocKind, newKind);
-    }
+    if (protoArg)
+        return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(protoArg), allocKind, newKind);
 
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    Handle<GlobalObject*> global = cxArg->global();
+    Handle<GlobalObject*> global = cx->global();
 
-    bool isCachable = NewObjectIsCachable(cxArg, newKind, clasp);
+    bool isCachable = NewObjectIsCachable(cx, newKind, clasp);
     if (isCachable) {
-        JSContext* cx = cxArg->asJSContext();
-        NewObjectCache& cache = cx->caches.newObjectCache;
+        NewObjectCache& cache = cx->asJSContext()->caches.newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         if (cache.lookupGlobal(clasp, global, allocKind, &entry)) {
-            JSObject* obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
+            gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+            JSObject* obj = cache.newObjectFromHit(cx->asJSContext(), entry, heap);
             if (obj)
                 return obj;
         }
     }
 
-    /*
-     * Find the appropriate proto for clasp. Built-in classes have a cached
-     * proto on cx->global(); all others get %ObjectPrototype%.
-     */
+    // Find the appropriate proto for clasp. Built-in classes have a cached
+    // proto on cx->global(); all others get %ObjectPrototype%.
     JSProtoKey protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (protoKey == JSProto_Null)
         protoKey = JSProto_Object;
 
-    RootedObject proto(cxArg, protoArg);
-    if (!GetBuiltinPrototype(cxArg, protoKey, &proto))
+    RootedObject proto(cx);
+    if (!GetBuiltinPrototype(cx, protoKey, &proto))
         return nullptr;
 
-    Rooted<TaggedProto> taggedProto(cxArg, TaggedProto(proto));
-    RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, clasp, taggedProto));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, AsTaggedProto(proto)));
     if (!group)
         return nullptr;
 
-    JSObject* obj = NewObject(cxArg, group, allocKind, newKind);
+    JSObject* obj = NewObject(cx, group, allocKind, newKind);
     if (!obj)
         return nullptr;
 
     if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
-        NewObjectCache& cache = cxArg->asJSContext()->caches.newObjectCache;
+        NewObjectCache& cache = cx->asJSContext()->caches.newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         cache.lookupGlobal(clasp, global, allocKind, &entry);
         cache.fillGlobal(entry, clasp, global, allocKind,
