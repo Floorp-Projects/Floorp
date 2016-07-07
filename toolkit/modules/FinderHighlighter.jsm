@@ -196,26 +196,8 @@ FinderHighlighter.prototype = {
         found = true;
       });
     } else {
-      // First, attempt to remove highlighting from main document
-      let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-      sel.removeAllRanges();
-
-      this.hide();
+      this.hide(window);
       this.clear();
-
-      // Next, check our editor cache, for editors belonging to this
-      // document
-      if (this._editors) {
-        for (let x = this._editors.length - 1; x >= 0; --x) {
-          if (this._editors[x].document == doc) {
-            sel = this._editors[x].selectionController
-                                  .getSelection(Ci.nsISelectionController.SELECTION_FIND);
-            sel.removeAllRanges();
-            // We don't need to listen to this editor any more
-            this._unhookListenersAtIndex(x);
-          }
-        }
-      }
 
       // Removing the highlighting always succeeds, so return true.
       found = true;
@@ -278,17 +260,37 @@ FinderHighlighter.prototype = {
   },
 
   /**
-   * If modal highlighting is enabled and the outline + dimmed background is
-   * currently visible, both will be hidden.
+   * Clear all highlighted matches. If modal highlighting is enabled and
+   * the outline + dimmed background is currently visible, both will be hidden.
    */
   hide(window = null) {
+    window = window || this.finder._getWindow();
+
+    let doc = window.document;
+    let controller = this.finder._getSelectionController(window);
+    let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+    sel.removeAllRanges();
+
+    // Next, check our editor cache, for editors belonging to this
+    // document
+    if (this._editors) {
+      for (let x = this._editors.length - 1; x >= 0; --x) {
+        if (this._editors[x].document == doc) {
+          sel = this._editors[x].selectionController
+                                .getSelection(Ci.nsISelectionController.SELECTION_FIND);
+          sel.removeAllRanges();
+          // We don't need to listen to this editor any more
+          this._unhookListenersAtIndex(x);
+        }
+      }
+    }
+
     if (!this._modal)
       return;
 
     if (this._modalHighlightOutline)
       this._modalHighlightOutline.setAttributeForElement(kModalOutlineId, "hidden", "true");
 
-    window = window || this.finder._getWindow();
     this._removeHighlightAllMask(window);
     this._removeModalHighlightListeners(window);
     delete this._brightText;
