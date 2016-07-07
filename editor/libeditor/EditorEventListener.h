@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEditorEventListener_h__
-#define nsEditorEventListener_h__
+#ifndef EditorEventListener_h
+#define EditorEventListener_h
 
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -32,10 +32,12 @@ class nsPresContext;
 #define HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
 #endif
 
-class nsEditorEventListener : public nsIDOMEventListener
+namespace mozilla {
+
+class EditorEventListener : public nsIDOMEventListener
 {
 public:
-  nsEditorEventListener();
+  EditorEventListener();
 
   virtual nsresult Connect(nsEditor* aEditor);
 
@@ -47,7 +49,7 @@ public:
   void SpellCheckIfNeeded();
 
 protected:
-  virtual ~nsEditorEventListener();
+  virtual ~EditorEventListener();
 
   nsresult InstallToEditor();
   void UninstallFromEditor();
@@ -95,4 +97,6 @@ protected:
 #endif
 };
 
-#endif // nsEditorEventListener_h__
+} // namespace mozilla
+
+#endif // #ifndef EditorEventListener_h

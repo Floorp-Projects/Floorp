@@ -791,7 +791,7 @@ public:
   // nothing.
   nsresult InitializeSelection(nsIDOMEventTarget* aFocusEventTarget);
 
-  // This method has to be called by nsEditorEventListener::Focus.
+  // This method has to be called by EditorEventListener::Focus.
   // All actions that have to be done when the editor is focused needs to be
   // added here.
   void OnFocus(nsIDOMEventTarget* aFocusEventTarget);
