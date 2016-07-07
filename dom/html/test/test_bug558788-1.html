@@ -154,13 +154,14 @@ function checkInputURL()
   sendString("ttp://mozilla.org");
   checkValidApplies(element);
 
-  for (var i=0; i<13; ++i) {
+  for (var i=0; i<10; ++i) {
     synthesizeKey("VK_BACK_SPACE", {});
     checkValidApplies(element);
   }
 
   synthesizeKey("VK_BACK_SPACE", {});
-  for (var i=0; i<4; ++i) {
+  // "http://" is now invalid
+  for (var i=0; i<7; ++i) {
     checkInvalidApplies(element);
     synthesizeKey("VK_BACK_SPACE", {});
   }
