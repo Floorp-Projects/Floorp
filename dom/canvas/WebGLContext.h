@@ -1045,6 +1045,7 @@ private:
     bool mBufferFetchingHasPerVertex;
     uint32_t mMaxFetchedVertices;
     uint32_t mMaxFetchedInstances;
+    bool mBufferFetch_IsAttrib0Active;
 
     bool DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
                           const char* info);
