@@ -32,6 +32,9 @@
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
 #include <dlfcn.h>
+#endif
+
+#if defined (XP_LINUX) && !defined (ANDROID)
 #include <unistd.h>
 #include <fstream>
 #include "mozilla/Tokenizer.h"
@@ -73,7 +76,7 @@ NS_EXPORT int android_sdk_version;
 // only happens well after that point.
 uint32_t nsSystemInfo::gUserUmask = 0;
 
-#if defined (MOZ_WIDGET_GTK)
+#if defined (XP_LINUX) && !defined (ANDROID)
 static void
 SimpleParseKeyValuePairs(const std::string& aFilename,
                          std::map<nsCString, nsCString>& aKeyValuePairs)
@@ -497,7 +500,7 @@ nsSystemInfo::Init()
   }
   MOZ_ASSERT(sizeof(sysctlValue32) == len);
 
-#elif defined (MOZ_WIDGET_GTK)
+#elif defined (XP_LINUX) && !defined (ANDROID)
   // Get vendor, family, model, stepping, physical cores, L3 cache size
   // from /proc/cpuinfo file
   {

@@ -13,6 +13,17 @@
   element.
 */
 
+:-moz-native-anonymous {
+  /*
+  Content CSS applying to the html element impact the highlighters.
+  To avoid that, possible cases have been set to initial.
+  */
+  text-transform: initial;
+  text-indent: initial;
+  letter-spacing: initial;
+  word-spacing: initial;
+}
+
 :-moz-native-anonymous .highlighter-container {
   --highlighter-guide-color: #08c;
   --highlighter-content-color: #87ceeb;

@@ -955,6 +955,8 @@ PopupNotifications.prototype = {
     if (this._currentNotifications.length == 0)
       return;
 
+    event.stopPropagation();
+
     // Get the anchor that is the immediate child of the icon box
     let anchor = event.target;
     while (anchor && anchor.parentNode != this.iconBox)

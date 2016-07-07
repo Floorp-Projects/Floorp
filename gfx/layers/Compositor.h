@@ -200,7 +200,7 @@ public:
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) { return nullptr; }
 
-  virtual bool Initialize() = 0;
+  virtual bool Initialize(nsCString* const out_failureReason) = 0;
   virtual void Destroy();
   bool IsDestroyed() const { return mIsDestroyed; }
 

@@ -523,6 +523,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   pointer-events: none;
 }
 
+#urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box {
+  pointer-events: auto;
+}
+
 #identity-icon-labels {
   max-width: 18em;
 }

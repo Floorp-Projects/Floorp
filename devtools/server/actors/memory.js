@@ -47,8 +47,8 @@ exports.MemoryActor = protocol.ActorClassWithSpec(memorySpec, {
 
   getState: actorBridgeWithSpec("getState"),
 
-  saveHeapSnapshot: function () {
-    return this.bridge.saveHeapSnapshot();
+  saveHeapSnapshot: function (boundaries) {
+    return this.bridge.saveHeapSnapshot(boundaries);
   },
 
   takeCensus: actorBridgeWithSpec("takeCensus"),
