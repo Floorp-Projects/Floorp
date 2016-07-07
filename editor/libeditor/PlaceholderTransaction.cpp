@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "PlaceholderTxn.h"
+#include "PlaceholderTransaction.h"
 
 #include "CompositionTransaction.h"
 #include "mozilla/dom/Selection.h"
@@ -11,10 +11,11 @@
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-PlaceholderTxn::PlaceholderTxn()
+using namespace dom;
+
+PlaceholderTransaction::PlaceholderTransaction()
   : mAbsorb(true)
   , mForwarding(nullptr)
   , mCompositionTransaction(nullptr)
@@ -23,13 +24,13 @@ PlaceholderTxn::PlaceholderTxn()
 {
 }
 
-PlaceholderTxn::~PlaceholderTxn()
+PlaceholderTransaction::~PlaceholderTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(PlaceholderTxn)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PlaceholderTransaction)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PlaceholderTxn,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PlaceholderTransaction,
                                                 EditAggregateTxn)
   if (tmp->mStartSel) {
     ImplCycleCollectionUnlink(*tmp->mStartSel);
@@ -37,7 +38,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PlaceholderTxn,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndSel);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PlaceholderTxn,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PlaceholderTransaction,
                                                   EditAggregateTxn)
   if (tmp->mStartSel) {
     ImplCycleCollectionTraverse(cb, *tmp->mStartSel, "mStartSel", 0);
@@ -45,17 +46,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PlaceholderTxn,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEndSel);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PlaceholderTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PlaceholderTransaction)
   NS_INTERFACE_MAP_ENTRY(nsIAbsorbingTransaction)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)
 
-NS_IMPL_ADDREF_INHERITED(PlaceholderTxn, EditAggregateTxn)
-NS_IMPL_RELEASE_INHERITED(PlaceholderTxn, EditAggregateTxn)
+NS_IMPL_ADDREF_INHERITED(PlaceholderTransaction, EditAggregateTxn)
+NS_IMPL_RELEASE_INHERITED(PlaceholderTransaction, EditAggregateTxn)
 
 NS_IMETHODIMP
-PlaceholderTxn::Init(nsIAtom* aName, nsSelectionState* aSelState,
-                     nsEditor* aEditor)
+PlaceholderTransaction::Init(nsIAtom* aName,
+                             nsSelectionState* aSelState,
+                             nsEditor* aEditor)
 {
   NS_ENSURE_TRUE(aEditor && aSelState, NS_ERROR_NULL_POINTER);
 
@@ -65,12 +67,14 @@ PlaceholderTxn::Init(nsIAtom* aName, nsSelectionState* aSelState,
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::DoTransaction(void)
+NS_IMETHODIMP
+PlaceholderTransaction::DoTransaction()
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::UndoTransaction(void)
+NS_IMETHODIMP
+PlaceholderTransaction::UndoTransaction()
 {
   // undo txns
   nsresult res = EditAggregateTxn::UndoTransaction();
@@ -84,8 +88,8 @@ NS_IMETHODIMP PlaceholderTxn::UndoTransaction(void)
   return mStartSel->RestoreSelection(selection);
 }
 
-
-NS_IMETHODIMP PlaceholderTxn::RedoTransaction(void)
+NS_IMETHODIMP
+PlaceholderTransaction::RedoTransaction()
 {
   // redo txns
   nsresult res = EditAggregateTxn::RedoTransaction();
@@ -98,7 +102,9 @@ NS_IMETHODIMP PlaceholderTxn::RedoTransaction(void)
 }
 
 
-NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge)
+NS_IMETHODIMP
+PlaceholderTransaction::Merge(nsITransaction* aTransaction,
+                              bool* aDidMerge)
 {
   NS_ENSURE_TRUE(aDidMerge && aTransaction, NS_ERROR_NULL_POINTER);
 
@@ -193,9 +199,10 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, bool *aDidMerg
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::GetTxnDescription(nsAString& aString)
+NS_IMETHODIMP
+PlaceholderTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("PlaceholderTxn: ");
+  aString.AssignLiteral("PlaceholderTransaction: ");
 
   if (mName)
   {
@@ -207,12 +214,15 @@ NS_IMETHODIMP PlaceholderTxn::GetTxnDescription(nsAString& aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::GetTxnName(nsIAtom **aName)
+NS_IMETHODIMP
+PlaceholderTransaction::GetTxnName(nsIAtom** aName)
 {
   return GetName(aName);
 }
 
-NS_IMETHODIMP PlaceholderTxn::StartSelectionEquals(nsSelectionState *aSelState, bool *aResult)
+NS_IMETHODIMP
+PlaceholderTransaction::StartSelectionEquals(nsSelectionState* aSelState,
+                                             bool* aResult)
 {
   // determine if starting selection matches the given selection state.
   // note that we only care about collapsed selections.
@@ -226,7 +236,8 @@ NS_IMETHODIMP PlaceholderTxn::StartSelectionEquals(nsSelectionState *aSelState, 
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::EndPlaceHolderBatch()
+NS_IMETHODIMP
+PlaceholderTransaction::EndPlaceHolderBatch()
 {
   mAbsorb = false;
 
@@ -240,19 +251,23 @@ NS_IMETHODIMP PlaceholderTxn::EndPlaceHolderBatch()
   return RememberEndingSelection();
 }
 
-NS_IMETHODIMP PlaceholderTxn::ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)
+NS_IMETHODIMP
+PlaceholderTransaction::ForwardEndBatchTo(
+                          nsIAbsorbingTransaction* aForwardingAddress)
 {
   mForwarding = do_GetWeakReference(aForwardingAddress);
   return NS_OK;
 }
 
-NS_IMETHODIMP PlaceholderTxn::Commit()
+NS_IMETHODIMP
+PlaceholderTransaction::Commit()
 {
   mCommitted = true;
   return NS_OK;
 }
 
-nsresult PlaceholderTxn::RememberEndingSelection()
+nsresult
+PlaceholderTransaction::RememberEndingSelection()
 {
   RefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
@@ -260,3 +275,4 @@ nsresult PlaceholderTxn::RememberEndingSelection()
   return NS_OK;
 }
 
+} // namespace mozilla
