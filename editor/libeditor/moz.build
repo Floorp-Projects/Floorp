@@ -27,7 +27,7 @@ UNIFIED_SOURCES += [
     'HTMLEditUtils.cpp',
     'InsertNodeTransaction.cpp',
     'InsertTextTransaction.cpp',
-    'JoinNodeTxn.cpp',
+    'JoinNodeTransaction.cpp',
     'nsEditor.cpp',
     'nsEditorCommands.cpp',
     'nsEditorController.cpp',
