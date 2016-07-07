@@ -6,6 +6,7 @@
 #include "nsHTMLObjectResizer.h"
 
 #include "EditorUtils.h"
+#include "HTMLEditUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
@@ -18,7 +19,6 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLCSSUtils.h"
-#include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -49,8 +49,6 @@ class nsISelection;
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-class nsHTMLEditUtils;
 
 // ==================================================================
 // DocumentResizeEventListener
@@ -207,10 +205,11 @@ nsHTMLEditor::CreateShadow(nsIDOMNode* aParentNode,
 {
   // let's create an image through the element factory
   nsAutoString name;
-  if (nsHTMLEditUtils::IsImage(aOriginalObject))
+  if (HTMLEditUtils::IsImage(aOriginalObject)) {
     name.AssignLiteral("img");
-  else
+  } else {
     name.AssignLiteral("span");
+  }
   nsCOMPtr<nsIDOMElement> retDOM;
   CreateAnonymousElement(name, aParentNode,
                          NS_LITERAL_STRING("mozResizingShadow"), true,
@@ -508,7 +507,7 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
                             NS_LITERAL_STRING("true"), true);
 
   // do we want to preserve ratio or not?
-  bool preserveRatio = nsHTMLEditUtils::IsImage(mResizedObject) &&
+  bool preserveRatio = HTMLEditUtils::IsImage(mResizedObject) &&
     Preferences::GetBool("editor.resizing.preserve_ratio", true);
 
   // the way we change the position/size of the shadow depends on
@@ -724,7 +723,7 @@ nsHTMLEditor::SetShadowPosition(Element* aShadow,
 {
   SetAnonymousElementPosition(aOriginalObjectX, aOriginalObjectY, static_cast<nsIDOMElement*>(GetAsDOMNode(aShadow)));
 
-  if (nsHTMLEditUtils::IsImage(aOriginalObject)) {
+  if (HTMLEditUtils::IsImage(aOriginalObject)) {
     nsAutoString imageSource;
     aOriginalObject->GetAttr(kNameSpaceID_None, nsGkAtoms::src, imageSource);
     nsresult res = aShadow->SetAttr(kNameSpaceID_None, nsGkAtoms::src,

@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "EditorUtils.h"
+#include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -30,7 +31,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
@@ -332,7 +332,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     // but if not we want to delete _contents_ of cells and replace
     // with non-table elements.  Use cellSelectionMode bool to
     // indicate results.
-    if (!nsHTMLEditUtils::IsTableElement(nodeList[0])) {
+    if (!HTMLEditUtils::IsTableElement(nodeList[0])) {
       cellSelectionMode = false;
     }
   }
@@ -486,9 +486,10 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       // give the user a hand on table element insertion.  if they have
       // a table or table row on the clipboard, and are trying to insert
       // into a table or table row, insert the appropriate children instead.
-      if (  (nsHTMLEditUtils::IsTableRow(curNode) && nsHTMLEditUtils::IsTableRow(parentNode))
-         && (nsHTMLEditUtils::IsTable(curNode)    || nsHTMLEditUtils::IsTable(parentNode)) )
-      {
+      if (HTMLEditUtils::IsTableRow(curNode) &&
+          HTMLEditUtils::IsTableRow(parentNode) &&
+          (HTMLEditUtils::IsTable(curNode) ||
+           HTMLEditUtils::IsTable(parentNode))) {
         nsCOMPtr<nsIDOMNode> child;
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child)
@@ -508,19 +509,18 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       // a list on the clipboard, and are trying to insert
       // into a list or list item, insert the appropriate children instead,
       // ie, merge the lists instead of pasting in a sublist.
-      else if (nsHTMLEditUtils::IsList(curNode) &&
-              (nsHTMLEditUtils::IsList(parentNode)  || nsHTMLEditUtils::IsListItem(parentNode)) )
-      {
+      else if (HTMLEditUtils::IsList(curNode) &&
+               (HTMLEditUtils::IsList(parentNode) ||
+                HTMLEditUtils::IsListItem(parentNode))) {
         nsCOMPtr<nsIDOMNode> child, tmp;
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child)
         {
-          if (nsHTMLEditUtils::IsListItem(child) || nsHTMLEditUtils::IsList(child))
-          {
+          if (HTMLEditUtils::IsListItem(child) ||
+              HTMLEditUtils::IsList(child)) {
             // Check if we are pasting into empty list item. If so
             // delete it and paste into parent list instead.
-            if (nsHTMLEditUtils::IsListItem(parentNode))
-            {
+            if (HTMLEditUtils::IsListItem(parentNode)) {
               bool isEmpty;
               rv = IsEmptyNode(parentNode, &isEmpty, true);
               if (NS_SUCCEEDED(rv) && isEmpty)
@@ -550,8 +550,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           curNode->GetFirstChild(getter_AddRefs(child));
         }
 
-      } else if (parentBlock && nsHTMLEditUtils::IsPre(parentBlock) &&
-                 nsHTMLEditUtils::IsPre(curNode)) {
+      } else if (parentBlock && HTMLEditUtils::IsPre(parentBlock) &&
+                 HTMLEditUtils::IsPre(curNode)) {
         // Check for pre's going into pre's.
         nsCOMPtr<nsIDOMNode> child, tmp;
         curNode->GetFirstChild(getter_AddRefs(child));
@@ -612,16 +612,16 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       int32_t selOffset;
 
       // but don't cross tables
-      if (!nsHTMLEditUtils::IsTable(lastInsertNode))
-      {
+      if (!HTMLEditUtils::IsTable(lastInsertNode)) {
         nsCOMPtr<nsINode> lastInsertNode_ = do_QueryInterface(lastInsertNode);
         NS_ENSURE_STATE(lastInsertNode_ || !lastInsertNode);
         selNode = GetAsDOMNode(GetLastEditableLeaf(*lastInsertNode_));
         tmp = selNode;
         while (tmp && (tmp != lastInsertNode))
         {
-          if (nsHTMLEditUtils::IsTable(tmp))
+          if (HTMLEditUtils::IsTable(tmp)) {
             highTable = tmp;
+          }
           nsCOMPtr<nsIDOMNode> parent = tmp;
           tmp->GetParentNode(getter_AddRefs(parent));
           tmp = parent;
@@ -631,8 +631,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       }
       if (!selNode)
         selNode = lastInsertNode;
-      if (IsTextNode(selNode) || (IsContainer(selNode) && !nsHTMLEditUtils::IsTable(selNode)))
-      {
+      if (IsTextNode(selNode) ||
+          (IsContainer(selNode) && !HTMLEditUtils::IsTable(selNode))) {
         rv = GetLengthOfDOMNode(selNode, (uint32_t&)selOffset);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -769,8 +769,7 @@ nsHTMLEditor::IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink)
   nsCOMPtr<nsIDOMNode> tmp, node = aNode;
   while (node)
   {
-    if (nsHTMLEditUtils::IsLink(node))
-    {
+    if (HTMLEditUtils::IsLink(node)) {
       if (outLink)
         *outLink = node;
       return true;
@@ -788,7 +787,7 @@ nsHTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly)
   if (aNode.TextIsOnlyWhitespace()) {
     nsCOMPtr<nsINode> parent = aNode.GetParentNode();
     if (parent) {
-      if (!aListOnly || nsHTMLEditUtils::IsList(parent)) {
+      if (!aListOnly || HTMLEditUtils::IsList(parent)) {
         ErrorResult rv;
         parent->RemoveChild(aNode, rv);
         return rv.StealNSResult();
@@ -2275,7 +2274,7 @@ nsHTMLEditor::GetListAndTableParents(StartOrEnd aStartOrEnd,
 
   for (nsCOMPtr<nsINode> node = aNodeList[idx]; node;
        node = node->GetParentNode()) {
-    if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsTable(node)) {
+    if (HTMLEditUtils::IsList(node) || HTMLEditUtils::IsTable(node)) {
       outArray.AppendElement(*node->AsElement());
     }
   }
@@ -2290,7 +2289,7 @@ nsHTMLEditor::DiscoverPartialListsAndTables(nsTArray<OwningNonNull<nsINode>>& aP
 
   // Scan insertion list for table elements (other than table).
   for (auto& curNode : aPasteNodes) {
-    if (nsHTMLEditUtils::IsTableElement(curNode) &&
+    if (HTMLEditUtils::IsTableElement(curNode) &&
         !curNode->IsHTMLElement(nsGkAtoms::table)) {
       nsCOMPtr<Element> table = curNode->GetParentElement();
       while (table && !table->IsHTMLElement(nsGkAtoms::table)) {
@@ -2307,9 +2306,9 @@ nsHTMLEditor::DiscoverPartialListsAndTables(nsTArray<OwningNonNull<nsINode>>& aP
         }
       }
     }
-    if (nsHTMLEditUtils::IsListItem(curNode)) {
+    if (HTMLEditUtils::IsListItem(curNode)) {
       nsCOMPtr<Element> list = curNode->GetParentElement();
-      while (list && !nsHTMLEditUtils::IsList(list)) {
+      while (list && !HTMLEditUtils::IsList(list)) {
         list = list->GetParentElement();
       }
       if (list) {
@@ -2334,16 +2333,16 @@ nsHTMLEditor::ScanForListAndTableStructure(StartOrEnd aStartOrEnd,
 {
   // Look upward from first/last paste node for a piece of this list/table
   int32_t idx = aStartOrEnd == StartOrEnd::end ? aNodes.Length() - 1 : 0;
-  bool isList = nsHTMLEditUtils::IsList(&aListOrTable);
+  bool isList = HTMLEditUtils::IsList(&aListOrTable);
 
   for (nsCOMPtr<nsINode> node = aNodes[idx]; node;
        node = node->GetParentNode()) {
-    if ((isList && nsHTMLEditUtils::IsListItem(node)) ||
-        (!isList && nsHTMLEditUtils::IsTableElement(node) &&
+    if ((isList && HTMLEditUtils::IsListItem(node)) ||
+        (!isList && HTMLEditUtils::IsTableElement(node) &&
                     !node->IsHTMLElement(nsGkAtoms::table))) {
       nsCOMPtr<Element> structureNode = node->GetParentElement();
       if (isList) {
-        while (structureNode && !nsHTMLEditUtils::IsList(structureNode)) {
+        while (structureNode && !HTMLEditUtils::IsList(structureNode)) {
           structureNode = structureNode->GetParentElement();
         }
       } else {

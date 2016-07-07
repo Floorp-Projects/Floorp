@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "EditorUtils.h"
+#include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -16,7 +17,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -234,8 +234,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode)
         NS_ENSURE_SUCCESS(res, res);
 
         // We can encounter textnodes here -- must find a row
-        while (rowNode && !nsHTMLEditUtils::IsTableRow(rowNode))
-        {
+        while (rowNode && !HTMLEditUtils::IsTableRow(rowNode)) {
           nsCOMPtr<nsIDOMNode> nextNode;
           res = rowNode->GetNextSibling(getter_AddRefs(nextNode));
           NS_ENSURE_SUCCESS(res, res);
@@ -273,8 +272,9 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
 
   NS_ENSURE_TRUE(aCurrentRowNode, NS_ERROR_NULL_POINTER);
 
-  if (!nsHTMLEditUtils::IsTableRow(aCurrentRowNode))
+  if (!HTMLEditUtils::IsTableRow(aCurrentRowNode)) {
     return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMNode> nextRow;
   nsresult res = aCurrentRowNode->GetNextSibling(getter_AddRefs(nextRow));
@@ -283,8 +283,7 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
   nsCOMPtr<nsIDOMNode> nextNode;
 
   // Skip over any textnodes here
-  while (nextRow && !nsHTMLEditUtils::IsTableRow(nextRow))
-  {
+  while (nextRow && !HTMLEditUtils::IsTableRow(nextRow)) {
     res = nextRow->GetNextSibling(getter_AddRefs(nextNode));
     NS_ENSURE_SUCCESS(res, res);
 
@@ -313,8 +312,7 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
     NS_ENSURE_SUCCESS(res, res);
 
     // We can encounter textnodes here -- must find a row
-    while (nextRow && !nsHTMLEditUtils::IsTableRow(nextRow))
-    {
+    while (nextRow && !HTMLEditUtils::IsTableRow(nextRow)) {
       res = nextRow->GetNextSibling(getter_AddRefs(nextNode));
       NS_ENSURE_SUCCESS(res, res);
 
@@ -352,8 +350,7 @@ nsHTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)
   nsresult res = aRowNode->GetLastChild(getter_AddRefs(rowChild));
   NS_ENSURE_SUCCESS(res, res);
 
-  while (rowChild && !nsHTMLEditUtils::IsTableCell(rowChild))
-  {
+  while (rowChild && !HTMLEditUtils::IsTableCell(rowChild)) {
     // Skip over textnodes
     nsCOMPtr<nsIDOMNode> previousChild;
     res = rowChild->GetPreviousSibling(getter_AddRefs(previousChild));
@@ -2898,8 +2895,7 @@ nsHTMLEditor::GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell)
   //   so tell caller the cell wasn't found
   if (startParent == endParent &&
       endOffset == startOffset+1 &&
-      nsHTMLEditUtils::IsTableCell(childNode))
-  {
+      HTMLEditUtils::IsTableCell(childNode)) {
     // Should we also test if frame is selected? (Use GetCellDataAt())
     // (Let's not for now -- more efficient)
     nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(childNode);
