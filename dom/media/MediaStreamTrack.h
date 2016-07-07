@@ -24,7 +24,7 @@ class MediaStream;
 class MediaStreamGraph;
 class MediaStreamGraphImpl;
 class MediaStreamTrackListener;
-class MediaStreamTrackDirectListener;
+class DirectMediaStreamTrackListener;
 class PeerConnectionImpl;
 class PeerConnectionMedia;
 class PeerIdentity;
@@ -363,8 +363,8 @@ public:
    * the listener succeeded (tracks originating from SourceMediaStreams) or
    * failed (e.g., WebAudio originated tracks).
    */
-  void AddDirectListener(MediaStreamTrackDirectListener *aListener);
-  void RemoveDirectListener(MediaStreamTrackDirectListener  *aListener);
+  void AddDirectListener(DirectMediaStreamTrackListener *aListener);
+  void RemoveDirectListener(DirectMediaStreamTrackListener  *aListener);
 
   /**
    * Sets up a MediaInputPort from the underlying track that this
@@ -377,6 +377,8 @@ public:
    * output stream.
    */
   bool IsForwardedThrough(MediaInputPort* aPort);
+
+  void SetMediaStreamSizeListener(DirectMediaStreamTrackListener* aListener);
 
 protected:
   virtual ~MediaStreamTrack();
@@ -416,6 +418,10 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIPrincipal> mPendingPrincipal;
   RefPtr<PrincipalHandleListener> mPrincipalHandleListener;
+  // Keep tracking MediaStreamTrackListener and DirectMediaStreamTrackListener,
+  // so we can remove them in |Destory|.
+  nsTArray<RefPtr<MediaStreamTrackListener>> mTrackListeners;
+  nsTArray<RefPtr<DirectMediaStreamTrackListener>> mDirectTrackListeners;
   nsString mID;
   MediaStreamTrackState mReadyState;
   bool mEnabled;

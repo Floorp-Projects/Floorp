@@ -337,11 +337,11 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
     // warning or an error if there is a lock that locks it.
     static bool reportIfFoundInStack(JSContext* cx, HandleScript script) {
         if (EnterDebuggeeNoExecute* nx = findInStack(cx)) {
-            bool warning = !cx->runtime()->options().throwOnDebuggeeWouldRun();
+            bool warning = !cx->options().throwOnDebuggeeWouldRun();
             if (!warning || !nx->reported_) {
                 AutoCompartment ac(cx, nx->debugger().toJSObject());
                 nx->reported_ = true;
-                if (cx->runtime()->options().dumpStackOnDebuggeeWouldRun()) {
+                if (cx->options().dumpStackOnDebuggeeWouldRun()) {
                     fprintf(stdout, "Dumping stack for DebuggeeWouldRun:\n");
                     DumpBacktrace(cx);
                 }

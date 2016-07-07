@@ -34,7 +34,7 @@ BEGIN_TEST(testPinAcrossGC)
     sw.strOk = false;
     CHECK(sw.str);
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(sw.strOk);
     return true;
 }

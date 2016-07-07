@@ -979,6 +979,7 @@ public:
     static bool GetColorGlyphLayers(hb_blob_t* aCOLR,
                                     hb_blob_t* aCPAL,
                                     uint32_t aGlyphId,
+                                    const mozilla::gfx::Color& aDefaultColor,
                                     nsTArray<uint16_t> &aGlyphs,
                                     nsTArray<mozilla::gfx::Color> &aColors);
 

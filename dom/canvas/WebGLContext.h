@@ -1437,9 +1437,9 @@ protected:
     CheckedUint32 GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
                                 uint32_t depth, uint8_t bytesPerPixel);
 
-    CheckedUint32 GetPackSize(uint32_t width, uint32_t height, uint8_t bytesPerPixel,
-                              CheckedUint32* const out_startOffset,
-                              CheckedUint32* const out_rowStride);
+    bool ValidatePackSize(const char* funcName, uint32_t width, uint32_t height,
+                          uint8_t bytesPerPixel, uint32_t* const out_rowStride,
+                          uint32_t* const out_endOffset);
 
     GLenum mPixelStore_ColorspaceConversion;
     bool mPixelStore_FlipY;

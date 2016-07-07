@@ -2890,7 +2890,7 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler& masm)
     masm.movePtr(ImmGCPtr(prototype_.get()), holderReg);
 
     Address shapeAddr(ICStubReg, ICGetProp_Primitive::offsetOfProtoShape());
-    masm.loadPtr(Address(holderReg, JSObject::offsetOfShape()), scratchReg);
+    masm.loadPtr(Address(holderReg, ShapedObject::offsetOfShape()), scratchReg);
     masm.branchPtr(Assembler::NotEqual, shapeAddr, scratchReg, &failure);
 
     if (!isFixedSlot_)

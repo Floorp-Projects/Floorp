@@ -1347,7 +1347,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     const uint8_t* bodyBegin = c.d.currentPosition();
     const uint8_t* bodyEnd = bodyBegin + bodySize;
 
-    AstDecodeExprIter iter(AstDecodePolicy(), c.d);
+    AstDecodeExprIter iter(c.d);
 
     uint32_t sigIndex = c.funcSigs()[funcIndex];
     const AstSig* sig = c.module().sigs()[sigIndex];

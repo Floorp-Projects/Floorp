@@ -1074,9 +1074,9 @@ JS_StringToVersion(const char* string);
 
 namespace JS {
 
-class JS_PUBLIC_API(RuntimeOptions) {
+class JS_PUBLIC_API(ContextOptions) {
   public:
-    RuntimeOptions()
+    ContextOptions()
       : baseline_(true),
         ion_(true),
         asmJS_(true),
@@ -1095,121 +1095,121 @@ class JS_PUBLIC_API(RuntimeOptions) {
     }
 
     bool baseline() const { return baseline_; }
-    RuntimeOptions& setBaseline(bool flag) {
+    ContextOptions& setBaseline(bool flag) {
         baseline_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleBaseline() {
+    ContextOptions& toggleBaseline() {
         baseline_ = !baseline_;
         return *this;
     }
 
     bool ion() const { return ion_; }
-    RuntimeOptions& setIon(bool flag) {
+    ContextOptions& setIon(bool flag) {
         ion_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleIon() {
+    ContextOptions& toggleIon() {
         ion_ = !ion_;
         return *this;
     }
 
     bool asmJS() const { return asmJS_; }
-    RuntimeOptions& setAsmJS(bool flag) {
+    ContextOptions& setAsmJS(bool flag) {
         asmJS_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleAsmJS() {
+    ContextOptions& toggleAsmJS() {
         asmJS_ = !asmJS_;
         return *this;
     }
 
     bool wasm() const { return wasm_; }
-    RuntimeOptions& setWasm(bool flag) {
+    ContextOptions& setWasm(bool flag) {
         wasm_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleWasm() {
+    ContextOptions& toggleWasm() {
         wasm_ = !wasm_;
         return *this;
     }
 
     bool wasmAlwaysBaseline() const { return wasmAlwaysBaseline_; }
-    RuntimeOptions& setWasmAlwaysBaseline(bool flag) {
+    ContextOptions& setWasmAlwaysBaseline(bool flag) {
         wasmAlwaysBaseline_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleWasmAlwaysBaseline() {
+    ContextOptions& toggleWasmAlwaysBaseline() {
         wasmAlwaysBaseline_ = !wasmAlwaysBaseline_;
         return *this;
     }
 
     bool throwOnAsmJSValidationFailure() const { return throwOnAsmJSValidationFailure_; }
-    RuntimeOptions& setThrowOnAsmJSValidationFailure(bool flag) {
+    ContextOptions& setThrowOnAsmJSValidationFailure(bool flag) {
         throwOnAsmJSValidationFailure_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleThrowOnAsmJSValidationFailure() {
+    ContextOptions& toggleThrowOnAsmJSValidationFailure() {
         throwOnAsmJSValidationFailure_ = !throwOnAsmJSValidationFailure_;
         return *this;
     }
 
     bool nativeRegExp() const { return nativeRegExp_; }
-    RuntimeOptions& setNativeRegExp(bool flag) {
+    ContextOptions& setNativeRegExp(bool flag) {
         nativeRegExp_ = flag;
         return *this;
     }
 
     bool unboxedArrays() const { return unboxedArrays_; }
-    RuntimeOptions& setUnboxedArrays(bool flag) {
+    ContextOptions& setUnboxedArrays(bool flag) {
         unboxedArrays_ = flag;
         return *this;
     }
 
     bool asyncStack() const { return asyncStack_; }
-    RuntimeOptions& setAsyncStack(bool flag) {
+    ContextOptions& setAsyncStack(bool flag) {
         asyncStack_ = flag;
         return *this;
     }
 
     bool throwOnDebuggeeWouldRun() const { return throwOnDebuggeeWouldRun_; }
-    RuntimeOptions& setThrowOnDebuggeeWouldRun(bool flag) {
+    ContextOptions& setThrowOnDebuggeeWouldRun(bool flag) {
         throwOnDebuggeeWouldRun_ = flag;
         return *this;
     }
 
     bool dumpStackOnDebuggeeWouldRun() const { return dumpStackOnDebuggeeWouldRun_; }
-    RuntimeOptions& setDumpStackOnDebuggeeWouldRun(bool flag) {
+    ContextOptions& setDumpStackOnDebuggeeWouldRun(bool flag) {
         dumpStackOnDebuggeeWouldRun_ = flag;
         return *this;
     }
 
     bool werror() const { return werror_; }
-    RuntimeOptions& setWerror(bool flag) {
+    ContextOptions& setWerror(bool flag) {
         werror_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleWerror() {
+    ContextOptions& toggleWerror() {
         werror_ = !werror_;
         return *this;
     }
 
     bool strictMode() const { return strictMode_; }
-    RuntimeOptions& setStrictMode(bool flag) {
+    ContextOptions& setStrictMode(bool flag) {
         strictMode_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleStrictMode() {
+    ContextOptions& toggleStrictMode() {
         strictMode_ = !strictMode_;
         return *this;
     }
 
     bool extraWarnings() const { return extraWarnings_; }
-    RuntimeOptions& setExtraWarnings(bool flag) {
+    ContextOptions& setExtraWarnings(bool flag) {
         extraWarnings_ = flag;
         return *this;
     }
-    RuntimeOptions& toggleExtraWarnings() {
+    ContextOptions& toggleExtraWarnings() {
         extraWarnings_ = !extraWarnings_;
         return *this;
     }
@@ -1231,11 +1231,8 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool extraWarnings_ : 1;
 };
 
-JS_PUBLIC_API(RuntimeOptions&)
-RuntimeOptionsRef(JSRuntime* rt);
-
-JS_PUBLIC_API(RuntimeOptions&)
-RuntimeOptionsRef(JSContext* cx);
+JS_PUBLIC_API(ContextOptions&)
+ContextOptionsRef(JSContext* cx);
 
 /**
  * Initialize the runtime's self-hosted code. Embeddings should call this
@@ -1608,7 +1605,7 @@ JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data);
  * Garbage collector API.
  */
 extern JS_PUBLIC_API(void)
-JS_GC(JSRuntime* rt);
+JS_GC(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext* cx);
@@ -2309,7 +2306,7 @@ class JS_PUBLIC_API(CompartmentBehaviors)
         return *this;
     }
 
-    bool extraWarnings(JSRuntime* rt) const;
+    bool extraWarnings(JSContext* cx) const;
     Override& extraWarningsOverride() { return extraWarningsOverride_; }
 
     bool getSingletonsAsTemplates() const {
@@ -4130,7 +4127,7 @@ JS_DecompileFunction(JSContext* cx, JS::Handle<JSFunction*> fun, unsigned indent
  * Why a runtime option?  The alternative is to add APIs duplicating those
  * for the other value of flags, and that doesn't seem worth the code bloat
  * cost.  Such new entry points would probably have less obvious names, too, so
- * would not tend to be used.  The RuntimeOptionsRef adjustment, OTOH, can be
+ * would not tend to be used.  The ContextOptionsRef adjustment, OTOH, can be
  * more easily hacked into existing code that does not depend on the bug; such
  * code can continue to use the familiar JS::Evaluate, etc., entry points.
  */
@@ -4308,10 +4305,10 @@ JS_CheckForInterrupt(JSContext* cx);
  * is disconnected before attempting such re-entry.
  */
 extern JS_PUBLIC_API(JSInterruptCallback)
-JS_SetInterruptCallback(JSRuntime* rt, JSInterruptCallback callback);
+JS_SetInterruptCallback(JSContext* cx, JSInterruptCallback callback);
 
 extern JS_PUBLIC_API(JSInterruptCallback)
-JS_GetInterruptCallback(JSRuntime* rt);
+JS_GetInterruptCallback(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSRuntime* rt);
@@ -4326,7 +4323,7 @@ namespace JS {
  * See dom/base/ScriptSettings.h for details.
  */
 extern JS_PUBLIC_API(void)
-SetGetIncumbentGlobalCallback(JSRuntime* rt, JSGetIncumbentGlobalCallback callback);
+SetGetIncumbentGlobalCallback(JSContext* cx, JSGetIncumbentGlobalCallback callback);
 
 /**
  * Sets the callback that's invoked whenever a Promise job should be enqeued.
@@ -4338,7 +4335,7 @@ SetGetIncumbentGlobalCallback(JSRuntime* rt, JSGetIncumbentGlobalCallback callba
  * passed here as arguments.
  */
 extern JS_PUBLIC_API(void)
-SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback,
+SetEnqueuePromiseJobCallback(JSContext* cx, JSEnqueuePromiseJobCallback callback,
                              void* data = nullptr);
 
 /**
@@ -4347,7 +4344,7 @@ SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback
  * without a handler gets a handler attached.
  */
 extern JS_PUBLIC_API(void)
-SetPromiseRejectionTrackerCallback(JSRuntime* rt, JSPromiseRejectionTrackerCallback callback,
+SetPromiseRejectionTrackerCallback(JSContext* cx, JSPromiseRejectionTrackerCallback callback,
                                    void* data = nullptr);
 
 /**
@@ -6160,19 +6157,19 @@ using PerformanceGroupVector = mozilla::Vector<RefPtr<js::PerformanceGroup>, 0, 
  * to the outside world and can cancelled with a call to `ResetMonitoring`.
  */
 extern JS_PUBLIC_API(bool)
-FlushPerformanceMonitoring(JSRuntime*);
+FlushPerformanceMonitoring(JSContext*);
 
 /**
  * Cancel any measurement that hasn't been committed.
  */
 extern JS_PUBLIC_API(void)
-ResetPerformanceMonitoring(JSRuntime*);
+ResetPerformanceMonitoring(JSContext*);
 
 /**
  * Cleanup any memory used by performance monitoring.
  */
 extern JS_PUBLIC_API(void)
-DisposePerformanceMonitoring(JSRuntime*);
+DisposePerformanceMonitoring(JSContext*);
 
 /**
  * Turn on/off stopwatch-based CPU monitoring.
@@ -6182,20 +6179,17 @@ DisposePerformanceMonitoring(JSRuntime*);
  * happen if we are out of memory.
  */
 extern JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringCPOW(JSRuntime*, bool);
+SetStopwatchIsMonitoringCPOW(JSContext*, bool);
 extern JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringCPOW(JSRuntime*);
+GetStopwatchIsMonitoringCPOW(JSContext*);
 extern JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringJank(JSRuntime*, bool);
+SetStopwatchIsMonitoringJank(JSContext*, bool);
 extern JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringJank(JSRuntime*);
-
-extern JS_PUBLIC_API(bool)
-IsStopwatchActive(JSRuntime*);
+GetStopwatchIsMonitoringJank(JSContext*);
 
 // Extract the CPU rescheduling data.
 extern JS_PUBLIC_API(void)
-GetPerfMonitoringTestCpuRescheduling(JSRuntime*, uint64_t* stayed, uint64_t* moved);
+GetPerfMonitoringTestCpuRescheduling(JSContext*, uint64_t* stayed, uint64_t* moved);
 
 
 /**
@@ -6203,22 +6197,22 @@ GetPerfMonitoringTestCpuRescheduling(JSRuntime*, uint64_t* stayed, uint64_t* mov
  * since process start.
  */
 extern JS_PUBLIC_API(void)
-AddCPOWPerformanceDelta(JSRuntime*, uint64_t delta);
+AddCPOWPerformanceDelta(JSContext*, uint64_t delta);
 
 typedef bool
 (*StopwatchStartCallback)(uint64_t, void*);
 extern JS_PUBLIC_API(bool)
-SetStopwatchStartCallback(JSRuntime*, StopwatchStartCallback, void*);
+SetStopwatchStartCallback(JSContext*, StopwatchStartCallback, void*);
 
 typedef bool
 (*StopwatchCommitCallback)(uint64_t, PerformanceGroupVector&, void*);
 extern JS_PUBLIC_API(bool)
-SetStopwatchCommitCallback(JSRuntime*, StopwatchCommitCallback, void*);
+SetStopwatchCommitCallback(JSContext*, StopwatchCommitCallback, void*);
 
 typedef bool
 (*GetGroupsCallback)(JSContext*, PerformanceGroupVector&, void*);
 extern JS_PUBLIC_API(bool)
-SetGetPerformanceGroupsCallback(JSRuntime*, GetGroupsCallback, void*);
+SetGetPerformanceGroupsCallback(JSContext*, GetGroupsCallback, void*);
 
 } /* namespace js */
 

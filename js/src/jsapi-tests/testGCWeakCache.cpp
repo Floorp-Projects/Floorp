@@ -20,7 +20,7 @@ BEGIN_TEST(testWeakCacheSet)
     // the test will continue to work, it will just not test as much.
     JS::RootedObject tenured1(cx, JS_NewPlainObject(cx));
     JS::RootedObject tenured2(cx, JS_NewPlainObject(cx));
-    JS_GC(rt);
+    JS_GC(cx);
     JS::RootedObject nursery1(cx, JS_NewPlainObject(cx));
     JS::RootedObject nursery2(cx, JS_NewPlainObject(cx));
 
@@ -35,7 +35,7 @@ BEGIN_TEST(testWeakCacheSet)
     cache.put(nursery2);
 
     // Verify relocation and that we don't sweep too aggressively.
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(cache.has(tenured1));
     CHECK(cache.has(tenured2));
     CHECK(cache.has(nursery1));
@@ -43,7 +43,7 @@ BEGIN_TEST(testWeakCacheSet)
 
     // Unroot two entries and verify that they get removed.
     tenured2 = nursery2 = nullptr;
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(cache.has(tenured1));
     CHECK(cache.has(nursery1));
     CHECK(cache.count() == 2);
@@ -60,7 +60,7 @@ BEGIN_TEST(testWeakCacheMap)
     // the test will continue to work, it will just not test as much.
     JS::RootedObject tenured1(cx, JS_NewPlainObject(cx));
     JS::RootedObject tenured2(cx, JS_NewPlainObject(cx));
-    JS_GC(rt);
+    JS_GC(cx);
     JS::RootedObject nursery1(cx, JS_NewPlainObject(cx));
     JS::RootedObject nursery2(cx, JS_NewPlainObject(cx));
 
@@ -75,14 +75,14 @@ BEGIN_TEST(testWeakCacheMap)
     cache.put(nursery1, 3);
     cache.put(nursery2, 4);
 
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(cache.has(tenured1));
     CHECK(cache.has(tenured2));
     CHECK(cache.has(nursery1));
     CHECK(cache.has(nursery2));
 
     tenured2 = nursery2 = nullptr;
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(cache.has(tenured1));
     CHECK(cache.has(nursery1));
     CHECK(cache.count() == 2);

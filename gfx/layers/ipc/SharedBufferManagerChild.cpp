@@ -159,7 +159,7 @@ SharedBufferManagerChild::StartUpOnThread(base::Thread* aThread)
   char thrname[128];
   base::snprintf(thrname, 128, "BufMgrParent#%d", base::Process::Current().pid());
   sSharedBufferManagerParentSingleton = new SharedBufferManagerParent(
-    nullptr, base::Process::Current().pid(), new base::Thread(thrname));
+    base::Process::Current().pid(), new base::Thread(thrname));
   sSharedBufferManagerChildSingleton->ConnectAsync(sSharedBufferManagerParentSingleton);
   return true;
 }

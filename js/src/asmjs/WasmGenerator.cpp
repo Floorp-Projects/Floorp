@@ -40,20 +40,16 @@ using mozilla::MakeEnumeratedRange;
 static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 
-ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
-  : cx_(cx),
-    jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
+ModuleGenerator::ModuleGenerator()
+  : alwaysBaseline_(false),
     numSigs_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
-    alloc_(&lifo_),
-    masm_(MacroAssembler::AsmJSToken(), alloc_),
-    funcIndexToExport_(cx),
+    masmAlloc_(&lifo_),
+    masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
     lastPatchedCallsite_(0),
     startOfUnpatchedBranches_(0),
     parallel_(false),
     outstanding_(0),
-    tasks_(cx),
-    freeTasks_(cx),
     activeFunc_(nullptr),
     startedFuncDefs_(false),
     finishedFuncDefs_(false)
@@ -68,12 +64,12 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                IonCompileTaskVector& worklist = HelperThreadState().wasmWorklist();
+                IonCompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist();
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                IonCompileTaskVector& finished = HelperThreadState().wasmFinishedList();
+                IonCompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList();
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
@@ -96,42 +92,30 @@ ModuleGenerator::~ModuleGenerator()
     }
 }
 
-static bool
-ParallelCompilationEnabled(ExclusiveContext* cx)
-{
-    // Since there are a fixed number of helper threads and one is already being
-    // consumed by this parsing task, ensure that there another free thread to
-    // avoid deadlock. (Note: there is at most one thread used for parsing so we
-    // don't have to worry about general dining philosophers.)
-    if (HelperThreadState().threadCount <= 1 || !CanUseExtraThreads())
-        return false;
-
-    // If 'cx' isn't a JSContext, then we are already off the main thread so
-    // off-thread compilation must be enabled.
-    return !cx->isJSContext() || cx->asJSContext()->runtime()->canUseOffthreadIonCompilation();
-}
-
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars file, Metadata* maybeMetadata)
+ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
+                      Metadata* maybeAsmJSMetadata)
 {
+    alwaysBaseline_ = args.alwaysBaseline;
+
     if (!funcIndexToExport_.init())
         return false;
 
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));;
 
     // asm.js passes in an AsmJSMetadata subclass to use instead.
-    if (maybeMetadata) {
-        metadata_ = maybeMetadata;
+    if (maybeAsmJSMetadata) {
+        MOZ_ASSERT(shared->kind == ModuleKind::AsmJS);
+        metadata_ = maybeAsmJSMetadata;
     } else {
         metadata_ = js_new<Metadata>();
         if (!metadata_)
             return false;
     }
 
-    metadata_->compileArgs = shared->args;
     metadata_->kind = shared->kind;
-    metadata_->heapUsage = HeapUsage::None;
-    metadata_->filename = Move(file);
+    metadata_->filename = Move(args.filename);
+    metadata_->assumptions = Move(args.assumptions);
 
     shared_ = Move(shared);
 
@@ -213,7 +197,7 @@ JumpRange()
     return Min(JitOptions.jumpThreshold, JumpImmediateRange);
 }
 
-typedef HashMap<uint32_t, uint32_t> OffsetMap;
+typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> OffsetMap;
 
 bool
 ModuleGenerator::convertOutOfRangeBranchesToThunks()
@@ -223,7 +207,7 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
     // Create thunks for callsites that have gone out of range. Use a map to
     // create one thunk for each callee since there is often high reuse.
 
-    OffsetMap alreadyThunked(cx_);
+    OffsetMap alreadyThunked;
     if (!alreadyThunked.init())
         return false;
 
@@ -342,6 +326,9 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     return true;
 }
 
+typedef Vector<Offsets, 0, SystemAllocPolicy> OffsetVector;
+typedef Vector<ProfilingOffsets, 0, SystemAllocPolicy> ProfilingOffsetVector;
+
 bool
 ModuleGenerator::finishCodegen()
 {
@@ -351,9 +338,9 @@ ModuleGenerator::finishCodegen()
     // larger than the JumpImmediateRange, even local uses of Label will fail
     // due to the large absolute offsets temporarily stored by Label::bind().
 
-    Vector<Offsets> entries(cx_);
-    Vector<ProfilingOffsets> interpExits(cx_);
-    Vector<ProfilingOffsets> jitExits(cx_);
+    OffsetVector entries;
+    ProfilingOffsetVector interpExits;
+    ProfilingOffsetVector jitExits;
     EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
     Offsets interruptExit;
 
@@ -364,7 +351,7 @@ ModuleGenerator::finishCodegen()
         if (!entries.resize(numExports()))
             return false;
         for (uint32_t i = 0; i < numExports(); i++)
-            entries[i] = GenerateEntry(masm, metadata_->exports[i], usesHeap());
+            entries[i] = GenerateEntry(masm, metadata_->exports[i], usesMemory());
 
         if (!interpExits.resize(numImports()))
             return false;
@@ -372,7 +359,7 @@ ModuleGenerator::finishCodegen()
             return false;
         for (uint32_t i = 0; i < numImports(); i++) {
             interpExits[i] = GenerateInterpExit(masm, metadata_->imports[i], i);
-            jitExits[i] = GenerateJitExit(masm, metadata_->imports[i], usesHeap());
+            jitExits[i] = GenerateJitExit(masm, metadata_->imports[i], usesMemory());
         }
 
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
@@ -419,6 +406,7 @@ ModuleGenerator::finishCodegen()
     // Fill in LinkData with the offsets of these stubs.
 
     linkData_.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
+    linkData_.unalignedAccessOffset = jumpTargets[JumpTarget::UnalignedAccess].begin;
     linkData_.interruptOffset = interruptExit.begin;
 
     // Only call convertOutOfRangeBranchesToThunks after all other codegen that may
@@ -598,31 +586,6 @@ ModuleGenerator::allocateGlobal(ValType type, bool isConst, uint32_t* index)
 }
 
 void
-ModuleGenerator::initHeapUsage(HeapUsage heapUsage, uint32_t initialHeapLength)
-{
-    MOZ_ASSERT(metadata_->heapUsage == HeapUsage::None);
-    metadata_->heapUsage = heapUsage;
-    metadata_->initialHeapLength = initialHeapLength;
-    if (isAsmJS())
-        MOZ_ASSERT(initialHeapLength == 0);
-    else
-        shared_->minHeapLength = initialHeapLength;
-}
-
-bool
-ModuleGenerator::usesHeap() const
-{
-    return UsesHeap(metadata_->heapUsage);
-}
-
-uint32_t
-ModuleGenerator::initialHeapLength() const
-{
-    MOZ_ASSERT(!isAsmJS());
-    return metadata_->initialHeapLength;
-}
-
-void
 ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
     MOZ_ASSERT(isAsmJS());
@@ -650,12 +613,21 @@ ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 }
 
 void
-ModuleGenerator::bumpMinHeapLength(uint32_t newMinHeapLength)
+ModuleGenerator::initMemoryUsage(MemoryUsage memoryUsage)
 {
     MOZ_ASSERT(isAsmJS());
-    MOZ_ASSERT(newMinHeapLength >= shared_->minHeapLength);
+    MOZ_ASSERT(shared_->memoryUsage == MemoryUsage::None);
 
-    shared_->minHeapLength = newMinHeapLength;
+    shared_->memoryUsage = memoryUsage;
+}
+
+void
+ModuleGenerator::bumpMinMemoryLength(uint32_t newMinMemoryLength)
+{
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(newMinMemoryLength >= shared_->minMemoryLength);
+
+    shared_->minMemoryLength = newMinMemoryLength;
 }
 
 const DeclaredSig&
@@ -745,10 +717,22 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(!startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
+    // The wasmCompilationInProgress atomic ensures that there is only one
+    // parallel compilation in progress at a time. In the special case of
+    // asm.js, where the ModuleGenerator itself can be on a helper thread, this
+    // avoids the possibility of deadlock since at most 1 helper thread will be
+    // blocking on other helper threads and there are always >1 helper threads.
+    // With wasm, this restriction could be relaxed by moving the worklist state
+    // out of HelperThreadState since each independent compilation needs its own
+    // worklist pair. Alternatively, the deadlock could be avoided by having the
+    // ModuleGenerator thread make progress (on compile tasks) instead of
+    // blocking.
+
+    GlobalHelperThreadState& threads = HelperThreadState();
+    MOZ_ASSERT(threads.threadCount > 1);
+
     uint32_t numTasks;
-    if (ParallelCompilationEnabled(cx_) &&
-        HelperThreadState().wasmCompilationInProgress.compareExchange(false, true))
-    {
+    if (CanUseExtraThreads() && threads.wasmCompilationInProgress.compareExchange(false, true)) {
 #ifdef DEBUG
         {
             AutoLockHelperThreadState lock;
@@ -757,18 +741,16 @@ ModuleGenerator::startFuncDefs()
             MOZ_ASSERT(HelperThreadState().wasmFinishedList().empty());
         }
 #endif
-
         parallel_ = true;
-        numTasks = HelperThreadState().maxWasmCompilationThreads();
+        numTasks = threads.maxWasmCompilationThreads();
     } else {
         numTasks = 1;
     }
 
     if (!tasks_.initCapacity(numTasks))
         return false;
-    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(rt, *shared_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(*shared_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -804,13 +786,6 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
 bool
 ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 {
-    TraceLoggerThread* logger = nullptr;
-    if (cx_->isJSContext())
-        logger = TraceLoggerForMainThread(cx_->asJSContext()->runtime());
-    else
-        logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
     MOZ_ASSERT(activeFunc_ == fg);
 
     auto func = js::MakeUnique<FuncBytes>(Move(fg->bytes_),
@@ -821,14 +796,14 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
     if (!func)
         return false;
 
-    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
-    bool baselineCompile = rt->options().wasmAlwaysBaseline() && BaselineCanCompile(fg);
+    auto mode = alwaysBaseline_ && BaselineCanCompile(fg)
+                ? IonCompileTask::CompileMode::Baseline
+                : IonCompileTask::CompileMode::Ion;
 
-    fg->task_->init(Move(func), baselineCompile ? IonCompileTask::CompileMode::Baseline
-                                                : IonCompileTask::CompileMode::Ion);
+    fg->task_->init(Move(func), mode);
 
     if (parallel_) {
-        if (!StartOffThreadWasmCompile(cx_, fg->task_))
+        if (!StartOffThreadWasmCompile(fg->task_))
             return false;
         outstanding_++;
     } else {
@@ -937,7 +912,7 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
     if (!metadata_->callSites.appendAll(masm_.callSites()))
         return nullptr;
 
-    // The MacroAssembler has accumulated all the heap accesses during codegen.
+    // The MacroAssembler has accumulated all the memory accesses during codegen.
     metadata_->memoryAccesses = masm_.extractMemoryAccesses();
     metadata_->boundsChecks = masm_.extractBoundsChecks();
 
@@ -948,6 +923,10 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
     metadata_->callThunks.podResizeToFit();
+
+    // Copy over data from the ModuleGeneratorData.
+    metadata_->memoryUsage = shared_->memoryUsage;
+    metadata_->minMemoryLength = shared_->minMemoryLength;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
@@ -961,11 +940,11 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
     if (!finishLinkData(code))
         return nullptr;
 
-    return cx_->make_unique<Module>(Move(code),
-                                    Move(linkData_),
-                                    Move(importNames),
-                                    Move(exportMap_),
-                                    Move(dataSegments_),
-                                    *metadata_,
-                                    bytecode);
+    return js::MakeUnique<Module>(Move(code),
+                                  Move(linkData_),
+                                  Move(importNames),
+                                  Move(exportMap_),
+                                  Move(dataSegments_),
+                                  *metadata_,
+                                  bytecode);
 }

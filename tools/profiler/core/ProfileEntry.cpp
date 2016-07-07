@@ -20,10 +20,6 @@
 // Self
 #include "ProfileEntry.h"
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
- #define snprintf _snprintf
-#endif
-
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 using mozilla::Maybe;

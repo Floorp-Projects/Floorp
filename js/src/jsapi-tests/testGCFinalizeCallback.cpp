@@ -15,7 +15,7 @@ BEGIN_TEST(testGCFinalizeCallback)
 
     /* Full GC, non-incremental. */
     FinalizeCalls = 0;
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(rt->gc.isFullGc());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());

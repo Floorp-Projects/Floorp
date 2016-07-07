@@ -168,10 +168,10 @@ public:
   }
 
   static void
-  SetDefaultRuntimeOptions(const JS::RuntimeOptions& aRuntimeOptions)
+  SetDefaultContextOptions(const JS::ContextOptions& aContextOptions)
   {
     AssertIsOnMainThread();
-    sDefaultJSSettings.runtimeOptions = aRuntimeOptions;
+    sDefaultJSSettings.contextOptions = aContextOptions;
   }
 
   void
@@ -184,7 +184,7 @@ public:
   UpdatePlatformOverridePreference(const nsAString& aValue);
 
   void
-  UpdateAllWorkerRuntimeOptions();
+  UpdateAllWorkerContextOptions();
 
   void
   UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages);
