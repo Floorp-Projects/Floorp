@@ -4,10 +4,8 @@
 taskId: {{build_slugid}}
 
 task:
-  created:
-    relative-datestamp: '0 seconds'
-  deadline:
-    relative-datestamp: '24 hours'
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
     source: http://todo.com/soon
     owner: mozilla-taskcluster-maintenance@mozilla.com

@@ -188,12 +188,6 @@ Each task has the following properties:
 ``task``
    The task's TaskCluster task definition.
 
-The task definition may contain "relative datestamps" of the form
-``{"relative-datestamp": "certain number of seconds/hours/days/years"}``.
-These will be replaced in the last step, while creating tasks.
-The UTC timestamp at that moment is noted, and all the relative datestamps
-are replaced with respect to this timestamp.
-
 The task definition may contain "task references" of the form
 ``{"task-reference": "string containing <task-label>"}``.  These will be
 replaced during the optimization step, with the appropriate taskId substituted
