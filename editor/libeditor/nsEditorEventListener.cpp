@@ -770,7 +770,7 @@ nsEditorEventListener::NotifyIMEOfMouseButtonEvent(
 nsresult
 nsEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
-  // FYI: This may be called by nsHTMLEditorEventListener::MouseDown() even
+  // FYI: This may be called by HTMLEditorEventListener::MouseDown() even
   //      when the event is not acceptable for committing composition.
   mEditor->ForceCompositionEnd();
   return NS_OK;
