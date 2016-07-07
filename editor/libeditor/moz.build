@@ -52,7 +52,7 @@ UNIFIED_SOURCES += [
     'nsTextEditRules.cpp',
     'nsTextEditRulesBidi.cpp',
     'nsWSRunObject.cpp',
-    'PlaceholderTxn.cpp',
+    'PlaceholderTransaction.cpp',
     'SetDocTitleTxn.cpp',
     'SplitNodeTxn.cpp',
     'TextEditorTest.cpp',

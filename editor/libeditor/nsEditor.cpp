@@ -22,7 +22,7 @@
 #include "InsertNodeTransaction.h"      // for InsertNodeTransaction
 #include "InsertTextTransaction.h"      // for InsertTextTransaction
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
-#include "PlaceholderTxn.h"             // for PlaceholderTxn
+#include "PlaceholderTransaction.h"     // for PlaceholderTransaction
 #include "SplitNodeTxn.h"               // for SplitNodeTxn
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
@@ -672,29 +672,31 @@ NS_IMETHODIMP
 nsEditor::DoTransaction(nsITransaction* aTxn)
 {
   if (mPlaceHolderBatch && !mPlaceHolderTxn) {
-    nsCOMPtr<nsIAbsorbingTransaction> plcTxn = new PlaceholderTxn();
+    nsCOMPtr<nsIAbsorbingTransaction> placeholderTransaction =
+      new PlaceholderTransaction();
 
-    // save off weak reference to placeholder txn
-    mPlaceHolderTxn = do_GetWeakReference(plcTxn);
-    plcTxn->Init(mPlaceHolderName, mSelState, this);
+    // Save off weak reference to placeholder transaction
+    mPlaceHolderTxn = do_GetWeakReference(placeholderTransaction);
+    placeholderTransaction->Init(mPlaceHolderName, mSelState, this);
     // placeholder txn took ownership of this pointer
     mSelState = nullptr;
 
     // QI to an nsITransaction since that's what DoTransaction() expects
-    nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
-    // we will recurse, but will not hit this case in the nested call
-    DoTransaction(theTxn);
+    nsCOMPtr<nsITransaction> transaction =
+      do_QueryInterface(placeholderTransaction);
+    // We will recurse, but will not hit this case in the nested call
+    DoTransaction(transaction);
 
     if (mTxnMgr) {
       nsCOMPtr<nsITransaction> topTxn = mTxnMgr->PeekUndoStack();
       if (topTxn) {
-        plcTxn = do_QueryInterface(topTxn);
-        if (plcTxn) {
+        placeholderTransaction = do_QueryInterface(topTxn);
+        if (placeholderTransaction) {
           // there is a placeholder transaction on top of the undo stack.  It
           // is either the one we just created, or an earlier one that we are
           // now merging into.  From here on out remember this placeholder
           // instead of the one we just created.
-          mPlaceHolderTxn = do_GetWeakReference(plcTxn);
+          mPlaceHolderTxn = do_GetWeakReference(placeholderTransaction);
         }
       }
     }
