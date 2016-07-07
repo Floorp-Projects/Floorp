@@ -285,6 +285,8 @@ NormalizedConstraints::NormalizedConstraints(
 }
 
 // Merge constructor. Create net constraints out of merging a set of others.
+// This is only used to resolve competing constraints from concurrent requests,
+// something the spec doesn't cover.
 
 NormalizedConstraints::NormalizedConstraints(
     const nsTArray<const NormalizedConstraints*>& aOthers)
@@ -295,7 +297,7 @@ NormalizedConstraints::NormalizedConstraints(
   nsTArray<MemberPtrType> list;
   NormalizedConstraints dummy(MediaTrackConstraints(), &list);
 
-  // Do intersection of all required constraints, and average of ideals.
+  // Do intersection of all required constraints, and average of ideals,
 
   for (uint32_t i = 1; i < aOthers.Length(); i++) {
     auto& other = *aOthers[i];
@@ -316,6 +318,32 @@ NormalizedConstraints::NormalizedConstraints(
   }
   for (auto& memberPtr : list) {
     (this->*memberPtr).FinalizeMerge();
+  }
+
+  // ...except for resolution and frame rate where we take the highest ideal.
+  // This is a bit of a hack based on the perception that people would be more
+  // surprised if they were to get lower resolution than they ideally requested.
+  //
+  // The spec gives browsers leeway here, saying they "SHOULD use the one with
+  // the smallest fitness distance", and also does not directly address the
+  // problem of competing constraints at all. There is no real web interop issue
+  // here since this is more about interop with other tabs on the same browser.
+  //
+  // We should revisit this logic once we support downscaling of resolutions and
+  // decimating of frame rates, per track.
+
+  for (auto& other : aOthers) {
+    mWidth.TakeHighestIdeal(other->mWidth);
+    mHeight.TakeHighestIdeal(other->mHeight);
+
+    // Consider implicit 30 fps default in comparison of competing constraints.
+    // Avoids 160x90x10 and 640x480 becoming 1024x768x10 (fitness distance flaw)
+    // This pretty much locks in 30 fps or higher, except for single-tab use.
+    auto frameRate = other->mFrameRate;
+    if (frameRate.mIdeal.isNothing()) {
+      frameRate.mIdeal.emplace(30);
+    }
+    mFrameRate.TakeHighestIdeal(frameRate);
   }
 }
 
