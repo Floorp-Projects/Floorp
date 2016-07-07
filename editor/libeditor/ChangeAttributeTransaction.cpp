@@ -3,18 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ChangeAttributeTxn.h"
+#include "ChangeAttributeTransaction.h"
 
 #include "mozilla/dom/Element.h"        // for Element
 
 #include "nsAString.h"
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-ChangeAttributeTxn::ChangeAttributeTxn(Element& aElement, nsIAtom& aAttribute,
-                                       const nsAString* aValue)
+using namespace dom;
+
+ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
+                                                       nsIAtom& aAttribute,
+                                                       const nsAString* aValue)
   : EditTxn()
   , mElement(&aElement)
   , mAttribute(&aAttribute)
@@ -25,20 +27,20 @@ ChangeAttributeTxn::ChangeAttributeTxn(Element& aElement, nsIAtom& aAttribute,
 {
 }
 
-ChangeAttributeTxn::~ChangeAttributeTxn()
+ChangeAttributeTransaction::~ChangeAttributeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTransaction, EditTxn,
                                    mElement)
 
-NS_IMPL_ADDREF_INHERITED(ChangeAttributeTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(ChangeAttributeTxn, EditTxn)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeAttributeTxn)
+NS_IMPL_ADDREF_INHERITED(ChangeAttributeTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(ChangeAttributeTransaction, EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeAttributeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-ChangeAttributeTxn::DoTransaction()
+ChangeAttributeTransaction::DoTransaction()
 {
   // Need to get the current value of the attribute and save it, and set
   // mAttributeWasSet
@@ -60,7 +62,7 @@ ChangeAttributeTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-ChangeAttributeTxn::UndoTransaction()
+ChangeAttributeTransaction::UndoTransaction()
 {
   if (mAttributeWasSet) {
     return mElement->SetAttr(kNameSpaceID_None, mAttribute, mUndoValue, true);
@@ -69,7 +71,7 @@ ChangeAttributeTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-ChangeAttributeTxn::RedoTransaction()
+ChangeAttributeTransaction::RedoTransaction()
 {
   if (mRemoveAttribute) {
     return mElement->UnsetAttr(kNameSpaceID_None, mAttribute, true);
@@ -79,9 +81,9 @@ ChangeAttributeTxn::RedoTransaction()
 }
 
 NS_IMETHODIMP
-ChangeAttributeTxn::GetTxnDescription(nsAString& aString)
+ChangeAttributeTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("ChangeAttributeTxn: [mRemoveAttribute == ");
+  aString.AssignLiteral("ChangeAttributeTransaction: [mRemoveAttribute == ");
 
   if (mRemoveAttribute) {
     aString.AppendLiteral("true] ");
@@ -91,3 +93,5 @@ ChangeAttributeTxn::GetTxnDescription(nsAString& aString)
   aString += nsDependentAtomString(mAttribute);
   return NS_OK;
 }
+
+} // namespace mozilla

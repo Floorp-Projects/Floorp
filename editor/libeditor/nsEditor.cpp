@@ -10,7 +10,7 @@
 #include <stdio.h>                      // for nullptr, stdout
 #include <string.h>                     // for strcmp
 
-#include "ChangeAttributeTxn.h"         // for ChangeAttributeTxn
+#include "ChangeAttributeTransaction.h" // for ChangeAttributeTransaction
 #include "CreateElementTxn.h"           // for CreateElementTxn
 #include "DeleteNodeTxn.h"              // for DeleteNodeTxn
 #include "DeleteRangeTxn.h"             // for DeleteRangeTxn
@@ -1199,9 +1199,9 @@ nsEditor::SetAttribute(nsIDOMElement* aElement, const nsAString& aAttribute,
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
 
-  RefPtr<ChangeAttributeTxn> txn =
+  RefPtr<ChangeAttributeTransaction> transaction =
     CreateTxnForSetAttribute(*element, *attribute, aValue);
-  return DoTransaction(txn);
+  return DoTransaction(transaction);
 }
 
 NS_IMETHODIMP
@@ -1232,9 +1232,9 @@ nsEditor::RemoveAttribute(nsIDOMElement* aElement, const nsAString& aAttribute)
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIAtom> attribute = NS_Atomize(aAttribute);
 
-  RefPtr<ChangeAttributeTxn> txn =
+  RefPtr<ChangeAttributeTransaction> transaction =
     CreateTxnForRemoveAttribute(*element, *attribute);
-  return DoTransaction(txn);
+  return DoTransaction(transaction);
 }
 
 
@@ -4171,24 +4171,24 @@ nsEditor::DoAfterRedoTransaction()
   MOZ_ALWAYS_SUCCEEDS(IncrementModificationCount(1));
 }
 
-already_AddRefed<ChangeAttributeTxn>
+already_AddRefed<ChangeAttributeTransaction>
 nsEditor::CreateTxnForSetAttribute(Element& aElement, nsIAtom& aAttribute,
                                    const nsAString& aValue)
 {
-  RefPtr<ChangeAttributeTxn> txn =
-    new ChangeAttributeTxn(aElement, aAttribute, &aValue);
+  RefPtr<ChangeAttributeTransaction> transaction =
+    new ChangeAttributeTransaction(aElement, aAttribute, &aValue);
 
-  return txn.forget();
+  return transaction.forget();
 }
 
 
-already_AddRefed<ChangeAttributeTxn>
+already_AddRefed<ChangeAttributeTransaction>
 nsEditor::CreateTxnForRemoveAttribute(Element& aElement, nsIAtom& aAttribute)
 {
-  RefPtr<ChangeAttributeTxn> txn =
-    new ChangeAttributeTxn(aElement, aAttribute, nullptr);
+  RefPtr<ChangeAttributeTransaction> transaction =
+    new ChangeAttributeTransaction(aElement, aAttribute, nullptr);
 
-  return txn.forget();
+  return transaction.forget();
 }
 
 
