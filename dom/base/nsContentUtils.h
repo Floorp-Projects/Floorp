@@ -2552,7 +2552,8 @@ public:
                                  unsigned short aInputSourceArg,
                                  bool aToWindow,
                                  bool *aPreventDefault,
-                                 bool aIsSynthesized);
+                                 bool aIsDOMEventSynthesized,
+                                 bool aIsWidgetEventSynthesized);
 
   static void FirePageShowEvent(nsIDocShellTreeItem* aItem,
                                 mozilla::dom::EventTarget* aChromeEventHandler,
