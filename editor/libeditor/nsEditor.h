@@ -62,6 +62,7 @@ class CreateElementTransaction;
 class DeleteNodeTransaction;
 class DeleteTextTransaction;
 class ErrorResult;
+class InsertNodeTransaction;
 class TextComposition;
 struct EditorDOMPoint;
 
@@ -70,7 +71,6 @@ class DataTransfer;
 class Element;
 class EventTarget;
 class InsertTextTxn;
-class InsertNodeTxn;
 class JoinNodeTxn;
 class Selection;
 class SplitNodeTxn;
@@ -278,7 +278,7 @@ protected:
 
   /** create a transaction for inserting aNode as a child of aParent.
     */
-  already_AddRefed<mozilla::dom::InsertNodeTxn>
+  already_AddRefed<mozilla::InsertNodeTransaction>
   CreateTxnForInsertNode(nsIContent& aNode, nsINode& aParent, int32_t aOffset);
 
   /** create a transaction for removing aNode from its parent.

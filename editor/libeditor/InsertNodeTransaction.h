@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef InsertNodeTxn_h__
-#define InsertNodeTxn_h__
+#ifndef InsertNodeTransaction_h
+#define InsertNodeTransaction_h
 
 #include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
 #include "nsCOMPtr.h"                   // for nsCOMPtr
@@ -15,44 +15,43 @@
 class nsEditor;
 
 namespace mozilla {
-namespace dom {
 
 /**
  * A transaction that inserts a single element
  */
-class InsertNodeTxn : public EditTxn
+class InsertNodeTransaction final : public EditTxn
 {
 public:
-  /** initialize the transaction.
-    * @param aNode   the node to insert
-    * @param aParent the node to insert into
-    * @param aOffset the offset in aParent to insert aNode
-    */
-  InsertNodeTxn(nsIContent& aNode, nsINode& aParent, int32_t aOffset,
-                nsEditor& aEditor);
+  /**
+   * Initialize the transaction.
+   * @param aNode       The node to insert.
+   * @param aParent     The node to insert into.
+   * @param aOffset     The offset in aParent to insert aNode.
+   */
+  InsertNodeTransaction(nsIContent& aNode, nsINode& aParent, int32_t aOffset,
+                        nsEditor& aEditor);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTxn, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction, EditTxn)
 
   NS_DECL_EDITTXN
 
 protected:
-  virtual ~InsertNodeTxn();
+  virtual ~InsertNodeTransaction();
 
-  /** the element to insert */
+  // The element to insert.
   nsCOMPtr<nsIContent> mNode;
 
-  /** the node into which the new node will be inserted */
+  // The node into which the new node will be inserted.
   nsCOMPtr<nsINode> mParent;
 
-  /** the index in mParent for the new node */
+  // The index in mParent for the new node.
   int32_t mOffset;
 
-  /** the editor for this transaction */
+  // The editor for this transaction.
   nsEditor& mEditor;
 };
 
-} // namespace dom
 } // namespace mozilla
 
-#endif
+#endif // #ifndef InsertNodeTransaction_h
