@@ -11,6 +11,7 @@
 #include <string.h>                     // for strcmp
 
 #include "ChangeAttributeTransaction.h" // for ChangeAttributeTransaction
+#include "CompositionTransaction.h"     // for CompositionTransaction
 #include "CreateElementTransaction.h"   // for CreateElementTransaction
 #include "DeleteNodeTransaction.h"      // for DeleteNodeTransaction
 #include "DeleteRangeTransaction.h"     // for DeleteRangeTransaction
@@ -18,7 +19,6 @@
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
 #include "EditorUtils.h"                // for AutoRules, etc
 #include "EditTxn.h"                    // for EditTxn
-#include "IMETextTxn.h"                 // for IMETextTxn
 #include "InsertNodeTxn.h"              // for InsertNodeTxn
 #include "InsertTextTxn.h"              // for InsertTextTxn
 #include "JoinNodeTxn.h"                // for JoinNodeTxn
@@ -2433,7 +2433,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
                          textRange.mStartOffset, textRange.Length());
     }
 
-    txn = CreateTxnForIMEText(aStringToInsert);
+    txn = CreateTxnForComposition(aStringToInsert);
     isIMETransaction = true;
     // All characters of the composition string will be replaced with
     // aStringToInsert.  So, we need to emulate to remove the composition
@@ -2487,7 +2487,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
     if (!len) {
       DeleteNode(mIMETextNode);
       mIMETextNode = nullptr;
-      static_cast<IMETextTxn*>(txn.get())->MarkFixed();
+      static_cast<CompositionTransaction*>(txn.get())->MarkFixed();
     }
   }
 
@@ -4228,19 +4228,19 @@ nsEditor::CreateTxnForDeleteNode(nsINode* aNode,
   return NS_OK;
 }
 
-already_AddRefed<IMETextTxn>
-nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert)
+already_AddRefed<CompositionTransaction>
+nsEditor::CreateTxnForComposition(const nsAString& aStringToInsert)
 {
   MOZ_ASSERT(mIMETextNode);
   // During handling IME composition, mComposition must have been initialized.
-  // TODO: We can simplify IMETextTxn::Init() with TextComposition class.
-  RefPtr<IMETextTxn> txn = new IMETextTxn(*mIMETextNode, mIMETextOffset,
-                                            mIMETextLength,
-                                            mComposition->GetRanges(),
-                                            aStringToInsert, *this);
-  return txn.forget();
+  // TODO: We can simplify CompositionTransaction::Init() with TextComposition
+  //       class.
+  RefPtr<CompositionTransaction> transaction =
+    new CompositionTransaction(*mIMETextNode, mIMETextOffset, mIMETextLength,
+                               mComposition->GetRanges(), aStringToInsert,
+                               *this);
+  return transaction.forget();
 }
-
 
 NS_IMETHODIMP
 nsEditor::CreateTxnForAddStyleSheet(StyleSheetHandle aSheet, AddStyleSheetTxn* *aTxn)
@@ -4753,8 +4753,9 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     if (textNode) {
       MOZ_ASSERT(textNode->Length() >= mIMETextOffset + mIMETextLength,
                  "The text node must be different from the old mIMETextNode");
-      IMETextTxn::SetIMESelection(*this, textNode, mIMETextOffset,
-                                  mIMETextLength, mComposition->GetRanges());
+      CompositionTransaction::SetIMESelection(*this, textNode, mIMETextOffset,
+                                              mIMETextLength,
+                                              mComposition->GetRanges());
     }
   }
 

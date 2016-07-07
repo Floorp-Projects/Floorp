@@ -4,23 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PlaceholderTxn.h"
-#include "nsEditor.h"
-#include "IMETextTxn.h"
-#include "nsGkAtoms.h"
+
+#include "CompositionTransaction.h"
 #include "mozilla/dom/Selection.h"
+#include "nsEditor.h"
+#include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(),
-                                    mAbsorb(true),
-                                    mForwarding(nullptr),
-                                    mIMETextTxn(nullptr),
-                                    mCommitted(false),
-                                    mStartSel(nullptr),
-                                    mEndSel(),
-                                    mEditor(nullptr)
+PlaceholderTxn::PlaceholderTxn()
+  : mAbsorb(true)
+  , mForwarding(nullptr)
+  , mCompositionTransaction(nullptr)
+  , mCommitted(false)
+  , mEditor(nullptr)
 {
 }
 
@@ -127,32 +126,29 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, bool *aDidMerg
   // we are absorbing all txn's if mAbsorb is lit.
   if (mAbsorb)
   {
-    RefPtr<IMETextTxn> otherTxn = do_QueryObject(aTransaction);
-    if (otherTxn) {
-      // special handling for IMETextTxn's: they need to merge with any previous
-      // IMETextTxn in this placeholder, if possible.
-      if (!mIMETextTxn)
-      {
+    RefPtr<CompositionTransaction> otherTransaction =
+      do_QueryObject(aTransaction);
+    if (otherTransaction) {
+      // special handling for CompositionTransaction's: they need to merge with
+      // any previous CompositionTransaction in this placeholder, if possible.
+      if (!mCompositionTransaction) {
         // this is the first IME txn in the placeholder
-        mIMETextTxn =otherTxn;
+        mCompositionTransaction = otherTransaction;
         AppendChild(editTxn);
-      }
-      else
-      {
+      } else {
         bool didMerge;
-        mIMETextTxn->Merge(otherTxn, &didMerge);
-        if (!didMerge)
-        {
+        mCompositionTransaction->Merge(otherTransaction, &didMerge);
+        if (!didMerge) {
           // it wouldn't merge.  Earlier IME txn is already committed and will
           // not absorb further IME txns.  So just stack this one after it
           // and remember it as a candidate for further merges.
-          mIMETextTxn =otherTxn;
+          mCompositionTransaction = otherTransaction;
           AppendChild(editTxn);
         }
       }
-    }
-    else if (!plcTxn)  // see bug 171243: just drop incoming placeholders on the floor.
-    {                  // their children will be swallowed by this preexisting one.
+    } else if (!plcTxn) {
+      // See bug 171243: just drop incoming placeholders on the floor.
+      // Their children will be swallowed by this preexisting one.
       AppendChild(editTxn);
     }
     *aDidMerge = true;
