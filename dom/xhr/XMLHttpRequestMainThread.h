@@ -127,6 +127,17 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   friend class nsXMLHttpRequestXPCOMifier;
 
 public:
+  enum class ProgressEventType : uint8_t {
+    loadstart,
+    progress,
+    error,
+    abort,
+    timeout,
+    load,
+    loadend,
+    ENUM_MAX
+  };
+
   XMLHttpRequestMainThread();
 
   void Construct(nsIPrincipal* aPrincipal,
@@ -512,7 +523,7 @@ public:
   // doesn't bubble.
   nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
   void DispatchProgressEvent(DOMEventTargetHelper* aTarget,
-                             const nsAString& aType,
+                             const ProgressEventType aType,
                              bool aLengthComputable,
                              int64_t aLoaded, int64_t aTotal);
 
@@ -717,7 +728,7 @@ protected:
    * @param aFlag A XML_HTTP_REQUEST_* state flag defined in
    *              XMLHttpRequestMainthread.cpp.
    */
-  void CloseRequestWithError(const nsAString& aType, const uint32_t aFlag);
+  void CloseRequestWithError(const ProgressEventType aType, const uint32_t aFlag);
 
   bool mFirstStartRequestSeen;
   bool mInLoadProgressEvent;
