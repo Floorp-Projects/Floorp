@@ -37,15 +37,30 @@ if CONFIG['OS_TARGET'] != 'Android':
         'rlz',
     ]
 
-if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
-    # For sandbox includes and the include dependencies those have
-    LOCAL_INCLUDES += [
-        '/security/sandbox/chromium',
-        '/security/sandbox/chromium-shim',
+# DELAYLOAD_DLLS in this block ensures that the DLL blocklist is functional
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DELAYLOAD_DLLS += [
+        'nss3.dll',
     ]
 
-    USE_LIBS += [
-        'sandbox_s',
+    if CONFIG['MOZ_SANDBOX']:
+        # For sandbox includes and the include dependencies those have
+        LOCAL_INCLUDES += [
+            '/security/sandbox/chromium',
+            '/security/sandbox/chromium-shim',
+        ]
+
+        USE_LIBS += [
+            'sandbox_s',
+        ]
+
+        DELAYLOAD_DLLS += [
+            'winmm.dll',
+            'user32.dll',
+        ]
+
+    DELAYLOAD_DLLS += [
+        'xul.dll',
     ]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] in ('Linux', 'Android'):
