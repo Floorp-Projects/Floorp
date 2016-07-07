@@ -59,7 +59,7 @@ private:
 
   bool IsVideoSeekComplete() const;
 
-  void CheckIfSeekComplete();
+  void MaybeFinishSeek();
 
   void OnAudioDecoded(MediaData* aAudioSample);
 
