@@ -74,9 +74,24 @@
         }
 
         function onlyOnce() {
-          ok(!beenHere2, "\"once\" listner has been called once");
+          ok(!beenHere2, "\"once\" listener has been called once");
           beenHere2 = true;
           emitter.emit("onlyonce");
+
+          testThrowingExceptionInListener();
+        }
+
+        function testThrowingExceptionInListener() {
+          function throwListener() {
+            emitter.off("throw-exception");
+            throw {
+              toString: () => "foo",
+              stack: "bar",
+            };
+          }
+
+          emitter.on("throw-exception", throwListener);
+          emitter.emit("throw-exception");
 
           killItWhileEmitting();
         }
