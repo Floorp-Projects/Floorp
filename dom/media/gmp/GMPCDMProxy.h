@@ -24,7 +24,9 @@ public:
 
   GMPCDMProxy(dom::MediaKeys* aKeys,
               const nsAString& aKeySystem,
-              GMPCrashHelper* aCrashHelper);
+              GMPCrashHelper* aCrashHelper,
+              bool aDistinctiveIdentifierRequired,
+              bool aPersistentStateRequired);
 
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,

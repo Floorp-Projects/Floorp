@@ -606,7 +606,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
       EXPECT_TRUE(!!mRunner->mDecryptor);
 
       if (mRunner->mDecryptor) {
-        mRunner->mDecryptor->Init(mRunner);
+        mRunner->mDecryptor->Init(mRunner, false, true);
       }
       nsCOMPtr<nsIThread> thread(GetGMPThread());
       thread->Dispatch(mContinuation, NS_DISPATCH_NORMAL);

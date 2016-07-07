@@ -46,7 +46,9 @@ ClearKeySessionManager::~ClearKeySessionManager()
 }
 
 void
-ClearKeySessionManager::Init(GMPDecryptorCallback* aCallback)
+ClearKeySessionManager::Init(GMPDecryptorCallback* aCallback,
+                             bool aDistinctiveIdentifierAllowed,
+                             bool aPersistentStateAllowed)
 {
   CK_LOGD("ClearKeySessionManager::Init");
   mCallback = aCallback;
