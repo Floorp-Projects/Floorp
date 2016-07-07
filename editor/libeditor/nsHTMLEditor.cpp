@@ -14,6 +14,7 @@
 #include "nsUnicharUtils.h"
 
 #include "HTMLEditUtils.h"
+#include "HTMLURIRefObject.h"
 #include "SetDocumentTitleTransaction.h"
 #include "StyleSheetTransactions.h"
 #include "TextEditUtils.h"
@@ -22,7 +23,6 @@
 #include "nsHTMLEditorEventListener.h"
 #include "TypeInState.h"
 
-#include "nsHTMLURIRefObject.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMMozNamedAttrMap.h"

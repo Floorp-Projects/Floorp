@@ -50,6 +50,7 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
+#include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsWSRunObject.h"
@@ -4403,7 +4404,7 @@ nsHTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     }
     OwningNonNull<Text> newNode = aDoc.CreateTextNode(EmptyString());
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->InsertNode(newNode, *node, offset);
+    res = mHTMLEditor->InsertNode(*newNode, *node, offset);
     NS_ENSURE_SUCCESS(res, res);
     node = newNode;
     offset = 0;
