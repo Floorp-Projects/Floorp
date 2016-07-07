@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 
+#include "EditorUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -24,7 +25,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLCSSUtils.h"
@@ -1548,7 +1548,7 @@ nsHTMLEditRules::WillInsertBreak(Selection& aSelection, bool* aCancel,
   // If the active editing host is an inline element, or if the active editing
   // host is the block parent itself, just append a br.
   nsCOMPtr<Element> host = mHTMLEditor->GetActiveEditingHost();
-  if (!nsEditorUtils::IsDescendantOf(blockParent, host)) {
+  if (!EditorUtils::IsDescendantOf(blockParent, host)) {
     res = StandardBreakImpl(node, offset, aSelection);
     NS_ENSURE_SUCCESS(res, res);
     *aHandled = true;
@@ -2608,8 +2608,8 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     leftList = leftBlock->GetParentElement();
     rightList = rightBlock->GetParentElement();
     if (leftList && rightList && leftList != rightList &&
-        !nsEditorUtils::IsDescendantOf(leftList, rightBlock, &offset) &&
-        !nsEditorUtils::IsDescendantOf(rightList, leftBlock, &offset)) {
+        !EditorUtils::IsDescendantOf(leftList, rightBlock, &offset) &&
+        !EditorUtils::IsDescendantOf(rightList, leftBlock, &offset)) {
       // There are some special complications if the lists are descendants of
       // the other lists' items.  Note that it is okay for them to be
       // descendants of the other lists themselves, which is the usual case for
@@ -2629,7 +2629,7 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
 
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
-  if (nsEditorUtils::IsDescendantOf(leftBlock, rightBlock, &rightOffset)) {
+  if (EditorUtils::IsDescendantOf(leftBlock, rightBlock, &rightOffset)) {
     // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
     rightOffset++;
@@ -2674,8 +2674,7 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     }
   // Offset below is where you find yourself in leftBlock when you traverse
   // upwards from rightBlock
-  } else if (nsEditorUtils::IsDescendantOf(rightBlock, leftBlock,
-                                           &leftOffset)) {
+  } else if (EditorUtils::IsDescendantOf(rightBlock, leftBlock, &leftOffset)) {
     // Tricky case.  Right block is inside left block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
     res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
@@ -3102,7 +3101,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
 
     if (nsHTMLEditUtils::IsList(curNode)) {
       // do we have a curList already?
-      if (curList && !nsEditorUtils::IsDescendantOf(curNode, curList)) {
+      if (curList && !EditorUtils::IsDescendantOf(curNode, curList)) {
         // move all of our children into curList.  cheezy way to do it: move
         // whole list and then RemoveContainer() on the list.  ConvertListType
         // first: that routine handles converting the list item types, if
@@ -3132,7 +3131,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
       if (!curParent->IsHTMLElement(listType)) {
         // list item is in wrong type of list. if we don't have a curList,
         // split the old list and make a new list of correct type.
-        if (!curList || nsEditorUtils::IsDescendantOf(curNode, curList)) {
+        if (!curList || EditorUtils::IsDescendantOf(curNode, curList)) {
           NS_ENSURE_STATE(mHTMLEditor);
           NS_ENSURE_STATE(curParent->IsContent());
           ErrorResult rv;
@@ -4035,7 +4034,7 @@ nsHTMLEditRules::WillOutdent(Selection& aSelection,
       // Do we have a blockquote that we are already committed to removing?
       if (curBlockQuote) {
         // If so, is this node a descendant?
-        if (nsEditorUtils::IsDescendantOf(curNode, curBlockQuote)) {
+        if (EditorUtils::IsDescendantOf(curNode, curBlockQuote)) {
           lastBQChild = curNode;
           // Then we don't need to do anything different for this node
           continue;
@@ -4165,7 +4164,7 @@ nsHTMLEditRules::WillOutdent(Selection& aSelection,
       int32_t startOffset = aSelection.GetRangeAt(0)->StartOffset();
       if (rememberedLeftBQ &&
           (startNode == rememberedLeftBQ ||
-           nsEditorUtils::IsDescendantOf(startNode, rememberedLeftBQ))) {
+           EditorUtils::IsDescendantOf(startNode, rememberedLeftBQ))) {
         // Selection is inside rememberedLeftBQ - push it past it.
         startNode = rememberedLeftBQ->GetParentNode();
         startOffset = startNode ? 1 + startNode->IndexOf(rememberedLeftBQ) : 0;
@@ -4176,7 +4175,7 @@ nsHTMLEditRules::WillOutdent(Selection& aSelection,
       startOffset = aSelection.GetRangeAt(0)->StartOffset();
       if (rememberedRightBQ &&
           (startNode == rememberedRightBQ ||
-           nsEditorUtils::IsDescendantOf(startNode, rememberedRightBQ))) {
+           EditorUtils::IsDescendantOf(startNode, rememberedRightBQ))) {
         // Selection is inside rememberedRightBQ - push it before it.
         startNode = rememberedRightBQ->GetParentNode();
         startOffset = startNode ? startNode->IndexOf(rememberedRightBQ) : -1;
@@ -4216,8 +4215,8 @@ nsHTMLEditRules::SplitBlock(Element& aBlock,
                             nsIContent** aOutMiddleNode)
 {
   // aStartChild and aEndChild must be exclusive descendants of aBlock
-  MOZ_ASSERT(nsEditorUtils::IsDescendantOf(&aStartChild, &aBlock) &&
-             nsEditorUtils::IsDescendantOf(&aEndChild, &aBlock));
+  MOZ_ASSERT(EditorUtils::IsDescendantOf(&aStartChild, &aBlock) &&
+             EditorUtils::IsDescendantOf(&aEndChild, &aBlock));
   NS_ENSURE_TRUE_VOID(mHTMLEditor);
   nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
@@ -6670,7 +6669,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
     } else if (IsInlineNode(curNode)) {
       if (curBlock) {
         // If so, is this node a descendant?
-        if (nsEditorUtils::IsDescendantOf(curNode, curBlock)) {
+        if (EditorUtils::IsDescendantOf(curNode, curBlock)) {
           // Then we don't need to do anything different for this node
           lastNode = curNode->AsContent();
           continue;
@@ -7670,7 +7669,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult)
         *aResult = true;
         return NS_OK;
       }
-      if (nsEditorUtils::IsDescendantOf(startParent, node)) {
+      if (EditorUtils::IsDescendantOf(startParent, node)) {
         *aResult = true;
         return NS_OK;
       }
@@ -7683,7 +7682,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult)
         *aResult = true;
         return NS_OK;
       }
-      if (nsEditorUtils::IsDescendantOf(endParent, node)) {
+      if (EditorUtils::IsDescendantOf(endParent, node)) {
         *aResult = true;
         return NS_OK;
       }

@@ -7,7 +7,7 @@
 #define AggregatePlaceholderTxn_h__
 
 #include "EditAggregateTxn.h"
-#include "nsEditorUtils.h"
+#include "EditorUtils.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"

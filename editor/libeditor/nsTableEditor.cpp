@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include "EditorUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -13,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLEditUtils.h"

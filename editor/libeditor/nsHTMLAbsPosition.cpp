@@ -4,6 +4,7 @@
 
 #include <math.h>
 
+#include "EditorUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -15,7 +16,6 @@
 #include "nsDebug.h"
 #include "nsEditRules.h"
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLCSSUtils.h"

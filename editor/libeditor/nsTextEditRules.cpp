@@ -5,6 +5,7 @@
 
 #include "nsTextEditRules.h"
 
+#include "EditorUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -19,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"

@@ -5,6 +5,8 @@
 
 #include "nsWSRunObject.h"
 
+#include "EditorUtils.h"
+
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
@@ -14,7 +16,6 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsHTMLEditor.h"
 #include "nsIContent.h"

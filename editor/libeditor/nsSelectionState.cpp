@@ -5,13 +5,13 @@
 
 #include "nsSelectionState.h"
 
+#include "EditorUtils.h"                // for EditorUtils
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/dom/Selection.h"      // for Selection
 #include "nsAString.h"                  // for nsAString_internal::Length
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsEditor.h"                   // for nsEditor
-#include "nsEditorUtils.h"              // for nsEditorUtils
 #include "nsError.h"                    // for NS_OK, etc
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
@@ -278,14 +278,15 @@ nsRangeUpdater::SelAdjDeleteNode(nsINode* aNode)
 
     // check for range endpoints that are in descendants of aNode
     nsCOMPtr<nsINode> oldStart;
-    if (nsEditorUtils::IsDescendantOf(item->startNode, aNode)) {
+    if (EditorUtils::IsDescendantOf(item->startNode, aNode)) {
       oldStart = item->startNode;  // save for efficiency hack below.
       item->startNode   = parent;
       item->startOffset = offset;
     }
 
     // avoid having to call IsDescendantOf() for common case of range startnode == range endnode.
-    if ((item->endNode == oldStart) || nsEditorUtils::IsDescendantOf(item->endNode, aNode))
+    if (item->endNode == oldStart ||
+        EditorUtils::IsDescendantOf(item->endNode, aNode))
     {
       item->endNode   = parent;
       item->endOffset = offset;
