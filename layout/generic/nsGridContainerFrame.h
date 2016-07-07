@@ -51,6 +51,14 @@ struct ComputedGridTrackInfo
   nsTArray<nscoord> mSizes;
   nsTArray<uint32_t> mStates;
 };
+
+struct ComputedGridLineInfo
+{
+  explicit ComputedGridLineInfo(nsTArray<nsTArray<nsString>>&& aNames)
+    : mNames(aNames)
+  {}
+  nsTArray<nsTArray<nsString>> mNames;
+};
 } // namespace mozilla
 
 class nsGridContainerFrame final : public nsContainerFrame
@@ -60,6 +68,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsGridContainerFrame)
   NS_DECL_QUERYFRAME
   typedef mozilla::ComputedGridTrackInfo ComputedGridTrackInfo;
+  typedef mozilla::ComputedGridLineInfo ComputedGridLineInfo;
 
   // nsIFrame overrides
   void Reflow(nsPresContext*           aPresContext,
@@ -105,17 +114,49 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridItemContainingBlockRect, nsRect)
 
+  /**
+   * These properties are created by a call to
+   * nsGridContainerFrame::GetGridFrameWithComputedInfo, typically from
+   * Element::GetGridFragments.
+   */
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridColTrackInfo, ComputedGridTrackInfo)
   const ComputedGridTrackInfo* GetComputedTemplateColumns()
   {
-    return Properties().Get(GridColTrackInfo());
+    const ComputedGridTrackInfo* info = Properties().Get(GridColTrackInfo());
+    MOZ_ASSERT(info, "Property generation wasn't requested.");
+    return info;
   }
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridRowTrackInfo, ComputedGridTrackInfo)
   const ComputedGridTrackInfo* GetComputedTemplateRows()
   {
-    return Properties().Get(GridRowTrackInfo());
+    const ComputedGridTrackInfo* info = Properties().Get(GridRowTrackInfo());
+    MOZ_ASSERT(info, "Property generation wasn't requested.");
+    return info;
   }
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridColumnLineInfo, ComputedGridLineInfo)
+  const ComputedGridLineInfo* GetComputedTemplateColumnLines()
+  {
+    const ComputedGridLineInfo* info = Properties().Get(GridColumnLineInfo());
+    MOZ_ASSERT(info, "Property generation wasn't requested.");
+    return info;
+  }
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridRowLineInfo, ComputedGridLineInfo)
+  const ComputedGridLineInfo* GetComputedTemplateRowLines()
+  {
+    const ComputedGridLineInfo* info = Properties().Get(GridRowLineInfo());
+    MOZ_ASSERT(info, "Property generation wasn't requested.");
+    return info;
+  }
+
+  /**
+   * Return a containing grid frame, and ensure it has computed grid info
+   * @return nullptr if aFrame has no grid container, or frame was destroyed
+   * @note this might destroy layout/style data since it may flush layout
+   */
+  static nsGridContainerFrame* GetGridFrameWithComputedInfo(nsIFrame* aFrame);
 
   struct TrackSize;
   struct GridItemInfo;
