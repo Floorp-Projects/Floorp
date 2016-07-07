@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SplitNodeTxn.h"
+#include "SplitNodeTransaction.h"
 
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
@@ -12,36 +12,34 @@
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
 #include "nsIContent.h"                 // for nsIContent
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-// note that aEditor is not refcounted
-SplitNodeTxn::SplitNodeTxn(nsEditor& aEditor, nsIContent& aNode,
-                           int32_t aOffset)
-  : EditTxn()
-  , mEditor(aEditor)
+using namespace dom;
+
+SplitNodeTransaction::SplitNodeTransaction(nsEditor& aEditor,
+                                           nsIContent& aNode,
+                                           int32_t aOffset)
+  : mEditor(aEditor)
   , mExistingRightNode(&aNode)
   , mOffset(aOffset)
-  , mNewLeftNode(nullptr)
-  , mParent(nullptr)
 {
 }
 
-SplitNodeTxn::~SplitNodeTxn()
+SplitNodeTransaction::~SplitNodeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTxn,
                                    mParent,
                                    mNewLeftNode)
 
-NS_IMPL_ADDREF_INHERITED(SplitNodeTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(SplitNodeTxn, EditTxn)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTxn)
+NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-SplitNodeTxn::DoTransaction()
+SplitNodeTransaction::DoTransaction()
 {
   // Create a new node
   ErrorResult rv;
@@ -67,7 +65,7 @@ SplitNodeTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-SplitNodeTxn::UndoTransaction()
+SplitNodeTransaction::UndoTransaction()
 {
   MOZ_ASSERT(mNewLeftNode && mParent);
 
@@ -80,7 +78,7 @@ SplitNodeTxn::UndoTransaction()
  * state.
  */
 NS_IMETHODIMP
-SplitNodeTxn::RedoTransaction()
+SplitNodeTransaction::RedoTransaction()
 {
   MOZ_ASSERT(mNewLeftNode && mParent);
 
@@ -114,14 +112,16 @@ SplitNodeTxn::RedoTransaction()
 
 
 NS_IMETHODIMP
-SplitNodeTxn::GetTxnDescription(nsAString& aString)
+SplitNodeTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("SplitNodeTxn");
+  aString.AssignLiteral("SplitNodeTransaction");
   return NS_OK;
 }
 
 nsIContent*
-SplitNodeTxn::GetNewNode()
+SplitNodeTransaction::GetNewNode()
 {
   return mNewLeftNode;
 }
+
+} // namespace mozilla
