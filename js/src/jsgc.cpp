@@ -2983,7 +2983,7 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
     if (rt->isHeapCollecting())
         return false;
 
-    JS::PrepareForFullGC(rt);
+    JS::PrepareForFullGC(rt->contextFromMainThread());
     requestMajorGC(reason);
     return true;
 }
@@ -3064,7 +3064,7 @@ GCRuntime::maybeGC(Zone* zone)
 
 #ifdef JS_GC_ZEAL
     if (hasZealMode(ZealMode::Alloc) || hasZealMode(ZealMode::Poke)) {
-        JS::PrepareForFullGC(rt);
+        JS::PrepareForFullGC(rt->contextFromMainThread());
         gc(GC_NORMAL, JS::gcreason::DEBUG_GC);
         return true;
     }
@@ -3104,7 +3104,7 @@ GCRuntime::maybePeriodicFullGC()
         if (chunkAllocationSinceLastGC ||
             numArenasFreeCommitted > decommitThreshold)
         {
-            JS::PrepareForFullGC(rt);
+            JS::PrepareForFullGC(rt->contextFromMainThread());
             startGC(GC_SHRINK, JS::gcreason::PERIODIC_FULL_GC);
         } else {
             nextFullGCTime = now + GC_IDLE_FULL_SPAN;
@@ -6292,7 +6292,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
 
         /* Need to re-schedule all zones for GC. */
         if (poked && cleanUpEverything)
-            JS::PrepareForFullGC(rt);
+            JS::PrepareForFullGC(rt->contextFromMainThread());
 
         /*
          * This code makes an extra effort to collect compartments that we
@@ -6419,14 +6419,14 @@ GCRuntime::notifyDidPaint()
         verifyPreBarriers();
 
     if (hasZealMode(ZealMode::FrameGC)) {
-        JS::PrepareForFullGC(rt);
+        JS::PrepareForFullGC(rt->contextFromMainThread());
         gc(GC_NORMAL, JS::gcreason::REFRESH_FRAME);
         return;
     }
 #endif
 
     if (isIncrementalGCInProgress() && !interFrameGC && tunables.areRefreshFrameSlicesEnabled()) {
-        JS::PrepareForIncrementalGC(rt);
+        JS::PrepareForIncrementalGC(rt->contextFromMainThread());
         gcSlice(JS::gcreason::REFRESH_FRAME);
     }
 
@@ -6448,7 +6448,7 @@ GCRuntime::startDebugGC(JSGCInvocationKind gckind, SliceBudget& budget)
 {
     MOZ_ASSERT(!isIncrementalGCInProgress());
     if (!ZonesSelected(rt))
-        JS::PrepareForFullGC(rt);
+        JS::PrepareForFullGC(rt->contextFromMainThread());
     invocationKind = gckind;
     collect(false, budget, JS::gcreason::DEBUG_GC);
 }
@@ -6458,7 +6458,7 @@ GCRuntime::debugGCSlice(SliceBudget& budget)
 {
     MOZ_ASSERT(isIncrementalGCInProgress());
     if (!ZonesSelected(rt))
-        JS::PrepareForIncrementalGC(rt);
+        JS::PrepareForIncrementalGC(rt->contextFromMainThread());
     collect(false, budget, JS::gcreason::DEBUG_GC);
 }
 
@@ -6467,7 +6467,7 @@ void
 js::PrepareForDebugGC(JSRuntime* rt)
 {
     if (!ZonesSelected(rt))
-        JS::PrepareForFullGC(rt);
+        JS::PrepareForFullGC(rt->contextFromMainThread());
 }
 
 JS_PUBLIC_API(void)
@@ -6607,7 +6607,7 @@ GCRuntime::gcIfRequested(JSContext* cx /* = nullptr */)
 void js::gc::FinishGC(JSRuntime* rt)
 {
     if (JS::IsIncrementalGCInProgress(rt)) {
-        JS::PrepareForIncrementalGC(rt);
+        JS::PrepareForIncrementalGC(rt->contextFromMainThread());
         JS::FinishIncrementalGC(rt, JS::gcreason::API);
     }
 
@@ -7195,28 +7195,28 @@ JS::PrepareZoneForGC(Zone* zone)
 }
 
 JS_PUBLIC_API(void)
-JS::PrepareForFullGC(JSRuntime* rt)
+JS::PrepareForFullGC(JSContext* cx)
 {
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+    for (ZonesIter zone(cx, WithAtoms); !zone.done(); zone.next())
         zone->scheduleGC();
 }
 
 JS_PUBLIC_API(void)
-JS::PrepareForIncrementalGC(JSRuntime* rt)
+JS::PrepareForIncrementalGC(JSContext* cx)
 {
-    if (!JS::IsIncrementalGCInProgress(rt))
+    if (!JS::IsIncrementalGCInProgress(cx))
         return;
 
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+    for (ZonesIter zone(cx, WithAtoms); !zone.done(); zone.next()) {
         if (zone->wasGCStarted())
             PrepareZoneForGC(zone);
     }
 }
 
 JS_PUBLIC_API(bool)
-JS::IsGCScheduled(JSRuntime* rt)
+JS::IsGCScheduled(JSContext* cx)
 {
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+    for (ZonesIter zone(cx, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isGCScheduled())
             return true;
     }
@@ -7231,10 +7231,10 @@ JS::SkipZoneForGC(Zone* zone)
 }
 
 JS_PUBLIC_API(void)
-JS::GCForReason(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+JS::GCForReason(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
-    rt->gc.gc(gckind, reason);
+    cx->gc.gc(gckind, reason);
 }
 
 JS_PUBLIC_API(void)

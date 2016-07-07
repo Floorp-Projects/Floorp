@@ -432,7 +432,7 @@ JSRuntime::destroyRuntime()
         /* Set the profiler sampler buffer generation to invalid. */
         profilerSampleBufferGen_ = UINT32_MAX;
 
-        JS::PrepareForFullGC(this);
+        JS::PrepareForFullGC(contextFromMainThread());
         gc.gc(GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
     }
 
