@@ -3022,8 +3022,9 @@ var imageToImageData = Task.async(function* (node, maxDim) {
   // Extract the image data
   let imageData;
   // The image may already be a data-uri, in which case, save ourselves the
-  // trouble of converting via the canvas.drawImage.toDataURL method
-  if (isImg && node.src.startsWith("data:")) {
+  // trouble of converting via the canvas.drawImage.toDataURL method, but only
+  // if the image doesn't need resizing
+  if (isImg && node.src.startsWith("data:") && resizeRatio === 1) {
     imageData = node.src;
   } else {
     // Create a canvas to copy the rawNode into and get the imageData from
