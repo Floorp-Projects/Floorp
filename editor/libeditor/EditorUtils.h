@@ -72,30 +72,39 @@ class MOZ_RAII nsAutoEditBatch : public nsAutoPlaceHolderBatch
     ~nsAutoEditBatch() {}
 };
 
+namespace mozilla {
+
 /***************************************************************************
  * stack based helper class for saving/restoring selection.  Note that this
  * assumes that the nodes involved are still around afterwards!
  */
-class MOZ_RAII nsAutoSelectionReset
+class MOZ_RAII AutoSelectionRestorer final
 {
-  private:
-    /** ref-counted reference to the selection that we are supposed to restore */
-    RefPtr<mozilla::dom::Selection> mSel;
-    nsEditor *mEd;  // non-owning ref to nsEditor
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+private:
+  // Ref-counted reference to the selection that we are supposed to restore.
+  RefPtr<dom::Selection> mSelection;
+  nsEditor* mEditor;  // Non-owning ref to nsEditor.
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-  public:
-    /** constructor responsible for remembering all state needed to restore aSel */
-    nsAutoSelectionReset(mozilla::dom::Selection* aSel, nsEditor* aEd MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+public:
+  /**
+   * Constructor responsible for remembering all state needed to restore
+   * aSelection.
+   */
+  AutoSelectionRestorer(dom::Selection* aSelection,
+                        nsEditor* aEditor
+                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    /** destructor restores mSel to its former state */
-    ~nsAutoSelectionReset();
+  /**
+   * Destructor restores mSelection to its former state
+   */
+  ~AutoSelectionRestorer();
 
-    /** Abort: cancel selection saver */
-    void Abort();
+  /**
+   * Abort() cancels to restore the selection.
+   */
+  void Abort();
 };
-
-namespace mozilla {
 
 /***************************************************************************
  * stack based helper class for StartOperation()/EndOperation() sandwich

@@ -1927,7 +1927,7 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   //  when replacing nodes
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-  nsAutoSelectionReset selectionResetter(selection, this);
+  AutoSelectionRestorer selectionRestorer(selection, this);
 
   // Set to the opposite of current type
   nsCOMPtr<nsIAtom> atom = nsEditor::GetTag(aSourceCell);
@@ -2474,7 +2474,7 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
   NS_ENSURE_SUCCESS(res, res);
 
   // Save current selection
-  nsAutoSelectionReset selectionResetter(selection, this);
+  AutoSelectionRestorer selectionRestorer(selection, this);
 
   nsAutoEditBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
