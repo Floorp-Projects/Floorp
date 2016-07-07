@@ -347,6 +347,7 @@ class MOZ_STACK_CLASS nsWSRunObject
                               int32_t aOffset);
 
     nsresult Scrub();
+    bool IsBlockNode(nsINode* aNode);
 
     // member variables ---------------------------------------------------------
 

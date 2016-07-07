@@ -39,7 +39,7 @@
     q:      cite
  */
 
-#include "nsHTMLURIRefObject.h"
+#include "HTMLURIRefObject.h"
 
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
@@ -53,31 +53,34 @@
 #include "nsISupportsUtils.h"
 #include "nsString.h"
 
+namespace mozilla {
+
 // String classes change too often and I can't keep up.
 // Set this macro to this week's approved case-insensitive compare routine.
 #define MATCHES(tagName, str) tagName.EqualsIgnoreCase(str)
 
-nsHTMLURIRefObject::nsHTMLURIRefObject()
-  : mCurAttrIndex(0), mAttributeCnt(0)
+HTMLURIRefObject::HTMLURIRefObject()
+  : mCurAttrIndex(0)
+  , mAttributeCnt(0)
 {
 }
 
-nsHTMLURIRefObject::~nsHTMLURIRefObject()
+HTMLURIRefObject::~HTMLURIRefObject()
 {
 }
 
 //Interfaces for addref and release and queryinterface
-NS_IMPL_ISUPPORTS(nsHTMLURIRefObject, nsIURIRefObject)
+NS_IMPL_ISUPPORTS(HTMLURIRefObject, nsIURIRefObject)
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::Reset()
+HTMLURIRefObject::Reset()
 {
   mCurAttrIndex = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
+HTMLURIRefObject::GetNextURI(nsAString& aURI)
 {
   NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
@@ -211,15 +214,15 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 }
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::RewriteAllURIs(const nsAString & aOldPat,
-                            const nsAString & aNewPat,
-                            bool aMakeRel)
+HTMLURIRefObject::RewriteAllURIs(const nsAString& aOldPat,
+                                 const nsAString& aNewPat,
+                                 bool aMakeRel)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::GetNode(nsIDOMNode** aNode)
+HTMLURIRefObject::GetNode(nsIDOMNode** aNode)
 {
   NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
@@ -229,7 +232,7 @@ nsHTMLURIRefObject::GetNode(nsIDOMNode** aNode)
 }
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
+HTMLURIRefObject::SetNode(nsIDOMNode* aNode)
 {
   mNode = aNode;
   nsAutoString dummyURI;
@@ -245,9 +248,11 @@ nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
   return NS_ERROR_INVALID_ARG;
 }
 
+} // namespace mozilla
+
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
 {
-  RefPtr<nsHTMLURIRefObject> refObject = new nsHTMLURIRefObject();
+  RefPtr<mozilla::HTMLURIRefObject> refObject = new mozilla::HTMLURIRefObject();
   nsresult rv = refObject->SetNode(aNode);
   if (NS_FAILED(rv)) {
     *aResult = 0;
@@ -256,4 +261,3 @@ nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
   refObject.forget(aResult);
   return NS_OK;
 }
-

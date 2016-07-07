@@ -33,12 +33,6 @@ using namespace mozilla::dom;
 
 const char16_t nbsp = 160;
 
-static bool IsBlockNode(nsINode* node)
-{
-  return node && node->IsElement() &&
-         nsHTMLEditor::NodeIsBlockStatic(node->AsElement());
-}
-
 //- constructor / destructor -----------------------------------------------
 nsWSRunObject::nsWSRunObject(nsHTMLEditor* aEd, nsINode* aNode, int32_t aOffset)
   : mNode(aNode)
@@ -1933,4 +1927,11 @@ nsWSRunObject::Scrub()
     run = run->mRight;
   }
   return NS_OK;
+}
+
+bool
+nsWSRunObject::IsBlockNode(nsINode* aNode)
+{
+  return aNode && aNode->IsElement() &&
+         nsHTMLEditor::NodeIsBlockStatic(aNode->AsElement());
 }
