@@ -1765,12 +1765,12 @@
         <body>
           <![CDATA[
             // Supported parameters:
-            // userContextId, remote, isPreloadBrowser, uriIsAboutBlank
+            // userContextId, remote, isPreloadBrowser, uriIsAboutBlank, permanentKey
 
             const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
             let b = document.createElementNS(NS_XUL, "browser");
-            b.permanentKey = {};
+            b.permanentKey = aParams.permanentKey || {};
             b.setAttribute("type", "content-targetable");
             b.setAttribute("message", "true");
             b.setAttribute("messagemanagergroup", "browsers");
@@ -1865,12 +1865,16 @@
                 !aParams.userContextId &&
                 !PrivateBrowsingUtils.isWindowPrivate(window)) {
               browser = this._getPreloadedBrowser();
-              usingPreloadedContent = !!browser;
+              if (browser) {
+                usingPreloadedContent = true;
+                aTab.permanentKey = browser.permanentKey;
+              }
             }
 
             if (!browser) {
               // No preloaded browser found, create one.
-              browser = this._createBrowser({remote: remote,
+              browser = this._createBrowser({permanentKey: aTab.permanentKey,
+                                             remote: remote,
                                              uriIsAboutBlank: uriIsAboutBlank,
                                              userContextId: aParams.userContextId});
             }
@@ -2013,6 +2017,7 @@
             var position = this.tabs.length - 1;
             t._tPos = position;
             t.lastAccessed = Date.now();
+            t.permanentKey = {};
             this.tabContainer._setPositionalAttributes();
 
             this.tabContainer.updateVisibility();
@@ -4454,6 +4459,7 @@
           var uniqueId = this._generateUniquePanelID();
           this.mPanelContainer.childNodes[0].id = uniqueId;
           this.mCurrentTab.linkedPanel = uniqueId;
+          this.mCurrentTab.permanentKey = this.mCurrentBrowser.permanentKey;
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab._fullyOpen = true;
           this.mCurrentTab.lastAccessed = Infinity;

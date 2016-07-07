@@ -5,38 +5,10 @@
 %endif
 
 #notification-popup-box {
-  position: relative;
-  background-color: #fff;
-  background-clip: padding-box;
-  padding-left: 3px;
-  border-width: 0 8px 0 0;
-  border-style: solid;
-  border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 fill;
-  margin-inline-end: -8px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  #notification-popup-box {
-    border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
-  }
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
-  padding-left: calc(var(--backbutton-urlbar-overlap) + 3px);
-}
-
-/* This changes the direction of the main notification box on the url bar. */
-#notification-popup-box:-moz-locale-dir(rtl),
-/* This adds a second flip for the notification anchors, as they don't switch direction
-   for RTL mode. */
-.notification-anchor-icon:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-/* For the anchor icons in the chat window, we don't have the notification popup box,
-   so we need to cancel the RTL transform. */
-.notification-anchor-icon.chat-toolbarbutton:-moz-locale-dir(rtl) {
-  transform: none;
+  padding: 5px 0px;
+  margin: -5px 0px;
+  margin-inline-end: -5px;
+  padding-inline-end: 5px;
 }
 
 /* This class can be used alone or in combination with the class defining the
@@ -45,7 +17,7 @@
 .notification-anchor-icon {
   width: 16px;
   height: 16px;
-  margin: 0 2px;
+  margin-inline-start: 2px;
 %ifdef MOZ_WIDGET_GTK
   list-style-image: url(moz-icon://stock/gtk-dialog-info?size=16);
 %else
@@ -247,14 +219,6 @@
   list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg#default);
 }
 
-.install-icon:hover {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg#hover);
-}
-
-.install-icon:hover:active {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg#active);
-}
-
 .popup-notification-icon[popupid="xpinstall-disabled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-origin-blocked"] {
@@ -314,14 +278,6 @@
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.plugin-icon:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.plugin-icon:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
 %ifdef XP_MACOSX
 @media (min-resolution: 1.1dppx) {
   .plugin-icon {
@@ -338,14 +294,6 @@
 
   .plugin-icon {
     -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  .plugin-icon:hover {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-
-  .plugin-icon:active {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 }
 %endif

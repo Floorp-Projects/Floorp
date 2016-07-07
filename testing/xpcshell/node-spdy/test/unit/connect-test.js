@@ -17,6 +17,13 @@ suite('A SPDY Server / Connect', function() {
                  req.url === '/deflate' ? zlib.createDeflate() :
                  null;
 
+      if (req.url == '/headerTest') {
+        if (req.headers['accept-encoding'] == 'gzip, deflate')
+          return res.end(fox);
+        else
+          return res.end();
+      }
+
       // Terminate connection gracefully
       if (req.url === '/goaway')
         req.socket.connection.end();
@@ -201,5 +208,32 @@ suite('A SPDY Server / Connect', function() {
       assert.equal(total, fox);
       done();
     });
+  });
+
+  test('should add accept-encoding header to request headers, ' +
+           'if none present',
+       function(done) {
+    var agent = spdy.createAgent({
+      host: '127.0.0.1',
+      port: PORT,
+      rejectUnauthorized: false
+    });
+
+    var req = https.request({
+        path: '/headerTest',
+        method: 'GET',
+        agent: agent,
+      }, function(res) {
+        var total = '';
+        res.on('data', function(chunk){
+          total += chunk;
+        });
+        res.once('end', function() {
+          agent.close();
+          assert.equal(total, fox);
+          done();
+        });
+      });
+      req.end();
   });
 });
