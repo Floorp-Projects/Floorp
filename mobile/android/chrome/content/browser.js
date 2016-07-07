@@ -3455,6 +3455,8 @@ Tab.prototype = {
     this.browser.setAttribute("type", "content-targetable");
     this.browser.setAttribute("messagemanagergroup", "browsers");
 
+    this.browser.permanentKey = {};
+
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
     let selectedPanel = BrowserApp.deck.selectedPanel;
@@ -4691,6 +4693,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
+    BrowserApp.deck.addEventListener("OpenMediaWithExtenalApp", this, true);
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
     InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
@@ -4713,6 +4716,9 @@ var BrowserEventHandler = {
         break;
       case 'MozMouseHittest':
         this._handleRetargetedTouchStart(aEvent);
+        break;
+      case 'OpenMediaWithExtenalApp':
+        ExternalApps.openExternal(aEvent.target);
         break;
     }
   },
