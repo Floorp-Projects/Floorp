@@ -520,9 +520,9 @@ public:
                JS::MutableHandle<JS::Value> aRetval,
                ErrorResult& aRv) override;
 
-  // This creates a trusted readystatechange event, which is not cancelable and
+  // This fires a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
-  nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
+  nsresult FireReadystatechangeEvent();
   void DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                              const ProgressEventType aType,
                              bool aLengthComputable,
