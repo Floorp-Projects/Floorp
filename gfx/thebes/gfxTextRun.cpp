@@ -1476,7 +1476,7 @@ gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget)
 }
 
 
-gfxTextRun::ClusterIterator::ClusterIterator(gfxTextRun *aTextRun)
+gfxTextRun::ClusterIterator::ClusterIterator(const gfxTextRun* aTextRun)
     : mTextRun(aTextRun), mCurrentChar(uint32_t(-1))
 {
 }
