@@ -54,6 +54,7 @@ class nsIDOMRange;
 class nsRange;
 
 namespace mozilla {
+class HTMLEditRules;
 class TypeInState;
 class WSRunObject;
 struct PropItem;
@@ -974,8 +975,8 @@ protected:
 public:
 
 // friends
+friend class mozilla::HTMLEditRules;
 friend class mozilla::WSRunObject;
-friend class nsHTMLEditRules;
 friend class nsTextEditRules;
 friend class nsHTMLEditorEventListener;
 

@@ -29,6 +29,7 @@ class nsITransferable;
 
 namespace mozilla {
 class AutoEditInitRulesTrigger;
+class HTMLEditRules;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -226,7 +227,7 @@ protected:
 
   // friends
   friend class mozilla::AutoEditInitRulesTrigger;
-  friend class nsHTMLEditRules;
+  friend class mozilla::HTMLEditRules;
   friend class nsTextEditRules;
 };
 
