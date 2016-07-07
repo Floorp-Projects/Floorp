@@ -15,6 +15,7 @@
 
 #include "HTMLEditUtils.h"
 #include "SetDocumentTitleTransaction.h"
+#include "StyleSheetTransactions.h"
 #include "TextEditUtils.h"
 #include "nsHTMLEditRules.h"
 
@@ -54,9 +55,6 @@
 // netwerk
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-
-// Transactionas
-#include "nsStyleSheetTxns.h"
 
 // Misc
 #include "EditorUtils.h"
@@ -2829,15 +2827,17 @@ nsHTMLEditor::RemoveStyleSheet(const nsAString &aURL)
   StyleSheetHandle::RefPtr sheet = GetStyleSheetForURL(aURL);
   NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
 
-  RefPtr<RemoveStyleSheetTxn> txn;
-  nsresult rv = CreateTxnForRemoveStyleSheet(sheet, getter_AddRefs(txn));
-  if (!txn) rv = NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = DoTransaction(txn);
-    if (NS_SUCCEEDED(rv))
+  RefPtr<RemoveStyleSheetTransaction> transaction;
+  nsresult rv =
+    CreateTxnForRemoveStyleSheet(sheet, getter_AddRefs(transaction));
+  if (!transaction) {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  if (NS_SUCCEEDED(rv)) {
+    rv = DoTransaction(transaction);
+    if (NS_SUCCEEDED(rv)) {
       mLastStyleSheetURL.Truncate();        // forget it
-
+    }
     // Remove it from our internal list
     rv = RemoveStyleSheetFromList(aURL);
   }
@@ -3400,20 +3400,19 @@ nsHTMLEditor::StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
   if (!mLastStyleSheetURL.IsEmpty())
     RemoveStyleSheet(mLastStyleSheetURL);
 
-  RefPtr<AddStyleSheetTxn> txn;
-  rv = CreateTxnForAddStyleSheet(aSheet, getter_AddRefs(txn));
-  if (!txn) rv = NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = DoTransaction(txn);
-    if (NS_SUCCEEDED(rv))
-    {
+  RefPtr<AddStyleSheetTransaction> transaction;
+  rv = CreateTxnForAddStyleSheet(aSheet, getter_AddRefs(transaction));
+  if (!transaction) {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  if (NS_SUCCEEDED(rv)) {
+    rv = DoTransaction(transaction);
+    if (NS_SUCCEEDED(rv)) {
       // Get the URI, then url spec from the sheet
       nsAutoCString spec;
       rv = aSheet->GetSheetURI()->GetSpec(spec);
 
-      if (NS_SUCCEEDED(rv))
-      {
+      if (NS_SUCCEEDED(rv)) {
         // Save it so we can remove before applying the next one
         mLastStyleSheetURL.AssignWithConversion(spec.get());
 

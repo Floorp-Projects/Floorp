@@ -24,6 +24,7 @@
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
 #include "PlaceholderTransaction.h"     // for PlaceholderTransaction
 #include "SplitNodeTransaction.h"       // for SplitNodeTransaction
+#include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
@@ -98,7 +99,6 @@
 #include "nsStringFwd.h"                // for nsAFlatString
 #include "nsStyleConsts.h"              // for NS_STYLE_DIRECTION_RTL, etc
 #include "nsStyleContext.h"             // for nsStyleContext
-#include "nsStyleSheetTxns.h"           // for AddStyleSheetTxn, etc
 #include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc
 #include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc
 #include "nsTextNode.h"                 // for nsTextNode
@@ -4246,14 +4246,14 @@ nsEditor::CreateTxnForComposition(const nsAString& aStringToInsert)
 }
 
 NS_IMETHODIMP
-nsEditor::CreateTxnForAddStyleSheet(StyleSheetHandle aSheet, AddStyleSheetTxn* *aTxn)
+nsEditor::CreateTxnForAddStyleSheet(StyleSheetHandle aSheet,
+                                    AddStyleSheetTransaction** aTransaction)
 {
-  RefPtr<AddStyleSheetTxn> txn = new AddStyleSheetTxn();
+  RefPtr<AddStyleSheetTransaction> transaction = new AddStyleSheetTransaction();
 
-  nsresult rv = txn->Init(this, aSheet);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
+  nsresult rv = transaction->Init(this, aSheet);
+  if (NS_SUCCEEDED(rv)) {
+    transaction.forget(aTransaction);
   }
 
   return rv;
@@ -4262,14 +4262,16 @@ nsEditor::CreateTxnForAddStyleSheet(StyleSheetHandle aSheet, AddStyleSheetTxn* *
 
 
 NS_IMETHODIMP
-nsEditor::CreateTxnForRemoveStyleSheet(StyleSheetHandle aSheet, RemoveStyleSheetTxn* *aTxn)
+nsEditor::CreateTxnForRemoveStyleSheet(
+            StyleSheetHandle aSheet,
+            RemoveStyleSheetTransaction** aTransaction)
 {
-  RefPtr<RemoveStyleSheetTxn> txn = new RemoveStyleSheetTxn();
+  RefPtr<RemoveStyleSheetTransaction> transaction =
+    new RemoveStyleSheetTransaction();
 
-  nsresult rv = txn->Init(this, aSheet);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
+  nsresult rv = transaction->Init(this, aSheet);
+  if (NS_SUCCEEDED(rv)) {
+    transaction.forget(aTransaction);
   }
 
   return rv;

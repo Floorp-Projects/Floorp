@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsStyleSheetTxns.h"
+#include "StyleSheetTransactions.h"
 
 #include <stddef.h>                     // for nullptr
 
@@ -18,7 +18,7 @@
 #include "nsIDocumentObserver.h"        // for UPDATE_STYLE
 #include "nsIEditor.h"                  // for nsIEditor
 
-using namespace mozilla;
+namespace mozilla {
 
 static void
 AddStyleSheet(nsIEditor* aEditor, StyleSheetHandle aSheet)
@@ -46,20 +46,24 @@ RemoveStyleSheet(nsIEditor* aEditor, StyleSheetHandle aSheet)
   }
 }
 
-AddStyleSheetTxn::AddStyleSheetTxn()
-:  EditTxn()
-,  mEditor(nullptr)
+/******************************************************************************
+ * AddStyleSheetTransaction
+ ******************************************************************************/
+
+AddStyleSheetTransaction::AddStyleSheetTransaction()
+  : mEditor(nullptr)
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTransaction, EditTxn,
                                    mSheet)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Init(nsIEditor* aEditor, StyleSheetHandle aSheet)
+AddStyleSheetTransaction::Init(nsIEditor* aEditor,
+                               StyleSheetHandle aSheet)
 {
   NS_ENSURE_TRUE(aEditor && aSheet, NS_ERROR_INVALID_ARG);
 
@@ -71,7 +75,7 @@ AddStyleSheetTxn::Init(nsIEditor* aEditor, StyleSheetHandle aSheet)
 
 
 NS_IMETHODIMP
-AddStyleSheetTxn::DoTransaction()
+AddStyleSheetTransaction::DoTransaction()
 {
   NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
 
@@ -80,7 +84,7 @@ AddStyleSheetTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::UndoTransaction()
+AddStyleSheetTransaction::UndoTransaction()
 {
   NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
 
@@ -89,27 +93,30 @@ AddStyleSheetTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::GetTxnDescription(nsAString& aString)
+AddStyleSheetTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("AddStyleSheetTxn");
+  aString.AssignLiteral("AddStyleSheetTransaction");
   return NS_OK;
 }
 
+/******************************************************************************
+ * RemoveStyleSheetTransaction
+ ******************************************************************************/
 
-RemoveStyleSheetTxn::RemoveStyleSheetTxn()
-:  EditTxn()
-,  mEditor(nullptr)
+RemoveStyleSheetTransaction::RemoveStyleSheetTransaction()
+  : mEditor(nullptr)
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTransaction, EditTxn,
                                    mSheet)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Init(nsIEditor* aEditor, StyleSheetHandle aSheet)
+RemoveStyleSheetTransaction::Init(nsIEditor* aEditor,
+                                  StyleSheetHandle aSheet)
 {
   NS_ENSURE_TRUE(aEditor && aSheet, NS_ERROR_INVALID_ARG);
 
@@ -121,7 +128,7 @@ RemoveStyleSheetTxn::Init(nsIEditor* aEditor, StyleSheetHandle aSheet)
 
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::DoTransaction()
+RemoveStyleSheetTransaction::DoTransaction()
 {
   NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
 
@@ -130,7 +137,7 @@ RemoveStyleSheetTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::UndoTransaction()
+RemoveStyleSheetTransaction::UndoTransaction()
 {
   NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
 
@@ -139,8 +146,10 @@ RemoveStyleSheetTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::GetTxnDescription(nsAString& aString)
+RemoveStyleSheetTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("RemoveStyleSheetTxn");
+  aString.AssignLiteral("RemoveStyleSheetTransaction");
   return NS_OK;
 }
+
+} // namespace mozilla
