@@ -15,8 +15,5 @@ DIRS += [
   'misc',
 ]
 
-if CONFIG['MOZ_CRT']:
-    DIRS += ['crt']
-
 if not CONFIG['JS_STANDALONE']:
     TEST_DIRS += ['tests']

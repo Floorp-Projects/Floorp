@@ -160,6 +160,7 @@ class BaseEmulator(Device):
         if self.proc:
             self.proc.kill()
             self.proc = None
+            self.connected = False
 
         # Remove temporary files
         shutil.rmtree(self.tmpdir)

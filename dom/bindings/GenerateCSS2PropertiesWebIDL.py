@@ -17,6 +17,7 @@ def generateLine(propName, extendedAttrs):
                                                  propName)
 def generate(output, idlFilename, preprocessorHeader):
     cpp = shellutil.split(buildconfig.substs['CPP'])
+    cpp += shellutil.split(buildconfig.substs['ACDEFINES'])
     cpp.append(preprocessorHeader)
     preprocessed = subprocess.check_output(cpp)
 

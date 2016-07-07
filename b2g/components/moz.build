@@ -7,7 +7,6 @@
 DIRS += ['test']
 
 EXTRA_COMPONENTS += [
-    'ActivitiesGlue.js',
     'AlertsService.js',
     'B2GAboutRedirector.js',
     'B2GAppMigrator.js',
@@ -17,7 +16,6 @@ EXTRA_COMPONENTS += [
     'FilePicker.js',
     'FxAccountsUIGlue.js',
     'HelperAppDialog.js',
-    'KillSwitch.js',
     'MailtoProtocolHandler.js',
     'MobileIdentityUIGlue.js',
     'OMAContentHandler.js',
@@ -26,7 +24,7 @@ EXTRA_COMPONENTS += [
     'PresentationRequestUIGlue.js',
     'ProcessGlobal.js',
     'SmsProtocolHandler.js',
-    'SystemMessageGlue.js',
+    'SystemMessageInternal.js',
     'TelProtocolHandler.js',
     'WebappsUpdateTimer.js',
 ]
@@ -63,12 +61,10 @@ EXTRA_JS_MODULES += [
     'ErrorPage.jsm',
     'Frames.jsm',
     'FxAccountsMgmtService.jsm',
-    'KillSwitchMain.jsm',
     'LogCapture.jsm',
     'LogParser.jsm',
     'LogShake.jsm',
     'OrientationChangeHandler.jsm',
-    'PersistentDataBlock.jsm',
     'SafeMode.jsm',
     'Screenshot.jsm',
     'SignInToWebsite.jsm',
@@ -81,3 +77,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     EXTRA_JS_MODULES += [
       'GlobalSimulatorScreen.jsm'
     ]
+
+XPIDL_SOURCES += [
+    'nsISystemMessagesInternal.idl'
+]
+
+XPIDL_MODULE = 'gaia_chrome'

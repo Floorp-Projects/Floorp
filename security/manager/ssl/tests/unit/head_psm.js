@@ -92,6 +92,20 @@ const certificateUsageObjectSigner           = 0x0040;
 const certificateUsageVerifyCA               = 0x0100;
 const certificateUsageStatusResponder        = 0x0400;
 
+// A map from the name of a certificate usage to the value of the usage.
+// Useful for printing debugging information and for enumerating all supported
+// usages.
+const allCertificateUsages = {
+  certificateUsageSSLClient,
+  certificateUsageSSLServer,
+  certificateUsageSSLCA,
+  certificateUsageEmailSigner,
+  certificateUsageEmailRecipient,
+  certificateUsageObjectSigner,
+  certificateUsageVerifyCA,
+  certificateUsageStatusResponder
+};
+
 const NO_FLAGS = 0;
 
 // Commonly certificates are represented as PEM. The format is roughly as
@@ -723,4 +737,59 @@ function loginToDBWithDefaultPassword() {
   let token = tokenDB.getInternalKeyToken();
   token.initPassword("");
   token.login(/*force*/ false);
+}
+
+// Helper for asyncTestCertificateUsages.
+class CertVerificationResult {
+  constructor(certName, usageString, successExpected, resolve) {
+    this.certName = certName;
+    this.usageString = usageString;
+    this.successExpected = successExpected;
+    this.resolve = resolve;
+  }
+
+  verifyCertFinished(aPRErrorCode, aVerifiedChain, aHasEVPolicy) {
+    if (this.successExpected) {
+      equal(aPRErrorCode, PRErrorCodeSuccess,
+            `verifying ${this.certName} for ${this.usageString} should succeed`);
+    } else {
+      notEqual(aPRErrorCode, PRErrorCodeSuccess,
+               `verifying ${this.certName} for ${this.usageString} should fail`);
+    }
+    this.resolve();
+  }
+}
+
+/**
+ * Asynchronously attempts to verify the given certificate for all supported
+ * usages (see allCertificateUsages). Verifies that the results match the
+ * expected successful usages. Returns a promise that will resolve when all
+ * verifications have been performed.
+ * Verification happens "now" with no specified flags or hostname.
+ *
+ * @param {nsIX509CertDB} certdb
+ *   The certificate database to use to verify the certificate.
+ * @param {nsIX509Cert} cert
+ *   The certificate to be verified.
+ * @param {Number[]} expectedUsages
+ *   A list of usages (as their integer values) that are expected to verify
+ *   successfully.
+ * @return {Promise}
+ *   A promise that will resolve with no value when all asynchronous operations
+ *   have completed.
+ */
+function asyncTestCertificateUsages(certdb, cert, expectedUsages) {
+  let now = (new Date()).getTime() / 1000;
+  let promises = [];
+  Object.keys(allCertificateUsages).forEach(usageString => {
+    let promise = new Promise((resolve, reject) => {
+      let usage = allCertificateUsages[usageString];
+      let successExpected = expectedUsages.includes(usage);
+      let result = new CertVerificationResult(cert.commonName, usageString,
+                                              successExpected, resolve);
+      certdb.asyncVerifyCertAtTime(cert, usage, 0, null, now, result);
+    });
+    promises.push(promise);
+  });
+  return Promise.all(promises);
 }
