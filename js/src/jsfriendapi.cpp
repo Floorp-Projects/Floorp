@@ -1141,15 +1141,15 @@ js::SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg)
 }
 
 JS_FRIEND_API(void)
-JS::NotifyDidPaint(JSRuntime* rt)
+JS::NotifyDidPaint(JSContext* cx)
 {
-    rt->gc.notifyDidPaint();
+    cx->gc.notifyDidPaint();
 }
 
 JS_FRIEND_API(void)
-JS::PokeGC(JSRuntime* rt)
+JS::PokeGC(JSContext* cx)
 {
-    rt->gc.poke();
+    cx->gc.poke();
 }
 
 JS_FRIEND_API(JSCompartment*)

@@ -518,7 +518,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   }
   JS_SetGrayGCRootsTracer(mJSContext, TraceGrayJS, this);
   JS_SetGCCallback(mJSContext, GCCallback, this);
-  mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
+  mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSContext, GCSliceCallback);
 
   if (NS_IsMainThread()) {
     // We would like to support all threads here, but the way timeline consumers
@@ -529,7 +529,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
     // main thread, since the UI for this tracing data only displays data
     // relevant to the main-thread.
     mPrevGCNurseryCollectionCallback = JS::SetGCNurseryCollectionCallback(
-      mJSRuntime, GCNurseryCollectionCallback);
+      mJSContext, GCNurseryCollectionCallback);
   }
 
   JS_SetObjectsTenuredCallback(mJSContext, JSObjectsTenuredCb, this);

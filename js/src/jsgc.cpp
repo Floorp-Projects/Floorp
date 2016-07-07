@@ -6471,10 +6471,10 @@ js::PrepareForDebugGC(JSRuntime* rt)
 }
 
 JS_PUBLIC_API(void)
-JS::ShrinkGCBuffers(JSRuntime* rt)
+JS::ShrinkGCBuffers(JSContext* cx)
 {
-    MOZ_ASSERT(!rt->isHeapBusy());
-    rt->gc.shrinkBuffers();
+    MOZ_ASSERT(!cx->isHeapBusy());
+    cx->gc.shrinkBuffers();
 }
 
 void
@@ -6608,7 +6608,7 @@ void js::gc::FinishGC(JSRuntime* rt)
 {
     if (JS::IsIncrementalGCInProgress(rt)) {
         JS::PrepareForIncrementalGC(rt->contextFromMainThread());
-        JS::FinishIncrementalGC(rt, JS::gcreason::API);
+        JS::FinishIncrementalGC(rt->contextFromMainThread(), JS::gcreason::API);
     }
 
     rt->gc.nursery.waitBackgroundFreeEnd();
@@ -7238,28 +7238,28 @@ JS::GCForReason(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reaso
 }
 
 JS_PUBLIC_API(void)
-JS::StartIncrementalGC(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
+JS::StartIncrementalGC(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
 {
     MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
-    rt->gc.startGC(gckind, reason, millis);
+    cx->gc.startGC(gckind, reason, millis);
 }
 
 JS_PUBLIC_API(void)
-JS::IncrementalGCSlice(JSRuntime* rt, gcreason::Reason reason, int64_t millis)
+JS::IncrementalGCSlice(JSContext* cx, gcreason::Reason reason, int64_t millis)
 {
-    rt->gc.gcSlice(reason, millis);
+    cx->gc.gcSlice(reason, millis);
 }
 
 JS_PUBLIC_API(void)
-JS::FinishIncrementalGC(JSRuntime* rt, gcreason::Reason reason)
+JS::FinishIncrementalGC(JSContext* cx, gcreason::Reason reason)
 {
-    rt->gc.finishGC(reason);
+    cx->gc.finishGC(reason);
 }
 
 JS_PUBLIC_API(void)
-JS::AbortIncrementalGC(JSRuntime* rt)
+JS::AbortIncrementalGC(JSContext* cx)
 {
-    rt->gc.abortGC();
+    cx->gc.abortGC();
 }
 
 char16_t*
@@ -7314,15 +7314,15 @@ JS::GCDescription::formatJSON(JSRuntime* rt, uint64_t timestamp) const
 }
 
 JS_PUBLIC_API(JS::GCSliceCallback)
-JS::SetGCSliceCallback(JSRuntime* rt, GCSliceCallback callback)
+JS::SetGCSliceCallback(JSContext* cx, GCSliceCallback callback)
 {
-    return rt->gc.setSliceCallback(callback);
+    return cx->gc.setSliceCallback(callback);
 }
 
 JS_PUBLIC_API(JS::GCNurseryCollectionCallback)
-JS::SetGCNurseryCollectionCallback(JSRuntime* rt, GCNurseryCollectionCallback callback)
+JS::SetGCNurseryCollectionCallback(JSContext* cx, GCNurseryCollectionCallback callback)
 {
-    return rt->gc.setNurseryCollectionCallback(callback);
+    return cx->gc.setNurseryCollectionCallback(callback);
 }
 
 JS_PUBLIC_API(void)
