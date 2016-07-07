@@ -33,7 +33,6 @@ const CONTENT_TYPES = {
   CSS_MIXED: 2,
   CSS_PROPERTY: 3,
 };
-const AUTOCOMPLETE_POPUP_CLASSNAME = "inplace-editor-autocomplete-popup";
 
 // The limit of 500 autocomplete suggestions should not be reached but is kept
 // for safety.
@@ -989,13 +988,13 @@ InplaceEditor.prototype = {
     let label, preLabel;
 
     if (this._selectedIndex === undefined) {
-      ({label, preLabel} =
-        this.popup.getItemAtIndex(this.popup.selectedIndex));
+      ({label, preLabel} = this.popup.getItemAtIndex(this.popup.selectedIndex));
     } else {
       ({label, preLabel} = this.popup.getItemAtIndex(this._selectedIndex));
     }
 
     let input = this.input;
+
     let pre = "";
 
     // CSS_MIXED needs special treatment here to make it so that
@@ -1021,13 +1020,13 @@ InplaceEditor.prototype = {
     // Wait for the popup to hide and then focus input async otherwise it does
     // not work.
     let onPopupHidden = () => {
-      this.popup._panel.removeEventListener("popuphidden", onPopupHidden);
+      this.popup.off("popup-closed", onPopupHidden);
       this.doc.defaultView.setTimeout(()=> {
         input.focus();
         this.emit("after-suggest");
       }, 0);
     };
-    this.popup._panel.addEventListener("popuphidden", onPopupHidden);
+    this.popup.on("popup-closed", onPopupHidden);
     this._hideAutocompletePopup();
   },
 
@@ -1174,7 +1173,6 @@ InplaceEditor.prototype = {
    *        item selected.
    */
   _openAutocompletePopup: function (offset, selectedIndex) {
-    this.popup._panel.classList.add(AUTOCOMPLETE_POPUP_CLASSNAME);
     this.popup.on("popup-click", this._onAutocompletePopupClick);
     this.popup.openPopup(this.input, offset, 0, selectedIndex);
   },
@@ -1184,7 +1182,6 @@ InplaceEditor.prototype = {
    * popup.
    */
   _hideAutocompletePopup: function () {
-    this.popup._panel.classList.remove(AUTOCOMPLETE_POPUP_CLASSNAME);
     this.popup.off("popup-click", this._onAutocompletePopupClick);
     this.popup.hidePopup();
   },

@@ -699,7 +699,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // previously set, revert to using an empty string by default.
     this._cbTextbox.value = expr;
 
-
     function openPopup() {
       // Show the conditional expression panel. The popup arrow should be pointing
       // at the line number node in the breakpoint item view.
