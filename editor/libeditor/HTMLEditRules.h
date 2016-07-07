@@ -28,10 +28,10 @@ class nsIEditor;
 class nsINode;
 class nsPlaintextEditor;
 class nsRange;
-class nsRulesInfo;
 
 namespace mozilla {
 
+class RulesInfo;
 struct EditorDOMPoint;
 namespace dom {
 class Element;
@@ -82,9 +82,9 @@ public:
                         nsIEditor::EDirection aDirection) override;
   NS_IMETHOD AfterEdit(EditAction action,
                        nsIEditor::EDirection aDirection) override;
-  NS_IMETHOD WillDoAction(Selection* aSelection, nsRulesInfo* aInfo,
+  NS_IMETHOD WillDoAction(Selection* aSelection, RulesInfo* aInfo,
                           bool* aCancel, bool* aHandled) override;
-  NS_IMETHOD DidDoAction(Selection* aSelection, nsRulesInfo* aInfo,
+  NS_IMETHOD DidDoAction(Selection* aSelection, RulesInfo* aInfo,
                          nsresult aResult) override;
   NS_IMETHOD DocumentModified() override;
 
@@ -200,7 +200,7 @@ protected:
   nsresult WillMakeBasicBlock(Selection& aSelection,
                               const nsAString& aBlockType,
                               bool* aCancel, bool* aHandled);
-  nsresult DidMakeBasicBlock(Selection* aSelection, nsRulesInfo* aInfo,
+  nsresult DidMakeBasicBlock(Selection* aSelection, RulesInfo* aInfo,
                              nsresult aResult);
   nsresult DidAbsolutePosition();
   nsresult AlignInnerBlocks(nsINode& aNode, const nsAString* alignType);

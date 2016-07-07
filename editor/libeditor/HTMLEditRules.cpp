@@ -62,9 +62,10 @@
 #endif
 
 class nsISupports;
-class nsRulesInfo;
 
 namespace mozilla {
+
+class RulesInfo;
 
 using namespace dom;
 
@@ -558,7 +559,7 @@ HTMLEditRules::AfterEditInner(EditAction action,
 
 NS_IMETHODIMP
 HTMLEditRules::WillDoAction(Selection* aSelection,
-                            nsRulesInfo* aInfo,
+                            RulesInfo* aInfo,
                             bool* aCancel,
                             bool* aHandled)
 {
@@ -659,7 +660,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
 NS_IMETHODIMP
 HTMLEditRules::DidDoAction(Selection* aSelection,
-                           nsRulesInfo* aInfo,
+                           RulesInfo* aInfo,
                            nsresult aResult)
 {
   TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
@@ -3452,7 +3453,7 @@ HTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
 
 nsresult
 HTMLEditRules::DidMakeBasicBlock(Selection* aSelection,
-                                 nsRulesInfo* aInfo,
+                                 RulesInfo* aInfo,
                                  nsresult aResult)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);

@@ -12,6 +12,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
+#include "nsIEditRules.h"
 #include "nsIEditorStyleSheets.h"
 #include "nsIEditorUtils.h"
 
@@ -19,8 +20,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsICSSLoaderObserver.h"
-
-#include "nsEditRules.h"
 
 #include "CSSEditUtils.h"
 

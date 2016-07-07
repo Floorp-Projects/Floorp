@@ -8,8 +8,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsEditRules.h"
 #include "nsEditor.h"
+#include "nsIEditRules.h"
 #include "nsIEditor.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
@@ -62,9 +62,9 @@ public:
                         nsIEditor::EDirection aDirection) override;
   NS_IMETHOD AfterEdit(EditAction action,
                        nsIEditor::EDirection aDirection) override;
-  NS_IMETHOD WillDoAction(Selection* aSelection, nsRulesInfo* aInfo,
+  NS_IMETHOD WillDoAction(Selection* aSelection, RulesInfo* aInfo,
                           bool* aCancel, bool* aHandled) override;
-  NS_IMETHOD DidDoAction(Selection* aSelection, nsRulesInfo* aInfo,
+  NS_IMETHOD DidDoAction(Selection* aSelection, RulesInfo* aInfo,
                          nsresult aResult) override;
   NS_IMETHOD DocumentIsEmpty(bool* aDocumentIsEmpty) override;
   NS_IMETHOD DocumentModified() override;
@@ -253,11 +253,11 @@ protected:
   friend class AutoLockRulesSniffing;
 };
 
-class TextRulesInfo final : public nsRulesInfo
+class TextRulesInfo final : public RulesInfo
 {
 public:
   explicit TextRulesInfo(EditAction aAction)
-    : nsRulesInfo(aAction)
+    : RulesInfo(aAction)
     , inString(nullptr)
     , outString(nullptr)
     , outputFormat(nullptr)
