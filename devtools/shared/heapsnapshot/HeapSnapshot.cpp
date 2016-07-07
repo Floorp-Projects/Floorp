@@ -63,9 +63,9 @@ GetCurrentThreadDebuggerMallocSizeOf()
 {
   auto ccrt = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(ccrt);
-  auto rt = ccrt->Runtime();
-  MOZ_ASSERT(rt);
-  auto mallocSizeOf = JS::dbg::GetDebuggerMallocSizeOf(rt);
+  auto cx = ccrt->Context();
+  MOZ_ASSERT(cx);
+  auto mallocSizeOf = JS::dbg::GetDebuggerMallocSizeOf(cx);
   MOZ_ASSERT(mallocSizeOf);
   return mallocSizeOf;
 }
@@ -1246,8 +1246,7 @@ public:
       return false;
     }
 
-    JSRuntime* rt = JS_GetRuntime(cx);
-    mozilla::MallocSizeOf mallocSizeOf = dbg::GetDebuggerMallocSizeOf(rt);
+    mozilla::MallocSizeOf mallocSizeOf = dbg::GetDebuggerMallocSizeOf(cx);
     MOZ_ASSERT(mallocSizeOf);
     protobufNode.set_size(ubiNode.size(mallocSizeOf));
 

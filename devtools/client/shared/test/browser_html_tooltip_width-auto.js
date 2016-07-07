@@ -25,11 +25,23 @@ const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
+let useXulWrapper;
+
 add_task(function* () {
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
-  let tooltip = new HTMLTooltip({doc}, {});
+  info("Run tests for a Tooltip without using a XUL panel");
+  useXulWrapper = false;
+  yield runTests(doc);
+
+  info("Run tests for a Tooltip with a XUL panel");
+  useXulWrapper = true;
+  yield runTests(doc);
+});
+
+function* runTests(doc) {
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
   info("Create tooltip content width to 150px");
   let tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: 100%; width: 150px; background: red;";
@@ -44,4 +56,6 @@ add_task(function* () {
   is(panelRect.width, 150, "Tooltip panel has the expected width.");
 
   yield hideTooltip(tooltip);
-});
+
+  tooltip.destroy();
+}

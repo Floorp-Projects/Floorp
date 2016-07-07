@@ -15,6 +15,7 @@
 #elif OS_WIN
 # include "mozilla/ipc/Transport_win.h"
 #endif
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -27,11 +28,11 @@ nsresult CreateTransport(base::ProcessId aProcIdOne,
                          TransportDescriptor* aOne,
                          TransportDescriptor* aTwo);
 
-Transport* OpenDescriptor(const TransportDescriptor& aTd,
-                          Transport::Mode aMode);
+UniquePtr<Transport> OpenDescriptor(const TransportDescriptor& aTd,
+                                    Transport::Mode aMode);
 
-Transport* OpenDescriptor(const FileDescriptor& aFd,
-                          Transport::Mode aMode);
+UniquePtr<Transport> OpenDescriptor(const FileDescriptor& aFd,
+                                    Transport::Mode aMode);
 
 TransportDescriptor
 DuplicateDescriptor(const TransportDescriptor& aTd);

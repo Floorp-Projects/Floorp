@@ -152,10 +152,10 @@ function setLDAPVersion(version) {
 }
 
 
-function getLDAPAttributes(host, base, filter, attribs) {
+function getLDAPAttributes(host, base, filter, attribs, isSecure) {
     
     try {
-        var urlSpec = "ldap://" + host + "/" + base + "?" + attribs + "?sub?" +
+        var urlSpec = "ldap" + (isSecure ? "s" : "") + "://" + host + (isSecure ? ":636" : "") + "/" + base + "?" + attribs + "?sub?" +
                       filter;
 
         var url = Components.classes["@mozilla.org/network/io-service;1"]
