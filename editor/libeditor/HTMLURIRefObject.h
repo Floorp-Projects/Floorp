@@ -3,17 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef HTMLURIRefObject_h
+#define HTMLURIRefObject_h
 
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsIURIRefObject.h"
 #include "nscore.h"
-
-class nsIDOMMozNamedAttrMap;
-class nsIDOMNode;
-
-#ifndef nsHTMLURIRefObject_h__
-#define nsHTMLURIRefObject_h__
 
 #define NS_URI_REF_OBJECT_CID                          \
 { /* {bdd79df6-1dd1-11b2-b29c-c3d63a58f1d2} */         \
@@ -21,10 +17,15 @@ class nsIDOMNode;
     { 0xb2, 0x9c, 0xc3, 0xd6, 0x3a, 0x58, 0xf1, 0xd2 } \
 }
 
-class nsHTMLURIRefObject final : public nsIURIRefObject
+class nsIDOMMozNamedAttrMap;
+class nsIDOMNode;
+
+namespace mozilla {
+
+class HTMLURIRefObject final : public nsIURIRefObject
 {
 public:
-  nsHTMLURIRefObject();
+  HTMLURIRefObject();
 
   // Interfaces for addref and release and queryinterface
   NS_DECL_ISUPPORTS
@@ -32,7 +33,7 @@ public:
   NS_DECL_NSIURIREFOBJECT
 
 protected:
-  virtual ~nsHTMLURIRefObject();
+  virtual ~HTMLURIRefObject();
 
   nsCOMPtr<nsIDOMNode> mNode;
   nsCOMPtr<nsIDOMMozNamedAttrMap> mAttributes;
@@ -40,7 +41,8 @@ protected:
   uint32_t mAttributeCnt;
 };
 
+} // namespace mozilla
+
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode);
 
-#endif /* nsHTMLURIRefObject_h__ */
-
+#endif // #ifndef HTMLURIRefObject_h
