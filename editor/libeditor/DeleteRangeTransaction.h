@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DeleteRangeTxn_h__
-#define DeleteRangeTxn_h__
+#ifndef DeleteRangeTransaction_h
+#define DeleteRangeTransaction_h
 
 #include "EditAggregateTxn.h"
 #include "EditTxn.h"
@@ -19,23 +19,27 @@ class nsEditor;
 class nsINode;
 class nsRangeUpdater;
 
+namespace mozilla {
+
 /**
  * A transaction that deletes an entire range in the content tree
  */
-class DeleteRangeTxn : public EditAggregateTxn
+class DeleteRangeTransaction final : public EditAggregateTxn
 {
 public:
-  /** initialize the transaction.
-    * @param aEditor the object providing basic editing operations
-    * @param aRange  the range to delete
-    */
+  /**
+   * Initialize the transaction.
+   * @param aEditor     The object providing basic editing operations.
+   * @param aRange      The range to delete.
+   */
   nsresult Init(nsEditor* aEditor,
                 nsRange* aRange,
                 nsRangeUpdater* aRangeUpdater);
 
-  DeleteRangeTxn();
+  DeleteRangeTransaction();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteRangeTxn, EditAggregateTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteRangeTransaction,
+                                           EditAggregateTxn)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_EDITTXN
@@ -47,8 +51,8 @@ public:
     mRange = nullptr;
     EditAggregateTxn::LastRelease();
   }
-protected:
 
+protected:
   nsresult CreateTxnsToDeleteBetween(nsINode* aNode,
                                      int32_t aStartOffset,
                                      int32_t aEndOffset);
@@ -59,16 +63,16 @@ protected:
                                      int32_t aOffset,
                                      nsIEditor::EDirection aAction);
 
-protected:
-
-  /** p1 in the range */
+  // P1 in the range.
   RefPtr<nsRange> mRange;
 
-  /** the editor for this transaction */
+  // The editor for this transaction.
   nsEditor* mEditor;
 
-  /** range updater object */
+  // Range updater object.
   nsRangeUpdater* mRangeUpdater;
 };
 
-#endif
+} // namespace mozilla
+
+#endif // #ifndef DeleteRangeTransaction_h

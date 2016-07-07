@@ -13,7 +13,7 @@
 #include "ChangeAttributeTransaction.h" // for ChangeAttributeTransaction
 #include "CreateElementTransaction.h"   // for CreateElementTransaction
 #include "DeleteNodeTransaction.h"      // for DeleteNodeTransaction
-#include "DeleteRangeTxn.h"             // for DeleteRangeTxn
+#include "DeleteRangeTransaction.h"     // for DeleteRangeTransaction
 #include "DeleteTextTxn.h"              // for DeleteTextTxn
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
 #include "EditorUtils.h"                // for AutoRules, etc
@@ -4302,9 +4302,9 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
     // Same with range as with selection; if it is collapsed and action
     // is eNone, do nothing.
     if (!range->Collapsed()) {
-      RefPtr<DeleteRangeTxn> txn = new DeleteRangeTxn();
-      txn->Init(this, range, &mRangeUpdater);
-      aggTxn->AppendChild(txn);
+      RefPtr<DeleteRangeTransaction> transaction = new DeleteRangeTransaction();
+      transaction->Init(this, range, &mRangeUpdater);
+      aggTxn->AppendChild(transaction);
     } else if (aAction != eNone) {
       // we have an insertion point.  delete the thing in front of it or
       // behind it, depending on aAction
