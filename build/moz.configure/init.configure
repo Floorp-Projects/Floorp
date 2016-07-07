@@ -115,6 +115,8 @@ def mozconfig(current_project, mozconfig, old_configure, build_env, help):
 
     return mozconfig
 
+set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
+
 
 # Hacks related to old-configure
 # ==============================
