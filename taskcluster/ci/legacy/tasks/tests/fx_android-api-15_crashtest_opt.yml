@@ -4,7 +4,6 @@ $inherits:
 task:
   payload:
     command:
-      - --test-suite=crashtest-{{chunk}}
       - --download-symbols=ondemand
   extra:
     treeherder:
