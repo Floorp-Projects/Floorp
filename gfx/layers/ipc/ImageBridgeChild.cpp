@@ -511,11 +511,6 @@ ImageBridgeChild::ImageBridgeChild()
 ImageBridgeChild::~ImageBridgeChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(GetTransport());
-
-  XRE_GetIOMessageLoop()->PostTask(task.forget());
-
   delete mTxn;
 }
 
@@ -1004,7 +999,7 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
     sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorThreadHolder::Loop(), nullptr, base::GetCurrentProcId());
+      CompositorThreadHolder::Loop(), base::GetCurrentProcId());
     sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
       NewRunnableFunction(CallSendImageBridgeThreadId,

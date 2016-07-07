@@ -23,6 +23,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
 
 #if defined(ANDROID) && defined(DEBUG)
@@ -235,12 +236,12 @@ protected:
     void AddOpenedActor(IToplevelProtocol* aActor);
 
 public:
-    void SetTransport(Transport* aTrans)
+    void SetTransport(UniquePtr<Transport> aTrans)
     {
-        mTrans = aTrans;
+        mTrans = Move(aTrans);
     }
 
-    Transport* GetTransport() const { return mTrans; }
+    Transport* GetTransport() const { return mTrans.get(); }
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
@@ -272,7 +273,7 @@ private:
     IToplevelProtocol* mOpener;
 
     ProtocolId mProtocolId;
-    Transport* mTrans;
+    UniquePtr<Transport> mTrans;
 };
 
 class IShmemAllocator
@@ -533,16 +534,16 @@ public:
         MOZ_RELEASE_ASSERT(mValid);
         MOZ_RELEASE_ASSERT(mMyPid == base::GetCurrentProcId());
 
-        Transport* t = mozilla::ipc::OpenDescriptor(mTransport, mMode);
+        UniquePtr<Transport> t = mozilla::ipc::OpenDescriptor(mTransport, mMode);
         if (!t) {
             return false;
         }
-        if (!aActor->Open(t, mOtherPid, XRE_GetIOMessageLoop(),
+        if (!aActor->Open(t.get(), mOtherPid, XRE_GetIOMessageLoop(),
                           mMode == Transport::MODE_SERVER ? ParentSide : ChildSide)) {
             return false;
         }
         mValid = false;
-        aActor->SetTransport(t);
+        aActor->SetTransport(Move(t));
         if (aProcessActor) {
             aProcessActor->AddOpenedActor(aActor);
         }

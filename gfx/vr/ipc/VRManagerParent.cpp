@@ -24,7 +24,6 @@ VRManagerParent::VRManagerParent(MessageLoop* aLoop,
   MOZ_COUNT_CTOR(VRManagerParent);
   MOZ_ASSERT(NS_IsMainThread());
 
-  SetTransport(aTransport);
   SetOtherProcessId(aChildProcessId);
 }
 
@@ -34,12 +33,6 @@ VRManagerParent::~VRManagerParent()
 
   MOZ_ASSERT(!mVRManagerHolder);
 
-  Transport* trans = GetTransport();
-  if (trans) {
-    MOZ_ASSERT(XRE_GetIOMessageLoop());
-    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(trans);
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-  }
   MOZ_COUNT_DTOR(VRManagerParent);
 }
 
@@ -115,11 +108,11 @@ VRManagerParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMa
 {
   for (unsigned int i = 0; i < aFds.Length(); i++) {
     if (aFds[i].protocolId() == unsigned(GetProtocolId())) {
-      Transport* transport = OpenDescriptor(aFds[i].fd(),
-                                            Transport::MODE_SERVER);
-      PVRManagerParent* vm = CreateCrossProcess(transport, base::GetProcId(aPeerProcess));
+      UniquePtr<Transport> transport =
+        OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
+      PVRManagerParent* vm = CreateCrossProcess(transport.get(), base::GetProcId(aPeerProcess));
       vm->CloneManagees(this, aCtx);
-      vm->IToplevelProtocol::SetTransport(transport);
+      vm->IToplevelProtocol::SetTransport(Move(transport));
       // The reference to the compositor thread is held in OnChannelConnected().
       // We need to do this for cloned actors, too.
       vm->OnChannelConnected(base::GetProcId(aPeerProcess));
