@@ -635,7 +635,11 @@ nsVideoFrame::UpdatePosterSource(bool aNotify)
   NS_ASSERTION(HasVideoElement(), "Only call this on <video> elements.");
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
 
-  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::poster)) {
+  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::poster) &&
+      !element->AttrValueIs(kNameSpaceID_None,
+                            nsGkAtoms::poster,
+                            nsGkAtoms::_empty,
+                            eIgnoreCase)) {
     nsAutoString posterStr;
     element->GetPoster(posterStr);
     mPosterImage->SetAttr(kNameSpaceID_None,
