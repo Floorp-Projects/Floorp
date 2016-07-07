@@ -6,6 +6,7 @@
 #include "nsHTMLEditorEventListener.h"
 
 #include "HTMLEditUtils.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
