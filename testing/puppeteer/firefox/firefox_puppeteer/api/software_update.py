@@ -220,13 +220,16 @@ class SoftwareUpdate(BaseLib):
 
         :returns: A dictionary of build information
         """
+        update_url = self.get_update_url(True)
+
         return {
             'buildid': self.app_info.appBuildID,
             'channel': self.update_channel.channel,
             'disabled_addons': self.prefs.get_pref(self.PREF_DISABLED_ADDONS),
             'locale': self.app_info.locale,
             'mar_channels': self.mar_channels.channels,
-            'url_aus': self.get_update_url(True),
+            'update_url': update_url,
+            'update_snippet': self.get_update_snippet(update_url),
             'user_agent': self.app_info.user_agent,
             'version': self.app_info.version
         }
@@ -329,36 +332,37 @@ class SoftwareUpdate(BaseLib):
         with open(os.path.join(self.staging_directory, 'update.status'), 'w') as f:
             f.write('failed: 6\n')
 
+    def get_update_snippet(self, update_url):
+        """Retrieve contents of the update snippet.
+
+        :param update_url: URL to the update snippet
+        """
+        snippet = None
+        try:
+            import urllib2
+            response = urllib2.urlopen(update_url)
+            snippet = response.read()
+        except Exception:
+            pass
+
+        return snippet
+
     def get_update_url(self, force=False):
-        """Retrieve the AUS update URL the update snippet is retrieved from
+        """Retrieve the AUS update URL the update snippet is retrieved from.
 
         :param force: Boolean flag to force an update check
 
         :returns: The URL of the update snippet
         """
         url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL_OVERRIDE)
-
         if not url:
             url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL)
 
-            # get the next two prefs from the default branch
-            dist = self.prefs.get_pref(self.PREF_APP_DISTRIBUTION, True) or 'default'
-            dist_version = self.prefs.get_pref(self.PREF_APP_DISTRIBUTION_VERSION,
-                                               True) or 'default'
-
-            # Not all placeholders are getting replaced correctly by formatURL
-            url = url.replace('%PRODUCT%', self.app_info.name)
-            url = url.replace('%BUILD_ID%', self.app_info.appBuildID)
-            url = url.replace('%BUILD_TARGET%', self.app_info.OS + '_' + self.ABI)
-            url = url.replace('%OS_VERSION%', self.os_version)
-            url = url.replace('%CHANNEL%', self.update_channel.channel)
-            url = url.replace('%DISTRIBUTION%', dist)
-            url = url.replace('%DISTRIBUTION_VERSION%', dist_version)
-
-            url = self.marionette.execute_script("""
-              Components.utils.import("resource://gre/modules/Services.jsm");
-              return Services.urlFormatter.formatURL(arguments[0]);
-            """, script_args=[url])
+        # Format the URL by replacing placeholders
+        url = self.marionette.execute_script("""
+          Components.utils.import("resource://gre/modules/UpdateUtils.jsm")
+          return UpdateUtils.formatUpdateURL(arguments[0]);
+        """, script_args=[url])
 
         if force:
             if '?' in url:

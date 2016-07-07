@@ -81,6 +81,14 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_linux64_pgo.yml
+  linux64-mulet:
+    platforms:
+      - Mulet Linux
+    types:
+      opt:
+        task: tasks/builds/mulet_linux.yml
+      debug:
+        task: tasks/builds/mulet_linux_dbg.yml
   linux64-mulet-haz:
     platforms:
       - Mulet Linux

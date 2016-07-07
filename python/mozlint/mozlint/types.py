@@ -32,7 +32,7 @@ class BaseType(object):
             paths, exclude = filterpaths(paths, linter.get('include'), exclude)
 
         if not paths:
-            print("{}: No files to lint for specified paths!".format(linter['name']))
+            print("{}: no files to lint in specified paths".format(linter['name']))
             return
 
         lintargs['exclude'] = exclude

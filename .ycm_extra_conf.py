@@ -4,9 +4,12 @@
 
 import imp
 import os
-from StringIO import StringIO
 import shlex
 import sys
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 old_bytecode = sys.dont_write_bytecode
 sys.dont_write_bytecode = True
