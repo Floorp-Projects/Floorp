@@ -3334,7 +3334,7 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsAString& aOutputString)
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // Save current selection
-  nsAutoSelectionReset selectionResetter(selection, this);
+  AutoSelectionRestorer selectionRestorer(selection, this);
 
   nsresult res = SetSelectionAroundHeadChildren(selection, mDocWeak);
   NS_ENSURE_SUCCESS(res, res);
@@ -4534,7 +4534,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   nsAutoEditBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
-  nsAutoSelectionReset selectionResetter(selection, this);
+  AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontSpazMySelection(this);
 
   bool cancel, handled;

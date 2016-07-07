@@ -352,10 +352,12 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   }
   else
   {
-    // delete whole cells: we will replace with new table content
-    { // Braces for artificial block to scope nsAutoSelectionReset.
-      // Save current selection since DeleteTableCell perturbs it
-      nsAutoSelectionReset selectionResetter(selection, this);
+    // Delete whole cells: we will replace with new table content.
+
+    // Braces for artificial block to scope AutoSelectionRestorer.
+    // Save current selection since DeleteTableCell() perturbs it.
+    {
+      AutoSelectionRestorer selectionRestorer(selection, this);
       rv = DeleteTableCell(1);
       NS_ENSURE_SUCCESS(rv, rv);
     }

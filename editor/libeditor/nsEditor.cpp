@@ -1568,7 +1568,7 @@ nsEditor::ReplaceContainer(Element* aOldContainer,
   }
 
   // notify our internal selection state listener
-  // (Note: A nsAutoSelectionReset object must be created
+  // (Note: An AutoSelectionRestorer object must be created
   //  before calling this to initialize mRangeUpdater)
   AutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, aOldContainer,
                                                ret);
