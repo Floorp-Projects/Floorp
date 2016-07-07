@@ -27,9 +27,6 @@ interface BrowserElementAudioChannel : EventTarget {
 
   [Throws]
   DOMRequest isActive();
-
-  [Throws]
-  DOMRequest notifyChannel(DOMString aEvent);
 };
 
 partial interface BrowserElementPrivileged {

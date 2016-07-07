@@ -1444,7 +1444,7 @@ nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
         // value attribute is being added or removed, then we need to
         // return a hint of frame change.  (See bugzilla bug 95475 for
         // details.)
-        retval = NS_STYLE_HINT_FRAMECHANGE;
+        retval = nsChangeHint_ReconstructFrame;
     } else {
         // if left or top changes we reflow. This will happen in xul
         // containers that manage positioned children such as a stack.

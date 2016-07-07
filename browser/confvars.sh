@@ -56,8 +56,6 @@ MOZ_APP_STATIC_INI=1
 MOZ_WEBGL_CONFORMANT=1
 # Enable navigator.mozPay
 MOZ_PAY=1
-# Enable activities. These are used for FxOS developers currently.
-MOZ_ACTIVITIES=1
 MOZ_JSDOWNLOADS=1
 MOZ_RUST_MP4PARSE=1
 

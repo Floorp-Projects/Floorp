@@ -18,7 +18,6 @@
 
 #include "mozIApplication.h"
 #include "nsComponentManagerUtils.h"
-#include "nsContentUtils.h"
 #include "nsFrameLoader.h"
 #include "nsIAppsService.h"
 #include "nsIDOMDOMRequest.h"
@@ -555,23 +554,10 @@ nsBrowserElement::GetAllowedAudioChannels(
       return;
     }
 
-    nsAutoString manifestURL;
-    aRv = mozBrowserFrame->GetAppManifestURL(manifestURL);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    nsCOMPtr<mozIApplication> parentApp;
-    aRv = GetParentApplication(getter_AddRefs(parentApp));
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
             ("nsBrowserElement, GetAllowedAudioChannels, this = %p\n", this));
 
     GenerateAllowedAudioChannels(innerWindow, frameLoader, mBrowserElementAPI,
-                                 manifestURL, parentApp,
                                  mBrowserElementAudioChannels, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
@@ -586,79 +572,45 @@ nsBrowserElement::GenerateAllowedAudioChannels(
                  nsPIDOMWindowInner* aWindow,
                  nsIFrameLoader* aFrameLoader,
                  nsIBrowserElementAPI* aAPI,
-                 const nsAString& aManifestURL,
-                 mozIApplication* aParentApp,
                  nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,
                  ErrorResult& aRv)
 {
   MOZ_ASSERT(aAudioChannels.IsEmpty());
-
-  nsCOMPtr<nsIAppsService> appsService =
-    do_GetService("@mozilla.org/AppsService;1");
-  if (NS_WARN_IF(!appsService)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsCOMPtr<mozIApplication> app;
-  aRv = appsService->GetAppByManifestURL(aManifestURL, getter_AddRefs(app));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
 
   // Normal is always allowed.
   nsTArray<RefPtr<BrowserElementAudioChannel>> channels;
 
   RefPtr<BrowserElementAudioChannel> ac =
     BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
-                                       AudioChannel::Normal,
-                                       aManifestURL, aRv);
+                                       AudioChannel::Normal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   channels.AppendElement(ac);
 
-  if (app) {
+  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Since we don't have permissions anymore let only chrome windows pick a
+  // non-default channel
+  if (nsContentUtils::IsChromeDoc(doc)) {
     const nsAttrValue::EnumTable* audioChannelTable =
       AudioChannelService::GetAudioChannelTable();
 
-    bool allowed;
-    nsAutoCString permissionName;
-
     for (uint32_t i = 0; audioChannelTable && audioChannelTable[i].tag; ++i) {
-      permissionName.AssignASCII("audio-channel-");
-      permissionName.AppendASCII(audioChannelTable[i].tag);
-
-      // In case of nested iframes we want to check if the parent has the
-      // permission to use this AudioChannel.
-      if (aParentApp) {
-        aRv = aParentApp->HasPermission(permissionName.get(), &allowed);
-        if (NS_WARN_IF(aRv.Failed())) {
-          return;
-        }
-
-        if (!allowed) {
-          continue;
-        }
-      }
-
-      aRv = app->HasPermission(permissionName.get(), &allowed);
+      AudioChannel value = (AudioChannel)audioChannelTable[i].value;
+      RefPtr<BrowserElementAudioChannel> ac =
+        BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
+                                           value, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
 
-      if (allowed) {
-        RefPtr<BrowserElementAudioChannel> ac =
-          BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
-                                             (AudioChannel)audioChannelTable[i].value,
-                                             aManifestURL, aRv);
-        if (NS_WARN_IF(aRv.Failed())) {
-          return;
-        }
-
-        channels.AppendElement(ac);
-      }
+      channels.AppendElement(ac);
     }
   }
 

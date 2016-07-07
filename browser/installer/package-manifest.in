@@ -175,10 +175,6 @@
 @RESPATH@/components/directory.xpt
 @RESPATH@/components/docshell.xpt
 @RESPATH@/components/dom.xpt
-#ifdef MOZ_ACTIVITIES
-@RESPATH@/components/dom_activities.xpt
-@RESPATH@/components/dom_messages.xpt
-#endif
 @RESPATH@/components/dom_apps.xpt
 @RESPATH@/components/dom_newapps.xpt
 @RESPATH@/components/dom_base.xpt
@@ -536,19 +532,6 @@
 
 @RESPATH@/components/TVSimulatorService.js
 @RESPATH@/components/TVSimulatorService.manifest
-
-#ifdef MOZ_ACTIVITIES
-@RESPATH@/components/SystemMessageCache.js
-@RESPATH@/components/SystemMessageInternal.js
-@RESPATH@/components/SystemMessageManager.js
-@RESPATH@/components/SystemMessageManager.manifest
-
-@RESPATH@/components/Activities.manifest
-@RESPATH@/components/ActivityProxy.js
-@RESPATH@/components/ActivityRequestHandler.js
-@RESPATH@/components/ActivityWrapper.js
-@RESPATH@/components/ActivityMessageConfigurator.js
-#endif
 
 @RESPATH@/components/Payment.js
 @RESPATH@/components/PaymentFlowInfo.js

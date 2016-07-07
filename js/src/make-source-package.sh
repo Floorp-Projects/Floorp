@@ -134,7 +134,6 @@ case $cmd in
     ${MKDIR} -p ${tgtpath}/mozglue
     cp -pPR \
         ${TOPSRCDIR}/mozglue/build \
-        ${TOPSRCDIR}/mozglue/crt \
         ${TOPSRCDIR}/mozglue/misc \
         ${TOPSRCDIR}/mozglue/moz.build \
         ${tgtpath}/mozglue

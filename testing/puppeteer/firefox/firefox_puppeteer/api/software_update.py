@@ -220,13 +220,16 @@ class SoftwareUpdate(BaseLib):
 
         :returns: A dictionary of build information
         """
+        update_url = self.get_update_url(True)
+
         return {
             'buildid': self.app_info.appBuildID,
             'channel': self.update_channel.channel,
             'disabled_addons': self.prefs.get_pref(self.PREF_DISABLED_ADDONS),
             'locale': self.app_info.locale,
             'mar_channels': self.mar_channels.channels,
-            'url_aus': self.get_update_url(True),
+            'update_url': update_url,
+            'update_snippet': self.get_update_snippet(update_url),
             'user_agent': self.app_info.user_agent,
             'version': self.app_info.version
         }
@@ -328,6 +331,21 @@ class SoftwareUpdate(BaseLib):
         """Update the update.status file and set the status to 'failed:6'"""
         with open(os.path.join(self.staging_directory, 'update.status'), 'w') as f:
             f.write('failed: 6\n')
+
+    def get_update_snippet(self, update_url):
+        """Retrieve contents of the update snippet.
+
+        :param update_url: URL to the update snippet
+        """
+        snippet = None
+        try:
+            import urllib2
+            response = urllib2.urlopen(update_url)
+            snippet = response.read()
+        except Exception:
+            pass
+
+        return snippet
 
     def get_update_url(self, force=False):
         """Retrieve the AUS update URL the update snippet is retrieved from.

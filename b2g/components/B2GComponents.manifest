@@ -23,10 +23,6 @@ contract @mozilla.org/b2g/directory-provider;1 {9181eb7c-6f87-11e1-90b1-4f59d80d
 category xpcom-directory-providers b2g-directory-provider @mozilla.org/b2g/directory-provider;1
 #endif
 
-# ActivitiesGlue.js
-component {3a54788b-48cc-4ab4-93d6-0d6a8ef74f8e} ActivitiesGlue.js
-contract @mozilla.org/dom/activities/ui-glue;1 {3a54788b-48cc-4ab4-93d6-0d6a8ef74f8e}
-
 # SystemMessageGlue.js
 component {2846f034-e614-11e3-93cd-74d02b97e723} SystemMessageGlue.js
 contract @mozilla.org/dom/messages/system-message-glue;1 {2846f034-e614-11e3-93cd-74d02b97e723}
@@ -122,6 +118,6 @@ contract @mozilla.org/presentation-device/prompt;1 {4a300c26-e99b-4018-ab9b-c48c
 component {ccc8a839-0b64-422b-8a60-fb2af0e376d0} PresentationRequestUIGlue.js
 contract @mozilla.org/presentation/requestuiglue;1 {ccc8a839-0b64-422b-8a60-fb2af0e376d0}
 
-# KillSwitch.js
-component {b6eae5c6-971c-4772-89e5-5df626bf3f09} KillSwitch.js
-contract @mozilla.org/moz-kill-switch;1 {b6eae5c6-971c-4772-89e5-5df626bf3f09}
+# SystemMessageInternal.js
+component {70589ca5-91ac-4b9e-b839-d6a88167d714} SystemMessageInternal.js
+contract @mozilla.org/system-message-internal;1 {70589ca5-91ac-4b9e-b839-d6a88167d714}
