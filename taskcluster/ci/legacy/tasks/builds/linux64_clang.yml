@@ -34,8 +34,7 @@ task:
       'public/clang.tar.xz':
         type: file
         path: '/home/worker/workspace/artifacts/clang.tar.xz'
-        expires:
-          relative-datestamp: "1 year"
+        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherderEnv:
