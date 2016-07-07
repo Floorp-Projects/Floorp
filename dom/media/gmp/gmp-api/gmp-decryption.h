@@ -227,7 +227,9 @@ public:
 
   // Sets the callback to use with the decryptor to return results
   // to Gecko.
-  virtual void Init(GMPDecryptorCallback* aCallback) = 0;
+  virtual void Init(GMPDecryptorCallback* aCallback,
+                    bool aDistinctiveIdentifierRequired,
+                    bool aPersistentStateRequired) = 0;
 
   // Initiates the creation of a session given |aType| and |aInitData|, and
   // the generation of a license request message.
