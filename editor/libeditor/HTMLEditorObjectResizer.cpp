@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/HTMLEditor.h"
-#include "nsHTMLObjectResizer.h"
+#include "HTMLEditorObjectResizerUtils.h"
 
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
@@ -45,8 +45,12 @@
 
 class nsISelection;
 
+namespace mozilla {
+
+using namespace dom;
+
 /******************************************************************************
- * DocumentResizeEventListener
+ * mozilla::DocumentResizeEventListener
  ******************************************************************************/
 
 NS_IMPL_ISUPPORTS(DocumentResizeEventListener, nsIDOMEventListener)
@@ -54,10 +58,6 @@ NS_IMPL_ISUPPORTS(DocumentResizeEventListener, nsIDOMEventListener)
 DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor* aEditor)
 {
   mEditor = do_GetWeakReference(aEditor);
-}
-
-DocumentResizeEventListener::~DocumentResizeEventListener()
-{
 }
 
 NS_IMETHODIMP
@@ -70,7 +70,7 @@ DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 }
 
 /******************************************************************************
- * ResizerSelectionListener
+ * mozilla::ResizerSelectionListener
  ******************************************************************************/
 
 NS_IMPL_ISUPPORTS(ResizerSelectionListener, nsISelectionListener)
@@ -78,10 +78,6 @@ NS_IMPL_ISUPPORTS(ResizerSelectionListener, nsISelectionListener)
 ResizerSelectionListener::ResizerSelectionListener(nsIHTMLEditor* aEditor)
 {
   mEditor = do_GetWeakReference(aEditor);
-}
-
-ResizerSelectionListener::~ResizerSelectionListener()
-{
 }
 
 NS_IMETHODIMP
@@ -104,7 +100,7 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
 }
 
 /******************************************************************************
- * ResizerMouseMotionListener
+ * mozilla::ResizerMouseMotionListener
  ******************************************************************************/
 
 NS_IMPL_ISUPPORTS(ResizerMouseMotionListener, nsIDOMEventListener)
@@ -112,10 +108,6 @@ NS_IMPL_ISUPPORTS(ResizerMouseMotionListener, nsIDOMEventListener)
 ResizerMouseMotionListener::ResizerMouseMotionListener(nsIHTMLEditor* aEditor)
 {
   mEditor = do_GetWeakReference(aEditor);
-}
-
-ResizerMouseMotionListener::~ResizerMouseMotionListener()
-{
 }
 
 NS_IMETHODIMP
@@ -137,10 +129,6 @@ ResizerMouseMotionListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 
   return NS_OK;
 }
-
-namespace mozilla {
-
-using namespace dom;
 
 /******************************************************************************
  * mozilla::HTMLEditor

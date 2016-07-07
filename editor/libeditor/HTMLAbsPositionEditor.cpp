@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "EditorUtils.h"
+#include "HTMLEditorObjectResizerUtils.h"
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
@@ -22,7 +23,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLObjectResizer.h"
 #include "nsIContent.h"
 #include "nsROCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleDeclaration.h"
