@@ -147,7 +147,7 @@ class TestFindElementHTML(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
 
-    def test_not_found(self):
+    def test_not_found_from_element(self):
         self.marionette.set_search_timeout(0)
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.ID, "foo")
@@ -160,7 +160,7 @@ class TestFindElementHTML(MarionetteTestCase):
         self.assertRaises(NoSuchElementException, el.find_element, By.TAG_NAME, "cheese")
         self.assertRaises(NoSuchElementException, el.find_element, By.XPATH, "cheese")
 
-    def test_not_found_implicit_wait(self):
+    def test_not_found_implicit_wait_from_element(self):
         self.marionette.set_search_timeout(50)
         self.marionette.navigate(id_html)
         el = self.marionette.find_element(By.ID, "foo")
