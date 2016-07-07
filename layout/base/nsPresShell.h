@@ -66,9 +66,9 @@ typedef nsClassHashtable<nsUint64HashKey, mozilla::CSSIntRegion> VisibleRegions;
 
 } // namespace mozilla
 
-// 250ms.  This is actually pref-controlled, but we use this value if we fail
+// 5ms.  This is actually pref-controlled, but we use this value if we fail
 // to get the pref for any reason.
-#define PAINTLOCK_EVENT_DELAY 250
+#define PAINTLOCK_EVENT_DELAY 5
 
 class PresShell final : public nsIPresShell,
                         public nsStubDocumentObserver,
