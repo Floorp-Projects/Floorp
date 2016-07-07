@@ -45,6 +45,16 @@
   max-height: 20rem;
 }
 
+/* Reset list styles. */
+.devtools-autocomplete-popup ul {
+  list-style: none;
+}
+
+.devtools-autocomplete-popup ul,
+.devtools-autocomplete-popup li {
+  margin: 0;
+}
+
 :root[platform="linux"] .devtools-autocomplete-popup {
   /* Root font size is bigger on Linux, adjust rem-based values. */
   max-height: 16rem;
@@ -55,50 +65,50 @@
   background-color: transparent;
   border-width: 0px !important;
   margin: 0;
+  padding: 2px;
 }
 
 .devtools-autocomplete-listbox > scrollbox {
   padding: 2px;
 }
 
-.inplace-editor-autocomplete-popup .devtools-autocomplete-listbox {
-  /* Inplace editor closes the autocomplete popup on blur, the autocomplete
-  popup should not steal the focus here.*/
-  -moz-user-focus: ignore;
-}
-
-.devtools-autocomplete-listbox > richlistitem,
-.devtools-autocomplete-listbox > richlistitem[selected] {
+.devtools-autocomplete-listbox .autocomplete-item {
   width: 100%;
   background-color: transparent;
   border-radius: 4px;
-}
-
-.devtools-autocomplete-listbox.dark-theme > richlistitem[selected],
-.devtools-autocomplete-listbox.dark-theme > richlistitem:hover {
-  background-color: rgba(0,0,0,0.5);
-}
-
-.devtools-autocomplete-listbox.dark-theme > richlistitem[selected] > .autocomplete-value,
-.devtools-autocomplete-listbox:focus.dark-theme > richlistitem[selected] > .initial-value {
-  color: hsl(208,100%,60%);
-}
-
-.devtools-autocomplete-listbox.dark-theme > richlistitem[selected] > label {
-  color: #eee;
-}
-
-.devtools-autocomplete-listbox.dark-theme > richlistitem > label {
-  color: #ccc;
-}
-
-.devtools-autocomplete-listbox > richlistitem > .initial-value,
-.devtools-autocomplete-listbox > richlistitem > .autocomplete-value {
-  margin: 0;
   padding: 1px 0;
 }
 
-.devtools-autocomplete-listbox > richlistitem > .autocomplete-count {
+.devtools-autocomplete-listbox .autocomplete-selected {
+  background-color: rgba(0,0,0,0.2);
+}
+
+.devtools-autocomplete-listbox.dark-theme .autocomplete-selected,
+.devtools-autocomplete-listbox.dark-theme .autocomplete-item:hover {
+  background-color: rgba(0,0,0,0.5);
+}
+
+.devtools-autocomplete-listbox.dark-theme .autocomplete-selected > .autocomplete-value,
+.devtools-autocomplete-listbox:focus.dark-theme .autocomplete-selected > .initial-value {
+  color: hsl(208,100%,60%);
+}
+
+.devtools-autocomplete-listbox.dark-theme .autocomplete-selected > span {
+  color: #eee;
+}
+
+.devtools-autocomplete-listbox.dark-theme .autocomplete-item > span {
+  color: #ccc;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > .initial-value,
+.devtools-autocomplete-listbox .autocomplete-item > .autocomplete-value {
+  margin: 0;
+  padding: 0;
+  cursor: default;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > .autocomplete-count {
   text-align: end;
 }
 
@@ -132,22 +142,22 @@
   background: var(--theme-body-background);
 }
 
-.devtools-autocomplete-listbox.firebug-theme > richlistitem[selected],
-.devtools-autocomplete-listbox.firebug-theme > richlistitem:hover,
-.devtools-autocomplete-listbox.light-theme > richlistitem[selected],
-.devtools-autocomplete-listbox.light-theme > richlistitem:hover {
+.devtools-autocomplete-listbox.firebug-theme .autocomplete-selected,
+.devtools-autocomplete-listbox.firebug-theme .autocomplete-item:hover,
+.devtools-autocomplete-listbox.light-theme .autocomplete-selected,
+.devtools-autocomplete-listbox.light-theme .autocomplete-item:hover {
   background-color: rgba(128,128,128,0.3);
 }
 
-.devtools-autocomplete-listbox.firebug-theme > richlistitem[selected] > .autocomplete-value,
-.devtools-autocomplete-listbox:focus.firebug-theme > richlistitem[selected] > .initial-value,
-.devtools-autocomplete-listbox.light-theme > richlistitem[selected] > .autocomplete-value,
-.devtools-autocomplete-listbox:focus.light-theme > richlistitem[selected] > .initial-value {
+.devtools-autocomplete-listbox.firebug-theme .autocomplete-selected > .autocomplete-value,
+.devtools-autocomplete-listbox:focus.firebug-theme .autocomplete-selected > .initial-value,
+.devtools-autocomplete-listbox.light-theme .autocomplete-selected > .autocomplete-value,
+.devtools-autocomplete-listbox:focus.light-theme .autocomplete-selected > .initial-value {
   color: #222;
 }
 
-.devtools-autocomplete-listbox.firebug-theme > richlistitem > label,
-.devtools-autocomplete-listbox.light-theme > richlistitem > label {
+.devtools-autocomplete-listbox.firebug-theme .autocomplete-item > span,
+.devtools-autocomplete-listbox.light-theme .autocomplete-item > span {
   color: #666;
 }
 

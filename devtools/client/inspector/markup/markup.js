@@ -23,7 +23,6 @@ const DRAG_DROP_MIN_INITIAL_DISTANCE = 10;
 const DRAG_DROP_HEIGHT_TO_SPEED = 500;
 const DRAG_DROP_HEIGHT_TO_SPEED_MIN = 0.5;
 const DRAG_DROP_HEIGHT_TO_SPEED_MAX = 1;
-const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
 const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
 const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
@@ -109,12 +108,9 @@ function MarkupView(inspector, frame, controllerWindow) {
   let options = {
     autoSelect: true,
     theme: "auto",
-    // panelId option prevents the markupView autocomplete popup from
-    // sharing XUL elements with other views, such as ruleView (see Bug 1191093)
-    panelId: AUTOCOMPLETE_POPUP_PANEL_ID
   };
-  this.popup = new AutocompletePopup(this.doc.defaultView.parent.document,
-                                     options);
+
+  this.popup = new AutocompletePopup(inspector._toolbox, options);
 
   this.undo = new UndoStack();
   this.undo.installController(controllerWindow);
