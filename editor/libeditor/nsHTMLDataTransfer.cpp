@@ -10,6 +10,7 @@
 #include "HTMLEditUtils.h"
 #include "SelectionState.h"
 #include "TextEditUtils.h"
+#include "WSRunObject.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -81,7 +82,6 @@
 #include "nsSubstringTuple.h"
 #include "nsTextEditRules.h"
 #include "nsTreeSanitizer.h"
-#include "nsWSRunObject.h"
 #include "nsXPCOM.h"
 #include "nscore.h"
 #include "nsContentUtils.h"
@@ -389,7 +389,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
     // the invisible br visible.
-    nsWSRunObject wsObj(this, parentNode, offsetOfNewNode);
+    WSRunObject wsObj(this, parentNode, offsetOfNewNode);
     if (wsObj.mEndReasonNode &&
         TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisBreak(wsObj.mEndReasonNode)) {
@@ -647,7 +647,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       }
 
       // make sure we don't end up with selection collapsed after an invisible break node
-      nsWSRunObject wsRunObj(this, selNode, selOffset);
+      WSRunObject wsRunObj(this, selNode, selOffset);
       nsCOMPtr<nsINode> visNode;
       int32_t outVisOffset=0;
       WSType visType;
@@ -658,14 +658,14 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         // we are after a break.  Is it visible?  Despite the name,
         // PriorVisibleNode does not make that determination for breaks.
         // It also may not return the break in visNode.  We have to pull it
-        // out of the nsWSRunObject's state.
+        // out of the WSRunObject's state.
         if (!IsVisBreak(wsRunObj.mStartReasonNode))
         {
           // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
           selNode = GetNodeLocation(GetAsDOMNode(wsRunObj.mStartReasonNode), &selOffset);
           // we want to be inside any inline style prior to break
-          nsWSRunObject wsRunObj(this, selNode, selOffset);
+          WSRunObject wsRunObj(this, selNode, selOffset);
           selNode_ = do_QueryInterface(selNode);
           wsRunObj.PriorVisibleNode(selNode_, selOffset, address_of(visNode),
                                     &outVisOffset, &visType);

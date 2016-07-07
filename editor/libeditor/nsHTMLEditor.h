@@ -55,6 +55,7 @@ class nsRange;
 
 namespace mozilla {
 class TypeInState;
+class WSRunObject;
 struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {
@@ -973,9 +974,9 @@ protected:
 public:
 
 // friends
+friend class mozilla::WSRunObject;
 friend class nsHTMLEditRules;
 friend class nsTextEditRules;
-friend class nsWSRunObject;
 friend class nsHTMLEditorEventListener;
 
 private:

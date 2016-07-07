@@ -53,7 +53,6 @@ UNIFIED_SOURCES += [
     'nsTableEditor.cpp',
     'nsTextEditRules.cpp',
     'nsTextEditRulesBidi.cpp',
-    'nsWSRunObject.cpp',
     'PlaceholderTransaction.cpp',
     'SelectionState.cpp',
     'SetDocumentTitleTransaction.cpp',
@@ -62,6 +61,7 @@ UNIFIED_SOURCES += [
     'TextEditorTest.cpp',
     'TextEditUtils.cpp',
     'TypeInState.cpp',
+    'WSRunObject.cpp',
 ]
 
 LOCAL_INCLUDES += [
