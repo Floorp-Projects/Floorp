@@ -437,8 +437,8 @@ class AutoLeaveZeal
         uint32_t dummy;
         JS_GetGCZealBits(cx_, &zealBits_, &frequency_, &dummy);
         JS_SetGCZeal(cx_, 0, 0);
-        JS::PrepareForFullGC(JS_GetRuntime(cx_));
-        JS::GCForReason(JS_GetRuntime(cx_), GC_SHRINK, JS::gcreason::DEBUG_GC);
+        JS::PrepareForFullGC(cx_);
+        JS::GCForReason(cx_, GC_SHRINK, JS::gcreason::DEBUG_GC);
     }
     ~AutoLeaveZeal() {
         for (size_t i = 0; i < sizeof(zealBits_) * 8; i++) {

@@ -110,8 +110,8 @@ BEGIN_TEST(testGCUID)
 
     // Force a compaction to move the object and check that the uid moved to
     // the new tenured heap location.
-    JS::PrepareForFullGC(rt);
-    JS::GCForReason(rt, GC_SHRINK, JS::gcreason::API);
+    JS::PrepareForFullGC(cx);
+    JS::GCForReason(cx, GC_SHRINK, JS::gcreason::API);
     MinimizeHeap(rt);
     CHECK(uintptr_t(obj.get()) != tenuredAddr);
     CHECK(obj->zone()->hasUniqueId(obj));

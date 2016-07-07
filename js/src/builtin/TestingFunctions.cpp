@@ -309,10 +309,10 @@ GC(JSContext* cx, unsigned argc, Value* vp)
     if (compartment)
         PrepareForDebugGC(cx->runtime());
     else
-        JS::PrepareForFullGC(cx->runtime());
+        JS::PrepareForFullGC(cx);
 
     JSGCInvocationKind gckind = shrinking ? GC_SHRINK : GC_NORMAL;
-    JS::GCForReason(cx->runtime(), gckind, JS::gcreason::API);
+    JS::GCForReason(cx, gckind, JS::gcreason::API);
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
@@ -3281,8 +3281,8 @@ majorGC(JSRuntime* rt, JSGCStatus status, void* data)
 
     if (info->depth > 0) {
         info->depth--;
-        JS::PrepareForFullGC(rt);
-        JS::GCForReason(rt, GC_NORMAL, JS::gcreason::API);
+        JS::PrepareForFullGC(rt->contextFromMainThread());
+        JS::GCForReason(rt->contextFromMainThread(), GC_NORMAL, JS::gcreason::API);
         info->depth++;
     }
 }
