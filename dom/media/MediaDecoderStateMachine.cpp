@@ -1698,14 +1698,6 @@ MediaDecoderStateMachine::OnSeekTaskResolved(SeekTaskResolveValue aValue)
     StopPrerollingVideo();
   }
 
-  if (aValue.mNeedToStopPrerollingAudio) {
-    StopPrerollingAudio();
-  }
-
-  if (aValue.mNeedToStopPrerollingVideo) {
-    StopPrerollingVideo();
-  }
-
   SeekCompleted();
 }
 
@@ -1724,14 +1716,6 @@ MediaDecoderStateMachine::OnSeekTaskRejected(SeekTaskRejectValue aValue)
 
   if (aValue.mIsVideoQueueFinished) {
     VideoQueue().Finish();
-    StopPrerollingVideo();
-  }
-
-  if (aValue.mNeedToStopPrerollingAudio) {
-    StopPrerollingAudio();
-  }
-
-  if (aValue.mNeedToStopPrerollingVideo) {
     StopPrerollingVideo();
   }
 
