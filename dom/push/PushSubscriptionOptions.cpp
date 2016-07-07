@@ -5,25 +5,47 @@
 #include "mozilla/dom/PushSubscriptionOptions.h"
 
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 namespace mozilla {
 namespace dom {
 
 PushSubscriptionOptions::PushSubscriptionOptions(nsIGlobalObject* aGlobal,
-                                                 nsTArray<uint8_t>&& aAppServerKey)
+                                                 nsTArray<uint8_t>&& aRawAppServerKey)
   : mGlobal(aGlobal)
-  , mAppServerKey(Move(aAppServerKey))
+  , mRawAppServerKey(Move(aRawAppServerKey))
+  , mAppServerKey(nullptr)
 {
   // There's only one global on a worker, so we don't need to pass a global
   // object to the constructor.
   MOZ_ASSERT_IF(NS_IsMainThread(), mGlobal);
+  mozilla::HoldJSObjects(this);
 }
 
-PushSubscriptionOptions::~PushSubscriptionOptions() {}
+PushSubscriptionOptions::~PushSubscriptionOptions()
+{
+  mAppServerKey = nullptr;
+  mozilla::DropJSObjects(this);
+}
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushSubscriptionOptions, mGlobal)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PushSubscriptionOptions)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PushSubscriptionOptions)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  tmp->mAppServerKey = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PushSubscriptionOptions)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(PushSubscriptionOptions)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAppServerKey)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushSubscriptionOptions)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PushSubscriptionOptions)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushSubscriptionOptions)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -41,7 +63,17 @@ PushSubscriptionOptions::GetApplicationServerKey(JSContext* aCx,
                                                  JS::MutableHandle<JSObject*> aKey,
                                                  ErrorResult& aRv)
 {
-  PushUtil::CopyArrayToArrayBuffer(aCx, mAppServerKey, aKey, aRv);
+  if (!mRawAppServerKey.IsEmpty() && !mAppServerKey) {
+    JS::Rooted<JSObject*> appServerKey(aCx);
+    PushUtil::CopyArrayToArrayBuffer(aCx, mRawAppServerKey, &appServerKey, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    MOZ_ASSERT(appServerKey);
+    mAppServerKey = appServerKey;
+    JS::ExposeObjectToActiveJS(mAppServerKey);
+  }
+  aKey.set(mAppServerKey);
 }
 
 } // namespace dom
