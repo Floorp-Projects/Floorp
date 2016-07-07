@@ -67,5 +67,32 @@ add_task(function* testReloadExitedAddon() {
   const newAddonActor = yield findAddonInRootList(client, installedAddon.id);
   equal(newAddonActor.id, addonActor.id);
 
+  // The actor id should be the same after the reload
+  equal(newAddonActor.actor, addonActor.actor);
+
+  const onAddonListChanged = new Promise((resolve) => {
+    client.addListener("addonListChanged", function listener() {
+      client.removeListener("addonListChanged", listener);
+      resolve();
+    });
+  });
+
+  // Install an upgrade version of the first add-on.
+  const addonUpgradeFile = getSupportFile("addons/web-extension-upgrade");
+  const upgradedAddon = yield AddonManager.installTemporaryAddon(
+    addonUpgradeFile);
+
+  // Waiting for addonListChanged unsolicited event
+  yield onAddonListChanged;
+
+  // re-list all add-ons after an upgrade.
+  const upgradedAddonActor = yield findAddonInRootList(client, upgradedAddon.id);
+  equal(upgradedAddonActor.id, addonActor.id);
+  // The actor id should be the same after the upgrade.
+  equal(upgradedAddonActor.actor, addonActor.actor);
+
+  // The addon metadata has been updated.
+  equal(upgradedAddonActor.name, "Test Addons Actor Upgrade");
+
   yield close(client);
 });
