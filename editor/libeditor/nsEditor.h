@@ -28,7 +28,6 @@
 #include "nscore.h"                     // for nsresult, nsAString, etc
 
 class AddStyleSheetTxn;
-class DeleteNodeTxn;
 class EditAggregateTxn;
 class RemoveStyleSheetTxn;
 class nsIAtom;
@@ -59,6 +58,7 @@ class AutoSelectionRestorer;
 class AutoTransactionsConserveSelection;
 class ChangeAttributeTransaction;
 class CreateElementTransaction;
+class DeleteNodeTransaction;
 class ErrorResult;
 class TextComposition;
 struct EditorDOMPoint;
@@ -283,8 +283,9 @@ protected:
 
   /** create a transaction for removing aNode from its parent.
     */
-  nsresult CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn);
-
+  nsresult CreateTxnForDeleteNode(
+             nsINode* aNode,
+             mozilla::DeleteNodeTransaction** aTransaction);
 
   nsresult CreateTxnForDeleteSelection(EDirection aAction,
                                        EditAggregateTxn** aTxn,

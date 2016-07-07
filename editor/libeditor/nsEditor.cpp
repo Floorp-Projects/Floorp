@@ -12,7 +12,7 @@
 
 #include "ChangeAttributeTransaction.h" // for ChangeAttributeTransaction
 #include "CreateElementTransaction.h"   // for CreateElementTransaction
-#include "DeleteNodeTxn.h"              // for DeleteNodeTxn
+#include "DeleteNodeTransaction.h"      // for DeleteNodeTransaction
 #include "DeleteRangeTxn.h"             // for DeleteRangeTxn
 #include "DeleteTextTxn.h"              // for DeleteTextTxn
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
@@ -1520,17 +1520,17 @@ nsEditor::DeleteNode(nsINode* aNode)
     listener->WillDeleteNode(aNode->AsDOMNode());
   }
 
-  RefPtr<DeleteNodeTxn> txn;
-  nsresult res = CreateTxnForDeleteNode(aNode, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(res))  {
-    res = DoTransaction(txn);
+  RefPtr<DeleteNodeTransaction> transaction;
+  nsresult rv = CreateTxnForDeleteNode(aNode, getter_AddRefs(transaction));
+  if (NS_SUCCEEDED(rv))  {
+    rv = DoTransaction(transaction);
   }
 
   for (auto& listener : mActionListeners) {
-    listener->DidDeleteNode(aNode->AsDOMNode(), res);
+    listener->DidDeleteNode(aNode->AsDOMNode(), rv);
   }
 
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -4215,16 +4215,17 @@ nsEditor::CreateTxnForInsertNode(nsIContent& aNode,
 }
 
 nsresult
-nsEditor::CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn)
+nsEditor::CreateTxnForDeleteNode(nsINode* aNode,
+                                 DeleteNodeTransaction** aTransaction)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  RefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
+  RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
 
-  nsresult res = txn->Init(this, aNode, &mRangeUpdater);
-  NS_ENSURE_SUCCESS(res, res);
+  nsresult rv = transaction->Init(this, aNode, &mRangeUpdater);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  txn.forget(aTxn);
+  transaction.forget(aTransaction);
   return NS_OK;
 }
 
@@ -4407,11 +4408,11 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       aTxn->AppendChild(txn);
     } else {
       // priorNode is not chardata, so tell its parent to delete it
-      RefPtr<DeleteNodeTxn> txn;
-      res = CreateTxnForDeleteNode(priorNode, getter_AddRefs(txn));
+      RefPtr<DeleteNodeTransaction> transaction;
+      res = CreateTxnForDeleteNode(priorNode, getter_AddRefs(transaction));
       NS_ENSURE_SUCCESS(res, res);
 
-      aTxn->AppendChild(txn);
+      aTxn->AppendChild(transaction);
     }
 
     NS_ADDREF(*aNode = priorNode);
@@ -4442,10 +4443,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       aTxn->AppendChild(txn);
     } else {
       // nextNode is not chardata, so tell its parent to delete it
-      RefPtr<DeleteNodeTxn> txn;
-      res = CreateTxnForDeleteNode(nextNode, getter_AddRefs(txn));
+      RefPtr<DeleteNodeTransaction> transaction;
+      res = CreateTxnForDeleteNode(nextNode, getter_AddRefs(transaction));
       NS_ENSURE_SUCCESS(res, res);
-      aTxn->AppendChild(txn);
+      aTxn->AppendChild(transaction);
     }
 
     NS_ADDREF(*aNode = nextNode);
@@ -4504,12 +4505,13 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       *aOffset = delTextTxn->GetOffset();
       *aLength = delTextTxn->GetNumCharsToDelete();
     } else {
-      RefPtr<DeleteNodeTxn> delElementTxn;
-      res = CreateTxnForDeleteNode(selectedNode, getter_AddRefs(delElementTxn));
+      RefPtr<DeleteNodeTransaction> deleteNodeTransaction;
+      res = CreateTxnForDeleteNode(selectedNode,
+                                   getter_AddRefs(deleteNodeTransaction));
       NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(delElementTxn, NS_ERROR_NULL_POINTER);
+      NS_ENSURE_TRUE(deleteNodeTransaction, NS_ERROR_NULL_POINTER);
 
-      aTxn->AppendChild(delElementTxn);
+      aTxn->AppendChild(deleteNodeTransaction);
     }
 
     NS_ADDREF(*aNode = selectedNode);
