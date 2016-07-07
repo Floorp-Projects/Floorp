@@ -16,7 +16,7 @@
 #include "DeleteNodeTransaction.h"      // for DeleteNodeTransaction
 #include "DeleteRangeTransaction.h"     // for DeleteRangeTransaction
 #include "DeleteTextTransaction.h"      // for DeleteTextTransaction
-#include "EditAggregateTxn.h"           // for EditAggregateTxn
+#include "EditAggregateTransaction.h"   // for EditAggregateTransaction
 #include "EditorUtils.h"                // for AutoRules, etc
 #include "EditTxn.h"                    // for EditTxn
 #include "InsertNodeTransaction.h"      // for InsertNodeTransaction
@@ -3987,17 +3987,17 @@ nsEditor::DeleteSelectionImpl(EDirection aAction,
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
-  RefPtr<EditAggregateTxn> txn;
+  RefPtr<EditAggregateTransaction> transaction;
   nsCOMPtr<nsINode> deleteNode;
   int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  nsresult res = CreateTxnForDeleteSelection(aAction, getter_AddRefs(txn),
-                                             getter_AddRefs(deleteNode),
-                                             &deleteCharOffset,
-                                             &deleteCharLength);
+  nsresult rv = CreateTxnForDeleteSelection(aAction,
+                                            getter_AddRefs(transaction),
+                                            getter_AddRefs(deleteNode),
+                                            &deleteCharOffset,
+                                            &deleteCharLength);
   nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
 
-  if (NS_SUCCEEDED(res))
-  {
+  if (NS_SUCCEEDED(rv)) {
     AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
     // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
     if (!deleteNode) {
@@ -4015,7 +4015,7 @@ nsEditor::DeleteSelectionImpl(EDirection aAction,
     }
 
     // Delete the specified amount
-    res = DoTransaction(txn);
+    rv = DoTransaction(transaction);
 
     // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
     if (!deleteNode) {
@@ -4024,16 +4024,16 @@ nsEditor::DeleteSelectionImpl(EDirection aAction,
       }
     } else if (deleteCharData) {
       for (auto& listener : mActionListeners) {
-        listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, res);
+        listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
       }
     } else {
       for (auto& listener : mActionListeners) {
-        listener->DidDeleteNode(deleteNode->AsDOMNode(), res);
+        listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
       }
     }
   }
 
-  return res;
+  return rv;
 }
 
 already_AddRefed<Element>
@@ -4278,13 +4278,13 @@ nsEditor::CreateTxnForRemoveStyleSheet(StyleSheetHandle aSheet, RemoveStyleSheet
 
 nsresult
 nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
-                                      EditAggregateTxn** aTxn,
+                                      EditAggregateTransaction** aTransaction,
                                       nsINode** aNode,
                                       int32_t* aOffset,
                                       int32_t* aLength)
 {
-  MOZ_ASSERT(aTxn);
-  *aTxn = nullptr;
+  MOZ_ASSERT(aTransaction);
+  *aTransaction = nullptr;
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -4295,7 +4295,8 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
   }
 
   // allocate the out-param transaction
-  RefPtr<EditAggregateTxn> aggTxn = new EditAggregateTxn();
+  RefPtr<EditAggregateTransaction> aggregateTransaction =
+    new EditAggregateTransaction();
 
   for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
@@ -4306,17 +4307,18 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
     if (!range->Collapsed()) {
       RefPtr<DeleteRangeTransaction> transaction = new DeleteRangeTransaction();
       transaction->Init(this, range, &mRangeUpdater);
-      aggTxn->AppendChild(transaction);
+      aggregateTransaction->AppendChild(transaction);
     } else if (aAction != eNone) {
       // we have an insertion point.  delete the thing in front of it or
       // behind it, depending on aAction
-      nsresult res = CreateTxnForDeleteInsertionPoint(range, aAction, aggTxn,
-                                                      aNode, aOffset, aLength);
-      NS_ENSURE_SUCCESS(res, res);
+      nsresult rv = CreateTxnForDeleteInsertionPoint(range, aAction,
+                                                     aggregateTransaction,
+                                                     aNode, aOffset, aLength);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  aggTxn.forget(aTxn);
+  aggregateTransaction.forget(aTransaction);
 
   return NS_OK;
 }
@@ -4357,12 +4359,13 @@ nsEditor::CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData,
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior
 //are not implemented
 nsresult
-nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
-                                           EDirection        aAction,
-                                           EditAggregateTxn* aTxn,
-                                           nsINode**         aNode,
-                                           int32_t*          aOffset,
-                                           int32_t*          aLength)
+nsEditor::CreateTxnForDeleteInsertionPoint(
+            nsRange* aRange,
+            EDirection aAction,
+            EditAggregateTransaction* aTransaction,
+            nsINode** aNode,
+            int32_t* aOffset,
+            int32_t* aLength)
 {
   MOZ_ASSERT(aAction != eNone);
 
@@ -4407,14 +4410,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 
       *aOffset = transaction->GetOffset();
       *aLength = transaction->GetNumCharsToDelete();
-      aTxn->AppendChild(transaction);
+      aTransaction->AppendChild(transaction);
     } else {
       // priorNode is not chardata, so tell its parent to delete it
       RefPtr<DeleteNodeTransaction> transaction;
       res = CreateTxnForDeleteNode(priorNode, getter_AddRefs(transaction));
       NS_ENSURE_SUCCESS(res, res);
 
-      aTxn->AppendChild(transaction);
+      aTransaction->AppendChild(transaction);
     }
 
     NS_ADDREF(*aNode = priorNode);
@@ -4442,13 +4445,13 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 
       *aOffset = transaction->GetOffset();
       *aLength = transaction->GetNumCharsToDelete();
-      aTxn->AppendChild(transaction);
+      aTransaction->AppendChild(transaction);
     } else {
       // nextNode is not chardata, so tell its parent to delete it
       RefPtr<DeleteNodeTransaction> transaction;
       res = CreateTxnForDeleteNode(nextNode, getter_AddRefs(transaction));
       NS_ENSURE_SUCCESS(res, res);
-      aTxn->AppendChild(transaction);
+      aTransaction->AppendChild(transaction);
     }
 
     NS_ADDREF(*aNode = nextNode);
@@ -4464,7 +4467,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       CreateTxnForDeleteCharacter(*nodeAsCharData, offset, aAction);
     NS_ENSURE_STATE(transaction);
 
-    aTxn->AppendChild(transaction);
+    aTransaction->AppendChild(transaction);
     NS_ADDREF(*aNode = node);
     *aOffset = transaction->GetOffset();
     *aLength = transaction->GetNumCharsToDelete();
@@ -4503,7 +4506,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
                                     aAction);
       NS_ENSURE_TRUE(deleteTextTransaction, NS_ERROR_NULL_POINTER);
 
-      aTxn->AppendChild(deleteTextTransaction);
+      aTransaction->AppendChild(deleteTextTransaction);
       *aOffset = deleteTextTransaction->GetOffset();
       *aLength = deleteTextTransaction->GetNumCharsToDelete();
     } else {
@@ -4513,7 +4516,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_TRUE(deleteNodeTransaction, NS_ERROR_NULL_POINTER);
 
-      aTxn->AppendChild(deleteNodeTransaction);
+      aTransaction->AppendChild(deleteNodeTransaction);
     }
 
     NS_ADDREF(*aNode = selectedNode);

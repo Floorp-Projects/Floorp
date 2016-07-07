@@ -6,7 +6,7 @@
 #ifndef DeleteRangeTransaction_h
 #define DeleteRangeTransaction_h
 
-#include "EditAggregateTxn.h"
+#include "EditAggregateTransaction.h"
 #include "EditTxn.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
@@ -24,7 +24,7 @@ namespace mozilla {
 /**
  * A transaction that deletes an entire range in the content tree
  */
-class DeleteRangeTransaction final : public EditAggregateTxn
+class DeleteRangeTransaction final : public EditAggregateTransaction
 {
 public:
   /**
@@ -39,7 +39,7 @@ public:
   DeleteRangeTransaction();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteRangeTransaction,
-                                           EditAggregateTxn)
+                                           EditAggregateTransaction)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_EDITTXN
@@ -49,7 +49,7 @@ public:
   virtual void LastRelease() override
   {
     mRange = nullptr;
-    EditAggregateTxn::LastRelease();
+    EditAggregateTransaction::LastRelease();
   }
 
 protected:
