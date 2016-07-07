@@ -13,8 +13,8 @@
 
 #include "nsUnicharUtils.h"
 
+#include "TextEditUtils.h"
 #include "nsHTMLEditRules.h"
-#include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
 
 #include "nsHTMLEditorEventListener.h"
@@ -956,16 +956,16 @@ bool
 nsHTMLEditor::IsVisBreak(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
-  if (!nsTextEditUtils::IsBreak(aNode)) {
+  if (!TextEditUtils::IsBreak(aNode)) {
     return false;
   }
   // Check if there is a later node in block after br
   nsCOMPtr<nsINode> priorNode = GetPriorHTMLNode(aNode, true);
-  if (priorNode && nsTextEditUtils::IsBreak(priorNode)) {
+  if (priorNode && TextEditUtils::IsBreak(priorNode)) {
     return true;
   }
   nsCOMPtr<nsINode> nextNode = GetNextHTMLNode(aNode, true);
-  if (nextNode && nsTextEditUtils::IsBreak(nextNode)) {
+  if (nextNode && TextEditUtils::IsBreak(nextNode)) {
     return true;
   }
 
@@ -4728,7 +4728,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
     NS_ENSURE_STATE(child_ || !child);
     tmp = GetAsDOMNode(GetLastEditableChild(*child_));
   }
-  while (child && nsTextEditUtils::IsBreak(child)) {
+  while (child && TextEditUtils::IsBreak(child)) {
     nsCOMPtr<nsIDOMNode> priorNode;
     res = GetPriorHTMLNode(child, address_of(priorNode));
     NS_ENSURE_SUCCESS(res, res);

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTextEditUtils_h__
-#define nsTextEditUtils_h__
+#ifndef TextEditUtils_h
+#define TextEditUtils_h
 
 #include "nscore.h"
 
@@ -12,7 +12,9 @@ class nsIDOMNode;
 class nsINode;
 class nsPlaintextEditor;
 
-class nsTextEditUtils
+namespace mozilla {
+
+class TextEditUtils final
 {
 public:
   // from nsTextEditRules:
@@ -23,6 +25,8 @@ public:
   static bool IsMozBR(nsINode* aNode);
   static bool HasMozAttr(nsIDOMNode* aNode);
 };
+
+} // naemspace mozilla
 
 /***************************************************************************
  * stack based helper class for detecting end of editor initialization, in
@@ -38,4 +42,4 @@ public:
   ~nsAutoEditInitRulesTrigger();
 };
 
-#endif /* nsTextEditUtils_h__ */
+#endif // #ifndef TextEditUtils_h
