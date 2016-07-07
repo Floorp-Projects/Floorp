@@ -620,7 +620,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     this._state = "attached";
-    this._debuggerSourcesSeen = new Set();
+    this._debuggerSourcesSeen = new WeakSet();
 
     Object.assign(this._options, aRequest.options || {});
     this.sources.setOptions(this._options);
