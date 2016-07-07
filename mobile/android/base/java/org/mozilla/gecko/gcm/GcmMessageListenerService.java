@@ -30,7 +30,7 @@ public class GcmMessageListenerService extends GcmListenerService {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                PushService.getInstance().onMessageReceived(
+                PushService.getInstance(GcmMessageListenerService.this).onMessageReceived(
                         GcmMessageListenerService.this, bundle);
             }
         });

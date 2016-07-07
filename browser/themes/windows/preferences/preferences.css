@@ -5,57 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-/* Global Styles */
-#BrowserPreferences radio[pane] {
-  list-style-image: url("chrome://browser/skin/preferences/Options.png"); 
-  padding: 5px 3px 1px;
-}
-
-radio[pane=paneMain] {
-  -moz-image-region: rect(0, 32px,  32px, 0);
-}
-
-radio[pane=paneTabs] {
-  -moz-image-region: rect(0, 64px, 32px, 32px);
-}
-
-#BrowserPreferences radio[pane=paneSearch] {
-  list-style-image: url("chrome://browser/skin/search-pref.png");
-}
-
-radio[pane=paneContent] {
-  -moz-image-region: rect(0, 96px,  32px, 64px);
-}
-
-radio[pane=paneApplications] {
-  -moz-image-region: rect(0, 128px,  32px, 96px);
-}
-
-radio[pane=panePrivacy] {
-  -moz-image-region: rect(0, 160px,  32px, 128px);
-}
-
-radio[pane=paneSecurity] {
-  -moz-image-region: rect(0, 192px,  32px, 160px);
-}
-
-radio[pane=paneAdvanced] {
-  -moz-image-region: rect(0, 224px, 32px, 192px);
-}
-
-radio[pane=paneSync] {
-  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png") !important;
-}
-
-/* These lines should be removed as part of fixing bug 1140495 */
-label.small {
-  font-size: smaller;
-}
-
-#tabPrefsBox {
-  margin: 6px;
-}
-
 /* General Pane */
 
 #useFirefoxSync,
@@ -71,27 +20,6 @@ label.small {
 #translationAttributionImage {
   width: 70px;
   cursor: pointer;
-}
-
-/* Applications Pane */
-#BrowserPreferences[animated="true"] #handlersView {
-  height: 25em;
-}
-
-#BrowserPreferences[animated="false"] #handlersView {
-  -moz-box-flex: 1;
-}
-
-/* Privacy Pane */
-
-/* styles for the link elements copied from .text-link in global.css */
-.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-.inline-link:hover {
-  text-decoration: underline;
 }
 
 /* Modeless Window Dialogs */

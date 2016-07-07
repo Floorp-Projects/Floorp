@@ -584,3 +584,29 @@ function* simulateNodeDragAndDrop(inspector, selector, xOffset, yOffset) {
   yield simulateNodeDrag(inspector, selector, xOffset, yOffset);
   yield simulateNodeDrop(inspector, selector);
 }
+
+/**
+ * Waits until the element has not scrolled for 30 consecutive frames.
+ */
+function* waitForScrollStop(doc) {
+  let el = doc.documentElement;
+  let win = doc.defaultView;
+  let lastScrollTop = el.scrollTop;
+  let stopFrameCount = 0;
+  while (stopFrameCount < 30) {
+    // Wait for a frame.
+    yield new Promise(resolve => win.requestAnimationFrame(resolve));
+
+    // Check if the element has scrolled.
+    if (lastScrollTop == el.scrollTop) {
+      // No scrolling since the last frame.
+      stopFrameCount++;
+    } else {
+      // The element has scrolled. Reset the frame counter.
+      stopFrameCount = 0;
+      lastScrollTop = el.scrollTop;
+    }
+  }
+
+  return lastScrollTop;
+}
