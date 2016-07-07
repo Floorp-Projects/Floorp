@@ -39,7 +39,8 @@ public:
   GridLine* Item(uint32_t aIndex);
   GridLine* IndexedGetter(uint32_t aIndex, bool& aFound);
 
-  void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo);
+  void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
+                   const ComputedGridLineInfo* aLineInfo);
 
 protected:
   RefPtr<GridDimension> mParent;

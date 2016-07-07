@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation of height:auto grid, not top-of-page</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-001-ref.html">
+
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 30px 30px 30px;
+  grid-auto-rows: 50px;
+  grid-gap: 12px;
+  border:5px solid;
+  align-content: start;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+
+</style>
+
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+	var wrapper = document.getElementById("wrapper");
+	var fragments = wrapper.getGridFragments();
+	
+	// test fragments of the grid
+	is(fragments.length, 2, "Grid is split into two fragments.");
+	
+	if (fragments.length == 2) {
+		var grid0 = fragments[0];
+		var grid1 = fragments[1];
+	
+		// test that both fragments have one row track and two lines
+		is(grid0.rows.tracks.length, 1, "Fragment 0 has one row track.");
+		is(grid0.rows.lines.length, 2, "Fragment 0 has two row lines.");
+		is(grid1.rows.tracks.length, 1, "Fragment 1 has one row track.");
+		is(grid1.rows.lines.length, 2, "Fragment 1 has two row lines.");
+	}
+	
+	SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+<div class="columns" style="height: 100px/*fragmentainer ends in the last row*/">
+<div style="padding-top:10px; background:grey">
+<div id="wrapper" class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1; height:60px"><x></x></span>
+</div></div></div>
+
+</body>
+</html>

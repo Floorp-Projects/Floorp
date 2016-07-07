@@ -30,13 +30,19 @@ Grid::Grid(nsISupports* aParent,
   MOZ_ASSERT(aFrame,
     "Should never be instantiated with a null nsGridContainerFrame");
 
-  const ComputedGridTrackInfo* rowTrackInfo = aFrame->GetComputedTemplateRows();
+  const ComputedGridTrackInfo* rowTrackInfo =
+    aFrame->GetComputedTemplateRows();
+  const ComputedGridLineInfo* rowLineInfo =
+    aFrame->GetComputedTemplateRowLines();
   mRows->SetTrackInfo(rowTrackInfo);
-  mRows->SetLineInfo(rowTrackInfo);
+  mRows->SetLineInfo(rowTrackInfo, rowLineInfo);
 
-  const ComputedGridTrackInfo* colTrackInfo = aFrame->GetComputedTemplateColumns();
-  mCols->SetTrackInfo(colTrackInfo);
-  mCols->SetLineInfo(colTrackInfo);
+  const ComputedGridTrackInfo* columnTrackInfo =
+    aFrame->GetComputedTemplateColumns();
+  const ComputedGridLineInfo* columnLineInfo =
+    aFrame->GetComputedTemplateColumnLines();
+  mCols->SetTrackInfo(columnTrackInfo);
+  mCols->SetLineInfo(columnTrackInfo, columnLineInfo);
 }
 
 Grid::~Grid()
