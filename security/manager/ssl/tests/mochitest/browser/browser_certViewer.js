@@ -29,16 +29,12 @@ function test() {
   let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);
   ok(cert, "found a certificate to look at");
   info("looking at certificate with nickname " + cert.nickname);
-  let arg = {
-    QueryInterface: function() {
-      return this;
-    },
-    getISupportAtIndex: function() {
-      return this.cert;
-    },
-    cert: cert
-  };
+  let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+  array.appendElement(cert, false);
+  let params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
+                 .createInstance(Ci.nsIDialogParamBlock);
+  params.objects = array;
   gBugWindow = window.openDialog("chrome://pippki/content/certViewer.xul",
-                                 "", "", arg);
+                                 "", "", params);
   gBugWindow.addEventListener("load", onLoad);
 }
