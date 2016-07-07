@@ -257,43 +257,42 @@ public:
   }
 };
 
-} // namespace mozilla
-
-
-/***************************************************************************
- * another helper class for SelectionState.  stack based class for doing
+/**
+ * Another helper class for SelectionState.  Stack based class for doing
  * Will/DidRemoveContainer()
  */
 
-class MOZ_STACK_CLASS nsAutoRemoveContainerSelNotify
+class MOZ_STACK_CLASS AutoRemoveContainerSelNotify final
 {
-  private:
-    mozilla::RangeUpdater& mRU;
-    nsIDOMNode *mNode;
-    nsIDOMNode *mParent;
-    int32_t    mOffset;
-    uint32_t   mNodeOrigLen;
+private:
+  RangeUpdater& mRangeUpdater;
+  nsIDOMNode* mNode;
+  nsIDOMNode* mParent;
+  int32_t mOffset;
+  uint32_t mNodeOrigLen;
 
-  public:
-    nsAutoRemoveContainerSelNotify(mozilla::RangeUpdater& aRangeUpdater,
-                                   nsINode* aNode,
-                                   nsINode* aParent,
-                                   int32_t aOffset,
-                                   uint32_t aNodeOrigLen)
-      : mRU(aRangeUpdater)
-      , mNode(aNode->AsDOMNode())
-      , mParent(aParent->AsDOMNode())
-      , mOffset(aOffset)
-      , mNodeOrigLen(aNodeOrigLen)
-    {
-      mRU.WillRemoveContainer();
-    }
+public:
+  AutoRemoveContainerSelNotify(RangeUpdater& aRangeUpdater,
+                               nsINode* aNode,
+                               nsINode* aParent,
+                               int32_t aOffset,
+                               uint32_t aNodeOrigLen)
+    : mRangeUpdater(aRangeUpdater)
+    , mNode(aNode->AsDOMNode())
+    , mParent(aParent->AsDOMNode())
+    , mOffset(aOffset)
+    , mNodeOrigLen(aNodeOrigLen)
+  {
+    mRangeUpdater.WillRemoveContainer();
+  }
 
-    ~nsAutoRemoveContainerSelNotify()
-    {
-      mRU.DidRemoveContainer(mNode, mParent, mOffset, mNodeOrigLen);
-    }
+  ~AutoRemoveContainerSelNotify()
+  {
+    mRangeUpdater.DidRemoveContainer(mNode, mParent, mOffset, mNodeOrigLen);
+  }
 };
+
+} // namespace mozilla
 
 /***************************************************************************
  * another helper class for SelectionState.  stack based class for doing
