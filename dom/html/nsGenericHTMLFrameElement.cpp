@@ -595,19 +595,6 @@ nsGenericHTMLFrameElement::GetIsolated(bool *aOut)
   return NS_OK;
 }
 
-/* [infallible] */ NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetIsExpectingSystemMessage(bool *aOut)
-{
-  *aOut = false;
-
-  if (!nsIMozBrowserFrame::GetReallyIsApp()) {
-    return NS_OK;
-  }
-
-  *aOut = HasAttr(kNameSpaceID_None, nsGkAtoms::expectingSystemMessage);
-  return NS_OK;
-}
-
 /** Get manifest url of app or widget
  * @param AppType: nsGkAtoms::mozapp or nsGkAtoms::mozwidget
  */

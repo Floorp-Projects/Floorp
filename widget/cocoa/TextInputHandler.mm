@@ -1469,12 +1469,12 @@ TextInputHandler::DebugPrintAllKeyboardLayouts()
       tis.GetLocalizedName(name);
       tis.GetInputSourceID(isid);
       MOZ_LOG(gLog, LogLevel::Info,
-             ("  %s\t<%s>%s%s\n",
-              NS_ConvertUTF16toUTF8(name).get(),
-              NS_ConvertUTF16toUTF8(isid).get(),
-              tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
-              tis.IsKeyboardLayout() && tis.GetUCKeyboardLayout() ?
-                "" : "\t(uchr is NOT AVAILABLE)"));
+        ("  %s\t<%s>%s%s\n",
+         NS_ConvertUTF16toUTF8(name).get(),
+         NS_ConvertUTF16toUTF8(isid).get(),
+         tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
+         tis.IsKeyboardLayout() && tis.GetUCKeyboardLayout() ?
+           "" : "\t(uchr is NOT AVAILABLE)"));
     }
     ::CFRelease(list);
   }
@@ -2458,11 +2458,11 @@ IMEInputHandler::DebugPrintAllIMEModes()
       tis.GetLocalizedName(name);
       tis.GetInputSourceID(isid);
       MOZ_LOG(gLog, LogLevel::Info,
-             ("  %s\t<%s>%s%s\n",
-              NS_ConvertUTF16toUTF8(name).get(),
-              NS_ConvertUTF16toUTF8(isid).get(),
-              tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
-              tis.IsEnabled() ? "" : "\t(Isn't Enabled)"));
+        ("  %s\t<%s>%s%s\n",
+         NS_ConvertUTF16toUTF8(name).get(),
+         NS_ConvertUTF16toUTF8(isid).get(),
+         tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
+         tis.IsEnabled() ? "" : "\t(Isn't Enabled)"));
     }
     ::CFRelease(list);
   }

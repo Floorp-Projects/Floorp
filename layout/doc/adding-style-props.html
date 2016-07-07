@@ -102,7 +102,7 @@ nsCSSPropList.h</a>
   Insert the property in the list alphabetically, using the existing
 property names as a template. The format of the entry you will create is:
 </p>
-  <pre>CSS_PROP(-moz-force-broken-image-icons, force_broken_image_icons, MozForceBrokenImageIcons, NS_STYLE_HINT_FRAMECHANGE) // bug 58646</pre>
+  <pre>CSS_PROP(-moz-force-broken-image-icons, force_broken_image_icons, MozForceBrokenImageIcons, nsChangeHint_ReconstructFrame) // bug 58646</pre>
 
 <p>The first value is the formal property name, in other words the property
 name as it is seen by the CSS parser.<br>
@@ -335,7 +335,7 @@ is the CalcDifference change for our example:<br>
     }
     return NS_STYLE_HINT_VISUAL;
   }
-  <b>return NS_STYLE_HINT_FRAMECHANGE;
+  <b>return nsChangeHint_ReconstructFrame;
 </b>}
 </pre>
   <h3>CSSStyleRule</h3>
