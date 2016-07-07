@@ -26,6 +26,7 @@
 #include "asmjs/WasmModule.h"
 #include "asmjs/WasmSerialize.h"
 #include "jit/ExecutableAllocator.h"
+#include "jit/MacroAssembler.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -106,18 +107,18 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 }
 
 static void
-SpecializeToHeap(CodeSegment& cs, const Metadata& metadata, uint8_t* heapBase, uint32_t heapLength)
+SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, uint8_t* base, uint32_t length)
 {
     for (const BoundsCheck& check : metadata.boundsChecks)
-        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), heapLength);
+        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), length);
 
 #if defined(JS_CODEGEN_X86)
     for (const MemoryAccess& access : metadata.memoryAccesses) {
         // Patch memory pointer immediate.
-        void* addr = access.patchHeapPtrImmAt(cs.code());
+        void* addr = access.patchMemoryPtrImmAt(cs.code());
         uint32_t disp = reinterpret_cast<uint32_t>(X86Encoding::GetPointer(addr));
         MOZ_ASSERT(disp <= INT32_MAX);
-        X86Encoding::SetPointer(addr, (void*)(heapBase + disp));
+        X86Encoding::SetPointer(addr, (void*)(base + disp));
     }
 #endif
 }
@@ -193,8 +194,8 @@ CodeSegment::create(JSContext* cx,
                     const Bytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata,
-                    uint8_t* heapBase,
-                    uint32_t heapLength)
+                    uint8_t* memoryBase,
+                    uint32_t memoryLength)
 {
     MOZ_ASSERT(bytecode.length() % gc::SystemPageSize() == 0);
     MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
@@ -213,6 +214,7 @@ CodeSegment::create(JSContext* cx,
     cs->globalDataLength_ = linkData.globalDataLength;
     cs->interruptCode_ = cs->code() + linkData.interruptOffset;
     cs->outOfBoundsCode_ = cs->code() + linkData.outOfBoundsOffset;
+    cs->unalignedAccessCode_ = cs->code() + linkData.unalignedAccessOffset;
 
     {
         JitContext jcx(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread()));
@@ -221,7 +223,7 @@ CodeSegment::create(JSContext* cx,
 
         memcpy(cs->code(), bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
-        SpecializeToHeap(*cs, metadata, heapBase, heapLength);
+        SpecializeToMemory(*cs, metadata, memoryBase, memoryLength);
     }
 
     if (!ExecutableAllocator::makeExecutable(cs->code(), cs->codeLength())) {
@@ -456,7 +458,8 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(callThunks) +
            SerializedPodVectorSize(funcNames) +
-           filename.serializedSize();
+           filename.serializedSize() +
+           assumptions.serializedSize();
 }
 
 uint8_t*
@@ -472,6 +475,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, callThunks);
     cursor = SerializePodVector(cursor, funcNames);
     cursor = filename.serialize(cursor);
+    cursor = assumptions.serialize(cursor);
     return cursor;
 }
 
@@ -487,7 +491,8 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &callSites)) &&
     (cursor = DeserializePodVector(cursor, &callThunks)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
-    (cursor = filename.deserialize(cursor));
+    (cursor = filename.deserialize(cursor)) &&
+    (cursor = assumptions.deserialize(cursor));
     return cursor;
 }
 
@@ -502,7 +507,8 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
-           filename.sizeOfExcludingThis(mallocSizeOf);
+           filename.sizeOfExcludingThis(mallocSizeOf) +
+           assumptions.sizeOfExcludingThis(mallocSizeOf);
 }
 
 bool

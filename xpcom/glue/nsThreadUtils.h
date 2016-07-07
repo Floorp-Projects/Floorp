@@ -746,8 +746,9 @@ class RunnableMethodImpl final
   ::nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
   Method mMethod;
   RunnableMethodArguments<Storages...> mArgs;
-public:
+private:
   virtual ~RunnableMethodImpl() { Revoke(); };
+public:
   template<typename... Args>
   explicit RunnableMethodImpl(ClassType* aObj, Method aMethod,
                               Args&&... aArgs)

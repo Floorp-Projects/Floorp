@@ -31,14 +31,26 @@ const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
+let useXulWrapper;
+
 add_task(function* () {
   yield addTab("about:blank");
   let [, , doc] = yield createHost("bottom", TEST_URI);
 
+  info("Run tests for a Tooltip without using a XUL panel");
+  useXulWrapper = false;
+  yield runTests(doc);
+
+  info("Run tests for a Tooltip with a XUL panel");
+  useXulWrapper = true;
+  yield runTests(doc);
+});
+
+function* runTests(doc) {
   yield testNoAutoFocus(doc);
   yield testAutoFocus(doc);
   yield testAutoFocusPreservesFocusChange(doc);
-});
+}
 
 function* testNoAutoFocus(doc) {
   yield focusNode(doc, "#box4-input");
@@ -52,6 +64,8 @@ function* testNoAutoFocus(doc) {
 
   yield hideTooltip(tooltip);
   yield blurNode(doc, "#box4-input");
+
+  tooltip.destroy();
 }
 
 function* testAutoFocus(doc) {
@@ -70,6 +84,8 @@ function* testAutoFocus(doc) {
 
   info("Blur the textbox before moving to the next test to reset the state.");
   yield blurNode(doc, "#box4-input");
+
+  tooltip.destroy();
 }
 
 function* testAutoFocusPreservesFocusChange(doc) {
@@ -92,6 +108,8 @@ function* testAutoFocusPreservesFocusChange(doc) {
 
   info("Blur the textbox before moving to the next test to reset the state.");
   yield blurNode(doc, "#box3-input");
+
+  tooltip.destroy();
 }
 
 /**
@@ -126,7 +144,7 @@ function blurNode(doc, selector) {
  *         tooltip content will be ready.
  */
 function* createTooltip(doc, autofocus) {
-  let tooltip = new HTMLTooltip({doc}, {autofocus});
+  let tooltip = new HTMLTooltip({doc}, {autofocus, useXulWrapper});
   let div = doc.createElementNS(HTML_NS, "div");
   div.classList.add("tooltip-content");
   div.style.height = "50px";

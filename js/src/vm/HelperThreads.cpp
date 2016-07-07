@@ -81,7 +81,7 @@ js::SetFakeCPUCount(size_t count)
 }
 
 bool
-js::StartOffThreadWasmCompile(ExclusiveContext* cx, wasm::IonCompileTask* task)
+js::StartOffThreadWasmCompile(wasm::IonCompileTask* task)
 {
     AutoLockHelperThreadState lock;
 
@@ -484,7 +484,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
 
     ScopedJSDeletePtr<ExclusiveContext> helpercx(
         cx->new_<ExclusiveContext>(cx->runtime(), (PerThreadData*) nullptr,
-                                   ExclusiveContext::Context_Exclusive));
+                                   ExclusiveContext::Context_Exclusive, cx->options()));
     if (!helpercx)
         return false;
 
@@ -521,7 +521,7 @@ js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& optio
 
     ScopedJSDeletePtr<ExclusiveContext> helpercx(
         cx->new_<ExclusiveContext>(cx->runtime(), (PerThreadData*) nullptr,
-                                   ExclusiveContext::Context_Exclusive));
+                                   ExclusiveContext::Context_Exclusive, cx->options()));
     if (!helpercx)
         return false;
 
@@ -1352,11 +1352,6 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
     wasm::IonCompileTask* task = wasmTask();
     {
         AutoUnlockHelperThreadState unlock(locked);
-
-        TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-        AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
-        PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->runtime());
         success = wasm::CompileFunction(task);
     }
 

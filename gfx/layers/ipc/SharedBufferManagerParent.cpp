@@ -125,9 +125,8 @@ private:
     UniquePtr<SharedBufferManagerParent> mSharedBufferManager;
 };
 
-SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base::ProcessId aOwner, base::Thread* aThread)
-  : mTransport(aTransport)
-  , mThread(aThread)
+SharedBufferManagerParent::SharedBufferManagerParent(base::ProcessId aOwner, base::Thread* aThread)
+  : mThread(aThread)
   , mDestroyed(false)
   , mLock("SharedBufferManagerParent.mLock")
 {
@@ -152,10 +151,6 @@ SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base
 SharedBufferManagerParent::~SharedBufferManagerParent()
 {
   MonitorAutoLock lock(*sManagerMonitor.get());
-  if (mTransport) {
-    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-  }
   sManagers.erase(mOwner);
   delete mThread;
 }
@@ -189,7 +184,7 @@ PSharedBufferManagerParent* SharedBufferManagerParent::Create(Transport* aTransp
   base::snprintf(thrname, 128, "BufMgrParent#%d", aOtherPid);
   thread = new base::Thread(thrname);
 
-  SharedBufferManagerParent* manager = new SharedBufferManagerParent(aTransport, aOtherPid, thread);
+  SharedBufferManagerParent* manager = new SharedBufferManagerParent(aOtherPid, thread);
   if (!thread->IsRunning()) {
     thread->Start();
   }
@@ -376,11 +371,11 @@ SharedBufferManagerParent::CloneToplevel(const InfallibleTArray<ProtocolFdMappin
 {
   for (unsigned int i = 0; i < aFds.Length(); i++) {
     if (aFds[i].protocolId() == unsigned(GetProtocolId())) {
-      Transport* transport = OpenDescriptor(aFds[i].fd(),
-                                            Transport::MODE_SERVER);
-      PSharedBufferManagerParent* bufferManager = Create(transport, base::GetProcId(aPeerProcess));
+      UniquePtr<Transport> transport =
+        OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
+      PSharedBufferManagerParent* bufferManager = Create(transport.get(), base::GetProcId(aPeerProcess));
       bufferManager->CloneManagees(this, aCtx);
-      bufferManager->IToplevelProtocol::SetTransport(transport);
+      bufferManager->IToplevelProtocol::SetTransport(Move(transport));
       return bufferManager;
     }
   }

@@ -69,3 +69,73 @@ add_task(function* () {
   yield promiseRemoveTab(tab2);
 });
 
+// Opens "uri" in a new tab with the provided userContextId and focuses it.
+// Returns the newly opened tab.
+function* openTabInUserContext(userContextId) {
+  // Open the tab in the correct userContextId.
+  let tab = gBrowser.addTab("http://example.com", { userContextId });
+
+  // Select tab and make sure its browser is focused.
+  gBrowser.selectedTab = tab;
+  tab.ownerDocument.defaultView.focus();
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  yield BrowserTestUtils.browserLoaded(browser);
+  return { tab, browser };
+}
+
+function waitForNewCookie() {
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observer(subj, topic, data) {
+      let cookie = subj.QueryInterface(Ci.nsICookie2);
+      if (data == "added") {
+        Services.obs.removeObserver(observer, topic);
+        resolve();
+      }
+    }, "cookie-changed", false);
+  });
+}
+
+add_task(function* test() {
+  const USER_CONTEXTS = [
+    "default",
+    "personal",
+    "work",
+  ];
+
+  const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+  const { TabStateFlusher } = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+
+  // Make sure userContext is enabled.
+  yield SpecialPowers.pushPrefEnv({
+    "set": [ [ "privacy.userContext.enabled", true ] ]
+  });
+
+  let lastSessionRestore;
+  for (let userContextId of Object.keys(USER_CONTEXTS)) {
+    // Load the page in 3 different contexts and set a cookie
+    // which should only be visible in that context.
+    let cookie = USER_CONTEXTS[userContextId];
+
+    // Open our tab in the given user context.
+    let { tab, browser } = yield* openTabInUserContext(userContextId);
+
+    yield Promise.all([
+      waitForNewCookie(),
+      ContentTask.spawn(browser, cookie, cookie => content.document.cookie = cookie)
+    ]);
+
+    // Ensure the tab's session history is up-to-date.
+    yield TabStateFlusher.flush(browser);
+
+    lastSessionRestore = ss.getWindowState(window);
+
+    // Remove the tab.
+    gBrowser.removeTab(tab);
+  }
+
+  let state = JSON.parse(lastSessionRestore);
+  is(state.windows[0].cookies.length, USER_CONTEXTS.length,
+    "session restore should have each container's cookie");
+});
+

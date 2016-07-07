@@ -944,7 +944,7 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
 
   ID2D1Device* device = Factory::GetD2D1Device();
   if (!device) {
-    gfxCriticalNote << "[D2D1.1] Failed to obtain a device for DrawTargetD2D1::Init().";
+    gfxCriticalNote << "[D2D1.1] Failed to obtain a device for DrawTargetD2D1::Init(ID3D11Texture2D*, SurfaceFormat).";
     return false;
   }
 
@@ -1009,7 +1009,7 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
 
   ID2D1Device* device = Factory::GetD2D1Device();
   if (!device) {
-    gfxCriticalNote << "[D2D1.1] Failed to obtain a device for DrawTargetD2D1::Init().";
+    gfxCriticalNote << "[D2D1.1] Failed to obtain a device for DrawTargetD2D1::Init(IntSize, SurfaceFormat).";
     return false;
   }
 

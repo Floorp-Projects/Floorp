@@ -13,14 +13,14 @@ BEGIN_TEST(testIsInsideNursery)
     CHECK(!rt->gc.nursery.isInside(rt));
     CHECK(!rt->gc.nursery.isInside((void*)nullptr));
 
-    JS_GC(rt);
+    JS_GC(cx);
 
     JS::RootedObject object(cx, JS_NewPlainObject(cx));
 
     /* Objects are initially allocated in the nursery. */
     CHECK(js::gc::IsInsideNursery(object));
 
-    JS_GC(rt);
+    JS_GC(cx);
 
     /* And are tenured if still live after a GC. */
     CHECK(!js::gc::IsInsideNursery(object));

@@ -1669,7 +1669,8 @@ gfxFontUtils::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL)
             reinterpret_cast<const uint8_t*>(colr) + offsetLayerRecord);
 
     for (uint16_t i = 0; i < numLayerRecords; i++, layer++) {
-        if (uint16_t(layer->paletteEntryIndex) >= numPaletteEntries) {
+        if (uint16_t(layer->paletteEntryIndex) >= numPaletteEntries &&
+            uint16_t(layer->paletteEntryIndex) != 0xFFFF) {
             // CPAL palette entry record is overflow
             return false;
         }
@@ -1713,6 +1714,7 @@ bool
 gfxFontUtils::GetColorGlyphLayers(hb_blob_t* aCOLR,
                                   hb_blob_t* aCPAL,
                                   uint32_t aGlyphId,
+                                  const mozilla::gfx::Color& aDefaultColor,
                                   nsTArray<uint16_t>& aGlyphs,
                                   nsTArray<mozilla::gfx::Color>& aColors)
 {
@@ -1744,15 +1746,19 @@ gfxFontUtils::GetColorGlyphLayers(hb_blob_t* aCOLR,
 
     for (uint16_t layerIndex = 0; layerIndex < numLayers; layerIndex++) {
         aGlyphs.AppendElement(uint16_t(layer->glyphId));
-        const CPALColorRecord* color =
-            reinterpret_cast<const CPALColorRecord*>(
-                reinterpret_cast<const uint8_t*>(cpal) +
-                offsetFirstColorRecord +
-                sizeof(CPALColorRecord) * uint16_t(layer->paletteEntryIndex));
-        aColors.AppendElement(mozilla::gfx::Color(color->red / 255.0,
-                                                  color->green / 255.0,
-                                                  color->blue / 255.0,
-                                                  color->alpha / 255.0));
+        if (uint16_t(layer->paletteEntryIndex) == 0xFFFF) {
+            aColors.AppendElement(aDefaultColor);
+        } else {
+            const CPALColorRecord* color =
+                reinterpret_cast<const CPALColorRecord*>(
+                    reinterpret_cast<const uint8_t*>(cpal) +
+                    offsetFirstColorRecord +
+                    sizeof(CPALColorRecord) * uint16_t(layer->paletteEntryIndex));
+            aColors.AppendElement(mozilla::gfx::Color(color->red / 255.0,
+                                                      color->green / 255.0,
+                                                      color->blue / 255.0,
+                                                      color->alpha / 255.0));
+        }
         layer++;
     }
     return true;

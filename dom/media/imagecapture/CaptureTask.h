@@ -8,6 +8,7 @@
 #define CAPTURETASK_H
 
 #include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "PrincipalChangeObserver.h"
 
 namespace mozilla {

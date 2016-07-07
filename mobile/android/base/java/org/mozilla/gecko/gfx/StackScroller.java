@@ -635,6 +635,11 @@ public class StackScroller {
         boolean update(long time) {
             final long currentTime = time - mStartTime;
 
+            if (((mState == SPLINE) && (mSplineDuration <= 0)) ||
+                    ((mState == CUBIC) && (mDuration <= 0))) {
+                return false;
+            }
+
             if (currentTime > mDuration) {
                 return false;
             }

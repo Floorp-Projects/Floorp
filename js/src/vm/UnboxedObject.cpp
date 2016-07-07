@@ -1930,7 +1930,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
     if (isArray) {
 #ifdef NIGHTLY_BUILD
         if (!getenv("JS_OPTION_USE_UNBOXED_ARRAYS")) {
-            if (!group->runtimeFromAnyThread()->options().unboxedArrays())
+            if (!cx->options().unboxedArrays())
                 return true;
         }
 #else

@@ -13,10 +13,6 @@
 
 #include <stdio.h>
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
-
 // nsAString
 
 uint32_t
@@ -1308,5 +1304,3 @@ ParseString(const nsACString& aSource, char aDelimiter,
 
   return true;
 }
-
-#undef snprintf
