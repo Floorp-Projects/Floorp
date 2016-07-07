@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
     'ChangeAttributeTransaction.cpp',
     'ChangeStyleTransaction.cpp',
     'CreateElementTransaction.cpp',
-    'DeleteNodeTxn.cpp',
+    'DeleteNodeTransaction.cpp',
     'DeleteRangeTxn.cpp',
     'DeleteTextTxn.cpp',
     'EditAggregateTxn.cpp',
