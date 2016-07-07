@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1285128
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1285128</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1285128">Mozilla Bug 1285128</a>
+<p id="display"></p>
+<div id="target0" style="width: 200px; height: 200px; background: green"></div>
+<script type="text/javascript">
+
+/** Test for Bug 1285128 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let target0 = window.document.getElementById("target0");
+  let pointerEventsList = ["pointerover", "pointerenter", "pointerdown",
+                           "pointerup", "pointerleave", "pointerout"];
+  let receivedPointerEvents = false;
+  pointerEventsList.forEach((elem, index, arr) => {
+    target0.addEventListener(elem, (event) => {
+      ok(false, "receiving event " + event.type);
+      receivedPointerEvents = true;
+    }, false);
+  });
+
+  target0.addEventListener("mouseenter", () => {
+    ok(!receivedPointerEvents, "synthesized mousemove should not trigger any pointer events");
+    SimpleTest.finish();
+  });
+
+  synthesizeMouseAtCenter(target0, { type: "mousemove",
+                                     inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE,
+                                     isWidgetEventSynthesized: true });
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+
+</script>
+</body>
+</html>
