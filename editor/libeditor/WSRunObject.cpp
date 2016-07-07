@@ -173,7 +173,7 @@ WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in
-  // nsHTMLEditRules.cpp
+  // HTMLEditRules.cpp
   NS_ENSURE_TRUE(aInOutParent && aInOutOffset, nullptr);
 
   nsresult res = NS_OK;
@@ -241,7 +241,7 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
 {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in
-  // nsHTMLEditRules.cpp
+  // HTMLEditRules.cpp
 
   // MOOSE: for now, just getting the ws logic straight.  This implementation
   // is very slow.  Will need to replace edit rules impl with a more efficient

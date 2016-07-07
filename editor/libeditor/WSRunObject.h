@@ -14,11 +14,11 @@
 #include "mozilla/dom/Text.h"
 
 class nsHTMLEditor;
-class nsHTMLEditRules;
 class nsIDOMNode;
 
 namespace mozilla {
 
+class HTMLEditRules;
 struct EditorDOMPoint;
 
 // class WSRunObject represents the entire whitespace situation
@@ -401,7 +401,7 @@ protected:
   nsHTMLEditor* mHTMLEditor;
 
   // Opening this class up for pillaging.
-  friend class nsHTMLEditRules;
+  friend class HTMLEditRules;
   // Opening this class up for more pillaging.
   friend class nsHTMLEditor;
 };

@@ -19,12 +19,12 @@
 #undef SetProp
 #endif
 
-class nsHTMLEditRules;
 class nsIAtom;
 class nsIDOMNode;
 
 namespace mozilla {
 
+class HTMLEditRules;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -102,7 +102,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mLastSelectionContainer;
   int32_t mLastSelectionOffset;
 
-  friend class nsHTMLEditRules;
+  friend class HTMLEditRules;
 };
 
 } // namespace mozilla
