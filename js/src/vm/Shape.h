@@ -538,7 +538,7 @@ class Shape : public gc::TenuredCell
     friend class TenuringTracer;
     friend struct StackBaseShape;
     friend struct StackShape;
-    friend class JS::ubi::Concrete<Shape>;
+    friend struct JS::ubi::Concrete<Shape>;
     friend class js::gc::RelocationOverlay;
 
   protected:
@@ -1459,32 +1459,24 @@ ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
 namespace JS {
 namespace ubi {
 
-template<>
-class Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> {
+template<> struct Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> {
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
   protected:
     explicit Concrete(js::Shape *ptr) : TracerConcreteWithCompartment<js::Shape>(ptr) { }
 
   public:
     static void construct(void *storage, js::Shape *ptr) { new (storage) Concrete(ptr); }
-
-    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-
-    const char16_t* typeName() const override { return concreteTypeName; }
-    static const char16_t concreteTypeName[];
 };
 
-template<>
-class Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> {
+template<> struct Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> {
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
   protected:
     explicit Concrete(js::BaseShape *ptr) : TracerConcreteWithCompartment<js::BaseShape>(ptr) { }
 
   public:
     static void construct(void *storage, js::BaseShape *ptr) { new (storage) Concrete(ptr); }
-
-    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-
-    const char16_t* typeName() const override { return concreteTypeName; }
-    static const char16_t concreteTypeName[];
 };
 
 } // namespace ubi

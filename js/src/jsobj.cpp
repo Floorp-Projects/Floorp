@@ -3831,7 +3831,8 @@ JS::ubi::Concrete<JSObject>::size(mozilla::MallocSizeOf mallocSizeOf) const
     return obj.tenuredSizeOfThis() + info.sizeOfAllThings();
 }
 
-const char16_t JS::ubi::Concrete<JSObject>::concreteTypeName[] = MOZ_UTF16("JSObject");
+template<> const char16_t JS::ubi::TracerConcrete<JSObject>::concreteTypeName[] =
+    MOZ_UTF16("JSObject");
 
 void
 JSObject::traceChildren(JSTracer* trc)
