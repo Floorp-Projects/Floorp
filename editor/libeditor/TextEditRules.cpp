@@ -240,7 +240,7 @@ TextEditRules::AfterEdit(EditAction action,
 
 NS_IMETHODIMP
 TextEditRules::WillDoAction(Selection* aSelection,
-                            nsRulesInfo* aInfo,
+                            RulesInfo* aInfo,
                             bool* aCancel,
                             bool* aHandled)
 {
@@ -288,7 +288,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
 
 NS_IMETHODIMP
 TextEditRules::DidDoAction(Selection* aSelection,
-                           nsRulesInfo* aInfo,
+                           RulesInfo* aInfo,
                            nsresult aResult)
 {
   NS_ENSURE_STATE(mEditor);
