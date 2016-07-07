@@ -1655,7 +1655,7 @@ XPCJSRuntime::~XPCJSRuntime()
     // to destroy it later we will crash.
     SetPendingException(nullptr);
 
-    JS::SetGCSliceCallback(Runtime(), mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(Context(), mPrevGCSliceCallback);
 
     xpc_DelocalizeRuntime(Runtime());
 
@@ -3555,7 +3555,7 @@ XPCJSRuntime::Initialize()
     JS_SetDestroyCompartmentCallback(cx, CompartmentDestroyedCallback);
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
-    mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
+    mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     JS_AddWeakPointerZoneGroupCallback(cx, WeakPointerZoneGroupCallback, this);
     JS_AddWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback, this);
@@ -3845,7 +3845,7 @@ void
 XPCRootSetElem::RemoveFromRootSet()
 {
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JS::PokeGC(xpc->GetRuntime()->Runtime());
+    JS::PokeGC(xpc->GetRuntime()->Context());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
 

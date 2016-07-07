@@ -1083,7 +1083,7 @@ SetLocationForGlobal(JSObject* global, nsIURI* locationURI)
 NS_IMETHODIMP
 nsXPConnect::NotifyDidPaint()
 {
-    JS::NotifyDidPaint(GetRuntime()->Runtime());
+    JS::NotifyDidPaint(GetRuntime()->Context());
     return NS_OK;
 }
 
