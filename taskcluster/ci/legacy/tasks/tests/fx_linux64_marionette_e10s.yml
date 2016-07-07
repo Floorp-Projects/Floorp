@@ -23,5 +23,4 @@ task:
       flavor: marionette
     treeherder:
       groupName: Desktop marionette e10s
-      groupSymbol: tc-e10s
-      symbol: Mn
+      symbol: Mn-e10s

@@ -4,14 +4,13 @@ $inherits:
 task:
   payload:
     command:
-      - --test-suite=cppunittest
+      - --test-suite={{suite}}
   metadata:
     name: '[TC] Android 4.3 API15+ cppunit test'
     description: cppunit run
   extra:
     suite:
       name: cppunittest
-      flavor: cppunittest
     treeherder:
       groupSymbol: tc
       symbol: Cpp

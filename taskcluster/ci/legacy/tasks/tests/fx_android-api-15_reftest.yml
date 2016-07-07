@@ -5,6 +5,8 @@ task:
   workerType: desktop-test-xlarge
   payload:
     maxRunTime: 10800
+    command:
+      - --test-suite={{suite}}{{chunk}}
   metadata:
     name: '[TC] Android 4.3 API15+ reftest-{{chunk}}'
     description: Reftest run {{chunk}}
@@ -12,8 +14,7 @@ task:
     chunks:
       total: 16
     suite:
-      name: reftest
-      flavor: reftest
+      name: reftest-{{chunk}}
     treeherder:
       groupSymbol: tc-R
       symbol: R{{chunk}}
