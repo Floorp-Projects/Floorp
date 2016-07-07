@@ -3543,7 +3543,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog)
 bool
 nsCycleCollector::IsIncrementalGCInProgress()
 {
-  return mJSRuntime && JS::IsIncrementalGCInProgress(mJSRuntime->Runtime());
+  return mJSRuntime && JS::IsIncrementalGCInProgress(mJSRuntime->Context());
 }
 
 void

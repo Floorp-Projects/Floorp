@@ -183,7 +183,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (!trc)
         return;
 
-    AutoPrepareForTracing prep(rt, WithAtoms);
+    AutoPrepareForTracing prep(rt->contextFromMainThread(), WithAtoms);
 
     for (auto chunk = allNonEmptyChunks(); !chunk.done(); chunk.next())
         chunk->bitmap.clear();
@@ -312,7 +312,7 @@ gc::GCRuntime::endVerifyPreBarriers()
 
     MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
-    AutoPrepareForTracing prep(rt, SkipAtoms);
+    AutoPrepareForTracing prep(rt->contextFromMainThread(), SkipAtoms);
 
     bool compartmentCreated = false;
 

@@ -431,7 +431,7 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     uint32_t value = floor(d);
-    if (param == JSGC_MARK_STACK_LIMIT && JS::IsIncrementalGCInProgress(cx->runtime())) {
+    if (param == JSGC_MARK_STACK_LIMIT && JS::IsIncrementalGCInProgress(cx)) {
         JS_ReportError(cx, "attempt to set markStackLimit while a GC is in progress");
         return false;
     }
