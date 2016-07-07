@@ -6,6 +6,7 @@
 #include "AudioNodeStream.h"
 
 #include "MediaStreamGraphImpl.h"
+#include "MediaStreamListener.h"
 #include "AudioNodeEngine.h"
 #include "ThreeDPoint.h"
 #include "AudioChannelFormat.h"
@@ -647,7 +648,7 @@ AudioNodeStream::AdvanceOutputSegment()
     AudioSegment tmpSegment;
     tmpSegment.AppendAndConsumeChunk(&copyChunk);
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
-                                segment->GetDuration(), 0, tmpSegment);
+                                segment->GetDuration(), TrackEventCommand::TRACK_EVENT_NONE, tmpSegment);
   }
 }
 
@@ -662,7 +663,7 @@ AudioNodeStream::FinishOutput()
     AudioSegment emptySegment;
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
                                 track->GetSegment()->GetDuration(),
-                                MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
+                                TrackEventCommand::TRACK_EVENT_ENDED, emptySegment);
   }
 }
 

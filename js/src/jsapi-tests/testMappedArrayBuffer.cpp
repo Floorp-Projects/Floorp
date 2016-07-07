@@ -177,9 +177,9 @@ bool TestTransferObject()
 
 static void GC(JSContext* cx)
 {
-    JS_GC(JS_GetRuntime(cx));
+    JS_GC(cx);
     // Trigger another to wait for background finalization to end.
-    JS_GC(JS_GetRuntime(cx));
+    JS_GC(cx);
 }
 
 END_TEST(testMappedArrayBuffer_bug945152)

@@ -2177,7 +2177,7 @@ jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAn
     // If needed, update alias analysis dependencies.
     if (updateAliasAnalysis) {
         TraceLoggerThread* logger;
-        if (GetJitContext()->runtime->onMainThread())
+        if (GetJitContext()->onMainThread())
             logger = TraceLoggerForMainThread(GetJitContext()->runtime);
         else
             logger = TraceLoggerForCurrentThread();

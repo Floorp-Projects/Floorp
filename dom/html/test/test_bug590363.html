@@ -47,7 +47,7 @@ var todoTypes = [
   "datetime", "week", "datetime-local"
 ];
 
-var nonTrivialSanitizing = [ 'number', 'date', 'time', 'color' ];
+var nonTrivialSanitizing = [ 'number', 'date', 'time', 'color', 'month' ];
 
 var length = testData.length;
 for (var i=0; i<length; ++i) {
@@ -60,7 +60,8 @@ for (var i=0; i<length; ++i) {
     // range will sanitize its value to 50 (the default) if it isn't a valid
     // number. We need to handle that specially.
     if (testData[j][0] == 'range' || testData[i][0] == 'range') {
-      if (testData[j][0] == 'date' || testData[j][0] == 'time') {
+      if (testData[j][0] == 'date' || testData[j][0] == 'time' ||
+          testData[j][0] == 'month') {
         expectedValue = '';
       } else if (testData[j][0] == 'color') {
         expectedValue = '#000000';
@@ -69,7 +70,7 @@ for (var i=0; i<length; ++i) {
       }
     } else if (testData[i][0] == 'color' || testData[j][0] == 'color') {
         if (testData[j][0] == 'number' || testData[j][0] == 'date' ||
-            testData[j][0] == 'time') {
+            testData[j][0] == 'time' || testData[j][0] == 'month') {
           expectedValue = ''
         } else {
           expectedValue = '#000000';

@@ -1026,9 +1026,15 @@ class MInstruction
     // protected, and delegates to the TempObject new operator. Thus, the
     // following code prevents calls to "new(alloc) MFoo" outside the MFoo
     // members.
-    template <typename... Args>
-    inline void* operator new(size_t nbytes, Args&&... args) {
-        return TempObject::operator new(nbytes, mozilla::Forward<Args>(args)...);
+    inline void* operator new(size_t nbytes, TempAllocator::Fallible view) throw() {
+        return TempObject::operator new(nbytes, view);
+    }
+    inline void* operator new(size_t nbytes, TempAllocator& alloc) {
+        return TempObject::operator new(nbytes, alloc);
+    }
+    template <class T>
+    inline void* operator new(size_t nbytes, T* pos) {
+        return TempObject::operator new(nbytes, pos);
     }
 
   public:

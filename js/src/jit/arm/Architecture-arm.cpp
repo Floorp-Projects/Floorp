@@ -6,7 +6,7 @@
 
 #include "jit/arm/Architecture-arm.h"
 
-#if !defined(JS_ARM_SIMULATOR) && !defined(__APPLE__)
+#if !defined(JS_SIMULATOR_ARM) && !defined(__APPLE__)
 #include <elf.h>
 #endif
 
@@ -40,7 +40,6 @@
 
 namespace js {
 namespace jit {
-
 
 // Parse the Linux kernel cpuinfo features. This is also used to parse the
 // override features which has some extensions: 'armv7', 'align' and 'hardfp'.
@@ -267,6 +266,12 @@ GetARMFlags()
 {
     MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
     return armHwCapFlags;
+}
+
+bool HasARMv7()
+{
+    MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
+    return armHwCapFlags & HWCAP_ARMv7;
 }
 
 bool HasMOVWT()

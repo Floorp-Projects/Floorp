@@ -20,6 +20,7 @@
 #define wasm_generator_h
 
 #include "asmjs/WasmBinary.h"
+#include "asmjs/WasmCompile.h"
 #include "asmjs/WasmModule.h"
 #include "jit/MacroAssembler.h"
 
@@ -61,9 +62,10 @@ typedef Vector<ImportModuleGeneratorData, 0, SystemAllocPolicy> ImportModuleGene
 
 struct ModuleGeneratorData
 {
-    CompileArgs                     args;
     ModuleKind                      kind;
-    mozilla::Atomic<uint32_t>       minHeapLength;
+    SignalUsage                     usesSignal;
+    MemoryUsage                     memoryUsage;
+    mozilla::Atomic<uint32_t>       minMemoryLength;
 
     DeclaredSigVector               sigs;
     DeclaredSigPtrVector            funcSigs;
@@ -77,8 +79,8 @@ struct ModuleGeneratorData
         return funcSigs[funcIndex] - sigs.begin();
     }
 
-    explicit ModuleGeneratorData(ExclusiveContext* cx, ModuleKind kind = ModuleKind::Wasm)
-      : args(cx), kind(kind), minHeapLength(0)
+    explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
+      : kind(kind), usesSignal(usesSignal), memoryUsage(MemoryUsage::None), minMemoryLength(0)
     {}
 };
 
@@ -92,10 +94,12 @@ typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
 
 class MOZ_STACK_CLASS ModuleGenerator
 {
-    typedef HashMap<uint32_t, uint32_t> FuncIndexMap;
+    typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> FuncIndexMap;
+    typedef Vector<IonCompileTask, 0, SystemAllocPolicy> IonCompileTaskVector;
+    typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskPtrVector;
 
-    ExclusiveContext*               cx_;
-    jit::JitContext                 jcx_;
+    // Constant parameters
+    bool                            alwaysBaseline_;
 
     // Data that is moved into the result of finish()
     LinkData                        linkData_;
@@ -107,7 +111,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueModuleGeneratorData       shared_;
     uint32_t                        numSigs_;
     LifoAlloc                       lifo_;
-    jit::TempAllocator              alloc_;
+    jit::JitContext                 jcx_;
+    jit::TempAllocator              masmAlloc_;
     jit::MacroAssembler             masm_;
     Uint32Vector                    funcIndexToCodeRange_;
     FuncIndexMap                    funcIndexToExport_;
@@ -118,8 +123,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Parallel compilation
     bool                            parallel_;
     uint32_t                        outstanding_;
-    Vector<IonCompileTask>          tasks_;
-    Vector<IonCompileTask*>         freeTasks_;
+    IonCompileTaskVector            tasks_;
+    IonCompileTaskPtrVector         freeTasks_;
 
     // Assertions
     DebugOnly<FunctionGenerator*>   activeFunc_;
@@ -137,21 +142,19 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
 
   public:
-    explicit ModuleGenerator(ExclusiveContext* cx);
+    explicit ModuleGenerator();
     ~ModuleGenerator();
 
-    MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared,
-                           UniqueChars filename,
-                           Metadata* maybeMetadata = nullptr);
+    MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared, CompileArgs&& args,
+                           Metadata* maybeAsmJSMetadata = nullptr);
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
-    CompileArgs args() const { return metadata_->compileArgs; }
+    SignalUsage usesSignal() const { return metadata_->assumptions.usesSignal; }
     jit::MacroAssembler& masm() { return masm_; }
 
-    // Heap usage:
-    void initHeapUsage(HeapUsage heapUsage, uint32_t initialHeapLength = 0);
-    bool usesHeap() const;
-    uint32_t initialHeapLength() const;
+    // Memory:
+    bool usesMemory() const { return UsesMemory(shared_->memoryUsage); }
+    uint32_t minMemoryLength() const { return shared_->minMemoryLength; }
     MOZ_MUST_USE bool addDataSegment(DataSegment s) { return dataSegments_.append(s); }
 
     // Signatures:
@@ -191,7 +194,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initImport(uint32_t importIndex, uint32_t sigIndex);
     MOZ_MUST_USE bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
     void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
-    void bumpMinHeapLength(uint32_t newMinHeapLength);
+    void initMemoryUsage(MemoryUsage memoryUsage);
+    void bumpMinMemoryLength(uint32_t newMinMemoryLength);
 
     // Finish compilation, provided the list of imported names and source
     // bytecode. Both these Vectors may be empty (viz., b/c asm.js does
@@ -241,7 +245,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     }
 
     bool usesSignalsForInterrupts() const {
-        return m_->args().useSignalHandlersForInterrupt;
+        return m_->usesSignal().forInterrupt;
     }
 
     Bytes& bytes() {

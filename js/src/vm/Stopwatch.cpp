@@ -578,73 +578,76 @@ PerformanceGroup::Release()
     this->Delete();
 }
 
-JS_PUBLIC_API(bool) SetStopwatchStartCallback(JSRuntime* rt, StopwatchStartCallback cb, void* closure)
+JS_PUBLIC_API(bool)
+SetStopwatchStartCallback(JSContext* cx, StopwatchStartCallback cb, void* closure)
 {
-    rt->performanceMonitoring.setStopwatchStartCallback(cb, closure);
-    return true;
-}
-
-JS_PUBLIC_API(bool) SetStopwatchCommitCallback(JSRuntime* rt, StopwatchCommitCallback cb, void* closure)
-{
-    rt->performanceMonitoring.setStopwatchCommitCallback(cb, closure);
-    return true;
-}
-
-JS_PUBLIC_API(bool) SetGetPerformanceGroupsCallback(JSRuntime* rt, GetGroupsCallback cb, void* closure)
-{
-    rt->performanceMonitoring.setGetGroupsCallback(cb, closure);
+    cx->performanceMonitoring.setStopwatchStartCallback(cb, closure);
     return true;
 }
 
 JS_PUBLIC_API(bool)
-FlushPerformanceMonitoring(JSRuntime* rt)
+SetStopwatchCommitCallback(JSContext* cx, StopwatchCommitCallback cb, void* closure)
 {
-    return rt->performanceMonitoring.commit();
-}
-JS_PUBLIC_API(void)
-ResetPerformanceMonitoring(JSRuntime* rt)
-{
-    return rt->performanceMonitoring.reset();
-}
-JS_PUBLIC_API(void)
-DisposePerformanceMonitoring(JSRuntime* rt)
-{
-    return rt->performanceMonitoring.dispose(rt);
+    cx->performanceMonitoring.setStopwatchCommitCallback(cb, closure);
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringJank(JSRuntime* rt, bool value)
+SetGetPerformanceGroupsCallback(JSContext* cx, GetGroupsCallback cb, void* closure)
 {
-    return rt->performanceMonitoring.setIsMonitoringJank(value);
-}
-JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringJank(JSRuntime* rt)
-{
-    return rt->performanceMonitoring.isMonitoringJank();
+    cx->performanceMonitoring.setGetGroupsCallback(cb, closure);
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringCPOW(JSRuntime* rt, bool value)
+FlushPerformanceMonitoring(JSContext* cx)
 {
-    return rt->performanceMonitoring.setIsMonitoringCPOW(value);
+    return cx->performanceMonitoring.commit();
+}
+JS_PUBLIC_API(void)
+ResetPerformanceMonitoring(JSContext* cx)
+{
+    return cx->performanceMonitoring.reset();
+}
+JS_PUBLIC_API(void)
+DisposePerformanceMonitoring(JSContext* cx)
+{
+    return cx->performanceMonitoring.dispose(cx);
+}
+
+JS_PUBLIC_API(bool)
+SetStopwatchIsMonitoringJank(JSContext* cx, bool value)
+{
+    return cx->performanceMonitoring.setIsMonitoringJank(value);
 }
 JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringCPOW(JSRuntime* rt)
+GetStopwatchIsMonitoringJank(JSContext* cx)
 {
-    return rt->performanceMonitoring.isMonitoringCPOW();
+    return cx->performanceMonitoring.isMonitoringJank();
+}
+
+JS_PUBLIC_API(bool)
+SetStopwatchIsMonitoringCPOW(JSContext* cx, bool value)
+{
+    return cx->performanceMonitoring.setIsMonitoringCPOW(value);
+}
+JS_PUBLIC_API(bool)
+GetStopwatchIsMonitoringCPOW(JSContext* cx)
+{
+    return cx->performanceMonitoring.isMonitoringCPOW();
 }
 
 JS_PUBLIC_API(void)
-GetPerfMonitoringTestCpuRescheduling(JSRuntime* rt, uint64_t* stayed, uint64_t* moved)
+GetPerfMonitoringTestCpuRescheduling(JSContext* cx, uint64_t* stayed, uint64_t* moved)
 {
-    *stayed = rt->performanceMonitoring.testCpuRescheduling.stayed;
-    *moved = rt->performanceMonitoring.testCpuRescheduling.moved;
+    *stayed = cx->performanceMonitoring.testCpuRescheduling.stayed;
+    *moved = cx->performanceMonitoring.testCpuRescheduling.moved;
 }
 
 JS_PUBLIC_API(void)
-AddCPOWPerformanceDelta(JSRuntime* rt, uint64_t delta)
+AddCPOWPerformanceDelta(JSContext* cx, uint64_t delta)
 {
-    rt->performanceMonitoring.totalCPOWTime += delta;
+    cx->performanceMonitoring.totalCPOWTime += delta;
 }
 
 
