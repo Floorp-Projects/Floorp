@@ -61,7 +61,6 @@ function runTests() {
 function setupTestFrame() {
   testFrame = document.createElement('iframe');
   testFrame.setAttribute('mozbrowser', 'true');
-  testFrame.setAttribute('mozapp', 'http://example.org/manifest.webapp');
   testFrame.src = fileURL;
 
   function loadend() {
@@ -91,7 +90,7 @@ function setupTestFrame() {
 }
 
 addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({'set': [["b2g.system_manifest_url", "http://mochi.test:8888/manifest.webapp"]]},
+  SpecialPowers.pushPrefEnv({'set': [["b2g.system_startup_url", window.location.href]]},
                             function() {
     SimpleTest.executeSoon(setupTestFrame);
   });

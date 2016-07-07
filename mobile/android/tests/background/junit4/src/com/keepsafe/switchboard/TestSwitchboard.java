@@ -1,7 +1,9 @@
 package com.keepsafe.switchboard;
 
 import android.content.Context;
+import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -9,9 +11,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.util.Experiments;
+import org.mozilla.gecko.util.IOUtils;
 import org.robolectric.RuntimeEnvironment;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,14 +31,40 @@ import static org.junit.Assert.*;
 @RunWith(TestRunner.class)
 public class TestSwitchboard {
 
-    private static final String TEST_JSON = "{\"active-experiment\":{\"isActive\":true,\"values\":{\"foo\": true}},\"inactive-experiment\":{\"isActive\":false,\"values\":null}}";
+    /**
+     * Create a JSON response from a JSON file.
+     */
+    private String readFromFile(String fileName) throws IOException {
+        URL url = getClass().getResource("/" + fileName);
+        if (url == null) {
+            throw new FileNotFoundException(fileName);
+        }
+
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
+
+        try {
+            inputStream = new BufferedInputStream(new FileInputStream(url.getPath()));
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferReader = new BufferedReader(inputStreamReader, 8192);
+            String line;
+            StringBuilder resultContent = new StringBuilder();
+            while ((line = bufferReader.readLine()) != null) {
+                resultContent.append(line);
+            }
+            bufferReader.close();
+
+            return resultContent.toString();
+
+        } finally {
+            IOUtils.safeStreamClose(inputStream);
+        }
+    }
 
     @Before
     public void setUp() throws IOException {
         final Context c = RuntimeEnvironment.application;
-
-        // Avoid hitting the network by setting a config directly.
-        Preferences.setDynamicConfigJson(c, TEST_JSON);
+        Preferences.setDynamicConfigJson(c, readFromFile("experiments.json"));
     }
 
     @Test
@@ -87,5 +124,21 @@ public class TestSwitchboard {
         assertFalse("inactive-experiment is inactive after override is cleared", SwitchBoard.isInExperiment(c, "inactive-experiment"));
         assertFalse("List of active experiments does not contain inactive-experiment again", SwitchBoard.getActiveExperiments(c).contains("inactive-experiment"));
     }
+
+    @Test
+    public void testMatching() {
+        final Context c = RuntimeEnvironment.application;
+        assertTrue("is-experiment is matching", SwitchBoard.isInExperiment(c, "is-matching"));
+        assertFalse("is-not-matching is not matching", SwitchBoard.isInExperiment(c, "is-not-matching"));
+    }
+
+    @Test
+    public void testNotExisting() {
+        final Context c = RuntimeEnvironment.application;
+        assertFalse("F0O does not exists", SwitchBoard.isInExperiment(c, "F0O"));
+        assertFalse("BaAaz does not exists", SwitchBoard.hasExperimentValues(c, "BaAaz"));
+    }
+
+
 
 }
