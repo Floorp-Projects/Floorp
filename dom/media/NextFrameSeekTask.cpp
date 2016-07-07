@@ -150,22 +150,10 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
   DropAllMediaDataBeforeCurrentPosition(mAudioQueue, mVideoQueue,
                                         mCurrentTimeBeforeSeek);
 
-  // While creating this seek task object, MDSM might had already ask the
-  // wrapper to decode a media sample or the MDSM is waiting a media data.
-  // If so, we cannot resolve the SeekTaskPromise immediately because there is
-  // a latency of running the resolving runnable. Instead, if there is a pending
-  // media request, we wait for it.
-  bool hasPendingRequests = mReader->IsRequestingAudioData() ||
-                            mReader->IsWaitingAudioData() ||
-                            mReader->IsRequestingVideoData() ||
-                            mReader->IsWaitingVideoData();
-
-  bool needMoreVideo = mVideoQueue.GetSize() == 0 && !mVideoQueue.IsFinished();
-
-  if (needMoreVideo) {
+  if (NeedMoreVideo()) {
     EnsureVideoDecodeTaskQueued();
   }
-  if (hasPendingRequests || needMoreVideo) {
+  if (!IsAudioSeekComplete() || !IsVideoSeekComplete()) {
     return mSeekTaskPromise.Ensure(__func__);
   }
 
@@ -188,9 +176,7 @@ NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
   SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
              IsVideoDecoding(), VideoRequestStatus());
 
-  if (!IsVideoDecoding() ||
-      mReader->IsRequestingVideoData() ||
-      mReader->IsWaitingVideoData()) {
+  if (!IsVideoDecoding() || IsVideoRequestPending()) {
     return;
   }
 
