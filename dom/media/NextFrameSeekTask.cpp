@@ -244,7 +244,7 @@ NextFrameSeekTask::IsVideoSeekComplete() const
 }
 
 void
-NextFrameSeekTask::CheckIfSeekComplete()
+NextFrameSeekTask::MaybeFinishSeek()
 {
   AssertOwnerThread();
 
@@ -283,7 +283,7 @@ NextFrameSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   // We accept any audio data here.
   mSeekedAudioData = aAudioSample;
 
-  CheckIfSeekComplete();
+  MaybeFinishSeek();
 }
 
 void
@@ -298,7 +298,7 @@ NextFrameSeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
   // audio decoding tasks if it needs to play audio, and MDSM will then receive
   // the decoding state from MediaDecoderReader.
 
-  CheckIfSeekComplete();
+  MaybeFinishSeek();
 }
 
 void
@@ -320,7 +320,7 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
     mSeekedVideoData = aVideoSample;
   }
 
-  CheckIfSeekComplete();
+  MaybeFinishSeek();
 }
 
 void
@@ -338,7 +338,7 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
       // found its target in the VideoQueue but still waits the video decoding
       // request (which is filed by the MDSM) to be resolved. In this case, we
       // already have the target of this seek task, try to resolve this task.
-      CheckIfSeekComplete();
+      MaybeFinishSeek();
       return;
     }
 
@@ -362,7 +362,7 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
 
   if (aReason == MediaDecoderReader::END_OF_STREAM) {
     mIsVideoQueueFinished = true;
-    CheckIfSeekComplete();
+    MaybeFinishSeek();
   }
 }
 
@@ -396,7 +396,7 @@ NextFrameSeekTask::SetCallbacks()
     OwnerThread(), [this] (WaitCallbackData aData) {
     // We don't make an audio decode request here, instead, let MDSM to
     // trigger further audio decode tasks if MDSM itself needs to play audio.
-    CheckIfSeekComplete();
+    MaybeFinishSeek();
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
