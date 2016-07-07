@@ -2,7 +2,6 @@
 $inherits:
   from: 'tasks/tests/fx_docker_desktop_generic.yml'
 task:
-  workerType: desktop-test-xlarge
   payload:
     maxRunTime: 5400
     command:
@@ -26,4 +25,4 @@ task:
     treeherder:
       groupName: Desktop web-platform-tests
       groupSymbol: tc-W-e10s
-      symbol: Wr
+      symbol: Wr-e10s

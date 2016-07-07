@@ -3,9 +3,10 @@ $inherits:
 task:
   payload:
     command:
-      - --test-suite=crashtest-debug-{{chunk}}
       - --download-symbols=true
   extra:
+    suite:
+      name: crashtest-debug-{{chunk}}
     chunks:
       total: 10
     treeherder:
