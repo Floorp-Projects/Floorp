@@ -1772,7 +1772,7 @@ IsNativeRegExpEnabled(JSContext* cx)
 #ifdef JS_CODEGEN_NONE
     return false;
 #else
-    return cx->runtime()->options().nativeRegExp();
+    return cx->options().nativeRegExp();
 #endif
 }
 

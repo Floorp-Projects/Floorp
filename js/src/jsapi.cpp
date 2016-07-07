@@ -614,16 +614,10 @@ JS_StringToVersion(const char* string)
     return JSVERSION_UNKNOWN;
 }
 
-JS_PUBLIC_API(JS::RuntimeOptions&)
-JS::RuntimeOptionsRef(JSRuntime* rt)
+JS_PUBLIC_API(JS::ContextOptions&)
+JS::ContextOptionsRef(JSContext* cx)
 {
-    return rt->options();
-}
-
-JS_PUBLIC_API(JS::RuntimeOptions&)
-JS::RuntimeOptionsRef(JSContext* cx)
-{
-    return cx->runtime()->options();
+    return cx->options();
 }
 
 JS_PUBLIC_API(bool)
@@ -1749,9 +1743,9 @@ JS_GetConstructor(JSContext* cx, HandleObject proto)
 }
 
 bool
-JS::CompartmentBehaviors::extraWarnings(JSRuntime* rt) const
+JS::CompartmentBehaviors::extraWarnings(JSContext* cx) const
 {
-    return extraWarningsOverride_.get(rt->options().extraWarnings());
+    return extraWarningsOverride_.get(cx->options().extraWarnings());
 }
 
 JS::CompartmentCreationOptions&
@@ -3884,16 +3878,16 @@ JS::CompileOptions::CompileOptions(JSContext* cx, JSVersion version)
 {
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 
-    strictOption = cx->runtime()->options().strictMode();
+    strictOption = cx->options().strictMode();
     extraWarningsOption = cx->compartment()->behaviors().extraWarnings(cx);
-    werrorOption = cx->runtime()->options().werror();
-    if (!cx->runtime()->options().asmJS())
+    werrorOption = cx->options().werror();
+    if (!cx->options().asmJS())
         asmJSOption = AsmJSOption::Disabled;
     else if (cx->compartment()->debuggerObservesAsmJS())
         asmJSOption = AsmJSOption::DisabledByDebugger;
     else
         asmJSOption = AsmJSOption::Enabled;
-    throwOnAsmJSValidationFailureOption = cx->runtime()->options().throwOnAsmJSValidationFailure();
+    throwOnAsmJSValidationFailureOption = cx->options().throwOnAsmJSValidationFailure();
 }
 
 enum SyntacticScopeOption { HasSyntacticScope, HasNonSyntacticScope };
@@ -4903,7 +4897,7 @@ JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
     // The option determines whether we actually use the new values at this
     // point. It will not affect restoring the previous values when the object
     // is destroyed, so if the option changes it won't cause consistency issues.
-    if (!cx->runtime()->options().asyncStack())
+    if (!cx->options().asyncStack())
         return;
 
     SavedFrame* asyncStack = &stack->as<SavedFrame>();
@@ -6082,20 +6076,20 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
         break;
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {
-            JS::RuntimeOptionsRef(rt).setIon(true);
+            JS::ContextOptionsRef(cx).setIon(true);
             JitSpew(js::jit::JitSpew_IonScripts, "Enable ion");
         } else if (value == 0) {
-            JS::RuntimeOptionsRef(rt).setIon(false);
+            JS::ContextOptionsRef(cx).setIon(false);
             JitSpew(js::jit::JitSpew_IonScripts, "Disable ion");
         }
         break;
       case JSJITCOMPILER_BASELINE_ENABLE:
         if (value == 1) {
-            JS::RuntimeOptionsRef(rt).setBaseline(true);
+            JS::ContextOptionsRef(cx).setBaseline(true);
             ReleaseAllJITCode(rt->defaultFreeOp());
             JitSpew(js::jit::JitSpew_BaselineScripts, "Enable baseline");
         } else if (value == 0) {
-            JS::RuntimeOptionsRef(rt).setBaseline(false);
+            JS::ContextOptionsRef(cx).setBaseline(false);
             ReleaseAllJITCode(rt->defaultFreeOp());
             JitSpew(js::jit::JitSpew_BaselineScripts, "Disable baseline");
         }
@@ -6148,9 +6142,9 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
       case JSJITCOMPILER_ION_FORCE_IC:
         return jit::JitOptions.forceInlineCaches;
       case JSJITCOMPILER_ION_ENABLE:
-        return JS::RuntimeOptionsRef(rt).ion();
+        return JS::ContextOptionsRef(cx).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:
-        return JS::RuntimeOptionsRef(rt).baseline();
+        return JS::ContextOptionsRef(cx).baseline();
       case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         return rt->canUseOffthreadIonCompilation();
       case JSJITCOMPILER_SIGNALS_ENABLE:
