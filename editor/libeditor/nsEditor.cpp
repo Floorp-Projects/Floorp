@@ -1617,8 +1617,8 @@ nsEditor::RemoveContainer(nsIContent* aNode)
   uint32_t nodeOrigLen = aNode->GetChildCount();
 
   // notify our internal selection state listener
-  nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode, parent,
-                                           offset, nodeOrigLen);
+  AutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode, parent,
+                                         offset, nodeOrigLen);
 
   while (aNode->HasChildren()) {
     nsCOMPtr<nsIContent> child = aNode->GetLastChild();
