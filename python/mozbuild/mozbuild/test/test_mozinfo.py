@@ -245,7 +245,8 @@ class TestWriteMozinfo(unittest.TestCase, Base):
         with NamedTemporaryFile(dir=os.path.normpath(c.topsrcdir)) as mozconfig:
             mozconfig.write('unused contents')
             mozconfig.flush()
-            write_mozinfo(self.f, c, {'MOZCONFIG': mozconfig.name})
+            c.mozconfig = mozconfig.name
+            write_mozinfo(self.f, c)
             with open(self.f) as f:
                 d = json.load(f)
                 self.assertEqual('win', d['os'])
