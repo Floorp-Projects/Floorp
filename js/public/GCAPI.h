@@ -393,7 +393,7 @@ SetGCNurseryCollectionCallback(JSContext* cx, GCNurseryCollectionCallback callba
  * disabled on the runtime.
  */
 extern JS_PUBLIC_API(void)
-DisableIncrementalGC(JSRuntime* rt);
+DisableIncrementalGC(JSContext* cx);
 
 /**
  * Returns true if incremental GC is enabled. Simply having incremental GC
@@ -404,14 +404,14 @@ DisableIncrementalGC(JSRuntime* rt);
  * collections are not happening incrementally when expected.
  */
 extern JS_PUBLIC_API(bool)
-IsIncrementalGCEnabled(JSRuntime* rt);
+IsIncrementalGCEnabled(JSContext* cx);
 
 /**
  * Returns true while an incremental GC is ongoing, both when actively
  * collecting and between slices.
  */
 extern JS_PUBLIC_API(bool)
-IsIncrementalGCInProgress(JSRuntime* rt);
+IsIncrementalGCInProgress(JSContext* cx);
 
 /*
  * Returns true when writes to GC things must call an incremental (pre) barrier.
@@ -419,7 +419,7 @@ IsIncrementalGCInProgress(JSRuntime* rt);
  * At other times, the barrier may be elided for performance.
  */
 extern JS_PUBLIC_API(bool)
-IsIncrementalBarrierNeeded(JSRuntime* rt);
+IsIncrementalBarrierNeeded(JSContext* cx);
 
 /*
  * Notify the GC that a reference to a GC thing is about to be overwritten.
@@ -438,7 +438,7 @@ IncrementalObjectBarrier(JSObject* obj);
  * Returns true if the most recent GC ran incrementally.
  */
 extern JS_PUBLIC_API(bool)
-WasIncrementalGC(JSRuntime* rt);
+WasIncrementalGC(JSContext* cx);
 
 /*
  * Generational GC:

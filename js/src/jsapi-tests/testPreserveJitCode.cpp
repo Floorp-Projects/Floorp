@@ -28,7 +28,7 @@ unsigned
 countIonScripts(JSObject* global)
 {
     unsigned count = 0;
-    js::IterateScripts(rt, global->compartment(), &count, ScriptCallback);
+    js::IterateScripts(cx, global->compartment(), &count, ScriptCallback);
     return count;
 }
 
