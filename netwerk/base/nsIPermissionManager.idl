@@ -94,6 +94,15 @@ interface nsIPermissionManager : nsISupports
            [optional] in int64_t expireTime);
 
   /**
+   * Get all custom permissions for a given URI. This will return
+   * an enumerator of all permissions which are not set to default
+   * and which belong to the matching prinicpal of the given URI.
+   *
+   * @param uri  the URI to get all permissions for
+   */
+  nsISimpleEnumerator getAllForURI(in nsIURI uri);
+
+  /**
    * Add permission information for a given principal.
    * It is internally calling the other add() method using the nsIURI from the
    * principal.
