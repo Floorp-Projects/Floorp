@@ -480,7 +480,10 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
     event.mClickCount = 1;
   }
   event.mModifiers = aModifiers;
-
+  // Real touch events will generate corresponding pointer events. We set
+  // convertToPointer to false to prevent the synthesized mouse events generate
+  // pointer events again.
+  event.convertToPointer = false;
   return DispatchWidgetEvent(event);
 }
 
