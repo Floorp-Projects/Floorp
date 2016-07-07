@@ -1154,6 +1154,8 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
                                             MutableHandle<DebuggerEnvironment*> result);
 
+    bool isGenerator() const;
+
   private:
     static const ClassOps classOps_;
 
@@ -1168,6 +1170,7 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc, Value* vp);
 
     AbstractFramePtr referent() const;
     Debugger* owner() const;
