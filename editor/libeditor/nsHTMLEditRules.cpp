@@ -2996,7 +2996,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   nsresult res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
 
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   res = GetListActionNodes(arrayOfNodes,
@@ -3054,8 +3054,8 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
     mNewBlock = theListItem;
     // put selection in new list item
     res = aSelection->Collapse(theListItem, 0);
-    // to prevent selection resetter from overriding us
-    selectionResetter.Abort();
+    // Don't restore the selection
+    selectionRestorer.Abort();
     *aHandled = true;
     return res;
   }
@@ -3276,7 +3276,7 @@ nsHTMLEditRules::WillRemoveList(Selection* aSelection,
   nsresult res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
   GetPromotedRanges(*aSelection, arrayOfRanges, EditAction::makeList);
@@ -3356,7 +3356,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
 
   nsresult res = NormalizeSelection(&aSelection);
   NS_ENSURE_SUCCESS(res, res);
-  nsAutoSelectionReset selectionResetter(&aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(&aSelection, mHTMLEditor);
   AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
   *aHandled = true;
 
@@ -3407,8 +3407,8 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
         NS_ENSURE_STATE(brNode);
         // Put selection at the split point
         res = aSelection.Collapse(curBlock->GetParentNode(), offset);
-        // To prevent selection resetter from overriding us.
-        selectionResetter.Abort();
+        // Don't restore the selection
+        selectionRestorer.Abort();
         *aHandled = true;
         NS_ENSURE_SUCCESS(res, res);
       }
@@ -3440,8 +3440,8 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
       }
       // Put selection in new block
       res = aSelection.Collapse(block, 0);
-      // To prevent selection resetter from overriding us.
-      selectionResetter.Abort();
+      // Don't restore the selection
+      selectionRestorer.Abort();
       *aHandled = true;
       NS_ENSURE_SUCCESS(res, res);
     }
@@ -3513,7 +3513,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   nsresult res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
   nsTArray<OwningNonNull<nsRange>> arrayOfRanges;
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
 
@@ -3575,7 +3575,8 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
-    selectionResetter.Abort();  // to prevent selection reseter from overriding us.
+    // Don't restore the selection
+    selectionRestorer.Abort();
     *aHandled = true;
     return res;
   }
@@ -3716,7 +3717,7 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
   nsresult res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
 
   // convert the selection ranges into "promoted" selection ranges:
   // this basically just expands the range to include the immediate
@@ -3759,7 +3760,8 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
-    selectionResetter.Abort();  // to prevent selection reseter from overriding us.
+    // Don't restore the selection
+    selectionRestorer.Abort();
     *aHandled = true;
     return res;
   }
@@ -3949,7 +3951,7 @@ nsHTMLEditRules::WillOutdent(Selection& aSelection,
 
   // Some scoping for selection resetting - we may need to tweak it
   {
-    nsAutoSelectionReset selectionResetter(&aSelection, mHTMLEditor);
+    AutoSelectionRestorer selectionRestorer(&aSelection, mHTMLEditor);
 
     // Convert the selection ranges into "promoted" selection ranges: this
     // basically just expands the range to include the immediate block parent,
@@ -4486,7 +4488,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
 
   nsresult rv = NormalizeSelection(&aSelection);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoSelectionReset selectionResetter(&aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(&aSelection, mHTMLEditor);
 
   // Convert the selection ranges into "promoted" selection ranges: This
   // basically just expands the range to include the immediate block parent,
@@ -4573,8 +4575,8 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
     rv = CreateMozBR(div->AsDOMNode(), 0);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aSelection.Collapse(div, 0);
-    // Don't reset our selection in this case.
-    selectionResetter.Abort();
+    // Don't restore the selection
+    selectionRestorer.Abort();
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
@@ -8507,7 +8509,7 @@ nsHTMLEditRules::WillAbsolutePosition(Selection& aSelection,
 
   nsresult res = NormalizeSelection(&aSelection);
   NS_ENSURE_SUCCESS(res, res);
-  nsAutoSelectionReset selectionResetter(&aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(&aSelection, mHTMLEditor);
 
   // Convert the selection ranges into "promoted" selection ranges: this
   // basically just expands the range to include the immediate block parent,
@@ -8550,8 +8552,8 @@ nsHTMLEditRules::WillAbsolutePosition(Selection& aSelection,
     }
     // Put selection in new block
     res = aSelection.Collapse(positionedDiv, 0);
-    // Prevent selection resetter from overriding us.
-    selectionResetter.Abort();
+    // Don't restore the selection
+    selectionRestorer.Abort();
     *aHandled = true;
     NS_ENSURE_SUCCESS(res, res);
     return NS_OK;
@@ -8707,7 +8709,7 @@ nsHTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
 
   NS_ENSURE_STATE(mHTMLEditor);
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
 
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIHTMLAbsPosEditor> absPosHTMLEditor = mHTMLEditor;
@@ -8735,7 +8737,7 @@ nsHTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
 
   NS_ENSURE_STATE(mHTMLEditor);
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+  AutoSelectionRestorer selectionRestorer(aSelection, mHTMLEditor);
 
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIHTMLAbsPosEditor> absPosHTMLEditor = mHTMLEditor;
