@@ -14,7 +14,7 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 
 UNIFIED_SOURCES += [
-    'ChangeAttributeTxn.cpp',
+    'ChangeAttributeTransaction.cpp',
     'ChangeStyleTxn.cpp',
     'CreateElementTxn.cpp',
     'DeleteNodeTxn.cpp',
