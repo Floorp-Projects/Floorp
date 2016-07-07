@@ -14,6 +14,7 @@
 #include "nsUnicharUtils.h"
 
 #include "HTMLEditUtils.h"
+#include "SetDocumentTitleTransaction.h"
 #include "TextEditUtils.h"
 #include "nsHTMLEditRules.h"
 
@@ -47,7 +48,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "SetDocTitleTxn.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 
@@ -823,15 +823,16 @@ nsHTMLEditor::IsBlockNode(nsINode *aNode)
 NS_IMETHODIMP
 nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 {
-  RefPtr<SetDocTitleTxn> txn = new SetDocTitleTxn();
-  NS_ENSURE_TRUE(txn, NS_ERROR_OUT_OF_MEMORY);
+  RefPtr<SetDocumentTitleTransaction> transaction =
+    new SetDocumentTitleTransaction();
+  NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult result = txn->Init(this, &aTitle);
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult rv = transaction->Init(this, &aTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(this);
-  return nsEditor::DoTransaction(txn);
+  return nsEditor::DoTransaction(transaction);
 }
 
 /* ------------ Block methods moved from nsEditor -------------- */
