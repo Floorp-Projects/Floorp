@@ -10,8 +10,6 @@ toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 # fix that another time.
 if 'gtk' in toolkit:
     DIRS += ['icon/gtk', 'icon']
-elif toolkit == 'qt':
-    DIRS += ['icon/qt', 'icon']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['icon/win', 'icon']
