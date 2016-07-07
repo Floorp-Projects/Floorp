@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DeleteRangeTxn.h"
+#include "DeleteRangeTransaction.h"
 
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTxn.h"
@@ -20,28 +20,27 @@
 #include "nsINode.h"
 #include "nsAString.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 // note that aEditor is not refcounted
-DeleteRangeTxn::DeleteRangeTxn()
-  : EditAggregateTxn(),
-    mRange(),
-    mEditor(nullptr),
-    mRangeUpdater(nullptr)
+DeleteRangeTransaction::DeleteRangeTransaction()
+  : mEditor(nullptr)
+  , mRangeUpdater(nullptr)
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteRangeTxn, EditAggregateTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteRangeTransaction, EditAggregateTxn,
                                    mRange)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)
 
 nsresult
-DeleteRangeTxn::Init(nsEditor* aEditor,
-                     nsRange* aRange,
-                     nsRangeUpdater* aRangeUpdater)
+DeleteRangeTransaction::Init(nsEditor* aEditor,
+                             nsRange* aRange,
+                             nsRangeUpdater* aRangeUpdater)
 {
   MOZ_ASSERT(aEditor && aRange);
 
@@ -60,7 +59,7 @@ DeleteRangeTxn::Init(nsEditor* aEditor,
 }
 
 NS_IMETHODIMP
-DeleteRangeTxn::DoTransaction()
+DeleteRangeTransaction::DoTransaction()
 {
   MOZ_ASSERT(mRange && mEditor);
   nsresult res;
@@ -108,7 +107,7 @@ DeleteRangeTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteRangeTxn::UndoTransaction()
+DeleteRangeTransaction::UndoTransaction()
 {
   MOZ_ASSERT(mRange && mEditor);
 
@@ -116,7 +115,7 @@ DeleteRangeTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteRangeTxn::RedoTransaction()
+DeleteRangeTransaction::RedoTransaction()
 {
   MOZ_ASSERT(mRange && mEditor);
 
@@ -124,16 +123,16 @@ DeleteRangeTxn::RedoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteRangeTxn::GetTxnDescription(nsAString& aString)
+DeleteRangeTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("DeleteRangeTxn");
+  aString.AssignLiteral("DeleteRangeTransaction");
   return NS_OK;
 }
 
 nsresult
-DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
-                                          int32_t aStartOffset,
-                                          int32_t aEndOffset)
+DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
+                                                  int32_t aStartOffset,
+                                                  int32_t aEndOffset)
 {
   // see what kind of node we have
   if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
@@ -178,9 +177,9 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
 }
 
 nsresult
-DeleteRangeTxn::CreateTxnsToDeleteContent(nsINode* aNode,
-                                          int32_t aOffset,
-                                          nsIEditor::EDirection aAction)
+DeleteRangeTransaction::CreateTxnsToDeleteContent(nsINode* aNode,
+                                                  int32_t aOffset,
+                                                  nsIEditor::EDirection aAction)
 {
   // see what kind of node we have
   if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
@@ -211,7 +210,7 @@ DeleteRangeTxn::CreateTxnsToDeleteContent(nsINode* aNode,
 }
 
 nsresult
-DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
+DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween()
 {
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
 
@@ -231,3 +230,5 @@ DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
   }
   return NS_OK;
 }
+
+} // namespace mozilla
