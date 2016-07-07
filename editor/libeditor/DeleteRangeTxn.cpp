@@ -5,7 +5,7 @@
 
 #include "DeleteRangeTxn.h"
 
-#include "DeleteNodeTxn.h"
+#include "DeleteNodeTransaction.h"
 #include "DeleteTextTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
@@ -164,10 +164,10 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
 
   nsresult res = NS_OK;
   for (int32_t i = aStartOffset; i < aEndOffset; ++i) {
-    RefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
-    res = txn->Init(mEditor, child, mRangeUpdater);
+    RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
+    res = transaction->Init(mEditor, child, mRangeUpdater);
     if (NS_SUCCEEDED(res)) {
-      AppendChild(txn);
+      AppendChild(transaction);
     }
 
     child = child->GetNextSibling();
@@ -222,11 +222,10 @@ DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
     nsCOMPtr<nsINode> node = iter->GetCurrentNode();
     NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-    RefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
-
-    res = txn->Init(mEditor, node, mRangeUpdater);
+    RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
+    res = transaction->Init(mEditor, node, mRangeUpdater);
     NS_ENSURE_SUCCESS(res, res);
-    AppendChild(txn);
+    AppendChild(transaction);
 
     iter->Next();
   }

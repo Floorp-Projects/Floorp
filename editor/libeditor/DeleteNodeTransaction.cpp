@@ -3,37 +3,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DeleteNodeTxn.h"
+#include "DeleteNodeTransaction.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsSelectionState.h" // nsRangeUpdater
 #include "nsAString.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-DeleteNodeTxn::DeleteNodeTxn()
-  : EditTxn(), mNode(), mParent(), mRefNode(), mRangeUpdater(nullptr)
+DeleteNodeTransaction::DeleteNodeTransaction()
+  : mEditor(nullptr)
+  , mRangeUpdater(nullptr)
 {
 }
 
-DeleteNodeTxn::~DeleteNodeTxn()
+DeleteNodeTransaction::~DeleteNodeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTxn,
                                    mNode,
                                    mParent,
                                    mRefNode)
 
-NS_IMPL_ADDREF_INHERITED(DeleteNodeTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(DeleteNodeTxn, EditTxn)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteNodeTxn)
+NS_IMPL_ADDREF_INHERITED(DeleteNodeTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(DeleteNodeTransaction, EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 nsresult
-DeleteNodeTxn::Init(nsEditor* aEditor, nsINode* aNode,
-                    nsRangeUpdater* aRangeUpdater)
+DeleteNodeTransaction::Init(nsEditor* aEditor,
+                            nsINode* aNode,
+                            nsRangeUpdater* aRangeUpdater)
 {
   NS_ENSURE_TRUE(aEditor && aNode, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;
@@ -48,9 +50,8 @@ DeleteNodeTxn::Init(nsEditor* aEditor, nsINode* aNode,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-DeleteNodeTxn::DoTransaction()
+DeleteNodeTransaction::DoTransaction()
 {
   NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
@@ -76,7 +77,7 @@ DeleteNodeTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteNodeTxn::UndoTransaction()
+DeleteNodeTransaction::UndoTransaction()
 {
   if (!mParent) {
     // this is a legal state, the txn is a no-op
@@ -92,7 +93,7 @@ DeleteNodeTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteNodeTxn::RedoTransaction()
+DeleteNodeTransaction::RedoTransaction()
 {
   if (!mParent) {
     // this is a legal state, the txn is a no-op
@@ -112,8 +113,10 @@ DeleteNodeTxn::RedoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteNodeTxn::GetTxnDescription(nsAString& aString)
+DeleteNodeTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("DeleteNodeTxn");
+  aString.AssignLiteral("DeleteNodeTransaction");
   return NS_OK;
 }
+
+} // namespace mozilla
