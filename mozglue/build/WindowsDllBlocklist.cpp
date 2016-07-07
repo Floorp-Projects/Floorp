@@ -243,6 +243,7 @@ static const int kUser32BeforeBlocklistParameterLen =
   sizeof(kUser32BeforeBlocklistParameter) - 1;
 
 static DWORD sThreadLoadingXPCOMModule;
+static bool sBlocklistInitAttempted;
 static bool sBlocklistInitFailed;
 static bool sUser32BeforeBlocklist;
 
@@ -756,6 +757,10 @@ WindowsDllInterceptor NtDllIntercept;
 MFBT_API void
 DllBlocklist_Initialize()
 {
+  if (sBlocklistInitAttempted) {
+    return;
+  }
+  sBlocklistInitAttempted = true;
 #if defined(_MSC_VER) && _MSC_VER < 1900 && defined(_M_X64)
   // The code below is not blocklist-related, but is the best place for it.
   // This is the earliest place where msvcr120.dll is loaded, and this
@@ -774,6 +779,8 @@ DllBlocklist_Initialize()
   if (GetModuleHandleA("user32.dll")) {
     sUser32BeforeBlocklist = true;
   }
+  // Catch any missing DELAYLOADS for user32.dll
+  MOZ_ASSERT(!sUser32BeforeBlocklist);
 
   NtDllIntercept.Init("ntdll.dll");
 
