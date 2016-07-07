@@ -2318,7 +2318,6 @@ ContentParent::ContentParent(ContentParent* aTemplate,
   mSubprocess->LaunchAndWaitForProcessHandle();
 
   // Clone actors routed by aTemplate for this instance.
-  IToplevelProtocol::SetTransport(mSubprocess->GetChannel());
   ProtocolCloneContext cloneContext;
   cloneContext.SetContentParent(this);
   CloneManagees(aTemplate, &cloneContext);

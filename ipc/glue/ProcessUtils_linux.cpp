@@ -218,9 +218,9 @@ ProcLoaderClientGeckoInit()
   TransportDescriptor fd;
   fd.mFd = base::FileDescriptor(sProcLoaderChannelFd, /*auto_close=*/ false);
   sProcLoaderChannelFd = -1;
-  Transport *transport = OpenDescriptor(fd, Transport::MODE_CLIENT);
+  UniquePtr<Transport> transport = OpenDescriptor(fd, Transport::MODE_CLIENT);
   sProcLoaderParent = new ProcLoaderParent();
-  sProcLoaderParent->Open(transport,
+  sProcLoaderParent->Open(transport.get(),
                           sProcLoaderPid,
                           XRE_GetIOMessageLoop(),
                           ParentSide);
@@ -569,11 +569,11 @@ ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
     process = new ContentProcess(aPeerPid);
     ChildThread *iothread = process->child_thread();
 
-    Transport *transport = OpenDescriptor(fd, Transport::MODE_CLIENT);
+    UniquePtr<Transport> transport = OpenDescriptor(fd, Transport::MODE_CLIENT);
     ProcLoaderChild *loaderChild = new ProcLoaderChild(aPeerPid);
     // Pass a message loop to initialize (connect) the channel
     // (connection).
-    loaderChild->Open(transport, aPeerPid, iothread->message_loop());
+    loaderChild->Open(transport.get(), aPeerPid, iothread->message_loop());
 
     BackgroundHangMonitor::Prohibit();
 
