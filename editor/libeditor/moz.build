@@ -16,6 +16,7 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 UNIFIED_SOURCES += [
     'ChangeAttributeTransaction.cpp',
     'ChangeStyleTransaction.cpp',
+    'CompositionTransaction.cpp',
     'CreateElementTransaction.cpp',
     'DeleteNodeTransaction.cpp',
     'DeleteRangeTransaction.cpp',
@@ -24,7 +25,6 @@ UNIFIED_SOURCES += [
     'EditorUtils.cpp',
     'EditTxn.cpp',
     'HTMLEditUtils.cpp',
-    'IMETextTxn.cpp',
     'InsertNodeTxn.cpp',
     'InsertTextTxn.cpp',
     'JoinNodeTxn.cpp',

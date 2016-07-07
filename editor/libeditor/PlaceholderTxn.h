@@ -16,9 +16,7 @@
 #include "nsAutoPtr.h"
 
 namespace mozilla {
-namespace dom {
-class IMETextTxn;
-} // namespace dom
+class CompositionTransaction;
 } // namespace mozilla
 
 /**
@@ -68,7 +66,8 @@ protected:
   /** the presentation shell, which we'll need to get the selection */
   bool        mAbsorb;          // do we auto absorb any and all transaction?
   nsWeakPtr   mForwarding;
-  mozilla::dom::IMETextTxn *mIMETextTxn;      // first IME txn in this placeholder - used for IME merging
+  // First IME txn in this placeholder - used for IME merging.
+  mozilla::CompositionTransaction* mCompositionTransaction;
                                 // non-owning for now - can't nsCOMPtr it due to broken transaction interfaces
   bool        mCommitted;       // do we stop auto absorbing any matching placeholder txns?
   // these next two members store the state of the selection in a safe way.
