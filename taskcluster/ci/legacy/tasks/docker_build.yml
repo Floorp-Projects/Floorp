@@ -23,5 +23,4 @@ task:
       'public/build':
         type: directory
         path: '/home/worker/artifacts/'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
