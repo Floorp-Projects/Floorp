@@ -2275,7 +2275,7 @@ nsEditor::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
     // We cannot find "better" insertion point in HTML editor.
     // WARNING: When you add some code to find better node in HTML editor,
     //          you need to call this before calling InsertTextImpl() in
-    //          nsHTMLEditRules.
+    //          HTMLEditRules.
     return;
   }
 

@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "EditorUtils.h"
+#include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "mozilla/Preferences.h"
@@ -20,7 +21,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditRules.h"
 #include "nsHTMLEditor.h"
 #include "nsHTMLObjectResizer.h"
 #include "nsIContent.h"
@@ -528,7 +528,8 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
     nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
     if (element && element->IsHTMLElement(nsGkAtoms::div) &&
         !HasStyleOrIdOrClass(element)) {
-      RefPtr<nsHTMLEditRules> htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
+      RefPtr<HTMLEditRules> htmlRules =
+        static_cast<HTMLEditRules*>(mRules.get());
       NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
       nsresult res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
       NS_ENSURE_SUCCESS(res, res);
