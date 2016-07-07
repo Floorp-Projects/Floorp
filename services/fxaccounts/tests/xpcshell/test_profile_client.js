@@ -299,7 +299,7 @@ add_test(function server401ResponsePersists() {
 
 add_test(function networkErrorResponse() {
   let client = new FxAccountsProfileClient({
-    serverURL: "http://",
+    serverURL: "http://domain.dummy",
     fxa: mockFxa,
   });
   client.fetchProfile()
