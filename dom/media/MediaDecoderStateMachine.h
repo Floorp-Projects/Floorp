@@ -509,8 +509,7 @@ protected:
   void EnqueueFirstFrameLoadedEvent();
 
   // Clears any previous seeking state and initiates a new seek on the decoder.
-  // The decoder monitor must be held.
-  void InitiateSeek(SeekJob aSeekJob);
+  RefPtr<MediaDecoder::SeekPromise> InitiateSeek(SeekJob aSeekJob);
 
   // Clears any previous seeking state and initiates a seek on the decoder to
   // resync the video and audio positions, when recovering from video decoding
