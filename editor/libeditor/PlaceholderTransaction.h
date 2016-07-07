@@ -6,7 +6,7 @@
 #ifndef PlaceholderTransaction_h
 #define PlaceholderTransaction_h
 
-#include "EditAggregateTxn.h"
+#include "EditAggregateTransaction.h"
 #include "EditorUtils.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
@@ -26,7 +26,7 @@ class CompositionTransaction;
  * transactions it has absorbed.
  */
 
-class PlaceholderTransaction final : public EditAggregateTxn,
+class PlaceholderTransaction final : public EditAggregateTransaction,
                                      public nsIAbsorbingTransaction,
                                      public nsSupportsWeakReference
 {
@@ -36,8 +36,8 @@ public:
   PlaceholderTransaction();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PlaceholderTransaction,
-                                           EditAggregateTxn)
-// ------------ EditAggregateTxn -----------------------
+                                           EditAggregateTransaction)
+// ------------ EditAggregateTransaction -----------------------
 
   NS_DECL_EDITTXN
 

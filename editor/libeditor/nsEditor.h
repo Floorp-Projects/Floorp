@@ -28,7 +28,6 @@
 #include "nscore.h"                     // for nsresult, nsAString, etc
 
 class AddStyleSheetTxn;
-class EditAggregateTxn;
 class RemoveStyleSheetTxn;
 class nsIAtom;
 class nsIContent;
@@ -61,6 +60,7 @@ class CompositionTransaction;
 class CreateElementTransaction;
 class DeleteNodeTransaction;
 class DeleteTextTransaction;
+class EditAggregateTransaction;
 class ErrorResult;
 class InsertNodeTransaction;
 class InsertTextTransaction;
@@ -287,18 +287,20 @@ protected:
              nsINode* aNode,
              mozilla::DeleteNodeTransaction** aTransaction);
 
-  nsresult CreateTxnForDeleteSelection(EDirection aAction,
-                                       EditAggregateTxn** aTxn,
-                                       nsINode** aNode,
-                                       int32_t* aOffset,
-                                       int32_t* aLength);
+  nsresult CreateTxnForDeleteSelection(
+             EDirection aAction,
+             mozilla::EditAggregateTransaction** aTransaction,
+             nsINode** aNode,
+             int32_t* aOffset,
+             int32_t* aLength);
 
-  nsresult CreateTxnForDeleteInsertionPoint(nsRange* aRange,
-                                            EDirection aAction,
-                                            EditAggregateTxn* aTxn,
-                                            nsINode** aNode,
-                                            int32_t* aOffset,
-                                            int32_t* aLength);
+  nsresult CreateTxnForDeleteInsertionPoint(
+             nsRange* aRange,
+             EDirection aAction,
+             mozilla::EditAggregateTransaction* aTransaction,
+             nsINode** aNode,
+             int32_t* aOffset,
+             int32_t* aLength);
 
 
   /** Create a transaction for inserting aStringToInsert into aTextNode.  Never
