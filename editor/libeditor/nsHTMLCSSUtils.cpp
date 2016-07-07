@@ -5,7 +5,7 @@
 
 #include "nsHTMLCSSUtils.h"
 
-#include "ChangeStyleTxn.h"
+#include "ChangeStyleTransaction.h"
 #include "EditTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -434,12 +434,13 @@ nsresult
 nsHTMLCSSUtils::SetCSSProperty(Element& aElement, nsIAtom& aProperty,
                                const nsAString& aValue, bool aSuppressTxn)
 {
-  RefPtr<ChangeStyleTxn> txn =
-    CreateCSSPropertyTxn(aElement, aProperty, aValue, ChangeStyleTxn::eSet);
+  RefPtr<ChangeStyleTransaction> transaction =
+    CreateCSSPropertyTxn(aElement, aProperty, aValue,
+                         ChangeStyleTransaction::eSet);
   if (aSuppressTxn) {
-    return txn->DoTransaction();
+    return transaction->DoTransaction();
   }
-  return mHTMLEditor->DoTransaction(txn);
+  return mHTMLEditor->DoTransaction(transaction);
 }
 
 nsresult
@@ -459,22 +460,25 @@ nsresult
 nsHTMLCSSUtils::RemoveCSSProperty(Element& aElement, nsIAtom& aProperty,
                                   const nsAString& aValue, bool aSuppressTxn)
 {
-  RefPtr<ChangeStyleTxn> txn =
-    CreateCSSPropertyTxn(aElement, aProperty, aValue, ChangeStyleTxn::eRemove);
+  RefPtr<ChangeStyleTransaction> transaction =
+    CreateCSSPropertyTxn(aElement, aProperty, aValue,
+                         ChangeStyleTransaction::eRemove);
   if (aSuppressTxn) {
-    return txn->DoTransaction();
+    return transaction->DoTransaction();
   }
-  return mHTMLEditor->DoTransaction(txn);
+  return mHTMLEditor->DoTransaction(transaction);
 }
 
-already_AddRefed<ChangeStyleTxn>
-nsHTMLCSSUtils::CreateCSSPropertyTxn(Element& aElement, nsIAtom& aAttribute,
-                                     const nsAString& aValue,
-                                     ChangeStyleTxn::EChangeType aChangeType)
+already_AddRefed<ChangeStyleTransaction>
+nsHTMLCSSUtils::CreateCSSPropertyTxn(
+                  Element& aElement,
+                  nsIAtom& aAttribute,
+                  const nsAString& aValue,
+                  ChangeStyleTransaction::EChangeType aChangeType)
 {
-  RefPtr<ChangeStyleTxn> txn =
-    new ChangeStyleTxn(aElement, aAttribute, aValue, aChangeType);
-  return txn.forget();
+  RefPtr<ChangeStyleTransaction> transaction =
+    new ChangeStyleTransaction(aElement, aAttribute, aValue, aChangeType);
+  return transaction.forget();
 }
 
 nsresult
@@ -1089,11 +1093,11 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
     } else if (nsGkAtoms::u == aHTMLProperty) {
       nsAutoString val;
       val.AssignLiteral("underline");
-      aIsSet = ChangeStyleTxn::ValueIncludes(valueString, val);
+      aIsSet = ChangeStyleTransaction::ValueIncludes(valueString, val);
     } else if (nsGkAtoms::strike == aHTMLProperty) {
       nsAutoString val;
       val.AssignLiteral("line-through");
-      aIsSet = ChangeStyleTxn::ValueIncludes(valueString, val);
+      aIsSet = ChangeStyleTransaction::ValueIncludes(valueString, val);
     } else if (aHTMLAttribute &&
                ((nsGkAtoms::font == aHTMLProperty &&
                  aHTMLAttribute->EqualsLiteral("color")) ||
