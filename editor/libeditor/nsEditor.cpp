@@ -21,7 +21,7 @@
 #include "EditTxn.h"                    // for EditTxn
 #include "InsertNodeTransaction.h"      // for InsertNodeTransaction
 #include "InsertTextTransaction.h"      // for InsertTextTransaction
-#include "JoinNodeTxn.h"                // for JoinNodeTxn
+#include "JoinNodeTransaction.h"        // for JoinNodeTransaction
 #include "PlaceholderTxn.h"             // for PlaceholderTxn
 #include "SplitNodeTxn.h"               // for SplitNodeTxn
 #include "TextEditUtils.h"              // for TextEditUtils
@@ -1483,9 +1483,10 @@ nsEditor::JoinNodes(nsINode& aLeftNode, nsINode& aRightNode)
   }
 
   nsresult result = NS_OK;
-  RefPtr<JoinNodeTxn> txn = CreateTxnForJoinNode(aLeftNode, aRightNode);
-  if (txn)  {
-    result = DoTransaction(txn);
+  RefPtr<JoinNodeTransaction> transaction =
+    CreateTxnForJoinNode(aLeftNode, aRightNode);
+  if (transaction)  {
+    result = DoTransaction(transaction);
   }
 
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
@@ -2636,16 +2637,16 @@ nsEditor::CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset)
   return txn.forget();
 }
 
-already_AddRefed<JoinNodeTxn>
+already_AddRefed<JoinNodeTransaction>
 nsEditor::CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode)
 {
-  RefPtr<JoinNodeTxn> txn = new JoinNodeTxn(*this, aLeftNode, aRightNode);
+  RefPtr<JoinNodeTransaction> transaction =
+    new JoinNodeTransaction(*this, aLeftNode, aRightNode);
 
-  NS_ENSURE_SUCCESS(txn->CheckValidity(), nullptr);
+  NS_ENSURE_SUCCESS(transaction->CheckValidity(), nullptr);
 
-  return txn.forget();
+  return transaction.forget();
 }
-
 
 // END nsEditor core implementation
 

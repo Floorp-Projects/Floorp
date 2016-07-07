@@ -64,6 +64,7 @@ class DeleteTextTransaction;
 class ErrorResult;
 class InsertNodeTransaction;
 class InsertTextTransaction;
+class JoinNodeTransaction;
 class TextComposition;
 struct EditorDOMPoint;
 
@@ -71,7 +72,6 @@ namespace dom {
 class DataTransfer;
 class Element;
 class EventTarget;
-class JoinNodeTxn;
 class Selection;
 class SplitNodeTxn;
 class Text;
@@ -338,7 +338,7 @@ protected:
   already_AddRefed<mozilla::dom::SplitNodeTxn>
   CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset);
 
-  already_AddRefed<mozilla::dom::JoinNodeTxn>
+  already_AddRefed<mozilla::JoinNodeTransaction>
   CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
