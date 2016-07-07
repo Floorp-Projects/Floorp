@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ChangeStyleTxn.h"
+#include "ChangeStyleTransaction.h"
 
 #include "mozilla/dom/Element.h"        // for Element
 #include "nsAString.h"                  // for nsAString_internal::Append, etc
@@ -18,28 +18,29 @@
 #include "nsString.h"                   // for nsAutoString, nsString, etc
 #include "nsUnicharUtils.h"             // for nsCaseInsensitiveStringComparator
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 #define kNullCh (char16_t('\0'))
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTxn, EditTxn, mElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTxn, mElement)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeStyleTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeStyleTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
-NS_IMPL_ADDREF_INHERITED(ChangeStyleTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(ChangeStyleTxn, EditTxn)
+NS_IMPL_ADDREF_INHERITED(ChangeStyleTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(ChangeStyleTransaction, EditTxn)
 
-ChangeStyleTxn::~ChangeStyleTxn()
+ChangeStyleTransaction::~ChangeStyleTransaction()
 {
 }
 
 // Answers true if aValue is in the string list of white-space separated values
 // aValueList.
 bool
-ChangeStyleTxn::ValueIncludes(const nsAString &aValueList,
-                              const nsAString &aValue)
+ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
+                                      const nsAString& aValue)
 {
   nsAutoString valueList(aValueList);
   bool result = false;
@@ -81,8 +82,9 @@ ChangeStyleTxn::ValueIncludes(const nsAString &aValueList,
 // Removes the value aRemoveValue from the string list of white-space separated
 // values aValueList
 void
-ChangeStyleTxn::RemoveValueFromListOfValues(nsAString& aValues,
-                                            const nsAString& aRemoveValue)
+ChangeStyleTransaction::RemoveValueFromListOfValues(
+                          nsAString& aValues,
+                          const nsAString& aRemoveValue)
 {
   nsAutoString classStr(aValues);
   nsAutoString outString;
@@ -116,9 +118,10 @@ ChangeStyleTxn::RemoveValueFromListOfValues(nsAString& aValues,
   aValues.Assign(outString);
 }
 
-ChangeStyleTxn::ChangeStyleTxn(Element& aElement, nsIAtom& aProperty,
-                               const nsAString& aValue,
-                               EChangeType aChangeType)
+ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
+                                               nsIAtom& aProperty,
+                                               const nsAString& aValue,
+                                               EChangeType aChangeType)
   : EditTxn()
   , mElement(&aElement)
   , mProperty(&aProperty)
@@ -132,7 +135,7 @@ ChangeStyleTxn::ChangeStyleTxn(Element& aElement, nsIAtom& aProperty,
 }
 
 NS_IMETHODIMP
-ChangeStyleTxn::DoTransaction()
+ChangeStyleTransaction::DoTransaction()
 {
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles =
     do_QueryInterface(mElement);
@@ -216,7 +219,8 @@ ChangeStyleTxn::DoTransaction()
 }
 
 nsresult
-ChangeStyleTxn::SetStyle(bool aAttributeWasSet, nsAString& aValue)
+ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
+                                 nsAString& aValue)
 {
   nsresult result = NS_OK;
   if (aAttributeWasSet) {
@@ -251,21 +255,21 @@ ChangeStyleTxn::SetStyle(bool aAttributeWasSet, nsAString& aValue)
 }
 
 NS_IMETHODIMP
-ChangeStyleTxn::UndoTransaction()
+ChangeStyleTransaction::UndoTransaction()
 {
   return SetStyle(mUndoAttributeWasSet, mUndoValue);
 }
 
 NS_IMETHODIMP
-ChangeStyleTxn::RedoTransaction()
+ChangeStyleTransaction::RedoTransaction()
 {
   return SetStyle(mRedoAttributeWasSet, mRedoValue);
 }
 
 NS_IMETHODIMP
-ChangeStyleTxn::GetTxnDescription(nsAString& aString)
+ChangeStyleTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("ChangeStyleTxn: [mRemoveProperty == ");
+  aString.AssignLiteral("ChangeStyleTransaction: [mRemoveProperty == ");
 
   if (mRemoveProperty) {
     aString.AppendLiteral("true] ");
@@ -278,15 +282,15 @@ ChangeStyleTxn::GetTxnDescription(nsAString& aString)
 
 // True if the CSS property accepts more than one value
 bool
-ChangeStyleTxn::AcceptsMoreThanOneValue(nsIAtom& aCSSProperty)
+ChangeStyleTransaction::AcceptsMoreThanOneValue(nsIAtom& aCSSProperty)
 {
   return &aCSSProperty == nsGkAtoms::text_decoration;
 }
 
 // Adds the value aNewValue to the list of white-space separated values aValues
 void
-ChangeStyleTxn::AddValueToMultivalueProperty(nsAString& aValues,
-                                             const nsAString& aNewValue)
+ChangeStyleTransaction::AddValueToMultivalueProperty(nsAString& aValues,
+                                                     const nsAString& aNewValue)
 {
   if (aValues.IsEmpty() || aValues.LowerCaseEqualsLiteral("none")) {
     aValues.Assign(aNewValue);
@@ -296,3 +300,5 @@ ChangeStyleTxn::AddValueToMultivalueProperty(nsAString& aValues,
     aValues.Append(aNewValue);
   }
 }
+
+} // namespace mozilla
