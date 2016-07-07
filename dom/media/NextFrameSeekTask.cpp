@@ -222,6 +222,24 @@ NextFrameSeekTask::RequestVideoData()
 }
 
 bool
+NextFrameSeekTask::NeedMoreVideo() const
+{
+  AssertOwnerThread();
+  // Need to request video when we have none and video queue is not finished.
+  return mVideoQueue.GetSize() == 0 &&
+         !mSeekedVideoData &&
+         !mVideoQueue.IsFinished() &&
+         !mIsVideoQueueFinished;
+}
+
+bool
+NextFrameSeekTask::IsVideoRequestPending() const
+{
+  AssertOwnerThread();
+  return mReader->IsRequestingVideoData() || mReader->IsWaitingVideoData();
+}
+
+bool
 NextFrameSeekTask::IsAudioSeekComplete() const
 {
   AssertOwnerThread();
@@ -231,13 +249,12 @@ NextFrameSeekTask::IsAudioSeekComplete() const
 }
 
 bool
-NextFrameSeekTask::IsVideoSeekComplete()
+NextFrameSeekTask::IsVideoSeekComplete() const
 {
   AssertOwnerThread();
-  SAMPLE_LOG("IsVideoSeekComplete() curTarVal=%d vqFin=%d vqSz=%d",
-      mSeekJob.Exists(), mIsVideoQueueFinished, !!mSeekedVideoData);
-
-  return mIsVideoQueueFinished || mSeekedVideoData;
+  // Don't finish seek until there are no pending requests. Otherwise, we might
+  // lose video samples for the promise is resolved asynchronously.
+  return !IsVideoRequestPending() && !NeedMoreVideo();
 }
 
 void
