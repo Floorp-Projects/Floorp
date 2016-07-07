@@ -680,7 +680,7 @@ class Marionette(object):
                 msg = self.client.request(name, params)
 
         except IOError:
-            if self.instance and not hasattr(self.instance, 'detached'):
+            if self.instance:
                 # If we've launched the binary we've connected to, wait
                 # for it to shut down.
                 returncode = self.instance.runner.wait(timeout=self.DEFAULT_STARTUP_TIMEOUT)
@@ -1037,16 +1037,19 @@ class Marionette(object):
                 "eRestart",
             ]
             self._send_message("quitApplication", {"flags": restart_flags})
-            self.client.close()
-            # The instance is restarting itself; we will no longer be able to
-            # track it by pid, so mark it as 'detached'.
-            self.instance.detached = True
+            self.delete_session()
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
+
         self.raise_for_port(self.wait_for_port())
         self.start_session(session_id=self.session_id)
         self._reset_timeouts()
+
+        if in_app:
+            # In some cases Firefox restarts itself by spawning into a new process group. As long as
+            # mozrprocess cannot track that (bug 1176758) we assist by checking the new process id.
+            self.instance.runner.process_handler.check_for_detached(self.session['processId'])
 
     def absolute_url(self, relative_url):
         '''
