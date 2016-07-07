@@ -1854,9 +1854,8 @@ class CrossProcessCompositorBridgeParent final : public PCompositorBridgeParent,
   friend class CompositorBridgeParent;
 
 public:
-  explicit CrossProcessCompositorBridgeParent(Transport* aTransport)
+  explicit CrossProcessCompositorBridgeParent()
     : CompositorBridgeParentIPCAllocator("CrossProcessCompositorBridgeParent")
-    , mTransport(aTransport)
     , mNotifyAfterRemotePaint(false)
     , mDestroyCalled(false)
   {
@@ -2043,7 +2042,6 @@ private:
   // reference to top-level actors.  So we hold a reference to
   // ourself.  This is released (deferred) in ActorDestroy().
   RefPtr<CrossProcessCompositorBridgeParent> mSelfRef;
-  Transport* mTransport;
 
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
   // If true, we should send a RemotePaintIsReady message when the layer transaction
@@ -2208,7 +2206,7 @@ CompositorBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid)
   gfxPlatform::InitLayersIPC();
 
   RefPtr<CrossProcessCompositorBridgeParent> cpcp =
-    new CrossProcessCompositorBridgeParent(aTransport);
+    new CrossProcessCompositorBridgeParent();
 
   cpcp->mSelfRef = cpcp;
   CompositorLoop()->PostTask(
@@ -2778,8 +2776,7 @@ CrossProcessCompositorBridgeParent::~CrossProcessCompositorBridgeParent()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_GetIOMessageLoop());
-  RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
-  XRE_GetIOMessageLoop()->PostTask(task.forget());
+  MOZ_ASSERT(IToplevelProtocol::GetTransport());
 }
 
 IToplevelProtocol*
@@ -2790,12 +2787,12 @@ CrossProcessCompositorBridgeParent::CloneToplevel(
 {
   for (unsigned int i = 0; i < aFds.Length(); i++) {
     if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
-      Transport* transport = OpenDescriptor(aFds[i].fd(),
-                                            Transport::MODE_SERVER);
+      UniquePtr<Transport> transport =
+        OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
       PCompositorBridgeParent* compositor =
-        CompositorBridgeParent::Create(transport, base::GetProcId(aPeerProcess));
+        CompositorBridgeParent::Create(transport.get(), base::GetProcId(aPeerProcess));
       compositor->CloneManagees(this, aCtx);
-      compositor->IToplevelProtocol::SetTransport(transport);
+      compositor->IToplevelProtocol::SetTransport(Move(transport));
       // The reference to the compositor thread is held in OnChannelConnected().
       // We need to do this for cloned actors, too.
       compositor->OnChannelConnected(base::GetProcId(aPeerProcess));

@@ -73,8 +73,6 @@ TestEndpointBridgeMainSubParent::ActorDestroy(ActorDestroyReason why)
   // longer so other things can be cleaned up.
   MessageLoop::current()->PostTask(
     do_AddRef(new DeleteTask<TestEndpointBridgeMainSubParent>(this)));
-  XRE_GetIOMessageLoop()->PostTask(
-    do_AddRef(new DeleteTask<Transport>(GetTransport())));
 }
 
 //-----------------------------------------------------------------------------
@@ -253,8 +251,6 @@ TestEndpointBridgeMainSubChild::ActorDestroy(ActorDestroyReason why)
   // longer so other things can be cleaned up.
   MessageLoop::current()->PostTask(
     do_AddRef(new DeleteTask<TestEndpointBridgeMainSubChild>(this)));
-  XRE_GetIOMessageLoop()->PostTask(
-    do_AddRef(new DeleteTask<Transport>(GetTransport())));
 }
 
 } // namespace mozilla

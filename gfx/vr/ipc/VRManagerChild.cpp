@@ -34,13 +34,6 @@ VRManagerChild::~VRManagerChild()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_DTOR(VRManagerChild);
-
-  Transport* trans = GetTransport();
-  if (trans) {
-    MOZ_ASSERT(XRE_GetIOMessageLoop());
-    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(trans);
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-  }
 }
 
 /*static*/ VRManagerChild*
