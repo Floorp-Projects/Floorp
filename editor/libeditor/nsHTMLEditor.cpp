@@ -68,6 +68,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsTextFragment.h"
@@ -879,8 +880,6 @@ nsHTMLEditor::GetBlock(nsINode& aNode)
   return GetBlockNodeParent(&aNode);
 }
 
-static const char16_t nbsp = 160;
-
 ///////////////////////////////////////////////////////////////////////////////
 // IsNextCharInNodeWhitespace: checks the adjacent content in the same node to
 //                             see if following selection is whitespace or nbsp
@@ -905,7 +904,7 @@ nsHTMLEditor::IsNextCharInNodeWhitespace(nsIContent* aContent,
       (uint32_t)aOffset < aContent->Length()) {
     char16_t ch = aContent->GetText()->CharAt(aOffset);
     *outIsSpace = nsCRT::IsAsciiSpace(ch);
-    *outIsNBSP = (ch == nbsp);
+    *outIsNBSP = (ch == kNBSP);
     if (outNode && outOffset) {
       NS_IF_ADDREF(*outNode = aContent);
       // yes, this is _past_ the character
@@ -938,7 +937,7 @@ nsHTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
   if (aContent->IsNodeOfType(nsINode::eTEXT) && aOffset > 0) {
     char16_t ch = aContent->GetText()->CharAt(aOffset - 1);
     *outIsSpace = nsCRT::IsAsciiSpace(ch);
-    *outIsNBSP = (ch == nbsp);
+    *outIsNBSP = (ch == kNBSP);
     if (outNode && outOffset) {
       NS_IF_ADDREF(*outNode = aContent);
       *outOffset = aOffset - 1;

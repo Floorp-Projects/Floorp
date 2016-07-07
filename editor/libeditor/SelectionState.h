@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __selectionstate_h__
-#define __selectionstate_h__
+#ifndef SelectionState_h
+#define SelectionState_h
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
@@ -15,6 +15,7 @@
 class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;
 class nsRange;
+class nsRangeUpdater;
 namespace mozilla {
 namespace dom {
 class Selection;
@@ -50,33 +51,34 @@ public:
   int32_t           endOffset;
 };
 
-class nsSelectionState
+namespace mozilla {
+
+class SelectionState final
 {
-  public:
+public:
+  SelectionState();
+  ~SelectionState();
 
-    nsSelectionState();
-    ~nsSelectionState();
+  void SaveSelection(dom::Selection *aSel);
+  nsresult RestoreSelection(dom::Selection* aSel);
+  bool IsCollapsed();
+  bool IsEqual(SelectionState *aSelState);
+  void MakeEmpty();
+  bool IsEmpty();
+private:
+  nsTArray<RefPtr<nsRangeStore>> mArray;
 
-    void     SaveSelection(mozilla::dom::Selection *aSel);
-    nsresult RestoreSelection(mozilla::dom::Selection* aSel);
-    bool     IsCollapsed();
-    bool     IsEqual(nsSelectionState *aSelState);
-    void     MakeEmpty();
-    bool     IsEmpty();
-  private:
-    nsTArray<RefPtr<nsRangeStore> > mArray;
-
-    friend class nsRangeUpdater;
-    friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
-                                            nsSelectionState&,
-                                            const char*,
-                                            uint32_t);
-    friend void ImplCycleCollectionUnlink(nsSelectionState&);
+  friend class nsRangeUpdater;
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          SelectionState&,
+                                          const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(SelectionState&);
 };
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsSelectionState& aField,
+                            SelectionState& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
@@ -84,10 +86,12 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 inline void
-ImplCycleCollectionUnlink(nsSelectionState& aField)
+ImplCycleCollectionUnlink(SelectionState& aField)
 {
   ImplCycleCollectionUnlink(aField.mArray);
 }
+
+} // namespace mozilla
 
 class nsRangeUpdater
 {
@@ -98,8 +102,8 @@ class nsRangeUpdater
 
     void RegisterRangeItem(nsRangeStore *aRangeItem);
     void DropRangeItem(nsRangeStore *aRangeItem);
-    nsresult RegisterSelectionState(nsSelectionState &aSelState);
-    nsresult DropSelectionState(nsSelectionState &aSelState);
+    nsresult RegisterSelectionState(mozilla::SelectionState& aSelState);
+    nsresult DropSelectionState(mozilla::SelectionState& aSelState);
 
     // editor selection gravity routines.  Note that we can't always depend on
     // DOM Range gravity to do what we want to the "real" selection.  For instance,
@@ -165,7 +169,7 @@ ImplCycleCollectionUnlink(nsRangeUpdater& aField)
 }
 
 /***************************************************************************
- * helper class for using nsSelectionState.  stack based class for doing
+ * helper class for using SelectionState.  stack based class for doing
  * preservation of dom points across editor actions
  */
 
@@ -224,7 +228,7 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
 
 
 /******************************************************************************
- * another helper class for nsSelectionState.  stack based class for doing
+ * another helper class for SelectionState.  stack based class for doing
  * Will/DidReplaceContainer()
  */
 
@@ -259,7 +263,7 @@ class MOZ_STACK_CLASS AutoReplaceContainerSelNotify
 
 
 /***************************************************************************
- * another helper class for nsSelectionState.  stack based class for doing
+ * another helper class for SelectionState.  stack based class for doing
  * Will/DidRemoveContainer()
  */
 
@@ -294,7 +298,7 @@ class MOZ_STACK_CLASS nsAutoRemoveContainerSelNotify
 };
 
 /***************************************************************************
- * another helper class for nsSelectionState.  stack based class for doing
+ * another helper class for SelectionState.  stack based class for doing
  * Will/DidInsertContainer()
  */
 
@@ -318,7 +322,7 @@ class MOZ_STACK_CLASS nsAutoInsertContainerSelNotify
 
 
 /***************************************************************************
- * another helper class for nsSelectionState.  stack based class for doing
+ * another helper class for SelectionState.  stack based class for doing
  * Will/DidMoveNode()
  */
 
@@ -354,6 +358,4 @@ class MOZ_STACK_CLASS nsAutoMoveNodeSelNotify
     }
 };
 
-#endif
-
-
+#endif // #ifndef SelectionState_h

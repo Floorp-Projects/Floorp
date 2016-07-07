@@ -927,7 +927,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
     mPlaceHolderName = aName;
     RefPtr<Selection> selection = GetSelection();
     if (selection) {
-      mSelState = new nsSelectionState();
+      mSelState = new SelectionState();
       mSelState->SaveSelection(selection);
     }
   }
