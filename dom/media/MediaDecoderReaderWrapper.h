@@ -9,6 +9,7 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Variant.h"
 #include "nsISupportsImpl.h"
 
 #include "MediaDecoderReader.h"
