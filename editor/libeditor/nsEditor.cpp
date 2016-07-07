@@ -23,7 +23,7 @@
 #include "InsertTextTransaction.h"      // for InsertTextTransaction
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
 #include "PlaceholderTransaction.h"     // for PlaceholderTransaction
-#include "SplitNodeTxn.h"               // for SplitNodeTxn
+#include "SplitNodeTransaction.h"       // for SplitNodeTransaction
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
@@ -1432,11 +1432,12 @@ nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
     listener->WillSplitNode(aNode.AsDOMNode(), aOffset);
   }
 
-  RefPtr<SplitNodeTxn> txn = CreateTxnForSplitNode(aNode, aOffset);
-  aResult = DoTransaction(txn);
+  RefPtr<SplitNodeTransaction> transaction =
+    CreateTxnForSplitNode(aNode, aOffset);
+  aResult = DoTransaction(transaction);
 
   nsCOMPtr<nsIContent> newNode = aResult.Failed() ? nullptr
-                                                  : txn->GetNewNode();
+                                                  : transaction->GetNewNode();
 
   mRangeUpdater.SelAdjSplitNode(aNode, aOffset, newNode);
 
@@ -2632,11 +2633,12 @@ nsEditor::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
   return transaction.forget();
 }
 
-already_AddRefed<SplitNodeTxn>
+already_AddRefed<SplitNodeTransaction>
 nsEditor::CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset)
 {
-  RefPtr<SplitNodeTxn> txn = new SplitNodeTxn(*this, aNode, aOffset);
-  return txn.forget();
+  RefPtr<SplitNodeTransaction> transaction =
+    new SplitNodeTransaction(*this, aNode, aOffset);
+  return transaction.forget();
 }
 
 already_AddRefed<JoinNodeTransaction>

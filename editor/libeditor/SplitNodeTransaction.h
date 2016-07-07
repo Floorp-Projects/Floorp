@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SplitNodeTxn_h__
-#define SplitNodeTxn_h__
+#ifndef SplitNodeTransaction_h
+#define SplitNodeTransaction_h
 
 #include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
 #include "nsCOMPtr.h"                   // for nsCOMPtr
@@ -17,25 +17,25 @@ class nsIContent;
 class nsINode;
 
 namespace mozilla {
-namespace dom {
 
 /**
  * A transaction that splits a node into two identical nodes, with the children
  * divided between the new nodes.
  */
-class SplitNodeTxn : public EditTxn
+class SplitNodeTransaction final : public EditTxn
 {
 public:
-  /** @param aEditor  The provider of core editing operations
-    * @param aNode    The node to split
-    * @param aOffset  The location within aNode to do the split.
-    *                 aOffset may refer to children of aNode, or content of aNode.
-    *                 The left node will have child|content 0..aOffset-1.
-    */
-  SplitNodeTxn(nsEditor& aEditor, nsIContent& aNode, int32_t aOffset);
+  /**
+   * @param aEditor  The provider of core editing operations
+   * @param aNode    The node to split
+   * @param aOffset  The location within aNode to do the split.  aOffset may
+   *                 refer to children of aNode, or content of aNode.  The left
+   *                 node will have child|content 0..aOffset-1.
+   */
+  SplitNodeTransaction(nsEditor& aEditor, nsIContent& aNode, int32_t aOffset);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTxn, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTransaction, EditTxn)
 
   NS_DECL_EDITTXN
 
@@ -44,27 +44,25 @@ public:
   nsIContent* GetNewNode();
 
 protected:
-  virtual ~SplitNodeTxn();
+  virtual ~SplitNodeTransaction();
 
   nsEditor& mEditor;
 
-  /** The node to operate upon */
+  // The node to operate upon.
   nsCOMPtr<nsIContent> mExistingRightNode;
 
-  /** The offset into mExistingRightNode where its children are split.  mOffset
-    * is the index of the first child in the right node.  -1 means the new node
-    * gets no children.
-    */
+  // The offset into mExistingRightNode where its children are split.  mOffset
+  // is the index of the first child in the right node.  -1 means the new node
+  // gets no children.
   int32_t mOffset;
 
-  /** The node we create when splitting mExistingRightNode */
+  // The node we create when splitting mExistingRightNode.
   nsCOMPtr<nsIContent> mNewLeftNode;
 
-  /** The parent shared by mExistingRightNode and mNewLeftNode */
+  // The parent shared by mExistingRightNode and mNewLeftNode.
   nsCOMPtr<nsINode> mParent;
 };
 
-} // namespace dom
 } // namespace mozilla
 
-#endif
+#endif // #ifndef SplitNodeTransaction_h
