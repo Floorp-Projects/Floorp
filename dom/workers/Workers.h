@@ -141,7 +141,7 @@ struct JSSettings
   JSContentChromeSettings chrome;
   JSContentChromeSettings content;
   JSGCSettingsArray gcSettings;
-  JS::RuntimeOptions runtimeOptions;
+  JS::ContextOptions contextOptions;
 
 #ifdef JS_GC_ZEAL
   uint8_t gcZeal;

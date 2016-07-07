@@ -1150,7 +1150,7 @@ DecodeUnknownSections(Decoder& d)
 bool
 CompileArgs::init(ExclusiveContext* cx)
 {
-    alwaysBaseline = cx->compartment()->runtimeFromAnyThread()->options().wasmAlwaysBaseline();
+    alwaysBaseline = cx->options().wasmAlwaysBaseline();
     return assumptions.init(SignalUsage(cx), cx->buildIdOp());
 }
 

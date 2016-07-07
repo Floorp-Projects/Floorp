@@ -8600,7 +8600,7 @@ js::IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // See EstablishPreconditions.
-    bool available = HasCompilerSupport(cx) && cx->runtime()->options().asmJS();
+    bool available = HasCompilerSupport(cx) && cx->options().asmJS();
 
     args.rval().set(BooleanValue(available));
     return true;
