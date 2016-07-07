@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "EditorUtils.h"
+#include "TextEditUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -44,7 +45,6 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTextEditRules.h"
-#include "nsTextEditUtils.h"
 #include "nscore.h"
 #include <algorithm>
 

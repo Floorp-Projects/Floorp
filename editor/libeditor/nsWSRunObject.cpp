@@ -6,6 +6,7 @@
 #include "nsWSRunObject.h"
 
 #include "EditorUtils.h"
+#include "TextEditUtils.h"
 
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Assertions.h"
@@ -25,7 +26,6 @@
 #include "nsRange.h"
 #include "nsSelectionState.h"
 #include "nsString.h"
-#include "nsTextEditUtils.h"
 #include "nsTextFragment.h"
 
 using namespace mozilla;
@@ -716,7 +716,7 @@ nsWSRunObject::GetWSNodes()
         // a break but still serves as a terminator to ws runs.
         mStartNode = start.node;
         mStartOffset = start.offset;
-        if (nsTextEditUtils::IsBreak(priorNode)) {
+        if (TextEditUtils::IsBreak(priorNode)) {
           mStartReason = WSType::br;
         } else {
           mStartReason = WSType::special;
@@ -824,7 +824,7 @@ nsWSRunObject::GetWSNodes()
         // serves as a terminator to ws runs.
         mEndNode = end.node;
         mEndOffset = end.offset;
-        if (nsTextEditUtils::IsBreak(nextNode)) {
+        if (TextEditUtils::IsBreak(nextNode)) {
           mEndReason = WSType::br;
         } else {
           mEndReason = WSType::special;

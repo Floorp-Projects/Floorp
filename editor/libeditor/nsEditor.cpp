@@ -24,6 +24,7 @@
 #include "JoinNodeTxn.h"                // for JoinNodeTxn
 #include "PlaceholderTxn.h"             // for PlaceholderTxn
 #include "SplitNodeTxn.h"               // for SplitNodeTxn
+#include "TextEditUtils.h"              // for TextEditUtils
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
 #include "mozilla/CheckedInt.h"         // for CheckedInt
@@ -100,7 +101,6 @@
 #include "nsStyleSheetTxns.h"           // for AddStyleSheetTxn, etc
 #include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc
 #include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc
-#include "nsTextEditUtils.h"            // for nsTextEditUtils
 #include "nsTextNode.h"                 // for nsTextNode
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsTransactionManager.h"       // for nsTransactionManager
@@ -2306,7 +2306,7 @@ nsEditor::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
   // Sometimes, aNode is the mozBR element itself.  In that case, we'll adjust
   // the insertion point to the previous text node, if one exists, or to the
   // parent anonymous DIV.
-  if (nsTextEditUtils::IsMozBR(node) && !offset) {
+  if (TextEditUtils::IsMozBR(node) && !offset) {
     if (node->GetPreviousSibling() &&
         node->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
       NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
