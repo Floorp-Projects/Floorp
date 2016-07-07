@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DeleteTextTxn.h"
+#include "DeleteTextTransaction.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
 #include "nsDebug.h"
@@ -14,15 +14,17 @@
 #include "nsSelectionState.h"
 #include "nsAString.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-DeleteTextTxn::DeleteTextTxn(nsEditor& aEditor,
-                             nsGenericDOMDataNode& aCharData, uint32_t aOffset,
-                             uint32_t aNumCharsToDelete,
-                             nsRangeUpdater* aRangeUpdater)
-  : EditTxn()
-  , mEditor(aEditor)
+using namespace dom;
+
+DeleteTextTransaction::DeleteTextTransaction(
+                         nsEditor& aEditor,
+                         nsGenericDOMDataNode& aCharData,
+                         uint32_t aOffset,
+                         uint32_t aNumCharsToDelete,
+                         nsRangeUpdater* aRangeUpdater)
+  : mEditor(aEditor)
   , mCharData(&aCharData)
   , mOffset(aOffset)
   , mNumCharsToDelete(aNumCharsToDelete)
@@ -32,14 +34,14 @@ DeleteTextTxn::DeleteTextTxn(nsEditor& aEditor,
                "Trying to delete more characters than in node");
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTxn,
                                    mCharData)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 nsresult
-DeleteTextTxn::Init()
+DeleteTextTransaction::Init()
 {
   // Do nothing if the node is read-only
   if (!mEditor.IsModifiableNode(mCharData)) {
@@ -50,7 +52,7 @@ DeleteTextTxn::Init()
 }
 
 NS_IMETHODIMP
-DeleteTextTxn::DoTransaction()
+DeleteTextTransaction::DoTransaction()
 {
   MOZ_ASSERT(mCharData);
 
@@ -81,7 +83,7 @@ DeleteTextTxn::DoTransaction()
 //XXX: We may want to store the selection state and restore it properly.  Was
 //     it an insertion point or an extended selection?
 NS_IMETHODIMP
-DeleteTextTxn::UndoTransaction()
+DeleteTextTransaction::UndoTransaction()
 {
   MOZ_ASSERT(mCharData);
 
@@ -89,9 +91,11 @@ DeleteTextTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-DeleteTextTxn::GetTxnDescription(nsAString& aString)
+DeleteTextTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("DeleteTextTxn: ");
+  aString.AssignLiteral("DeleteTextTransaction: ");
   aString += mDeletedText;
   return NS_OK;
 }
+
+} // namespace mozilla
