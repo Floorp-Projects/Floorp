@@ -56,10 +56,10 @@
 
 // Misc
 #include "EditorUtils.h"
+#include "HTMLEditorObjectResizerUtils.h"
 #include "TextEditorTest.h"
 #include "WSRunObject.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLObjectResizer.h"
 #include "nsIWidget.h"
 
 #include "nsIFrame.h"
