@@ -24,10 +24,10 @@ BEGIN_TEST(testGCFinalizeCallback)
     /* Full GC, incremental. */
     FinalizeCalls = 0;
     JS::PrepareForFullGC(cx);
-    JS::StartIncrementalGC(rt, GC_NORMAL, JS::gcreason::API, 1000000);
+    JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
     while (rt->gc.isIncrementalGCInProgress()) {
         JS::PrepareForFullGC(cx);
-        JS::IncrementalGCSlice(rt, JS::gcreason::API, 1000000);
+        JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
     }
     CHECK(!rt->gc.isIncrementalGCInProgress());
     CHECK(rt->gc.isFullGc());
@@ -65,10 +65,10 @@ BEGIN_TEST(testGCFinalizeCallback)
     /* Compartment GC, incremental, single compartment. */
     FinalizeCalls = 0;
     JS::PrepareZoneForGC(global1->zone());
-    JS::StartIncrementalGC(rt, GC_NORMAL, JS::gcreason::API, 1000000);
+    JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
     while (rt->gc.isIncrementalGCInProgress()) {
         JS::PrepareZoneForGC(global1->zone());
-        JS::IncrementalGCSlice(rt, JS::gcreason::API, 1000000);
+        JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
     }
     CHECK(!rt->gc.isIncrementalGCInProgress());
     CHECK(!rt->gc.isFullGc());
@@ -81,12 +81,12 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareZoneForGC(global1->zone());
     JS::PrepareZoneForGC(global2->zone());
     JS::PrepareZoneForGC(global3->zone());
-    JS::StartIncrementalGC(rt, GC_NORMAL, JS::gcreason::API, 1000000);
+    JS::StartIncrementalGC(cx, GC_NORMAL, JS::gcreason::API, 1000000);
     while (rt->gc.isIncrementalGCInProgress()) {
         JS::PrepareZoneForGC(global1->zone());
         JS::PrepareZoneForGC(global2->zone());
         JS::PrepareZoneForGC(global3->zone());
-        JS::IncrementalGCSlice(rt, JS::gcreason::API, 1000000);
+        JS::IncrementalGCSlice(cx, JS::gcreason::API, 1000000);
     }
     CHECK(!rt->gc.isIncrementalGCInProgress());
     CHECK(!rt->gc.isFullGc());
