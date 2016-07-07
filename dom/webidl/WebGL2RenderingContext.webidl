@@ -348,19 +348,25 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
     void renderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 
+    ////////////////////////////////////
+
     /* Texture objects */
     void texStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
     void texStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height,
                       GLsizei depth);
 
+    //////
+
     void texImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum format,
                     GLenum type, ArrayBufferView? pixels);
+
+    //////
+
     [Throws] // Can't actually throw.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                       GLenum format, GLenum type,
-                       ArrayBufferView? pixels);
+                       GLenum format, GLenum type, ArrayBufferView? pixels);
     [Throws] // Can't actually throw.
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLenum format, GLenum type, ImageData? data);
@@ -375,6 +381,8 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLint zoffset, GLenum format, GLenum type, HTMLVideoElement video);
 
+    //////
+
     void copyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                            GLint zoffset, GLint x, GLint y, GLsizei width,
                            GLsizei height);
@@ -386,6 +394,70 @@ interface WebGL2RenderingContext : WebGLRenderingContext
                                  GLint zoffset, GLsizei width, GLsizei height,
                                  GLsizei depth, GLenum format,
                                  ArrayBufferView data);
+
+    ////////////////
+    // Texture from PBO
+
+    [Throws] // Can't actually throw.
+    void texImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                    GLsizei height, GLint border, GLenum format, GLenum type,
+                    GLintptr offset);
+
+    [Throws] // Can't actually throw.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height, GLenum format, GLenum type,
+                       GLintptr offset);
+
+    void texImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                    GLsizei height, GLsizei depth, GLint border, GLenum format,
+                    GLenum type, GLintptr offset);
+
+    [Throws] // Can't actually throw.
+    void texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                       GLenum format, GLenum type, GLintptr offset);
+
+    ////////////////
+    // WebGL 1 overloads
+
+    // Overloads must share [Throws].
+    [Throws] // Can't throw.
+    void texImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
+                    GLsizei height, GLint border, GLenum format, GLenum type,
+                    ArrayBufferView? pixels);
+    [Throws] // Can't throw.
+    void texImage2D(GLenum target, GLint level, GLenum internalformat, GLenum format,
+                    GLenum type, ImageData? pixels);
+    [Throws] // May throw DOMException
+    void texImage2D(GLenum target, GLint level, GLenum internalformat, GLenum format,
+                    GLenum type, HTMLImageElement image);
+    [Throws] // May throw DOMException
+    void texImage2D(GLenum target, GLint level, GLenum internalformat, GLenum format,
+                    GLenum type, HTMLCanvasElement canvas);
+    [Throws] // May throw DOMException
+    void texImage2D(GLenum target, GLint level, GLenum internalformat, GLenum format,
+                    GLenum type, HTMLVideoElement video);
+
+    //////
+
+    [Throws] // Can't throw.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height, GLenum format, GLenum type,
+                       ArrayBufferView? pixels);
+    [Throws] // Can't throw.
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, ImageData? pixels);
+    [Throws]  // May throw DOMException
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, HTMLImageElement image);
+    [Throws] // May throw DOMException
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, HTMLCanvasElement canvas);
+    [Throws] // May throw DOMException
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, HTMLVideoElement video);
+
+    ////////////////////////////////////
 
     /* Programs and shaders */
     [WebGLHandlesContextLoss] GLint getFragDataLocation(WebGLProgram? program, DOMString name);
