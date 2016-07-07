@@ -16,7 +16,7 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 UNIFIED_SOURCES += [
     'ChangeAttributeTransaction.cpp',
     'ChangeStyleTransaction.cpp',
-    'CreateElementTxn.cpp',
+    'CreateElementTransaction.cpp',
     'DeleteNodeTxn.cpp',
     'DeleteRangeTxn.cpp',
     'DeleteTextTxn.cpp',

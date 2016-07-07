@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CreateElementTxn.h"
+#include "CreateElementTransaction.h"
 
 #include <algorithm>
 #include <stdio.h>
@@ -28,13 +28,14 @@
 #include "nsStringFwd.h"
 #include "nsString.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-CreateElementTxn::CreateElementTxn(nsEditor& aEditor,
-                                   nsIAtom& aTag,
-                                   nsINode& aParent,
-                                   int32_t aOffsetInParent)
+using namespace dom;
+
+CreateElementTransaction::CreateElementTransaction(nsEditor& aEditor,
+                                                   nsIAtom& aTag,
+                                                   nsINode& aParent,
+                                                   int32_t aOffsetInParent)
   : EditTxn()
   , mEditor(&aEditor)
   , mTag(&aTag)
@@ -43,23 +44,23 @@ CreateElementTxn::CreateElementTxn(nsEditor& aEditor,
 {
 }
 
-CreateElementTxn::~CreateElementTxn()
+CreateElementTransaction::~CreateElementTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction, EditTxn,
                                    mParent,
                                    mNewNode,
                                    mRefNode)
 
-NS_IMPL_ADDREF_INHERITED(CreateElementTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(CreateElementTxn, EditTxn)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTxn)
+NS_IMPL_ADDREF_INHERITED(CreateElementTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(CreateElementTransaction, EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 
 NS_IMETHODIMP
-CreateElementTxn::DoTransaction()
+CreateElementTransaction::DoTransaction()
 {
   MOZ_ASSERT(mEditor && mTag && mParent);
 
@@ -101,7 +102,7 @@ CreateElementTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-CreateElementTxn::UndoTransaction()
+CreateElementTransaction::UndoTransaction()
 {
   MOZ_ASSERT(mEditor && mParent);
 
@@ -112,7 +113,7 @@ CreateElementTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-CreateElementTxn::RedoTransaction()
+CreateElementTransaction::RedoTransaction()
 {
   MOZ_ASSERT(mEditor && mParent);
 
@@ -127,15 +128,17 @@ CreateElementTxn::RedoTransaction()
 }
 
 NS_IMETHODIMP
-CreateElementTxn::GetTxnDescription(nsAString& aString)
+CreateElementTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("CreateElementTxn: ");
+  aString.AssignLiteral("CreateElementTransaction: ");
   aString += nsDependentAtomString(mTag);
   return NS_OK;
 }
 
 already_AddRefed<Element>
-CreateElementTxn::GetNewNode()
+CreateElementTransaction::GetNewNode()
 {
   return nsCOMPtr<Element>(mNewNode).forget();
 }
+
+} // namespace mozilla
