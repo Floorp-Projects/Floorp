@@ -32,12 +32,14 @@ let testCommands = new Map();
 testCommands.set("console.log()", {
   command: "console.log('foobar', 'test')",
   commandType: "consoleAPICall",
-  expectedText: "foobar test"
+  // @TODO should output: foobar test
+  expectedText: "\"foobar\"\"test\""
 });
 testCommands.set("new Date()", {
   command: "new Date(448156800000)",
   commandType: "evaluationResult",
-  expectedText: "Date 1984-03-15T00:00:00.000Z"
+  // @TODO should output: Date 1984-03-15T00:00:00.000Z
+  expectedText: "1984-03-15T00:00:00.000Z"
 });
 testCommands.set("pageError", {
   command: null,

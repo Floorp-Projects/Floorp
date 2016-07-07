@@ -6,57 +6,8 @@
 */
 
 /* Global Styles */
-#BrowserPreferences radio[pane] {
-  list-style-image: url("chrome://browser/skin/preferences/Options.png"); 
-}
-
-radio[pane=paneMain] {
-  -moz-image-region: rect(0px, 32px,  32px, 0px)
-}
-
-radio[pane=paneTabs] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px)
-}
-
-#BrowserPreferences radio[pane=paneSearch] {
-  list-style-image: url("chrome://browser/skin/search-pref.png");
-}
-
 .checkbox-check {
   -moz-appearance: checkbox;
-}
-
-radio[pane=paneContent] {
-  -moz-image-region: rect(0px, 96px,  32px, 64px)
-}
-
-radio[pane=paneApplications] {
-  -moz-image-region: rect(0px, 128px,  32px, 96px)
-}
-
-radio[pane=panePrivacy] {
-  -moz-image-region: rect(0px, 160px,  32px, 128px)
-}
-
-radio[pane=paneSecurity] {
-  -moz-image-region: rect(0px, 192px,  32px, 160px)
-}
-
-radio[pane=paneAdvanced] {
-  -moz-image-region: rect(0px, 224px, 32px, 192px)
-}
-
-radio[pane=paneSync] {
-  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png") !important;
-}
-
-/* These lines should be removed as part of fixing bug 1140495 */
-label.small {
-  font-size: smaller;
-}
-
-#tabPrefsBox {
-  margin: 5px;
 }
 
 /* General Pane */
@@ -73,27 +24,6 @@ label.small {
 #translationAttributionImage {
   width: 70px;
   cursor: pointer;
-}
-
-/* Applications Pane */
-#BrowserPreferences[animated="true"] #handlersView {
-  height: 25em;
-}
-
-#BrowserPreferences[animated="false"] #handlersView {
-  -moz-box-flex: 1;
-}
-
-/* Privacy Pane */
-
-/* styles for the link elements copied from .text-link in global.css */
-.inline-link {
-  color: -moz-nativehyperlinktext;
-  text-decoration: none;
-}
-
-.inline-link:hover {
-  text-decoration: underline;
 }
 
 /* Modeless Window Dialogs */
@@ -118,20 +48,10 @@ label.small {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-#paneApplications {
-  margin-left: 4px;
-  margin-right: 4px; 
-  padding-left: 0;
-  padding-right: 0; 
-}
-
 #linksOpenInBox {
   margin-top: 5px;
 }
 
-#paneAdvanced {
-  padding-bottom: 10px;
-}
 #advancedPrefs {
   margin-left: 0;
   margin-right: 0; 

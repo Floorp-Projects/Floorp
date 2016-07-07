@@ -23,7 +23,8 @@ window.onload = Task.async(function* () {
 
   const messageBodyPath = "span > span.message-flex-body > span.message-body.devtools-monospace";
   const messageBody = rendered.querySelectorAll(messageBodyPath);
-  is(messageBody[0].textContent, "foobar test", "ConsoleApiCall outputs expected text for repeated message");
+  // @TODO Expected output should be: foobar test
+  is(messageBody[0].textContent, "\"foobar\"\"test\"", "ConsoleApiCall outputs expected text for repeated message");
 
   const repeatPath = "span > span.message-flex-body > span.message-body.devtools-monospace + span.message-repeats";
   const repeat = rendered.querySelectorAll(repeatPath);

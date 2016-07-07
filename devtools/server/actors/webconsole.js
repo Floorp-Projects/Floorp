@@ -220,8 +220,7 @@ WebConsoleActor.prototype =
   {
     if (window) {
       if (this._hadChromeWindow) {
-        let contextChangedMsg = WebConsoleActor.l10n.getStr("evaluationContextChanged");
-        Services.console.logStringMessage(contextChangedMsg);
+        Services.console.logStringMessage('Webconsole context has changed');
       }
       this._lastChromeWindow = Cu.getWeakReference(window);
       this._hadChromeWindow = true;
