@@ -864,6 +864,14 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   margin-inline-start: 0;
 }
 
+.urlbar-input-box,
+#urlbar-display-box {
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--urlbar-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-image-slice: 1;
+}
+
 .urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
   transition: opacity 0.15s ease;
@@ -958,8 +966,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 #urlbar-display-box {
   margin-top: -1px;
   margin-bottom: -1px;
-  border-inline-end: 1px solid #AAA;
-  margin-inline-end: 3px;
 }
 
 .urlbar-display {
@@ -1011,9 +1017,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 /* Notification icon box */
-#notification-popup-box {
-  border-radius: 2.5px 0 0 2.5px;
-}
 
 .notification-anchor-icon:-moz-focusring {
   outline: 1px dotted -moz-DialogText;

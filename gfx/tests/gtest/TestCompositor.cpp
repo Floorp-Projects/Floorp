@@ -138,8 +138,8 @@ static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, 
     MOZ_CRASH(); // No support yet
 #endif
   }
-
-  if (!compositor || !compositor->Initialize()) {
+  nsCString failureReason;
+  if (!compositor || !compositor->Initialize(&failureReason)) {
     printf_stderr("Failed to construct layer manager for the requested backend\n");
     abort();
   }

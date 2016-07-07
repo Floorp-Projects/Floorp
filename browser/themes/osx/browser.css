@@ -1576,10 +1576,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
     padding-top: 4px;
     padding-bottom: 4px;
   }
-  #identity-box {
-    --identity-box-hover-background-color: rgb(240,237,237);
-    --identity-box-selected-background-color: rgb(220,217,217);
-  }
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1602,6 +1598,14 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 .urlbar-input-box {
   margin-inline-start: 0;
   padding: 3px 0 2px;
+}
+
+.urlbar-input-box,
+#urlbar-display-box {
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--urlbar-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-image-slice: 1;
 }
 
 .urlbar-history-dropmarker {
@@ -1687,11 +1691,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #wrapper-urlbar-container[place="palette"] {
   max-width: 20em;
-}
-
-#urlbar-display-box {
-  border-inline-end: 1px solid #AAA;
-  margin-inline-end: 3px;
 }
 
 .urlbar-display {
@@ -2587,16 +2586,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 6px 0 4px;
 }
 
-/* Background tabs:
- *
- * Decrease the height of the hoverable region of background tabs whenever the tabs are at the top
- * of the window (e.g. no menubar, tabs in titlebar, etc.) to make it easier to drag the window by
- * the titlebar. We don't need this in fullscreen since window dragging is not an issue there.
- */
-#main-window[tabsintitlebar]:not([inFullscreen]) .tab-background-middle:not([visuallyselected=true]) {
-  clip-path: url(chrome://browser/content/browser.xul#tab-hover-clip-path);
-}
-
 /**
  * Tab Drag and Drop
  */
@@ -2969,10 +2958,6 @@ menuitem:hover > hbox > .alltabs-endimage[soundplaying] {
 }
 
 %include ../shared/notification-icons.inc.css
-
-#notification-popup-box {
-  border-radius: 2px 0 0 2px;
-}
 
 .notification-anchor-icon:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,

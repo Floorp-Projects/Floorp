@@ -47,10 +47,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-Cu.import("resource://gre/modules/PageThumbs.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Pref to enable/disable preview-per-tab
 const TOGGLE_PREF_NAME = "browser.taskbar.previews.enable";
@@ -66,12 +67,11 @@ const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
 XPCOMUtils.defineLazyServiceGetter(this, "imgTools",
                                    "@mozilla.org/image/tools;1",
                                    "imgITools");
-XPCOMUtils.defineLazyServiceGetter(this, "faviconSvc",
-                                   "@mozilla.org/browser/favicon-service;1",
-                                   "nsIFaviconService");
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+                                  "resource://gre/modules/PageThumbs.jsm");
 
 // nsIURI -> imgIContainer
-function _imageFromURI(doc, uri, privateMode, callback) {
+function _imageFromURI(uri, privateMode, callback) {
   let channel = NetUtil.newChannel({
     uri: uri,
     loadUsingSystemPrincipal: true,
@@ -94,19 +94,20 @@ function _imageFromURI(doc, uri, privateMode, callback) {
     } catch (e) {
       // We failed, so use the default favicon (only if this wasn't the default
       // favicon).
-      let defaultURI = faviconSvc.defaultFavicon;
+      let defaultURI = PlacesUtils.favicons.defaultFavicon;
       if (!defaultURI.equals(uri))
-        _imageFromURI(doc, defaultURI, privateMode, callback);
+        _imageFromURI(defaultURI, privateMode, callback);
     }
   });
 }
 
 // string? -> imgIContainer
-function getFaviconAsImage(doc, iconurl, privateMode, callback) {
-  if (iconurl)
-    _imageFromURI(doc, NetUtil.newURI(iconurl), privateMode, callback);
-  else
-    _imageFromURI(doc, faviconSvc.defaultFavicon, privateMode, callback);
+function getFaviconAsImage(iconurl, privateMode, callback) {
+  if (iconurl) {
+    _imageFromURI(NetUtil.newURI(iconurl), privateMode, callback);
+  } else {
+    _imageFromURI(PlacesUtils.favicons.defaultFavicon, privateMode, callback);
+  }
 }
 
 // Snaps the given rectangle to be pixel-aligned at the given scale
@@ -452,7 +453,6 @@ TabWindow.prototype = {
     // Grab the default favicon
     getFaviconAsImage(
       null,
-      null,
       PrivateBrowsingUtils.isWindowPrivate(this.win),
       function (img) {
         // It is possible that we've already gotten the real favicon, so make sure
@@ -606,20 +606,41 @@ TabWindow.prototype = {
     }
   },
 
+  directRequestProtocols: new Set([
+    "file", "chrome", "resource", "about"
+  ]),
   onLinkIconAvailable: function (aBrowser, aIconURL) {
-    let self = this;
+    if (!aIconURL) {
+      return;
+    }
+    let tab = this.tabbrowser.getTabForBrowser(aBrowser);
+    let shouldRequestFaviconURL = true;
+    try {
+      urlObject = NetUtil.newURI(aIconURL);
+      shouldRequestFaviconURL =
+        !this.directRequestProtocols.has(urlObject.scheme);
+    } catch (ex) {}
+
+    let requestURL = shouldRequestFaviconURL ?
+      "moz-anno:favicon:" + aIconURL :
+      aIconURL;
+
     getFaviconAsImage(
-      null,
-      aIconURL,
+      requestURL,
       PrivateBrowsingUtils.isWindowPrivate(this.win),
-      function (img) {
-        let index = self.tabbrowser.browsers.indexOf(aBrowser);
-        // Only add it if we've found the index.  The tab could have closed!
+      img => {
+        let index = this.tabbrowser.browsers.indexOf(aBrowser);
+        // Only add it if we've found the index and the URI is still the same.
+        // The tab could have closed, and there's no guarantee the icons
+        // will have finished fetching 'in order'.
         if (index != -1) {
-          let tab = self.tabbrowser.tabs[index];
-          self.previews.get(tab).icon = img;
+          let tab = this.tabbrowser.tabs[index];
+          if (tab.getAttribute("image") == aIconURL) {
+            this.previews.get(tab).icon = img;
+          }
         }
-      });
+      }
+    );
   }
 }
 
@@ -663,6 +684,7 @@ this.AeroPeek = {
     this.prefs.addObserver(TOGGLE_PREF_NAME, this, false);
     this.prefs.addObserver(DISABLE_THRESHOLD_PREF_NAME, this, false);
     this.prefs.addObserver(CACHE_EXPIRATION_TIME_PREF_NAME, this, false);
+    PlacesUtils.history.addObserver(this, true);
 
     this.cacheLifespan = this.prefs.getIntPref(CACHE_EXPIRATION_TIME_PREF_NAME);
 
@@ -761,7 +783,31 @@ this.AeroPeek = {
         });
         break;
     }
-  }
+  },
+
+  /* nsINavHistoryObserver implementation */
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+  onVisit() {},
+  onTitleChanged() {},
+  onFrecencyChanged() {},
+  onManyFrecenciesChanged() {},
+  onDeleteURI() {},
+  onClearHistory() {},
+  onDeleteVisits() {},
+  onPageChanged(uri, changedConst, newValue) {
+    if (this._enabled && changedConst == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
+      for (let win of this.windows) {
+        for (let [tab, preview] of win.previews) {
+          if (tab.getAttribute("image") == newValue) {
+            win.onLinkIconAvailable(tab.linkedBrowser, newValue);
+          }
+        }
+      }
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsINavHistoryObserver]),
 };
 
 XPCOMUtils.defineLazyGetter(AeroPeek, "cacheTimer", () =>

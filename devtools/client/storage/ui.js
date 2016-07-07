@@ -8,6 +8,7 @@
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 loader.lazyRequireGetter(this, "TreeWidget",
                          "devtools/client/shared/widgets/TreeWidget", true);
@@ -110,6 +111,15 @@ function StorageUI(front, target, panelWin, toolbox) {
   this.searchBox = this._panelDoc.getElementById("storage-searchbox");
   this.filterItems = this.filterItems.bind(this);
   this.searchBox.addEventListener("command", this.filterItems);
+
+  let shortcuts = new KeyShortcuts({
+    window: this._panelDoc.defaultView,
+  });
+  let key = L10N.getStr("storage.filter.key");
+  shortcuts.on(key, (name, event) => {
+    event.preventDefault();
+    this.searchBox.focus();
+  });
 
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);

@@ -30,7 +30,6 @@ add_task(function* () {
   // Force the toolbox to be 200px high;
   yield pushPref("devtools.toolbox.footer.height", 200);
 
-  yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
   info("Test a tooltip is not closed when clicking inside itself");
@@ -40,7 +39,7 @@ add_task(function* () {
   let box3 = doc.getElementById("box3");
   let box4 = doc.getElementById("box4");
 
-  let tooltip = new HTMLTooltip({doc}, {});
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
 
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100px";

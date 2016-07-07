@@ -10,6 +10,11 @@ body {
   /* Top padding for when the window height is small.
      Bottom padding to keep everything centered. */
   padding: 75px 0;
+  /* info-pages.css sets a minimum width of 13em to the content
+   * container. If we don't set a min-width here, the content
+   * gets clipped in iframes with small width. We don't accomodate
+   * any padding to prioritize real estate in the small viewport. */
+  min-width: 13em;
 }
 
 .button-container {

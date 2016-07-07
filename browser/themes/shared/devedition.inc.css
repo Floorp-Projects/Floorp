@@ -61,8 +61,6 @@
 :root[devtoolstheme="dark"] #identity-box {
   --identity-box-chrome-color: #46afe3;
   --identity-box-verified-background-color: transparent;
-  --identity-box-hover-background-color: rgba(231,230,230,.2);
-  --identity-box-selected-background-color: rgba(211,210,210,.2);
 }
 
 :root[devtoolstheme="light"] {
@@ -207,23 +205,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   overflow: -moz-hidden-unscrollable;
   clip-path: none;
   margin-inline-start: 0;
-}
-
-/* Swap out the white arrow with a dark one for the dark theme */
-:root[devtoolstheme="dark"] #notification-popup-box {
-  border-image: url("chrome://browser/skin/devedition/urlbar-arrow.png") 0 8 0 0 fill;
-}
-
-@media (min-resolution: 1.1dppx) {
-  :root[devtoolstheme="dark"] #notification-popup-box {
-    border-image: url("chrome://browser/skin/devedition/urlbar-arrow@2x.png") 0 16 0 0 fill;
-  }
-}
-
-/* The (white) notification box background color should match the theme */
-#notification-popup-box {
-  border-radius: 0;
-  background-color: var(--url-and-searchbar-background-color);
 }
 
 /* Nav bar specific stuff */

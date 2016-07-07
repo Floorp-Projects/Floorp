@@ -27,21 +27,33 @@ const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
 
+let useXulWrapper;
+
 add_task(function* () {
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
+  info("Run tests for a Tooltip without using a XUL panel");
+  useXulWrapper = false;
+  yield runTests(doc);
+
+  info("Run tests for a Tooltip with a XUL panel");
+  useXulWrapper = true;
+  yield runTests(doc);
+});
+
+function* runTests(doc) {
   yield testClickInTooltipContent(doc);
   yield testConsumeOutsideClicksFalse(doc);
   yield testConsumeOutsideClicksTrue(doc);
   yield testClickInOuterIframe(doc);
   yield testClickInInnerIframe(doc);
-});
+}
 
 function* testClickInTooltipContent(doc) {
   info("Test a tooltip is not closed when clicking inside itself");
 
-  let tooltip = new HTMLTooltip({doc}, {});
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
@@ -57,7 +69,7 @@ function* testConsumeOutsideClicksFalse(doc) {
   info("Test closing a tooltip via click with consumeOutsideClicks: false");
   let box4 = doc.getElementById("box4");
 
-  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: false});
+  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: false, useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
@@ -80,7 +92,7 @@ function* testConsumeOutsideClicksTrue(doc) {
   let box4clicks = 0;
   box4.addEventListener("click", () => box4clicks++);
 
-  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: true});
+  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: true, useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
@@ -98,7 +110,7 @@ function* testClickInOuterIframe(doc) {
   info("Test clicking an iframe outside of the tooltip closes the tooltip");
   let frame = doc.getElementById("frame");
 
-  let tooltip = new HTMLTooltip({doc});
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
   tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
@@ -113,7 +125,7 @@ function* testClickInOuterIframe(doc) {
 function* testClickInInnerIframe(doc) {
   info("Test clicking an iframe inside the tooltip content does not close the tooltip");
 
-  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: false});
+  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: false, useXulWrapper});
 
   let iframe = doc.createElementNS(HTML_NS, "iframe");
   iframe.style.width = "100px";
