@@ -7039,6 +7039,22 @@ DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr refere
   return &frame;
 }
 
+/* static */ bool
+DebuggerFrame::getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
+                         MutableHandle<DebuggerObject*> result)
+{
+    AbstractFramePtr referent = frame->referent();
+    if (!referent.isFunctionFrame()) {
+        result.set(nullptr);
+        return true;
+    }
+
+    Debugger* dbg = frame->owner();
+
+    RootedObject callee(cx, referent.callee());
+    return dbg->wrapDebuggeeObject(cx, callee, result);
+}
+
 static void
 UpdateFrameIterPc(FrameIter& iter)
 {
@@ -7152,6 +7168,12 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
  * Methods that need a ScriptFrameIterator should use THIS_FRAME_ITER.
  */
 
+#define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                          \
+    CallArgs args = CallArgsFromVp(argc, vp);                                           \
+    Rooted<DebuggerFrame*> frame(cx, DebuggerFrame::checkThis(cx, args, fnname, true)); \
+    if (!frame)                                                                         \
+        return false;
+
 #define THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj)                       \
     CallArgs args = CallArgsFromVp(argc, vp);                                         \
     RootedNativeObject thisobj(cx, DebuggerFrame::checkThis(cx, args, fnname, true)); \
@@ -7256,14 +7278,16 @@ DebuggerFrame_getEnvironment(JSContext* cx, unsigned argc, Value* vp)
     return dbg->wrapEnvironment(cx, env, args.rval());
 }
 
-static bool
-DebuggerFrame_getCallee(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::calleeGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get callee", args, thisobj, frame);
-    RootedValue calleev(cx, frame.isFunctionFrame() ? frame.calleev() : NullValue());
-    if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &calleev))
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get callee", args, frame);
+
+    Rooted<DebuggerObject*> result(cx);
+    if (!DebuggerFrame::getCallee(cx, frame, &result))
         return false;
-    args.rval().set(calleev);
+
+    args.rval().setObjectOrNull(result);
     return true;
 }
 
@@ -7793,7 +7817,7 @@ DebuggerFrame::construct(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("arguments", DebuggerFrame_getArguments, 0),
-    JS_PSG("callee", DebuggerFrame_getCallee, 0),
+    JS_PSG("callee", DebuggerFrame::calleeGetter, 0),
     JS_PSG("constructing", DebuggerFrame_getConstructing, 0),
     JS_PSG("environment", DebuggerFrame_getEnvironment, 0),
     JS_PSG("generator", DebuggerFrame_getGenerator, 0),
