@@ -118,6 +118,15 @@ public:
         mMergeDenominator = 0;
       }
     }
+    void TakeHighestIdeal(const Range& aOther) {
+      if (aOther.mIdeal.isSome()) {
+        if (mIdeal.isNothing()) {
+          mIdeal.emplace(aOther.Get(0));
+        } else {
+          *mIdeal = std::max(Get(0), aOther.Get(0));
+        }
+      }
+    }
   private:
     bool Merge(const BaseRange& aOther) override {
       return Merge(static_cast<const Range&>(aOther));
