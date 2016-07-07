@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteNodeTransaction.h"
+#include "SelectionState.h" // nsRangeUpdater
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"
-#include "nsSelectionState.h" // nsRangeUpdater
 #include "nsAString.h"
 
 namespace mozilla {

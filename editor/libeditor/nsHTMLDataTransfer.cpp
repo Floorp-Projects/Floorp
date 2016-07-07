@@ -8,6 +8,7 @@
 
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
+#include "SelectionState.h"
 #include "TextEditUtils.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -72,7 +73,6 @@
 #include "nsPlaintextEditor.h"
 #include "nsRange.h"
 #include "nsReadableUtils.h"
-#include "nsSelectionState.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"

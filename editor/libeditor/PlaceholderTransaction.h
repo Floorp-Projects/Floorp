@@ -46,12 +46,12 @@ public:
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
-  NS_IMETHOD Init(nsIAtom* aName, nsSelectionState* aSelState,
+  NS_IMETHOD Init(nsIAtom* aName, SelectionState* aSelState,
                   nsEditor* aEditor) override;
 
   NS_IMETHOD GetTxnName(nsIAtom** aName) override;
 
-  NS_IMETHOD StartSelectionEquals(nsSelectionState* aSelState,
+  NS_IMETHOD StartSelectionEquals(SelectionState* aSelState,
                                   bool* aResult) override;
 
   NS_IMETHOD EndPlaceHolderBatch() override;
@@ -80,8 +80,8 @@ protected:
   // restore the selection properly.
 
   // Use a pointer because this is constructed before we exist.
-  nsAutoPtr<nsSelectionState> mStartSel;
-  nsSelectionState mEndSel;
+  nsAutoPtr<SelectionState> mStartSel;
+  SelectionState mEndSel;
 
   // The editor for this transaction.
   nsEditor* mEditor;

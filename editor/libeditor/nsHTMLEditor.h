@@ -30,6 +30,7 @@
 #include "nsIHTMLObjectResizeListener.h"
 #include "nsIHTMLObjectResizer.h"
 
+#include "nsIContentFilter.h"
 #include "nsIDocumentObserver.h"
 
 #include "nsPoint.h"
@@ -46,7 +47,6 @@ class nsDocumentFragment;
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIClipboard;
-class nsIContentFilter;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
@@ -80,6 +80,8 @@ class nsHTMLEditor final : public nsPlaintextEditor,
                            public nsStubMutationObserver
 {
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
+
+  const char16_t kNBSP = 160;
 
 public:
 
