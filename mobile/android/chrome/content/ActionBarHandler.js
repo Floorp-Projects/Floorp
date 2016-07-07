@@ -67,9 +67,9 @@ var ActionBarHandler = {
     if (this._selectionID) {
       if (!this._selectionHasChanged()) {
         // Still the same active selection.
-        if (e.reason == 'visibilitychange' || e.reason == 'presscaret' ||
-            e.reason == 'scroll' ) {
-          // Visibility changes don't affect boundingClientRect.
+        if (e.reason == 'presscaret' || e.reason == 'scroll') {
+          // boundingClientRect doesn't matter since we are hiding the floating
+          // toolbar.
           this._updateVisibility();
         } else {
           // Selection changes update boundingClientRect.
