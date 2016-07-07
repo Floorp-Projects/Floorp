@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "EditorUtils.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Selection.h"
@@ -13,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"

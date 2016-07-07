@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsEditorUtils.h"
+#include "EditorUtils.h"
 
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Selection.h"
@@ -126,8 +126,12 @@ nsDOMSubtreeIterator::~nsDOMSubtreeIterator()
  * some general purpose editor utils
  *****************************************************************************/
 
+namespace mozilla {
+
 bool
-nsEditorUtils::IsDescendantOf(nsINode* aNode, nsINode* aParent, int32_t* aOffset)
+EditorUtils::IsDescendantOf(nsINode* aNode,
+                            nsINode* aParent,
+                            int32_t* aOffset)
 {
   MOZ_ASSERT(aNode && aParent);
   if (aNode == aParent) {
@@ -147,7 +151,9 @@ nsEditorUtils::IsDescendantOf(nsINode* aNode, nsINode* aParent, int32_t* aOffset
 }
 
 bool
-nsEditorUtils::IsDescendantOf(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t* aOffset)
+EditorUtils::IsDescendantOf(nsIDOMNode* aNode,
+                            nsIDOMNode* aParent,
+                            int32_t* aOffset)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
@@ -156,13 +162,15 @@ nsEditorUtils::IsDescendantOf(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t* a
 }
 
 bool
-nsEditorUtils::IsLeafNode(nsIDOMNode *aNode)
+EditorUtils::IsLeafNode(nsIDOMNode* aNode)
 {
   bool hasChildren = false;
   if (aNode)
     aNode->HasChildNodes(&hasChildren);
   return !hasChildren;
 }
+
+} // namespace mozilla
 
 /******************************************************************************
  * utility methods for drag/drop/copy/paste hooks

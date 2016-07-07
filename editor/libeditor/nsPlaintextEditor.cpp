@@ -5,6 +5,7 @@
 
 #include "nsPlaintextEditor.h"
 
+#include "EditorUtils.h"  // nsAutoEditBatch, nsAutoRules
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -24,7 +25,6 @@
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsEditRules.h"
-#include "nsEditorUtils.h"  // nsAutoEditBatch, nsAutoRules
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"

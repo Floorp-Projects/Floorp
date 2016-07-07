@@ -5,6 +5,7 @@
 
 #include "nsHTMLObjectResizer.h"
 
+#include "EditorUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
@@ -14,7 +15,6 @@
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsEditorUtils.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLCSSUtils.h"

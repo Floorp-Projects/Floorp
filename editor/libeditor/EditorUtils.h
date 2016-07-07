@@ -4,9 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#ifndef nsEditorUtils_h__
-#define nsEditorUtils_h__
-
+#ifndef EditorUtils_h
+#define EditorUtils_h
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -264,15 +263,19 @@ struct MOZ_STACK_CLASS DOMPoint
   }
 };
 
+namespace mozilla {
 
-class nsEditorUtils
+class EditorUtils final
 {
-  public:
-    static bool IsDescendantOf(nsINode* aNode, nsINode* aParent, int32_t* aOffset = 0);
-    static bool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t *aOffset = 0);
-    static bool IsLeafNode(nsIDOMNode *aNode);
+public:
+  static bool IsDescendantOf(nsINode* aNode, nsINode* aParent,
+                             int32_t* aOffset = 0);
+  static bool IsDescendantOf(nsIDOMNode* aNode, nsIDOMNode* aParent,
+                             int32_t* aOffset = 0);
+  static bool IsLeafNode(nsIDOMNode* aNode);
 };
 
+} // namespace mozilla
 
 class nsIDOMEvent;
 class nsISimpleEnumerator;
@@ -288,4 +291,4 @@ class nsEditorHookUtils
                                                   nsISimpleEnumerator **aEnumerator);
 };
 
-#endif // nsEditorUtils_h__
+#endif // #ifndef EditorUtils_h
