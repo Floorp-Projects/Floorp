@@ -53,6 +53,7 @@ class nsIDOMRange;
 class nsRange;
 
 namespace mozilla {
+class HTMLEditorEventListener;
 class HTMLEditRules;
 class TextEditRules;
 class TypeInState;
@@ -974,10 +975,10 @@ protected:
 
 public:
   // friends
+  friend class mozilla::HTMLEditorEventListener;
   friend class mozilla::HTMLEditRules;
   friend class mozilla::TextEditRules;
   friend class mozilla::WSRunObject;
-  friend class nsHTMLEditorEventListener;
 
 private:
   // Helpers

@@ -13,16 +13,14 @@
 
 #include "nsUnicharUtils.h"
 
+#include "HTMLEditorEventListener.h"
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "HTMLURIRefObject.h"
 #include "SetDocumentTitleTransaction.h"
 #include "StyleSheetTransactions.h"
 #include "TextEditUtils.h"
-
-#include "nsHTMLEditorEventListener.h"
 #include "TypeInState.h"
-
 
 #include "nsIDOMText.h"
 #include "nsIDOMMozNamedAttrMap.h"
@@ -442,7 +440,7 @@ nsHTMLEditor::CreateEventListeners()
 {
   // Don't create the handler twice
   if (!mEventListener) {
-    mEventListener = new nsHTMLEditorEventListener();
+    mEventListener = new HTMLEditorEventListener();
   }
 }
 
@@ -455,8 +453,8 @@ nsHTMLEditor::InstallEventListeners()
   // NOTE: nsHTMLEditor doesn't need to initialize mEventTarget here because
   // the target must be document node and it must be referenced as weak pointer.
 
-  nsHTMLEditorEventListener* listener =
-    reinterpret_cast<nsHTMLEditorEventListener*>(mEventListener.get());
+  HTMLEditorEventListener* listener =
+    reinterpret_cast<HTMLEditorEventListener*>(mEventListener.get());
   return listener->Connect(this);
 }
 
