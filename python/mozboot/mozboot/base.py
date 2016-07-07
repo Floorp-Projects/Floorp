@@ -4,10 +4,12 @@
 
 from __future__ import print_function, unicode_literals
 
+import hashlib
 import os
 import re
 import subprocess
 import sys
+import urllib2
 
 from distutils.version import LooseVersion
 
@@ -405,3 +407,18 @@ class BaseBootstrapper(object):
         Child classes should reimplement this.
         """
         print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
+
+    def http_download_and_save(self, url, dest, sha256hexhash):
+        f = urllib2.urlopen(url)
+        h = hashlib.sha256()
+        with open(dest, 'wb') as out:
+            while True:
+                data = f.read(4096)
+                if data:
+                    out.write(data)
+                    h.update(data)
+                else:
+                    break
+        if h.hexdigest() != sha256hexhash:
+            os.remove(dest)
+            raise ValueError('Hash of downloaded file does not match expected hash')
