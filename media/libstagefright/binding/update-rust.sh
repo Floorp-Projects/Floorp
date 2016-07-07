@@ -18,8 +18,10 @@ echo "Constructing C api header..."
 cargo build
 popd
 rm -rf mp4parse
-mkdir mp4parse
-cp _upstream/mp4parse/src/*.rs mp4parse/
+mkdir -p mp4parse/src
+cp _upstream/mp4parse/Cargo.toml mp4parse/
+cp _upstream/mp4parse/build.rs mp4parse/
+cp _upstream/mp4parse/src/*.rs mp4parse/src/
 cp _upstream/mp4parse/include/mp4parse.h include/
 
 # TODO: download deps from crates.io.
@@ -28,10 +30,10 @@ git clone https://github.com/BurntSushi/byteorder _upstream/byteorder
 pushd _upstream/byteorder
 git checkout 0.5.3
 popd
-rm -rf mp4parse/byteorder
-mkdir mp4parse/byteorder
-cp _upstream/byteorder/src/lib.rs mp4parse/byteorder/mod.rs
-cp _upstream/byteorder/src/new.rs mp4parse/byteorder/new.rs
+rm -rf mp4parse/src/byteorder
+mkdir mp4parse/src/byteorder
+cp _upstream/byteorder/src/lib.rs mp4parse/src/byteorder/mod.rs
+cp _upstream/byteorder/src/new.rs mp4parse/src/byteorder/new.rs
 
 echo "Applying patches..."
 patch -p4 < byteorder-mod.patch

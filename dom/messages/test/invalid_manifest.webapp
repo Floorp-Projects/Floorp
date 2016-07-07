@@ -1,8 +1,0 @@
-{
-  "name": "Random app",
-  "launch_path": "/index.html",
-  "messages": [{
-    "dummy-system-message": "/index.html",
-    "dummy-system-message2": "/index.html"
-  }]
-}

@@ -147,9 +147,6 @@ public:
    */
   void OnNavigation();
 
-  // Helper to initialize mMessagesManager.
-  nsresult EnsureMessagesManager();
-
   // The XPCOM GetProduct is OK
   // The XPCOM GetLanguage is OK
   void GetUserAgent(nsString& aUserAgent, ErrorResult& /* unused */)
@@ -251,11 +248,6 @@ public:
   network::Connection* GetConnection(ErrorResult& aRv);
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
-  void MozSetMessageHandler(const nsAString& aType,
-                            systemMessageCallback* aCallback,
-                            ErrorResult& aRv);
-  bool MozHasPendingMessage(const nsAString& aType, ErrorResult& aRv);
-  void MozSetMessageHandlerPromise(Promise& aPromise, ErrorResult& aRv);
 
 #ifdef MOZ_B2G
   already_AddRefed<Promise> GetMobileIdAssertion(const MobileIdOptions& options,
@@ -393,7 +385,6 @@ private:
 #endif
   RefPtr<nsDOMCameraManager> mCameraManager;
   RefPtr<MediaDevices> mMediaDevices;
-  nsCOMPtr<nsIDOMNavigatorSystemMessages> mMessagesManager;
   nsTArray<nsWeakPtr> mDeviceStorageStores;
   RefPtr<time::TimeManager> mTimeManager;
   RefPtr<ServiceWorkerContainer> mServiceWorkerContainer;

@@ -11,6 +11,7 @@ from mozbuild import shellutil
 
 def get_properties(preprocessorHeader):
     cpp = shellutil.split(buildconfig.substs['CPP'])
+    cpp += shellutil.split(buildconfig.substs['ACDEFINES'])
     cpp.append(preprocessorHeader)
     preprocessed = subprocess.check_output(cpp)
     properties = [{"name":p[0], "prop":p[1], "id":p[2],

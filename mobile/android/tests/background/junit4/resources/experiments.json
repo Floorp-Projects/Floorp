@@ -1,0 +1,99 @@
+
+{
+  "data": [
+    {
+      "name": "active-experiment",
+        "match": {
+        },
+        "buckets": {
+          "min": "0",
+          "max": "100"
+        },
+        "values": {
+          "foo": true
+        }
+    },
+
+    {
+      "name": "inactive-experiment",
+        "match": {
+          "appId": "^NOPE$"
+        },
+        "buckets": {
+          "min": "0",
+          "max": "0"
+        }
+      },
+    {
+      "name": "bookmark-history-menu",
+        "match": {
+        },
+        "buckets": {
+          "min": "0",
+          "max": "100"
+        }
+      },
+    {
+      "name": "is-matching",
+        "match": {
+          "appId": "^org.mozilla.gecko$"
+        },
+        "buckets": {
+          "min": "0",
+          "max": "100"
+        }
+      },
+    {
+      "name": "is-not-matching",
+        "match": {
+          "appId": "^org.mozilla.fennec|^org.mozilla.firefox_beta$"
+        },
+        "buckets": {
+          "min": "0",
+          "max": "100"
+        }
+      },
+    {
+      "name": "promote-add-to-homescreen",
+      "buckets": {
+        "max": "100",
+        "min": "50"
+      },
+      "last_modified": 1467705654772,
+      "values": {
+        "lastVisitMaximumAgeMs": 600000,
+        "minimumTotalVisits": 5,
+        "lastVisitMinimumAgeMs": 30000
+      },
+      "id": "20d278d7-0d35-4811-8f01-bf24e31ba51b",
+      "match": {
+        "appId": "^org.mozilla.fennec|^org.mozilla.firefox_beta$"
+      },
+      "schema": 1467705310595
+    },
+    {
+      "name": "offline-cache",
+      "buckets": {
+        "max": "100",
+        "min": "0"
+      },
+      "last_modified": 1467705429859,
+      "id": "9f1ea043-c1d8-48ba-802d-aeabaf667afe",
+      "match": {
+        "appId": "^org.mozilla.fennec|^org.mozilla.firefox_beta$"
+      },
+      "schema": 1467705310595
+    },
+    {
+      "name": "bookmark-history-menu",
+      "buckets": {
+        "max": "100",
+        "min": "0"
+      },
+      "last_modified": 1467705381971,
+      "id": "29988035-1a59-4671-b679-2c717a68bd12",
+      "match": {},
+      "schema": 1467705310595
+    }
+  ]
+}

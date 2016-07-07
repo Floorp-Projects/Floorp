@@ -3248,34 +3248,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   border-radius: 1px;
 }
 
-.social-activation-icon {
-  width: auto;
-  height: auto;
-  max-height: 64px;
-  max-width: 64px;
-}
-
-#social-activation-message {
-  max-width: 250px;
-}
-
-#social-activation-message > label {
-  margin: 0;
-}
-
-#social-activation-button {
-  @hudButton@
-  min-height: 0px;
-}
-
-#social-activation-button:focus {
-  @hudButtonFocused@
-}
-
-#social-activation-button:hover:active {
-  @hudButtonPressed@
-}
-
 /* === end of social toolbar button === */
 
 /* === social toolbar provider menu  === */

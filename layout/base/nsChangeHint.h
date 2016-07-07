@@ -70,8 +70,11 @@ enum nsChangeHint {
 
   /**
    * Change requires frame change (e.g., display:).
-   * This subsumes all the above. Reconstructs all frame descendants,
-   * including following placeholders to out-of-flows.
+   * Reconstructs all frame descendants, including following placeholders
+   * to out-of-flows.
+   *
+   * Note that this subsumes all the other change hints. (see
+   * RestyleManager::ProcessRestyledFrames for details).
    */
   nsChangeHint_ReconstructFrame = 1 << 10,
 
@@ -356,8 +359,6 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
                nsChangeHint_NeedDirtyReflow)
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
-#define NS_STYLE_HINT_FRAMECHANGE \
-  nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
 
 #define nsChangeHint_Hints_CanIgnoreIfNotVisible   \
   nsChangeHint(NS_STYLE_HINT_VISUAL |              \
