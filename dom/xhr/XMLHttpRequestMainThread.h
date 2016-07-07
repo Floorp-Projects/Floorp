@@ -561,11 +561,9 @@ public:
 protected:
   // XHR states are meant to mirror the XHR2 spec:
   //   https://xhr.spec.whatwg.org/#states
-  // Note that we currently have an extra pseudo-state called sent.
   enum class State : uint8_t {
     unsent,           // object has been constructed.
     opened,           // open() has been successfully invoked.
-    sent,             // non-spec, corresponds with "opened and the send() flag is set".
     headers_received, // redirects followed and response headers received.
     loading,          // response body is being received.
     done,             // data transfer concluded, whether success or error.
@@ -699,6 +697,12 @@ protected:
   bool mFlagACwithCredentials;
   bool mFlagTimedOut;
   bool mFlagDeleted;
+
+  // The XHR2 spec's send() flag. Set when the XHR begins uploading, until it
+  // finishes downloading (or an error/abort has occurred during either phase).
+  // Used to guard against the user trying to alter headers/etc when it's too
+  // late, and ensure the XHR only handles one in-flight request at once.
+  bool mFlagSend;
 
   RefPtr<XMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
