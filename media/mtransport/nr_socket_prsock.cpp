@@ -1958,7 +1958,7 @@ void NrTcpSocketIpc::connect_i(const nsACString &remote_addr,
   dom::TCPSocketChild* child = new dom::TCPSocketChild(NS_ConvertUTF8toUTF16(remote_addr), remote_port);
   socket_child_ = child;
 
-  socket_child_->SetFilterName(nsCString(NS_NETWORK_SOCKET_FILTER_HANDLER_STUN_SUFFIX));
+  // Bug 1285330: put filtering back in here
 
   // XXX remove remote!
   socket_child_->SendWindowlessOpenBind(this,
