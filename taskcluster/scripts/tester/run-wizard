@@ -21,12 +21,38 @@ def resume():
 
 
 def setup():
-    call(['run-mozharness', '--no-run-tests'])
-    print("Mozharness has finished downloading the build and "
-          "tests to {}.".format(os.path.join(os.getcwd(), 'build')))
+    """Run the mozharness script without the 'run-tests' action.
+
+    This will do all the necessary setup steps like creating a virtualenv and
+    downloading the tests and firefox binary. But it stops before running the
+    tests.
+    """
+    status = call(['run-mozharness', '--no-run-tests'])
+
+    if status:
+        # something went wrong
+        return status
+
+    build_dir = os.path.expanduser(os.path.join('~', 'workspace', 'build'))
+    mach_src = os.path.join(build_dir, 'tests', 'mach')
+    mach_dest = os.path.expanduser(os.path.join('~', 'bin', 'mach'))
+
+    if os.path.exists(mach_dest):
+        os.remove(mach_dest)
+    os.symlink(mach_src, mach_dest)
+
+    print("""
+Mozharness has finished downloading the build and tests to:
+{}
+
+A limited mach environment has also been set up and added to the $PATH, but
+it may be missing the command you need. To see a list of commands, run:
+    $ mach help
+""".lstrip().format(build_dir))
 
 
 def clone():
+    """Clone the correct gecko repository and update to the proper revision."""
     repo = os.environ['GECKO_HEAD_REPOSITORY']
     rev = os.environ['GECKO_HEAD_REV']
     clone_path = os.path.expanduser(os.path.join('~', 'gecko'))
@@ -53,8 +79,8 @@ OPTIONS = [
      "passively monitoring it from another shell."),
     ('Setup task', setup,
      "Setup the task (download the application and tests) but don't run the "
-     "tests just yet. The tests can be run with a custom configuration later "
-     "(experimental)."),
+     "tests just yet. The tests can be run with a custom configuration later. "
+     "This will provide a mach environment (experimental)."),
     ('Clone gecko', clone,
      "Perform a clone of gecko using the task's repo and update it to the "
      "task's revision."),

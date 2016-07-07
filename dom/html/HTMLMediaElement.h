@@ -1193,6 +1193,9 @@ protected:
   bool IsAllowedToPlay();
 
   bool IsAudible() const;
+  bool HaveFailedWithSourceNotSupportedError() const;
+
+  void OpenUnsupportedMediaWithExtenalAppIfNeeded();
 
   class nsAsyncEventRunner;
   using nsGenericHTMLElement::DispatchEvent;
@@ -1630,6 +1633,8 @@ private:
 
   // True if media element is audible for users.
   bool mAudible;
+
+  nsAutoCString mMimeType;
 };
 
 } // namespace dom

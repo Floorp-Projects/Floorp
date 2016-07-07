@@ -2654,8 +2654,8 @@ nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
     if (!textRun) {
       // A text run was not constructed for this frame. This is bad. The caller
       // will check mTextRun.
-      static const gfxSkipChars emptySkipChars;
-      return gfxSkipCharsIterator(emptySkipChars, 0);
+      return gfxSkipCharsIterator(gfxPlatform::
+                                  GetPlatform()->EmptySkipChars(), 0);
     }
     TabWidthStore* tabWidths = Properties().Get(TabWidthProperty());
     if (tabWidths && tabWidths->mValidForContentOffset != GetContentOffset()) {
@@ -2692,8 +2692,7 @@ nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
   }
 
   NS_ERROR("Can't find flow containing this frame???");
-  static const gfxSkipChars emptySkipChars;
-  return gfxSkipCharsIterator(emptySkipChars, 0);
+  return gfxSkipCharsIterator(gfxPlatform::GetPlatform()->EmptySkipChars(), 0);
 }
 
 static uint32_t

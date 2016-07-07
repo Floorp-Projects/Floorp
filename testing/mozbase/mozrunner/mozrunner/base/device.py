@@ -161,6 +161,9 @@ class DeviceRunner(BaseRunner):
 
 
 class FennecRunner(DeviceRunner):
+    def __init__(self, cmdargs=None, **kwargs):
+        super(FennecRunner, self).__init__(**kwargs)
+        self.cmdargs = cmdargs or []
 
     @property
     def command(self):
@@ -171,6 +174,7 @@ class FennecRunner(DeviceRunner):
         app = "%s/org.mozilla.gecko.BrowserApp" % self.app_ctx.remote_process
         cmd.extend(['am', 'start', '-a', 'android.activity.MAIN', '-n', app])
         params = ['-no-remote', '-profile', self.app_ctx.remote_profile]
+        params.extend(self.cmdargs)
         cmd.extend(['--es', 'args', '"%s"' % ' '.join(params)])
         # Append env variables in the form "--es env0 MOZ_CRASHREPORTER=1"
         for (count, (k, v)) in enumerate(self._device_env.iteritems()):

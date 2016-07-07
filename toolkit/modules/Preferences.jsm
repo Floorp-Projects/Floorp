@@ -319,6 +319,8 @@ Preferences.ignore = function(prefName, callback, thisObject) {
   if (observer) {
     Preferences._prefBranch.removeObserver(fullPrefName, observer);
     observers.splice(observers.indexOf(observer), 1);
+  } else {
+    Cu.reportError(`Attempt to stop observing a preference "${prefName}" that's not being observed`);
   }
 };
 

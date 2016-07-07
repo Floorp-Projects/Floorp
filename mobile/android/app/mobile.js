@@ -919,3 +919,5 @@ pref("dom.presentation.discovery.enabled", true);
 
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);
+
+pref("media.openUnsupportedTypeWithExternalApp", true);

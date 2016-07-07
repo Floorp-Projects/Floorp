@@ -141,10 +141,22 @@ class Device(object):
             logcat_log = os.path.join(self.logdir, '%s.log' % serial)
             if os.path.isfile(logcat_log):
                 self._rotate_log(logcat_log)
-            logcat_args = [self.app_ctx.adb, '-s', '%s' % serial,
-                           'logcat', '-v', 'time', '-b', 'main', '-b', 'radio']
-            self.logcat_proc = ProcessHandler(logcat_args, logfile=logcat_log)
-            self.logcat_proc.run()
+            self.logcat_proc = self.start_logcat(serial, logfile=logcat_log)
+
+    def start_logcat(self, serial, logfile=None, stream=None, filterspec=None):
+        logcat_args = [self.app_ctx.adb, '-s', '%s' % serial,
+                       'logcat', '-v', 'time', '-b', 'main', '-b', 'radio']
+        # only log filterspec
+        if filterspec:
+            logcat_args.extend(['-s', filterspec])
+        process_args = {}
+        if logfile:
+            process_args['logfile'] = logfile
+        elif stream:
+            process_args['stream'] = stream
+        proc = ProcessHandler(logcat_args, **process_args)
+        proc.run()
+        return proc
 
     def reboot(self):
         """

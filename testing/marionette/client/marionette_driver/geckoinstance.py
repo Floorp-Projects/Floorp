@@ -10,7 +10,7 @@ import time
 from copy import deepcopy
 
 from mozprofile import Profile
-from mozrunner import Runner
+from mozrunner import Runner, FennecEmulatorRunner
 
 
 class GeckoInstance(object):
@@ -47,41 +47,53 @@ class GeckoInstance(object):
     def __init__(self, host, port, bin, profile=None, addons=None,
                  app_args=None, symbols_path=None, gecko_log=None, prefs=None,
                  workspace=None, verbose=0):
+        self.runner_class = Runner
+        self.app_args = app_args or []
+        self.runner = None
+        self.symbols_path = symbols_path
+        self.binary = bin
+
         self.marionette_host = host
         self.marionette_port = port
-        self.bin = bin
         # Alternative to default temporary directory
         self.workspace = workspace
+        self.addons = addons
         # Check if it is a Profile object or a path to profile
         self.profile = None
-        self.addons = addons
         if isinstance(profile, Profile):
             self.profile = profile
         else:
             self.profile_path = profile
         self.prefs = prefs
-        self.required_prefs = deepcopy(GeckoInstance.required_prefs)
+        self.required_prefs = deepcopy(self.required_prefs)
         if prefs:
             self.required_prefs.update(prefs)
-        self.app_args = app_args or []
-        self.runner = None
-        self.symbols_path = symbols_path
 
-        if gecko_log != '-':
-            if gecko_log is None:
-                gecko_log = 'gecko.log'
-            elif os.path.isdir(gecko_log):
-                fname = 'gecko-%d.log' % time.time()
-                gecko_log = os.path.join(gecko_log, fname)
-
-            gecko_log = os.path.realpath(gecko_log)
-            if os.access(gecko_log, os.F_OK):
-                os.remove(gecko_log)
-
-        self.gecko_log = gecko_log
+        self._gecko_log_option = gecko_log
+        self._gecko_log = None
         self.verbose = verbose
 
-    def start(self):
+    @property
+    def gecko_log(self):
+        if self._gecko_log:
+            return self._gecko_log
+
+        path = self._gecko_log_option
+        if path != '-':
+            if path is None:
+                path = 'gecko.log'
+            elif os.path.isdir(path):
+                fname = 'gecko-%d.log' % time.time()
+                path = os.path.join(path, fname)
+
+            path = os.path.realpath(path)
+            if os.access(path, os.F_OK):
+                os.remove(path)
+
+        self._gecko_log = path
+        return self._gecko_log
+
+    def _update_profile(self):
         profile_args = {"preferences": deepcopy(self.required_prefs)}
         profile_args["preferences"]["marionette.defaultPrefs.port"] = self.marionette_port
         if self.prefs:
@@ -118,6 +130,12 @@ class GeckoInstance(object):
                                                            profile_name)
                 self.profile = Profile.clone(**profile_args)
 
+    def start(self):
+        self._update_profile()
+        self.runner = self.runner_class(**self._get_runner_args())
+        self.runner.start()
+
+    def _get_runner_args(self):
         process_args = {
             'processOutputLine': [NullOutput()],
         }
@@ -133,14 +151,15 @@ class GeckoInstance(object):
         # https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
         env.update({'MOZ_CRASHREPORTER': '1',
                     'MOZ_CRASHREPORTER_NO_REPORT': '1'})
-        self.runner = Runner(
-            binary=self.bin,
-            profile=self.profile,
-            cmdargs=['-no-remote', '-marionette'] + self.app_args,
-            env=env,
-            symbols_path=self.symbols_path,
-            process_args=process_args)
-        self.runner.start()
+
+        return {
+            'binary': self.binary,
+            'profile': self.profile,
+            'cmdargs': ['-no-remote', '-marionette'] + self.app_args,
+            'env': env,
+            'symbols_path': self.symbols_path,
+            'process_args': process_args
+        }
 
     def close(self, restart=False):
         if not restart:
@@ -162,6 +181,93 @@ class GeckoInstance(object):
         else:
             self.prefs = None
         self.start()
+
+
+class FennecInstance(GeckoInstance):
+    def __init__(self, emulator_binary=None, avd_home=None, avd=None,
+                 adb_path=None, serial=None, connect_to_running_emulator=False,
+                 *args, **kwargs):
+        super(FennecInstance, self).__init__(*args, **kwargs)
+        self.runner_class = FennecEmulatorRunner
+        # runner args
+        self._package_name = None
+        self.emulator_binary = emulator_binary
+        self.avd_home = avd_home
+        self.adb_path = adb_path
+        self.avd = avd
+        self.serial = serial
+        self.connect_to_running_emulator = connect_to_running_emulator
+
+    @property
+    def package_name(self):
+        """
+        Name of app to run on emulator.
+
+        Note that FennecInstance does not use self.binary
+        """
+        if self._package_name is None:
+            self._package_name = 'org.mozilla.fennec'
+            user = os.getenv('USER')
+            if user:
+                self._package_name += '_' + user
+        return self._package_name
+
+    def start(self):
+        self._update_profile()
+        self.runner = self.runner_class(**self._get_runner_args())
+        try:
+            if self.connect_to_running_emulator:
+                self.runner.device.connect()
+            self.runner.start()
+        except Exception as e:
+            message = 'Error possibly due to runner or device args.'
+            e.args += (message,)
+            if hasattr(e, 'strerror') and e.strerror:
+                e.strerror = ', '.join([e.strerror, message])
+            raise e
+        # gecko_log comes from logcat when running with device/emulator
+        logcat_args = {
+            'filterspec': 'Gecko',
+            'serial': self.runner.device.dm._deviceSerial
+        }
+        if self.gecko_log == '-':
+            logcat_args['stream'] = sys.stdout
+        else:
+            logcat_args['logfile'] = self.gecko_log
+        self.runner.device.start_logcat(**logcat_args)
+        self.runner.device.setup_port_forwarding(
+            local_port=self.marionette_port,
+            remote_port=self.marionette_port,
+        )
+
+    def _get_runner_args(self):
+        process_args = {
+            'processOutputLine': [NullOutput()],
+        }
+
+        runner_args = {
+            'app': self.package_name,
+            'avd_home': self.avd_home,
+            'adb_path': self.adb_path,
+            'binary': self.emulator_binary,
+            'profile': self.profile,
+            'cmdargs': ['-marionette'] + self.app_args,
+            'symbols_path': self.symbols_path,
+            'process_args': process_args,
+            'logdir': self.workspace or os.getcwd(),
+            'serial': self.serial,
+        }
+        if self.avd:
+            runner_args['avd'] = self.avd
+
+        return runner_args
+
+    def close(self, restart=False):
+        super(FennecInstance, self).close(restart)
+        if self.runner and self.runner.device.connected:
+            self.runner.device.dm.remove_forward(
+                'tcp:%d' % int(self.marionette_port)
+            )
 
 
 class B2GDesktopInstance(GeckoInstance):
@@ -234,4 +340,5 @@ apps = {
     'b2g': B2GDesktopInstance,
     'b2gdesktop': B2GDesktopInstance,
     'fxdesktop': DesktopInstance,
+    'fennec': FennecInstance,
 }

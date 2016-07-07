@@ -12,6 +12,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
+const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 
@@ -23,15 +24,14 @@ ConsoleApiCall.propTypes = {
 
 function ConsoleApiCall(props) {
   const { message } = props;
-  const messageBody =
-    dom.span({className: "message-body devtools-monospace"},
-      formatTextContent(message.data));
+
+  const counter = message.data.counter;
+  const messageBody = counter ?
+    `${counter.label}: ${counter.count}` :
+    message.data.arguments.map((arg) => GripMessageBody({grip: arg}));
+
   const icon = MessageIcon({severity: message.severity});
   const repeat = MessageRepeat({repeat: message.repeat});
-  const children = [
-    messageBody,
-    repeat
-  ];
 
   // @TODO Use of "is" is a temporary hack to get the category and severity
   // attributes to be applied. There are targeted in webconsole's CSS rules,
@@ -42,30 +42,20 @@ function ConsoleApiCall(props) {
     category: message.category,
     severity: message.severity
   },
+    // @TODO add timestamp
+    // @TODO add indent if necessary
     icon,
     dom.span({className: "message-body-wrapper"},
       dom.span({},
         dom.span({className: "message-flex-body"},
-          children
+          dom.span({className: "message-body devtools-monospace"},
+            messageBody
+          ),
+          repeat
         )
       )
     )
   );
-}
-
-function formatTextContent(data) {
-  return data.arguments.map(function (arg, i, arr) {
-    if (data.counter) {
-      let {label, count} = data.counter;
-      arg = `${label}: ${count}`;
-    }
-
-    const str = dom.span({className: "console-string"}, arg);
-    if (i < arr.length - 1) {
-      return [str, " "];
-    }
-    return str;
-  });
 }
 
 module.exports.ConsoleApiCall = ConsoleApiCall;

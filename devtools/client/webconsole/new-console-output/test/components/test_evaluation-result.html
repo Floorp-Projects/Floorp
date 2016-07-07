@@ -15,53 +15,29 @@
 window.onload = Task.async(function* () {
   const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
   const {
-    EvaluationResult,
-    getPreviewComponent
+    EvaluationResult
   } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 
-  yield testFullRender();
-  yield testGetPreviewComponent();
+  yield testDate();
 
   SimpleTest.finish()
 
   /**
-   * Test that passing in a message correctly wires up all the children.
-   *
-   * The different combinations of children are tested in separate per-component
-   * tests. This test just ensures that this component pipes data to its children.
+   * Test that evaluation result correctly outputs date results.
    */
-  function testFullRender() {
-    const testValue = testCommands.get("new Date()");
-    const packet = yield getPacket(testValue.command, testValue.commandType);
+  function testDate() {
+    const testCommand = testCommands.get("new Date()");
+    const packet = yield getPacket(testCommand.command, testCommand.commandType);
     const message = prepareMessage(packet);
     const props = {
       message
     };
     const rendered = renderComponent(EvaluationResult, props);
 
-    ok(rendered.textContent.includes(testValue.expectedText),
-      "EvaluationResult pipes data to its children as expected");
-}
+    const queryPathBase = "div.message.cm-s-mozilla span.message-body-wrapper.message-body.devtools-monospace span .objectLink";
 
-  /**
-   * Test that getPreviewComponent() returns correct component for each object type.
-   */
-  function testGetPreviewComponent() {
-    const testValues = [
-      {
-        commandObj: testCommands.get("new Date()"),
-        expectedComponent: require("devtools/client/webconsole/new-console-output/components/message-types/date-preview").DatePreview
-      }
-    ];
-
-    for (let testValue of testValues) {
-      const { commandObj, expectedComponent } = testValue;
-      const packet = yield getPacket(commandObj.command, commandObj.commandType);
-      const message = prepareMessage(packet);
-      const rendered = shallowRenderComponent(EvaluationResult, {message});
-      is(rendered.type, expectedComponent,
-        `EvaluationResult nests ${expectedComponent} based on command: ${commandObj.command}`);
-    }
+    const preview = rendered.querySelectorAll(queryPathBase);
+    is(preview[0].textContent, testCommand.expectedText, "EvaluationResult outputs expected text");
   }
 });
 
