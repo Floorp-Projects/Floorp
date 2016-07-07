@@ -5,7 +5,7 @@ task:
   workerType: desktop-test-xlarge
   payload:
     command:
-      - --test-suite=mochitest-{{chunk}}
+      - --test-suite={{suite}}{{chunk}}
   metadata:
     name: '[TC] Android 4.3 API15+ mochitest-{{chunk}}'
     description: Mochitest plain run {{chunk}}
@@ -13,8 +13,7 @@ task:
     chunks:
       total: 20
     suite:
-      name: mochitest
-      flavor: plain-chunked
+      name: mochitest-{{chunk}}
     treeherder:
       groupSymbol: tc-M
       symbol: {{chunk}}
