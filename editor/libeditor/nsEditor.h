@@ -59,13 +59,13 @@ class AutoTransactionsConserveSelection;
 class ChangeAttributeTransaction;
 class CreateElementTransaction;
 class DeleteNodeTransaction;
+class DeleteTextTransaction;
 class ErrorResult;
 class TextComposition;
 struct EditorDOMPoint;
 
 namespace dom {
 class DataTransfer;
-class DeleteTextTxn;
 class Element;
 class EventTarget;
 class IMETextTxn;
@@ -327,11 +327,11 @@ protected:
 
 //  NS_IMETHOD DeleteRange(nsIDOMRange *aRange);
 
-  already_AddRefed<mozilla::dom::DeleteTextTxn>
+  already_AddRefed<mozilla::DeleteTextTransaction>
   CreateTxnForDeleteText(nsGenericDOMDataNode& aElement,
                          uint32_t aOffset, uint32_t aLength);
 
-  already_AddRefed<mozilla::dom::DeleteTextTxn>
+  already_AddRefed<mozilla::DeleteTextTransaction>
   CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
                               EDirection aDirection);
 

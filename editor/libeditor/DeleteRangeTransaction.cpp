@@ -6,7 +6,7 @@
 #include "DeleteRangeTransaction.h"
 
 #include "DeleteNodeTransaction.h"
-#include "DeleteTextTxn.h"
+#include "DeleteTextTransaction.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"
@@ -147,14 +147,14 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
     RefPtr<nsGenericDOMDataNode> charDataNode =
       static_cast<nsGenericDOMDataNode*>(aNode);
 
-    RefPtr<DeleteTextTxn> txn =
-      new DeleteTextTxn(*mEditor, *charDataNode, aStartOffset, numToDel,
-                        mRangeUpdater);
+    RefPtr<DeleteTextTransaction> transaction =
+      new DeleteTextTransaction(*mEditor, *charDataNode, aStartOffset, numToDel,
+                                mRangeUpdater);
 
-    nsresult res = txn->Init();
+    nsresult res = transaction->Init();
     NS_ENSURE_SUCCESS(res, res);
 
-    AppendChild(txn);
+    AppendChild(transaction);
     return NS_OK;
   }
 
@@ -196,13 +196,14 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(nsINode* aNode,
     if (numToDelete) {
       RefPtr<nsGenericDOMDataNode> dataNode =
         static_cast<nsGenericDOMDataNode*>(aNode);
-      RefPtr<DeleteTextTxn> txn = new DeleteTextTxn(*mEditor, *dataNode,
-          start, numToDelete, mRangeUpdater);
+      RefPtr<DeleteTextTransaction> transaction =
+        new DeleteTextTransaction(*mEditor, *dataNode, start, numToDelete,
+                                  mRangeUpdater);
 
-      nsresult res = txn->Init();
+      nsresult res = transaction->Init();
       NS_ENSURE_SUCCESS(res, res);
 
-      AppendChild(txn);
+      AppendChild(transaction);
     }
   }
 
