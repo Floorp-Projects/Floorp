@@ -18,8 +18,7 @@ task:
       -
         type: 'directory'
         path: 'public\test'
-        expires:
-          relative-datestamp: '1 year'
+        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherder:
