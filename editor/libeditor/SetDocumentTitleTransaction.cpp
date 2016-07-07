@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SetDocTitleTxn.h"
+#include "SetDocumentTitleTransaction.h"
 #include "mozilla/dom/Element.h"        // for Element
 #include "nsAString.h"
 #include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
@@ -20,18 +20,18 @@
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 
-using namespace mozilla;
+namespace mozilla {
 
-// note that aEditor is not refcounted
-SetDocTitleTxn::SetDocTitleTxn()
-  : EditTxn()
-  , mEditor(nullptr)
+// Note that aEditor is not refcounted.
+SetDocumentTitleTransaction::SetDocumentTitleTransaction()
+  : mEditor(nullptr)
   , mIsTransient(false)
 {
 }
 
-NS_IMETHODIMP SetDocTitleTxn::Init(nsIHTMLEditor *aEditor,
-                                   const nsAString *aValue)
+NS_IMETHODIMP
+SetDocumentTitleTransaction::Init(nsIHTMLEditor* aEditor,
+                                  const nsAString* aValue)
 
 {
   NS_ASSERTION(aEditor && aValue, "null args");
@@ -43,24 +43,28 @@ NS_IMETHODIMP SetDocTitleTxn::Init(nsIHTMLEditor *aEditor,
   return NS_OK;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::DoTransaction(void)
+NS_IMETHODIMP
+SetDocumentTitleTransaction::DoTransaction()
 {
   return SetDomTitle(mValue);
 }
 
-NS_IMETHODIMP SetDocTitleTxn::UndoTransaction(void)
+NS_IMETHODIMP
+SetDocumentTitleTransaction::UndoTransaction()
 {
   // No extra work required; the DOM changes alone are enough
   return NS_OK;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::RedoTransaction(void)
+NS_IMETHODIMP
+SetDocumentTitleTransaction::RedoTransaction()
 {
   // No extra work required; the DOM changes alone are enough
   return NS_OK;
 }
 
-nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
+nsresult
+SetDocumentTitleTransaction::SetDomTitle(const nsAString& aTitle)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
@@ -167,17 +171,20 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   return res;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAString& aString)
+NS_IMETHODIMP
+SetDocumentTitleTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("SetDocTitleTxn: ");
+  aString.AssignLiteral("SetDocumentTitleTransaction: ");
   aString += mValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::GetIsTransient(bool *aIsTransient)
+NS_IMETHODIMP
+SetDocumentTitleTransaction::GetIsTransient(bool* aIsTransient)
 {
   NS_ENSURE_TRUE(aIsTransient, NS_ERROR_NULL_POINTER);
   *aIsTransient = mIsTransient;
   return NS_OK;
 }
 
+} // namespace mozilla
