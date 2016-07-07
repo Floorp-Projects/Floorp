@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "InsertNodeTxn.h"
+#include "InsertNodeTransaction.h"
 
 #include "mozilla/dom/Selection.h"      // for Selection
 
@@ -16,34 +16,36 @@
 #include "nsReadableUtils.h"            // for ToNewCString
 #include "nsString.h"                   // for nsString
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-InsertNodeTxn::InsertNodeTxn(nsIContent& aNode, nsINode& aParent,
-                             int32_t aOffset, nsEditor& aEditor)
-  : EditTxn()
-  , mNode(&aNode)
+using namespace dom;
+
+InsertNodeTransaction::InsertNodeTransaction(nsIContent& aNode,
+                                             nsINode& aParent,
+                                             int32_t aOffset,
+                                             nsEditor& aEditor)
+  : mNode(&aNode)
   , mParent(&aParent)
   , mOffset(aOffset)
   , mEditor(aEditor)
 {
 }
 
-InsertNodeTxn::~InsertNodeTxn()
+InsertNodeTransaction::~InsertNodeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTxn,
                                    mNode,
                                    mParent)
 
-NS_IMPL_ADDREF_INHERITED(InsertNodeTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(InsertNodeTxn, EditTxn)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertNodeTxn)
+NS_IMPL_ADDREF_INHERITED(InsertNodeTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(InsertNodeTransaction, EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-InsertNodeTxn::DoTransaction()
+InsertNodeTransaction::DoTransaction()
 {
   MOZ_ASSERT(mNode && mParent);
 
@@ -75,7 +77,7 @@ InsertNodeTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-InsertNodeTxn::UndoTransaction()
+InsertNodeTransaction::UndoTransaction()
 {
   MOZ_ASSERT(mNode && mParent);
 
@@ -85,8 +87,10 @@ InsertNodeTxn::UndoTransaction()
 }
 
 NS_IMETHODIMP
-InsertNodeTxn::GetTxnDescription(nsAString& aString)
+InsertNodeTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("InsertNodeTxn");
+  aString.AssignLiteral("InsertNodeTransaction");
   return NS_OK;
 }
+
+} // namespace mozilla
