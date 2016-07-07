@@ -108,11 +108,6 @@ ShutdownTestOpensOpenedParent(TestOpensOpenedParent* parent,
                               Transport* transport)
 {
     delete parent;
-
-    // Now delete the transport, which has to happen after the
-    // top-level actor is deleted.
-    XRE_GetIOMessageLoop()->PostTask(
-        do_AddRef(new DeleteTask<Transport>(transport)));
 }
 
 void
@@ -230,11 +225,6 @@ ShutdownTestOpensOpenedChild(TestOpensOpenedChild* child,
                              Transport* transport)
 {
     delete child;
-
-    // Now delete the transport, which has to happen after the
-    // top-level actor is deleted.
-    XRE_GetIOMessageLoop()->PostTask(
-        do_AddRef(new DeleteTask<Transport>(transport)));
 
     // Kick off main-thread shutdown.
     gMainThread->PostTask(

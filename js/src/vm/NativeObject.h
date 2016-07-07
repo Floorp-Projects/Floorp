@@ -21,6 +21,7 @@
 #include "gc/Marking.h"
 #include "js/Value.h"
 #include "vm/Shape.h"
+#include "vm/ShapedObject.h"
 #include "vm/String.h"
 #include "vm/TypeInference.h"
 
@@ -327,17 +328,18 @@ enum class DenseElementResult {
 /*
  * NativeObject specifies the internal implementation of a native object.
  *
- * Native objects extend the base implementation of an object with storage
- * for the object's named properties and indexed elements.
+ * Native objects use ShapedObject::shape_ to record property information.  Two
+ * native objects with the same shape are guaranteed to have the same number of
+ * fixed slots.
+ *
+ * Native objects extend the base implementation of an object with storage for
+ * the object's named properties and indexed elements.
  *
  * These are stored separately from one another. Objects are followed by a
  * variable-sized array of values for inline storage, which may be used by
  * either properties of native objects (fixed slots), by elements (fixed
  * elements), or by other data for certain kinds of objects, such as
  * ArrayBufferObjects and TypedArrayObjects.
- *
- * Two native objects with the same shape are guaranteed to have the same
- * number of fixed slots.
  *
  * Named property storage can be split between fixed slots and a dynamically
  * allocated array (the slots member). For an object with N fixed slots, shapes
@@ -354,12 +356,9 @@ enum class DenseElementResult {
  * Slots and elements may both be non-empty. The slots may be either names or
  * indexes; no indexed property will be in both the slots and elements.
  */
-class NativeObject : public JSObject
+class NativeObject : public ShapedObject
 {
   protected:
-    // Property layout description and other state.
-    GCPtrShape shape_;
-
     /* Slots for object properties. */
     js::HeapSlot* slots_;
 
@@ -377,8 +376,6 @@ class NativeObject : public JSObject
         static_assert(sizeof(NativeObject) % sizeof(Value) == 0,
                       "fixed slots after an object must be aligned");
 
-        static_assert(offsetof(NativeObject, shape_) == offsetof(shadow::Object, shape),
-                      "shadow shape must match actual shape");
         static_assert(offsetof(NativeObject, group_) == offsetof(shadow::Object, group),
                       "shadow type must match actual type");
         static_assert(offsetof(NativeObject, slots_) == offsetof(shadow::Object, slots),

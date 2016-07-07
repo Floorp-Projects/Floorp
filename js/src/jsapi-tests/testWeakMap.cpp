@@ -35,14 +35,14 @@ BEGIN_TEST(testWeakMap_basicOperations)
     CHECK(r == val);
     CHECK(checkSize(map, 1));
 
-    JS_GC(rt);
+    JS_GC(cx);
 
     CHECK(GetWeakMapEntry(cx, map, key, &r));
     CHECK(r == val);
     CHECK(checkSize(map, 1));
 
     key = nullptr;
-    JS_GC(rt);
+    JS_GC(cx);
 
     CHECK(checkSize(map, 0));
 
@@ -71,7 +71,7 @@ END_TEST(testWeakMap_basicOperations)
 BEGIN_TEST(testWeakMap_keyDelegates)
 {
     JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
-    JS_GC(rt);
+    JS_GC(cx);
     JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
     CHECK(map);
 
@@ -130,7 +130,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     /* Check that when the delegate becomes unreachable the entry is removed. */
     delegateRoot = nullptr;
     keyDelegate = nullptr;
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(checkSize(map, 0));
 
     return true;

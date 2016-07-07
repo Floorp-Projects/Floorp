@@ -723,10 +723,6 @@ PluginModuleContentParent::PluginModuleContentParent(bool aAllowAsyncInit)
 
 PluginModuleContentParent::~PluginModuleContentParent()
 {
-    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(GetTransport());
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-                                     
-
     Preferences::UnregisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
 

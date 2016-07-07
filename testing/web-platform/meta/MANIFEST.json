@@ -36403,6 +36403,12 @@
             "url": "/web-animations/animation-model/keyframe-effects/spacing-keyframes.html"
           }
         ],
+        "service-workers/service-worker/client-navigate.https.html": [
+          {
+            "path": "service-workers/service-worker/client-navigate.https.html",
+            "url": "/service-workers/service-worker/client-navigate.https.html"
+          }
+        ],
         "web-animations/interfaces/DocumentTimeline/constructor.html": [
           {
             "path": "web-animations/interfaces/DocumentTimeline/constructor.html",

@@ -13,6 +13,9 @@
 #include "nsISpeechService.h"
 
 namespace mozilla {
+
+class SharedBuffer;
+
 namespace dom {
 
 class SpeechSynthesisUtterance;

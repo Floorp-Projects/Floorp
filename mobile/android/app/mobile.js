@@ -560,8 +560,10 @@ pref("ui.dragThresholdY", 25);
 pref("layers.acceleration.disabled", false);
 pref("layers.async-video.enabled", true);
 
-#ifdef MOZ_ANDROID_APZ
-pref("layers.async-pan-zoom.enabled", true);
+#ifndef MOZ_ANDROID_APZ
+pref("layers.async-pan-zoom.enabled", false);
+#endif
+
 pref("apz.content_response_timeout", 600);
 pref("apz.allow_immediate_handoff", false);
 pref("apz.touch_start_tolerance", "0.06");
@@ -579,7 +581,6 @@ pref("apz.fling_stopped_threshold", "0.0");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 pref("apz.fling_accel_interval_ms", 750);
 pref("apz.overscroll.enabled", true);
-#endif
 
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);

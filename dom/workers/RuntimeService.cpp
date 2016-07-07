@@ -261,7 +261,7 @@ GenerateSharedWorkerKey(const nsACString& aScriptSpec, const nsACString& aName,
 }
 
 void
-LoadRuntimeOptions(const char* aPrefName, void* /* aClosure */)
+LoadContextOptions(const char* aPrefName, void* /* aClosure */)
 {
   AssertIsOnMainThread();
 
@@ -291,9 +291,9 @@ LoadRuntimeOptions(const char* aPrefName, void* /* aClosure */)
   }
 #endif
 
-  // Runtime options.
-  JS::RuntimeOptions runtimeOptions;
-  runtimeOptions.setAsmJS(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs")))
+  // Context options.
+  JS::ContextOptions contextOptions;
+  contextOptions.setAsmJS(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs")))
                 .setWasm(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm")))
                 .setThrowOnAsmJSValidationFailure(GetWorkerPref<bool>(
                       NS_LITERAL_CSTRING("throw_on_asmjs_validation_failure")))
@@ -304,10 +304,10 @@ LoadRuntimeOptions(const char* aPrefName, void* /* aClosure */)
                 .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")))
                 .setExtraWarnings(GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict")));
 
-  RuntimeService::SetDefaultRuntimeOptions(runtimeOptions);
+  RuntimeService::SetDefaultContextOptions(contextOptions);
 
   if (rts) {
-    rts->UpdateAllWorkerRuntimeOptions();
+    rts->UpdateAllWorkerContextOptions();
   }
 }
 
@@ -758,7 +758,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 
   JSContext* workerCx = JS_GetContext(aRuntime);
 
-  JS::RuntimeOptionsRef(aRuntime) = settings.runtimeOptions;
+  JS::ContextOptionsRef(workerCx) = settings.contextOptions;
 
   JSSettings::JSGCSettingsArray& gcSettings = settings.gcSettings;
 
@@ -793,9 +793,9 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     return nullptr;
   }
 
-  JS_SetInterruptCallback(aRuntime, InterruptCallback);
+  JS_SetInterruptCallback(workerCx, InterruptCallback);
 
-  js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
+  js::SetCTypesActivityCallback(workerCx, CTypesActivityCallback);
 
 #ifdef JS_GC_ZEAL
   JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
@@ -1711,7 +1711,7 @@ RuntimeService::Init()
 
   // Initialize JSSettings.
   if (!sDefaultJSSettings.gcSettings[0].IsSet()) {
-    sDefaultJSSettings.runtimeOptions = JS::RuntimeOptions();
+    sDefaultJSSettings.contextOptions = JS::ContextOptions();
     sDefaultJSSettings.chrome.maxScriptRuntime = -1;
     sDefaultJSSettings.chrome.compartmentOptions.behaviors().setVersion(JSVERSION_LATEST);
     sDefaultJSSettings.content.maxScriptRuntime = MAX_SCRIPT_RUN_TIME_SEC;
@@ -1789,10 +1789,10 @@ RuntimeService::Init()
 #undef WORKER_PREF
 
       NS_FAILED(Preferences::RegisterCallbackAndCall(
-                                                   LoadRuntimeOptions,
+                                                   LoadContextOptions,
                                                    PREF_WORKERS_OPTIONS_PREFIX,
                                                    nullptr)) ||
-      NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
+      NS_FAILED(Preferences::RegisterCallback(LoadContextOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr))) {
     NS_WARNING("Failed to register pref callbacks!");
@@ -1931,10 +1931,10 @@ RuntimeService::Cleanup()
   NS_ASSERTION(!mWindowMap.Count(), "All windows should have been released!");
 
   if (mObserved) {
-    if (NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeOptions,
+    if (NS_FAILED(Preferences::UnregisterCallback(LoadContextOptions,
                                                   PREF_JS_OPTIONS_PREFIX,
                                                   nullptr)) ||
-        NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeOptions,
+        NS_FAILED(Preferences::UnregisterCallback(LoadContextOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
 
@@ -2287,9 +2287,9 @@ RuntimeService::NoteIdleThread(WorkerThread* aThread)
 }
 
 void
-RuntimeService::UpdateAllWorkerRuntimeOptions()
+RuntimeService::UpdateAllWorkerContextOptions()
 {
-  BROADCAST_ALL_WORKERS(UpdateRuntimeOptions, sDefaultJSSettings.runtimeOptions);
+  BROADCAST_ALL_WORKERS(UpdateContextOptions, sDefaultJSSettings.contextOptions);
 }
 
 void
@@ -2583,7 +2583,7 @@ WorkerThreadPrimaryRunnable::Run()
 
     // Perform a full GC. This will collect the main worker global and CC,
     // which should break all cycles that touch JS.
-    JS_GC(JS_GetRuntime(cx));
+    JS_GC(cx);
 
     // Before shutting down the cycle collector we need to do one more pass
     // through the event loop to clean up any C++ objects that need deferred

@@ -49,6 +49,7 @@ using mozilla::Move;
 using mozilla::MallocSizeOf;
 using mozilla::PodZero;
 using mozilla::PodCopy;
+using mozilla::PodEqual;
 using mozilla::RefCounted;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
@@ -605,7 +606,7 @@ class MemoryAccess
       : nextInsOffset_(nextInsOffset)
     { }
 
-    void* patchHeapPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
+    void* patchMemoryPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
     void offsetBy(uint32_t offset) { nextInsOffset_ += offset; }
 };
 #elif defined(JS_CODEGEN_X64)
@@ -732,6 +733,8 @@ enum class Trap
     IntegerDivideByZero,
     // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
     OutOfBounds,
+    // Unaligned memory access.
+    UnalignedAccess,
     // Bad signature for an indirect call.
     BadIndirectCall,
 
@@ -755,6 +758,7 @@ enum class JumpTarget
     InvalidConversionToInteger = unsigned(Trap::InvalidConversionToInteger),
     IntegerDivideByZero = unsigned(Trap::IntegerDivideByZero),
     OutOfBounds = unsigned(Trap::OutOfBounds),
+    UnalignedAccess = unsigned(Trap::UnalignedAccess),
     BadIndirectCall = unsigned(Trap::BadIndirectCall),
     ImpreciseSimdConversion = unsigned(Trap::ImpreciseSimdConversion),
     // Non-traps
@@ -765,19 +769,40 @@ enum class JumpTarget
 
 typedef EnumeratedArray<JumpTarget, JumpTarget::Limit, Uint32Vector> JumpSiteArray;
 
-// The CompileArgs struct captures global parameters that affect all wasm code
+// The SignalUsage struct captures global parameters that affect all wasm code
 // generation. It also currently is the single source of truth for whether or
 // not to use signal handlers for different purposes.
 
-struct CompileArgs
+struct SignalUsage
 {
-    bool useSignalHandlersForOOB;
-    bool useSignalHandlersForInterrupt;
+    // NB: these fields are serialized as a POD in Assumptions.
+    bool forOOB;
+    bool forInterrupt;
 
-    CompileArgs() = default;
-    explicit CompileArgs(ExclusiveContext* cx);
-    bool operator==(CompileArgs rhs) const;
-    bool operator!=(CompileArgs rhs) const { return !(*this == rhs); }
+    SignalUsage() = default;
+    explicit SignalUsage(ExclusiveContext* cx);
+    bool operator==(SignalUsage rhs) const;
+    bool operator!=(SignalUsage rhs) const { return !(*this == rhs); }
+};
+
+// Assumptions captures ambient state that must be the same when compiling and
+// deserializing a module for the compiled code to be valid. If it's not, then
+// the module must be recompiled from scratch.
+
+struct Assumptions
+{
+    SignalUsage           usesSignal;
+    uint32_t              cpuId;
+    JS::BuildIdCharVector buildId;
+    bool                  newFormat;
+
+    Assumptions() : cpuId(0), newFormat(false) {}
+    MOZ_MUST_USE bool init(SignalUsage usesSignal, JS::BuildIdOp buildIdOp);
+
+    bool operator==(const Assumptions& rhs) const;
+    bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
+
+    WASM_DECLARE_SERIALIZABLE(Assumptions)
 };
 
 // A Module can either be asm.js or wasm.

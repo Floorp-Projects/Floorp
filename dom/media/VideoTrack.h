@@ -13,6 +13,7 @@ namespace mozilla {
 namespace dom {
 
 class VideoTrackList;
+class VideoStreamTrack;
 
 class VideoTrack : public MediaTrack
 {
@@ -20,7 +21,11 @@ public:
   VideoTrack(const nsAString& aId,
              const nsAString& aKind,
              const nsAString& aLabel,
-             const nsAString& aLanguage);
+             const nsAString& aLanguage,
+             VideoStreamTrack* aStreamTarck = nullptr);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VideoTrack, MediaTrack)
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -36,6 +41,11 @@ public:
   // aFlags contains FIRE_NO_EVENTS because no events are fired in such cases.
   void SetEnabledInternal(bool aEnabled, int aFlags) override;
 
+  // Get associated video stream track when the video track comes from
+  // MediaStream. This might be nullptr when the src of owning HTMLMediaElement
+  // is not MediaStream.
+  VideoStreamTrack* GetVideoStreamTrack() { return mVideoStreamTrack; }
+
   // WebIDL
   bool Selected() const
   {
@@ -48,7 +58,10 @@ public:
   void SetSelected(bool aSelected);
 
 private:
+  virtual ~VideoTrack();
+
   bool mSelected;
+  RefPtr<VideoStreamTrack> mVideoStreamTrack;
 };
 
 } // namespace dom

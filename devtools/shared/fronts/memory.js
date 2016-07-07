@@ -35,10 +35,14 @@ const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
    *         Always force a bulk data copy of the saved heap snapshot, even when
    *         the server and client share a file system.
    *
+   * @params {Object|undefined} options.boundaries
+   *         The boundaries for the heap snapshot. See
+   *         ThreadSafeChromeUtils.webidl for more details.
+   *
    * @returns Promise<String>
    */
   saveHeapSnapshot: protocol.custom(Task.async(function* (options = {}) {
-    const snapshotId = yield this._saveHeapSnapshotImpl();
+    const snapshotId = yield this._saveHeapSnapshotImpl(options.boundaries);
 
     if (!options.forceCopy &&
         (yield HeapSnapshotFileUtils.haveHeapSnapshotTempFile(snapshotId))) {

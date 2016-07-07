@@ -7,8 +7,10 @@
 #include "AudioChannelAgent.h"
 #include "AudioChannelService.h"
 #include "AudioSegment.h"
+#include "MediaStreamListener.h"
 #include "nsSpeechTask.h"
 #include "nsSynthVoiceRegistry.h"
+#include "SharedBuffer.h"
 #include "SpeechSynthesis.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
@@ -53,10 +55,10 @@ public:
   }
 
   void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamListener::MediaStreamGraphEvent event) override
+                   MediaStreamGraphEvent event) override
   {
     switch (event) {
-      case EVENT_FINISHED:
+      case MediaStreamGraphEvent::EVENT_FINISHED:
         {
           if (!mStarted) {
             mStarted = true;
@@ -70,7 +72,7 @@ public:
           aGraph->DispatchToMainThreadAfterStreamStateUpdate(endRunnable.forget());
         }
         break;
-      case EVENT_REMOVED:
+      case MediaStreamGraphEvent::EVENT_REMOVED:
         mSpeechTask = nullptr;
         // Dereference MediaStream to destroy safety
         mStream = nullptr;
