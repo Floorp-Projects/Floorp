@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSelectionState.h"
+#include "SelectionState.h"
 
 #include "EditorUtils.h"                // for EditorUtils
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
@@ -19,23 +19,28 @@
 #include "nsISupportsImpl.h"            // for nsRange::Release
 #include "nsRange.h"                    // for nsRange
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-/***************************************************************************
- * class for recording selection info.  stores selection as collection of
+using namespace dom;
+
+/******************************************************************************
+ * mozilla::SelectionState
+ *
+ * Class for recording selection info.  Stores selection as collection of
  * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Can't store
  * ranges since dom gravity will possibly change the ranges.
- */
-nsSelectionState::nsSelectionState() : mArray(){}
+ ******************************************************************************/
+SelectionState::SelectionState()
+{
+}
 
-nsSelectionState::~nsSelectionState()
+SelectionState::~SelectionState()
 {
   MakeEmpty();
 }
 
 void
-nsSelectionState::SaveSelection(Selection* aSel)
+SelectionState::SaveSelection(Selection* aSel)
 {
   MOZ_ASSERT(aSel);
   int32_t arrayCount = mArray.Length();
@@ -61,7 +66,7 @@ nsSelectionState::SaveSelection(Selection* aSel)
 }
 
 nsresult
-nsSelectionState::RestoreSelection(Selection* aSel)
+SelectionState::RestoreSelection(Selection* aSel)
 {
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
   nsresult res;
@@ -84,7 +89,7 @@ nsSelectionState::RestoreSelection(Selection* aSel)
 }
 
 bool
-nsSelectionState::IsCollapsed()
+SelectionState::IsCollapsed()
 {
   if (1 != mArray.Length()) return false;
   RefPtr<nsRange> range = mArray[0]->GetRange();
@@ -95,7 +100,7 @@ nsSelectionState::IsCollapsed()
 }
 
 bool
-nsSelectionState::IsEqual(nsSelectionState *aSelState)
+SelectionState::IsEqual(SelectionState* aSelState)
 {
   NS_ENSURE_TRUE(aSelState, false);
   uint32_t i, myCount = mArray.Length(), itsCount = aSelState->mArray.Length();
@@ -120,17 +125,22 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
 }
 
 void
-nsSelectionState::MakeEmpty()
+SelectionState::MakeEmpty()
 {
   // free any items in the array
   mArray.Clear();
 }
 
 bool
-nsSelectionState::IsEmpty()
+SelectionState::IsEmpty()
 {
   return mArray.IsEmpty();
 }
+
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 /***************************************************************************
  * nsRangeUpdater:  class for updating nsRanges in response to editor actions.
@@ -163,7 +173,7 @@ nsRangeUpdater::DropRangeItem(nsRangeStore *aRangeItem)
 }
 
 nsresult
-nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
+nsRangeUpdater::RegisterSelectionState(SelectionState& aSelState)
 {
   uint32_t i, theCount = aSelState.mArray.Length();
   if (theCount < 1) return NS_ERROR_FAILURE;
@@ -177,7 +187,7 @@ nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
 }
 
 nsresult
-nsRangeUpdater::DropSelectionState(nsSelectionState &aSelState)
+nsRangeUpdater::DropSelectionState(SelectionState& aSelState)
 {
   uint32_t i, theCount = aSelState.mArray.Length();
   if (theCount < 1) return NS_ERROR_FAILURE;
@@ -627,7 +637,7 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
 
 
 /***************************************************************************
- * helper class for nsSelectionState.  nsRangeStore stores range endpoints.
+ * helper class for SelectionState.  nsRangeStore stores range endpoints.
  */
 
 nsRangeStore::nsRangeStore()

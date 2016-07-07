@@ -6,6 +6,7 @@
 #ifndef nsHTMLEditRules_h__
 #define nsHTMLEditRules_h__
 
+#include "SelectionState.h"
 #include "TypeInState.h"
 #include "nsCOMPtr.h"
 #include "nsEditor.h"
@@ -13,7 +14,6 @@
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsISupportsImpl.h"
-#include "nsSelectionState.h"
 #include "nsTArray.h"
 #include "nsTextEditRules.h"
 #include "nscore.h"

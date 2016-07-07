@@ -6,6 +6,7 @@
 #include "nsWSRunObject.h"
 
 #include "EditorUtils.h"
+#include "SelectionState.h"
 #include "TextEditUtils.h"
 
 #include "mozilla/OwningNonNull.h"
@@ -24,7 +25,6 @@
 #include "nsIDOMNode.h"
 #include "nsISupportsImpl.h"
 #include "nsRange.h"
-#include "nsSelectionState.h"
 #include "nsString.h"
 #include "nsTextFragment.h"
 

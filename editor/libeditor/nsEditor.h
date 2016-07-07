@@ -6,6 +6,7 @@
 #ifndef __editor_h__
 #define __editor_h__
 
+#include "SelectionState.h"             // for nsRangeUpdater, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
@@ -22,7 +23,6 @@
 #include "nsISupportsImpl.h"            // for nsEditor::Release, etc
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
-#include "nsSelectionState.h"           // for nsRangeUpdater, etc
 #include "nsString.h"                   // for nsCString
 #include "nsWeakReference.h"            // for nsSupportsWeakReference
 #include "nscore.h"                     // for nsresult, nsAString, etc
@@ -850,7 +850,8 @@ protected:
   nsWeakPtr        mPlaceHolderTxn;      // weak reference to placeholder for begin/end batch purposes
   nsWeakPtr        mDocWeak;             // weak reference to the nsIDOMDocument
   nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
-  nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
+  // Saved selection state for placeholder transaction batching.
+  mozilla::SelectionState* mSelState;
   nsString         *mPhonetic;
   // IME composition this is not null between compositionstart and
   // compositionend.
@@ -864,8 +865,8 @@ protected:
   // Listen to overall doc state (dirty or not, just created, etc)
   nsTArray<OwningNonNull<nsIDocumentStateListener>> mDocStateListeners;
 
-  // cached selection for AutoSelectionRestorer
-  nsSelectionState  mSavedSel;
+  // Cached selection for AutoSelectionRestorer.
+  mozilla::SelectionState mSavedSel;
   nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
 
   uint32_t          mModCount;     // number of modifications (for undo/redo stack)

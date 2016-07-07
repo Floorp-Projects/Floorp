@@ -56,7 +56,7 @@ NS_IMPL_RELEASE_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 
 NS_IMETHODIMP
 PlaceholderTransaction::Init(nsIAtom* aName,
-                             nsSelectionState* aSelState,
+                             SelectionState* aSelState,
                              nsEditor* aEditor)
 {
   NS_ENSURE_TRUE(aEditor && aSelState, NS_ERROR_NULL_POINTER);
@@ -217,7 +217,7 @@ PlaceholderTransaction::GetTxnName(nsIAtom** aName)
 }
 
 NS_IMETHODIMP
-PlaceholderTransaction::StartSelectionEquals(nsSelectionState* aSelState,
+PlaceholderTransaction::StartSelectionEquals(SelectionState* aSelState,
                                              bool* aResult)
 {
   // determine if starting selection matches the given selection state.

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
+#include "SelectionState.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
@@ -34,7 +35,6 @@
 #include "nsLiteralString.h"
 #include "nsRange.h"
 #include "nsReadableUtils.h"
-#include "nsSelectionState.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
