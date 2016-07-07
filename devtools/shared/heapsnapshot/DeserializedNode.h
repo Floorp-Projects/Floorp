@@ -244,7 +244,7 @@ using mozilla::devtools::DeserializedNode;
 using mozilla::devtools::DeserializedStackFrame;
 
 template<>
-class Concrete<DeserializedNode> : public Base
+struct Concrete<DeserializedNode> : public Base
 {
 protected:
   explicit Concrete(DeserializedNode* ptr) : Base(ptr) { }
@@ -253,6 +253,8 @@ protected:
   }
 
 public:
+  static const char16_t concreteTypeName[];
+
   static void construct(void* storage, DeserializedNode* ptr) {
     new (storage) Concrete(ptr);
   }
@@ -271,8 +273,6 @@ public:
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.
   js::UniquePtr<EdgeRange> edges(JSRuntime* rt, bool) const override;
-
-  static const char16_t concreteTypeName[];
 };
 
 template<>

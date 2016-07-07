@@ -788,13 +788,7 @@ IsMarked(const jit::VMFunction*)
 namespace JS {
 namespace ubi {
 template<>
-class Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
-  protected:
-    explicit Concrete(js::jit::JitCode *ptr) : TracerConcrete<js::jit::JitCode>(ptr) { }
-
-  public:
-    static void construct(void *storage, js::jit::JitCode *ptr) { new (storage) Concrete(ptr); }
-
+struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
     CoarseType coarseType() const final { return CoarseType::Script; }
 
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override {
@@ -804,8 +798,11 @@ class Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
         return size;
     }
 
-    const char16_t* typeName() const override { return concreteTypeName; }
-    static const char16_t concreteTypeName[];
+  protected:
+    explicit Concrete(js::jit::JitCode *ptr) : TracerConcrete<js::jit::JitCode>(ptr) { }
+
+  public:
+    static void construct(void *storage, js::jit::JitCode *ptr) { new (storage) Concrete(ptr); }
 };
 
 } // namespace ubi

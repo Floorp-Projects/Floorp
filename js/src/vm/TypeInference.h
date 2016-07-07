@@ -1325,17 +1325,14 @@ namespace JS {
 namespace ubi {
 
 template<>
-class Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> {
+struct Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> {
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
   protected:
     explicit Concrete(js::ObjectGroup *ptr) : TracerConcrete<js::ObjectGroup>(ptr) { }
 
   public:
     static void construct(void *storage, js::ObjectGroup *ptr) { new (storage) Concrete(ptr); }
-
-    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-
-    const char16_t* typeName() const override { return concreteTypeName; }
-    static const char16_t concreteTypeName[];
 };
 
 } // namespace ubi
