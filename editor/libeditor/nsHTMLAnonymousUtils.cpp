@@ -11,7 +11,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -424,7 +423,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
   if (!isPositioned) {
     // hmmm... the expensive way now...
     nsAutoString positionStr;
-    mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::position,
+    mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::position,
                                        positionStr);
     isPositioned = positionStr.EqualsLiteral("absolute");
   }
@@ -435,7 +434,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 
     // Get the all the computed css styles attached to the element node
     RefPtr<nsComputedDOMStyle> cssDecl =
-      mHTMLCSSUtils->GetComputedStyle(element);
+      mCSSEditUtils->GetComputedStyle(element);
     NS_ENSURE_STATE(cssDecl);
 
     aBorderLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));
@@ -474,6 +473,6 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 void
 nsHTMLEditor::SetAnonymousElementPosition(int32_t aX, int32_t aY, nsIDOMElement *aElement)
 {
-  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("left"), aX);
-  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("top"), aY);
+  mCSSEditUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("left"), aX);
+  mCSSEditUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("top"), aY);
 }
