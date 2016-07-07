@@ -51,9 +51,13 @@ private:
 
   void RequestVideoData();
 
+  bool NeedMoreVideo() const;
+
+  bool IsVideoRequestPending() const;
+
   bool IsAudioSeekComplete() const;
 
-  bool IsVideoSeekComplete();
+  bool IsVideoSeekComplete() const;
 
   void CheckIfSeekComplete();
 
