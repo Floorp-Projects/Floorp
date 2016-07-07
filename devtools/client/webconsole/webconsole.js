@@ -501,8 +501,9 @@ WebConsoleFrame.prototype = {
   _initUI: function () {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
-    this.NEW_CONSOLE_OUTPUT_ENABLED = !this.owner._browserConsole &&
-      Services.prefs.getBoolPref(PREF_NEW_FRONTEND_ENABLED);
+    this.NEW_CONSOLE_OUTPUT_ENABLED = !this.owner._browserConsole
+      && !this.owner.target.chrome
+      && Services.prefs.getBoolPref(PREF_NEW_FRONTEND_ENABLED);
 
     this._initDefaultFilterPrefs();
 
