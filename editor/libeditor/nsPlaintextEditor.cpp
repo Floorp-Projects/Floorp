@@ -1094,7 +1094,7 @@ nsPlaintextEditor::Undo(uint32_t aCount)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsAutoUpdateViewBatch beginViewBatching(this);
+  AutoUpdateViewBatch beginViewBatching(this);
 
   ForceCompositionEnd();
 
@@ -1123,7 +1123,7 @@ nsPlaintextEditor::Redo(uint32_t aCount)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsAutoUpdateViewBatch beginViewBatching(this);
+  AutoUpdateViewBatch beginViewBatching(this);
 
   ForceCompositionEnd();
 

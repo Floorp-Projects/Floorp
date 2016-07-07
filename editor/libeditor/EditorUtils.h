@@ -162,38 +162,41 @@ class MOZ_RAII nsAutoTxnsConserveSelection
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+namespace mozilla {
+
 /***************************************************************************
  * stack based helper class for batching reflow and paint requests.
  */
-class MOZ_RAII nsAutoUpdateViewBatch
+class MOZ_RAII AutoUpdateViewBatch final
 {
-  public:
-
-  explicit nsAutoUpdateViewBatch(nsEditor *ed MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : mEd(ed)
+public:
+  explicit AutoUpdateViewBatch(nsEditor* aEditor
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mEditor(aEditor)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    NS_ASSERTION(mEd, "null mEd pointer!");
+    NS_ASSERTION(mEditor, "null mEditor pointer!");
 
-    if (mEd)
-      mEd->BeginUpdateViewBatch();
+    if (mEditor) {
+      mEditor->BeginUpdateViewBatch();
+    }
   }
 
-  ~nsAutoUpdateViewBatch()
+  ~AutoUpdateViewBatch()
   {
-    if (mEd)
-      mEd->EndUpdateViewBatch();
+    if (mEditor) {
+      mEditor->EndUpdateViewBatch();
+    }
   }
 
-  protected:
-  nsEditor *mEd;
+protected:
+  nsEditor* mEditor;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /******************************************************************************
  * some helper classes for iterating the dom tree
  *****************************************************************************/
-
-namespace mozilla {
 
 class BoolDomIterFunctor
 {
