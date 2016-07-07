@@ -34,7 +34,6 @@ function getTooltipContent(doc) {
 }
 
 add_task(function* () {
-  yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
   let box1 = doc.getElementById("box1");
@@ -44,7 +43,7 @@ add_task(function* () {
 
   let width = 100, height = 50;
 
-  let tooltip = new HTMLTooltip({doc}, {});
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
   tooltip.setContent(getTooltipContent(doc), {width, height});
 
   info("Show the tooltip on each of the 4 hbox, without calling hide in between");
@@ -67,4 +66,6 @@ add_task(function* () {
 
   info("Hide tooltip before leaving test");
   yield hideTooltip(tooltip);
+
+  tooltip.destroy();
 });
