@@ -324,39 +324,31 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
 
   SAMPLE_LOG("OnVideoNotDecoded (aReason=%u)", aReason);
 
-  if (aReason == MediaDecoderReader::DECODE_ERROR) {
-    if (mVideoQueue.GetSize() > 0) {
-      // The video decoding request might be filed by MDSM not the
-      // NextFrameSeekTask itself. So, the NextFrameSeekTask might has already
-      // found its target in the VideoQueue but still waits the video decoding
-      // request (which is filed by the MDSM) to be resolved. In this case, we
-      // already have the target of this seek task, try to resolve this task.
-      MaybeFinishSeek();
-      return;
-    }
-
-    // Otherwise, we cannot get the target video frame of this seek task,
-    // delegate the decode error to the generic error path.
-    RejectIfExist(__func__);
-    return;
-  }
-
-  // If the decoder is waiting for data, we tell it to call us back when the
-  // data arrives.
-  if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    mReader->WaitForData(MediaData::VIDEO_DATA);
-    return;
-  }
-
-  if (aReason == MediaDecoderReader::CANCELED) {
-    EnsureVideoDecodeTaskQueued();
-    return;
-  }
-
   if (aReason == MediaDecoderReader::END_OF_STREAM) {
     mIsVideoQueueFinished = true;
-    MaybeFinishSeek();
   }
+
+  // Video seek not finished.
+  if (NeedMoreVideo()) {
+    switch (aReason) {
+      case MediaDecoderReader::DECODE_ERROR:
+        // Reject the promise since we can't finish video seek anyway.
+        RejectIfExist(__func__);
+        break;
+      case MediaDecoderReader::WAITING_FOR_DATA:
+        mReader->WaitForData(MediaData::VIDEO_DATA);
+        break;
+      case MediaDecoderReader::CANCELED:
+        EnsureVideoDecodeTaskQueued();
+        break;
+      case MediaDecoderReader::END_OF_STREAM:
+        MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
+        break;
+    }
+    return;
+  }
+
+  MaybeFinishSeek();
 }
 
 void
@@ -394,9 +386,16 @@ NextFrameSeekTask::SetCallbacks()
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
-    if (aData.is<MediaData::Type>()) {
-      EnsureVideoDecodeTaskQueued();
+    if (NeedMoreVideo()) {
+      if (aData.is<MediaData::Type>()) {
+        EnsureVideoDecodeTaskQueued();
+      } else {
+        // Reject if we can't finish video seeking.
+        RejectIfExist(__func__);
+      }
+      return;
     }
+    MaybeFinishSeek();
   });
 }
 
