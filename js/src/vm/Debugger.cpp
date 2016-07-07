@@ -7128,6 +7128,12 @@ DebuggerFrame::getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
 }
 
 /* static */ bool
+DebuggerFrame::isGenerator() const
+{
+    return referent().script()->isGenerator();
+}
+
+/* static */ bool
 DebuggerFrame::getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
                                   Maybe<ScriptFrameIter>& result)
 {
@@ -7342,11 +7348,12 @@ DebuggerFrame::calleeGetter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getGenerator(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::generatorGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get generator", args, thisobj, frame);
-    args.rval().setBoolean(frame.script()->isGenerator());
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get callee", args, frame);
+
+    args.rval().setBoolean(frame->isGenerator());
     return true;
 }
 
@@ -7876,7 +7883,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("callee", DebuggerFrame::calleeGetter, 0),
     JS_PSG("constructing", DebuggerFrame::constructingGetter, 0),
     JS_PSG("environment", DebuggerFrame::environmentGetter, 0),
-    JS_PSG("generator", DebuggerFrame_getGenerator, 0),
+    JS_PSG("generator", DebuggerFrame::generatorGetter, 0),
     JS_PSG("live", DebuggerFrame_getLive, 0),
     JS_PSG("offset", DebuggerFrame_getOffset, 0),
     JS_PSG("older", DebuggerFrame_getOlder, 0),
