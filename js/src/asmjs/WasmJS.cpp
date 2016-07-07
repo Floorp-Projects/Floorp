@@ -157,7 +157,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
 static bool
 InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
 {
-    MOZ_ASSERT(cx->runtime()->options().wasm());
+    MOZ_ASSERT(cx->options().wasm());
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
@@ -209,7 +209,7 @@ const Class js::WasmClass = {
 JSObject*
 js::InitWasmClass(JSContext* cx, HandleObject global)
 {
-    MOZ_ASSERT(cx->runtime()->options().wasm());
+    MOZ_ASSERT(cx->options().wasm());
 
     RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
     if (!proto)
@@ -649,7 +649,7 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
 JSObject*
 js::InitWebAssemblyClass(JSContext* cx, HandleObject global)
 {
-    MOZ_ASSERT(cx->runtime()->options().wasm());
+    MOZ_ASSERT(cx->options().wasm());
 
     RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
     if (!proto)

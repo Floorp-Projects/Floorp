@@ -167,8 +167,8 @@ IsIonEnabled(JSContext* cx)
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
 #else
-    return cx->runtime()->options().ion() &&
-           cx->runtime()->options().baseline() &&
+    return cx->options().ion() &&
+           cx->options().baseline() &&
            cx->runtime()->jitSupportsFloatingPoint;
 #endif
 }
