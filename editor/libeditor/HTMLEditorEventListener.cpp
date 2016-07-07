@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLEditorEventListener.h"
+#include "HTMLEditorEventListener.h"
 
 #include "HTMLEditUtils.h"
 #include "mozilla/dom/Event.h"
@@ -27,17 +27,13 @@
 #include "nsQueryObject.h"
 #include "nsRange.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-/*
- * nsHTMLEditorEventListener implementation
- *
- */
+using namespace dom;
 
 #ifdef DEBUG
 nsresult
-nsHTMLEditorEventListener::Connect(nsEditor* aEditor)
+HTMLEditorEventListener::Connect(nsEditor* aEditor)
 {
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryObject(aEditor);
   nsCOMPtr<nsIHTMLInlineTableEditor> htmlInlineTableEditor =
@@ -49,14 +45,14 @@ nsHTMLEditorEventListener::Connect(nsEditor* aEditor)
 #endif
 
 nsHTMLEditor*
-nsHTMLEditorEventListener::GetHTMLEditor()
+HTMLEditorEventListener::GetHTMLEditor()
 {
   // mEditor must be nsHTMLEditor or its subclass.
   return static_cast<nsHTMLEditor*>(mEditor);
 }
 
 nsresult
-nsHTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 {
   nsHTMLEditor* htmlEditor = GetHTMLEditor();
 
@@ -75,7 +71,7 @@ nsHTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 }
 
 nsresult
-nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
   nsHTMLEditor* htmlEditor = GetHTMLEditor();
   // Contenteditable should disregard mousedowns outside it.
@@ -205,7 +201,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 }
 
 nsresult
-nsHTMLEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult rv = aMouseEvent->AsEvent()->GetTarget(getter_AddRefs(target));
@@ -217,3 +213,5 @@ nsHTMLEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 
   return nsEditorEventListener::MouseClick(aMouseEvent);
 }
+
+} // namespace mozilla
