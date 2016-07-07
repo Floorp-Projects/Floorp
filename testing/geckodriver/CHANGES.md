@@ -3,9 +3,11 @@
 All notable changes to this program is documented in this file.
 
 
-## Unreleased
+## 0.9.0 (2016-06-30)
 
 ### Added
+- Add ability to use `firefox_binary` capability to define location of Firefox to use
+- Automatically detect the default Firefox path if one is not given
 - Cross-compile to Windows and ARMv7 (HF) in CI
 - Add Musl C library-backed static binaries in CI
 - Add `-v`, `-vv`, and `--log LEVEL` flags to increase Gecko verbosity
@@ -13,7 +15,11 @@ All notable changes to this program is documented in this file.
 - Add new `--version` flag showing copying information and a link to the repository
 
 ### Changed
+- Now connects to a Marionette on a random port by default
 - Update webdriver-rust library dependency
+- Migrated to use Travis to deploy new releases
+- Reduced amount of logging
+- Introduced a changelog (this)
 
 
 ## 0.8.0 (2016-06-07)
