@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "EditorUtils.h"
+#include "TextEditUtils.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -79,7 +80,6 @@
 #include "nsStringIterator.h"
 #include "nsSubstringTuple.h"
 #include "nsTextEditRules.h"
-#include "nsTextEditUtils.h"
 #include "nsTreeSanitizer.h"
 #include "nsWSRunObject.h"
 #include "nsXPCOM.h"
@@ -391,7 +391,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     // the invisible br visible.
     nsWSRunObject wsObj(this, parentNode, offsetOfNewNode);
     if (wsObj.mEndReasonNode &&
-        nsTextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
+        TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisBreak(wsObj.mEndReasonNode)) {
       rv = DeleteNode(wsObj.mEndReasonNode);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -472,7 +472,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
 
       NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
       NS_ENSURE_TRUE(curNode != fragmentAsNode, NS_ERROR_FAILURE);
-      NS_ENSURE_TRUE(!nsTextEditUtils::IsBody(curNode), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(!TextEditUtils::IsBody(curNode), NS_ERROR_FAILURE);
 
       if (insertedContextParent)
       {
@@ -585,8 +585,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
         while (NS_FAILED(rv) && curNode)
         {
           curNode->GetParentNode(getter_AddRefs(parent));
-          if (parent && !nsTextEditUtils::IsBody(parent))
-          {
+          if (parent && !TextEditUtils::IsBody(parent)) {
             rv = InsertNodeAtPoint(parent, address_of(parentNode), &offsetOfNewNode, true);
             if (NS_SUCCEEDED(rv))
             {

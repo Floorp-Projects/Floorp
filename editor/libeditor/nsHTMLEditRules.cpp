@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "EditorUtils.h"
+#include "TextEditUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -49,7 +50,6 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "nsTextEditUtils.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsWSRunObject.h"
@@ -1217,7 +1217,7 @@ nsHTMLEditRules::WillInsert(Selection& aSelection, bool* aCancel)
   // Get prior node
   nsCOMPtr<nsIContent> priorNode = mHTMLEditor->GetPriorHTMLNode(selNode,
                                                                  selOffset);
-  if (priorNode && nsTextEditUtils::IsMozBR(priorNode)) {
+  if (priorNode && TextEditUtils::IsMozBR(priorNode)) {
     nsCOMPtr<Element> block1 = mHTMLEditor->GetBlock(selNode);
     nsCOMPtr<Element> block2 = mHTMLEditor->GetBlockNodeParent(priorNode);
 
@@ -3007,7 +3007,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   bool bOnlyBreaks = true;
   for (auto& curNode : arrayOfNodes) {
     // if curNode is not a Break or empty inline, we're done
-    if (!nsTextEditUtils::IsBreak(curNode) &&
+    if (!TextEditUtils::IsBreak(curNode) &&
         !IsEmptyInline(curNode)) {
       bOnlyBreaks = false;
       break;
@@ -3087,7 +3087,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
     }
 
     // if curNode is a Break, delete it, and quit remembering prev list item
-    if (nsTextEditUtils::IsBreak(curNode)) {
+    if (TextEditUtils::IsBreak(curNode)) {
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
@@ -4516,7 +4516,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
       return NS_OK;
     }
 
-    if (nsTextEditUtils::IsBreak(node)) {
+    if (TextEditUtils::IsBreak(node)) {
       // The special case emptyDiv code (below) that consumes BRs can cause
       // tables to split if the start node of the selection is not in a table
       // cell or caption, for example parent is a <tr>.  Avoid this unnecessary
@@ -4551,7 +4551,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
     // creating extra lines, if possible.
     nsCOMPtr<nsIContent> brContent =
       mHTMLEditor->GetNextHTMLNode(parent, offset);
-    if (brContent && nsTextEditUtils::IsBreak(brContent)) {
+    if (brContent && TextEditUtils::IsBreak(brContent)) {
       // Making use of html structure... if next node after where we are
       // putting our div is not a block, then the br we found is in same block
       // we are, so it's safe to consume it.
@@ -6263,7 +6263,7 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
       NS_ENSURE_STATE(mHTMLEditor);
       sibling = mHTMLEditor->GetPriorHTMLSibling(node);
       if (!sibling || !mHTMLEditor || !mHTMLEditor->IsVisBreak(sibling) ||
-          nsTextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
+          TextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
       }
@@ -6273,7 +6273,7 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
       NS_ENSURE_STATE(mHTMLEditor);
       sibling = mHTMLEditor->GetNextHTMLSibling(node);
       if (!sibling || !mHTMLEditor || !mHTMLEditor->IsVisBreak(sibling) ||
-          nsTextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
+          TextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
         offset++;
@@ -6297,13 +6297,13 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
     nearNode = mHTMLEditor->GetPriorHTMLNode(node, aOffset);
     NS_ENSURE_STATE(mHTMLEditor);
     if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) ||
-        nsTextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
+        TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
       // is there a BR after it?
       NS_ENSURE_STATE(mHTMLEditor);
       nearNode = mHTMLEditor->GetNextHTMLNode(node, aOffset);
       NS_ENSURE_STATE(mHTMLEditor);
       if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) ||
-          nsTextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
+          TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
         newBRneeded = true;
         parent = node;
         offset = aOffset;
@@ -7334,8 +7334,7 @@ nsHTMLEditRules::AdjustSelection(Selection* aSelection,
     nsCOMPtr<Element> block = mHTMLEditor->GetBlock(*selNode);
     nsCOMPtr<Element> nearBlock = mHTMLEditor->GetBlockNodeParent(nearNode);
     if (block && block == nearBlock) {
-      if (nearNode && nsTextEditUtils::IsBreak(nearNode) )
-      {
+      if (nearNode && TextEditUtils::IsBreak(nearNode)) {
         NS_ENSURE_STATE(mHTMLEditor);
         if (!mHTMLEditor->IsVisBreak(nearNode))
         {
@@ -7358,8 +7357,7 @@ nsHTMLEditRules::AdjustSelection(Selection* aSelection,
           NS_ENSURE_STATE(mHTMLEditor);
           nsCOMPtr<nsIContent> nextNode =
             mHTMLEditor->GetNextHTMLNode(nearNode, true);
-          if (nextNode && nsTextEditUtils::IsMozBR(nextNode))
-          {
+          if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
             // selection between br and mozbr.  make it stick to mozbr
             // so that it will be on blank line.
             aSelection->SetInterlinePosition(true);
@@ -7372,7 +7370,7 @@ nsHTMLEditRules::AdjustSelection(Selection* aSelection,
   // we aren't in a textnode: are we adjacent to text or a break or an image?
   NS_ENSURE_STATE(mHTMLEditor);
   nearNode = mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, true);
-  if (nearNode && (nsTextEditUtils::IsBreak(nearNode) ||
+  if (nearNode && (TextEditUtils::IsBreak(nearNode) ||
                    nsEditor::IsTextNode(nearNode) ||
                    nsHTMLEditUtils::IsImage(nearNode) ||
                    nearNode->IsHTMLElement(nsGkAtoms::hr))) {
@@ -7381,7 +7379,7 @@ nsHTMLEditRules::AdjustSelection(Selection* aSelection,
   }
   NS_ENSURE_STATE(mHTMLEditor);
   nearNode = mHTMLEditor->GetNextHTMLNode(selNode, selOffset, true);
-  if (nearNode && (nsTextEditUtils::IsBreak(nearNode) ||
+  if (nearNode && (TextEditUtils::IsBreak(nearNode) ||
                    nsEditor::IsTextNode(nearNode) ||
                    nearNode->IsAnyOfHTMLElements(nsGkAtoms::img,
                                                  nsGkAtoms::hr))) {
@@ -7460,7 +7458,7 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
   // but don't cross any breaks, images, or table elements.
   NS_ENSURE_STATE(mHTMLEditor);
   while (nearNode && !(mHTMLEditor->IsTextNode(nearNode)
-                       || nsTextEditUtils::IsBreak(nearNode)
+                       || TextEditUtils::IsBreak(nearNode)
                        || nsHTMLEditUtils::IsImage(nearNode)))
   {
     curNode = nearNode;
@@ -7730,7 +7728,7 @@ nsHTMLEditRules::ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes
     if (!mHTMLEditor->IsEditable(node)) {
       continue;
     }
-    if (nsTextEditUtils::IsBreak(node)) {
+    if (TextEditUtils::IsBreak(node)) {
       // First break doesn't count
       if (brCount) {
         return false;
@@ -7868,8 +7866,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   temp = selNode;
 
   // check that selNode is inside body
-  while (temp && !nsTextEditUtils::IsBody(temp))
-  {
+  while (temp && !TextEditUtils::IsBody(temp)) {
     res = temp->GetParentNode(getter_AddRefs(parent));
     temp = parent;
   }
@@ -7889,8 +7886,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   temp = selNode;
 
   // check that selNode is inside body
-  while (temp && !nsTextEditUtils::IsBody(temp))
-  {
+  while (temp && !TextEditUtils::IsBody(temp)) {
     res = temp->GetParentNode(getter_AddRefs(parent));
     temp = parent;
   }
@@ -8322,12 +8318,9 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts)
   res = mHTMLEditor->NodeIsBlockStatic(child, &isChildBlock);
   NS_ENSURE_SUCCESS(res, res);
   bool foundCR = false;
-  if (isChildBlock || nsTextEditUtils::IsBreak(child))
-  {
+  if (isChildBlock || TextEditUtils::IsBreak(child)) {
     foundCR = true;
-  }
-  else
-  {
+  } else {
     nsCOMPtr<nsIDOMNode> sibling;
     if (aStarts)
     {
@@ -8346,8 +8339,7 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts)
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->NodeIsBlockStatic(sibling, &isBlock);
       NS_ENSURE_SUCCESS(res, res);
-      if (isBlock || nsTextEditUtils::IsBreak(sibling))
-      {
+      if (isBlock || TextEditUtils::IsBreak(sibling)) {
         foundCR = true;
       }
     }

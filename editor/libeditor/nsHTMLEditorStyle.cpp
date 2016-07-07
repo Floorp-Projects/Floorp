@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "EditorUtils.h"
+#include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
@@ -38,7 +39,6 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTextEditRules.h"
-#include "nsTextEditUtils.h"
 #include "nsUnicharUtils.h"
 #include "nscore.h"
 
@@ -629,7 +629,7 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
     }
     nsCOMPtr<Element> savedBR;
     if (!IsContainer(secondSplitParent)) {
-      if (nsTextEditUtils::IsBreak(secondSplitParent)) {
+      if (TextEditUtils::IsBreak(secondSplitParent)) {
         savedBR = do_QueryInterface(secondSplitParent);
         NS_ENSURE_STATE(savedBR);
       }

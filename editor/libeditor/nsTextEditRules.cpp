@@ -6,6 +6,7 @@
 #include "nsTextEditRules.h"
 
 #include "EditorUtils.h"
+#include "TextEditUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -37,7 +38,6 @@
 #include "nsISupportsBase.h"
 #include "nsLiteralString.h"
 #include "mozilla/dom/NodeIterator.h"
-#include "nsTextEditUtils.h"
 #include "nsUnicharUtils.h"
 
 using namespace mozilla;
@@ -475,8 +475,7 @@ nsTextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
 
   nsCOMPtr<nsIDOMNode> nextNode = mEditor->GetChildAt(parentNode,
                                                       parentOffset + 1);
-  if (nextNode && nsTextEditUtils::IsMozBR(nextNode))
-  {
+  if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
     res = aSelection->Collapse(parentNode, parentOffset + 1);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -1107,7 +1106,7 @@ nsTextEditRules::RemoveRedundantTrailingBR()
   }
 
   dom::Element* elem = child->AsElement();
-  if (!nsTextEditUtils::IsMozBR(elem)) {
+  if (!TextEditUtils::IsMozBR(elem)) {
     return NS_OK;
   }
 

@@ -6,6 +6,7 @@
 #include "nsPlaintextEditor.h"
 
 #include "EditorUtils.h"  // AutoEditBatch, AutoRules
+#include "TextEditUtils.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -54,7 +55,6 @@
 #include "nsStringFwd.h"
 #include "nsSubstringTuple.h"
 #include "nsTextEditRules.h"
-#include "nsTextEditUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsXPCOM.h"
 
@@ -1605,7 +1605,7 @@ nsPlaintextEditor::SelectEntireDocument(Selection* aSelection)
 
   nsCOMPtr<nsIDOMNode> childNode = GetChildAt(selNode, selOffset - 1);
 
-  if (childNode && nsTextEditUtils::IsMozBR(childNode)) {
+  if (childNode && TextEditUtils::IsMozBR(childNode)) {
     int32_t parentOffset;
     nsCOMPtr<nsIDOMNode> parentNode = GetNodeLocation(childNode, &parentOffset);
 

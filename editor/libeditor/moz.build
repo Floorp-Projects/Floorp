@@ -51,12 +51,12 @@ UNIFIED_SOURCES += [
     'nsTableEditor.cpp',
     'nsTextEditRules.cpp',
     'nsTextEditRulesBidi.cpp',
-    'nsTextEditUtils.cpp',
     'nsWSRunObject.cpp',
     'PlaceholderTxn.cpp',
     'SetDocTitleTxn.cpp',
     'SplitNodeTxn.cpp',
     'TextEditorTest.cpp',
+    'TextEditUtils.cpp',
     'TypeInState.cpp',
 ]
 
