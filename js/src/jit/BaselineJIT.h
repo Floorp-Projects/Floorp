@@ -515,7 +515,7 @@ IsBaselineEnabled(JSContext* cx)
 #ifdef JS_CODEGEN_NONE
     return false;
 #else
-    return cx->runtime()->options().baseline();
+    return cx->options().baseline();
 #endif
 }
 

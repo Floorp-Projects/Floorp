@@ -16,8 +16,7 @@ CPOWTimer::CPOWTimer(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     , startInterval_(0)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    JSRuntime* runtime = JS_GetRuntime(cx);
-    if (!js::GetStopwatchIsMonitoringCPOW(runtime))
+    if (!js::GetStopwatchIsMonitoringCPOW(cx))
         return;
     cx_ = cx;
     startInterval_ = JS_Now();
@@ -29,8 +28,7 @@ CPOWTimer::~CPOWTimer()
         return;
     }
 
-    JSRuntime* runtime = JS_GetRuntime(cx_);
-    if (!js::GetStopwatchIsMonitoringCPOW(runtime)) {
+    if (!js::GetStopwatchIsMonitoringCPOW(cx_)) {
         // Monitoring has been deactivated while we were in the timer.
         return;
     }
@@ -41,5 +39,5 @@ CPOWTimer::~CPOWTimer()
         return;
     }
 
-    js::AddCPOWPerformanceDelta(runtime, endInterval - startInterval_);
+    js::AddCPOWPerformanceDelta(cx_, endInterval - startInterval_);
 }

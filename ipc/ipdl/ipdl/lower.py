@@ -328,6 +328,12 @@ def _refptrForget(expr):
 def _refptrTake(expr):
     return ExprCall(ExprSelect(expr, '.', 'take'))
 
+def _uniqueptr(T):
+    return Type('UniquePtr', T=T)
+
+def _uniqueptrGet(expr):
+    return ExprCall(ExprSelect(expr, '.', 'get'))
+
 def _cxxArrayType(basetype, const=0, ref=0):
     return Type('nsTArray', T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
 
@@ -4211,19 +4217,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 pvar,
                 ExprCall(
                     _allocMethod(actor.ptype, actor.side),
-                    args=[ tvar, pidvar ]))))
+                    args=[ _uniqueptrGet(tvar), pidvar ]))))
             iffailalloc.addifstmt(StmtReturn(_Result.ProcessingError))
 
             settrans = StmtExpr(ExprCall(
                 ExprSelect(pvar, '->', 'IToplevelProtocol::SetTransport'),
-                args=[tvar]))
+                args=[ExprMove(tvar)]))
 
             addopened = StmtExpr(ExprCall(
                 ExprVar('IToplevelProtocol::AddOpenedActor'),
                 args=[pvar]))
 
             case.addstmts([
-                StmtDecl(Decl(Type('Transport', ptr=1), tvar.name)),
+                StmtDecl(Decl(_uniqueptr(Type('Transport')), tvar.name)),
                 StmtDecl(Decl(Type(_actorName(actor.ptype.name(), actor.side),
                                    ptr=1), pvar.name)),
                 iffailopen,

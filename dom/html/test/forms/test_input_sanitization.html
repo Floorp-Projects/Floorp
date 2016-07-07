@@ -74,7 +74,7 @@ var inputTypes =
 [
   "text", "password", "search", "tel", "hidden", "checkbox", "radio",
   "submit", "image", "reset", "button", "email", "url", "number", "date",
-  "time", "range", "color"
+  "time", "range", "color", "month"
 ];
 
 var todoTypes =
@@ -176,6 +176,20 @@ function sanitizeValue(aType, aValue)
       }
       return aValue;
     case "month":
+      // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-month-string
+      var match = /^([0-9]{4,})-([0-9]{2})$/.exec(aValue);
+      if (!match) {
+        return "";
+      }
+      var year = Number(match[1]);
+      if (year === 0) {
+        return "";
+      }
+      var month = Number(match[2]);
+      if (month > 12 || month < 1) {
+        return "";
+      }
+      return aValue;
     case "week":
     case "datetime":
     case "datetime-local":
@@ -330,6 +344,27 @@ function checkSanitizing(element, inputTypeDescription)
     "FFAAZZ",
     "ABCDEF",
     "#7654321",
+    // For month
+    "1970-01",
+    "1234-12",
+    "123456789-01",
+    "2013-13",
+    "0000-00",
+    "2015-00",
+    "0001-01",
+    "1-1",
+    "888-05",
+    "2013-3",
+    "2013-may",
+    "2000-1a",
+    "2013-03-13",
+    "december",
+    "abcdef",
+    "12",
+    "  2013-03",
+    "2013 - 03",
+    "2013 03",
+    "2013/03",
   ];
 
   for (value of testData) {

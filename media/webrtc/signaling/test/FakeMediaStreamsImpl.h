@@ -128,7 +128,7 @@ void Fake_AudioStreamSource::Periodic() {
     (*it)->NotifyQueuedTrackChanges(nullptr, // Graph
                                     0, // TrackID
                                     0, // Offset TODO(ekr@rtfm.com) fix
-                                    0, // ???
+                                    static_cast<mozilla::TrackEventCommand>(0), // ???
                                     segment,
                                     nullptr, // Input stream
                                     -1);     // Input track id

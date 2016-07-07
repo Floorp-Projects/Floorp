@@ -14,7 +14,7 @@ BEGIN_TEST(testNullRoot)
     script.init(cx, nullptr);
 
     // This used to crash because obj was nullptr.
-    JS_GC(cx->runtime());
+    JS_GC(cx);
 
     return true;
 }

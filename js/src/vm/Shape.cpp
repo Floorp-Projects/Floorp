@@ -1198,7 +1198,10 @@ JSObject::setFlags(ExclusiveContext* cx, BaseShape::Flag flags, GenerateShape ge
     if (!newShape)
         return false;
 
-    self->setShapeMaybeNonNative(newShape);
+    // The success of the |JSObject::ensureShape| call above means that |self|
+    // can be assumed to have a shape.
+    self->as<ShapedObject>().setShape(newShape);
+
     return true;
 }
 

@@ -48,7 +48,7 @@ BEGIN_TEST(testExternalStrings)
     // clear that newborn root
     JS_NewUCStringCopyN(cx, arr, arrlen);
 
-    JS_GC(rt);
+    JS_GC(cx);
 
     // a generous fudge factor to account for strings rooted by conservative gc
     const unsigned epsilon = 10;

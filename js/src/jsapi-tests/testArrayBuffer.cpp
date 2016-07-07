@@ -148,8 +148,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 
 static void GC(JSContext* cx)
 {
-    JS_GC(JS_GetRuntime(cx));
-    JS_GC(JS_GetRuntime(cx)); // Trigger another to wait for background finalization to end
+    JS_GC(cx);
+    JS_GC(cx); // Trigger another to wait for background finalization to end
 }
 
 bool hasDetachedBuffer(JS::HandleObject obj) {

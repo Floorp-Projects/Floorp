@@ -58,7 +58,7 @@ public:
   explicit CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
                           nsIGlobalObject* aIncumbentGlobal)
   {
-    if (aCx && JS::RuntimeOptionsRef(aCx).asyncStack()) {
+    if (aCx && JS::ContextOptionsRef(aCx).asyncStack()) {
       JS::RootedObject stack(aCx);
       if (!JS::CaptureCurrentStack(aCx, &stack)) {
         JS_ClearPendingException(aCx);
@@ -230,7 +230,7 @@ protected:
                  nsIGlobalObject* aIncumbentGlobal,
                  const FastCallbackConstructor&)
   {
-    if (aCx && JS::RuntimeOptionsRef(aCx).asyncStack()) {
+    if (aCx && JS::ContextOptionsRef(aCx).asyncStack()) {
       JS::RootedObject stack(aCx);
       if (!JS::CaptureCurrentStack(aCx, &stack)) {
         JS_ClearPendingException(aCx);

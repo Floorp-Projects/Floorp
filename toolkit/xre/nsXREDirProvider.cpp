@@ -669,6 +669,9 @@ RegisterExtensionInterpositions(nsINIParser &parser)
 
     if (!xpc::SetAddonInterposition(addonId, interposition))
       continue;
+
+    if (!xpc::AllowCPOWsInAddon(addonId, true))
+      continue;
   }
   while (true);
 }
@@ -1076,7 +1079,7 @@ nsXREDirProvider::DoShutdown()
 
       JSRuntime *rt = xpc::GetJSRuntime();
       if (rt) {
-        JS_GC(rt);
+        JS_GC(JS_GetContext(rt));
       }
 
       // Phase 3: Notify observers of a profile change

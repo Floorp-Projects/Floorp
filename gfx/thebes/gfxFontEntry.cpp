@@ -1062,12 +1062,14 @@ gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag)
 
 bool
 gfxFontEntry::GetColorLayersInfo(uint32_t aGlyphId,
+                            const mozilla::gfx::Color& aDefaultColor,
                             nsTArray<uint16_t>& aLayerGlyphs,
                             nsTArray<mozilla::gfx::Color>& aLayerColors)
 {
     return gfxFontUtils::GetColorGlyphLayers(mCOLR,
                                              mCPAL,
                                              aGlyphId,
+                                             aDefaultColor,
                                              aLayerGlyphs,
                                              aLayerColors);
 }

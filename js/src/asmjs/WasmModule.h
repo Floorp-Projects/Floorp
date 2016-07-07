@@ -41,6 +41,7 @@ struct LinkDataCacheablePod
     uint32_t globalDataLength;
     uint32_t interruptOffset;
     uint32_t outOfBoundsOffset;
+    uint32_t unalignedAccessOffset;
 
     LinkDataCacheablePod() { mozilla::PodZero(this); }
 };
@@ -190,7 +191,7 @@ class Module
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
-                     Handle<ArrayBufferObjectMaybeShared*> asmJSHeap,
+                     HandleArrayBufferObjectMaybeShared asmJSBuffer,
                      HandleWasmInstanceObject instanceObj) const;
 
     // Structured clone support:

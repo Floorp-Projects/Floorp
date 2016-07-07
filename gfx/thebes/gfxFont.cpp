@@ -1786,7 +1786,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
     }
 
     if (fontParams.haveColorGlyphs &&
-        RenderColorGlyph(runParams.dt,
+        RenderColorGlyph(runParams.dt, runParams.context,
                          fontParams.scaledFont, fontParams.renderingOptions,
                          fontParams.drawOptions,
                          fontParams.matInv * gfx::Point(devPt.x, devPt.y),
@@ -2170,6 +2170,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
 
 bool
 gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget,
+                          gfxContext* aContext,
                           mozilla::gfx::ScaledFont* scaledFont,
                           GlyphRenderingOptions* aRenderingOptions,
                           mozilla::gfx::DrawOptions aDrawOptions,
@@ -2179,7 +2180,12 @@ gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget,
     AutoTArray<uint16_t, 8> layerGlyphs;
     AutoTArray<mozilla::gfx::Color, 8> layerColors;
 
-    if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, layerGlyphs, layerColors)) {
+    mozilla::gfx::Color defaultColor;
+    if (!aContext->GetDeviceColor(defaultColor)) {
+        defaultColor = mozilla::gfx::Color(0, 0, 0);
+    }
+    if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, defaultColor,
+                                            layerGlyphs, layerColors)) {
         return false;
     }
 

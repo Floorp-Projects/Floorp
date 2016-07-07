@@ -696,7 +696,7 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_POSITION_FIXED                 3
 #define NS_STYLE_POSITION_STICKY                4
 
-// See nsStyleDisplay.mClip
+// See nsStyleEffects.mClip, mClipFlags
 #define NS_STYLE_CLIP_AUTO                      0x00
 #define NS_STYLE_CLIP_RECT                      0x01
 #define NS_STYLE_CLIP_TYPE_MASK                 0x0F

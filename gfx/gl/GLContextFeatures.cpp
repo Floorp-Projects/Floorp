@@ -36,6 +36,7 @@ enum class GLESVersion : uint32_t {
     ES2   = 200,
     ES3   = 300,
     ES3_1 = 310,
+    ES3_2 = 320,
 };
 
 // ARB_ES2_compatibility is natively supported in OpenGL 4.1.
@@ -189,7 +190,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "EXT_color_buffer_float",
         GLVersion::GL3,
-        GLESVersion::NONE,
+        GLESVersion::ES3_2,
         GLContext::Extension_None,
         {
             GLContext::EXT_color_buffer_float,
@@ -496,7 +497,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "renderbuffer_color_float",
         GLVersion::GL3,
-        GLESVersion::ES3,
+        GLESVersion::ES3_2,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
@@ -507,7 +508,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "renderbuffer_color_half_float",
         GLVersion::GL3,
-        GLESVersion::ES3,
+        GLESVersion::ES3_2,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,

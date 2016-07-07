@@ -257,15 +257,15 @@ class BuilderOrigin : public Builder {
 // and returns the number of bytes allocated to that block. SpiderMonkey itself
 // doesn't know which function is appropriate to use, but the embedding does.
 
-// Tell Debuggers in |runtime| to use |mallocSizeOf| to find the size of
+// Tell Debuggers in |cx| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
 JS_PUBLIC_API(void)
-SetDebuggerMallocSizeOf(JSRuntime* runtime, mozilla::MallocSizeOf mallocSizeOf);
+SetDebuggerMallocSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf);
 
-// Get the MallocSizeOf function that the given runtime is using to find the
+// Get the MallocSizeOf function that the given context is using to find the
 // size of malloc'd blocks.
 JS_PUBLIC_API(mozilla::MallocSizeOf)
-GetDebuggerMallocSizeOf(JSRuntime* runtime);
+GetDebuggerMallocSizeOf(JSContext* cx);
 
 
 

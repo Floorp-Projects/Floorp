@@ -474,7 +474,7 @@ typedef enum  {
   * fp is the file for the dump output.
   */
 extern JS_FRIEND_API(void)
-DumpHeap(JSRuntime* rt, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour);
+DumpHeap(JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour);
 
 #ifdef JS_OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API(bool) obj_defineGetter(JSContext* cx, unsigned argc, JS::Value* vp);
@@ -2688,8 +2688,7 @@ PrepareScriptEnvironmentAndInvoke(JSContext* cx, JS::HandleObject scope,
                                   ScriptEnvironmentPreparer::Closure& closure);
 
 JS_FRIEND_API(void)
-SetScriptEnvironmentPreparer(JSRuntime* rt, ScriptEnvironmentPreparer*
-preparer);
+SetScriptEnvironmentPreparer(JSContext* cx, ScriptEnvironmentPreparer* preparer);
 
 enum CTypesActivityType {
     CTYPES_CALL_BEGIN,
@@ -2706,7 +2705,7 @@ typedef void
  * calling into C.
  */
 JS_FRIEND_API(void)
-SetCTypesActivityCallback(JSRuntime* rt, CTypesActivityCallback cb);
+SetCTypesActivityCallback(JSContext* cx, CTypesActivityCallback cb);
 
 class MOZ_RAII JS_FRIEND_API(AutoCTypesActivityCallback) {
   private:

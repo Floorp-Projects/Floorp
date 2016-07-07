@@ -42,6 +42,14 @@
     "keyed": true,
     "description": "Reasons why add-on shims were used, keyed by add-on ID."
   },
+  "ADDON_FORBIDDEN_CPOW_USAGE": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Counts the number of times a given add-on used CPOWs when it was marked as e10s compatible.",
+    "bug_numbers": [1214824],
+    "alert_emails": ["wmccloskey@mozilla.com"]
+  },
   "BROWSER_SHIM_USAGE_BLOCKED": {
     "expires_in_version": "never",
     "kind": "count",
@@ -9959,13 +9967,36 @@
     "description": "Number of times about:crashes has been opened.",
     "releaseChannelCollection": "opt-out"
   },
-  "XHR_IN_WORKER": {
-    "alert_emails": ["amarchesini@mozilla.com"],
+   "D3D9_COMPOSITING_FAILURE_ID": {
+    "alert_emails": ["bgirard@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "keyed": true,
+    "description": "D3D9 compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
+    "bug_numbers": [1002846]
+  },
+    "D3D11_COMPOSITING_FAILURE_ID": {
+    "alert_emails": ["bgirard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "D3D11 compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
+    "bug_numbers": [1002846]
+  },
+    "OPENGL_COMPOSITING_FAILURE_ID": {
+    "alert_emails": ["bgirard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "OpenGL compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
+    "bug_numbers": [1002846]
+  },
+  "XHR_IN_WORKER": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
     "bug_numbers": [1280229],
-    "description": "Number of the use of XHR in workers.",
-    "releaseChannelCollection": "opt-out"
+    "description": "Number of the use of XHR in workers."
   },
   "BLINK_FILESYSTEM_USED": {
     "alert_emails": ["amarchesini@mozilla.com"],

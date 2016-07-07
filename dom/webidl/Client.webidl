@@ -25,6 +25,9 @@ interface WindowClient : Client {
 
   [Throws, NewObject]
   Promise<WindowClient> focus();
+
+  [Throws, NewObject]
+  Promise<WindowClient> navigate(USVString url);
 };
 
 enum FrameType {

@@ -108,7 +108,6 @@ static const TCHAR kPluginIgnoreSubclassProperty[] = TEXT("PluginIgnoreSubclassP
 
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
-#include "nsCocoaFeatures.h"
 #include "PluginUtilsOSX.h"
 #endif // defined(XP_MACOSX)
 
@@ -3534,10 +3533,8 @@ PluginInstanceChild::EnsureCurrentBuffer(void)
         void *caLayer = nullptr;
         if (mDrawingModel == NPDrawingModelCoreGraphics) {
             if (!mCGLayer) {
-                bool avoidCGCrashes = !nsCocoaFeatures::OnMountainLionOrLater() &&
-                  (GetQuirks() & QUIRK_FLASH_AVOID_CGMODE_CRASHES);
-                caLayer = mozilla::plugins::PluginUtilsOSX::GetCGLayer(CallCGDraw, this,
-                                                                       avoidCGCrashes,
+                caLayer = mozilla::plugins::PluginUtilsOSX::GetCGLayer(CallCGDraw,
+                                                                       this, false,
                                                                        mContentsScaleFactor);
 
                 if (!caLayer) {

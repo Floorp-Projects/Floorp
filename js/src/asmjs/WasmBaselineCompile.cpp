@@ -2071,7 +2071,7 @@ class BaseCompiler
 
     void addInterruptCheck()
     {
-        if (mg_.args.useSignalHandlersForInterrupt)
+        if (mg_.usesSignal.forInterrupt)
             return;
 
         // FIXME - implement this.
@@ -2739,7 +2739,7 @@ class BaseCompiler
         // can't (yet) use the signal handlers.
 
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-        if (mg_.args.useSignalHandlersForOOB && !access.isAtomicAccess())
+        if (mg_.usesSignal.forOOB && !access.isAtomicAccess())
             return false;
 #endif
 
@@ -6195,7 +6195,7 @@ BaseCompiler::BaseCompiler(const ModuleGeneratorData& mg,
                            const ValTypeVector& locals,
                            FuncCompileResults& compileResults)
     : mg_(mg),
-      iter_(BaseCompilePolicy(), decoder),
+      iter_(decoder),
       func_(func),
       lastReadCallSite_(0),
       alloc_(compileResults.alloc()),
@@ -6399,7 +6399,7 @@ js::wasm::BaselineCompileFunction(IonCompileTask* task)
 
     // The MacroAssembler will sometimes access the jitContext.
 
-    JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
+    JitContext jitContext(&results.alloc());
 
     // One-pass baseline compilation.
 

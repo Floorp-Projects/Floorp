@@ -240,11 +240,8 @@ GC(JSContext *cx,
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-    JSRuntime *rt = JS_GetRuntime(cx);
-    JS_GC(rt);
-#ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
-#endif
+    JS_GC(cx);
+
     args.rval().setUndefined();
     return true;
 }
@@ -470,8 +467,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
         }
         mGlobalHolder.reset();
 
-        JSRuntime *rt = JS_GetRuntime(cx);
-        JS_GC(rt);
+        JS_GC(cx);
     }
 }
 

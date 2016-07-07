@@ -3,10 +3,6 @@
 #include "jsctypes-test.h"
 #include "jsctypes-test-finalizer.h"
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif // defined(XP_WIN)
-
 /**
  * Shared infrastructure
  */
@@ -325,4 +321,3 @@ reset_errno()
 {
   errno = 0;
 }
-

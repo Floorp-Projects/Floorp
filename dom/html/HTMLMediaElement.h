@@ -1247,6 +1247,8 @@ protected:
   // Holds a reference to the size-getting MediaStreamListener attached to
   // mSrcStream.
   RefPtr<StreamSizeListener> mMediaStreamSizeListener;
+  // The selected video stream track which contained mMediaStreamSizeListener.
+  RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
   const RefPtr<ShutdownObserver> mShutdownObserver;
 

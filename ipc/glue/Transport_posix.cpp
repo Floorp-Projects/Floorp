@@ -51,16 +51,16 @@ CreateTransport(base::ProcessId aProcIdOne,
   return NS_OK;
 }
 
-Transport*
+UniquePtr<Transport>
 OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 {
-  return new Transport(aTd.mFd.fd, aMode, nullptr);
+  return MakeUnique<Transport>(aTd.mFd.fd, aMode, nullptr);
 }
 
-Transport*
+UniquePtr<Transport>
 OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
 {
-  return new Transport(aFd.PlatformHandle(), aMode, nullptr);
+  return MakeUnique<Transport>(aFd.PlatformHandle(), aMode, nullptr);
 }
 
 TransportDescriptor

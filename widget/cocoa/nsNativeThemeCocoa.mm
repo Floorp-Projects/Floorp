@@ -1153,7 +1153,7 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
   RenderWithCoreUI(drawRect, cgContext,
           [NSDictionary dictionaryWithObjectsAndKeys:
             @"kCUIBackgroundTypeMenu", @"backgroundTypeKey",
-            aImageName, @"imageNameKey",
+            imageName, @"imageNameKey",
             state, @"state",
             @"image", @"widget",
             [NSNumber numberWithBool:YES], @"is.flipped",

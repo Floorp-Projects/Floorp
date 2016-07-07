@@ -324,7 +324,7 @@ checkReportFlags(JSContext* cx, unsigned* flags)
     }
 
     /* Warnings become errors when JSOPTION_WERROR is set. */
-    if (JSREPORT_IS_WARNING(*flags) && cx->runtime()->options().werror())
+    if (JSREPORT_IS_WARNING(*flags) && cx->options().werror())
         *flags &= ~JSREPORT_WARNING;
 
     return false;
@@ -845,10 +845,12 @@ js::GetErrorMessage(void* userRef, const unsigned errorNumber)
     return nullptr;
 }
 
-ExclusiveContext::ExclusiveContext(JSRuntime* rt, PerThreadData* pt, ContextKind kind)
+ExclusiveContext::ExclusiveContext(JSRuntime* rt, PerThreadData* pt, ContextKind kind,
+                                   const JS::ContextOptions& options)
   : ContextFriendFields(rt),
     helperThread_(nullptr),
     contextKind_(kind),
+    options_(options),
     perThreadData(pt),
     arenas_(nullptr),
     enterCompartmentDepth_(0)
@@ -871,7 +873,7 @@ ExclusiveContext::recoverFromOutOfMemory()
 }
 
 JSContext::JSContext(JSRuntime* parentRuntime)
-  : ExclusiveContext(this, &this->JSRuntime::mainThread, Context_JS),
+  : ExclusiveContext(this, &this->JSRuntime::mainThread, Context_JS, JS::ContextOptions()),
     JSRuntime(parentRuntime),
     throwing(false),
     unwrappedException_(this),

@@ -464,6 +464,10 @@ class WasmTokenStream
         unsigned column = token.begin() - lineStart_ + 1;
         error->reset(JS_smprintf("parsing wasm text at %u:%u", line_, column));
     }
+    void generateError(WasmToken token, const char* msg, UniqueChars* error) {
+        unsigned column = token.begin() - lineStart_ + 1;
+        error->reset(JS_smprintf("parsing wasm text at %u:%u: %s", line_, column, msg));
+    }
     WasmToken peek() {
         if (!lookaheadDepth_) {
             lookahead_[lookaheadIndex_] = next();
@@ -1985,7 +1989,7 @@ ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2,
         switch (val.kind()) {
           case WasmToken::Index:
             if (!IsPowerOfTwo(val.index())) {
-                c.ts.generateError(val, c.error);
+                c.ts.generateError(val, "non-power-of-two alignment", c.error);
                 return false;
             }
             *alignLog2 = CeilingLog2(val.index());
@@ -2429,10 +2433,6 @@ ParseExport(WasmParseContext& c)
       case WasmToken::Name:
         return new(c.lifo) AstExport(name.text(), AstRef(exportee.name(), AstNoIndex));
       case WasmToken::Memory:
-        if (name.text() != AstName(MOZ_UTF16("memory"), 6)) {
-            c.ts.generateError(exportee, c.error);
-            return nullptr;
-        }
         return new(c.lifo) AstExport(name.text());
       default:
         break;
@@ -2974,7 +2974,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     }
 
     for (AstExport* export_ : module->exports()) {
-        if (export_->kind() != AstExportKind::Func)
+        if (export_->kind() != DefinitionKind::Function)
             continue;
         if (!r.resolveFunction(export_->func()))
             return false;
@@ -3393,10 +3393,20 @@ EncodeBytes(Encoder& e, AstName wasmName)
 }
 
 static bool
-EncodeImport(Encoder& e, AstImport& imp)
+EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
 {
-    if (!e.writeVarU32(imp.sig().index()))
-        return false;
+    if (!newFormat) {
+        if (!e.writeVarU32(imp.sig().index()))
+            return false;
+
+        if (!EncodeBytes(e, imp.module()))
+            return false;
+
+        if (!EncodeBytes(e, imp.func()))
+            return false;
+
+        return true;
+    }
 
     if (!EncodeBytes(e, imp.module()))
         return false;
@@ -3404,11 +3414,17 @@ EncodeImport(Encoder& e, AstImport& imp)
     if (!EncodeBytes(e, imp.func()))
         return false;
 
+    if (!e.writeVarU32(uint32_t(DefinitionKind::Function)))
+        return false;
+
+    if (!e.writeVarU32(imp.sig().index()))
+        return false;
+
     return true;
 }
 
 static bool
-EncodeImportSection(Encoder& e, AstModule& module)
+EncodeImportSection(Encoder& e, bool newFormat, AstModule& module)
 {
     if (module.imports().empty())
         return true;
@@ -3421,7 +3437,7 @@ EncodeImportSection(Encoder& e, AstModule& module)
         return false;
 
     for (AstImport* imp : module.imports()) {
-        if (!EncodeImport(e, *imp))
+        if (!EncodeImport(e, newFormat, *imp))
             return false;
     }
 
@@ -3430,7 +3446,7 @@ EncodeImportSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeMemorySection(Encoder& e, AstModule& module)
+EncodeMemorySection(Encoder& e, bool newFormat, AstModule& module)
 {
     if (!module.maybeMemory())
         return true;
@@ -3448,61 +3464,85 @@ EncodeMemorySection(Encoder& e, AstModule& module)
     if (!e.writeVarU32(maxSize))
         return false;
 
-    uint8_t exported = 0;
-    for (AstExport* exp : module.exports()) {
-        if (exp->kind() == AstExportKind::Memory) {
-            exported = 1;
-            break;
+    if (!newFormat) {
+        uint8_t exported = 0;
+        for (AstExport* exp : module.exports()) {
+            if (exp->kind() == DefinitionKind::Memory) {
+                exported = 1;
+                break;
+            }
         }
-    }
 
-    if (!e.writeFixedU8(exported))
-        return false;
+        if (!e.writeFixedU8(exported))
+            return false;
+    }
 
     e.finishSection(offset);
     return true;
 }
 
 static bool
-EncodeFunctionExport(Encoder& e, AstExport& exp)
+EncodeExport(Encoder& e, bool newFormat, AstExport& exp)
 {
-    if (!e.writeVarU32(exp.func().index()))
-        return false;
+    if (!newFormat) {
+        if (exp.kind() != DefinitionKind::Function)
+            return true;
+
+        if (!e.writeVarU32(exp.func().index()))
+            return false;
+
+        if (!EncodeBytes(e, exp.name()))
+            return false;
+
+        return true;
+    }
 
     if (!EncodeBytes(e, exp.name()))
         return false;
+
+    if (!e.writeVarU32(uint32_t(exp.kind())))
+        return false;
+
+    switch (exp.kind()) {
+      case DefinitionKind::Function:
+        if (!e.writeVarU32(exp.func().index()))
+            return false;
+        break;
+      case DefinitionKind::Memory:
+        if (!e.writeVarU32(0))
+            return false;
+        break;
+    }
 
     return true;
 }
 
 static bool
-EncodeExportSection(Encoder& e, AstModule& module)
+EncodeExportSection(Encoder& e, bool newFormat, AstModule& module)
 {
-    uint32_t numFuncExports = 0;
-    for (AstExport* exp : module.exports()) {
-        if (exp->kind() == AstExportKind::Func)
-            numFuncExports++;
+    uint32_t numExports = 0;
+    if (newFormat) {
+        numExports = module.exports().length();
+    } else {
+        for (AstExport* exp : module.exports()) {
+            if (exp->kind() == DefinitionKind::Function)
+                numExports++;
+        }
     }
 
-    if (!numFuncExports)
+    if (!numExports)
         return true;
 
     size_t offset;
     if (!e.startSection(ExportSectionId, &offset))
         return false;
 
-    if (!e.writeVarU32(numFuncExports))
+    if (!e.writeVarU32(numExports))
         return false;
 
     for (AstExport* exp : module.exports()) {
-        switch (exp->kind()) {
-          case AstExportKind::Func:
-            if (!EncodeFunctionExport(e, *exp))
-                return false;
-            break;
-          case AstExportKind::Memory:
-            continue;
-        }
+        if (!EncodeExport(e, newFormat, *exp))
+            return false;
     }
 
     e.finishSection(offset);
@@ -3628,7 +3668,7 @@ EncodeDataSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeModule(AstModule& module, Bytes* bytes)
+EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
 {
     Encoder e(*bytes);
 
@@ -3641,7 +3681,7 @@ EncodeModule(AstModule& module, Bytes* bytes)
     if (!EncodeTypeSection(e, module))
         return false;
 
-    if (!EncodeImportSection(e, module))
+    if (!EncodeImportSection(e, newFormat, module))
         return false;
 
     if (!EncodeFunctionSection(e, module))
@@ -3650,10 +3690,10 @@ EncodeModule(AstModule& module, Bytes* bytes)
     if (!EncodeTableSection(e, module))
         return false;
 
-    if (!EncodeMemorySection(e, module))
+    if (!EncodeMemorySection(e, newFormat, module))
         return false;
 
-    if (!EncodeExportSection(e, module))
+    if (!EncodeExportSection(e, newFormat, module))
         return false;
 
     if (!EncodeCodeSection(e, module))
@@ -3668,7 +3708,7 @@ EncodeModule(AstModule& module, Bytes* bytes)
 /*****************************************************************************/
 
 bool
-wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
+wasm::TextToBinary(const char16_t* text, bool newFormat, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
     AstModule* module = ParseModule(text, lifo, error);
@@ -3678,5 +3718,5 @@ wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
     if (!ResolveModule(lifo, module, error))
         return false;
 
-    return EncodeModule(*module, bytes);
+    return EncodeModule(*module, newFormat, bytes);
 }

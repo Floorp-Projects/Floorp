@@ -2807,7 +2807,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // then we won't have stored clip data for it. We can just clear the clip
     // instead since we know we won't render anything, and the inner out-of-flow
     // frame will setup the correct clip for itself.
-    clipState.Clear();
+    clipState.SetClipForContainingBlockDescendants(nullptr);
     clipState.SetScrollClipForContainingBlockDescendants(nullptr);
   }
 
