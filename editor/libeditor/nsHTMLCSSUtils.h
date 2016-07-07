@@ -6,10 +6,10 @@
 #ifndef nsHTMLCSSUtils_h__
 #define nsHTMLCSSUtils_h__
 
-#include "ChangeStyleTxn.h"             // for ChangeStyleTxn::EChangeType
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsTArray.h"                   // for nsTArray
-#include "nscore.h"                     // for nsAString, nsresult, nullptr
+#include "ChangeStyleTransaction.h" // for ChangeStyleTransaction::EChangeType
+#include "nsCOMPtr.h"               // for already_AddRefed
+#include "nsTArray.h"               // for nsTArray
+#include "nscore.h"                 // for nsAString, nsresult, nullptr
 
 class nsComputedDOMStyle;
 class nsIAtom;
@@ -386,10 +386,10 @@ private:
     * @param aValue             [IN] the value to set for this CSS property
     * @param aChangeType        [IN] eSet to set, eRemove to remove
     */
-  already_AddRefed<mozilla::dom::ChangeStyleTxn>
+  already_AddRefed<mozilla::ChangeStyleTransaction>
   CreateCSSPropertyTxn(mozilla::dom::Element& aElement,
       nsIAtom& aProperty, const nsAString& aValue,
-      mozilla::dom::ChangeStyleTxn::EChangeType aChangeType);
+      mozilla::ChangeStyleTransaction::EChangeType aChangeType);
 
   /** back-end for GetSpecifiedProperty and GetComputedProperty
    *
