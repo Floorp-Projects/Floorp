@@ -15,6 +15,13 @@ body {
 	grid-template-columns: 50px repeat(auto-fit, 100px);
 	background-color: #f00;
 }
+.wrapper2 {
+	display: grid;
+	width: 600px;
+	grid-gap: 0px;
+	grid-template-columns: repeat(2, 100px) repeat(auto-fill, 50px);
+	background-color: #f00;
+}
 .box {
 	background-color: #444;
 	color: #fff;
@@ -33,12 +40,20 @@ function runTests() {
 	var wrapper = document.getElementById("wrapper");
 	var grid = wrapper.getGridFragments()[0];
 	
-	// test count after removal
+	// test auto-fit count after removal
 	is(grid.cols.tracks.length, 2, "Grid column track array compensates for removed auto-fit columns.");
 	
-	// test state of tracks
-	is(grid.cols.tracks[0].state, "static", "Grid column track 0 is marked as static.");
-	is(grid.cols.tracks[1].state, "repeat", "Grid column track 1 is marked as repeat.");
+	var wrapper2 = document.getElementById("wrapper2");
+	var grid2 = wrapper2.getGridFragments()[0];
+	
+	// test auto-fill count of tracks
+	is(grid2.cols.tracks.length, 10, "Grid column track array respects auto-fill columns.");
+	
+	if (grid2.cols.tracks.length == 10) {
+		// test for static and repeat
+		is(grid2.cols.tracks[1].state, "static", "Grid column track 2 is marked as static.");
+		is(grid2.cols.tracks[2].state, "repeat", "Grid column track 3 is marked as repeat.");
+	}
 	
 	SimpleTest.finish();
 }
@@ -48,6 +63,10 @@ function runTests() {
 
 	<div id="wrapper" class="wrapper">
 		<div id="boxA" class="box a">A</div>
+	</div>
+	
+	<div id="wrapper2" class="wrapper2">
+		<div id="boxB" class="box b">B</div>
 	</div>
 	
 </body>
