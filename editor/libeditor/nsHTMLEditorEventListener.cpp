@@ -5,12 +5,12 @@
 
 #include "nsHTMLEditorEventListener.h"
 
+#include "HTMLEditUtils.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"
-#include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
@@ -175,7 +175,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
           }
         }
 
-        if (isContextClick && !nsHTMLEditUtils::IsImage(node)) {
+        if (isContextClick && !HTMLEditUtils::IsImage(node)) {
           selection->Collapse(parent, offset);
         } else {
           htmlEditor->SelectElement(element);

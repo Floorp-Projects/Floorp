@@ -339,7 +339,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsINode* aNode, nsIAtom* aProperty,
                                 nsGkAtoms::table,
                                 nsGkAtoms::hr,
                                 // For the above, why not use
-                                // nsHTMLEditUtils::SupportsAlignAttr?
+                                // HTMLEditUtils::SupportsAlignAttr?
                                 // It also checks for tbody, tfoot, thead.
                                 // Let's add the following elements here even
                                 // if "align" has a different meaning for them

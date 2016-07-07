@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "HTMLEditUtils.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
@@ -21,6 +21,8 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nscore.h"
+
+using namespace mozilla;
 
 // Uncomment the following line if you want to disable
 // table deletion when the only column/row is removed
@@ -46,8 +48,9 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
   NS_ENSURE_ARG_POINTER(aCell);
 
   // do nothing if aCell is not a table cell...
-  if (!nsHTMLEditUtils::IsTableCell(aCell))
+  if (!HTMLEditUtils::IsTableCell(aCell)) {
     return NS_OK;
+  }
 
   if (mInlineEditedCell) {
     NS_ERROR("call HideInlineTableEditingUI first");
