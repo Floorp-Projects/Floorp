@@ -88,6 +88,10 @@ private:
     ~WebGLActiveInfo() { }
 };
 
+//////////
+
+uint8_t ElemSizeFromType(GLenum elemType);
+
 } // namespace mozilla
 
 #endif // WEBGL_ACTIVE_INFO_H_

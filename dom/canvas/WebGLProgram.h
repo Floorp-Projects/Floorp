@@ -71,7 +71,9 @@ struct LinkedProgramInfo final
     std::vector<RefPtr<UniformBlockInfo>> uniformBlocks;
 
     // Needed for draw call validation.
-    std::set<GLuint> activeAttribLocs;
+    std::map<const WebGLActiveInfo*, GLuint> activeAttribLocs;
+
+    //////
 
     explicit LinkedProgramInfo(WebGLProgram* prog);
 
@@ -109,11 +111,6 @@ struct LinkedProgramInfo final
         }
 
         return false;
-    }
-
-    bool HasActiveAttrib(GLuint loc) const {
-        auto itr = activeAttribLocs.find(loc);
-        return itr != activeAttribLocs.end();
     }
 };
 
@@ -196,6 +193,7 @@ private:
     ~WebGLProgram();
 
     void LinkAndUpdate();
+    bool ValidateAfterTentativeLink(nsCString* const out_linkLog) const;
 
 public:
     const GLuint mGLName;

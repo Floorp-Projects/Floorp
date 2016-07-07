@@ -583,24 +583,39 @@ WebGLContext::ValidateBufferFetching(const char* info)
     bool hasPerVertex = false;
     uint32_t maxVertices = UINT32_MAX;
     uint32_t maxInstances = UINT32_MAX;
-    uint32_t attribs = mBoundVertexArray->mAttribs.Length();
+    const uint32_t attribCount = mBoundVertexArray->mAttribs.Length();
 
-    for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[i];
-
+    uint32_t i = 0;
+    for (const auto& vd : mBoundVertexArray->mAttribs) {
         // If the attrib array isn't enabled, there's nothing to check;
         // it's a static value.
         if (!vd.enabled)
             continue;
 
         if (vd.buf == nullptr) {
-            ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %d!", info, i);
+            ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %du!",
+                                  info, i);
             return false;
         }
 
-        // If the attrib is not in use, then we don't have to validate
-        // it, just need to make sure that the binding is non-null.
-        if (!mActiveProgramLinkInfo->HasActiveAttrib(i))
+        ++i;
+    }
+
+    mBufferFetch_IsAttrib0Active = false;
+
+    for (const auto& pair : mActiveProgramLinkInfo->activeAttribLocs) {
+        const auto attrib = pair.first;
+        const uint32_t attribLoc = pair.second;
+
+        if (attribLoc >= attribCount)
+            continue;
+
+        if (attribLoc == 0) {
+            mBufferFetch_IsAttrib0Active = true;
+        }
+
+        const auto& vd = mBoundVertexArray->mAttribs[attribLoc];
+        if (!vd.enabled)
             continue;
 
         // the base offset
@@ -610,7 +625,9 @@ WebGLContext::ValidateBufferFetching(const char* info)
         if (!checked_byteLength.isValid() ||
             !checked_sizeOfLastElement.isValid())
         {
-            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
+            ErrorInvalidOperation("%s: Integer overflow occured while checking vertex"
+                                  " attrib %u.",
+                                  info, attribLoc);
             return false;
         }
 
@@ -623,7 +640,9 @@ WebGLContext::ValidateBufferFetching(const char* info)
         CheckedUint32 checked_maxAllowedCount = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
 
         if (!checked_maxAllowedCount.isValid()) {
-            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
+            ErrorInvalidOperation("%s: Integer overflow occured while checking vertex"
+                                  " attrib %u.",
+                                  info, attribLoc);
             return false;
         }
 
@@ -663,7 +682,7 @@ WebGLContext::WhatDoesVertexAttrib0Need()
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
         mBoundVertexArray->IsAttribArrayEnabled(0) &&
-        !mActiveProgramLinkInfo->HasActiveAttrib(0))
+        !mBufferFetch_IsAttrib0Active)
     {
         return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
     }
@@ -675,7 +694,7 @@ WebGLContext::WhatDoesVertexAttrib0Need()
         return WebGLVertexAttrib0Status::Default;
     }
 
-    return mActiveProgramLinkInfo->HasActiveAttrib(0)
+    return mBufferFetch_IsAttrib0Active
            ? WebGLVertexAttrib0Status::EmulatedInitializedArray
            : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
 }
