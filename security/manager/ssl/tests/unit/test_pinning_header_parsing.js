@@ -58,7 +58,7 @@ function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
 
   // check that maxAge was processed correctly
   if (settingPin && expectedMaxAge) {
-    ok(maxAge.value == expectedMaxAge, `max-age value should be ${expectedMaxAge}`)
+    ok(maxAge.value == expectedMaxAge, `max-age value should be ${expectedMaxAge}`);
   }
 
   // after processing ensure that the postconditions are true, if setting
