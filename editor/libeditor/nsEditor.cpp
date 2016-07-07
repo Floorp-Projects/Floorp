@@ -14,7 +14,7 @@
 #include "CreateElementTransaction.h"   // for CreateElementTransaction
 #include "DeleteNodeTransaction.h"      // for DeleteNodeTransaction
 #include "DeleteRangeTransaction.h"     // for DeleteRangeTransaction
-#include "DeleteTextTxn.h"              // for DeleteTextTxn
+#include "DeleteTextTransaction.h"      // for DeleteTextTransaction
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
 #include "EditorUtils.h"                // for AutoRules, etc
 #include "EditTxn.h"                    // for EditTxn
@@ -2592,9 +2592,9 @@ nsresult
 nsEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
                      uint32_t aLength)
 {
-  RefPtr<DeleteTextTxn> txn =
+  RefPtr<DeleteTextTransaction> transaction =
     CreateTxnForDeleteText(aCharData, aOffset, aLength);
-  NS_ENSURE_STATE(txn);
+  NS_ENSURE_STATE(transaction);
 
   AutoRules beginRulesSniffing(this, EditAction::deleteText,
                                nsIEditor::ePrevious);
@@ -2606,30 +2606,29 @@ nsEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
         aLength);
   }
 
-  nsresult res = DoTransaction(txn);
+  nsresult rv = DoTransaction(transaction);
 
   // Let listeners know what happened
   for (auto& listener : mActionListeners) {
     listener->DidDeleteText(
         static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
-        aLength, res);
+        aLength, rv);
   }
 
-  return res;
+  return rv;
 }
 
-
-already_AddRefed<DeleteTextTxn>
+already_AddRefed<DeleteTextTransaction>
 nsEditor::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
                                  uint32_t aOffset, uint32_t aLength)
 {
-  RefPtr<DeleteTextTxn> txn =
-    new DeleteTextTxn(*this, aCharData, aOffset, aLength, &mRangeUpdater);
+  RefPtr<DeleteTextTransaction> transaction =
+    new DeleteTextTransaction(*this, aCharData, aOffset, aLength,
+                              &mRangeUpdater);
+  nsresult rv = transaction->Init();
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  nsresult res = txn->Init();
-  NS_ENSURE_SUCCESS(res, nullptr);
-
-  return txn.forget();
+  return transaction.forget();
 }
 
 already_AddRefed<SplitNodeTxn>
@@ -4319,7 +4318,7 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
   return NS_OK;
 }
 
-already_AddRefed<DeleteTextTxn>
+already_AddRefed<DeleteTextTransaction>
 nsEditor::CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData,
                                       uint32_t aOffset, EDirection aDirection)
 {
@@ -4399,13 +4398,13 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       NS_ENSURE_STATE(length);
-      RefPtr<DeleteTextTxn> txn =
+      RefPtr<DeleteTextTransaction> transaction =
         CreateTxnForDeleteCharacter(*priorNodeAsCharData, length, ePrevious);
-      NS_ENSURE_STATE(txn);
+      NS_ENSURE_STATE(transaction);
 
-      *aOffset = txn->GetOffset();
-      *aLength = txn->GetNumCharsToDelete();
-      aTxn->AppendChild(txn);
+      *aOffset = transaction->GetOffset();
+      *aLength = transaction->GetNumCharsToDelete();
+      aTxn->AppendChild(transaction);
     } else {
       // priorNode is not chardata, so tell its parent to delete it
       RefPtr<DeleteNodeTransaction> transaction;
@@ -4434,13 +4433,13 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       NS_ENSURE_STATE(length);
-      RefPtr<DeleteTextTxn> txn =
+      RefPtr<DeleteTextTransaction> transaction =
         CreateTxnForDeleteCharacter(*nextNodeAsCharData, 0, eNext);
-      NS_ENSURE_STATE(txn);
+      NS_ENSURE_STATE(transaction);
 
-      *aOffset = txn->GetOffset();
-      *aLength = txn->GetNumCharsToDelete();
-      aTxn->AppendChild(txn);
+      *aOffset = transaction->GetOffset();
+      *aLength = transaction->GetNumCharsToDelete();
+      aTxn->AppendChild(transaction);
     } else {
       // nextNode is not chardata, so tell its parent to delete it
       RefPtr<DeleteNodeTransaction> transaction;
@@ -4458,14 +4457,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     RefPtr<nsGenericDOMDataNode> nodeAsCharData =
       static_cast<nsGenericDOMDataNode*>(node.get());
     // we have chardata, so delete a char at the proper offset
-    RefPtr<DeleteTextTxn> txn = CreateTxnForDeleteCharacter(*nodeAsCharData,
-                                                              offset, aAction);
-    NS_ENSURE_STATE(txn);
+    RefPtr<DeleteTextTransaction> transaction =
+      CreateTxnForDeleteCharacter(*nodeAsCharData, offset, aAction);
+    NS_ENSURE_STATE(transaction);
 
-    aTxn->AppendChild(txn);
+    aTxn->AppendChild(transaction);
     NS_ADDREF(*aNode = node);
-    *aOffset = txn->GetOffset();
-    *aLength = txn->GetNumCharsToDelete();
+    *aOffset = transaction->GetOffset();
+    *aLength = transaction->GetNumCharsToDelete();
   } else {
     // we're either deleting a node or chardata, need to dig into the next/prev
     // node to find out
@@ -4496,14 +4495,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       if (aAction == ePrevious) {
         position = selectedNode->Length();
       }
-      RefPtr<DeleteTextTxn> delTextTxn =
+      RefPtr<DeleteTextTransaction> deleteTextTransaction =
         CreateTxnForDeleteCharacter(*selectedNodeAsCharData, position,
                                     aAction);
-      NS_ENSURE_TRUE(delTextTxn, NS_ERROR_NULL_POINTER);
+      NS_ENSURE_TRUE(deleteTextTransaction, NS_ERROR_NULL_POINTER);
 
-      aTxn->AppendChild(delTextTxn);
-      *aOffset = delTextTxn->GetOffset();
-      *aLength = delTextTxn->GetNumCharsToDelete();
+      aTxn->AppendChild(deleteTextTransaction);
+      *aOffset = deleteTextTransaction->GetOffset();
+      *aLength = deleteTextTransaction->GetNumCharsToDelete();
     } else {
       RefPtr<DeleteNodeTransaction> deleteNodeTransaction;
       res = CreateTxnForDeleteNode(selectedNode,
