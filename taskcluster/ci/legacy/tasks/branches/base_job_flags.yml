@@ -28,6 +28,8 @@ flags:
     - linux64-valgrind
     - macosx64
     - macosx64-st-an
+    - win32
+    - win64
 
   tests:
     - cppunit
