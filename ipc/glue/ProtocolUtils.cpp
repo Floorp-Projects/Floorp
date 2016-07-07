@@ -66,7 +66,6 @@ static StaticMutex gProtocolMutex;
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
  : mOpener(nullptr)
  , mProtocolId(aProtoId)
- , mTrans(nullptr)
 {
 }
 
@@ -84,6 +83,11 @@ IToplevelProtocol::~IToplevelProtocol()
 
   if (mOpener) {
       removeFrom(mOpener->mOpenActors);
+  }
+
+  if (mTrans) {
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTrans.release());
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
   }
 }
 
