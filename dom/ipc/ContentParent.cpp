@@ -150,7 +150,6 @@
 #include "nsISiteSecurityService.h"
 #include "nsISpellChecker.h"
 #include "nsISupportsPrimitives.h"
-#include "nsISystemMessagesInternal.h"
 #include "nsITimer.h"
 #include "nsIURIFixup.h"
 #include "nsIDocShellTreeOwner.h"
@@ -887,9 +886,7 @@ ContentParent::GetInitialProcessPriority(Element* aFrameElement)
     return PROCESS_PRIORITY_FOREGROUND;
   }
 
-  return browserFrame->GetIsExpectingSystemMessage() ?
-           PROCESS_PRIORITY_FOREGROUND_HIGH :
-           PROCESS_PRIORITY_FOREGROUND;
+  return PROCESS_PRIORITY_FOREGROUND;
 }
 
 #if defined(XP_WIN)
@@ -1357,8 +1354,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     return nullptr;
   }
 
-  parent->AsContentParent()->MaybeTakeCPUWakeLock(aFrameElement);
-
   return TabParent::GetFrom(browser);
 }
 
@@ -1485,102 +1480,9 @@ ContentParent::ForwardKnownInfo()
     Unused << SendVolumes(volumeInfo);
   }
 #endif /* MOZ_WIDGET_GONK */
-
-  nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
-    do_GetService("@mozilla.org/system-message-internal;1");
-  if (systemMessenger && !mIsForBrowser) {
-    nsCOMPtr<nsIURI> manifestURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(manifestURI), mAppManifestURL);
-    if (NS_SUCCEEDED(rv)) {
-      systemMessenger->RefreshCache(mMessageManager, manifestURI);
-    }
-  }
 }
 
 namespace {
-
-class SystemMessageHandledListener final
-  : public nsITimerCallback
-  , public LinkedListElement<SystemMessageHandledListener>
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  SystemMessageHandledListener() {}
-
-  static void OnSystemMessageHandled()
-  {
-    if (!sListeners) {
-      return;
-    }
-
-    SystemMessageHandledListener* listener = sListeners->popFirst();
-    if (!listener) {
-      return;
-    }
-
-    // Careful: ShutDown() may delete |this|.
-    listener->ShutDown();
-  }
-
-  void Init(WakeLock* aWakeLock)
-  {
-    MOZ_ASSERT(!mWakeLock);
-    MOZ_ASSERT(!mTimer);
-
-    // mTimer keeps a strong reference to |this|.  When this object's
-    // destructor runs, it will remove itself from the LinkedList.
-
-    if (!sListeners) {
-      sListeners = new LinkedList<SystemMessageHandledListener>();
-      ClearOnShutdown(&sListeners);
-    }
-    sListeners->insertBack(this);
-
-    mWakeLock = aWakeLock;
-
-    mTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-    uint32_t timeoutSec =
-      Preferences::GetInt("dom.ipc.systemMessageCPULockTimeoutSec", 30);
-    mTimer->InitWithCallback(this, timeoutSec * 1000, nsITimer::TYPE_ONE_SHOT);
-  }
-
-  NS_IMETHOD Notify(nsITimer* aTimer) override
-  {
-    // Careful: ShutDown() may delete |this|.
-    ShutDown();
-    return NS_OK;
-  }
-
-private:
-  ~SystemMessageHandledListener() {}
-
-  static StaticAutoPtr<LinkedList<SystemMessageHandledListener> > sListeners;
-
-  void ShutDown()
-  {
-    RefPtr<SystemMessageHandledListener> kungFuDeathGrip = this;
-
-    ErrorResult rv;
-    mWakeLock->Unlock(rv);
-
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
-    }
-  }
-
-  RefPtr<WakeLock> mWakeLock;
-  nsCOMPtr<nsITimer> mTimer;
-};
-
-StaticAutoPtr<LinkedList<SystemMessageHandledListener> >
-  SystemMessageHandledListener::sListeners;
-
-NS_IMPL_ISUPPORTS(SystemMessageHandledListener,
-                  nsITimerCallback)
-
 
 class RemoteWindowContext final : public nsIRemoteWindowContext
                                 , public nsIInterfaceRequestor
@@ -1620,30 +1522,6 @@ RemoteWindowContext::OpenURI(nsIURI* aURI)
 }
 
 } // namespace
-
-void
-ContentParent::MaybeTakeCPUWakeLock(Element* aFrameElement)
-{
-  // Take the CPU wake lock on behalf of this processs if it's expecting a
-  // system message.  We'll release the CPU lock once the message is
-  // delivered, or after some period of time, which ever comes first.
-
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame =
-    do_QueryInterface(aFrameElement);
-  if (!browserFrame ||
-    !browserFrame->GetIsExpectingSystemMessage()) {
-    return;
-  }
-
-  RefPtr<PowerManagerService> pms = PowerManagerService::GetInstance();
-  RefPtr<WakeLock> lock =
-    pms->NewWakeLockOnBehalfOfProcess(NS_LITERAL_STRING("cpu"), this);
-
-  // This object's Init() function keeps it alive.
-  RefPtr<SystemMessageHandledListener> listener =
-    new SystemMessageHandledListener();
-  listener->Init(lock);
-}
 
 bool
 ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
@@ -4809,13 +4687,6 @@ ContentParent::SendPBlobConstructor(PBlobParent* aActor,
                                     const BlobConstructorParams& aParams)
 {
   return PContentParent::SendPBlobConstructor(aActor, aParams);
-}
-
-bool
-ContentParent::RecvSystemMessageHandled()
-{
-  SystemMessageHandledListener::OnSystemMessageHandled();
-  return true;
 }
 
 PBrowserParent*

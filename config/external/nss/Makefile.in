@@ -367,12 +367,7 @@ endif
 # Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
 # definitions in NSS, so just export it into the sub-make's environment.
 ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
-ifdef MOZ_CRT
-# OS_LIBS comes from having mozcrt as a dependency in moz.build.
-DLLFLAGS := $(OS_LIBS)
-else
 DLLFLAGS := -LIBPATH:$(ABS_DIST)/../mozglue/build -DEFAULTLIB:mozglue
-endif
 export DLLFLAGS
 endif
 

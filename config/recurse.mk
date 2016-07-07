@@ -168,9 +168,6 @@ endif
 ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
 mozglue/build/target memory/replace/logalloc/replay/target: memory/replace/dummy/target
 endif
-ifdef MOZ_CRT
-mozglue/crt/target: mozglue/build/target
-endif
 # js/src/target can end up invoking js/src/host rules (through object files
 # depending on jsautokw.h, which depends on host_jskwgen, and that can't
 # happen at the same time (bug #1146738)

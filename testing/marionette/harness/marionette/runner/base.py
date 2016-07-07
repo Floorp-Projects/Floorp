@@ -685,6 +685,7 @@ class BaseMarionetteTestRunner(object):
             'prefs': self.prefs,
             'startup_timeout': self.startup_timeout,
             'verbose': self.verbose,
+            'symbols_path': self.symbols_path,
         }
         if self.bin or self.emulator:
             kwargs.update({

@@ -58,7 +58,7 @@ NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
   MOZ_ASSERT(HasVideo());
 
   // Configure MediaDecoderReaderWrapper.
-  SetMediaDecoderReaderWrapperCallback();
+  SetCallbacks();
 }
 
 NextFrameSeekTask::~NextFrameSeekTask()
@@ -93,7 +93,7 @@ NextFrameSeekTask::Discard()
   RejectIfExist(__func__);
 
   // Disconnect MediaDecoderReader.
-  CancelMediaDecoderReaderWrapperCallback();
+  CancelCallbacks();
 
   mIsDiscarded = true;
 }
@@ -171,22 +171,23 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
   // If so, we cannot resolve the SeekTaskPromise immediately because there is
   // a latency of running the resolving runnable. Instead, if there is a pending
   // media request, we wait for it.
-  if ((mVideoQueue.GetSize() > 0
-       && !mReader->IsRequestingAudioData() && !mReader->IsWaitingAudioData()
-       && !mReader->IsRequestingVideoData() && !mReader->IsWaitingVideoData())
-      || mVideoQueue.AtEndOfStream()) {
-    UpdateSeekTargetTime();
-    SeekTaskResolveValue val = {};  // Zero-initialize data members.
-    return SeekTask::SeekTaskPromise::CreateAndResolve(val, __func__);
-  } else {
-    // Only invoke EnsureVideoDecodeTaskQueued() if we have no video data; we
-    // might be here because we are waiting audio data, and don't bother to make
-    // more requests to reader in this case.
-    if (mVideoQueue.GetSize() == 0) {
-      EnsureVideoDecodeTaskQueued();
-    }
+  bool hasPendingRequests = mReader->IsRequestingAudioData() ||
+                            mReader->IsWaitingAudioData() ||
+                            mReader->IsRequestingVideoData() ||
+                            mReader->IsWaitingVideoData();
+
+  bool needMoreVideo = mVideoQueue.GetSize() == 0 && !mVideoQueue.IsFinished();
+
+  if (needMoreVideo) {
+    EnsureVideoDecodeTaskQueued();
+  }
+  if (hasPendingRequests || needMoreVideo) {
     return mSeekTaskPromise.Ensure(__func__);
   }
+
+  UpdateSeekTargetTime();
+  SeekTaskResolveValue val = {};  // Zero-initialize data members.
+  return SeekTask::SeekTaskPromise::CreateAndResolve(val, __func__);
 }
 
 bool
@@ -298,9 +299,9 @@ NextFrameSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   // resolved.
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
-             (aAudioSample ? aAudioSample->mTime : -1),
-             (aAudioSample ? aAudioSample->GetEndTime() : -1),
-             (aAudioSample ? aAudioSample->mDiscontinuity : 0));
+             aAudioSample->mTime,
+             aAudioSample->GetEndTime(),
+             aAudioSample->mDiscontinuity);
 
   if (!Exists()) {
     // We've received a sample from a previous decode. Discard it.
@@ -341,9 +342,9 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   // resolved.
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
-             (aVideoSample ? aVideoSample->mTime : -1),
-             (aVideoSample ? aVideoSample->GetEndTime() : -1),
-             (aVideoSample ? aVideoSample->mDiscontinuity : 0));
+             aVideoSample->mTime,
+             aVideoSample->GetEndTime(),
+             aVideoSample->mDiscontinuity);
 
   if (!Exists()) {
     // We've received a sample from a previous decode. Discard it.
@@ -411,7 +412,7 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
 }
 
 void
-NextFrameSeekTask::SetMediaDecoderReaderWrapperCallback()
+NextFrameSeekTask::SetCallbacks()
 {
   AssertOwnerThread();
 
@@ -440,6 +441,7 @@ NextFrameSeekTask::SetMediaDecoderReaderWrapperCallback()
     OwnerThread(), [this] (WaitCallbackData aData) {
     // We don't make an audio decode request here, instead, let MDSM to
     // trigger further audio decode tasks if MDSM itself needs to play audio.
+    CheckIfSeekComplete();
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
@@ -451,7 +453,7 @@ NextFrameSeekTask::SetMediaDecoderReaderWrapperCallback()
 }
 
 void
-NextFrameSeekTask::CancelMediaDecoderReaderWrapperCallback()
+NextFrameSeekTask::CancelCallbacks()
 {
   AssertOwnerThread();
   mAudioCallback.Disconnect();

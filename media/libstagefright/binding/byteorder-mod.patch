@@ -1,7 +1,7 @@
-diff --git a/media/libstagefright/binding/mp4parse/byteorder/mod.rs b/media/libstagefright/binding/mp4parse/byteorder/mod.rs
+diff --git a/media/libstagefright/binding/mp4parse/src/byteorder/mod.rs b/media/libstagefright/binding/mp4parse/src/byteorder/mod.rs
 index a25bab6..13db30a 100644
---- a/media/libstagefright/binding/mp4parse/byteorder/mod.rs
-+++ b/media/libstagefright/binding/mp4parse/byteorder/mod.rs
+--- a/media/libstagefright/binding/mp4parse/src/byteorder/mod.rs
++++ b/media/libstagefright/binding/mp4parse/src/byteorder/mod.rs
 @@ -36,24 +36,17 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
  ```
  */
@@ -41,10 +41,10 @@ index a25bab6..13db30a 100644
          assert!($size <= $src.len());
          let mut data: $ty = 0;
          unsafe {
-diff --git a/media/libstagefright/binding/mp4parse/byteorder/new.rs b/media/libstagefright/binding/mp4parse/byteorder/new.rs
+diff --git a/media/libstagefright/binding/mp4parse/src/byteorder/new.rs b/media/libstagefright/binding/mp4parse/src/byteorder/new.rs
 index b5f3770..b32f97b 100644
---- a/media/libstagefright/binding/mp4parse/byteorder/new.rs
-+++ b/media/libstagefright/binding/mp4parse/byteorder/new.rs
+--- a/media/libstagefright/binding/mp4parse/src/byteorder/new.rs
++++ b/media/libstagefright/binding/mp4parse/src/byteorder/new.rs
 @@ -1,6 +1,6 @@
  use std::io::{self, Result};
  
