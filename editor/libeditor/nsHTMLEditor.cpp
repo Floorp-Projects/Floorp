@@ -284,7 +284,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     }
 
     // Init the HTML-CSS utils
-    mHTMLCSSUtils = new nsHTMLCSSUtils(this);
+    mCSSEditUtils = new CSSEditUtils(this);
 
     // disable links
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
@@ -1787,7 +1787,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
     // Make sure to not walk off onto the Document node
     do {
       // retrieve the computed style of background-color for blockParent
-      mHTMLCSSUtils->GetComputedProperty(*blockParent,
+      mCSSEditUtils->GetComputedProperty(*blockParent,
                                          *nsGkAtoms::backgroundColor,
                                          aOutColor);
       blockParent = blockParent->GetParentElement();
@@ -1798,7 +1798,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
       // color we are looking for
-      mHTMLCSSUtils->GetDefaultBackgroundColor(aOutColor);
+      mCSSEditUtils->GetDefaultBackgroundColor(aOutColor);
     }
   }
   else {
@@ -1817,7 +1817,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
       else {
         // no, it's not; let's retrieve the computed style of background-color for the
         // node to examine
-        mHTMLCSSUtils->GetComputedProperty(*nodeToExamine,
+        mCSSEditUtils->GetComputedProperty(*nodeToExamine,
                                            *nsGkAtoms::backgroundColor,
                                            aOutColor);
         if (!aOutColor.EqualsLiteral("transparent")) {
@@ -4406,9 +4406,11 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
   nsAutoScriptBlocker scriptBlocker;
 
   nsresult res = NS_OK;
-  if (IsCSSEnabled() && mHTMLCSSUtils) {
+  if (IsCSSEnabled() && mCSSEditUtils) {
     int32_t count;
-    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nullptr, &aAttribute, &aValue, &count,
+    res = mCSSEditUtils->SetCSSEquivalentToHTMLStyle(aElement, nullptr,
+                                                     &aAttribute, &aValue,
+                                                     &count,
                                                      aSuppressTransaction);
     NS_ENSURE_SUCCESS(res, res);
     if (count) {
@@ -4474,8 +4476,8 @@ nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
   MOZ_ASSERT(attribute);
 
   nsresult res = NS_OK;
-  if (IsCSSEnabled() && mHTMLCSSUtils) {
-    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(
+  if (IsCSSEnabled() && mCSSEditUtils) {
+    res = mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
         element, nullptr, &aAttribute, nullptr, aSuppressTransaction);
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -4494,11 +4496,11 @@ nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
 nsresult
 nsHTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked)
 {
-  if (!mHTMLCSSUtils) {
+  if (!mCSSEditUtils) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mHTMLCSSUtils->SetCSSEnabled(aIsCSSPrefChecked);
+  mCSSEditUtils->SetCSSEnabled(aIsCSSPrefChecked);
 
   // Disable the eEditorNoCSSMask flag if we're enabling StyleWithCSS.
   uint32_t flags = mFlags;
@@ -4558,13 +4560,13 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         // And apply the background color to that block container
         if (blockParent && cachedBlockParent != blockParent) {
           cachedBlockParent = blockParent;
-          mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
+          mCSSEditUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
                                                      &bgcolor, &aColor, false);
         }
       } else if (startNode == endNode &&
                  startNode->IsHTMLElement(nsGkAtoms::body) && isCollapsed) {
         // No block in the document, let's apply the background to the body
-        mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(startNode->AsElement(),
+        mCSSEditUtils->SetCSSEquivalentToHTMLStyle(startNode->AsElement(),
                                                    nullptr, &bgcolor, &aColor,
                                                    false);
       } else if (startNode == endNode && (endOffset - startOffset == 1 ||
@@ -4575,7 +4577,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         nsCOMPtr<Element> blockParent = GetBlock(*selectedNode);
         if (blockParent && cachedBlockParent != blockParent) {
           cachedBlockParent = blockParent;
-          mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
+          mCSSEditUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
                                                      &bgcolor, &aColor, false);
         }
       } else {
@@ -4618,7 +4620,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           nsCOMPtr<Element> blockParent = GetBlockNodeParent(startNode);
           if (blockParent && cachedBlockParent != blockParent) {
             cachedBlockParent = blockParent;
-            mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
+            mCSSEditUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
                                                        &bgcolor, &aColor,
                                                        false);
           }
@@ -4629,7 +4631,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           nsCOMPtr<Element> blockParent = GetBlock(node);
           if (blockParent && cachedBlockParent != blockParent) {
             cachedBlockParent = blockParent;
-            mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
+            mCSSEditUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
                                                        &bgcolor, &aColor,
                                                        false);
           }
@@ -4643,7 +4645,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           nsCOMPtr<Element> blockParent = GetBlockNodeParent(endNode);
           if (blockParent && cachedBlockParent != blockParent) {
             cachedBlockParent = blockParent;
-            mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
+            mCSSEditUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
                                                        &bgcolor, &aColor,
                                                        false);
           }
@@ -4695,7 +4697,7 @@ nsHTMLEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
   }
 
   // If CSS is enabled, we are stricter about span nodes.
-  return mHTMLCSSUtils->ElementsSameStyle(aNode1->AsDOMNode(),
+  return mCSSEditUtils->ElementsSameStyle(aNode1->AsDOMNode(),
                                           aNode2->AsDOMNode());
 }
 

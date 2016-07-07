@@ -20,7 +20,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditRules.h"
 #include "nsHTMLEditor.h"
 #include "nsHTMLObjectResizer.h"
@@ -88,7 +87,7 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
 
   while (!resultNode && node && !node->IsHTMLElement(nsGkAtoms::html)) {
     nsresult res =
-      mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::position,
+      mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::position,
                                          positionStr);
     NS_ENSURE_SUCCESS(res, res);
     if (positionStr.EqualsLiteral("absolute"))
@@ -154,7 +153,7 @@ nsHTMLEditor::SetElementZIndex(nsIDOMElement* aElement, int32_t aZindex)
   nsAutoString zIndexStr;
   zIndexStr.AppendInt(aZindex);
 
-  mHTMLCSSUtils->SetCSSProperty(*element, *nsGkAtoms::z_index, zIndexStr);
+  mCSSEditUtils->SetCSSProperty(*element, *nsGkAtoms::z_index, zIndexStr);
   return NS_OK;
 }
 
@@ -192,7 +191,7 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
   nsAutoString zIndexStr;
   *aZindex = 0;
 
-  nsresult res = mHTMLCSSUtils->GetSpecifiedProperty(*element,
+  nsresult res = mCSSEditUtils->GetSpecifiedProperty(*element,
                                                      *nsGkAtoms::z_index,
                                                      zIndexStr);
   NS_ENSURE_SUCCESS(res, res);
@@ -206,13 +205,13 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
     nsAutoString positionStr;
     while (node && zIndexStr.EqualsLiteral("auto") &&
            !node->IsHTMLElement(nsGkAtoms::body)) {
-      res = mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::position,
+      res = mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::position,
                                                positionStr);
       NS_ENSURE_SUCCESS(res, res);
       if (positionStr.EqualsLiteral("absolute")) {
         // ah, we found one, what's its z-index ? If its z-index is auto,
         // we have to continue climbing the document's tree
-        res = mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::z_index,
+        res = mCSSEditUtils->GetComputedProperty(*node, *nsGkAtoms::z_index,
                                                  zIndexStr);
         NS_ENSURE_SUCCESS(res, res);
       }
@@ -346,9 +345,9 @@ nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
   mPositioningShadow->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 
   // position it
-  mHTMLCSSUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::width,
+  mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::width,
                                       mPositionedObjectWidth);
-  mHTMLCSSUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::height,
+  mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::height,
                                       mPositionedObjectHeight);
 
   mIsMoving = true;
@@ -446,9 +445,9 @@ nsHTMLEditor::SetFinalPosition(int32_t aX, int32_t aY)
   nsCOMPtr<Element> absolutelyPositionedObject =
     do_QueryInterface(mAbsolutelyPositionedObject);
   NS_ENSURE_STATE(absolutelyPositionedObject);
-  mHTMLCSSUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
+  mCSSEditUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
                                       *nsGkAtoms::top, newY);
-  mHTMLCSSUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
+  mCSSEditUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
                                       *nsGkAtoms::left, newX);
   // keep track of that size
   mPositionedObjectX  = newX;
@@ -476,7 +475,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
   NS_ENSURE_ARG_POINTER(element);
 
   nsAutoString positionStr;
-  mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::position,
+  mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::position,
                                      positionStr);
   bool isPositioned = (positionStr.EqualsLiteral("absolute"));
 
@@ -490,7 +489,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
     int32_t x, y;
     GetElementOrigin(aElement, x, y);
 
-    mHTMLCSSUtils->SetCSSProperty(*element, *nsGkAtoms::position,
+    mCSSEditUtils->SetCSSProperty(*element, *nsGkAtoms::position,
                                   NS_LITERAL_STRING("absolute"));
 
     AddPositioningOffset(x, y);
@@ -510,19 +509,19 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
     }
   }
   else {
-    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::position,
+    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::position,
                                      EmptyString());
-    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::top,
+    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::top,
                                      EmptyString());
-    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::left,
+    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::left,
                                      EmptyString());
-    mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::z_index,
+    mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::z_index,
                                      EmptyString());
 
     if (!HTMLEditUtils::IsImage(aElement)) {
-      mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::width,
+      mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::width,
                                        EmptyString());
-      mHTMLCSSUtils->RemoveCSSProperty(*element, *nsGkAtoms::height,
+      mCSSEditUtils->RemoveCSSProperty(*element, *nsGkAtoms::height,
                                        EmptyString());
     }
 
@@ -583,8 +582,8 @@ void
 nsHTMLEditor::SetElementPosition(dom::Element& aElement, int32_t aX, int32_t aY)
 {
   AutoEditBatch batchIt(this);
-  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
-  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
+  mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
+  mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
 }
 
 // self-explanatory
@@ -618,18 +617,18 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
 
   nsAutoString bgImageStr;
   nsresult res =
-    mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::background_image,
+    mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::background_image,
                                        bgImageStr);
   NS_ENSURE_SUCCESS(res, res);
   if (bgImageStr.EqualsLiteral("none")) {
     nsAutoString bgColorStr;
     res =
-      mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::backgroundColor,
+      mCSSEditUtils->GetComputedProperty(*element, *nsGkAtoms::backgroundColor,
                                          bgColorStr);
     NS_ENSURE_SUCCESS(res, res);
     if (bgColorStr.EqualsLiteral("transparent")) {
       RefPtr<nsComputedDOMStyle> cssDecl =
-        mHTMLCSSUtils->GetComputedStyle(element);
+        mCSSEditUtils->GetComputedStyle(element);
       NS_ENSURE_STATE(cssDecl);
 
       // from these declarations, get the one we want and that one only

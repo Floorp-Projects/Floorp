@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "SelectionState.h"
@@ -21,7 +22,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -278,7 +278,7 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
   // No luck so far.  Now we check for a <span> with a single style=""
   // attribute that sets only the style we're looking for, if this type of
   // style supports it
-  if (!mHTMLCSSUtils->IsCSSEditableProperty(element, aProperty, aAttribute) ||
+  if (!mCSSEditUtils->IsCSSEditableProperty(element, aProperty, aAttribute) ||
       !element->IsHTMLElement(nsGkAtoms::span) ||
       element->GetAttrCount() != 1 ||
       !element->HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
@@ -292,11 +292,11 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
   nsCOMPtr<Element> newSpan = CreateHTMLContent(nsGkAtoms::span);
   NS_ASSERTION(newSpan, "CreateHTMLContent failed");
   NS_ENSURE_TRUE(newSpan, false);
-  mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(newSpan, aProperty,
+  mCSSEditUtils->SetCSSEquivalentToHTMLStyle(newSpan, aProperty,
                                              aAttribute, aValue,
                                              /*suppress transaction*/ true);
 
-  return mHTMLCSSUtils->ElementsSameStyle(newSpan, element);
+  return mCSSEditUtils->ElementsSameStyle(newSpan, element);
 }
 
 
@@ -319,11 +319,11 @@ nsHTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
   }
 
   // Don't need to do anything if property already set on node
-  if (mHTMLCSSUtils->IsCSSEditableProperty(&aText, &aProperty, aAttribute)) {
+  if (mCSSEditUtils->IsCSSEditableProperty(&aText, &aProperty, aAttribute)) {
     // The HTML styles defined by aProperty/aAttribute have a CSS equivalence
     // for node; let's check if it carries those CSS styles
-    if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(&aText, &aProperty,
-          aAttribute, aValue, nsHTMLCSSUtils::eComputed)) {
+    if (mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(&aText, &aProperty,
+          aAttribute, aValue, CSSEditUtils::eComputed)) {
       return NS_OK;
     }
   } else if (IsTextPropertySetByContent(&aText, &aProperty, aAttribute,
@@ -418,9 +418,9 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
   }
 
   // Don't need to do anything if property already set on node
-  if (mHTMLCSSUtils->IsCSSEditableProperty(&aNode, &aProperty, aAttribute)) {
-    if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
-          &aNode, &aProperty, aAttribute, aValue, nsHTMLCSSUtils::eComputed)) {
+  if (mCSSEditUtils->IsCSSEditableProperty(&aNode, &aProperty, aAttribute)) {
+    if (mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+          &aNode, &aProperty, aAttribute, aValue, CSSEditUtils::eComputed)) {
       return NS_OK;
     }
   } else if (IsTextPropertySetByContent(&aNode, &aProperty,
@@ -429,7 +429,8 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
   }
 
   bool useCSS = (IsCSSEnabled() &&
-                 mHTMLCSSUtils->IsCSSEditableProperty(&aNode, &aProperty, aAttribute)) ||
+                 mCSSEditUtils->IsCSSEditableProperty(&aNode, &aProperty,
+                                                      aAttribute)) ||
                 // bgcolor is always done using CSS
                 aAttribute->EqualsLiteral("bgcolor");
 
@@ -447,7 +448,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
 
     // Add the CSS styles corresponding to the HTML style request
     int32_t count;
-    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(tmp->AsDOMNode(),
+    res = mCSSEditUtils->SetCSSEquivalentToHTMLStyle(tmp->AsDOMNode(),
                                                      &aProperty, aAttribute,
                                                      &aValue, &count, false);
     NS_ENSURE_SUCCESS(res, res);
@@ -570,14 +571,14 @@ nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
   while (!IsBlockNode(node) && node->GetParent() &&
          IsEditable(node->GetParent())) {
     isSet = false;
-    if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+    if (useCSS && mCSSEditUtils->IsCSSEditableProperty(node, aProperty,
                                                        aAttribute)) {
       // The HTML style defined by aProperty/aAttribute has a CSS equivalence
       // in this implementation for the node; let's check if it carries those
       // CSS styles
       nsAutoString firstValue;
-      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(GetAsDOMNode(node),
-        aProperty, aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
+      mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(GetAsDOMNode(node),
+        aProperty, aAttribute, isSet, firstValue, CSSEditUtils::eSpecified);
     }
     if (// node is the correct inline prop
         (aProperty && node->IsHTMLElement(aProperty)) ||
@@ -779,17 +780,17 @@ nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
   }
 
   if (!aChildrenOnly &&
-      mHTMLCSSUtils->IsCSSEditableProperty(&aNode, aProperty, aAttribute)) {
+      mCSSEditUtils->IsCSSEditableProperty(&aNode, aProperty, aAttribute)) {
     // the HTML style defined by aProperty/aAttribute has a CSS equivalence in
     // this implementation for the node aNode; let's check if it carries those
     // css styles
     nsAutoString propertyValue;
-    bool isSet = mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(&aNode,
-      aProperty, aAttribute, propertyValue, nsHTMLCSSUtils::eSpecified);
+    bool isSet = mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(&aNode,
+      aProperty, aAttribute, propertyValue, CSSEditUtils::eSpecified);
     if (isSet && aNode.IsElement()) {
       // yes, tmp has the corresponding css declarations in its style attribute
       // let's remove them
-      mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode.AsElement(),
+      mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(aNode.AsElement(),
                                                     aProperty,
                                                     aAttribute,
                                                     &propertyValue,
@@ -1001,14 +1002,14 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
         return NS_OK;
       }
 
-      if (mHTMLCSSUtils->IsCSSEditableProperty(collapsedNode, &aProperty,
+      if (mCSSEditUtils->IsCSSEditableProperty(collapsedNode, &aProperty,
                                                aAttribute)) {
         if (aValue) {
           tOutString.Assign(*aValue);
         }
         *aFirst = *aAny = *aAll =
-          mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(collapsedNode,
-              &aProperty, aAttribute, tOutString, nsHTMLCSSUtils::eComputed);
+          mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(collapsedNode,
+              &aProperty, aAttribute, tOutString, CSSEditUtils::eComputed);
         if (outValue) {
           outValue->Assign(tOutString);
         }
@@ -1075,7 +1076,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
 
       bool isSet = false;
       if (first) {
-        if (mHTMLCSSUtils->IsCSSEditableProperty(content, &aProperty,
+        if (mCSSEditUtils->IsCSSEditableProperty(content, &aProperty,
                                                  aAttribute)) {
           // The HTML styles defined by aProperty/aAttribute have a CSS
           // equivalence in this implementation for node; let's check if it
@@ -1083,8 +1084,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
           if (aValue) {
             firstValue.Assign(*aValue);
           }
-          isSet = mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(content,
-              &aProperty, aAttribute, firstValue, nsHTMLCSSUtils::eComputed);
+          isSet = mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(content,
+              &aProperty, aAttribute, firstValue, CSSEditUtils::eComputed);
         } else {
           isSet = IsTextPropertySetByContent(content, &aProperty, aAttribute,
                                              aValue, &firstValue);
@@ -1095,7 +1096,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
           *outValue = firstValue;
         }
       } else {
-        if (mHTMLCSSUtils->IsCSSEditableProperty(content, &aProperty,
+        if (mCSSEditUtils->IsCSSEditableProperty(content, &aProperty,
                                                  aAttribute)) {
           // The HTML styles defined by aProperty/aAttribute have a CSS
           // equivalence in this implementation for node; let's check if it
@@ -1103,8 +1104,8 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
           if (aValue) {
             theValue.Assign(*aValue);
           }
-          isSet = mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(content,
-              &aProperty, aAttribute, theValue, nsHTMLCSSUtils::eComputed);
+          isSet = mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(content,
+              &aProperty, aAttribute, theValue, CSSEditUtils::eComputed);
         } else {
           isSet = IsTextPropertySetByContent(content, &aProperty, aAttribute,
                                              aValue, &theValue);
@@ -1250,18 +1251,18 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
       if (startNode && startNode == endNode && startNode->GetAsText()) {
         // We're done with this range!
         if (IsCSSEnabled() &&
-            mHTMLCSSUtils->IsCSSEditableProperty(startNode, aProperty,
+            mCSSEditUtils->IsCSSEditableProperty(startNode, aProperty,
                                                  aAttribute)) {
           // The HTML style defined by aProperty/aAttribute has a CSS
           // equivalence in this implementation for startNode
-          if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(startNode,
+          if (mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(startNode,
                 aProperty, aAttribute, EmptyString(),
-                nsHTMLCSSUtils::eComputed)) {
+                CSSEditUtils::eComputed)) {
             // startNode's computed style indicates the CSS equivalence to the
             // HTML style to remove is applied; but we found no element in the
             // ancestors of startNode carrying specified styles; assume it
             // comes from a rule and try to insert a span "inverting" the style
-            if (mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
+            if (mCSSEditUtils->IsCSSInvertible(*aProperty, aAttribute)) {
               NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
               SetInlinePropertyOnTextNode(*startNode->GetAsText(),
                                           range->StartOffset(),
@@ -1291,17 +1292,17 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
           res = RemoveStyleInside(node, aProperty, aAttribute);
           NS_ENSURE_SUCCESS(res, res);
           if (IsCSSEnabled() &&
-              mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+              mCSSEditUtils->IsCSSEditableProperty(node, aProperty,
                                                    aAttribute) &&
-              mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node,
+              mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(node,
                   aProperty, aAttribute, EmptyString(),
-                  nsHTMLCSSUtils::eComputed) &&
+                  CSSEditUtils::eComputed) &&
               // startNode's computed style indicates the CSS equivalence to
               // the HTML style to remove is applied; but we found no element
               // in the ancestors of startNode carrying specified styles;
               // assume it comes from a rule and let's try to insert a span
               // "inverting" the style
-              mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
+              mCSSEditUtils->IsCSSInvertible(*aProperty, aAttribute)) {
             NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
             SetInlinePropertyOnNode(node, *aProperty, aAttribute, value);
           }
