@@ -12,6 +12,7 @@
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
+#include "WSRunObject.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
@@ -53,7 +54,6 @@
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsWSRunObject.h"
 #include <algorithm>
 
 // Workaround for windows headers
@@ -514,14 +514,14 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
       NS_ENSURE_STATE(mHTMLEditor);
       NS_ENSURE_STATE(mRangeItem->startNode);
       NS_ENSURE_STATE(mRangeItem->endNode);
-      nsWSRunObject(mHTMLEditor, mRangeItem->startNode,
-                    mRangeItem->startOffset).AdjustWhitespace();
+      WSRunObject(mHTMLEditor, mRangeItem->startNode,
+                  mRangeItem->startOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
       if (mRangeItem->startNode != mRangeItem->endNode ||
           mRangeItem->startOffset != mRangeItem->endOffset) {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsWSRunObject(mHTMLEditor, mRangeItem->endNode,
-                      mRangeItem->endOffset).AdjustWhitespace();
+        WSRunObject(mHTMLEditor, mRangeItem->endNode,
+                    mRangeItem->endOffset).AdjustWhitespace();
       }
     }
 
@@ -1304,7 +1304,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
   }
 
   if (aAction == EditAction::insertIMEText) {
-    // Right now the nsWSRunObject code bails on empty strings, but IME needs
+    // Right now the WSRunObject code bails on empty strings, but IME needs
     // the InsertTextImpl() call to still happen since empty strings are meaningful there.
     NS_ENSURE_STATE(mHTMLEditor);
     // If there is one or more IME selections, its minimum offset should be
@@ -1321,7 +1321,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     }
     else
     {
-      nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+      WSRunObject wsObj(mHTMLEditor, selNode, selOffset);
       res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
     }
     NS_ENSURE_SUCCESS(res, res);
@@ -1424,7 +1424,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
 
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
         NS_ENSURE_STATE(mHTMLEditor);
-        nsWSRunObject wsObj(mHTMLEditor, curNode, curOffset);
+        WSRunObject wsObj(mHTMLEditor, curNode, curOffset);
 
         // is it a tab?
         if (subStr.Equals(tabStr))
@@ -1604,7 +1604,7 @@ nsHTMLEditRules::StandardBreakImpl(nsINode& aNode, int32_t aOffset,
     brNode = mHTMLEditor->CreateBR(node, aOffset);
     NS_ENSURE_STATE(brNode);
   } else {
-    nsWSRunObject wsObj(mHTMLEditor, node, aOffset);
+    WSRunObject wsObj(mHTMLEditor, node, aOffset);
     int32_t visOffset = 0;
     WSType wsType;
     nsCOMPtr<nsINode> visNode;
@@ -1644,7 +1644,7 @@ nsHTMLEditRules::StandardBreakImpl(nsINode& aNode, int32_t aOffset,
     res = aSelection.Collapse(node, offset);
     NS_ENSURE_SUCCESS(res, res);
   } else {
-    nsWSRunObject wsObj(mHTMLEditor, node, offset + 1);
+    WSRunObject wsObj(mHTMLEditor, node, offset + 1);
     nsCOMPtr<nsINode> secondBR;
     int32_t visOffset = 0;
     WSType wsType;
@@ -1714,7 +1714,7 @@ nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool* aHandled)
     // The latter can confuse a user if they click there and start typing,
     // because being in the mailquote may affect wrapping behavior, or font color, etc.
     NS_ENSURE_STATE(mHTMLEditor);
-    nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+    WSRunObject wsObj(mHTMLEditor, selNode, selOffset);
     nsCOMPtr<nsINode> visNode;
     int32_t visOffset=0;
     WSType wsType;
@@ -1750,7 +1750,7 @@ nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool* aHandled)
     // then we will need a 2nd br added to achieve blank line that user expects.
     if (IsInlineNode(*citeNode)) {
       NS_ENSURE_STATE(mHTMLEditor);
-      nsWSRunObject wsObj(mHTMLEditor, selNode, newOffset);
+      WSRunObject wsObj(mHTMLEditor, selNode, newOffset);
       nsCOMPtr<nsINode> visNode;
       int32_t visOffset=0;
       WSType wsType;
@@ -1759,7 +1759,7 @@ nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool* aHandled)
       if (wsType == WSType::normalWS || wsType == WSType::text ||
           wsType == WSType::special) {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsWSRunObject wsObjAfterBR(mHTMLEditor, selNode, newOffset+1);
+        WSRunObject wsObjAfterBR(mHTMLEditor, selNode, newOffset+1);
         wsObjAfterBR.NextVisibleNode(selNode, newOffset + 1,
                                      address_of(visNode), &visOffset, &wsType);
         if (wsType == WSType::normalWS || wsType == WSType::text ||
@@ -1895,7 +1895,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   if (bCollapsed) {
     // What's in the direction we are deleting?
     NS_ENSURE_STATE(mHTMLEditor);
-    nsWSRunObject wsObj(mHTMLEditor, startNode, startOffset);
+    WSRunObject wsObj(mHTMLEditor, startNode, startOffset);
     nsCOMPtr<nsINode> visNode;
     int32_t visOffset;
     WSType wsType;
@@ -1960,7 +1960,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         eo = range->EndOffset();
       }
       NS_ENSURE_STATE(mHTMLEditor);
-      res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
+      res = WSRunObject::PrepareToDeleteRange(mHTMLEditor,
           address_of(visNode), &so, address_of(visNode), &eo);
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
@@ -2051,7 +2051,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
             NS_ENSURE_STATE(mHTMLEditor);
             nsCOMPtr<nsIContent> otherContent(do_QueryInterface(otherNode));
-            res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, otherContent);
+            res = WSRunObject::PrepareToDeleteNode(mHTMLEditor, otherContent);
             NS_ENSURE_SUCCESS(res, res);
             NS_ENSURE_STATE(mHTMLEditor);
             res = mHTMLEditor->DeleteNode(otherNode);
@@ -2066,8 +2066,8 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       // Found break or image, or hr.
       NS_ENSURE_STATE(mHTMLEditor);
       NS_ENSURE_STATE(visNode->IsContent());
-      res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor,
-                                               visNode->AsContent());
+      res = WSRunObject::PrepareToDeleteNode(mHTMLEditor,
+                                             visNode->AsContent());
       NS_ENSURE_SUCCESS(res, res);
       // Remember sibling to visnode, if any
       NS_ENSURE_STATE(mHTMLEditor);
@@ -2254,9 +2254,9 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   if (!IsPlaintextEditor()) {
     NS_ENSURE_STATE(mHTMLEditor);
     AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
-    res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
-                                           address_of(startNode), &startOffset,
-                                           address_of(endNode), &endOffset);
+    res = WSRunObject::PrepareToDeleteRange(mHTMLEditor,
+                                            address_of(startNode), &startOffset,
+                                            address_of(endNode), &endOffset);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -2492,7 +2492,7 @@ nsHTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
 
   // examine selection
   NS_ENSURE_STATE(mHTMLEditor);
-  nsWSRunObject wsObj(mHTMLEditor, node, offset);
+  WSRunObject wsObj(mHTMLEditor, node, offset);
   if (((wsObj.mStartReason & WSType::block) ||
        (wsObj.mStartReason & WSType::br)) &&
       (wsObj.mEndReason & WSType::block)) {
@@ -2629,9 +2629,9 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
     rightOffset++;
-    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                            nsWSRunObject::kBlockEnd,
-                                            leftBlock);
+    res = WSRunObject::ScrubBlockBoundary(mHTMLEditor,
+                                          WSRunObject::kBlockEnd,
+                                          leftBlock);
     NS_ENSURE_SUCCESS(res, res);
 
     {
@@ -2639,9 +2639,9 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
       nsCOMPtr<nsINode> trackingRightBlock(rightBlock);
       AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
                                 address_of(trackingRightBlock), &rightOffset);
-      res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                              nsWSRunObject::kAfterBlock,
-                                              rightBlock, rightOffset);
+      res = WSRunObject::ScrubBlockBoundary(mHTMLEditor,
+                                            WSRunObject::kAfterBlock,
+                                            rightBlock, rightOffset);
       NS_ENSURE_SUCCESS(res, res);
       if (trackingRightBlock->IsElement()) {
         rightBlock = trackingRightBlock->AsElement();
@@ -2672,9 +2672,9 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
   } else if (EditorUtils::IsDescendantOf(rightBlock, leftBlock, &leftOffset)) {
     // Tricky case.  Right block is inside left block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
-    res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                            nsWSRunObject::kBlockStart,
-                                            rightBlock);
+    res = WSRunObject::ScrubBlockBoundary(mHTMLEditor,
+                                          WSRunObject::kBlockStart,
+                                          rightBlock);
     NS_ENSURE_SUCCESS(res, res);
     {
       // We can't just track leftBlock because it's an Element, so track
@@ -2682,9 +2682,9 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
       nsCOMPtr<nsINode> trackingLeftBlock(leftBlock);
       AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
                                 address_of(trackingLeftBlock), &leftOffset);
-      res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
-                                              nsWSRunObject::kBeforeBlock,
-                                              leftBlock, leftOffset);
+      res = WSRunObject::ScrubBlockBoundary(mHTMLEditor,
+                                            WSRunObject::kBeforeBlock,
+                                            leftBlock, leftOffset);
       NS_ENSURE_SUCCESS(res, res);
       if (trackingLeftBlock->IsElement()) {
         leftBlock = trackingLeftBlock->AsElement();
@@ -2766,7 +2766,7 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     // if you backspace from li into p.
 
     // Adjust whitespace at block boundaries
-    res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor, leftBlock, rightBlock);
+    res = WSRunObject::PrepareToJoinBlocks(mHTMLEditor, leftBlock, rightBlock);
     NS_ENSURE_SUCCESS(res, res);
     // Do br adjustment.
     nsCOMPtr<Element> brNode =
@@ -4893,7 +4893,7 @@ nsHTMLEditRules::CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
     return nullptr;
   }
 
-  nsWSRunObject wsTester(mHTMLEditor, testNode, testOffset);
+  WSRunObject wsTester(mHTMLEditor, testNode, testOffset);
   if (WSType::br == wsTester.mStartReason) {
     return wsTester.mStartReasonNode->AsElement();
   }
@@ -4972,7 +4972,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
   // Find previous visible thingy before start of selection
   if (selStartNode != selCommon && selStartNode != root) {
     while (true) {
-      nsWSRunObject wsObj(mHTMLEditor, selStartNode, selStartOffset);
+      WSRunObject wsObj(mHTMLEditor, selStartNode, selStartOffset);
       wsObj.PriorVisibleNode(selStartNode, selStartOffset, address_of(unused),
                              &visOffset, &wsType);
       if (wsType != WSType::thisBlock) {
@@ -4994,7 +4994,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
   // Find next visible thingy after end of selection
   if (selEndNode != selCommon && selEndNode != root) {
     while (true) {
-      nsWSRunObject wsObj(mHTMLEditor, selEndNode, selEndOffset);
+      WSRunObject wsObj(mHTMLEditor, selEndNode, selEndOffset);
       wsObj.NextVisibleNode(selEndNode, selEndOffset, address_of(unused),
                             &visOffset, &wsType);
       if (wsType == WSType::br) {
@@ -5117,7 +5117,7 @@ nsHTMLEditRules::NormalizeSelection(Selection* inSelection)
   WSType wsType;
 
   // let the whitespace code do the heavy lifting
-  nsWSRunObject wsEndObj(mHTMLEditor, endNode, endOffset);
+  WSRunObject wsEndObj(mHTMLEditor, endNode, endOffset);
   // is there any intervening visible whitespace?  if so we can't push selection past that,
   // it would visibly change maening of users selection
   nsCOMPtr<nsINode> endNode_(do_QueryInterface(endNode));
@@ -5157,7 +5157,7 @@ nsHTMLEditRules::NormalizeSelection(Selection* inSelection)
 
 
   // similar dealio for start of range
-  nsWSRunObject wsStartObj(mHTMLEditor, startNode, startOffset);
+  WSRunObject wsStartObj(mHTMLEditor, startNode, startOffset);
   // is there any intervening visible whitespace?  if so we can't push selection past that,
   // it would visibly change maening of users selection
   nsCOMPtr<nsINode> startNode_(do_QueryInterface(startNode));
@@ -6143,9 +6143,9 @@ nsHTMLEditRules::ReturnInHeader(Selection& aSelection,
 
   // Get ws code to adjust any ws
   nsCOMPtr<nsINode> node = &aNode;
-  nsresult res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
-                                                           address_of(node),
-                                                           &aOffset);
+  nsresult res = WSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
+                                                         address_of(node),
+                                                         &aOffset);
   NS_ENSURE_SUCCESS(res, res);
 
   // Split the header
@@ -6340,7 +6340,8 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   nsCOMPtr<nsIContent> leftPara, rightPara;
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsINode> selNode(do_QueryInterface(*aSelNode));
-  res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor, address_of(selNode), aOffset);
+  res = WSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
+                                                address_of(selNode), aOffset);
   *aSelNode = GetAsDOMNode(selNode);
   NS_ENSURE_SUCCESS(res, res);
   // split the paragraph
@@ -6465,9 +6466,9 @@ nsHTMLEditRules::ReturnInListItem(Selection& aSelection,
   // Else we want a new list item at the same list level.  Get ws code to
   // adjust any ws.
   nsCOMPtr<nsINode> selNode = &aNode;
-  res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
-                                                  address_of(selNode),
-                                                  &aOffset);
+  res = WSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
+                                                address_of(selNode),
+                                                &aOffset);
   NS_ENSURE_SUCCESS(res, res);
   // Now split list item
   NS_ENSURE_STATE(selNode->IsContent());
@@ -6519,7 +6520,7 @@ nsHTMLEditRules::ReturnInListItem(Selection& aSelection,
           return NS_OK;
         }
       } else {
-        nsWSRunObject wsObj(mHTMLEditor, &aListItem, 0);
+        WSRunObject wsObj(mHTMLEditor, &aListItem, 0);
         nsCOMPtr<nsINode> visNode;
         int32_t visOffset = 0;
         WSType wsType;
@@ -7131,7 +7132,7 @@ nsHTMLEditRules::AdjustWhitespace(Selection* aSelection)
 
   // ask whitespace object to tweak nbsp's
   NS_ENSURE_STATE(mHTMLEditor);
-  return nsWSRunObject(mHTMLEditor, selNode, selOffset).AdjustWhitespace();
+  return WSRunObject(mHTMLEditor, selNode, selOffset).AdjustWhitespace();
 }
 
 nsresult
