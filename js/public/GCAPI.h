@@ -161,7 +161,7 @@ PrepareZoneForGC(Zone* zone);
  * Schedule all zones to be collected in the next GC.
  */
 extern JS_PUBLIC_API(void)
-PrepareForFullGC(JSRuntime* rt);
+PrepareForFullGC(JSContext* cx);
 
 /**
  * When performing an incremental GC, the zones that were selected for the
@@ -169,14 +169,14 @@ PrepareForFullGC(JSRuntime* rt);
  * This function selects those slices automatically.
  */
 extern JS_PUBLIC_API(void)
-PrepareForIncrementalGC(JSRuntime* rt);
+PrepareForIncrementalGC(JSContext* cx);
 
 /**
  * Returns true if any zone in the system has been scheduled for GC with one of
  * the functions above or by the JS engine.
  */
 extern JS_PUBLIC_API(bool)
-IsGCScheduled(JSRuntime* rt);
+IsGCScheduled(JSContext* cx);
 
 /**
  * Undoes the effect of the Prepare methods above. The given zone will not be
@@ -201,7 +201,7 @@ SkipZoneForGC(Zone* zone);
  * the system.
  */
 extern JS_PUBLIC_API(void)
-GCForReason(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason);
+GCForReason(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason);
 
 /*
  * Incremental GC:

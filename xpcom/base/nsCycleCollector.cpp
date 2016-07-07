@@ -3551,7 +3551,7 @@ nsCycleCollector::FinishAnyIncrementalGCInProgress()
 {
   if (IsIncrementalGCInProgress()) {
     NS_WARNING("Finishing incremental GC in progress during CC");
-    JS::PrepareForIncrementalGC(mJSRuntime->Runtime());
+    JS::PrepareForIncrementalGC(mJSRuntime->Context());
     JS::FinishIncrementalGC(mJSRuntime->Runtime(), JS::gcreason::CC_FORCED);
   }
 }
