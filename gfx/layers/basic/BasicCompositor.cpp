@@ -621,10 +621,6 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     clearRect = mInvalidRect;
   }
 
-  // Prevent CreateRenderTargetForWindow from clearing unwanted area.
-  gfxUtils::ClipToRegion(mDrawTarget,
-                         mInvalidRegion.ToUnknownRegion());
-
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
@@ -643,10 +639,8 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   // translate future coordinates.
   mRenderTarget->mDrawTarget->SetTransform(Matrix::Translation(-mRenderTarget->GetOrigin()));
 
-  if (mRenderTarget->mDrawTarget != mDrawTarget) {
-    gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
-                           mInvalidRegion.ToUnknownRegion());
-  }
+  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
+                         mInvalidRegion.ToUnknownRegion());
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
@@ -681,10 +675,7 @@ BasicCompositor::EndFrame()
   }
 
   // Pop aInvalidregion
-  mDrawTarget->PopClip();
-  if (mRenderTarget->mDrawTarget != mDrawTarget) {
-    mRenderTarget->mDrawTarget->PopClip();
-  }
+  mRenderTarget->mDrawTarget->PopClip();
 
   if (mTarget || mRenderTarget->mDrawTarget != mDrawTarget) {
     // Note: Most platforms require us to buffer drawing to the widget surface.
