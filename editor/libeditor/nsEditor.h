@@ -63,6 +63,7 @@ class DeleteNodeTransaction;
 class DeleteTextTransaction;
 class ErrorResult;
 class InsertNodeTransaction;
+class InsertTextTransaction;
 class TextComposition;
 struct EditorDOMPoint;
 
@@ -70,7 +71,6 @@ namespace dom {
 class DataTransfer;
 class Element;
 class EventTarget;
-class InsertTextTxn;
 class JoinNodeTxn;
 class Selection;
 class SplitNodeTxn;
@@ -304,7 +304,7 @@ protected:
   /** Create a transaction for inserting aStringToInsert into aTextNode.  Never
     * returns null.
     */
-  already_AddRefed<mozilla::dom::InsertTextTxn>
+  already_AddRefed<mozilla::InsertTextTransaction>
   CreateTxnForInsertText(const nsAString& aStringToInsert, Text& aTextNode,
                          int32_t aOffset);
 

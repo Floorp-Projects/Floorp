@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "InsertTextTxn.h"
+#include "InsertTextTransaction.h"
 
 #include "mozilla/dom/Selection.h"      // Selection local var
 #include "mozilla/dom/Text.h"           // mTextNode
@@ -13,40 +13,39 @@
 #include "nsError.h"                    // for NS_OK, etc
 #include "nsQueryObject.h"              // for do_QueryObject
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-class nsITransaction;
+using namespace dom;
 
-InsertTextTxn::InsertTextTxn(Text& aTextNode, uint32_t aOffset,
-                             const nsAString& aStringToInsert,
-                             nsEditor& aEditor)
-  : EditTxn()
-  , mTextNode(&aTextNode)
+InsertTextTransaction::InsertTextTransaction(Text& aTextNode,
+                                             uint32_t aOffset,
+                                             const nsAString& aStringToInsert,
+                                             nsEditor& aEditor)
+  : mTextNode(&aTextNode)
   , mOffset(aOffset)
   , mStringToInsert(aStringToInsert)
   , mEditor(aEditor)
 {
 }
 
-InsertTextTxn::~InsertTextTxn()
+InsertTextTransaction::~InsertTextTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTxn, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTransaction, EditTxn,
                                    mTextNode)
 
-NS_IMPL_ADDREF_INHERITED(InsertTextTxn, EditTxn)
-NS_IMPL_RELEASE_INHERITED(InsertTextTxn, EditTxn)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTxn)
-  if (aIID.Equals(NS_GET_IID(InsertTextTxn))) {
+NS_IMPL_ADDREF_INHERITED(InsertTextTransaction, EditTxn)
+NS_IMPL_RELEASE_INHERITED(InsertTextTransaction, EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTransaction)
+  if (aIID.Equals(NS_GET_IID(InsertTextTransaction))) {
     foundInterface = static_cast<nsITransaction*>(this);
   } else
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 
 NS_IMETHODIMP
-InsertTextTxn::DoTransaction()
+InsertTextTransaction::DoTransaction()
 {
   nsresult res = mTextNode->InsertData(mOffset, mStringToInsert);
   NS_ENSURE_SUCCESS(res, res);
@@ -67,13 +66,14 @@ InsertTextTxn::DoTransaction()
 }
 
 NS_IMETHODIMP
-InsertTextTxn::UndoTransaction()
+InsertTextTransaction::UndoTransaction()
 {
   return mTextNode->DeleteData(mOffset, mStringToInsert.Length());
 }
 
 NS_IMETHODIMP
-InsertTextTxn::Merge(nsITransaction* aTransaction, bool* aDidMerge)
+InsertTextTransaction::Merge(nsITransaction* aTransaction,
+                             bool* aDidMerge)
 {
   if (!aTransaction || !aDidMerge) {
     return NS_OK;
@@ -81,12 +81,12 @@ InsertTextTxn::Merge(nsITransaction* aTransaction, bool* aDidMerge)
   // Set out param default value
   *aDidMerge = false;
 
-  // If aTransaction is a InsertTextTxn, and if the selection hasn't changed,
-  // then absorb it
-  RefPtr<InsertTextTxn> otherInsTxn = do_QueryObject(aTransaction);
-  if (otherInsTxn && IsSequentialInsert(*otherInsTxn)) {
+  // If aTransaction is a InsertTextTransaction, and if the selection hasn't
+  // changed, then absorb it.
+  RefPtr<InsertTextTransaction> otherTransaction = do_QueryObject(aTransaction);
+  if (otherTransaction && IsSequentialInsert(*otherTransaction)) {
     nsAutoString otherData;
-    otherInsTxn->GetData(otherData);
+    otherTransaction->GetData(otherData);
     mStringToInsert += otherData;
     *aDidMerge = true;
   }
@@ -95,9 +95,9 @@ InsertTextTxn::Merge(nsITransaction* aTransaction, bool* aDidMerge)
 }
 
 NS_IMETHODIMP
-InsertTextTxn::GetTxnDescription(nsAString& aString)
+InsertTextTransaction::GetTxnDescription(nsAString& aString)
 {
-  aString.AssignLiteral("InsertTextTxn: ");
+  aString.AssignLiteral("InsertTextTransaction: ");
   aString += mStringToInsert;
   return NS_OK;
 }
@@ -105,14 +105,17 @@ InsertTextTxn::GetTxnDescription(nsAString& aString)
 /* ============ private methods ================== */
 
 void
-InsertTextTxn::GetData(nsString& aResult)
+InsertTextTransaction::GetData(nsString& aResult)
 {
   aResult = mStringToInsert;
 }
 
 bool
-InsertTextTxn::IsSequentialInsert(InsertTextTxn& aOtherTxn)
+InsertTextTransaction::IsSequentialInsert(
+                         InsertTextTransaction& aOtherTransaction)
 {
-  return aOtherTxn.mTextNode == mTextNode &&
-         aOtherTxn.mOffset == mOffset + mStringToInsert.Length();
+  return aOtherTransaction.mTextNode == mTextNode &&
+         aOtherTransaction.mOffset == mOffset + mStringToInsert.Length();
 }
+
+} // namespace mozilla
