@@ -712,7 +712,7 @@ nsEditor::DoTransaction(nsITransaction* aTxn)
     // XXX: if an embedding application called DoTransaction() directly
     // XXX: to pump its own transactions through the system, but in that
     // XXX: case, wouldn't we want to use Begin/EndUpdateViewBatch() or
-    // XXX: its auto equivalent nsAutoUpdateViewBatch to ensure that
+    // XXX: its auto equivalent AutoUpdateViewBatch to ensure that
     // XXX: selection listeners have access to accurate frame data?
     // XXX:
     // XXX: Note that if we did add Begin/EndUpdateViewBatch() calls
