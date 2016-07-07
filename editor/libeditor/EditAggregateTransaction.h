@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef EditAggregateTxn_h__
-#define EditAggregateTxn_h__
+#ifndef EditAggregateTransaction_h
+#define EditAggregateTransaction_h
 
 #include "EditTxn.h"
 #include "nsCOMPtr.h"
@@ -16,34 +16,42 @@
 
 class nsITransaction;
 
+namespace mozilla {
+
 /**
  * base class for all document editing transactions that require aggregation.
  * provides a list of child transactions.
  */
-class EditAggregateTxn : public EditTxn
+class EditAggregateTransaction : public EditTxn
 {
 public:
-  EditAggregateTxn();
+  EditAggregateTransaction();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EditAggregateTxn, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EditAggregateTransaction, EditTxn)
 
   NS_DECL_EDITTXN
 
   NS_IMETHOD RedoTransaction() override;
-  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge) override;
+  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
-  /** append a transaction to this aggregate */
-  NS_IMETHOD AppendChild(EditTxn *aTxn);
+  /**
+   * Append a transaction to this aggregate.
+   */
+  NS_IMETHOD AppendChild(EditTxn* aTxn);
 
-  /** get the name assigned to this txn */
-  NS_IMETHOD GetName(nsIAtom **aName);
+  /**
+   * Get the name assigned to this transaction.
+   */
+  NS_IMETHOD GetName(nsIAtom** aName);
 
 protected:
-  virtual ~EditAggregateTxn();
+  virtual ~EditAggregateTransaction();
 
-  nsTArray< RefPtr<EditTxn> > mChildren;
+  nsTArray<RefPtr<EditTxn>> mChildren;
   nsCOMPtr<nsIAtom> mName;
 };
 
-#endif
+} // namespace mozilla
+
+#endif // #ifndef EditAggregateTransaction_h
