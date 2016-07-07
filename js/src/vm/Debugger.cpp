@@ -7055,6 +7055,38 @@ DebuggerFrame::getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
     return dbg->wrapDebuggeeObject(cx, callee, result);
 }
 
+/* static */ bool
+DebuggerFrame::getIsConstructing(JSContext* cx, Handle<DebuggerFrame*> frame, bool& result)
+{
+    Maybe<ScriptFrameIter> maybeIter;
+    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
+        return false;
+    ScriptFrameIter& iter = *maybeIter;
+
+    result = iter.isFunctionFrame() && iter.isConstructing();
+    return true;
+}
+
+/* static */ bool
+DebuggerFrame::getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                  Maybe<ScriptFrameIter>& result)
+{
+    AbstractFramePtr referent = AbstractFramePtr::FromRaw(frame->getPrivate());
+    if (referent.isScriptFrameIterData()) {
+        result.emplace(*reinterpret_cast<ScriptFrameIter::Data*>(referent.raw()));
+    } else {
+        result.emplace(cx, ScriptFrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK);
+        ScriptFrameIter& iter = *result;
+        while (!iter.hasUsableAbstractFramePtr() || iter.abstractFramePtr() != referent)
+            ++iter;
+        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+        if (!data)
+            return false;
+        frame->setPrivate(data.raw());
+    }
+    return true;
+}
+
 static void
 UpdateFrameIterPc(FrameIter& iter)
 {
@@ -7299,11 +7331,16 @@ DebuggerFrame_getGenerator(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getConstructing(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::constructingGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME_ITER(cx, argc, vp, "get constructing", args, thisobj, _, iter);
-    args.rval().setBoolean(iter.isFunctionFrame() && iter.isConstructing());
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get callee", args, frame);
+
+    bool result;
+    if (!DebuggerFrame::getIsConstructing(cx, frame, result))
+        return false;
+
+    args.rval().setBoolean(result);
     return true;
 }
 
@@ -7818,7 +7855,7 @@ DebuggerFrame::construct(JSContext* cx, unsigned argc, Value* vp)
 const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("arguments", DebuggerFrame_getArguments, 0),
     JS_PSG("callee", DebuggerFrame::calleeGetter, 0),
-    JS_PSG("constructing", DebuggerFrame_getConstructing, 0),
+    JS_PSG("constructing", DebuggerFrame::constructingGetter, 0),
     JS_PSG("environment", DebuggerFrame_getEnvironment, 0),
     JS_PSG("generator", DebuggerFrame_getGenerator, 0),
     JS_PSG("live", DebuggerFrame_getLive, 0),
