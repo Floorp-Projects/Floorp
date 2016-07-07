@@ -550,7 +550,7 @@ js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
 
     if (exnType == JSEXN_WARN) {
         // werror must be enabled, so we use JSEXN_ERR.
-        MOZ_ASSERT(cx->runtime()->options().werror());
+        MOZ_ASSERT(cx->options().werror());
         exnType = JSEXN_ERR;
     }
 

@@ -40,9 +40,6 @@ static bool do_preload = false;
 #if defined(XP_WIN)
 #include <windows.h>
 #include <mbstring.h>
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
 
 typedef HINSTANCE LibHandleType;
 

@@ -104,7 +104,7 @@ class FunctionCompiler
                      MIRGenerator& mirGen,
                      FuncCompileResults& compileResults)
       : mg_(mg),
-        iter_(IonCompilePolicy(), decoder),
+        iter_(decoder),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
@@ -691,7 +691,7 @@ class FunctionCompiler
 
     void addInterruptCheck()
     {
-        if (mg_.args.useSignalHandlersForInterrupt)
+        if (mg_.usesSignal.forInterrupt)
             return;
 
         if (inDeadCode())
@@ -3382,14 +3382,14 @@ wasm::IonCompileFunction(IonCompileTask* task)
 
     // Set up for Ion compilation.
 
-    JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
+    JitContext jitContext(&results.alloc());
     const JitCompileOptions options;
     MIRGraph graph(&results.alloc());
     CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS));
-    mir.initUsesSignalHandlersForAsmJSOOB(task->mg().args.useSignalHandlersForOOB);
-    mir.initMinAsmJSHeapLength(task->mg().minHeapLength);
+    mir.initUsesSignalHandlersForAsmJSOOB(task->mg().usesSignal.forOOB);
+    mir.initMinAsmJSHeapLength(task->mg().minMemoryLength);
 
     // Build MIR graph
     {
@@ -3441,14 +3441,17 @@ wasm::IonCompileFunction(IonCompileTask* task)
 bool
 wasm::CompileFunction(IonCompileTask* task)
 {
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
+
     switch (task->mode()) {
       case wasm::IonCompileTask::CompileMode::Ion:
         return wasm::IonCompileFunction(task);
       case wasm::IonCompileTask::CompileMode::Baseline:
         return wasm::BaselineCompileFunction(task);
       case wasm::IonCompileTask::CompileMode::None:
-        MOZ_CRASH("Uninitialized task");
+        break;
     }
-    // Silence gcc 5.2.1 warning.
-    return false;
+
+    MOZ_CRASH("Uninitialized task");
 }

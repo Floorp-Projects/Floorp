@@ -102,7 +102,6 @@ class IonCompileTask
     enum class CompileMode { None, Baseline, Ion };
 
   private:
-    JSRuntime* const           runtime_;
     const ModuleGeneratorData& mg_;
     LifoAlloc                  lifo_;
     UniqueFuncBytes            func_;
@@ -113,12 +112,9 @@ class IonCompileTask
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(JSRuntime* rt, const ModuleGeneratorData& mg, size_t defaultChunkSize)
-      : runtime_(rt), mg_(mg), lifo_(defaultChunkSize), func_(nullptr), mode_(CompileMode::None)
+    IonCompileTask(const ModuleGeneratorData& mg, size_t defaultChunkSize)
+      : mg_(mg), lifo_(defaultChunkSize), func_(nullptr), mode_(CompileMode::None)
     {}
-    JSRuntime* runtime() const {
-        return runtime_;
-    }
     LifoAlloc& lifo() {
         return lifo_;
     }

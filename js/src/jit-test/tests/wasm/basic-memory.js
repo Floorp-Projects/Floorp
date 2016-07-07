@@ -156,6 +156,8 @@ testStoreError('i32', '', 0, 0, 8, /greater than natural alignment/);
 testStoreError('f32', '', 0, 0, 8, /greater than natural alignment/);
 testStoreError('f64', '', 0, 0, 16, /greater than natural alignment/);
 
+assertErrorMessage(() => wasmEvalText('(module (memory 2 1))'), TypeError, /maximum memory size less than initial memory size/);
+
 assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
 
@@ -167,3 +169,4 @@ assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offse
 
 wasmEvalText('(module (memory 0 65535))')
 assertErrorMessage(() => wasmEvalText('(module (memory 0 65536))'), TypeError, /maximum memory size too big/);
+

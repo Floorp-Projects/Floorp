@@ -169,6 +169,9 @@ Connection.prototype._init = function init() {
   // for both legacy and non-legacy, when our socket is ready for writes again,
   //   drain the sinks in case they were queuing due to socketBuffering.
   this.socket.on('drain', function () {
+    if (!state.socketBuffering)
+      return;
+
     state.socketBuffering = false;
     Object.keys(state.streams).forEach(function(id) {
       state.streams[id]._drainSink(0);
@@ -298,7 +301,6 @@ Connection.prototype._handleSynStream = function handleSynStream(frame) {
   }
 
   var stream = new Stream(this, frame);
-  this._addStream(stream);
 
   // Associate streams
   if (associated) {
@@ -556,6 +558,8 @@ Connection.prototype._handlePing = function handlePing(id) {
     state.framer.pingFrame(id, function(err, frame) {
       if (err)
         return self.emit('error', err);
+
+      self.emit('ping', id);
       self.write(frame);
     });
     return;

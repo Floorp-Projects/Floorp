@@ -134,7 +134,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         // control flow was for some unexpected results. Frightfully expensive,
         // but oh well.
         RootedObject stack(cx);
-        if (cx->runtime()->options().asyncStack() || cx->compartment()->isDebuggee()) {
+        if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
             if (!JS::CaptureCurrentStack(cx, &stack, 0))
                 return nullptr;
         }
@@ -424,7 +424,7 @@ PromiseObject::onSettled(JSContext* cx)
 {
     Rooted<PromiseObject*> promise(cx, this);
     RootedObject stack(cx);
-    if (cx->runtime()->options().asyncStack() || cx->compartment()->isDebuggee()) {
+    if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
         if (!JS::CaptureCurrentStack(cx, &stack, 0)) {
             cx->clearPendingException();
             return;

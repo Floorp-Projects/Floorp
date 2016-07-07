@@ -37,7 +37,7 @@ static JSObject*
 PreWrap(JSContext* cx, JS::HandleObject scope, JS::HandleObject obj,
         JS::HandleObject objectPassedToWrap)
 {
-    JS_GC(JS_GetRuntime(cx));
+    JS_GC(cx);
     return obj;
 }
 

@@ -4878,7 +4878,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(objReg, UnboxedPlainObject::offsetOfExpando()), holderReg);
 
         // Write the expando object's new shape.
-        Address shapeAddr(holderReg, JSObject::offsetOfShape());
+        Address shapeAddr(holderReg, ShapedObject::offsetOfShape());
         EmitPreBarrier(masm, shapeAddr, MIRType::Shape);
         masm.loadPtr(Address(ICStubReg, ICSetProp_NativeAdd::offsetOfNewShape()), scratch);
         masm.storePtr(scratch, shapeAddr);
@@ -4887,7 +4887,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler& masm)
             masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), holderReg);
     } else {
         // Write the object's new shape.
-        Address shapeAddr(objReg, JSObject::offsetOfShape());
+        Address shapeAddr(objReg, ShapedObject::offsetOfShape());
         EmitPreBarrier(masm, shapeAddr, MIRType::Shape);
         masm.loadPtr(Address(ICStubReg, ICSetProp_NativeAdd::offsetOfNewShape()), scratch);
         masm.storePtr(scratch, shapeAddr);

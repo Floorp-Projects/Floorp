@@ -50,11 +50,9 @@ MessageLoop* ImageBridgeParent::sMainLoop = nullptr;
 CompositorThreadHolder* GetCompositorThreadHolder();
 
 ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
-                                     Transport* aTransport,
                                      ProcessId aChildProcessId)
   : CompositableParentManager("ImageBridgeParent")
   , mMessageLoop(aLoop)
-  , mTransport(aTransport)
   , mSetChildThreadPriority(false)
   , mClosed(false)
 {
@@ -76,12 +74,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
 ImageBridgeParent::~ImageBridgeParent()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mTransport) {
-    MOZ_ASSERT(XRE_GetIOMessageLoop());
-    RefPtr<DeleteTask<Transport>> task(new DeleteTask<Transport>(mTransport));
-    XRE_GetIOMessageLoop()->PostTask(task.forget());
-  }
 
   nsTArray<PImageContainerParent*> parents;
   ManagedPImageContainerParent(parents);
@@ -199,7 +191,7 @@ ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
 ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId)
 {
   MessageLoop* loop = CompositorThreadHolder::Loop();
-  RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
+  RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aChildProcessId);
 
   loop->PostTask(NewRunnableFunction(ConnectImageBridgeInParentProcess,
                                      bridge.get(), aTransport, aChildProcessId));
@@ -355,11 +347,11 @@ ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds
 {
   for (unsigned int i = 0; i < aFds.Length(); i++) {
     if (aFds[i].protocolId() == unsigned(GetProtocolId())) {
-      Transport* transport = OpenDescriptor(aFds[i].fd(),
-                                            Transport::MODE_SERVER);
-      PImageBridgeParent* bridge = Create(transport, base::GetProcId(aPeerProcess));
+      UniquePtr<Transport> transport =
+        OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
+      PImageBridgeParent* bridge = Create(transport.get(), base::GetProcId(aPeerProcess));
       bridge->CloneManagees(this, aCtx);
-      bridge->IToplevelProtocol::SetTransport(transport);
+      bridge->IToplevelProtocol::SetTransport(Move(transport));
       // The reference to the compositor thread is held in OnChannelConnected().
       // We need to do this for cloned actors, too.
       bridge->OnChannelConnected(base::GetProcId(aPeerProcess));

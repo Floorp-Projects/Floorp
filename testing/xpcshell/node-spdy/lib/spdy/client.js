@@ -171,7 +171,6 @@ proto.createConnection = function createConnection(options) {
                                                        options.spdy.decompress
   });
   state.id += 2;
-  state.connection._addStream(stream);
 
   return stream;
 };

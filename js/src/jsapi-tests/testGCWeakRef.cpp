@@ -46,7 +46,7 @@ BEGIN_TEST(testGCWeakRef)
 
     // A full collection with a second ref should keep the object as well.
     CHECK(obj == heap.get().weak);
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(obj == heap.get().weak);
     v = JS::UndefinedValue();
     CHECK(JS_GetProperty(cx, obj, "x", &v));
@@ -56,7 +56,7 @@ BEGIN_TEST(testGCWeakRef)
     // A full collection after nulling the root should collect the object, or
     // at least null out the weak reference before returning to the mutator.
     obj = nullptr;
-    JS_GC(rt);
+    JS_GC(cx);
     CHECK(heap.get().weak == nullptr);
 
     return true;

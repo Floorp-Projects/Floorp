@@ -1529,7 +1529,7 @@ Simulator::readW(int32_t addr, SimInstruction* instr)
 void
 Simulator::writeW(int32_t addr, int value, SimInstruction* instr)
 {
-    if ((addr & 3) == 0) {
+    if ((addr & 3) == 0 || !HasAlignmentFault()) {
         intptr_t* ptr = reinterpret_cast<intptr_t*>(addr);
         *ptr = value;
         return;
@@ -1615,7 +1615,7 @@ Simulator::readHU(int32_t addr, SimInstruction* instr)
 int16_t
 Simulator::readH(int32_t addr, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if ((addr & 1) == 0 || !HasAlignmentFault()) {
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
         return *ptr;
     }
@@ -1627,7 +1627,7 @@ Simulator::readH(int32_t addr, SimInstruction* instr)
 void
 Simulator::writeH(int32_t addr, uint16_t value, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if ((addr & 1) == 0 || !HasAlignmentFault()) {
         uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
         *ptr = value;
     } else {
@@ -1639,7 +1639,7 @@ Simulator::writeH(int32_t addr, uint16_t value, SimInstruction* instr)
 void
 Simulator::writeH(int32_t addr, int16_t value, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if ((addr & 1) == 0 || !HasAlignmentFault()) {
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
         *ptr = value;
     } else {

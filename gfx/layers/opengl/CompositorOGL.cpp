@@ -227,7 +227,7 @@ CompositorOGL::CleanupResources()
 }
 
 bool
-CompositorOGL::Initialize()
+CompositorOGL::Initialize(nsCString* const out_failureReason)
 {
   ScopedGfxFeatureReporter reporter("GL Layers");
 
@@ -237,12 +237,16 @@ CompositorOGL::Initialize()
   mGLContext = CreateContext();
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (!mGLContext)
+  if (!mGLContext){
+    *out_failureReason = "FEATURE_FAILURE_OPENGL_NO_ANDROID_CONTEXT";
     NS_RUNTIMEABORT("We need a context on Android");
+  }
 #endif
 
-  if (!mGLContext)
+  if (!mGLContext){
+    *out_failureReason = "FEATURE_FAILURE_OPENGL_CREATE_CONTEXT";
     return false;
+  }
 
   MakeCurrent();
 
@@ -258,6 +262,7 @@ CompositorOGL::Initialize()
   RefPtr<EffectSolidColor> effect = new EffectSolidColor(Color(0, 0, 0, 0));
   ShaderConfigOGL config = GetShaderConfigFor(effect);
   if (!GetShaderProgramFor(config)) {
+    *out_failureReason = "FEATURE_FAILURE_OPENGL_COMPILE_SHADER";
     return false;
   }
 
@@ -332,6 +337,7 @@ CompositorOGL::Initialize()
 
     if (mFBOTextureTarget == LOCAL_GL_NONE) {
       /* Unable to find a texture target that works with FBOs and NPOT textures */
+      *out_failureReason = "FEATURE_FAILURE_OPENGL_NO_TEXTURE_TARGET";
       return false;
     }
   } else {
@@ -349,6 +355,7 @@ CompositorOGL::Initialize()
      * texture2DRect).
      */
     if (!mGLContext->IsExtensionSupported(gl::GLContext::ARB_texture_rectangle))
+      *out_failureReason = "FEATURE_FAILURE_OPENGL_ARB_EXT";
       return false;
   }
 
@@ -425,6 +432,7 @@ CompositorOGL::Initialize()
   }
 
   reporter.SetSuccessful();
+
   return true;
 }
 

@@ -299,10 +299,10 @@ pref("ui.dragThresholdY", 25);
 // they're not maintained anywhere else.
 #ifndef MOZ_WIDGET_GONK
 pref("dom.ipc.tabs.disabled", true);
+pref("layers.async-pan-zoom.enabled", false);
 #else
 pref("dom.ipc.tabs.disabled", false);
 pref("layers.acceleration.disabled", false);
-pref("layers.async-pan-zoom.enabled", true);
 pref("gfx.content.azure.backends", "cairo");
 #endif
 

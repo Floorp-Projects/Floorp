@@ -1152,6 +1152,14 @@ protected:
   bool IsValidSimpleColor(const nsAString& aValue) const;
 
   /**
+   * Parse a date string of the form yyyy-mm
+   * @param the string to be parsed.
+   * @return whether the string is a valid month.
+   * Note : this function does not consider the empty string as valid.
+   */
+  bool IsValidMonth(const nsAString& aValue) const;
+
+  /**
    * Parse a date string of the form yyyy-mm-dd
    * @param the string to be parsed.
    * @return whether the string is a valid date.
@@ -1160,15 +1168,37 @@ protected:
   bool IsValidDate(const nsAString& aValue) const;
 
   /**
+   * Parse a year string of the form yyyy
+   *
+   * @param the string to be parsed.
+   *
+   * @return the year in aYear.
+   * @return whether the parsing was successful.
+   */
+  bool ParseYear(const nsAString& aValue, uint32_t* aYear) const;
+
+  /**
+   * Parse a month string of the form yyyy-mm
+   *
+   * @param the string to be parsed.
+   * @return the year and month in aYear and aMonth.
+   * @return whether the parsing was successful.
+   */
+  bool ParseMonth(const nsAString& aValue,
+                  uint32_t* aYear,
+                  uint32_t* aMonth) const;
+
+  /**
    * Parse a date string of the form yyyy-mm-dd
+   *
    * @param the string to be parsed.
    * @return the date in aYear, aMonth, aDay.
    * @return whether the parsing was successful.
    */
-  bool GetValueAsDate(const nsAString& aValue,
-                      uint32_t* aYear,
-                      uint32_t* aMonth,
-                      uint32_t* aDay) const;
+  bool ParseDate(const nsAString& aValue,
+                 uint32_t* aYear,
+                 uint32_t* aMonth,
+                 uint32_t* aDay) const;
 
   /**
    * This methods returns the number of days in a given month, for a given year.

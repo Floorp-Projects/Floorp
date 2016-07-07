@@ -48,12 +48,7 @@ public:
    * MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
   void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamListener::MediaStreamGraphEvent event)
-  {
-    if (event == MediaStreamListener::MediaStreamGraphEvent::EVENT_REMOVED) {
-      NotifyEndOfStream();
-    }
-  }
+                   MediaStreamGraphEvent event);
 
   /**
    * Creates and sets up meta data for a specific codec, called on the worker

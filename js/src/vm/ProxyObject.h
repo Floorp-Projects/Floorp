@@ -8,16 +8,19 @@
 #define vm_ProxyObject_h
 
 #include "js/Proxy.h"
-#include "vm/NativeObject.h"
+#include "vm/ShapedObject.h"
 
 namespace js {
 
-// This is the base class for the various kinds of proxy objects.  It's never
-// instantiated.
-class ProxyObject : public JSObject
+/**
+ * This is the base class for the various kinds of proxy objects.  It's never
+ * instantiated.
+ *
+ * Proxy objects use ShapedObject::shape_ primarily to record flags.  Property
+ * information, &c. is all dynamically computed.
+ */
+class ProxyObject : public ShapedObject
 {
-    GCPtrShape shape;
-
     // GetProxyDataLayout computes the address of this field.
     detail::ProxyDataLayout data;
 

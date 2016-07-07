@@ -545,18 +545,18 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
     InstanceClassHasProtoAtDepth
   };
   SetDOMCallbacks(mJSContext, &DOMcallbacks);
-  js::SetScriptEnvironmentPreparer(mJSRuntime, &mEnvironmentPreparer);
+  js::SetScriptEnvironmentPreparer(mJSContext, &mEnvironmentPreparer);
 
-  JS::SetGetIncumbentGlobalCallback(mJSRuntime, GetIncumbentGlobalCallback);
+  JS::SetGetIncumbentGlobalCallback(mJSContext, GetIncumbentGlobalCallback);
 
 #ifdef SPIDERMONKEY_PROMISE
-  JS::SetEnqueuePromiseJobCallback(mJSRuntime, EnqueuePromiseJobCallback, this);
-  JS::SetPromiseRejectionTrackerCallback(mJSRuntime, PromiseRejectionTrackerCallback, this);
+  JS::SetEnqueuePromiseJobCallback(mJSContext, EnqueuePromiseJobCallback, this);
+  JS::SetPromiseRejectionTrackerCallback(mJSContext, PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
   mConsumedRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
 #endif // SPIDERMONKEY_PROMISE
 
-  JS::dbg::SetDebuggerMallocSizeOf(mJSRuntime, moz_malloc_size_of);
+  JS::dbg::SetDebuggerMallocSizeOf(mJSContext, moz_malloc_size_of);
 
   nsCycleCollector_registerJSRuntime(this);
 
@@ -1325,8 +1325,7 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 void
 CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile)
 {
-  MOZ_ASSERT(mJSRuntime);
-  js::DumpHeap(Runtime(), aFile, js::CollectNurseryBeforeDump);
+  js::DumpHeap(Context(), aFile, js::CollectNurseryBeforeDump);
 }
 
 void
