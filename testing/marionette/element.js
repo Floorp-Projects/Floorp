@@ -351,7 +351,7 @@ element.findByXPathAll = function(root, startNode, expr) {
  *     Sequence of link elements which text is |s|.
  */
 element.findByLinkText = function(node, s) {
-  return filterLinks(node, link => link.text === s);
+  return filterLinks(node, link => link.text.trim() === s);
 };
 
 /**
@@ -438,7 +438,7 @@ function findElement(using, value, rootNode, startNode) {
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (link.text === value) {
+        if (link.text.trim() === value) {
           return link;
         }
       }
