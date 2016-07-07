@@ -59,8 +59,8 @@
 #include "nsStyleSheetTxns.h"
 
 // Misc
+#include "EditorUtils.h"
 #include "TextEditorTest.h"
-#include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
 #include "nsGkAtoms.h"
 #include "nsIWidget.h"

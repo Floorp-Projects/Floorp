@@ -32,6 +32,9 @@
  * when we know that we are checking as a result of navigation.
  */
 
+#include "EditorUtils.h"
+#include "mozilla/Services.h"
+#include "mozilla/dom/Selection.h"
 #include "mozInlineSpellChecker.h"
 #include "mozInlineSpellWordUtil.h"
 #include "mozISpellI18NManager.h"
@@ -48,7 +51,6 @@
 #include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsRange.h"
-#include "mozilla/dom/Selection.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -65,8 +67,6 @@
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsEditor.h"
-#include "nsEditorUtils.h"
-#include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsITextControlElement.h"
 #include "prtime.h"
