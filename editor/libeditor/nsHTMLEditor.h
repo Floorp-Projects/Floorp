@@ -22,7 +22,7 @@
 
 #include "nsEditRules.h"
 
-#include "nsHTMLCSSUtils.h"
+#include "CSSEditUtils.h"
 
 #include "nsHTMLObjectResizer.h"
 #include "nsIHTMLAbsPosEditor.h"
@@ -41,6 +41,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/StyleSheetHandle.h"
 
 class nsDocumentFragment;
@@ -57,7 +58,6 @@ class TypeInState;
 struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {
-class BlobImpl;
 class DocumentFragment;
 } // namespace dom
 namespace widget {
@@ -396,8 +396,8 @@ public:
 
   bool IsCSSEnabled()
   {
-    // TODO: removal of mCSSAware and use only the presence of mHTMLCSSUtils
-    return mCSSAware && mHTMLCSSUtils && mHTMLCSSUtils->IsCSSPrefChecked();
+    // TODO: removal of mCSSAware and use only the presence of mCSSEditUtils
+    return mCSSAware && mCSSEditUtils && mCSSEditUtils->IsCSSPrefChecked();
   }
 
   static bool HasAttributes(Element* aElement)
@@ -791,7 +791,7 @@ protected:
   bool mCRInParagraphCreatesParagraph;
 
   bool mCSSAware;
-  nsAutoPtr<nsHTMLCSSUtils> mHTMLCSSUtils;
+  nsAutoPtr<mozilla::CSSEditUtils> mCSSEditUtils;
 
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   int32_t  mSelectedCellIndex;

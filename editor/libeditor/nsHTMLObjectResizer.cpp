@@ -18,7 +18,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLCSSUtils.h"
 #include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
@@ -250,12 +249,12 @@ nsHTMLEditor::SetAllResizersPosition()
   nsAutoString value;
   float resizerWidth, resizerHeight;
   nsCOMPtr<nsIAtom> dummyUnit;
-  mHTMLCSSUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
+  mCSSEditUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
                                      value);
-  mHTMLCSSUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
-  mHTMLCSSUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::height,
+  mCSSEditUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
+  mCSSEditUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::height,
                                      value);
-  mHTMLCSSUtils->ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
+  mCSSEditUtils->ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
 
   int32_t rw  = (int32_t)((resizerWidth + 1) / 2);
   int32_t rh =  (int32_t)((resizerHeight+ 1) / 2);
@@ -543,9 +542,9 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   mResizingShadow->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 
   // position it
-  mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::width,
+  mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::width,
                                       mResizedObjectWidth);
-  mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::height,
+  mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::height,
                                       mResizedObjectHeight);
 
   // add a mouse move listener to the editor
@@ -673,9 +672,9 @@ nsHTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW, int32_
 
   // Offset info box by 20 so it's not directly under the mouse cursor.
   const int mouseCursorOffset = 20;
-  mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingInfo, *nsGkAtoms::left,
+  mCSSEditUtils->SetCSSPropertyPixels(*mResizingInfo, *nsGkAtoms::left,
                                       infoXPosition + mouseCursorOffset);
-  mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingInfo, *nsGkAtoms::top,
+  mCSSEditUtils->SetCSSPropertyPixels(*mResizingInfo, *nsGkAtoms::top,
                                       infoYPosition + mouseCursorOffset);
 
   nsCOMPtr<nsIContent> textInfo = mResizingInfo->GetFirstChild();
@@ -829,13 +828,13 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     int32_t newWidth  = GetNewResizingWidth(clientX, clientY);
     int32_t newHeight = GetNewResizingHeight(clientX, clientY);
 
-    mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::left,
+    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::left,
                                         newX);
-    mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::top,
+    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::top,
                                         newY);
-    mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::width,
+    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::width,
                                         newWidth);
-    mHTMLCSSUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::height,
+    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::height,
                                         newHeight);
 
     return SetResizingInfoPosition(newX, newY, newWidth, newHeight);
@@ -869,9 +868,9 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
 
     SnapToGrid(newX, newY);
 
-    mHTMLCSSUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::left,
+    mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::left,
                                         newX);
-    mHTMLCSSUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::top,
+    mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::top,
                                         newY);
   }
   return NS_OK;
@@ -914,9 +913,9 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
   NS_ENSURE_TRUE(resizedObject, );
   if (mResizedObjectIsAbsolutelyPositioned) {
     if (setHeight)
-      mHTMLCSSUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::top, y);
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::top, y);
     if (setWidth)
-      mHTMLCSSUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::left, x);
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::left, x);
   }
   if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
     if (setWidth && mResizedObject->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
@@ -929,10 +928,10 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
     }
 
     if (setWidth)
-      mHTMLCSSUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::width,
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::width,
                                           width);
     if (setHeight)
-      mHTMLCSSUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::height,
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::height,
                                           height);
   }
   else {
@@ -942,10 +941,10 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
     // triggering an immediate reflow; otherwise, we have problems
     // with asynchronous reflow
     if (setWidth)
-      mHTMLCSSUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::width,
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::width,
                                           width);
     if (setHeight)
-      mHTMLCSSUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::height,
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::height,
                                           height);
 
     if (setWidth) {
@@ -960,10 +959,10 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
     }
 
     if (setWidth)
-      mHTMLCSSUtils->RemoveCSSProperty(*resizedObject, *nsGkAtoms::width,
+      mCSSEditUtils->RemoveCSSProperty(*resizedObject, *nsGkAtoms::width,
                                        EmptyString());
     if (setHeight)
-      mHTMLCSSUtils->RemoveCSSProperty(*resizedObject, *nsGkAtoms::height,
+      mCSSEditUtils->RemoveCSSProperty(*resizedObject, *nsGkAtoms::height,
                                        EmptyString());
   }
   // finally notify the listeners if any
