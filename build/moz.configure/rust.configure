@@ -72,8 +72,8 @@ def rust_target(rust_compiler, rustc, target, cross_compiling):
         os_or_kernel = target.kernel if target.kernel == 'Linux' and target.os != 'Android' else target.os
         rustc_target = {
             # DragonFly
-            ('x86_64', 'Dragonfly'): 'x86_64-unknown-dragonfly',
-            # FreeBSD, GNU/kFreeBSD
+            ('x86_64', 'DragonFly'): 'x86_64-unknown-dragonfly',
+            # FreeBSD
             ('x86', 'FreeBSD'): 'i686-unknown-freebsd',
             ('x86_64', 'FreeBSD'): 'x86_64-unknown-freebsd',
             # NetBSD
