@@ -577,7 +577,7 @@ public class AndroidFxAccount {
   protected void broadcastAccountStateChangedIntent() {
     final Intent intent = new Intent(FxAccountConstants.ACCOUNT_STATE_CHANGED_ACTION);
     intent.putExtra(Constants.JSON_KEY_ACCOUNT, account.name);
-    context.sendBroadcast(intent, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION);
+    LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
   }
 
   public synchronized State getState() {
