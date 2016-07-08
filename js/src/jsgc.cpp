@@ -3514,6 +3514,7 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
             if (comp->principals())
                 JS_DropPrincipals(rt->contextFromMainThread(), comp->principals());
             js_delete(comp);
+            rt->gc.stats.sweptCompartment();
         } else {
             *write++ = comp;
             foundOne = true;
@@ -3565,6 +3566,7 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
                 zone->sweepCompartments(fop, false, destroyingRuntime);
                 MOZ_ASSERT(zone->compartments.empty());
                 fop->delete_(zone);
+                stats.sweptZone();
                 continue;
             }
             zone->sweepCompartments(fop, true, destroyingRuntime);
