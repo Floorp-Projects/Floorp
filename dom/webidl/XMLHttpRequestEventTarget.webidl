@@ -13,24 +13,17 @@
 [Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface XMLHttpRequestEventTarget : EventTarget {
   // event handlers
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onloadstart;
 
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onprogress;
 
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onabort;
 
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onerror;
 
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onload;
 
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler ontimeout;
 
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onloadend;
 };
