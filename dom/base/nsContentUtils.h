@@ -1722,7 +1722,6 @@ public:
                                                       nsresult* aRv);
 
   static JSContext *GetCurrentJSContext();
-  static JSContext *GetSafeJSContext();
   static JSContext *GetCurrentJSContextForThread();
   inline static JSContext *RootingCx() {
     return mozilla::dom::danger::GetJSContext();
