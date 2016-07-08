@@ -204,6 +204,40 @@ LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 }
 
 void
+LIRGeneratorX86::visitWasmStore(MWasmStore* ins)
+{
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    LAllocation baseAlloc = useRegisterOrZeroAtStart(base);
+
+    LAllocation valueAlloc;
+    switch (ins->accessType()) {
+      case Scalar::Int8: case Scalar::Uint8:
+        // See comment for LIRGeneratorX86::useByteOpRegister.
+        valueAlloc = useFixed(ins->value(), eax);
+        break;
+      case Scalar::Int16: case Scalar::Uint16:
+      case Scalar::Int32: case Scalar::Uint32:
+      case Scalar::Float32: case Scalar::Float64:
+      case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Int32x4:
+        // For now, don't allow constant values. The immediate operand affects
+        // instruction layout which affects patching.
+        valueAlloc = useRegisterAtStart(ins->value());
+        break;
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected array type");
+    }
+
+    auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
+    add(lir, ins);
+}
+
+void
 LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
     MDefinition* base = ins->base();
