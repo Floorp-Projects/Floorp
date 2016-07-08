@@ -276,6 +276,20 @@ const PREF_SSL_IMPACT = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
 }, []);
 
 
+function getSerializedSecurityInfo(docShell) {
+  let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                    .getService(Ci.nsISerializationHelper);
+
+  let securityInfo = docShell.failedChannel && docShell.failedChannel.securityInfo;
+  if (!securityInfo) {
+    return "";
+  }
+  securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+              .QueryInterface(Ci.nsISerializable);
+
+  return serhelper.serializeToString(securityInfo);
+}
+
 var AboutNetAndCertErrorListener = {
   init: function(chromeGlobal) {
     addMessageListener("CertErrorDetails", this);
@@ -417,19 +431,10 @@ var AboutNetAndCertErrorListener = {
 
     // if we're enabling reports, send a report for this failure
     if (evt.detail) {
-      let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                        .getService(Ci.nsISerializationHelper);
-
-      let serializable = docShell.failedChannel.securityInfo
-          .QueryInterface(Ci.nsITransportSecurityInfo)
-          .QueryInterface(Ci.nsISerializable);
-
-      let serializedSecurityInfo = serhelper.serializeToString(serializable);
-
       let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
       sendAsyncMessage("Browser:SendSSLErrorReport", {
         uri: { host, port },
-        securityInfo: serializedSecurityInfo
+        securityInfo: getSerializedSecurityInfo(docShell),
       });
 
     }
@@ -542,26 +547,14 @@ var ClickEventHandler = {
   },
 
   onCertError: function (targetElement, ownerDoc) {
-    let docshell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+    let docShell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
                                        .getInterface(Ci.nsIWebNavigation)
                                        .QueryInterface(Ci.nsIDocShell);
-    let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                     .getService(Ci.nsISerializationHelper);
-    let serializedSecurityInfo = "";
-
-    try {
-      let serializable =  docShell.failedChannel.securityInfo
-                                  .QueryInterface(Ci.nsITransportSecurityInfo)
-                                  .QueryInterface(Ci.nsISerializable);
-
-      serializedSecurityInfo = serhelper.serializeToString(serializable);
-    } catch (e) { }
-
     sendAsyncMessage("Browser:CertExceptionError", {
       location: ownerDoc.location.href,
       elementId: targetElement.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
-      securityInfoAsString: serializedSecurityInfo
+      securityInfoAsString: getSerializedSecurityInfo(docShell),
     });
   },
 

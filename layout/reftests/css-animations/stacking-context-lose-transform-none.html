@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <title>
-Transform animation creates a stacking context even though it has only
-'transform:none' keyframes
+Transform animation losing in cascade doesn't create stacking context
 </title>
 <style>
 span {
@@ -12,12 +11,13 @@ span {
   top: 50px;
 }
 @keyframes TransformNone {
-  from, to { transform: none }
+  from, to { transform: none; }
 }
 #test {
   width: 100px; height: 100px;
   background: blue;
   animation: TransformNone 100s infinite;
+  transform: none !important;
 }
 </style>
 <span></span>
