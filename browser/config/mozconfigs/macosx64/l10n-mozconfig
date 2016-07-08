@@ -4,5 +4,9 @@ ac_add_options --with-l10n-base=../../l10n
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-branding=browser/branding/nightly
 
+# Don't autoclobber l10n, as this can lead to missing binaries and broken builds
+# Bug 1283438
+mk_add_options AUTOCLOBBER=
+
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"

@@ -153,8 +153,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/newtab-XPVista7.svg          (tabbrowser/newtab-XPVista7.svg)
   skin/classic/browser/tabbrowser/newtab-inverted.svg          (tabbrowser/newtab-inverted.svg)
   skin/classic/browser/tabbrowser/newtab-inverted-XPVista7.svg (tabbrowser/newtab-inverted-XPVista7.svg)
-  skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
-  skin/classic/browser/tabbrowser/connecting@2x.png            (tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
   skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
   skin/classic/browser/tabbrowser/tab-arrow-left.svg           (tabbrowser/tab-arrow-left.svg)

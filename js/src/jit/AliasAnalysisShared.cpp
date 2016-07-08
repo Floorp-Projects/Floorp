@@ -142,6 +142,8 @@ GetObject(const MDefinition* ins)
       case MDefinition::Op_AtomicTypedArrayElementBinop:
       case MDefinition::Op_AsmJSLoadHeap:
       case MDefinition::Op_AsmJSStoreHeap:
+      case MDefinition::Op_WasmLoad:
+      case MDefinition::Op_WasmStore:
       case MDefinition::Op_AsmJSCompareExchangeHeap:
       case MDefinition::Op_AsmJSAtomicBinopHeap:
       case MDefinition::Op_AsmJSLoadGlobalVar:

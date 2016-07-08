@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Bug 1238183</title>
+  </head>
+  <body>
+    <script type="application/javascript;version=1.7">
+      "use strict";
+
+      // if we have a query string, use it to set storages
+      if (window.location.search.length > 0) {
+        let context_name = window.location.search.substr(1);
+        localStorage.setItem("userContext", context_name);
+        sessionStorage.setItem("userContext", context_name);
+
+        let request = indexedDB.open("idb", 1);
+
+        request.onerror = function() {
+          throw new Error("error opening db connection");
+        };
+
+        request.onupgradeneeded = event => {
+          let db = event.target.result;
+          let store = db.createObjectStore("obj", { keyPath: "id" });
+          store.createIndex("userContext", "userContext", { unique: false });
+        };
+
+        request.onsuccess = event => {
+          let db = request.result;
+          let transaction = db.transaction(["obj"], "readwrite");
+          let store = transaction.objectStore("obj");
+          store.add({id: 1, userContext: context_name});
+
+          transaction.oncomplete = () => {
+            db.close();
+          };
+        };
+      }
+    </script>
+  </body>
+</html>
