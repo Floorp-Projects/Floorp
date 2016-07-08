@@ -55,7 +55,7 @@
 #include "nsNetUtil.h"
 
 // Misc
-#include "EditorUtils.h"
+#include "mozilla/EditorUtils.h"
 #include "HTMLEditorObjectResizerUtils.h"
 #include "TextEditorTest.h"
 #include "WSRunObject.h"

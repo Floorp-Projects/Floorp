@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ChangeStyleTransaction.h"
+#include "mozilla/ChangeStyleTransaction.h"
 
 #include "mozilla/dom/Element.h"        // for Element
 #include "nsAString.h"                  // for nsAString_internal::Append, etc

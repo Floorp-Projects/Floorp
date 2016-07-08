@@ -5,11 +5,11 @@
 
 #include "mozilla/HTMLEditor.h"
 
-#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"

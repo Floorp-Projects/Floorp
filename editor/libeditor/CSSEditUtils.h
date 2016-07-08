@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CSSEditUtils_h
-#define CSSEditUtils_h
+#ifndef mozilla_CSSEditUtils_h
+#define mozilla_CSSEditUtils_h
 
-#include "ChangeStyleTransaction.h" // for ChangeStyleTransaction::EChangeType
+#include "mozilla/ChangeStyleTransaction.h" // for ChangeStyleTransaction
 #include "nsCOMPtr.h"               // for already_AddRefed
 #include "nsTArray.h"               // for nsTArray
 #include "nscore.h"                 // for nsAString, nsresult, nullptr
@@ -470,4 +470,4 @@ private:
 
 } // namespace mozilla
 
-#endif // #ifndef CSSEditUtils_h
+#endif // #ifndef mozilla_CSSEditUtils_h

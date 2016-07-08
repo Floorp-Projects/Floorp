@@ -5,8 +5,8 @@
 
 #include "mozilla/TextEditor.h"
 
-#include "EditorUtils.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"

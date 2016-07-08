@@ -6,7 +6,7 @@
 #ifndef CreateElementTransaction_h
 #define CreateElementTransaction_h
 
-#include "EditTransactionBase.h"
+#include "mozilla/EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"

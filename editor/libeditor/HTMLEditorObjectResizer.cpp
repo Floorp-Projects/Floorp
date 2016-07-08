@@ -6,9 +6,9 @@
 #include "mozilla/HTMLEditor.h"
 #include "HTMLEditorObjectResizerUtils.h"
 
-#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"

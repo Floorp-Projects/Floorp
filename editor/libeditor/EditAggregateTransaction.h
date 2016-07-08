@@ -6,7 +6,7 @@
 #ifndef EditAggregateTransaction_h
 #define EditAggregateTransaction_h
 
-#include "EditTransactionBase.h"
+#include "mozilla/EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIAtom.h"

@@ -6,7 +6,7 @@
 #ifndef InsertTextTransaction_h
 #define InsertTextTransaction_h
 
-#include "EditTransactionBase.h"        // base class
+#include "mozilla/EditTransactionBase.h"  // base class
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsID.h"                       // NS_DECLARE_STATIC_IID_ACCESSOR
 #include "nsISupportsImpl.h"            // NS_DECL_ISUPPORTS_INHERITED

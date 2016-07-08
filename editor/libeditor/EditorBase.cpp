@@ -18,8 +18,6 @@
 #include "DeleteTextTransaction.h"      // for DeleteTextTransaction
 #include "EditAggregateTransaction.h"   // for EditAggregateTransaction
 #include "EditorEventListener.h"        // for EditorEventListener
-#include "EditorUtils.h"                // for AutoRules, etc
-#include "EditTransactionBase.h"        // for EditTransactionBase
 #include "InsertNodeTransaction.h"      // for InsertNodeTransaction
 #include "InsertTextTransaction.h"      // for InsertTextTransaction
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
@@ -30,6 +28,8 @@
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
 #include "mozilla/CheckedInt.h"         // for CheckedInt
+#include "mozilla/EditorUtils.h"        // for AutoRules, etc
+#include "mozilla/EditTransactionBase.h" // for EditTransactionBase
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Selection.h"      // for Selection, etc
