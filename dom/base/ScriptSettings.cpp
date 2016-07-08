@@ -783,7 +783,7 @@ AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   if (IsJSAPIActive()) {
-    mCx = nsContentUtils::GetSafeJSContext();
+    mCx = danger::GetJSContext();
   } else {
     mJSAPI.Init();
     mCx = mJSAPI.cx();
