@@ -356,7 +356,7 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
 {
   // can be called from the compositor or vsync thread
   MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
-  if (mCurrentCompositeTask == nullptr) {
+  if (mCurrentCompositeTask == nullptr && CompositorThreadHolder::Loop()) {
     RefPtr<CancelableRunnable> task =
       NewCancelableRunnableMethod<TimeStamp>(this, &CompositorVsyncScheduler::Composite,
                                              aCompositeTimestamp);
