@@ -641,7 +641,7 @@ IMEContentObserver::IsEditorComposing() const
   // Note that don't use TextComposition here. The important thing is,
   // whether the editor already started to handle composition because
   // web contents can change selection, text content and/or something from
-  // compositionstart event listener which is run before nsEditor handles it.
+  // compositionstart event listener which is run before EditorBase handles it.
   nsCOMPtr<nsIEditorIMESupport> editorIMESupport = do_QueryInterface(mEditor);
   if (NS_WARN_IF(!editorIMESupport)) {
     return false;

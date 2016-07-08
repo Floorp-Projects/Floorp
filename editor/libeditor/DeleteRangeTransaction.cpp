@@ -8,11 +8,11 @@
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -24,9 +24,9 @@ namespace mozilla {
 
 using namespace dom;
 
-// note that aEditor is not refcounted
+// note that aEditorBase is not refcounted
 DeleteRangeTransaction::DeleteRangeTransaction()
-  : mEditor(nullptr)
+  : mEditorBase(nullptr)
   , mRangeUpdater(nullptr)
 {
 }
@@ -39,21 +39,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
 
 nsresult
-DeleteRangeTransaction::Init(nsEditor* aEditor,
+DeleteRangeTransaction::Init(EditorBase* aEditorBase,
                              nsRange* aRange,
                              RangeUpdater* aRangeUpdater)
 {
-  MOZ_ASSERT(aEditor && aRange);
+  MOZ_ASSERT(aEditorBase && aRange);
 
-  mEditor = aEditor;
+  mEditorBase = aEditorBase;
   mRange = aRange->CloneRange();
   mRangeUpdater = aRangeUpdater;
 
-  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mRange->GetStartParent()),
+  NS_ENSURE_TRUE(mEditorBase->IsModifiableNode(mRange->GetStartParent()),
                  NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mRange->GetEndParent()),
+  NS_ENSURE_TRUE(mEditorBase->IsModifiableNode(mRange->GetEndParent()),
                  NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mRange->GetCommonAncestor()),
+  NS_ENSURE_TRUE(mEditorBase->IsModifiableNode(mRange->GetCommonAncestor()),
                  NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -62,7 +62,7 @@ DeleteRangeTransaction::Init(nsEditor* aEditor,
 NS_IMETHODIMP
 DeleteRangeTransaction::DoTransaction()
 {
-  MOZ_ASSERT(mRange && mEditor);
+  MOZ_ASSERT(mRange && mEditorBase);
   nsresult res;
 
   // build the child transactions
@@ -95,9 +95,9 @@ DeleteRangeTransaction::DoTransaction()
 
   // only set selection to deletion point if editor gives permission
   bool bAdjustSelection;
-  mEditor->ShouldTxnSetSelection(&bAdjustSelection);
+  mEditorBase->ShouldTxnSetSelection(&bAdjustSelection);
   if (bAdjustSelection) {
-    RefPtr<Selection> selection = mEditor->GetSelection();
+    RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     res = selection->Collapse(startParent, startOffset);
     NS_ENSURE_SUCCESS(res, res);
@@ -110,7 +110,7 @@ DeleteRangeTransaction::DoTransaction()
 NS_IMETHODIMP
 DeleteRangeTransaction::UndoTransaction()
 {
-  MOZ_ASSERT(mRange && mEditor);
+  MOZ_ASSERT(mRange && mEditorBase);
 
   return EditAggregateTransaction::UndoTransaction();
 }
@@ -118,7 +118,7 @@ DeleteRangeTransaction::UndoTransaction()
 NS_IMETHODIMP
 DeleteRangeTransaction::RedoTransaction()
 {
-  MOZ_ASSERT(mRange && mEditor);
+  MOZ_ASSERT(mRange && mEditorBase);
 
   return EditAggregateTransaction::RedoTransaction();
 }
@@ -149,8 +149,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
       static_cast<nsGenericDOMDataNode*>(aNode);
 
     RefPtr<DeleteTextTransaction> transaction =
-      new DeleteTextTransaction(*mEditor, *charDataNode, aStartOffset, numToDel,
-                                mRangeUpdater);
+      new DeleteTextTransaction(*mEditorBase, *charDataNode, aStartOffset,
+                                numToDel, mRangeUpdater);
 
     nsresult res = transaction->Init();
     NS_ENSURE_SUCCESS(res, res);
@@ -165,7 +165,7 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
   nsresult res = NS_OK;
   for (int32_t i = aStartOffset; i < aEndOffset; ++i) {
     RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
-    res = transaction->Init(mEditor, child, mRangeUpdater);
+    res = transaction->Init(mEditorBase, child, mRangeUpdater);
     if (NS_SUCCEEDED(res)) {
       AppendChild(transaction);
     }
@@ -198,7 +198,7 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(nsINode* aNode,
       RefPtr<nsGenericDOMDataNode> dataNode =
         static_cast<nsGenericDOMDataNode*>(aNode);
       RefPtr<DeleteTextTransaction> transaction =
-        new DeleteTextTransaction(*mEditor, *dataNode, start, numToDelete,
+        new DeleteTextTransaction(*mEditorBase, *dataNode, start, numToDelete,
                                   mRangeUpdater);
 
       nsresult res = transaction->Init();
@@ -224,7 +224,7 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween()
     NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
     RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
-    res = transaction->Init(mEditor, node, mRangeUpdater);
+    res = transaction->Init(mEditorBase, node, mRangeUpdater);
     NS_ENSURE_SUCCESS(res, res);
     AppendChild(transaction);
 

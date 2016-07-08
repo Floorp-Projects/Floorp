@@ -22,7 +22,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -461,7 +460,8 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
     return NS_OK;
 
   int32_t parentOffset;
-  nsCOMPtr<nsIDOMNode> parentNode = nsEditor::GetNodeLocation(selNode, &parentOffset);
+  nsCOMPtr<nsIDOMNode> parentNode =
+    EditorBase::GetNodeLocation(selNode, &parentOffset);
 
   NS_ENSURE_STATE(mTextEditor);
   nsCOMPtr<nsIDOMNode> root = do_QueryInterface(mTextEditor->GetRoot());
@@ -478,7 +478,9 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
 }
 
 static inline already_AddRefed<nsIDOMNode>
-GetTextNode(Selection* selection, nsEditor* editor) {
+GetTextNode(Selection* selection,
+            EditorBase* editor)
+{
   int32_t selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult res = editor->GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);

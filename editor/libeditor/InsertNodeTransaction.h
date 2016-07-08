@@ -12,9 +12,9 @@
 #include "nsIContent.h"                 // for nsIContent
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 
-class nsEditor;
-
 namespace mozilla {
+
+class EditorBase;
 
 /**
  * A transaction that inserts a single element
@@ -29,7 +29,7 @@ public:
    * @param aOffset     The offset in aParent to insert aNode.
    */
   InsertNodeTransaction(nsIContent& aNode, nsINode& aParent, int32_t aOffset,
-                        nsEditor& aEditor);
+                        EditorBase& aEditorBase);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction,
@@ -50,7 +50,7 @@ protected:
   int32_t mOffset;
 
   // The editor for this transaction.
-  nsEditor& mEditor;
+  EditorBase& mEditorBase;
 };
 
 } // namespace mozilla

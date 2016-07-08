@@ -10,7 +10,6 @@
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextEditRules.h"
 #include "nsCOMPtr.h"
-#include "nsEditor.h"
 #include "nsIEditActionListener.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"

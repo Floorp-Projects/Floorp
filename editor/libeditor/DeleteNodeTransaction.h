@@ -14,10 +14,9 @@
 #include "nsISupportsImpl.h"
 #include "nscore.h"
 
-class nsEditor;
-
 namespace mozilla {
 
+class EditorBase;
 class RangeUpdater;
 
 /**
@@ -30,7 +29,7 @@ public:
    * Initialize the transaction.
    * @param aElement        The node to delete.
    */
-  nsresult Init(nsEditor* aEditor, nsINode* aNode,
+  nsresult Init(EditorBase* aEditorBase, nsINode* aNode,
                 RangeUpdater* aRangeUpdater);
 
   DeleteNodeTransaction();
@@ -56,7 +55,7 @@ protected:
   nsCOMPtr<nsIContent> mRefNode;
 
   // The editor for this transaction.
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
 
   // Range updater object.
   RangeUpdater* mRangeUpdater;

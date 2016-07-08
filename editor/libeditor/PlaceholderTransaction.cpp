@@ -6,8 +6,8 @@
 #include "PlaceholderTransaction.h"
 
 #include "CompositionTransaction.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/dom/Selection.h"
-#include "nsEditor.h"
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 
@@ -20,7 +20,7 @@ PlaceholderTransaction::PlaceholderTransaction()
   , mForwarding(nullptr)
   , mCompositionTransaction(nullptr)
   , mCommitted(false)
-  , mEditor(nullptr)
+  , mEditorBase(nullptr)
 {
 }
 
@@ -57,13 +57,13 @@ NS_IMPL_RELEASE_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 NS_IMETHODIMP
 PlaceholderTransaction::Init(nsIAtom* aName,
                              SelectionState* aSelState,
-                             nsEditor* aEditor)
+                             EditorBase* aEditorBase)
 {
-  NS_ENSURE_TRUE(aEditor && aSelState, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aEditorBase && aSelState, NS_ERROR_NULL_POINTER);
 
   mName = aName;
   mStartSel = aSelState;
-  mEditor = aEditor;
+  mEditorBase = aEditorBase;
   return NS_OK;
 }
 
@@ -83,7 +83,7 @@ PlaceholderTransaction::UndoTransaction()
   NS_ENSURE_TRUE(mStartSel, NS_ERROR_NULL_POINTER);
 
   // now restore selection
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mStartSel->RestoreSelection(selection);
 }
@@ -96,7 +96,7 @@ PlaceholderTransaction::RedoTransaction()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now restore selection
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mEndSel.RestoreSelection(selection);
 }
@@ -265,7 +265,7 @@ PlaceholderTransaction::Commit()
 nsresult
 PlaceholderTransaction::RememberEndingSelection()
 {
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   mEndSel.SaveSelection(selection);
   return NS_OK;

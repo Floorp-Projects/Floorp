@@ -6,9 +6,9 @@
 #ifndef mozilla_TextEditor_h
 #define mozilla_TextEditor_h
 
+#include "mozilla/EditorBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsEditor.h"
 #include "nsIEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIPlaintextEditor.h"
@@ -40,13 +40,13 @@ class Selection;
  * The text editor implementation.
  * Use to edit text document represented as a DOM tree.
  */
-class TextEditor : public nsEditor
+class TextEditor : public EditorBase
                  , public nsIPlaintextEditor
                  , public nsIEditorMailSupport
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextEditor, nsEditor)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextEditor, EditorBase)
 
   enum ETypingAction
   {
@@ -63,7 +63,7 @@ public:
   // nsIEditorMailSupport overrides
   NS_DECL_NSIEDITORMAILSUPPORT
 
-  // Overrides of nsEditor interface methods
+  // Overrides of EditorBase interface methods
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement* aElement,
                                       const nsAString& aAttribute,
                                       const nsAString& aValue,

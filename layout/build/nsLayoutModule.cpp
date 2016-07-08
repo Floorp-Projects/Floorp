@@ -136,7 +136,6 @@ using mozilla::dom::AudioChannelAgent;
 
 // Editor stuff
 #include "nsEditorCID.h"
-#include "nsEditor.h"
 #include "mozilla/EditorController.h" //CID
 #include "mozilla/HTMLEditor.h"
 

@@ -47,7 +47,7 @@ public:
 // ------------ nsIAbsorbingTransaction -----------------------
 
   NS_IMETHOD Init(nsIAtom* aName, SelectionState* aSelState,
-                  nsEditor* aEditor) override;
+                  EditorBase* aEditorBase) override;
 
   NS_IMETHOD GetTxnName(nsIAtom** aName) override;
 
@@ -84,7 +84,7 @@ protected:
   SelectionState mEndSel;
 
   // The editor for this transaction.
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
 };
 
 } // namespace mozilla

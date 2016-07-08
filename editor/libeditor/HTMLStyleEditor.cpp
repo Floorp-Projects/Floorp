@@ -20,7 +20,6 @@
 #include "nsCaseTreatment.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
@@ -52,7 +51,7 @@ static bool
 IsEmptyTextNode(HTMLEditor* aThis, nsINode* aNode)
 {
   bool isEmptyTextNode = false;
-  return nsEditor::IsTextNode(aNode) &&
+  return EditorBase::IsTextNode(aNode) &&
          NS_SUCCEEDED(aThis->IsEmptyNode(aNode, &isEmptyTextNode)) &&
          isEmptyTextNode;
 }

@@ -14,11 +14,11 @@
 #include "nsRange.h"
 #include "nscore.h"
 
-class nsEditor;
 class nsINode;
 
 namespace mozilla {
 
+class EditorBase;
 class RangeUpdater;
 
 /**
@@ -29,10 +29,10 @@ class DeleteRangeTransaction final : public EditAggregateTransaction
 public:
   /**
    * Initialize the transaction.
-   * @param aEditor     The object providing basic editing operations.
+   * @param aEditorBase The object providing basic editing operations.
    * @param aRange      The range to delete.
    */
-  nsresult Init(nsEditor* aEditor,
+  nsresult Init(EditorBase* aEditorBase,
                 nsRange* aRange,
                 RangeUpdater* aRangeUpdater);
 
@@ -67,7 +67,7 @@ protected:
   RefPtr<nsRange> mRange;
 
   // The editor for this transaction.
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
 
   // Range updater object.
   RangeUpdater* mRangeUpdater;

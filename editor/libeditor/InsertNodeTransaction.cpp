@@ -5,11 +5,12 @@
 
 #include "InsertNodeTransaction.h"
 
+#include "mozilla/EditorBase.h"         // for EditorBase
+
 #include "mozilla/dom/Selection.h"      // for Selection
 
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsEditor.h"                   // for nsEditor
 #include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc
 #include "nsIContent.h"                 // for nsIContent
 #include "nsMemory.h"                   // for nsMemory
@@ -23,11 +24,11 @@ using namespace dom;
 InsertNodeTransaction::InsertNodeTransaction(nsIContent& aNode,
                                              nsINode& aParent,
                                              int32_t aOffset,
-                                             nsEditor& aEditor)
+                                             EditorBase& aEditorBase)
   : mNode(&aNode)
   , mParent(&aParent)
   , mOffset(aOffset)
-  , mEditor(aEditor)
+  , mEditorBase(aEditorBase)
 {
 }
 
@@ -58,15 +59,15 @@ InsertNodeTransaction::DoTransaction()
   // Note, it's ok for ref to be null. That means append.
   nsCOMPtr<nsIContent> ref = mParent->GetChildAt(mOffset);
 
-  mEditor.MarkNodeDirty(GetAsDOMNode(mNode));
+  mEditorBase.MarkNodeDirty(GetAsDOMNode(mNode));
 
   ErrorResult rv;
   mParent->InsertBefore(*mNode, ref, rv);
   NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   // Only set selection to insertion point if editor gives permission
-  if (mEditor.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditor.GetSelection();
+  if (mEditorBase.GetShouldTxnSetSelection()) {
+    RefPtr<Selection> selection = mEditorBase.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     // Place the selection just after the inserted element
     selection->Collapse(mParent, mOffset + 1);

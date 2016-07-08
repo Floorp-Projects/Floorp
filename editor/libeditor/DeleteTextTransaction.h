@@ -14,10 +14,9 @@
 #include "nsString.h"
 #include "nscore.h"
 
-class nsEditor;
-
 namespace mozilla {
 
+class EditorBase;
 class RangeUpdater;
 
 /**
@@ -28,13 +27,13 @@ class DeleteTextTransaction final : public EditTransactionBase
 public:
   /**
    * Initialize the transaction.
-   * @param aEditor             The provider of basic editing operations.
+   * @param aEditorBase         The provider of basic editing operations.
    * @param aElement            The content node to remove text from.
    * @param aOffset             The location in aElement to begin the deletion.
    * @param aNumCharsToDelete   The number of characters to delete.  Not the
    *                            number of bytes!
    */
-  DeleteTextTransaction(nsEditor& aEditor,
+  DeleteTextTransaction(EditorBase& aEditorBase,
                         nsGenericDOMDataNode& aCharData,
                         uint32_t aOffset,
                         uint32_t aNumCharsToDelete,
@@ -54,7 +53,7 @@ public:
 
 protected:
   // The provider of basic editing operations.
-  nsEditor& mEditor;
+  EditorBase& mEditorBase;
 
   // The CharacterData node to operate upon.
   RefPtr<nsGenericDOMDataNode> mCharData;
