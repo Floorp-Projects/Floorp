@@ -3,22 +3,28 @@
 
 package org.mozilla.gecko.fxa.login;
 
+import android.text.TextUtils;
+
 import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
-import org.mozilla.gecko.background.fxa.FxAccountClient20.StatusResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.RecoveryEmailStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.fxa.FxAccountDevice;
 import org.mozilla.gecko.browserid.MockMyIDTokenFactory;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import ch.boye.httpclientandroidlib.HttpStatus;
 import ch.boye.httpclientandroidlib.ProtocolVersion;
@@ -41,6 +47,7 @@ public class MockFxAccountClient implements FxAccountClient {
     public boolean verified;
     public final byte[] kA;
     public final byte[] wrapkB;
+    public final Map<String, FxAccountDevice> devices;
 
     public User(String email, byte[] quickStretchedPW) {
       this.email = email;
@@ -49,6 +56,7 @@ public class MockFxAccountClient implements FxAccountClient {
       this.verified = false;
       this.kA = Utils.generateRandomBytes(FxAccountUtils.CRYPTO_KEY_LENGTH_BYTES);
       this.wrapkB = Utils.generateRandomBytes(FxAccountUtils.CRYPTO_KEY_LENGTH_BYTES);
+      this.devices = new HashMap<String, FxAccountDevice>();
     }
   }
 
@@ -94,14 +102,26 @@ public class MockFxAccountClient implements FxAccountClient {
   }
 
   @Override
-  public void status(byte[] sessionToken, RequestDelegate<StatusResponse> requestDelegate) {
+  public void accountStatus(String uid, RequestDelegate<AccountStatusResponse> requestDelegate) {
+    boolean userFound = false;
+    for (User user : users.values()) {
+      if (user.uid.equals(uid)) {
+        userFound = true;
+        break;
+      }
+    }
+    requestDelegate.handleSuccess(new AccountStatusResponse(userFound));
+  }
+
+  @Override
+  public void recoveryEmailStatus(byte[] sessionToken, RequestDelegate<RecoveryEmailStatusResponse> requestDelegate) {
     String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
     User user = users.get(email);
     if (email == null || user == null) {
       handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
       return;
     }
-    requestDelegate.handleSuccess(new StatusResponse(email, user.verified));
+    requestDelegate.handleSuccess(new RecoveryEmailStatusResponse(email, user.verified));
   }
 
   @Override
@@ -140,5 +160,57 @@ public class MockFxAccountClient implements FxAccountClient {
     } catch (Exception e) {
       requestDelegate.handleError(e);
     }
+  }
+
+  @Override
+  public void registerOrUpdateDevice(byte[] sessionToken, FxAccountDevice deviceToRegister, RequestDelegate<FxAccountDevice> requestDelegate) {
+    String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
+    User user = users.get(email);
+    if (email == null || user == null) {
+      handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
+      return;
+    }
+    if (!user.verified) {
+      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT, "user is unverified");
+      return;
+    }
+    try {
+      String deviceId = deviceToRegister.id;
+      if (TextUtils.isEmpty(deviceId)) { // Create
+        deviceId = UUID.randomUUID().toString();
+        FxAccountDevice device = new FxAccountDevice(deviceToRegister.name, deviceId, deviceToRegister.type, null);
+        deviceToRegister.id = deviceId;
+      } else { // Update
+        FxAccountDevice existingDevice = user.devices.get(deviceId);
+        if (existingDevice != null) {
+          if (!TextUtils.isEmpty(deviceToRegister.name)) {
+            existingDevice.name = deviceToRegister.name;
+          } // We could also update the other fields..
+        } else { // Device unknown
+          handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.UNKNOWN_DEVICE, "device is unknown");
+          return;
+        }
+      }
+      requestDelegate.handleSuccess(deviceToRegister);
+    } catch (Exception e) {
+      requestDelegate.handleError(e);
+    }
+  }
+
+  @Override
+  public void deviceList(byte[] sessionToken, RequestDelegate<FxAccountDevice[]> requestDelegate) {
+    String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
+    User user = users.get(email);
+    if (email == null || user == null) {
+      handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
+      return;
+    }
+    if (!user.verified) {
+      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT, "user is unverified");
+      return;
+    }
+    Collection<FxAccountDevice> devices = user.devices.values();
+    FxAccountDevice[] devicesArray = devices.toArray(new FxAccountDevice[devices.size()]);
+    requestDelegate.handleSuccess(devicesArray);
   }
 }

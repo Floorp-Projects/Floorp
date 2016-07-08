@@ -1485,7 +1485,7 @@ void MediaDecoderStateMachine::ReaderSuspendedChanged()
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("ReaderSuspendedChanged: suspended = %d", mIsReaderSuspended.Ref());
 
-  if (!HasVideo() || mIsReaderSuspended || IsDecodingFirstFrame()) {
+  if (IsShutdown() || !HasVideo() || mIsReaderSuspended || IsDecodingFirstFrame()) {
     return;
   }
 

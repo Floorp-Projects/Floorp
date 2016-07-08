@@ -48,7 +48,7 @@ BEGIN_TEST(testGCAllocator)
 #endif
 
     /* Finish any ongoing background free activity. */
-    js::gc::FinishGC(rt);
+    js::gc::FinishGC(cx);
 
     bool growUp;
     CHECK(addressesGrowUp(&growUp));

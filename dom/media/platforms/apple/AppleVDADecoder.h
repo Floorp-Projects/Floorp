@@ -132,7 +132,6 @@ private:
   Atomic<uint32_t> mInputIncoming;
   Atomic<bool> mIsShutDown;
   const bool mUseSoftwareImages;
-  const bool mIs106;
 
   // Protects mReorderQueue.
   Monitor mMonitor;

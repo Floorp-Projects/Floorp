@@ -10,10 +10,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsDebug.h"
 
-#ifndef MOZ_WIDGET_UIKIT
-#include "nsCocoaFeatures.h"
-#endif
-
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
@@ -51,11 +47,6 @@ AppleCMLinker::Link()
     goto fail;
   }
 
-#ifdef MOZ_WIDGET_UIKIT
-  if (true) {
-#else
-  if (nsCocoaFeatures::OnLionOrLater()) {
-#endif
 #define LINK_FUNC2(func)                                       \
   func = (typeof(func))dlsym(sLink, #func);                    \
   if (!func) {                                                 \
@@ -72,22 +63,6 @@ AppleCMLinker::Link()
 
     skPropFullRangeVideo =
       GetIOConst("kCMFormatDescriptionExtension_FullRangeVideo");
-
-  } else {
-#define LINK_FUNC2(cm, fig)                                    \
-  cm = (typeof(cm))dlsym(sLink, #fig);                         \
-  if (!cm) {                                                   \
-    NS_WARNING("Couldn't load CoreMedia function " #fig );     \
-    goto fail;                                                 \
-  }
-#define LINK_FUNC(func) LINK_FUNC2(CM ## func, Fig ## func)
-#include "AppleCMFunctions.h"
-#undef LINK_FUNC
-#undef LINK_FUNC2
-
-    skPropExtensionAtoms =
-      GetIOConst("kFigFormatDescriptionExtension_SampleDescriptionExtensionAtoms");
-  }
 
   if (!skPropExtensionAtoms) {
     goto fail;

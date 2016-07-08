@@ -731,7 +731,7 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
         "Using active loaded icon");
     }
     if (activeBlocked && !passiveLoaded) {
-      is(connectionIconImage, "url(\"chrome://browser/skin/identity-mixed-active-blocked.svg\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/identity-secure.svg\")",
         "Using active blocked icon");
     }
     if (passiveLoaded && !(activeLoaded || activeBlocked)) {

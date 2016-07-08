@@ -1735,10 +1735,10 @@ public:
         TraceInside(trc);
     }
 
-    void WriteBarrierPre(JSRuntime* rt)
+    void WriteBarrierPre(JSContext* cx)
     {
-        if (JS::IsIncrementalBarrierNeeded(rt) && mJSProtoObject)
-            mJSProtoObject.writeBarrierPre(rt);
+        if (JS::IsIncrementalBarrierNeeded(cx) && mJSProtoObject)
+            mJSProtoObject.writeBarrierPre(cx);
     }
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
