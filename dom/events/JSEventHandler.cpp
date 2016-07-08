@@ -154,7 +154,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       columnNumber.Construct();
       columnNumber.Value() = scriptEvent->Colno();
 
-      error.Construct(nsContentUtils::RootingCxForThread());
+      error.Construct(GetJSRuntime());
       scriptEvent->GetError(&error.Value());
     } else {
       msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();

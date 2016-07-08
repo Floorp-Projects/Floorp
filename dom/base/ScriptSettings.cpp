@@ -293,6 +293,12 @@ GetJSContext()
 }
 } // namespace danger
 
+JSRuntime*
+GetJSRuntime()
+{
+  return CycleCollectedJSRuntime::Get()->Runtime();
+}
+
 AutoJSAPI::AutoJSAPI()
   : ScriptSettingsStackEntry(nullptr, eJSAPI)
   , mCx(nullptr)
