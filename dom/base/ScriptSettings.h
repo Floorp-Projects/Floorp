@@ -136,6 +136,8 @@ JSContext* GetJSContext();
 
 } // namespace danger
 
+JSRuntime* GetJSRuntime();
+
 class ScriptSettingsStack;
 class ScriptSettingsStackEntry {
   friend class ScriptSettingsStack;
