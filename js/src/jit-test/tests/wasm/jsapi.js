@@ -121,6 +121,7 @@ assertErrorMessage(() => new Memory(1), TypeError, "first argument must be a mem
 assertErrorMessage(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
 assertErrorMessage(() => new Memory({initial:-1}), TypeError, /bad Memory initial size/);
 assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
+assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
 assertEq(new Memory({initial:1}) instanceof Memory, true);
 
 // 'WebAssembly.Memory.prototype' property

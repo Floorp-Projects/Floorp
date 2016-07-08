@@ -101,10 +101,11 @@ struct Import
 {
     CacheableChars module;
     CacheableChars func;
+    DefinitionKind kind;
 
     Import() = default;
-    Import(UniqueChars&& module, UniqueChars&& func)
-      : module(Move(module)), func(Move(func))
+    Import(UniqueChars&& module, UniqueChars&& func, DefinitionKind kind)
+      : module(Move(module)), func(Move(func)), kind(kind)
     {}
 
     WASM_DECLARE_SERIALIZABLE(Import)
@@ -167,6 +168,8 @@ class Module
     const SharedMetadata    metadata_;
     const SharedBytes       bytecode_;
 
+    bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
+
   public:
     Module(Bytes&& code,
            LinkData&& linkData,
@@ -191,7 +194,7 @@ class Module
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
-                     HandleArrayBufferObjectMaybeShared asmJSBuffer,
+                     HandleWasmMemoryObject memoryImport,
                      HandleWasmInstanceObject instanceObj) const;
 
     // Structured clone support:

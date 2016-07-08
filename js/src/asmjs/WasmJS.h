@@ -146,6 +146,7 @@ class WasmMemoryObject : public NativeObject
 typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
 typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
 typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
+typedef MutableHandle<WasmMemoryObject*> MutableHandleWasmMemoryObject;
 
 } // namespace js
 

@@ -1114,7 +1114,7 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
 static bool
 RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector& sigs)
 {
-    const AstSig* sig = sigs[import.sig().index()];
+    const AstSig* sig = sigs[import.funcSig().index()];
     if (!RenderIndent(c))
         return false;
     if (!c.buffer.append("(import "))
@@ -1131,8 +1131,8 @@ RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector
     if (!c.buffer.append("\" \""))
         return false;
 
-    const AstName& funcName = import.func();
-    if (!RenderEscapedString(c, funcName))
+    const AstName& fieldName = import.field();
+    if (!RenderEscapedString(c, fieldName))
         return false;
 
     if (!c.buffer.append("\""))
@@ -1293,9 +1293,9 @@ RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
         return false;
     if (!c.buffer.append("(memory "))
         return false;
-    if (!RenderInt32(c, maybeMemory->initialSize()))
+    if (!RenderInt32(c, maybeMemory->initial()))
        return false;
-    Maybe<uint32_t> memMax = maybeMemory->maxSize();
+    Maybe<uint32_t> memMax = maybeMemory->maximum();
     if (memMax) {
         if (!c.buffer.append(" "))
             return false;
