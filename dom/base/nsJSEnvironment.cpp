@@ -247,8 +247,8 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
     return nullptr;
   }
 
-  JSContext* cx = nsContentUtils::RootingCxForThread();
-  JS::RootedObject exceptionObject(cx, &exceptionValue.toObject());
+  JSRuntime* rt = GetJSRuntime();
+  JS::RootedObject exceptionObject(rt, &exceptionValue.toObject());
   JSObject* stackObject = ExceptionStackOrNull(exceptionObject);
   if (stackObject) {
     return stackObject;
@@ -269,7 +269,7 @@ FindExceptionStackForConsoleReport(nsPIDOMWindowInner* win,
   if (!stack) {
     return nullptr;
   }
-  JS::RootedValue value(cx);
+  JS::RootedValue value(rt);
   stack->GetNativeSavedFrame(&value);
   if (value.isObject()) {
     return &value.toObject();

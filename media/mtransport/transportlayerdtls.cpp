@@ -368,6 +368,7 @@ static const struct PRIOMethods TransportLayerMethods = {
 };
 
 TransportLayerDtls::~TransportLayerDtls() {
+  nspr_io_adapter_->SetEnabled(false);
   if (timer_) {
     timer_->Cancel();
   }

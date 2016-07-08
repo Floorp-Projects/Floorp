@@ -308,6 +308,13 @@ TracerConcrete<Referent>::zone() const
     return get().zoneFromAnyThread();
 }
 
+template JS::Zone* TracerConcrete<JSScript>::zone() const;
+template JS::Zone* TracerConcrete<js::LazyScript>::zone() const;
+template JS::Zone* TracerConcrete<js::Shape>::zone() const;
+template JS::Zone* TracerConcrete<js::BaseShape>::zone() const;
+template JS::Zone* TracerConcrete<JS::Symbol>::zone() const;
+template JS::Zone* TracerConcrete<JSString>::zone() const;
+
 template<typename Referent>
 UniquePtr<EdgeRange>
 TracerConcrete<Referent>::edges(JSRuntime* rt, bool wantNames) const {
@@ -321,12 +328,23 @@ TracerConcrete<Referent>::edges(JSRuntime* rt, bool wantNames) const {
     return UniquePtr<EdgeRange>(range.release());
 }
 
+template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::BaseShape>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<JS::Symbol>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSRuntime* rt, bool wantNames) const;
+
 template<typename Referent>
 JSCompartment*
 TracerConcreteWithCompartment<Referent>::compartment() const
 {
     return TracerBase::get().compartment();
 }
+
+template JSCompartment* TracerConcreteWithCompartment<JSScript>::compartment() const;
+template JSCompartment* TracerConcreteWithCompartment<js::Shape>::compartment() const;
+template JSCompartment* TracerConcreteWithCompartment<js::BaseShape>::compartment() const;
 
 bool
 Concrete<JSObject>::hasAllocationStack() const
@@ -371,37 +389,13 @@ Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& o
     return true;
 }
 
-template<> const char16_t TracerConcrete<JS::Symbol>::concreteTypeName[] =
-    MOZ_UTF16("JS::Symbol");
-template<> const char16_t TracerConcrete<JSScript>::concreteTypeName[] =
-    MOZ_UTF16("JSScript");
-template<> const char16_t TracerConcrete<js::LazyScript>::concreteTypeName[] =
-    MOZ_UTF16("js::LazyScript");
-template<> const char16_t TracerConcrete<js::jit::JitCode>::concreteTypeName[] =
-    MOZ_UTF16("js::jit::JitCode");
-template<> const char16_t TracerConcrete<js::Shape>::concreteTypeName[] =
-    MOZ_UTF16("js::Shape");
-template<> const char16_t TracerConcrete<js::BaseShape>::concreteTypeName[] =
-    MOZ_UTF16("js::BaseShape");
-template<> const char16_t TracerConcrete<js::ObjectGroup>::concreteTypeName[] =
-    MOZ_UTF16("js::ObjectGroup");
-
-
-// Instantiate all the TracerConcrete and templates here, where
-// we have the member functions' definitions in scope.
-namespace JS {
-namespace ubi {
-template class TracerConcreteWithCompartment<JSObject>;
-template class TracerConcrete<JSString>;
-template class TracerConcrete<JS::Symbol>;
-template class TracerConcreteWithCompartment<JSScript>;
-template class TracerConcrete<js::LazyScript>;
-template class TracerConcrete<js::jit::JitCode>;
-template class TracerConcreteWithCompartment<js::Shape>;
-template class TracerConcreteWithCompartment<js::BaseShape>;
-template class TracerConcrete<js::ObjectGroup>;
-} // namespace ubi
-} // namespace JS
+const char16_t Concrete<JS::Symbol>::concreteTypeName[] = MOZ_UTF16("JS::Symbol");
+const char16_t Concrete<JSScript>::concreteTypeName[] = MOZ_UTF16("JSScript");
+const char16_t Concrete<js::LazyScript>::concreteTypeName[] = MOZ_UTF16("js::LazyScript");
+const char16_t Concrete<js::jit::JitCode>::concreteTypeName[] = MOZ_UTF16("js::jit::JitCode");
+const char16_t Concrete<js::Shape>::concreteTypeName[] = MOZ_UTF16("js::Shape");
+const char16_t Concrete<js::BaseShape>::concreteTypeName[] = MOZ_UTF16("js::BaseShape");
+const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = MOZ_UTF16("js::ObjectGroup");
 
 namespace JS {
 namespace ubi {

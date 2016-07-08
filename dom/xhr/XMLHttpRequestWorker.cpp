@@ -507,7 +507,7 @@ public:
     mReadyState(0), mUploadEvent(aUploadEvent), mProgressEvent(true),
     mLengthComputable(aLengthComputable), mUseCachedArrayBufferResponse(false),
     mResponseTextResult(NS_OK), mStatusResult(NS_OK), mResponseResult(NS_OK),
-    mScopeObj(nsContentUtils::RootingCxForThread(), aScopeObj)
+    mScopeObj(GetJSRuntime(), aScopeObj)
   { }
 
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType,
@@ -520,7 +520,7 @@ public:
     mUploadEvent(aUploadEvent), mProgressEvent(false), mLengthComputable(0),
     mUseCachedArrayBufferResponse(false), mResponseTextResult(NS_OK),
     mStatusResult(NS_OK), mResponseResult(NS_OK),
-    mScopeObj(nsContentUtils::RootingCxForThread(), aScopeObj)
+    mScopeObj(GetJSRuntime(), aScopeObj)
   { }
 
 private:

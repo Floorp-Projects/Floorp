@@ -62,6 +62,8 @@ BottomHost.prototype = {
 
     this._splitter = ownerDocument.createElement("splitter");
     this._splitter.setAttribute("class", "devtools-horizontal-splitter");
+    // Avoid resizing notification containers
+    this._splitter.setAttribute("resizebefore", "flex");
 
     this.frame = ownerDocument.createElement("iframe");
     this.frame.className = "devtools-toolbox-bottom-iframe";

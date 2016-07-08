@@ -7,6 +7,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
 #include "jsapi.h"
 #include "xpcpublic.h"
@@ -284,6 +285,20 @@ IsJSAPIActive()
   return topEntry && !topEntry->NoJSAPI();
 }
 
+namespace danger {
+JSContext*
+GetJSContext()
+{
+  return CycleCollectedJSRuntime::Get()->Context();
+}
+} // namespace danger
+
+JSRuntime*
+GetJSRuntime()
+{
+  return CycleCollectedJSRuntime::Get()->Runtime();
+}
+
 AutoJSAPI::AutoJSAPI()
   : ScriptSettingsStackEntry(nullptr, eJSAPI)
   , mCx(nullptr)
@@ -325,6 +340,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
                         JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aCx == danger::GetJSContext());
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
   MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
@@ -418,18 +434,16 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
 
 AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
                      bool aIsMainThread,
-                     JSContext* aCx,
                      Type aType)
   : ScriptSettingsStackEntry(aGlobalObject, aType)
   , mIsMainThread(aIsMainThread)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
-  MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
-  InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(), aCx,
-               aIsMainThread);
+  InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(),
+               danger::GetJSContext(), aIsMainThread);
 }
 
 void
@@ -438,8 +452,7 @@ AutoJSAPI::Init()
   MOZ_ASSERT(!mCx, "An AutoJSAPI should only be initialised once");
 
   InitInternal(/* aGlobalObject */ nullptr, /* aGlobal */ nullptr,
-               nsContentUtils::GetDefaultJSContextForThread(),
-               NS_IsMainThread());
+               danger::GetJSContext(), NS_IsMainThread());
 }
 
 bool
@@ -464,7 +477,7 @@ AutoJSAPI::Init(nsIGlobalObject* aGlobalObject, JSContext* aCx)
 bool
 AutoJSAPI::Init(nsIGlobalObject* aGlobalObject)
 {
-  return Init(aGlobalObject, nsContentUtils::GetDefaultJSContextForThread());
+  return Init(aGlobalObject, danger::GetJSContext());
 }
 
 bool
@@ -634,16 +647,11 @@ AutoJSAPI::IsStackTop() const
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  const char *aReason,
-                                 bool aIsMainThread,
-                                 JSContext* aCx)
-  : AutoJSAPI(aGlobalObject, aIsMainThread,
-              aCx ? aCx : nsContentUtils::GetSafeJSContext(),
-              eEntryScript)
+                                 bool aIsMainThread)
+  : AutoJSAPI(aGlobalObject, aIsMainThread, eEntryScript)
   , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
-  MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
-  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == nsContentUtils::GetSafeJSContext());
 
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
@@ -652,9 +660,8 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
 
 AutoEntryScript::AutoEntryScript(JSObject* aObject,
                                  const char *aReason,
-                                 bool aIsMainThread,
-                                 JSContext* aCx)
-  : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread, aCx)
+                                 bool aIsMainThread)
+  : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread)
 {
 }
 
@@ -776,7 +783,7 @@ AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   if (IsJSAPIActive()) {
-    mCx = nsContentUtils::GetSafeJSContext();
+    mCx = danger::GetJSContext();
   } else {
     mJSAPI.Init();
     mCx = mJSAPI.cx();

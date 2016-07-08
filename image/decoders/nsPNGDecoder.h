@@ -26,12 +26,13 @@ public:
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual Telemetry::ID SpeedHistogram() override;
 
+  /// @return true if this PNG is a valid ICO resource.
+  bool IsValidICO() const;
+
 private:
   friend class DecoderFactory;
-  friend class nsICODecoder;
 
   // Decoders should only be instantiated via DecoderFactory.
-  // XXX(seth): nsICODecoder is temporarily an exception to this rule.
   explicit nsPNGDecoder(RasterImage* aImage);
 
   nsresult CreateFrame(gfx::SurfaceFormat aFormat,
@@ -53,37 +54,6 @@ private:
   void PostInvalidationIfNeeded();
 
   void WriteRow(uint8_t* aRow);
-
-  // Check if PNG is valid ICO (32bpp RGBA)
-  // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
-  bool IsValidICO() const
-  {
-    // If there are errors in the call to png_get_IHDR, the error_callback in
-    // nsPNGDecoder.cpp is called.  In this error callback we do a longjmp, so
-    // we need to save the jump buffer here. Oterwise we'll end up without a
-    // proper callstack.
-    if (setjmp(png_jmpbuf(mPNG))) {
-      // We got here from a longjmp call indirectly from png_get_IHDR
-      return false;
-    }
-
-    png_uint_32
-        png_width,  // Unused
-        png_height; // Unused
-
-    int png_bit_depth,
-        png_color_type;
-
-    if (png_get_IHDR(mPNG, mInfo, &png_width, &png_height, &png_bit_depth,
-                     &png_color_type, nullptr, nullptr, nullptr)) {
-
-      return ((png_color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
-               png_color_type == PNG_COLOR_TYPE_RGB) &&
-              png_bit_depth == 8);
-    } else {
-      return false;
-    }
-  }
 
   enum class State
   {

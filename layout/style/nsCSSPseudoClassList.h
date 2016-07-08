@@ -161,6 +161,8 @@ CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate", 0, "",
 
 CSS_STATE_PSEUDO_CLASS(mozDevtoolsHighlighted, ":-moz-devtools-highlighted", 0, "",
                        NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED)
+CSS_STATE_PSEUDO_CLASS(mozStyleeditorTransitioning, ":-moz-styleeditor-transitioning", 0, "",
+                       NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING)
 
 // Matches the element which is being displayed full-screen, and
 // any containing frames.

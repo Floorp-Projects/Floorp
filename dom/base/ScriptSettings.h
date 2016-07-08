@@ -127,6 +127,17 @@ inline JSObject& IncumbentJSGlobal()
 // AutoJSAPI or AutoEntryScript to get yourself a properly set up JSContext.
 bool IsJSAPIActive();
 
+namespace danger {
+
+// Get the JSContext for this thread.  This is in the "danger" namespace because
+// we generally want people using AutoJSAPI instead, unless they really know
+// what they're doing.
+JSContext* GetJSContext();
+
+} // namespace danger
+
+JSRuntime* GetJSRuntime();
+
 class ScriptSettingsStack;
 class ScriptSettingsStackEntry {
   friend class ScriptSettingsStack;
@@ -278,13 +289,9 @@ public:
   }
 
 protected:
-  // Protected constructor, allowing subclasses to specify a particular cx to
-  // be used. This constructor initialises the AutoJSAPI, so Init must NOT be
-  // called on subclasses that use this.
-  // If aGlobalObject, its associated JS global or aCx are null this will cause
-  // an assertion, as will setting aIsMainThread incorrectly.
-  AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, JSContext* aCx,
-            Type aType);
+  // Protected constructor for subclasses.  This constructor initialises the
+  // AutoJSAPI, so Init must NOT be called on subclasses that use this.
+  AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, Type aType);
 
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
@@ -313,15 +320,11 @@ class MOZ_STACK_CLASS AutoEntryScript : public AutoJSAPI {
 public:
   AutoEntryScript(nsIGlobalObject* aGlobalObject,
                   const char *aReason,
-                  bool aIsMainThread = NS_IsMainThread(),
-                  // Note: aCx is mandatory off-main-thread.
-                  JSContext* aCx = nullptr);
+                  bool aIsMainThread = NS_IsMainThread());
 
   AutoEntryScript(JSObject* aObject, // Any object from the relevant global
                   const char *aReason,
-                  bool aIsMainThread = NS_IsMainThread(),
-                  // Note: aCx is mandatory off-main-thread.
-                  JSContext* aCx = nullptr);
+                  bool aIsMainThread = NS_IsMainThread());
 
   ~AutoEntryScript();
 

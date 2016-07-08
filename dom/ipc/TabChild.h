@@ -138,7 +138,6 @@ public:
     return NS_OK;
   }
 
-  virtual JSContext* GetJSContextForEventHandlers() override;
   virtual nsIPrincipal* GetPrincipal() override;
   virtual JSObject* GetGlobalJSObject() override;
 

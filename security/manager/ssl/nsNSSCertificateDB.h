@@ -8,6 +8,7 @@
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIX509CertDB.h"
@@ -58,7 +59,7 @@ private:
   CERTDERCerts* getCertsFromPackage(const mozilla::UniquePLArenaPool& arena,
                                     uint8_t* data, uint32_t length,
                                     const nsNSSShutDownPreventionLock& proofOfLock);
-  nsresult handleCACertDownload(nsIArray *x509Certs, 
+  nsresult handleCACertDownload(mozilla::NotNull<nsIArray*> x509Certs,
                                 nsIInterfaceRequestor *ctx,
                                 const nsNSSShutDownPreventionLock &proofOfLock);
 

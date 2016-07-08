@@ -3404,7 +3404,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       LogicalRect oldFloatAvailableSpaceRect(floatAvailableSpace.mRect);
       floatAvailableSpace = aState.GetFloatAvailableSpaceForBSize(
                               aState.mBCoord + bStartMargin,
-                              brc.GetMetrics().Height(),
+                              brc.GetMetrics().BSize(wm),
                               &floatManagerState);
       NS_ASSERTION(floatAvailableSpace.mRect.BStart(wm) ==
                      oldFloatAvailableSpaceRect.BStart(wm),

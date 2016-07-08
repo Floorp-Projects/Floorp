@@ -247,7 +247,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
   // The string that we're interested in will be a JSON string that looks like:
   //  {"key":"ums.autoMount","value":true}
 
-  RootedDictionary<SettingChangeNotification> setting(nsContentUtils::RootingCxForThread());
+  RootedDictionary<SettingChangeNotification> setting(nsContentUtils::RootingCx());
   if (!WrappedJSToDictionary(aSubject, setting)) {
     return NS_OK;
   }
