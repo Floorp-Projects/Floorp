@@ -5424,7 +5424,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
     // layer rendering.
     return nullptr;
   }
-  layer->SetMaskLayer(nullptr);
+  ResetLayerStateForRecycling(layer);
   return layer;
 }
 
