@@ -34,7 +34,7 @@ class TestMixedScriptContentBlocking(FirefoxTestCase):
         if enabled:
             color, icon_filename, state = (
                 'rgb(0, 136, 0)',
-                'identity-mixed-active-blocked',
+                'identity-secure',
                 'blocked'
             )
         else:
