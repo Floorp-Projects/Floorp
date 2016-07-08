@@ -61,8 +61,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.RectF;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.net.Uri;
@@ -134,7 +132,6 @@ public abstract class GeckoApp
     GeckoMenu.MenuPresenter,
     LocationListener,
     NativeEventListener,
-    SensorEventListener,
     Tabs.OnTabsChangedListener,
     ViewTreeObserver.OnGlobalLayoutListener {
 
@@ -252,11 +249,6 @@ public abstract class GeckoApp
 
     @Override
     public LocationListener getLocationListener() {
-        return this;
-    }
-
-    @Override
-    public SensorEventListener getSensorEventListener() {
         return this;
     }
 
@@ -2529,16 +2521,6 @@ public abstract class GeckoApp
 
     @Override
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
-
-    // Accelerometer.
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
-    }
 
     // Geolocation.
     @Override
