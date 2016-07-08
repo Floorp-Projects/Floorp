@@ -143,6 +143,7 @@ AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
   mOverScroller->GetCurrX(&currentX);
   mOverScroller->GetCurrY(&currentY);
   ParentLayerPoint offset((float)currentX, (float)currentY);
+  ParentLayerPoint preCheckedOffset(offset);
 
   bool hitBoundX = CheckBounds(mApzc.mX, offset.x, mFlingDirection.x, &(offset.x));
   bool hitBoundY = CheckBounds(mApzc.mY, offset.y, mFlingDirection.y, &(offset.y));
@@ -163,9 +164,12 @@ AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
 
       mPreviousVelocity = velocity;
     }
-  } else if (hitBoundX || hitBoundY) {
-    // We have reached the end of the scroll in one of the directions being scrolled and the offset has not
-    // changed so end animation.
+  } else if ((fabsf(offset.x - preCheckedOffset.x) > BOUNDS_EPSILON) || (fabsf(offset.y - preCheckedOffset.y) > BOUNDS_EPSILON)) {
+    // The page is no longer scrolling but the fling animation is still animating beyond the page bounds. If it goes
+    // beyond the BOUNDS_EPSILON then it has overflowed and will never stop. In that case, stop the fling animation.
+    shouldContinueFling = false;
+  } else if (hitBoundX && hitBoundY) {
+    // We can't scroll any farther along either axis.
     shouldContinueFling = false;
   }
 
