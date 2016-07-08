@@ -253,12 +253,13 @@ ScalarTypeDescr::typeName(Type type)
         case constant_: return #name_;
         JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
 #undef NUMERIC_TYPE_TO_STRING
+      case Scalar::Int64:
       case Scalar::Float32x4:
       case Scalar::Int8x16:
       case Scalar::Int16x8:
       case Scalar::Int32x4:
       case Scalar::MaxTypedArrayViewType:
-        MOZ_CRASH();
+        break;
     }
     MOZ_CRASH("Invalid type");
 }
@@ -293,6 +294,7 @@ ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
 
         JS_FOR_EACH_SCALAR_TYPE_REPR(SCALARTYPE_CALL)
 #undef SCALARTYPE_CALL
+      case Scalar::Int64:
       case Scalar::Float32x4:
       case Scalar::Int8x16:
       case Scalar::Int16x8:

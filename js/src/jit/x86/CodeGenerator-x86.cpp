@@ -273,6 +273,7 @@ CodeGeneratorX86::load(Scalar::Type accessType, const Operand& srcAddr, const LD
       case Scalar::Int8x16:
       case Scalar::Int16x8:
       case Scalar::Int32x4:      MOZ_CRASH("SIMD load should be handled in their own function");
+      case Scalar::Int64:        MOZ_CRASH("should be handled in a separate function (2 regs)");
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
 }
@@ -386,6 +387,7 @@ CodeGeneratorX86::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
+      case Scalar::Int64:
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Uint8Clamped:
@@ -550,6 +552,9 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
         masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr);
         break;
 
+      case Scalar::Int64:
+        MOZ_CRASH("should be handled in a separate function (2 registers)");
+
       case Scalar::Float32x4:
       case Scalar::Int8x16:
       case Scalar::Int16x8:
@@ -629,6 +634,7 @@ CodeGeneratorX86::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
+      case Scalar::Int64:
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Uint8Clamped:

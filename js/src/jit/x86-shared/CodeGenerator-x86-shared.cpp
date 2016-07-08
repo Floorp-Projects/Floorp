@@ -376,6 +376,7 @@ void
 CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool)
 {
     switch (ool->viewType()) {
+      case Scalar::Int64:
       case Scalar::Float32x4:
       case Scalar::Int8x16:
       case Scalar::Int16x8:

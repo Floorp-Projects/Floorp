@@ -1759,6 +1759,7 @@ GetTypedArrayRange(TempAllocator& alloc, Scalar::Type type)
       case Scalar::Int32:
         return Range::NewInt32Range(alloc, INT32_MIN, INT32_MAX);
 
+      case Scalar::Int64:
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Float32x4:
