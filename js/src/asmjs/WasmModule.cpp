@@ -25,6 +25,7 @@
 #include "asmjs/WasmSerialize.h"
 
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/Debugger-inl.h"
 
 using namespace js;
 using namespace js::wasm;
@@ -376,6 +377,97 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
     return true;
 }
 
+static bool
+WasmCall(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedFunction callee(cx, &args.callee().as<JSFunction>());
+
+    Instance& instance = ExportedFunctionToInstance(callee);
+    uint32_t exportIndex = ExportedFunctionToExportIndex(callee);
+
+    return instance.callExport(cx, exportIndex, args);
+}
+
+static JSFunction*
+NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint32_t exportIndex)
+{
+    Instance& instance = instanceObj->instance();
+    const Metadata& metadata = instance.metadata();
+    const Export& exp = metadata.exports[exportIndex];
+    unsigned numArgs = exp.sig().args().length();
+
+    RootedAtom name(cx, instance.getFuncAtom(cx, exp.funcIndex()));
+    if (!name)
+        return nullptr;
+
+    JSFunction* fun = NewNativeConstructor(cx, WasmCall, numArgs, name,
+                                           gc::AllocKind::FUNCTION_EXTENDED, GenericObject,
+                                           JSFunction::ASMJS_CTOR);
+    if (!fun)
+        return nullptr;
+
+    fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
+    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
+    return fun;
+}
+
+static bool
+CreateExportObject(JSContext* cx,
+                   HandleWasmInstanceObject instanceObj,
+                   HandleWasmMemoryObject memoryObj,
+                   const ExportMap& exportMap,
+                   const Metadata& metadata,
+                   MutableHandleObject exportObj)
+{
+    MOZ_ASSERT(exportMap.fieldNames.length() == exportMap.fieldsToExports.length());
+
+    if (metadata.isAsmJS() &&
+        exportMap.fieldNames.length() == 1 &&
+        strlen(exportMap.fieldNames[0].get()) == 0)
+    {
+        exportObj.set(NewExportedFunction(cx, instanceObj, 0));
+        return !!exportObj;
+    }
+
+    exportObj.set(JS_NewPlainObject(cx));
+    if (!exportObj)
+        return false;
+
+    Rooted<ValueVector> vals(cx, ValueVector(cx));
+    for (size_t exportIndex = 0; exportIndex < metadata.exports.length(); exportIndex++) {
+        JSFunction* fun = NewExportedFunction(cx, instanceObj, exportIndex);
+        if (!fun || !vals.append(ObjectValue(*fun)))
+            return false;
+    }
+
+    for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
+        const char* fieldName = exportMap.fieldNames[fieldIndex].get();
+        JSAtom* atom = AtomizeUTF8Chars(cx, fieldName, strlen(fieldName));
+        if (!atom)
+            return false;
+
+        RootedId id(cx, AtomToId(atom));
+        RootedValue val(cx);
+        uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
+        if (exportIndex == MemoryExport) {
+            if (metadata.assumptions.newFormat)
+                val = ObjectValue(*memoryObj);
+            else
+                val = ObjectValue(memoryObj->buffer());
+        } else {
+            val = vals[exportIndex];
+        }
+
+        if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
+            return false;
+    }
+
+    return true;
+}
+
+static const char ExportField[] = "exports";
+
 bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
@@ -398,6 +490,7 @@ Module::instantiate(JSContext* cx,
     // developer actually cares: when the compartment is debuggable (which is
     // true when the web console is open) or a names section is implied (since
     // this going to be stripped for non-developer builds).
+
     const ShareableBytes* maybeBytecode = nullptr;
     if (cx->compartment()->isDebuggee() || !metadata_->funcNames.empty())
         maybeBytecode = bytecode_.get();
@@ -405,6 +498,7 @@ Module::instantiate(JSContext* cx,
     // Store a summary of LinkData::FuncTableVector, only as much is needed
     // for runtime toggling of profiling mode. Currently, only asm.js has typed
     // function tables.
+
     TypedFuncTableVector typedFuncTables;
     if (metadata_->isAsmJS()) {
         if (!typedFuncTables.reserve(linkData_.funcTables.length()))
@@ -413,6 +507,65 @@ Module::instantiate(JSContext* cx,
             typedFuncTables.infallibleEmplaceBack(tbl.globalDataOffset, tbl.elemOffsets.length());
     }
 
-    return Instance::create(cx, Move(cs), *metadata_, maybeBytecode, Move(typedFuncTables),
-                            memory, funcImports, exportMap_, instanceObj);
+    // Create the Instance, ensuring that it is traceable via 'instanceObj'
+    // before any GC can occur and invalidate the pointers stored in global
+    // memory.
+
+    {
+        auto instance = cx->make_unique<Instance>(Move(cs),
+                                                  *metadata_,
+                                                  maybeBytecode,
+                                                  Move(typedFuncTables),
+                                                  memory,
+                                                  funcImports);
+        if (!instance)
+            return false;
+
+        instanceObj->init(Move(instance));
+    }
+
+    // Create the export object.
+
+    RootedObject exportObj(cx);
+    if (!CreateExportObject(cx, instanceObj, memory, exportMap_, *metadata_, &exportObj))
+        return false;
+
+    instanceObj->initExportsObject(exportObj);
+
+    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+
+    RootedValue val(cx, ObjectValue(*exportObj));
+    if (!JS_DefinePropertyById(cx, instanceObj, id, val, JSPROP_ENUMERATE))
+        return false;
+
+    // Done! Notify the Debugger of the new Instance.
+
+    Debugger::onNewWasmInstance(cx, instanceObj);
+
+    return true;
+}
+
+bool
+wasm::IsExportedFunction(JSFunction* fun)
+{
+    return fun->maybeNative() == WasmCall;
+}
+
+Instance&
+wasm::ExportedFunctionToInstance(JSFunction* fun)
+{
+    MOZ_ASSERT(IsExportedFunction(fun));
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
+    return v.toObject().as<WasmInstanceObject>().instance();
+}
+
+uint32_t
+wasm::ExportedFunctionToExportIndex(JSFunction* fun)
+{
+    MOZ_ASSERT(IsExportedFunction(fun));
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
+    return v.toInt32();
 }
