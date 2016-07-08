@@ -699,6 +699,8 @@ ScalarTypeToMIRType(Scalar::Type type)
       case Scalar::Uint32:
       case Scalar::Uint8Clamped:
         return MIRType::Int32;
+      case Scalar::Int64:
+        return MIRType::Int64;
       case Scalar::Float32:
         return MIRType::Float32;
       case Scalar::Float64:
@@ -727,6 +729,7 @@ ScalarTypeToLength(Scalar::Type type)
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
+      case Scalar::Int64:
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Uint8Clamped:
