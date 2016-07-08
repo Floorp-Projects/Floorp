@@ -243,7 +243,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         type='clang',
         compiler='/usr/bin/clang-3.3',
     )
-    CLANGXX_3_3_RESULT = 'Only clang/llvm 3.4 or newer is supported.'
+    CLANGXX_3_3_RESULT = 'Only clang/llvm 3.6 or newer is supported.'
     CLANG_3_6_RESULT = CompilerResult(
         flags=['-std=gnu99'],
         version='3.6.2',
