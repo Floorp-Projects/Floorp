@@ -257,6 +257,8 @@ protected:
      * Signal handlers.
      */
     static void OnKeysChanged(GdkKeymap* aKeymap, KeymapWrapper* aKeymapWrapper);
+    static void OnDirectionChanged(GdkKeymap *aGdkKeymap,
+                                   KeymapWrapper* aKeymapWrapper);
 
     /**
      * GetCharCodeFor() Computes what character is inputted by the key event
