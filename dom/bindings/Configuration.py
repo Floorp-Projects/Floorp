@@ -335,8 +335,6 @@ class Descriptor(DescriptorProvider):
         else:
             self.jsImplParentHeader = self.jsImplParent.replace("::", "/") + ".h"
 
-        self.skipGen = desc.get('skipGen', False)
-
         self.notflattened = desc.get('notflattened', False)
         self.register = desc.get('register', True)
 
