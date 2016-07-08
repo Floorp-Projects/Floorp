@@ -312,6 +312,52 @@ public:
         obsServ->NotifyObservers(nullptr, aTopic->ToCString().get(),
                                  aData ? aData->ToString().get() : nullptr);
     }
+
+    static void OnSensorChanged(int32_t aType, float aX, float aY, float aZ,
+                                float aW, int32_t aAccuracy, int64_t aTime)
+    {
+        AutoTArray<float, 4> values;
+
+        switch (aType) {
+        // Bug 938035, transfer HAL data for orientation sensor to meet w3c
+        // spec, ex: HAL report alpha=90 means East but alpha=90 means West
+        // in w3c spec
+        case hal::SENSOR_ORIENTATION:
+            values.AppendElement(360.0f - aX);
+            values.AppendElement(-aY);
+            values.AppendElement(-aZ);
+            break;
+
+        case hal::SENSOR_LINEAR_ACCELERATION:
+        case hal::SENSOR_ACCELERATION:
+        case hal::SENSOR_GYROSCOPE:
+        case hal::SENSOR_PROXIMITY:
+            values.AppendElement(aX);
+            values.AppendElement(aY);
+            values.AppendElement(aZ);
+            break;
+
+        case hal::SENSOR_LIGHT:
+            values.AppendElement(aX);
+            break;
+
+        case hal::SENSOR_ROTATION_VECTOR:
+        case hal::SENSOR_GAME_ROTATION_VECTOR:
+            values.AppendElement(aX);
+            values.AppendElement(aY);
+            values.AppendElement(aZ);
+            values.AppendElement(aW);
+            break;
+
+        default:
+            __android_log_print(ANDROID_LOG_ERROR, "Gecko",
+                                "Unknown sensor type %d", aType);
+        }
+
+        hal::SensorData sdata(hal::SensorType(aType), aTime, values,
+                              hal::SensorAccuracyType(aAccuracy));
+        hal::NotifySensorChange(sdata);
+    }
 };
 
 nsAppShell::nsAppShell()
@@ -622,52 +668,6 @@ nsAppShell::LegacyGeckoEvent::Run()
     case AndroidGeckoEvent::NATIVE_POKE:
         nsAppShell::Get()->NativeEventCallback();
         break;
-
-    case AndroidGeckoEvent::SENSOR_EVENT: {
-        AutoTArray<float, 4> values;
-        mozilla::hal::SensorType type = (mozilla::hal::SensorType) curEvent->Flags();
-
-        switch (type) {
-          // Bug 938035, transfer HAL data for orientation sensor to meet w3c
-          // spec, ex: HAL report alpha=90 means East but alpha=90 means West
-          // in w3c spec
-          case hal::SENSOR_ORIENTATION:
-            values.AppendElement(360 -curEvent->X());
-            values.AppendElement(-curEvent->Y());
-            values.AppendElement(-curEvent->Z());
-            break;
-          case hal::SENSOR_LINEAR_ACCELERATION:
-          case hal::SENSOR_ACCELERATION:
-          case hal::SENSOR_GYROSCOPE:
-          case hal::SENSOR_PROXIMITY:
-            values.AppendElement(curEvent->X());
-            values.AppendElement(curEvent->Y());
-            values.AppendElement(curEvent->Z());
-            break;
-
-        case hal::SENSOR_LIGHT:
-            values.AppendElement(curEvent->X());
-            break;
-
-        case hal::SENSOR_ROTATION_VECTOR:
-        case hal::SENSOR_GAME_ROTATION_VECTOR:
-            values.AppendElement(curEvent->X());
-            values.AppendElement(curEvent->Y());
-            values.AppendElement(curEvent->Z());
-            values.AppendElement(curEvent->W());
-            break;
-
-        default:
-            __android_log_print(ANDROID_LOG_ERROR,
-                                "Gecko", "### SENSOR_EVENT fired, but type wasn't known %d",
-                                type);
-        }
-
-        const hal::SensorAccuracyType &accuracy = (hal::SensorAccuracyType) curEvent->MetaState();
-        hal::SensorData sdata(type, curEvent->Time(), values, accuracy);
-        hal::NotifySensorChange(sdata);
-      }
-      break;
 
     case AndroidGeckoEvent::LOCATION_EVENT: {
         if (!gLocationCallback)

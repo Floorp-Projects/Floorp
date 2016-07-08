@@ -366,16 +366,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
             break;
 
-        case SENSOR_EVENT:
-             mX = jenv->GetDoubleField(jobj, jXField);
-             mY = jenv->GetDoubleField(jobj, jYField);
-             mZ = jenv->GetDoubleField(jobj, jZField);
-             mW = jenv->GetDoubleField(jobj, jWField);
-             mFlags = jenv->GetIntField(jobj, jFlagsField);
-             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-             mTime = jenv->GetLongField(jobj, jTimeField);
-             break;
-
         case LOCATION_EVENT: {
             jobject location = jenv->GetObjectField(jobj, jLocationField);
             mGeoPosition = AndroidLocation::CreateGeoPosition(jenv, location);
