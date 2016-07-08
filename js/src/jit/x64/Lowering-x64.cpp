@@ -161,7 +161,8 @@ LIRGeneratorX64::visitWasmStore(MWasmStore* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
-    LAllocation value;
+    MDefinition* value = ins->value();
+    LAllocation valueAlloc;
     switch (ins->accessType()) {
       case Scalar::Int8:
       case Scalar::Uint8:
@@ -169,7 +170,14 @@ LIRGeneratorX64::visitWasmStore(MWasmStore* ins)
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
-        value = useRegisterOrConstantAtStart(ins->value());
+        valueAlloc = useRegisterOrConstantAtStart(value);
+        break;
+      case Scalar::Int64:
+        // No way to encode an int64-to-memory move on x64.
+        if (value->isConstant() && value->type() != MIRType::Int64)
+            valueAlloc = useOrConstantAtStart(value);
+        else
+            valueAlloc = useRegisterAtStart(value);
         break;
       case Scalar::Float32:
       case Scalar::Float64:
@@ -177,7 +185,7 @@ LIRGeneratorX64::visitWasmStore(MWasmStore* ins)
       case Scalar::Int8x16:
       case Scalar::Int16x8:
       case Scalar::Int32x4:
-        value = useRegisterAtStart(ins->value());
+        valueAlloc = useRegisterAtStart(value);
         break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -185,7 +193,7 @@ LIRGeneratorX64::visitWasmStore(MWasmStore* ins)
     }
 
     LAllocation baseAlloc = useRegisterOrZeroAtStart(base);
-    auto* lir = new(alloc()) LWasmStore(baseAlloc, value);
+    auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
     add(lir, ins);
 }
 
@@ -234,6 +242,7 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
       case Scalar::Int32x4:
         lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()));
         break;
+      case Scalar::Int64:
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");

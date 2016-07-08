@@ -28,9 +28,13 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void memoryBarrier(MemoryBarrierBits barrier);
 
     void load(Scalar::Type type, const Operand& srcAddr, AnyRegister out);
-    void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
+    void loadI64(Scalar::Type type, const Operand& srcAddr, AnyRegister out);
+    void visitWasmLoadBase(const MWasmLoad* mir, const LAllocation* ptr, const LDefinition* output,
+                           bool isInt64);
 
     void store(Scalar::Type type, const LAllocation* value, const Operand& dstAddr);
+
+    void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
     void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand& dstAddr);
 
     void emitSimdLoad(LAsmJSLoadHeap* ins);
@@ -69,6 +73,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
     void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmLoadI64(LWasmLoadI64* ins);
     void visitWasmStore(LWasmStore* ins);
     void visitAsmSelectI64(LAsmSelectI64* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
