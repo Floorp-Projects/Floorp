@@ -4592,8 +4592,12 @@ PresShell::NotifyCompositorOfVisibleRegionsChange()
     return;
   }
 
+  // XXX(seth): Right now we're just treating MAY_BECOME_VISIBLE and
+  // IN_DISPLAYPORT regions the same when visualizing them. In part 2 we'll
+  // update the visualization to display them differently.
+
   // Clear the old visible regions associated with this document.
-  compositorChild->SendClearVisibleRegions(layersId, presShellId);
+  compositorChild->SendClearApproximatelyVisibleRegions(layersId, presShellId);
 
   // Send the new visible regions to the compositor.
   for (auto iter = mVisibleRegions->mApproximate.ConstIter();
@@ -4605,8 +4609,7 @@ PresShell::NotifyCompositorOfVisibleRegionsChange()
 
     const ScrollableLayerGuid guid(layersId, presShellId, viewId);
 
-    compositorChild->SendUpdateVisibleRegion(VisibilityCounter::MAY_BECOME_VISIBLE,
-                                             guid, *region);
+    compositorChild->SendNotifyApproximatelyVisibleRegion(guid, *region);
   }
 
   for (auto iter = mVisibleRegions->mInDisplayPort.ConstIter();
@@ -4618,8 +4621,7 @@ PresShell::NotifyCompositorOfVisibleRegionsChange()
 
     const ScrollableLayerGuid guid(layersId, presShellId, viewId);
 
-    compositorChild->SendUpdateVisibleRegion(VisibilityCounter::IN_DISPLAYPORT,
-                                             guid, *region);
+    compositorChild->SendNotifyApproximatelyVisibleRegion(guid, *region);
   }
 }
 

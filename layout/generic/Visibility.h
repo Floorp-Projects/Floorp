@@ -8,8 +8,6 @@
  * possible visibility states of a frame. @OnNonvisible is an enumeration that
  * allows callers to request a specific action when a frame transitions from
  * visible to nonvisible.
- *
- * IPC serializers are available in VisibilityIPC.h.
  */
 
 #ifndef mozilla_layout_generic_Visibility_h
