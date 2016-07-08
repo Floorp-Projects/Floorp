@@ -753,11 +753,8 @@ SessionStore.prototype = {
 
     // Save some data that'll help in adjusting the zoom level
     // when restoring in a different screen orientation.
-    let viewportInfo = this._getViewportInfo(aWindow.outerWidth, aWindow.outerHeight, content);
-    scrolldata.zoom.autoSize = viewportInfo.autoSize;
-    log("onTabScroll() autoSize: " + scrolldata.zoom.autoSize);
-    scrolldata.zoom.windowWidth = aWindow.outerWidth;
-    log("onTabScroll() windowWidth: " + scrolldata.zoom.windowWidth);
+    scrolldata.zoom.displaySize = this._getContentViewerSize(content);
+    log("onTabScroll() displayWidth: " + scrolldata.zoom.displaySize.width);
 
     // Save zoom and scroll data.
     data.scrolldata = scrolldata;
@@ -767,23 +764,16 @@ SessionStore.prototype = {
     this.saveStateDelayed();
   },
 
-  _getViewportInfo: function ss_getViewportInfo(aDisplayWidth, aDisplayHeight, aWindow) {
-    let viewportInfo = {};
-    let defaultZoom = {}, allowZoom = {}, minZoom = {}, maxZoom ={},
-        width = {}, height = {}, autoSize = {};
+  _getContentViewerSize: function ss_getContentViewerSize(aWindow) {
+    let displaySize = {};
+    let width = {}, height = {};
     aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
-      Ci.nsIDOMWindowUtils).getViewportInfo(aDisplayWidth, aDisplayHeight,
-        defaultZoom, allowZoom, minZoom, maxZoom, width, height, autoSize);
+      Ci.nsIDOMWindowUtils).getContentViewerSize(width, height);
 
-    viewportInfo.defaultZoom = defaultZoom.value;
-    viewportInfo.allowZoom = allowZoom.value;
-    viewportInfo.minZoom = maxZoom.value;
-    viewportInfo.maxZoom = maxZoom.value;
-    viewportInfo.width = width.value;
-    viewportInfo.height = height.value;
-    viewportInfo.autoSize = autoSize.value;
+    displaySize.width = width.value;
+    displaySize.height = height.value;
 
-    return viewportInfo;
+    return displaySize;
   },
 
   saveStateDelayed: function ss_saveStateDelayed() {
@@ -1385,38 +1375,21 @@ SessionStore.prototype = {
   },
 
   /**
-  * Restores the zoom level of the window. This needs to be called before
-  * first paint/load (whichever comes first) to take any effect.
-  */
+   * Restores the zoom level of the window. This needs to be called before
+   * first paint/load (whichever comes first) to take any effect.
+   */
   _restoreZoom: function ss_restoreZoom(aScrollData, aBrowser) {
-    if (aScrollData && aScrollData.zoom) {
-      let recalculatedZoom = this._recalculateZoom(aScrollData.zoom);
-      log("_restoreZoom(), resolution: " + recalculatedZoom);
+    if (aScrollData && aScrollData.zoom && aScrollData.zoom.displaySize) {
+      log("_restoreZoom(), resolution: " + aScrollData.zoom.resolution +
+          ", old displayWidth: " + aScrollData.zoom.displaySize.width);
 
       let utils = aBrowser.contentWindow.QueryInterface(
         Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       // Restore zoom level.
-      utils.setRestoreResolution(recalculatedZoom);
+      utils.setRestoreResolution(aScrollData.zoom.resolution,
+                                 aScrollData.zoom.displaySize.width,
+                                 aScrollData.zoom.displaySize.height);
     }
-  },
-
-  /**
-  * Recalculates the zoom level to account for a changed display width,
-  * e.g. because the device was rotated.
-  */
-  _recalculateZoom: function ss_recalculateZoom(aZoomData) {
-    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-
-    // Pages with "width=device-width" won't need any zoom level scaling.
-    if (!aZoomData.autoSize) {
-      let oldWidth = aZoomData.windowWidth;
-      let newWidth = browserWin.outerWidth;
-      if (oldWidth != newWidth && oldWidth > 0 && newWidth > 0) {
-        log("_recalculateZoom(), old resolution: " + aZoomData.resolution);
-        return newWidth / oldWidth * aZoomData.resolution;
-      }
-    }
-    return aZoomData.resolution;
   },
 
   /**
