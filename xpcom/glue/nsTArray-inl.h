@@ -269,7 +269,7 @@ nsTArray_base<Alloc, Copy>::ShiftData(index_type aStart,
     aNewLen *= aElemSize;
     aOldLen *= aElemSize;
     char* baseAddr = reinterpret_cast<char*>(mHdr + 1) + aStart;
-    Copy::CopyOverlappingRegion(baseAddr + aNewLen, baseAddr + aOldLen, num, aElemSize);
+    Copy::MoveOverlappingRegion(baseAddr + aNewLen, baseAddr + aOldLen, num, aElemSize);
   }
 }
 
