@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#ifndef EditorUtils_h
-#define EditorUtils_h
+#ifndef mozilla_EditorUtils_h
+#define mozilla_EditorUtils_h
 
 #include "mozilla/EditorBase.h"
 #include "mozilla/GuardObjects.h"
@@ -312,4 +312,4 @@ private:
 
 } // namespace mozilla
 
-#endif // #ifndef EditorUtils_h
+#endif // #ifndef mozilla_EditorUtils_h

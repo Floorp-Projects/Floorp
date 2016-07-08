@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ChangeStyleTransaction_h
-#define ChangeStyleTransaction_h
+#ifndef mozilla_ChangeStyleTransaction_h
+#define mozilla_ChangeStyleTransaction_h
 
-#include "EditTransactionBase.h"          // base class
+#include "mozilla/EditTransactionBase.h"  // base class
 #include "nsCOMPtr.h"                     // nsCOMPtr members
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsString.h"                     // nsString members
@@ -120,4 +120,4 @@ private:
 
 } // namespace mozilla
 
-#endif // #ifndef ChangeStyleTransaction_h
+#endif // #ifndef mozilla_ChangeStyleTransaction_h

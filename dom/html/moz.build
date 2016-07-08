@@ -232,7 +232,6 @@ LOCAL_INCLUDES += [
     '/dom/media/',
     '/dom/xbl',
     '/dom/xul',
-    '/editor/libeditor',
     '/editor/txmgr',
     '/image',
     '/layout/forms',

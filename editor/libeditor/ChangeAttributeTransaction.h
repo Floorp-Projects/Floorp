@@ -6,8 +6,8 @@
 #ifndef ChangeAttributeTransaction_h
 #define ChangeAttributeTransaction_h
 
-#include "EditTransactionBase.h"          // base class
 #include "mozilla/Attributes.h"           // override
+#include "mozilla/EditTransactionBase.h"  // base class
 #include "nsCOMPtr.h"                     // nsCOMPtr members
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED
 #include "nsISupportsImpl.h"              // NS_DECL_ISUPPORTS_INHERITED

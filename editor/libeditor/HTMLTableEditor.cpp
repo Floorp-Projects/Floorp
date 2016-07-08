@@ -7,9 +7,9 @@
 
 #include "mozilla/HTMLEditor.h"
 
-#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"

@@ -8,7 +8,6 @@
 
 #include <string.h>
 
-#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
@@ -19,6 +18,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SelectionState.h"

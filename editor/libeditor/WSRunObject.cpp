@@ -5,11 +5,11 @@
 
 #include "WSRunObject.h"
 
-#include "EditorUtils.h"
 #include "TextEditUtils.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/OwningNonNull.h"

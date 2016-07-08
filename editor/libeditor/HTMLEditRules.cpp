@@ -8,12 +8,12 @@
 
 #include <stdlib.h>
 
-#include "CSSEditUtils.h"
-#include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CSSEditUtils.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"

@@ -6,7 +6,7 @@
 #ifndef DeleteTextTransaction_h
 #define DeleteTextTransaction_h
 
-#include "EditTransactionBase.h"
+#include "mozilla/EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericDOMDataNode.h"

@@ -32,8 +32,8 @@
  * when we know that we are checking as a result of navigation.
  */
 
-#include "EditorUtils.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellChecker.h"
