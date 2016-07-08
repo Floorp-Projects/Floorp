@@ -215,7 +215,7 @@ function exec(e) {
 
     if (exprName === "module") {
         let moduleText = e.toString();
-        module = wasmEvalText(moduleText, imports);
+        module = Wasm.instantiateModule(wasmTextToBinary(moduleText), imports).exports;
         return;
     }
 
@@ -231,9 +231,6 @@ function exec(e) {
 
         if (typeof module[name] === "function") {
             fn = module[name];
-        } else if (name === "") {
-            fn = module;
-            assert(typeof fn === "function", "Default exported function not found: " + e);
         } else {
             assert(false, "Exported function not found: " + e);
         }
