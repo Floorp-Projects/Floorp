@@ -348,8 +348,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     let hasAnonChildren = rawNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE &&
                           rawNode.ownerDocument.getAnonymousNodes(rawNode);
 
-    if (numChildren === 0 &&
-        (rawNode.contentDocument || rawNode.getSVGDocument)) {
+    let hasContentDocument = rawNode.contentDocument;
+    let hasSVGDocument = rawNode.getSVGDocument && rawNode.getSVGDocument();
+    if (numChildren === 0 && (hasContentDocument || hasSVGDocument)) {
       // This might be an iframe with virtual children.
       numChildren = 1;
     }
@@ -1610,10 +1611,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
           }
         }
         sugs.classes.delete("");
-        // Editing the style editor may make the stylesheet have errors and
-        // thus the page's elements' styles start changing with a transition.
-        // That transition comes from the `moz-styleeditor-transitioning` class.
-        sugs.classes.delete("moz-styleeditor-transitioning");
         sugs.classes.delete(HIDDEN_CLASS);
         for (let [className, count] of sugs.classes) {
           if (className.startsWith(completing)) {
@@ -1685,10 +1682,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
           id && result.push(["#" + id, count]);
         }
         sugs.classes.delete("");
-        // Editing the style editor may make the stylesheet have errors and
-        // thus the page's elements' styles start changing with a transition.
-        // That transition comes from the `moz-styleeditor-transitioning` class.
-        sugs.classes.delete("moz-styleeditor-transitioning");
         sugs.classes.delete(HIDDEN_CLASS);
         for (let [className, count] of sugs.classes) {
           className && result.push(["." + className, count]);
@@ -3030,8 +3023,9 @@ var imageToImageData = Task.async(function* (node, maxDim) {
   // Extract the image data
   let imageData;
   // The image may already be a data-uri, in which case, save ourselves the
-  // trouble of converting via the canvas.drawImage.toDataURL method
-  if (isImg && node.src.startsWith("data:")) {
+  // trouble of converting via the canvas.drawImage.toDataURL method, but only
+  // if the image doesn't need resizing
+  if (isImg && node.src.startsWith("data:") && resizeRatio === 1) {
     imageData = node.src;
   } else {
     // Create a canvas to copy the rawNode into and get the imageData from
