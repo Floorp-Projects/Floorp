@@ -454,7 +454,7 @@ BackgroundClipTextEnabledPrefChangeCallback(const char* aPrefName,
 
 template<typename TestType>
 static bool
-HasMatchingCurrentAnimations(const nsIFrame* aFrame, TestType&& aTest)
+HasMatchingAnimations(const nsIFrame* aFrame, TestType&& aTest)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
   if (!effects) {
@@ -462,10 +462,6 @@ HasMatchingCurrentAnimations(const nsIFrame* aFrame, TestType&& aTest)
   }
 
   for (KeyframeEffectReadOnly* effect : *effects) {
-    if (!effect->IsCurrent()) {
-      continue;
-    }
-
     if (aTest(*effect)) {
       return true;
     }
@@ -478,10 +474,10 @@ bool
 nsLayoutUtils::HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
                                              nsCSSProperty aProperty)
 {
-  return HasMatchingCurrentAnimations(aFrame,
+  return HasMatchingAnimations(aFrame,
     [&aProperty](KeyframeEffectReadOnly& aEffect)
     {
-      return aEffect.HasAnimationOfProperty(aProperty);
+      return aEffect.IsCurrent() && aEffect.HasAnimationOfProperty(aProperty);
     }
   );
 }
@@ -489,12 +485,12 @@ nsLayoutUtils::HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
 bool
 nsLayoutUtils::HasCurrentTransitions(const nsIFrame* aFrame)
 {
-  return HasMatchingCurrentAnimations(aFrame,
+  return HasMatchingAnimations(aFrame,
     [](KeyframeEffectReadOnly& aEffect)
     {
       // Since |aEffect| is current, it must have an associated Animation
       // so we don't need to null-check the result of GetAnimation().
-      return aEffect.GetAnimation()->AsCSSTransition();
+      return aEffect.IsCurrent() && aEffect.GetAnimation()->AsCSSTransition();
     }
   );
 }
@@ -504,10 +500,24 @@ nsLayoutUtils::HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
                                                  const nsCSSProperty* aProperties,
                                                  size_t aPropertyCount)
 {
-  return HasMatchingCurrentAnimations(aFrame,
+  return HasMatchingAnimations(aFrame,
     [&aProperties, &aPropertyCount](KeyframeEffectReadOnly& aEffect)
     {
-      return aEffect.HasAnimationOfProperties(aProperties, aPropertyCount);
+      return aEffect.IsCurrent() &&
+        aEffect.HasAnimationOfProperties(aProperties, aPropertyCount);
+    }
+  );
+}
+
+bool
+nsLayoutUtils::HasRelevantAnimationOfProperty(const nsIFrame* aFrame,
+                                              nsCSSProperty aProperty)
+{
+  return HasMatchingAnimations(aFrame,
+    [&aProperty](KeyframeEffectReadOnly& aEffect)
+    {
+      return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
+             aEffect.HasAnimationOfProperty(aProperty);
     }
   );
 }

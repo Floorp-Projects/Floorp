@@ -2254,6 +2254,14 @@ public:
                                                 size_t aPropertyCount);
 
   /**
+   * Returns true if the frame has current or in-effect (i.e. in before phase,
+   * running or filling) animations or transitions for the
+   * property.
+   */
+  static bool HasRelevantAnimationOfProperty(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty);
+
+  /**
    * Checks if off-main-thread animations are enabled.
    */
   static bool AreAsyncAnimationsEnabled();
