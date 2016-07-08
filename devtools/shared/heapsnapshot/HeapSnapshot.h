@@ -46,7 +46,7 @@ class HeapSnapshot final : public nsISupports
   friend struct DeserializedNode;
   friend struct DeserializedEdge;
   friend struct DeserializedStackFrame;
-  friend struct JS::ubi::Concrete<JS::ubi::DeserializedNode>;
+  friend class JS::ubi::Concrete<JS::ubi::DeserializedNode>;
 
   explicit HeapSnapshot(JSContext* cx, nsISupports* aParent)
     : timestamp(Nothing())

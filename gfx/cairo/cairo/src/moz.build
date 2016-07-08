@@ -81,13 +81,6 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     SOURCES += [
         'cairo-ps-surface.c',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    EXPORTS.cairo += [
-        'cairo-qt.h',
-    ]
-    SOURCES += [
-        'cairo-qt-surface.cpp',
-    ]
 
 if CONFIG['MOZ_X11']:
     EXPORTS.cairo += [
@@ -248,10 +241,6 @@ if CONFIG['CLANG_CL']:
 if CONFIG['GNU_CC'] and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
     CFLAGS += ['-O2']
     CXXFLAGS += ['-O2']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    CFLAGS += CONFIG['MOZ_QT_CFLAGS']
-    CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']
 
 if CONFIG['MOZ_X11']:
     CFLAGS += CONFIG['XCFLAGS']

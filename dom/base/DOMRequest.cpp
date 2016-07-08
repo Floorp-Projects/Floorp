@@ -23,6 +23,7 @@ using mozilla::dom::DOMRequestService;
 using mozilla::dom::DOMCursor;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
+using mozilla::dom::GetJSRuntime;
 
 DOMRequest::DOMRequest(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
@@ -301,7 +302,7 @@ class FireSuccessAsyncTask : public mozilla::Runnable
   FireSuccessAsyncTask(DOMRequest* aRequest,
                        const JS::Value& aResult) :
     mReq(aRequest),
-    mResult(nsContentUtils::RootingCxForThread(), aResult)
+    mResult(GetJSRuntime(), aResult)
   {
   }
 

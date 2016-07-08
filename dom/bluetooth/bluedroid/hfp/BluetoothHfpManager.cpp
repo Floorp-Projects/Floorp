@@ -751,7 +751,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
   mService = service;
 
   // Signal
-  JS::Rooted<JS::Value> value(nsContentUtils::RootingCxForThread());
+  JS::Rooted<JS::Value> value(dom::GetJSRuntime());
   voiceInfo->GetRelSignalStrength(&value);
   if (value.isNumber()) {
     mSignal = (int)ceil(value.toNumber() / 20.0);

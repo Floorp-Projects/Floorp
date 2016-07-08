@@ -430,11 +430,8 @@ private:
   void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
     MOZ_ASSERT(PromiseObj()); // It was preserved!
 
-    AutoJSAPI jsapi;
-    if (!jsapi.Init(mGlobal)) {
-      return;
-    }
-    JSContext* cx = jsapi.cx();
+    AutoEntryScript aes(mGlobal, "Promise resolution or rejection");
+    JSContext* cx = aes.cx();
 
     JS::Rooted<JS::Value> val(cx);
     if (!ToJSValue(cx, aArgument, &val)) {

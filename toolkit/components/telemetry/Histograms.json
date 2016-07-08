@@ -9574,7 +9574,7 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1225336],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "count",
     "description": "Count of times a web notification was clicked"
   },
@@ -9590,7 +9590,7 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1225336],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "count",
     "description": "Count of times a Notification was rendered (accounting for XUL DND). A system backend may put the notification directly into the tray if its own DND is on."
   },
@@ -9692,7 +9692,7 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1219030],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."

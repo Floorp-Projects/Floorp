@@ -296,6 +296,11 @@ class ExecutableAllocator
             : "r" (code), "r" (reinterpret_cast<char*>(code) + size)
             : "r0", "r1", "r2");
     }
+#elif defined(JS_CODEGEN_ARM64) && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
+    static void cacheFlush(void* code, size_t size)
+    {
+	__clear_cache(code, (void *)((size_t)code + size));
+    }
 #elif JS_CPU_SPARC
     static void cacheFlush(void* code, size_t size)
     {

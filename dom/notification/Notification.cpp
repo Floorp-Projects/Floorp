@@ -1073,7 +1073,7 @@ Notification::ConstructFromFields(
 {
   MOZ_ASSERT(aGlobal);
 
-  RootedDictionary<NotificationOptions> options(nsContentUtils::RootingCxForThread());
+  RootedDictionary<NotificationOptions> options(nsContentUtils::RootingCx());
   options.mDir = Notification::StringToDirection(nsString(aDir));
   options.mLang = aLang;
   options.mBody = aBody;

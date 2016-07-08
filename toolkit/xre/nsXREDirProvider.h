@@ -148,6 +148,7 @@ protected:
   bool                   mProfileNotified;
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   nsCOMPtr<nsIFile>      mContentTempDir;
+  nsCOMPtr<nsIFile>      mContentProcessSandboxTempDir;
 #endif
   nsCOMArray<nsIFile>    mAppBundleDirectories;
   nsCOMArray<nsIFile>    mExtensionDirectories;

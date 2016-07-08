@@ -596,7 +596,7 @@ AudioManager::Observe(nsISupports* aSubject,
   // To process the volume control on each volume categories according to
   // change of settings
   else if (!strcmp(aTopic, MOZ_SETTINGS_CHANGE_ID)) {
-    RootedDictionary<dom::SettingChangeNotification> setting(nsContentUtils::RootingCxForThread());
+    RootedDictionary<dom::SettingChangeNotification> setting(nsContentUtils::RootingCx());
     if (!WrappedJSToDictionary(aSubject, setting)) {
       return NS_OK;
     }

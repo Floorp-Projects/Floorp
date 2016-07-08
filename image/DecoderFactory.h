@@ -20,6 +20,7 @@ namespace image {
 
 class Decoder;
 class IDecodingTask;
+class nsICODecoder;
 class RasterImage;
 class SourceBuffer;
 
@@ -118,6 +119,29 @@ public:
                         NotNull<RasterImage*> aImage,
                         NotNull<SourceBuffer*> aSourceBuffer,
                         int aSampleSize);
+
+  /**
+   * Creates and initializes a decoder for an ICO resource, which may be either
+   * a BMP or PNG image.
+   *
+   * @param aType Which type of decoder to create. This must be either BMP or
+   *              PNG.
+   * @param aSourceBuffer The SourceBuffer which the decoder will read its data
+   *                      from.
+   * @param aICODecoder The ICO decoder which is controlling this resource
+   *                    decoder. @aICODecoder's settings will be copied to the
+   *                    resource decoder, so the two decoders will have the
+   *                    same decoder flags, surface flags, target size, and
+   *                    other parameters.
+   * @param aDataOffset If @aType is BMP, specifies the offset at which data
+   *                    begins in the BMP resource. Must be Some() if and only
+   *                    if @aType is BMP.
+   */
+  static already_AddRefed<Decoder>
+  CreateDecoderForICOResource(DecoderType aType,
+                              NotNull<SourceBuffer*> aSourceBuffer,
+                              NotNull<nsICODecoder*> aICODecoder,
+                              const Maybe<uint32_t>& aDataOffset = Nothing());
 
   /**
    * Creates and initializes an anonymous decoder (one which isn't associated

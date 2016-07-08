@@ -1698,10 +1698,7 @@ CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject scope,
   // Not much we can do if we simply don't have a usable global here...
   NS_ENSURE_TRUE_VOID(global && global->GetGlobalJSObject());
 
-  bool mainThread = NS_IsMainThread();
-  JSContext* cx =
-    mainThread ? nullptr : nsContentUtils::GetDefaultJSContextForThread();
-  AutoEntryScript aes(global, "JS-engine-initiated execution", mainThread, cx);
+  AutoEntryScript aes(global, "JS-engine-initiated execution");
 
   MOZ_ASSERT(!JS_IsExceptionPending(aes.cx()));
 

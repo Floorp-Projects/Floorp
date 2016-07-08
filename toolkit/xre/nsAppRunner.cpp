@@ -610,143 +610,6 @@ CanShowProfileManager()
   return true;
 }
 
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-static already_AddRefed<nsIFile>
-GetAndCleanTempDir()
-{
-  // Get the directory within which we'll place the
-  // sandbox-writable temp directory
-  nsCOMPtr<nsIFile> tempDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                       getter_AddRefs(tempDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  // If the NS_APP_CONTENT_PROCESS_TEMP_DIR is the real temp directory, don't
-  // attempt to delete it.
-  nsCOMPtr<nsIFile> realTempDir;
-  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(realTempDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-  bool isRealTemp;
-  rv = tempDir->Equals(realTempDir, &isRealTemp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-  if (isRealTemp) {
-    return tempDir.forget();
-  }
-
-  // Don't return an error if the directory doesn't exist.
-  // Windows Remove() returns NS_ERROR_FILE_NOT_FOUND while
-  // OS X returns NS_ERROR_FILE_TARGET_DOES_NOT_EXIST.
-  rv = tempDir->Remove(/* aRecursive */ true);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND &&
-      rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-    NS_WARNING("Failed to delete temp directory.");
-    return nullptr;
-  }
-
-  return tempDir.forget();
-}
-
-static void
-SetUpSandboxEnvironment()
-{
-  // Setup a sandbox-writable temp directory. i.e., a directory
-  // that is writable by a sandboxed content process. This
-  // only applies when e10s is enabled, depending on the platform
-  // and setting of security.sandbox.content.level.
-  if (!BrowserTabsRemoteAutostart()) {
-    return;
-  }
-
-#if defined(XP_WIN)
-  // For Windows, the temp dir only makes sense for Vista and later
-  // with a sandbox pref level >= 1
-  if (!IsVistaOrLater() ||
-      (Preferences::GetInt("security.sandbox.content.level") < 1)) {
-    return;
-  }
-#endif
-
-#if defined(XP_MACOSX)
-  // For OSX, we just require sandbox pref level >= 1.
-  if (Preferences::GetInt("security.sandbox.content.level") < 1) {
-    return;
-  }
-#endif
-
-  // Get (and create if blank) temp directory suffix pref.
-  nsresult rv;
-  nsAdoptingString tempDirSuffix =
-    Preferences::GetString("security.sandbox.content.tempDirSuffix");
-  if (tempDirSuffix.IsEmpty()) {
-    nsCOMPtr<nsIUUIDGenerator> uuidgen =
-      do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    nsID uuid;
-    rv = uuidgen->GenerateUUIDInPlace(&uuid);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    char uuidChars[NSID_LENGTH];
-    uuid.ToProvidedString(uuidChars);
-    tempDirSuffix.AssignASCII(uuidChars);
-
-    // Save the pref to be picked up later.
-    rv = Preferences::SetCString("security.sandbox.content.tempDirSuffix",
-                                 uuidChars);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // If we fail to save the pref we don't want to create the temp dir,
-      // because we won't be able to clean it up later.
-      return;
-    }
-
-    nsCOMPtr<nsIPrefService> prefsvc = Preferences::GetService();
-    if (!prefsvc || NS_FAILED(prefsvc->SavePrefFile(nullptr))) {
-      // Again, if we fail to save the pref file we might not be able to clean
-      // up the temp directory, so don't create one.
-      NS_WARNING("Failed to save pref file, cannot create temp dir.");
-      return;
-    }
-  }
-
-  // Get (and clean up if still there) the sandbox-writable temp directory.
-  nsCOMPtr<nsIFile> tempDir = GetAndCleanTempDir();
-  if (!tempDir) {
-    NS_WARNING("Failed to get or clean sandboxed temp directory.");
-    return;
-  }
-
-  rv = tempDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-}
-
-static void
-CleanUpSandboxEnvironment()
-{
-#if defined(XP_WIN)
-  // We can't have created the temp directory before Vista.
-  if (!IsVistaOrLater()) {
-    return;
-  }
-#endif
-
-  // Get and remove the sandbox-writable temp directory.
-  // This function already warns if the deletion fails.
-  nsCOMPtr<nsIFile> tempDir = GetAndCleanTempDir();
-}
-#endif
-
 bool gSafeMode = false;
 
 /**
@@ -4382,9 +4245,6 @@ XREMain::XRE_mainRun()
   // available to us.
   SandboxInfo::SubmitTelemetry();
 #endif
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-  SetUpSandboxEnvironment();
-#endif
 
   {
     rv = appStartup->Run();
@@ -4393,10 +4253,6 @@ XREMain::XRE_mainRun()
       gLogConsoleErrors = true;
     }
   }
-
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-  CleanUpSandboxEnvironment();
-#endif
 
   return rv;
 }

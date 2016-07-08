@@ -2865,12 +2865,6 @@ dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
 
-qt)
-    MOZ_ENABLE_QT=1
-
-    AC_DEFINE(QT_NO_KEYWORDS)
-    ;;
-
 cocoa)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     # Use -Wl as a trick to avoid -framework and framework names from
@@ -2985,173 +2979,8 @@ if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINT_PREVIEW)
 fi
 
-dnl ========================================================
-dnl = QT support
-dnl ========================================================
-if test "$MOZ_ENABLE_QT"
-then
-    MOZ_ARG_WITH_STRING(qtdir,
-    [  --with-qtdir=\$dir       Specify Qt directory ],
-    [ QTDIR=$withval])
-
-    if test -z "$QTDIR"; then
-        AC_CHECK_PROGS(HOST_QMAKE, $HOST_QMAKE qmake, "")
-    else
-        HOST_QMAKE="$QTDIR/bin/qmake"
-    fi
-    QT_VERSION=`$HOST_QMAKE -v | grep 'Using Qt version' | egrep -o '[[0-9]]+\.[[0-9]]+\.[[0-9]]+'`
-
-    if test -z "$QTDIR"; then
-        case $QT_VERSION in
-        5.*)
-            AC_MSG_RESULT("Using qt5: $QT_VERSION")
-            PKG_CHECK_MODULES(MOZ_QT, Qt5Gui Qt5Network Qt5Core Qt5Quick, ,
-            [
-              AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qtbase development packages, (On Ubuntu, you might try installing the packages qtbase5-dev libqt5opengl5-dev.)])
-            ])
-            QT5INCDIR=`pkg-config --variable=includedir Qt5Gui`
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QT5INCDIR/QtGui/$QT_VERSION/QtGui"
-            if test "$NS_PRINTING"; then
-                PKG_CHECK_MODULES(MOZ_QT_WIDGETS, Qt5PrintSupport, ,
-                [
-                  AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qt5 printsupport development package])
-                ])
-                MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT_WIDGETS_LIBS"
-                MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT_WIDGETS_CFLAGS"
-            fi
-            ;;
-        *)
-            AC_MSG_ERROR([* * * Unsupported Qt Version: $QT_VERSION])
-            ;;
-        esac
-
-        AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
-        AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
-    else
-        MOZ_QT_CFLAGS="-DQT_SHARED"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtGui"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtCore"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
-        MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDeclarative"
-        case $QT_VERSION in
-        5.*)
-            AC_MSG_RESULT("Using qt5: $QT_VERSION")
-            MOZ_QT_LIBS="$MOZ_QT_LIBS -L$QTDIR/lib/ -lQt5Gui -lQt5Network -lQt5Core -lQt5Xml"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtGui/$QT_VERSION/QtGui"
-            if test "$NS_PRINTING"; then
-                MOZ_QT_LIBS="$MOZ_QT_LIBS -lQt5Widgets -lQt5PrintSupport"
-                MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
-            fi
-            ;;
-        *)
-            AC_MSG_ERROR([* * * Unsupported Qt Version: $QT_VERSION])
-            ;;
-        esac
-
-        HOST_MOC="$QTDIR/bin/moc"
-        HOST_RCC="$QTDIR/bin/rcc"
-    fi
-    if test -z "$HOST_MOC"; then
-        AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is incorrect])
-    fi
-    if test -z "$HOST_RCC"; then
-        AC_MSG_ERROR([No acceptable rcc preprocessor found. Qt SDK is not installed or --with-qt is incorrect])
-    fi
-
-    MOC=$HOST_MOC
-    RCC=$HOST_RCC
-
-    MOZ_ENABLE_QMSYSTEM2=
-    PKG_CHECK_MODULES(_QMSYSTEM2, qmsystem2,
-                      MOZ_ENABLE_QMSYSTEM2=1,
-                      MOZ_ENABLE_QMSYSTEM2=)
-
-    if test "$MOZ_ENABLE_QMSYSTEM2"; then
-      MOZ_ENABLE_QMSYSTEM2=1
-      MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QMSYSTEM2_CFLAGS"
-      MOZ_QT_LIBS="$MOZ_QT_LIBS $_QMSYSTEM2_LIBS"
-      AC_DEFINE(MOZ_ENABLE_QMSYSTEM2)
-    fi
-
-    MOZ_ENABLE_QTNETWORK=
-    PKG_CHECK_MODULES(_QTNETWORK, QtNetwork >= 4.7,
-                      MOZ_ENABLE_QTNETWORK=1,
-                      MOZ_ENABLE_QTNETWORK=)
-
-    if test "$MOZ_ENABLE_QTNETWORK"; then
-      MOZ_ENABLE_QTNETWORK=1
-      AC_DEFINE(MOZ_ENABLE_QTNETWORK)
-    fi
-
-    MOZ_ENABLE_QTMOBILITY=
-    PKG_CHECK_MODULES(_QTMOBILITY, QtSensors QtFeedback QtLocation,
-                      MOZ_ENABLE_QTMOBILITY=1,
-                      MOZ_ENABLE_QTMOBILITY=)
-    if test "$MOZ_ENABLE_QTMOBILITY"; then
-       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QTMOBILITY_CFLAGS"
-       MOZ_QT_LIBS="$MOZ_QT_LIBS $_QTMOBILITY_LIBS"
-    else
-       AC_CHECK_LIB(QtSensors, main, [
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMobility"
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtSensors"
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtFeedback"
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtLocation"
-          MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback -lQtLocation"
-       ])
-    fi
-
-    MOZ_ENABLE_QT5FEEDBACK=
-    PKG_CHECK_MODULES(_QT5FEEDBACK, Qt0Feedback,
-                      MOZ_ENABLE_QT5FEEDBACK=1,
-                      MOZ_ENABLE_QT5FEEDBACK=)
-    if test "$MOZ_ENABLE_QT5FEEDBACK"; then
-       MOZ_ENABLE_QT5FEEDBACK=1
-       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QT5FEEDBACK_CFLAGS"
-       MOZ_QT_LIBS="$MOZ_QT_LIBS $_QT5FEEDBACK_LIBS"
-       AC_DEFINE(MOZ_ENABLE_QT5FEEDBACK)
-       AC_SUBST(MOZ_ENABLE_QT5FEEDBACK)
-    fi
-
-    MOZ_ENABLE_QT5GEOPOSITION=
-    PKG_CHECK_MODULES(_QT5GEOPOSITION, Qt5Positioning,
-                      MOZ_ENABLE_QT5GEOPOSITION=1,
-                      MOZ_ENABLE_QT5GEOPOSITION=)
-    if test "$MOZ_ENABLE_QT5GEOPOSITION"; then
-       MOZ_ENABLE_QT5GEOPOSITION=1
-       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QT5GEOPOSITION_CFLAGS"
-       MOZ_QT_LIBS="$MOZ_QT_LIBS $_QT5GEOPOSITION_LIBS"
-       AC_DEFINE(MOZ_ENABLE_QT5GEOPOSITION)
-       AC_SUBST(MOZ_ENABLE_QT5GEOPOSITION)
-    fi
-
-    if test "$MOZ_ENABLE_CONTENTACTION"; then
-      MOZ_ENABLE_CONTENTACTION=1
-      AC_DEFINE(MOZ_ENABLE_CONTENTACTION)
-    fi
-
-    MOZ_ENABLE_CONTENTACTION=
-    PKG_CHECK_MODULES(LIBCONTENTACTION, contentaction-0.1, _LIB_FOUND=1, _LIB_FOUND=)
-    if test "$MOZ_ENABLE_CONTENTACTION"; then
-       MOZ_ENABLE_CONTENTACTION=1
-       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_CONTENTACTION_CFLAGS"
-       MOZ_QT_LIBS="$MOZ_QT_LIBS $_CONTENTACTION_LIBS"
-       AC_DEFINE(MOZ_ENABLE_CONTENTACTION)
-       AC_SUBST(MOZ_ENABLE_CONTENTACTION)
-    fi
-    TK_CFLAGS=$MOZ_QT_CFLAGS
-    TK_LIBS=$MOZ_QT_LIBS
-fi
-
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
-
-AC_SUBST(MOZ_ENABLE_QT)
-AC_SUBST(MOZ_ENABLE_QTNETWORK)
-AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
-AC_SUBST_LIST(MOZ_QT_CFLAGS)
-AC_SUBST_LIST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
 AC_SUBST(RCC)
@@ -3229,7 +3058,7 @@ MOZ_ANDROID_INSTALL_TRACKING
 dnl ========================================================
 dnl = Pango
 dnl ========================================================
-if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
+if test "$MOZ_ENABLE_GTK"
 then
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
@@ -3314,7 +3143,7 @@ dnl ========================================================
 dnl = libproxy support
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
+if test "$MOZ_ENABLE_GTK"
 then
     MOZ_ENABLE_LIBPROXY=
 
@@ -3367,7 +3196,7 @@ dnl ========================================================
 dnl = dbus support
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
+if test "$MOZ_ENABLE_GTK"
 then
     MOZ_ENABLE_DBUS=1
 
@@ -3389,7 +3218,7 @@ dnl ========================================================
 dnl = speech-dispatcher support
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
+if test "$MOZ_ENABLE_GTK"
 then
     MOZ_SYNTH_SPEECHD=1
 

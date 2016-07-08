@@ -274,12 +274,6 @@ interface nsIDOMEventTarget : nsISupports
    */
   [notxpcom, nostdcall]
   nsIScriptContext GetContextForEventHandlers(out nsresult aRv);
-
-  /**
-   * If the method above returns null, but a success code, this method
-   * is called.
-   */
-  [notxpcom, nostdcall] JSContextPtr GetJSContextForEventHandlers();
 };
 
 %{C++
@@ -287,8 +281,7 @@ interface nsIDOMEventTarget : nsISupports
 #define NS_IMPL_DOMTARGET_DEFAULTS(_class) \
 mozilla::dom::EventTarget* _class::GetTargetForDOMEvent() { return this; } \
 mozilla::dom::EventTarget* _class::GetTargetForEventTargetChain() { return this; } \
-nsresult _class::WillHandleEvent(mozilla::EventChainPostVisitor& aVisitor) { return NS_OK; } \
-JSContext* _class::GetJSContextForEventHandlers() { return nullptr; }
+nsresult _class::WillHandleEvent(mozilla::EventChainPostVisitor& aVisitor) { return NS_OK; }
 
 #define NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(aClass) \
 NS_IMETHODIMP \
