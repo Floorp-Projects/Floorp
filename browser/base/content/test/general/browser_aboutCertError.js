@@ -356,7 +356,7 @@ add_task(function* checkUnknownIssuerLearnMoreLink() {
     let learnMoreLink = content.document.getElementById("learnMoreLink");
     return learnMoreLink.href;
   });
-  is(href, "https://support.mozilla.org/kb/troubleshoot-SEC_ERROR_UNKNOWN_ISSUER");
+  ok(href.endsWith("security-error"), "security-error in the Learn More URL");
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
