@@ -604,7 +604,6 @@ WebGLContext::ValidateBufferFetching(const char* info)
     mBufferFetch_IsAttrib0Active = false;
 
     for (const auto& pair : mActiveProgramLinkInfo->activeAttribLocs) {
-        const auto attrib = pair.first;
         const uint32_t attribLoc = pair.second;
 
         if (attribLoc >= attribCount)
