@@ -621,12 +621,19 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     clearRect = mInvalidRect;
   }
 
+  // Prevent CreateRenderTargetForWindow from clearing unwanted area.
+  gfxUtils::ClipToRegion(mDrawTarget,
+                         mInvalidRegion.ToUnknownRegion());
+
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
     CreateRenderTargetForWindow(mInvalidRect,
                                 clearRect,
                                 bufferMode);
+
+  mDrawTarget->PopClip();
+
   if (!target) {
     if (!mTarget) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
