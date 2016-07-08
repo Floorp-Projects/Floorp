@@ -1206,13 +1206,13 @@ nsIFrame::Combines3DTransformWithAncestors() const
   if (!GetParent() || !GetParent()->Extend3DContext()) {
     return false;
   }
-  return StyleDisplay()->HasTransform(this) || StyleDisplay()->BackfaceIsHidden();
+  return StyleDisplay()->HasTransform(this) || BackfaceIsHidden();
 }
 
 bool
 nsIFrame::In3DContextAndBackfaceIsHidden() const
 {
-  return Combines3DTransformWithAncestors() && StyleDisplay()->BackfaceIsHidden();
+  return Combines3DTransformWithAncestors() && BackfaceIsHidden();
 }
 
 bool

@@ -1854,7 +1854,7 @@ public:
   const DisplayItemScrollClip* ScrollClip() const { return mScrollClip; }
 
   bool BackfaceIsHidden() {
-    return mFrame->StyleDisplay()->BackfaceIsHidden();
+    return mFrame->BackfaceIsHidden();
   }
 
 protected:
