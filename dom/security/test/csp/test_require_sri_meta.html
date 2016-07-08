@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1277557 - CSP require-sri-for does not block when CSP is in meta tag</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load scripts within an iframe and make sure that meta-csp of
+ * require-sri-for applies correctly to preloaded scripts.
+ * Please note that we have to use <script src=""> to kick
+ * off the html preloader.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.setBoolPref("security.csp.experimentalEnabled", true);
+
+var curTest;
+var counter = -1;
+
+const tests = [
+  { // test 1
+    description: "script with *no* SRI should be blocked",
+    query: "no-sri",
+    expected: "script-blocked"
+  },
+  { // test 2
+    description: "script-with *incorrect* SRI should be blocked",
+    query: "wrong-sri",
+    expected: "script-blocked"
+  },
+  { // test 3
+    description: "script-with *correct* SRI should be loaded",
+    query: "correct-sri",
+    expected: "script-loaded"
+  },
+];
+
+function finishTest() {
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+function checkResults(result) {
+  is(result, curTest.expected, curTest.description);
+  loadNextTest();
+}
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  checkResults(event.data.result);
+}
+
+function loadNextTest() {
+  counter++;
+  if (counter == tests.length) {
+    finishTest();
+    return;
+  }
+  curTest = tests[counter];
+  var testframe = document.getElementById("testframe");
+  testframe.src = "file_require_sri_meta.sjs?" + curTest.query;
+}
+
+loadNextTest();
+
+</script>
+</body>
+</html>

@@ -908,6 +908,13 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                                                 relevantLinkVisited);
 
   if (!result) {
+    // |aVisitedRuleNode| may have a ref-count of zero since we are yet
+    // to create the style context that will hold an owning reference to it.
+    // As a result, we need to make sure it stays alive until that point
+    // in case something in the first call to NS_NewStyleContext triggers a
+    // GC sweep of rule nodes.
+    RefPtr<nsRuleNode> kungFuDeathGrip{aVisitedRuleNode};
+
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
                                 aRuleNode,
                                 aFlags & eSkipParentDisplayBasedStyleFixup);
