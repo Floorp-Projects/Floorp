@@ -13240,24 +13240,16 @@ class ForwardDeclarationBuilder:
     def build(self):
         return self._build(atTopLevel=True)
 
-    def forwardDeclareForType(self, t, config, workerness='both'):
+    def forwardDeclareForType(self, t, config):
         t = t.unroll()
         if t.isGeckoInterface():
             name = t.inner.identifier.name
-            # Find and add the non-worker implementation, if any.
-            if workerness != 'workeronly':
-                try:
-                    desc = config.getDescriptor(name, False)
-                    self.add(desc.nativeType)
-                except NoSuchDescriptorError:
-                    pass
-            # Find and add the worker implementation, if any.
-            if workerness != 'mainthreadonly':
-                try:
-                    desc = config.getDescriptor(name, True)
-                    self.add(desc.nativeType)
-                except NoSuchDescriptorError:
-                    pass
+            try:
+                desc = config.getDescriptor(name, False)
+                self.add(desc.nativeType)
+            except NoSuchDescriptorError:
+                pass
+
         # Note: Spidermonkey interfaces are typedefs, so can't be
         # forward-declared
         elif t.isCallback():
@@ -13272,7 +13264,7 @@ class ForwardDeclarationBuilder:
             self.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
             self.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
         elif t.isMozMap():
-            self.forwardDeclareForType(t.inner, config, workerness)
+            self.forwardDeclareForType(t.inner, config)
         # Don't need to do anything for void, primitive, string, any or object.
         # There may be some other cases we are missing.
 
@@ -13284,7 +13276,7 @@ class CGForwardDeclarations(CGWrapper):
     boolean. If the boolean is true we will declare a struct, otherwise we'll
     declare a class.
     """
-    def __init__(self, config, descriptors, mainCallbacks, workerCallbacks,
+    def __init__(self, config, descriptors, callbacks,
                  dictionaries, callbackInterfaces, additionalDeclarations=[]):
         builder = ForwardDeclarationBuilder()
 
@@ -13321,16 +13313,10 @@ class CGForwardDeclarations(CGWrapper):
                 continue
             builder.add(d.nativeType + "Atoms", isStruct=True)
 
-        for callback in mainCallbacks:
+        for callback in callbacks:
             builder.addInMozillaDom(callback.identifier.name)
             for t in getTypesFromCallback(callback):
-                builder.forwardDeclareForType(t, config,
-                                              workerness='mainthreadonly')
-
-        for callback in workerCallbacks:
-            builder.addInMozillaDom(callback.identifier.name)
-            for t in getTypesFromCallback(callback):
-                builder.forwardDeclareForType(t, config, workerness='workeronly')
+                builder.forwardDeclareForType(t, config)
 
         for d in callbackInterfaces:
             builder.add(d.nativeType)
@@ -13437,7 +13423,7 @@ class CGBindingRoot(CGThing):
         hasThreadChecks = hasWorkerStuff or any(d.hasThreadChecks() for d in descriptors)
         bindingHeaders["nsThreadUtils.h"] = hasThreadChecks
 
-        dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
+        dictionaries = config.getDictionaries(webIDLFile)
 
         def dictionaryHasChromeOnly(dictionary):
             while dictionary:
@@ -13451,10 +13437,7 @@ class CGBindingRoot(CGThing):
             any(dictionaryHasChromeOnly(d) for d in dictionaries))
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
-        mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
-                                            workers=False)
-        workerCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
-                                              workers=True)
+        callbacks = config.getCallbacks(webIDLFile)
         callbackDescriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                                     isCallback=True)
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
@@ -13475,7 +13458,7 @@ class CGBindingRoot(CGThing):
         cgthings = [CGEnum(e) for e in enums]
 
         hasCode = (descriptors or callbackDescriptors or dictionaries or
-                   mainCallbacks or workerCallbacks)
+                   callbacks)
         bindingHeaders["mozilla/dom/BindingUtils.h"] = hasCode
         bindingHeaders["mozilla/OwningNonNull.h"] = hasCode
         bindingHeaders["mozilla/dom/BindingDeclarations.h"] = (
@@ -13547,16 +13530,10 @@ class CGBindingRoot(CGThing):
                 cgthings.append(CGUnionStruct(t, config, True))
 
         # Do codegen for all the callbacks.
-        cgthings.extend(CGCallbackFunction(c, config) for c in mainCallbacks)
+        cgthings.extend(CGCallbackFunction(c, config) for c in callbacks)
 
         cgthings.extend([CGNamespace('binding_detail', CGFastCallback(c))
-                         for c in mainCallbacks])
-
-        cgthings.extend(CGCallbackFunction(c, config)
-                        for c in workerCallbacks if c not in mainCallbacks)
-
-        cgthings.extend([CGNamespace('binding_detail', CGFastCallback(c))
-                         for c in workerCallbacks if c not in mainCallbacks])
+                         for c in callbacks])
 
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])
@@ -13586,7 +13563,7 @@ class CGBindingRoot(CGThing):
                                  CGWrapper(curr, pre="\n"))
 
         curr = CGList([CGForwardDeclarations(config, descriptors,
-                                             mainCallbacks, workerCallbacks,
+                                             callbacks,
                                              dictionaries,
                                              callbackDescriptors + jsImplemented,
                                              additionalDeclarations=unionDeclarations),
@@ -13603,7 +13580,7 @@ class CGBindingRoot(CGThing):
 
         curr = CGHeaders(descriptors,
                          dictionaries,
-                         mainCallbacks + workerCallbacks,
+                         callbacks,
                          callbackDescriptors,
                          bindingDeclareHeaders,
                          bindingHeaders,

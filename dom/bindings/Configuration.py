@@ -117,19 +117,6 @@ class Configuration(DescriptorProvider):
 
         self.enums = [e for e in parseData if e.isEnum()]
 
-        # Figure out what our main-thread and worker dictionaries and callbacks
-        # are.
-        mainTypes = set()
-        for descriptor in ([self.getDescriptor("DummyInterface", workers=False)] +
-                           self.getDescriptors(workers=False, isExternal=False, skipGen=False)):
-            mainTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
-        (mainCallbacks, mainDictionaries) = findCallbacksAndDictionaries(mainTypes)
-
-        workerTypes = set()
-        for descriptor in (self.getDescriptors(workers=True, isExternal=False, skipGen=False)):
-            workerTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
-        (workerCallbacks, workerDictionaries) = findCallbacksAndDictionaries(workerTypes)
-
         self.dictionaries = [d for d in parseData if d.isDictionary()]
         self.callbacks = [c for c in parseData if
                           c.isCallback() and not c.isInterface()]
@@ -194,14 +181,6 @@ class Configuration(DescriptorProvider):
                     self.unionsPerFilename[uniqueFilenameForUnion].append((t, descriptor))
                     filenamesForUnion.add(t.filename())
 
-        def flagWorkerOrMainThread(items, main, worker):
-            for item in items:
-                if item in main:
-                    item.setUserData("mainThread", True)
-                if item in worker:
-                    item.setUserData("workers", True)
-        flagWorkerOrMainThread(self.callbacks, mainCallbacks, workerCallbacks)
-
     def getInterface(self, ifname):
         return self.interfaces[ifname]
 
@@ -255,26 +234,11 @@ class Configuration(DescriptorProvider):
     def getEnums(self, webIDLFile):
         return filter(lambda e: e.filename() == webIDLFile, self.enums)
 
-    @staticmethod
-    def _filterForFileAndWorkers(items, filters):
-        """Gets the items that match the given filters."""
-        for key, val in filters.iteritems():
-            if key == 'webIDLFile':
-                items = filter(lambda x: x.filename() == val, items)
-            elif key == 'workers':
-                if val:
-                    items = filter(lambda x: x.getUserData("workers", False), items)
-                else:
-                    items = filter(lambda x: x.getUserData("mainThread", False), items)
-            else:
-                assert(0)  # Unknown key
-        return items
+    def getDictionaries(self, webIDLFile):
+        return filter(lambda d: d.filename() == webIDLFile, self.dictionaries)
 
-    def getDictionaries(self, **filters):
-        return self._filterForFileAndWorkers(self.dictionaries, filters)
-
-    def getCallbacks(self, **filters):
-        return self._filterForFileAndWorkers(self.callbacks, filters)
+    def getCallbacks(self, webIDLFile):
+        return filter(lambda c: c.filename() == webIDLFile, self.callbacks)
 
     def getDescriptor(self, interfaceName, workers=False):
         """
@@ -886,36 +850,6 @@ def getTypesFromCallback(callback):
     types = [sig[0]]  # Return type
     types.extend(arg.type for arg in sig[1])  # Arguments
     return types
-
-
-def findCallbacksAndDictionaries(inputTypes):
-    """
-    Ensure that all callbacks and dictionaries reachable from types end up in
-    the returned callbacks and dictionaries sets.
-
-    Note that we assume that our initial invocation already includes all types
-    reachable via descriptors in "types", so we only have to deal with things
-    that are themeselves reachable via callbacks and dictionaries.
-    """
-    def doFindCallbacksAndDictionaries(types, callbacks, dictionaries):
-        unhandledTypes = set()
-        for type in types:
-            if type.isCallback() and type.callback not in callbacks:
-                unhandledTypes |= getFlatTypes(getTypesFromCallback(type.callback))
-                callbacks.add(type.callback)
-            elif type.isDictionary() and type.inner not in dictionaries:
-                d = type.inner
-                unhandledTypes |= getFlatTypes(getTypesFromDictionary(d))
-                while d:
-                    dictionaries.add(d)
-                    d = d.parent
-        if len(unhandledTypes) != 0:
-            doFindCallbacksAndDictionaries(unhandledTypes, callbacks, dictionaries)
-
-    retCallbacks = set()
-    retDictionaries = set()
-    doFindCallbacksAndDictionaries(inputTypes, retCallbacks, retDictionaries)
-    return (retCallbacks, retDictionaries)
 
 
 def getAllTypes(descriptors, dictionaries, callbacks):
