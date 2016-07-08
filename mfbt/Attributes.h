@@ -53,8 +53,6 @@
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
 #  if _MSC_VER >= 1900
-#    define MOZ_HAVE_CXX11_CONSTEXPR
-#    define MOZ_HAVE_CXX11_CONSTEXPR_IN_TEMPLATES
 #    define MOZ_HAVE_EXPLICIT_CONVERSION
 #  endif
 #  ifdef __clang__
@@ -72,9 +70,6 @@
 #  ifndef __has_extension
 #    define __has_extension __has_feature /* compatibility, for older versions of clang */
 #  endif
-#  if __has_extension(cxx_constexpr)
-#    define MOZ_HAVE_CXX11_CONSTEXPR
-#  endif
 #  if __has_extension(cxx_explicit_conversions)
 #    define MOZ_HAVE_EXPLICIT_CONVERSION
 #  endif
@@ -86,8 +81,6 @@
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#    define MOZ_HAVE_CXX11_CONSTEXPR
-#    define MOZ_HAVE_CXX11_CONSTEXPR_IN_TEMPLATES
 #    define MOZ_HAVE_EXPLICIT_CONVERSION
 #  endif
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
@@ -102,30 +95,6 @@
 #  if __has_extension(attribute_analyzer_noreturn)
 #    define MOZ_HAVE_ANALYZER_NORETURN __attribute__((analyzer_noreturn))
 #  endif
-#endif
-
-/*
- * The MOZ_CONSTEXPR specifier declares that a C++11 compiler can evaluate a
- * function at compile time. A constexpr function cannot examine any values
- * except its arguments and can have no side effects except its return value.
- * The MOZ_CONSTEXPR_VAR specifier tells a C++11 compiler that a variable's
- * value may be computed at compile time.  It should be prefered to just
- * marking variables as MOZ_CONSTEXPR because if the compiler does not support
- * constexpr it will fall back to making the variable const, and some compilers
- * do not accept variables being marked both const and constexpr.
- */
-#ifdef MOZ_HAVE_CXX11_CONSTEXPR
-#  define MOZ_CONSTEXPR         constexpr
-#  define MOZ_CONSTEXPR_VAR     constexpr
-#  ifdef MOZ_HAVE_CXX11_CONSTEXPR_IN_TEMPLATES
-#    define MOZ_CONSTEXPR_TMPL  constexpr
-#  else
-#    define MOZ_CONSTEXPR_TMPL
-#  endif
-#else
-#  define MOZ_CONSTEXPR         /* no support */
-#  define MOZ_CONSTEXPR_VAR     const
-#  define MOZ_CONSTEXPR_TMPL
 #endif
 
 /*

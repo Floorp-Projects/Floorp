@@ -205,7 +205,7 @@ public:
   /**
    * Construct a UniquePtr containing |nullptr|.
    */
-  MOZ_CONSTEXPR UniquePtr()
+  constexpr UniquePtr()
     : mTuple(static_cast<Pointer>(nullptr), DeleterType())
   {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
@@ -372,7 +372,7 @@ public:
   /**
    * Construct a UniquePtr containing nullptr.
    */
-  MOZ_CONSTEXPR UniquePtr()
+  constexpr UniquePtr()
     : mTuple(static_cast<Pointer>(nullptr), DeleterType())
   {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
@@ -514,7 +514,7 @@ template<typename T>
 class DefaultDelete
 {
 public:
-  MOZ_CONSTEXPR DefaultDelete() {}
+  constexpr DefaultDelete() {}
 
   template<typename U>
   MOZ_IMPLICIT DefaultDelete(const DefaultDelete<U>& aOther,
@@ -534,7 +534,7 @@ template<typename T>
 class DefaultDelete<T[]>
 {
 public:
-  MOZ_CONSTEXPR DefaultDelete() {}
+  constexpr DefaultDelete() {}
 
   void operator()(T* aPtr) const
   {

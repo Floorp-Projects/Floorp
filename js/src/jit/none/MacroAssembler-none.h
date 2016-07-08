@@ -14,82 +14,82 @@
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register StackPointer = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register FramePointer = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register ReturnReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimd128Reg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimd128Reg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { FloatRegisters::invalid_reg };
+static constexpr Register StackPointer = { Registers::invalid_reg };
+static constexpr Register FramePointer = { Registers::invalid_reg };
+static constexpr Register ReturnReg = { Registers::invalid_reg };
+static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::invalid_reg };
+static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::invalid_reg };
+static constexpr FloatRegister ReturnSimd128Reg = { FloatRegisters::invalid_reg };
+static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::invalid_reg };
+static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::invalid_reg };
+static constexpr FloatRegister ScratchSimd128Reg = { FloatRegisters::invalid_reg };
+static constexpr FloatRegister InvalidFloatReg = { FloatRegisters::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register OsrFrameReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register PreBarrierReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register CallTempReg0 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register CallTempReg1 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register CallTempReg2 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register CallTempReg3 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register CallTempReg4 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register CallTempReg5 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { Registers::invalid_reg };
+static constexpr Register OsrFrameReg = { Registers::invalid_reg };
+static constexpr Register ArgumentsRectifierReg = { Registers::invalid_reg };
+static constexpr Register PreBarrierReg = { Registers::invalid_reg };
+static constexpr Register CallTempReg0 = { Registers::invalid_reg };
+static constexpr Register CallTempReg1 = { Registers::invalid_reg };
+static constexpr Register CallTempReg2 = { Registers::invalid_reg };
+static constexpr Register CallTempReg3 = { Registers::invalid_reg };
+static constexpr Register CallTempReg4 = { Registers::invalid_reg };
+static constexpr Register CallTempReg5 = { Registers::invalid_reg };
+static constexpr Register InvalidReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register IntArgReg0 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register IntArgReg1 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register IntArgReg2 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register IntArgReg3 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register GlobalReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register HeapReg = { Registers::invalid_reg };
+static constexpr Register IntArgReg0 = { Registers::invalid_reg };
+static constexpr Register IntArgReg1 = { Registers::invalid_reg };
+static constexpr Register IntArgReg2 = { Registers::invalid_reg };
+static constexpr Register IntArgReg3 = { Registers::invalid_reg };
+static constexpr Register GlobalReg = { Registers::invalid_reg };
+static constexpr Register HeapReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegCallee = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegE0 = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegE1 = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegE2 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegReturnData = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegReturnType = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegD0 = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegD1 = { Registers::invalid_reg };
+static constexpr Register AsmJSIonExitRegD2 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register RegExpTesterStickyReg = { Registers::invalid_reg };
+static constexpr Register RegExpTesterRegExpReg = { Registers::invalid_reg };
+static constexpr Register RegExpTesterStringReg = { Registers::invalid_reg };
+static constexpr Register RegExpTesterLastIndexReg = { Registers::invalid_reg };
+static constexpr Register RegExpTesterStickyReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherStickyReg = { Registers::invalid_reg };
+static constexpr Register RegExpMatcherRegExpReg = { Registers::invalid_reg };
+static constexpr Register RegExpMatcherStringReg = { Registers::invalid_reg };
+static constexpr Register RegExpMatcherLastIndexReg = { Registers::invalid_reg };
+static constexpr Register RegExpMatcherStickyReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register JSReturnReg = { Registers::invalid_reg };
+static constexpr Register JSReturnReg_Type = { Registers::invalid_reg };
+static constexpr Register JSReturnReg_Data = { Registers::invalid_reg };
+static constexpr Register JSReturnReg = { Registers::invalid_reg };
 
 #if defined(JS_NUNBOX32)
-static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg, InvalidReg);
-static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr ValueOperand JSReturnOperand(InvalidReg, InvalidReg);
+static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
 #elif defined(JS_PUNBOX64)
-static MOZ_CONSTEXPR_VAR ValueOperand JSReturnOperand(InvalidReg);
-static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg);
+static constexpr ValueOperand JSReturnOperand(InvalidReg);
+static constexpr Register64 ReturnReg64(InvalidReg);
 #else
 #error "Bad architecture"
 #endif
 
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = { Registers::invalid_reg };
+static constexpr Register ABINonArgReg0 = { Registers::invalid_reg };
+static constexpr Register ABINonArgReg1 = { Registers::invalid_reg };
+static constexpr Register ABINonArgReturnReg0 = { Registers::invalid_reg };
+static constexpr Register ABINonArgReturnReg1 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = { Registers::invalid_reg };
+static constexpr Register WasmTableCallPtrReg = { Registers::invalid_reg };
+static constexpr Register WasmTableCallSigReg = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 4;
-static MOZ_CONSTEXPR_VAR uint32_t CodeAlignment = 4;
-static MOZ_CONSTEXPR_VAR uint32_t JitStackAlignment = 8;
-static MOZ_CONSTEXPR_VAR uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
+static constexpr uint32_t ABIStackAlignment = 4;
+static constexpr uint32_t CodeAlignment = 4;
+static constexpr uint32_t JitStackAlignment = 8;
+static constexpr uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
 
 static const Scale ScalePointer = TimesOne;
 

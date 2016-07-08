@@ -4266,7 +4266,7 @@ struct TextEmphasisChars
   TEXT_EMPHASIS_CHARS_ITEM("\u25b2", "\u25b3", TRIANGLE) \
   TEXT_EMPHASIS_CHARS_ITEM("\ufe45", "\ufe46", SESAME)
 
-static MOZ_CONSTEXPR_VAR TextEmphasisChars kTextEmphasisChars[] =
+static constexpr TextEmphasisChars kTextEmphasisChars[] =
 {
 #define TEXT_EMPHASIS_CHARS_ITEM(filled_, open_, type_) \
   { MOZ_UTF16(filled_), MOZ_UTF16(open_) }, // type_

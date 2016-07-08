@@ -14,10 +14,10 @@
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register CallTempReg4 = t4;
-static MOZ_CONSTEXPR_VAR Register CallTempReg5 = t5;
+static constexpr Register CallTempReg4 = t4;
+static constexpr Register CallTempReg5 = t5;
 
-static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { t0, t1, t2, t3, t4 };
+static constexpr Register CallTempNonArgRegs[] = { t0, t1, t2, t3, t4 };
 static const uint32_t NumCallTempNonArgRegs = mozilla::ArrayLength(CallTempNonArgRegs);
 
 class ABIArgGenerator
@@ -46,72 +46,72 @@ class ABIArgGenerator
     }
 };
 
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = t0;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = t1;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = t0;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = t1;
+static constexpr Register ABINonArgReg0 = t0;
+static constexpr Register ABINonArgReg1 = t1;
+static constexpr Register ABINonArgReturnReg0 = t0;
+static constexpr Register ABINonArgReturnReg1 = t1;
 
 // Registers used for asm.js/wasm table calls. These registers must be disjoint
 // from the ABI argument registers and from each other.
-static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = ABINonArgReg0;
-static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = ABINonArgReg1;
+static constexpr Register WasmTableCallPtrReg = ABINonArgReg0;
+static constexpr Register WasmTableCallSigReg = ABINonArgReg1;
 
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = a3;
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = a2;
-static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg, InvalidReg);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::f0, FloatRegister::Single };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::f0, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::f18, FloatRegister::Single };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::f18, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloat32Reg = { FloatRegisters::f16, FloatRegister::Single };
-static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchDoubleReg = { FloatRegisters::f16, FloatRegister::Double };
+static constexpr Register JSReturnReg_Type = a3;
+static constexpr Register JSReturnReg_Data = a2;
+static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::f0, FloatRegister::Single };
+static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::f0, FloatRegister::Double };
+static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::f18, FloatRegister::Single };
+static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::f18, FloatRegister::Double };
+static constexpr FloatRegister SecondScratchFloat32Reg = { FloatRegisters::f16, FloatRegister::Single };
+static constexpr FloatRegister SecondScratchDoubleReg = { FloatRegisters::f16, FloatRegister::Double };
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (t8).
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = JSReturnReg_Data;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = JSReturnReg_Type;
+static constexpr Register AsmJSIonExitRegReturnData = JSReturnReg_Data;
+static constexpr Register AsmJSIonExitRegReturnType = JSReturnReg_Type;
 
-static MOZ_CONSTEXPR_VAR FloatRegister f0  = { FloatRegisters::f0, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f2  = { FloatRegisters::f2, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f4  = { FloatRegisters::f4, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f6  = { FloatRegisters::f6, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f8  = { FloatRegisters::f8, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f10 = { FloatRegisters::f10, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f12 = { FloatRegisters::f12, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f14 = { FloatRegisters::f14, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f16 = { FloatRegisters::f16, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f18 = { FloatRegisters::f18, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f20 = { FloatRegisters::f20, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f22 = { FloatRegisters::f22, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f24 = { FloatRegisters::f24, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f26 = { FloatRegisters::f26, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f28 = { FloatRegisters::f28, FloatRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister f30 = { FloatRegisters::f30, FloatRegister::Double };
+static constexpr FloatRegister f0  = { FloatRegisters::f0, FloatRegister::Double };
+static constexpr FloatRegister f2  = { FloatRegisters::f2, FloatRegister::Double };
+static constexpr FloatRegister f4  = { FloatRegisters::f4, FloatRegister::Double };
+static constexpr FloatRegister f6  = { FloatRegisters::f6, FloatRegister::Double };
+static constexpr FloatRegister f8  = { FloatRegisters::f8, FloatRegister::Double };
+static constexpr FloatRegister f10 = { FloatRegisters::f10, FloatRegister::Double };
+static constexpr FloatRegister f12 = { FloatRegisters::f12, FloatRegister::Double };
+static constexpr FloatRegister f14 = { FloatRegisters::f14, FloatRegister::Double };
+static constexpr FloatRegister f16 = { FloatRegisters::f16, FloatRegister::Double };
+static constexpr FloatRegister f18 = { FloatRegisters::f18, FloatRegister::Double };
+static constexpr FloatRegister f20 = { FloatRegisters::f20, FloatRegister::Double };
+static constexpr FloatRegister f22 = { FloatRegisters::f22, FloatRegister::Double };
+static constexpr FloatRegister f24 = { FloatRegisters::f24, FloatRegister::Double };
+static constexpr FloatRegister f26 = { FloatRegisters::f26, FloatRegister::Double };
+static constexpr FloatRegister f28 = { FloatRegisters::f28, FloatRegister::Double };
+static constexpr FloatRegister f30 = { FloatRegisters::f30, FloatRegister::Double };
 
 // MIPS CPUs can only load multibyte data that is "naturally"
 // four-byte-aligned, sp register should be eight-byte-aligned.
-static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 8;
-static MOZ_CONSTEXPR_VAR uint32_t JitStackAlignment = 8;
+static constexpr uint32_t ABIStackAlignment = 8;
+static constexpr uint32_t JitStackAlignment = 8;
 
-static MOZ_CONSTEXPR_VAR uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
+static constexpr uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
 static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >= 1,
   "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
 // TODO this is just a filler to prevent a build failure. The MIPS SIMD
 // alignment requirements still need to be explored.
 // TODO Copy the static_asserts from x64/x86 assembler files.
-static MOZ_CONSTEXPR_VAR uint32_t SimdMemoryAlignment = 8;
-static MOZ_CONSTEXPR_VAR uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
+static constexpr uint32_t SimdMemoryAlignment = 8;
+static constexpr uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+static constexpr bool SupportsUint32x4FloatConversions = false;
 
 // Does this architecture support comparisons of unsigned integer vectors?
-static MOZ_CONSTEXPR_VAR bool SupportsUint8x16Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint16x8Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
+static constexpr bool SupportsUint8x16Compares = false;
+static constexpr bool SupportsUint16x8Compares = false;
+static constexpr bool SupportsUint32x4Compares = false;
 
-static MOZ_CONSTEXPR_VAR Scale ScalePointer = TimesFour;
+static constexpr Scale ScalePointer = TimesFour;
 
 class Assembler : public AssemblerMIPSShared
 {

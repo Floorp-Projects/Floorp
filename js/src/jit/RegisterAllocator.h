@@ -144,7 +144,7 @@ struct AllocationIntegrityState
 class CodePosition
 {
   private:
-    MOZ_CONSTEXPR explicit CodePosition(uint32_t bits)
+    constexpr explicit CodePosition(uint32_t bits)
       : bits_(bits)
     { }
 
@@ -163,7 +163,7 @@ class CodePosition
         OUTPUT
     };
 
-    MOZ_CONSTEXPR CodePosition() : bits_(0)
+    constexpr CodePosition() : bits_(0)
     { }
 
     CodePosition(uint32_t instruction, SubPosition where) {

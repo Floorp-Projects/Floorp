@@ -23,7 +23,7 @@ namespace xpc {
 template <typename Base, typename Policy>
 class FilteringWrapper : public Base {
   public:
-    MOZ_CONSTEXPR explicit FilteringWrapper(unsigned flags) : Base(flags) {}
+    constexpr explicit FilteringWrapper(unsigned flags) : Base(flags) {}
 
     virtual bool enter(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                        js::Wrapper::Action act, bool* bp) const override;
@@ -63,7 +63,7 @@ class FilteringWrapper : public Base {
  */
 class CrossOriginXrayWrapper : public SecurityXrayDOM {
   public:
-    MOZ_CONSTEXPR explicit CrossOriginXrayWrapper(unsigned flags) :
+    constexpr explicit CrossOriginXrayWrapper(unsigned flags) :
       SecurityXrayDOM(flags) {}
 
 

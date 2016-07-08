@@ -45,7 +45,7 @@ class initializer_list
       , mSize(aSize) { }
 public:
 
-    MOZ_CONSTEXPR initializer_list() : mBegin(nullptr), mSize(0) {}
+    constexpr initializer_list() : mBegin(nullptr), mSize(0) {}
 
     typedef T value_type;
     typedef const T& reference;

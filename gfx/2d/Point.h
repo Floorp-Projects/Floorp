@@ -43,13 +43,13 @@ struct IntPointTyped :
   typedef IntCoordTyped<units> Coord;
   typedef BasePoint< int32_t, IntPointTyped<units>, IntCoordTyped<units> > Super;
 
-  MOZ_CONSTEXPR IntPointTyped() : Super() {}
-  MOZ_CONSTEXPR IntPointTyped(int32_t aX, int32_t aY) : Super(Coord(aX), Coord(aY)) {}
+  constexpr IntPointTyped() : Super() {}
+  constexpr IntPointTyped(int32_t aX, int32_t aY) : Super(Coord(aX), Coord(aY)) {}
   // The mixed-type constructors (int, Coord) and (Coord, int) are needed to
   // avoid ambiguities because Coord is implicitly convertible to int.
-  MOZ_CONSTEXPR IntPointTyped(int32_t aX, Coord aY) : Super(Coord(aX), aY) {}
-  MOZ_CONSTEXPR IntPointTyped(Coord aX, int32_t aY) : Super(aX, Coord(aY)) {}
-  MOZ_CONSTEXPR IntPointTyped(Coord aX, Coord aY) : Super(aX, aY) {}
+  constexpr IntPointTyped(int32_t aX, Coord aY) : Super(Coord(aX), aY) {}
+  constexpr IntPointTyped(Coord aX, int32_t aY) : Super(aX, Coord(aY)) {}
+  constexpr IntPointTyped(Coord aX, Coord aY) : Super(aX, aY) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -74,14 +74,14 @@ struct PointTyped :
   typedef CoordTyped<units, F> Coord;
   typedef BasePoint< F, PointTyped<units, F>, CoordTyped<units, F> > Super;
 
-  MOZ_CONSTEXPR PointTyped() : Super() {}
-  MOZ_CONSTEXPR PointTyped(F aX, F aY) : Super(Coord(aX), Coord(aY)) {}
+  constexpr PointTyped() : Super() {}
+  constexpr PointTyped(F aX, F aY) : Super(Coord(aX), Coord(aY)) {}
   // The mixed-type constructors (Float, Coord) and (Coord, Float) are needed to
   // avoid ambiguities because Coord is implicitly convertible to Float.
-  MOZ_CONSTEXPR PointTyped(F aX, Coord aY) : Super(Coord(aX), aY) {}
-  MOZ_CONSTEXPR PointTyped(Coord aX, F aY) : Super(aX, Coord(aY)) {}
-  MOZ_CONSTEXPR PointTyped(Coord aX, Coord aY) : Super(aX.value, aY.value) {}
-  MOZ_CONSTEXPR MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(F(point.x), F(point.y)) {}
+  constexpr PointTyped(F aX, Coord aY) : Super(Coord(aX), aY) {}
+  constexpr PointTyped(Coord aX, F aY) : Super(aX, Coord(aY)) {}
+  constexpr PointTyped(Coord aX, Coord aY) : Super(aX.value, aY.value) {}
+  constexpr MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(F(point.x), F(point.y)) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -172,8 +172,8 @@ struct IntSizeTyped :
 
   typedef BaseSize< int32_t, IntSizeTyped<units> > Super;
 
-  MOZ_CONSTEXPR IntSizeTyped() : Super() {}
-  MOZ_CONSTEXPR IntSizeTyped(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
+  constexpr IntSizeTyped() : Super() {}
+  constexpr IntSizeTyped(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
@@ -197,8 +197,8 @@ struct SizeTyped :
 
   typedef BaseSize< F, SizeTyped<units, F> > Super;
 
-  MOZ_CONSTEXPR SizeTyped() : Super() {}
-  MOZ_CONSTEXPR SizeTyped(F aWidth, F aHeight) : Super(aWidth, aHeight) {}
+  constexpr SizeTyped() : Super() {}
+  constexpr SizeTyped(F aWidth, F aHeight) : Super(aWidth, aHeight) {}
   explicit SizeTyped(const IntSizeTyped<units>& size) :
     Super(F(size.width), F(size.height)) {}
 

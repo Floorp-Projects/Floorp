@@ -369,18 +369,18 @@ class VFPRegister
     bool _isMissing : 1;
 
   public:
-    MOZ_CONSTEXPR VFPRegister(uint32_t r, RegType k)
+    constexpr VFPRegister(uint32_t r, RegType k)
       : kind(k), code_ (Code(r)), _isInvalid(false), _isMissing(false)
     { }
-    MOZ_CONSTEXPR VFPRegister()
+    constexpr VFPRegister()
       : kind(Double), code_(Code(0)), _isInvalid(true), _isMissing(false)
     { }
 
-    MOZ_CONSTEXPR VFPRegister(RegType k, uint32_t id, bool invalid, bool missing) :
+    constexpr VFPRegister(RegType k, uint32_t id, bool invalid, bool missing) :
         kind(k), code_(Code(id)), _isInvalid(invalid), _isMissing(missing) {
     }
 
-    explicit MOZ_CONSTEXPR VFPRegister(Code id)
+    explicit constexpr VFPRegister(Code id)
       : kind(Double), code_(id), _isInvalid(false), _isMissing(false)
     { }
     bool operator==(const VFPRegister& other) const {

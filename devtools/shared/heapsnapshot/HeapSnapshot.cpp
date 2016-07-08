@@ -1447,7 +1447,7 @@ HeapSnapshot::CreateUniqueCoreDumpFile(ErrorResult& rv,
 class DeleteHeapSnapshotTempFileHelperChild
 {
 public:
-  MOZ_CONSTEXPR DeleteHeapSnapshotTempFileHelperChild() { }
+  constexpr DeleteHeapSnapshotTempFileHelperChild() { }
 
   void operator()(PHeapSnapshotTempFileHelperChild* ptr) const {
     NS_WARN_IF(!HeapSnapshotTempFileHelperChild::Send__delete__(ptr));

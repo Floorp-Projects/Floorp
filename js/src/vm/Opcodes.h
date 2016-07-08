@@ -2251,7 +2251,7 @@ static_assert((0 ==
 
 // Define JSOP_*_LENGTH constants for all ops.
 #define DEFINE_LENGTH_CONSTANT(op, val, name, image, len, ...) \
-    MOZ_CONSTEXPR_VAR size_t op##_LENGTH = len;
+    constexpr size_t op##_LENGTH = len;
 FOR_EACH_OPCODE(DEFINE_LENGTH_CONSTANT)
 #undef DEFINE_LENGTH_CONSTANT
 

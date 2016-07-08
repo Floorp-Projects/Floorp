@@ -14,7 +14,7 @@ namespace js {
 class DeadObjectProxy : public BaseProxyHandler
 {
   public:
-    explicit MOZ_CONSTEXPR DeadObjectProxy()
+    explicit constexpr DeadObjectProxy()
       : BaseProxyHandler(&family)
     { }
 

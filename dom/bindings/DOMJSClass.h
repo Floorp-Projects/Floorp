@@ -238,7 +238,7 @@ struct NativePropertiesN {
 
   const int32_t iteratorAliasMethodIndex;
 
-  MOZ_CONSTEXPR const NativePropertiesN<7>* Upcast() const {
+  constexpr const NativePropertiesN<7>* Upcast() const {
     return reinterpret_cast<const NativePropertiesN<7>*>(this);
   }
 

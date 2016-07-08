@@ -140,7 +140,7 @@ private:
 class LazyLogModule final
 {
 public:
-  explicit MOZ_CONSTEXPR LazyLogModule(const char* aLogName)
+  explicit constexpr LazyLogModule(const char* aLogName)
     : mLogName(aLogName)
     , mLog(nullptr)
   {

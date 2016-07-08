@@ -462,21 +462,21 @@ template <>
 struct LastArg<>
 {
     typedef void Type;
-    static MOZ_CONSTEXPR_VAR size_t nbArgs = 0;
+    static constexpr size_t nbArgs = 0;
 };
 
 template <typename HeadType>
 struct LastArg<HeadType>
 {
     typedef HeadType Type;
-    static MOZ_CONSTEXPR_VAR size_t nbArgs = 1;
+    static constexpr size_t nbArgs = 1;
 };
 
 template <typename HeadType, typename... TailTypes>
 struct LastArg<HeadType, TailTypes...>
 {
     typedef typename LastArg<TailTypes...>::Type Type;
-    static MOZ_CONSTEXPR_VAR size_t nbArgs = LastArg<TailTypes...>::nbArgs + 1;
+    static constexpr size_t nbArgs = LastArg<TailTypes...>::nbArgs + 1;
 };
 
 // Construct a bit mask from a list of types.  The mask is constructed as an OR
@@ -491,7 +491,7 @@ struct BitMask;
 template <template<typename> class Each, typename ResultType, size_t Shift>
 struct BitMask<Each, ResultType, Shift>
 {
-    static MOZ_CONSTEXPR_VAR ResultType result = ResultType();
+    static constexpr ResultType result = ResultType();
 };
 
 template <template<typename> class Each, typename ResultType, size_t Shift,
@@ -503,7 +503,7 @@ struct BitMask<Each, ResultType, Shift, HeadType, TailTypes...>
     static_assert(LastArg<TailTypes...>::nbArgs < (8 * sizeof(ResultType) / Shift),
                   "not enough bits in the result type to store all bit masks");
 
-    static MOZ_CONSTEXPR_VAR ResultType result =
+    static constexpr ResultType result =
         ResultType(Each<HeadType>::result) |
         (BitMask<Each, ResultType, Shift, TailTypes...>::result << Shift);
 };

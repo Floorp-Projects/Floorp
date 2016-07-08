@@ -106,10 +106,10 @@ class FloatRegister : public FloatRegisterMIPSShared
     ContentType kind_ : 3;
 
   public:
-    MOZ_CONSTEXPR FloatRegister(uint32_t r, ContentType kind = Codes::Double)
+    constexpr FloatRegister(uint32_t r, ContentType kind = Codes::Double)
       : reg_(Encoding(r)), kind_(kind)
     { }
-    MOZ_CONSTEXPR FloatRegister()
+    constexpr FloatRegister()
       : reg_(Encoding(FloatRegisters::invalid_freg)), kind_(Codes::Double)
     { }
 

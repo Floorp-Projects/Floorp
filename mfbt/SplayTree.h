@@ -56,7 +56,7 @@ class SplayTree
   T* mRoot;
 
 public:
-  MOZ_CONSTEXPR SplayTree()
+  constexpr SplayTree()
     : mRoot(nullptr)
   {}
 
