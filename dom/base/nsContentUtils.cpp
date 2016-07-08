@@ -5561,16 +5561,16 @@ nsContentUtils::GetCurrentJSContextForThread()
   }
 }
 
-template<typename StringType, typename CharType>
+/* static */
 void
-_ASCIIToLowerInSitu(StringType& aStr)
+nsContentUtils::ASCIIToLower(nsAString& aStr)
 {
-  CharType* iter = aStr.BeginWriting();
-  CharType* end = aStr.EndWriting();
+  char16_t* iter = aStr.BeginWriting();
+  char16_t* end = aStr.EndWriting();
   MOZ_ASSERT(iter && end);
 
   while (iter != end) {
-    CharType c = *iter;
+    char16_t c = *iter;
     if (c >= 'A' && c <= 'Z') {
       *iter = c + ('a' - 'A');
     }
@@ -5580,33 +5580,19 @@ _ASCIIToLowerInSitu(StringType& aStr)
 
 /* static */
 void
-nsContentUtils::ASCIIToLower(nsAString& aStr)
-{
-  return _ASCIIToLowerInSitu<nsAString, char16_t>(aStr);
-}
-
-/* static */
-void
-nsContentUtils::ASCIIToLower(nsACString& aStr)
-{
-  return _ASCIIToLowerInSitu<nsACString, char>(aStr);
-}
-
-template<typename StringType, typename CharType>
-void
-_ASCIIToLowerCopy(const StringType& aSource, StringType& aDest)
+nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
 {
   uint32_t len = aSource.Length();
   aDest.SetLength(len);
   MOZ_ASSERT(aDest.Length() == len);
 
-  CharType* dest = aDest.BeginWriting();
+  char16_t* dest = aDest.BeginWriting();
   MOZ_ASSERT(dest);
 
-  const CharType* iter = aSource.BeginReading();
-  const CharType* end = aSource.EndReading();
+  const char16_t* iter = aSource.BeginReading();
+  const char16_t* end = aSource.EndReading();
   while (iter != end) {
-    CharType c = *iter;
+    char16_t c = *iter;
     *dest = (c >= 'A' && c <= 'Z') ?
        c + ('a' - 'A') : c;
     ++iter;
@@ -5616,27 +5602,14 @@ _ASCIIToLowerCopy(const StringType& aSource, StringType& aDest)
 
 /* static */
 void
-nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest) {
-  return _ASCIIToLowerCopy<nsAString, char16_t>(aSource, aDest);
-}
-
-/* static */
-void
-nsContentUtils::ASCIIToLower(const nsACString& aSource, nsACString& aDest) {
-  return _ASCIIToLowerCopy<nsACString, char>(aSource, aDest);
-}
-
-
-template<typename StringType, typename CharType>
-void
-_ASCIIToUpperInSitu(StringType& aStr)
+nsContentUtils::ASCIIToUpper(nsAString& aStr)
 {
-  CharType* iter = aStr.BeginWriting();
-  CharType* end = aStr.EndWriting();
+  char16_t* iter = aStr.BeginWriting();
+  char16_t* end = aStr.EndWriting();
   MOZ_ASSERT(iter && end);
 
   while (iter != end) {
-    CharType c = *iter;
+    char16_t c = *iter;
     if (c >= 'a' && c <= 'z') {
       *iter = c + ('A' - 'a');
     }
@@ -5646,52 +5619,24 @@ _ASCIIToUpperInSitu(StringType& aStr)
 
 /* static */
 void
-nsContentUtils::ASCIIToUpper(nsAString& aStr)
-{
-  return _ASCIIToUpperInSitu<nsAString, char16_t>(aStr);
-}
-
-/* static */
-void
-nsContentUtils::ASCIIToUpper(nsACString& aStr)
-{
-  return _ASCIIToUpperInSitu<nsACString, char>(aStr);
-}
-
-template<typename StringType, typename CharType>
-void
-_ASCIIToUpperCopy(const StringType& aSource, StringType& aDest)
+nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
 {
   uint32_t len = aSource.Length();
   aDest.SetLength(len);
   MOZ_ASSERT(aDest.Length() == len);
 
-  CharType* dest = aDest.BeginWriting();
+  char16_t* dest = aDest.BeginWriting();
   MOZ_ASSERT(dest);
 
-  const CharType* iter = aSource.BeginReading();
-  const CharType* end = aSource.EndReading();
+  const char16_t* iter = aSource.BeginReading();
+  const char16_t* end = aSource.EndReading();
   while (iter != end) {
-    CharType c = *iter;
+    char16_t c = *iter;
     *dest = (c >= 'a' && c <= 'z') ?
       c + ('A' - 'a') : c;
     ++iter;
     ++dest;
   }
-}
-
-/* static */
-void
-nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
-{
-  return _ASCIIToUpperCopy<nsAString, char16_t>(aSource, aDest);
-}
-
-/* static */
-void
-nsContentUtils::ASCIIToUpper(const nsACString& aSource, nsACString& aDest)
-{
-  return _ASCIIToUpperCopy<nsACString, char>(aSource, aDest);
 }
 
 /* static */
