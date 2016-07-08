@@ -575,20 +575,20 @@ struct nsTArray_CopyWithMemutils
 {
   const static bool allowRealloc = true;
 
-  static void CopyElements(void* aDest, const void* aSrc, size_t aCount,
-                           size_t aElemSize)
+  static void CopyNonOverlappingRegion(void* aDest, const void* aSrc, size_t aCount,
+                                       size_t aElemSize)
   {
     memcpy(aDest, aSrc, aCount * aElemSize);
   }
 
-  static void CopyHeaderAndElements(void* aDest, const void* aSrc,
-                                    size_t aCount, size_t aElemSize)
+  static void CopyNonOverlappingRegionWithHeader(void* aDest, const void* aSrc,
+                                                 size_t aCount, size_t aElemSize)
   {
     memcpy(aDest, aSrc, sizeof(nsTArrayHeader) + aCount * aElemSize);
   }
 
-  static void MoveElements(void* aDest, const void* aSrc, size_t aCount,
-                           size_t aElemSize)
+  static void CopyOverlappingRegion(void* aDest, const void* aSrc, size_t aCount,
+                                    size_t aElemSize)
   {
     memmove(aDest, aSrc, aCount * aElemSize);
   }
@@ -605,8 +605,8 @@ struct nsTArray_CopyWithConstructors
 
   const static bool allowRealloc = false;
 
-  static void CopyElements(void* aDest, void* aSrc, size_t aCount,
-                           size_t aElemSize)
+  static void CopyNonOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                       size_t aElemSize)
   {
     ElemType* destElem = static_cast<ElemType*>(aDest);
     ElemType* srcElem = static_cast<ElemType*>(aSrc);
@@ -623,19 +623,19 @@ struct nsTArray_CopyWithConstructors
     }
   }
 
-  static void CopyHeaderAndElements(void* aDest, void* aSrc, size_t aCount,
-                                    size_t aElemSize)
+  static void CopyNonOverlappingRegionWithHeader(void* aDest, void* aSrc, size_t aCount,
+                                                 size_t aElemSize)
   {
     nsTArrayHeader* destHeader = static_cast<nsTArrayHeader*>(aDest);
     nsTArrayHeader* srcHeader = static_cast<nsTArrayHeader*>(aSrc);
     *destHeader = *srcHeader;
-    CopyElements(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
-                 static_cast<uint8_t*>(aSrc) + sizeof(nsTArrayHeader),
-                 aCount, aElemSize);
+    CopyNonOverlappingRegion(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
+                             static_cast<uint8_t*>(aSrc) + sizeof(nsTArrayHeader),
+                             aCount, aElemSize);
   }
 
-  static void MoveElements(void* aDest, void* aSrc, size_t aCount,
-                           size_t aElemSize)
+  static void CopyOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                    size_t aElemSize)
   {
     ElemType* destElem = static_cast<ElemType*>(aDest);
     ElemType* srcElem = static_cast<ElemType*>(aSrc);
@@ -651,7 +651,7 @@ struct nsTArray_CopyWithConstructors
         traits::Destruct(srcElem);
       }
     } else {
-      CopyElements(aDest, aSrc, aCount, aElemSize);
+      CopyNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
     }
   }
 };
@@ -1976,8 +1976,8 @@ nsTArray_Impl<E, Alloc>::AppendElements(nsTArray_Impl<Item, Allocator>&& aArray)
         len + otherLen, sizeof(elem_type)))) {
     return nullptr;
   }
-  copy_type::CopyElements(Elements() + len, aArray.Elements(), otherLen,
-                          sizeof(elem_type));
+  copy_type::CopyNonOverlappingRegion(Elements() + len, aArray.Elements(), otherLen,
+                                      sizeof(elem_type));
   this->IncrementLength(otherLen);
   aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
                                    MOZ_ALIGNOF(elem_type));
