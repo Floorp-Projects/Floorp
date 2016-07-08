@@ -2170,12 +2170,6 @@ def methodLength(method):
     return min(overloadLength(arguments) for retType, arguments in signatures)
 
 
-def isMaybeExposedIn(member, descriptor):
-    # All we can say for sure is that if this is a worker descriptor
-    # and member is not exposed in any worker, then it's not exposed.
-    return not descriptor.workers or member.isExposedInAnyWorker()
-
-
 def clearableCachedAttrs(descriptor):
     return (m for m in descriptor.interface.members if
             m.isAttr() and
@@ -2213,8 +2207,7 @@ class MethodDefiner(PropertyDefiner):
             methods = [m for m in descriptor.interface.members if
                        m.isMethod() and m.isStatic() == static and
                        MemberIsUnforgeable(m, descriptor) == unforgeable and
-                       not m.isIdentifierLess() and
-                       isMaybeExposedIn(m, descriptor)]
+                       not m.isIdentifierLess()]
         else:
             methods = []
         self.chrome = []
@@ -2299,8 +2292,7 @@ class MethodDefiner(PropertyDefiner):
         # neither.
         if (not static and
             not unforgeable and
-            descriptor.supportsIndexedProperties() and
-            isMaybeExposedIn(descriptor.operations['IndexedGetter'], descriptor)):
+            descriptor.supportsIndexedProperties()):
             if hasIterator(methods, self.regular):
                 raise TypeError("Cannot have indexed getter/attr on "
                                 "interface %s with other members "
@@ -2363,8 +2355,7 @@ class MethodDefiner(PropertyDefiner):
         if not static:
             stringifier = descriptor.operations['Stringifier']
             if (stringifier and
-                unforgeable == MemberIsUnforgeable(stringifier, descriptor) and
-                isMaybeExposedIn(stringifier, descriptor)):
+                unforgeable == MemberIsUnforgeable(stringifier, descriptor)):
                 toStringDesc = {
                     "name": "toString",
                     "nativeName": stringifier.identifier.name,
@@ -2378,8 +2369,7 @@ class MethodDefiner(PropertyDefiner):
                     self.regular.append(toStringDesc)
             jsonifier = descriptor.operations['Jsonifier']
             if (jsonifier and
-                unforgeable == MemberIsUnforgeable(jsonifier, descriptor) and
-                isMaybeExposedIn(jsonifier, descriptor)):
+                unforgeable == MemberIsUnforgeable(jsonifier, descriptor)):
                 toJSONDesc = {
                     "name": "toJSON",
                     "nativeName": jsonifier.identifier.name,
@@ -2532,7 +2522,6 @@ class AttrDefiner(PropertyDefiner):
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
                           MemberIsUnforgeable(m, descriptor) == unforgeable and
-                          isMaybeExposedIn(m, descriptor) and
                           not isNonExposedNavigatorObjectGetter(m, descriptor)]
         else:
             attributes = []
@@ -2620,8 +2609,7 @@ class ConstDefiner(PropertyDefiner):
     def __init__(self, descriptor, name):
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        constants = [m for m in descriptor.interface.members if m.isConst() and
-                     isMaybeExposedIn(m, descriptor)]
+        constants = [m for m in descriptor.interface.members if m.isConst()]
         self.chrome = [m for m in constants if isChromeOnly(m)]
         self.regular = [m for m in constants if not isChromeOnly(m)]
 
@@ -11972,8 +11960,7 @@ class CGDescriptor(CGThing):
         # the idea is that we have to notice when the exposure set changes.
         if descriptor.workers:
             methods = (m for m in descriptor.interface.members if
-                       m.isMethod() and isMaybeExposedIn(m, descriptor) and
-                       len(m.signatures()) != 1)
+                       m.isMethod() and len(m.signatures()) != 1)
             for m in methods:
                 for sig in m.signatures():
                     for arg in sig[1]:
@@ -12002,8 +11989,6 @@ class CGDescriptor(CGThing):
                                                NamedConstructorName(n)))
         for m in descriptor.interface.members:
             if m.isMethod() and m.identifier.name == 'queryInterface':
-                continue
-            if not isMaybeExposedIn(m, descriptor):
                 continue
 
             props = memberProperties(m, descriptor)
