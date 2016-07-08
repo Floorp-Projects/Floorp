@@ -160,7 +160,7 @@
                        class="devtools-toolbarbutton icon-and-text"
                        tooltiptext="&netmonitorUI.footer.perf;"/>
         <textbox id="requests-menu-filter-freetext-text"
-                 class="devtools-searchinput"
+                 class="devtools-filterinput"
                  type="search"
                  required="true"
                  placeholder="&netmonitorUI.footer.filterFreetext.label;"/>

@@ -75,7 +75,7 @@ function* synthesizeKeys(keys, inspector) {
 }
 
 function assertHasResult(inspector, expectResult) {
-  is(inspector.searchBox.classList.contains("devtools-no-search-result"),
+  is(inspector.searchBox.classList.contains("devtools-style-searchbox-no-match"),
      !expectResult,
      "There are" + (expectResult ? "" : " no") + " search results");
 }
