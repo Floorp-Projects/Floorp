@@ -5315,7 +5315,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 """,
                 getPromiseGlobal=getPromiseGlobal,
                 exceptionCode=exceptionCode)
-        elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
+        elif not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                     descriptor,
@@ -6423,7 +6423,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         else:
             wrappingCode = ""
 
-        if not descriptor.interface.isExternal() and not descriptor.skipGen:
+        if not descriptor.interface.isExternal():
             if descriptor.wrapperCache:
                 wrapMethod = "GetOrCreateDOMReflector"
                 wrapArgs = "cx, %s, ${jsvalHandle}" % result
@@ -12953,8 +12953,7 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
     def definition_body(self):
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInAnyWorker=True,
-                                                 register=True,
-                                                 skipGen=False)
+                                                 register=True)
         conditions = []
         for desc in descriptors:
             bindingNS = toBindingNamespace(desc.name)
@@ -12979,8 +12978,7 @@ class CGRegisterWorkerDebuggerBindings(CGAbstractMethod):
     def definition_body(self):
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInWorkerDebugger=True,
-                                                 register=True,
-                                                 skipGen=False)
+                                                 register=True)
         conditions = []
         for desc in descriptors:
             bindingNS = toBindingNamespace(desc.name)
@@ -13007,8 +13005,7 @@ class CGResolveSystemBinding(CGAbstractMethod):
     def definition_body(self):
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInSystemGlobals=True,
-                                                 register=True,
-                                                 skipGen=False)
+                                                 register=True)
 
         def descNameToId(name):
             return "s%s_id" % name
@@ -13307,8 +13304,7 @@ class CGBindingRoot(CGThing):
             True)
 
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
-                                            hasInterfaceOrInterfacePrototypeObject=True,
-                                            skipGen=False)
+                                            hasInterfaceOrInterfacePrototypeObject=True)
 
         unionTypes = UnionsForFile(config, webIDLFile)
 
@@ -16287,8 +16283,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInAnyWorker=True,
-                                                            skipGen=False)]
+                                                            isExposedInAnyWorker=True)]
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'RegisterWorkerBindings', curr)
@@ -16313,8 +16308,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInWorkerDebugger=True,
-                                                            skipGen=False)]
+                                                            isExposedInWorkerDebugger=True)]
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'RegisterWorkerDebuggerBindings', curr)
@@ -16339,8 +16333,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInSystemGlobals=True,
-                                                            skipGen=False)]
+                                                            isExposedInSystemGlobals=True)]
         defineIncludes.append("nsThreadUtils.h")  # For NS_IsMainThread
         defineIncludes.append("js/Id.h")  # For jsid
         defineIncludes.append("mozilla/dom/BindingUtils.h")  # AtomizeAndPinJSString
