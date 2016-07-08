@@ -104,6 +104,15 @@ Menu.prototype._createMenuItems = function (parent) {
       let menu = doc.createElement("menu");
       menu.appendChild(menupopup);
       menu.setAttribute("label", item.label);
+      if (item.disabled) {
+        menu.setAttribute("disabled", "true");
+      }
+      if (item.accesskey) {
+        menu.setAttribute("accesskey", item.accesskey);
+      }
+      if (item.id) {
+        menu.id = item.id;
+      }
       parent.appendChild(menu);
     } else if (item.type === "separator") {
       let menusep = doc.createElement("menuseparator");
