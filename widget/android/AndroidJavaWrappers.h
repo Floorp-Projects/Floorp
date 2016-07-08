@@ -623,7 +623,6 @@ public:
     enum {
         NATIVE_POKE = 0,
         MOTION_EVENT = 2,
-        SENSOR_EVENT = 3,
         LOCATION_EVENT = 5,
         LOAD_URI = 12,
         NOOP = 15,

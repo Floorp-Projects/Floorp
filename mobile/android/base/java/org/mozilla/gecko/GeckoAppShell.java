@@ -534,14 +534,94 @@ public class GeckoAppShell
         am.cancel(pi);
     }
 
+    @WrapForJNI
+    /* package */ static native void onSensorChanged(int hal_type, float x, float y, float z,
+                                                     float w, int accuracy, long time);
+
     private static class DefaultListeners implements SensorEventListener {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
 
+        private static int HalSensorAccuracyFor(int androidAccuracy) {
+            switch (androidAccuracy) {
+            case SensorManager.SENSOR_STATUS_UNRELIABLE:
+                return GeckoHalDefines.SENSOR_ACCURACY_UNRELIABLE;
+            case SensorManager.SENSOR_STATUS_ACCURACY_LOW:
+                return GeckoHalDefines.SENSOR_ACCURACY_LOW;
+            case SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM:
+                return GeckoHalDefines.SENSOR_ACCURACY_MED;
+            case SensorManager.SENSOR_STATUS_ACCURACY_HIGH:
+                return GeckoHalDefines.SENSOR_ACCURACY_HIGH;
+            }
+            return GeckoHalDefines.SENSOR_ACCURACY_UNKNOWN;
+        }
+
         @Override
         public void onSensorChanged(SensorEvent s) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(s));
+            int sensor_type = s.sensor.getType();
+            int hal_type = 0;
+            float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
+            final int accuracy = HalSensorAccuracyFor(s.accuracy);
+            // SensorEvent timestamp is in nanoseconds, Gecko expects microseconds.
+            final long time = s.timestamp / 1000;
+
+            switch (sensor_type) {
+            case Sensor.TYPE_ACCELEROMETER:
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+            case Sensor.TYPE_ORIENTATION:
+                if (sensor_type == Sensor.TYPE_ACCELEROMETER) {
+                    hal_type = GeckoHalDefines.SENSOR_ACCELERATION;
+                } else if (sensor_type == Sensor.TYPE_LINEAR_ACCELERATION) {
+                    hal_type = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
+                } else {
+                    hal_type = GeckoHalDefines.SENSOR_ORIENTATION;
+                }
+                x = s.values[0];
+                y = s.values[1];
+                z = s.values[2];
+                break;
+
+            case Sensor.TYPE_GYROSCOPE:
+                hal_type = GeckoHalDefines.SENSOR_GYROSCOPE;
+                x = (float) Math.toDegrees(s.values[0]);
+                y = (float) Math.toDegrees(s.values[1]);
+                z = (float) Math.toDegrees(s.values[2]);
+                break;
+
+            case Sensor.TYPE_PROXIMITY:
+                hal_type = GeckoHalDefines.SENSOR_PROXIMITY;
+                x = s.values[0];
+                z = s.sensor.getMaximumRange();
+                break;
+
+            case Sensor.TYPE_LIGHT:
+                hal_type = GeckoHalDefines.SENSOR_LIGHT;
+                x = s.values[0];
+                break;
+
+            case Sensor.TYPE_ROTATION_VECTOR:
+            case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
+                hal_type = (sensor_type == Sensor.TYPE_ROTATION_VECTOR ?
+                        GeckoHalDefines.SENSOR_ROTATION_VECTOR :
+                        GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
+                x = s.values[0];
+                y = s.values[1];
+                z = s.values[2];
+                if (s.values.length >= 4) {
+                    w = s.values[3];
+                } else {
+                    // s.values[3] was optional in API <= 18, so we need to compute it
+                    // The values form a unit quaternion, so we can compute the angle of
+                    // rotation purely based on the given 3 values.
+                    w = 1.0f - s.values[0] * s.values[0] -
+                            s.values[1] * s.values[1] - s.values[2] * s.values[2];
+                    w = (w > 0.0f) ? (float) Math.sqrt(w) : 0.0f;
+                }
+                break;
+            }
+
+            GeckoAppShell.onSensorChanged(hal_type, x, y, z, w, accuracy, time);
         }
     }
 
