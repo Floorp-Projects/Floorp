@@ -54,7 +54,6 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         'checkout-gaia',
         'checkout-gaia-l10n',
         'checkout-gecko-l10n',
-        'checkout-compare-locales',
         # End deprecated
         'get-blobs',
         'update-source-manifest',
@@ -139,9 +138,6 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             'mozilla_dir': 'build/gecko',
             'objdir': 'build/objdir-gecko',
             'merge_locales': True,
-            'compare_locales_repo': 'https://hg.mozilla.org/build/compare-locales',
-            'compare_locales_rev': 'RELEASE_AUTOMATION',
-            'compare_locales_vcs': 'hg',
             'repo_remote_mappings': {},
             'influx_credentials_file': 'oauth.txt',
             'balrog_credentials_file': 'oauth.txt',
@@ -193,7 +189,6 @@ class B2GBuild(LocalesMixin, PurgeMixin,
 
         dirs = {
             'gaia_l10n_base_dir': os.path.join(abs_dirs['abs_work_dir'], 'gaia-l10n'),
-            'compare_locales_dir': os.path.join(abs_dirs['abs_work_dir'], 'compare-locales'),
             'abs_public_upload_dir': os.path.join(abs_dirs['abs_work_dir'], 'upload-public'),
         }
 
@@ -377,7 +372,6 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         super(B2GBuild, self).checkout_sources()
         self.checkout_gecko_l10n()
         self.checkout_gaia_l10n()
-        self.checkout_compare_locales()
 
     def get_blobs(self):
         self.download_blobs()
@@ -431,15 +425,6 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             self.copytree(os.path.join(dirs['abs_l10n_dir'], locale, 'mobile', 'overrides'),
                           os.path.join(dirs['abs_l10n_dir'], locale, 'b2g', 'chrome', 'overrides'),
                           error_level=FATAL)
-
-    def checkout_compare_locales(self):
-        dirs = self.query_abs_dirs()
-        dest = dirs['compare_locales_dir']
-        repo = self.config['compare_locales_repo']
-        rev = self.config['compare_locales_rev']
-        vcs = self.config['compare_locales_vcs']
-        abs_rev = self.vcs_checkout(repo=repo, dest=dest, branch=rev, vcs=vcs)
-        self.set_buildbot_property('compare_locales_revision', abs_rev, write_to_file=True)
 
     def query_do_translate_hg_to_git(self, gecko_config_key=None):
         manifest_config = self.config.get('manifest', {})
@@ -590,9 +575,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             env['MOZ_CHROME_MULTILOCALE'] = " ".join(self.query_locales())
             if 'PATH' not in env:
                 env['PATH'] = os.environ.get('PATH')
-            env['PATH'] += ':%s' % os.path.join(dirs['compare_locales_dir'], 'scripts')
             env['PYTHONPATH'] = os.environ.get('PYTHONPATH', '')
-            env['PYTHONPATH'] += ':%s' % os.path.join(dirs['compare_locales_dir'], 'lib')
 
         with open(os.path.join(dirs['work_dir'], '.userconfig'), 'w') as cfg:
             cfg.write('GECKO_OBJDIR={0}'.format(self.objdir))
