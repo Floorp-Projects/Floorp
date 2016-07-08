@@ -6,7 +6,7 @@
 #include "EditAggregateTransaction.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"                   // for nsCOMPtr
-#include "nsError.h"                    // for NS_OK, etc
+#include "nsError.h"                    // for NS_OK, etc.
 #include "nsISupportsUtils.h"           // for NS_ADDREF
 #include "nsITransaction.h"             // for nsITransaction
 #include "nsString.h"                   // for nsAutoString

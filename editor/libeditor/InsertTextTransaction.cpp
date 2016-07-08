@@ -9,8 +9,8 @@
 #include "mozilla/dom/Selection.h"      // Selection local var
 #include "mozilla/dom/Text.h"           // mTextNode
 #include "nsAString.h"                  // nsAString parameter
-#include "nsDebug.h"                    // for NS_ASSERTION, etc
-#include "nsError.h"                    // for NS_OK, etc
+#include "nsDebug.h"                    // for NS_ASSERTION, etc.
+#include "nsError.h"                    // for NS_OK, etc.
 #include "nsQueryObject.h"              // for do_QueryObject
 
 namespace mozilla {

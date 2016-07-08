@@ -8,8 +8,8 @@
 #include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
-#include "nsDebug.h"                    // for NS_ASSERTION, etc
-#include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
+#include "nsDebug.h"                    // for NS_ASSERTION, etc.
+#include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc.
 #include "nsIContent.h"                 // for nsIContent
 
 namespace mozilla {

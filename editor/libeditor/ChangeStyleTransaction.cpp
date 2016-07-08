@@ -6,16 +6,16 @@
 #include "mozilla/ChangeStyleTransaction.h"
 
 #include "mozilla/dom/Element.h"        // for Element
-#include "nsAString.h"                  // for nsAString_internal::Append, etc
+#include "nsAString.h"                  // for nsAString_internal::Append, etc.
 #include "nsCRT.h"                      // for nsCRT::IsAsciiSpace
-#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc
-#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc
-#include "nsGkAtoms.h"                  // for nsGkAtoms, etc
+#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc.
+#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.
+#include "nsGkAtoms.h"                  // for nsGkAtoms, etc.
 #include "nsIDOMCSSStyleDeclaration.h"  // for nsIDOMCSSStyleDeclaration
 #include "nsIDOMElementCSSInlineStyle.h" // for nsIDOMElementCSSInlineStyle
-#include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc
+#include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc.
 #include "nsReadableUtils.h"            // for ToNewUnicode
-#include "nsString.h"                   // for nsAutoString, nsString, etc
+#include "nsString.h"                   // for nsAutoString, nsString, etc.
 #include "nsUnicharUtils.h"             // for nsCaseInsensitiveStringComparator
 
 namespace mozilla {

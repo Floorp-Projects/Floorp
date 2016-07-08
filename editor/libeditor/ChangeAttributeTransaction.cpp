@@ -8,7 +8,7 @@
 #include "mozilla/dom/Element.h"        // for Element
 
 #include "nsAString.h"
-#include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
+#include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc.
 
 namespace mozilla {
 
