@@ -143,6 +143,19 @@ RestyleManagerHandle::Ptr::GetRestyleGeneration() const
   FORWARD(GetRestyleGeneration, ());
 }
 
+uint32_t
+RestyleManagerHandle::Ptr::GetHoverGeneration() const
+{
+  FORWARD(GetHoverGeneration, ());
+}
+
+void
+RestyleManagerHandle::Ptr::SetObservingRefreshDriver(bool aObserving)
+{
+  FORWARD(SetObservingRefreshDriver, (aObserving));
+}
+
+
 } // namespace mozilla
 
 #undef FORWARD

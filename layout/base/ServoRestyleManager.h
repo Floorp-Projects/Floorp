@@ -8,8 +8,11 @@
 #define mozilla_ServoRestyleManager_h
 
 #include "mozilla/EventStates.h"
+#include "mozilla/RestyleManagerBase.h"
 #include "nsChangeHint.h"
 #include "nsISupportsImpl.h"
+#include "nsPresContext.h"
+#include "nsINode.h"
 
 namespace mozilla {
 namespace dom {
@@ -26,12 +29,12 @@ namespace mozilla {
 /**
  * Restyle manager for a Servo-backed style system.
  */
-class ServoRestyleManager
+class ServoRestyleManager : public RestyleManagerBase
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
 
-  ServoRestyleManager();
+  explicit ServoRestyleManager(nsPresContext* aPresContext);
 
   void Disconnect();
   void PostRestyleEvent(dom::Element* aElement,
@@ -64,12 +67,17 @@ public:
                         const nsAttrValue* aOldValue);
   nsresult ReparentStyleContext(nsIFrame* aFrame);
   bool HasPendingRestyles();
-  uint64_t GetRestyleGeneration() const;
 
 protected:
   ~ServoRestyleManager() {}
 
-  uint64_t mRestyleGeneration;
+private:
+  inline ServoStyleSet* StyleSet() const {
+    MOZ_ASSERT(PresContext()->StyleSet()->IsServo(),
+               "ServoRestyleManager should only be used with a Servo-flavored "
+               "style backend");
+    return PresContext()->StyleSet()->AsServo();
+  }
 };
 
 } // namespace mozilla
