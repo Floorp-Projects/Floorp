@@ -541,6 +541,11 @@ public class GeckoAppShell
     /* package */ static native void onSensorChanged(int hal_type, float x, float y, float z,
                                                      float w, int accuracy, long time);
 
+    @WrapForJNI
+    /* package */ static native void onLocationChanged(double latitude, double longitude,
+                                                       double altitude, float accuracy,
+                                                       float bearing, float speed, long time);
+
     private static class DefaultListeners implements SensorEventListener, LocationListener {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -631,7 +636,10 @@ public class GeckoAppShell
         @Override
         public void onLocationChanged(Location location) {
             // No logging here: user-identifying information.
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
+            GeckoAppShell.onLocationChanged(location.getLatitude(), location.getLongitude(),
+                                            location.getAltitude(), location.getAccuracy(),
+                                            location.getBearing(), location.getSpeed(),
+                                            location.getTime());
         }
 
         @Override
