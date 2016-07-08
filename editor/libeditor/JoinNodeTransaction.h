@@ -6,7 +6,7 @@
 #ifndef JoinNodeTransaction_h
 #define JoinNodeTransaction_h
 
-#include "mozilla/EditTransactionBase.h" // for EditTransactionBase, etc
+#include "mozilla/EditTransactionBase.h" // for EditTransactionBase, etc.
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"                       // for REFNSIID

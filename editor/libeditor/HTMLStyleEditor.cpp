@@ -624,7 +624,7 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
   }
   if (rightNode) {
     nsCOMPtr<nsINode> secondSplitParent = GetLeftmostChild(rightNode);
-    // don't try to split non-containers (br's, images, hr's, etc)
+    // don't try to split non-containers (br's, images, hr's, etc.)
     if (!secondSplitParent) {
       secondSplitParent = rightNode;
     }

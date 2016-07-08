@@ -1134,7 +1134,7 @@ HTMLEditRules::AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
     bool isBlock = IsBlockNode(*child);
     bool isFormat = HTMLEditUtils::IsFormatNode(child);
     if (isBlock && !isFormat) {
-      // if it's a div, etc, recurse
+      // if it's a div, etc., recurse
       AppendInnerFormatNodes(aArray, child);
     } else if (isFormat) {
       aArray.AppendElement(*child);
@@ -4620,7 +4620,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
     }
 
     // If it's a list item, or a list inside a list, forget any "current" div,
-    // and instead put divs inside the appropriate block (td, li, etc)
+    // and instead put divs inside the appropriate block (td, li, etc.)
     if (HTMLEditUtils::IsListItem(curNode) ||
         HTMLEditUtils::IsList(curNode)) {
       rv = RemoveAlignment(GetAsDOMNode(curNode), aAlignType, true);

@@ -10,8 +10,8 @@
 #include "mozilla/dom/Selection.h"      // for Selection
 
 #include "nsAString.h"
-#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc.
+#include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.
 #include "nsIContent.h"                 // for nsIContent
 #include "nsMemory.h"                   // for nsMemory
 #include "nsReadableUtils.h"            // for ToNewCString

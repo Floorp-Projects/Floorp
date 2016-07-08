@@ -368,7 +368,7 @@ protected:
   // Node/offset where ws starts.
   nsCOMPtr<nsINode> mStartNode;
   int32_t mStartOffset;
-  // Reason why ws starts (eText, eOtherBlock, etc).
+  // Reason why ws starts (eText, eOtherBlock, etc.).
   WSType mStartReason;
   // The node that implicated by start reason.
   nsCOMPtr<nsINode> mStartReasonNode;
@@ -376,7 +376,7 @@ protected:
   // Node/offset where ws ends.
   nsCOMPtr<nsINode> mEndNode;
   int32_t mEndOffset;
-  // Reason why ws ends (eText, eOtherBlock, etc).
+  // Reason why ws ends (eText, eOtherBlock, etc.).
   WSType mEndReason;
   // The node that implicated by end reason.
   nsCOMPtr<nsINode> mEndReasonNode;

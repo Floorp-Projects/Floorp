@@ -8,24 +8,24 @@
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
-#include "mozilla/SelectionState.h"     // for RangeUpdater, etc
+#include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
-#include "nsIEditor.h"                  // for nsIEditor::EDirection, etc
-#include "nsIEditorIMESupport.h"        // for NS_DECL_NSIEDITORIMESUPPORT, etc
-#include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc
-#include "nsIPhonetic.h"                // for NS_DECL_NSIPHONETIC, etc
-#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsIEditor.h"                  // for nsIEditor::EDirection, etc.
+#include "nsIEditorIMESupport.h"        // for NS_DECL_NSIEDITORIMESUPPORT, etc.
+#include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc.
+#include "nsIPhonetic.h"                // for NS_DECL_NSIPHONETIC, etc.
+#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
 #include "nsISelectionController.h"     // for nsISelectionController constants
-#include "nsISupportsImpl.h"            // for EditorBase::Release, etc
+#include "nsISupportsImpl.h"            // for EditorBase::Release, etc.
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsString.h"                   // for nsCString
 #include "nsWeakReference.h"            // for nsSupportsWeakReference
-#include "nscore.h"                     // for nsresult, nsAString, etc
+#include "nscore.h"                     // for nsresult, nsAString, etc.
 
 class nsIAtom;
 class nsIContent;
@@ -972,7 +972,7 @@ protected:
   nsTArray<OwningNonNull<nsIEditActionListener>> mActionListeners;
   // Just notify once per high level change.
   nsTArray<OwningNonNull<nsIEditorObserver>> mEditorObservers;
-  // Listen to overall doc state (dirty or not, just created, etc).
+  // Listen to overall doc state (dirty or not, just created, etc.).
   nsTArray<OwningNonNull<nsIDocumentStateListener>> mDocStateListeners;
 
   // Cached selection for AutoSelectionRestorer.
