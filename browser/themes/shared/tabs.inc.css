@@ -114,15 +114,15 @@
 }
 
 .tab-sharing-icon-overlay[sharing="camera"] {
-  list-style-image: url("chrome://browser/skin/glyphs.svg#camera");
+  list-style-image: url("chrome://browser/skin/permissions.svg#camera");
 }
 
 .tab-sharing-icon-overlay[sharing="microphone"] {
-  list-style-image: url("chrome://browser/skin/glyphs.svg#microphone");
+  list-style-image: url("chrome://browser/skin/permissions.svg#microphone");
 }
 
 .tab-sharing-icon-overlay[sharing="screen"] {
-  list-style-image: url("chrome://browser/skin/glyphs.svg#screen");
+  list-style-image: url("chrome://browser/skin/permissions.svg#screen");
 }
 
 .tab-sharing-icon-overlay[sharing] {
