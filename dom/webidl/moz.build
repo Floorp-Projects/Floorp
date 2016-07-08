@@ -144,7 +144,6 @@ WEBIDL_FILES = [
     'DOMTransaction.webidl',
     'Downloads.webidl',
     'DragEvent.webidl',
-    'DummyBinding.webidl',
     'DynamicsCompressorNode.webidl',
     'Element.webidl',
     'Event.webidl',
