@@ -581,6 +581,9 @@ auto GeckoAppShell::NotifyWakeLockChanged(mozilla::jni::String::Param a0, mozill
     return mozilla::jni::Method<NotifyWakeLockChanged_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
+constexpr char GeckoAppShell::OnSensorChanged_t::name[];
+constexpr char GeckoAppShell::OnSensorChanged_t::signature[];
+
 constexpr char GeckoAppShell::OpenUriExternal_t::name[];
 constexpr char GeckoAppShell::OpenUriExternal_t::signature[];
 
