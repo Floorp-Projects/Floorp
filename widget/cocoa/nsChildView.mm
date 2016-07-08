@@ -6021,6 +6021,39 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   return command.mSucceeded && command.mIsEnabled;
 }
 
+NS_IMETHODIMP
+nsChildView::GetSelectionAsPlaintext(nsAString& aResult)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (!nsClipboard::sSelectionCache) {
+    MOZ_ASSERT(aResult.IsEmpty());
+    return NS_OK;
+  }
+
+  // Get the current chrome or content selection.
+  NSDictionary* pasteboardOutputDict = nullptr;
+  pasteboardOutputDict = nsClipboard::
+    PasteboardDictFromTransferable(nsClipboard::sSelectionCache);
+
+  if (NS_WARN_IF(!pasteboardOutputDict)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Declare the pasteboard types.
+  unsigned int typeCount = [pasteboardOutputDict count];
+  NSMutableArray* declaredTypes = [NSMutableArray arrayWithCapacity:typeCount];
+  [declaredTypes addObjectsFromArray:[pasteboardOutputDict allKeys]];
+  NSString* currentKey = [declaredTypes objectAtIndex:0];
+  NSString* currentValue = [pasteboardOutputDict valueForKey:currentKey];
+  const char* textSelection = [currentValue UTF8String];
+  aResult = NS_ConvertUTF8toUTF16(textSelection);
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 #pragma mark -
 
 #ifdef ACCESSIBILITY
