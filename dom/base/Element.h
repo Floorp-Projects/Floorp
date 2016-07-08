@@ -75,27 +75,27 @@ NS_GetContentList(nsINode* aRootNode,
 // Element-specific flags
 enum {
   // Set if the element has a pending style change.
-  ELEMENT_HAS_PENDING_RESTYLE =                 ELEMENT_FLAG_BIT(0),
+  ELEMENT_HAS_PENDING_RESTYLE =                 NODE_SHARED_RESTYLE_BIT_1,
 
   // Set if the element is a potential restyle root (that is, has a style
   // change pending _and_ that style change will attempt to restyle
   // descendants).
-  ELEMENT_IS_POTENTIAL_RESTYLE_ROOT =           ELEMENT_FLAG_BIT(1),
+  ELEMENT_IS_POTENTIAL_RESTYLE_ROOT =           NODE_SHARED_RESTYLE_BIT_2,
 
   // Set if the element has a pending animation-only style change as
   // part of an animation-only style update (where we update styles from
   // animation to the current refresh tick, but leave everything else as
   // it was).
-  ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE =  ELEMENT_FLAG_BIT(2),
+  ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE =  ELEMENT_FLAG_BIT(0),
 
   // Set if the element is a potential animation-only restyle root (that
   // is, has an animation-only style change pending _and_ that style
   // change will attempt to restyle descendants).
-  ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT = ELEMENT_FLAG_BIT(3),
+  ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT = ELEMENT_FLAG_BIT(1),
 
   // Set if this element has a pending restyle with an eRestyle_SomeDescendants
   // restyle hint.
-  ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR = ELEMENT_FLAG_BIT(4),
+  ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR = ELEMENT_FLAG_BIT(2),
 
   // Just the HAS_PENDING bits, for convenience
   ELEMENT_PENDING_RESTYLE_FLAGS =
@@ -113,10 +113,10 @@ enum {
                               ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR,
 
   // Set if this element is marked as 'scrollgrab' (see bug 912666)
-  ELEMENT_HAS_SCROLLGRAB = ELEMENT_FLAG_BIT(5),
+  ELEMENT_HAS_SCROLLGRAB = ELEMENT_FLAG_BIT(3),
 
   // Remaining bits are for subclasses
-  ELEMENT_TYPE_SPECIFIC_BITS_OFFSET = NODE_TYPE_SPECIFIC_BITS_OFFSET + 6
+  ELEMENT_TYPE_SPECIFIC_BITS_OFFSET = NODE_TYPE_SPECIFIC_BITS_OFFSET + 4
 };
 
 #undef ELEMENT_FLAG_BIT
