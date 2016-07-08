@@ -309,10 +309,11 @@ var AboutNetAndCertErrorListener = {
     let div = content.document.getElementById("certificateErrorText");
     div.textContent = msg.data.info;
     let learnMoreLink = content.document.getElementById("learnMoreLink");
+    let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
     switch (msg.data.code) {
       case SEC_ERROR_UNKNOWN_ISSUER:
-        learnMoreLink.href = "https://support.mozilla.org/kb/troubleshoot-SEC_ERROR_UNKNOWN_ISSUER";
+        learnMoreLink.href = baseURL  + "security-error";
         break;
 
       // in case the certificate expired we make sure the system clock
@@ -348,8 +349,7 @@ var AboutNetAndCertErrorListener = {
               .style.display = "block";
           }
         }
-        let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "time-errors";
-        learnMoreLink.setAttribute("href", url);
+        learnMoreLink.href = baseURL  + "time-errors";
         break;
     }
   },
