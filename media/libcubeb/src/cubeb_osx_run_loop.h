@@ -11,4 +11,12 @@
  *
  * This has to be called only once per process, so it is in a separate header
  * for easy integration in other code bases.  */
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 void cubeb_set_coreaudio_notification_runloop();
+
+#if defined(__cplusplus)
+}
+#endif
