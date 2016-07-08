@@ -23,8 +23,8 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-extern LogModule* GetDirectShowLog();
-#define LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+static LazyLogModule gDirectShowLog("DirectShowDecoder");
+#define LOG(...) MOZ_LOG(gDirectShowLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 AudioSinkFilter::AudioSinkFilter(const wchar_t* aObjectName, HRESULT* aOutResult)
   : BaseFilter(aObjectName, CLSID_MozAudioSinkFilter),

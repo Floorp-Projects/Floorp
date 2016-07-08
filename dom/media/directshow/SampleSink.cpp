@@ -14,8 +14,8 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-extern LogModule* GetDirectShowLog();
-#define LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+static LazyLogModule gDirectShowLog("DirectShowDecoder");
+#define LOG(...) MOZ_LOG(gDirectShowLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 SampleSink::SampleSink()
   : mMonitor("SampleSink"),
@@ -65,7 +65,7 @@ SampleSink::Receive(IMediaSample* aSample)
     mon.Wait();
   }
 
-  if (MOZ_LOG_TEST(GetDirectShowLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gDirectShowLog, LogLevel::Debug)) {
     REFERENCE_TIME start = 0, end = 0;
     HRESULT hr = aSample->GetMediaTime(&start, &end);
     LOG("SampleSink::Receive() [%4.2lf-%4.2lf]",
@@ -102,7 +102,7 @@ SampleSink::Extract(RefPtr<IMediaSample>& aOutSample)
   }
   aOutSample = mSample;
 
-  if (MOZ_LOG_TEST(GetDirectShowLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gDirectShowLog, LogLevel::Debug)) {
     int64_t start = 0, end = 0;
     mSample->GetMediaTime(&start, &end);
     LOG("SampleSink::Extract() [%4.2lf-%4.2lf]",
