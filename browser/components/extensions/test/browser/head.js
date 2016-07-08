@@ -8,6 +8,8 @@
  *          getBrowserActionPopup getPageActionPopup
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden
+ *          openContextMenu closeContextMenu
+ *          openExtensionContextMenu closeExtensionContextMenu
  */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -102,6 +104,44 @@ function closeBrowserAction(extension, win = window) {
   CustomizableUI.hidePanelForNode(node);
 
   return Promise.resolve();
+}
+
+function* openContextMenu(id) {
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter(id, {type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+  return contentAreaContextMenu;
+}
+
+function* closeContextMenu() {
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  contentAreaContextMenu.hidePopup();
+  yield popupHiddenPromise;
+}
+
+function* openExtensionContextMenu() {
+  let contextMenu = yield openContextMenu("#img1");
+  let topLevelMenu = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
+
+  // Return null if the extension only has one item and therefore no extension menu.
+  if (topLevelMenu.length == 0) {
+    return null;
+  }
+
+  let extensionMenu = topLevelMenu[0].childNodes[0];
+  let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(extensionMenu, {});
+  yield popupShownPromise;
+  return extensionMenu;
+}
+
+function* closeExtensionContextMenu(itemToSelect) {
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(itemToSelect, {});
+  yield popupHiddenPromise;
 }
 
 function getPageActionPopup(extension, win = window) {

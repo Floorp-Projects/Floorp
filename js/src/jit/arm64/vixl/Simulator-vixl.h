@@ -40,6 +40,7 @@
 #include "jit/arm64/vixl/Globals-vixl.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
 #include "jit/arm64/vixl/Instrument-vixl.h"
+#include "jit/arm64/vixl/Simulator-Constants-vixl.h"
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "jit/IonTypes.h"
 #include "threading/Mutex.h"
@@ -54,120 +55,6 @@
     JS_END_MACRO
 
 namespace vixl {
-
-// Debug instructions.
-//
-// VIXL's macro-assembler and simulator support a few pseudo instructions to
-// make debugging easier. These pseudo instructions do not exist on real
-// hardware.
-//
-// TODO: Provide controls to prevent the macro assembler from emitting
-// pseudo-instructions. This is important for ahead-of-time compilers, where the
-// macro assembler is built with USE_SIMULATOR but the code will eventually be
-// run on real hardware.
-//
-// TODO: Also consider allowing these pseudo-instructions to be disabled in the
-// simulator, so that users can check that the input is a valid native code.
-// (This isn't possible in all cases. Printf won't work, for example.)
-//
-// Each debug pseudo instruction is represented by a HLT instruction. The HLT
-// immediate field is used to identify the type of debug pseudo instruction.
-
-enum DebugHltOpcodes {
-  kUnreachableOpcode = 0xdeb0,
-  kPrintfOpcode,
-  kTraceOpcode,
-  kLogOpcode,
-  // Aliases.
-  kDebugHltFirstOpcode = kUnreachableOpcode,
-  kDebugHltLastOpcode = kLogOpcode
-};
-
-// Each pseudo instruction uses a custom encoding for additional arguments, as
-// described below.
-
-// Unreachable - kUnreachableOpcode
-//
-// Instruction which should never be executed. This is used as a guard in parts
-// of the code that should not be reachable, such as in data encoded inline in
-// the instructions.
-
-// Printf - kPrintfOpcode
-//  - arg_count: The number of arguments.
-//  - arg_pattern: A set of PrintfArgPattern values, packed into two-bit fields.
-//
-// Simulate a call to printf.
-//
-// Floating-point and integer arguments are passed in separate sets of registers
-// in AAPCS64 (even for varargs functions), so it is not possible to determine
-// the type of each argument without some information about the values that were
-// passed in. This information could be retrieved from the printf format string,
-// but the format string is not trivial to parse so we encode the relevant
-// information with the HLT instruction.
-//
-// Also, the following registers are populated (as if for a native A64 call):
-//    x0: The format string
-// x1-x7: Optional arguments, if type == CPURegister::kRegister
-// d0-d7: Optional arguments, if type == CPURegister::kFPRegister
-const unsigned kPrintfArgCountOffset = 1 * kInstructionSize;
-const unsigned kPrintfArgPatternListOffset = 2 * kInstructionSize;
-const unsigned kPrintfLength = 3 * kInstructionSize;
-
-const unsigned kPrintfMaxArgCount = 4;
-
-// The argument pattern is a set of two-bit-fields, each with one of the
-// following values:
-enum PrintfArgPattern {
-  kPrintfArgW = 1,
-  kPrintfArgX = 2,
-  // There is no kPrintfArgS because floats are always converted to doubles in C
-  // varargs calls.
-  kPrintfArgD = 3
-};
-static const unsigned kPrintfArgPatternBits = 2;
-
-// Trace - kTraceOpcode
-//  - parameter: TraceParameter stored as a uint32_t
-//  - command: TraceCommand stored as a uint32_t
-//
-// Allow for trace management in the generated code. This enables or disables
-// automatic tracing of the specified information for every simulated
-// instruction.
-const unsigned kTraceParamsOffset = 1 * kInstructionSize;
-const unsigned kTraceCommandOffset = 2 * kInstructionSize;
-const unsigned kTraceLength = 3 * kInstructionSize;
-
-// Trace parameters.
-enum TraceParameters {
-  LOG_DISASM     = 1 << 0,  // Log disassembly.
-  LOG_REGS       = 1 << 1,  // Log general purpose registers.
-  LOG_VREGS      = 1 << 2,  // Log NEON and floating-point registers.
-  LOG_SYSREGS    = 1 << 3,  // Log the flags and system registers.
-  LOG_WRITE      = 1 << 4,  // Log writes to memory.
-
-  LOG_NONE       = 0,
-  LOG_STATE      = LOG_REGS | LOG_VREGS | LOG_SYSREGS,
-  LOG_ALL        = LOG_DISASM | LOG_STATE | LOG_WRITE
-};
-
-// Trace commands.
-enum TraceCommand {
-  TRACE_ENABLE   = 1,
-  TRACE_DISABLE  = 2
-};
-
-// Log - kLogOpcode
-//  - parameter: TraceParameter stored as a uint32_t
-//
-// Print the specified information once. This mechanism is separate from Trace.
-// In particular, _all_ of the specified registers are printed, rather than just
-// the registers that the instruction writes.
-//
-// Any combination of the TraceParameters values can be used, except that
-// LOG_DISASM is not supported for Log.
-const unsigned kLogParamsOffset = 1 * kInstructionSize;
-const unsigned kLogLength = 2 * kInstructionSize;
-
 
 // Assemble the specified IEEE-754 components into the target type and apply
 // appropriate rounding.
@@ -877,8 +764,10 @@ class Simulator : public DecoderVisitor {
 
   // Declare all Visitor functions.
   #define DECLARE(A) virtual void Visit##A(const Instruction* instr);
-  VISITOR_LIST(DECLARE)
+  VISITOR_LIST_THAT_RETURN(DECLARE)
+  VISITOR_LIST_THAT_DONT_RETURN(DECLARE)
   #undef DECLARE
+
 
   // Integer register accessors.
 
@@ -1434,11 +1323,11 @@ class Simulator : public DecoderVisitor {
   }
 
   void AddSubHelper(const Instruction* instr, int64_t op2);
-  int64_t AddWithCarry(unsigned reg_size,
-                       bool set_flags,
-                       int64_t src1,
-                       int64_t src2,
-                       int64_t carry_in = 0);
+  uint64_t AddWithCarry(unsigned reg_size,
+                        bool set_flags,
+                        uint64_t left,
+                        uint64_t right,
+                        int carry_in = 0);
   void LogicalHelper(const Instruction* instr, int64_t op2);
   void ConditionalCompareHelper(const Instruction* instr, int64_t op2);
   void LoadStoreHelper(const Instruction* instr,
@@ -2677,7 +2566,7 @@ class Simulator : public DecoderVisitor {
   }
 
   static int CalcZFlag(uint64_t result) {
-    return result == 0;
+    return (result == 0) ? 1 : 0;
   }
 
   static const uint32_t kConditionFlagsMask = 0xf0000000;
