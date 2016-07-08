@@ -981,11 +981,7 @@ class CGIncludeGuard(CGWrapper):
 def getRelevantProviders(descriptor, config):
     if descriptor is not None:
         return [descriptor]
-    # Do both the non-worker and worker versions
-    return [
-        config.getDescriptorProvider(False),
-        config.getDescriptorProvider(True)
-    ]
+    return [config]
 
 
 class CGHeaders(CGWrapper):
@@ -13467,9 +13463,6 @@ class CGBindingRoot(CGThing):
         bindingHeaders["nsIGlobalObject.h"] = jsImplemented
         bindingHeaders["AtomList.h"] = hasNonEmptyDictionaries or jsImplemented or callbackDescriptors
 
-        # Only mainthread things can have hasXPConnectImpls
-        provider = config.getDescriptorProvider(False)
-
         def descriptorClearsPropsInSlots(descriptor):
             if not descriptor.wrapperCache:
                 return False
@@ -13547,21 +13540,19 @@ class CGBindingRoot(CGThing):
 
         for t in dependencySortObjects(dictionaries + unionStructs, getDependencies, getName):
             if t.isDictionary():
-                cgthings.append(CGDictionary(t, config.getDescriptorProvider(False)))
+                cgthings.append(CGDictionary(t, config))
             else:
                 assert t.isUnion()
-                # FIXME: Unions are broken in workers.  See bug 809899.
-                cgthings.append(CGUnionStruct(t, config.getDescriptorProvider(False)))
-                cgthings.append(CGUnionStruct(t, config.getDescriptorProvider(False), True))
+                cgthings.append(CGUnionStruct(t, config))
+                cgthings.append(CGUnionStruct(t, config, True))
 
         # Do codegen for all the callbacks.
-        cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(False))
-                        for c in mainCallbacks)
+        cgthings.extend(CGCallbackFunction(c, config) for c in mainCallbacks)
 
         cgthings.extend([CGNamespace('binding_detail', CGFastCallback(c))
                          for c in mainCallbacks])
 
-        cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(True))
+        cgthings.extend(CGCallbackFunction(c, config)
                         for c in workerCallbacks if c not in mainCallbacks)
 
         cgthings.extend([CGNamespace('binding_detail', CGFastCallback(c))
@@ -16448,8 +16439,8 @@ class GlobalGenRoots():
 
         unions = CGList(traverseMethods +
                         unlinkMethods +
-                        [CGUnionStruct(t, config.getDescriptorProvider(False)) for t in unionStructs] +
-                        [CGUnionStruct(t, config.getDescriptorProvider(False), True) for t in unionStructs],
+                        [CGUnionStruct(t, config) for t in unionStructs] +
+                        [CGUnionStruct(t, config, True) for t in unionStructs],
                         "\n")
 
         includes.add("mozilla/OwningNonNull.h")
