@@ -117,7 +117,6 @@ public:
   }
   using mozilla::DOMEventTargetHelper::AddEventListener;
 
-  virtual JSContext* GetJSContextForEventHandlers() override { return nsContentUtils::GetSafeJSContext(); }
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
   void LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope);
   void FireUnloadEvent();
