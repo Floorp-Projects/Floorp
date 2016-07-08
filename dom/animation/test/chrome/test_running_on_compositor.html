@@ -447,6 +447,28 @@ promise_test(function(t) {
   });
 }, 'animation is removed from the compositor when setting null target');
 
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] },
+                              { duration: 100 * MS_PER_SEC,
+                                delay: 100 * MS_PER_SEC,
+                                fill: 'backwards' });
+
+  return animation.ready.then(function() {
+    // Will be fixed in bug 1223658.
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Animation with fill:backwards in delay phase reports ' +
+                  'that it is NOT running on the compositor');
+
+    animation.currentTime = 100 * MS_PER_SEC;
+    return waitForFrame();
+ }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Animation with fill:backwards in delay phase reports ' +
+                  'that it is running on the compositor after delay phase');
+  });
+}, 'animation with fill:backwards in delay phase is running on the ' +
+   ' main-thread while it is in delay phase');
 
 </script>
 </body>

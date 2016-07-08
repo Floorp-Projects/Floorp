@@ -1361,13 +1361,14 @@ public:
   /**
    * Returns true if this frame is transformed (e.g. has CSS or SVG transforms)
    * or if its parent is an SVG frame that has children-only transforms (e.g.
-   * an SVG viewBox attribute) or if its transform-style is preserve-3d.
+   * an SVG viewBox attribute) or if its transform-style is preserve-3d or
+   * the frame has transform animations.
    */
   bool IsTransformed() const;
 
   /**
-   * Returns true if the frame is translucent for the purposes of creating a
-   * stacking context.
+   * Returns true if the frame is translucent or the frame has opacity
+   * animations for the purposes of creating a stacking context.
    */
   bool HasOpacity() const
   {
@@ -3260,7 +3261,7 @@ public:
   virtual mozilla::dom::Element*
   GetPseudoElement(mozilla::CSSPseudoElementType aType);
 
-  bool BackfaceIsHidden() {
+  bool BackfaceIsHidden() const {
     return StyleDisplay()->BackfaceIsHidden();
   }
 
