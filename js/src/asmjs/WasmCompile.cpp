@@ -406,18 +406,19 @@ DecodeExpr(FunctionDecoder& f)
         return f.iter().readLoad(ValType::I32, 4, nullptr);
       case Expr::I64Load8S:
       case Expr::I64Load8U:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readLoad(ValType::I64, 1, nullptr);
       case Expr::I64Load16S:
       case Expr::I64Load16U:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readLoad(ValType::I64, 2, nullptr);
       case Expr::I64Load32S:
       case Expr::I64Load32U:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readLoad(ValType::I64, 4, nullptr);
       case Expr::I64Load:
-        return f.iter().notYetImplemented("i64");
+        return f.checkI64Support() &&
+               f.iter().readLoad(ValType::I64, 8, nullptr);
       case Expr::F32Load:
         return f.iter().readLoad(ValType::F32, 4, nullptr);
       case Expr::F64Load:
@@ -429,16 +430,17 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32Store:
         return f.iter().readStore(ValType::I32, 4, nullptr, nullptr);
       case Expr::I64Store8:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readStore(ValType::I64, 1, nullptr, nullptr);
       case Expr::I64Store16:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readStore(ValType::I64, 2, nullptr, nullptr);
       case Expr::I64Store32:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readStore(ValType::I64, 4, nullptr, nullptr);
       case Expr::I64Store:
-        return f.iter().notYetImplemented("i64");
+        return f.checkI64Support() &&
+               f.iter().readStore(ValType::I64, 8, nullptr, nullptr);
       case Expr::F32Store:
         return f.iter().readStore(ValType::F32, 4, nullptr, nullptr);
       case Expr::F64Store:

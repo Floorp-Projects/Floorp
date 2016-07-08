@@ -364,6 +364,7 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
     // Interpret the opcode.
     if (HasRIP(modrm, sib, rex))
         MOZ_CRASH("Unable to disassemble instruction");
+
     size_t memSize = 0;
     OtherOperand otherOperand(imm);
     HeapAccess::Kind kind = HeapAccess::Unknown;
@@ -428,14 +429,22 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
         MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 1;
-        kind = HeapAccess::LoadSext32;
+        kind = opsize == 8 ? HeapAccess::LoadSext64 : HeapAccess::LoadSext32;
         break;
       case Pack2ByteOpcode(OP2_MOVSX_GvEw):
         MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 2;
-        kind = HeapAccess::LoadSext32;
+        kind = opsize == 8 ? HeapAccess::LoadSext64 : HeapAccess::LoadSext32;
         break;
+#ifdef JS_CODEGEN_X64
+      case OP_MOVSXD_GvEv:
+        MOZ_RELEASE_ASSERT(!haveImm);
+        otherOperand = OtherOperand(gpr);
+        memSize = 4;
+        kind = HeapAccess::LoadSext64;
+        break;
+#endif // JS_CODEGEN_X64
       case Pack2ByteOpcode(OP2_MOVDQ_VdqWdq): // aka OP2_MOVDQ_VsdWsd
       case Pack2ByteOpcode(OP2_MOVAPS_VsdWsd):
         MOZ_RELEASE_ASSERT(!haveImm);
@@ -516,14 +525,21 @@ js::jit::Disassembler::DumpHeapAccess(const HeapAccess& access)
       case HeapAccess::Store:      fprintf(stderr, "store"); break;
       case HeapAccess::Load:       fprintf(stderr, "load"); break;
       case HeapAccess::LoadSext32: fprintf(stderr, "loadSext32"); break;
+      case HeapAccess::LoadSext64: fprintf(stderr, "loadSext64"); break;
       default:                     fprintf(stderr, "unknown"); break;
     }
     fprintf(stderr, "%u ", unsigned(access.size()));
 
     switch (access.otherOperand().kind()) {
-      case OtherOperand::Imm: fprintf(stderr, "imm %d", access.otherOperand().imm()); break;
-      case OtherOperand::GPR: fprintf(stderr, "gpr %s", X86Encoding::GPRegName(access.otherOperand().gpr())); break;
-      case OtherOperand::FPR: fprintf(stderr, "fpr %s", X86Encoding::XMMRegName(access.otherOperand().fpr())); break;
+      case OtherOperand::Imm:
+        fprintf(stderr, "imm %d", access.otherOperand().imm());
+        break;
+      case OtherOperand::GPR:
+        fprintf(stderr, "gpr %s", X86Encoding::GPRegName(access.otherOperand().gpr()));
+        break;
+      case OtherOperand::FPR:
+        fprintf(stderr, "fpr %s", X86Encoding::XMMRegName(access.otherOperand().fpr()));
+        break;
       default: fprintf(stderr, "unknown");
     }
 

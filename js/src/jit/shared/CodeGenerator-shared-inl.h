@@ -303,37 +303,53 @@ CodeGeneratorShared::restoreLiveVolatile(LInstruction* ins)
 
 void
 CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
-                                                 Scalar::Type type, unsigned numElems,
+                                                 bool isInt64, Scalar::Type type, unsigned numElems,
                                                  const Operand& mem, LAllocation alloc)
 {
 #ifdef DEBUG
     using namespace Disassembler;
 
-    OtherOperand op;
     Disassembler::HeapAccess::Kind kind = isLoad ? HeapAccess::Load : HeapAccess::Store;
     switch (type) {
       case Scalar::Int8:
       case Scalar::Int16:
         if (kind == HeapAccess::Load)
-            kind = HeapAccess::LoadSext32;
-        MOZ_FALLTHROUGH;
+            kind = isInt64 ? HeapAccess::LoadSext64 : HeapAccess::LoadSext32;
+        break;
+      case Scalar::Int32:
+        if (isInt64 && kind == HeapAccess::Load)
+            kind = HeapAccess::LoadSext64;
+        break;
+      default:
+        break;
+    }
+
+    OtherOperand op;
+    switch (type) {
+      case Scalar::Int8:
       case Scalar::Uint8:
+      case Scalar::Int16:
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
         if (!alloc.isConstant()) {
             op = OtherOperand(ToRegister(alloc).encoding());
         } else {
-            int32_t i = ToInt32(&alloc);
+            // x86 doesn't allow encoding an imm64 to memory move; the value
+            // is wrapped anyways.
+            int32_t i = isInt64 ? int32_t(ToInt64(&alloc)) : ToInt32(&alloc);
 
             // Sign-extend the immediate value out to 32 bits. We do this even
             // for unsigned element types so that we match what the disassembly
             // code does, as it doesn't know about signedness of stores.
             unsigned shift = 32 - TypedArrayElemSize(type) * 8;
             i = i << shift >> shift;
-
             op = OtherOperand(i);
         }
+        break;
+      case Scalar::Int64:
+        // Can't encode an imm64-to-memory move.
+        op = OtherOperand(ToRegister(alloc).encoding());
         break;
       case Scalar::Float32:
       case Scalar::Float64:
@@ -354,6 +370,22 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
     masm.verifyHeapAccessDisassembly(begin, end,
                                      HeapAccess(kind, size, ComplexAddress(mem), op));
 #endif
+}
+
+void
+CodeGeneratorShared::verifyLoadDisassembly(uint32_t begin, uint32_t end, bool isInt64,
+                                           Scalar::Type type, unsigned numElems, const Operand& mem,
+                                           LAllocation alloc)
+{
+    verifyHeapAccessDisassembly(begin, end, true, isInt64, type, numElems, mem, alloc);
+}
+
+void
+CodeGeneratorShared::verifyStoreDisassembly(uint32_t begin, uint32_t end, bool isInt64,
+                                            Scalar::Type type, unsigned numElems,
+                                            const Operand& mem, LAllocation alloc)
+{
+    verifyHeapAccessDisassembly(begin, end, false, isInt64, type, numElems, mem, alloc);
 }
 
 inline bool
