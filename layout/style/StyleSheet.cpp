@@ -54,7 +54,7 @@ StyleSheet::SetComplete()
   if (mOwningNode && !mDisabled &&
       mOwningNode->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
       mOwningNode->IsContent()) {
-    ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
+    dom::ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
     shadowRoot->StyleSheetChanged();
   }
 }

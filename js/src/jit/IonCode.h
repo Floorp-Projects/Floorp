@@ -751,7 +751,7 @@ struct VMFunction;
 struct AutoFlushICache
 {
   private:
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     uintptr_t start_;
     uintptr_t stop_;
     const char* name_;
@@ -788,7 +788,13 @@ IsMarked(const jit::VMFunction*)
 namespace JS {
 namespace ubi {
 template<>
-struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
+class Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
+  protected:
+    explicit Concrete(js::jit::JitCode *ptr) : TracerConcrete<js::jit::JitCode>(ptr) { }
+
+  public:
+    static void construct(void *storage, js::jit::JitCode *ptr) { new (storage) Concrete(ptr); }
+
     CoarseType coarseType() const final { return CoarseType::Script; }
 
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override {
@@ -798,11 +804,8 @@ struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
         return size;
     }
 
-  protected:
-    explicit Concrete(js::jit::JitCode *ptr) : TracerConcrete<js::jit::JitCode>(ptr) { }
-
-  public:
-    static void construct(void *storage, js::jit::JitCode *ptr) { new (storage) Concrete(ptr); }
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
 };
 
 } // namespace ubi

@@ -58,6 +58,7 @@ protected:
 
   bool mIsAlphaPremultiplied;
   gl::OriginPos mOriginPos;
+  bool mIsMirror;
 
   RefPtr<gfx::DataSourceSurface> mCachedTempSurface;
 

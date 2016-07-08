@@ -61,6 +61,25 @@
     function bad_invalidBlobLoaded() {
       ok(false, "We should not load stylesheets using blob: URLs when they have the wrong hash!");
     }
+
+    function good_correctUTF8HashLoaded() {
+      ok(true, "A UTF8 stylesheet was correctly loaded when integrity matched");
+    }
+    function bad_correctUTF8HashBlocked() {
+      ok(false, "We should load UTF8 stylesheets with hashes that match!");
+    }
+    function good_correctUTF8BOMHashLoaded() {
+      ok(true, "A UTF8 stylesheet (with BOM) was correctly loaded when integrity matched");
+    }
+    function bad_correctUTF8BOMHashBlocked() {
+      todo(false, "We should load UTF8 (with BOM) stylesheets with hashes that match!");
+    }
+    function good_correctUTF8ishHashLoaded() {
+      ok(true, "A UTF8ish stylesheet was correctly loaded when integrity matched");
+    }
+    function bad_correctUTF8ishHashBlocked() {
+      todo(false, "We should load UTF8ish stylesheets with hashes that match!");
+    }
   </script>
 
   <!-- valid sha256 hash. should trigger onload -->
@@ -80,6 +99,24 @@
         integrity="sha256-bogus"
         onerror="good_incorrectHashBlocked()"
         onload="bad_incorrectHashLoaded()">
+
+  <!-- valid sha384 hash of a utf8 file. should trigger onload -->
+  <link rel="stylesheet" href="style4.css"
+        integrity="sha384-13rt+j7xMDLhohLukb7AZx8lDGS3hkahp0IoeuyvxSNVPyc1QQmTDcwXGhQZjoMH"
+        onerror="bad_correctUTF8HashBlocked()"
+        onload="good_correctUTF8HashLoaded()">
+
+  <!-- valid sha384 hash of a utf8 file with a BOM. should trigger onload -->
+  <link rel="stylesheet" href="style5.css"
+        integrity="sha384-udAqVKPIHf/OD1isAYKrgzsog/3Q6lSEL2nKhtLSTmHryiae0+y6x1akeTzEF446"
+        onerror="bad_correctUTF8BOMHashBlocked()"
+        onload="good_correctUTF8BOMHashLoaded()">
+
+  <!-- valid sha384 hash of a utf8 file with the wrong charset. should trigger onload -->
+  <link rel="stylesheet" href="style6.css"
+        integrity="sha384-Xli4ROFoVGCiRgXyl7y8jv5Vm2yuqj+8tkNL3cUI7AHaCocna75JLs5xID437W6C"
+        onerror="bad_correctUTF8ishHashBlocked()"
+        onload="good_correctUTF8ishHashLoaded()">
 </head>
 <body>
 
@@ -109,7 +146,10 @@
    document.body.appendChild(link);
 </script>
 
-<p><span id="red-text">This should be red </span> and
+<p><span id="red-text">This should be red </span>,
+  <span id="purple-text">this should be purple</span>,
+  <span id="brown-text">this should be brown</span>,
+  <span id="orange-text">this should be orange</span>, and
   <span class="blue-text" id="blue-text-element">this should be blue.</span>
   However, <span id="black-text">this should stay black</span> and
   <span class="black-text" id="black-text-2">this should also stay black.</span>

@@ -1722,11 +1722,10 @@ public:
                                                       nsresult* aRv);
 
   static JSContext *GetCurrentJSContext();
-  static JSContext *GetSafeJSContext();
   static JSContext *GetCurrentJSContextForThread();
-  static JSContext *GetDefaultJSContextForThread();
-  inline static JSContext *RootingCx() { return GetSafeJSContext(); }
-  inline static JSContext *RootingCxForThread() { return GetDefaultJSContextForThread(); }
+  inline static JSContext *RootingCx() {
+    return mozilla::dom::danger::GetJSContext();
+  }
 
   /**
    * Case insensitive comparison between two strings. However it only ignores
