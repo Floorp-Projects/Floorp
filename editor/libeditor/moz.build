@@ -13,6 +13,10 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 
+EXPORTS.mozilla += [
+    'EditorController.h',
+]
+
 UNIFIED_SOURCES += [
     'ChangeAttributeTransaction.cpp',
     'ChangeStyleTransaction.cpp',
@@ -22,6 +26,7 @@ UNIFIED_SOURCES += [
     'DeleteRangeTransaction.cpp',
     'DeleteTextTransaction.cpp',
     'EditAggregateTransaction.cpp',
+    'EditorController.cpp',
     'EditorUtils.cpp',
     'EditTransactionBase.cpp',
     'HTMLEditUtils.cpp',
@@ -30,7 +35,6 @@ UNIFIED_SOURCES += [
     'JoinNodeTransaction.cpp',
     'nsEditor.cpp',
     'nsEditorCommands.cpp',
-    'nsEditorController.cpp',
     'nsEditorEventListener.cpp',
     'nsHTMLAbsPosition.cpp',
     'nsHTMLAnonymousUtils.cpp',
