@@ -29,20 +29,20 @@ const ERRORS = [
   "WebDriverError",
 ];
 
+const BUILTIN_ERRORS = new Set([
+  "Error",
+  "EvalError",
+  "InternalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError",
+]);
+
 this.EXPORTED_SYMBOLS = ["error"].concat(ERRORS);
 
 this.error = {};
-
-error.BuiltinErrors = {
-  Error: 0,
-  EvalError: 1,
-  InternalError: 2,
-  RangeError: 3,
-  ReferenceError: 4,
-  SyntaxError: 5,
-  TypeError: 6,
-  URIError: 7,
-};
 
 /**
  * Checks if obj is an instance of the Error prototype in a safe manner.
@@ -61,7 +61,13 @@ error.isError = function(val) {
   } else if (val instanceof Ci.nsIException) {
     return true;
   } else {
-    return Object.getPrototypeOf(val) in error.BuiltinErrors;
+    // DOMRectList errors on string comparison
+   try {
+      let proto = Object.getPrototypeOf(val);
+      return BUILTIN_ERRORS.has(proto.toString());
+    } catch (e) {
+      return false;
+    }
   }
 };
 
