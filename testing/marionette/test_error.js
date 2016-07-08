@@ -10,19 +10,6 @@ function notok(condition) {
   ok(!(condition));
 }
 
-add_test(function test_BuiltinErrors() {
-  ok("Error" in error.BuiltinErrors);
-  ok("EvalError" in error.BuiltinErrors);
-  ok("InternalError" in error.BuiltinErrors);
-  ok("RangeError" in error.BuiltinErrors);
-  ok("ReferenceError" in error.BuiltinErrors);
-  ok("SyntaxError" in error.BuiltinErrors);
-  ok("TypeError" in error.BuiltinErrors);
-  ok("URIError" in error.BuiltinErrors);
-
-  run_next_test();
-});
-
 add_test(function test_isError() {
   notok(error.isError(null));
   notok(error.isError([]));
