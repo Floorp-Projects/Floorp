@@ -616,6 +616,15 @@ struct nsTArray_CopyWithConstructors
                              aCount, aElemSize);
   }
 
+  // These functions are defined by analogy with memmove and memcpy.
+  // What they actually do is slightly different: MoveOverlappingRegion
+  // checks to see which direction the movement needs to take place,
+  // whether from back-to-front of the range to be moved or from
+  // front-to-back.  MoveNonOverlappingRegion assumes that moving
+  // front-to-back is always valid.  So they're really more like
+  // std::move{_backward,} in that respect.  We keep these names because
+  // we think they read slightly better, and MoveNonOverlappingRegion is
+  // only ever called on overlapping regions from MoveOverlappingRegion.
   static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
                                     size_t aElemSize)
   {
@@ -625,12 +634,15 @@ struct nsTArray_CopyWithConstructors
     ElemType* srcElemEnd = srcElem + aCount;
     if (destElem == srcElem) {
       return;  // In practice, we don't do this.
-    } else if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
+    }
+
+    // Figure out whether to copy back-to-front or front-to-back.
+    if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
       while (destElemEnd != destElem) {
         --destElemEnd;
         --srcElemEnd;
         traits::Construct(destElemEnd, mozilla::Move(*srcElemEnd));
-        traits::Destruct(srcElem);
+        traits::Destruct(srcElemEnd);
       }
     } else {
       MoveNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
