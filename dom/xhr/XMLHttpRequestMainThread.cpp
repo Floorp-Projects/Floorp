@@ -1272,16 +1272,13 @@ XMLHttpRequestMainThread::GetLoadGroup() const
 }
 
 nsresult
-XMLHttpRequestMainThread::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
+XMLHttpRequestMainThread::FireReadystatechangeEvent()
 {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  event.forget(aDOMEvent);
-
-  (*aDOMEvent)->InitEvent(kLiteralString_readystatechange, false, false);
-
+  event->InitEvent(kLiteralString_readystatechange, false, false);
   // We assume anyone who managed to call CreateReadystatechangeEvent is trusted
-  (*aDOMEvent)->SetTrusted(true);
-
+  event->SetTrusted(true);
+  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   return NS_OK;
 }
 
@@ -3118,11 +3115,7 @@ XMLHttpRequestMainThread::ChangeState(State aState, bool aBroadcast)
   if (aBroadcast && (!mFlagSynchronous ||
                      aState == State::opened ||
                      aState == State::done)) {
-    nsCOMPtr<nsIDOMEvent> event;
-    rv = CreateReadystatechangeEvent(getter_AddRefs(event));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    rv = FireReadystatechangeEvent();
   }
 
   return rv;
