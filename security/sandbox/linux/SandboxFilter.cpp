@@ -606,8 +606,8 @@ public:
 
     CASES_FOR_getrlimit:
     case __NR_clock_getres:
-    case __NR_getresuid:
-    case __NR_getresgid:
+    CASES_FOR_getresuid:
+    CASES_FOR_getresgid:
       return Allow();
 
     case __NR_umask:
