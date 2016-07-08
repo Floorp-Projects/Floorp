@@ -43,17 +43,6 @@ SetInt32(void* where, int32_t value)
 }
 
 inline void
-AddInt32(void* where, int32_t value)
-{
-#ifdef DEBUG
-    uint32_t x = reinterpret_cast<uint32_t*>(where)[-1];
-    uint32_t y = x + uint32_t(value);
-    MOZ_ASSERT(value >= 0 ? (int32_t(y) >= int32_t(x)) : (int32_t(y) < int32_t(x)));
-#endif
-    reinterpret_cast<uint32_t*>(where)[-1] += uint32_t(value);
-}
-
-inline void
 SetRel32(void* from, void* to)
 {
     intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);

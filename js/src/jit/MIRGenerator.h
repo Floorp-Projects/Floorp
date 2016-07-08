@@ -224,7 +224,6 @@ class MIRGenerator
 
     bool needsBoundsCheckBranch(const MWasmMemoryAccess* access) const;
     size_t foldableOffsetRange(const MWasmMemoryAccess* access) const;
-    size_t foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) const;
 
   private:
     GraphSpewer gs_;

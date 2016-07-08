@@ -213,56 +213,39 @@ void Simulator::set_instruction_stats(bool value) {
 }
 
 // Helpers ---------------------------------------------------------------------
-int64_t Simulator::AddWithCarry(unsigned reg_size,
-                                bool set_flags,
-                                int64_t src1,
-                                int64_t src2,
-                                int64_t carry_in) {
+uint64_t Simulator::AddWithCarry(unsigned reg_size,
+                                 bool set_flags,
+                                 uint64_t left,
+                                 uint64_t right,
+                                 int carry_in) {
   VIXL_ASSERT((carry_in == 0) || (carry_in == 1));
   VIXL_ASSERT((reg_size == kXRegSize) || (reg_size == kWRegSize));
 
-  uint64_t u1, u2;
-  int64_t result;
-  int64_t signed_sum = src1 + src2 + carry_in;
+  uint64_t max_uint = (reg_size == kWRegSize) ? kWMaxUInt : kXMaxUInt;
+  uint64_t reg_mask = (reg_size == kWRegSize) ? kWRegMask : kXRegMask;
+  uint64_t sign_mask = (reg_size == kWRegSize) ? kWSignMask : kXSignMask;
 
-  uint32_t N, Z, C, V;
-
-  if (reg_size == kWRegSize) {
-    u1 = static_cast<uint64_t>(src1) & kWRegMask;
-    u2 = static_cast<uint64_t>(src2) & kWRegMask;
-
-    result = signed_sum & kWRegMask;
-    // Compute the C flag by comparing the sum to the max unsigned integer.
-    C = ((kWMaxUInt - u1) < (u2 + carry_in)) ||
-        ((kWMaxUInt - u1 - carry_in) < u2);
-    // Overflow iff the sign bit is the same for the two inputs and different
-    // for the result.
-    int64_t s_src1 = src1 << (kXRegSize - kWRegSize);
-    int64_t s_src2 = src2 << (kXRegSize - kWRegSize);
-    int64_t s_result = result << (kXRegSize - kWRegSize);
-    V = ((s_src1 ^ s_src2) >= 0) && ((s_src1 ^ s_result) < 0);
-
-  } else {
-    u1 = static_cast<uint64_t>(src1);
-    u2 = static_cast<uint64_t>(src2);
-
-    result = signed_sum;
-    // Compute the C flag by comparing the sum to the max unsigned integer.
-    C = ((kXMaxUInt - u1) < (u2 + carry_in)) ||
-        ((kXMaxUInt - u1 - carry_in) < u2);
-    // Overflow iff the sign bit is the same for the two inputs and different
-    // for the result.
-    V = ((src1 ^ src2) >= 0) && ((src1 ^ result) < 0);
-  }
-
-  N = CalcNFlag(result, reg_size);
-  Z = CalcZFlag(result);
+  left &= reg_mask;
+  right &= reg_mask;
+  uint64_t result = (left + right + carry_in) & reg_mask;
 
   if (set_flags) {
-    nzcv().SetN(N);
-    nzcv().SetZ(Z);
-    nzcv().SetC(C);
-    nzcv().SetV(V);
+    nzcv().SetN(CalcNFlag(result, reg_size));
+    nzcv().SetZ(CalcZFlag(result));
+
+    // Compute the C flag by comparing the result to the max unsigned integer.
+    uint64_t max_uint_2op = max_uint - carry_in;
+    bool C = (left > max_uint_2op) || ((max_uint_2op - left) < right);
+    nzcv().SetC(C ? 1 : 0);
+
+    // Overflow iff the sign bit is the same for the two inputs and different
+    // for the result.
+    uint64_t left_sign = left & sign_mask;
+    uint64_t right_sign = right & sign_mask;
+    uint64_t result_sign = result & sign_mask;
+    bool V = (left_sign == right_sign) && (left_sign != result_sign);
+    nzcv().SetV(V ? 1 : 0);
+
     LogSystemRegister(NZCV);
   }
   return result;

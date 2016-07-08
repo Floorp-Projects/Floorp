@@ -462,7 +462,7 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t numBytes, bool signalsF
 #endif
     }
 
-    auto buffer = ArrayBufferObject::create(cx, numBytes);
+    auto* buffer = ArrayBufferObject::create(cx, numBytes);
     if (!buffer)
         return nullptr;
 
@@ -633,6 +633,10 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
             size_t nAllocated = nbytes;
             if (contents.kind() == MAPPED)
                 nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+            else if (contents.kind() == WASM_MAPPED)
+                nAllocated = wasm::MappedSize;
+#endif
             cx->zone()->updateMallocCounter(nAllocated);
         }
     } else {
