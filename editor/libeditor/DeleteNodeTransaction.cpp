@@ -22,15 +22,15 @@ DeleteNodeTransaction::~DeleteNodeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTransactionBase,
                                    mNode,
                                    mParent,
                                    mRefNode)
 
-NS_IMPL_ADDREF_INHERITED(DeleteNodeTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(DeleteNodeTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(DeleteNodeTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(DeleteNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteNodeTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 nsresult
 DeleteNodeTransaction::Init(nsEditor* aEditor,

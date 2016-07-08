@@ -6,7 +6,7 @@
 #ifndef JoinNodeTransaction_h
 #define JoinNodeTransaction_h
 
-#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "EditTransactionBase.h"        // for EditTransactionBase, etc
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"                       // for REFNSIID
@@ -23,7 +23,7 @@ namespace mozilla {
  * children of E2.  After DoTransaction() and RedoTransaction(), E1 is removed
  * from the content tree and E2 remains.
  */
-class JoinNodeTransaction final : public EditTxn
+class JoinNodeTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -39,10 +39,11 @@ public:
    */
   nsresult CheckValidity();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JoinNodeTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JoinNodeTransaction,
+                                           EditTransactionBase)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
 protected:
   nsEditor&  mEditor;

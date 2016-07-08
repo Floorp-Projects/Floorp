@@ -6,7 +6,7 @@
 #ifndef DeleteTextTransaction_h
 #define DeleteTextTransaction_h
 
-#include "EditTxn.h"
+#include "EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericDOMDataNode.h"
@@ -22,7 +22,7 @@ namespace mozilla {
 /**
  * A transaction that removes text from a content node.
  */
-class DeleteTextTransaction final : public EditTxn
+class DeleteTextTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -41,10 +41,11 @@ public:
 
   nsresult Init();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteTextTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteTextTransaction,
+                                           EditTransactionBase)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   uint32_t GetOffset() { return mOffset; }
 

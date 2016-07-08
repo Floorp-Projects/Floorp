@@ -6,7 +6,6 @@
 #include "nsHTMLCSSUtils.h"
 
 #include "ChangeStyleTransaction.h"
-#include "EditTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/css/Declaration.h"

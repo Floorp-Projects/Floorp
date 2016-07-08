@@ -40,7 +40,7 @@ CompositionTransaction::~CompositionTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(CompositionTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CompositionTransaction, EditTransactionBase,
                                    mTextNode)
 // mRangeList can't lead to cycles
 
@@ -48,10 +48,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CompositionTransaction)
   if (aIID.Equals(NS_GET_IID(CompositionTransaction))) {
     foundInterface = static_cast<nsITransaction*>(this);
   } else
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-NS_IMPL_ADDREF_INHERITED(CompositionTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(CompositionTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(CompositionTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(CompositionTransaction, EditTransactionBase)
 
 NS_IMETHODIMP
 CompositionTransaction::DoTransaction()

@@ -6,7 +6,7 @@
 #ifndef SplitNodeTransaction_h
 #define SplitNodeTransaction_h
 
-#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "EditTransactionBase.h"        // for EditTxn, etc
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
@@ -22,7 +22,7 @@ namespace mozilla {
  * A transaction that splits a node into two identical nodes, with the children
  * divided between the new nodes.
  */
-class SplitNodeTransaction final : public EditTxn
+class SplitNodeTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -35,9 +35,10 @@ public:
   SplitNodeTransaction(nsEditor& aEditor, nsIContent& aNode, int32_t aOffset);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTransaction,
+                                           EditTransactionBase)
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
 

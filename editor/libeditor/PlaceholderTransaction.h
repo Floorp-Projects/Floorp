@@ -39,7 +39,7 @@ public:
                                            EditAggregateTransaction)
 // ------------ EditAggregateTransaction -----------------------
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;

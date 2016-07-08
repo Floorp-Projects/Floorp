@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef EditTxn_h__
-#define EditTxn_h__
+#ifndef EditTransactionBase_h
+#define EditTransactionBase_h
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -12,29 +12,33 @@
 #include "nsPIEditorTransaction.h"
 #include "nscore.h"
 
+namespace mozilla {
+
 /**
  * Base class for all document editing transactions.
  */
-class EditTxn : public nsITransaction,
-                public nsPIEditorTransaction
+class EditTransactionBase : public nsITransaction
+                          , public nsPIEditorTransaction
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditTxn, nsITransaction)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditTransactionBase, nsITransaction)
 
   virtual void LastRelease() {}
 
   NS_IMETHOD RedoTransaction(void) override;
-  NS_IMETHOD GetIsTransient(bool *aIsTransient) override;
-  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge) override;
+  NS_IMETHOD GetIsTransient(bool* aIsTransient) override;
+  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
 protected:
-  virtual ~EditTxn();
+  virtual ~EditTransactionBase();
 };
 
-#define NS_DECL_EDITTXN \
+} // namespace mozilla
+
+#define NS_DECL_EDITTRANSACTIONBASE \
   NS_IMETHOD DoTransaction() override; \
   NS_IMETHOD UndoTransaction() override; \
-  NS_IMETHOD GetTxnDescription(nsAString& aTxnDescription) override;
+  NS_IMETHOD GetTxnDescription(nsAString& aTransactionDescription) override;
 
-#endif
+#endif // #ifndef EditTransactionBase_h

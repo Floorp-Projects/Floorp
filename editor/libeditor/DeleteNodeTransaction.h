@@ -6,7 +6,7 @@
 #ifndef DeleteNodeTransaction_h
 #define DeleteNodeTransaction_h
 
-#include "EditTxn.h"
+#include "EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
@@ -22,7 +22,7 @@ namespace mozilla {
 /**
  * A transaction that deletes a single element
  */
-class DeleteNodeTransaction final : public EditTxn
+class DeleteNodeTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -35,9 +35,10 @@ public:
   DeleteNodeTransaction();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteNodeTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteNodeTransaction,
+                                           EditTransactionBase)
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
 

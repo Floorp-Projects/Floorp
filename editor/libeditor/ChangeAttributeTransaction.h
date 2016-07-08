@@ -6,7 +6,7 @@
 #ifndef ChangeAttributeTransaction_h
 #define ChangeAttributeTransaction_h
 
-#include "EditTxn.h"                      // base class
+#include "EditTransactionBase.h"          // base class
 #include "mozilla/Attributes.h"           // override
 #include "nsCOMPtr.h"                     // nsCOMPtr members
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED
@@ -25,7 +25,7 @@ class Element;
  * A transaction that changes an attribute of a content node.  This transaction
  * covers add, remove, and change attribute.
  */
-class ChangeAttributeTransaction final : public EditTxn
+class ChangeAttributeTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -38,9 +38,10 @@ public:
                              const nsAString* aValue);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeAttributeTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeAttributeTransaction,
+                                           EditTransactionBase)
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
 

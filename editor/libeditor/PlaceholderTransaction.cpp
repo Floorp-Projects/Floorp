@@ -125,13 +125,14 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
   nsCOMPtr<nsPIEditorTransaction> pTxn = do_QueryInterface(aTransaction);
   NS_ENSURE_TRUE(pTxn, NS_OK); // it's foreign so just bail!
 
-  EditTxn *editTxn = (EditTxn*)aTransaction;  //XXX: hack, not safe!  need nsIEditTransaction!
+  // XXX: hack, not safe!  need nsIEditTransaction!
+  EditTransactionBase* editTransactionBase = (EditTransactionBase*)aTransaction;
   // determine if this incoming txn is a placeholder txn
-  nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryObject(editTxn);
+  nsCOMPtr<nsIAbsorbingTransaction> absorbingTransaction =
+    do_QueryObject(editTransactionBase);
 
-  // we are absorbing all txn's if mAbsorb is lit.
-  if (mAbsorb)
-  {
+  // We are absorbing all transactions if mAbsorb is lit.
+  if (mAbsorb) {
     RefPtr<CompositionTransaction> otherTransaction =
       do_QueryObject(aTransaction);
     if (otherTransaction) {
@@ -140,7 +141,7 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
       if (!mCompositionTransaction) {
         // this is the first IME txn in the placeholder
         mCompositionTransaction = otherTransaction;
-        AppendChild(editTxn);
+        AppendChild(editTransactionBase);
       } else {
         bool didMerge;
         mCompositionTransaction->Merge(otherTransaction, &didMerge);
@@ -149,42 +150,37 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
           // not absorb further IME txns.  So just stack this one after it
           // and remember it as a candidate for further merges.
           mCompositionTransaction = otherTransaction;
-          AppendChild(editTxn);
+          AppendChild(editTransactionBase);
         }
       }
-    } else if (!plcTxn) {
+    } else if (!absorbingTransaction) {
       // See bug 171243: just drop incoming placeholders on the floor.
       // Their children will be swallowed by this preexisting one.
-      AppendChild(editTxn);
+      AppendChild(editTransactionBase);
     }
     *aDidMerge = true;
 //  RememberEndingSelection();
 //  efficiency hack: no need to remember selection here, as we haven't yet
 //  finished the initial batch and we know we will be told when the batch ends.
 //  we can remeber the selection then.
-  }
-  else
-  { // merge typing or IME or deletion transactions if the selection matches
+  } else {
+    // merge typing or IME or deletion transactions if the selection matches
     if (((mName.get() == nsGkAtoms::TypingTxnName) ||
          (mName.get() == nsGkAtoms::IMETxnName)    ||
          (mName.get() == nsGkAtoms::DeleteTxnName))
-         && !mCommitted )
-    {
-      nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryObject(editTxn);
-      if (plcTxn) {
+         && !mCommitted) {
+      if (absorbingTransaction) {
         nsCOMPtr<nsIAtom> atom;
-        plcTxn->GetTxnName(getter_AddRefs(atom));
-        if (atom && (atom == mName))
-        {
+        absorbingTransaction->GetTxnName(getter_AddRefs(atom));
+        if (atom && atom == mName) {
           // check if start selection of next placeholder matches
           // end selection of this placeholder
           bool isSame;
-          plcTxn->StartSelectionEquals(&mEndSel, &isSame);
-          if (isSame)
-          {
+          absorbingTransaction->StartSelectionEquals(&mEndSel, &isSame);
+          if (isSame) {
             mAbsorb = true;  // we need to start absorbing again
-            plcTxn->ForwardEndBatchTo(this);
-            // AppendChild(editTxn);
+            absorbingTransaction->ForwardEndBatchTo(this);
+            // AppendChild(editTransactionBase);
             // see bug 171243: we don't need to merge placeholders
             // into placeholders.  We just reactivate merging in the pre-existing
             // placeholder and drop the new one on the floor.  The EndPlaceHolderBatch()
