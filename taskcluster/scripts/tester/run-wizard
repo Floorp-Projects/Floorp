@@ -5,10 +5,14 @@
 
 from __future__ import print_function, unicode_literals
 
+import datetime
 import os
 import subprocess
 import sys
+import time
 from textwrap import wrap
+
+here = os.path.dirname(os.path.abspath(__file__))
 
 
 def call(cmd, **kwargs):
@@ -16,7 +20,19 @@ def call(cmd, **kwargs):
     return subprocess.call(cmd, **kwargs)
 
 
+def wait_for_run_mozharness(timeout=30):
+    starttime = datetime.datetime.now()
+    while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+        if os.path.isfile(os.path.join(here, 'run-mozharness')):
+            break
+        time.sleep(0.2)
+    else:
+        print("Timed out after %d seconds waiting for the 'run-mozharness' binary" % timeout)
+        return 1
+
+
 def resume():
+    wait_for_run_mozharness()
     call(['run-mozharness'])
 
 
@@ -27,6 +43,7 @@ def setup():
     downloading the tests and firefox binary. But it stops before running the
     tests.
     """
+    wait_for_run_mozharness()
     status = call(['run-mozharness', '--no-run-tests'])
 
     if status:
