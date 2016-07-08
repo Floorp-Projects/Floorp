@@ -978,12 +978,6 @@ class CGIncludeGuard(CGWrapper):
                            declarePost='\n#endif // %s\n' % define)
 
 
-def getRelevantProviders(descriptor, config):
-    if descriptor is not None:
-        return [descriptor]
-    return [config]
-
-
 class CGHeaders(CGWrapper):
     """
     Generates the appropriate include statements.
@@ -1046,12 +1040,11 @@ class CGHeaders(CGWrapper):
         bindingHeaders = set()
         declareIncludes = set(declareIncludes)
 
-        def addHeadersForType((t, descriptor, dictionary)):
+        def addHeadersForType((t, dictionary)):
             """
-            Add the relevant headers for this type.  We use descriptor and
-            dictionary, if passed, to decide what to do with interface types.
+            Add the relevant headers for this type.  We use dictionary, if
+            passed, to decide what to do with interface types.
             """
-            assert not descriptor or not dictionary
             # Dictionaries have members that need to be actually
             # declared, not just forward-declared.
             if dictionary:
@@ -1082,22 +1075,20 @@ class CGHeaders(CGWrapper):
                         headerSet = declareIncludes
                     headerSet.add("mozilla/dom/TypedArray.h")
                 else:
-                    providers = getRelevantProviders(descriptor, config)
-                    for p in providers:
-                        try:
-                            typeDesc = p.getDescriptor(unrolled.inner.identifier.name)
-                        except NoSuchDescriptorError:
-                            continue
-                        # Dictionaries with interface members rely on the
-                        # actual class definition of that interface member
-                        # being visible in the binding header, because they
-                        # store them in RefPtr and have inline
-                        # constructors/destructors.
-                        #
-                        # XXXbz maybe dictionaries with interface members
-                        # should just have out-of-line constructors and
-                        # destructors?
-                        headerSet.add(typeDesc.headerFile)
+                    try:
+                        typeDesc = config.getDescriptor(unrolled.inner.identifier.name)
+                    except NoSuchDescriptorError:
+                        return
+                    # Dictionaries with interface members rely on the
+                    # actual class definition of that interface member
+                    # being visible in the binding header, because they
+                    # store them in RefPtr and have inline
+                    # constructors/destructors.
+                    #
+                    # XXXbz maybe dictionaries with interface members
+                    # should just have out-of-line constructors and
+                    # destructors?
+                    headerSet.add(typeDesc.headerFile)
             elif unrolled.isDictionary():
                 headerSet.add(self.getDeclarationFilename(unrolled.inner))
             elif unrolled.isCallback():
@@ -1118,7 +1109,7 @@ class CGHeaders(CGWrapper):
                     bindingHeaders.add("mozilla/dom/MozMap.h")
                 # Also add headers for the type the MozMap is
                 # parametrized over, if needed.
-                addHeadersForType((t.inner, descriptor, dictionary))
+                addHeadersForType((t.inner, dictionary))
 
         map(addHeadersForType,
             getAllTypes(descriptors + callbackDescriptors, dictionaries,
@@ -1168,10 +1159,10 @@ class CGHeaders(CGWrapper):
                 # convenience functions
                 if desc.interface.maplikeOrSetlikeOrIterable.hasKeyType():
                     addHeadersForType((desc.interface.maplikeOrSetlikeOrIterable.keyType,
-                                       desc, None))
+                                       None))
                 if desc.interface.maplikeOrSetlikeOrIterable.hasValueType():
                     addHeadersForType((desc.interface.maplikeOrSetlikeOrIterable.valueType,
-                                       desc, None))
+                                       None))
 
         for d in dictionaries:
             if d.parent:
@@ -1252,19 +1243,17 @@ def SortedDictValues(d):
 
 def UnionsForFile(config, webIDLFile):
     """
-    Returns a list of tuples each containing two elements (type and descriptor)
-    for all union types that are only used in webIDLFile. If webIDLFile is None
-    this will return the list of tuples for union types that are used in more
-    than one WebIDL file.
+    Returns a list of union types for all union types that are only used in
+    webIDLFile. If webIDLFile is None this will return the list of tuples for
+    union types that are used in more than one WebIDL file.
     """
     return config.unionsPerFilename.get(webIDLFile, [])
 
 
 def UnionTypes(unionTypes, config):
     """
-    The unionTypes argument should be a list of tuples, each containing two
-    elements: a union type and a descriptor. This is typically the list
-    generated by UnionsForFile.
+    The unionTypes argument should be a list of union types. This is typically
+    the list generated by UnionsForFile.
 
     Returns a tuple containing a set of header filenames to include in
     the header for the types in unionTypes, a set of header filenames to
@@ -1282,10 +1271,9 @@ def UnionTypes(unionTypes, config):
     traverseMethods = dict()
     unlinkMethods = dict()
 
-    for (t, descriptor) in unionTypes:
+    for t in unionTypes:
         name = str(t)
         if name not in unionStructs:
-            providers = getRelevantProviders(descriptor, config)
             unionStructs[name] = t
 
             def addHeadersForType(f):
@@ -1298,23 +1286,22 @@ def UnionTypes(unionTypes, config):
                         headers.add("jsfriendapi.h")
                         headers.add("mozilla/dom/TypedArray.h")
                     else:
-                        for p in providers:
-                            try:
-                                typeDesc = p.getDescriptor(f.inner.identifier.name)
-                            except NoSuchDescriptorError:
-                                continue
-                            if typeDesc.interface.isCallback() or isSequence:
-                                # Callback interfaces always use strong refs, so
-                                # we need to include the right header to be able
-                                # to Release() in our inlined code.
-                                #
-                                # Similarly, sequences always contain strong
-                                # refs, so we'll need the header to handler
-                                # those.
-                                headers.add(typeDesc.headerFile)
-                            else:
-                                declarations.add((typeDesc.nativeType, False))
-                                implheaders.add(typeDesc.headerFile)
+                        try:
+                            typeDesc = config.getDescriptor(f.inner.identifier.name)
+                        except NoSuchDescriptorError:
+                            return
+                        if typeDesc.interface.isCallback() or isSequence:
+                            # Callback interfaces always use strong refs, so
+                            # we need to include the right header to be able
+                            # to Release() in our inlined code.
+                            #
+                            # Similarly, sequences always contain strong
+                            # refs, so we'll need the header to handler
+                            # those.
+                            headers.add(typeDesc.headerFile)
+                        else:
+                            declarations.add((typeDesc.nativeType, False))
+                            implheaders.add(typeDesc.headerFile)
                 elif f.isDictionary():
                     # For a dictionary, we need to see its declaration in
                     # UnionTypes.h so we have its sizeof and know how big to
@@ -1369,26 +1356,23 @@ def UnionConversions(unionTypes, config):
     headers = set()
     unionConversions = dict()
 
-    for (t, descriptor) in unionTypes:
+    for t in unionTypes:
         name = str(t)
         if name not in unionConversions:
-            providers = getRelevantProviders(descriptor, config)
-            unionConversions[name] = CGUnionConversionStruct(t, providers[0])
+            unionConversions[name] = CGUnionConversionStruct(t, config)
 
-            def addHeadersForType(f, providers):
+            def addHeadersForType(f):
                 f = f.unroll()
                 if f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
                         headers.add("mozilla/dom/TypedArray.h")
                     elif f.inner.isExternal():
-                        providers = getRelevantProviders(descriptor, config)
-                        for p in providers:
-                            try:
-                                typeDesc = p.getDescriptor(f.inner.identifier.name)
-                            except NoSuchDescriptorError:
-                                continue
-                            headers.add(typeDesc.headerFile)
+                        try:
+                            typeDesc = config.getDescriptor(f.inner.identifier.name)
+                        except NoSuchDescriptorError:
+                            return
+                        headers.add(typeDesc.headerFile)
                     else:
                         headers.add(CGHeaders.getDeclarationFilename(f.inner))
                 elif f.isDictionary():
@@ -1398,14 +1382,14 @@ def UnionConversions(unionTypes, config):
                 elif f.isMozMap():
                     headers.add("mozilla/dom/MozMap.h")
                     # And the internal type of the MozMap
-                    addHeadersForType(f.inner, providers)
+                    addHeadersForType(f.inner)
 
             # We plan to include UnionTypes.h no matter what, so it's
             # OK if we throw it into the set here.
             headers.add(CGHeaders.getUnionDeclarationFilename(config, t))
 
             for f in t.flatMemberTypes:
-                addHeadersForType(f, providers)
+                addHeadersForType(f)
 
     return (headers,
             CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
@@ -16451,7 +16435,7 @@ class GlobalGenRoots():
         unionTypes = []
         for l in config.unionsPerFilename.itervalues():
             unionTypes.extend(l)
-        unionTypes.sort(key=lambda u: u[0].name)
+        unionTypes.sort(key=lambda u: u.name)
         headers, unions = UnionConversions(unionTypes,
                                            config)
 
