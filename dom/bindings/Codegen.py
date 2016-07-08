@@ -2032,24 +2032,8 @@ class PropertyDefiner:
 
     @staticmethod
     def getControllingCondition(interfaceMember, descriptor):
-        # We do a slightly complicated thing for exposure sets to deal nicely
-        # with the situation of an [Exposed=Window] thing on an interface
-        # exposed in workers that has a worker-specific descriptor.  In that
-        # situation, we already skip generation of the member entirely in the
-        # worker binding, and shouldn't need to check for the various worker
-        # scopes in the non-worker binding.
         interface = descriptor.interface
         nonExposureSet = interface.exposureSet - interfaceMember.exposureSet
-        # Skip getting the descriptor if we're just exposed everywhere or not
-        # looking at the non-worker descriptor.
-        if len(nonExposureSet) and not descriptor.workers:
-            workerProvider = descriptor.config.getDescriptorProvider(True)
-            workerDesc = workerProvider.getDescriptor(interface.identifier.name)
-            if workerDesc.workers:
-                # Just drop all the worker interface names from the
-                # nonExposureSet, since we know we'll have a mainthread global
-                # of some sort.
-                nonExposureSet.difference_update(interface.getWorkerExposureSet())
 
         return MemberCondition(
             PropertyDefiner.getStringAttr(interfaceMember,
