@@ -15,9 +15,6 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
 import android.location.Address;
 import android.location.Location;
 import android.os.SystemClock;
@@ -71,7 +68,6 @@ public class GeckoEvent {
     public enum NativeGeckoEvent {
         NATIVE_POKE(0),
         MOTION_EVENT(2),
-        SENSOR_EVENT(3),
         LOCATION_EVENT(5),
         LOAD_URI(12),
         NOOP(15),
@@ -345,105 +341,6 @@ public class GeckoEvent {
             mPointRadii[index] = new Point(0, 0);
             mPoints[index] = new Point(0, 0);
         }
-    }
-
-    private static int HalSensorAccuracyFor(int androidAccuracy) {
-        switch (androidAccuracy) {
-        case SensorManager.SENSOR_STATUS_UNRELIABLE:
-            return GeckoHalDefines.SENSOR_ACCURACY_UNRELIABLE;
-        case SensorManager.SENSOR_STATUS_ACCURACY_LOW:
-            return GeckoHalDefines.SENSOR_ACCURACY_LOW;
-        case SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM:
-            return GeckoHalDefines.SENSOR_ACCURACY_MED;
-        case SensorManager.SENSOR_STATUS_ACCURACY_HIGH:
-            return GeckoHalDefines.SENSOR_ACCURACY_HIGH;
-        }
-        return GeckoHalDefines.SENSOR_ACCURACY_UNKNOWN;
-    }
-
-    public static GeckoEvent createSensorEvent(SensorEvent s) {
-        int sensor_type = s.sensor.getType();
-        GeckoEvent event = null;
-
-        switch (sensor_type) {
-
-        case Sensor.TYPE_ACCELEROMETER:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_ACCELERATION;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            event.mY = s.values[1];
-            event.mZ = s.values[2];
-            break;
-
-        case Sensor.TYPE_LINEAR_ACCELERATION:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            event.mY = s.values[1];
-            event.mZ = s.values[2];
-            break;
-
-        case Sensor.TYPE_ORIENTATION:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_ORIENTATION;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            event.mY = s.values[1];
-            event.mZ = s.values[2];
-            break;
-
-        case Sensor.TYPE_GYROSCOPE:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_GYROSCOPE;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = Math.toDegrees(s.values[0]);
-            event.mY = Math.toDegrees(s.values[1]);
-            event.mZ = Math.toDegrees(s.values[2]);
-            break;
-
-        case Sensor.TYPE_PROXIMITY:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_PROXIMITY;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            event.mY = 0;
-            event.mZ = s.sensor.getMaximumRange();
-            break;
-
-        case Sensor.TYPE_LIGHT:
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = GeckoHalDefines.SENSOR_LIGHT;
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            break;
-
-        case Sensor.TYPE_ROTATION_VECTOR:
-        case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
-            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
-            event.mFlags = (sensor_type == Sensor.TYPE_ROTATION_VECTOR ?
-                    GeckoHalDefines.SENSOR_ROTATION_VECTOR :
-                    GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
-            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
-            event.mX = s.values[0];
-            event.mY = s.values[1];
-            event.mZ = s.values[2];
-            if (s.values.length >= 4) {
-                event.mW = s.values[3];
-            } else {
-                // s.values[3] was optional in API <= 18, so we need to compute it
-                // The values form a unit quaternion, so we can compute the angle of
-                // rotation purely based on the given 3 values.
-                event.mW = 1 - s.values[0] * s.values[0] - s.values[1] * s.values[1] - s.values[2] * s.values[2];
-                event.mW = (event.mW > 0.0) ? Math.sqrt(event.mW) : 0.0;
-            }
-            break;
-        }
-
-        // SensorEvent timestamp is in nanoseconds, Gecko expects microseconds.
-        event.mTime = s.timestamp / 1000;
-        return event;
     }
 
     public static GeckoEvent createLocationEvent(Location l) {
