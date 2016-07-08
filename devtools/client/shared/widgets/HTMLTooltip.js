@@ -211,7 +211,7 @@ function HTMLTooltip(toolbox, {
   this.type = type;
   this.autofocus = autofocus;
   this.consumeOutsideClicks = consumeOutsideClicks;
-  this.useXulWrapper = useXulWrapper;
+  this.useXulWrapper = this._isXUL() && useXulWrapper;
 
   this._position = null;
 
@@ -229,7 +229,7 @@ function HTMLTooltip(toolbox, {
   if (stylesheet) {
     this._applyStylesheet(stylesheet);
   }
-  if (this._isXUL() && this.useXulWrapper) {
+  if (this.useXulWrapper) {
     // When using a XUL panel as the wrapper, the actual markup for the tooltip is as
     // follows :
     // <panel> <!-- XUL panel used to position the tooltip anywhere on screen -->
