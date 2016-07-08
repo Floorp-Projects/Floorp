@@ -156,7 +156,7 @@ OutputParser.prototype = {
     };
 
     let angleOK = function (angle) {
-      return (new angleUtils.CssAngle(angle)).valid;
+      return /^-?\d+\.?\d*(deg|rad|grad|turn)$/gi.test(angle);
     };
 
     while (true) {
