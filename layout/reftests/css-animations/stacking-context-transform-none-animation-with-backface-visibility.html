@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <title>
 Transform animation creates a stacking context even though it has only
-'transform:none' keyframes
+'transform:none' keyframes and with a style which prevents performning
+the animation on the compositor.
 </title>
 <style>
 span {
@@ -17,6 +18,7 @@ span {
 #test {
   width: 100px; height: 100px;
   background: blue;
+  backface-visibility: hidden;
   animation: TransformNone 100s infinite;
 }
 </style>
