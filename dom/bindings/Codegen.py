@@ -3801,13 +3801,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
-        if self.descriptor.workers:
-            fireOnNewGlobal = """// XXXkhuey can't do this yet until workers can lazy resolve.
-// JS_FireOnNewGlobalObject(aCx, aReflector);
-"""
-        else:
-            fireOnNewGlobal = ""
-
         if self.descriptor.hasUnforgeableMembers:
             declareProto = "JS::Handle<JSObject*> canonicalProto =\n"
             assertProto = (
@@ -3847,7 +3840,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
-            $*{fireOnNewGlobal}
 
             return true;
             """,
@@ -3858,8 +3850,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             properties=properties,
             chromeProperties=chromeProperties,
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
-            slots=InitMemberSlots(self.descriptor, True),
-            fireOnNewGlobal=fireOnNewGlobal)
+            slots=InitMemberSlots(self.descriptor, True))
 
 
 class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
