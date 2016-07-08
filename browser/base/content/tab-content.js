@@ -41,6 +41,17 @@ XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
 var global = this;
 
 
+addEventListener("MozDOMPointerLock:Entered", function(aEvent) {
+  sendAsyncMessage("PointerLock:Entered", {
+    originNoSuffix: aEvent.target.nodePrincipal.originNoSuffix
+  });
+});
+
+addEventListener("MozDOMPointerLock:Exited", function(aEvent) {
+  sendAsyncMessage("PointerLock:Exited");
+});
+
+
 addMessageListener("Browser:HideSessionRestoreButton", function (message) {
   // Hide session restore button on about:home
   let doc = content.document;

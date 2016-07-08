@@ -660,7 +660,7 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
   background: black;
 }
 
-html|*#fullscreen-warning {
+html|*.pointerlockfswarning {
   position: fixed;
   z-index: 2147483647 !important;
   visibility: visible;
@@ -674,28 +674,28 @@ html|*#fullscreen-warning {
   max-width: 95%;
   pointer-events: none;
 }
-html|*#fullscreen-warning:not([hidden]) {
+html|*.pointerlockfswarning:not([hidden]) {
   display: flex;
   will-change: transform;
 }
-html|*#fullscreen-warning[onscreen] {
+html|*.pointerlockfswarning[onscreen] {
   transform: translate(-50%, 50px);
 }
-html|*#fullscreen-warning[ontop] {
+html|*.pointerlockfswarning[ontop] {
   /* Use -10px to hide the border and border-radius on the top */
   transform: translate(-50%, -10px);
 }
-#main-window[OSXLionFullscreen] html|*#fullscreen-warning[ontop] {
+#main-window[OSXLionFullscreen] html|*.pointerlockfswarning[ontop] {
   transform: translate(-50%, 80px);
 }
 
-html|*#fullscreen-domain-text,
-html|*#fullscreen-generic-text {
+html|*.pointerlockfswarning-domain-text,
+html|*.pointerlockfswarning-generic-text {
   word-wrap: break-word;
   /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
   min-width: 1px
 }
-html|*#fullscreen-domain-text:not([hidden]) + html|*#fullscreen-generic-text {
+html|*.pointerlockfswarning-domain-text:not([hidden]) + html|*.pointerlockfswarning-generic-text {
   display: none;
 }
 
