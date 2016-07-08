@@ -1,0 +1,63 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ /* Toolbox command buttons */
+
+#command-button-paintflashing::before {
+   background-image: var(--command-paintflashing-image);
+ }
+
+#command-button-screenshot::before {
+   background-image: var(--command-screenshot-image);
+ }
+
+#command-button-responsive::before {
+ background-image: var(--command-responsive-image);
+}
+
+#command-button-scratchpad::before {
+ background-image: var(--command-scratchpad-image);
+}
+
+#command-button-pick::before {
+ background-image: var(--command-pick-image);
+}
+
+#command-button-splitconsole::before {
+ background-image: var(--command-splitconsole-image);
+}
+
+#command-button-noautohide::before {
+ background-image: var(--command-noautohide-image);
+}
+
+#command-button-eyedropper::before {
+ background-image: var(--command-eyedropper-image);
+}
+
+#command-button-rulers::before {
+ background-image: var(--command-rulers-image);
+}
+
+#command-button-measure::before {
+ background-image: var(--command-measure-image);
+}
+
+#command-button-frames::before {
+ background-image: var(--command-frames-image);
+}
+
+#command-button-frames {
+ background: url("chrome://devtools/skin/images/dropmarker.svg") no-repeat right;
+
+ /* Override background-size from the command-button.
+   The drop down arrow is smaller */
+ background-size: 8px 4px !important;
+ min-width: 32px;
+}
+
+#command-button-frames:-moz-dir(rtl) {
+ background-position: left;
+}
