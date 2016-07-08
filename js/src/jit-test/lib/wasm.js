@@ -4,7 +4,10 @@ if (!wasmIsSupported())
 load(libdir + "asserts.js");
 
 function wasmEvalText(str, imports) {
-    return Wasm.instantiateModule(wasmTextToBinary(str), imports).exports;
+    var exports = Wasm.instantiateModule(wasmTextToBinary(str), imports).exports;
+    if (Object.keys(exports).length == 1 && exports[""])
+        return exports[""];
+    return exports;
 }
 
 function mismatchError(actual, expect) {

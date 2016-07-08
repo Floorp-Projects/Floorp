@@ -10,12 +10,6 @@ assertEq(Object.getOwnPropertyNames(o).length, 0);
 var o = wasmEvalText('(module (func))');
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
-var o = wasmEvalText('(module (func) (export "" 0))');
-assertEq(typeof o, "function");
-assertEq(o.name, "wasm-function[0]");
-assertEq(o.length, 0);
-assertEq(o(), undefined);
-
 var o = wasmEvalText('(module (func) (export "a" 0))');
 var names = Object.getOwnPropertyNames(o);
 assertEq(names.length, 1);
@@ -23,21 +17,6 @@ assertEq(names[0], 'a');
 var desc = Object.getOwnPropertyDescriptor(o, 'a');
 assertEq(typeof desc.value, "function");
 assertEq(desc.value.name, "wasm-function[0]");
-assertEq(desc.value.length, 0);
-assertEq(desc.value(), undefined);
-assertEq(desc.writable, true);
-assertEq(desc.enumerable, true);
-assertEq(desc.configurable, true);
-assertEq(desc.value(), undefined);
-
-var o = wasmEvalText('(module (func) (func) (export "" 0) (export "a" 1))');
-assertEq(typeof o, "function");
-assertEq(o.name, "wasm-function[0]");
-assertEq(o.length, 0);
-assertEq(o(), undefined);
-var desc = Object.getOwnPropertyDescriptor(o, 'a');
-assertEq(typeof desc.value, "function");
-assertEq(desc.value.name, "wasm-function[1]");
 assertEq(desc.value.length, 0);
 assertEq(desc.value(), undefined);
 assertEq(desc.writable, true);

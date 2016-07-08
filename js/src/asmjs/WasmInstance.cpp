@@ -384,48 +384,34 @@ NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint
 static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
-                   HandleObject memoryObj,
+                   HandleWasmMemoryObject memoryObj,
                    const ExportMap& exportMap,
-                   const ExportVector& exports,
+                   const Metadata& metadata,
                    MutableHandleObject exportObj)
 {
     MOZ_ASSERT(exportMap.fieldNames.length() == exportMap.fieldsToExports.length());
 
-    for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
-        const char* fieldName = exportMap.fieldNames[fieldIndex].get();
-        if (!*fieldName) {
-            MOZ_ASSERT(!exportObj);
-            uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-            if (exportIndex == MemoryExport) {
-                MOZ_ASSERT(memoryObj);
-                exportObj.set(memoryObj);
-            } else {
-                exportObj.set(NewExportedFunction(cx, instanceObj, exportIndex));
-                if (!exportObj)
-                    return false;
-            }
-            break;
-        }
+    if (metadata.isAsmJS() &&
+        exportMap.fieldNames.length() == 1 &&
+        strlen(exportMap.fieldNames[0].get()) == 0)
+    {
+        exportObj.set(NewExportedFunction(cx, instanceObj, 0));
+        return !!exportObj;
     }
 
+    exportObj.set(JS_NewPlainObject(cx));
+    if (!exportObj)
+        return false;
+
     Rooted<ValueVector> vals(cx, ValueVector(cx));
-    for (size_t exportIndex = 0; exportIndex < exports.length(); exportIndex++) {
+    for (size_t exportIndex = 0; exportIndex < metadata.exports.length(); exportIndex++) {
         JSFunction* fun = NewExportedFunction(cx, instanceObj, exportIndex);
         if (!fun || !vals.append(ObjectValue(*fun)))
             return false;
     }
 
-    if (!exportObj) {
-        exportObj.set(JS_NewPlainObject(cx));
-        if (!exportObj)
-            return false;
-    }
-
     for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
         const char* fieldName = exportMap.fieldNames[fieldIndex].get();
-        if (!*fieldName)
-            continue;
-
         JSAtom* atom = AtomizeUTF8Chars(cx, fieldName, strlen(fieldName));
         if (!atom)
             return false;
@@ -433,10 +419,14 @@ CreateExportObject(JSContext* cx,
         RootedId id(cx, AtomToId(atom));
         RootedValue val(cx);
         uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-        if (exportIndex == MemoryExport)
-            val = ObjectValue(*memoryObj);
-        else
+        if (exportIndex == MemoryExport) {
+            if (metadata.assumptions.newFormat)
+                val = ObjectValue(*memoryObj);
+            else
+                val = ObjectValue(memoryObj->buffer());
+        } else {
             val = vals[exportIndex];
+        }
 
         if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
             return false;
@@ -499,14 +489,8 @@ Instance::create(JSContext* cx,
 
     // Create the export object.
 
-    RootedObject memoryObj(cx);
-    if (metadata.assumptions.newFormat)
-        memoryObj = memory;
-    else
-        memoryObj = memory ? &memory->buffer() : nullptr;
-
     RootedObject exportObj(cx);
-    if (!CreateExportObject(cx, instanceObj, memoryObj, exportMap, metadata.exports, &exportObj))
+    if (!CreateExportObject(cx, instanceObj, memory, exportMap, metadata, &exportObj))
         return false;
 
     // Attach the export object to the instance object.

@@ -151,6 +151,12 @@ assertEq(Object.keys(e).join(), "bar,foo");
 assertEq(e.foo(), undefined);
 assertEq(e.bar.buffer.byteLength, 64*1024);
 
+var code = textToBinary('(module (memory 1 1) (export "" memory))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).length, 1);
+assertEq(String(Object.keys(e)), "");
+assertEq(e[""] instanceof Memory, true);
+
 // Re-exports:
 
 var code = textToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" memory) (export "bar" memory))');
