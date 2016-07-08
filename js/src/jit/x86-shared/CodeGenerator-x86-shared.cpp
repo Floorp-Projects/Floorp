@@ -454,15 +454,46 @@ CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* acce
     // field, so -access->endOffset() will turn into
     // (heapLength - access->endOffset()), allowing us to test whether the end
     // of the access is beyond the end of the heap.
-    uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(-access->endOffset())).offset();
+    MOZ_ASSERT(access->endOffset() >= 1,
+               "need to subtract 1 to use JAE, see also AssemblerX86Shared::UpdateBoundsCheck");
+
+    uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(1 - access->endOffset())).offset();
     if (maybeFail)
-        masm.j(Assembler::Above, maybeFail);
+        masm.j(Assembler::AboveOrEqual, maybeFail);
     else
-        masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
+        masm.j(Assembler::AboveOrEqual, wasm::JumpTarget::OutOfBounds);
 
     if (pass)
         masm.bind(pass);
 
+    masm.append(wasm::BoundsCheck(cmpOffset));
+}
+
+void
+CodeGeneratorX86Shared::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
+{
+    const MWasmBoundsCheck* mir = ins->mir();
+    MOZ_ASSERT(gen->needsBoundsCheckBranch(mir));
+    if (mir->offset() > INT32_MAX) {
+        masm.jump(wasm::JumpTarget::OutOfBounds);
+        return;
+    }
+
+    Register ptrReg = ToRegister(ins->ptr());
+    maybeEmitWasmBoundsCheckBranch(mir, ptrReg);
+}
+
+void
+CodeGeneratorX86Shared::maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr)
+{
+    if (!mir->needsBoundsCheck())
+        return;
+
+    MOZ_ASSERT(mir->endOffset() >= 1,
+               "need to subtract 1 to use JAE, see also AssemblerX86Shared::UpdateBoundsCheck");
+
+    uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(1 - mir->endOffset())).offset();
+    masm.j(Assembler::AboveOrEqual, wasm::JumpTarget::OutOfBounds);
     masm.append(wasm::BoundsCheck(cmpOffset));
 }
 

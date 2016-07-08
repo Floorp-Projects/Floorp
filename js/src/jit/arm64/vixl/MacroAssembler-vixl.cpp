@@ -26,6 +26,8 @@
 
 #include "jit/arm64/vixl/MacroAssembler-vixl.h"
 
+#include <ctype.h>
+
 namespace vixl {
 
 MacroAssembler::MacroAssembler()

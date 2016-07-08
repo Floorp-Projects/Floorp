@@ -2189,6 +2189,119 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 }
 
 void
+CodeGeneratorARM::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
+{
+    MWasmBoundsCheck* mir = ins->mir();
+
+    uint32_t offset = mir->offset();
+    if (offset > INT32_MAX) {
+        masm.as_b(wasm::JumpTarget::OutOfBounds);
+        return;
+    }
+
+    // No guarantee that heapBase + endOffset can be properly encoded in
+    // the cmp immediate in ma_BoundsCheck, so use an explicit add instead.
+    uint32_t endOffset = mir->endOffset();
+
+    Register ptr = ToRegister(ins->ptr());
+
+    ScratchRegisterScope ptrPlusOffset(masm);
+    masm.move32(Imm32(endOffset), ptrPlusOffset);
+    masm.ma_add(ptr, ptrPlusOffset, SetCC);
+
+    // Detect unsigned overflow by checking the carry bit.
+    masm.as_b(wasm::JumpTarget::OutOfBounds, Assembler::CarrySet);
+
+    uint32_t cmpOffset = masm.ma_BoundsCheck(ptrPlusOffset).getOffset();
+    masm.append(wasm::BoundsCheck(cmpOffset));
+    masm.as_b(wasm::JumpTarget::OutOfBounds, Assembler::Above);
+}
+
+void
+CodeGeneratorARM::visitWasmLoad(LWasmLoad* lir)
+{
+    const MWasmLoad* mir = lir->mir();
+
+    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
+
+    uint32_t offset = mir->offset();
+    if (offset > INT32_MAX) {
+        // This is unreachable because of bounds checks.
+        masm.breakpoint();
+        return;
+    }
+
+    Register ptr = ToRegister(lir->ptr());
+    AnyRegister output = ToAnyRegister(lir->output());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.ma_add(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    Scalar::Type type = mir->accessType();
+    bool isSigned = type == Scalar::Int8 || type == Scalar::Int16 || type == Scalar::Int32;
+    bool isFloat = output.isFloat();
+
+    unsigned byteSize = mir->byteSize();
+
+    if (isFloat) {
+        MOZ_ASSERT((byteSize == 4) == output.fpu().isSingle());
+        ScratchRegisterScope scratch(masm);
+        masm.ma_add(HeapReg, ptr, scratch);
+        masm.ma_vldr(Address(scratch, 0), output.fpu());
+    } else {
+        masm.ma_dataTransferN(IsLoad, byteSize * 8, isSigned, HeapReg, ptr, output.gpr());
+    }
+}
+
+void
+CodeGeneratorARM::visitWasmStore(LWasmStore* lir)
+{
+    const MWasmStore* mir = lir->mir();
+
+    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
+
+    uint32_t offset = mir->offset();
+    if (offset > INT32_MAX) {
+        // This is unreachable because of bounds checks.
+        masm.breakpoint();
+        return;
+    }
+
+    Register ptr = ToRegister(lir->ptr());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.ma_add(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    AnyRegister value = ToAnyRegister(lir->value());
+    unsigned byteSize = mir->byteSize();
+    Scalar::Type type = mir->accessType();
+
+    if (value.isFloat()) {
+        FloatRegister val = value.fpu();
+        MOZ_ASSERT((byteSize == 4) == val.isSingle());
+        ScratchRegisterScope scratch(masm);
+        masm.ma_add(HeapReg, ptr, scratch);
+        masm.ma_vstr(val, Address(scratch, 0));
+    } else {
+        bool isSigned = type == Scalar::Uint32 || type == Scalar::Int32; // see AsmJSStoreHeap;
+        Register val = value.gpr();
+        masm.ma_dataTransferN(IsStore, 8 * byteSize /* bits */, isSigned, HeapReg, ptr, val);
+    }
+}
+
+void
 CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 {
     const MAsmJSStoreHeap* mir = ins->mir();

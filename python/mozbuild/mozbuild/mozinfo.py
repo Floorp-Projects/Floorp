@@ -10,7 +10,7 @@ from __future__ import absolute_import
 import os
 import re
 import json
-import mozbuild.mozconfig as mozconfig
+
 
 def build_dict(config, env=os.environ):
     """
@@ -29,9 +29,8 @@ def build_dict(config, env=os.environ):
     d = {}
     d['topsrcdir'] = config.topsrcdir
 
-    the_mozconfig = mozconfig.MozconfigLoader(config.topsrcdir).find_mozconfig(env)
-    if the_mozconfig:
-        d['mozconfig'] = the_mozconfig
+    if config.mozconfig:
+        d['mozconfig'] = config.mozconfig
 
     # os
     o = substs["OS_TARGET"]
