@@ -668,6 +668,52 @@ MaybeDecodeName(Decoder& d)
 }
 
 static bool
+DecodeMemorySignature(Decoder& d, ModuleGeneratorData* init)
+{
+    uint32_t flags;
+    if (!d.readVarU32(&flags))
+        return Fail(d, "expected memory flags");
+
+    if (flags & ~uint32_t(MemoryFlags::AllowedMask))
+        return Fail(d, "unexpected bits set in memory flags");
+
+    if (!(flags & uint32_t(MemoryFlags::Default)))
+        return Fail(d, "currently, every memory must be declared default");
+
+    uint32_t initialPages;
+    if (!d.readVarU32(&initialPages))
+        return Fail(d, "expected initial memory size");
+
+    CheckedInt<uint32_t> initialBytes = initialPages;
+    initialBytes *= PageSize;
+    if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
+        return Fail(d, "initial memory size too big");
+
+    CheckedInt<uint32_t> maxBytes(UINT32_MAX);
+    if (flags & uint32_t(MemoryFlags::HasMaximum)) {
+        uint32_t maxPages;
+        if (!d.readVarU32(&maxPages))
+            return Fail(d, "expected maximum length");
+
+        if (initialPages > maxPages)
+            return Fail(d, "maximum memory size less than initial memory size");
+
+        maxBytes = maxPages;
+        maxBytes *= PageSize;
+        if (!maxBytes.isValid())
+            return Fail(d, "maximum memory size too big");
+    }
+
+    if (UsesMemory(init->memoryUsage))
+        return Fail(d, "already have default memory");
+
+    init->memoryUsage = MemoryUsage::Unshared;
+    init->minMemoryLength = initialBytes.value();
+    init->maxMemoryLength = maxBytes.value();
+    return true;
+}
+
+static bool
 DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector* imports)
 {
     if (!newFormat) {
@@ -692,7 +738,7 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
         if (!funcName)
             return Fail(d, "expected valid import func name");
 
-        return imports->emplaceBack(Move(moduleName), Move(funcName));
+        return imports->emplaceBack(Move(moduleName), Move(funcName), DefinitionKind::Function);
     }
 
     UniqueChars moduleName = MaybeDecodeName(d);
@@ -705,9 +751,6 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
     UniqueChars funcName = MaybeDecodeName(d);
     if (!funcName)
         return Fail(d, "expected valid import func name");
-
-    if (!imports->emplaceBack(Move(moduleName), Move(funcName)))
-        return false;
 
     uint32_t importKind;
     if (!d.readVarU32(&importKind))
@@ -724,11 +767,16 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
             return false;
         break;
       }
+      case DefinitionKind::Memory: {
+        if (!DecodeMemorySignature(d, init))
+            return false;
+        break;
+      }
       default:
         return Fail(d, "unsupported import kind");
     }
 
-    return true;
+    return imports->emplaceBack(Move(moduleName), Move(funcName), DefinitionKind(importKind));
 }
 
 static bool
@@ -767,45 +815,49 @@ DecodeMemorySection(Decoder& d, bool newFormat, ModuleGeneratorData* init, bool*
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    uint32_t initialSizePages;
-    if (!d.readVarU32(&initialSizePages))
-        return Fail(d, "expected initial memory size");
+    if (newFormat) {
+        if (!DecodeMemorySignature(d, init))
+            return false;
+    } else {
+        uint32_t initialSizePages;
+        if (!d.readVarU32(&initialSizePages))
+            return Fail(d, "expected initial memory size");
 
-    CheckedInt<uint32_t> initialSize = initialSizePages;
-    initialSize *= PageSize;
-    if (!initialSize.isValid())
-        return Fail(d, "initial memory size too big");
+        CheckedInt<uint32_t> initialSize = initialSizePages;
+        initialSize *= PageSize;
+        if (!initialSize.isValid())
+            return Fail(d, "initial memory size too big");
 
-    // ArrayBufferObject can't currently allocate more than INT32_MAX bytes.
-    if (initialSize.value() > uint32_t(INT32_MAX))
-        return false;
+        // ArrayBufferObject can't currently allocate more than INT32_MAX bytes.
+        if (initialSize.value() > uint32_t(INT32_MAX))
+            return false;
 
-    uint32_t maxSizePages;
-    if (!d.readVarU32(&maxSizePages))
-        return Fail(d, "expected initial memory size");
+        uint32_t maxSizePages;
+        if (!d.readVarU32(&maxSizePages))
+            return Fail(d, "expected initial memory size");
 
-    CheckedInt<uint32_t> maxSize = maxSizePages;
-    maxSize *= PageSize;
-    if (!maxSize.isValid())
-        return Fail(d, "maximum memory size too big");
+        CheckedInt<uint32_t> maxSize = maxSizePages;
+        maxSize *= PageSize;
+        if (!maxSize.isValid())
+            return Fail(d, "maximum memory size too big");
 
-    if (maxSize.value() < initialSize.value())
-        return Fail(d, "maximum memory size less than initial memory size");
+        if (maxSize.value() < initialSize.value())
+            return Fail(d, "maximum memory size less than initial memory size");
 
-    if (!newFormat) {
         uint8_t u8;
         if (!d.readFixedU8(&u8))
             return Fail(d, "expected exported byte");
 
         *exported = u8;
+        MOZ_ASSERT(init->memoryUsage == MemoryUsage::None);
+        init->memoryUsage = MemoryUsage::Unshared;
+        init->minMemoryLength = initialSize.value();
+        init->maxMemoryLength = maxSize.value();
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
         return Fail(d, "memory section byte size mismatch");
 
-    MOZ_ASSERT(init->memoryUsage == MemoryUsage::None);
-    init->memoryUsage = MemoryUsage::Unshared;
-    init->minMemoryLength = initialSize.value();
     return true;
 }
 

@@ -107,12 +107,13 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 }
 
 static void
-SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, uint8_t* base, uint32_t length)
+SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, HandleWasmMemoryObject memory)
 {
     for (const BoundsCheck& check : metadata.boundsChecks)
-        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), length);
+        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), memory->buffer().byteLength());
 
 #if defined(JS_CODEGEN_X86)
+    uint8_t* base = memory->buffer().dataPointerEither().unwrap();
     for (const MemoryAccess& access : metadata.memoryAccesses) {
         // Patch memory pointer immediate.
         void* addr = access.patchMemoryPtrImmAt(cs.code());
@@ -194,8 +195,7 @@ CodeSegment::create(JSContext* cx,
                     const Bytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata,
-                    uint8_t* memoryBase,
-                    uint32_t memoryLength)
+                    HandleWasmMemoryObject memory)
 {
     MOZ_ASSERT(bytecode.length() % gc::SystemPageSize() == 0);
     MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
@@ -223,7 +223,8 @@ CodeSegment::create(JSContext* cx,
 
         memcpy(cs->code(), bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
-        SpecializeToMemory(*cs, metadata, memoryBase, memoryLength);
+        if (memory)
+            SpecializeToMemory(*cs, metadata, memory);
     }
 
     if (!ExecutableAllocator::makeExecutable(cs->code(), cs->codeLength())) {

@@ -503,21 +503,42 @@ class AstFunc : public AstNode
     AstName name() const { return name_; }
 };
 
+class AstMemorySignature
+{
+    uint32_t initial_;
+    Maybe<uint32_t> maximum_;
+
+  public:
+    AstMemorySignature() = default;
+    AstMemorySignature(uint32_t initial, Maybe<uint32_t> maximum)
+      : initial_(initial), maximum_(maximum)
+    {}
+    uint32_t initial() const { return initial_; }
+    const Maybe<uint32_t>& maximum() const { return maximum_; }
+};
+
 class AstImport : public AstNode
 {
     AstName name_;
     AstName module_;
-    AstName func_;
-    AstRef sig_;
+    AstName field_;
+    DefinitionKind kind_;
+    AstRef funcSig_;
+    AstMemorySignature memSig_;
 
   public:
-    AstImport(AstName name, AstName module, AstName func, AstRef sig)
-      : name_(name), module_(module), func_(func), sig_(sig)
+    AstImport(AstName name, AstName module, AstName field, AstRef funcSig)
+      : name_(name), module_(module), field_(field), kind_(DefinitionKind::Function), funcSig_(funcSig)
+    {}
+    AstImport(AstName name, AstName module, AstName field, AstMemorySignature memSig)
+      : name_(name), module_(module), field_(field), kind_(DefinitionKind::Memory), memSig_(memSig)
     {}
     AstName name() const { return name_; }
     AstName module() const { return module_; }
-    AstName func() const { return func_; }
-    AstRef& sig() { return sig_; }
+    AstName field() const { return field_; }
+    DefinitionKind kind() const { return kind_; }
+    AstRef& funcSig() { MOZ_ASSERT(kind_ == DefinitionKind::Function); return funcSig_; }
+    const AstMemorySignature& memSig() const { MOZ_ASSERT(kind_ == DefinitionKind::Memory); return memSig_; }
 };
 
 class AstExport : public AstNode
@@ -564,20 +585,15 @@ class AstSegment : public AstNode
 
 typedef AstVector<AstSegment*> AstSegmentVector;
 
-class AstMemory : public AstNode
+class AstMemory : public AstNode, public AstMemorySignature
 {
-    uint32_t initialSize_;
-    Maybe<uint32_t> maxSize_;
     AstSegmentVector segments_;
 
   public:
-    explicit AstMemory(uint32_t initialSize, Maybe<uint32_t> maxSize, AstSegmentVector&& segments)
-      : initialSize_(initialSize),
-        maxSize_(maxSize),
+    explicit AstMemory(AstMemorySignature memSig, AstSegmentVector&& segments)
+      : AstMemorySignature(memSig),
         segments_(Move(segments))
     {}
-    uint32_t initialSize() const { return initialSize_; }
-    const Maybe<uint32_t>& maxSize() const { return maxSize_; }
     const AstSegmentVector& segments() const { return segments_; }
 };
 

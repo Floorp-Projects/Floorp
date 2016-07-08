@@ -69,8 +69,7 @@ class CodeSegment
                                     const Bytes& code,
                                     const LinkData& linkData,
                                     const Metadata& metadata,
-                                    uint8_t* memoryBase,
-                                    uint32_t memoryLength);
+                                    HandleWasmMemoryObject memory);
     ~CodeSegment();
 
     uint8_t* code() const { return bytes_; }
@@ -416,6 +415,7 @@ struct MetadataCacheablePod
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
     uint32_t              minMemoryLength;
+    uint32_t              maxMemoryLength;
 
     MetadataCacheablePod() { mozilla::PodZero(this); }
 };
