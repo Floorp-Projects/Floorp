@@ -904,9 +904,6 @@ public:
     if (!context || !context->mTarget)
       return;
 
-    // Since SkiaGL default to store drawing command until flush
-    // We will have to flush it before present.
-    context->mTarget->Flush();
     context->ReturnTarget();
   }
 
