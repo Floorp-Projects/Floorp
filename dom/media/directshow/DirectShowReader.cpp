@@ -17,13 +17,14 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-LogModule*
-GetDirectShowLog() {
-  static LazyLogModule log("DirectShowDecoder");
-  return log;
-}
+// Windows XP's MP3 decoder filter. This is available on XP only, on Vista
+// and later we can use the DMO Wrapper filter and MP3 decoder DMO.
+const GUID DirectShowReader::CLSID_MPEG_LAYER_3_DECODER_FILTER =
+{ 0x38BE3000, 0xDBF4, 0x11D0, {0x86, 0x0E, 0x00, 0xA0, 0x24, 0xCF, 0xEF, 0x6D} };
 
-#define LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+
+static LazyLogModule gDirectShowLog("DirectShowDecoder");
+#define LOG(...) MOZ_LOG(gDirectShowLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 DirectShowReader::DirectShowReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
@@ -77,11 +78,6 @@ ParseMP3Headers(MP3FrameParser *aParser, MediaResource *aResource)
 
   return aParser->IsMP3() ? NS_OK : NS_ERROR_FAILURE;
 }
-
-// Windows XP's MP3 decoder filter. This is available on XP only, on Vista
-// and later we can use the DMO Wrapper filter and MP3 decoder DMO.
-static const GUID CLSID_MPEG_LAYER_3_DECODER_FILTER =
-{ 0x38BE3000, 0xDBF4, 0x11D0, {0x86, 0x0E, 0x00, 0xA0, 0x24, 0xCF, 0xEF, 0x6D} };
 
 nsresult
 DirectShowReader::ReadMetadata(MediaInfo* aInfo,
