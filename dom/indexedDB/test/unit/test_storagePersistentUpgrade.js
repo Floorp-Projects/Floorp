@@ -11,10 +11,6 @@ function testSteps()
     // This one lives in storage/default/http+++www.mozilla.org
     { url: "http://www.mozilla.org", dbName: "dbB", dbVersion: 1 },
 
-    // This one lives in storage/default/1007+f+app+++system.gaiamobile.org
-    { appId: 1007, inIsolatedMozBrowser: false, url: "app://system.gaiamobile.org",
-      dbName: "dbM", dbVersion: 1 },
-
     // This one lives in storage/default/1007+t+https+++developer.cdn.mozilla.net
     { appId: 1007, inIsolatedMozBrowser: true, url: "https://developer.cdn.mozilla.net",
       dbName: "dbN", dbVersion: 1 },

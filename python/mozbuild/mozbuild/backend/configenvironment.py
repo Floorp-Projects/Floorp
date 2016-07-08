@@ -34,6 +34,7 @@ class BuildConfig(object):
         self.non_global_defines = []
         self.substs = {}
         self.files = []
+        self.mozconfig = None
 
     @classmethod
     def from_config_status(cls, path):
@@ -106,7 +107,7 @@ class ConfigEnvironment(object):
     """
 
     def __init__(self, topsrcdir, topobjdir, defines=None,
-        non_global_defines=None, substs=None, source=None):
+        non_global_defines=None, substs=None, source=None, mozconfig=None):
 
         if not source:
             source = mozpath.join(topobjdir, 'config.status')
@@ -116,6 +117,7 @@ class ConfigEnvironment(object):
         self.substs = dict(substs or {})
         self.topsrcdir = mozpath.abspath(topsrcdir)
         self.topobjdir = mozpath.abspath(topobjdir)
+        self.mozconfig = mozpath.abspath(mozconfig) if mozconfig else None
         self.lib_prefix = self.substs.get('LIB_PREFIX', '')
         if 'LIB_SUFFIX' in self.substs:
             self.lib_suffix = '.%s' % self.substs['LIB_SUFFIX']
