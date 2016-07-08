@@ -136,15 +136,11 @@ def read_output(*args):
 class HGRepoInfo:
     def __init__(self, path):
         self.path = path
-
-        rev = os.environ.get('MOZ_SOURCE_CHANGESET')
-        if not rev:
-            rev = read_output('hg', '-R', path,
-                              'parent', '--template={node|short}')
-
-        # Look for the default hg path. If MOZ_SOURCE_REPO is set, we
+        rev = read_output('hg', '-R', path,
+                          'parent', '--template={node|short}')
+        # Look for the default hg path.  If SRVSRV_ROOT is set, we
         # don't bother asking hg.
-        hg_root = os.environ.get('MOZ_SOURCE_REPO')
+        hg_root = os.environ.get("SRCSRV_ROOT")
         if hg_root:
             root = hg_root
         else:
@@ -162,7 +158,7 @@ class HGRepoInfo:
         if cleanroot is None:
             print >> sys.stderr, textwrap.dedent("""\
                 Could not determine repo info for %s.  This is either not a clone of the web-based
-                repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % path
+                repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % path
             sys.exit(1)
         self.rev = rev
         self.root = root
@@ -209,7 +205,7 @@ class GitRepoInfo:
         if cleanroot is None:
             print >> sys.stderr, textwrap.dedent("""\
                 Could not determine repo info for %s (%s).  This is either not a clone of a web-based
-                repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % (path, root)
+                repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % (path, root)
             sys.exit(1)
         self.rev = rev
         self.cleanroot = cleanroot
@@ -618,7 +614,7 @@ class Dumper:
 
         # tries to get the vcs root from the .mozconfig first - if it's not set
         # the tinderbox vcs path will be assigned further down
-        vcs_root = os.environ.get('MOZ_SOURCE_REPO')
+        vcs_root = os.environ.get("SRCSRV_ROOT")
         for arch_num, arch in enumerate(self.archs):
             self.files_record[files] = 0 # record that we submitted jobs for this tuple of files
             self.SubmitJob(files[-1], 'ProcessFilesWork', args=(files, arch_num, arch, vcs_root, after, after_arg), callback=self.ProcessFilesFinished)
