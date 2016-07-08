@@ -21,15 +21,6 @@ from mozbuild.base import MachCommandBase, MozbuildObject
 
 @CommandProvider
 class SearchProvider(object):
-    @Command('mxr', category='misc',
-        description='Search for something in MXR.')
-    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
-    def mxr(self, term):
-        import webbrowser
-        term = ' '.join(term)
-        uri = 'https://mxr.mozilla.org/mozilla-central/search?string=%s' % term
-        webbrowser.open_new_tab(uri)
-
     @Command('dxr', category='misc',
         description='Search for something in DXR.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
@@ -60,12 +51,12 @@ class SearchProvider(object):
     @Command('search', category='misc',
         description='Search for something on the Internets. '
         'This will open 3 new browser tabs and search for the term on Google, '
-        'MDN, and MXR.')
+        'MDN, and DXR.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def search(self, term):
         self.google(term)
         self.mdn(term)
-        self.mxr(term)
+        self.dxr(term)
 
 
 @CommandProvider
