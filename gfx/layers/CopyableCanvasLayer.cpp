@@ -37,6 +37,7 @@ CopyableCanvasLayer::CopyableCanvasLayer(LayerManager* aLayerManager, void *aImp
   , mGLFrontbuffer(nullptr)
   , mIsAlphaPremultiplied(true)
   , mOriginPos(gl::OriginPos::TopLeft)
+  , mIsMirror(false)
 {
   MOZ_COUNT_CTOR(CopyableCanvasLayer);
 }
@@ -55,6 +56,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
     mGLContext = aData.mGLContext;
     mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
     mOriginPos = gl::OriginPos::BottomLeft;
+    mIsMirror = aData.mIsMirror;
 
     MOZ_ASSERT(mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
 

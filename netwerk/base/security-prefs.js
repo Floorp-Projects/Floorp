@@ -92,3 +92,8 @@ pref("security.webauth.u2f_enable_usbtoken", false);
 pref("security.ssl.errorReporting.enabled", true);
 pref("security.ssl.errorReporting.url", "https://incoming.telemetry.mozilla.org/submit/sslreports/");
 pref("security.ssl.errorReporting.automatic", false);
+
+// Impose a maximum age on HPKP headers, to avoid sites getting permanently
+// blacking themselves out by setting a bad pin.  (60 days by default)
+// https://tools.ietf.org/html/rfc7469#section-4.1
+pref("security.cert_pinning.max_max_age_seconds", 5184000);

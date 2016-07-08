@@ -67,7 +67,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
 
   UniquePtr<SurfaceFactory> factory = GLScreenBuffer::CreateFactory(mGLContext, caps, forwarder, mFlags);
 
-  if (mGLFrontbuffer) {
+  if (mGLFrontbuffer || aData.mIsMirror) {
     // We're using a source other than the one in the default screen.
     // (SkiaGL)
     mFactory = Move(factory);

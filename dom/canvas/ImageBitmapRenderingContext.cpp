@@ -214,8 +214,14 @@ ImageBitmapRenderingContext::Reset()
 already_AddRefed<Layer>
 ImageBitmapRenderingContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                             Layer* aOldLayer,
-                                            LayerManager* aManager)
+                                            LayerManager* aManager,
+                                            bool aMirror /* = false */)
 {
+  if (aMirror) {
+    // Not supported for ImageBitmapRenderingContext
+    return nullptr;
+  }
+
   if (!mImage) {
     // No DidTransactionCallback will be received, so mark the context clean
     // now so future invalidations will be dispatched.
