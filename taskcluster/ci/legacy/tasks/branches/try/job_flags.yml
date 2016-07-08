@@ -43,6 +43,18 @@ builds:
   linux64:
     platforms:
       - Linux64
+    extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
+      - linux64-l10n
+      - sm-plain
+      - sm-nonunified
+      - sm-arm-sim
+      - sm-arm64-sim
+      - sm-compacting
+      - sm-rootanalysis
+      - sm-package
+      - sm-tsan
+      - sm-asan
+      - sm-msan
     types:
       opt:
         task: tasks/builds/opt_linux64.yml
@@ -127,6 +139,36 @@ builds:
         task: tasks/builds/b2g_nexus_5l_eng.yml
       debug:
         task: tasks/builds/b2g_nexus_5l_debug.yml
+  sm-tsan:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_tsan.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-asan:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_asan.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-msan:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_msan.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
 
 post-build:
   upload-symbols:
