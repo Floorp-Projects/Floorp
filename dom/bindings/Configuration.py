@@ -77,34 +77,14 @@ class Configuration(DescriptorProvider):
                 entry = {}
             else:
                 entry = config[iface.identifier.name]
-            if not isinstance(entry, list):
-                assert isinstance(entry, dict)
-                entry = [entry]
-            elif len(entry) == 1:
-                if entry[0].get("workers", False):
-                    # List with only a workers descriptor means we should
-                    # infer a mainthread descriptor.  If you want only
-                    # workers bindings, don't use a list here.
-                    entry.append({})
-                else:
-                    raise TypeError("Don't use a single-element list for "
-                                    "non-worker-only interface " + iface.identifier.name +
-                                    " in Bindings.conf")
-            elif len(entry) == 2:
-                if entry[0].get("workers", False) == entry[1].get("workers", False):
-                    raise TypeError("The two entries for interface " + iface.identifier.name +
-                                    " in Bindings.conf should not have the same value for 'workers'")
-            else:
-                raise TypeError("Interface " + iface.identifier.name +
-                                " should have no more than two entries in Bindings.conf")
-            descs = [Descriptor(self, iface, x) for x in entry]
-            self.descriptors.extend(descs)
+            assert not isinstance(entry, list)
+            desc = Descriptor(self, iface, entry)
+            self.descriptors.append(desc)
             # Setting up descriptorsByName while iterating through interfaces
             # means we can get the nativeType of iterable interfaces without
             # having to do multiple loops.
-            for d in descs:
-                self.descriptorsByName.setdefault(d.interface.identifier.name,
-                                                  []).append(d)
+            assert desc.interface.identifier.name not in self.descriptorsByName
+            self.descriptorsByName[desc.interface.identifier.name] = desc
 
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(lambda x, y: cmp(x.name, y.name))
@@ -240,22 +220,17 @@ class Configuration(DescriptorProvider):
     def getCallbacks(self, webIDLFile):
         return filter(lambda c: c.filename() == webIDLFile, self.callbacks)
 
-    def getDescriptor(self, interfaceName, workers=False):
+    def getDescriptor(self, interfaceName):
         """
-        Gets the appropriate descriptor for the given interface name
-        and the given workers boolean.
+        Gets the appropriate descriptor for the given interface name.
         """
         # We may have optimized out this descriptor, but the chances of anyone
         # asking about it are then slim.  Put the check for that _after_ we've
-        # done our normal lookups.  But that means we have to do our normal
-        # lookups in a way that will not throw if they fail.
-        for d in self.descriptorsByName.get(interfaceName, []):
-            if d.workers == workers:
-                return d
-
-        if workers:
-            for d in self.descriptorsByName.get(interfaceName, []):
-                return d
+        # done our normal lookup.  But that means we have to do our normal
+        # lookup in a way that will not throw if it fails.
+        d = self.descriptorsByName.get(interfaceName, None)
+        if d:
+            return d
 
         if interfaceName in self.optimizedOutDescriptorNames:
             raise NoSuchDescriptorError(
@@ -790,11 +765,9 @@ class Descriptor(DescriptorProvider):
 
     def getDescriptor(self, interfaceName):
         """
-        Gets the appropriate descriptor for the given interface name given the
-        context of the current descriptor. This selects the appropriate
-        implementation for cases like workers.
+        Gets the appropriate descriptor for the given interface name.
         """
-        return self.config.getDescriptor(interfaceName, self.workers)
+        return self.config.getDescriptor(interfaceName)
 
 
 # Some utility methods
