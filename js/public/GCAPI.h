@@ -161,7 +161,7 @@ PrepareZoneForGC(Zone* zone);
  * Schedule all zones to be collected in the next GC.
  */
 extern JS_PUBLIC_API(void)
-PrepareForFullGC(JSRuntime* rt);
+PrepareForFullGC(JSContext* cx);
 
 /**
  * When performing an incremental GC, the zones that were selected for the
@@ -169,14 +169,14 @@ PrepareForFullGC(JSRuntime* rt);
  * This function selects those slices automatically.
  */
 extern JS_PUBLIC_API(void)
-PrepareForIncrementalGC(JSRuntime* rt);
+PrepareForIncrementalGC(JSContext* cx);
 
 /**
  * Returns true if any zone in the system has been scheduled for GC with one of
  * the functions above or by the JS engine.
  */
 extern JS_PUBLIC_API(bool)
-IsGCScheduled(JSRuntime* rt);
+IsGCScheduled(JSContext* cx);
 
 /**
  * Undoes the effect of the Prepare methods above. The given zone will not be
@@ -201,7 +201,7 @@ SkipZoneForGC(Zone* zone);
  * the system.
  */
 extern JS_PUBLIC_API(void)
-GCForReason(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason);
+GCForReason(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason);
 
 /*
  * Incremental GC:
@@ -227,43 +227,43 @@ GCForReason(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason);
  * Begin an incremental collection and perform one slice worth of work. When
  * this function returns, the collection may not be complete.
  * IncrementalGCSlice() must be called repeatedly until
- * !IsIncrementalGCInProgress(rt).
+ * !IsIncrementalGCInProgress(cx).
  *
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
 extern JS_PUBLIC_API(void)
-StartIncrementalGC(JSRuntime* rt, JSGCInvocationKind gckind, gcreason::Reason reason,
+StartIncrementalGC(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason,
                    int64_t millis = 0);
 
 /**
  * Perform a slice of an ongoing incremental collection. When this function
  * returns, the collection may not be complete. It must be called repeatedly
- * until !IsIncrementalGCInProgress(rt).
+ * until !IsIncrementalGCInProgress(cx).
  *
  * Note: SpiderMonkey's GC is not realtime. Slices in practice may be longer or
  *       shorter than the requested interval.
  */
 extern JS_PUBLIC_API(void)
-IncrementalGCSlice(JSRuntime* rt, gcreason::Reason reason, int64_t millis = 0);
+IncrementalGCSlice(JSContext* cx, gcreason::Reason reason, int64_t millis = 0);
 
 /**
- * If IsIncrementalGCInProgress(rt), this call finishes the ongoing collection
- * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(rt),
+ * If IsIncrementalGCInProgress(cx), this call finishes the ongoing collection
+ * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(cx),
  * this is equivalent to GCForReason. When this function returns,
- * IsIncrementalGCInProgress(rt) will always be false.
+ * IsIncrementalGCInProgress(cx) will always be false.
  */
 extern JS_PUBLIC_API(void)
-FinishIncrementalGC(JSRuntime* rt, gcreason::Reason reason);
+FinishIncrementalGC(JSContext* cx, gcreason::Reason reason);
 
 /**
- * If IsIncrementalGCInProgress(rt), this call aborts the ongoing collection and
+ * If IsIncrementalGCInProgress(cx), this call aborts the ongoing collection and
  * performs whatever work needs to be done to return the collector to its idle
  * state. This may take an arbitrarily long time. When this function returns,
- * IsIncrementalGCInProgress(rt) will always be false.
+ * IsIncrementalGCInProgress(cx) will always be false.
  */
 extern JS_PUBLIC_API(void)
-AbortIncrementalGC(JSRuntime* rt);
+AbortIncrementalGC(JSContext* cx);
 
 namespace dbg {
 
@@ -356,7 +356,7 @@ typedef void
  * marking.
  */
 extern JS_PUBLIC_API(GCSliceCallback)
-SetGCSliceCallback(JSRuntime* rt, GCSliceCallback callback);
+SetGCSliceCallback(JSContext* cx, GCSliceCallback callback);
 
 /**
  * Describes the progress of an observed nursery collection.
@@ -384,7 +384,7 @@ using GCNurseryCollectionCallback = void(*)(JSRuntime* rt, GCNurseryProgress pro
  * be called at the start and end of every nursery collection.
  */
 extern JS_PUBLIC_API(GCNurseryCollectionCallback)
-SetGCNurseryCollectionCallback(JSRuntime* rt, GCNurseryCollectionCallback callback);
+SetGCNurseryCollectionCallback(JSContext* cx, GCNurseryCollectionCallback callback);
 
 /**
  * Incremental GC defaults to enabled, but may be disabled for testing or in
@@ -393,7 +393,7 @@ SetGCNurseryCollectionCallback(JSRuntime* rt, GCNurseryCollectionCallback callba
  * disabled on the runtime.
  */
 extern JS_PUBLIC_API(void)
-DisableIncrementalGC(JSRuntime* rt);
+DisableIncrementalGC(JSContext* cx);
 
 /**
  * Returns true if incremental GC is enabled. Simply having incremental GC
@@ -404,14 +404,14 @@ DisableIncrementalGC(JSRuntime* rt);
  * collections are not happening incrementally when expected.
  */
 extern JS_PUBLIC_API(bool)
-IsIncrementalGCEnabled(JSRuntime* rt);
+IsIncrementalGCEnabled(JSContext* cx);
 
 /**
  * Returns true while an incremental GC is ongoing, both when actively
  * collecting and between slices.
  */
 extern JS_PUBLIC_API(bool)
-IsIncrementalGCInProgress(JSRuntime* rt);
+IsIncrementalGCInProgress(JSContext* cx);
 
 /*
  * Returns true when writes to GC things must call an incremental (pre) barrier.
@@ -419,7 +419,7 @@ IsIncrementalGCInProgress(JSRuntime* rt);
  * At other times, the barrier may be elided for performance.
  */
 extern JS_PUBLIC_API(bool)
-IsIncrementalBarrierNeeded(JSRuntime* rt);
+IsIncrementalBarrierNeeded(JSContext* cx);
 
 /*
  * Notify the GC that a reference to a GC thing is about to be overwritten.
@@ -438,7 +438,7 @@ IncrementalObjectBarrier(JSObject* obj);
  * Returns true if the most recent GC ran incrementally.
  */
 extern JS_PUBLIC_API(bool)
-WasIncrementalGC(JSRuntime* rt);
+WasIncrementalGC(JSContext* cx);
 
 /*
  * Generational GC:
@@ -479,7 +479,7 @@ GetGCNumber();
  * GC to return this memory immediately.
  */
 extern JS_PUBLIC_API(void)
-ShrinkGCBuffers(JSRuntime* rt);
+ShrinkGCBuffers(JSContext* cx);
 
 /**
  * Assert if a GC occurs while this class is live. This class does not disable
@@ -665,13 +665,13 @@ MarkStringAsLive(Zone* zone, JSString* string)
  * Note: this is not related to the PokeGC in nsJSEnvironment.
  */
 extern JS_FRIEND_API(void)
-PokeGC(JSRuntime* rt);
+PokeGC(JSContext* cx);
 
 /*
  * Internal to Firefox.
  */
 extern JS_FRIEND_API(void)
-NotifyDidPaint(JSRuntime* rt);
+NotifyDidPaint(JSContext* cx);
 
 } /* namespace JS */
 

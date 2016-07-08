@@ -193,14 +193,14 @@ const getRelativeRect = function (node, relativeTo) {
  *          Defaults to true. The tooltip is closed when clicking outside.
  *          Should this event be stopped and consumed or not.
  *        - {Boolean} useXulWrapper
- *          Defaults to true. If the tooltip is hosted in a XUL document, use a XUL panel
+ *          Defaults to false. If the tooltip is hosted in a XUL document, use a XUL panel
  *          in order to use all the screen viewport available.
  */
 function HTMLTooltip(toolbox, {
     type = "normal",
     autofocus = false,
     consumeOutsideClicks = true,
-    useXulWrapper = true,
+    useXulWrapper = false,
   } = {}) {
   EventEmitter.decorate(this);
 

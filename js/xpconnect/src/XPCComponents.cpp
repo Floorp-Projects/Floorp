@@ -2570,9 +2570,9 @@ nsXPCComponents_Utils::GetWeakReference(HandleValue object, JSContext* cx,
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    PrepareForFullGC(rt);
-    GCForReason(rt, GC_NORMAL, gcreason::COMPONENT_UTILS);
+    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    PrepareForFullGC(cx);
+    GCForReason(cx, GC_NORMAL, gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -2614,9 +2614,9 @@ nsXPCComponents_Utils::ClearMaxCCTime()
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC()
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    PrepareForFullGC(rt);
-    GCForReason(rt, GC_SHRINK, gcreason::COMPONENT_UTILS);
+    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    PrepareForFullGC(cx);
+    GCForReason(cx, GC_SHRINK, gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 

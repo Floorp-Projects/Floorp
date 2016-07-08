@@ -1,7 +1,9 @@
 # This task is the base for most tests in gecko.
 task:
-  created: '{{now}}'
-  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  created:
+    relative-datestamp: '0 seconds'
+  deadline:
+    relative-datestamp: '24 hours'
   metadata:
     source: '{{source}}'
     owner: mozilla-taskcluster-maintenance@mozilla.com

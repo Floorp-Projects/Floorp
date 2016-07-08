@@ -2021,7 +2021,7 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
 
     // Collect the list of scripts which are part of the current compartment.
     {
-        js::gc::AutoPrepareForTracing apft(rt, SkipAtoms);
+        js::gc::AutoPrepareForTracing apft(cx, SkipAtoms);
     }
     Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {

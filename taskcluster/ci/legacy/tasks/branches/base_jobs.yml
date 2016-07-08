@@ -215,6 +215,22 @@ builds:
       file_patterns:
        - js/public/**
        - js/src/**
+  win32:
+    platforms:
+      - win32
+    types:
+      opt:
+        task: tasks/builds/opt_win32.yml
+      debug:
+        task: tasks/builds/dbg_win32.yml
+  win64:
+    platforms:
+      - win64
+    types:
+      opt:
+        task: tasks/builds/opt_win64.yml
+      debug:
+        task: tasks/builds/dbg_win64.yml
 
 tests:
   cppunit:

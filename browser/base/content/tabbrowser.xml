@@ -4351,6 +4351,7 @@
             case "Browser:WindowCreated": {
               let tab = this.getTabForBrowser(browser);
               if (tab && data.userContextId) {
+                ContextualIdentityService.telemetry(data.userContextId);
                 tab.setUserContextId(data.userContextId);
               }
 
