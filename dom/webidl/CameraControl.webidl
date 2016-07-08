@@ -489,8 +489,6 @@ dictionary CameraDetectedFaceInit
   DOMPointInit mouth;
 };
 
-callback CameraFaceDetectionCallback = void (sequence<CameraDetectedFace> faces);
-
 partial interface CameraControl
 {
   /* Starts the face detection. This should be called after the preview is
