@@ -73,7 +73,8 @@ class MozbuildObject(ProcessExecutionMixin):
     running processes, etc. This classes provides that functionality. Other
     modules can inherit from this class to obtain this functionality easily.
     """
-    def __init__(self, topsrcdir, settings, log_manager, topobjdir=None):
+    def __init__(self, topsrcdir, settings, log_manager, topobjdir=None,
+                 mozconfig=MozconfigLoader.AUTODETECT):
         """Create a new Mozbuild object instance.
 
         Instances are bound to a source directory, a ConfigSettings instance,
@@ -88,7 +89,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         self._make = None
         self._topobjdir = mozpath.normsep(topobjdir) if topobjdir else topobjdir
-        self._mozconfig = None
+        self._mozconfig = mozconfig
         self._config_guess_output = None
         self._config_environment = None
         self._virtualenv_manager = None
@@ -104,9 +105,7 @@ class MozbuildObject(ProcessExecutionMixin):
         mozconfig file.
 
         If the current working directory is inside a known objdir, we always
-        use the topsrcdir and mozconfig associated with that objdir. If no
-        mozconfig is associated with that objdir, we fall back to looking for
-        the mozconfig in the usual places.
+        use the topsrcdir and mozconfig associated with that objdir.
 
         If the current working directory is inside a known srcdir, we use that
         topsrcdir and look for mozconfigs using the default mechanism, which
@@ -126,7 +125,7 @@ class MozbuildObject(ProcessExecutionMixin):
         cwd = cwd or os.getcwd()
         topsrcdir = None
         topobjdir = None
-        mozconfig = None
+        mozconfig = MozconfigLoader.AUTODETECT
 
         def load_mozinfo(path):
             info = json.load(open(path, 'rt'))
@@ -196,7 +195,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
         # If we can't resolve topobjdir, oh well. The constructor will figure
         # it out via config.guess.
-        return cls(topsrcdir, None, None, topobjdir=topobjdir)
+        return cls(topsrcdir, None, None, topobjdir=topobjdir,
+                   mozconfig=mozconfig)
 
     @staticmethod
     def resolve_mozconfig_topobjdir(topsrcdir, mozconfig, default=None):
@@ -237,9 +237,9 @@ class MozbuildObject(ProcessExecutionMixin):
 
         This a dict as returned by MozconfigLoader.read_mozconfig()
         """
-        if self._mozconfig is None:
+        if self._mozconfig is MozconfigLoader.AUTODETECT:
             loader = MozconfigLoader(self.topsrcdir)
-            self._mozconfig = loader.read_mozconfig(
+            self._mozconfig = loader.read_mozconfig(path=self._mozconfig,
                 moz_build_app=os.environ.get('MOZ_CURRENT_PROJECT'))
 
         return self._mozconfig

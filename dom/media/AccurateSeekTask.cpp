@@ -45,7 +45,7 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
   , mCurrentTimeBeforeSeek(media::TimeUnit::FromMicroseconds(aCurrentMediaTime))
   , mAudioRate(aInfo.mAudio.mRate)
-  , mDoneAudioSeeking(!aInfo.HasAudio() || aSeekJob.mTarget.IsVideoOnly())
+  , mDoneAudioSeeking(!aInfo.HasAudio() || mSeekJob.mTarget.IsVideoOnly())
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
   AssertOwnerThread();
@@ -309,6 +309,14 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
     audio->mTime, audio->GetEndTime(), audio->mDiscontinuity);
 
+  // Video-only seek doesn't reset audio decoder. There might be pending audio
+  // requests when AccurateSeekTask::Seek() begins. We will just store the data
+  // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
+  if (mSeekJob.mTarget.IsVideoOnly()) {
+    mSeekedAudioData = audio.forget();
+    return;
+  }
+
   if (mFirstAudioSample) {
     mFirstAudioSample = false;
     MOZ_ASSERT(audio->mDiscontinuity);
@@ -340,6 +348,11 @@ AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
   MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
 
   SAMPLE_LOG("OnNotDecoded type=%d reason=%u", aType, aReason);
+
+  // Ignore pending requests from video-only seek.
+  if (aType == MediaData::AUDIO_DATA && mSeekJob.mTarget.IsVideoOnly()) {
+    return;
+  }
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
     // If this is a decode error, delegate to the generic error path.
@@ -446,6 +459,10 @@ AccurateSeekTask::SetCallbacks()
 
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
+    // Ignore pending requests from video-only seek.
+    if (mSeekJob.mTarget.IsVideoOnly()) {
+      return;
+    }
     if (aData.is<MediaData::Type>()) {
       RequestAudioData();
     }
