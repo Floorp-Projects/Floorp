@@ -315,14 +315,14 @@ Export::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 size_t
-Import::serializedSize() const
+FuncImport::serializedSize() const
 {
     return SerializedSigSize(sig_) +
            sizeof(pod);
 }
 
 uint8_t*
-Import::serialize(uint8_t* cursor) const
+FuncImport::serialize(uint8_t* cursor) const
 {
     cursor = SerializeSig(cursor, sig_);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
@@ -330,7 +330,7 @@ Import::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-Import::deserialize(const uint8_t* cursor)
+FuncImport::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializeSig(cursor, &sig_)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
@@ -338,7 +338,7 @@ Import::deserialize(const uint8_t* cursor)
 }
 
 size_t
-Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return SizeOfSigExcludingThis(sig_, mallocSizeOf);
 }
@@ -450,7 +450,7 @@ size_t
 Metadata::serializedSize() const
 {
     return sizeof(pod()) +
-           SerializedVectorSize(imports) +
+           SerializedVectorSize(funcImports) +
            SerializedVectorSize(exports) +
            SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(boundsChecks) +
@@ -466,7 +466,7 @@ uint8_t*
 Metadata::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-    cursor = SerializeVector(cursor, imports);
+    cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, exports);
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, boundsChecks);
@@ -483,7 +483,7 @@ Metadata::serialize(uint8_t* cursor) const
 Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializeVector(cursor, &imports)) &&
+    (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &exports)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
@@ -499,7 +499,7 @@ Metadata::deserialize(const uint8_t* cursor)
 size_t
 Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfVectorExcludingThis(imports, mallocSizeOf) +
+    return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
            SizeOfVectorExcludingThis(exports, mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            boundsChecks.sizeOfExcludingThis(mallocSizeOf) +

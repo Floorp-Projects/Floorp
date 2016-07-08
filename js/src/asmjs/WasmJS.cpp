@@ -81,30 +81,30 @@ GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleVal
 }
 
 static bool
-ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& importNames,
-                MutableHandle<FunctionVector> imports)
+GetImports(JSContext* cx, HandleObject importObj, const ImportVector& imports,
+           MutableHandle<FunctionVector> funcImports)
 {
-    if (!importNames.empty() && !importObj)
+    if (!imports.empty() && !importObj)
         return Throw(cx, "no import object given");
 
-    for (const ImportName& name : importNames) {
+    for (const Import& import : imports) {
         RootedValue v(cx);
-        if (!GetProperty(cx, importObj, name.module.get(), &v))
+        if (!GetProperty(cx, importObj, import.module.get(), &v))
             return false;
 
-        if (strlen(name.func.get()) > 0) {
+        if (strlen(import.func.get()) > 0) {
             if (!v.isObject())
                 return Throw(cx, "import object field is not an Object");
 
             RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, name.func.get(), &v))
+            if (!GetProperty(cx, obj, import.func.get(), &v))
                 return false;
         }
 
         if (!IsFunctionObject(v))
             return Throw(cx, "import object field is not a Function");
 
-        if (!imports.append(&v.toObject().as<JSFunction>()))
+        if (!funcImports.append(&v.toObject().as<JSFunction>()))
             return false;
     }
 
@@ -144,7 +144,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
+    if (!GetImports(cx, importObj, module->imports(), &funcImports))
         return false;
 
     instanceObj.set(WasmInstanceObject::create(cx));
@@ -454,7 +454,7 @@ InstanceConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, module.importNames(), &funcImports))
+    if (!GetImports(cx, importObj, module.imports(), &funcImports))
         return false;
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());

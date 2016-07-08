@@ -48,10 +48,10 @@ Instance::addressOfMemoryBase() const
     return (uint8_t**)(codeSegment_->globalData() + HeapGlobalDataOffset);
 }
 
-ImportExit&
-Instance::importToExit(const Import& import)
+FuncImportExit&
+Instance::funcImportToExit(const FuncImport& fi)
 {
-    return *(ImportExit*)(codeSegment_->globalData() + import.exitGlobalDataOffset());
+    return *(FuncImportExit*)(codeSegment_->globalData() + fi.exitGlobalDataOffset());
 }
 
 WasmActivation*&
@@ -178,19 +178,19 @@ CreateI64Object(JSContext* cx, int64_t i64)
 }
 
 bool
-Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uint64_t* argv,
+Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
-    const Import& import = metadata_->imports[importIndex];
+    const FuncImport& fi = metadata_->funcImports[funcImportIndex];
 
     InvokeArgs args(cx);
     if (!args.init(argc))
         return false;
 
     bool hasI64Arg = false;
-    MOZ_ASSERT(import.sig().args().length() == argc);
+    MOZ_ASSERT(fi.sig().args().length() == argc);
     for (size_t i = 0; i < argc; i++) {
-        switch (import.sig().args()[i]) {
+        switch (fi.sig().args()[i]) {
           case ValType::I32:
             args[i].set(Int32Value(*(int32_t*)&argv[i]));
             break;
@@ -221,7 +221,8 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
         }
     }
 
-    RootedValue fval(cx, ObjectValue(*importToExit(import).fun));
+    FuncImportExit& exit = funcImportToExit(fi);
+    RootedValue fval(cx, ObjectValue(*exit.fun));
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
         return false;
@@ -229,13 +230,11 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
     // Don't try to optimize if the function has at least one i64 arg or if
     // it returns an int64. GenerateJitExit relies on this, as does the
     // type inference code below in this function.
-    if (hasI64Arg || import.sig().ret() == ExprType::I64)
+    if (hasI64Arg || fi.sig().ret() == ExprType::I64)
         return true;
 
-    ImportExit& exit = importToExit(import);
-
     // The exit may already have become optimized.
-    void* jitExitCode = codeSegment_->code() + import.jitExitCodeOffset();
+    void* jitExitCode = codeSegment_->code() + fi.jitExitCodeOffset();
     if (exit.code == jitExitCode)
         return true;
 
@@ -256,7 +255,7 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
         return true;
 
     // Currently we can't rectify arguments. Therefore disable if argc is too low.
-    if (exit.fun->nargs() > import.sig().args().length())
+    if (exit.fun->nargs() > fi.sig().args().length())
         return true;
 
     // Ensure the argument types are included in the argument TypeSets stored in
@@ -271,7 +270,7 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
         return true;
     for (uint32_t i = 0; i < exit.fun->nargs(); i++) {
         TypeSet::Type type = TypeSet::UnknownType();
-        switch (import.sig().args()[i]) {
+        switch (fi.sig().args()[i]) {
           case ValType::I32:   type = TypeSet::Int32Type(); break;
           case ValType::I64:   MOZ_CRASH("can't happen because of above guard");
           case ValType::F32:   type = TypeSet::DoubleType(); break;
@@ -290,7 +289,7 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
     }
 
     // Let's optimize it!
-    if (!script->baselineScript()->addDependentWasmImport(cx, *this, importIndex))
+    if (!script->baselineScript()->addDependentWasmImport(cx, *this, funcImportIndex))
         return false;
 
     exit.code = jitExitCode;
@@ -299,49 +298,49 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
 }
 
 /* static */ int32_t
-Instance::callImport_void(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_void(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    return activation->instance().callImport(cx, importIndex, argc, argv, &rval);
+    return activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval);
 }
 
 /* static */ int32_t
-Instance::callImport_i32(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i32(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToInt32(cx, rval, (int32_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_i64(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ReadI64Object(cx, rval, (int64_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_f64(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_f64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToNumber(cx, rval, (double*)argv);
@@ -487,10 +486,10 @@ Instance::create(JSContext* cx,
 
     Instance& instance = instanceObj->instance();
 
-    for (size_t i = 0; i < metadata.imports.length(); i++) {
-        const Import& import = metadata.imports[i];
-        ImportExit& exit = instance.importToExit(import);
-        exit.code = instance.codeSegment().code() + import.interpExitCodeOffset();
+    for (size_t i = 0; i < metadata.funcImports.length(); i++) {
+        const FuncImport& fi = metadata.funcImports[i];
+        FuncImportExit& exit = instance.funcImportToExit(fi);
+        exit.code = instance.codeSegment().code() + fi.interpExitCodeOffset();
         exit.fun = funcImports[i];
         exit.baselineScript = nullptr;
     }
@@ -532,8 +531,8 @@ Instance::create(JSContext* cx,
 
 Instance::~Instance()
 {
-    for (unsigned i = 0; i < metadata_->imports.length(); i++) {
-        ImportExit& exit = importToExit(metadata_->imports[i]);
+    for (unsigned i = 0; i < metadata_->funcImports.length(); i++) {
+        FuncImportExit& exit = funcImportToExit(metadata_->funcImports[i]);
         if (exit.baselineScript)
             exit.baselineScript->removeDependentWasmImport(*this, i);
     }
@@ -542,8 +541,8 @@ Instance::~Instance()
 void
 Instance::trace(JSTracer* trc)
 {
-    for (const Import& import : metadata_->imports)
-        TraceNullableEdge(trc, &importToExit(import).fun, "wasm function import");
+    for (const FuncImport& fi : metadata_->funcImports)
+        TraceNullableEdge(trc, &funcImportToExit(fi).fun, "wasm function import");
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
 
@@ -808,11 +807,11 @@ Instance::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
 }
 
 void
-Instance::deoptimizeImportExit(uint32_t importIndex)
+Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const Import& import = metadata_->imports[importIndex];
-    ImportExit& exit = importToExit(import);
-    exit.code = codeSegment_->code() + import.interpExitCodeOffset();
+    const FuncImport& fi = metadata_->funcImports[funcImportIndex];
+    FuncImportExit& exit = funcImportToExit(fi);
+    exit.code = codeSegment_->code() + fi.interpExitCodeOffset();
     exit.baselineScript = nullptr;
 }
 
