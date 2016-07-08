@@ -592,6 +592,18 @@ struct nsTArray_CopyWithMemutils
   {
     memmove(aDest, aSrc, aCount * aElemSize);
   }
+
+  static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                    size_t aElemSize)
+  {
+    memmove(aDest, aSrc, aCount * aElemSize);
+  }
+
+  static void MoveNonOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                       size_t aElemSize)
+  {
+    memcpy(aDest, aSrc, aCount * aElemSize);
+  }
 };
 
 //
@@ -652,6 +664,45 @@ struct nsTArray_CopyWithConstructors
       }
     } else {
       CopyNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
+    }
+  }
+
+  static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                    size_t aElemSize)
+  {
+    ElemType* destElem = static_cast<ElemType*>(aDest);
+    ElemType* srcElem = static_cast<ElemType*>(aSrc);
+    ElemType* destElemEnd = destElem + aCount;
+    ElemType* srcElemEnd = srcElem + aCount;
+    if (destElem == srcElem) {
+      return;  // In practice, we don't do this.
+    } else if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
+      while (destElemEnd != destElem) {
+        --destElemEnd;
+        --srcElemEnd;
+        traits::Construct(destElemEnd, mozilla::Move(*srcElemEnd));
+        traits::Destruct(srcElem);
+      }
+    } else {
+      MoveNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
+    }
+  }
+
+  static void MoveNonOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                       size_t aElemSize)
+  {
+    ElemType* destElem = static_cast<ElemType*>(aDest);
+    ElemType* srcElem = static_cast<ElemType*>(aSrc);
+    ElemType* destElemEnd = destElem + aCount;
+#ifdef DEBUG
+    ElemType* srcElemEnd = srcElem + aCount;
+    MOZ_ASSERT(srcElemEnd <= destElem || srcElemEnd > destElemEnd);
+#endif
+    while (destElem != destElemEnd) {
+      traits::Construct(destElem, mozilla::Move(*srcElem));
+      traits::Destruct(srcElem);
+      ++destElem;
+      ++srcElem;
     }
   }
 };
@@ -1976,7 +2027,7 @@ nsTArray_Impl<E, Alloc>::AppendElements(nsTArray_Impl<Item, Allocator>&& aArray)
         len + otherLen, sizeof(elem_type)))) {
     return nullptr;
   }
-  copy_type::CopyNonOverlappingRegion(Elements() + len, aArray.Elements(), otherLen,
+  copy_type::MoveNonOverlappingRegion(Elements() + len, aArray.Elements(), otherLen,
                                       sizeof(elem_type));
   this->IncrementLength(otherLen);
   aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
