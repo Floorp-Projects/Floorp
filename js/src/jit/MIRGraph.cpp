@@ -126,12 +126,6 @@ MIRGenerator::needsBoundsCheckBranch(const MWasmMemoryAccess* access) const
 size_t
 MIRGenerator::foldableOffsetRange(const MWasmMemoryAccess* access) const
 {
-    return foldableOffsetRange(access->needsBoundsCheck(), access->isAtomicAccess());
-}
-
-size_t
-MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) const
-{
     // This determines whether it's ok to fold up to WasmImmediateRange
     // offsets, instead of just WasmCheckedImmediateRange.
 
@@ -148,14 +142,14 @@ MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) cons
 
     // Signal-handling can be dynamically disabled by OS bugs or flags.
     // Bug 1254935: Atomic accesses can't be handled with signal handlers yet.
-    if (usesSignalHandlersForAsmJSOOB_ && !atomic)
+    if (usesSignalHandlersForAsmJSOOB_ && !access->isAtomicAccess())
         return WasmImmediateRange;
 #endif
 
     // On 32-bit platforms, if we've proven the access is in bounds after
     // 32-bit wrapping, we can fold full offsets because they're added with
     // 32-bit arithmetic.
-    if (sizeof(intptr_t) == sizeof(int32_t) && !accessNeedsBoundsCheck)
+    if (sizeof(intptr_t) == sizeof(int32_t) && !access->needsBoundsCheck())
         return WasmImmediateRange;
 
     // Otherwise, only allow the checked size. This is always less than the

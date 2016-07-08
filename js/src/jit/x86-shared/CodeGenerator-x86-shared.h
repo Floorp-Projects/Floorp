@@ -94,24 +94,24 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     };
 
   private:
-    void
-    emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* mir, const MInstruction* ins,
-                               Register ptr, Label* fail);
+    void emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* mir, const MInstruction* ins,
+                                    Register ptr, Label* fail);
+
+  protected:
+    void maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr);
 
   public:
     // For SIMD and atomic loads and stores (which throw on out-of-bounds):
-    bool
-    maybeEmitThrowingAsmJSBoundsCheck(const MWasmMemoryAccess* mir, const MInstruction* ins,
-                                      const LAllocation* ptr);
+    bool maybeEmitThrowingAsmJSBoundsCheck(const MWasmMemoryAccess* mir, const MInstruction* ins,
+                                           const LAllocation* ptr);
 
     // For asm.js plain and atomic loads that possibly require a bounds check:
-    bool
-    maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir, LAsmJSLoadHeap* ins,
-                                  OutOfLineLoadTypedArrayOutOfBounds** ool);
+    bool maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir, LAsmJSLoadHeap* ins,
+                                       OutOfLineLoadTypedArrayOutOfBounds** ool);
 
     // For asm.js plain and atomic stores that possibly require a bounds check:
-    bool
-    maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins, Label** rejoin);
+    bool maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins,
+                                        Label** rejoin);
 
     void cleanupAfterAsmJSBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr);
 
@@ -272,6 +272,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
     virtual void visitAsmSelect(LAsmSelect* ins);
     virtual void visitAsmReinterpret(LAsmReinterpret* lir);
+    virtual void visitWasmBoundsCheck(LWasmBoundsCheck* ins);
     virtual void visitMemoryBarrier(LMemoryBarrier* ins);
     virtual void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
     virtual void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);

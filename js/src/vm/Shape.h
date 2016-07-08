@@ -129,6 +129,7 @@ enum class MaybeAdding { Adding = true, NotAdding = false };
 class ShapeTable {
   public:
     friend class NativeObject;
+    friend class BaseShape;
     static const uint32_t MIN_ENTRIES   = 11;
 
     class Entry {
@@ -145,6 +146,7 @@ class ShapeTable {
       public:
         bool isFree() const { return shape_ == nullptr; }
         bool isRemoved() const { return shape_ == SHAPE_REMOVED; }
+        bool isLive() const { return !isFree() && !isRemoved(); }
         bool hadCollision() const { return uintptr_t(shape_) & SHAPE_COLLISION; }
 
         void setFree() { shape_ = nullptr; }
@@ -453,6 +455,10 @@ class BaseShape : public gc::TenuredCell
 
     void traceChildren(JSTracer* trc);
     void traceChildrenSkipShapeTable(JSTracer* trc);
+
+#ifdef DEBUG
+    bool canSkipMarkingShapeTable(Shape* lastShape);
+#endif
 
   private:
     static void staticAsserts() {
