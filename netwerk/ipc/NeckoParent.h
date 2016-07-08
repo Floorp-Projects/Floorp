@@ -235,8 +235,6 @@ protected:
   virtual bool RecvRemoveRequestContext(const nsCString& rcid) override;
 
 private:
-  nsCString mCoreAppsBasePath;
-  nsCString mWebAppsBasePath;
   RefPtr<OfflineObserver> mObserver;
 };
 

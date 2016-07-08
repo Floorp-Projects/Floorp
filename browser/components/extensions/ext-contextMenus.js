@@ -454,7 +454,6 @@ var gExtensionCount = 0;
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
   gContextMenuMap.set(extension, new Map());
-  gRootItems.delete(extension);
   if (++gExtensionCount == 1) {
     Services.obs.addObserver(contextMenuObserver,
                              "on-build-contextmenu",
@@ -464,6 +463,7 @@ extensions.on("startup", (type, extension) => {
 
 extensions.on("shutdown", (type, extension) => {
   gContextMenuMap.delete(extension);
+  gRootItems.delete(extension);
   if (--gExtensionCount == 0) {
     Services.obs.removeObserver(contextMenuObserver,
                                 "on-build-contextmenu");
