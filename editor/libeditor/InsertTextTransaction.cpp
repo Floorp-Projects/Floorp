@@ -32,16 +32,16 @@ InsertTextTransaction::~InsertTextTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertTextTransaction, EditTransactionBase,
                                    mTextNode)
 
-NS_IMPL_ADDREF_INHERITED(InsertTextTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(InsertTextTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(InsertTextTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(InsertTextTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTransaction)
   if (aIID.Equals(NS_GET_IID(InsertTextTransaction))) {
     foundInterface = static_cast<nsITransaction*>(this);
   } else
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 
 NS_IMETHODIMP

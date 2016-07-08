@@ -7,7 +7,6 @@
 #define DeleteRangeTransaction_h
 
 #include "EditAggregateTransaction.h"
-#include "EditTxn.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
 #include "nsIEditor.h"
@@ -42,7 +41,7 @@ public:
                                            EditAggregateTransaction)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
 

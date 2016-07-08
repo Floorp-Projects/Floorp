@@ -24,13 +24,14 @@ using namespace dom;
 
 #define kNullCh (char16_t('\0'))
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTxn, mElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTransactionBase,
+                                   mElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeStyleTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-NS_IMPL_ADDREF_INHERITED(ChangeStyleTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(ChangeStyleTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(ChangeStyleTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(ChangeStyleTransaction, EditTransactionBase)
 
 ChangeStyleTransaction::~ChangeStyleTransaction()
 {
@@ -122,7 +123,7 @@ ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
                                                nsIAtom& aProperty,
                                                const nsAString& aValue,
                                                EChangeType aChangeType)
-  : EditTxn()
+  : EditTransactionBase()
   , mElement(&aElement)
   , mProperty(&aProperty)
   , mValue(aValue)

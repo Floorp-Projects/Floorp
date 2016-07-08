@@ -34,11 +34,11 @@ DeleteTextTransaction::DeleteTextTransaction(
                "Trying to delete more characters than in node");
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTransactionBase,
                                    mCharData)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 nsresult
 DeleteTextTransaction::Init()

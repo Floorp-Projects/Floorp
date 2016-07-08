@@ -55,11 +55,12 @@ AddStyleSheetTransaction::AddStyleSheetTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTransaction,
+                                   EditTransactionBase,
                                    mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
 AddStyleSheetTransaction::Init(nsIEditor* aEditor,
@@ -108,11 +109,12 @@ RemoveStyleSheetTransaction::RemoveStyleSheetTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTransaction,
+                                   EditTransactionBase,
                                    mSheet)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
 RemoveStyleSheetTransaction::Init(nsIEditor* aEditor,

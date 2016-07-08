@@ -11,7 +11,7 @@
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIEditor.h"                  // for nsEditor::IsModifiableNode
-#include "nsISupportsImpl.h"            // for EditTxn::QueryInterface, etc
+#include "nsISupportsImpl.h"            // for QueryInterface, etc
 
 namespace mozilla {
 
@@ -27,13 +27,13 @@ JoinNodeTransaction::JoinNodeTransaction(nsEditor& aEditor,
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodeTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(JoinNodeTransaction, EditTransactionBase,
                                    mLeftNode,
                                    mRightNode,
                                    mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JoinNodeTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 nsresult
 JoinNodeTransaction::CheckValidity()

@@ -17,7 +17,7 @@ using namespace dom;
 ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
                                                        nsIAtom& aAttribute,
                                                        const nsAString* aValue)
-  : EditTxn()
+  : EditTransactionBase()
   , mElement(&aElement)
   , mAttribute(&aAttribute)
   , mValue(aValue ? *aValue : EmptyString())
@@ -31,13 +31,14 @@ ChangeAttributeTransaction::~ChangeAttributeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTransaction,
+                                   EditTransactionBase,
                                    mElement)
 
-NS_IMPL_ADDREF_INHERITED(ChangeAttributeTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(ChangeAttributeTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(ChangeAttributeTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(ChangeAttributeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeAttributeTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
 ChangeAttributeTransaction::DoTransaction()
