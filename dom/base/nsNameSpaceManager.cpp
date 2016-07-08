@@ -116,10 +116,19 @@ nsNameSpaceManager::GetNameSpaceID(const nsAString& aURI)
     return kNameSpaceID_None; // xmlns="", see bug 75700 for details
   }
 
-  int32_t nameSpaceID;
-
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aURI);
-  if (mURIToIDTable.Get(atom, &nameSpaceID)) {
+  return GetNameSpaceID(atom);
+}
+
+int32_t
+nsNameSpaceManager::GetNameSpaceID(nsIAtom* aURI)
+{
+  if (aURI == nsGkAtoms::_empty) {
+    return kNameSpaceID_None; // xmlns="", see bug 75700 for details
+  }
+
+  int32_t nameSpaceID;
+  if (mURIToIDTable.Get(aURI, &nameSpaceID)) {
     NS_POSTCONDITION(nameSpaceID >= 0, "Bogus namespace ID");
     return nameSpaceID;
   }

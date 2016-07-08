@@ -385,8 +385,9 @@ JSRuntime::destroyRuntime()
          * Finish any in-progress GCs first. This ensures the parseWaitingOnGC
          * list is empty in CancelOffThreadParses.
          */
-        if (JS::IsIncrementalGCInProgress(this))
-            FinishGC(this);
+        JSContext* cx = contextFromMainThread();
+        if (JS::IsIncrementalGCInProgress(cx))
+            FinishGC(cx);
 
         /* Free source hook early, as its destructor may want to delete roots. */
         sourceHook = nullptr;
@@ -432,7 +433,7 @@ JSRuntime::destroyRuntime()
         /* Set the profiler sampler buffer generation to invalid. */
         profilerSampleBufferGen_ = UINT32_MAX;
 
-        JS::PrepareForFullGC(this);
+        JS::PrepareForFullGC(contextFromMainThread());
         gc.gc(GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
     }
 

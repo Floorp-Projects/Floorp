@@ -168,7 +168,7 @@ BEGIN_TEST(testIncrementalRoots)
     // We'd better be between iGC slices now. There's always a risk that
     // something will decide that we need to do a full GC (such as gczeal, but
     // that is turned off.)
-    MOZ_ASSERT(JS::IsIncrementalGCInProgress(rt));
+    MOZ_ASSERT(JS::IsIncrementalGCInProgress(cx));
 
     // And assert that the mark bits are as we expect them to be.
     MOZ_ASSERT(vec[0]->asTenured().isMarked());

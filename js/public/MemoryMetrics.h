@@ -883,7 +883,7 @@ class ObjectPrivateVisitor
 };
 
 extern JS_PUBLIC_API(bool)
-CollectRuntimeStats(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
+CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
 
 extern JS_PUBLIC_API(size_t)
 SystemCompartmentCount(JSRuntime* rt);
@@ -895,11 +895,11 @@ extern JS_PUBLIC_API(size_t)
 PeakSizeOfTemporary(const JSRuntime* rt);
 
 extern JS_PUBLIC_API(bool)
-AddSizeOfTab(JSRuntime* rt, JS::HandleObject obj, mozilla::MallocSizeOf mallocSizeOf,
+AddSizeOfTab(JSContext* cx, JS::HandleObject obj, mozilla::MallocSizeOf mallocSizeOf,
              ObjectPrivateVisitor* opv, TabSizes* sizes);
 
 extern JS_PUBLIC_API(bool)
-AddServoSizeOf(JSRuntime *rt, mozilla::MallocSizeOf mallocSizeOf,
+AddServoSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf,
                ObjectPrivateVisitor *opv, ServoSizes *sizes);
 
 } // namespace JS

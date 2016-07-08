@@ -165,11 +165,10 @@ GCRuntime::tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thing
             // We have no memory available for a new chunk; perform an
             // all-compartments, non-incremental, shrinking GC and wait for
             // sweeping to finish.
-            JSRuntime *rt = cx->asJSContext()->runtime();
-            JS::PrepareForFullGC(rt);
+            JS::PrepareForFullGC(cx->asJSContext());
             AutoKeepAtoms keepAtoms(cx->perThreadData);
-            rt->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
-            rt->gc.waitBackgroundSweepOrAllocEnd();
+            cx->asJSContext()->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
+            cx->asJSContext()->gc.waitBackgroundSweepOrAllocEnd();
 
             t = tryNewTenuredThing<T, NoGC>(cx, kind, thingSize);
             if (!t)
