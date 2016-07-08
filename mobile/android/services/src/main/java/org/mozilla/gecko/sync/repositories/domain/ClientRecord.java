@@ -50,6 +50,7 @@ public class ClientRecord extends Record {
   public String application;         // Display name, E.g., "Firefox Beta"
   public String appPackage;          // E.g., "org.mozilla.firefox_beta"
   public String device;              // E.g., "HTC One"
+  public String fxaDeviceId;         // E.g., "525b624eaaf1e40d21ec8997c3116ad8"
 
   public ClientRecord(String guid, String collection, long lastModified, boolean deleted) {
     super(guid, collection, lastModified, deleted);
@@ -115,6 +116,10 @@ public class ClientRecord extends Record {
     if (payload.containsKey("device")) {
       this.device = payload.getString("device");
     }
+
+    if (payload.containsKey("fxaDeviceId")) {
+      this.fxaDeviceId = payload.getString("fxaDeviceId");
+    }
   }
 
   @Override
@@ -131,7 +136,6 @@ public class ClientRecord extends Record {
     if (this.protocols != null) {
       payload.put("protocols",  this.protocols);
     }
-
 
     if (this.formfactor != null) {
       payload.put("formfactor", this.formfactor);
@@ -151,6 +155,10 @@ public class ClientRecord extends Record {
 
     if (this.device != null) {
       payload.put("device", this.device);
+    }
+
+    if (this.fxaDeviceId != null) {
+      payload.put("fxaDeviceId", this.fxaDeviceId);
     }
   }
 
@@ -201,6 +209,7 @@ public class ClientRecord extends Record {
     out.application = this.application;
     out.appPackage = this.appPackage;
     out.device = this.device;
+    out.fxaDeviceId = this.fxaDeviceId;
 
     return out;
   }

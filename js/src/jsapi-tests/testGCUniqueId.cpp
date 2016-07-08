@@ -12,13 +12,13 @@
 #include "jsapi-tests/tests.h"
 
 static void
-MinimizeHeap(JSRuntime* rt)
+MinimizeHeap(JSContext* cx)
 {
     // The second collection is to force us to wait for the background
     // sweeping that the first GC started to finish.
-    JS_GC(JS_GetContext(rt));
-    JS_GC(JS_GetContext(rt));
-    js::gc::FinishGC(rt);
+    JS_GC(cx);
+    JS_GC(cx);
+    js::gc::FinishGC(cx);
 }
 
 BEGIN_TEST(testGCUID)
@@ -31,7 +31,7 @@ BEGIN_TEST(testGCUID)
     uint64_t tmp = 0;
 
     // Ensure the heap is as minimal as it can get.
-    MinimizeHeap(rt);
+    MinimizeHeap(cx);
 
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     uintptr_t nurseryAddr = uintptr_t(obj.get());
@@ -53,7 +53,7 @@ BEGIN_TEST(testGCUID)
     CHECK(uid == tmp);
 
     // Tenure the thing and check that the UID moved with it.
-    MinimizeHeap(rt);
+    MinimizeHeap(cx);
     uintptr_t tenuredAddr = uintptr_t(obj.get());
     CHECK(tenuredAddr != nurseryAddr);
     CHECK(!js::gc::IsInsideNursery(obj));
@@ -71,9 +71,9 @@ BEGIN_TEST(testGCUID)
     // Try to get another tenured object in the same location and check that
     // the uid was removed correctly.
     obj = nullptr;
-    MinimizeHeap(rt);
+    MinimizeHeap(cx);
     obj = JS_NewPlainObject(cx);
-    MinimizeHeap(rt);
+    MinimizeHeap(cx);
     CHECK(uintptr_t(obj.get()) == tenuredAddr);
     CHECK(!obj->zone()->hasUniqueId(obj));
     CHECK(obj->zone()->getUniqueId(obj, &tmp));
@@ -91,7 +91,7 @@ BEGIN_TEST(testGCUID)
     }
 
     // Transfer our vector to tenured if it isn't there already.
-    MinimizeHeap(rt);
+    MinimizeHeap(cx);
 
     // Tear holes in the heap by unrooting the even objects and collecting.
     JS::Rooted<ObjectVector> vec2(cx, ObjectVector(cx));
@@ -100,7 +100,7 @@ BEGIN_TEST(testGCUID)
             vec2.append(vec[i]);
     }
     vec.clear();
-    MinimizeHeap(rt);
+    MinimizeHeap(cx);
 
     // Grab the last object in the vector as our object of interest.
     obj = vec2.back();
@@ -110,9 +110,9 @@ BEGIN_TEST(testGCUID)
 
     // Force a compaction to move the object and check that the uid moved to
     // the new tenured heap location.
-    JS::PrepareForFullGC(rt);
-    JS::GCForReason(rt, GC_SHRINK, JS::gcreason::API);
-    MinimizeHeap(rt);
+    JS::PrepareForFullGC(cx);
+    JS::GCForReason(cx, GC_SHRINK, JS::gcreason::API);
+    MinimizeHeap(cx);
     CHECK(uintptr_t(obj.get()) != tenuredAddr);
     CHECK(obj->zone()->hasUniqueId(obj));
     CHECK(obj->zone()->getUniqueId(obj, &tmp));

@@ -1141,15 +1141,15 @@ js::SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg)
 }
 
 JS_FRIEND_API(void)
-JS::NotifyDidPaint(JSRuntime* rt)
+JS::NotifyDidPaint(JSContext* cx)
 {
-    rt->gc.notifyDidPaint();
+    cx->gc.notifyDidPaint();
 }
 
 JS_FRIEND_API(void)
-JS::PokeGC(JSRuntime* rt)
+JS::PokeGC(JSContext* cx)
 {
-    rt->gc.poke();
+    cx->gc.poke();
 }
 
 JS_FRIEND_API(JSCompartment*)
@@ -1158,6 +1158,14 @@ js::GetAnyCompartmentInZone(JS::Zone* zone)
     CompartmentsInZoneIter comp(zone);
     MOZ_ASSERT(!comp.done());
     return comp.get();
+}
+
+void
+JS::ObjectPtr::finalize(JSRuntime* rt)
+{
+    if (IsIncrementalBarrierNeeded(rt->contextFromMainThread()))
+        IncrementalObjectBarrier(value);
+    value = nullptr;
 }
 
 void

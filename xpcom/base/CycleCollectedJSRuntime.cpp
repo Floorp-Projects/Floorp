@@ -518,7 +518,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   }
   JS_SetGrayGCRootsTracer(mJSContext, TraceGrayJS, this);
   JS_SetGCCallback(mJSContext, GCCallback, this);
-  mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
+  mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSContext, GCSliceCallback);
 
   if (NS_IsMainThread()) {
     // We would like to support all threads here, but the way timeline consumers
@@ -529,7 +529,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
     // main thread, since the UI for this tracing data only displays data
     // relevant to the main-thread.
     mPrevGCNurseryCollectionCallback = JS::SetGCNurseryCollectionCallback(
-      mJSRuntime, GCNurseryCollectionCallback);
+      mJSContext, GCNurseryCollectionCallback);
   }
 
   JS_SetObjectsTenuredCallback(mJSContext, JSObjectsTenuredCb, this);
@@ -1226,7 +1226,7 @@ void
 CycleCollectedJSRuntime::FixWeakMappingGrayBits() const
 {
   MOZ_ASSERT(mJSRuntime);
-  MOZ_ASSERT(!JS::IsIncrementalGCInProgress(mJSRuntime),
+  MOZ_ASSERT(!JS::IsIncrementalGCInProgress(mJSContext),
              "Don't call FixWeakMappingGrayBits during a GC.");
   FixWeakMappingGrayBitsTracer fixer(mJSRuntime);
   fixer.FixAll();
@@ -1247,8 +1247,8 @@ CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
   MOZ_ASSERT(aReason < JS::gcreason::NUM_REASONS);
   JS::gcreason::Reason gcreason = static_cast<JS::gcreason::Reason>(aReason);
 
-  JS::PrepareForFullGC(mJSRuntime);
-  JS::GCForReason(mJSRuntime, GC_NORMAL, gcreason);
+  JS::PrepareForFullGC(mJSContext);
+  JS::GCForReason(mJSContext, GC_NORMAL, gcreason);
 }
 
 void
@@ -1634,7 +1634,7 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
 #endif
 
       // Do any deferred finalization of native objects.
-      FinalizeDeferredThings(JS::WasIncrementalGC(mJSRuntime) ? FinalizeIncrementally :
+      FinalizeDeferredThings(JS::WasIncrementalGC(mJSContext) ? FinalizeIncrementally :
                                                                 FinalizeNow);
       break;
     }
@@ -1669,7 +1669,7 @@ void
 CycleCollectedJSRuntime::PrepareWaitingZonesForGC()
 {
   if (mZonesWaitingForGC.Count() == 0) {
-    JS::PrepareForFullGC(Runtime());
+    JS::PrepareForFullGC(Context());
   } else {
     for (auto iter = mZonesWaitingForGC.Iter(); !iter.Done(); iter.Next()) {
       JS::PrepareZoneForGC(iter.Get()->GetKey());

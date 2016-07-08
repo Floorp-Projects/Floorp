@@ -37,9 +37,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=332246
 
 /** Test for Bug 332246 **/
 
+function isWithFuzz(itIs, itShouldBe, fuzz, description) {
+  ok(Math.abs(itIs - itShouldBe) <= fuzz, `${description} - expected a value between ${itShouldBe - fuzz} and ${itShouldBe + fuzz}, got ${itIs}`);
+}
+
 var a1 = document.getElementById('a1');
 var a2 = document.getElementById('a2');
-is(a1.scrollHeight, 400, "Wrong a1.scrollHeight");
+isWithFuzz(a1.scrollHeight, 400, 1, "Wrong a1.scrollHeight");
 is(a1.offsetHeight, 100, "Wrong a1.offsetHeight");
 a2.scrollIntoView(true);
 is(a1.scrollTop, 100, "Wrong scrollTop value after a2.scrollIntoView(true)");
@@ -48,7 +52,7 @@ is(a1.scrollTop, 200, "Wrong scrollTop value after a2.scrollIntoView(false)");
 
 var b1 = document.getElementById('b1');
 var b2 = document.getElementById('b2');
-is(b1.scrollHeight, 420, "Wrong b1.scrollHeight");
+isWithFuzz(b1.scrollHeight, 420, 1, "Wrong b1.scrollHeight");
 is(b1.offsetHeight, 100, "Wrong b1.offsetHeight");
 b2.scrollIntoView(true);
 is(b1.scrollTop, 100, "Wrong scrollTop value after b2.scrollIntoView(true)");
@@ -57,12 +61,12 @@ is(b1.scrollTop, 220, "Wrong scrollTop value after b2.scrollIntoView(false)");
 
 var c1 = document.getElementById('c1');
 var c2 = document.getElementById('c2');
-is(c1.scrollHeight, 320, "Wrong c1.scrollHeight");
+isWithFuzz(c1.scrollHeight, 320, 1, "Wrong c1.scrollHeight");
 is(c1.offsetHeight, 100, "Wrong c1.offsetHeight");
 c2.scrollIntoView(true);
 is(c1.scrollTop, 100, "Wrong scrollTop value after c2.scrollIntoView(true)");
 c2.scrollIntoView(false);
-is(c1.scrollTop, 220, "Wrong scrollTop value after c2.scrollIntoView(false)");
+isWithFuzz(c1.scrollTop, 220, 1, "Wrong scrollTop value after c2.scrollIntoView(false)");
 
 </script>
 </pre>

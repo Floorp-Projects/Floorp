@@ -957,6 +957,11 @@ public:
     return mAttrsAndChildren.GetAttr(aAttr);
   }
 
+  const nsAttrValue* GetParsedAttr(nsIAtom* aAttr, int32_t aNameSpaceID) const
+  {
+    return mAttrsAndChildren.GetAttr(aAttr, aNameSpaceID);
+  }
+
   /**
    * Returns the attribute map, if there is one.
    *

@@ -22,7 +22,7 @@ skip-if(B2G||Mulet) HTTP(..) == table-cell.html table-cell-ref.html # Initial mu
 skip-if(Mulet) fuzzy-if(gtkWidget,10,32) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(B2G||Mulet) HTTP(..) == single-value.html single-value-ref.html  # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(gtkWidget,10,2) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy(1,702) skip-if(Android||B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) HTTP(..) == xulscroll.html xulscroll-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy(1,2616) skip-if(Android||B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) HTTP(..) == xulscroll.html xulscroll-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == combobox-zoom.html combobox-zoom-ref.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands

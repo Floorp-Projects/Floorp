@@ -1130,6 +1130,52 @@ class DebuggerEnvironment : public NativeObject
     static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc, Value* vp);
 };
 
+class DebuggerFrame : public NativeObject
+{
+  public:
+    enum {
+        OWNER_SLOT
+    };
+
+    static const unsigned RESERVED_SLOTS = 1;
+
+    static const Class class_;
+
+    static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
+    static DebuggerFrame* create(JSContext* cx, HandleObject proto, AbstractFramePtr referent,
+                                 const ScriptFrameIter* maybeIter, HandleNativeObject debugger);
+    static DebuggerFrame* checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
+                                    bool checkLive);
+
+    static MOZ_MUST_USE bool getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                       MutableHandle<DebuggerObject*> result);
+    static MOZ_MUST_USE bool getIsConstructing(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                               bool& result);
+    static MOZ_MUST_USE bool getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                            MutableHandle<DebuggerEnvironment*> result);
+
+    bool isGenerator() const;
+
+  private:
+    static const ClassOps classOps_;
+
+    static const JSPropertySpec properties_[];
+    static const JSFunctionSpec methods_[];
+
+    static MOZ_MUST_USE bool getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                                mozilla::Maybe<ScriptFrameIter>& result);
+
+    static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+
+    static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc, Value* vp);
+
+    AbstractFramePtr referent() const;
+    Debugger* owner() const;
+};
+
 class DebuggerObject : public NativeObject
 {
   public:

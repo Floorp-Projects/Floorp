@@ -1157,7 +1157,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, Pars
         return nullptr;
     }
 
-    mergeParseTaskCompartment(rt, parseTask, global, cx->compartment());
+    mergeParseTaskCompartment(cx, parseTask, global, cx->compartment());
 
     if (!parseTask->finish(cx))
         return nullptr;
@@ -1229,7 +1229,7 @@ GlobalObject::getStarGeneratorFunctionPrototype()
 }
 
 void
-GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* parseTask,
+GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
                                                    Handle<GlobalObject*> global,
                                                    JSCompartment* dest)
 {
@@ -1237,10 +1237,10 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
     // finished merging the contents of the parse task's compartment into the
     // destination compartment.  Finish any ongoing incremental GC first and
     // assert that no allocation can occur.
-    gc::FinishGC(rt);
-    JS::AutoAssertNoAlloc noAlloc(rt);
+    gc::FinishGC(cx);
+    JS::AutoAssertNoAlloc noAlloc(cx);
 
-    LeaveParseTaskZone(rt, parseTask);
+    LeaveParseTaskZone(cx, parseTask);
 
     {
         // Generator functions don't have Function.prototype as prototype but a

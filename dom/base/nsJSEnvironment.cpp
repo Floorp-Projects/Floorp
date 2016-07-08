@@ -189,7 +189,8 @@ static nsScriptNameSpaceManager *gNameSpaceManager;
 
 static PRTime sFirstCollectionTime;
 
-static JSRuntime *sRuntime;
+static JSRuntime* sRuntime;
+static JSContext* sContext;
 
 static bool sIsInitialized;
 static bool sDidShutdown;
@@ -351,7 +352,7 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-active")) {
     nsJSContext::KillShrinkingGCTimer();
     if (sIsCompactingOnUserInactive) {
-      JS::AbortIncrementalGC(sRuntime);
+      JS::AbortIncrementalGC(sContext);
     }
     MOZ_ASSERT(!sIsCompactingOnUserInactive);
   } else if (!nsCRT::strcmp(aTopic, "quit-application") ||
@@ -1204,8 +1205,8 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   if (sCCLockedOut && aIncremental == IncrementalGC) {
     // We're in the middle of incremental GC. Do another slice.
-    JS::PrepareForIncrementalGC(sRuntime);
-    JS::IncrementalGCSlice(sRuntime, aReason, aSliceMillis);
+    JS::PrepareForIncrementalGC(sContext);
+    JS::IncrementalGCSlice(sContext, aReason, aSliceMillis);
     return;
   }
 
@@ -1213,15 +1214,15 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   if (sNeedsFullGC || aReason != JS::gcreason::CC_WAITING) {
     sNeedsFullGC = false;
-    JS::PrepareForFullGC(sRuntime);
+    JS::PrepareForFullGC(sContext);
   } else {
     CycleCollectedJSRuntime::Get()->PrepareWaitingZonesForGC();
   }
 
   if (aIncremental == IncrementalGC) {
-    JS::StartIncrementalGC(sRuntime, gckind, aReason, aSliceMillis);
+    JS::StartIncrementalGC(sContext, gckind, aReason, aSliceMillis);
   } else {
-    JS::GCForReason(sRuntime, gckind, aReason);
+    JS::GCForReason(sContext, gckind, aReason);
   }
 }
 
@@ -1234,7 +1235,7 @@ nsJSContext::ShrinkGCBuffersNow()
 
   KillShrinkGCBuffersTimer();
 
-  JS::ShrinkGCBuffers(sRuntime);
+  JS::ShrinkGCBuffers(sContext);
 }
 
 static void
@@ -1244,8 +1245,8 @@ FinishAnyIncrementalGC()
 
   if (sCCLockedOut) {
     // We're in the middle of an incremental GC, so finish it.
-    JS::PrepareForIncrementalGC(sRuntime);
-    JS::FinishIncrementalGC(sRuntime, JS::gcreason::CC_FORCED);
+    JS::PrepareForIncrementalGC(sContext);
+    JS::FinishIncrementalGC(sContext, JS::gcreason::CC_FORCED);
   }
 }
 
@@ -2295,6 +2296,7 @@ mozilla::dom::StartupJSEnvironment()
   sNeedsGCAfterCC = false;
   gNameSpaceManager = nullptr;
   sRuntime = nullptr;
+  sContext = nullptr;
   sIsInitialized = false;
   sDidShutdown = false;
   sShuttingDown = false;
@@ -2309,7 +2311,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   int32_t highwatermark = Preferences::GetInt(aPrefName, 128);
 
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_MAX_MALLOC_BYTES,
+  JS_SetGCParameter(sContext, JSGC_MAX_MALLOC_BYTES,
                     highwatermark * 1024L * 1024L);
 }
 
@@ -2319,7 +2321,7 @@ SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   uint32_t max = (pref <= 0 || pref >= 0x1000) ? -1 : (uint32_t)pref * 1024 * 1024;
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_MAX_BYTES, max);
+  JS_SetGCParameter(sContext, JSGC_MAX_BYTES, max);
 }
 
 static void
@@ -2335,7 +2337,7 @@ SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
   } else {
     mode = JSGC_MODE_GLOBAL;
   }
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_MODE, mode);
+  JS_SetGCParameter(sContext, JSGC_MODE, mode);
 }
 
 static void
@@ -2344,14 +2346,14 @@ SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref > 0 && pref < 100000)
-    JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_SLICE_TIME_BUDGET, pref);
+    JS_SetGCParameter(sContext, JSGC_SLICE_TIME_BUDGET, pref);
 }
 
 static void
 SetMemoryGCCompactingPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_COMPACTING_ENABLED, pref);
+  JS_SetGCParameter(sContext, JSGC_COMPACTING_ENABLED, pref);
 }
 
 static void
@@ -2360,28 +2362,28 @@ SetMemoryGCPrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref >= 0 && pref < 10000)
-    JS_SetGCParameter(JS_GetContext(sRuntime), (JSGCParamKey)(intptr_t)aClosure, pref);
+    JS_SetGCParameter(sContext, (JSGCParamKey)(intptr_t)aClosure, pref);
 }
 
 static void
 SetMemoryGCDynamicHeapGrowthPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_DYNAMIC_HEAP_GROWTH, pref);
+  JS_SetGCParameter(sContext, JSGC_DYNAMIC_HEAP_GROWTH, pref);
 }
 
 static void
 SetMemoryGCDynamicMarkSlicePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_DYNAMIC_MARK_SLICE, pref);
+  JS_SetGCParameter(sContext, JSGC_DYNAMIC_MARK_SLICE, pref);
 }
 
 static void
 SetMemoryGCRefreshFrameSlicesEnabledPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
-  JS_SetGCParameter(JS_GetContext(sRuntime), JSGC_REFRESH_FRAME_SLICES_ENABLED, pref);
+  JS_SetGCParameter(sContext, JSGC_REFRESH_FRAME_SLICES_ENABLED, pref);
 }
 
 
@@ -2442,10 +2444,12 @@ nsJSContext::EnsureStatics()
     MOZ_CRASH();
   }
 
+  sContext = JS_GetContext(sRuntime);
+
   // Let's make sure that our main thread is the same as the xpcom main thread.
   MOZ_ASSERT(NS_IsMainThread());
 
-  sPrevGCSliceCallback = JS::SetGCSliceCallback(sRuntime, DOMGCSliceCallback);
+  sPrevGCSliceCallback = JS::SetGCSliceCallback(sContext, DOMGCSliceCallback);
 
   // Set up the asm.js cache callbacks
   static const JS::AsmJSCacheOps asmJSCacheOps = {
@@ -2454,7 +2458,7 @@ nsJSContext::EnsureStatics()
     AsmJSCacheOpenEntryForWrite,
     asmjscache::CloseEntryForWrite
   };
-  JS::SetAsmJSCacheOps(JS_GetContext(sRuntime), &asmJSCacheOps);
+  JS::SetAsmJSCacheOps(sContext, &asmJSCacheOps);
 
   // Set these global xpconnect options...
   Preferences::RegisterCallbackAndCall(SetMemoryHighWaterMarkPrefChangedCallback,

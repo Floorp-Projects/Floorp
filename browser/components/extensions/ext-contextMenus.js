@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var {
   EventManager,
+  IconDetails,
   runSafe,
 } = ExtensionUtils;
 
@@ -53,8 +54,8 @@ var gMenuBuilder = {
         let parentWindow = contextData.menu.ownerDocument.defaultView;
         let extension = root.extension;
 
-        let url = IconDetails.getURL(extension.manifest.icons, parentWindow, extension, 16 /* size */);
-        let resolvedURL = root.extension.baseURI.resolve(url);
+        let {icon} = IconDetails.getURL(extension.manifest.icons, parentWindow, extension, 16 /* size */);
+        let resolvedURL = root.extension.baseURI.resolve(icon);
 
         if (rootElement.localName == "menu") {
           rootElement.setAttribute("class", "menu-iconic");

@@ -28,7 +28,7 @@ unsigned
 countIonScripts(JSObject* global)
 {
     unsigned count = 0;
-    js::IterateScripts(rt, global->compartment(), &count, ScriptCallback);
+    js::IterateScripts(cx, global->compartment(), &count, ScriptCallback);
     return count;
 }
 
@@ -77,10 +77,10 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
     CHECK_EQUAL(value.toInt32(), 45);
     CHECK_EQUAL(countIonScripts(global), 1u);
 
-    GCForReason(rt, GC_NORMAL, gcreason::API);
+    GCForReason(cx, GC_NORMAL, gcreason::API);
     CHECK_EQUAL(countIonScripts(global), remainingIonScripts);
 
-    GCForReason(rt, GC_SHRINK, gcreason::API);
+    GCForReason(cx, GC_SHRINK, gcreason::API);
     CHECK_EQUAL(countIonScripts(global), 0u);
 
     return true;
