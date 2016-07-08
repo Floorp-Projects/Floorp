@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsEditorController.h"
+#include "mozilla/EditorController.h"
 
 #include "mozilla/mozalloc.h"
 #include "nsDebug.h"
@@ -13,35 +13,40 @@
 
 class nsIControllerCommand;
 
+namespace mozilla {
 
-
-#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                      \
-  {                                                                                       \
-    _cmdClass* theCmd = new _cmdClass();                                                  \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                       \
-    inCommandTable->RegisterCommand(_cmdName,                                             \
-                                   static_cast<nsIControllerCommand *>(theCmd));          \
+#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                           \
+  {                                                                            \
+    _cmdClass* theCmd = new _cmdClass();                                       \
+    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                            \
+    aCommandTable->RegisterCommand(                                            \
+                     _cmdName,                                                 \
+                     static_cast<nsIControllerCommand *>(theCmd));             \
   }
 
-#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                                    \
-  {                                                                                       \
-    _cmdClass* theCmd = new _cmdClass();                                                  \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                       \
-    inCommandTable->RegisterCommand(_cmdName,                                             \
-                                   static_cast<nsIControllerCommand *>(theCmd));
+#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                         \
+  {                                                                            \
+    _cmdClass* theCmd = new _cmdClass();                                       \
+    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                            \
+    aCommandTable->RegisterCommand(                                            \
+                     _cmdName,                                                 \
+                     static_cast<nsIControllerCommand *>(theCmd));
 
-#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
-    inCommandTable->RegisterCommand(_cmdName,                                             \
-                                   static_cast<nsIControllerCommand *>(theCmd));
+#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                          \
+    aCommandTable->RegisterCommand(                                            \
+                     _cmdName,                                                 \
+                     static_cast<nsIControllerCommand *>(theCmd));
 
-#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
-    inCommandTable->RegisterCommand(_cmdName,                                             \
-                                   static_cast<nsIControllerCommand *>(theCmd));          \
+#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                          \
+    aCommandTable->RegisterCommand(                                            \
+                     _cmdName,                                                 \
+                     static_cast<nsIControllerCommand *>(theCmd));             \
   }
-
 
 // static
-nsresult nsEditorController::RegisterEditingCommands(nsIControllerCommandTable *inCommandTable)
+nsresult
+EditorController::RegisterEditingCommands(
+                    nsIControllerCommandTable* aCommandTable)
 {
   // now register all our commands
   // These are commands that will be used in text widgets, and in composer
@@ -78,9 +83,10 @@ nsresult nsEditorController::RegisterEditingCommands(nsIControllerCommandTable *
   return NS_OK;
 }
 
-
 // static
-nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *inCommandTable)
+nsresult
+EditorController::RegisterEditorCommands(
+                    nsIControllerCommandTable* aCommandTable)
 {
   // These are commands that will be used in text widgets only.
 
@@ -134,3 +140,4 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *i
   return NS_OK;
 }
 
+} // namespace mozilla

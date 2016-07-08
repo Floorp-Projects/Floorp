@@ -138,7 +138,7 @@ using mozilla::dom::AudioChannelAgent;
 #include "nsEditorCID.h"
 #include "nsEditor.h"
 #include "nsPlaintextEditor.h"
-#include "nsEditorController.h" //CID
+#include "mozilla/EditorController.h" //CID
 
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
@@ -911,8 +911,7 @@ CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
 // Constructor of a controller which is set up to use, internally, a
 // singleton command-table pre-filled with editor commands.
 static nsresult
-nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
-                              void **aResult)
+EditorControllerConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsresult rv;
   nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
@@ -968,7 +967,7 @@ nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsEditorController::RegisterEditorCommands(commandTable);
+  rv = EditorController::RegisterEditorCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   // we don't know here whether we're being created as an instance,
@@ -987,7 +986,7 @@ nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsEditorController::RegisterEditingCommands(commandTable);
+  rv = EditorController::RegisterEditingCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   // we don't know here whether we're being created as an instance,
@@ -1088,7 +1087,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kNS_AUDIOCHANNELAGENT_CID, true, nullptr, AudioChannelAgentConstructor },
   { &kNS_HTMLEDITOR_CID, false, nullptr, nsHTMLEditorConstructor },
-  { &kNS_EDITORCONTROLLER_CID, false, nullptr, nsEditorControllerConstructor },
+  { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
   { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
