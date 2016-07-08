@@ -325,6 +325,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
                         JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aCx == nsContentUtils::GetDefaultJSContextForThread());
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
   MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
@@ -418,17 +419,16 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
 
 AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
                      bool aIsMainThread,
-                     JSContext* aCx,
                      Type aType)
   : ScriptSettingsStackEntry(aGlobalObject, aType)
   , mIsMainThread(aIsMainThread)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
-  MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
-  InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(), aCx,
+  InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(),
+               nsContentUtils::GetDefaultJSContextForThread(),
                aIsMainThread);
 }
 
@@ -634,16 +634,11 @@ AutoJSAPI::IsStackTop() const
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  const char *aReason,
-                                 bool aIsMainThread,
-                                 JSContext* aCx)
-  : AutoJSAPI(aGlobalObject, aIsMainThread,
-              aCx ? aCx : nsContentUtils::GetSafeJSContext(),
-              eEntryScript)
+                                 bool aIsMainThread)
+  : AutoJSAPI(aGlobalObject, aIsMainThread, eEntryScript)
   , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
-  MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
-  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == nsContentUtils::GetSafeJSContext());
 
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
@@ -652,9 +647,8 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
 
 AutoEntryScript::AutoEntryScript(JSObject* aObject,
                                  const char *aReason,
-                                 bool aIsMainThread,
-                                 JSContext* aCx)
-  : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread, aCx)
+                                 bool aIsMainThread)
+  : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread)
 {
 }
 
