@@ -215,7 +215,8 @@ function exec(e) {
 
     if (exprName === "module") {
         let moduleText = e.toString();
-        module = Wasm.instantiateModule(wasmTextToBinary(moduleText), imports).exports;
+        var m = new WebAssembly.Module(wasmTextToBinary(moduleText, 'new-format'));
+        module = new WebAssembly.Instance(m, imports).exports;
         return;
     }
 
@@ -276,7 +277,10 @@ function exec(e) {
         }
         let caught = false;
         try {
-            wasmEvalText(moduleText, imports);
+            new WebAssembly.Instance(
+                new WebAssembly.Module(
+                    wasmTextToBinary(moduleText, 'new-format')),
+                imports);
         } catch(e) {
             if (errMsg && e.toString().indexOf(errMsg) === -1)
                 warn(`expected error message "${errMsg}", got "${e}"`);
