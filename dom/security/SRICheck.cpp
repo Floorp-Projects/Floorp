@@ -324,6 +324,15 @@ SRICheckDataVerifier::VerifyHash(const SRIMetadata& aMetadata,
     return NS_ERROR_SRI_CORRUPT;
   }
 
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
+    nsAutoCString encodedHash;
+    nsresult rv = Base64Encode(mComputedHash, encodedHash);
+    if (NS_SUCCEEDED(rv)) {
+      SRILOG(("SRICheckDataVerifier::VerifyHash, mComputedHash=%s",
+              encodedHash.get()));
+    }
+  }
+
   if (!binaryHash.Equals(mComputedHash)) {
     SRILOG(("SRICheckDataVerifier::VerifyHash, hash[%u] did not match", aHashIndex));
     return NS_ERROR_SRI_CORRUPT;
