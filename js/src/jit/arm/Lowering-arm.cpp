@@ -498,6 +498,48 @@ LIRGeneratorARM::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 }
 
 void
+LIRGeneratorARM::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
+{
+    MDefinition* input = ins->input();
+    MOZ_ASSERT(input->type() == MIRType::Int32);
+
+    LAllocation baseAlloc = useRegisterAtStart(input);
+    auto* lir = new(alloc()) LWasmBoundsCheck(baseAlloc);
+    add(lir, ins);
+}
+
+void
+LIRGeneratorARM::visitWasmLoad(MWasmLoad* ins)
+{
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    LAllocation baseAlloc = useRegisterAtStart(base);
+    auto* lir = new(alloc()) LWasmLoad(baseAlloc);
+
+    if (ins->offset())
+        lir->setTemp(0, tempCopy(base, 0));
+
+    define(lir, ins);
+}
+
+void
+LIRGeneratorARM::visitWasmStore(MWasmStore* ins)
+{
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    LAllocation baseAlloc = useRegisterAtStart(base);
+    LAllocation valueAlloc = useRegisterAtStart(ins->value());
+    auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
+
+    if (ins->offset())
+        lir->setTemp(0, tempCopy(base, 0));
+
+    add(lir, ins);
+}
+
+void
 LIRGeneratorARM::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
     MOZ_ASSERT(ins->offset() == 0);
