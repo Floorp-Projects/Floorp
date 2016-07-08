@@ -12,6 +12,7 @@
 #include "nsJSPrincipals.h"
 #include "nsNullPrincipal.h"
 #include "nsThreadUtils.h"
+#include "nsContentUtils.h"
 
 #include "xpcprivate.h"
 
@@ -91,61 +92,67 @@ const js::Class SimpleGlobalClass = {
 JSObject*
 SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
 {
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
+  // We can't root our return value with our AutoJSAPI because the rooting
+  // analysis thinks ~AutoJSAPI can GC.  So we need to root in a scope outside
+  // the lifetime of the AutoJSAPI.
+  JS::Rooted<JSObject*> global(nsContentUtils::RootingCx());
 
-  JS::CompartmentOptions options;
-  options.creationOptions().setInvisibleToDebugger(true);
+  { // Scope to ensure the AutoJSAPI destructor runs before we end up returning
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
 
-  JS::Rooted<JSObject*> global(cx);
+    JS::CompartmentOptions options;
+    options.creationOptions().setInvisibleToDebugger(true);
 
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
-    options.creationOptions().setTrace(xpc::TraceXPCGlobal);
-    global = xpc::CreateGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
-                                     nsJSPrincipals::get(principal),
-                                     options);
-  } else {
-    global = JS_NewGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
-                                nullptr,
-                                JS::DontFireOnNewGlobalHook, options);
-  }
+    if (NS_IsMainThread()) {
+      nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
+      options.creationOptions().setTrace(xpc::TraceXPCGlobal);
+      global = xpc::CreateGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
+                                       nsJSPrincipals::get(principal),
+                                       options);
+    } else {
+      global = JS_NewGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
+                                  nullptr,
+                                  JS::DontFireOnNewGlobalHook, options);
+    }
 
-  if (!global) {
-    jsapi.ClearException();
-    return nullptr;
-  }
-
-  JSAutoCompartment ac(cx, global);
-
-  // It's important to create the nsIGlobalObject for our new global before we
-  // start trying to wrap things like the prototype into its compartment,
-  // because the wrap operation relies on the global having its nsIGlobalObject
-  // already.
-  RefPtr<SimpleGlobalObject> globalObject =
-    new SimpleGlobalObject(global, globalType);
-
-  // Pass on ownership of globalObject to |global|.
-  JS_SetPrivate(global, globalObject.forget().take());
-
-  if (proto.isObjectOrNull()) {
-    JS::Rooted<JSObject*> protoObj(cx, proto.toObjectOrNull());
-    if (!JS_WrapObject(cx, &protoObj)) {
+    if (!global) {
       jsapi.ClearException();
       return nullptr;
     }
 
-    if (!JS_SplicePrototype(cx, global, protoObj)) {
-      jsapi.ClearException();
+    JSAutoCompartment ac(cx, global);
+
+    // It's important to create the nsIGlobalObject for our new global before we
+    // start trying to wrap things like the prototype into its compartment,
+    // because the wrap operation relies on the global having its
+    // nsIGlobalObject already.
+    RefPtr<SimpleGlobalObject> globalObject =
+      new SimpleGlobalObject(global, globalType);
+
+    // Pass on ownership of globalObject to |global|.
+    JS_SetPrivate(global, globalObject.forget().take());
+
+    if (proto.isObjectOrNull()) {
+      JS::Rooted<JSObject*> protoObj(cx, proto.toObjectOrNull());
+      if (!JS_WrapObject(cx, &protoObj)) {
+        jsapi.ClearException();
+        return nullptr;
+      }
+
+      if (!JS_SplicePrototype(cx, global, protoObj)) {
+        jsapi.ClearException();
+        return nullptr;
+      }
+    } else if (!proto.isUndefined()) {
+      // Bogus proto.
       return nullptr;
     }
-  } else if (!proto.isUndefined()) {
-    // Bogus proto.
-    return nullptr;
+
+    JS_FireOnNewGlobalObject(cx, global);
   }
 
-  JS_FireOnNewGlobalObject(cx, global);
   return global;
 }
 
