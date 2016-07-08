@@ -334,7 +334,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
                         JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
-  MOZ_ASSERT(aCx == nsContentUtils::GetDefaultJSContextForThread());
+  MOZ_ASSERT(aCx == danger::GetJSContext());
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
   MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
@@ -437,8 +437,7 @@ AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
   InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(),
-               nsContentUtils::GetDefaultJSContextForThread(),
-               aIsMainThread);
+               danger::GetJSContext(), aIsMainThread);
 }
 
 void
@@ -447,8 +446,7 @@ AutoJSAPI::Init()
   MOZ_ASSERT(!mCx, "An AutoJSAPI should only be initialised once");
 
   InitInternal(/* aGlobalObject */ nullptr, /* aGlobal */ nullptr,
-               nsContentUtils::GetDefaultJSContextForThread(),
-               NS_IsMainThread());
+               danger::GetJSContext(), NS_IsMainThread());
 }
 
 bool
@@ -473,7 +471,7 @@ AutoJSAPI::Init(nsIGlobalObject* aGlobalObject, JSContext* aCx)
 bool
 AutoJSAPI::Init(nsIGlobalObject* aGlobalObject)
 {
-  return Init(aGlobalObject, nsContentUtils::GetDefaultJSContextForThread());
+  return Init(aGlobalObject, danger::GetJSContext());
 }
 
 bool

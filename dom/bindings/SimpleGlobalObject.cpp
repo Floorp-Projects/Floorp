@@ -9,12 +9,13 @@
 #include "jsapi.h"
 #include "js/Class.h"
 
-#include "nsContentUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsNullPrincipal.h"
 #include "nsThreadUtils.h"
 
 #include "xpcprivate.h"
+
+#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 namespace dom {
@@ -90,8 +91,9 @@ const js::Class SimpleGlobalClass = {
 JSObject*
 SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
 {
-  JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
-  JSAutoRequest ar(cx);
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
 
   JS::CompartmentOptions options;
   options.creationOptions().setInvisibleToDebugger(true);
@@ -111,7 +113,7 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
   }
 
   if (!global) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return nullptr;
   }
 
@@ -130,12 +132,12 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
   if (proto.isObjectOrNull()) {
     JS::Rooted<JSObject*> protoObj(cx, proto.toObjectOrNull());
     if (!JS_WrapObject(cx, &protoObj)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return nullptr;
     }
 
     if (!JS_SplicePrototype(cx, global, protoObj)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return nullptr;
     }
   } else if (!proto.isUndefined()) {
