@@ -17,6 +17,8 @@ const {listenOnce} = require("devtools/shared/async-utils");
 const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
+const { installHelperSheet,
+  addPseudoClassLock, removePseudoClassLock } = require("devtools/server/actors/highlighters/utils/markup");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic"));
 
@@ -24,17 +26,17 @@ XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
-var TRANSITION_CLASS = "moz-styleeditor-transitioning";
+var TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
 var TRANSITION_BUFFER_MS = 1000;
 var TRANSITION_RULE_SELECTOR =
-".moz-styleeditor-transitioning:root, .moz-styleeditor-transitioning:root *";
-var TRANSITION_RULE = TRANSITION_RULE_SELECTOR + " {\
-transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
-transition-delay: 0ms !important;\
-transition-timing-function: ease-out !important;\
-transition-property: all !important;\
-}";
+`:root${TRANSITION_PSEUDO_CLASS}, :root${TRANSITION_PSEUDO_CLASS} *`;
+var TRANSITION_RULE = `${TRANSITION_RULE_SELECTOR} {
+  transition-duration: ${TRANSITION_DURATION_MS}ms !important;
+  transition-delay: 0ms !important;
+  transition-timing-function: ease-out !important;
+  transition-property: all !important;
+}`;
 
 var LOAD_ERROR = "error-load";
 
@@ -248,6 +250,22 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     return this._styleSheetIndex;
   },
 
+  destroy: function () {
+    if (this._transitionTimeout) {
+      this.window.clearTimeout(this._transitionTimeout);
+      removePseudoClassLock(
+                   this.document.documentElement, TRANSITION_PSEUDO_CLASS);
+    }
+  },
+
+  /**
+   * Since StyleSheetActor doesn't have a protocol.js parent actor that take
+   * care of its lifetime, implementing disconnect is required to cleanup.
+   */
+  disconnect: function () {
+    this.destroy();
+  },
+
   initialize: function (aStyleSheet, aParentActor, aWindow) {
     protocol.Actor.prototype.initialize.call(this, null);
 
@@ -260,8 +278,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     // text and index are unknown until source load
     this.text = null;
     this._styleSheetIndex = -1;
-
-    this._transitionRefCount = 0;
   },
 
   /**
@@ -721,7 +737,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * to remove the rule after a certain time.
    */
   _insertTransistionRule: function (kind) {
-    this.document.documentElement.classList.add(TRANSITION_CLASS);
+    addPseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
 
     // We always add the rule since we've just reset all the rules
     this.rawSheet.insertRule(TRANSITION_RULE, this.rawSheet.cssRules.length);
@@ -739,7 +755,8 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    */
   _onTransitionEnd: function (kind)
   {
-    this.document.documentElement.classList.remove(TRANSITION_CLASS);
+    this._transitionTimeout = null;
+    removePseudoClassLock(this.document.documentElement, TRANSITION_PSEUDO_CLASS);
 
     let index = this.rawSheet.cssRules.length - 1;
     let rule = this.rawSheet.cssRules[index];

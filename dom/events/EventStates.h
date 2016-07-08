@@ -286,6 +286,8 @@ private:
 #define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
 // Element is an unresolved custom element candidate
 #define NS_EVENT_STATE_UNRESOLVED NS_DEFINE_EVENT_STATE_MACRO(46)
+// Element is transitioning for rules changed by style editor
+#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(47)
 
 // Event state that is used for values that need to be parsed but do nothing.
 #define NS_EVENT_STATE_IGNORE NS_DEFINE_EVENT_STATE_MACRO(63)
@@ -304,4 +306,3 @@ private:
 #define INTRINSIC_STATES (~ESM_MANAGED_STATES)
 
 #endif // mozilla_EventStates_h_
-

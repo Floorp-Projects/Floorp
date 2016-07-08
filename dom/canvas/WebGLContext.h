@@ -333,7 +333,8 @@ public:
 
     already_AddRefed<Layer>
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
-                   LayerManager* manager) override;
+                   LayerManager* manager,
+                   bool aMirror = false) override;
 
     // Note that 'clean' here refers to its invalidation state, not the
     // contents of the buffer.
