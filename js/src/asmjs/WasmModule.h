@@ -214,6 +214,18 @@ class Module
 
 typedef UniquePtr<Module> UniqueModule;
 
+// These accessors are used to implemented the special asm.js semantics of
+// exported wasm functions:
+
+extern bool
+IsExportedFunction(JSFunction* fun);
+
+extern Instance&
+ExportedFunctionToInstance(JSFunction* fun);
+
+extern uint32_t
+ExportedFunctionToExportIndex(JSFunction* fun);
+
 } // namespace wasm
 } // namespace js
 
