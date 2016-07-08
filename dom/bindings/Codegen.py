@@ -533,8 +533,6 @@ def PrototypeIDAndDepth(descriptor):
     prototypeID = "prototypes::id::"
     if descriptor.interface.hasInterfacePrototypeObject():
         prototypeID += descriptor.interface.identifier.name
-        if descriptor.workers:
-            prototypeID += "_workers"
         depth = "PrototypeTraits<%s>::Depth" % prototypeID
     else:
         prototypeID += "_ID_Count"
@@ -2214,8 +2212,6 @@ class MethodDefiner(PropertyDefiner):
         self.regular = []
         for m in methods:
             if m.identifier.name == 'queryInterface':
-                if self.descriptor.workers:
-                    continue
                 if m.isStatic():
                     raise TypeError("Legacy queryInterface member shouldn't be static")
                 signatures = m.signatures()
@@ -3270,16 +3266,6 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'JSObject*', args)
-
-    def declare(self):
-        if self.descriptor.workers:
-            return ''
-        return CGAbstractMethod.declare(self)
-
-    def define(self):
-        if self.descriptor.workers:
-            return ''
-        return CGAbstractMethod.define(self)
 
     def definition_body(self):
         if len(self.descriptor.interface.namedConstructors) > 0:
@@ -5365,9 +5351,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     isCallbackReturnValue,
                     firstCap(sourceDescription)))
         else:
-            # Worker descriptors can't end up here, because all of our
-            # "external" stuff is not exposed in workers.
-            assert not descriptor.workers
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
             # to addref when unwrapping or not.  So we just pass an
@@ -13588,12 +13571,11 @@ class CGBindingRoot(CGThing):
         cgthings.extend([CGDescriptor(x) for x in descriptors])
 
         # Do codegen for all the callback interfaces.  Skip worker callbacks.
-        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors if
-                         not x.workers])
+        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors])
 
         cgthings.extend([CGNamespace('binding_detail',
                                      CGFastCallback(x.interface))
-                         for x in callbackDescriptors if not x.workers])
+                         for x in callbackDescriptors])
 
         # Do codegen for JS implemented classes
         def getParentDescriptor(desc):
