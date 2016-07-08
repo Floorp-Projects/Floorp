@@ -1405,7 +1405,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   // what we need for animating backface-visibility correctly if we
   // remove the above test for Extend3DContext(); that would require
   // looking at backface-visibility on descendants as well. See bug 1186204.
-  if (aFrame->StyleDisplay()->BackfaceIsHidden()) {
+  if (aFrame->BackfaceIsHidden()) {
     aPerformanceWarning =
       AnimationPerformanceWarning::Type::TransformBackfaceVisibilityHidden;
     return false;

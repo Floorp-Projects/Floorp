@@ -3260,7 +3260,7 @@ public:
   virtual mozilla::dom::Element*
   GetPseudoElement(mozilla::CSSPseudoElementType aType);
 
-  bool BackfaceIsHidden() {
+  bool BackfaceIsHidden() const {
     return StyleDisplay()->BackfaceIsHidden();
   }
 
