@@ -7,6 +7,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
 #include "jsapi.h"
 #include "xpcpublic.h"
@@ -283,6 +284,14 @@ IsJSAPIActive()
   ScriptSettingsStackEntry* topEntry = ScriptSettingsStack::Top();
   return topEntry && !topEntry->NoJSAPI();
 }
+
+namespace danger {
+JSContext*
+GetJSContext()
+{
+  return CycleCollectedJSRuntime::Get()->Context();
+}
+} // namespace danger
 
 AutoJSAPI::AutoJSAPI()
   : ScriptSettingsStackEntry(nullptr, eJSAPI)

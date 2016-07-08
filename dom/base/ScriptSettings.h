@@ -127,6 +127,15 @@ inline JSObject& IncumbentJSGlobal()
 // AutoJSAPI or AutoEntryScript to get yourself a properly set up JSContext.
 bool IsJSAPIActive();
 
+namespace danger {
+
+// Get the JSContext for this thread.  This is in the "danger" namespace because
+// we generally want people using AutoJSAPI instead, unless they really know
+// what they're doing.
+JSContext* GetJSContext();
+
+} // namespace danger
+
 class ScriptSettingsStack;
 class ScriptSettingsStackEntry {
   friend class ScriptSettingsStack;
