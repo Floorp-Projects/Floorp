@@ -279,7 +279,7 @@ class Descriptor(DescriptorProvider):
         self.config = config
         self.interface = interface
 
-        self.wantsXrays = desc.get('wantsXrays', True)
+        self.wantsXrays = interface.isExposedInWindow()
 
         # Read the desc, and fill in the relevant defaults.
         ifaceName = self.interface.identifier.name
