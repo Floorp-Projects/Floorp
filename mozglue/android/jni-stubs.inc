@@ -286,6 +286,25 @@ Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv * arg0, jclass a
 
 #ifdef JNI_STUBS
 
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged_t)(JNIEnv *, jclass, jint, jfloat, jfloat, jfloat, jfloat, jint, jlong);
+static Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged_t f_Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged;
+extern "C" NS_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged(JNIEnv * arg0, jclass arg1, jint arg2, jfloat arg3, jfloat arg4, jfloat arg5, jfloat arg6, jint arg7, jlong arg8) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged", &f_Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge_t)(JNIEnv *, jclass, jbyteArray);
 static Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge_t f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge;
 extern "C" NS_EXPORT void MOZ_JNICALL
