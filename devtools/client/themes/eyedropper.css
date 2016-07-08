@@ -30,6 +30,8 @@
 }
 
 #color-value {
+  /* avoid the # appearing at the end for some colours in RTL locales */
+  direction: ltr;
   padding: 0.3em;
   text-shadow: 1px 1px 1px #fff;
 }

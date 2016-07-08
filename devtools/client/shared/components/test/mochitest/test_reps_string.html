@@ -1,0 +1,55 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test String rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - String</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { StringRep } = browserRequire("devtools/client/shared/components/reps/string");
+
+  try {
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testMultiline") });
+    is(renderedRep.type, StringRep.rep, `Rep correctly selects ${StringRep.rep.displayName}`);
+
+    // Test rendering
+    yield testMultiline();
+    yield testMultilineOpen();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testMultiline() {
+    const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline") });
+    is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\\nbbb…bbbbbb\\ncccccccccccccccc\\n\"", "String rep has expected text content for multiline string");
+  }
+
+  function testMultilineOpen() {
+    const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline"), member: {open: true} });
+    is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n\"", "String rep has expected text content for multiline string when open");
+  }
+
+  function getGripStub(name) {
+    switch (name) {
+      case "testMultiline":
+        return "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n";
+    }
+  }
+});
+</script>
+</pre>
+</body>
+</html>
