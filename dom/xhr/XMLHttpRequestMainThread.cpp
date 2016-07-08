@@ -95,14 +95,24 @@ namespace dom {
 // in an int32_t!
 #define XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE (1*1024*1024*1024LL)
 
-#define LOAD_STR "load"
-#define ERROR_STR "error"
-#define ABORT_STR "abort"
-#define TIMEOUT_STR "timeout"
-#define LOADSTART_STR "loadstart"
-#define PROGRESS_STR "progress"
-#define READYSTATE_STR "readystatechange"
-#define LOADEND_STR "loadend"
+namespace {
+  const nsLiteralString ProgressEventTypeStrings[] = {
+    NS_LITERAL_STRING("loadstart"),
+    NS_LITERAL_STRING("progress"),
+    NS_LITERAL_STRING("error"),
+    NS_LITERAL_STRING("abort"),
+    NS_LITERAL_STRING("timeout"),
+    NS_LITERAL_STRING("load"),
+    NS_LITERAL_STRING("loadend")
+  };
+  static_assert(MOZ_ARRAY_LENGTH(ProgressEventTypeStrings) ==
+                  size_t(XMLHttpRequestMainThread::ProgressEventType::ENUM_MAX),
+                "Mismatched lengths for ProgressEventTypeStrings and ProgressEventType enums");
+
+  const nsString kLiteralString_readystatechange = NS_LITERAL_STRING("readystatechange");
+  const nsString kLiteralString_xmlhttprequest = NS_LITERAL_STRING("xmlhttprequest");
+  const nsString kLiteralString_DOMContentLoaded = NS_LITERAL_STRING("DOMContentLoaded");
+}
 
 // CIDs
 
@@ -1021,7 +1031,7 @@ XMLHttpRequestMainThread::GetStatusText(nsACString& aStatusText,
 }
 
 void
-XMLHttpRequestMainThread::CloseRequestWithError(const nsAString& aType,
+XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType,
                                                 const uint32_t aFlag)
 {
   if (mChannel) {
@@ -1069,7 +1079,7 @@ XMLHttpRequestMainThread::CloseRequestWithError(const nsAString& aType,
 void
 XMLHttpRequestMainThread::Abort(ErrorResult& arv)
 {
-  CloseRequestWithError(NS_LITERAL_STRING(ABORT_STR), XML_HTTP_REQUEST_ABORTED);
+  CloseRequestWithError(ProgressEventType::abort, XML_HTTP_REQUEST_ABORTED);
 }
 
 NS_IMETHODIMP
@@ -1298,8 +1308,7 @@ XMLHttpRequestMainThread::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   event.forget(aDOMEvent);
 
-  (*aDOMEvent)->InitEvent(NS_LITERAL_STRING(READYSTATE_STR),
-                          false, false);
+  (*aDOMEvent)->InitEvent(kLiteralString_readystatechange, false, false);
 
   // We assume anyone who managed to call CreateReadystatechangeEvent is trusted
   (*aDOMEvent)->SetTrusted(true);
@@ -1309,22 +1318,16 @@ XMLHttpRequestMainThread::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 
 void
 XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
-                                                const nsAString& aType,
+                                                const ProgressEventType aType,
                                                 bool aLengthComputable,
                                                 int64_t aLoaded, int64_t aTotal)
 {
   NS_ASSERTION(aTarget, "null target");
-  NS_ASSERTION(!aType.IsEmpty(), "missing event type");
 
   if (NS_FAILED(CheckInnerWindowCorrectness()) ||
       (!AllowUploadProgress() && aTarget == mUpload)) {
     return;
   }
-
-  bool dispatchLoadend = aType.EqualsLiteral(LOAD_STR) ||
-                         aType.EqualsLiteral(ERROR_STR) ||
-                         aType.EqualsLiteral(TIMEOUT_STR) ||
-                         aType.EqualsLiteral(ABORT_STR);
 
   ProgressEventInit init;
   init.mBubbles = false;
@@ -1333,14 +1336,18 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   init.mLoaded = aLoaded;
   init.mTotal = (aTotal == -1) ? 0 : aTotal;
 
+  const nsAString& typeString = ProgressEventTypeStrings[(uint8_t)aType];
   RefPtr<ProgressEvent> event =
-    ProgressEvent::Constructor(aTarget, aType, init);
+    ProgressEvent::Constructor(aTarget, typeString, init);
   event->SetTrusted(true);
 
   aTarget->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 
-  if (dispatchLoadend) {
-    DispatchProgressEvent(aTarget, NS_LITERAL_STRING(LOADEND_STR),
+  // If we're sending a load, error, timeout or abort event, then
+  // also dispatch the subsequent loadend event.
+  if (aType == ProgressEventType::load || aType == ProgressEventType::error ||
+      aType == ProgressEventType::timeout || aType == ProgressEventType::abort) {
+    DispatchProgressEvent(aTarget, ProgressEventType::loadend,
                           aLengthComputable, aLoaded, aTotal);
   }
 }
@@ -1563,7 +1570,7 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
     if (timedChannel) {
-      timedChannel->SetInitiatorType(NS_LITERAL_STRING("xmlhttprequest"));
+      timedChannel->SetInitiatorType(kLiteralString_xmlhttprequest);
     }
   }
 
@@ -1797,7 +1804,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       MaybeDispatchProgressEvents(true);
     }
     mUploadComplete = true;
-    DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOAD_STR),
+    DispatchProgressEvent(mUpload, ProgressEventType::load,
                           true, mUploadTotal, mUploadTotal);
   }
 
@@ -2115,7 +2122,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     EventListenerManager* manager =
       eventTarget->GetOrCreateListenerManager();
     manager->AddEventListenerByType(new nsXHRParseEndListener(this),
-                                    NS_LITERAL_STRING("DOMContentLoaded"),
+                                    kLiteralString_DOMContentLoaded,
                                     TrustedEventsAtSystemGroupBubble());
     return NS_OK;
   }
@@ -2144,15 +2151,13 @@ XMLHttpRequestMainThread::ChangeStateToDone()
     mTimeoutTimer->Cancel();
   }
 
-  NS_NAMED_LITERAL_STRING(errorStr, ERROR_STR);
-  NS_NAMED_LITERAL_STRING(loadStr, LOAD_STR);
   DispatchProgressEvent(this,
-                        mErrorLoad ? errorStr : loadStr,
+                        mErrorLoad ? ProgressEventType::error : ProgressEventType::load,
                         !mErrorLoad,
                         mLoadTransferred,
                         mErrorLoad ? 0 : mLoadTransferred);
   if (mErrorLoad && mUpload && !mUploadComplete) {
-    DispatchProgressEvent(mUpload, errorStr, true,
+    DispatchProgressEvent(mUpload, ProgressEventType::error, true,
                           mUploadTransferred, mUploadTotal);
   }
 
@@ -2833,10 +2838,10 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
     if (mUpload && mUpload->HasListenersFor(nsGkAtoms::onprogress)) {
       StartProgressEventTimer();
     }
-    DispatchProgressEvent(this, NS_LITERAL_STRING(LOADSTART_STR), false,
+    DispatchProgressEvent(this, ProgressEventType::loadstart, false,
                           0, 0);
     if (mUpload && !mUploadComplete) {
-      DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOADSTART_STR), true,
+      DispatchProgressEvent(mUpload, ProgressEventType::loadstart, true,
                             0, mUploadTotal);
     }
   }
@@ -3263,7 +3268,7 @@ XMLHttpRequestMainThread::MaybeDispatchProgressEvents(bool aFinalProgress)
   // XML_HTTP_REQUEST_SENT
   if ((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState) {
     if (mUpload && !mUploadComplete) {
-      DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
+      DispatchProgressEvent(mUpload, ProgressEventType::progress,
                             mUploadLengthComputable, mUploadTransferred,
                             mUploadTotal);
     }
@@ -3272,7 +3277,7 @@ XMLHttpRequestMainThread::MaybeDispatchProgressEvents(bool aFinalProgress)
       mLoadTotal = mLoadTransferred;
     }
     mInLoadProgressEvent = true;
-    DispatchProgressEvent(this, NS_LITERAL_STRING(PROGRESS_STR),
+    DispatchProgressEvent(this, ProgressEventType::progress,
                           mLoadLengthComputable, mLoadTransferred,
                           mLoadTotal);
     mInLoadProgressEvent = false;
@@ -3481,8 +3486,7 @@ XMLHttpRequestMainThread::HandleTimeoutCallback()
     return;
   }
 
-  CloseRequestWithError(NS_LITERAL_STRING(TIMEOUT_STR),
-                        XML_HTTP_REQUEST_TIMED_OUT);
+  CloseRequestWithError(ProgressEventType::timeout, XML_HTTP_REQUEST_TIMED_OUT);
 }
 
 NS_IMETHODIMP
