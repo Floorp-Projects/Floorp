@@ -2062,7 +2062,7 @@ ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aPainted)
       static_cast<PaintedDisplayItemLayerUserData*>(aPainted->GetUserData(&gPaintedDisplayItemLayerUserData));
   RefPtr<ColorLayer> layer = data->mColorLayer;
   if (layer) {
-    layer->SetMaskLayer(nullptr);
+    ResetLayerStateForRecycling(layer);
     layer->ClearExtraDumpInfo();
   } else {
     // Create a new layer
@@ -2086,7 +2086,7 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
       static_cast<PaintedDisplayItemLayerUserData*>(aPainted->GetUserData(&gPaintedDisplayItemLayerUserData));
   RefPtr<ImageLayer> layer = data->mImageLayer;
   if (layer) {
-    layer->SetMaskLayer(nullptr);
+    ResetLayerStateForRecycling(layer);
     layer->ClearExtraDumpInfo();
   } else {
     // Create a new layer
