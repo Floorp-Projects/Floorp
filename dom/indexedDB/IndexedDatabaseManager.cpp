@@ -485,7 +485,7 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
     error->GetName(errorName);
   }
 
-  RootedDictionary<ErrorEventInit> init(nsContentUtils::RootingCxForThread());
+  RootedDictionary<ErrorEventInit> init(nsContentUtils::RootingCx());
   request->GetCallerLocation(init.mFilename, &init.mLineno, &init.mColno);
 
   init.mMessage = errorName;

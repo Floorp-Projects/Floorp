@@ -1724,8 +1724,7 @@ public:
   static JSContext *GetCurrentJSContext();
   static JSContext *GetSafeJSContext();
   static JSContext *GetCurrentJSContextForThread();
-  inline static JSContext *RootingCx() { return GetSafeJSContext(); }
-  inline static JSContext *RootingCxForThread() {
+  inline static JSContext *RootingCx() {
     return mozilla::dom::danger::GetJSContext();
   }
 
