@@ -94,8 +94,6 @@ browser.jar:
   skin/classic/browser/social/share-button-active.png (social/share-button-active.png)
   skin/classic/browser/tabbrowser/alltabs.png         (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/alltabs-inverted.png (tabbrowser/alltabs-inverted.png)
-  skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
-  skin/classic/browser/tabbrowser/connecting@2x.png   (tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/newtab.svg                (tabbrowser/newtab.svg)
   skin/classic/browser/tabbrowser/newtab-inverted.svg       (tabbrowser/newtab-inverted.svg)
   skin/classic/browser/tabbrowser/tab-active-middle.png     (tabbrowser/tab-active-middle.png)
