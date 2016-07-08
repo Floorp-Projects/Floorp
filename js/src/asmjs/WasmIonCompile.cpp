@@ -1731,9 +1731,9 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
-    const TableModuleGeneratorData& table = f.mg().kind == ModuleKind::AsmJS
-                                            ? f.mg().asmJSSigToTable[sigIndex]
-                                            : f.mg().wasmTable;
+    const TableGenDesc& table = f.mg().kind == ModuleKind::AsmJS
+                                ? f.mg().asmJSSigToTable[sigIndex]
+                                : f.mg().wasmTable;
 
     MDefinition* def;
     if (!f.funcPtrCall(sigIndex, table.numElems, table.globalDataOffset, callee, args, &def))
@@ -1751,13 +1751,13 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
-    uint32_t importIndex;
+    uint32_t funcImportIndex;
     uint32_t arity;
-    if (!f.iter().readCallImport(&importIndex, &arity))
+    if (!f.iter().readCallImport(&funcImportIndex, &arity))
         return false;
 
-    const ImportModuleGeneratorData& import = f.mg().imports[importIndex];
-    const Sig& sig = *import.sig;
+    const FuncImportGenDesc& funcImport = f.mg().funcImports[funcImportIndex];
+    const Sig& sig = *funcImport.sig;
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, &args))
@@ -1767,7 +1767,7 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
         return false;
 
     MDefinition* def;
-    if (!f.ffiCall(import.globalDataOffset, args, sig.ret(), &def))
+    if (!f.ffiCall(funcImport.globalDataOffset, args, sig.ret(), &def))
         return false;
 
     if (IsVoid(sig.ret()))

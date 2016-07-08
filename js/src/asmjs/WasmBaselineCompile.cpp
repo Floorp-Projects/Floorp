@@ -4863,9 +4863,9 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
         return false;
 
     Stk& callee = peek(numArgs);
-    const TableModuleGeneratorData& table = isCompilingAsmJS()
-                                            ? mg_.asmJSSigToTable[sigIndex]
-                                            : mg_.wasmTable;
+    const TableGenDesc& table = isCompilingAsmJS()
+                                ? mg_.asmJSSigToTable[sigIndex]
+                                : mg_.wasmTable;
     funcPtrCall(sig, sigIndex, table.numElems, table.globalDataOffset, callee, baselineCall);
 
     endCall(baselineCall);
@@ -4886,13 +4886,13 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
 
-    uint32_t importIndex;
+    uint32_t funcImportIndex;
     uint32_t arity;
-    if (!iter_.readCallImport(&importIndex, &arity))
+    if (!iter_.readCallImport(&funcImportIndex, &arity))
         return false;
 
-    const ImportModuleGeneratorData& import = mg_.imports[importIndex];
-    const Sig& sig = *import.sig;
+    const FuncImportGenDesc& funcImport = mg_.funcImports[funcImportIndex];
+    const Sig& sig = *funcImport.sig;
 
     if (deadCode_)
         return skipCall(sig.args(), sig.ret());
@@ -4911,7 +4911,7 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
     if (!iter_.readCallReturn(sig.ret()))
         return false;
 
-    ffiCall(import.globalDataOffset, baselineCall);
+    ffiCall(funcImport.globalDataOffset, baselineCall);
 
     endCall(baselineCall);
 
