@@ -15,8 +15,8 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-extern LogModule* GetDirectShowLog();
-#define LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+static LazyLogModule gDirectShowLog("DirectShowDecoder");
+#define LOG(...) MOZ_LOG(gDirectShowLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 AudioSinkInputPin::AudioSinkInputPin(wchar_t* aObjectName,
                                      AudioSinkFilter* aFilter,
