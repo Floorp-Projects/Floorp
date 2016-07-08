@@ -1261,7 +1261,7 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
     if (!ValidateTargetForFormat(funcName, mContext, target, dstFormat))
         return;
 
-    if (!mContext->IsWebGL2() && dstFormat->hasDepth) {
+    if (!mContext->IsWebGL2() && dstFormat->d) {
         if (target != LOCAL_GL_TEXTURE_2D ||
             blob->mHasData ||
             level != 0)
@@ -1345,7 +1345,7 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
         return;
     }
 
-    if (!mContext->IsWebGL2() && dstFormat->hasDepth) {
+    if (!mContext->IsWebGL2() && dstFormat->d) {
         mContext->ErrorInvalidOperation("%s: Function may not be called on a texture of"
                                         " format %s.",
                                         funcName, dstFormat->name);
@@ -1995,7 +1995,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     if (!ValidateTargetForFormat(funcName, mContext, target, dstFormat))
         return;
 
-    if (!mContext->IsWebGL2() && dstFormat->hasDepth) {
+    if (!mContext->IsWebGL2() && dstFormat->d) {
         mContext->ErrorInvalidOperation("%s: Function may not be called with format %s.",
                                         funcName, dstFormat->name);
         return;
@@ -2095,7 +2095,7 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
     MOZ_ASSERT(dstUsage);
     auto dstFormat = dstUsage->format;
 
-    if (!mContext->IsWebGL2() && dstFormat->hasDepth) {
+    if (!mContext->IsWebGL2() && dstFormat->d) {
         mContext->ErrorInvalidOperation("%s: Function may not be called on a texture of"
                                         " format %s.",
                                         funcName, dstFormat->name);
