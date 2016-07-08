@@ -8,17 +8,20 @@
 </head>
 
 <body>
-<input id="fileList" type="file"></input>
 <script type="application/javascript;version=1.7">
 
 var directory;
+var fileList;
 
 function create_fileList(aPath) {
+  fileList = document.createElement('input');
+  fileList.setAttribute('type', 'file');
+  document.body.appendChild(fileList);
+
   var url = SimpleTest.getTestFileURL("script_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
 
     fileList.getFilesAndDirectories().then(function(array) {
@@ -40,7 +43,6 @@ function test_simpleFilePicker(aPath) {
   var script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
 
     is(fileList.files.length, 1, "we want 1 element");
@@ -61,7 +63,6 @@ function test_duplicateGetFilesAndDirectories() {
   var script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
 
     var p1 = fileList.getFilesAndDirectories();
@@ -82,7 +83,6 @@ function test_inputGetFiles() {
   var script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
 
     fileList.getFilesAndDirectories()
