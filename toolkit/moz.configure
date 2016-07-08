@@ -98,7 +98,7 @@ set_config('L10NBASEDIR', l10n_base)
 # reason.
 option('--enable-default-toolkit', nargs=1,
        choices=('cairo-windows', 'cairo-gtk2', 'cairo-gtk2-x11', 'cairo-gtk3',
-                'cairo-qt', 'cairo-cocoa', 'cairo-uikit', 'cairo-android',
+                'cairo-cocoa', 'cairo-uikit', 'cairo-android',
                 'cairo-gonk'),
        help='Select default toolkit')
 
@@ -121,8 +121,7 @@ def toolkit(value, target):
         else:
             platform_choices = ('cairo-android',)
     else:
-        platform_choices = ('cairo-gtk3', 'cairo-gtk2', 'cairo-gtk2-x11',
-                            'cairo-qt')
+        platform_choices = ('cairo-gtk3', 'cairo-gtk2', 'cairo-gtk2-x11')
 
     if value:
         if value[0] not in platform_choices:
@@ -165,10 +164,10 @@ option('--without-x', env='WITHOUT_X', help='Disable X11 support')
 
 @depends('--without-x', toolkit)
 def x11(value, toolkit):
-    if not value and toolkit != 'qt':
-        die('--without-x is only valid with --enable-default-toolkit=qt')
+    if not value:
+        die('--without-x is not supported')
 
-    x11_toolkits = ('gtk2', 'gtk3', 'qt')
+    x11_toolkits = ('gtk2', 'gtk3')
     if value and value.origin != 'default' and toolkit not in x11_toolkits:
         die('--with-x is only valid with --enable-default-toolkit={%s}',
             ','.join(x11_toolkits))
@@ -219,7 +218,7 @@ set_define(gl_provider_define, True)
 # ==============================================================
 @depends(toolkit)
 def pdf_printing(toolkit):
-    if toolkit in ('windows', 'gtk2', 'gtk3', 'qt', 'android', 'gonk'):
+    if toolkit in ('windows', 'gtk2', 'gtk3', 'android', 'gonk'):
         return True
 
 @depends(pdf_printing)
@@ -256,7 +255,7 @@ option(env='USE_FC_FREETYPE',
 
 @depends('USE_FC_FREETYPE', toolkit)
 def fc_freetype(value, toolkit):
-    if value or (toolkit in ('gtk2', 'gtk3', 'qt') and
+    if value or (toolkit in ('gtk2', 'gtk3') and
                  value.origin == 'default'):
         return True
 

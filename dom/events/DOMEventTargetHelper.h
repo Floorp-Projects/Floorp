@@ -292,9 +292,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
   } \
   virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv) { \
     return _to GetContextForEventHandlers(aRv); \
-  } \
-  virtual JSContext * GetJSContextForEventHandlers(void) { \
-    return _to GetJSContextForEventHandlers(); \
   }
 
 #define NS_REALLY_FORWARD_NSIDOMEVENTTARGET(_class) \
