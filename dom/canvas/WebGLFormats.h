@@ -198,22 +198,31 @@ struct FormatInfo
     const GLenum sizedFormat;
     const UnsizedFormat unsizedFormat;
     const ComponentType componentType;
-    const uint8_t estimatedBytesPerPixel; // 0 iff `!!compression`. Only use this for
+    const bool isSRGB;
+
+    const CompressedFormatInfo* const compression;
+
+    const uint8_t estimatedBytesPerPixel; // 0 iff bool(compression).
+
+    // In bits. Iff bool(compression), active channels are 1.
     const uint8_t r;
     const uint8_t g;
     const uint8_t b;
     const uint8_t a;
-    const bool isColorFormat;             // memory usage estimation. Use
-    const bool isSRGB;                    // BytesPerPixel(packingFormat, packingType) for
-    const bool hasAlpha;                  // calculating pack/unpack byte count.
-    const bool hasDepth;
-    const bool hasStencil;
+    const uint8_t d;
+    const uint8_t s;
 
-    const CompressedFormatInfo* const compression;
+    //////
 
     std::map<UnsizedFormat, const FormatInfo*> copyDecayFormats;
 
     const FormatInfo* GetCopyDecayFormat(UnsizedFormat) const;
+
+    bool IsColorFormat() const {
+         // Alpha is a 'color format' since it's 'color-attachable'.
+        return bool(compression) ||
+               bool(r | g | b | a);
+    }
 };
 
 struct PackingInfo

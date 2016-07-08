@@ -83,7 +83,7 @@ WebGLFBAttachPoint::Samples() const
 bool
 WebGLFBAttachPoint::HasAlpha() const
 {
-    return Format()->format->hasAlpha;
+    return Format()->format->a;
 }
 
 const webgl::FormatUsageInfo*
@@ -102,7 +102,7 @@ WebGLFBAttachPoint::IsReadableFloat() const
     MOZ_ASSERT(formatUsage);
 
     auto format = formatUsage->format;
-    if (!format->isColorFormat)
+    if (!format->IsColorFormat())
         return false;
 
     return format->componentType == webgl::ComponentType::Float;
@@ -294,21 +294,21 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
 
     switch (mAttachmentPoint) {
     case LOCAL_GL_DEPTH_ATTACHMENT:
-        hasRequiredBits = format->hasDepth;
+        hasRequiredBits = format->d;
         break;
 
     case LOCAL_GL_STENCIL_ATTACHMENT:
-        hasRequiredBits = format->hasStencil;
+        hasRequiredBits = format->s;
         break;
 
     case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
         MOZ_ASSERT(!webgl->IsWebGL2());
-        hasRequiredBits = (format->hasDepth && format->hasStencil);
+        hasRequiredBits = (format->d && format->s);
         break;
 
     default:
         MOZ_ASSERT(mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0);
-        hasRequiredBits = format->isColorFormat;
+        hasRequiredBits = format->IsColorFormat();
         break;
     }
 
@@ -323,11 +323,11 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
 
         switch (mAttachmentPoint) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
-            hasSurplusPlanes = format->hasStencil;
+            hasSurplusPlanes = format->s;
             break;
 
         case LOCAL_GL_STENCIL_ATTACHMENT:
-            hasSurplusPlanes = format->hasDepth;
+            hasSurplusPlanes = format->d;
             break;
         }
 
