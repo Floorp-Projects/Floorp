@@ -348,6 +348,7 @@ MSG_DEF(JSMSG_WASM_BAD_IND_CALL,       0, JSEXN_ERR,         "wasm indirect call
 MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR,     "first argument must be an ArrayBuffer or typed array object")
 MSG_DEF(JSMSG_WASM_BAD_MOD_ARG,        0, JSEXN_TYPEERR,     "first argument must be a WebAssembly.Module")
 MSG_DEF(JSMSG_WASM_BAD_MEM_ARG,        0, JSEXN_TYPEERR,     "first argument must be a memory descriptor")
+MSG_DEF(JSMSG_WASM_BAD_MEM_IMP_SIZE,   0, JSEXN_TYPEERR,     "imported Memory with incompatible size")
 MSG_DEF(JSMSG_WASM_BAD_MEM_SIZE,       1, JSEXN_TYPEERR,     "bad Memory {0} size")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR,     "second argument, if present, must be an object")
 MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,         "unreachable executed")

@@ -66,6 +66,7 @@ struct ModuleGeneratorData
     SignalUsage               usesSignal;
     MemoryUsage               memoryUsage;
     mozilla::Atomic<uint32_t> minMemoryLength;
+    uint32_t                  maxMemoryLength;
 
     DeclaredSigVector         sigs;
     DeclaredSigPtrVector      funcSigs;
@@ -80,7 +81,11 @@ struct ModuleGeneratorData
     }
 
     explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind), usesSignal(usesSignal), memoryUsage(MemoryUsage::None), minMemoryLength(0)
+      : kind(kind),
+        usesSignal(usesSignal),
+        memoryUsage(MemoryUsage::None),
+        minMemoryLength(0),
+        maxMemoryLength(UINT32_MAX)
     {}
 };
 

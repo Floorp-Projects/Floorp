@@ -82,7 +82,7 @@ GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleVal
 
 static bool
 GetImports(JSContext* cx, HandleObject importObj, const ImportVector& imports,
-           MutableHandle<FunctionVector> funcImports)
+           MutableHandle<FunctionVector> funcImports, MutableHandleWasmMemoryObject memoryImport)
 {
     if (!imports.empty() && !importObj)
         return Throw(cx, "no import object given");
@@ -101,11 +101,23 @@ GetImports(JSContext* cx, HandleObject importObj, const ImportVector& imports,
                 return false;
         }
 
-        if (!IsFunctionObject(v))
-            return Throw(cx, "import object field is not a Function");
+        switch (import.kind) {
+          case DefinitionKind::Function:
+            if (!IsFunctionObject(v))
+                return Throw(cx, "import object field is not a Function");
 
-        if (!funcImports.append(&v.toObject().as<JSFunction>()))
-            return false;
+            if (!funcImports.append(&v.toObject().as<JSFunction>()))
+                return false;
+
+            break;
+          case DefinitionKind::Memory:
+            if (!v.isObject() || !v.toObject().is<WasmMemoryObject>())
+                return Throw(cx, "import object field is not a Memory");
+
+            MOZ_ASSERT(!memoryImport);
+            memoryImport.set(&v.toObject().as<WasmMemoryObject>());
+            break;
+        }
     }
 
     return true;
@@ -144,14 +156,15 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    if (!GetImports(cx, importObj, module->imports(), &funcImports))
+    RootedWasmMemoryObject memoryImport(cx);
+    if (!GetImports(cx, importObj, module->imports(), &funcImports, &memoryImport))
         return false;
 
     instanceObj.set(WasmInstanceObject::create(cx));
     if (!instanceObj)
         return false;
 
-    return module->instantiate(cx, funcImports, nullptr, instanceObj);
+    return module->instantiate(cx, funcImports, memoryImport, instanceObj);
 }
 
 static bool
@@ -454,7 +467,8 @@ InstanceConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    if (!GetImports(cx, importObj, module.imports(), &funcImports))
+    RootedWasmMemoryObject memoryImport(cx);
+    if (!GetImports(cx, importObj, module.imports(), &funcImports, &memoryImport))
         return false;
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
@@ -462,7 +476,7 @@ InstanceConstructor(JSContext* cx, unsigned argc, Value* vp)
     if (!instanceObj)
         return false;
 
-    if (!module.instantiate(cx, funcImports, nullptr, instanceObj))
+    if (!module.instantiate(cx, funcImports, memoryImport, instanceObj))
         return false;
 
     args.rval().setObject(*instanceObj);

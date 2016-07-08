@@ -1432,7 +1432,7 @@ PrintTableSection(WasmPrintContext& c, AstTable* maybeTable, const AstModule::Fu
 static bool
 PrintImport(WasmPrintContext& c, AstImport& import, const AstModule::SigVector& sigs)
 {
-    const AstSig* sig = sigs[import.sig().index()];
+    const AstSig* sig = sigs[import.funcSig().index()];
     if (!PrintIndent(c))
         return false;
     if (!c.buffer.append("import "))
@@ -1440,8 +1440,8 @@ PrintImport(WasmPrintContext& c, AstImport& import, const AstModule::SigVector& 
     if (!c.buffer.append("\""))
         return false;
 
-    const AstName& funcName = import.func();
-    if (!PrintEscapedString(c, funcName))
+    const AstName& fieldName = import.field();
+    if (!PrintEscapedString(c, fieldName))
         return false;
 
     if (!c.buffer.append("\" as "))
@@ -1625,13 +1625,12 @@ PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory)
         return false;
     if (!c.buffer.append("memory "))
         return false;
-    if (!PrintInt32(c, maybeMemory->initialSize()))
+    if (!PrintInt32(c, maybeMemory->initial()))
        return false;
-    Maybe<uint32_t> memMax = maybeMemory->maxSize();
-    if (memMax) {
+    if (maybeMemory->maximum()) {
         if (!c.buffer.append(", "))
             return false;
-        if (!PrintInt32(c, *memMax))
+        if (!PrintInt32(c, *maybeMemory->maximum()))
             return false;
     }
 

@@ -7811,12 +7811,18 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
     HandleValue importVal = args.get(1);
     HandleValue bufferVal = args.get(2);
 
-    Rooted<ArrayBufferObjectMaybeShared*> heap(cx);
-    if (module.metadata().usesMemory() && !CheckBuffer(cx, metadata, bufferVal, &heap))
-        return false;
+    RootedArrayBufferObjectMaybeShared buffer(cx);
+    RootedWasmMemoryObject memoryObj(cx);
+    if (module.metadata().usesMemory()) {
+        if (!CheckBuffer(cx, metadata, bufferVal, &buffer))
+            return false;
+
+        memoryObj = WasmMemoryObject::create(cx, buffer, nullptr);
+        if (!memoryObj)
+            return false;
+    }
 
     Vector<Val> valImports(cx);
-
     Rooted<FunctionVector> ffis(cx, FunctionVector(cx));
     if (!ffis.resize(metadata.numFFIs))
         return false;
@@ -7875,7 +7881,7 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
     if (!instanceObj)
         return false;
 
-    if (!module.instantiate(cx, funcImports, heap, instanceObj))
+    if (!module.instantiate(cx, funcImports, memoryObj, instanceObj))
         return false;
 
     // Now write the imported values into global data.

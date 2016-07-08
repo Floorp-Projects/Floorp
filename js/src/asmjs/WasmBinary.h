@@ -70,6 +70,13 @@ enum class DefinitionKind
     Memory                               = 0x01
 };
 
+enum class MemoryFlags
+{
+    Default                              = 0x1,
+    HasMaximum                           = 0x2,
+    AllowedMask                          = 0x3
+};
+
 enum class Expr
 {
     // Control flow operators
