@@ -2341,9 +2341,6 @@ ParseTypeDef(WasmParseContext& c)
 static AstSegment*
 ParseSegment(WasmParseContext& c)
 {
-    if (!c.ts.match(WasmToken::Segment, c.error))
-        return nullptr;
-
     WasmToken dstOffset;
     if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
         return nullptr;
@@ -2372,22 +2369,23 @@ ParseMemorySignature(WasmParseContext& c, AstMemorySignature* memSig)
 }
 
 static AstMemory*
-ParseMemory(WasmParseContext& c)
+ParseMemory(WasmParseContext& c, AstModule* module)
 {
     AstMemorySignature memSig;
     if (!ParseMemorySignature(c, &memSig))
         return nullptr;
 
-    AstSegmentVector segments(c.lifo);
     while (c.ts.getIf(WasmToken::OpenParen)) {
+        if (!c.ts.match(WasmToken::Segment, c.error))
+            return nullptr;
         AstSegment* segment = ParseSegment(c);
-        if (!segment || !segments.append(segment))
+        if (!segment || !module->append(segment))
             return nullptr;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
             return nullptr;
     }
 
-    return new(c.lifo) AstMemory(memSig, Move(segments));
+    return new(c.lifo) AstMemory(memSig);
 }
 
 static AstImport*
@@ -2502,10 +2500,20 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Memory: {
-            AstMemory* memory = ParseMemory(c);
+            AstMemory* memory = ParseMemory(c, module);
             if (!memory)
                 return nullptr;
             if (!module->setMemory(memory)) {
+                c.ts.generateError(section, c.error);
+                return nullptr;
+            }
+            break;
+          }
+          case WasmToken::Segment: {
+            AstSegment* segment = ParseSegment(c);
+            if (!segment)
+                return nullptr;
+            if (!module->append(segment)) {
                 c.ts.generateError(section, c.error);
                 return nullptr;
             }
@@ -3677,8 +3685,16 @@ EncodeCodeSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeDataSegment(Encoder& e, AstSegment& segment)
+EncodeDataSegment(Encoder& e, bool newFormat, AstSegment& segment)
 {
+    if (newFormat) {
+        if (!e.writeVarU32(0))  // linear memory index
+            return false;
+
+        if (!e.writeExpr(Expr::I32Const))
+            return false;
+    }
+
     if (!e.writeVarU32(segment.offset()))
         return false;
 
@@ -3703,22 +3719,20 @@ EncodeDataSegment(Encoder& e, AstSegment& segment)
 }
 
 static bool
-EncodeDataSection(Encoder& e, AstModule& module)
+EncodeDataSection(Encoder& e, bool newFormat, AstModule& module)
 {
-    if (!module.maybeMemory() || module.maybeMemory()->segments().empty())
+    if (module.segments().empty())
         return true;
-
-    const AstSegmentVector& segments = module.maybeMemory()->segments();
 
     size_t offset;
     if (!e.startSection(DataSectionId, &offset))
         return false;
 
-    if (!e.writeVarU32(segments.length()))
+    if (!e.writeVarU32(module.segments().length()))
         return false;
 
-    for (AstSegment* segment : segments) {
-        if (!EncodeDataSegment(e, *segment))
+    for (AstSegment* segment : module.segments()) {
+        if (!EncodeDataSegment(e, newFormat, *segment))
             return false;
     }
 
@@ -3758,7 +3772,7 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
     if (!EncodeCodeSection(e, module))
         return false;
 
-    if (!EncodeDataSection(e, module))
+    if (!EncodeDataSection(e, newFormat, module))
         return false;
 
     return true;
