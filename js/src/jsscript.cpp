@@ -2495,8 +2495,8 @@ SaveSharedScriptData(ExclusiveContext* cx, Handle<JSScript*> script, SharedScrip
      * reachable. This is effectively a read barrier.
      */
     if (cx->isJSContext()) {
-        JSRuntime* rt = cx->asJSContext()->runtime();
-        if (JS::IsIncrementalGCInProgress(rt) && rt->gc.isFullGc())
+        JSContext* ncx = cx->asJSContext();
+        if (JS::IsIncrementalGCInProgress(ncx) && ncx->gc.isFullGc())
             ssd->marked = true;
     }
 

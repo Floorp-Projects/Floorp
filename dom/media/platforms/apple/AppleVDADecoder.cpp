@@ -23,7 +23,6 @@
 #include "gfxPlatform.h"
 
 #ifndef MOZ_WIDGET_UIKIT
-#include "nsCocoaFeatures.h"
 #include "MacIOSurfaceImage.h"
 #endif
 
@@ -67,10 +66,8 @@ AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
   , mIsShutDown(false)
 #ifdef MOZ_WIDGET_UIKIT
   , mUseSoftwareImages(true)
-  , mIs106(false)
 #else
   , mUseSoftwareImages(false)
-  , mIs106(!nsCocoaFeatures::OnLionOrLater())
 #endif
   , mMonitor("AppleVideoDecoder")
   , mIsFlushing(false)
@@ -537,17 +534,6 @@ AppleVDADecoder::DoDecode(MediaRawData* aSample)
     NS_WARNING("AppleVDADecoder: Couldn't pass frame to decoder");
     mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
     return NS_ERROR_FAILURE;
-  }
-
-  if (mIs106) {
-    // TN2267:
-    // frameInfo: A CFDictionaryRef containing information to be returned in
-    // the output callback for this frame.
-    // This dictionary can contain client provided information associated with
-    // the frame being decoded, for example presentation time.
-    // The CFDictionaryRef will be retained by the framework.
-    // In 10.6, it is released one too many. So retain it.
-    CFRetain(frameInfo);
   }
 
   return NS_OK;

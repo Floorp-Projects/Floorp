@@ -899,16 +899,6 @@ static void DrawCellWithSnapping(NSCell *cell,
 + (CUIRendererRef)coreUIRenderer;
 @end
 
-static void
-RenderWithCoreUILegacy(CGRect aRect, CGContextRef cgContext, NSDictionary* aOptions, bool aSkipAreaCheck)
-{
-  if (aSkipAreaCheck || (aRect.size.width * aRect.size.height <= BITMAP_MAX_AREA)) {
-    CUIRendererRef renderer = [NSWindow respondsToSelector:@selector(coreUIRenderer)]
-      ? [NSWindow coreUIRenderer] : nil;
-    CUIDraw(renderer, aRect, cgContext, (CFDictionaryRef)aOptions, NULL);
-  }
-}
-
 static id
 GetAquaAppearance()
 {
@@ -929,11 +919,11 @@ GetAquaAppearance()
 @end
 
 static void
-RenderWithCoreUI(CGRect aRect, CGContextRef cgContext, NSDictionary* aOptions)
+RenderWithCoreUI(CGRect aRect, CGContextRef cgContext, NSDictionary* aOptions, bool aSkipAreaCheck = false)
 {
   id appearance = GetAquaAppearance();
 
-  if (aRect.size.width * aRect.size.height > BITMAP_MAX_AREA) {
+  if (!aSkipAreaCheck && aRect.size.width * aRect.size.height > BITMAP_MAX_AREA) {
     return;
   }
 
@@ -945,7 +935,9 @@ RenderWithCoreUI(CGRect aRect, CGContextRef cgContext, NSDictionary* aOptions)
     [appearance _drawInRect:aRect context:cgContext options:aOptions];
   } else {
     // 10.9 and below
-    RenderWithCoreUILegacy(aRect, cgContext, aOptions, false);
+    CUIRendererRef renderer = [NSWindow respondsToSelector:@selector(coreUIRenderer)]
+      ? [NSWindow coreUIRenderer] : nil;
+    CUIDraw(renderer, aRect, cgContext, (CFDictionaryRef)aOptions, NULL);
   }
 }
 
@@ -2756,20 +2748,19 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         }
       }
       const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
-      // Scrollbar thumbs have a too high minimum width when rendered through
-      // NSAppearance on 10.10, so we call RenderWithCoreUILegacy here.
-      RenderWithCoreUILegacy(macRect, cgContext,
-              [NSDictionary dictionaryWithObjectsAndKeys:
-                (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
-                (isSmall ? @"small" : @"regular"), @"size",
-                (isRolledOver ? @"rollover" : @"normal"), @"state",
-                (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
-                (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
-                [NSNumber numberWithBool:YES], @"indiconly",
-                [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
-                [NSNumber numberWithBool:YES], @"is.flipped",
-                nil],
-              true);
+      NSMutableDictionary* options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+        (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
+        (isSmall ? @"small" : @"regular"), @"size",
+        (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
+        (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
+        [NSNumber numberWithBool:YES], @"indiconly",
+        [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
+        [NSNumber numberWithBool:YES], @"is.flipped",
+        nil];
+      if (isRolledOver) {
+        [options setObject:@"rollover" forKey:@"state"];
+      }
+      RenderWithCoreUI(macRect, cgContext, options, true);
     }
       break;
 
@@ -2795,7 +2786,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
         bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
         const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
-        RenderWithCoreUILegacy(macRect, cgContext,
+        RenderWithCoreUI(macRect, cgContext,
                 [NSDictionary dictionaryWithObjectsAndKeys:
                   (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
                   (isSmall ? @"small" : @"regular"), @"size",
@@ -3012,10 +3003,25 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     {
       bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
       if (nsLookAndFeel::UseOverlayScrollbars()) {
+        if (!nsCocoaFeatures::OnYosemiteOrLater()) {
+          // Pre-10.10, we have to center the thumb rect in the middle of the
+          // scrollbar. Starting with 10.10, the expected rect for thumb
+          // rendering is the full width of the scrollbar.
+          if (isHorizontal) {
+            aResult->top = 2;
+            aResult->bottom = 1;
+          } else {
+            aResult->left = 2;
+            aResult->right = 1;
+          }
+        }
+        // Leave a bit of space at the start and the end on all OS X versions.
         if (isHorizontal) {
-          aResult->SizeTo(2, 1, 1, 1);
+          aResult->left = 1;
+          aResult->right = 1;
         } else {
-          aResult->SizeTo(1, 1, 1, 2);
+          aResult->top = 1;
+          aResult->bottom = 1;
         }
       }
 

@@ -6157,7 +6157,7 @@
   },
   "WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN": {
     "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 15,
     "description": "Origins for getUserMedia calls (0=other, 1=HTTPS, 2=file, 3=app, 4=localhost, 5=loop, 6=privileged)",
@@ -7301,7 +7301,7 @@
   },
   "COOKIE_SCHEME_SECURITY": {
     "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
@@ -9988,5 +9988,19 @@
     "bug_numbers": [1272501],
     "releaseChannelCollection": "opt-out",
     "description": "HTMLInputElement.webkitdirectory attribute used"
+  },
+  "UNIQUE_CONTAINERS_OPENED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1276006],
+    "kind": "count",
+    "description": "Tracking the unique number of opened Containers."
+  },
+  "TOTAL_CONTAINERS_OPENED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1276006],
+    "kind": "count",
+    "description": "Tracking the total number of opened Containers."
   }
 }

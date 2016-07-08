@@ -136,7 +136,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         if (!Base::init(len))
             return false;
         zone->gcWeakMapList.insertFront(this);
-        marked = JS::IsIncrementalGCInProgress(zone->runtimeFromMainThread());
+        JSRuntime* rt = zone->runtimeFromMainThread();
+        marked = JS::IsIncrementalGCInProgress(rt->contextFromMainThread());
         return true;
     }
 

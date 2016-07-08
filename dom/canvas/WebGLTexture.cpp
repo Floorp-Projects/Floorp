@@ -812,10 +812,6 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
     case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-    case LOCAL_GL_TEXTURE_SWIZZLE_A:
-    case LOCAL_GL_TEXTURE_SWIZZLE_B:
-    case LOCAL_GL_TEXTURE_SWIZZLE_G:
-    case LOCAL_GL_TEXTURE_SWIZZLE_R:
     case LOCAL_GL_TEXTURE_WRAP_R:
         mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
         return JS::NumberValue(uint32_t(i));
@@ -1025,6 +1021,10 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, GLint* maybeIntPar
 
     case LOCAL_GL_TEXTURE_WRAP_T:
         mWrapT = intParam;
+        break;
+
+    case LOCAL_GL_TEXTURE_COMPARE_MODE:
+        mTexCompareMode = intParam;
         break;
 
     // We don't actually need to store the WRAP_R, since it doesn't change texture
