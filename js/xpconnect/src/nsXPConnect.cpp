@@ -979,13 +979,6 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
     return NS_OK;
 }
 
-/* virtual */
-JSContext*
-nsXPConnect::GetSafeJSContext()
-{
-    return GetRuntime()->Context();
-}
-
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
 {

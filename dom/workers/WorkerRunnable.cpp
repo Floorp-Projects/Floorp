@@ -318,9 +318,7 @@ WorkerRunnable::Run()
   JSContext* cx;
   AutoJSAPI* jsapi;
   if (globalObject) {
-    aes.emplace(globalObject, "Worker runnable",
-                isMainThread,
-                isMainThread ? nullptr : GetCurrentThreadJSContext());
+    aes.emplace(globalObject, "Worker runnable", isMainThread);
     jsapi = aes.ptr();
     cx = aes->cx();
   } else {

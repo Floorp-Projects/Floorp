@@ -411,6 +411,11 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
       gfxCriticalError() << "Invalid canvas front buffer";
       return;
     }
+  } else if (layer && layer->mIsMirror) {
+    mShSurfClient = CloneSurface(gl->Screen()->Front()->Surf(), layer->mFactory.get());
+    if (!mShSurfClient) {
+      return;
+    }
   } else {
     mShSurfClient = gl->Screen()->Front();
     if (mShSurfClient && mShSurfClient->GetAllocator() &&

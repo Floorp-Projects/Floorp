@@ -476,6 +476,12 @@ CheckUserContextCompatibility(nsIDocShell* aDocShell)
     return false;
   }
 
+  // DocShell can have UsercontextID set but loading a document with system
+  // principal. In this case, we consider everything ok.
+  if (nsContentUtils::IsSystemPrincipal(subjectPrincipal)) {
+    return true;
+  }
+
   uint32_t principalUserContextId;
   nsresult rv = subjectPrincipal->GetUserContextId(&principalUserContextId);
   NS_ENSURE_SUCCESS(rv, false);

@@ -41,7 +41,7 @@ def toStringBool(arg):
 
 
 def toBindingNamespace(arg):
-    return re.sub("((_workers)?$)", "Binding\\1", arg)
+    return arg + "Binding"
 
 
 def isTypeCopyConstructible(type):
@@ -533,8 +533,6 @@ def PrototypeIDAndDepth(descriptor):
     prototypeID = "prototypes::id::"
     if descriptor.interface.hasInterfacePrototypeObject():
         prototypeID += descriptor.interface.identifier.name
-        if descriptor.workers:
-            prototypeID += "_workers"
         depth = "PrototypeTraits<%s>::Depth" % prototypeID
     else:
         prototypeID += "_ID_Count"
@@ -980,16 +978,6 @@ class CGIncludeGuard(CGWrapper):
                            declarePost='\n#endif // %s\n' % define)
 
 
-def getRelevantProviders(descriptor, config):
-    if descriptor is not None:
-        return [descriptor]
-    # Do both the non-worker and worker versions
-    return [
-        config.getDescriptorProvider(False),
-        config.getDescriptorProvider(True)
-    ]
-
-
 class CGHeaders(CGWrapper):
     """
     Generates the appropriate include statements.
@@ -1052,12 +1040,11 @@ class CGHeaders(CGWrapper):
         bindingHeaders = set()
         declareIncludes = set(declareIncludes)
 
-        def addHeadersForType((t, descriptor, dictionary)):
+        def addHeadersForType((t, dictionary)):
             """
-            Add the relevant headers for this type.  We use descriptor and
-            dictionary, if passed, to decide what to do with interface types.
+            Add the relevant headers for this type.  We use dictionary, if
+            passed, to decide what to do with interface types.
             """
-            assert not descriptor or not dictionary
             # Dictionaries have members that need to be actually
             # declared, not just forward-declared.
             if dictionary:
@@ -1088,22 +1075,20 @@ class CGHeaders(CGWrapper):
                         headerSet = declareIncludes
                     headerSet.add("mozilla/dom/TypedArray.h")
                 else:
-                    providers = getRelevantProviders(descriptor, config)
-                    for p in providers:
-                        try:
-                            typeDesc = p.getDescriptor(unrolled.inner.identifier.name)
-                        except NoSuchDescriptorError:
-                            continue
-                        # Dictionaries with interface members rely on the
-                        # actual class definition of that interface member
-                        # being visible in the binding header, because they
-                        # store them in RefPtr and have inline
-                        # constructors/destructors.
-                        #
-                        # XXXbz maybe dictionaries with interface members
-                        # should just have out-of-line constructors and
-                        # destructors?
-                        headerSet.add(typeDesc.headerFile)
+                    try:
+                        typeDesc = config.getDescriptor(unrolled.inner.identifier.name)
+                    except NoSuchDescriptorError:
+                        return
+                    # Dictionaries with interface members rely on the
+                    # actual class definition of that interface member
+                    # being visible in the binding header, because they
+                    # store them in RefPtr and have inline
+                    # constructors/destructors.
+                    #
+                    # XXXbz maybe dictionaries with interface members
+                    # should just have out-of-line constructors and
+                    # destructors?
+                    headerSet.add(typeDesc.headerFile)
             elif unrolled.isDictionary():
                 headerSet.add(self.getDeclarationFilename(unrolled.inner))
             elif unrolled.isCallback():
@@ -1124,7 +1109,7 @@ class CGHeaders(CGWrapper):
                     bindingHeaders.add("mozilla/dom/MozMap.h")
                 # Also add headers for the type the MozMap is
                 # parametrized over, if needed.
-                addHeadersForType((t.inner, descriptor, dictionary))
+                addHeadersForType((t.inner, dictionary))
 
         map(addHeadersForType,
             getAllTypes(descriptors + callbackDescriptors, dictionaries,
@@ -1174,10 +1159,10 @@ class CGHeaders(CGWrapper):
                 # convenience functions
                 if desc.interface.maplikeOrSetlikeOrIterable.hasKeyType():
                     addHeadersForType((desc.interface.maplikeOrSetlikeOrIterable.keyType,
-                                       desc, None))
+                                       None))
                 if desc.interface.maplikeOrSetlikeOrIterable.hasValueType():
                     addHeadersForType((desc.interface.maplikeOrSetlikeOrIterable.valueType,
-                                       desc, None))
+                                       None))
 
         for d in dictionaries:
             if d.parent:
@@ -1258,19 +1243,17 @@ def SortedDictValues(d):
 
 def UnionsForFile(config, webIDLFile):
     """
-    Returns a list of tuples each containing two elements (type and descriptor)
-    for all union types that are only used in webIDLFile. If webIDLFile is None
-    this will return the list of tuples for union types that are used in more
-    than one WebIDL file.
+    Returns a list of union types for all union types that are only used in
+    webIDLFile. If webIDLFile is None this will return the list of tuples for
+    union types that are used in more than one WebIDL file.
     """
     return config.unionsPerFilename.get(webIDLFile, [])
 
 
 def UnionTypes(unionTypes, config):
     """
-    The unionTypes argument should be a list of tuples, each containing two
-    elements: a union type and a descriptor. This is typically the list
-    generated by UnionsForFile.
+    The unionTypes argument should be a list of union types. This is typically
+    the list generated by UnionsForFile.
 
     Returns a tuple containing a set of header filenames to include in
     the header for the types in unionTypes, a set of header filenames to
@@ -1288,10 +1271,9 @@ def UnionTypes(unionTypes, config):
     traverseMethods = dict()
     unlinkMethods = dict()
 
-    for (t, descriptor) in unionTypes:
+    for t in unionTypes:
         name = str(t)
         if name not in unionStructs:
-            providers = getRelevantProviders(descriptor, config)
             unionStructs[name] = t
 
             def addHeadersForType(f):
@@ -1304,23 +1286,22 @@ def UnionTypes(unionTypes, config):
                         headers.add("jsfriendapi.h")
                         headers.add("mozilla/dom/TypedArray.h")
                     else:
-                        for p in providers:
-                            try:
-                                typeDesc = p.getDescriptor(f.inner.identifier.name)
-                            except NoSuchDescriptorError:
-                                continue
-                            if typeDesc.interface.isCallback() or isSequence:
-                                # Callback interfaces always use strong refs, so
-                                # we need to include the right header to be able
-                                # to Release() in our inlined code.
-                                #
-                                # Similarly, sequences always contain strong
-                                # refs, so we'll need the header to handler
-                                # those.
-                                headers.add(typeDesc.headerFile)
-                            else:
-                                declarations.add((typeDesc.nativeType, False))
-                                implheaders.add(typeDesc.headerFile)
+                        try:
+                            typeDesc = config.getDescriptor(f.inner.identifier.name)
+                        except NoSuchDescriptorError:
+                            return
+                        if typeDesc.interface.isCallback() or isSequence:
+                            # Callback interfaces always use strong refs, so
+                            # we need to include the right header to be able
+                            # to Release() in our inlined code.
+                            #
+                            # Similarly, sequences always contain strong
+                            # refs, so we'll need the header to handler
+                            # those.
+                            headers.add(typeDesc.headerFile)
+                        else:
+                            declarations.add((typeDesc.nativeType, False))
+                            implheaders.add(typeDesc.headerFile)
                 elif f.isDictionary():
                     # For a dictionary, we need to see its declaration in
                     # UnionTypes.h so we have its sizeof and know how big to
@@ -1375,26 +1356,23 @@ def UnionConversions(unionTypes, config):
     headers = set()
     unionConversions = dict()
 
-    for (t, descriptor) in unionTypes:
+    for t in unionTypes:
         name = str(t)
         if name not in unionConversions:
-            providers = getRelevantProviders(descriptor, config)
-            unionConversions[name] = CGUnionConversionStruct(t, providers[0])
+            unionConversions[name] = CGUnionConversionStruct(t, config)
 
-            def addHeadersForType(f, providers):
+            def addHeadersForType(f):
                 f = f.unroll()
                 if f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
                         headers.add("mozilla/dom/TypedArray.h")
                     elif f.inner.isExternal():
-                        providers = getRelevantProviders(descriptor, config)
-                        for p in providers:
-                            try:
-                                typeDesc = p.getDescriptor(f.inner.identifier.name)
-                            except NoSuchDescriptorError:
-                                continue
-                            headers.add(typeDesc.headerFile)
+                        try:
+                            typeDesc = config.getDescriptor(f.inner.identifier.name)
+                        except NoSuchDescriptorError:
+                            return
+                        headers.add(typeDesc.headerFile)
                     else:
                         headers.add(CGHeaders.getDeclarationFilename(f.inner))
                 elif f.isDictionary():
@@ -1404,14 +1382,14 @@ def UnionConversions(unionTypes, config):
                 elif f.isMozMap():
                     headers.add("mozilla/dom/MozMap.h")
                     # And the internal type of the MozMap
-                    addHeadersForType(f.inner, providers)
+                    addHeadersForType(f.inner)
 
             # We plan to include UnionTypes.h no matter what, so it's
             # OK if we throw it into the set here.
             headers.add(CGHeaders.getUnionDeclarationFilename(config, t))
 
             for f in t.flatMemberTypes:
-                addHeadersForType(f, providers)
+                addHeadersForType(f)
 
     return (headers,
             CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
@@ -2032,24 +2010,8 @@ class PropertyDefiner:
 
     @staticmethod
     def getControllingCondition(interfaceMember, descriptor):
-        # We do a slightly complicated thing for exposure sets to deal nicely
-        # with the situation of an [Exposed=Window] thing on an interface
-        # exposed in workers that has a worker-specific descriptor.  In that
-        # situation, we already skip generation of the member entirely in the
-        # worker binding, and shouldn't need to check for the various worker
-        # scopes in the non-worker binding.
         interface = descriptor.interface
         nonExposureSet = interface.exposureSet - interfaceMember.exposureSet
-        # Skip getting the descriptor if we're just exposed everywhere or not
-        # looking at the non-worker descriptor.
-        if len(nonExposureSet) and not descriptor.workers:
-            workerProvider = descriptor.config.getDescriptorProvider(True)
-            workerDesc = workerProvider.getDescriptor(interface.identifier.name)
-            if workerDesc.workers:
-                # Just drop all the worker interface names from the
-                # nonExposureSet, since we know we'll have a mainthread global
-                # of some sort.
-                nonExposureSet.difference_update(interface.getWorkerExposureSet())
 
         return MemberCondition(
             PropertyDefiner.getStringAttr(interfaceMember,
@@ -2186,12 +2148,6 @@ def methodLength(method):
     return min(overloadLength(arguments) for retType, arguments in signatures)
 
 
-def isMaybeExposedIn(member, descriptor):
-    # All we can say for sure is that if this is a worker descriptor
-    # and member is not exposed in any worker, then it's not exposed.
-    return not descriptor.workers or member.isExposedInAnyWorker()
-
-
 def clearableCachedAttrs(descriptor):
     return (m for m in descriptor.interface.members if
             m.isAttr() and
@@ -2229,16 +2185,13 @@ class MethodDefiner(PropertyDefiner):
             methods = [m for m in descriptor.interface.members if
                        m.isMethod() and m.isStatic() == static and
                        MemberIsUnforgeable(m, descriptor) == unforgeable and
-                       not m.isIdentifierLess() and
-                       isMaybeExposedIn(m, descriptor)]
+                       not m.isIdentifierLess()]
         else:
             methods = []
         self.chrome = []
         self.regular = []
         for m in methods:
             if m.identifier.name == 'queryInterface':
-                if self.descriptor.workers:
-                    continue
                 if m.isStatic():
                     raise TypeError("Legacy queryInterface member shouldn't be static")
                 signatures = m.signatures()
@@ -2315,8 +2268,7 @@ class MethodDefiner(PropertyDefiner):
         # neither.
         if (not static and
             not unforgeable and
-            descriptor.supportsIndexedProperties() and
-            isMaybeExposedIn(descriptor.operations['IndexedGetter'], descriptor)):
+            descriptor.supportsIndexedProperties()):
             if hasIterator(methods, self.regular):
                 raise TypeError("Cannot have indexed getter/attr on "
                                 "interface %s with other members "
@@ -2379,8 +2331,7 @@ class MethodDefiner(PropertyDefiner):
         if not static:
             stringifier = descriptor.operations['Stringifier']
             if (stringifier and
-                unforgeable == MemberIsUnforgeable(stringifier, descriptor) and
-                isMaybeExposedIn(stringifier, descriptor)):
+                unforgeable == MemberIsUnforgeable(stringifier, descriptor)):
                 toStringDesc = {
                     "name": "toString",
                     "nativeName": stringifier.identifier.name,
@@ -2394,8 +2345,7 @@ class MethodDefiner(PropertyDefiner):
                     self.regular.append(toStringDesc)
             jsonifier = descriptor.operations['Jsonifier']
             if (jsonifier and
-                unforgeable == MemberIsUnforgeable(jsonifier, descriptor) and
-                isMaybeExposedIn(jsonifier, descriptor)):
+                unforgeable == MemberIsUnforgeable(jsonifier, descriptor)):
                 toJSONDesc = {
                     "name": "toJSON",
                     "nativeName": jsonifier.identifier.name,
@@ -2548,7 +2498,6 @@ class AttrDefiner(PropertyDefiner):
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
                           MemberIsUnforgeable(m, descriptor) == unforgeable and
-                          isMaybeExposedIn(m, descriptor) and
                           not isNonExposedNavigatorObjectGetter(m, descriptor)]
         else:
             attributes = []
@@ -2636,8 +2585,7 @@ class ConstDefiner(PropertyDefiner):
     def __init__(self, descriptor, name):
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        constants = [m for m in descriptor.interface.members if m.isConst() and
-                     isMaybeExposedIn(m, descriptor)]
+        constants = [m for m in descriptor.interface.members if m.isConst()]
         self.chrome = [m for m in constants if isChromeOnly(m)]
         self.regular = [m for m in constants if not isChromeOnly(m)]
 
@@ -3299,16 +3247,6 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'JSObject*', args)
 
-    def declare(self):
-        if self.descriptor.workers:
-            return ''
-        return CGAbstractMethod.declare(self)
-
-    def define(self):
-        if self.descriptor.workers:
-            return ''
-        return CGAbstractMethod.define(self)
-
     def definition_body(self):
         if len(self.descriptor.interface.namedConstructors) > 0:
             getConstructor = dedent("""
@@ -3829,13 +3767,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
-        if self.descriptor.workers:
-            fireOnNewGlobal = """// XXXkhuey can't do this yet until workers can lazy resolve.
-// JS_FireOnNewGlobalObject(aCx, aReflector);
-"""
-        else:
-            fireOnNewGlobal = ""
-
         if self.descriptor.hasUnforgeableMembers:
             declareProto = "JS::Handle<JSObject*> canonicalProto =\n"
             assertProto = (
@@ -3875,7 +3806,6 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
-            $*{fireOnNewGlobal}
 
             return true;
             """,
@@ -3886,8 +3816,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             properties=properties,
             chromeProperties=chromeProperties,
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
-            slots=InitMemberSlots(self.descriptor, True),
-            fireOnNewGlobal=fireOnNewGlobal)
+            slots=InitMemberSlots(self.descriptor, True))
 
 
 class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
@@ -5386,7 +5315,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 """,
                 getPromiseGlobal=getPromiseGlobal,
                 exceptionCode=exceptionCode)
-        elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
+        elif not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                     descriptor,
@@ -5402,9 +5331,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     isCallbackReturnValue,
                     firstCap(sourceDescription)))
         else:
-            # Worker descriptors can't end up here, because all of our
-            # "external" stuff is not exposed in workers.
-            assert not descriptor.workers
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
             # to addref when unwrapping or not.  So we just pass an
@@ -6497,7 +6423,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         else:
             wrappingCode = ""
 
-        if not descriptor.interface.isExternal() and not descriptor.skipGen:
+        if not descriptor.interface.isExternal():
             if descriptor.wrapperCache:
                 wrapMethod = "GetOrCreateDOMReflector"
                 wrapArgs = "cx, %s, ${jsvalHandle}" % result
@@ -7691,31 +7617,7 @@ class CGMethodCall(CGThing):
                                       isConstructor=isConstructor,
                                       useCounterName=useCounterName)
 
-        def filteredSignatures(signatures, descriptor):
-            def typeExposedInWorkers(type):
-                return (not type.isGeckoInterface() or
-                        type.inner.isExposedInAnyWorker())
-            if descriptor.workers:
-                # Filter out the signatures that should not be exposed in a
-                # worker.  The IDL parser enforces the return value being
-                # exposed correctly, but we have to check the argument types.
-                #
-                # If this code changes, adjust the self._deps
-                # computation in CGDDescriptor.__init__ as needed.
-                assert all(typeExposedInWorkers(sig[0]) for sig in signatures)
-                signatures = filter(
-                    lambda sig: all(typeExposedInWorkers(arg.type)
-                                    for arg in sig[1]),
-                    signatures)
-                if len(signatures) == 0:
-                    raise TypeError("%s.%s has a worker binding with no "
-                                    "signatures that take arguments exposed in "
-                                    "workers." %
-                                    (descriptor.interface.identifier.name,
-                                     method.identifier.name))
-            return signatures
-
-        signatures = filteredSignatures(method.signatures(), descriptor)
+        signatures = method.signatures()
         if len(signatures) == 1:
             # Special case: we can just do a per-signature method call
             # here for our one signature and not worry about switching
@@ -7745,17 +7647,13 @@ class CGMethodCall(CGThing):
 
         argCountCases = []
         for argCountIdx, argCount in enumerate(allowedArgCounts):
-            possibleSignatures = filteredSignatures(
-                method.signaturesForArgCount(argCount),
-                descriptor)
+            possibleSignatures = method.signaturesForArgCount(argCount)
 
             # Try to optimize away cases when the next argCount in the list
             # will have the same code as us; if it does, we can fall through to
             # that case.
             if argCountIdx+1 < len(allowedArgCounts):
-                nextPossibleSignatures = filteredSignatures(
-                    method.signaturesForArgCount(allowedArgCounts[argCountIdx+1]),
-                    descriptor)
+                nextPossibleSignatures = method.signaturesForArgCount(allowedArgCounts[argCountIdx+1])
             else:
                 nextPossibleSignatures = None
             if possibleSignatures == nextPossibleSignatures:
@@ -11981,21 +11879,6 @@ class CGDescriptor(CGThing):
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
         self._deps = descriptor.interface.getDeps()
-        # If we have a worker descriptor, add dependencies on interface types we
-        # have as method arguments to overloaded methods.  See the
-        # filteredSignatures() bit in CGMethodCall.  Note that we have to add
-        # both interfaces that _are_ exposed in workers and ones that aren't;
-        # the idea is that we have to notice when the exposure set changes.
-        if descriptor.workers:
-            methods = (m for m in descriptor.interface.members if
-                       m.isMethod() and isMaybeExposedIn(m, descriptor) and
-                       len(m.signatures()) != 1)
-            for m in methods:
-                for sig in m.signatures():
-                    for arg in sig[1]:
-                        if (arg.type.isGeckoInterface() and
-                            not arg.type.inner.isExternal()):
-                            self._deps.add(arg.type.inner.filename())
 
         cgThings = []
         cgThings.append(CGGeneric(declare="typedef %s NativeType;\n" %
@@ -12018,8 +11901,6 @@ class CGDescriptor(CGThing):
                                                NamedConstructorName(n)))
         for m in descriptor.interface.members:
             if m.isMethod() and m.identifier.name == 'queryInterface':
-                continue
-            if not isMaybeExposedIn(m, descriptor):
                 continue
 
             props = memberProperties(m, descriptor)
@@ -13070,25 +12951,9 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
         self.config = config
 
     def definition_body(self):
-        # We have to be a bit careful: Some of the interfaces we want to expose
-        # in workers only have one descriptor, while others have both a worker
-        # and a non-worker descriptor.  When both are present we want the worker
-        # descriptor, but otherwise we want whatever descriptor we've got.
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInAnyWorker=True,
-                                                 register=True,
-                                                 skipGen=False,
-                                                 workers=True)
-        workerDescriptorIfaceNames = set(d.interface.identifier.name for
-                                         d in descriptors)
-        descriptors.extend(
-            filter(
-                lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
-                self.config.getDescriptors(hasInterfaceObject=True,
-                                           isExposedInAnyWorker=True,
-                                           register=True,
-                                           skipGen=False,
-                                           workers=False)))
+                                                 register=True)
         conditions = []
         for desc in descriptors:
             bindingNS = toBindingNamespace(desc.name)
@@ -13111,25 +12976,9 @@ class CGRegisterWorkerDebuggerBindings(CGAbstractMethod):
         self.config = config
 
     def definition_body(self):
-        # We have to be a bit careful: Some of the interfaces we want to expose
-        # in workers only have one descriptor, while others have both a worker
-        # and a non-worker descriptor.  When both are present we want the worker
-        # descriptor, but otherwise we want whatever descriptor we've got.
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInWorkerDebugger=True,
-                                                 register=True,
-                                                 skipGen=False,
-                                                 workers=True)
-        workerDescriptorIfaceNames = set(d.interface.identifier.name for
-                                         d in descriptors)
-        descriptors.extend(
-            filter(
-                lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
-                self.config.getDescriptors(hasInterfaceObject=True,
-                                           isExposedInWorkerDebugger=True,
-                                           register=True,
-                                           skipGen=False,
-                                           workers=False)))
+                                                 register=True)
         conditions = []
         for desc in descriptors:
             bindingNS = toBindingNamespace(desc.name)
@@ -13156,9 +13005,7 @@ class CGResolveSystemBinding(CGAbstractMethod):
     def definition_body(self):
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInSystemGlobals=True,
-                                                 workers=False,
-                                                 register=True,
-                                                 skipGen=False)
+                                                 register=True)
 
         def descNameToId(name):
             return "s%s_id" % name
@@ -13343,24 +13190,16 @@ class ForwardDeclarationBuilder:
     def build(self):
         return self._build(atTopLevel=True)
 
-    def forwardDeclareForType(self, t, config, workerness='both'):
+    def forwardDeclareForType(self, t, config):
         t = t.unroll()
         if t.isGeckoInterface():
             name = t.inner.identifier.name
-            # Find and add the non-worker implementation, if any.
-            if workerness != 'workeronly':
-                try:
-                    desc = config.getDescriptor(name, False)
-                    self.add(desc.nativeType)
-                except NoSuchDescriptorError:
-                    pass
-            # Find and add the worker implementation, if any.
-            if workerness != 'mainthreadonly':
-                try:
-                    desc = config.getDescriptor(name, True)
-                    self.add(desc.nativeType)
-                except NoSuchDescriptorError:
-                    pass
+            try:
+                desc = config.getDescriptor(name)
+                self.add(desc.nativeType)
+            except NoSuchDescriptorError:
+                pass
+
         # Note: Spidermonkey interfaces are typedefs, so can't be
         # forward-declared
         elif t.isCallback():
@@ -13375,7 +13214,7 @@ class ForwardDeclarationBuilder:
             self.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
             self.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
         elif t.isMozMap():
-            self.forwardDeclareForType(t.inner, config, workerness)
+            self.forwardDeclareForType(t.inner, config)
         # Don't need to do anything for void, primitive, string, any or object.
         # There may be some other cases we are missing.
 
@@ -13387,7 +13226,7 @@ class CGForwardDeclarations(CGWrapper):
     boolean. If the boolean is true we will declare a struct, otherwise we'll
     declare a class.
     """
-    def __init__(self, config, descriptors, mainCallbacks, workerCallbacks,
+    def __init__(self, config, descriptors, callbacks,
                  dictionaries, callbackInterfaces, additionalDeclarations=[]):
         builder = ForwardDeclarationBuilder()
 
@@ -13424,16 +13263,10 @@ class CGForwardDeclarations(CGWrapper):
                 continue
             builder.add(d.nativeType + "Atoms", isStruct=True)
 
-        for callback in mainCallbacks:
+        for callback in callbacks:
             builder.addInMozillaDom(callback.identifier.name)
             for t in getTypesFromCallback(callback):
-                builder.forwardDeclareForType(t, config,
-                                              workerness='mainthreadonly')
-
-        for callback in workerCallbacks:
-            builder.addInMozillaDom(callback.identifier.name)
-            for t in getTypesFromCallback(callback):
-                builder.forwardDeclareForType(t, config, workerness='workeronly')
+                builder.forwardDeclareForType(t, config)
 
         for d in callbackInterfaces:
             builder.add(d.nativeType)
@@ -13471,8 +13304,7 @@ class CGBindingRoot(CGThing):
             True)
 
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
-                                            hasInterfaceOrInterfacePrototypeObject=True,
-                                            skipGen=False)
+                                            hasInterfaceOrInterfacePrototypeObject=True)
 
         unionTypes = UnionsForFile(config, webIDLFile)
 
@@ -13533,14 +13365,11 @@ class CGBindingRoot(CGThing):
 
         # XXXkhuey ugly hack but this is going away soon.
         bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
-        hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
-                                                   workers=True)) != 0
-        bindingHeaders["WorkerPrivate.h"] = hasWorkerStuff
 
-        hasThreadChecks = hasWorkerStuff or any(d.hasThreadChecks() for d in descriptors)
+        hasThreadChecks = any(d.hasThreadChecks() for d in descriptors)
         bindingHeaders["nsThreadUtils.h"] = hasThreadChecks
 
-        dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
+        dictionaries = config.getDictionaries(webIDLFile)
 
         def dictionaryHasChromeOnly(dictionary):
             while dictionary:
@@ -13554,10 +13383,7 @@ class CGBindingRoot(CGThing):
             any(dictionaryHasChromeOnly(d) for d in dictionaries))
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
-        mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
-                                            workers=False)
-        workerCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
-                                              workers=True)
+        callbacks = config.getCallbacks(webIDLFile)
         callbackDescriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                                     isCallback=True)
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
@@ -13565,9 +13391,6 @@ class CGBindingRoot(CGThing):
         bindingDeclareHeaders["nsWeakReference.h"] = jsImplemented
         bindingHeaders["nsIGlobalObject.h"] = jsImplemented
         bindingHeaders["AtomList.h"] = hasNonEmptyDictionaries or jsImplemented or callbackDescriptors
-
-        # Only mainthread things can have hasXPConnectImpls
-        provider = config.getDescriptorProvider(False)
 
         def descriptorClearsPropsInSlots(descriptor):
             if not descriptor.wrapperCache:
@@ -13581,7 +13404,7 @@ class CGBindingRoot(CGThing):
         cgthings = [CGEnum(e) for e in enums]
 
         hasCode = (descriptors or callbackDescriptors or dictionaries or
-                   mainCallbacks or workerCallbacks)
+                   callbacks)
         bindingHeaders["mozilla/dom/BindingUtils.h"] = hasCode
         bindingHeaders["mozilla/OwningNonNull.h"] = hasCode
         bindingHeaders["mozilla/dom/BindingDeclarations.h"] = (
@@ -13646,36 +13469,27 @@ class CGBindingRoot(CGThing):
 
         for t in dependencySortObjects(dictionaries + unionStructs, getDependencies, getName):
             if t.isDictionary():
-                cgthings.append(CGDictionary(t, config.getDescriptorProvider(False)))
+                cgthings.append(CGDictionary(t, config))
             else:
                 assert t.isUnion()
-                # FIXME: Unions are broken in workers.  See bug 809899.
-                cgthings.append(CGUnionStruct(t, config.getDescriptorProvider(False)))
-                cgthings.append(CGUnionStruct(t, config.getDescriptorProvider(False), True))
+                cgthings.append(CGUnionStruct(t, config))
+                cgthings.append(CGUnionStruct(t, config, True))
 
         # Do codegen for all the callbacks.
-        cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(False))
-                        for c in mainCallbacks)
+        cgthings.extend(CGCallbackFunction(c, config) for c in callbacks)
 
         cgthings.extend([CGNamespace('binding_detail', CGFastCallback(c))
-                         for c in mainCallbacks])
-
-        cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(True))
-                        for c in workerCallbacks if c not in mainCallbacks)
-
-        cgthings.extend([CGNamespace('binding_detail', CGFastCallback(c))
-                         for c in workerCallbacks if c not in mainCallbacks])
+                         for c in callbacks])
 
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])
 
-        # Do codegen for all the callback interfaces.  Skip worker callbacks.
-        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors if
-                         not x.workers])
+        # Do codegen for all the callback interfaces.
+        cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors])
 
         cgthings.extend([CGNamespace('binding_detail',
                                      CGFastCallback(x.interface))
-                         for x in callbackDescriptors if not x.workers])
+                         for x in callbackDescriptors])
 
         # Do codegen for JS implemented classes
         def getParentDescriptor(desc):
@@ -13695,7 +13509,7 @@ class CGBindingRoot(CGThing):
                                  CGWrapper(curr, pre="\n"))
 
         curr = CGList([CGForwardDeclarations(config, descriptors,
-                                             mainCallbacks, workerCallbacks,
+                                             callbacks,
                                              dictionaries,
                                              callbackDescriptors + jsImplemented,
                                              additionalDeclarations=unionDeclarations),
@@ -13712,7 +13526,7 @@ class CGBindingRoot(CGThing):
 
         curr = CGHeaders(descriptors,
                          dictionaries,
-                         mainCallbacks + workerCallbacks,
+                         callbacks,
                          callbackDescriptors,
                          bindingDeclareHeaders,
                          bindingHeaders,
@@ -14474,8 +14288,7 @@ class CGExampleRoot(CGThing):
     respectively.
     """
     def __init__(self, config, interfaceName):
-        # Let's assume we're not doing workers stuff
-        descriptor = config.getDescriptor(interfaceName, False)
+        descriptor = config.getDescriptor(interfaceName)
 
         self.root = CGWrapper(CGExampleClass(descriptor),
                               pre="\n", post="\n")
@@ -16441,13 +16254,11 @@ class GlobalGenRoots():
         # Add the includes
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
-                                                            workers=False,
                                                             isExposedInWindow=True,
                                                             register=True)]
         defineIncludes.append('mozilla/dom/WebIDLGlobalNameHash.h')
         defineIncludes.extend([CGHeaders.getDeclarationFilename(desc.interface)
                                for desc in config.getDescriptors(isNavigatorProperty=True,
-                                                                 workers=False,
                                                                  register=True)])
         curr = CGHeaders([], [], [], [], [], defineIncludes, 'RegisterBindings',
                          curr)
@@ -16472,8 +16283,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInAnyWorker=True,
-                                                            skipGen=False)]
+                                                            isExposedInAnyWorker=True)]
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'RegisterWorkerBindings', curr)
@@ -16498,8 +16308,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInWorkerDebugger=True,
-                                                            skipGen=False)]
+                                                            isExposedInWorkerDebugger=True)]
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'RegisterWorkerDebuggerBindings', curr)
@@ -16524,8 +16333,7 @@ class GlobalGenRoots():
         defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
                           for desc in config.getDescriptors(hasInterfaceObject=True,
                                                             register=True,
-                                                            isExposedInSystemGlobals=True,
-                                                            skipGen=False)]
+                                                            isExposedInSystemGlobals=True)]
         defineIncludes.append("nsThreadUtils.h")  # For NS_IsMainThread
         defineIncludes.append("js/Id.h")  # For jsid
         defineIncludes.append("mozilla/dom/BindingUtils.h")  # AtomizeAndPinJSString
@@ -16548,8 +16356,8 @@ class GlobalGenRoots():
 
         unions = CGList(traverseMethods +
                         unlinkMethods +
-                        [CGUnionStruct(t, config.getDescriptorProvider(False)) for t in unionStructs] +
-                        [CGUnionStruct(t, config.getDescriptorProvider(False), True) for t in unionStructs],
+                        [CGUnionStruct(t, config) for t in unionStructs] +
+                        [CGUnionStruct(t, config, True) for t in unionStructs],
                         "\n")
 
         includes.add("mozilla/OwningNonNull.h")
@@ -16584,7 +16392,7 @@ class GlobalGenRoots():
         unionTypes = []
         for l in config.unionsPerFilename.itervalues():
             unionTypes.extend(l)
-        unionTypes.sort(key=lambda u: u[0].name)
+        unionTypes.sort(key=lambda u: u.name)
         headers, unions = UnionConversions(unionTypes,
                                            config)
 
@@ -17112,8 +16920,7 @@ class CGEventClass(CGBindingImplClass):
 
 class CGEventRoot(CGThing):
     def __init__(self, config, interfaceName):
-        # Let's assume we're not doing workers stuff, for now
-        descriptor = config.getDescriptor(interfaceName, False)
+        descriptor = config.getDescriptor(interfaceName)
 
         self.root = CGWrapper(CGEventClass(descriptor),
                               pre="\n", post="\n")
@@ -17132,7 +16939,7 @@ class CGEventRoot(CGThing):
             [],
             [],
             [
-                config.getDescriptor(parent, False).headerFile,
+                config.getDescriptor(parent).headerFile,
                 "mozilla/Attributes.h",
                 "mozilla/ErrorResult.h",
                 "mozilla/dom/%sBinding.h" % interfaceName,

@@ -345,6 +345,11 @@ ResolveModuleObjectProperty(JSContext* aCx, HandleObject aModObj, const char* na
 const mozilla::Module*
 mozJSComponentLoader::LoadModule(FileLocation& aFile)
 {
+    if (!NS_IsMainThread()) {
+        MOZ_ASSERT(false, "Don't use JS components off the main thread");
+        return nullptr;
+    }
+
     nsCOMPtr<nsIFile> file = aFile.GetBaseFile();
 
     nsCString spec;
