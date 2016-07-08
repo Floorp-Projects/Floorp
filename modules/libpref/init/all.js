@@ -1556,7 +1556,7 @@ pref("network.http.signed-packages.enabled", false);
 // array - behavior as it used to be. If it is true: empty headers coming from
 // the network will exist in header array as empty string. Call SetHeader with
 // an empty value will still delete the header.(Bug 6699259)
-pref("network.http.keep_empty_response_headers_as_empty_string", false);
+pref("network.http.keep_empty_response_headers_as_empty_string", true);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
