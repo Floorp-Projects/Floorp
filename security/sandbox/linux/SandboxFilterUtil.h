@@ -79,8 +79,8 @@ public:
 #define CASES_FOR_getgid   case __NR_getgid32
 #define CASES_FOR_geteuid   case __NR_geteuid32
 #define CASES_FOR_getegid   case __NR_getegid32
-#define CASES_FOR_getresuid   case __NR_getresuid32
-#define CASES_FOR_getresgid   case __NR_getresgid32
+#define CASES_FOR_getresuid   case __NR_getresuid32: case __NR_getresuid
+#define CASES_FOR_getresgid   case __NR_getresgid32: case __NR_getresgid
 // The set*id syscalls are omitted; we'll probably never need to allow them.
 #else
 #define CASES_FOR_getuid   case __NR_getuid
