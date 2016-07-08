@@ -53,12 +53,6 @@ public class FxAccountConstants {
   public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_AUTH_TOKENS = "account_deleted_intent_auth_tokens";
 
   /**
-   * This signing-level permission protects broadcast intents that should be
-   * received only by Firefox channels sharing the same Android Firefox Account type.
-   */
-  public static final String PER_ACCOUNT_TYPE_PERMISSION = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE + ".permission.PER_ACCOUNT_TYPE";
-
-  /**
    * This action is broadcast when an Android Firefox Account's internal state
    * is changed.
    * <p>
