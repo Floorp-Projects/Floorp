@@ -3339,12 +3339,6 @@ TabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
   return NS_OK;
 }
 
-JSContext*
-TabChildGlobal::GetJSContextForEventHandlers()
-{
-  return nsContentUtils::GetSafeJSContext();
-}
-
 nsIPrincipal*
 TabChildGlobal::GetPrincipal()
 {
