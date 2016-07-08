@@ -933,7 +933,6 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
 
     // GLES 3.0.4, p147, table 3.19
     // GLES 3.0.4, p286+, $C.1 "ETC Compressed Texture Image Formats"
-#if ALLOW_ES3_FORMATS
     // Note that all compressed texture formats are filterable:
     // GLES 3.0.4 p161:
     // "[A] texture is complete unless any of the following conditions hold true:
@@ -953,7 +952,7 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
     fnAllowES3TexFormat(FOO(COMPRESSED_SIGNED_RG11_EAC               ), false, true);
     fnAllowES3TexFormat(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), false, true);
     fnAllowES3TexFormat(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), false, true);
-#endif
+
 #undef FOO
 
     // GLES 3.0.4, p206, "Required Renderbuffer Formats":
