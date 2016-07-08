@@ -19,7 +19,6 @@ class nsIDOMEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIPresShell;
-class nsEditor;
 class nsPresContext;
 
 // X.h defines KeyPress
@@ -34,12 +33,14 @@ class nsPresContext;
 
 namespace mozilla {
 
+class EditorBase;
+
 class EditorEventListener : public nsIDOMEventListener
 {
 public:
   EditorEventListener();
 
-  virtual nsresult Connect(nsEditor* aEditor);
+  virtual nsresult Connect(EditorBase* aEditorBase);
 
   void Disconnect();
 
@@ -85,7 +86,7 @@ protected:
   bool ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent);
   nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
 
-  nsEditor* mEditor; // weak
+  EditorBase* mEditorBase; // weak
   RefPtr<nsCaret> mCaret;
   bool mCommitText;
   bool mInTransaction;

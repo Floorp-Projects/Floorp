@@ -160,7 +160,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
 
   // If there is a selection, we should retrieve the selection root from
   // the range since when the window is inactivated, the ancestor limiter
-  // of selection was cleared by blur event handler of nsEditor but the
+  // of selection was cleared by blur event handler of EditorBase but the
   // selection range still keeps storing the nodes.  If the active element of
   // the deactive window is <input> or <textarea>, we can compute the
   // selection root from them.
@@ -2054,7 +2054,7 @@ ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aRange)
 
   // If the parent is not a text node but it has a text node at the offset,
   // we should adjust the range into the text node.
-  // NOTE: This is emulating similar situation of nsEditor.
+  // NOTE: This is emulating similar situation of EditorBase.
   nsINode* childNode = nullptr;
   int32_t offsetInChildNode = -1;
   if (!offsetInParentNode && parentNode->HasChildren()) {

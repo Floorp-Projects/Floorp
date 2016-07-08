@@ -5,10 +5,10 @@
 
 #include "SplitNodeTransaction.h"
 
+#include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
-#include "nsEditor.h"                   // for nsEditor
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
 #include "nsIContent.h"                 // for nsIContent
 
@@ -16,10 +16,10 @@ namespace mozilla {
 
 using namespace dom;
 
-SplitNodeTransaction::SplitNodeTransaction(nsEditor& aEditor,
+SplitNodeTransaction::SplitNodeTransaction(EditorBase& aEditorBase,
                                            nsIContent& aNode,
                                            int32_t aOffset)
-  : mEditor(aEditor)
+  : mEditorBase(aEditorBase)
   , mExistingRightNode(&aNode)
   , mOffset(aOffset)
 {
@@ -48,16 +48,16 @@ SplitNodeTransaction::DoTransaction()
   NS_ASSERTION(!rv.Failed() && clone, "Could not create clone");
   NS_ENSURE_TRUE(!rv.Failed() && clone, rv.StealNSResult());
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
-  mEditor.MarkNodeDirty(mExistingRightNode->AsDOMNode());
+  mEditorBase.MarkNodeDirty(mExistingRightNode->AsDOMNode());
 
   // Get the parent node
   mParent = mExistingRightNode->GetParentNode();
   NS_ENSURE_TRUE(mParent, NS_ERROR_NULL_POINTER);
 
   // Insert the new node
-  rv = mEditor.SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
-  if (mEditor.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditor.GetSelection();
+  rv = mEditorBase.SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
+  if (mEditorBase.GetShouldTxnSetSelection()) {
+    RefPtr<Selection> selection = mEditorBase.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     rv = selection->Collapse(mNewLeftNode, mOffset);
   }
@@ -70,7 +70,7 @@ SplitNodeTransaction::UndoTransaction()
   MOZ_ASSERT(mNewLeftNode && mParent);
 
   // This assumes Do inserted the new node in front of the prior existing node
-  return mEditor.JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent);
+  return mEditorBase.JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent);
 }
 
 /* Redo cannot simply resplit the right node, because subsequent transactions

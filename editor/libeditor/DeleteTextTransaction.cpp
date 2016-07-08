@@ -4,11 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteTextTransaction.h"
+
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsIEditor.h"
 #include "nsISupportsImpl.h"
@@ -19,12 +20,12 @@ namespace mozilla {
 using namespace dom;
 
 DeleteTextTransaction::DeleteTextTransaction(
-                         nsEditor& aEditor,
+                         EditorBase& aEditorBase,
                          nsGenericDOMDataNode& aCharData,
                          uint32_t aOffset,
                          uint32_t aNumCharsToDelete,
                          RangeUpdater* aRangeUpdater)
-  : mEditor(aEditor)
+  : mEditorBase(aEditorBase)
   , mCharData(&aCharData)
   , mOffset(aOffset)
   , mNumCharsToDelete(aNumCharsToDelete)
@@ -44,7 +45,7 @@ nsresult
 DeleteTextTransaction::Init()
 {
   // Do nothing if the node is read-only
-  if (!mEditor.IsModifiableNode(mCharData)) {
+  if (!mEditorBase.IsModifiableNode(mCharData)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -68,8 +69,8 @@ DeleteTextTransaction::DoTransaction()
   }
 
   // Only set selection to deletion point if editor gives permission
-  if (mEditor.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditor.GetSelection();
+  if (mEditorBase.GetShouldTxnSetSelection()) {
+    RefPtr<Selection> selection = mEditorBase.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     res = selection->Collapse(mCharData, mOffset);
     NS_ASSERTION(NS_SUCCEEDED(res),

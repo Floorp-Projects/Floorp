@@ -11,7 +11,6 @@
 #include "nsAString.h"                  // for nsAString_internal::Length
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsEditor.h"                   // for nsEditor
 #include "nsError.h"                    // for NS_OK, etc
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData

@@ -8,12 +8,12 @@
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/dom/Element.h"        // for Element, nsINode
 #include "nsAString.h"                  // for nsAString_internal::IsEmpty
 #include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc
 #include "nsCaseTreatment.h"
 #include "nsDebug.h"                    // for NS_PRECONDITION, etc
-#include "nsEditor.h"                   // for nsEditor
 #include "nsError.h"                    // for NS_SUCCEEDED
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::a, etc
 #include "nsHTMLTags.h"
@@ -88,7 +88,7 @@ bool
 HTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode* aNode)
 {
   MOZ_ASSERT(aNode);
-  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
+  nsCOMPtr<nsIAtom> nodeAtom = EditorBase::GetTag(aNode);
   return (nodeAtom == nsGkAtoms::ul)
       || (nodeAtom == nsGkAtoms::ol)
       || (nodeAtom == nsGkAtoms::dl)
@@ -127,7 +127,7 @@ HTMLEditUtils::IsHeader(nsIDOMNode* aNode)
 bool
 HTMLEditUtils::IsParagraph(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::p);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::p);
 }
 
 /**
@@ -136,7 +136,7 @@ HTMLEditUtils::IsParagraph(nsIDOMNode* aNode)
 bool
 HTMLEditUtils::IsHR(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::hr);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::hr);
 }
 
 /**
@@ -215,7 +215,7 @@ HTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
 bool
 HTMLEditUtils::IsTable(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::table);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::table);
 }
 
 bool
@@ -230,7 +230,7 @@ HTMLEditUtils::IsTable(nsINode* aNode)
 bool
 HTMLEditUtils::IsTableRow(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::tr);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::tr);
 }
 
 /**
@@ -287,7 +287,7 @@ HTMLEditUtils::IsList(nsINode* aNode)
 bool
 HTMLEditUtils::IsOrderedList(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::ol);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::ol);
 }
 
 
@@ -297,7 +297,7 @@ HTMLEditUtils::IsOrderedList(nsIDOMNode* aNode)
 bool
 HTMLEditUtils::IsUnorderedList(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::ul);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::ul);
 }
 
 /**
@@ -306,7 +306,7 @@ HTMLEditUtils::IsUnorderedList(nsIDOMNode* aNode)
 bool
 HTMLEditUtils::IsBlockquote(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::blockquote);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::blockquote);
 }
 
 /**
@@ -315,7 +315,7 @@ HTMLEditUtils::IsBlockquote(nsIDOMNode* aNode)
 bool
 HTMLEditUtils::IsPre(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::pre);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::pre);
 }
 
 /**
@@ -330,7 +330,7 @@ HTMLEditUtils::IsImage(nsINode* aNode)
 bool
 HTMLEditUtils::IsImage(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::img);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::img);
 }
 
 bool
@@ -382,7 +382,7 @@ HTMLEditUtils::IsNamedAnchor(nsINode* aNode)
 bool
 HTMLEditUtils::IsDiv(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::div);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::div);
 }
 
 /**
@@ -466,7 +466,7 @@ bool
 HTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 {
   MOZ_ASSERT(aNode);
-  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
+  nsCOMPtr<nsIAtom> nodeAtom = EditorBase::GetTag(aNode);
   return (nodeAtom == nsGkAtoms::hr)
       || (nodeAtom == nsGkAtoms::table)
       || (nodeAtom == nsGkAtoms::tbody)

@@ -9,10 +9,9 @@
 #include "EditorEventListener.h"
 #include "nscore.h"
 
-class nsEditor;
-
 namespace mozilla {
 
+class EditorBase;
 class HTMLEditor;
 
 class HTMLEditorEventListener final : public EditorEventListener
@@ -28,7 +27,7 @@ public:
 
 #ifdef DEBUG
   // WARNING: You must be use HTMLEditor or its sub class for this class.
-  virtual nsresult Connect(nsEditor* aEditor) override;
+  virtual nsresult Connect(EditorBase* aEditorBase) override;
 #endif
 
 protected:

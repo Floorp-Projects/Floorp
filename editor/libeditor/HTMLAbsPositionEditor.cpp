@@ -20,7 +20,6 @@
 #include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"

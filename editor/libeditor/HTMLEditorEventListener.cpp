@@ -11,7 +11,6 @@
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
@@ -32,14 +31,14 @@ using namespace dom;
 
 #ifdef DEBUG
 nsresult
-HTMLEditorEventListener::Connect(nsEditor* aEditor)
+HTMLEditorEventListener::Connect(EditorBase* aEditorBase)
 {
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryObject(aEditor);
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryObject(aEditorBase);
   nsCOMPtr<nsIHTMLInlineTableEditor> htmlInlineTableEditor =
-    do_QueryObject(aEditor);
+    do_QueryObject(aEditorBase);
   NS_PRECONDITION(htmlEditor && htmlInlineTableEditor,
                   "Set HTMLEditor or its sub class");
-  return EditorEventListener::Connect(aEditor);
+  return EditorEventListener::Connect(aEditorBase);
 }
 #endif
 
@@ -47,7 +46,7 @@ HTMLEditor*
 HTMLEditorEventListener::GetHTMLEditor()
 {
   // mEditor must be HTMLEditor or its subclass.
-  return static_cast<HTMLEditor*>(mEditor);
+  return static_cast<HTMLEditor*>(mEditorBase);
 }
 
 nsresult
@@ -104,7 +103,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
-    RefPtr<Selection> selection = mEditor->GetSelection();
+    RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node

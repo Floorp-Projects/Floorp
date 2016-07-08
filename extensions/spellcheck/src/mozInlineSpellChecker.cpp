@@ -33,6 +33,7 @@
  */
 
 #include "EditorUtils.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellChecker.h"
@@ -66,7 +67,6 @@
 #include "nsIContent.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
-#include "nsEditor.h"
 #include "nsIObserverService.h"
 #include "nsITextControlElement.h"
 #include "prtime.h"
