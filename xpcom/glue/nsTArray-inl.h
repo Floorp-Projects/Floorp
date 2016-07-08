@@ -216,9 +216,9 @@ nsTArray_base<Alloc, Copy>::ShrinkCapacity(size_type aElemSize,
   if (IsAutoArray() && GetAutoArrayBuffer(aElemAlign)->mCapacity >= length) {
     Header* header = GetAutoArrayBuffer(aElemAlign);
 
-    // Copy data, but don't copy the header to avoid overwriting mCapacity
+    // Move the data, but don't copy the header to avoid overwriting mCapacity.
     header->mLength = length;
-    Copy::CopyNonOverlappingRegion(header + 1, mHdr + 1, length, aElemSize);
+    Copy::MoveNonOverlappingRegion(header + 1, mHdr + 1, length, aElemSize);
 
     nsTArrayFallibleAllocator::Free(mHdr);
     mHdr = header;
@@ -409,9 +409,9 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
     return ActualAlloc::FailureResult();
   }
 
-  Copy::CopyNonOverlappingRegion(temp.Elements(), smallerElements, smallerLength, aElemSize);
-  Copy::CopyNonOverlappingRegion(smallerElements, largerElements, largerLength, aElemSize);
-  Copy::CopyNonOverlappingRegion(largerElements, temp.Elements(), smallerLength, aElemSize);
+  Copy::MoveNonOverlappingRegion(temp.Elements(), smallerElements, smallerLength, aElemSize);
+  Copy::MoveNonOverlappingRegion(smallerElements, largerElements, largerLength, aElemSize);
+  Copy::MoveNonOverlappingRegion(largerElements, temp.Elements(), smallerLength, aElemSize);
 
   // Swap the arrays' lengths.
   MOZ_ASSERT((aOther.Length() == 0 || mHdr != EmptyHdr()) &&
