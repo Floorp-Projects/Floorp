@@ -130,6 +130,13 @@ function* testSubmenu(toolbox) {
     label: "Submenu parent",
     submenu: submenu,
   }));
+  menu.append(new MenuItem({
+    label: "Submenu parent with attributes",
+    id: "submenu-parent-with-attrs",
+    submenu: submenu,
+    accesskey: "A",
+    disabled: true,
+  }));
 
   menu.popup(0, 0, toolbox);
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
@@ -137,8 +144,13 @@ function* testSubmenu(toolbox) {
     "No menuitem children");
 
   let menus = toolbox.doc.querySelectorAll("#menu-popup > menu");
-  is(menus.length, 1, "Correct number of menus");
+  is(menus.length, 2, "Correct number of menus");
   is(menus[0].getAttribute("label"), "Submenu parent", "Correct label");
+  ok(!menus[0].hasAttribute("disabled"), "Correct disabled state");
+
+  is(menus[1].getAttribute("accesskey"), "A", "Correct accesskey");
+  ok(menus[1].hasAttribute("disabled"), "Correct disabled state");
+  ok(menus[1].id, "submenu-parent-with-attrs", "Correct id");
 
   let subMenuItems = menus[0].querySelectorAll("menupopup > menuitem");
   is(subMenuItems.length, 1, "Correct number of submenu items");
