@@ -1042,8 +1042,10 @@ js::GCMarker::eagerlyMarkChildren(Shape* shape)
         // be traced by this loop they do not need to be traced here as well.
         BaseShape* base = shape->base();
         CheckTraversedEdge(shape, base);
-        if (mark(base))
+        if (mark(base)) {
+            MOZ_ASSERT(base->canSkipMarkingShapeTable(shape));
             base->traceChildrenSkipShapeTable(this);
+        }
 
         traverseEdge(shape, shape->propidRef().get());
 
