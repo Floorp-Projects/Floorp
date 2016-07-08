@@ -1836,15 +1836,19 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
 {
     MOZ_ASSERT(global->is<GlobalObject>());
 
-    // Off thread parsing and compilation tasks create a dummy global which is then
-    // merged back into the host compartment. Since it used to be a global, it will still
-    // have this trace hook, but it does not have a meaning relative to its new compartment.
-    // We can safely skip it.
-    if (!global->isOwnGlobal())
+    // Off thread parsing and compilation tasks create a dummy global which is
+    // then merged back into the host compartment. Since it used to be a
+    // global, it will still have this trace hook, but it does not have a
+    // meaning relative to its new compartment. We can safely skip it.
+    //
+    // Similarly, if we GC when creating the global, we may not have set that
+    // global's compartment's global pointer yet. In this case, the compartment
+    // will not yet contain anything that needs to be traced.
+    if (!global->isOwnGlobal(trc))
         return;
 
-    // Trace the compartment for any GC things that should only stick around if we know the
-    // compartment is live.
+    // Trace the compartment for any GC things that should only stick around if
+    // we know the compartment is live.
     global->compartment()->trace(trc);
 
     if (JSTraceOp trace = global->compartment()->creationOptions().getTrace())
