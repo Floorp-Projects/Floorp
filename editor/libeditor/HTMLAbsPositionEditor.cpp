@@ -6,11 +6,11 @@
 
 #include <math.h>
 
-#include "EditorUtils.h"
 #include "HTMLEditorObjectResizerUtils.h"
 #include "HTMLEditRules.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"

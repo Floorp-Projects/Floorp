@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef EditTransactionBase_h
-#define EditTransactionBase_h
+#ifndef mozilla_EditTransactionBase_h
+#define mozilla_EditTransactionBase_h
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -41,4 +41,4 @@ protected:
   NS_IMETHOD UndoTransaction() override; \
   NS_IMETHOD GetTxnDescription(nsAString& aTransactionDescription) override;
 
-#endif // #ifndef EditTransactionBase_h
+#endif // #ifndef mozilla_EditTransactionBase_h

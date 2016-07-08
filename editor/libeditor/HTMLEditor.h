@@ -6,9 +6,8 @@
 #ifndef mozilla_HTMLEditor_h
 #define mozilla_HTMLEditor_h
 
-#include "CSSEditUtils.h"
-
 #include "mozilla/Attributes.h"
+#include "mozilla/CSSEditUtils.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"

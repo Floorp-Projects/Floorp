@@ -6,7 +6,7 @@
 #ifndef InsertNodeTransaction_h
 #define InsertNodeTransaction_h
 
-#include "EditTransactionBase.h"        // for EditTransactionBase, etc
+#include "mozilla/EditTransactionBase.h" // for EditTransactionBase, etc
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"                 // for nsIContent

@@ -7,7 +7,7 @@
 #define PlaceholderTransaction_h
 
 #include "EditAggregateTransaction.h"
-#include "EditorUtils.h"
+#include "mozilla/EditorUtils.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"

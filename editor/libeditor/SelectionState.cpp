@@ -5,8 +5,8 @@
 
 #include "mozilla/SelectionState.h"
 
-#include "EditorUtils.h"                // for EditorUtils
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/EditorUtils.h"        // for EditorUtils
 #include "mozilla/dom/Selection.h"      // for Selection
 #include "nsAString.h"                  // for nsAString_internal::Length
 #include "nsCycleCollectionParticipant.h"

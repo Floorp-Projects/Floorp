@@ -5,9 +5,9 @@
 
 #include "mozilla/TextEditRules.h"
 
-#include "EditorUtils.h"
 #include "TextEditUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextComposition.h"

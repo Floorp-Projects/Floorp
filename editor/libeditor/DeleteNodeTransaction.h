@@ -6,7 +6,7 @@
 #ifndef DeleteNodeTransaction_h
 #define DeleteNodeTransaction_h
 
-#include "EditTransactionBase.h"
+#include "mozilla/EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
