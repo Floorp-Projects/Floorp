@@ -5,9 +5,13 @@
 package org.mozilla.gecko.sync;
 
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountDeviceRegistrator;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import android.accounts.Account;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -37,6 +41,14 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
     return accountGUID;
   }
 
+  private synchronized void saveClientNameToSharedPreferences(String clientName, long now) {
+    sharedPreferences
+            .edit()
+            .putString(SyncConfiguration.PREF_CLIENT_NAME, clientName)
+            .putLong(SyncConfiguration.PREF_CLIENT_DATA_TIMESTAMP, now)
+            .apply();
+  }
+
   /**
    * Set client name.
    *
@@ -44,11 +56,14 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
    */
   @Override
   public synchronized void setClientName(String clientName, long now) {
-    sharedPreferences
-      .edit()
-      .putString(SyncConfiguration.PREF_CLIENT_NAME, clientName)
-      .putLong(SyncConfiguration.PREF_CLIENT_DATA_TIMESTAMP, now)
-      .commit();
+    saveClientNameToSharedPreferences(clientName, now);
+
+    // Update the FxA device registration
+    final Account account = FirefoxAccounts.getFirefoxAccount(context);
+    if (account != null) {
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+      fxAccount.resetDeviceRegistrationVersion();
+    }
   }
 
   @Override
@@ -62,7 +77,7 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
     if (clientName == null) {
       clientName = getDefaultClientName();
       long now = System.currentTimeMillis();
-      setClientName(clientName, now);
+      saveClientNameToSharedPreferences(clientName, now); // Save locally only to avoid a recursion loop
     }
     return clientName;
   }
