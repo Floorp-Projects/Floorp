@@ -359,7 +359,7 @@ void
 ErrorResult::ClearUnionData()
 {
   if (IsJSException()) {
-    JSContext* cx = nsContentUtils::RootingCxForThread();
+    JSContext* cx = nsContentUtils::RootingCx();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     js::RemoveRawValueRoot(cx, &mJSException);
@@ -398,7 +398,7 @@ ErrorResult::operator=(ErrorResult&& aRHS)
     mMessage = aRHS.mMessage;
     aRHS.mMessage = nullptr;
   } else if (aRHS.IsJSException()) {
-    JSContext* cx = nsContentUtils::RootingCxForThread();
+    JSContext* cx = nsContentUtils::RootingCx();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     if (!js::AddRawValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
@@ -453,7 +453,7 @@ ErrorResult::CloneTo(ErrorResult& aRv) const
 #ifdef DEBUG
     aRv.mUnionState = HasJSException;
 #endif
-    JSContext* cx = nsContentUtils::RootingCxForThread();
+    JSContext* cx = nsContentUtils::RootingCx();
     JS::Rooted<JS::Value> exception(cx, mJSException);
     aRv.ThrowJSException(cx, exception);
   }

@@ -370,7 +370,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     }
 
     dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(
-      nsContentUtils::RootingCxForThread());
+      nsContentUtils::RootingCx());
     const RefPtr<gfx::SourceSurface> surf = FromImageData(mContext, funcName, unpackType,
                                                           imageData, &scopedArr);
     if (!surf)
