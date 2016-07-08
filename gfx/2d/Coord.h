@@ -110,8 +110,8 @@ struct IntCoordTyped :
 
   typedef BaseCoord< int32_t, IntCoordTyped<units> > Super;
 
-  MOZ_CONSTEXPR IntCoordTyped() : Super() {}
-  MOZ_CONSTEXPR MOZ_IMPLICIT IntCoordTyped(int32_t aValue) : Super(aValue) {}
+  constexpr IntCoordTyped() : Super() {}
+  constexpr MOZ_IMPLICIT IntCoordTyped(int32_t aValue) : Super(aValue) {}
 };
 
 template<class units, class F>
@@ -126,9 +126,9 @@ struct CoordTyped :
 
   typedef BaseCoord< F, CoordTyped<units, F> > Super;
 
-  MOZ_CONSTEXPR CoordTyped() : Super() {}
-  MOZ_CONSTEXPR MOZ_IMPLICIT CoordTyped(F aValue) : Super(aValue) {}
-  explicit MOZ_CONSTEXPR CoordTyped(const IntCoordTyped<units>& aCoord) : Super(F(aCoord.value)) {}
+  constexpr CoordTyped() : Super() {}
+  constexpr MOZ_IMPLICIT CoordTyped(F aValue) : Super(aValue) {}
+  explicit constexpr CoordTyped(const IntCoordTyped<units>& aCoord) : Super(F(aCoord.value)) {}
 
   void Round() {
     this->value = floor(this->value + 0.5);

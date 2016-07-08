@@ -19,12 +19,12 @@ static const uint32_t SimdMemoryAlignment = 4; // Make it 4 to avoid a bunch of 
 static const uint32_t AsmJSStackAlignment = 8;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+static constexpr bool SupportsUint32x4FloatConversions = false;
 
 // Does this architecture support comparisons of unsigned integer vectors?
-static MOZ_CONSTEXPR_VAR bool SupportsUint8x16Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint16x8Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
+static constexpr bool SupportsUint8x16Compares = false;
+static constexpr bool SupportsUint16x8Compares = false;
+static constexpr bool SupportsUint32x4Compares = false;
 
 class Registers
 {

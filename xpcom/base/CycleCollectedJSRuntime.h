@@ -66,7 +66,7 @@ public:
 class JSZoneParticipant : public nsCycleCollectionParticipant
 {
 public:
-  MOZ_CONSTEXPR JSZoneParticipant(): nsCycleCollectionParticipant()
+  constexpr JSZoneParticipant(): nsCycleCollectionParticipant()
   {
   }
 

@@ -61,7 +61,7 @@ enum XrayType {
 class XrayTraits
 {
 public:
-    MOZ_CONSTEXPR XrayTraits() {}
+    constexpr XrayTraits() {}
 
     static JSObject* getTargetObject(JSObject* wrapper) {
         return js::UncheckedUnwrap(wrapper, /* stopAtWindowProxy = */ false);
@@ -160,7 +160,7 @@ public:
 class DOMXrayTraits : public XrayTraits
 {
 public:
-    MOZ_CONSTEXPR DOMXrayTraits() = default;
+    constexpr DOMXrayTraits() = default;
 
     enum {
         HasPrototype = 1
@@ -411,7 +411,7 @@ XrayTraits* GetXrayTraits(JSObject* obj);
 template <typename Base, typename Traits = XPCWrappedNativeXrayTraits >
 class XrayWrapper : public Base {
   public:
-    MOZ_CONSTEXPR explicit XrayWrapper(unsigned flags)
+    constexpr explicit XrayWrapper(unsigned flags)
       : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG, Traits::HasPrototype)
     { };
 
@@ -499,7 +499,7 @@ class XrayWrapper : public Base {
 
 class SandboxProxyHandler : public js::Wrapper {
 public:
-    MOZ_CONSTEXPR SandboxProxyHandler() : js::Wrapper(0)
+    constexpr SandboxProxyHandler() : js::Wrapper(0)
     {
     }
 
@@ -535,7 +535,7 @@ extern const SandboxProxyHandler sandboxProxyHandler;
 // to them directly.
 class SandboxCallableProxyHandler : public js::Wrapper {
 public:
-    MOZ_CONSTEXPR SandboxCallableProxyHandler() : js::Wrapper(0)
+    constexpr SandboxCallableProxyHandler() : js::Wrapper(0)
     {
     }
 

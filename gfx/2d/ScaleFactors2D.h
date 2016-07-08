@@ -26,20 +26,20 @@ struct ScaleFactors2D {
   float xScale;
   float yScale;
 
-  MOZ_CONSTEXPR ScaleFactors2D() : xScale(1.0), yScale(1.0) {}
-  MOZ_CONSTEXPR ScaleFactors2D(const ScaleFactors2D<src, dst>& aCopy)
+  constexpr ScaleFactors2D() : xScale(1.0), yScale(1.0) {}
+  constexpr ScaleFactors2D(const ScaleFactors2D<src, dst>& aCopy)
     : xScale(aCopy.xScale), yScale(aCopy.yScale) {}
-  MOZ_CONSTEXPR ScaleFactors2D(float aXScale, float aYScale)
+  constexpr ScaleFactors2D(float aXScale, float aYScale)
     : xScale(aXScale), yScale(aYScale) {}
   // Layout code often uses gfxSize to represent a pair of x/y scales.
-  explicit MOZ_CONSTEXPR ScaleFactors2D(const gfxSize& aSize)
+  explicit constexpr ScaleFactors2D(const gfxSize& aSize)
     : xScale(aSize.width), yScale(aSize.height) {}
 
   // "Upgrade" from a ScaleFactor.
   // This is deliberately 'explicit' so that the treatment of a single scale
   // number as both the x- and y-scale in a context where they are allowed to
   // be different, is more visible.
-  explicit MOZ_CONSTEXPR ScaleFactors2D(const ScaleFactor<src, dst>& aScale)
+  explicit constexpr ScaleFactors2D(const ScaleFactor<src, dst>& aScale)
     : xScale(aScale.scale), yScale(aScale.scale) {}
 
   bool AreScalesSame() const {

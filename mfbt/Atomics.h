@@ -323,7 +323,7 @@ struct AtomicIntrinsics<T*, Order>
 template<typename T>
 struct ToStorageTypeArgument
 {
-  static MOZ_CONSTEXPR T convert (T aT) { return aT; }
+  static constexpr T convert (T aT) { return aT; }
 };
 
 } // namespace detail
@@ -514,13 +514,13 @@ struct ToStorageTypeArgument
 {
   typedef typename AtomicStorageType<T>::Type ResultType;
 
-  static MOZ_CONSTEXPR ResultType convert (T aT) { return ResultType(aT); }
+  static constexpr ResultType convert (T aT) { return ResultType(aT); }
 };
 
 template<typename T>
 struct ToStorageTypeArgument<T, false>
 {
-  static MOZ_CONSTEXPR T convert (T aT) { return aT; }
+  static constexpr T convert (T aT) { return aT; }
 };
 
 } // namespace detail
@@ -546,8 +546,8 @@ protected:
   ValueType mValue;
 
 public:
-  MOZ_CONSTEXPR AtomicBase() : mValue() {}
-  explicit MOZ_CONSTEXPR AtomicBase(T aInit)
+  constexpr AtomicBase() : mValue() {}
+  explicit constexpr AtomicBase(T aInit)
     : mValue(ToStorageTypeArgument<T>::convert(aInit))
   {}
 
@@ -598,8 +598,8 @@ class AtomicBaseIncDec : public AtomicBase<T, Order>
   typedef typename detail::AtomicBase<T, Order> Base;
 
 public:
-  MOZ_CONSTEXPR AtomicBaseIncDec() : Base() {}
-  explicit MOZ_CONSTEXPR AtomicBaseIncDec(T aInit) : Base(aInit) {}
+  constexpr AtomicBaseIncDec() : Base() {}
+  explicit constexpr AtomicBaseIncDec(T aInit) : Base(aInit) {}
 
   using Base::operator=;
 
@@ -654,8 +654,8 @@ class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value &&
   typedef typename detail::AtomicBaseIncDec<T, Order> Base;
 
 public:
-  MOZ_CONSTEXPR Atomic() : Base() {}
-  explicit MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
+  constexpr Atomic() : Base() {}
+  explicit constexpr Atomic(T aInit) : Base(aInit) {}
 
   using Base::operator=;
 
@@ -702,8 +702,8 @@ class Atomic<T*, Order> : public detail::AtomicBaseIncDec<T*, Order>
   typedef typename detail::AtomicBaseIncDec<T*, Order> Base;
 
 public:
-  MOZ_CONSTEXPR Atomic() : Base() {}
-  explicit MOZ_CONSTEXPR Atomic(T* aInit) : Base(aInit) {}
+  constexpr Atomic() : Base() {}
+  explicit constexpr Atomic(T* aInit) : Base(aInit) {}
 
   using Base::operator=;
 
@@ -733,8 +733,8 @@ class Atomic<T, Order, typename EnableIf<IsEnum<T>::value>::Type>
   typedef typename detail::AtomicBase<T, Order> Base;
 
 public:
-  MOZ_CONSTEXPR Atomic() : Base() {}
-  explicit MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
+  constexpr Atomic() : Base() {}
+  explicit constexpr Atomic(T aInit) : Base(aInit) {}
 
   operator T() const { return T(Base::Intrinsics::load(Base::mValue)); }
 
@@ -767,8 +767,8 @@ class Atomic<bool, Order>
   typedef typename detail::AtomicBase<uint32_t, Order> Base;
 
 public:
-  MOZ_CONSTEXPR Atomic() : Base() {}
-  explicit MOZ_CONSTEXPR Atomic(bool aInit) : Base(aInit) {}
+  constexpr Atomic() : Base() {}
+  explicit constexpr Atomic(bool aInit) : Base(aInit) {}
 
   // We provide boolean wrappers for the underlying AtomicBase methods.
   MOZ_IMPLICIT operator bool() const

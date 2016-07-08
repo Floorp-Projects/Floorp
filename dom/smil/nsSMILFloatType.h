@@ -41,7 +41,7 @@ protected:
 
 private:
   // Private constructor: prevent instances beyond my singleton.
-  MOZ_CONSTEXPR nsSMILFloatType() {}
+  constexpr nsSMILFloatType() {}
 };
 
 #endif // NS_SMILFLOATTYPE_H_

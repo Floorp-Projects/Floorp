@@ -24,7 +24,7 @@ namespace mozilla {
 class DBusConnectionDelete
 {
 public:
-  MOZ_CONSTEXPR DBusConnectionDelete()
+  constexpr DBusConnectionDelete()
   { }
 
   void operator()(DBusConnection* aConnection) const

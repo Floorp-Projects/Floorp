@@ -578,13 +578,13 @@ public:
   friend class CounterStyleManager;
 
   // will be initialized by CounterStyleManager::InitializeBuiltinCounterStyles
-  MOZ_CONSTEXPR BuiltinCounterStyle()
+  constexpr BuiltinCounterStyle()
     : CounterStyle(NS_STYLE_LIST_STYLE_NONE)
   {
   }
 
 protected:
-  MOZ_CONSTEXPR explicit BuiltinCounterStyle(int32_t aStyle)
+  constexpr explicit BuiltinCounterStyle(int32_t aStyle)
     : CounterStyle(aStyle)
   {
   }

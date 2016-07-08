@@ -60,7 +60,7 @@ class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
     unsigned mFlags;
 
   public:
-    explicit MOZ_CONSTEXPR Wrapper(unsigned aFlags, bool aHasPrototype = false,
+    explicit constexpr Wrapper(unsigned aFlags, bool aHasPrototype = false,
                                    bool aHasSecurityPolicy = false)
       : BaseProxyHandler(&family, aHasPrototype, aHasSecurityPolicy),
         mFlags(aFlags)
@@ -163,7 +163,7 @@ WrapperOptions::proto() const
 class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 {
   public:
-    explicit MOZ_CONSTEXPR CrossCompartmentWrapper(unsigned aFlags, bool aHasPrototype = false,
+    explicit constexpr CrossCompartmentWrapper(unsigned aFlags, bool aHasPrototype = false,
                                                    bool aHasSecurityPolicy = false)
       : Wrapper(CROSS_COMPARTMENT | aFlags, aHasPrototype, aHasSecurityPolicy)
     { }
@@ -222,7 +222,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrapper
 {
   public:
-    explicit MOZ_CONSTEXPR OpaqueCrossCompartmentWrapper() : CrossCompartmentWrapper(0)
+    explicit constexpr OpaqueCrossCompartmentWrapper() : CrossCompartmentWrapper(0)
     { }
 
     /* Standard internal methods. */
@@ -286,7 +286,7 @@ template <class Base>
 class JS_FRIEND_API(SecurityWrapper) : public Base
 {
   public:
-    explicit MOZ_CONSTEXPR SecurityWrapper(unsigned flags, bool hasPrototype = false)
+    explicit constexpr SecurityWrapper(unsigned flags, bool hasPrototype = false)
       : Base(flags, hasPrototype, /* hasSecurityPolicy = */ true)
     { }
 

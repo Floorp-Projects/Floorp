@@ -46,7 +46,7 @@ NS_IMPL_CI_INTERFACE_GETTER(Statement,
 class StatementClassInfo : public nsIClassInfo
 {
 public:
-  MOZ_CONSTEXPR StatementClassInfo() {}
+  constexpr StatementClassInfo() {}
 
   NS_DECL_ISUPPORTS_INHERITED
 

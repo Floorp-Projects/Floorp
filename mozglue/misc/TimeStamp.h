@@ -62,7 +62,7 @@ class BaseTimeDuration
 {
 public:
   // The default duration is 0.
-  MOZ_CONSTEXPR BaseTimeDuration() : mValue(0) {}
+  constexpr BaseTimeDuration() : mValue(0) {}
   // Allow construction using '0' as the initial value, for readability,
   // but no other numbers (so we don't have any implicit unit conversions).
   struct _SomethingVeryRandomHere;
@@ -395,7 +395,7 @@ public:
   /**
    * Initialize to the "null" moment
    */
-  MOZ_CONSTEXPR TimeStamp() : mValue(0) {}
+  constexpr TimeStamp() : mValue(0) {}
   // Default copy-constructor and assignment are OK
 
   /**

@@ -1994,7 +1994,7 @@ class DebugScopeProxy : public BaseProxyHandler
     static const char family;
     static const DebugScopeProxy singleton;
 
-    MOZ_CONSTEXPR DebugScopeProxy() : BaseProxyHandler(&family) {}
+    constexpr DebugScopeProxy() : BaseProxyHandler(&family) {}
 
     static bool isFunctionScopeWithThis(const JSObject& scope)
     {

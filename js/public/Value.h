@@ -367,8 +367,8 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == 8);
 #if defined(JS_VALUE_IS_CONSTEXPR)
 #  define JS_RETURN_LAYOUT_FROM_BITS(BITS) \
     return (jsval_layout) { .asBits = (BITS) }
-#  define JS_VALUE_CONSTEXPR MOZ_CONSTEXPR
-#  define JS_VALUE_CONSTEXPR_VAR MOZ_CONSTEXPR_VAR
+#  define JS_VALUE_CONSTEXPR constexpr
+#  define JS_VALUE_CONSTEXPR_VAR constexpr
 #else
 #  define JS_RETURN_LAYOUT_FROM_BITS(BITS) \
     jsval_layout l;                        \

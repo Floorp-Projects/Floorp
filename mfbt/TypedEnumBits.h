@@ -47,34 +47,34 @@ private:
   const E mValue;
 
 public:
-  explicit MOZ_CONSTEXPR CastableTypedEnumResult(E aValue)
+  explicit constexpr CastableTypedEnumResult(E aValue)
     : mValue(aValue)
   {}
 
-  MOZ_CONSTEXPR operator E() const { return mValue; }
+  constexpr operator E() const { return mValue; }
 
   template<typename DestinationType>
-  MOZ_EXPLICIT_CONVERSION MOZ_CONSTEXPR
+  MOZ_EXPLICIT_CONVERSION constexpr
   operator DestinationType() const { return DestinationType(mValue); }
 
-  MOZ_CONSTEXPR bool operator !() const { return !bool(mValue); }
+  constexpr bool operator !() const { return !bool(mValue); }
 };
 
 #define MOZ_CASTABLETYPEDENUMRESULT_BINOP(Op, OtherType, ReturnType) \
 template<typename E> \
-MOZ_CONSTEXPR ReturnType \
+constexpr ReturnType \
 operator Op(const OtherType& aE, const CastableTypedEnumResult<E>& aR) \
 { \
   return ReturnType(aE Op OtherType(aR)); \
 } \
 template<typename E> \
-MOZ_CONSTEXPR ReturnType \
+constexpr ReturnType \
 operator Op(const CastableTypedEnumResult<E>& aR, const OtherType& aE) \
 { \
   return ReturnType(OtherType(aR) Op aE); \
 } \
 template<typename E> \
-MOZ_CONSTEXPR ReturnType \
+constexpr ReturnType \
 operator Op(const CastableTypedEnumResult<E>& aR1, \
             const CastableTypedEnumResult<E>& aR2) \
 { \
@@ -90,7 +90,7 @@ MOZ_CASTABLETYPEDENUMRESULT_BINOP(||, bool, bool)
 MOZ_CASTABLETYPEDENUMRESULT_BINOP(&&, bool, bool)
 
 template <typename E>
-MOZ_CONSTEXPR CastableTypedEnumResult<E>
+constexpr CastableTypedEnumResult<E>
 operator ~(const CastableTypedEnumResult<E>& aR)
 {
   return CastableTypedEnumResult<E>(~(E(aR)));
@@ -123,7 +123,7 @@ struct UnsignedIntegerTypeForEnum
 } // namespace mozilla
 
 #define MOZ_MAKE_ENUM_CLASS_BINOP_IMPL(Name, Op) \
-   inline MOZ_CONSTEXPR mozilla::CastableTypedEnumResult<Name> \
+   inline constexpr mozilla::CastableTypedEnumResult<Name> \
    operator Op(Name a, Name b) \
    { \
      typedef mozilla::CastableTypedEnumResult<Name> Result; \
@@ -145,7 +145,7 @@ struct UnsignedIntegerTypeForEnum
    MOZ_MAKE_ENUM_CLASS_BINOP_IMPL(Name, |) \
    MOZ_MAKE_ENUM_CLASS_BINOP_IMPL(Name, &) \
    MOZ_MAKE_ENUM_CLASS_BINOP_IMPL(Name, ^) \
-   inline MOZ_CONSTEXPR mozilla::CastableTypedEnumResult<Name> \
+   inline constexpr mozilla::CastableTypedEnumResult<Name> \
    operator~(Name a) \
    { \
      typedef mozilla::CastableTypedEnumResult<Name> Result; \
