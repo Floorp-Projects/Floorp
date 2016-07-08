@@ -57,12 +57,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         return null;
     }
 
-    // Bug 908773: Implement this
-    @Override
-    public SensorEventListener getSensorEventListener() {
-        return null;
-    }
-
     // Bug 908775: Implement this
     @Override
     public void doRestart() {}
