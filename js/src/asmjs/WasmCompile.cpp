@@ -592,7 +592,7 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeTableSection(Decoder& d, ModuleGeneratorData* init)
+DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* elemFuncIndices)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(TableSectionId, &sectionStart, &sectionSize))
@@ -606,7 +606,7 @@ DecodeTableSection(Decoder& d, ModuleGeneratorData* init)
     if (init->wasmTable.numElems > MaxTableElems)
         return Fail(d, "too many table elements");
 
-    if (!init->wasmTable.elemFuncIndices.resize(init->wasmTable.numElems))
+    if (!elemFuncIndices->resize(init->wasmTable.numElems))
         return false;
 
     for (uint32_t i = 0; i < init->wasmTable.numElems; i++) {
@@ -617,7 +617,7 @@ DecodeTableSection(Decoder& d, ModuleGeneratorData* init)
         if (funcIndex >= init->funcSigs.length())
             return Fail(d, "table element out of range");
 
-        init->wasmTable.elemFuncIndices[i] = funcIndex;
+        (*elemFuncIndices)[i] = funcIndex;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -1071,6 +1071,17 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
+DecodeElemSection(Decoder& d, Uint32Vector&& elemFuncIndices, ModuleGenerator& mg)
+{
+    // More fun here in the next patch:
+
+    if (!mg.addElemSegment(Move(elemFuncIndices)))
+        return false;
+
+    return true;
+}
+
+static bool
 DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
@@ -1245,7 +1256,8 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
     if (!DecodeFunctionSection(d, init.get()))
         return nullptr;
 
-    if (!DecodeTableSection(d, init.get()))
+    Uint32Vector elemFuncIndices;
+    if (!DecodeTableSection(d, init.get(), &elemFuncIndices))
         return nullptr;
 
     bool memoryExported = false;
@@ -1260,6 +1272,9 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))
+        return nullptr;
+
+    if (!DecodeElemSection(d, Move(elemFuncIndices), mg))
         return nullptr;
 
     if (!DecodeDataSection(d, newFormat, mg))
