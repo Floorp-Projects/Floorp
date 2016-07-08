@@ -3090,6 +3090,9 @@ HTMLMediaElement::ReportTelemetry()
 
   Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS, SECONDS_TO_MS(mPlayTime.Total()));
   LOG(LogLevel::Debug, ("%p VIDEO_PLAY_TIME_MS = %f", this, mPlayTime.Total()));
+
+  Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS, SECONDS_TO_MS(mHiddenPlayTime.Total()));
+  LOG(LogLevel::Debug, ("%p VIDEO_HIDDEN_PLAY_TIME_MS = %f", this, mHiddenPlayTime.Total()));
 }
 
 void HTMLMediaElement::UnbindFromTree(bool aDeep,
@@ -4577,10 +4580,15 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
 
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
+    if (IsHidden()) {
+      mHiddenPlayTime.Start();
+    }
   } else if (aName.EqualsLiteral("waiting")) {
     mPlayTime.Pause();
+    mHiddenPlayTime.Pause();
   } else if (aName.EqualsLiteral("pause")) {
     mPlayTime.Pause();
+    mHiddenPlayTime.Pause();
   }
 
   return NS_OK;
@@ -4777,8 +4785,17 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 bool
 HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
 {
+  bool visible = !IsHidden();
+  if (visible) {
+    // Visible -> Just pause hidden play time (no-op if already paused).
+    mHiddenPlayTime.Pause();
+  } else if (mPlayTime.IsStarted()) {
+    // Not visible, play time is running -> Start hidden play time if needed.
+    mHiddenPlayTime.Start();
+  }
+
   if (mDecoder && !IsBeingDestroyed()) {
-    mDecoder->NotifyOwnerActivityChanged(!IsHidden());
+    mDecoder->NotifyOwnerActivityChanged(visible);
   }
 
   bool pauseElement = !IsActive();
