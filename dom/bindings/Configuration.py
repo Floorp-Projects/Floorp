@@ -105,15 +105,15 @@ class Configuration(DescriptorProvider):
         # union types with that name are used.
         self.filenamesPerUnion = defaultdict(set)
 
-        # Dictionary mapping from a filename to a list of tuples containing a
-        # type and descriptor for the union types used in that file. If a union
-        # type is used in multiple files then it will be added to the list
-        # for the None key. Note that the list contains a tuple for every use of
-        # a union type, so there can be multiple tuples with union types that
-        # have the same name.
+        # Dictionary mapping from a filename to a list of types for
+        # the union types used in that file. If a union type is used
+        # in multiple files then it will be added to the list for the
+        # None key. Note that the list contains a type for every use
+        # of a union type, so there can be multiple entries with union
+        # types that have the same name.
         self.unionsPerFilename = defaultdict(list)
 
-        for (t, descriptor, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
+        for (t, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
             while True:
                 if t.isMozMap():
                     t = t.inner
@@ -149,7 +149,7 @@ class Configuration(DescriptorProvider):
                                 # unions for the file where we previously found
                                 # them.
                                 unionsForFilename = self.unionsPerFilename[f]
-                                unionsForFilename = filter(lambda u: u[0].name != t.name,
+                                unionsForFilename = filter(lambda u: u.name != t.name,
                                                            unionsForFilename)
                                 if len(unionsForFilename) == 0:
                                     del self.unionsPerFilename[f]
@@ -158,7 +158,7 @@ class Configuration(DescriptorProvider):
                         # Unions with this name appear in multiple files, record
                         # the filename as None, so that we can detect that.
                         uniqueFilenameForUnion = None
-                    self.unionsPerFilename[uniqueFilenameForUnion].append((t, descriptor))
+                    self.unionsPerFilename[uniqueFilenameForUnion].append(t)
                     filenamesForUnion.add(t.filename())
 
     def getInterface(self, ifname):
@@ -828,21 +828,20 @@ def getTypesFromCallback(callback):
 def getAllTypes(descriptors, dictionaries, callbacks):
     """
     Generate all the types we're dealing with.  For each type, a tuple
-    containing type, descriptor, dictionary is yielded.  The
-    descriptor and dictionary can be None if the type does not come
-    from a descriptor or dictionary; they will never both be non-None.
+    containing type, dictionary is yielded.  The dictionary can be None if the
+    type does not come from a dictionary.
     """
     for d in descriptors:
         if d.interface.isExternal():
             continue
         for t in getTypesFromDescriptor(d):
-            yield (t, d, None)
+            yield (t, None)
     for dictionary in dictionaries:
         for t in getTypesFromDictionary(dictionary):
-            yield (t, None, dictionary)
+            yield (t, dictionary)
     for callback in callbacks:
         for t in getTypesFromCallback(callback):
-            yield (t, None, None)
+            yield (t, None)
 
 def iteratorNativeType(descriptor):
     assert descriptor.interface.isIterable()
