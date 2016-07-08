@@ -35,6 +35,8 @@ extern PRLogModuleInfo* sCocoaLog;
 
 extern void EnsureLogInitialized();
 
+mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
+
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
   mCachedClipboard = -1;
@@ -45,6 +47,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 
 nsClipboard::~nsClipboard()
 {
+  sSelectionCache = nullptr;
 }
 
 // We separate this into its own function because after an @try, all local
@@ -62,6 +65,12 @@ GetDataFromPasteboard(NSPasteboard* aPasteboard, NSString* aType)
     mozilla::Unused << e;
   }
   return data;
+}
+
+void
+nsClipboard::SetSelectionCache(nsITransferable *aTransferable)
+{
+  sSelectionCache = aTransferable;
 }
 
 NS_IMETHODIMP
