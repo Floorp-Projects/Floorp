@@ -2108,8 +2108,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (table.defined())
             return false;
         table.define();
-        mg_.initSigTableElems(table.sigIndex(), Move(elems));
-        return true;
+        return mg_.initSigTableElems(table.sigIndex(), Move(elems));
     }
     bool declareImport(PropertyName* name, Sig&& sig, unsigned ffiIndex, uint32_t* importIndex) {
         ImportMap::AddPtr p = importMap_.lookupForAdd(NamedSig::Lookup(name, sig));

@@ -137,7 +137,6 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
 
         MOZ_ASSERT(linkData_.globalDataLength % sizeof(void*) == 0);
         MOZ_ASSERT(shared_->asmJSSigToTable.empty());
-        MOZ_ASSERT(shared_->wasmTable.numElems == shared_->wasmTable.elemFuncIndices.length());
         MOZ_ASSERT(!shared_->wasmTable.globalDataOffset);
         shared_->wasmTable.globalDataOffset = linkData_.globalDataLength;
         linkData_.globalDataLength += shared_->wasmTable.numElems * sizeof(void*);
@@ -488,35 +487,6 @@ ModuleGenerator::finishLinkData(Bytes& code)
     MOZ_ASSERT(masm_.numAsmJSGlobalAccesses() == 0);
 #endif
 
-    // Function pointer table elements
-
-    if (shared_->wasmTable.numElems > 0) {
-        const TableGenDesc& table = shared_->wasmTable;
-
-        Uint32Vector elemOffsets;
-        for (size_t i = 0; i < table.elemFuncIndices.length(); i++) {
-            if (!elemOffsets.append(funcCodeRange(table.elemFuncIndices[i]).funcTableEntry()))
-                return false;
-        }
-
-        if (!linkData_.funcTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
-            return false;
-    }
-
-    for (const TableGenDesc& table : shared_->asmJSSigToTable) {
-        if (table.elemFuncIndices.empty())
-            continue;
-
-        Uint32Vector elemOffsets;
-        for (size_t i = 0; i < table.elemFuncIndices.length(); i++) {
-            if (!elemOffsets.append(funcCodeRange(table.elemFuncIndices[i]).funcNonProfilingEntry()))
-                return false;
-        }
-
-        if (!linkData_.funcTables.emplaceBack(table.globalDataOffset, Move(elemOffsets)))
-            return false;
-    }
-
     return true;
 }
 
@@ -839,6 +809,13 @@ ModuleGenerator::finishFuncDefs()
     return true;
 }
 
+bool
+ModuleGenerator::addElemSegment(Uint32Vector&& elemFuncIndices)
+{
+    MOZ_ASSERT(!isAsmJS());
+    return elemSegments_.emplaceBack(shared_->wasmTable.globalDataOffset, Move(elemFuncIndices));
+}
+
 void
 ModuleGenerator::setFuncNames(NameInBytecodeVector&& funcNames)
 {
@@ -864,7 +841,7 @@ ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t numElems)
     return true;
 }
 
-void
+bool
 ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices)
 {
     MOZ_ASSERT(isAsmJS());
@@ -873,8 +850,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     TableGenDesc& table = shared_->asmJSSigToTable[sigIndex];
     MOZ_ASSERT(table.numElems == elemFuncIndices.length());
 
-    MOZ_ASSERT(table.elemFuncIndices.empty());
-    table.elemFuncIndices = Move(elemFuncIndices);
+    return elemSegments_.emplaceBack(table.globalDataOffset, Move(elemFuncIndices));
 }
 
 UniqueModule
@@ -938,6 +914,16 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
     }
 #endif
 
+    // Convert function indices to offsets into the code section.
+    // WebAssembly's tables are (currently) all untyped and point to the table
+    // entry. asm.js tables are all typed and thus point to the normal entry.
+    for (ElemSegment& seg : elemSegments_) {
+        for (uint32_t& elem : seg.elems) {
+            const CodeRange& cr = funcCodeRange(elem);
+            elem = isAsmJS() ? cr.funcNonProfilingEntry() : cr.funcTableEntry();
+        }
+    }
+
     if (!finishLinkData(code))
         return nullptr;
 
@@ -946,6 +932,7 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
                                   Move(imports),
                                   Move(exportMap_),
                                   Move(dataSegments_),
+                                  Move(elemSegments_),
                                   *metadata_,
                                   bytecode);
 }

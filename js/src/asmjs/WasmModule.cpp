@@ -96,41 +96,11 @@ LinkData::SymbolicLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) cons
 }
 
 size_t
-LinkData::FuncTable::serializedSize() const
-{
-    return sizeof(globalDataOffset) +
-           SerializedPodVectorSize(elemOffsets);
-}
-
-uint8_t*
-LinkData::FuncTable::serialize(uint8_t* cursor) const
-{
-    cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
-    cursor = SerializePodVector(cursor, elemOffsets);
-    return cursor;
-}
-
-const uint8_t*
-LinkData::FuncTable::deserialize(const uint8_t* cursor)
-{
-    (cursor = ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
-    (cursor = DeserializePodVector(cursor, &elemOffsets));
-    return cursor;
-}
-
-size_t
-LinkData::FuncTable::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return elemOffsets.sizeOfExcludingThis(mallocSizeOf);
-}
-
-size_t
 LinkData::serializedSize() const
 {
     return sizeof(pod()) +
            SerializedPodVectorSize(internalLinks) +
-           symbolicLinks.serializedSize() +
-           SerializedVectorSize(funcTables);
+           symbolicLinks.serializedSize();
 }
 
 uint8_t*
@@ -139,7 +109,6 @@ LinkData::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializePodVector(cursor, internalLinks);
     cursor = symbolicLinks.serialize(cursor);
-    cursor = SerializeVector(cursor, funcTables);
     return cursor;
 }
 
@@ -148,8 +117,7 @@ LinkData::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = DeserializePodVector(cursor, &internalLinks)) &&
-    (cursor = symbolicLinks.deserialize(cursor)) &&
-    (cursor = DeserializeVector(cursor, &funcTables));
+    (cursor = symbolicLinks.deserialize(cursor));
     return cursor;
 }
 
@@ -157,8 +125,7 @@ size_t
 LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return internalLinks.sizeOfExcludingThis(mallocSizeOf) +
-           symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcTables, mallocSizeOf);
+           symbolicLinks.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
@@ -222,6 +189,35 @@ ExportMap::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 size_t
+ElemSegment::serializedSize() const
+{
+    return sizeof(globalDataOffset) +
+           SerializedPodVectorSize(elems);
+}
+
+uint8_t*
+ElemSegment::serialize(uint8_t* cursor) const
+{
+    cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
+    cursor = SerializePodVector(cursor, elems);
+    return cursor;
+}
+
+const uint8_t*
+ElemSegment::deserialize(const uint8_t* cursor)
+{
+    (cursor = ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
+    (cursor = DeserializePodVector(cursor, &elems));
+    return cursor;
+}
+
+size_t
+ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return elems.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t
 Module::serializedSize() const
 {
     return SerializedPodVectorSize(code_) +
@@ -229,6 +225,7 @@ Module::serializedSize() const
            SerializedVectorSize(imports_) +
            exportMap_.serializedSize() +
            SerializedPodVectorSize(dataSegments_) +
+           SerializedVectorSize(elemSegments_) +
            metadata_->serializedSize() +
            SerializedPodVectorSize(bytecode_->bytes);
 }
@@ -241,6 +238,7 @@ Module::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, imports_);
     cursor = exportMap_.serialize(cursor);
     cursor = SerializePodVector(cursor, dataSegments_);
+    cursor = SerializeVector(cursor, elemSegments_);
     cursor = metadata_->serialize(cursor);
     cursor = SerializePodVector(cursor, bytecode_->bytes);
     return cursor;
@@ -274,6 +272,11 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
     if (!cursor)
         return nullptr;
 
+    ElemSegmentVector elemSegments;
+    cursor = DeserializeVector(cursor, &elemSegments);
+    if (!cursor)
+        return nullptr;
+
     MutableMetadata metadata;
     if (maybeMetadata) {
         metadata = maybeMetadata;
@@ -299,6 +302,7 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
                                      Move(imports),
                                      Move(exportMap),
                                      Move(dataSegments),
+                                     Move(elemSegments),
                                      *metadata,
                                      *bytecode);
     if (!*module)
@@ -317,9 +321,10 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              code_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
-             imports_.sizeOfExcludingThis(mallocSizeOf) +
+             SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              exportMap_.sizeOfExcludingThis(mallocSizeOf) +
              dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
+             SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
              metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }
@@ -373,6 +378,18 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
     uint8_t* memoryBase = memory->buffer().dataPointerEither().unwrap(/* memcpy */);
     for (const DataSegment& seg : dataSegments_)
         memcpy(memoryBase + seg.memoryOffset, bytecode_->begin() + seg.bytecodeOffset, seg.length);
+
+    return true;
+}
+
+bool
+Module::instantiateTable(JSContext* cx, const CodeSegment& cs) const
+{
+    for (const ElemSegment& seg : elemSegments_) {
+        auto array = reinterpret_cast<void**>(cs.globalData() + seg.globalDataOffset);
+        for (size_t i = 0; i < seg.elems.length(); i++)
+            array[i] = cs.code() + seg.elems[i];
+    }
 
     return true;
 }
@@ -484,6 +501,9 @@ Module::instantiate(JSContext* cx,
     if (!cs)
         return false;
 
+    if (!instantiateTable(cx, *cs))
+        return false;
+
     // To support viewing the source of an instance (Instance::createText), the
     // instance must hold onto a ref of the bytecode (keeping it alive). This
     // wastes memory for most users, so we try to only save the source when a
@@ -501,10 +521,10 @@ Module::instantiate(JSContext* cx,
 
     TypedFuncTableVector typedFuncTables;
     if (metadata_->isAsmJS()) {
-        if (!typedFuncTables.reserve(linkData_.funcTables.length()))
+        if (!typedFuncTables.reserve(elemSegments_.length()))
             return false;
-        for (const LinkData::FuncTable& tbl : linkData_.funcTables)
-            typedFuncTables.infallibleEmplaceBack(tbl.globalDataOffset, tbl.elemOffsets.length());
+        for (const ElemSegment& seg : elemSegments_)
+            typedFuncTables.infallibleEmplaceBack(seg.globalDataOffset, seg.elems.length());
     }
 
     // Create the Instance, ensuring that it is traceable via 'instanceObj'
