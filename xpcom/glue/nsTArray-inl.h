@@ -173,7 +173,7 @@ nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type aCapacity,
       return ActualAlloc::FailureResult();
     }
 
-    Copy::CopyNonOverlappingRegionWithHeader(header, mHdr, Length(), aElemSize);
+    Copy::MoveNonOverlappingRegionWithHeader(header, mHdr, Length(), aElemSize);
 
     if (!UsesAutoArrayBuffer()) {
       ActualAlloc::Free(mHdr);
@@ -454,7 +454,7 @@ nsTArray_base<Alloc, Copy>::EnsureNotUsingAutoArrayBuffer(size_type aElemSize)
       return false;
     }
 
-    Copy::CopyNonOverlappingRegionWithHeader(header, mHdr, Length(), aElemSize);
+    Copy::MoveNonOverlappingRegionWithHeader(header, mHdr, Length(), aElemSize);
     header->mCapacity = Length();
     mHdr = header;
   }
