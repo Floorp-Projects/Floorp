@@ -12951,25 +12951,10 @@ class CGRegisterWorkerBindings(CGAbstractMethod):
         self.config = config
 
     def definition_body(self):
-        # We have to be a bit careful: Some of the interfaces we want to expose
-        # in workers only have one descriptor, while others have both a worker
-        # and a non-worker descriptor.  When both are present we want the worker
-        # descriptor, but otherwise we want whatever descriptor we've got.
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInAnyWorker=True,
                                                  register=True,
-                                                 skipGen=False,
-                                                 workers=True)
-        workerDescriptorIfaceNames = set(d.interface.identifier.name for
-                                         d in descriptors)
-        descriptors.extend(
-            filter(
-                lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
-                self.config.getDescriptors(hasInterfaceObject=True,
-                                           isExposedInAnyWorker=True,
-                                           register=True,
-                                           skipGen=False,
-                                           workers=False)))
+                                                 skipGen=False)
         conditions = []
         for desc in descriptors:
             bindingNS = toBindingNamespace(desc.name)
@@ -12992,25 +12977,10 @@ class CGRegisterWorkerDebuggerBindings(CGAbstractMethod):
         self.config = config
 
     def definition_body(self):
-        # We have to be a bit careful: Some of the interfaces we want to expose
-        # in workers only have one descriptor, while others have both a worker
-        # and a non-worker descriptor.  When both are present we want the worker
-        # descriptor, but otherwise we want whatever descriptor we've got.
         descriptors = self.config.getDescriptors(hasInterfaceObject=True,
                                                  isExposedInWorkerDebugger=True,
                                                  register=True,
-                                                 skipGen=False,
-                                                 workers=True)
-        workerDescriptorIfaceNames = set(d.interface.identifier.name for
-                                         d in descriptors)
-        descriptors.extend(
-            filter(
-                lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
-                self.config.getDescriptors(hasInterfaceObject=True,
-                                           isExposedInWorkerDebugger=True,
-                                           register=True,
-                                           skipGen=False,
-                                           workers=False)))
+                                                 skipGen=False)
         conditions = []
         for desc in descriptors:
             bindingNS = toBindingNamespace(desc.name)
