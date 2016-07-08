@@ -23,8 +23,6 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 // WeakMap[Extension -> BrowserAction]
 var browserActionMap = new WeakMap();
 
-global.browserActionOf = browserActionOf;
-
 // Responsible for the browser_action section of the manifest as well
 // as the associated popup.
 function BrowserAction(options, extension) {
