@@ -84,23 +84,13 @@ class Instance
     static int32_t callImport_i64(int32_t importIndex, int32_t argc, uint64_t* argv);
     static int32_t callImport_f64(int32_t importIndex, int32_t argc, uint64_t* argv);
 
-    template <class T> friend struct js::MallocProvider;
+  public:
     Instance(UniqueCodeSegment codeSegment,
              const Metadata& metadata,
              const ShareableBytes* maybeBytecode,
              TypedFuncTableVector&& typedFuncTables,
-             HandleWasmMemoryObject memory);
-
-  public:
-    static bool create(JSContext* cx,
-                       UniqueCodeSegment codeSegment,
-                       const Metadata& metadata,
-                       const ShareableBytes* maybeBytecode,
-                       TypedFuncTableVector&& typedFuncTables,
-                       HandleWasmMemoryObject memoryObject,
-                       Handle<FunctionVector> funcImports,
-                       const ExportMap& exports,
-                       HandleWasmInstanceObject instanceObj);
+             HandleWasmMemoryObject memory,
+             Handle<FunctionVector> funcImports);
     ~Instance();
     void trace(JSTracer* trc);
 
@@ -161,18 +151,6 @@ class Instance
 };
 
 typedef UniquePtr<Instance> UniqueInstance;
-
-// These accessors are used to implemented the special asm.js semantics of
-// exported wasm functions:
-
-extern bool
-IsExportedFunction(JSFunction* fun);
-
-extern Instance&
-ExportedFunctionToInstance(JSFunction* fun);
-
-extern uint32_t
-ExportedFunctionToExportIndex(JSFunction* fun);
 
 } // namespace wasm
 } // namespace js
