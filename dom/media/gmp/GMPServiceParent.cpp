@@ -719,7 +719,7 @@ GeckoMediaPluginServiceParent::UnloadPlugins()
     MutexAutoLock lock(mMutex);
     // Move all plugins references to a local array. This way mMutex won't be
     // locked when calling CloseActive (to avoid inter-locking).
-    plugins = Move(mPlugins);
+    Swap(plugins, mPlugins);
   }
 
   LOGD(("%s::%s plugins:%u including async:%u", __CLASS__, __FUNCTION__,

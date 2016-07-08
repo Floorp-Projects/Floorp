@@ -64,7 +64,7 @@ function prepareMessage(packet) {
       messageType = "ConsoleApiCall";
       repeat = 1;
       repeatId = getRepeatId(data);
-      severity = SEVERITY_CLASS_FRAGMENTS[LEVELS[data.level]];
+      severity = SEVERITY_CLASS_FRAGMENTS[LEVELS[data.level]] || "log";
       break;
     case "pageError":
       data = Object.assign({}, packet.pageError);
@@ -77,7 +77,7 @@ function prepareMessage(packet) {
       severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_ERROR];
       if (data.warning || data.strict) {
         severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_WARNING];
-      } else if (data.info) {
+      } else {
         severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG];
       }
       break;

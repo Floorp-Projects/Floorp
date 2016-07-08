@@ -8,6 +8,8 @@
 #ifndef mozilla_SheetType_h
 #define mozilla_SheetType_h
 
+#include <stdint.h>
+
 namespace mozilla {
 
 // The "origins" of the CSS cascade, from lowest precedence to
