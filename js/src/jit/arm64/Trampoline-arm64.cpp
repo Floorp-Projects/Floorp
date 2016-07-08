@@ -272,6 +272,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.abiret();
 
     Linker linker(masm);
+    AutoFlushICache afc("EnterJIT");
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -313,6 +314,7 @@ JitRuntime::generateInvalidator(JSContext* cx)
     masm.branch(bailoutTail);
 
     Linker linker(masm);
+    AutoFlushICache afc("Invalidator");
     return linker.newCode<NoGC>(cx, OTHER_CODE);
 }
 
@@ -420,6 +422,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.ret();
 
     Linker linker(masm);
+    AutoFlushICache afc("ArgumentsRectifier");
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
     if (returnAddrOut)
@@ -527,6 +530,7 @@ JitRuntime::generateBailoutTable(JSContext* cx, uint32_t frameClass)
     MacroAssembler masm;
     masm.breakpoint();
     Linker linker(masm);
+    AutoFlushICache afc("BailoutTable");
     return linker.newCode<NoGC>(cx, OTHER_CODE);
 }
 
@@ -541,6 +545,7 @@ JitRuntime::generateBailoutHandler(JSContext* cx)
 #endif
 
     Linker linker(masm);
+    AutoFlushICache afc("BailoutHandler");
     return linker.newCode<NoGC>(cx, OTHER_CODE);
 }
 
@@ -727,6 +732,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
               f.extraValuesToPop * sizeof(Value)));
 
     Linker linker(masm);
+    AutoFlushICache afc("VMWrapper");
     JitCode* wrapper = linker.newCode<NoGC>(cx, OTHER_CODE);
     if (!wrapper)
         return nullptr;
@@ -770,6 +776,7 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
     masm.abiret();
 
     Linker linker(masm);
+    AutoFlushICache afc("PreBarrier");
     return linker.newCode<NoGC>(cx, OTHER_CODE);
 }
 
@@ -824,6 +831,7 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
     masm.abiret();
 
     Linker linker(masm);
+    AutoFlushICache afc("DebugTrapHandler");
     JitCode* codeDbg = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -841,6 +849,7 @@ JitRuntime::generateExceptionTailStub(JSContext* cx, void* handler)
     masm.handleFailureWithHandlerTail(handler);
 
     Linker linker(masm);
+    AutoFlushICache afc("ExceptionTailStub");
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
@@ -858,6 +867,7 @@ JitRuntime::generateBailoutTailStub(JSContext* cx)
     masm.generateBailoutTail(r1, r2);
 
     Linker linker(masm);
+    AutoFlushICache afc("BailoutTailStub");
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF

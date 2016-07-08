@@ -228,6 +228,54 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
 }
 
 /* static */ already_AddRefed<Decoder>
+DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
+                                            NotNull<SourceBuffer*> aSourceBuffer,
+                                            NotNull<nsICODecoder*> aICODecoder,
+                                            const Maybe<uint32_t>& aDataOffset
+                                              /* = Nothing() */)
+{
+  // Create the decoder.
+  RefPtr<Decoder> decoder;
+  switch (aType) {
+    case DecoderType::BMP:
+      MOZ_ASSERT(aDataOffset);
+      decoder = new nsBMPDecoder(aICODecoder->GetImageMaybeNull(), *aDataOffset);
+      break;
+
+    case DecoderType::PNG:
+      MOZ_ASSERT(!aDataOffset);
+      decoder = new nsPNGDecoder(aICODecoder->GetImageMaybeNull());
+      break;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid ICO resource decoder type");
+      return nullptr;
+  }
+
+  MOZ_ASSERT(decoder);
+
+  // Initialize the decoder, copying settings from @aICODecoder.
+  decoder->SetMetadataDecode(aICODecoder->IsMetadataDecode());
+  decoder->SetIterator(aSourceBuffer->Iterator());
+  decoder->SetDecoderFlags(aICODecoder->GetDecoderFlags());
+  decoder->SetSurfaceFlags(aICODecoder->GetSurfaceFlags());
+
+  // Set a target size for downscale-during-decode if applicable.
+  const Maybe<IntSize> targetSize = aICODecoder->GetTargetSize();
+  if (targetSize) {
+    DebugOnly<nsresult> rv = decoder->SetTargetSize(*targetSize);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
+  }
+
+  decoder->Init();
+  if (NS_FAILED(decoder->GetDecoderError())) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
+/* static */ already_AddRefed<Decoder>
 DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
                                        NotNull<SourceBuffer*> aSourceBuffer,
                                        const Maybe<IntSize>& aTargetSize,

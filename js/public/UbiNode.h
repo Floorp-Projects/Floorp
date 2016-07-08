@@ -578,6 +578,11 @@ class Base {
     // node owns exclusively that are not exposed as their own ubi::Nodes.
     // |mallocSizeOf| should be a malloc block sizing function; see
     // |mfbt/MemoryReporting.h|.
+    //
+    // Because we can use |JS::ubi::Node|s backed by a snapshot that was taken
+    // on a 64-bit platform when we are currently on a 32-bit platform, we
+    // cannot rely on |size_t| for node sizes. Instead, |Size| is uint64_t on
+    // all platforms.
     using Size = uint64_t;
     virtual Size size(mozilla::MallocSizeOf mallocSizeof) const { return 1; }
 
@@ -641,28 +646,28 @@ class Base {
 };
 
 // A traits template with a specialization for each referent type that
-// ubi::Node supports. The specialization must be the concrete subclass of
-// Base that represents a pointer to the referent type. It must also
-// include the members described here.
+// ubi::Node supports. The specialization must be the concrete subclass of Base
+// that represents a pointer to the referent type. It must include these
+// members:
+//
+//    // The specific char16_t array returned by Concrete<T>::typeName().
+//    static const char16_t concreteTypeName[];
+//
+//    // Construct an instance of this concrete class in |storage| referring
+//    // to |referent|. Implementations typically use a placement 'new'.
+//    //
+//    // In some cases, |referent| will contain dynamic type information that
+//    // identifies it a some more specific subclass of |Referent|. For
+//    // example, when |Referent| is |JSObject|, then |referent->getClass()|
+//    // could tell us that it's actually a JSFunction. Similarly, if
+//    // |Referent| is |nsISupports|, we would like a ubi::Node that knows its
+//    // final implementation type.
+//    //
+//    // So we delegate the actual construction to this specialization, which
+//    // knows Referent's details.
+//    static void construct(void* storage, Referent* referent);
 template<typename Referent>
-struct Concrete {
-    // The specific char16_t array returned by Concrete<T>::typeName.
-    static const char16_t concreteTypeName[];
-
-    // Construct an instance of this concrete class in |storage| referring
-    // to |referent|. Implementations typically use a placement 'new'.
-    //
-    // In some cases, |referent| will contain dynamic type information that
-    // identifies it a some more specific subclass of |Referent|. For example,
-    // when |Referent| is |JSObject|, then |referent->getClass()| could tell us
-    // that it's actually a JSFunction. Similarly, if |Referent| is
-    // |nsISupports|, we would like a ubi::Node that knows its final
-    // implementation type.
-    //
-    // So, we delegate the actual construction to this specialization, which
-    // knows Referent's details.
-    static void construct(void* storage, Referent* referent);
-};
+class Concrete;
 
 // A container for a Base instance; all members simply forward to the contained
 // instance.  This container allows us to pass ubi::Node instances by value.
@@ -994,24 +999,24 @@ class MOZ_STACK_CLASS RootList {
 /*** Concrete classes for ubi::Node referent types ************************************************/
 
 template<>
-struct Concrete<RootList> : public Base {
-    js::UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override;
-    const char16_t* typeName() const override { return concreteTypeName; }
-
+class Concrete<RootList> : public Base {
   protected:
     explicit Concrete(RootList* ptr) : Base(ptr) { }
     RootList& get() const { return *static_cast<RootList*>(ptr); }
 
   public:
-    static const char16_t concreteTypeName[];
     static void construct(void* storage, RootList* ptr) { new (storage) Concrete(ptr); }
+
+    js::UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override;
+
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
 };
 
 // A reusable ubi::Concrete specialization base class for types supported by
 // JS::TraceChildren.
 template<typename Referent>
 class TracerConcrete : public Base {
-    const char16_t* typeName() const override { return concreteTypeName; }
     js::UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override;
     JS::Zone* zone() const override;
 
@@ -1020,7 +1025,6 @@ class TracerConcrete : public Base {
     Referent& get() const { return *static_cast<Referent*>(ptr); }
 
   public:
-    static const char16_t concreteTypeName[];
     static void construct(void* storage, Referent* ptr) { new (storage) TracerConcrete(ptr); }
 };
 
@@ -1042,9 +1046,7 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
 // Define specializations for some commonly-used public JSAPI types.
 // These can use the generic templates above.
 template<>
-struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
-    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-
+class Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
   protected:
     explicit Concrete(JS::Symbol* ptr) : TracerConcrete(ptr) { }
 
@@ -1052,23 +1054,40 @@ struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
     static void construct(void* storage, JS::Symbol* ptr) {
         new (storage) Concrete(ptr);
     }
+
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
 };
 
-template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
-    CoarseType coarseType() const final { return CoarseType::Script; }
-    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-    const char* scriptFilename() const final;
-
+template<>
+class Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
   protected:
     explicit Concrete(JSScript *ptr) : TracerConcreteWithCompartment<JSScript>(ptr) { }
 
   public:
     static void construct(void *storage, JSScript *ptr) { new (storage) Concrete(ptr); }
+
+    CoarseType coarseType() const final { return CoarseType::Script; }
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+    const char* scriptFilename() const final;
+
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
 };
 
 // The JSObject specialization.
 template<>
 class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
+  protected:
+    explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
+
+  public:
+    static void construct(void* storage, JSObject* ptr) {
+        new (storage) Concrete(ptr);
+    }
+
     const char* jsObjectClassName() const override;
     MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName)
         const override;
@@ -1079,26 +1098,25 @@ class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
 
     CoarseType coarseType() const final { return CoarseType::Object; }
 
-  protected:
-    explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
-
-  public:
-    static void construct(void* storage, JSObject* ptr) {
-        new (storage) Concrete(ptr);
-    }
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
 };
 
 // For JSString, we extend the generic template with a 'size' implementation.
-template<> struct Concrete<JSString> : TracerConcrete<JSString> {
-    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-
-    CoarseType coarseType() const final { return CoarseType::String; }
-
+template<>
+class Concrete<JSString> : TracerConcrete<JSString> {
   protected:
     explicit Concrete(JSString *ptr) : TracerConcrete<JSString>(ptr) { }
 
   public:
     static void construct(void *storage, JSString *ptr) { new (storage) Concrete(ptr); }
+
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+    CoarseType coarseType() const final { return CoarseType::String; }
+
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
 };
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
@@ -1115,7 +1133,6 @@ class Concrete<void> : public Base {
 
   public:
     static void construct(void* storage, void* ptr) { new (storage) Concrete(ptr); }
-    static const char16_t concreteTypeName[];
 };
 
 

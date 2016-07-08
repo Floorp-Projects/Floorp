@@ -10,7 +10,3 @@ RESOURCE_FILES.entityTables = [
     'html40Symbols.properties',
     'mathml20.properties',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    CFLAGS += CONFIG['MOZ_QT_CFLAGS']
-    CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']

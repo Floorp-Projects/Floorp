@@ -3563,7 +3563,9 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     /* This assignment must occur before all the Rebase calls. */
     dst->data = data.forget();
     dst->dataSize_ = size;
-    memcpy(dst->data, src->data, size);
+    MOZ_ASSERT(bool(dst->data) == bool(src->data));
+    if (dst->data)
+        memcpy(dst->data, src->data, size);
 
     /* Script filenames, bytecodes and atoms are runtime-wide. */
     dst->setCode(src->code());

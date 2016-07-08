@@ -85,6 +85,30 @@
 #define NS_APP_PERMISSION_PARENT_DIR            "permissionDBPDir"
 
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+//
+// NS_APP_CONTENT_PROCESS_TEMP_DIR refers to a directory that is read and
+// write accessible from a sandboxed content process. The key may be used in
+// either process, but the directory is intended to be used for short-lived
+// files that need to be saved to the filesystem by the content process and
+// don't need to survive browser restarts. The directory is reset on startup.
+// The key is only valid when MOZ_CONTENT_SANDBOX is defined. When
+// MOZ_CONTENT_SANDBOX is defined, the directory the key refers to differs
+// depending on whether or not content sandboxing is enabled.
+//
+// When MOZ_CONTENT_SANDBOX is defined and sandboxing is enabled (versus
+// manually disabled via prefs), the content process replaces NS_OS_TEMP_DIR
+// with NS_APP_CONTENT_PROCESS_TEMP_DIR so that legacy code in content
+// attempting to write to NS_OS_TEMP_DIR will write to
+// NS_APP_CONTENT_PROCESS_TEMP_DIR instead. When MOZ_CONTENT_SANDBOX is
+// defined but sandboxing is disabled, NS_APP_CONTENT_PROCESS_TEMP_DIR
+// falls back to NS_OS_TEMP_DIR in both content and chrome processes.
+//
+// New code should avoid writing to the filesystem from the content process
+// and should instead proxy through the parent process whenever possible.
+//
+// At present, all sandboxed content processes use the same directory for
+// NS_APP_CONTENT_PROCESS_TEMP_DIR, but that should not be relied upon.
+//
 #define NS_APP_CONTENT_PROCESS_TEMP_DIR         "ContentTmpD"
 #endif // (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
 

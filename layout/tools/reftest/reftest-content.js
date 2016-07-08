@@ -116,7 +116,7 @@ function OnInitialLoad()
     addEventListener("MozPaintWait", PaintWaitListener, true);
     addEventListener("MozPaintWaitFinished", PaintWaitFinishedListener, true);
 
-    LogWarning("Using browser remote="+ gBrowserIsRemote +"\n");
+    LogInfo("Using browser remote="+ gBrowserIsRemote +"\n");
 }
 
 function SetFailureTimeout(cb, timeout)

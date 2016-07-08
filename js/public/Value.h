@@ -546,7 +546,7 @@ static inline jsval_layout
 OBJECT_TO_JSVAL_IMPL(JSObject* obj)
 {
     jsval_layout l;
-    MOZ_ASSERT(uintptr_t(obj) > 0x1000 || uintptr_t(obj) == 0x42);
+    MOZ_ASSERT(uintptr_t(obj) > 0x1000 || uintptr_t(obj) == 0x48);
     l.s.tag = JSVAL_TAG_OBJECT;
     l.s.payload.obj = obj;
     return l;
@@ -828,7 +828,7 @@ OBJECT_TO_JSVAL_IMPL(JSObject* obj)
 {
     jsval_layout l;
     uint64_t objBits = (uint64_t)obj;
-    MOZ_ASSERT(uintptr_t(obj) > 0x1000 || uintptr_t(obj) == 0x42);
+    MOZ_ASSERT(uintptr_t(obj) > 0x1000 || uintptr_t(obj) == 0x48);
     MOZ_ASSERT((objBits >> JSVAL_TAG_SHIFT) == 0);
     l.asBits = objBits | JSVAL_SHIFTED_TAG_OBJECT;
     return l;
@@ -1552,7 +1552,7 @@ static inline Value
 ObjectValueCrashOnTouch()
 {
     Value v;
-    v.setObject(*reinterpret_cast<JSObject*>(0x42));
+    v.setObject(*reinterpret_cast<JSObject*>(0x48));
     return v;
 }
 
