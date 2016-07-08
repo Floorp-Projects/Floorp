@@ -587,14 +587,10 @@ typedef AstVector<AstSegment*> AstSegmentVector;
 
 class AstMemory : public AstNode, public AstMemorySignature
 {
-    AstSegmentVector segments_;
-
   public:
-    explicit AstMemory(AstMemorySignature memSig, AstSegmentVector&& segments)
-      : AstMemorySignature(memSig),
-        segments_(Move(segments))
+    explicit AstMemory(AstMemorySignature memSig)
+      : AstMemorySignature(memSig)
     {}
-    const AstSegmentVector& segments() const { return segments_; }
 };
 
 class AstModule : public AstNode
@@ -604,12 +600,14 @@ class AstModule : public AstNode
     typedef AstVector<AstImport*> ImportVector;
     typedef AstVector<AstExport*> ExportVector;
     typedef AstVector<AstSig*> SigVector;
+    typedef AstVector<AstSegment*> SegmentVector;
 
   private:
     typedef AstHashMap<AstSig*, uint32_t, AstSig> SigMap;
 
     LifoAlloc& lifo_;
     AstMemory* memory_;
+    SegmentVector segments_;
     SigVector sigs_;
     SigMap sigMap_;
     ImportVector imports_;
@@ -621,6 +619,7 @@ class AstModule : public AstNode
     explicit AstModule(LifoAlloc& lifo)
       : lifo_(lifo),
         memory_(nullptr),
+        segments_(lifo),
         sigs_(lifo),
         sigMap_(lifo),
         imports_(lifo),
@@ -639,6 +638,12 @@ class AstModule : public AstNode
     }
     AstMemory* maybeMemory() const {
         return memory_;
+    }
+    bool append(AstSegment* seg) {
+        return segments_.append(seg);
+    }
+    const SegmentVector& segments() const {
+        return segments_;
     }
     bool declare(AstSig&& sig, uint32_t* sigIndex) {
         SigMap::AddPtr p = sigMap_.lookupForAdd(sig);

@@ -1457,13 +1457,12 @@ AstDecodeDataSection(AstDecodeContext &c)
     if (!c.d.startSection(DataSectionId, &sectionStart, &sectionSize))
         return AstDecodeFail(c, "failed to start section");
 
-    AstSegmentVector segments(c.lifo);
     if (sectionStart == Decoder::NotStarted) {
         if (!c.initialSizePages)
             return true;
 
         AstMemorySignature memSig(*c.initialSizePages, c.maxSizePages);
-        AstMemory* memory = new(c.lifo) AstMemory(memSig, Move(segments));
+        AstMemory* memory = new(c.lifo) AstMemory(memSig);
         if (!memory)
             return false;
 
@@ -1504,14 +1503,14 @@ AstDecodeDataSection(AstDecodeContext &c)
 
         AstName name(buffer, numBytes);
         AstSegment* segment = new(c.lifo) AstSegment(dstOffset, name);
-        if (!segment || !segments.append(segment))
+        if (!segment || !c.module().append(segment))
             return false;
 
         prevEnd = dstOffset + numBytes;
     }
 
     AstMemorySignature memSig(initialSizePages, c.maxSizePages);
-    AstMemory* memory = new(c.lifo) AstMemory(memSig, Move(segments));
+    AstMemory* memory = new(c.lifo) AstMemory(memSig);
     if (!memory)
         return false;
 
