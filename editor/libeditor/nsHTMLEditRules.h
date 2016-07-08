@@ -37,7 +37,7 @@ class Selection;
 } // namespace dom
 } // namespace mozilla
 
-struct StyleCache : public PropItem
+struct StyleCache : public mozilla::PropItem
 {
   bool mPresent;
 

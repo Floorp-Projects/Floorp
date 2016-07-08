@@ -46,15 +46,15 @@ class nsDocumentFragment;
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIClipboard;
-class TypeInState;
 class nsIContentFilter;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
 class nsRange;
-struct PropItem;
 
 namespace mozilla {
+class TypeInState;
+struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {
 class BlobImpl;
@@ -784,7 +784,7 @@ protected:
 
   nsTArray<OwningNonNull<nsIContentFilter>> mContentFilters;
 
-  RefPtr<TypeInState>        mTypeInState;
+  RefPtr<mozilla::TypeInState> mTypeInState;
 
   bool mCRInParagraphCreatesParagraph;
 
@@ -802,7 +802,7 @@ protected:
   nsTArray<mozilla::StyleSheetHandle::RefPtr> mStyleSheets;
 
   // an array for holding default style settings
-  nsTArray<PropItem*> mDefaultStyles;
+  nsTArray<mozilla::PropItem*> mDefaultStyles;
 
 protected:
 
