@@ -29,6 +29,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsToolkitCompsCID.h"
+#include "nsGeoPosition.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
@@ -358,6 +359,20 @@ public:
                               hal::SensorAccuracyType(aAccuracy));
         hal::NotifySensorChange(sdata);
     }
+
+    static void OnLocationChanged(double aLatitude, double aLongitude,
+                                  double aAltitude, float aAccuracy,
+                                  float aBearing, float aSpeed, int64_t aTime)
+    {
+        if (!gLocationCallback) {
+            return;
+        }
+
+        RefPtr<nsIDOMGeoPosition> geoPosition(
+                new nsGeoPosition(aLatitude, aLongitude, aAltitude, aAccuracy,
+                                  aAccuracy, aBearing, aSpeed, aTime));
+        gLocationCallback->Update(geoPosition);
+    }
 };
 
 nsAppShell::nsAppShell()
@@ -668,18 +683,6 @@ nsAppShell::LegacyGeckoEvent::Run()
     case AndroidGeckoEvent::NATIVE_POKE:
         nsAppShell::Get()->NativeEventCallback();
         break;
-
-    case AndroidGeckoEvent::LOCATION_EVENT: {
-        if (!gLocationCallback)
-            break;
-
-        nsGeoPosition* p = curEvent->GeoPosition();
-        if (p)
-            gLocationCallback->Update(curEvent->GeoPosition());
-        else
-            NS_WARNING("Received location event without geoposition!");
-        break;
-    }
 
     case AndroidGeckoEvent::THUMBNAIL: {
         if (!nsAppShell::Get()->mBrowserApp)
