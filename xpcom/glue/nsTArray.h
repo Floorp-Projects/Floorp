@@ -581,7 +581,7 @@ struct nsTArray_CopyWithMemutils
     memcpy(aDest, aSrc, aCount * aElemSize);
   }
 
-  static void CopyNonOverlappingRegionWithHeader(void* aDest, const void* aSrc,
+  static void MoveNonOverlappingRegionWithHeader(void* aDest, const void* aSrc,
                                                  size_t aCount, size_t aElemSize)
   {
     memcpy(aDest, aSrc, sizeof(nsTArrayHeader) + aCount * aElemSize);
@@ -635,13 +635,13 @@ struct nsTArray_CopyWithConstructors
     }
   }
 
-  static void CopyNonOverlappingRegionWithHeader(void* aDest, void* aSrc, size_t aCount,
+  static void MoveNonOverlappingRegionWithHeader(void* aDest, void* aSrc, size_t aCount,
                                                  size_t aElemSize)
   {
     nsTArrayHeader* destHeader = static_cast<nsTArrayHeader*>(aDest);
     nsTArrayHeader* srcHeader = static_cast<nsTArrayHeader*>(aSrc);
     *destHeader = *srcHeader;
-    CopyNonOverlappingRegion(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
+    MoveNonOverlappingRegion(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
                              static_cast<uint8_t*>(aSrc) + sizeof(nsTArrayHeader),
                              aCount, aElemSize);
   }
