@@ -98,7 +98,6 @@ EXPORTS += [
     'ScrollbarActivity.h',
     'ScrollSnap.h',
     'Visibility.h',
-    'VisibilityIPC.h',
 ]
 
 EXPORTS.mozilla += [
