@@ -359,7 +359,7 @@ void
 ErrorResult::ClearUnionData()
 {
   if (IsJSException()) {
-    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+    JSContext* cx = nsContentUtils::RootingCxForThread();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     js::RemoveRawValueRoot(cx, &mJSException);
@@ -398,7 +398,7 @@ ErrorResult::operator=(ErrorResult&& aRHS)
     mMessage = aRHS.mMessage;
     aRHS.mMessage = nullptr;
   } else if (aRHS.IsJSException()) {
-    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+    JSContext* cx = nsContentUtils::RootingCxForThread();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     if (!js::AddRawValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
