@@ -6,7 +6,7 @@
 #ifndef InsertTextTransaction_h
 #define InsertTextTransaction_h
 
-#include "EditTxn.h"                    // base class
+#include "EditTransactionBase.h"        // base class
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsID.h"                       // NS_DECLARE_STATIC_IID_ACCESSOR
 #include "nsISupportsImpl.h"            // NS_DECL_ISUPPORTS_INHERITED
@@ -29,7 +29,7 @@ class Text;
 /**
  * A transaction that inserts text into a content node.
  */
-class InsertTextTransaction final : public EditTxn
+class InsertTextTransaction final : public EditTransactionBase
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSERTTEXTTXN_IID)
@@ -44,9 +44,10 @@ public:
                         const nsAString& aString, nsEditor& aEditor);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTransaction,
+                                           EditTransactionBase)
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 

@@ -6,7 +6,7 @@
 #ifndef CreateElementTransaction_h
 #define CreateElementTransaction_h
 
-#include "EditTxn.h"
+#include "EditTransactionBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -25,7 +25,7 @@ namespace dom {
 class Element;
 } // namespace dom
 
-class CreateElementTransaction final : public EditTxn
+class CreateElementTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -44,9 +44,10 @@ public:
                            int32_t aOffsetInParent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTransaction,
+                                           EditTransactionBase)
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
 

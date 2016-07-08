@@ -35,14 +35,14 @@ InsertNodeTransaction::~InsertNodeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(InsertNodeTransaction, EditTransactionBase,
                                    mNode,
                                    mParent)
 
-NS_IMPL_ADDREF_INHERITED(InsertNodeTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(InsertNodeTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(InsertNodeTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(InsertNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertNodeTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
 InsertNodeTransaction::DoTransaction()

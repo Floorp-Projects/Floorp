@@ -6,7 +6,7 @@
 #ifndef ChangeStyleTransaction_h
 #define ChangeStyleTransaction_h
 
-#include "EditTxn.h"                      // base class
+#include "EditTransactionBase.h"          // base class
 #include "nsCOMPtr.h"                     // nsCOMPtr members
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsString.h"                     // nsString members
@@ -24,14 +24,15 @@ class Element;
  * A transaction that changes the value of a CSS inline style of a content
  * node.  This transaction covers add, remove, and change a property's value.
  */
-class ChangeStyleTransaction final : public EditTxn
+class ChangeStyleTransaction final : public EditTransactionBase
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeStyleTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeStyleTransaction,
+                                           EditTransactionBase)
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
 

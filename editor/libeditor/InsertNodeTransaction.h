@@ -6,7 +6,7 @@
 #ifndef InsertNodeTransaction_h
 #define InsertNodeTransaction_h
 
-#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "EditTransactionBase.h"        // for EditTransactionBase, etc
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"                 // for nsIContent
@@ -19,7 +19,7 @@ namespace mozilla {
 /**
  * A transaction that inserts a single element
  */
-class InsertNodeTransaction final : public EditTxn
+class InsertNodeTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -32,9 +32,10 @@ public:
                         nsEditor& aEditor);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction,
+                                           EditTransactionBase)
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
 protected:
   virtual ~InsertNodeTransaction();

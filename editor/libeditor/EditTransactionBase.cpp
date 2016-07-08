@@ -3,38 +3,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "EditTxn.h"
+#include "EditTransactionBase.h"
 #include "nsError.h"
 #include "nsISupportsBase.h"
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(EditTxn)
+namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(EditTxn)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditTxn)
+NS_IMPL_CYCLE_COLLECTION_CLASS(EditTransactionBase)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(EditTransactionBase)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditTransactionBase)
   // We don't have anything to traverse, but some of our subclasses do.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditTxn)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditTransactionBase)
   NS_INTERFACE_MAP_ENTRY(nsITransaction)
   NS_INTERFACE_MAP_ENTRY(nsPIEditorTransaction)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransaction)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(EditTxn)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(EditTxn, LastRelease())
+NS_IMPL_CYCLE_COLLECTING_ADDREF(EditTransactionBase)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(EditTransactionBase,
+                                                   LastRelease())
 
-EditTxn::~EditTxn()
+EditTransactionBase::~EditTransactionBase()
 {
 }
 
 NS_IMETHODIMP
-EditTxn::RedoTransaction(void)
+EditTransactionBase::RedoTransaction()
 {
   return DoTransaction();
 }
 
 NS_IMETHODIMP
-EditTxn::GetIsTransient(bool *aIsTransient)
+EditTransactionBase::GetIsTransient(bool* aIsTransient)
 {
   *aIsTransient = false;
 
@@ -42,9 +45,11 @@ EditTxn::GetIsTransient(bool *aIsTransient)
 }
 
 NS_IMETHODIMP
-EditTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge)
+EditTransactionBase::Merge(nsITransaction* aTransaction, bool* aDidMerge)
 {
   *aDidMerge = false;
 
   return NS_OK;
 }
+
+} // namespace mozilla

@@ -21,13 +21,14 @@ EditAggregateTransaction::~EditAggregateTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(EditAggregateTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(EditAggregateTransaction,
+                                   EditTransactionBase,
                                    mChildren)
 
-NS_IMPL_ADDREF_INHERITED(EditAggregateTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(EditAggregateTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(EditAggregateTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(EditAggregateTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditAggregateTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
 EditAggregateTransaction::DoTransaction()
@@ -109,13 +110,13 @@ EditAggregateTransaction::GetTxnDescription(nsAString& aString)
 }
 
 NS_IMETHODIMP
-EditAggregateTransaction::AppendChild(EditTxn* aTransaction)
+EditAggregateTransaction::AppendChild(EditTransactionBase* aTransaction)
 {
   if (!aTransaction) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  RefPtr<EditTxn> *slot = mChildren.AppendElement();
+  RefPtr<EditTransactionBase>* slot = mChildren.AppendElement();
   if (!slot) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -6,7 +6,7 @@
 #ifndef SetDocumentTitleTransaction_h
 #define SetDocumentTitleTransaction_h
 
-#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "EditTransactionBase.h"        // for EditTransactionBase, etc
 #include "nsString.h"                   // for nsString
 #include "nscore.h"                     // for NS_IMETHOD, nsAString, etc
 
@@ -19,7 +19,7 @@ namespace mozilla {
  *  which is a text node under the <title> tag in a page's <head> section
  * provides default concrete behavior for all nsITransaction methods.
  */
-class SetDocumentTitleTransaction final : public EditTxn
+class SetDocumentTitleTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -35,7 +35,7 @@ private:
   nsresult SetDomTitle(const nsAString& aTitle);
 
 public:
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD GetIsTransient(bool *aIsTransient) override;

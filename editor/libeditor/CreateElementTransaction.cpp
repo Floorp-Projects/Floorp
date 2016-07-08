@@ -36,7 +36,7 @@ CreateElementTransaction::CreateElementTransaction(nsEditor& aEditor,
                                                    nsIAtom& aTag,
                                                    nsINode& aParent,
                                                    int32_t aOffsetInParent)
-  : EditTxn()
+  : EditTransactionBase()
   , mEditor(&aEditor)
   , mTag(&aTag)
   , mParent(&aParent)
@@ -48,15 +48,16 @@ CreateElementTransaction::~CreateElementTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction,
+                                   EditTransactionBase,
                                    mParent,
                                    mNewNode,
                                    mRefNode)
 
-NS_IMPL_ADDREF_INHERITED(CreateElementTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(CreateElementTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(CreateElementTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(CreateElementTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 
 NS_IMETHODIMP

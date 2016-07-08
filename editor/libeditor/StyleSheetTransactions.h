@@ -6,7 +6,7 @@
 #ifndef StylesheetTransactions_h
 #define StylesheetTransactions_h
 
-#include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
+#include "EditTransactionBase.h"        // for EditTransactionBase, etc
 #include "mozilla/StyleSheetHandle.h"   // for mozilla::StyleSheetHandle
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"                       // for REFNSIID
@@ -16,7 +16,7 @@ class nsIEditor;
 
 namespace mozilla {
 
-class AddStyleSheetTransaction final : public EditTxn
+class AddStyleSheetTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -28,10 +28,11 @@ public:
 
   AddStyleSheetTransaction();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AddStyleSheetTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AddStyleSheetTransaction,
+                                           EditTransactionBase)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
 protected:
   // The editor that created this transaction.
@@ -41,7 +42,7 @@ protected:
 };
 
 
-class RemoveStyleSheetTransaction final : public EditTxn
+class RemoveStyleSheetTransaction final : public EditTransactionBase
 {
 public:
   /**
@@ -53,10 +54,11 @@ public:
 
   RemoveStyleSheetTransaction();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RemoveStyleSheetTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RemoveStyleSheetTransaction,
+                                           EditTransactionBase)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
 protected:
   // The editor that created this transaction.

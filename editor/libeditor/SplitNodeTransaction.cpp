@@ -29,14 +29,14 @@ SplitNodeTransaction::~SplitNodeTransaction()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTxn,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
                                    mParent,
                                    mNewLeftNode)
 
-NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTxn)
-NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTxn)
+NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTransactionBase)
+NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTxn)
+NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
 SplitNodeTransaction::DoTransaction()

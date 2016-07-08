@@ -6,7 +6,7 @@
 #ifndef CompositionTransaction_h
 #define CompositionTransaction_h
 
-#include "EditTxn.h"                      // base class
+#include "EditTransactionBase.h"          // base class
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsString.h"                     // mStringToInsert
 
@@ -30,7 +30,7 @@ class Text;
  * composition string, modifying the composition string or its IME selection
  * ranges and commit or cancel the composition.
  */
-class CompositionTransaction final : public EditTxn
+class CompositionTransaction final : public EditTransactionBase
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMETEXTTXN_IID)
@@ -51,11 +51,12 @@ public:
                          const nsAString& aString,
                          nsEditor& aEditor);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionTransaction, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionTransaction,
+                                           EditTransactionBase)
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_EDITTXN
+  NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
