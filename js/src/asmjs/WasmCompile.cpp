@@ -932,7 +932,7 @@ DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet
         if (!d.readVarU32(&memoryIndex))
             return Fail(d, "expected memory index");
 
-        if (memoryIndex > 0)
+        if (memoryIndex > 0 || !mg.usesMemory())
             return Fail(d, "memory index out of bounds");
 
         return mg.addMemoryExport(Move(fieldName));
