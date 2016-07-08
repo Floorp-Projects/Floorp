@@ -520,11 +520,18 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   nsTArray<AnimationProperty> properties;
   if (mTarget) {
+    // When GetAnimationPropertiesFromKeyframes calculates computed values
+    // from |mKeyframes|, if it triggers a subsequent restyle where we
+    // rebuild animations, we could find that |mKeyframes| is overwritten
+    // while it is being iterated over. Normally that shouldn't happen,
+    // but, just in case, we make a copy of |mKeyframes| first and iterate over
+    // that instead.
+    auto keyframesCopy(mKeyframes);
     properties =
       KeyframeUtils::GetAnimationPropertiesFromKeyframes(aStyleContext,
                                                          mTarget->mElement,
                                                          mTarget->mPseudoType,
-                                                         mKeyframes);
+                                                         keyframesCopy);
   }
 
   if (mProperties == properties) {
