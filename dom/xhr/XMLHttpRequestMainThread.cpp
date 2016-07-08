@@ -161,7 +161,7 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mResponseType(XMLHttpRequestResponseType::_empty),
     mRequestObserver(nullptr),
     mState(State::unsent),
-    mFlagAsynchronous(true), mFlagAborted(false), mFlagParseBody(false),
+    mFlagSynchronous(false), mFlagAborted(false), mFlagParseBody(false),
     mFlagSyncLooping(false), mFlagBackgroundRequest(false),
     mFlagHadUploadListenersOnSend(false), mFlagACwithCredentials(false),
     mFlagTimedOut(false), mFlagDeleted(false),
@@ -719,13 +719,13 @@ XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestResponseType aResponseTy
   }
 
   // sync request is not allowed setting responseType in window context
-  if (HasOrHasHadOwner() && mState != State::unsent && !mFlagAsynchronous) {
+  if (HasOrHasHadOwner() && mState != State::unsent && mFlagSynchronous) {
     LogMessage("ResponseTypeSyncXHRWarning", GetOwner());
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
 
-  if (!mFlagAsynchronous &&
+  if (mFlagSynchronous &&
       (aResponseType == XMLHttpRequestResponseType::Moz_chunked_text ||
        aResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1421,7 +1421,7 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
   mFlagAborted = false;
   mFlagTimedOut = false;
 
-  mFlagAsynchronous = async;
+  mFlagSynchronous = !async;
 
   nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
   if (!doc) {
@@ -1759,7 +1759,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   request->GetStatus(&status);
   mErrorLoad = mErrorLoad || NS_FAILED(status);
 
-  if (mUpload && !mUploadComplete && !mErrorLoad && mFlagAsynchronous) {
+  if (mUpload && !mUploadComplete && !mErrorLoad && !mFlagSynchronous) {
     if (mProgressTimerIsActive) {
       mProgressTimerIsActive = false;
       mProgressNotifier->Cancel();
@@ -1864,7 +1864,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       // legacy users of XHR who use responseType == "" for retrieving the
       // responseText of text/html resources. This legacy case is so common
       // that it's not useful to emit a warning about it.
-      if (!mFlagAsynchronous) {
+      if (mFlagSynchronous) {
         // We don't make cool new features available in the bad synchronous
         // mode. The synchronous mode is for legacy only.
         mWarnAboutSyncHtml = true;
@@ -1957,8 +1957,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   // We won't get any progress events anyway if we didn't have progress
   // events when starting the request - so maybe no need to start timer here.
-  if (NS_SUCCEEDED(rv) &&
-      mFlagAsynchronous &&
+  if (NS_SUCCEEDED(rv) && !mFlagSynchronous &&
       HasListenersFor(nsGkAtoms::onprogress)) {
     StartProgressEventTimer();
   }
@@ -2753,7 +2752,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
   mWaitingForOnStopRequest = true;
 
   // If we're synchronous, spin an event loop here and wait
-  if (!mFlagAsynchronous) {
+  if (mFlagSynchronous) {
     mFlagSyncLooping = true;
 
     nsCOMPtr<nsIDocument> suspendedDoc;
@@ -2932,7 +2931,7 @@ XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout)
 void
 XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 {
-  if (!mFlagAsynchronous && mState != State::unsent && HasOrHasHadOwner()) {
+  if (mFlagSynchronous && mState != State::unsent && HasOrHasHadOwner()) {
     /* Timeout is not supported for synchronous requests with an owning window,
        per XHR2 spec. */
     LogMessage("TimeoutSyncXHRWarning", GetOwner());
@@ -3113,7 +3112,7 @@ XMLHttpRequestMainThread::ChangeState(State aState, bool aBroadcast)
   if (aState != State::sent && // SENT is internal
       !droppingFromSENTtoOPENED && // since SENT is essentially OPENED
       aBroadcast &&
-      (mFlagAsynchronous || aState == State::opened || aState == State::done)) {
+      (!mFlagSynchronous || aState == State::opened || aState == State::done)) {
     nsCOMPtr<nsIDOMEvent> event;
     rv = CreateReadystatechangeEvent(getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3205,7 +3204,7 @@ XMLHttpRequestMainThread::MaybeDispatchProgressEvents(bool aFinalProgress)
   if (mProgressTimerIsActive ||
       !mProgressSinceLastProgressEvent ||
       mErrorLoad ||
-      !mFlagAsynchronous) {
+      mFlagSynchronous) {
     return;
   }
 
