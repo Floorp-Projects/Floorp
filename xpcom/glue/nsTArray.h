@@ -1922,83 +1922,6 @@ public:
   // 'operator<' is defined for elem_type.
   void Sort() { Sort(nsDefaultComparator<elem_type, elem_type>()); }
 
-  //
-  // Binary Heap
-  //
-
-  // Sorts the array into a binary heap.
-  // @param aComp The Comparator used to create the heap
-  template<class Comparator>
-  void MakeHeap(const Comparator& aComp)
-  {
-    if (!Length()) {
-      return;
-    }
-    index_type index = (Length() - 1) / 2;
-    do {
-      SiftDown(index, aComp);
-    } while (index--);
-  }
-
-  // A variation on the MakeHeap method defined above.
-  void MakeHeap()
-  {
-    MakeHeap(nsDefaultComparator<elem_type, elem_type>());
-  }
-
-  // Adds an element to the heap
-  // @param aItem The item to add
-  // @param aComp The Comparator used to sift-up the item
-  template<class Item, class Comparator>
-  elem_type* PushHeap(const Item& aItem, const Comparator& aComp)
-  {
-    if (!base_type::template InsertSlotsAt<Alloc>(Length(), 1, sizeof(elem_type),
-                                                  MOZ_ALIGNOF(elem_type))) {
-      return nullptr;
-    }
-    // Sift up the new node
-    elem_type* elem = Elements();
-    index_type index = Length() - 1;
-    index_type parent_index = (index - 1) / 2;
-    while (index && aComp.LessThan(elem[parent_index], aItem)) {
-      elem[index] = elem[parent_index];
-      index = parent_index;
-      parent_index = (index - 1) / 2;
-    }
-    elem[index] = aItem;
-    return &elem[index];
-  }
-
-  // A variation on the PushHeap method defined above.
-  template<class Item>
-  elem_type* PushHeap(const Item& aItem)
-  {
-    return PushHeap(aItem, nsDefaultComparator<elem_type, Item>());
-  }
-
-  // Delete the root of the heap and restore the heap
-  // @param aComp The Comparator used to restore the heap
-  template<class Comparator>
-  void PopHeap(const Comparator& aComp)
-  {
-    if (!Length()) {
-      return;
-    }
-    index_type last_index = Length() - 1;
-    elem_type* elem = Elements();
-    elem[0] = elem[last_index];
-    TruncateLength(last_index);
-    if (Length()) {
-      SiftDown(0, aComp);
-    }
-  }
-
-  // A variation on the PopHeap method defined above.
-  void PopHeap()
-  {
-    PopHeap(nsDefaultComparator<elem_type, elem_type>());
-  }
-
 protected:
   using base_type::Hdr;
   using base_type::ShrinkCapacity;
@@ -2025,37 +1948,6 @@ protected:
     AssignRangeAlgorithm<mozilla::IsPod<Item>::value,
                          mozilla::IsSame<Item, elem_type>::value>
                          ::implementation(Elements(), aStart, aCount, aValues);
-  }
-
-  // This method sifts an item down to its proper place in a binary heap
-  // @param aIndex The index of the node to start sifting down from
-  // @param aComp  The Comparator used to sift down
-  template<class Comparator>
-  void SiftDown(index_type aIndex, const Comparator& aComp)
-  {
-    elem_type* elem = Elements();
-    elem_type item = elem[aIndex];
-    index_type iend = Length() - 1;
-    while ((aIndex * 2) < iend) {
-      const index_type left = (aIndex * 2) + 1;
-      const index_type right = (aIndex * 2) + 2;
-      const index_type parent_index = aIndex;
-      if (aComp.LessThan(item, elem[left])) {
-        if (left < iend &&
-            aComp.LessThan(elem[left], elem[right])) {
-          aIndex = right;
-        } else {
-          aIndex = left;
-        }
-      } else if (left < iend &&
-                 aComp.LessThan(item, elem[right])) {
-        aIndex = right;
-      } else {
-        break;
-      }
-      elem[parent_index] = elem[aIndex];
-    }
-    elem[aIndex] = item;
   }
 };
 
