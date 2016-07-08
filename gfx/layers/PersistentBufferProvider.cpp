@@ -210,12 +210,10 @@ PersistentBufferProviderShared::ReturnDrawTarget(already_AddRefed<gfx::DrawTarge
 
   mBack->Unlock();
 
-  if (mFront != mBack && !mBuffers.Contains(mFront)) {
-    mBuffers.AppendElement(mFront);
+  if (!mBuffer && mFront && !mFront->IsLocked()) {
+    mBuffer.swap(mFront);
   }
 
-  // Make mFront point to the now realized back buffer. mFront is what the next
-  // transaction will pick up and send to the compositor.
   mFront = mBack;
 
   return true;
