@@ -190,7 +190,6 @@ function* testInArea(area) {
       CustomizableUI.addWidgetToArea(widget.id, area);
     }
     if (expecting.waitUntilClosed) {
-      dump(`L0G HERE`);
       let panel = getBrowserActionPopup(extension);
       if (panel && panel.state != "closed") {
         yield promisePopupHidden(panel);
