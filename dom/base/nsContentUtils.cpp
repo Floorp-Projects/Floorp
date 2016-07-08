@@ -5546,16 +5546,7 @@ nsContentUtils::GetCurrentJSContext()
   if (!IsJSAPIActive()) {
     return nullptr;
   }
-  return GetSafeJSContext();
-}
-
-/* static */
-JSContext *
-nsContentUtils::GetSafeJSContext()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInitialized());
-  return sXPConnect->GetSafeJSContext();
+  return danger::GetJSContext();
 }
 
 /* static */
