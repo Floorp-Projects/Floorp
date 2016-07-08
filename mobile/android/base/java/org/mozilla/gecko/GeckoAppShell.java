@@ -442,50 +442,53 @@ public class GeckoAppShell
     @WrapForJNI
     @SuppressLint("MissingPermission") // Permissions are explicitly checked for within this method
     public static void enableLocation(final boolean enable) {
+        final Runnable requestLocation = new Runnable() {
+            @Override
+            public void run() {
+                LocationManager lm = getLocationManager(getApplicationContext());
+                if (lm == null) {
+                    return;
+                }
+
+                if (!enable) {
+                    lm.removeUpdates(getLocationListener());
+                    return;
+                }
+
+                Location lastKnownLocation = getLastKnownLocation(lm);
+                if (lastKnownLocation != null) {
+                    getLocationListener().onLocationChanged(lastKnownLocation);
+                }
+
+                Criteria criteria = new Criteria();
+                criteria.setSpeedRequired(false);
+                criteria.setBearingRequired(false);
+                criteria.setAltitudeRequired(false);
+                if (locationHighAccuracyEnabled) {
+                    criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                    criteria.setCostAllowed(true);
+                    criteria.setPowerRequirement(Criteria.POWER_HIGH);
+                } else {
+                    criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+                    criteria.setCostAllowed(false);
+                    criteria.setPowerRequirement(Criteria.POWER_LOW);
+                }
+
+                String provider = lm.getBestProvider(criteria, true);
+                if (provider == null)
+                    return;
+
+                Looper l = Looper.getMainLooper();
+                lm.requestLocationUpdates(provider, 100, 0.5f, getLocationListener(), l);
+            }
+        };
+
         Permissions
                 .from((Activity) getContext())
                 .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
                 .onUIThread()
                 .doNotPromptIf(!enable)
-                .run(new Runnable() {
-                    @Override
-                    public void run() {
-                        LocationManager lm = getLocationManager(getApplicationContext());
-                        if (lm == null) {
-                            return;
-                        }
-
-                        if (enable) {
-                            Location lastKnownLocation = getLastKnownLocation(lm);
-                            if (lastKnownLocation != null) {
-                                getGeckoInterface().getLocationListener().onLocationChanged(lastKnownLocation);
-                            }
-
-                            Criteria criteria = new Criteria();
-                            criteria.setSpeedRequired(false);
-                            criteria.setBearingRequired(false);
-                            criteria.setAltitudeRequired(false);
-                            if (locationHighAccuracyEnabled) {
-                                criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                                criteria.setCostAllowed(true);
-                                criteria.setPowerRequirement(Criteria.POWER_HIGH);
-                            } else {
-                                criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-                                criteria.setCostAllowed(false);
-                                criteria.setPowerRequirement(Criteria.POWER_LOW);
-                            }
-
-                            String provider = lm.getBestProvider(criteria, true);
-                            if (provider == null)
-                                return;
-
-                            Looper l = Looper.getMainLooper();
-                            lm.requestLocationUpdates(provider, 100, (float) .5, getGeckoInterface().getLocationListener(), l);
-                        } else {
-                            lm.removeUpdates(getGeckoInterface().getLocationListener());
-                        }
-                    }
-                });
+                .run(requestLocation);
     }
 
     private static LocationManager getLocationManager(Context context) {
@@ -538,7 +541,7 @@ public class GeckoAppShell
     /* package */ static native void onSensorChanged(int hal_type, float x, float y, float z,
                                                      float w, int accuracy, long time);
 
-    private static class DefaultListeners implements SensorEventListener {
+    private static class DefaultListeners implements SensorEventListener, LocationListener {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -623,10 +626,33 @@ public class GeckoAppShell
 
             GeckoAppShell.onSensorChanged(hal_type, x, y, z, w, accuracy, time);
         }
+
+        // Geolocation.
+        @Override
+        public void onLocationChanged(Location location) {
+            // No logging here: user-identifying information.
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
+        }
+
+        @Override
+        public void onProviderDisabled(String provider)
+        {
+        }
+
+        @Override
+        public void onProviderEnabled(String provider)
+        {
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras)
+        {
+        }
     }
 
     private static final DefaultListeners DEFAULT_LISTENERS = new DefaultListeners();
     private static SensorEventListener sSensorListener = DEFAULT_LISTENERS;
+    private static LocationListener sLocationListener = DEFAULT_LISTENERS;
 
     public static SensorEventListener getSensorListener() {
         return sSensorListener;
@@ -634,6 +660,14 @@ public class GeckoAppShell
 
     public static void setSensorListener(final SensorEventListener listener) {
         sSensorListener = listener;
+    }
+
+    public static LocationListener getLocationListener() {
+        return sLocationListener;
+    }
+
+    public static void setLocationListener(final LocationListener listener) {
+        sLocationListener = listener;
     }
 
     @WrapForJNI
@@ -1825,7 +1859,6 @@ public class GeckoAppShell
         public GeckoProfile getProfile();
         public Activity getActivity();
         public String getDefaultUAString();
-        public LocationListener getLocationListener();
         public void doRestart();
         public void setFullScreen(boolean fullscreen);
         public void addPluginView(View view, final RectF rect, final boolean isFullScreen);
