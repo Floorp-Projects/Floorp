@@ -34,6 +34,14 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
 {
   NS_ASSERTION ( aTransferable, "clipboard given a null transferable" );
 
+  if (aWhichClipboard == kSelectionCache) {
+    if (aTransferable) {
+      SetSelectionCache(aTransferable);
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
   if (aTransferable == mTransferable && anOwner == mClipboardOwner)
     return NS_OK;
   bool selectClipPresent;
