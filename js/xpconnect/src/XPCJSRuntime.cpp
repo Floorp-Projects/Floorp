@@ -1655,7 +1655,7 @@ XPCJSRuntime::~XPCJSRuntime()
     // to destroy it later we will crash.
     SetPendingException(nullptr);
 
-    JS::SetGCSliceCallback(Runtime(), mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(Context(), mPrevGCSliceCallback);
 
     xpc_DelocalizeRuntime(Runtime());
 
@@ -2952,7 +2952,7 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations,
                               anonymize);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter,
+    if (!JS::CollectRuntimeStats(xpcrt->Context(), &rtStats, &orphanReporter,
                                  anonymize))
     {
         return NS_ERROR_FAILURE;
@@ -3135,12 +3135,12 @@ static nsresult
 JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize, size_t* jsStringsSize,
             size_t* jsPrivateSize, size_t* jsOtherSize)
 {
-    JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    JS::RootedObject obj(rt, objArg);
+    JSContext* cx = nsXPConnect::GetRuntimeInstance()->Context();
+    JS::RootedObject obj(cx, objArg);
 
     TabSizes sizes;
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
-    NS_ENSURE_TRUE(JS::AddSizeOfTab(rt, obj, moz_malloc_size_of,
+    NS_ENSURE_TRUE(JS::AddSizeOfTab(cx, obj, moz_malloc_size_of,
                                     &orphanReporter, &sizes),
                    NS_ERROR_OUT_OF_MEMORY);
 
@@ -3555,7 +3555,7 @@ XPCJSRuntime::Initialize()
     JS_SetDestroyCompartmentCallback(cx, CompartmentDestroyedCallback);
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
-    mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
+    mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     JS_AddWeakPointerZoneGroupCallback(cx, WeakPointerZoneGroupCallback, this);
     JS_AddWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback, this);
@@ -3845,7 +3845,7 @@ void
 XPCRootSetElem::RemoveFromRootSet()
 {
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JS::PokeGC(xpc->GetRuntime()->Runtime());
+    JS::PokeGC(xpc->GetRuntime()->Context());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
 

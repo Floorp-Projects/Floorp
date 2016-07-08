@@ -17,10 +17,6 @@ from taskgraph.util.docker import (
     generate_context_hash
 )
 from taskgraph.util.templates import Templates
-from taskgraph.util.time import (
-    json_time_from_now,
-    current_json_time,
-)
 
 logger = logging.getLogger(__name__)
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
@@ -54,8 +50,6 @@ class DockerImageTask(base.Task):
             'head_rev': params['head_rev'],
             'owner': params['owner'],
             'level': params['level'],
-            'from_now': json_time_from_now,
-            'now': current_json_time(),
             'source': '{repo}file/{rev}/taskcluster/ci/docker-image/image.yml'
                       .format(repo=params['head_repository'], rev=params['head_rev']),
         }
