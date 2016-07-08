@@ -15,8 +15,6 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.location.Address;
-import android.location.Location;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.SparseArray;
@@ -68,7 +66,6 @@ public class GeckoEvent {
     public enum NativeGeckoEvent {
         NATIVE_POKE(0),
         MOTION_EVENT(2),
-        LOCATION_EVENT(5),
         LOAD_URI(12),
         NOOP(15),
         VIEWPORT(20),
@@ -129,7 +126,6 @@ public class GeckoEvent {
     private String mCharacters;
     private String mCharactersExtra;
     private String mData;
-    private Location mLocation;
 
     private int     mConnectionType;
     private boolean mIsWifi;
@@ -341,12 +337,6 @@ public class GeckoEvent {
             mPointRadii[index] = new Point(0, 0);
             mPoints[index] = new Point(0, 0);
         }
-    }
-
-    public static GeckoEvent createLocationEvent(Location l) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOCATION_EVENT);
-        event.mLocation = l;
-        return event;
     }
 
     public static GeckoEvent createViewportEvent(ImmutableViewportMetrics metrics, DisplayPortMetrics displayPort) {
