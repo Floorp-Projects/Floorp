@@ -34,6 +34,8 @@
 # include "vtune/VTuneWrapper.h"
 #endif
 
+#include "vm/ArrayBufferObject-inl.h"
+
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
