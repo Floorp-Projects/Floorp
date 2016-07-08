@@ -10,7 +10,7 @@
 { 0x3836386d, 0x806a, 0x488d, \
   { 0x8b, 0xab, 0xaf, 0x42, 0xbb, 0x4c, 0x90, 0x66 } }
 
-#include "nsEditor.h" // for EditAction enum
+#include "mozilla/EditorBase.h" // for EditAction enum
 
 namespace mozilla {
 

@@ -22,6 +22,7 @@ Transaction interface to outside world
 class nsIAtom;
 
 namespace mozilla {
+class EditorBase;
 class SelectionState;
 } // namespace mozilla
 
@@ -35,7 +36,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IABSORBINGTRANSACTION_IID)
 
   NS_IMETHOD Init(nsIAtom* aName, mozilla::SelectionState* aSelState,
-                  nsEditor* aEditor) = 0;
+                  mozilla::EditorBase* aEditorBase) = 0;
 
   NS_IMETHOD EndPlaceHolderBatch()=0;
 

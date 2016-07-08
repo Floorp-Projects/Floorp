@@ -4,16 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteNodeTransaction.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/SelectionState.h" // RangeUpdater
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsAString.h"
 
 namespace mozilla {
 
 DeleteNodeTransaction::DeleteNodeTransaction()
-  : mEditor(nullptr)
+  : mEditorBase(nullptr)
   , mRangeUpdater(nullptr)
 {
 }
@@ -33,17 +33,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 nsresult
-DeleteNodeTransaction::Init(nsEditor* aEditor,
+DeleteNodeTransaction::Init(EditorBase* aEditorBase,
                             nsINode* aNode,
                             RangeUpdater* aRangeUpdater)
 {
-  NS_ENSURE_TRUE(aEditor && aNode, NS_ERROR_NULL_POINTER);
-  mEditor = aEditor;
+  NS_ENSURE_TRUE(aEditorBase && aNode, NS_ERROR_NULL_POINTER);
+  mEditorBase = aEditorBase;
   mNode = aNode;
   mParent = aNode->GetParentNode();
 
   // do nothing if the node has a parent and it's read-only
-  NS_ENSURE_TRUE(!mParent || mEditor->IsModifiableNode(mParent),
+  NS_ENSURE_TRUE(!mParent || mEditorBase->IsModifiableNode(mParent),
                  NS_ERROR_FAILURE);
 
   mRangeUpdater = aRangeUpdater;

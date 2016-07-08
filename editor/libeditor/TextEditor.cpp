@@ -94,23 +94,23 @@ TextEditor::~TextEditor()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditor)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, nsEditor)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, EditorBase)
   if (tmp->mRules)
     tmp->mRules->DetachEditor();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRules)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TextEditor, nsEditor)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TextEditor, EditorBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRules)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(TextEditor, nsEditor)
-NS_IMPL_RELEASE_INHERITED(TextEditor, nsEditor)
+NS_IMPL_ADDREF_INHERITED(TextEditor, EditorBase)
+NS_IMPL_RELEASE_INHERITED(TextEditor, EditorBase)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
-NS_INTERFACE_MAP_END_INHERITING(nsEditor)
+NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
 
 NS_IMETHODIMP
@@ -133,7 +133,7 @@ TextEditor::Init(nsIDOMDocument* aDoc,
     AutoEditInitRulesTrigger rulesTrigger(this, rulesRes);
 
     // Init the base editor
-    res = nsEditor::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
+    res = EditorBase::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
   }
 
   NS_ENSURE_SUCCESS(rulesRes, rulesRes);
@@ -215,7 +215,7 @@ TextEditor::EndEditorInit()
 NS_IMETHODIMP
 TextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
 {
-  nsresult rv = nsEditor::SetDocumentCharacterSet(characterSet);
+  nsresult rv = EditorBase::SetDocumentCharacterSet(characterSet);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Update META charset element.
@@ -309,10 +309,10 @@ TextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
     // set attribute to <original prefix> charset=text/html
     nsCOMPtr<nsIDOMElement> metaElement = do_QueryInterface(metaNode);
     MOZ_ASSERT(metaElement);
-    rv = nsEditor::SetAttribute(metaElement, NS_LITERAL_STRING("content"),
-                                Substring(originalStart, start) +
-                                  charsetEquals +
-                                  NS_ConvertASCIItoUTF16(aCharacterSet));
+    rv = EditorBase::SetAttribute(metaElement, NS_LITERAL_STRING("content"),
+                                  Substring(originalStart, start) +
+                                    charsetEquals +
+                                    NS_ConvertASCIItoUTF16(aCharacterSet));
     return NS_SUCCEEDED(rv);
   }
   return false;
@@ -357,8 +357,8 @@ TextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   // HandleKeyPressEvent()'s switch statement.
 
   if (IsReadonly() || IsDisabled()) {
-    // When we're not editable, the events handled on nsEditor.
-    return nsEditor::HandleKeyPressEvent(aKeyEvent);
+    // When we're not editable, the events handled on EditorBase.
+    return EditorBase::HandleKeyPressEvent(aKeyEvent);
   }
 
   WidgetKeyboardEvent* nativeKeyEvent =
@@ -375,8 +375,8 @@ TextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
     case NS_VK_ALT:
     case NS_VK_BACK:
     case NS_VK_DELETE:
-      // These keys are handled on nsEditor
-      return nsEditor::HandleKeyPressEvent(aKeyEvent);
+      // These keys are handled on EditorBase
+      return EditorBase::HandleKeyPressEvent(aKeyEvent);
     case NS_VK_TAB: {
       if (IsTabbable()) {
         return NS_OK; // let it be used for focus switching
@@ -844,7 +844,7 @@ TextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
     textEditRules->ResetIMETextPWBuf();
   }
 
-  return nsEditor::BeginIMEComposition(aEvent);
+  return EditorBase::BeginIMEComposition(aEvent);
 }
 
 nsresult
@@ -1104,7 +1104,7 @@ TextEditor::Undo(uint32_t aCount)
 
   if (!cancel && NS_SUCCEEDED(result))
   {
-    result = nsEditor::Undo(aCount);
+    result = EditorBase::Undo(aCount);
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
 
@@ -1133,7 +1133,7 @@ TextEditor::Redo(uint32_t aCount)
 
   if (!cancel && NS_SUCCEEDED(result))
   {
-    result = nsEditor::Redo(aCount);
+    result = EditorBase::Redo(aCount);
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
 
@@ -1552,7 +1552,7 @@ TextEditor::StartOperation(EditAction opID,
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
+  EditorBase::StartOperation(opID, aDirection);  // will set mAction, mDirection
   if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
 }
@@ -1570,7 +1570,7 @@ TextEditor::EndOperation()
   // post processing
   nsresult res = NS_OK;
   if (mRules) res = mRules->AfterEdit(mAction, mDirection);
-  nsEditor::EndOperation();  // will clear mAction, mDirection
+  EditorBase::EndOperation();  // will clear mAction, mDirection
   return res;
 }
 
@@ -1595,7 +1595,7 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   }
 
   SelectionBatcher selectionBatcher(aSelection);
-  nsresult rv = nsEditor::SelectEntireDocument(aSelection);
+  nsresult rv = EditorBase::SelectEntireDocument(aSelection);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't select the trailing BR node if we have one
@@ -1630,7 +1630,7 @@ TextEditor::SetAttributeOrEquivalent(nsIDOMElement* aElement,
                                      const nsAString& aValue,
                                      bool aSuppressTransaction)
 {
-  return nsEditor::SetAttribute(aElement, aAttribute, aValue);
+  return EditorBase::SetAttribute(aElement, aAttribute, aValue);
 }
 
 nsresult
@@ -1638,7 +1638,7 @@ TextEditor::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
                                         const nsAString& aAttribute,
                                         bool aSuppressTransaction)
 {
-  return nsEditor::RemoveAttribute(aElement, aAttribute);
+  return EditorBase::RemoveAttribute(aElement, aAttribute);
 }
 
 } // namespace mozilla

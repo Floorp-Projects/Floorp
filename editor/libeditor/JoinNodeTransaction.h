@@ -12,10 +12,11 @@
 #include "nsID.h"                       // for REFNSIID
 #include "nscore.h"                     // for NS_IMETHOD
 
-class nsEditor;
 class nsINode;
 
 namespace mozilla {
+
+class EditorBase;
 
 /**
  * A transaction that joins two nodes E1 (left node) and E2 (right node) into a
@@ -27,11 +28,11 @@ class JoinNodeTransaction final : public EditTransactionBase
 {
 public:
   /**
-   * @param aEditor         The provider of core editing operations.
+   * @param aEditorBase     The provider of core editing operations.
    * @param aLeftNode       The first of two nodes to join.
    * @param aRightNode      The second of two nodes to join.
    */
-  JoinNodeTransaction(nsEditor& aEditor,
+  JoinNodeTransaction(EditorBase& aEditorBase,
                       nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
@@ -46,7 +47,7 @@ public:
   NS_DECL_EDITTRANSACTIONBASE
 
 protected:
-  nsEditor&  mEditor;
+  EditorBase& mEditorBase;
 
   // The nodes to operate upon.  After the merge, mRightNode remains and
   // mLeftNode is removed from the content tree.

@@ -118,7 +118,7 @@ public:
   virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent) override;
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
   virtual bool IsEditable(nsINode* aNode) override;
-  using nsEditor::IsEditable;
+  using EditorBase::IsEditable;
 
   // nsStubMutationObserver overrides
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -248,7 +248,7 @@ public:
   nsresult SetCSSBackgroundColor(const nsAString& aColor);
   nsresult SetHTMLBackgroundColor(const nsAString& aColor);
 
-  // Block methods moved from nsEditor
+  // Block methods moved from EditorBase
   static Element* GetBlockNodeParent(nsINode* aNode);
   static nsIDOMNode* GetBlockNodeParent(nsIDOMNode* aNode);
   static Element* GetBlock(nsINode& aNode);
@@ -266,7 +266,7 @@ public:
                                   nsIContent** outNode = nullptr,
                                   int32_t* outOffset = 0);
 
-  // Overrides of nsEditor interface methods
+  // Overrides of EditorBase interface methods
   nsresult EndUpdateViewBatch() override;
 
   NS_IMETHOD Init(nsIDOMDocument* aDoc, nsIContent* aRoot,
@@ -283,7 +283,7 @@ public:
 protected:
   virtual ~HTMLEditor();
 
-  using nsEditor::IsBlockNode;
+  using EditorBase::IsBlockNode;
   virtual bool IsBlockNode(nsINode *aNode) override;
 
 public:

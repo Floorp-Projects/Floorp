@@ -7,12 +7,12 @@
 
 #include <stddef.h>
 
-#include "mozilla/dom/Selection.h"
+#include "nsError.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
-#include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMNode.h"
 #include "nsISupportsBase.h"
@@ -63,7 +63,9 @@ TypeInState::UpdateSelState(Selection* aSelection)
     return NS_OK;
   }
 
-  return nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(mLastSelectionContainer), &mLastSelectionOffset);
+  return EditorBase::GetStartNodeAndOffset(
+                       aSelection, getter_AddRefs(mLastSelectionContainer),
+                       &mLastSelectionOffset);
 }
 
 
@@ -92,8 +94,8 @@ TypeInState::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
       int32_t selOffset = 0;
 
       nsresult result =
-        nsEditor::GetStartNodeAndOffset(selection, getter_AddRefs(selNode),
-                                        &selOffset);
+        EditorBase::GetStartNodeAndOffset(selection, getter_AddRefs(selNode),
+                                          &selOffset);
 
       NS_ENSURE_SUCCESS(result, result);
 

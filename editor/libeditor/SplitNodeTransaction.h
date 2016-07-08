@@ -12,11 +12,12 @@
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS_INHERITED
 #include "nscore.h"                     // for NS_IMETHOD
 
-class nsEditor;
 class nsIContent;
 class nsINode;
 
 namespace mozilla {
+
+class EditorBase;
 
 /**
  * A transaction that splits a node into two identical nodes, with the children
@@ -26,13 +27,14 @@ class SplitNodeTransaction final : public EditTransactionBase
 {
 public:
   /**
-   * @param aEditor  The provider of core editing operations
-   * @param aNode    The node to split
-   * @param aOffset  The location within aNode to do the split.  aOffset may
-   *                 refer to children of aNode, or content of aNode.  The left
-   *                 node will have child|content 0..aOffset-1.
+   * @param aEditorBase The provider of core editing operations
+   * @param aNode       The node to split
+   * @param aOffset     The location within aNode to do the split.  aOffset may
+   *                    refer to children of aNode, or content of aNode.  The
+   *                    left node will have child|content 0..aOffset-1.
    */
-  SplitNodeTransaction(nsEditor& aEditor, nsIContent& aNode, int32_t aOffset);
+  SplitNodeTransaction(EditorBase& aEditorBase, nsIContent& aNode,
+                       int32_t aOffset);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTransaction,
@@ -47,7 +49,7 @@ public:
 protected:
   virtual ~SplitNodeTransaction();
 
-  nsEditor& mEditor;
+  EditorBase& mEditorBase;
 
   // The node to operate upon.
   nsCOMPtr<nsIContent> mExistingRightNode;

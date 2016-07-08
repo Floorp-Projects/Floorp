@@ -11,7 +11,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
-class nsEditor;
 class nsIAtom;
 class nsIContent;
 class nsINode;
@@ -21,6 +20,7 @@ class nsINode;
  */
 namespace mozilla {
 
+class EditorBase;
 namespace dom {
 class Element;
 } // namespace dom
@@ -30,7 +30,7 @@ class CreateElementTransaction final : public EditTransactionBase
 public:
   /**
    * Initialize the transaction.
-   * @param aEditor         The provider of basic editing functionality.
+   * @param aEditorBase     The provider of basic editing functionality.
    * @param aTag            The tag (P, HR, TABLE, etc.) for the new element.
    * @param aParent         The node into which the new element will be
    *                        inserted.
@@ -38,7 +38,7 @@ public:
    *                        If eAppend, the new element is appended as the last
    *                        child.
    */
-  CreateElementTransaction(nsEditor& aEditor,
+  CreateElementTransaction(EditorBase& aEditorBase,
                            nsIAtom& aTag,
                            nsINode& aParent,
                            int32_t aOffsetInParent);
@@ -57,7 +57,7 @@ protected:
   virtual ~CreateElementTransaction();
 
   // The document into which the new node will be inserted.
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
 
   // The tag (mapping to object type) for the new element.
   nsCOMPtr<nsIAtom> mTag;

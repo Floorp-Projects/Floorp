@@ -31,7 +31,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"

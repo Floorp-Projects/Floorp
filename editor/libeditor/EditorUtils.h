@@ -7,13 +7,13 @@
 #ifndef EditorUtils_h
 #define EditorUtils_h
 
+#include "mozilla/EditorBase.h"
+#include "mozilla/GuardObjects.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nscore.h"
-#include "mozilla/GuardObjects.h"
 
 class nsIAtom;
 class nsIContentIterator;
@@ -88,7 +88,7 @@ class MOZ_RAII AutoSelectionRestorer final
 private:
   // Ref-counted reference to the selection that we are supposed to restore.
   RefPtr<dom::Selection> mSelection;
-  nsEditor* mEditor;  // Non-owning ref to nsEditor.
+  EditorBase* mEditorBase;  // Non-owning ref to EditorBase.
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 public:
@@ -97,7 +97,7 @@ public:
    * aSelection.
    */
   AutoSelectionRestorer(dom::Selection* aSelection,
-                        nsEditor* aEditor
+                        EditorBase* aEditorBase
                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   /**
@@ -117,16 +117,16 @@ public:
 class MOZ_RAII AutoRules final
 {
 public:
-  AutoRules(nsEditor* aEditor, EditAction aAction,
+  AutoRules(EditorBase* aEditorBase, EditAction aAction,
             nsIEditor::EDirection aDirection
             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mEditor(aEditor)
+    : mEditorBase(aEditorBase)
     , mDoNothing(false)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     // mAction will already be set if this is nested call
-    if (mEditor && !mEditor->mAction) {
-      mEditor->StartOperation(aAction, aDirection);
+    if (mEditorBase && !mEditorBase->mAction) {
+      mEditorBase->StartOperation(aAction, aDirection);
     } else {
       mDoNothing = true; // nested calls will end up here
     }
@@ -134,13 +134,13 @@ public:
 
   ~AutoRules()
   {
-    if (mEditor && !mDoNothing) {
-      mEditor->EndOperation();
+    if (mEditorBase && !mDoNothing) {
+      mEditorBase->EndOperation();
     }
   }
 
 protected:
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
   bool mDoNothing;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -152,27 +152,27 @@ protected:
 class MOZ_RAII AutoTransactionsConserveSelection final
 {
 public:
-  explicit AutoTransactionsConserveSelection(nsEditor* aEditor
+  explicit AutoTransactionsConserveSelection(EditorBase* aEditorBase
                                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mEditor(aEditor)
+    : mEditorBase(aEditorBase)
     , mOldState(true)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (mEditor) {
-      mOldState = mEditor->GetShouldTxnSetSelection();
-      mEditor->SetShouldTxnSetSelection(false);
+    if (mEditorBase) {
+      mOldState = mEditorBase->GetShouldTxnSetSelection();
+      mEditorBase->SetShouldTxnSetSelection(false);
     }
   }
 
   ~AutoTransactionsConserveSelection()
   {
-    if (mEditor) {
-      mEditor->SetShouldTxnSetSelection(mOldState);
+    if (mEditorBase) {
+      mEditorBase->SetShouldTxnSetSelection(mOldState);
     }
   }
 
 protected:
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
   bool mOldState;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -183,27 +183,27 @@ protected:
 class MOZ_RAII AutoUpdateViewBatch final
 {
 public:
-  explicit AutoUpdateViewBatch(nsEditor* aEditor
+  explicit AutoUpdateViewBatch(EditorBase* aEditorBase
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mEditor(aEditor)
+    : mEditorBase(aEditorBase)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    NS_ASSERTION(mEditor, "null mEditor pointer!");
+    NS_ASSERTION(mEditorBase, "null mEditorBase pointer!");
 
-    if (mEditor) {
-      mEditor->BeginUpdateViewBatch();
+    if (mEditorBase) {
+      mEditorBase->BeginUpdateViewBatch();
     }
   }
 
   ~AutoUpdateViewBatch()
   {
-    if (mEditor) {
-      mEditor->EndUpdateViewBatch();
+    if (mEditorBase) {
+      mEditorBase->EndUpdateViewBatch();
     }
   }
 
 protected:
-  nsEditor* mEditor;
+  EditorBase* mEditorBase;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

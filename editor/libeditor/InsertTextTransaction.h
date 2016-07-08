@@ -13,7 +13,6 @@
 #include "nsString.h"                   // nsString members
 #include "nscore.h"                     // NS_IMETHOD, nsAString
 
-class nsEditor;
 class nsITransaction;
 
 #define NS_INSERTTEXTTXN_IID \
@@ -22,6 +21,7 @@ class nsITransaction;
 
 namespace mozilla {
 
+class EditorBase;
 namespace dom {
 class Text;
 } // namespace dom
@@ -41,7 +41,7 @@ public:
    * @param aPresShell      Used to get and set the selection.
    */
   InsertTextTransaction(dom::Text& aTextNode, uint32_t aOffset,
-                        const nsAString& aString, nsEditor& aEditor);
+                        const nsAString& aString, EditorBase& aEditorBase);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTransaction,
@@ -72,7 +72,7 @@ private:
   nsString mStringToInsert;
 
   // The editor, which we'll need to get the selection.
-  nsEditor& mEditor;
+  EditorBase& mEditorBase;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InsertTextTransaction, NS_INSERTTEXTTXN_IID)

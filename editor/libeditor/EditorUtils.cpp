@@ -34,40 +34,40 @@ using namespace dom;
 
 AutoSelectionRestorer::AutoSelectionRestorer(
                          Selection* aSelection,
-                         nsEditor* aEditor
+                         EditorBase* aEditorBase
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mEditor(nullptr)
+  : mEditorBase(nullptr)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aEditor)) {
+  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aEditorBase)) {
     return;
   }
-  if (aEditor->ArePreservingSelection()) {
+  if (aEditorBase->ArePreservingSelection()) {
     // We already have initialized mSavedSel, so this must be nested call.
     return;
   }
   mSelection = aSelection;
-  mEditor = aEditor;
-  mEditor->PreserveSelectionAcrossActions(mSelection);
+  mEditorBase = aEditorBase;
+  mEditorBase->PreserveSelectionAcrossActions(mSelection);
 }
 
 AutoSelectionRestorer::~AutoSelectionRestorer()
 {
-  NS_ASSERTION(!mSelection || mEditor,
-               "mEditor should be non-null when mSelection is");
+  NS_ASSERTION(!mSelection || mEditorBase,
+               "mEditorBase should be non-null when mSelection is");
   // mSelection will be null if this was nested call.
-  if (mSelection && mEditor->ArePreservingSelection()) {
-    mEditor->RestorePreservedSelection(mSelection);
+  if (mSelection && mEditorBase->ArePreservingSelection()) {
+    mEditorBase->RestorePreservedSelection(mSelection);
   }
 }
 
 void
 AutoSelectionRestorer::Abort()
 {
-  NS_ASSERTION(!mSelection || mEditor,
-               "mEditor should be non-null when mSelection is");
+  NS_ASSERTION(!mSelection || mEditorBase,
+               "mEditorBase should be non-null when mSelection is");
   if (mSelection) {
-    mEditor->StopPreservingSelection();
+    mEditorBase->StopPreservingSelection();
   }
 }
 

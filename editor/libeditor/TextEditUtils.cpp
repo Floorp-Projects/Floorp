@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsCaseTreatment.h"
 #include "nsDebug.h"
-#include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
@@ -33,7 +32,7 @@ namespace mozilla {
 bool
 TextEditUtils::IsBody(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::body);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::body);
 }
 
 /**
@@ -42,7 +41,7 @@ TextEditUtils::IsBody(nsIDOMNode* aNode)
 bool
 TextEditUtils::IsBreak(nsIDOMNode* aNode)
 {
-  return nsEditor::NodeIsType(aNode, nsGkAtoms::br);
+  return EditorBase::NodeIsType(aNode, nsGkAtoms::br);
 }
 
 bool

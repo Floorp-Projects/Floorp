@@ -5,11 +5,11 @@
 
 #include "CompositionTransaction.h"
 
+#include "mozilla/EditorBase.h"         // mEditorBase
 #include "mozilla/dom/Selection.h"      // local var
 #include "mozilla/dom/Text.h"           // mTextNode
 #include "nsAString.h"                  // params
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
-#include "nsEditor.h"                   // mEditor
 #include "nsError.h"                    // for NS_SUCCEEDED, NS_FAILED, etc
 #include "nsIPresShell.h"               // nsISelectionController constants
 #include "nsRange.h"                    // local var
@@ -25,13 +25,13 @@ CompositionTransaction::CompositionTransaction(
                           uint32_t aReplaceLength,
                           TextRangeArray* aTextRangeArray,
                           const nsAString& aStringToInsert,
-                          nsEditor& aEditor)
+                          EditorBase& aEditorBase)
   : mTextNode(&aTextNode)
   , mOffset(aOffset)
   , mReplaceLength(aReplaceLength)
   , mRanges(aTextRangeArray)
   , mStringToInsert(aStringToInsert)
-  , mEditor(aEditor)
+  , mEditorBase(aEditorBase)
   , mFixed(false)
 {
 }
@@ -58,7 +58,7 @@ CompositionTransaction::DoTransaction()
 {
   // Fail before making any changes if there's no selection controller
   nsCOMPtr<nsISelectionController> selCon;
-  mEditor.GetSelectionController(getter_AddRefs(selCon));
+  mEditorBase.GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
   // Advance caret: This requires the presentation shell to get the selection.
@@ -81,7 +81,7 @@ CompositionTransaction::UndoTransaction()
 {
   // Get the selection first so we'll fail before making any changes if we
   // can't get it
-  RefPtr<Selection> selection = mEditor.GetSelection();
+  RefPtr<Selection> selection = mEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   nsresult res = mTextNode->DeleteData(mOffset, mStringToInsert.Length());
@@ -142,19 +142,19 @@ CompositionTransaction::GetTxnDescription(nsAString& aString)
 nsresult
 CompositionTransaction::SetSelectionForRanges()
 {
-  return SetIMESelection(mEditor, mTextNode, mOffset,
+  return SetIMESelection(mEditorBase, mTextNode, mOffset,
                          mStringToInsert.Length(), mRanges);
 }
 
 // static
 nsresult
-CompositionTransaction::SetIMESelection(nsEditor& aEditor,
+CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
                                         Text* aTextNode,
                                         uint32_t aOffsetInNode,
                                         uint32_t aLengthOfCompositionString,
                                         const TextRangeArray* aRanges)
 {
-  RefPtr<Selection> selection = aEditor.GetSelection();
+  RefPtr<Selection> selection = aEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = selection->StartBatchChanges();
@@ -169,7 +169,7 @@ CompositionTransaction::SetIMESelection(nsEditor& aEditor,
   };
 
   nsCOMPtr<nsISelectionController> selCon;
-  aEditor.GetSelectionController(getter_AddRefs(selCon));
+  aEditorBase.GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
   for (uint32_t i = 0; i < ArrayLength(kIMESelections); ++i) {
@@ -202,7 +202,8 @@ CompositionTransaction::SetIMESelection(nsEditor& aEditor,
     // specified explicitly, we need to handle it ourselves later.
     if (textRange.mRangeType == TextRangeType::eCaret) {
       NS_ASSERTION(!setCaret, "The ranges already has caret position");
-      NS_ASSERTION(!textRange.Length(), "nsEditor doesn't support wide caret");
+      NS_ASSERTION(!textRange.Length(),
+                   "EditorBase doesn't support wide caret");
       int32_t caretOffset = static_cast<int32_t>(
         aOffsetInNode +
           std::min(textRange.mStartOffset, aLengthOfCompositionString));
@@ -215,7 +216,7 @@ CompositionTransaction::SetIMESelection(nsEditor& aEditor,
       }
       // If caret range is specified explicitly, we should show the caret if
       // it should be so.
-      aEditor.HideCaret(false);
+      aEditorBase.HideCaret(false);
       continue;
     }
 
@@ -287,7 +288,7 @@ CompositionTransaction::SetIMESelection(nsEditor& aEditor,
 
     // If caret range isn't specified explicitly, we should hide the caret.
     // Hiding the caret benefits a Windows build (see bug 555642 comment #6).
-    aEditor.HideCaret(true);
+    aEditorBase.HideCaret(true);
   }
 
   rv = selection->EndBatchChangesInternal();
