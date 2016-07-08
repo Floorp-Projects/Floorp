@@ -123,7 +123,7 @@ public:
     virtual bool RegisterHwcEventCallback(const HwcHALProcs_t &aProcs) = 0;
 
 protected:
-    MOZ_CONSTEXPR static uint32_t HwcAPIVersion(uint32_t aMaj, uint32_t aMin) {
+    constexpr static uint32_t HwcAPIVersion(uint32_t aMaj, uint32_t aMin) {
         // HARDWARE_MAKE_API_VERSION_2, from Android hardware.h
         return (((aMaj & 0xff) << 24) | ((aMin & 0xff) << 16) | (1 & 0xffff));
     }

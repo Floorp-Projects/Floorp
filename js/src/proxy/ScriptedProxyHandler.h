@@ -15,7 +15,7 @@ namespace js {
 class ScriptedProxyHandler : public BaseProxyHandler
 {
   public:
-    MOZ_CONSTEXPR ScriptedProxyHandler()
+    constexpr ScriptedProxyHandler()
       : BaseProxyHandler(&family)
     { }
 

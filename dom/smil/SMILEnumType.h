@@ -43,7 +43,7 @@ protected:
 
 private:
   // Private constructor: prevent instances beyond my singleton.
-  MOZ_CONSTEXPR SMILEnumType() {}
+  constexpr SMILEnumType() {}
 };
 
 } // namespace mozilla

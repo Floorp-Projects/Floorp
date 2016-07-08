@@ -275,7 +275,7 @@
 using namespace mozilla;
 
 struct ComponentsInterfaceShimEntry {
-  MOZ_CONSTEXPR
+  constexpr
   ComponentsInterfaceShimEntry(const char* aName, const nsIID& aIID,
                                const dom::NativePropertyHooks* aNativePropHooks)
     : geckoName(aName), iid(aIID), nativePropHooks(aNativePropHooks) {}

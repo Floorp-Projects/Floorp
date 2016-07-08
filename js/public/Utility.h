@@ -472,7 +472,7 @@ namespace JS {
 template<typename T>
 struct DeletePolicy
 {
-    MOZ_CONSTEXPR DeletePolicy() {}
+    constexpr DeletePolicy() {}
 
     template<typename U>
     MOZ_IMPLICIT DeletePolicy(DeletePolicy<U> other,

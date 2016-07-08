@@ -26,9 +26,9 @@ template<class src, class dst>
 struct ScaleFactor {
   float scale;
 
-  MOZ_CONSTEXPR ScaleFactor() : scale(1.0) {}
-  MOZ_CONSTEXPR ScaleFactor(const ScaleFactor<src, dst>& aCopy) : scale(aCopy.scale) {}
-  explicit MOZ_CONSTEXPR ScaleFactor(float aScale) : scale(aScale) {}
+  constexpr ScaleFactor() : scale(1.0) {}
+  constexpr ScaleFactor(const ScaleFactor<src, dst>& aCopy) : scale(aCopy.scale) {}
+  explicit constexpr ScaleFactor(float aScale) : scale(aScale) {}
 
   ScaleFactor<dst, src> Inverse() {
     return ScaleFactor<dst, src>(1 / scale);

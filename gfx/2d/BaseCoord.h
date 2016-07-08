@@ -21,8 +21,8 @@ struct BaseCoord {
   T value;
 
   // Constructors
-  MOZ_CONSTEXPR BaseCoord() : value(0) {}
-  explicit MOZ_CONSTEXPR BaseCoord(T aValue) : value(aValue) {}
+  constexpr BaseCoord() : value(0) {}
+  explicit constexpr BaseCoord(T aValue) : value(aValue) {}
 
   // Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator

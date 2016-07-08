@@ -26,8 +26,8 @@ struct BaseSize {
   };
 
   // Constructors
-  MOZ_CONSTEXPR BaseSize() : width(0), height(0) {}
-  MOZ_CONSTEXPR BaseSize(T aWidth, T aHeight) : width(aWidth), height(aHeight) {}
+  constexpr BaseSize() : width(0), height(0) {}
+  constexpr BaseSize(T aWidth, T aHeight) : width(aWidth), height(aHeight) {}
 
   void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
 

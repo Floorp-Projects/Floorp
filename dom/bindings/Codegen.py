@@ -10146,7 +10146,7 @@ class ClassConstructor(ClassItem):
         if self.inline and declaring:
             decorators.append('inline')
         if self.constexpr and declaring:
-            decorators.append('MOZ_CONSTEXPR')
+            decorators.append('constexpr')
         if decorators:
             return ' '.join(decorators) + ' '
         return ''

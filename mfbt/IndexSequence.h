@@ -74,7 +74,7 @@ namespace mozilla {
 template<size_t... Indices>
 struct IndexSequence
 {
-  static MOZ_CONSTEXPR size_t Size() { return sizeof...(Indices); }
+  static constexpr size_t Size() { return sizeof...(Indices); }
 };
 
 namespace detail {

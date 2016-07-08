@@ -52,21 +52,21 @@ PointerRangeSize(T* aBegin, T* aEnd)
  * Beware of the implicit trailing '\0' when using this with string constants.
  */
 template<typename T, size_t N>
-MOZ_CONSTEXPR size_t
+constexpr size_t
 ArrayLength(T (&aArr)[N])
 {
   return N;
 }
 
 template<typename T, size_t N>
-MOZ_CONSTEXPR size_t
+constexpr size_t
 ArrayLength(const Array<T, N>& aArr)
 {
   return N;
 }
 
 template<typename E, E N, typename T>
-MOZ_CONSTEXPR size_t
+constexpr size_t
 ArrayLength(const EnumeratedArray<E, N, T>& aArr)
 {
   return size_t(N);
@@ -78,21 +78,21 @@ ArrayLength(const EnumeratedArray<E, N, T>& aArr)
  * Beware of the implicit trailing '\0' when using this with string constants.
  */
 template<typename T, size_t N>
-MOZ_CONSTEXPR T*
+constexpr T*
 ArrayEnd(T (&aArr)[N])
 {
   return aArr + ArrayLength(aArr);
 }
 
 template<typename T, size_t N>
-MOZ_CONSTEXPR T*
+constexpr T*
 ArrayEnd(Array<T, N>& aArr)
 {
   return &aArr[0] + ArrayLength(aArr);
 }
 
 template<typename T, size_t N>
-MOZ_CONSTEXPR const T*
+constexpr const T*
 ArrayEnd(const Array<T, N>& aArr)
 {
   return &aArr[0] + ArrayLength(aArr);

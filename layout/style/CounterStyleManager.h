@@ -33,7 +33,7 @@ struct PadType;
 class CounterStyle
 {
 protected:
-  explicit MOZ_CONSTEXPR CounterStyle(int32_t aStyle)
+  explicit constexpr CounterStyle(int32_t aStyle)
     : mStyle(aStyle)
   {
   }

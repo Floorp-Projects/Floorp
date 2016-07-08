@@ -75,7 +75,7 @@ private:
 class Checker
 {
 public:
-  MOZ_CONSTEXPR Checker() : mState(kIdle), mIsWritable(1) {}
+  constexpr Checker() : mState(kIdle), mIsWritable(1) {}
 
   Checker& operator=(Checker&& aOther) {
     // Atomic<> doesn't have an |operator=(Atomic<>&&)|.

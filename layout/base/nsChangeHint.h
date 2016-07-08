@@ -232,13 +232,13 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
 // infinite recursion.
 typedef decltype(nsChangeHint(0) + nsChangeHint(0)) nsChangeHint_size_t;
 
-inline nsChangeHint MOZ_CONSTEXPR
+inline nsChangeHint constexpr
 operator|(nsChangeHint aLeft, nsChangeHint aRight)
 {
   return nsChangeHint(nsChangeHint_size_t(aLeft) | nsChangeHint_size_t(aRight));
 }
 
-inline nsChangeHint MOZ_CONSTEXPR
+inline nsChangeHint constexpr
 operator&(nsChangeHint aLeft, nsChangeHint aRight)
 {
   return nsChangeHint(nsChangeHint_size_t(aLeft) & nsChangeHint_size_t(aRight));
@@ -254,13 +254,13 @@ inline nsChangeHint& operator&=(nsChangeHint& aLeft, nsChangeHint aRight)
   return aLeft = aLeft & aRight;
 }
 
-inline nsChangeHint MOZ_CONSTEXPR
+inline nsChangeHint constexpr
 operator~(nsChangeHint aArg)
 {
   return nsChangeHint(~nsChangeHint_size_t(aArg));
 }
 
-inline nsChangeHint MOZ_CONSTEXPR
+inline nsChangeHint constexpr
 operator^(nsChangeHint aLeft, nsChangeHint aRight)
 {
   return nsChangeHint(nsChangeHint_size_t(aLeft) ^ nsChangeHint_size_t(aRight));
@@ -464,14 +464,14 @@ enum nsRestyleHint {
 // infinite recursion.
 typedef decltype(nsRestyleHint(0) + nsRestyleHint(0)) nsRestyleHint_size_t;
 
-inline MOZ_CONSTEXPR nsRestyleHint operator|(nsRestyleHint aLeft,
+inline constexpr nsRestyleHint operator|(nsRestyleHint aLeft,
                                              nsRestyleHint aRight)
 {
   return nsRestyleHint(nsRestyleHint_size_t(aLeft) |
                        nsRestyleHint_size_t(aRight));
 }
 
-inline MOZ_CONSTEXPR nsRestyleHint operator&(nsRestyleHint aLeft,
+inline constexpr nsRestyleHint operator&(nsRestyleHint aLeft,
                                              nsRestyleHint aRight)
 {
   return nsRestyleHint(nsRestyleHint_size_t(aLeft) &
@@ -488,12 +488,12 @@ inline nsRestyleHint& operator&=(nsRestyleHint& aLeft, nsRestyleHint aRight)
   return aLeft = aLeft & aRight;
 }
 
-inline MOZ_CONSTEXPR nsRestyleHint operator~(nsRestyleHint aArg)
+inline constexpr nsRestyleHint operator~(nsRestyleHint aArg)
 {
   return nsRestyleHint(~nsRestyleHint_size_t(aArg));
 }
 
-inline MOZ_CONSTEXPR nsRestyleHint operator^(nsRestyleHint aLeft,
+inline constexpr nsRestyleHint operator^(nsRestyleHint aLeft,
                                              nsRestyleHint aRight)
 {
   return nsRestyleHint(nsRestyleHint_size_t(aLeft) ^
