@@ -575,22 +575,10 @@ struct nsTArray_CopyWithMemutils
 {
   const static bool allowRealloc = true;
 
-  static void CopyNonOverlappingRegion(void* aDest, const void* aSrc, size_t aCount,
-                                       size_t aElemSize)
-  {
-    memcpy(aDest, aSrc, aCount * aElemSize);
-  }
-
   static void MoveNonOverlappingRegionWithHeader(void* aDest, const void* aSrc,
                                                  size_t aCount, size_t aElemSize)
   {
     memcpy(aDest, aSrc, sizeof(nsTArrayHeader) + aCount * aElemSize);
-  }
-
-  static void CopyOverlappingRegion(void* aDest, const void* aSrc, size_t aCount,
-                                    size_t aElemSize)
-  {
-    memmove(aDest, aSrc, aCount * aElemSize);
   }
 
   static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
@@ -617,24 +605,6 @@ struct nsTArray_CopyWithConstructors
 
   const static bool allowRealloc = false;
 
-  static void CopyNonOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
-                                       size_t aElemSize)
-  {
-    ElemType* destElem = static_cast<ElemType*>(aDest);
-    ElemType* srcElem = static_cast<ElemType*>(aSrc);
-    ElemType* destElemEnd = destElem + aCount;
-#ifdef DEBUG
-    ElemType* srcElemEnd = srcElem + aCount;
-    MOZ_ASSERT(srcElemEnd <= destElem || srcElemEnd > destElemEnd);
-#endif
-    while (destElem != destElemEnd) {
-      traits::Construct(destElem, *srcElem);
-      traits::Destruct(srcElem);
-      ++destElem;
-      ++srcElem;
-    }
-  }
-
   static void MoveNonOverlappingRegionWithHeader(void* aDest, void* aSrc, size_t aCount,
                                                  size_t aElemSize)
   {
@@ -644,27 +614,6 @@ struct nsTArray_CopyWithConstructors
     MoveNonOverlappingRegion(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
                              static_cast<uint8_t*>(aSrc) + sizeof(nsTArrayHeader),
                              aCount, aElemSize);
-  }
-
-  static void CopyOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
-                                    size_t aElemSize)
-  {
-    ElemType* destElem = static_cast<ElemType*>(aDest);
-    ElemType* srcElem = static_cast<ElemType*>(aSrc);
-    ElemType* destElemEnd = destElem + aCount;
-    ElemType* srcElemEnd = srcElem + aCount;
-    if (destElem == srcElem) {
-      return;  // In practice, we don't do this.
-    } else if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
-      while (destElemEnd != destElem) {
-        --destElemEnd;
-        --srcElemEnd;
-        traits::Construct(destElemEnd, *srcElemEnd);
-        traits::Destruct(srcElem);
-      }
-    } else {
-      CopyNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
-    }
   }
 
   static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
