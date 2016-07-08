@@ -7663,31 +7663,7 @@ class CGMethodCall(CGThing):
                                       isConstructor=isConstructor,
                                       useCounterName=useCounterName)
 
-        def filteredSignatures(signatures, descriptor):
-            def typeExposedInWorkers(type):
-                return (not type.isGeckoInterface() or
-                        type.inner.isExposedInAnyWorker())
-            if descriptor.workers:
-                # Filter out the signatures that should not be exposed in a
-                # worker.  The IDL parser enforces the return value being
-                # exposed correctly, but we have to check the argument types.
-                #
-                # If this code changes, adjust the self._deps
-                # computation in CGDDescriptor.__init__ as needed.
-                assert all(typeExposedInWorkers(sig[0]) for sig in signatures)
-                signatures = filter(
-                    lambda sig: all(typeExposedInWorkers(arg.type)
-                                    for arg in sig[1]),
-                    signatures)
-                if len(signatures) == 0:
-                    raise TypeError("%s.%s has a worker binding with no "
-                                    "signatures that take arguments exposed in "
-                                    "workers." %
-                                    (descriptor.interface.identifier.name,
-                                     method.identifier.name))
-            return signatures
-
-        signatures = filteredSignatures(method.signatures(), descriptor)
+        signatures = method.signatures()
         if len(signatures) == 1:
             # Special case: we can just do a per-signature method call
             # here for our one signature and not worry about switching
@@ -7717,17 +7693,13 @@ class CGMethodCall(CGThing):
 
         argCountCases = []
         for argCountIdx, argCount in enumerate(allowedArgCounts):
-            possibleSignatures = filteredSignatures(
-                method.signaturesForArgCount(argCount),
-                descriptor)
+            possibleSignatures = method.signaturesForArgCount(argCount)
 
             # Try to optimize away cases when the next argCount in the list
             # will have the same code as us; if it does, we can fall through to
             # that case.
             if argCountIdx+1 < len(allowedArgCounts):
-                nextPossibleSignatures = filteredSignatures(
-                    method.signaturesForArgCount(allowedArgCounts[argCountIdx+1]),
-                    descriptor)
+                nextPossibleSignatures = method.signaturesForArgCount(allowedArgCounts[argCountIdx+1])
             else:
                 nextPossibleSignatures = None
             if possibleSignatures == nextPossibleSignatures:
@@ -11953,20 +11925,6 @@ class CGDescriptor(CGThing):
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
         self._deps = descriptor.interface.getDeps()
-        # If we have a worker descriptor, add dependencies on interface types we
-        # have as method arguments to overloaded methods.  See the
-        # filteredSignatures() bit in CGMethodCall.  Note that we have to add
-        # both interfaces that _are_ exposed in workers and ones that aren't;
-        # the idea is that we have to notice when the exposure set changes.
-        if descriptor.workers:
-            methods = (m for m in descriptor.interface.members if
-                       m.isMethod() and len(m.signatures()) != 1)
-            for m in methods:
-                for sig in m.signatures():
-                    for arg in sig[1]:
-                        if (arg.type.isGeckoInterface() and
-                            not arg.type.inner.isExternal()):
-                            self._deps.add(arg.type.inner.filename())
 
         cgThings = []
         cgThings.append(CGGeneric(declare="typedef %s NativeType;\n" %
