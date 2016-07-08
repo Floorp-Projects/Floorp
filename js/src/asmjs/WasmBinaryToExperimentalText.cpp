@@ -1616,7 +1616,7 @@ PrintCodeSection(WasmPrintContext& c, const AstModule::FuncVector& funcs, const 
 
 
 static bool
-PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory)
+PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory, const AstModule::SegmentVector& segments)
 {
     if (!maybeMemory)
         return true;
@@ -1636,7 +1636,7 @@ PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory)
 
     c.indent++;
 
-    uint32_t numSegments = maybeMemory->segments().length();
+    uint32_t numSegments = segments.length();
     if (!numSegments) {
       if (!c.buffer.append(" {}\n\n"))
           return false;
@@ -1646,7 +1646,7 @@ PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory)
         return false;
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        const AstSegment* segment = maybeMemory->segments()[i];
+        const AstSegment* segment = segments[i];
 
         if (!PrintIndent(c))
             return false;
@@ -1688,7 +1688,7 @@ PrintModule(WasmPrintContext& c, AstModule& module)
     if (!PrintCodeSection(c, module.funcs(), module.sigs()))
         return false;
 
-    if (!PrintDataSection(c, module.maybeMemory()))
+    if (!PrintDataSection(c, module.maybeMemory(), module.segments()))
         return false;
 
     return true;

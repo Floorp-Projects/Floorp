@@ -1284,7 +1284,7 @@ RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs, cons
 
 
 static bool
-RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
+RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory, const AstModule::SegmentVector& segments)
 {
     if (!maybeMemory)
         return true;
@@ -1305,7 +1305,7 @@ RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
 
     c.indent++;
 
-    uint32_t numSegments = maybeMemory->segments().length();
+    uint32_t numSegments = segments.length();
     if (!numSegments) {
       if (!c.buffer.append(")\n"))
           return false;
@@ -1315,7 +1315,7 @@ RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
         return false;
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        const AstSegment* segment = maybeMemory->segments()[i];
+        const AstSegment* segment = segments[i];
 
         if (!RenderIndent(c))
             return false;
@@ -1362,7 +1362,7 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     if (!RenderCodeSection(c, module.funcs(), module.sigs()))
         return false;
 
-    if (!RenderDataSection(c, module.maybeMemory()))
+    if (!RenderDataSection(c, module.maybeMemory(), module.segments()))
         return false;
 
     c.indent--;

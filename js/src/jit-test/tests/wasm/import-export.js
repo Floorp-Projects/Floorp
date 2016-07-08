@@ -163,3 +163,30 @@ assertEq(mem, e.bar);
 
 assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memory 1 1)) (memory 1 1))')), TypeError, /already have default memory/);
 assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memory 1 1)) (import "x" "y" (memory 2 2)))')), TypeError, /already have default memory/);
+
+// Data segments on imports
+
+var m = new Module(textToBinary(`
+    (module
+        (import "a" "b" (memory 1 1))
+        (segment 0 "\\0a\\0b")
+        (segment 100 "\\0c\\0d")
+        (func $get (param $p i32) (result i32)
+            (i32.load8_u (get_local $p)))
+        (export "get" $get))
+`));
+var mem = new Memory({initial:1});
+var {get} = new Instance(m, {a:{b:mem}}).exports;
+assertEq(get(0), 0xa);
+assertEq(get(1), 0xb);
+assertEq(get(2), 0x0);
+assertEq(get(100), 0xc);
+assertEq(get(101), 0xd);
+assertEq(get(102), 0x0);
+var i8 = new Uint8Array(mem.buffer);
+assertEq(i8[0], 0xa);
+assertEq(i8[1], 0xb);
+assertEq(i8[2], 0x0);
+assertEq(i8[100], 0xc);
+assertEq(i8[101], 0xd);
+assertEq(i8[102], 0x0);

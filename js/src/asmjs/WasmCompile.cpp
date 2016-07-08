@@ -1071,7 +1071,7 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeDataSection(Decoder& d, ModuleGenerator& mg)
+DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(DataSectionId, &sectionStart, &sectionSize))
@@ -1091,8 +1091,23 @@ DecodeDataSection(Decoder& d, ModuleGenerator& mg)
 
     uint32_t max = mg.minMemoryLength();
     for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
-        DataSegment seg;
+        if (newFormat) {
+            uint32_t linearMemoryIndex;
+            if (!d.readVarU32(&linearMemoryIndex))
+                return Fail(d, "expected linear memory index");
 
+            if (linearMemoryIndex != 0)
+                return Fail(d, "linear memory index must currently be 0");
+
+            Expr expr;
+            if (!d.readExpr(&expr))
+                return Fail(d, "failed to read initializer expression");
+
+            if (expr != Expr::I32Const)
+                return Fail(d, "expected i32.const initializer expression");
+        }
+
+        DataSegment seg;
         if (!d.readVarU32(&seg.memoryOffset))
             return Fail(d, "expected segment destination offset");
 
@@ -1247,7 +1262,7 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
     if (!DecodeCodeSection(d, mg))
         return nullptr;
 
-    if (!DecodeDataSection(d, mg))
+    if (!DecodeDataSection(d, newFormat, mg))
         return nullptr;
 
     if (!DecodeNameSection(d, mg))
