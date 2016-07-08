@@ -51,12 +51,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
                                           AppConstants.USER_AGENT_FENNEC_MOBILE;
     }
 
-    // Bug 908772: Implement this
-    @Override
-    public LocationListener getLocationListener() {
-        return null;
-    }
-
     // Bug 908775: Implement this
     @Override
     public void doRestart() {}
