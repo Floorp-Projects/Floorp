@@ -8,15 +8,19 @@
 </head>
 
 <body>
-<input id="fileList" type="file"></input>
 <script type="application/javascript;version=1.7">
 
+var fileList;
+
 function create_fileList() {
+  fileList = document.createElement('input');
+  fileList.setAttribute('type', 'file');
+  document.body.appendChild(fileList);
+
   var url = SimpleTest.getTestFileURL("script_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    var fileList = document.getElementById('fileList');
     SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
     script.destroy();
     next();
@@ -27,7 +31,6 @@ function create_fileList() {
 }
 
 function test_worker() {
-  var fileList = document.getElementById('fileList');
   fileList.getFilesAndDirectories().then(function(array) {
     var worker = new Worker('worker_basic.js');
     worker.onmessage = function(e) {
