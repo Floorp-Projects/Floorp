@@ -1621,6 +1621,7 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
       }
 
       if (!mBufferProvider) {
+        mTarget = nullptr;
         mBufferProvider = layerManager->CreatePersistentBufferProvider(size, format);
       }
     }
@@ -1667,6 +1668,7 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   } else {
     EnsureErrorTarget();
     mTarget = sErrorTarget;
+    mBufferProvider = nullptr;
   }
 
   // Drop a note in the debug builds if we ever use accelerated Skia canvas.
@@ -1773,9 +1775,11 @@ CanvasRenderingContext2D::InitializeWithDrawTarget(nsIDocShell* aShell,
 
   IntSize size = aTarget->GetSize();
   SetDimensions(size.width, size.height);
-  mTarget = aTarget;
 
-  if (!mTarget) {
+  if (aTarget) {
+    mTarget = aTarget;
+    mBufferProvider = new PersistentBufferProviderBasic(aTarget);
+  } else {
     EnsureErrorTarget();
     mTarget = sErrorTarget;
   }
@@ -5792,17 +5796,14 @@ CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
     return mBufferProvider;
   }
 
-  if (!mTarget) {
-    return nullptr;
+  if (mTarget) {
+    mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+    return mBufferProvider;
   }
 
   if (aManager) {
     mBufferProvider = aManager->CreatePersistentBufferProvider(gfx::IntSize(mWidth, mHeight),
                                                                GetSurfaceFormat());
-  }
-
-  if (!mBufferProvider) {
-    mBufferProvider = new PersistentBufferProviderBasic(mTarget);
   }
 
   return mBufferProvider;
