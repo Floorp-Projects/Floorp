@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_XMLHttpRequestMainThread_h
 #define mozilla_dom_XMLHttpRequestMainThread_h
 
+#include <bitset>
 #include "nsAutoPtr.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
@@ -558,6 +559,18 @@ public:
     return sDontWarnAboutSyncXHR;
   }
 protected:
+  // XHR states are meant to mirror the XHR2 spec:
+  //   https://xhr.spec.whatwg.org/#states
+  // Note that we currently have an extra pseudo-state called sent.
+  enum class State : uint8_t {
+    unsent,           // object has been constructed.
+    opened,           // open() has been successfully invoked.
+    sent,             // non-spec, corresponds with "opened and the send() flag is set".
+    headers_received, // redirects followed and response headers received.
+    loading,          // response body is being received.
+    done,             // data transfer concluded, whether success or error.
+  };
+
   nsresult DetectCharset();
   nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
@@ -571,7 +584,7 @@ protected:
   bool CreateDOMBlob(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
-  nsresult ChangeState(uint32_t aState, bool aBroadcast = true);
+  nsresult ChangeState(State aState, bool aBroadcast = true);
   already_AddRefed<nsILoadGroup> GetLoadGroup() const;
   nsIURI *GetBaseURI();
 
@@ -675,7 +688,17 @@ protected:
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
-  uint32_t mState;
+  State mState;
+
+  bool mFlagAsynchronous;
+  bool mFlagAborted;
+  bool mFlagParseBody;
+  bool mFlagSyncLooping;
+  bool mFlagBackgroundRequest;
+  bool mFlagHadUploadListenersOnSend;
+  bool mFlagACwithCredentials;
+  bool mFlagTimedOut;
+  bool mFlagDeleted;
 
   RefPtr<XMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
@@ -725,10 +748,8 @@ protected:
    * events.
    *
    * @param aType The progress event type.
-   * @param aFlag A XML_HTTP_REQUEST_* state flag defined in
-   *              XMLHttpRequestMainthread.cpp.
    */
-  void CloseRequestWithError(const ProgressEventType aType, const uint32_t aFlag);
+  void CloseRequestWithError(const ProgressEventType aType);
 
   bool mFirstStartRequestSeen;
   bool mInLoadProgressEvent;
