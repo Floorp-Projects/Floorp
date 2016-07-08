@@ -6,9 +6,9 @@
 #include "SetDocumentTitleTransaction.h"
 #include "mozilla/dom/Element.h"        // for Element
 #include "nsAString.h"
-#include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
-#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc
-#include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
+#include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc.
+#include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc.
+#include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc.
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement

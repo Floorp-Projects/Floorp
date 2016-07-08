@@ -23,34 +23,34 @@
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
 #include "PlaceholderTransaction.h"     // for PlaceholderTransaction
 #include "SplitNodeTransaction.h"       // for SplitNodeTransaction
-#include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc
+#include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc.
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
 #include "mozilla/CheckedInt.h"         // for CheckedInt
-#include "mozilla/EditorUtils.h"        // for AutoRules, etc
+#include "mozilla/EditorUtils.h"        // for AutoRules, etc.
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/dom/Selection.h"      // for Selection, etc
+#include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/TextComposition.h"    // for TextComposition
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAString.h"                  // for nsAString_internal::Length, etc
+#include "mozilla/mozalloc.h"           // for operator new, etc.
+#include "nsAString.h"                  // for nsAString_internal::Length, etc.
 #include "nsCCUncollectableMarker.h"    // for nsCCUncollectableMarker
 #include "nsCaret.h"                    // for nsCaret
 #include "nsCaseTreatment.h"
-#include "nsCharTraits.h"               // for NS_IS_HIGH_SURROGATE, etc
+#include "nsCharTraits.h"               // for NS_IS_HIGH_SURROGATE, etc.
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsComputedDOMStyle.h"         // for nsComputedDOMStyle
 #include "nsContentUtils.h"             // for nsContentUtils
 #include "nsDOMString.h"                // for DOMStringIsNull
-#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsError.h"                    // for NS_OK, etc
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc.
+#include "nsError.h"                    // for NS_OK, etc.
 #include "nsFocusManager.h"             // for nsFocusManager
 #include "nsFrameSelection.h"           // for nsFrameSelection
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::dir
@@ -65,10 +65,10 @@
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
-#include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent, etc
+#include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent, etc.
 #include "nsIDOMMozNamedAttrMap.h"      // for nsIDOMMozNamedAttrMap
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
-#include "nsIDOMNode.h"                 // for nsIDOMNode, etc
+#include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDOMNodeList.h"             // for nsIDOMNodeList
 #include "nsIDOMText.h"                 // for nsIDOMText
 #include "nsIDocument.h"                // for nsIDocument
@@ -78,29 +78,29 @@
 #include "nsIEditorSpellCheck.h"        // for nsIEditorSpellCheck
 #include "nsIFrame.h"                   // for nsIFrame
 #include "nsIHTMLDocument.h"            // for nsIHTMLDocument
-#include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc
-#include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc
-#include "nsINode.h"                    // for nsINode, etc
-#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc.
+#include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc.
+#include "nsINode.h"                    // for nsINode, etc.
+#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
 #include "nsIPresShell.h"               // for nsIPresShell
-#include "nsISelectionController.h"     // for nsISelectionController, etc
-#include "nsISelectionDisplay.h"        // for nsISelectionDisplay, etc
+#include "nsISelectionController.h"     // for nsISelectionController, etc.
+#include "nsISelectionDisplay.h"        // for nsISelectionDisplay, etc.
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_IF_ADDREF
 #include "nsITransaction.h"             // for nsITransaction
 #include "nsITransactionManager.h"
 #include "nsIWeakReference.h"           // for nsISupportsWeakReference
-#include "nsIWidget.h"                  // for nsIWidget, IMEState, etc
+#include "nsIWidget.h"                  // for nsIWidget, IMEState, etc.
 #include "nsPIDOMWindow.h"              // for nsPIDOMWindow
 #include "nsPresContext.h"              // for nsPresContext
 #include "nsRange.h"                    // for nsRange
 #include "nsReadableUtils.h"            // for EmptyString, ToNewCString
-#include "nsString.h"                   // for nsAutoString, nsString, etc
+#include "nsString.h"                   // for nsAutoString, nsString, etc.
 #include "nsStringFwd.h"                // for nsAFlatString
-#include "nsStyleConsts.h"              // for NS_STYLE_DIRECTION_RTL, etc
+#include "nsStyleConsts.h"              // for NS_STYLE_DIRECTION_RTL, etc.
 #include "nsStyleContext.h"             // for nsStyleContext
-#include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc
-#include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc
+#include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc.
+#include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc.
 #include "nsTextNode.h"                 // for nsTextNode
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsTransactionManager.h"       // for nsTransactionManager

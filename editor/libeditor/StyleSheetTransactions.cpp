@@ -8,11 +8,11 @@
 #include <stddef.h>                     // for nullptr
 
 #include "nsAString.h"
-#include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
+#include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc.
 #include "mozilla/StyleSheetHandle.h"   // for mozilla::StyleSheetHandle
 #include "mozilla/StyleSheetHandleInlines.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE
-#include "nsError.h"                    // for NS_OK, etc
+#include "nsError.h"                    // for NS_OK, etc.
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentObserver.h"        // for UPDATE_STYLE

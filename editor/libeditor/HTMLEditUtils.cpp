@@ -7,15 +7,15 @@
 
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/dom/Element.h"        // for Element, nsINode
 #include "nsAString.h"                  // for nsAString_internal::IsEmpty
-#include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc
+#include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc.
 #include "nsCaseTreatment.h"
-#include "nsDebug.h"                    // for NS_PRECONDITION, etc
+#include "nsDebug.h"                    // for NS_PRECONDITION, etc.
 #include "nsError.h"                    // for NS_SUCCEEDED
-#include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::a, etc
+#include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::a, etc.
 #include "nsHTMLTags.h"
 #include "nsIAtom.h"                    // for nsIAtom
 #include "nsIDOMHTMLAnchorElement.h"    // for nsIDOMHTMLAnchorElement

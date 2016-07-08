@@ -4346,7 +4346,7 @@ HTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
   }
 
   // if it's not a text node (handled above) and it's not a container,
-  // then we don't call it empty (it's an <hr>, or <br>, etc).
+  // then we don't call it empty (it's an <hr>, or <br>, etc.).
   // Also, if it's an anchor then don't treat it as empty - even though
   // anchors are containers, named anchors are "empty" but we don't
   // want to treat them as such.  Also, don't call ListItems or table

@@ -5,13 +5,13 @@
 
 #include "mozilla/SelectionState.h"
 
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/EditorUtils.h"        // for EditorUtils
 #include "mozilla/dom/Selection.h"      // for Selection
 #include "nsAString.h"                  // for nsAString_internal::Length
 #include "nsCycleCollectionParticipant.h"
-#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
-#include "nsError.h"                    // for NS_OK, etc
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc.
+#include "nsError.h"                    // for NS_OK, etc.
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMNode.h"                 // for nsIDOMNode

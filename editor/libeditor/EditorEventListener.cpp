@@ -6,8 +6,8 @@
 
 #include "EditorEventListener.h"
 
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/EditorBase.h"         // for EditorBase, etc
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/EditorBase.h"         // for EditorBase, etc.
 #include "mozilla/EventListenerManager.h" // for EventListenerManager
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
@@ -18,10 +18,10 @@
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCaret.h"                    // for nsCaret
-#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
+#include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc.
 #include "nsFocusManager.h"             // for nsFocusManager
 #include "nsGkAtoms.h"                  // for nsGkAtoms, nsGkAtoms::input
-#include "nsIClipboard.h"               // for nsIClipboard, etc
+#include "nsIClipboard.h"               // for nsIClipboard, etc.
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIController.h"              // for nsIController
 #include "nsID.h"
@@ -36,17 +36,17 @@
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDocument.h"                // for nsIDocument
-#include "nsIEditor.h"                  // for EditorBase::GetSelection, etc
+#include "nsIEditor.h"                  // for EditorBase::GetSelection, etc.
 #include "nsIEditorIMESupport.h"
 #include "nsIEditorMailSupport.h"       // for nsIEditorMailSupport
 #include "nsIFocusManager.h"            // for nsIFocusManager
-#include "nsIFormControl.h"             // for nsIFormControl, etc
+#include "nsIFormControl.h"             // for nsIFormControl, etc.
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor
-#include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc
-#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc.
+#include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
 #include "nsIPresShell.h"               // for nsIPresShell
-#include "nsISelectionController.h"     // for nsISelectionController, etc
-#include "nsITransferable.h"            // for kFileMime, kHTMLMime, etc
+#include "nsISelectionController.h"     // for nsISelectionController, etc.
+#include "nsITransferable.h"            // for kFileMime, kHTMLMime, etc.
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsPIWindowRoot.h"             // for nsPIWindowRoot
@@ -56,7 +56,7 @@
 #include "nsString.h"                   // for nsAutoString
 #include "nsQueryObject.h"              // for do_QueryObject
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-#include "nsContentUtils.h"             // for nsContentUtils, etc
+#include "nsContentUtils.h"             // for nsContentUtils, etc.
 #include "nsIBidiKeyboard.h"            // for nsIBidiKeyboard
 #endif
 
