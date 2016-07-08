@@ -9,7 +9,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 add_task(function* testPermissionsListing() {
   Assert.deepEqual(SitePermissions.listPermissions().sort(),
     ["camera","cookie","desktop-notification","geo","image",
-     "indexedDB","install","microphone","pointerLock","popup"],
+     "indexedDB","install","microphone","popup"],
     "Correct list of all permissions");
 });
 
@@ -38,8 +38,6 @@ add_task(function* testHasGrantedPermissions() {
   SitePermissions.remove(uri, "microphone");
   Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
 
-  SitePermissions.set(uri, "pointerLock", SitePermissions.BLOCK);
-
   // check that a combination of ALLOW and BLOCK states returns true
   SitePermissions.set(uri, "geo", SitePermissions.ALLOW);
   Assert.equal(SitePermissions.hasGrantedPermissions(uri), true);
@@ -52,7 +50,6 @@ add_task(function* testHasGrantedPermissions() {
   SitePermissions.remove(uri, "geo");
   Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
 
-  SitePermissions.remove(uri, "pointerLock");
 });
 
 add_task(function* testGetPermissionsByURI() {
