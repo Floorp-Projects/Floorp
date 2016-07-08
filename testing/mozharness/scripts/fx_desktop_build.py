@@ -72,9 +72,6 @@ class FxDesktopBuild(BuildScript, object):
                 'stage_product': 'firefox',
                 'platform_supports_post_upload_to_latest': True,
                 'latest_mar_dir': '/pub/mozilla.org/firefox/nightly/latest-%(branch)s',
-                'compare_locales_repo': 'https://hg.mozilla.org/build/compare-locales',
-                'compare_locales_rev': 'RELEASE_AUTOMATION',
-                'compare_locales_vcs': 'hgtool',
                 'influx_credentials_file': 'oauth.txt',
                 'build_resources_path': '%(abs_src_dir)s/obj-firefox/.mozbuild/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
@@ -154,7 +151,6 @@ class FxDesktopBuild(BuildScript, object):
                                         'src',
                                         self._query_objdir())
             },
-            'compare_locales_dir': os.path.join(abs_dirs['abs_work_dir'], 'compare-locales'),
         }
         abs_dirs.update(dirs)
         self.abs_dirs = abs_dirs
