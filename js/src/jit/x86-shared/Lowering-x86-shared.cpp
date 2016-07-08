@@ -339,6 +339,12 @@ LIRGeneratorX86Shared::visitWasmLoad(MWasmLoad* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
+    if (ins->type() == MIRType::Int64) {
+        auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
+        defineInt64(lir, ins);
+        return;
+    }
+
     auto* lir = new(alloc()) LWasmLoad(useRegisterOrZeroAtStart(base));
     define(lir, ins);
 }

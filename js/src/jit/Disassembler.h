@@ -202,6 +202,7 @@ class HeapAccess {
         Unknown,
         Load,       // any bits not covered by the load are zeroed
         LoadSext32, // like Load, but sign-extend to 32 bits
+        LoadSext64, // like Load, but sign-extend to 64 bits
         Store
     };
 
