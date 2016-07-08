@@ -312,6 +312,7 @@ template JS::Zone* TracerConcrete<JSScript>::zone() const;
 template JS::Zone* TracerConcrete<js::LazyScript>::zone() const;
 template JS::Zone* TracerConcrete<js::Shape>::zone() const;
 template JS::Zone* TracerConcrete<js::BaseShape>::zone() const;
+template JS::Zone* TracerConcrete<js::ObjectGroup>::zone() const;
 template JS::Zone* TracerConcrete<JS::Symbol>::zone() const;
 template JS::Zone* TracerConcrete<JSString>::zone() const;
 
@@ -332,6 +333,7 @@ template UniquePtr<EdgeRange> TracerConcrete<JSScript>::edges(JSRuntime* rt, boo
 template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(JSRuntime* rt, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(JSRuntime* rt, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::BaseShape>::edges(JSRuntime* rt, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::ObjectGroup>::edges(JSRuntime* rt, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<JS::Symbol>::edges(JSRuntime* rt, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSRuntime* rt, bool wantNames) const;
 
