@@ -20,8 +20,9 @@ function messages(state = Immutable.List(), action) {
       if (newMessage.allowRepeating && state.size > 0) {
         let lastMessage = state.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
-          newMessage.repeat = lastMessage.repeat + 1;
-          return state.pop().push(newMessage);
+          return state.pop().push(
+            newMessage.set("repeat", lastMessage.repeat + 1)
+          );
         }
       }
       return state.push(newMessage);
