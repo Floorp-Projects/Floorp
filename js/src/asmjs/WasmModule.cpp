@@ -161,14 +161,14 @@ LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 size_t
-ImportName::serializedSize() const
+Import::serializedSize() const
 {
     return module.serializedSize() +
            func.serializedSize();
 }
 
 uint8_t*
-ImportName::serialize(uint8_t* cursor) const
+Import::serialize(uint8_t* cursor) const
 {
     cursor = module.serialize(cursor);
     cursor = func.serialize(cursor);
@@ -176,7 +176,7 @@ ImportName::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-ImportName::deserialize(const uint8_t* cursor)
+Import::deserialize(const uint8_t* cursor)
 {
     (cursor = module.deserialize(cursor)) &&
     (cursor = func.deserialize(cursor));
@@ -184,7 +184,7 @@ ImportName::deserialize(const uint8_t* cursor)
 }
 
 size_t
-ImportName::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return module.sizeOfExcludingThis(mallocSizeOf) +
            func.sizeOfExcludingThis(mallocSizeOf);
@@ -225,7 +225,7 @@ Module::serializedSize() const
 {
     return SerializedPodVectorSize(code_) +
            linkData_.serializedSize() +
-           SerializedVectorSize(importNames_) +
+           SerializedVectorSize(imports_) +
            exportMap_.serializedSize() +
            SerializedPodVectorSize(dataSegments_) +
            metadata_->serializedSize() +
@@ -237,7 +237,7 @@ Module::serialize(uint8_t* cursor) const
 {
     cursor = SerializePodVector(cursor, code_);
     cursor = linkData_.serialize(cursor);
-    cursor = SerializeVector(cursor, importNames_);
+    cursor = SerializeVector(cursor, imports_);
     cursor = exportMap_.serialize(cursor);
     cursor = SerializePodVector(cursor, dataSegments_);
     cursor = metadata_->serialize(cursor);
@@ -258,8 +258,8 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
     if (!cursor)
         return nullptr;
 
-    ImportNameVector importNames;
-    cursor = DeserializeVector(cursor, &importNames);
+    ImportVector imports;
+    cursor = DeserializeVector(cursor, &imports);
     if (!cursor)
         return nullptr;
 
@@ -295,7 +295,7 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
 
     *module = js::MakeUnique<Module>(Move(code),
                                      Move(linkData),
-                                     Move(importNames),
+                                     Move(imports),
                                      Move(exportMap),
                                      Move(dataSegments),
                                      *metadata,
@@ -316,7 +316,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              code_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
-             importNames_.sizeOfExcludingThis(mallocSizeOf) +
+             imports_.sizeOfExcludingThis(mallocSizeOf) +
              exportMap_.sizeOfExcludingThis(mallocSizeOf) +
              dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
              metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
@@ -329,7 +329,7 @@ Module::instantiate(JSContext* cx,
                     HandleArrayBufferObjectMaybeShared asmJSBuffer,
                     HandleWasmInstanceObject instanceObj) const
 {
-    MOZ_ASSERT(funcImports.length() == metadata_->imports.length());
+    MOZ_ASSERT(funcImports.length() == metadata_->funcImports.length());
 
     // asm.js module instantiation supplies its own buffer, but for wasm, create
     // and initialize the buffer if one is requested. Either way, the buffer is

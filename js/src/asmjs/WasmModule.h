@@ -91,26 +91,26 @@ struct LinkData : LinkDataCacheablePod
 typedef UniquePtr<LinkData> UniqueLinkData;
 typedef UniquePtr<const LinkData> UniqueConstLinkData;
 
-// ImportName describes a single wasm import. An ImportNameVector describes all
+// Import describes a single wasm import. An ImportVector describes all
 // of a single module's imports.
 //
-// ImportNameVector is built incrementally by ModuleGenerator and then stored
+// ImportVector is built incrementally by ModuleGenerator and then stored
 // immutably by Module.
 
-struct ImportName
+struct Import
 {
     CacheableChars module;
     CacheableChars func;
 
-    ImportName() = default;
-    ImportName(UniqueChars&& module, UniqueChars&& func)
+    Import() = default;
+    Import(UniqueChars&& module, UniqueChars&& func)
       : module(Move(module)), func(Move(func))
     {}
 
-    WASM_DECLARE_SERIALIZABLE(ImportName)
+    WASM_DECLARE_SERIALIZABLE(Import)
 };
 
-typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
+typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
 // ExportMap describes all of a single module's exports. The ExportMap describes
 // how the Exports (stored in Metadata) are mapped to the fields of the export
@@ -161,7 +161,7 @@ class Module
 {
     const Bytes             code_;
     const LinkData          linkData_;
-    const ImportNameVector  importNames_;
+    const ImportVector      imports_;
     const ExportMap         exportMap_;
     const DataSegmentVector dataSegments_;
     const SharedMetadata    metadata_;
@@ -170,14 +170,14 @@ class Module
   public:
     Module(Bytes&& code,
            LinkData&& linkData,
-           ImportNameVector&& importNames,
+           ImportVector&& imports,
            ExportMap&& exportMap,
            DataSegmentVector&& dataSegments,
            const Metadata& metadata,
            const ShareableBytes& bytecode)
       : code_(Move(code)),
         linkData_(Move(linkData)),
-        importNames_(Move(importNames)),
+        imports_(Move(imports)),
         exportMap_(Move(exportMap)),
         dataSegments_(Move(dataSegments)),
         metadata_(&metadata),
@@ -185,7 +185,7 @@ class Module
     {}
 
     const Metadata& metadata() const { return *metadata_; }
-    const ImportNameVector& importNames() const { return importNames_; }
+    const ImportVector& imports() const { return imports_; }
 
     // Instantiate this module with the given imports:
 

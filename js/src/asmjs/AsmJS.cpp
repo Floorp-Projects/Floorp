@@ -1759,7 +1759,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
-            !genData->imports.resize(MaxImports) ||
+            !genData->funcImports.resize(MaxImports) ||
             !genData->asmJSSigToTable.resize(MaxTables))
         {
             return false;
@@ -2289,7 +2289,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         // asm.js has its own, different, version of imports through
         // AsmJSGlobal.
-        ImportNameVector importNames;
+        ImportVector imports;
 
         // asm.js does not have any wasm bytecode to save; view-source is
         // provided through the ScriptSource.
@@ -2297,7 +2297,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!bytes)
             return nullptr;
 
-        return mg_.finish(Move(importNames), *bytes);
+        return mg_.finish(Move(imports), *bytes);
     }
 };
 
