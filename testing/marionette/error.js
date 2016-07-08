@@ -6,7 +6,7 @@
 
 const {interfaces: Ci, utils: Cu} = Components;
 
-const ERRORS = [
+const ERRORS = new Set([
   "ElementNotAccessibleError",
   "ElementNotVisibleError",
   "InvalidArgumentError",
@@ -27,7 +27,7 @@ const ERRORS = [
   "UnknownError",
   "UnsupportedOperationError",
   "WebDriverError",
-];
+]);
 
 const BUILTIN_ERRORS = new Set([
   "Error",
@@ -40,7 +40,7 @@ const BUILTIN_ERRORS = new Set([
   "URIError",
 ]);
 
-this.EXPORTED_SYMBOLS = ["error"].concat(ERRORS);
+this.EXPORTED_SYMBOLS = ["error"].concat(Array.from(ERRORS));
 
 this.error = {};
 
@@ -76,7 +76,7 @@ error.isError = function(val) {
  */
 error.isWebDriverError = function(obj) {
   return error.isError(obj) &&
-      ("name" in obj && ERRORS.indexOf(obj.name) >= 0);
+      ("name" in obj && ERRORS.has(obj.name));
 };
 
 /**
