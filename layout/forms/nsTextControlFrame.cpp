@@ -37,11 +37,11 @@
 
 #include "nsIDOMText.h" //for multiline getselection
 #include "nsFocusManager.h"
-#include "nsTextEditRules.h"
 #include "nsPresState.h"
 #include "nsContentList.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/TextEditRules.h"
 #include "nsContentUtils.h"
 #include "nsTextNode.h"
 #include "mozilla/StyleSetHandle.h"
@@ -1319,7 +1319,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   }
 
   if (!value.IsEmpty() && IsPasswordTextControl()) {
-    nsTextEditRules::FillBufWithPWChars(&value, value.Length());
+    TextEditRules::FillBufWithPWChars(&value, value.Length());
   }
   return textContent->SetText(value, aNotify);
 }

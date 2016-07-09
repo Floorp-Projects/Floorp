@@ -17,7 +17,7 @@ namespace mozilla {
 class TextEditUtils final
 {
 public:
-  // from nsTextEditRules:
+  // from TextEditRules:
   static bool IsBody(nsIDOMNode* aNode);
   static bool IsBreak(nsIDOMNode* aNode);
   static bool IsBreak(nsINode* aNode);

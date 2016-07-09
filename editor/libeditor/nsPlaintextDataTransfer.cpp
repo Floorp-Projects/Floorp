@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EditorUtils.h"
-#include "SelectionState.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"

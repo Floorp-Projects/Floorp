@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TextEditRules.h"
+
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -15,19 +17,19 @@
 #include "nsISupportsImpl.h"
 #include "nsPlaintextEditor.h"
 #include "nsPresContext.h"
-#include "nsTextEditRules.h"
 #include "nscore.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 // Test for distance between caret and text that will be deleted
 nsresult
-nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
-                                           nsIDOMNode           *aSelNode,
-                                           int32_t               aSelOffset,
-                                           nsIEditor::EDirection aAction,
-                                           bool                 *aCancel)
+TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
+                                         nsIDOMNode* aSelNode,
+                                         int32_t aSelOffset,
+                                         nsIEditor::EDirection aAction,
+                                         bool* aCancel)
 {
   NS_ENSURE_ARG_POINTER(aCancel);
   *aCancel = false;
@@ -80,7 +82,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
 }
 
 void
-nsTextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
+TextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
 {
   /**
    * After inserting text the caret Bidi level must be set to the level of the
@@ -95,3 +97,5 @@ nsTextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
     frameSelection->UndefineCaretBidiLevel();
   }
 }
+
+} // namespace mozilla

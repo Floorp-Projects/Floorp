@@ -6,9 +6,9 @@
 #ifndef __editor_h__
 #define __editor_h__
 
-#include "SelectionState.h"             // for RangeUpdater, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
+#include "mozilla/SelectionState.h"     // for RangeUpdater, etc
 #include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
