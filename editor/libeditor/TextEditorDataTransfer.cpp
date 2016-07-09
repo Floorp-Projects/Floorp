@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TextEditor.h"
+
 #include "EditorUtils.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
@@ -38,7 +40,6 @@
 #include "nsITransferable.h"
 #include "nsIVariant.h"
 #include "nsLiteralString.h"
-#include "nsPlaintextEditor.h"
 #include "nsRange.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -48,10 +49,12 @@
 class nsILoadContext;
 class nsISupports;
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
+using namespace dom;
+
+NS_IMETHODIMP
+TextEditor::PrepareTransferable(nsITransferable** transferable)
 {
   // Create generic Transferable for getting the data
   nsresult rv = CallCreateInstance("@mozilla.org/widget/transferable;1", transferable);
@@ -69,10 +72,11 @@ NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transfera
   return NS_OK;
 }
 
-nsresult nsPlaintextEditor::InsertTextAt(const nsAString &aStringToInsert,
-                                         nsIDOMNode *aDestinationNode,
-                                         int32_t aDestOffset,
-                                         bool aDoDeleteSelection)
+nsresult
+TextEditor::InsertTextAt(const nsAString& aStringToInsert,
+                         nsIDOMNode* aDestinationNode,
+                         int32_t aDestOffset,
+                         bool aDoDeleteSelection)
 {
   if (aDestinationNode)
   {
@@ -99,10 +103,11 @@ nsresult nsPlaintextEditor::InsertTextAt(const nsAString &aStringToInsert,
   return InsertText(aStringToInsert);
 }
 
-NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTransferable,
-                                                            nsIDOMNode *aDestinationNode,
-                                                            int32_t aDestOffset,
-                                                            bool aDoDeleteSelection)
+NS_IMETHODIMP
+TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
+                                       nsIDOMNode* aDestinationNode,
+                                       int32_t aDestOffset,
+                                       bool aDoDeleteSelection)
 {
   nsresult rv = NS_OK;
   char* bestFlavor = nullptr;
@@ -137,12 +142,13 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
   return rv;
 }
 
-nsresult nsPlaintextEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
-                                                   int32_t aIndex,
-                                                   nsIDOMDocument *aSourceDoc,
-                                                   nsIDOMNode *aDestinationNode,
-                                                   int32_t aDestOffset,
-                                                   bool aDoDeleteSelection)
+nsresult
+TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
+                                   int32_t aIndex,
+                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDOMNode* aDestinationNode,
+                                   int32_t aDestOffset,
+                                   bool aDoDeleteSelection)
 {
   nsCOMPtr<nsIVariant> data;
   DataTransfer::Cast(aDataTransfer)->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), aIndex,
@@ -159,7 +165,8 @@ nsresult nsPlaintextEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
   return NS_OK;
 }
 
-nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
+nsresult
+TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
   ForceCompositionEnd();
 
@@ -320,7 +327,8 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   return rv;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
+NS_IMETHODIMP
+TextEditor::Paste(int32_t aSelectionType)
 {
   if (!FireClipboardEvent(ePaste, aSelectionType)) {
     return NS_OK;
@@ -353,7 +361,8 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
   return rv;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferable)
+NS_IMETHODIMP
+TextEditor::PasteTransferable(nsITransferable* aTransferable)
 {
   // Use an invalid value for the clipboard type as data comes from aTransferable
   // and we don't currently implement a way to put that in the data transfer yet.
@@ -373,7 +382,9 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
   return InsertTextFromTransferable(aTransferable, nullptr, 0, true);
 }
 
-NS_IMETHODIMP nsPlaintextEditor::CanPaste(int32_t aSelectionType, bool *aCanPaste)
+NS_IMETHODIMP
+TextEditor::CanPaste(int32_t aSelectionType,
+                     bool* aCanPaste)
 {
   NS_ENSURE_ARG_POINTER(aCanPaste);
   *aCanPaste = false;
@@ -400,7 +411,9 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(int32_t aSelectionType, bool *aCanPast
 }
 
 
-NS_IMETHODIMP nsPlaintextEditor::CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste)
+NS_IMETHODIMP
+TextEditor::CanPasteTransferable(nsITransferable* aTransferable,
+                                 bool* aCanPaste)
 {
   NS_ENSURE_ARG_POINTER(aCanPaste);
 
@@ -429,7 +442,8 @@ NS_IMETHODIMP nsPlaintextEditor::CanPasteTransferable(nsITransferable *aTransfer
   return NS_OK;
 }
 
-bool nsPlaintextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
+bool
+TextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
 {
   // Try to determine whether we should use a sanitizing fragment sink
   bool isSafe = false;
@@ -457,3 +471,4 @@ bool nsPlaintextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
   return isSafe;
 }
 
+} // namespace mozilla

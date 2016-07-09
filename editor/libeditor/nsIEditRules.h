@@ -12,10 +12,9 @@
 
 #include "nsEditor.h" // for EditAction enum
 
-class nsPlaintextEditor;
-
 namespace mozilla {
 
+class TextEditor;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -48,7 +47,7 @@ public:
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules
 
-  NS_IMETHOD Init(nsPlaintextEditor* aEditor) = 0;
+  NS_IMETHOD Init(mozilla::TextEditor* aTextEditor) = 0;
   NS_IMETHOD SetInitialValue(const nsAString& aValue) = 0;
   NS_IMETHOD DetachEditor() = 0;
   NS_IMETHOD BeforeEdit(EditAction action,

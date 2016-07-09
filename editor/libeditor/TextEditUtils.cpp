@@ -6,6 +6,7 @@
 #include "TextEditUtils.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -18,7 +19,6 @@
 #include "nsIDOMNode.h"
 #include "nsNameSpaceManager.h"
 #include "nsLiteralString.h"
-#include "nsPlaintextEditor.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -94,9 +94,8 @@ TextEditUtils::HasMozAttr(nsIDOMNode* aNode)
  * AutoEditInitRulesTrigger
  ******************************************************************************/
 
-AutoEditInitRulesTrigger::AutoEditInitRulesTrigger(
-                            nsPlaintextEditor* aTextEditor,
-                            nsresult& aResult)
+AutoEditInitRulesTrigger::AutoEditInitRulesTrigger(TextEditor* aTextEditor,
+                                                   nsresult& aResult)
   : mTextEditor(aTextEditor)
   , mResult(aResult)
 {

@@ -72,7 +72,6 @@
 #include "nsLinebreakConverter.h"
 #include "nsLiteralString.h"
 #include "nsNetUtil.h"
-#include "nsPlaintextEditor.h"
 #include "nsRange.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -1556,9 +1555,9 @@ HTMLEditor::PasteNoFormatting(int32_t aSelectionType)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the nsITransferable interface for getting the data from the clipboard.
-  // use nsPlaintextEditor::PrepareTransferable() to force unicode plaintext data.
+  // use TextEditor::PrepareTransferable() to force unicode plaintext data.
   nsCOMPtr<nsITransferable> trans;
-  rv = nsPlaintextEditor::PrepareTransferable(getter_AddRefs(trans));
+  rv = TextEditor::PrepareTransferable(getter_AddRefs(trans));
   if (NS_SUCCEEDED(rv) && trans)
   {
     // Get the Data from the clipboard
@@ -1862,7 +1861,7 @@ HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
 }
 
 // Insert plaintext as a quotation, with cite marks (e.g. "> ").
-// This differs from its corresponding method in nsPlaintextEditor
+// This differs from its corresponding method in TextEditor
 // in that here, quoted material is enclosed in a <pre> tag
 // in order to preserve the original line wrapping.
 NS_IMETHODIMP
@@ -1910,9 +1909,9 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   }
 
   if (aAddCites)
-    rv = nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
+    rv = TextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
   else
-    rv = nsPlaintextEditor::InsertText(aQuotedText);
+    rv = TextEditor::InsertText(aQuotedText);
   // Note that if !aAddCites, aNodeInserted isn't set.
   // That's okay because the routines that use aAddCites
   // don't need to know the inserted node.
@@ -1938,13 +1937,13 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 NS_IMETHODIMP
 HTMLEditor::StripCites()
 {
-  return nsPlaintextEditor::StripCites();
+  return TextEditor::StripCites();
 }
 
 NS_IMETHODIMP
 HTMLEditor::Rewrap(bool aRespectNewlines)
 {
-  return nsPlaintextEditor::Rewrap(aRespectNewlines);
+  return TextEditor::Rewrap(aRespectNewlines);
 }
 
 NS_IMETHODIMP

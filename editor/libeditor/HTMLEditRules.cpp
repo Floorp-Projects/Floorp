@@ -45,7 +45,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsINode.h"
 #include "nsLiteralString.h"
-#include "nsPlaintextEditor.h"
 #include "nsRange.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -229,7 +228,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLEditRules, TextEditRules,
                                    mRangeItem)
 
 NS_IMETHODIMP
-HTMLEditRules::Init(nsPlaintextEditor* aTextEditor)
+HTMLEditRules::Init(TextEditor* aTextEditor)
 {
   InitFields();
 
@@ -1466,7 +1465,7 @@ HTMLEditRules::WillLoadHTML(Selection* aSelection,
 
   if (mBogusNode)
   {
-    mEditor->DeleteNode(mBogusNode);
+    mTextEditor->DeleteNode(mBogusNode);
     mBogusNode = nullptr;
   }
 
@@ -2470,7 +2469,9 @@ HTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
   // get selection
   nsCOMPtr<nsINode> node;
   int32_t offset;
-  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
+  nsresult res = mTextEditor->GetStartNodeAndOffset(aSelection,
+                                                    getter_AddRefs(node),
+                                                    &offset);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
@@ -2910,7 +2911,9 @@ HTMLEditRules::DidDeleteSelection(Selection* aSelection,
   // find where we are
   nsCOMPtr<nsINode> startNode;
   int32_t startOffset;
-  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
+  nsresult res = mTextEditor->GetStartNodeAndOffset(aSelection,
+                                                    getter_AddRefs(startNode),
+                                                    &startOffset);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
@@ -3663,7 +3666,7 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
         if (!curQuote)
         {
           // First, check that our element can contain a div.
-          if (!mEditor->CanContainTag(*curParent, *nsGkAtoms::div)) {
+          if (!mTextEditor->CanContainTag(*curParent, *nsGkAtoms::div)) {
             return NS_OK; // cancelled
           }
 
@@ -3894,7 +3897,7 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
         if (!curQuote)
         {
           // First, check that our element can contain a blockquote.
-          if (!mEditor->CanContainTag(*curParent, *nsGkAtoms::blockquote)) {
+          if (!mTextEditor->CanContainTag(*curParent, *nsGkAtoms::blockquote)) {
             return NS_OK; // cancelled
           }
 
@@ -4644,7 +4647,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
     // node doesn't go in div we used earlier.
     if (!curDiv || transitionList[i]) {
       // First, check that our element can contain a div.
-      if (!mEditor->CanContainTag(*curParent, *nsGkAtoms::div)) {
+      if (!mTextEditor->CanContainTag(*curParent, *nsGkAtoms::div)) {
         // Cancelled
         return NS_OK;
       }
@@ -6260,7 +6263,7 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
     } else {
       if (doesCRCreateNewP) {
         nsCOMPtr<nsIDOMNode> tmp;
-        res = mEditor->SplitNode(aNode, aOffset, getter_AddRefs(tmp));
+        res = mTextEditor->SplitNode(aNode, aOffset, getter_AddRefs(tmp));
         NS_ENSURE_SUCCESS(res, res);
         selNode = tmp;
       }
@@ -6488,7 +6491,7 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
           nsCOMPtr<Element> newListItem =
             mHTMLEditor->CreateNode(listAtom, list, itemOffset + 1);
           NS_ENSURE_STATE(newListItem);
-          res = mEditor->DeleteNode(&aListItem);
+          res = mTextEditor->DeleteNode(&aListItem);
           NS_ENSURE_SUCCESS(res, res);
           res = aSelection.Collapse(newListItem, 0);
           NS_ENSURE_SUCCESS(res, res);
@@ -8738,7 +8741,7 @@ HTMLEditRules::DocumentModifiedWorker()
   // Delete our bogus node, if we have one, since the document might not be
   // empty any more.
   if (mBogusNode) {
-    mEditor->DeleteNode(mBogusNode);
+    mTextEditor->DeleteNode(mBogusNode);
     mBogusNode = nullptr;
   }
 
