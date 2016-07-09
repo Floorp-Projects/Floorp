@@ -11,3 +11,9 @@ description,
 caption > label {
   font-size: 1.2em;
 }
+
+/* Create a separate rule to unset these styles on .tree-input instead of
+   using :not(.tree-input) so the selector specifity doesn't change. */
+textbox.tree-input {
+  font-size: unset;
+}
