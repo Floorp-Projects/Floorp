@@ -2509,16 +2509,16 @@ XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
     if (domClass) {
       ProtoHandleGetter protoGetter = domClass->mGetProto;
       if (protoGetter) {
-        protop.set(protoGetter(cx, global));
+        protop.set(protoGetter(cx));
       } else {
-        protop.set(JS_GetObjectPrototype(cx, global));
+        protop.set(JS::GetRealmObjectPrototype(cx));
       }
     } else {
       const js::Class* clasp = js::GetObjectClass(obj);
       MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
       ProtoGetter protoGetter =
         DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mGetParentProto;
-      protop.set(protoGetter(cx, global));
+      protop.set(protoGetter(cx));
     }
   }
 
@@ -3096,7 +3096,7 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     return nullptr;
   }
 
-  JS::Handle<JSObject*> proto = GetProto(aCx, aGlobal);
+  JS::Handle<JSObject*> proto = GetProto(aCx);
   if (!proto || !JS_SplicePrototype(aCx, aGlobal, proto)) {
     NS_WARNING("Failed to set proto");
     return nullptr;
@@ -3271,24 +3271,10 @@ struct StrongPtrForMember
                                RefPtr<T>, nsAutoPtr<T>>::Type Type;
 };
 
-inline
-JSObject*
-GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*>)
-{
-  return JS_GetErrorPrototype(aCx);
-}
-
-inline
-JSObject*
-GetIteratorPrototype(JSContext* aCx, JS::Handle<JSObject*>)
-{
-  return JS_GetIteratorPrototype(aCx);
-}
-
 namespace binding_detail {
 inline
 JSObject*
-GetHackedNamespaceProtoObject(JSContext* aCx, JS::Handle<JSObject*>)
+GetHackedNamespaceProtoObject(JSContext* aCx)
 {
   return JS_NewPlainObject(aCx);
 }
