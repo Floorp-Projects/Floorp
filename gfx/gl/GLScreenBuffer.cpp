@@ -946,9 +946,20 @@ ReadBuffer::Create(GLContext* gl,
 
     GLenum err = localError.GetError();
     MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);
-    if (err || !gl->IsFramebufferComplete(fb)) {
-        ret = nullptr;
+    if (err)
+        return nullptr;
+
+    const bool needsAcquire = !surf->IsProducerAcquired();
+    if (needsAcquire) {
+        surf->ProducerAcquire();
     }
+    const bool isComplete = gl->IsFramebufferComplete(fb);
+    if (needsAcquire) {
+        surf->ProducerRelease();
+    }
+
+    if (!isComplete)
+        return nullptr;
 
     return Move(ret);
 }
