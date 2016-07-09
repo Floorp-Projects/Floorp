@@ -19,7 +19,7 @@ if (AppConstants.platform == "win") {
   });
 }
 
-const REGKEY = "Software\\Mozilla\\NativeMessagingHosts";
+const REGPATH = "Software\\Mozilla\\NativeMessagingHosts";
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
@@ -102,7 +102,7 @@ add_task(function* test_good_manifest() {
   yield writeManifest(USER_TEST_JSON, templateManifest);
   if (registry) {
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                      REGKEY, "test", USER_TEST_JSON);
+                      `${REGPATH}\\test`, "", USER_TEST_JSON);
   }
 
   let result = yield HostManifestManager.lookupApplication("test", context);
@@ -177,9 +177,9 @@ add_task(function* good_manifest_system_dir() {
   yield writeManifest(GLOBAL_TEST_JSON, globalManifest);
   if (registry) {
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                      REGKEY, "test", null);
+                      `${REGPATH}\\test`, "", null);
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                      REGKEY, "test", GLOBAL_TEST_JSON);
+                      `${REGPATH}\\test`, "", GLOBAL_TEST_JSON);
   }
 
   let where = (AppConstants.platform == "win") ? "registry location" : "directory";
@@ -193,7 +193,7 @@ add_task(function* test_user_dir_precedence() {
   yield writeManifest(USER_TEST_JSON, templateManifest);
   if (registry) {
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                      REGKEY, "test", USER_TEST_JSON);
+                      `${REGPATH}\\test`, "", USER_TEST_JSON);
   }
   // global test.json and LOCAL_MACHINE registry key on windows are
   // still present from the previous test
@@ -247,7 +247,7 @@ while True:
     yield writeManifest(manifestPath, manifest);
 
     registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                      REGKEY, "wontdie", manifestPath);
+                      `${REGPATH}\\wontdie`, "", manifestPath);
   } else {
     yield OS.File.writeAtomic(scriptPath, `#!${PYTHON} -u\n${SCRIPT}`);
     yield OS.File.setPermissions(scriptPath, {unixMode: 0o755});

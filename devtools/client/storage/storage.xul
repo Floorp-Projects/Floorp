@@ -42,7 +42,7 @@
     <vbox flex="1">
       <hbox id="storage-toolbar" class="devtools-toolbar">
         <textbox id="storage-searchbox"
-                 class="devtools-searchinput"
+                 class="devtools-filterinput"
                  type="search"
                  timeout="200"
                  placeholder="&searchBox.placeholder;"/>

@@ -4674,6 +4674,10 @@ pref("full-screen-api.warning.timeout", 3000);
 // delay for the warning box to show when pointer stays on the top, unit: ms
 pref("full-screen-api.warning.delay", 500);
 
+// DOM pointerlock API
+// time for the warning box stays on the screen before sliding out, unit: ms
+pref("pointer-lock-api.warning.timeout", 3000);
+
 // DOM idle observers API
 pref("dom.idle-observers-api.enabled", true);
 

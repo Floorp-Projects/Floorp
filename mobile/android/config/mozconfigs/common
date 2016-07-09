@@ -52,18 +52,25 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-warnings-as-errors
 
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-fennec-geoloc-api.key
+
+# MOZ_INSTALL_TRACKING does not guarantee MOZ_UPDATE_CHANNEL will be set so we
+# provide a default state. Currently, the default state provides a default
+# keyfile because an assertion will be thrown if MOZ_INSTALL_TRACKING is
+# specified but a keyfile is not. This assertion can catch if we misconfigure a
+# release or beta build and it does not have a valid keyfile.
+#
+# However, by providing a default keyfile, if we misconfigure beta or release,
+# the default keyfile may be used instead and the assertion won't catch the
+# error.  Therefore, it would be ideal to have MOZ_INSTALL_TRACKING guarantee
+# MOZ_UPDATE_CHANNEL was set so we can remove the default case. This may occur
+# when release promotion is implemented on Android.
+#
+# In all cases, we don't upload Adjust pings in automation.
 if test "$MOZ_UPDATE_CHANNEL" = "release" ; then
     ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk.token
 elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
     ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk-beta.token
 else
-    # (bug 1277553) In Aurora -> Beta simulation builds, no update channel is
-    # specified, causing an assertion to throw that MOZ_INSTALL_TRACKING is
-    # specified but the keyfile is not. In this case, we add a default keyfile.
-    # This has the disadvantage that if our beta/release checks above ever
-    # fail, we'll come to this default case and the compile-time check to
-    # specify a valid keyfile will be broken. I don't have any better
-    # alternatives.
     ac_add_options --with-adjust-sdk-keyfile="$topsrcdir/mobile/android/base/adjust-sdk-sandbox.token"
 fi
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token

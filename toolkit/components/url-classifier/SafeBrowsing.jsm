@@ -285,9 +285,14 @@ this.SafeBrowsing = {
     for (let i = 0; i < trackingProtectionLists.length; ++i) {
       if (this.trackingEnabled) {
         listManager.enableUpdate(trackingProtectionLists[i]);
-        listManager.enableUpdate(trackingProtectionWhitelists[i]);
       } else {
         listManager.disableUpdate(trackingProtectionLists[i]);
+      }
+    }
+    for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
+      if (this.trackingEnabled) {
+        listManager.enableUpdate(trackingProtectionWhitelists[i]);
+      } else {
         listManager.disableUpdate(trackingProtectionWhitelists[i]);
       }
     }

@@ -374,7 +374,8 @@ div.CodeMirror span.eval-text {
 }
 
 .devtools-textinput,
-.devtools-searchinput {
+.devtools-searchinput,
+.devtools-filterinput {
   background-color: rgba(24, 29, 32, 1);
   color: rgba(184, 200, 217, 1);
 }

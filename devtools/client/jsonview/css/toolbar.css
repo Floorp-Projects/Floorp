@@ -8,9 +8,8 @@
 
 .toolbar {
   line-height: 20px;
-  font-size: 12px;
   height: 22px;
-  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font: message-box;
   padding: 4px 0 3px 0;
 }
 

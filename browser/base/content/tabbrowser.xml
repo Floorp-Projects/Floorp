@@ -2730,6 +2730,13 @@
             let ourPermanentKey = ourBrowser.permanentKey;
             ourBrowser.permanentKey = aOtherBrowser.permanentKey;
             aOtherBrowser.permanentKey = ourPermanentKey;
+            aOurTab.permanentKey = ourBrowser.permanentKey;
+            if (remoteBrowser) {
+              let otherTab = remoteBrowser.getTabForBrowser(aOtherBrowser);
+              if (otherTab) {
+                otherTab.permanentKey = aOtherBrowser.permanentKey;
+              }
+            }
 
             // Restore the progress listener
             tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false);

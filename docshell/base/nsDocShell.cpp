@@ -2513,10 +2513,6 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
   // Assume false until we determine otherwise...
   *aFullscreenAllowed = false;
 
-  // If it is sandboxed, fullscreen is not allowed.
-  if (mSandboxFlags & SANDBOXED_FULLSCREEN) {
-    return NS_OK;
-  }
   nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
   if (!win) {
     return NS_OK;
@@ -2554,10 +2550,6 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
       }
     } else {
       // neither iframe nor embed
-      return NS_OK;
-    }
-    nsIDocument* doc = frameElement->GetUncomposedDoc();
-    if (!doc || !doc->FullscreenEnabledInternal()) {
       return NS_OK;
     }
   }
@@ -3835,13 +3827,6 @@ nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell)
 
   // Otherwise, we are sandboxed from aTargetDocShell.
   return true;
-}
-
-void
-nsDocShell::ApplySandboxAndFullscreenFlags(nsIDocument* aDoc)
-{
-  aDoc->SetSandboxFlags(mSandboxFlags);
-  aDoc->SetFullscreenEnabled(GetFullscreenAllowed());
 }
 
 NS_IMETHODIMP
@@ -8062,9 +8047,9 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
       blankDoc->SetContainer(this);
 
-      // Apply the sandbox and fullscreen enabled flags to the document.
-      // These are immutable after being set here.
-      ApplySandboxAndFullscreenFlags(blankDoc);
+      // Copy our sandbox flags to the document. These are immutable
+      // after being set here.
+      blankDoc->SetSandboxFlags(mSandboxFlags);
 
       // create a content viewer for us and the new document
       docFactory->CreateInstanceForDocument(

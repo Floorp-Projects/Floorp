@@ -179,7 +179,7 @@ function goUpdateConsoleCommands() {
 
         <spacer flex="1"/>
 
-        <textbox class="compact hud-filter-box devtools-searchinput" type="search"
+        <textbox class="compact hud-filter-box devtools-filterinput" type="search"
                  placeholder="&filterOutput.placeholder;" tabindex="2"/>
       </toolbar>
 
