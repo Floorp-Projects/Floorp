@@ -266,6 +266,8 @@ public:
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
 
+  virtual bool AddonHasPermission(const nsAString& aPerm);
+
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
   virtual bool IsCodebasePrincipal() const { return false; };

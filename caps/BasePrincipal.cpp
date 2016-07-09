@@ -586,6 +586,22 @@ BasePrincipal::GetUnknownAppId(bool* aUnknownAppId)
   return NS_OK;
 }
 
+bool
+BasePrincipal::AddonHasPermission(const nsAString& aPerm)
+{
+  if (mOriginAttributes.mAddonId.IsEmpty()) {
+    return false;
+  }
+  nsCOMPtr<nsIAddonPolicyService> aps =
+    do_GetService("@mozilla.org/addons/policy-service;1");
+  NS_ENSURE_TRUE(aps, false);
+
+  bool retval = false;
+  nsresult rv = aps->AddonHasPermission(mOriginAttributes.mAddonId, aPerm, &retval);
+  NS_ENSURE_SUCCESS(rv, false);
+  return retval;
+}
+
 already_AddRefed<BasePrincipal>
 BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const PrincipalOriginAttributes& aAttrs)
 {
