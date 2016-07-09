@@ -224,11 +224,17 @@ add_task(function* () {
   // retry manually to simulate the HTTP layer
   yield startClient("server: fallback only, client: fallback enabled retry, public",
                     port, Cr.NS_OK);
+  // make sure that we remember the TLS intolerance
+  yield startClient("server: fallback only, client: second try after fallback success, public",
+                    port, Cr.NS_OK);
   yield startClient("server: fallback only, client: fallback enabled, private",
                     port, getXPCOMStatusFromNSS(SSL_ERROR_NO_CYPHER_OVERLAP),
                     {isPrivate: true, allowReset: true});
   yield startClient("server: fallback only, client: fallback enabled retry, private",
                     port, Cr.NS_OK, {isPrivate: true});
+  // make sure that we remember the TLS intolerance
+  yield startClient("server: fallback only, client: second try after fallback success, private",
+                    port, Cr.NS_OK);
 });
 
 do_register_cleanup(function() {
