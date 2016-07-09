@@ -215,7 +215,8 @@ function exec(e) {
 
     if (exprName === "module") {
         let moduleText = e.toString();
-        module = wasmEvalText(moduleText, imports);
+        var m = new WebAssembly.Module(wasmTextToBinary(moduleText, 'new-format'));
+        module = new WebAssembly.Instance(m, imports).exports;
         return;
     }
 
@@ -231,9 +232,6 @@ function exec(e) {
 
         if (typeof module[name] === "function") {
             fn = module[name];
-        } else if (name === "") {
-            fn = module;
-            assert(typeof fn === "function", "Default exported function not found: " + e);
         } else {
             assert(false, "Exported function not found: " + e);
         }
@@ -279,7 +277,10 @@ function exec(e) {
         }
         let caught = false;
         try {
-            wasmEvalText(moduleText, imports);
+            new WebAssembly.Instance(
+                new WebAssembly.Module(
+                    wasmTextToBinary(moduleText, 'new-format')),
+                imports);
         } catch(e) {
             if (errMsg && e.toString().indexOf(errMsg) === -1)
                 warn(`expected error message "${errMsg}", got "${e}"`);

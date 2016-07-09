@@ -2218,7 +2218,7 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, bool respecifyTexture
     const auto driverUnpackInfo = usage->idealUnpack;
     MOZ_RELEASE_ASSERT(driverUnpackInfo, "GFX: ideal unpack info not set.");
 
-    if (usage->isRenderable && depth == 1 &&
+    if (usage->IsRenderable() && depth == 1 &&
         !xOffset && !yOffset && !zOffset)
     {
         // While we would like to skip the extra complexity of trying to zero with an FB

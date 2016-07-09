@@ -40,7 +40,7 @@ protected:
 
 private:
   // Private constructor: prevent instances beyond my singleton.
-  MOZ_CONSTEXPR SVGNumberPairSMILType() {}
+  constexpr SVGNumberPairSMILType() {}
 };
 
 } // namespace mozilla

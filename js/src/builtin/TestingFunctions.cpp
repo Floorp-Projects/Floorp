@@ -512,6 +512,14 @@ WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmUsesSignalForOOB(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(wasm::SignalUsage(cx).forOOB);
+    return true;
+}
+
+static bool
 WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1559,67 +1567,6 @@ Terminate(JSContext* cx, unsigned arg, Value* vp)
 
     JS_ClearPendingException(cx);
     return false;
-}
-
-#define SPS_PROFILING_STACK_MAX_SIZE 1000
-static ProfileEntry SPS_PROFILING_STACK[SPS_PROFILING_STACK_MAX_SIZE];
-static uint32_t SPS_PROFILING_STACK_SIZE = 0;
-
-static bool
-EnableSPSProfiling(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Disable before re-enabling; see the assertion in |SPSProfiler::setProfilingStack|.
-    if (cx->runtime()->spsProfiler.installed())
-        cx->runtime()->spsProfiler.enable(false);
-
-    SetRuntimeProfilingStack(cx->runtime(), SPS_PROFILING_STACK, &SPS_PROFILING_STACK_SIZE,
-                             SPS_PROFILING_STACK_MAX_SIZE);
-    cx->runtime()->spsProfiler.enableSlowAssertions(false);
-    cx->runtime()->spsProfiler.enable(true);
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
-EnableSPSProfilingWithSlowAssertions(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setUndefined();
-
-    if (cx->runtime()->spsProfiler.enabled()) {
-        // If profiling already enabled with slow assertions disabled,
-        // this is a no-op.
-        if (cx->runtime()->spsProfiler.slowAssertionsEnabled())
-            return true;
-
-        // Slow assertions are off.  Disable profiling before re-enabling
-        // with slow assertions on.
-        cx->runtime()->spsProfiler.enable(false);
-    }
-
-    // Disable before re-enabling; see the assertion in |SPSProfiler::setProfilingStack|.
-    if (cx->runtime()->spsProfiler.installed())
-        cx->runtime()->spsProfiler.enable(false);
-
-    SetRuntimeProfilingStack(cx->runtime(), SPS_PROFILING_STACK, &SPS_PROFILING_STACK_SIZE,
-                             SPS_PROFILING_STACK_MAX_SIZE);
-    cx->runtime()->spsProfiler.enableSlowAssertions(true);
-    cx->runtime()->spsProfiler.enable(true);
-
-    return true;
-}
-
-static bool
-DisableSPSProfiling(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (cx->runtime()->spsProfiler.installed())
-        cx->runtime()->spsProfiler.enable(false);
-    args.rval().setUndefined();
-    return true;
 }
 
 static bool
@@ -3787,20 +3734,6 @@ gc::ZealModeHelpText),
 "  Terminate JavaScript execution, as if we had run out of\n"
 "  memory or been terminated by the slow script dialog."),
 
-    JS_FN_HELP("enableSPSProfiling", EnableSPSProfiling, 0, 0,
-"enableSPSProfiling()",
-"  Enables SPS instrumentation and corresponding assertions, with slow\n"
-"  assertions disabled.\n"),
-
-    JS_FN_HELP("enableSPSProfilingWithSlowAssertions", EnableSPSProfilingWithSlowAssertions, 0, 0,
-"enableSPSProfilingWithSlowAssertions()",
-"  Enables SPS instrumentation and corresponding assertions, with slow\n"
-"  assertions enabled.\n"),
-
-    JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 0, 0,
-"disableSPSProfiling()",
-"  Disables SPS instrumentation"),
-
     JS_FN_HELP("readSPSProfilingStack", ReadSPSProfilingStack, 0, 0,
 "readSPSProfilingStack()",
 "  Reads the jit stack using ProfilingFrameIterator."),
@@ -3848,6 +3781,10 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
 "wasmIsSupported()",
 "  Returns a boolean indicating whether WebAssembly is supported on the current device."),
+
+    JS_FN_HELP("wasmUsesSignalForOOB", WasmUsesSignalForOOB, 0, 0,
+"wasmUsesSignalForOOB()",
+"  Return whether wasm and asm.js use a signal handler for detecting out-of-bounds."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",

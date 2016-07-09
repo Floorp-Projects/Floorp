@@ -1530,10 +1530,11 @@ enum Type {
     Uint8Clamped,
 
     /**
-     * SIMD types don't have their own TypedArray equivalent, for now.
+     * Types that don't have their own TypedArray equivalent, for now.
      */
     MaxTypedArrayViewType,
 
+    Int64,
     Float32x4,
     Int8x16,
     Int16x8,
@@ -1555,6 +1556,7 @@ byteSize(Type atype)
       case Uint32:
       case Float32:
         return 4;
+      case Int64:
       case Float64:
         return 8;
       case Int8x16:
@@ -1573,6 +1575,7 @@ isSignedIntType(Type atype) {
       case Int8:
       case Int16:
       case Int32:
+      case Int64:
       case Int8x16:
       case Int16x8:
       case Int32x4:
@@ -1600,6 +1603,7 @@ isSimdType(Type atype) {
       case Uint16:
       case Int32:
       case Uint32:
+      case Int64:
       case Float32:
       case Float64:
         return false;
@@ -1631,6 +1635,7 @@ scalarByteSize(Type atype) {
       case Uint16:
       case Int32:
       case Uint32:
+      case Int64:
       case Float32:
       case Float64:
       case MaxTypedArrayViewType:

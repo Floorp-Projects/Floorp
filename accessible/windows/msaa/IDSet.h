@@ -31,7 +31,7 @@ namespace a11y {
 class IDSet
 {
 public:
-  MOZ_CONSTEXPR IDSet() : mBitSet(), mIdx(0) {}
+  constexpr IDSet() : mBitSet(), mIdx(0) {}
 
   /**
    * Return a new unique id.

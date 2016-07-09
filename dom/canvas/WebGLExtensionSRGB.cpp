@@ -49,7 +49,7 @@ WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
     fnAdd(webgl::EffectiveFormat::SRGB8_ALPHA8, LOCAL_GL_SRGB_ALPHA, LOCAL_GL_RGBA);
 
     auto usage = fua->EditUsage(webgl::EffectiveFormat::SRGB8_ALPHA8);
-    usage->isRenderable = true;
+    usage->SetRenderable();
     fua->AllowRBFormat(LOCAL_GL_SRGB8_ALPHA8, usage);
 }
 

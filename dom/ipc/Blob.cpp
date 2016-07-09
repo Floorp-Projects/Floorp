@@ -723,7 +723,7 @@ CreateBlobImpl(const nsTArray<uint8_t>& aMemoryData,
   RefPtr<BlobImpl> blobImpl;
 
   if (auto length = static_cast<size_t>(aMemoryData.Length())) {
-    static MOZ_CONSTEXPR_VAR size_t elementSizeMultiplier =
+    static constexpr size_t elementSizeMultiplier =
       sizeof(aMemoryData[0]) / sizeof(char);
 
     if (!aMetadata.mHasRecursed &&

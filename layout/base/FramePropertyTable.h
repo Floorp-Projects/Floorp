@@ -46,7 +46,7 @@ protected:
    * just use the static function FramePropertyDescriptor::New* below
    * instead of using this constructor directly.
    */
-  MOZ_CONSTEXPR FramePropertyDescriptorUntyped(
+  constexpr FramePropertyDescriptorUntyped(
     UntypedDestructor* aDtor, UntypedDestructorWithFrame* aDtorWithFrame)
     : mDestructor(aDtor)
     , mDestructorWithFrame(aDtorWithFrame)
@@ -72,25 +72,25 @@ struct FramePropertyDescriptor : public FramePropertyDescriptorUntyped
                                    T* aPropertyValue);
 
   template<Destructor Dtor>
-  static MOZ_CONSTEXPR const FramePropertyDescriptor<T> NewWithDestructor()
+  static constexpr const FramePropertyDescriptor<T> NewWithDestructor()
   {
     return { Destruct<Dtor>, nullptr };
   }
 
   template<DestructorWithFrame Dtor>
-  static MOZ_CONSTEXPR
+  static constexpr
   const FramePropertyDescriptor<T> NewWithDestructorWithFrame()
   {
     return { nullptr, DestructWithFrame<Dtor> };
   }
 
-  static MOZ_CONSTEXPR const FramePropertyDescriptor<T> NewWithoutDestructor()
+  static constexpr const FramePropertyDescriptor<T> NewWithoutDestructor()
   {
     return { nullptr, nullptr };
   }
 
 private:
-  MOZ_CONSTEXPR FramePropertyDescriptor(
+  constexpr FramePropertyDescriptor(
     UntypedDestructor* aDtor, UntypedDestructorWithFrame* aDtorWithFrame)
     : FramePropertyDescriptorUntyped(aDtor, aDtorWithFrame)
   {}

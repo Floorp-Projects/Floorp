@@ -78,7 +78,7 @@ public:
 
 private:
   // Private constructor: prevent instances beyond my singleton.
-  MOZ_CONSTEXPR SVGMotionSMILType() {}
+  constexpr SVGMotionSMILType() {}
 };
 
 } // namespace mozilla

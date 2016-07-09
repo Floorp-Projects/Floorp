@@ -75,6 +75,9 @@ public:
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) override;
 
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture) override;
+
   virtual bool SupportsEffect(EffectTypes aEffect) override;
 
   virtual void SetRenderTarget(CompositingRenderTarget *aSource) override

@@ -13,6 +13,7 @@
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/ssse3-scaler.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/SSE.h"
 #include "gfxUtils.h"
 #include "YCbCrUtils.h"
@@ -78,6 +79,103 @@ public:
 public:
   RefPtr<gfx::DataSourceSurface> mSurface;
   bool mWrappingExistingData;
+};
+
+/**
+ * WrappingTextureSourceYCbCrBasic wraps YUV format BufferTextureHost to defer
+ * yuv->rgb conversion. The conversion happens when GetSurface is called.
+ */
+class WrappingTextureSourceYCbCrBasic : public DataTextureSource
+                                      , public TextureSourceBasic
+{
+public:
+  virtual const char* Name() const override { return "WrappingTextureSourceYCbCrBasic"; }
+
+  explicit WrappingTextureSourceYCbCrBasic(BufferTextureHost* aTexture)
+  : mTexture(aTexture)
+  , mSize(aTexture->GetSize())
+  , mNeedsUpdate(true)
+  {
+    mFromYCBCR = true;
+  }
+
+  virtual DataTextureSource* AsDataTextureSource() override
+  {
+    return this;
+  }
+
+  virtual TextureSourceBasic* AsSourceBasic() override { return this; }
+
+  virtual WrappingTextureSourceYCbCrBasic* AsWrappingTextureSourceYCbCrBasic() override { return this; }
+
+  virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override
+  {
+    if (mSurface && !mNeedsUpdate) {
+      return mSurface;
+    }
+    MOZ_ASSERT(mTexture);
+    if (!mTexture) {
+      return nullptr;
+    }
+
+    if (!mSurface) {
+      mSurface = Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
+    }
+    if (!mSurface) {
+      return nullptr;
+    }
+    MOZ_ASSERT(mTexture->GetBufferDescriptor().type() == BufferDescriptor::TYCbCrDescriptor);
+    MOZ_ASSERT(mTexture->GetSize() == mSize);
+
+    mSurface =
+      ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
+        mTexture->GetBuffer(),
+        mTexture->GetBufferDescriptor().get_YCbCrDescriptor(),
+        mSurface);
+    mNeedsUpdate = false;
+    return mSurface;
+  }
+
+  SurfaceFormat GetFormat() const override
+  {
+    return gfx::SurfaceFormat::B8G8R8X8;
+  }
+
+  virtual IntSize GetSize() const override
+  {
+    return mSize;
+  }
+
+  virtual bool Update(gfx::DataSourceSurface* aSurface,
+                      nsIntRegion* aDestRegion = nullptr,
+                      gfx::IntPoint* aSrcOffset = nullptr) override
+  {
+    return false;
+  }
+
+  virtual void DeallocateDeviceData() override
+  {
+    mTexture = nullptr;
+    mSurface = nullptr;
+    SetUpdateSerial(0);
+  }
+
+  virtual void Unbind() override
+  {
+    mNeedsUpdate = true;
+  }
+
+  void SetBufferTextureHost(BufferTextureHost* aTexture) override
+  {
+    mTexture = aTexture;
+    mNeedsUpdate = true;
+  }
+
+public:
+  BufferTextureHost* mTexture;
+  const gfx::IntSize mSize;
+  RefPtr<gfx::DataSourceSurface> mSurface;
+  bool mNeedsUpdate;
 };
 
 BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, widget::CompositorWidget* aWidget)
@@ -212,6 +310,19 @@ already_AddRefed<DataTextureSource>
 BasicCompositor::CreateDataTextureSourceAround(DataSourceSurface* aSurface)
 {
   RefPtr<DataTextureSource> result = new DataTextureSourceBasic(aSurface);
+  return result.forget();
+}
+
+already_AddRefed<DataTextureSource>
+BasicCompositor::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
+{
+  BufferTextureHost* bufferTexture = aTexture->AsBufferTextureHost();
+  MOZ_ASSERT(bufferTexture);
+
+  if (!bufferTexture) {
+    return nullptr;
+  }
+  RefPtr<DataTextureSource> result = new WrappingTextureSourceYCbCrBasic(bufferTexture);
   return result.forget();
 }
 

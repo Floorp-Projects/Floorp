@@ -813,11 +813,11 @@ enum ModuleKind
     AsmJS
 };
 
-// ImportExit describes the region of wasm global memory allocated for an
-// import. This is accessed directly from JIT code and mutated by Instance as
-// exits become optimized and deoptimized.
+// FuncImportExit describes the region of wasm global memory allocated for a
+// function import. This is accessed directly from JIT code and mutated by
+// Instance as exits become optimized and deoptimized.
 
-struct ImportExit
+struct FuncImportExit
 {
     void* code;
     jit::BaselineScript* baselineScript;

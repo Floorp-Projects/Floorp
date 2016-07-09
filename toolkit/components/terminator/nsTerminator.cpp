@@ -173,7 +173,7 @@ RunWatchdog(void* arg)
 class PR_CloseDelete
 {
 public:
-  MOZ_CONSTEXPR PR_CloseDelete() {}
+  constexpr PR_CloseDelete() {}
 
   PR_CloseDelete(const PR_CloseDelete& aOther)
   {}
@@ -308,7 +308,7 @@ struct ShutdownStep
   char const* const mTopic;
   int mTicks;
 
-  MOZ_CONSTEXPR explicit ShutdownStep(const char *const topic)
+  constexpr explicit ShutdownStep(const char *const topic)
     : mTopic(topic)
     , mTicks(-1)
   {}

@@ -15094,11 +15094,11 @@ CSSParserImpl::ParseTextDecoration()
 bool
 CSSParserImpl::ParseTextEmphasis()
 {
-  static MOZ_CONSTEXPR_VAR nsCSSProperty kTextEmphasisIDs[] = {
+  static constexpr nsCSSProperty kTextEmphasisIDs[] = {
     eCSSProperty_text_emphasis_style,
     eCSSProperty_text_emphasis_color
   };
-  MOZ_CONSTEXPR_VAR int32_t numProps = MOZ_ARRAY_LENGTH(kTextEmphasisIDs);
+  constexpr int32_t numProps = MOZ_ARRAY_LENGTH(kTextEmphasisIDs);
   nsCSSValue values[numProps];
 
   int32_t found = ParseChoice(values, kTextEmphasisIDs, numProps);

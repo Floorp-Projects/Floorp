@@ -2765,7 +2765,7 @@ class BaseCompiler
         }
 
 #if defined(JS_CODEGEN_X64)
-        // CodeGeneratorX64::visitAsmJSLoadHeap()
+        // CodeGeneratorX64::visitAsmJSLoadHeap()/visitWasmLoad()/visitWasmLoadI64()
 
         if (needsBoundsCheckBranch(access))
             MOZ_CRASH("BaseCompiler platform hook: bounds checking");
@@ -2773,17 +2773,33 @@ class BaseCompiler
         Operand srcAddr(HeapReg, ptr.reg, TimesOne, access.offset());
 
         uint32_t before = masm.size();
-        switch (access.accessType()) {
-          case Scalar::Int8:      masm.movsbl(srcAddr, dest.i32().reg); break;
-          case Scalar::Uint8:     masm.movzbl(srcAddr, dest.i32().reg); break;
-          case Scalar::Int16:     masm.movswl(srcAddr, dest.i32().reg); break;
-          case Scalar::Uint16:    masm.movzwl(srcAddr, dest.i32().reg); break;
-          case Scalar::Int32:
-          case Scalar::Uint32:    masm.movl(srcAddr, dest.i32().reg); break;
-          case Scalar::Float32:   masm.loadFloat32(srcAddr, dest.f32().reg); break;
-          case Scalar::Float64:   masm.loadDouble(srcAddr, dest.f64().reg); break;
-          default:
-            MOZ_CRASH("Compiler bug: Unexpected array type");
+        if (dest.tag == AnyReg::I64) {
+            Register out = dest.i64().reg.reg;
+            switch (access.accessType()) {
+              case Scalar::Int8:      masm.movsbq(srcAddr, out); break;
+              case Scalar::Uint8:     masm.movzbq(srcAddr, out); break;
+              case Scalar::Int16:     masm.movswq(srcAddr, out); break;
+              case Scalar::Uint16:    masm.movzwq(srcAddr, out); break;
+              case Scalar::Int32:     masm.movslq(srcAddr, out); break;
+              // Int32 to int64 moves zero-extend by default.
+              case Scalar::Uint32:    masm.movl(srcAddr, out); break;
+              case Scalar::Int64:     masm.movq(srcAddr, out); break;
+              default:
+                MOZ_CRASH("Compiler bug: Unexpected array type in int64 load");
+            }
+        } else {
+            switch (access.accessType()) {
+              case Scalar::Int8:      masm.movsbl(srcAddr, dest.i32().reg); break;
+              case Scalar::Uint8:     masm.movzbl(srcAddr, dest.i32().reg); break;
+              case Scalar::Int16:     masm.movswl(srcAddr, dest.i32().reg); break;
+              case Scalar::Uint16:    masm.movzwl(srcAddr, dest.i32().reg); break;
+              case Scalar::Int32:
+              case Scalar::Uint32:    masm.movl(srcAddr, dest.i32().reg); break;
+              case Scalar::Float32:   masm.loadFloat32(srcAddr, dest.f32().reg); break;
+              case Scalar::Float64:   masm.loadDouble(srcAddr, dest.f64().reg); break;
+              default:
+                MOZ_CRASH("Compiler bug: Unexpected array type");
+            }
         }
         uint32_t after = masm.size();
 
@@ -2803,18 +2819,25 @@ class BaseCompiler
 
         Operand dstAddr(HeapReg, ptr.reg, TimesOne, access.offset());
 
+        Register intReg;
+        if (src.tag == AnyReg::I32)
+            intReg = src.i32().reg;
+        else if (src.tag == AnyReg::I64)
+            intReg = src.i64().reg.reg;
+
         uint32_t before = masm.size();
         switch (access.accessType()) {
           case Scalar::Int8:
-          case Scalar::Uint8:        masm.movb(src.i32().reg, dstAddr); break;
+          case Scalar::Uint8:        masm.movb(intReg, dstAddr); break;
           case Scalar::Int16:
-          case Scalar::Uint16:       masm.movw(src.i32().reg, dstAddr); break;
+          case Scalar::Uint16:       masm.movw(intReg, dstAddr); break;
           case Scalar::Int32:
-          case Scalar::Uint32:       masm.movl(src.i32().reg, dstAddr); break;
+          case Scalar::Uint32:       masm.movl(intReg, dstAddr); break;
+          case Scalar::Int64:        masm.movq(intReg, dstAddr); break;
           case Scalar::Float32:      masm.storeFloat32(src.f32().reg, dstAddr); break;
           case Scalar::Float64:      masm.storeDouble(src.f64().reg, dstAddr); break;
           default:
-              MOZ_CRASH("Compiler bug: Unexpected array type");
+            MOZ_CRASH("Compiler bug: Unexpected array type");
         }
         uint32_t after = masm.size();
 
@@ -4863,9 +4886,9 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
         return false;
 
     Stk& callee = peek(numArgs);
-    const TableModuleGeneratorData& table = isCompilingAsmJS()
-                                            ? mg_.asmJSSigToTable[sigIndex]
-                                            : mg_.wasmTable;
+    const TableGenDesc& table = isCompilingAsmJS()
+                                ? mg_.asmJSSigToTable[sigIndex]
+                                : mg_.wasmTable;
     funcPtrCall(sig, sigIndex, table.numElems, table.globalDataOffset, callee, baselineCall);
 
     endCall(baselineCall);
@@ -4886,13 +4909,13 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
 
-    uint32_t importIndex;
+    uint32_t funcImportIndex;
     uint32_t arity;
-    if (!iter_.readCallImport(&importIndex, &arity))
+    if (!iter_.readCallImport(&funcImportIndex, &arity))
         return false;
 
-    const ImportModuleGeneratorData& import = mg_.imports[importIndex];
-    const Sig& sig = *import.sig;
+    const FuncImportGenDesc& funcImport = mg_.funcImports[funcImportIndex];
+    const Sig& sig = *funcImport.sig;
 
     if (deadCode_)
         return skipCall(sig.args(), sig.ret());
@@ -4911,7 +4934,7 @@ BaseCompiler::emitCallImport(uint32_t callOffset)
     if (!iter_.readCallReturn(sig.ret()))
         return false;
 
-    ffiCall(import.globalDataOffset, baselineCall);
+    ffiCall(funcImport.globalDataOffset, baselineCall);
 
     endCall(baselineCall);
 
@@ -5223,9 +5246,14 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
         pushI32(rp);
         break;
       }
-      case ValType::I64:
-        MOZ_CRASH("Unimplemented: loadHeap i64");
+      case ValType::I64: {
+        RegI32 rp = popI32();
+        RegI64 rv = needI64();
+        loadHeap(access, rp, AnyReg(rv));
+        pushI64(rv);
+        freeI32(rp);
         break;
+      }
       case ValType::F32: {
         RegI32 rp = popI32();
         RegF32 rv = needF32();
@@ -5274,9 +5302,14 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
         pushI32(rv);
         break;
       }
-      case ValType::I64:
-        MOZ_CRASH("Unimplemented: storeHeap i64");
+      case ValType::I64: {
+        RegI64 rv = popI64();
+        RegI32 rp = popI32();
+        storeHeap(access, rp, AnyReg(rv));
+        freeI32(rp);
+        pushI64(rv);
         break;
+      }
       case ValType::F32: {
         RegF32 rv = popF32();
         RegI32 rp = popI32();
@@ -5839,7 +5872,7 @@ BaseCompiler::emitBody()
           case Expr::I64Load32U:
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Uint32));
           case Expr::I64Load:
-            MOZ_CRASH("BaseCompiler platform hook: int64 load");
+            CHECK_NEXT(emitLoad(ValType::I64, Scalar::Int64));
           case Expr::I64Store8:
             CHECK_NEXT(emitStore(ValType::I64, Scalar::Int8));
           case Expr::I64Store16:
@@ -5847,7 +5880,7 @@ BaseCompiler::emitBody()
           case Expr::I64Store32:
             CHECK_NEXT(emitStore(ValType::I64, Scalar::Int32));
           case Expr::I64Store:
-            MOZ_CRASH("BaseCompiler platform hook: int64 store");
+            CHECK_NEXT(emitStore(ValType::I64, Scalar::Int64));
 
           // F32
           case Expr::F32Const: {

@@ -454,16 +454,16 @@ class MOZ_STACK_CLASS TokenStream
 
   public:
     typedef Token::Modifier Modifier;
-    static MOZ_CONSTEXPR_VAR Modifier None = Token::None;
-    static MOZ_CONSTEXPR_VAR Modifier Operand = Token::Operand;
-    static MOZ_CONSTEXPR_VAR Modifier KeywordIsName = Token::KeywordIsName;
-    static MOZ_CONSTEXPR_VAR Modifier TemplateTail = Token::TemplateTail;
+    static constexpr Modifier None = Token::None;
+    static constexpr Modifier Operand = Token::Operand;
+    static constexpr Modifier KeywordIsName = Token::KeywordIsName;
+    static constexpr Modifier TemplateTail = Token::TemplateTail;
 
     typedef Token::ModifierException ModifierException;
-    static MOZ_CONSTEXPR_VAR ModifierException NoException = Token::NoException;
-    static MOZ_CONSTEXPR_VAR ModifierException NoneIsOperand = Token::NoneIsOperand;
-    static MOZ_CONSTEXPR_VAR ModifierException OperandIsNone = Token::OperandIsNone;
-    static MOZ_CONSTEXPR_VAR ModifierException NoneIsKeywordIsName = Token::NoneIsKeywordIsName;
+    static constexpr ModifierException NoException = Token::NoException;
+    static constexpr ModifierException NoneIsOperand = Token::NoneIsOperand;
+    static constexpr ModifierException OperandIsNone = Token::OperandIsNone;
+    static constexpr ModifierException NoneIsKeywordIsName = Token::NoneIsKeywordIsName;
 
     void addModifierException(ModifierException modifierException) {
 #ifdef DEBUG
