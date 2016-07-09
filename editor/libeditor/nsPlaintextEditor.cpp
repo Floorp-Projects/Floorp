@@ -139,7 +139,7 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
   NS_ENSURE_SUCCESS(rulesRes, rulesRes);
 
   // mRules may not have been initialized yet, when this is called via
-  // nsHTMLEditor::Init.
+  // HTMLEditor::Init.
   if (mRules) {
     mRules->SetInitialValue(aInitialValue);
   }

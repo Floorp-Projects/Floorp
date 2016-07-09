@@ -83,7 +83,6 @@
 #include "nsMenuBarListener.h"
 #endif
 
-#include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
 #ifdef MOZ_WEBSPEECH

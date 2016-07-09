@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/HTMLEditor.h"
+
 #include <math.h>
 
 #include "EditorUtils.h"
@@ -20,7 +22,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditor.h"
 #include "nsHTMLObjectResizer.h"
 #include "nsIContent.h"
 #include "nsROCSSPrimitiveValue.h"
@@ -46,13 +47,14 @@
 #include "nscore.h"
 #include <algorithm>
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 #define  BLACK_BG_RGB_TRIGGER 0xd0
 
 NS_IMETHODIMP
-nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
+HTMLEditor::AbsolutePositionSelection(bool aEnabled)
 {
   AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this,
@@ -78,7 +80,7 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
+HTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement** _retval)
 {
   nsAutoString positionStr;
   nsCOMPtr<nsINode> node = GetSelectionContainer();
@@ -102,30 +104,31 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSelectionContainerAbsolutelyPositioned(bool *aIsSelectionContainerAbsolutelyPositioned)
+HTMLEditor::GetSelectionContainerAbsolutelyPositioned(
+              bool* aIsSelectionContainerAbsolutelyPositioned)
 {
   *aIsSelectionContainerAbsolutelyPositioned = (mAbsolutelyPositionedObject != nullptr);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetAbsolutePositioningEnabled(bool * aIsEnabled)
+HTMLEditor::GetAbsolutePositioningEnabled(bool* aIsEnabled)
 {
   *aIsEnabled = mIsAbsolutelyPositioningEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetAbsolutePositioningEnabled(bool aIsEnabled)
+HTMLEditor::SetAbsolutePositioningEnabled(bool aIsEnabled)
 {
   mIsAbsolutelyPositioningEnabled = aIsEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::RelativeChangeElementZIndex(nsIDOMElement * aElement,
+HTMLEditor::RelativeChangeElementZIndex(nsIDOMElement* aElement,
                                           int32_t aChange,
-                                          int32_t * aReturn)
+                                          int32_t* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -144,7 +147,8 @@ nsHTMLEditor::RelativeChangeElementZIndex(nsIDOMElement * aElement,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetElementZIndex(nsIDOMElement* aElement, int32_t aZindex)
+HTMLEditor::SetElementZIndex(nsIDOMElement* aElement,
+                             int32_t aZindex)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(element);
@@ -157,7 +161,7 @@ nsHTMLEditor::SetElementZIndex(nsIDOMElement* aElement, int32_t aZindex)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::RelativeChangeZIndex(int32_t aChange)
+HTMLEditor::RelativeChangeZIndex(int32_t aChange)
 {
   AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this,
@@ -182,8 +186,8 @@ nsHTMLEditor::RelativeChangeZIndex(int32_t aChange)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
-                               int32_t * aZindex)
+HTMLEditor::GetElementZIndex(nsIDOMElement* aElement,
+                             int32_t* aZindex)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_STATE(element || !aElement);
@@ -227,7 +231,7 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
 }
 
 already_AddRefed<Element>
-nsHTMLEditor::CreateGrabber(nsINode* aParentNode)
+HTMLEditor::CreateGrabber(nsINode* aParentNode)
 {
   // let's create a grabber through the element factory
   nsCOMPtr<nsIDOMElement> retDOM;
@@ -247,7 +251,7 @@ nsHTMLEditor::CreateGrabber(nsINode* aParentNode)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::RefreshGrabber()
+HTMLEditor::RefreshGrabber()
 {
   NS_ENSURE_TRUE(mAbsolutelyPositionedObject, NS_ERROR_NULL_POINTER);
 
@@ -270,7 +274,7 @@ nsHTMLEditor::RefreshGrabber()
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::HideGrabber()
+HTMLEditor::HideGrabber()
 {
   nsresult res = mAbsolutelyPositionedObject->UnsetAttr(kNameSpaceID_None,
                                                         nsGkAtoms::_moz_abspos,
@@ -298,7 +302,7 @@ nsHTMLEditor::HideGrabber()
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
+HTMLEditor::ShowGrabberOnElement(nsIDOMElement* aElement)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(element);
@@ -327,7 +331,7 @@ nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
 }
 
 nsresult
-nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
+HTMLEditor::StartMoving(nsIDOMElement* aHandle)
 {
   nsCOMPtr<nsINode> parentNode = mGrabber->GetParentNode();
 
@@ -354,7 +358,7 @@ nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
 }
 
 void
-nsHTMLEditor::SnapToGrid(int32_t & newX, int32_t & newY)
+HTMLEditor::SnapToGrid(int32_t& newX, int32_t& newY)
 {
   if (mSnapToGridEnabled && mGridSize) {
     newX = (int32_t) floor( ((float)newX / (float)mGridSize) + 0.5f ) * mGridSize;
@@ -363,7 +367,7 @@ nsHTMLEditor::SnapToGrid(int32_t & newX, int32_t & newY)
 }
 
 nsresult
-nsHTMLEditor::GrabberClicked()
+HTMLEditor::GrabberClicked()
 {
   // add a mouse move listener to the editor
   nsresult res = NS_OK;
@@ -385,7 +389,7 @@ nsHTMLEditor::GrabberClicked()
 }
 
 nsresult
-nsHTMLEditor::EndMoving()
+HTMLEditor::EndMoving()
 {
   if (mPositioningShadow) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -421,7 +425,8 @@ nsHTMLEditor::EndMoving()
   return CheckSelectionStateForAnonymousButtons(selection);
 }
 nsresult
-nsHTMLEditor::SetFinalPosition(int32_t aX, int32_t aY)
+HTMLEditor::SetFinalPosition(int32_t aX,
+                             int32_t aY)
 {
   nsresult res = EndMoving();
   NS_ENSURE_SUCCESS(res, res);
@@ -456,7 +461,8 @@ nsHTMLEditor::SetFinalPosition(int32_t aX, int32_t aY)
 }
 
 void
-nsHTMLEditor::AddPositioningOffset(int32_t & aX, int32_t & aY)
+HTMLEditor::AddPositioningOffset(int32_t& aX,
+                                 int32_t& aY)
 {
   // Get the positioning offset
   int32_t positioningOffset =
@@ -467,8 +473,8 @@ nsHTMLEditor::AddPositioningOffset(int32_t & aX, int32_t & aY)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
-                                        bool aEnabled)
+HTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
+                                      bool aEnabled)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(element);
@@ -540,28 +546,28 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetSnapToGridEnabled(bool aEnabled)
+HTMLEditor::SetSnapToGridEnabled(bool aEnabled)
 {
   mSnapToGridEnabled = aEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSnapToGridEnabled(bool * aIsEnabled)
+HTMLEditor::GetSnapToGridEnabled(bool* aIsEnabled)
 {
   *aIsEnabled = mSnapToGridEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetGridSize(uint32_t aSize)
+HTMLEditor::SetGridSize(uint32_t aSize)
 {
   mGridSize = aSize;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetGridSize(uint32_t * aSize)
+HTMLEditor::GetGridSize(uint32_t* aSize)
 {
   *aSize = mGridSize;
   return NS_OK;
@@ -569,7 +575,9 @@ nsHTMLEditor::GetGridSize(uint32_t * aSize)
 
 // self-explanatory
 NS_IMETHODIMP
-nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, int32_t aX, int32_t aY)
+HTMLEditor::SetElementPosition(nsIDOMElement* aElement,
+                               int32_t aX,
+                               int32_t aY)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_STATE(element);
@@ -579,7 +587,9 @@ nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, int32_t aX, int32_t aY
 }
 
 void
-nsHTMLEditor::SetElementPosition(dom::Element& aElement, int32_t aX, int32_t aY)
+HTMLEditor::SetElementPosition(Element& aElement,
+                               int32_t aX,
+                               int32_t aY)
 {
   AutoEditBatch batchIt(this);
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
@@ -588,7 +598,7 @@ nsHTMLEditor::SetElementPosition(dom::Element& aElement, int32_t aX, int32_t aY)
 
 // self-explanatory
 NS_IMETHODIMP
-nsHTMLEditor::GetPositionedElement(nsIDOMElement ** aReturn)
+HTMLEditor::GetPositionedElement(nsIDOMElement** aReturn)
 {
   nsCOMPtr<nsIDOMElement> ret =
     static_cast<nsIDOMElement*>(GetAsDOMNode(mAbsolutelyPositionedObject));
@@ -597,8 +607,8 @@ nsHTMLEditor::GetPositionedElement(nsIDOMElement ** aReturn)
 }
 
 nsresult
-nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
-                                            nsAString & aReturn)
+HTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement* aElement,
+                                          nsAString& aReturn)
 {
   // we are going to outline the positioned element and bring it to the
   // front to overlap any other element intersecting with it. But
@@ -664,3 +674,5 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
 
   return NS_OK;
 }
+
+} // namespace mozilla

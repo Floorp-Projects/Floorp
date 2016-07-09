@@ -3256,10 +3256,10 @@ nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
 bool
 nsEditor::IsBlockNode(nsINode* aNode)
 {
-  // stub to be overridden in nsHTMLEditor.
+  // stub to be overridden in HTMLEditor.
   // screwing around with the class hierarchy here in order
   // to not duplicate the code in GetNextNode/GetPrevNode
-  // across both nsEditor/nsHTMLEditor.
+  // across both nsEditor/HTMLEditor.
   return false;
 }
 

@@ -7,6 +7,7 @@
 
 #include "ChangeStyleTransaction.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
@@ -20,7 +21,6 @@
 #include "nsDependentSubstring.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -301,7 +301,7 @@ const CSSEditUtils::CSSEquivTable hrAlignEquivTable[] = {
   { CSSEditUtils::eCSSEditableProperty_NONE, 0 }
 };
 
-CSSEditUtils::CSSEditUtils(nsHTMLEditor* aHTMLEditor)
+CSSEditUtils::CSSEditUtils(HTMLEditor* aHTMLEditor)
   : mHTMLEditor(aHTMLEditor)
   , mIsCSSPrefChecked(true)
 {
@@ -589,7 +589,7 @@ CSSEditUtils::RemoveCSSInlineStyle(nsIDOMNode* aNode,
   NS_ENSURE_SUCCESS(res, res);
 
   if (!element->IsHTMLElement(nsGkAtoms::span) ||
-      nsHTMLEditor::HasAttributes(element)) {
+      HTMLEditor::HasAttributes(element)) {
     return NS_OK;
   }
 

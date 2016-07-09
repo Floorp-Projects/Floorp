@@ -14,6 +14,7 @@
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
@@ -31,7 +32,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -86,7 +86,7 @@ enum
 
 static bool IsBlockNode(const nsINode& node)
 {
-  return nsHTMLEditor::NodeIsBlockStatic(&node);
+  return HTMLEditor::NodeIsBlockStatic(&node);
 }
 
 static bool IsInlineNode(const nsINode& node)
@@ -133,8 +133,8 @@ public:
 class EmptyEditableFunctor final : public BoolDomIterFunctor
 {
 public:
-  explicit EmptyEditableFunctor(nsHTMLEditor* editor)
-    : mHTMLEditor(editor)
+  explicit EmptyEditableFunctor(HTMLEditor* aHTMLEditor)
+    : mHTMLEditor(aHTMLEditor)
   {}
 
   virtual bool operator()(nsINode* aNode) const
@@ -152,7 +152,7 @@ public:
   }
 
 protected:
-  nsHTMLEditor* mHTMLEditor;
+  HTMLEditor* mHTMLEditor;
 };
 
 /********************************************************
@@ -211,7 +211,7 @@ HTMLEditRules::~HTMLEditRules()
 {
   // remove ourselves as a listener to edit actions
   // In some cases, we have already been removed by
-  // ~nsHTMLEditor, in which case we will get a null pointer here
+  // ~HTMLEditor, in which case we will get a null pointer here
   // which we ignore.  But this allows us to add the ability to
   // switch rule sets on the fly if we want.
   if (mHTMLEditor)
@@ -233,7 +233,7 @@ HTMLEditRules::Init(nsPlaintextEditor* aTextEditor)
 {
   InitFields();
 
-  mHTMLEditor = static_cast<nsHTMLEditor*>(aTextEditor);
+  mHTMLEditor = static_cast<HTMLEditor*>(aTextEditor);
   nsresult res;
 
   // call through to base class Init
@@ -1612,7 +1612,7 @@ HTMLEditRules::StandardBreakImpl(nsINode& aNode,
       nsCOMPtr<nsINode> linkParent = linkNode->GetParentNode();
       aOffset = mHTMLEditor->SplitNodeDeep(*linkNode, *node->AsContent(),
                                            aOffset,
-                                           nsHTMLEditor::EmptyContainers::no);
+                                           HTMLEditor::EmptyContainers::no);
       NS_ENSURE_STATE(aOffset != -1);
       node = linkParent;
     }
@@ -1720,7 +1720,7 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
     NS_ENSURE_STATE(mHTMLEditor);
     NS_ENSURE_STATE(selNode->IsContent());
     int32_t newOffset = mHTMLEditor->SplitNodeDeep(*citeNode,
-        *selNode->AsContent(), selOffset, nsHTMLEditor::EmptyContainers::no,
+        *selNode->AsContent(), selOffset, HTMLEditor::EmptyContainers::no,
         getter_AddRefs(leftCite), getter_AddRefs(rightCite));
     NS_ENSURE_STATE(newOffset != -1);
     selNode = citeNode->GetParentNode();
@@ -3387,7 +3387,7 @@ HTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
         // Do the splits!
         offset = mHTMLEditor->SplitNodeDeep(curBlock, *parent->AsContent(),
                                             offset,
-                                            nsHTMLEditor::EmptyContainers::no);
+                                            HTMLEditor::EmptyContainers::no);
         NS_ENSURE_STATE(offset != -1);
         // Put a br at the split point
         brNode = mHTMLEditor->CreateBR(curBlock->GetParentNode(), offset);
@@ -4222,7 +4222,7 @@ HTMLEditRules::SplitBlock(Element& aBlock,
   // Do the splits!
   nsCOMPtr<nsIContent> newMiddleNode1;
   mHTMLEditor->SplitNodeDeep(aBlock, startParent, startOffset,
-                             nsHTMLEditor::EmptyContainers::no,
+                             HTMLEditor::EmptyContainers::no,
                              aOutLeftNode, getter_AddRefs(newMiddleNode1));
 
   // Get split point location
@@ -4233,7 +4233,7 @@ HTMLEditRules::SplitBlock(Element& aBlock,
   // Do the splits!
   nsCOMPtr<nsIContent> newMiddleNode2;
   mHTMLEditor->SplitNodeDeep(aBlock, endParent, endOffset,
-                             nsHTMLEditor::EmptyContainers::no,
+                             HTMLEditor::EmptyContainers::no,
                              getter_AddRefs(newMiddleNode2), aOutRightNode);
 
   if (aOutMiddleNode) {
@@ -4411,8 +4411,8 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
 
     if (relFontSize) {
       // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
-      nsHTMLEditor::FontSize dir = relFontSize > 0 ?
-        nsHTMLEditor::FontSize::incr : nsHTMLEditor::FontSize::decr;
+      HTMLEditor::FontSize dir = relFontSize > 0 ?
+        HTMLEditor::FontSize::incr : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         NS_ENSURE_STATE(mHTMLEditor);
         res = mHTMLEditor->RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
@@ -4961,7 +4961,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
 
   // Find current selection common block parent
   nsCOMPtr<Element> selCommon =
-    nsHTMLEditor::GetBlock(*range->GetCommonAncestor());
+    HTMLEditor::GetBlock(*range->GetCommonAncestor());
   NS_ENSURE_STATE(selCommon);
 
   // Set up for loops and cache our root element
@@ -5035,7 +5035,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
   bool doEndExpansion = true;
   if (firstBRParent) {
     // Find block node containing br
-    nsCOMPtr<Element> brBlock = nsHTMLEditor::GetBlock(*firstBRParent);
+    nsCOMPtr<Element> brBlock = HTMLEditor::GetBlock(*firstBRParent);
     bool nodeBefore = false, nodeAfter = false;
 
     // Create a range that represents expanded selection
@@ -5969,7 +5969,7 @@ HTMLEditRules::BustUpInlinesAtBRs(
 
     int32_t resultOffset =
       mHTMLEditor->SplitNodeDeep(*splitDeepNode, splitParentNode, splitOffset,
-                                 nsHTMLEditor::EmptyContainers::yes,
+                                 HTMLEditor::EmptyContainers::yes,
                                  getter_AddRefs(leftNode),
                                  getter_AddRefs(rightNode));
     NS_ENSURE_STATE(resultOffset != -1);
@@ -6338,7 +6338,7 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   NS_ENSURE_STATE(mHTMLEditor);
   NS_ENSURE_STATE(selNode->IsContent());
   mHTMLEditor->SplitNodeDeep(*para, *selNode->AsContent(), *aOffset,
-                             nsHTMLEditor::EmptyContainers::yes,
+                             HTMLEditor::EmptyContainers::yes,
                              getter_AddRefs(leftPara),
                              getter_AddRefs(rightPara));
   // get rid of the break, if it is visible (otherwise it may be needed to prevent an empty p)
@@ -8441,7 +8441,7 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
   if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
       &aElement == mHTMLEditor->GetActiveEditingHost() ||
       !mHTMLEditor->IsDescendantOfEditorRoot(&aElement) ||
-      nsHTMLEditor::HasAttributes(&aElement)) {
+      HTMLEditor::HasAttributes(&aElement)) {
     return NS_OK;
   }
 

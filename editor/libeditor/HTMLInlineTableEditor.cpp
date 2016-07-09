@@ -2,19 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/HTMLEditor.h"
+
 #include "HTMLEditUtils.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsHTMLEditor.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNode.h"
-#include "nsIHTMLEditor.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsIPresShell.h"
 #include "nsLiteralString.h"
@@ -22,28 +22,28 @@
 #include "nsString.h"
 #include "nscore.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 // Uncomment the following line if you want to disable
 // table deletion when the only column/row is removed
 // #define DISABLE_TABLE_DELETION 1
 
 NS_IMETHODIMP
-nsHTMLEditor::SetInlineTableEditingEnabled(bool aIsEnabled)
+HTMLEditor::SetInlineTableEditingEnabled(bool aIsEnabled)
 {
   mIsInlineTableEditingEnabled = aIsEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetInlineTableEditingEnabled(bool * aIsEnabled)
+HTMLEditor::GetInlineTableEditingEnabled(bool* aIsEnabled)
 {
   *aIsEnabled = mIsInlineTableEditingEnabled;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
+HTMLEditor::ShowInlineTableEditingUI(nsIDOMElement* aCell)
 {
   NS_ENSURE_ARG_POINTER(aCell);
 
@@ -93,7 +93,7 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::HideInlineTableEditingUI()
+HTMLEditor::HideInlineTableEditingUI()
 {
   mInlineEditedCell = nullptr;
 
@@ -130,7 +130,7 @@ nsHTMLEditor::HideInlineTableEditingUI()
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
+HTMLEditor::DoInlineTableEditingAction(nsIDOMElement* aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   bool anonElement = false;
@@ -187,7 +187,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
 }
 
 void
-nsHTMLEditor::AddMouseClickListener(nsIDOMElement * aElement)
+HTMLEditor::AddMouseClickListener(nsIDOMElement* aElement)
 {
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
   if (evtTarget) {
@@ -197,7 +197,7 @@ nsHTMLEditor::AddMouseClickListener(nsIDOMElement * aElement)
 }
 
 void
-nsHTMLEditor::RemoveMouseClickListener(nsIDOMElement * aElement)
+HTMLEditor::RemoveMouseClickListener(nsIDOMElement* aElement)
 {
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
   if (evtTarget) {
@@ -207,7 +207,7 @@ nsHTMLEditor::RemoveMouseClickListener(nsIDOMElement * aElement)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::RefreshInlineTableEditingUI()
+HTMLEditor::RefreshInlineTableEditingUI()
 {
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mInlineEditedCell);
   if (!htmlElement) {
@@ -272,3 +272,4 @@ nsHTMLEditor::RefreshInlineTableEditingUI()
   return NS_OK;
 }
 
+} // namespace mozilla

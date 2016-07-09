@@ -139,8 +139,8 @@ using mozilla::dom::AudioChannelAgent;
 #include "nsEditor.h"
 #include "nsPlaintextEditor.h"
 #include "mozilla/EditorController.h" //CID
+#include "mozilla/HTMLEditor.h"
 
-#include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 #include "nsTextServicesCID.h"
 
@@ -155,23 +155,6 @@ using mozilla::dom::AudioChannelAgent;
 #endif
 #endif
 #include "nsParserUtils.h"
-
-#define NS_EDITORCOMMANDTABLE_CID \
-{ 0x4f5e62b8, 0xd659, 0x4156, { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 }}
-
-#define NS_EDITINGCOMMANDTABLE_CID \
-{ 0xcb38a746, 0xbeb8, 0x43f3, { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 }}
-
-#define NS_HAPTICFEEDBACK_CID \
-{ 0x1f15dbc8, 0xbfaa, 0x45de, \
-{ 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 
 #include "nsHTMLCanvasFrame.h"
 
@@ -281,6 +264,26 @@ using mozilla::dom::time::TimeService;
 using mozilla::net::StreamingProtocolControllerService;
 using mozilla::gmp::GeckoMediaPluginService;
 using mozilla::dom::NotificationTelemetryService;
+
+#define NS_EDITORCOMMANDTABLE_CID \
+{ 0x4f5e62b8, 0xd659, 0x4156, \
+  { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 } }
+
+#define NS_EDITINGCOMMANDTABLE_CID \
+{ 0xcb38a746, 0xbeb8, 0x43f3, \
+  { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 } }
+
+#define NS_HAPTICFEEDBACK_CID \
+{ 0x1f15dbc8, 0xbfaa, 0x45de, \
+  { 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(HTMLEditor)
 
 // Transformiix
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */
@@ -1086,7 +1089,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_VOLUMESERVICE_CID, true, nullptr, nsVolumeServiceConstructor },
 #endif
   { &kNS_AUDIOCHANNELAGENT_CID, true, nullptr, AudioChannelAgentConstructor },
-  { &kNS_HTMLEDITOR_CID, false, nullptr, nsHTMLEditorConstructor },
+  { &kNS_HTMLEDITOR_CID, false, nullptr, HTMLEditorConstructor },
   { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },

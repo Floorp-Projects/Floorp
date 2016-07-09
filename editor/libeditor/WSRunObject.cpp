@@ -8,10 +8,11 @@
 #include "EditorUtils.h"
 #include "TextEditUtils.h"
 
-#include "mozilla/OwningNonNull.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/SelectionState.h"
 
 #include "nsAString.h"
@@ -19,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsHTMLEditor.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -34,7 +34,7 @@ using namespace dom;
 
 const char16_t nbsp = 160;
 
-WSRunObject::WSRunObject(nsHTMLEditor* aHTMLEditor,
+WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          nsINode* aNode,
                          int32_t aOffset)
   : mNode(aNode)
@@ -52,7 +52,7 @@ WSRunObject::WSRunObject(nsHTMLEditor* aHTMLEditor,
   GetRuns();
 }
 
-WSRunObject::WSRunObject(nsHTMLEditor* aHTMLEditor,
+WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          nsIDOMNode* aNode,
                          int32_t aOffset)
   : mNode(do_QueryInterface(aNode))
@@ -76,7 +76,7 @@ WSRunObject::~WSRunObject()
 }
 
 nsresult
-WSRunObject::ScrubBlockBoundary(nsHTMLEditor* aHTMLEditor,
+WSRunObject::ScrubBlockBoundary(HTMLEditor* aHTMLEditor,
                                 BlockBoundary aBoundary,
                                 nsINode* aBlock,
                                 int32_t aOffset)
@@ -100,7 +100,7 @@ WSRunObject::ScrubBlockBoundary(nsHTMLEditor* aHTMLEditor,
 }
 
 nsresult
-WSRunObject::PrepareToJoinBlocks(nsHTMLEditor* aHTMLEditor,
+WSRunObject::PrepareToJoinBlocks(HTMLEditor* aHTMLEditor,
                                  Element* aLeftBlock,
                                  Element* aRightBlock)
 {
@@ -114,7 +114,7 @@ WSRunObject::PrepareToJoinBlocks(nsHTMLEditor* aHTMLEditor,
 }
 
 nsresult
-WSRunObject::PrepareToDeleteRange(nsHTMLEditor* aHTMLEditor,
+WSRunObject::PrepareToDeleteRange(HTMLEditor* aHTMLEditor,
                                   nsCOMPtr<nsINode>* aStartNode,
                                   int32_t* aStartOffset,
                                   nsCOMPtr<nsINode>* aEndNode,
@@ -135,7 +135,7 @@ WSRunObject::PrepareToDeleteRange(nsHTMLEditor* aHTMLEditor,
 }
 
 nsresult
-WSRunObject::PrepareToDeleteNode(nsHTMLEditor* aHTMLEditor,
+WSRunObject::PrepareToDeleteNode(HTMLEditor* aHTMLEditor,
                                  nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent && aHTMLEditor, NS_ERROR_NULL_POINTER);
@@ -151,7 +151,7 @@ WSRunObject::PrepareToDeleteNode(nsHTMLEditor* aHTMLEditor,
 }
 
 nsresult
-WSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEditor,
+WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor* aHTMLEditor,
                                         nsCOMPtr<nsINode>* aSplitNode,
                                         int32_t* aSplitOffset)
 {
@@ -1928,7 +1928,7 @@ bool
 WSRunObject::IsBlockNode(nsINode* aNode)
 {
   return aNode && aNode->IsElement() &&
-         nsHTMLEditor::NodeIsBlockStatic(aNode->AsElement());
+         HTMLEditor::NodeIsBlockStatic(aNode->AsElement());
 }
 
 } // namespace mozilla

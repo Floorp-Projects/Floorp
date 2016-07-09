@@ -10,9 +10,10 @@
 #include "nscore.h"
 
 class nsEditor;
-class nsHTMLEditor;
 
 namespace mozilla {
+
+class HTMLEditor;
 
 class HTMLEditorEventListener final : public EditorEventListener
 {
@@ -26,7 +27,7 @@ public:
   }
 
 #ifdef DEBUG
-  // WARNING: You must be use nsHTMLEditor or its sub class for this class.
+  // WARNING: You must be use HTMLEditor or its sub class for this class.
   virtual nsresult Connect(nsEditor* aEditor) override;
 #endif
 
@@ -35,7 +36,7 @@ protected:
   virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) override;
   virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent) override;
 
-  inline nsHTMLEditor* GetHTMLEditor();
+  inline HTMLEditor* GetHTMLEditor();
 };
 
 } // namespace mozilla
