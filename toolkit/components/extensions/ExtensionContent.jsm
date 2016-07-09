@@ -804,6 +804,10 @@ BrowserExtensionContent.prototype = {
   localize(...args) {
     return this.localeData.localize(...args);
   },
+
+  hasPermission(perm) {
+    return this.permissions.has(perm);
+  },
 };
 
 ExtensionManager = {

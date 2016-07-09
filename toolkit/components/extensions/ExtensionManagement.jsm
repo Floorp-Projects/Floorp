@@ -166,6 +166,7 @@ var Service = {
     handler.setSubstitution(uuid, uri);
 
     this.uuidMap.set(uuid, extension);
+    this.aps.setAddonHasPermissionCallback(extension.id, extension.hasPermission.bind(extension));
     this.aps.setAddonLoadURICallback(extension.id, this.checkAddonMayLoad.bind(this, extension));
     this.aps.setAddonLocalizeCallback(extension.id, extension.localize.bind(extension));
     this.aps.setAddonCSP(extension.id, extension.manifest.content_security_policy);
@@ -176,6 +177,7 @@ var Service = {
   shutdownExtension(uuid) {
     let extension = this.uuidMap.get(uuid);
     this.uuidMap.delete(uuid);
+    this.aps.setAddonHasPermissionCallback(extension.id, null);
     this.aps.setAddonLoadURICallback(extension.id, null);
     this.aps.setAddonLocalizeCallback(extension.id, null);
     this.aps.setAddonCSP(extension.id, null);
