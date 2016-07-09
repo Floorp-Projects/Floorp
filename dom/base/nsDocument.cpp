@@ -1455,7 +1455,6 @@ nsIDocument::nsIDocument()
     mFontFaceSetDirty(true),
     mGetUserFontSetCalled(false),
     mPostedFlushUserFontSet(false),
-    mFullscreenEnabled(false),
     mPartID(0),
     mDidFireDOMContentLoaded(true),
     mHasScrollLinkedEffect(false),
@@ -2594,7 +2593,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
 
   if (docShell) {
-    docShell->ApplySandboxAndFullscreenFlags(this);
+    nsresult rv = docShell->GetSandboxFlags(&mSandboxFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
     WarnIfSandboxIneffective(docShell, mSandboxFlags, GetChannel());
   }
 
@@ -11802,7 +11802,11 @@ GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
   if (!nsContentUtils::IsFullScreenApiEnabled()) {
     return "FullscreenDeniedDisabled";
   }
-  if (!aDoc->FullscreenEnabledInternal()) {
+
+  // Ensure that all containing elements are <iframe> and have
+  // allowfullscreen attribute set.
+  nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
+  if (!docShell || !docShell->GetFullscreenAllowed()) {
     return "FullscreenDeniedContainerNotAllowed";
   }
   return nullptr;
@@ -12366,10 +12370,7 @@ public:
       return NS_OK;
     }
 
-    // Handling a request from user input in non-fullscreen mode.
-    // Do a normal permission check.
-    nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow();
-    nsContentPermissionUtils::AskPermission(this, window);
+    Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
 
@@ -12491,6 +12492,10 @@ nsPointerLockPermissionRequest::Allow(JS::HandleValue aChoices)
   NS_ASSERTION(EventStateManager::sPointerLockedElement &&
                EventStateManager::sPointerLockedDoc,
                "aElement and this should support weak references!");
+
+  nsContentUtils::DispatchEventOnlyToChrome(
+    doc, ToSupports(e), NS_LITERAL_STRING("MozDOMPointerLock:Entered"),
+    /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
 
   DispatchPointerLockChange(d);
   return NS_OK;
@@ -12766,6 +12771,12 @@ nsDocument::UnlockPointer(nsIDocument* aDoc)
   EventStateManager::sPointerLockedDoc = nullptr;
   static_cast<nsDocument*>(pointerLockedDoc.get())->mAllowRelocking = !!aDoc;
   gPendingPointerLockRequest = nullptr;
+
+  nsContentUtils::DispatchEventOnlyToChrome(
+    doc, ToSupports(pointerLockedElement),
+    NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
+    /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+
   DispatchPointerLockChange(pointerLockedDoc);
 }
 
