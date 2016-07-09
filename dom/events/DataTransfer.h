@@ -150,6 +150,9 @@ public:
 
   already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
 
+  already_AddRefed<Promise> GetFiles(bool aRecursiveFlag, ErrorResult& aRv);
+
+
   void AddElement(Element& aElement, mozilla::ErrorResult& aRv);
 
   uint32_t MozItemCount() const;
