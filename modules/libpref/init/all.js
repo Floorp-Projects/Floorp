@@ -4783,7 +4783,15 @@ pref("dom.w3c_pointer_events.enabled", false);
 pref("dom.imagecapture.enabled", false);
 
 // W3C touch-action css property (related to touch and pointer events)
+// Note that we turn this on even on platforms/configurations where touch
+// events are not supported (e.g. OS X, or Windows with e10s disabled). For
+// those platforms we don't handle touch events anyway so it's conceptually
+// a no-op.
+#ifdef NIGHTLY_BUILD
+pref("layout.css.touch_action.enabled", true);
+#else
 pref("layout.css.touch_action.enabled", false);
+#endif
 
 // Enables some assertions in nsStyleContext that are too expensive
 // for general use, but might be useful to enable for specific tests.
