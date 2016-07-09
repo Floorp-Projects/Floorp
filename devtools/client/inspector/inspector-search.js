@@ -69,7 +69,7 @@ InspectorSearch.prototype = {
     this._lastSearched = query;
 
     if (query.length === 0) {
-      this.searchBox.classList.remove("devtools-no-search-result");
+      this.searchBox.classList.remove("devtools-style-searchbox-no-match");
       if (!lastSearched || lastSearched.length > 0) {
         this.emit("search-cleared");
       }
@@ -85,12 +85,12 @@ InspectorSearch.prototype = {
 
     if (res) {
       this.inspector.selection.setNodeFront(res.node, "inspectorsearch");
-      this.searchBox.classList.remove("devtools-no-search-result");
+      this.searchBox.classList.remove("devtools-style-searchbox-no-match");
 
       res.query = query;
       this.emit("search-result", res);
     } else {
-      this.searchBox.classList.add("devtools-no-search-result");
+      this.searchBox.classList.add("devtools-style-searchbox-no-match");
       this.emit("search-result");
     }
   }),

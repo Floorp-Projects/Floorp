@@ -245,11 +245,7 @@ var gPermissionObject = {
     exactHostMatch: true
   },
 
-  "indexedDB": {},
-
-  "pointerLock": {
-    exactHostMatch: true
-  }
+  "indexedDB": {}
 };
 
 const kPermissionIDs = Object.keys(gPermissionObject);
