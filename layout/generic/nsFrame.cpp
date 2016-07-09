@@ -1611,7 +1611,7 @@ nsIFrame::DisableVisibilityTracking()
   }
 
   // We were visible, so send an OnVisibilityChange() notification.
-  OnVisibilityChange(previousVisibility, Visibility::NONVISIBLE);
+  OnVisibilityChange(Visibility::NONVISIBLE);
 }
 
 void
@@ -1647,7 +1647,7 @@ nsIFrame::DecVisibilityCount(VisibilityCounter aCounter,
   }
 
   // Our visibility just changed, so send an OnVisibilityChange() notification.
-  OnVisibilityChange(previousVisibility, newVisibility, aNonvisibleAction);
+  OnVisibilityChange(newVisibility, aNonvisibleAction);
 }
 
 void
@@ -1678,21 +1678,16 @@ nsIFrame::IncVisibilityCount(VisibilityCounter aCounter)
   }
 
   // Our visibility just changed, so send an OnVisibilityChange() notification.
-  OnVisibilityChange(previousVisibility, newVisibility);
+  OnVisibilityChange(newVisibility);
 }
 
 void
-nsIFrame::OnVisibilityChange(Visibility aOldVisibility,
-                             Visibility aNewVisibility,
+nsIFrame::OnVisibilityChange(Visibility aNewVisibility,
                              Maybe<OnNonvisible> aNonvisibleAction
                                /* = Nothing() */)
 {
   // XXX(seth): In bug 1218990 we'll implement visibility tracking for CSS
   // images here.
-  MOZ_ASSERT(aOldVisibility != Visibility::UNTRACKED,
-             "Should've started at Visibility::NONVISIBLE");
-  MOZ_ASSERT(aNewVisibility != Visibility::UNTRACKED,
-             "Shouldn't notify for Visibility::UNTRACKED");
 }
 
 static nsIFrame*
