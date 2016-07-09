@@ -245,13 +245,6 @@ SharedSurface_D3D11Interop::Create(const RefPtr<DXGLDevice>& dxgl,
         return nullptr;
     }
 
-    RefPtr<IDXGIKeyedMutex> keyedMutex;
-    hr = textureD3D->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(keyedMutex));
-    if (FAILED(hr)) {
-        NS_WARNING("Failed to obtained keyed mutex from texture!");
-        return nullptr;
-    }
-
     HANDLE sharedHandle;
     textureDXGI->GetSharedHandle(&sharedHandle);
 
@@ -268,7 +261,7 @@ SharedSurface_D3D11Interop::Create(const RefPtr<DXGLDevice>& dxgl,
 
     typedef SharedSurface_D3D11Interop ptrT;
     UniquePtr<ptrT> ret ( new ptrT(gl, size, hasAlpha, renderbufferGL, dxgl, objectWGL,
-                                   textureD3D, sharedHandle, keyedMutex) );
+                                   textureD3D, sharedHandle) );
     return Move(ret);
 }
 
@@ -279,8 +272,7 @@ SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(GLContext* gl,
                                                        const RefPtr<DXGLDevice>& dxgl,
                                                        HANDLE objectWGL,
                                                        const RefPtr<ID3D11Texture2D>& textureD3D,
-                                                       HANDLE sharedHandle,
-                                                       const RefPtr<IDXGIKeyedMutex>& keyedMutex)
+                                                       HANDLE sharedHandle)
     : SharedSurface(SharedSurfaceType::DXGLInterop2,
                     AttachmentType::GLRenderbuffer,
                     gl,
@@ -293,13 +285,11 @@ SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(GLContext* gl,
     , mTextureD3D(textureD3D)
     , mNeedsFinish(gfxPrefs::WebGLDXGLNeedsFinish())
     , mSharedHandle(sharedHandle)
-    , mKeyedMutex(keyedMutex)
-    , mLockedForGL(false)
 { }
 
 SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 {
-    MOZ_ASSERT(!mLockedForGL);
+    MOZ_ASSERT(!IsProducerAcquired());
 
     if (!mDXGL->UnregisterObject(mObjectWGL)) {
         NS_WARNING("Failed to release a DXGL object, possibly leaking it.");
@@ -316,38 +306,14 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 void
 SharedSurface_D3D11Interop::ProducerAcquireImpl()
 {
-    MOZ_ASSERT(!mLockedForGL);
-
-    if (mKeyedMutex) {
-        const uint64_t keyValue = 0;
-        const DWORD timeoutMs = 10000;
-        HRESULT hr = mKeyedMutex->AcquireSync(keyValue, timeoutMs);
-        if (hr == WAIT_TIMEOUT) {
-            // Doubt we should do this? Maybe Wait for ever?
-            MOZ_CRASH("GFX: d3d11Interop timeout");
-        }
-    }
-
-    // Now we have the mutex, we can lock for GL.
     MOZ_ALWAYS_TRUE(mDXGL->LockObject(mObjectWGL));
-
-    mLockedForGL = true;
 }
 
 void
 SharedSurface_D3D11Interop::ProducerReleaseImpl()
 {
-    MOZ_ASSERT(mLockedForGL);
-
     mGL->fFlush();
     MOZ_ALWAYS_TRUE(mDXGL->UnlockObject(mObjectWGL));
-
-    mLockedForGL = false;
-
-    // Now we have unlocked for GL, we can release to consumer.
-    if (mKeyedMutex) {
-        mKeyedMutex->ReleaseSync(0);
-    }
 
     if (mNeedsFinish) {
         mGL->fFinish();

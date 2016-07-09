@@ -30,10 +30,6 @@ public:
     const RefPtr<ID3D11Texture2D> mTextureD3D;
     const bool mNeedsFinish;
 
-protected:
-    RefPtr<IDXGIKeyedMutex> mKeyedMutex;
-    bool mLockedForGL;
-
 public:
     static UniquePtr<SharedSurface_D3D11Interop> Create(const RefPtr<DXGLDevice>& dxgl,
                                                         GLContext* gl,
@@ -54,8 +50,7 @@ protected:
                                const RefPtr<DXGLDevice>& dxgl,
                                HANDLE objectWGL,
                                const RefPtr<ID3D11Texture2D>& textureD3D,
-                               HANDLE sharedHandle,
-                               const RefPtr<IDXGIKeyedMutex>& keyedMutex);
+                               HANDLE sharedHandle);
 
 public:
     virtual ~SharedSurface_D3D11Interop();
