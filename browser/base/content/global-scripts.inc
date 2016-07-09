@@ -16,7 +16,7 @@
 <script type="application/javascript" src="chrome://browser/content/browser-customization.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-devedition.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-feeds.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-fullScreen.js"/>
+<script type="application/javascript" src="chrome://browser/content/browser-fullScreenAndPointerLock.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-fullZoom.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-gestureSupport.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-media.js"/>

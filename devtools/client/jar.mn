@@ -218,6 +218,8 @@ devtools.jar:
     skin/images/magnifying-glass@2x.png (themes/images/magnifying-glass@2x.png)
     skin/images/magnifying-glass-light.png (themes/images/magnifying-glass-light.png)
     skin/images/magnifying-glass-light@2x.png (themes/images/magnifying-glass-light@2x.png)
+    skin/images/filter.svg (themes/images/filter.svg)
+    skin/images/search.svg (themes/images/search.svg)
     skin/images/itemToggle.png (themes/images/itemToggle.png)
     skin/images/itemToggle@2x.png (themes/images/itemToggle@2x.png)
     skin/images/itemArrow-dark-rtl.svg (themes/images/itemArrow-dark-rtl.svg)

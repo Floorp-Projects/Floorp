@@ -72,7 +72,7 @@
             <html:div id="ruleview-toolbar">
               <html:div class="devtools-searchbox">
                 <html:input id="ruleview-searchbox"
-                            class="devtools-searchinput devtools-rule-searchbox"
+                            class="devtools-filterinput devtools-rule-searchbox"
                             type="search"
                             placeholder="&filterStylesPlaceholder;"/>
                 <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
@@ -97,7 +97,7 @@
           <html:div class="devtools-toolbar">
             <html:div class="devtools-searchbox">
               <html:input id="computedview-searchbox"
-                          class="devtools-searchinput devtools-rule-searchbox"
+                          class="devtools-filterinput devtools-rule-searchbox"
                           type="search"
                           placeholder="&filterStylesPlaceholder;"/>
               <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
