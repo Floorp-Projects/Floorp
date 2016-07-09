@@ -343,6 +343,10 @@ class GlobalObject : public NativeObject
         return &self->getPrototype(JSProto_Object).toObject().as<NativeObject>();
     }
 
+    static NativeObject* getOrCreateObjectPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return global->getOrCreateObjectPrototype(cx);
+    }
+
     NativeObject* getOrCreateFunctionPrototype(JSContext* cx) {
         if (functionObjectClassesInitialized())
             return &getPrototype(JSProto_Function).toObject().as<NativeObject>();
@@ -350,6 +354,10 @@ class GlobalObject : public NativeObject
         if (!ensureConstructor(cx, self, JSProto_Object))
             return nullptr;
         return &self->getPrototype(JSProto_Function).toObject().as<NativeObject>();
+    }
+
+    static NativeObject* getOrCreateFunctionPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return global->getOrCreateFunctionPrototype(cx);
     }
 
     static NativeObject* getOrCreateArrayPrototype(JSContext* cx, Handle<GlobalObject*> global) {

@@ -31,6 +31,7 @@
 #include "js/HashTable.h"
 #include "js/Id.h"
 #include "js/Principals.h"
+#include "js/Realm.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/Utility.h"
