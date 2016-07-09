@@ -79,6 +79,8 @@ class PresShell final : public nsIPresShell,
   template <typename T> using Maybe = mozilla::Maybe<T>;
   using Nothing = mozilla::Nothing;
   using OnNonvisible = mozilla::OnNonvisible;
+  template <typename T> using UniquePtr = mozilla::UniquePtr<T>;
+  using VisibilityCounter = mozilla::VisibilityCounter;
   using VisibleFrames = mozilla::VisibleFrames;
   using VisibleRegions = mozilla::VisibleRegions;
 
@@ -359,7 +361,7 @@ public:
 
   virtual nscolor ComputeBackstopColor(nsView* aDisplayRoot) override;
 
-  virtual nsresult SetIsActive(bool aIsActive, bool aIsHidden = true) override;
+  virtual void SetIsActive(bool aIsActive, bool aIsHidden = true) override;
 
   virtual bool GetIsViewportOverridden() override {
     return (mMobileViewportManager != nullptr);
@@ -403,8 +405,8 @@ public:
   void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
                                          bool aRemoveOnly = false) override;
 
-  void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame) override;
-  void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) override;
+  void MarkFrameVisible(nsIFrame* aFrame, VisibilityCounter aCounter) override;
+  void MarkFrameNonvisible(nsIFrame* aFrame) override;
 
   bool AssumeAllFramesVisible() override;
 
@@ -581,6 +583,9 @@ protected:
   void AddAuthorSheet(nsISupports* aSheet);
   void RemoveSheet(mozilla::SheetType aType, nsISupports* aSheet);
 
+  /// @return the LayerManager at the root of the view tree.
+  LayerManager* GetRootLayerManager();
+
   // Hide a view if it is a popup
   void HideViewIfPopup(nsView* aView);
 
@@ -673,7 +678,6 @@ protected:
   void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
   void QueryIsActive();
-  nsresult UpdateImageLockingState();
 
   bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
@@ -766,24 +770,80 @@ protected:
   void UpdateApproximateFrameVisibility();
   void DoUpdateApproximateFrameVisibility(bool aRemoveOnly);
 
-  void ClearApproximatelyVisibleFramesList(Maybe<mozilla::OnNonvisible> aNonvisibleAction
-                                             = Nothing());
-  static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
-  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
-                                                   Maybe<VisibleRegions>& aVisibleRegions);
+  void ClearVisibleFramesSets(Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  static void ClearVisibleFramesForUnvisitedPresShells(nsView* aView, bool aClear);
+  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList);
   void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                const nsRect& aRect,
-                                               Maybe<VisibleRegions>& aVisibleRegions,
                                                bool aRemoveOnly = false);
+  void UpdateFrameVisibilityOnActiveStateChange();
 
-  void DecApproximateVisibleCount(VisibleFrames& aFrames,
-                                  Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  void InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounter);
+  void AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCounter);
+  void NotifyCompositorOfVisibleRegionsChange();
 
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
+  nsRevocableEventPtr<nsRunnableMethod<PresShell>> mNotifyCompositorOfVisibleRegionsChangeEvent;
 
-  // A set of frames that were visible or could be visible soon at the time
-  // that we last did an approximate frame visibility update.
-  VisibleFrames mApproximatelyVisibleFrames;
+  struct VisibleFramesContainer
+  {
+    VisibleFramesContainer() : mSuppressingVisibility(false) { }
+
+    void AddFrame(nsIFrame* aFrame, VisibilityCounter aCounter);
+    void RemoveFrame(nsIFrame* aFrame, VisibilityCounter aCounter);
+
+    bool IsVisibilitySuppressed() const { return mSuppressingVisibility; }
+    void SuppressVisibility();
+    void UnsuppressVisibility();
+
+    VisibleFrames& ForCounter(VisibilityCounter aCounter)
+    {
+      switch (aCounter)
+      {
+        case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximate;
+        case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPort;
+      }
+      MOZ_CRASH();
+    }
+
+    // A set of frames that were visible or could be visible soon at the time
+    // that we last did an approximate frame visibility update.
+    VisibleFrames mApproximate;
+
+    // A set of frames that were visible in the displayport the last time we painted.
+    VisibleFrames mInDisplayPort;
+
+    bool mSuppressingVisibility;
+  };
+
+  VisibleFramesContainer mVisibleFrames;
+
+  struct VisibleRegionsContainer
+  {
+    VisibleRegions& ForCounter(VisibilityCounter aCounter)
+    {
+      switch (aCounter)
+      {
+        case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximate;
+        case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPort;
+      }
+      MOZ_CRASH();
+    }
+
+    // The approximately visible regions calculated during the last update to
+    // approximate frame visibility.
+    VisibleRegions mApproximate;
+
+    // The in-displayport visible regions calculated during the last paint.
+    VisibleRegions mInDisplayPort;
+  };
+
+  // The most recent visible regions we've computed. Only non-null if the APZ
+  // minimap visibility visualization was enabled during the last visibility
+  // update.
+  UniquePtr<VisibleRegionsContainer> mVisibleRegions;
+
+  friend struct AutoUpdateVisibility;
 
 
   //////////////////////////////////////////////////////////////////////////////
