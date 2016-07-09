@@ -12370,10 +12370,7 @@ public:
       return NS_OK;
     }
 
-    // Handling a request from user input in non-fullscreen mode.
-    // Do a normal permission check.
-    nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow();
-    nsContentPermissionUtils::AskPermission(this, window);
+    Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
 
@@ -12495,6 +12492,10 @@ nsPointerLockPermissionRequest::Allow(JS::HandleValue aChoices)
   NS_ASSERTION(EventStateManager::sPointerLockedElement &&
                EventStateManager::sPointerLockedDoc,
                "aElement and this should support weak references!");
+
+  nsContentUtils::DispatchEventOnlyToChrome(
+    doc, ToSupports(e), NS_LITERAL_STRING("MozDOMPointerLock:Entered"),
+    /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
 
   DispatchPointerLockChange(d);
   return NS_OK;
@@ -12770,6 +12771,12 @@ nsDocument::UnlockPointer(nsIDocument* aDoc)
   EventStateManager::sPointerLockedDoc = nullptr;
   static_cast<nsDocument*>(pointerLockedDoc.get())->mAllowRelocking = !!aDoc;
   gPendingPointerLockRequest = nullptr;
+
+  nsContentUtils::DispatchEventOnlyToChrome(
+    doc, ToSupports(pointerLockedElement),
+    NS_LITERAL_STRING("MozDOMPointerLock:Exited"),
+    /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
+
   DispatchPointerLockChange(pointerLockedDoc);
 }
 

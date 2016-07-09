@@ -53,7 +53,7 @@ var SearchBox = React.createClass({
   render: function () {
     return (
       input({
-        className: "searchBox",
+        className: "dom-searchbox devtools-filterinput",
         placeholder: l10n.getStr("dom.filterDOMPanel"),
         onChange: this.onSearch
       })
