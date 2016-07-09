@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-html|*#fullscreen-warning {
+html|*.pointerlockfswarning {
   align-items: center;
   background: rgba(45, 62, 72, 0.9);
   border: 2px solid #fafafa;
@@ -14,34 +14,34 @@ html|*#fullscreen-warning {
   font: message-box;
 }
 
-html|*#fullscreen-warning::before {
+html|*.pointerlockfswarning::before {
   margin: 0;
   width: 24px; height: 24px;
 }
 
-html|*#fullscreen-warning.verifiedIdentity::before,
-html|*#fullscreen-warning.verifiedDomain::before {
+html|*.pointerlockfswarning[data-identity="verifiedIdentity"]::before,
+html|*.pointerlockfswarning[data-identity="verifiedDomain"]::before {
   content: url("chrome://browser/skin/fullscreen/secure.svg");
 }
 
-html|*#fullscreen-warning.unknownIdentity::before {
+html|*.pointerlockfswarning[data-identity="unknownIdentity"]::before {
   content: url("chrome://browser/skin/fullscreen/insecure.svg");
 }
 
-html|*#fullscreen-domain-text,
-html|*#fullscreen-generic-text {
+html|*.pointerlockfswarning-domain-text,
+html|*.pointerlockfswarning-generic-text {
   font-size: 21px;
   font-weight: lighter;
   color: #fafafa;
   margin: 0 16px;
 }
 
-html|*#fullscreen-domain {
+html|*.pointerlockfswarning-domain {
   font-weight: bold;
   margin: 0;
 }
 
-html|*#fullscreen-exit-button {
+html|*.pointerlockfswarning-exit-button {
   padding: 5px 30px;
   font: message-box;
   font-size: 14px;

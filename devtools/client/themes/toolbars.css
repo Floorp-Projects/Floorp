@@ -11,8 +11,8 @@
   --searchbox-border-color: #ffbf00;
   --searcbox-no-match-background-color: #ffe5e5;
   --searcbox-no-match-border-color: #e52e2e;
-  --magnifying-glass-image: url(images/magnifying-glass-light.png);
-  --magnifying-glass-image-2x: url(images/magnifying-glass-light@2x.png);
+  --magnifying-glass-image: url(images/search.svg);
+  --filter-image: url(images/filter.svg);
   --tool-options-image: url(images/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
   --icon-filter: invert(1);
@@ -42,8 +42,8 @@
   --searchbox-border-color: #d99f2b;
   --searcbox-no-match-background-color: #402325;
   --searcbox-no-match-border-color: #cc3d3d;
-  --magnifying-glass-image: url(images/magnifying-glass.png);
-  --magnifying-glass-image-2x: url(images/magnifying-glass@2x.png);
+  --magnifying-glass-image: url(images/search.svg);
+  --filter-image: url(images/filter.svg);
   --tool-options-image: url(images/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
   --icon-filter: none;
@@ -376,38 +376,57 @@
 /* Text input */
 
 .devtools-textinput,
-.devtools-searchinput {
+.devtools-searchinput,
+.devtools-filterinput {
   -moz-appearance: none;
   margin: 1px 3px;
   border: 1px solid;
   border-radius: 2px;
   padding: 4px 6px;
   border-color: var(--theme-splitter-color);
+  font: message-box;
 }
 
 :root[platform="mac"] .devtools-textinput,
-:root[platform="mac"] .devtools-searchinput {
+:root[platform="mac"] .devtools-searchinput,
+:root[platform="mac"] .devtools-filterinput {
   border-radius: 20px;
 }
 
-.devtools-searchinput {
+.devtools-searchinput,
+.devtools-filterinput {
   padding: 0;
   padding-inline-start: 22px;
   padding-inline-end: 4px;
-  background-image: var(--magnifying-glass-image);
   background-position: 8px center;
   background-size: 11px 11px;
   background-repeat: no-repeat;
   font-size: inherit;
 }
 
+.devtools-searchinput {
+  background-image: var(--magnifying-glass-image);
+}
+
+.devtools-filterinput {
+  background-image: var(--filter-image);
+}
+
 .devtools-searchinput:-moz-locale-dir(rtl),
-.devtools-searchinput:dir(rtl) {
+.devtools-searchinput:dir(rtl),
+.devtools-filterinput:-moz-locale-dir(rtl),
+.devtools-filterinput:dir(rtl) {
   background-position: calc(100% - 8px) center;
 }
 
-.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon,
+.devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
   visibility: hidden;
+}
+
+.devtools-searchinput .textbox-input::-moz-placeholder,
+.devtools-filterinput .textbox-input::-moz-placeholder {
+  font-style: normal;
 }
 
 /* Searchbox is a div container element for a search input element */
@@ -420,13 +439,15 @@
 
 /* The spacing is accomplished with a padding on the searchbox */
 .devtools-searchbox > .devtools-textinput,
-.devtools-searchbox > .devtools-searchinput {
+.devtools-searchbox > .devtools-searchinput,
+.devtools-searchbox > .devtools-filterinput {
   margin-left: 0;
   margin-right: 0;
 }
 
 .devtools-searchbox > .devtools-textinput:-moz-focusring,
-.devtools-searchbox > .devtools-searchinput:-moz-focusring {
+.devtools-searchbox > .devtools-searchinput:-moz-focusring,
+.devtools-searchbox > .devtools-filterinput:-moz-focusring {
   border-color: var(--theme-focus-border-color-textbox);
   box-shadow: var(--theme-focus-box-shadow-textbox);
   transition: all 0.2s ease-in-out;
@@ -436,11 +457,13 @@
 /* Don't add 'double spacing' for inputs that are at beginning / end
    of a toolbar (since the toolbar has it's own spacing). */
 .devtools-toolbar > .devtools-textinput:first-child,
-.devtools-toolbar > .devtools-searchinput:first-child {
+.devtools-toolbar > .devtools-searchinput:first-child,
+.devtools-toolbar > .devtools-filterinput:first-child {
   margin-inline-start: 0;
 }
 .devtools-toolbar > .devtools-textinput:last-child,
-.devtools-toolbar > .devtools-searchinput:last-child {
+.devtools-toolbar > .devtools-searchinput:last-child,
+.devtools-toolbar > .devtools-filterinput:last-child {
   margin-inline-end: 0;
 }
 .devtools-toolbar > .devtools-searchbox:first-child {
@@ -453,7 +476,6 @@
 .devtools-rule-searchbox {
   -moz-box-flex: 1;
   width: 100%;
-  font: inherit;
 }
 
 .devtools-rule-searchbox[filled] {
@@ -465,10 +487,6 @@
 .devtools-style-searchbox-no-match {
   background-color: var(--searcbox-no-match-background-color) !important;
   border-color: var(--searcbox-no-match-border-color) !important;
-}
-
-.devtools-no-search-result {
-  border-color: var(--theme-highlight-red) !important;
 }
 
 .devtools-searchinput-clear {
@@ -505,28 +523,26 @@
   background-position: -16px 0;
 }
 
-.theme-dark .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+.theme-dark .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear,
+.theme-dark .devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
   list-style-image: url("chrome://devtools/skin/images/search-clear-dark.svg");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.theme-light .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+.theme-light .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear,
+.theme-light .devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
   list-style-image: url("chrome://devtools/skin/images/search-clear-light.svg");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear,
+.devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
   margin-bottom: 0;
 }
 
-.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover {
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover,
+.devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .devtools-searchinput {
-    background-image: var(--magnifying-glass-image-2x);
-  }
 }
 
 /* Close button */
