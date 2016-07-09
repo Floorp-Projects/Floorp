@@ -2313,13 +2313,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       dirtyRect.IntersectRect(dirtyRect, clipPropClip);
     }
 
-    MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
-
     // Extend3DContext() also guarantees that applyAbsPosClipping and usingSVGEffects are false
     // We only modify the preserve-3d rect if we are the top of a preserve-3d heirarchy
     if (Extend3DContext()) {
+      // Mark these first so MarkAbsoluteFramesForDisplayList knows if we are
+      // going to be forced to descend into frames.
       aBuilder->MarkPreserve3DFramesForDisplayList(this);
     }
+
+    MarkAbsoluteFramesForDisplayList(aBuilder, dirtyRect);
 
     nsDisplayLayerEventRegions* eventRegions = nullptr;
     if (aBuilder->IsBuildingLayerEventRegions()) {
