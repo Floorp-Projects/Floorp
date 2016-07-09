@@ -10,9 +10,10 @@
 
 class nsIDOMNode;
 class nsINode;
-class nsPlaintextEditor;
 
 namespace mozilla {
+
+class TextEditor;
 
 class TextEditUtils final
 {
@@ -33,11 +34,11 @@ public:
 class AutoEditInitRulesTrigger final
 {
 private:
-  nsPlaintextEditor* mTextEditor;
+  TextEditor* mTextEditor;
   nsresult& mResult;
 
 public:
-  AutoEditInitRulesTrigger(nsPlaintextEditor* aTextEditor, nsresult& aResult);
+  AutoEditInitRulesTrigger(TextEditor* aTextEditor, nsresult& aResult);
   ~AutoEditInitRulesTrigger();
 };
 

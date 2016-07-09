@@ -5,6 +5,8 @@
 
 #include "mozilla/TextEditRules.h"
 
+#include "mozilla/TextEditor.h"
+#include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -13,9 +15,7 @@
 #include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
-#include "mozilla/dom/Selection.h"
 #include "nsISupportsImpl.h"
-#include "nsPlaintextEditor.h"
 #include "nsPresContext.h"
 #include "nscore.h"
 
@@ -34,7 +34,7 @@ TextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
   NS_ENSURE_ARG_POINTER(aCancel);
   *aCancel = false;
 
-  nsCOMPtr<nsIPresShell> shell = mEditor->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = mTextEditor->GetPresShell();
   NS_ENSURE_TRUE(shell, NS_ERROR_NOT_INITIALIZED);
 
   nsPresContext *context = shell->GetPresContext();

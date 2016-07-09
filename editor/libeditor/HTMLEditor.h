@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleSheetHandle.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
 
@@ -33,7 +34,6 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsISelectionListener.h"
 #include "nsITableEditor.h"
-#include "nsPlaintextEditor.h"
 #include "nsPoint.h"
 #include "nsStubMutationObserver.h"
 #include "nsTArray.h"
@@ -67,7 +67,7 @@ struct IMEState;
  * The HTML editor implementation.<br>
  * Use to edit HTML document represented as a DOM tree.
  */
-class HTMLEditor final : public nsPlaintextEditor
+class HTMLEditor final : public TextEditor
                        , public nsIHTMLEditor
                        , public nsIHTMLObjectResizer
                        , public nsIHTMLAbsPosEditor
@@ -97,14 +97,14 @@ public:
   };
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLEditor, nsPlaintextEditor)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLEditor, TextEditor)
 
   HTMLEditor();
 
   bool GetReturnInParagraphCreatesNewParagraph();
   Element* GetSelectionContainer();
 
-  // nsPlaintextEditor overrides
+  // TextEditor overrides
   NS_IMETHOD GetIsDocumentEditable(bool* aIsDocumentEditable) override;
   NS_IMETHOD BeginningOfDocument() override;
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent) override;

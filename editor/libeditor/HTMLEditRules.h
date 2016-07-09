@@ -25,13 +25,13 @@ class nsIDOMElement;
 class nsIDOMNode;
 class nsIEditor;
 class nsINode;
-class nsPlaintextEditor;
 class nsRange;
 
 namespace mozilla {
 
 class HTMLEditor;
 class RulesInfo;
+class TextEditor;
 struct EditorDOMPoint;
 namespace dom {
 class Element;
@@ -76,7 +76,7 @@ public:
   HTMLEditRules();
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsPlaintextEditor* aTextEditor) override;
+  NS_IMETHOD Init(TextEditor* aTextEditor) override;
   NS_IMETHOD DetachEditor() override;
   NS_IMETHOD BeforeEdit(EditAction action,
                         nsIEditor::EDirection aDirection) override;

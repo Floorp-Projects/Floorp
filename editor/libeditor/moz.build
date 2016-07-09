@@ -22,6 +22,7 @@ EXPORTS.mozilla += [
     'EditorController.h',
     'HTMLEditor.h',
     'SelectionState.h',
+    'TextEditor.h',
     'TextEditRules.h',
 ]
 
@@ -57,13 +58,13 @@ UNIFIED_SOURCES += [
     'InternetCiter.cpp',
     'JoinNodeTransaction.cpp',
     'nsEditor.cpp',
-    'nsPlaintextDataTransfer.cpp',
-    'nsPlaintextEditor.cpp',
     'PlaceholderTransaction.cpp',
     'SelectionState.cpp',
     'SetDocumentTitleTransaction.cpp',
     'SplitNodeTransaction.cpp',
     'StyleSheetTransactions.cpp',
+    'TextEditor.cpp',
+    'TextEditorDataTransfer.cpp',
     'TextEditorTest.cpp',
     'TextEditRules.cpp',
     'TextEditRulesBidi.cpp',
