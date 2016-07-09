@@ -43,7 +43,6 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
-#include "nsTextEditRules.h"
 #include "nscore.h"
 #include <algorithm>
 

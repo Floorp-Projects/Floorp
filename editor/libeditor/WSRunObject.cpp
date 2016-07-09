@@ -6,13 +6,13 @@
 #include "WSRunObject.h"
 
 #include "EditorUtils.h"
-#include "SelectionState.h"
 #include "TextEditUtils.h"
 
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/SelectionState.h"
 
 #include "nsAString.h"
 #include "nsCRT.h"

@@ -13,8 +13,15 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 
+EXPORTS += [
+    'nsEditor.h',
+    'nsEditRules.h',
+]
+
 EXPORTS.mozilla += [
     'EditorController.h',
+    'SelectionState.h',
+    'TextEditRules.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -51,14 +58,14 @@ UNIFIED_SOURCES += [
     'nsPlaintextDataTransfer.cpp',
     'nsPlaintextEditor.cpp',
     'nsTableEditor.cpp',
-    'nsTextEditRules.cpp',
-    'nsTextEditRulesBidi.cpp',
     'PlaceholderTransaction.cpp',
     'SelectionState.cpp',
     'SetDocumentTitleTransaction.cpp',
     'SplitNodeTransaction.cpp',
     'StyleSheetTransactions.cpp',
     'TextEditorTest.cpp',
+    'TextEditRules.cpp',
+    'TextEditRulesBidi.cpp',
     'TextEditUtils.cpp',
     'TypeInState.cpp',
     'WSRunObject.cpp',

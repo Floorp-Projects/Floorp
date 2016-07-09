@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/TextEvents.h"         // for WidgetCompositionEvent
 #include "mozilla/dom/Element.h"        // for Element
+#include "mozilla/dom/Event.h"          // for Event
 #include "mozilla/dom/EventTarget.h"    // for EventTarget
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
