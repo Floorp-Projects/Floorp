@@ -159,9 +159,14 @@ SharedPlanarYCbCrImage::AdoptData(const Data &aData)
   uint32_t cbOffset = aData.mCbChannel - base;
   uint32_t crOffset = aData.mCrChannel - base;
 
+  auto fwd = mCompositable->GetForwarder()->AsCompositableForwarder();
+  bool hasIntermediateBuffer = fwd ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
+                                                                  fwd->GetCompositorBackendType())
+                                   : true;
+
   static_cast<BufferTextureData*>(mTextureClient->GetInternalData())->SetDesciptor(
     YCbCrDescriptor(aData.mYSize, aData.mCbCrSize, yOffset, cbOffset, crOffset,
-                    aData.mStereoMode)
+                    aData.mStereoMode, hasIntermediateBuffer)
   );
 
   return true;

@@ -24,6 +24,7 @@ public:
   TextureSourceBasic() : mFromYCBCR(false) {}
   virtual ~TextureSourceBasic() {}
   virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) = 0;
+  virtual void SetBufferTextureHost(BufferTextureHost* aTexture) {}
   bool mFromYCBCR; // we to track sources from YCBCR so we can use a less accurate fast path for video
 };
 
