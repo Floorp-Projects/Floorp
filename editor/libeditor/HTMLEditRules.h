@@ -6,8 +6,9 @@
 #ifndef HTMLEditRules_h
 #define HTMLEditRules_h
 
-#include "SelectionState.h"
 #include "TypeInState.h"
+#include "mozilla/SelectionState.h"
+#include "mozilla/TextEditRules.h"
 #include "nsCOMPtr.h"
 #include "nsEditor.h"
 #include "nsIEditActionListener.h"
@@ -15,7 +16,6 @@
 #include "nsIHTMLEditor.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
-#include "nsTextEditRules.h"
 #include "nscore.h"
 
 class nsHTMLEditor;
@@ -66,12 +66,12 @@ struct StyleCache final : public PropItem
 
 #define SIZE_STYLE_TABLE 19
 
-class HTMLEditRules : public nsTextEditRules
+class HTMLEditRules : public TextEditRules
                     , public nsIEditActionListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLEditRules, nsTextEditRules)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLEditRules, TextEditRules)
 
   HTMLEditRules();
 

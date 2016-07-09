@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef SelectionState_h
-#define SelectionState_h
+#ifndef mozilla_SelectionState_h
+#define mozilla_SelectionState_h
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
@@ -354,4 +354,4 @@ public:
 
 } // namespace mozilla
 
-#endif // #ifndef SelectionState_h
+#endif // #ifndef mozilla_SelectionState_h

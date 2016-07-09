@@ -10,13 +10,14 @@
 #include "TextEditUtils.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/Selection.h"
-#include "mozilla/dom/Event.h"
+#include "mozilla/TextEditRules.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Selection.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsCRT.h"
 #include "nsCaret.h"
@@ -54,7 +55,6 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsSubstringTuple.h"
-#include "nsTextEditRules.h"
 #include "nsUnicharUtils.h"
 #include "nsXPCOM.h"
 
@@ -322,7 +322,7 @@ NS_IMETHODIMP nsPlaintextEditor::InitRules()
 {
   if (!mRules) {
     // instantiate the rules for this text editor
-    mRules = new nsTextEditRules();
+    mRules = new TextEditRules();
   }
   return mRules->Init(this);
 }
@@ -832,8 +832,7 @@ nsPlaintextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
     // Protect the edit rules object from dying
     nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-    nsTextEditRules *textEditRules =
-      static_cast<nsTextEditRules*>(mRules.get());
+    TextEditRules* textEditRules = static_cast<TextEditRules*>(mRules.get());
     textEditRules->ResetIMETextPWBuf();
   }
 

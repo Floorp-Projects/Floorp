@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteNodeTransaction.h"
-#include "SelectionState.h" // RangeUpdater
+#include "mozilla/SelectionState.h" // RangeUpdater
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"

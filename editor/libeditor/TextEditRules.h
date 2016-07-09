@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTextEditRules_h__
-#define nsTextEditRules_h__
+#ifndef mozilla_TextEditRules_h
+#define mozilla_TextEditRules_h
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -13,45 +13,49 @@
 #include "nsIEditor.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
-#include "nsPlaintextEditor.h"
 #include "nsString.h"
 #include "nscore.h"
 
+class nsAutoLockRulesSniffing;
 class nsIDOMElement;
 class nsIDOMNode;
+class nsPlaintextEditor;
+
 namespace mozilla {
+
 namespace dom {
 class Selection;
 } // namespace dom
-} // namespace mozilla
 
-/** Object that encapsulates HTML text-specific editing rules.
-  *
-  * To be a good citizen, edit rules must live by these restrictions:
-  * 1. All data manipulation is through the editor.
-  *    Content nodes in the document tree must <B>not</B> be manipulated directly.
-  *    Content nodes in document fragments that are not part of the document itself
-  *    may be manipulated at will.  Operations on document fragments must <B>not</B>
-  *    go through the editor.
-  * 2. Selection must not be explicitly set by the rule method.
-  *    Any manipulation of Selection must be done by the editor.
-  */
-class nsTextEditRules : public nsIEditRules, public nsITimerCallback
+/**
+ * Object that encapsulates HTML text-specific editing rules.
+ *
+ * To be a good citizen, edit rules must live by these restrictions:
+ * 1. All data manipulation is through the editor.
+ *    Content nodes in the document tree must <B>not</B> be manipulated
+ *    directly.  Content nodes in document fragments that are not part of the
+ *    document itself may be manipulated at will.  Operations on document
+ *    fragments must <B>not</B> go through the editor.
+ * 2. Selection must not be explicitly set by the rule method.
+ *    Any manipulation of Selection must be done by the editor.
+ */
+class TextEditRules : public nsIEditRules
+                    , public nsITimerCallback
 {
 public:
-  typedef mozilla::dom::Element       Element;
-  typedef mozilla::dom::Selection     Selection;
-  typedef mozilla::dom::Text          Text;
-  template<typename T> using OwningNonNull = mozilla::OwningNonNull<T>;
+  typedef dom::Element Element;
+  typedef dom::Selection Selection;
+  typedef dom::Text Text;
+  template<typename T> using OwningNonNull = OwningNonNull<T>;
 
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTextEditRules, nsIEditRules)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TextEditRules, nsIEditRules)
 
-  nsTextEditRules();
+  TextEditRules();
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsPlaintextEditor *aEditor) override;
+  NS_IMETHOD Init(nsPlaintextEditor* aTextEditor) override;
   NS_IMETHOD SetInitialValue(const nsAString& aValue) override;
   NS_IMETHOD DetachEditor() override;
   NS_IMETHOD BeforeEdit(EditAction action,
@@ -62,11 +66,11 @@ public:
                           bool* aCancel, bool* aHandled) override;
   NS_IMETHOD DidDoAction(Selection* aSelection, nsRulesInfo* aInfo,
                          nsresult aResult) override;
-  NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty) override;
+  NS_IMETHOD DocumentIsEmpty(bool* aDocumentIsEmpty) override;
   NS_IMETHOD DocumentModified() override;
 
 protected:
-  virtual ~nsTextEditRules();
+  virtual ~TextEditRules();
 
 public:
   void ResetIMETextPWBuf();
@@ -93,7 +97,7 @@ public:
    *        * nsIPlaintextEditor::eNewlinesPasteToFirst or any other value:
    *          remove the first newline and all characters following it.
    */
-  static void HandleNewLines(nsString &aString, int32_t aNewLineHandling);
+  static void HandleNewLines(nsString& aString, int32_t aNewLineHandling);
 
   /**
    * Prepare a string buffer for being displayed as the contents of a password
@@ -105,25 +109,25 @@ public:
    * @param aLength the number of password characters that aOutString should
    *        contain.
    */
-  static void FillBufWithPWChars(nsAString *aOutString, int32_t aLength);
+  static void FillBufWithPWChars(nsAString* aOutString, int32_t aLength);
 
 protected:
 
   void InitFields();
 
-  // nsTextEditRules implementation methods
-  nsresult WillInsertText(  EditAction aAction,
-                            Selection* aSelection,
-                            bool            *aCancel,
-                            bool            *aHandled,
-                            const nsAString *inString,
-                            nsAString       *outString,
-                            int32_t          aMaxLength);
+  // TextEditRules implementation methods
+  nsresult WillInsertText(EditAction aAction,
+                          Selection* aSelection,
+                          bool* aCancel,
+                          bool* aHandled,
+                          const nsAString* inString,
+                          nsAString* outString,
+                          int32_t aMaxLength);
   nsresult DidInsertText(Selection* aSelection, nsresult aResult);
-  nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
+  nsresult GetTopEnclosingPre(nsIDOMNode* aNode, nsIDOMNode** aOutPreNode);
 
   nsresult WillInsertBreak(Selection* aSelection, bool* aCancel,
-                           bool *aHandled, int32_t aMaxLength);
+                           bool* aHandled, int32_t aMaxLength);
   nsresult DidInsertBreak(Selection* aSelection, nsresult aResult);
 
   void WillInsert(Selection& aSelection, bool* aCancel);
@@ -131,8 +135,8 @@ protected:
 
   nsresult WillDeleteSelection(Selection* aSelection,
                                nsIEditor::EDirection aCollapsedAction,
-                               bool *aCancel,
-                               bool *aHandled);
+                               bool* aCancel,
+                               bool* aHandled);
   nsresult DidDeleteSelection(Selection* aSelection,
                               nsIEditor::EDirection aCollapsedAction,
                               nsresult aResult);
@@ -151,43 +155,51 @@ protected:
   nsresult WillRedo(Selection* aSelection, bool* aCancel, bool* aHandled);
   nsresult DidRedo(Selection* aSelection, nsresult aResult);
 
-  /** called prior to nsIEditor::OutputToString
-    * @param aSelection
-    * @param aInFormat  the format requested for the output, a MIME type
-    * @param aOutText   the string to use for output, if aCancel is set to true
-    * @param aOutCancel if set to true, the caller should cancel the operation
-    *                   and use aOutText as the result.
-    */
+  /**
+   * Called prior to nsIEditor::OutputToString.
+   * @param aSelection
+   * @param aInFormat  The format requested for the output, a MIME type.
+   * @param aOutText   The string to use for output, if aCancel is set to true.
+   * @param aOutCancel If set to true, the caller should cancel the operation
+   *                   and use aOutText as the result.
+   */
   nsresult WillOutputText(Selection* aSelection,
-                          const nsAString  *aInFormat,
-                          nsAString *aOutText,
-                          bool     *aOutCancel,
-                          bool *aHandled);
+                          const nsAString* aInFormat,
+                          nsAString* aOutText,
+                          bool* aOutCancel,
+                          bool* aHandled);
 
   nsresult DidOutputText(Selection* aSelection, nsresult aResult);
 
-
-  // helper functions
-
-  /** check for and replace a redundant trailing break */
+  /**
+   * Check for and replace a redundant trailing break.
+   */
   nsresult RemoveRedundantTrailingBR();
 
-  /** creates a trailing break in the text doc if there is not one already */
+  /**
+   * Creates a trailing break in the text doc if there is not one already.
+   */
   nsresult CreateTrailingBRIfNeeded();
 
- /** creates a bogus text node if the document has no editable content */
+  /**
+   * Creates a bogus text node if the document has no editable content.
+   */
   nsresult CreateBogusNodeIfNeeded(Selection* aSelection);
 
-  /** returns a truncated insertion string if insertion would place us
-      over aMaxLength */
-  nsresult TruncateInsertionIfNeeded(Selection*  aSelection,
-                                     const nsAString          *aInString,
-                                     nsAString                *aOutString,
-                                     int32_t                   aMaxLength,
-                                     bool                     *aTruncated);
+  /**
+   * Returns a truncated insertion string if insertion would place us over
+   * aMaxLength
+   */
+  nsresult TruncateInsertionIfNeeded(Selection* aSelection,
+                                     const nsAString* aInString,
+                                     nsAString* aOutString,
+                                     int32_t aMaxLength,
+                                     bool* aTruncated);
 
-  /** Remove IME composition text from password buffer */
-  void RemoveIMETextFromPWBuf(int32_t &aStart, nsAString *aIMEString);
+  /**
+   * Remove IME composition text from password buffer.
+   */
+  void RemoveIMETextFromPWBuf(int32_t& aStart, nsAString* aIMEString);
 
   nsresult CreateMozBR(nsIDOMNode* inParent, int32_t inOffset,
                        nsIDOMNode** outBRNode = nullptr);
@@ -195,69 +207,53 @@ protected:
   void UndefineCaretBidiLevel(Selection* aSelection);
 
   nsresult CheckBidiLevelForDeletion(Selection* aSelection,
-                                     nsIDOMNode           *aSelNode,
-                                     int32_t               aSelOffset,
+                                     nsIDOMNode* aSelNode,
+                                     int32_t aSelOffset,
                                      nsIEditor::EDirection aAction,
-                                     bool                 *aCancel);
+                                     bool* aCancel);
 
   nsresult HideLastPWInput();
 
   nsresult CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection);
 
-  bool IsPasswordEditor() const
-  {
-    return mEditor ? mEditor->IsPasswordEditor() : false;
-  }
-  bool IsSingleLineEditor() const
-  {
-    return mEditor ? mEditor->IsSingleLineEditor() : false;
-  }
-  bool IsPlaintextEditor() const
-  {
-    return mEditor ? mEditor->IsPlaintextEditor() : false;
-  }
-  bool IsReadonly() const
-  {
-    return mEditor ? mEditor->IsReadonly() : false;
-  }
-  bool IsDisabled() const
-  {
-    return mEditor ? mEditor->IsDisabled() : false;
-  }
-  bool IsMailEditor() const
-  {
-    return mEditor ? mEditor->IsMailEditor() : false;
-  }
-  bool DontEchoPassword() const
-  {
-    return mEditor ? mEditor->DontEchoPassword() : false;
-  }
+  bool IsPasswordEditor() const;
+  bool IsSingleLineEditor() const;
+  bool IsPlaintextEditor() const;
+  bool IsReadonly() const;
+  bool IsDisabled() const;
+  bool IsMailEditor() const;
+  bool DontEchoPassword() const;
 
-  // data members
-  nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
-  nsString             mPasswordText;  // a buffer we use to store the real value of password editors
-  nsString             mPasswordIMEText;  // a buffer we use to track the IME composition string
-  uint32_t             mPasswordIMEIndex;
-  nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
-  nsCOMPtr<nsIDOMNode> mCachedSelectionNode;    // cached selected node
-  int32_t              mCachedSelectionOffset;  // cached selected offset
-  uint32_t             mActionNesting;
-  bool                 mLockRulesSniffing;
-  bool                 mDidExplicitlySetInterline;
-  bool                 mDeleteBidiImmediately; // in bidirectional text, delete
-                                               // characters not visually
-                                               // adjacent to the caret without
-                                               // moving the caret first.
-  EditAction mTheAction;     // the top level editor action
-  nsCOMPtr<nsITimer>   mTimer;
-  uint32_t             mLastStart, mLastLength;
+  // Note that we do not refcount the editor.
+  nsPlaintextEditor* mEditor;
+  // A buffer we use to store the real value of password editors.
+  nsString mPasswordText;
+  // A buffer we use to track the IME composition string.
+  nsString mPasswordIMEText;
+  uint32_t mPasswordIMEIndex;
+  // Magic node acts as placeholder in empty doc.
+  nsCOMPtr<nsIDOMNode> mBogusNode;
+  // Cached selected node.
+  nsCOMPtr<nsIDOMNode> mCachedSelectionNode;
+  // Cached selected offset.
+  int32_t mCachedSelectionOffset;
+  uint32_t mActionNesting;
+  bool mLockRulesSniffing;
+  bool mDidExplicitlySetInterline;
+  // In bidirectional text, delete characters not visually adjacent to the
+  // caret without moving the caret first.
+  bool mDeleteBidiImmediately;
+  // The top level editor action.
+  EditAction mTheAction;
+  nsCOMPtr<nsITimer> mTimer;
+  uint32_t mLastStart;
+  uint32_t mLastLength;
 
   // friends
   friend class nsAutoLockRulesSniffing;
-
 };
 
-
+} // namespace mozilla
 
 class nsTextRulesInfo : public nsRulesInfo
 {
@@ -316,13 +312,13 @@ class nsAutoLockRulesSniffing
 {
   public:
 
-  explicit nsAutoLockRulesSniffing(nsTextEditRules *rules) : mRules(rules)
+  explicit nsAutoLockRulesSniffing(mozilla::TextEditRules *rules) : mRules(rules)
                  {if (mRules) mRules->mLockRulesSniffing = true;}
   ~nsAutoLockRulesSniffing()
                  {if (mRules) mRules->mLockRulesSniffing = false;}
 
   protected:
-  nsTextEditRules *mRules;
+  mozilla::TextEditRules *mRules;
 };
 
 
@@ -355,4 +351,4 @@ protected:
   bool mOldState;
 };
 
-#endif //nsTextEditRules_h__
+#endif // #ifndef mozilla_TextEditRules_h

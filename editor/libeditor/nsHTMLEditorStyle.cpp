@@ -5,10 +5,10 @@
 
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
-#include "SelectionState.h"
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
@@ -38,7 +38,6 @@
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "nsTextEditRules.h"
 #include "nsUnicharUtils.h"
 #include "nscore.h"
 
