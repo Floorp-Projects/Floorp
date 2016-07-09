@@ -132,6 +132,19 @@ label.findbar-find-fast:-moz-lwtheme,
   box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
+@media (-moz-mac-yosemite-theme) {
+  .findbar-container > toolbarbutton:-moz-focusring,
+  .findbar-find-next:-moz-focusring,
+  .findbar-find-previous:-moz-focusring {
+    box-shadow: @yosemiteFocusRingShadow@, @roundButtonShadow@;
+  }
+
+  .findbar-find-next:hover:active:-moz-focusring,
+  .findbar-find-previous:hover:active:-moz-focusring {
+    box-shadow: @yosemiteFocusRingShadow@, @roundButtonPressedShadow@;
+  }
+}
+
 /* Search field */
 
 .findbar-textbox {
@@ -168,6 +181,12 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-textbox[focused="true"] {
   box-shadow: @focusRingShadow@;
+}
+
+@media (-moz-mac-yosemite-theme) {
+  .findbar-textbox[focused="true"] {
+    box-shadow: @yosemiteFocusRingShadow@;
+  }
 }
 
 .findbar-textbox[flash="true"] {
