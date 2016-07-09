@@ -259,7 +259,7 @@ class BaseStackFrame {
 
     // Return true if this frame's function is a self-hosted JavaScript builtin,
     // false otherwise.
-    virtual bool isSelfHosted() const = 0;
+    virtual bool isSelfHosted(JSContext* cx) const = 0;
 
     // Construct a SavedFrame stack for the stack starting with this frame and
     // containing all of its parents. The SavedFrame objects will be placed into
@@ -416,7 +416,7 @@ class StackFrame {
     AtomOrTwoByteChars functionDisplayName() const { return base()->functionDisplayName(); }
     StackFrame parent() const { return base()->parent(); }
     bool isSystem() const { return base()->isSystem(); }
-    bool isSelfHosted() const { return base()->isSelfHosted(); }
+    bool isSelfHosted(JSContext* cx) const { return base()->isSelfHosted(cx); }
     MOZ_MUST_USE bool constructSavedFrameStack(JSContext* cx,
                                                MutableHandleObject outSavedFrameStack) const {
         return base()->constructSavedFrameStack(cx, outSavedFrameStack);
@@ -463,7 +463,7 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
     AtomOrTwoByteChars functionDisplayName() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
     StackFrame parent() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
     bool isSystem() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
-    bool isSelfHosted() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
+    bool isSelfHosted(JSContext* cx) const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
 };
 
 MOZ_MUST_USE bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,

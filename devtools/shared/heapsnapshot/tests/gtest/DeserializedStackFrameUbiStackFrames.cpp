@@ -46,7 +46,7 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
     EXPECT_EQ(JS::ubi::AtomOrTwoByteChars(source), ubiFrame.source());
     EXPECT_EQ(JS::ubi::AtomOrTwoByteChars(functionDisplayName),
               ubiFrame.functionDisplayName());
-    EXPECT_FALSE(ubiFrame.isSelfHosted());
+    EXPECT_FALSE(ubiFrame.isSelfHosted(cx));
     EXPECT_FALSE(ubiFrame.isSystem());
 
     JS::RootedObject savedFrame(cx);
