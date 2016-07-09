@@ -271,9 +271,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if options.localAPK:
             self.localAPKContents = ZipFile(options.localAPK)
         if options.setup:
+            self.setupTestDir()
             self.setupUtilities()
             self.setupModules()
-            self.setupTestDir()
         self.setupMinidumpDir()
         self.remoteAPK = None
         if options.localAPK:

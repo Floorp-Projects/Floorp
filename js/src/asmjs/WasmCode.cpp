@@ -34,6 +34,8 @@
 # include "vtune/VTuneWrapper.h"
 #endif
 
+#include "vm/ArrayBufferObject-inl.h"
+
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
@@ -94,25 +96,20 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
         }
     }
 
-    // Initialize data in the code segment that needs absolute addresses:
+    // These constants are logically part of the code:
 
     *(double*)(cs.globalData() + NaN64GlobalDataOffset) = GenericNaN();
     *(float*)(cs.globalData() + NaN32GlobalDataOffset) = GenericNaN();
-
-    for (const LinkData::FuncTable& table : linkData.funcTables) {
-        auto array = reinterpret_cast<void**>(cs.globalData() + table.globalDataOffset);
-        for (size_t i = 0; i < table.elemOffsets.length(); i++)
-            array[i] = cs.code() + table.elemOffsets[i];
-    }
 }
 
 static void
-SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, uint8_t* base, uint32_t length)
+SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, HandleWasmMemoryObject memory)
 {
     for (const BoundsCheck& check : metadata.boundsChecks)
-        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), length);
+        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), memory->buffer().byteLength());
 
 #if defined(JS_CODEGEN_X86)
+    uint8_t* base = memory->buffer().dataPointerEither().unwrap();
     for (const MemoryAccess& access : metadata.memoryAccesses) {
         // Patch memory pointer immediate.
         void* addr = access.patchMemoryPtrImmAt(cs.code());
@@ -194,8 +191,7 @@ CodeSegment::create(JSContext* cx,
                     const Bytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata,
-                    uint8_t* memoryBase,
-                    uint32_t memoryLength)
+                    HandleWasmMemoryObject memory)
 {
     MOZ_ASSERT(bytecode.length() % gc::SystemPageSize() == 0);
     MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
@@ -223,7 +219,8 @@ CodeSegment::create(JSContext* cx,
 
         memcpy(cs->code(), bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
-        SpecializeToMemory(*cs, metadata, memoryBase, memoryLength);
+        if (memory)
+            SpecializeToMemory(*cs, metadata, memory);
     }
 
     if (!ExecutableAllocator::makeExecutable(cs->code(), cs->codeLength())) {
@@ -315,14 +312,14 @@ Export::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 size_t
-Import::serializedSize() const
+FuncImport::serializedSize() const
 {
     return SerializedSigSize(sig_) +
            sizeof(pod);
 }
 
 uint8_t*
-Import::serialize(uint8_t* cursor) const
+FuncImport::serialize(uint8_t* cursor) const
 {
     cursor = SerializeSig(cursor, sig_);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
@@ -330,7 +327,7 @@ Import::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-Import::deserialize(const uint8_t* cursor)
+FuncImport::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializeSig(cursor, &sig_)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
@@ -338,7 +335,7 @@ Import::deserialize(const uint8_t* cursor)
 }
 
 size_t
-Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return SizeOfSigExcludingThis(sig_, mallocSizeOf);
 }
@@ -450,7 +447,7 @@ size_t
 Metadata::serializedSize() const
 {
     return sizeof(pod()) +
-           SerializedVectorSize(imports) +
+           SerializedVectorSize(funcImports) +
            SerializedVectorSize(exports) +
            SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(boundsChecks) +
@@ -466,7 +463,7 @@ uint8_t*
 Metadata::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-    cursor = SerializeVector(cursor, imports);
+    cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, exports);
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, boundsChecks);
@@ -483,7 +480,7 @@ Metadata::serialize(uint8_t* cursor) const
 Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializeVector(cursor, &imports)) &&
+    (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &exports)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
@@ -499,7 +496,7 @@ Metadata::deserialize(const uint8_t* cursor)
 size_t
 Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return SizeOfVectorExcludingThis(imports, mallocSizeOf) +
+    return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
            SizeOfVectorExcludingThis(exports, mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            boundsChecks.sizeOfExcludingThis(mallocSizeOf) +

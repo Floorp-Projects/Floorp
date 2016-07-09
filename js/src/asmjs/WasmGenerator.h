@@ -36,51 +36,55 @@ class FunctionGenerator;
 // any given datum before being read by a background thread. In particular,
 // once created, the Vectors are never resized.
 
-struct TableModuleGeneratorData
+struct TableGenDesc
 {
     uint32_t globalDataOffset;
     uint32_t numElems;
-    Uint32Vector elemFuncIndices;
 
-    TableModuleGeneratorData()
+    TableGenDesc()
       : globalDataOffset(0), numElems(0)
     {}
 };
 
-typedef Vector<TableModuleGeneratorData, 0, SystemAllocPolicy> TableModuleGeneratorDataVector;
+typedef Vector<TableGenDesc, 0, SystemAllocPolicy> TableGenDescVector;
 
-struct ImportModuleGeneratorData
+struct FuncImportGenDesc
 {
     const DeclaredSig* sig;
     uint32_t globalDataOffset;
 
-    ImportModuleGeneratorData() : sig(nullptr), globalDataOffset(0) {}
-    explicit ImportModuleGeneratorData(const DeclaredSig* sig) : sig(sig), globalDataOffset(0) {}
+    FuncImportGenDesc() : sig(nullptr), globalDataOffset(0) {}
+    explicit FuncImportGenDesc(const DeclaredSig* sig) : sig(sig), globalDataOffset(0) {}
 };
 
-typedef Vector<ImportModuleGeneratorData, 0, SystemAllocPolicy> ImportModuleGeneratorDataVector;
+typedef Vector<FuncImportGenDesc, 0, SystemAllocPolicy> FuncImportGenDescVector;
 
 struct ModuleGeneratorData
 {
-    ModuleKind                      kind;
-    SignalUsage                     usesSignal;
-    MemoryUsage                     memoryUsage;
-    mozilla::Atomic<uint32_t>       minMemoryLength;
+    ModuleKind                kind;
+    SignalUsage               usesSignal;
+    MemoryUsage               memoryUsage;
+    mozilla::Atomic<uint32_t> minMemoryLength;
+    uint32_t                  maxMemoryLength;
 
-    DeclaredSigVector               sigs;
-    DeclaredSigPtrVector            funcSigs;
-    ImportModuleGeneratorDataVector imports;
-    GlobalDescVector                globals;
+    DeclaredSigVector         sigs;
+    DeclaredSigPtrVector      funcSigs;
+    FuncImportGenDescVector   funcImports;
+    GlobalDescVector          globals;
 
-    TableModuleGeneratorData        wasmTable;
-    TableModuleGeneratorDataVector  asmJSSigToTable;
+    TableGenDesc              wasmTable;
+    TableGenDescVector        asmJSSigToTable;
 
     uint32_t funcSigIndex(uint32_t funcIndex) const {
         return funcSigs[funcIndex] - sigs.begin();
     }
 
     explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind), usesSignal(usesSignal), memoryUsage(MemoryUsage::None), minMemoryLength(0)
+      : kind(kind),
+        usesSignal(usesSignal),
+        memoryUsage(MemoryUsage::None),
+        minMemoryLength(0),
+        maxMemoryLength(UINT32_MAX)
     {}
 };
 
@@ -106,6 +110,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MutableMetadata                 metadata_;
     ExportMap                       exportMap_;
     DataSegmentVector               dataSegments_;
+    ElemSegmentVector               elemSegments_;
 
     // Data scoped to the ModuleGenerator's lifetime
     UniqueModuleGeneratorData       shared_;
@@ -138,7 +143,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishTask(IonCompileTask* task);
     MOZ_MUST_USE bool finishCodegen();
     MOZ_MUST_USE bool finishLinkData(Bytes& code);
-    MOZ_MUST_USE bool addImport(const Sig& sig, uint32_t globalDataOffset);
+    MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
 
   public:
@@ -155,7 +160,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Memory:
     bool usesMemory() const { return UsesMemory(shared_->memoryUsage); }
     uint32_t minMemoryLength() const { return shared_->minMemoryLength; }
-    MOZ_MUST_USE bool addDataSegment(DataSegment s) { return dataSegments_.append(s); }
 
     // Signatures:
     uint32_t numSigs() const { return numSigs_; }
@@ -170,8 +174,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     const GlobalDesc& global(unsigned index) const { return shared_->globals[index]; }
 
     // Imports:
-    uint32_t numImports() const;
-    const ImportModuleGeneratorData& import(uint32_t index) const;
+    uint32_t numFuncImports() const;
+    const FuncImportGenDesc& funcImport(uint32_t funcImportIndex) const;
 
     // Exports:
     MOZ_MUST_USE bool declareExport(UniqueChars fieldName, uint32_t funcIndex,
@@ -185,6 +189,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
 
+    // Segments:
+    MOZ_MUST_USE bool addDataSegment(DataSegment s) { return dataSegments_.append(s); }
+    MOZ_MUST_USE bool addElemSegment(Uint32Vector&& elemFuncIndices);
+
     // Function names:
     void setFuncNames(NameInBytecodeVector&& funcNames);
 
@@ -193,14 +201,14 @@ class MOZ_STACK_CLASS ModuleGenerator
     void initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
     MOZ_MUST_USE bool initImport(uint32_t importIndex, uint32_t sigIndex);
     MOZ_MUST_USE bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
-    void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
+    MOZ_MUST_USE bool initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
     void initMemoryUsage(MemoryUsage memoryUsage);
     void bumpMinMemoryLength(uint32_t newMinMemoryLength);
 
-    // Finish compilation, provided the list of imported names and source
-    // bytecode. Both these Vectors may be empty (viz., b/c asm.js does
-    // different things for imports and source).
-    UniqueModule finish(ImportNameVector&& importNames, const ShareableBytes& bytecode);
+    // Finish compilation, provided the list of imports and source bytecode.
+    // Both these Vectors may be empty (viz., b/c asm.js does different things
+    // for imports and source).
+    UniqueModule finish(ImportVector&& imports, const ShareableBytes& bytecode);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.

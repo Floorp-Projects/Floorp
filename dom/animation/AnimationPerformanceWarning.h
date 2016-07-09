@@ -49,7 +49,7 @@ struct AnimationPerformanceWarning
   // this variable, please include this header file directly.
   // This value is the same as the limit of nsStringBundle::FormatString.
   // See the implementation of nsStringBundle::FormatString.
-  static MOZ_CONSTEXPR_VAR uint8_t kMaxParamsForLocalization = 10;
+  static constexpr uint8_t kMaxParamsForLocalization = 10;
 
   // Indicates why this property could not be animated on the compositor.
   Type mType;

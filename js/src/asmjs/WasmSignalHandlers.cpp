@@ -702,6 +702,8 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
           case Disassembler::HeapAccess::Store:
             StoreValueFromRegister(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
             break;
+          case Disassembler::HeapAccess::LoadSext64:
+            MOZ_CRASH("no int64 accesses in asm.js");
           case Disassembler::HeapAccess::Unknown:
             MOZ_CRASH("Failed to disassemble instruction");
         }
@@ -726,6 +728,8 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
           case Disassembler::HeapAccess::Store:
             // Do nothing.
             break;
+          case Disassembler::HeapAccess::LoadSext64:
+            MOZ_CRASH("no int64 accesses in asm.js");
           case Disassembler::HeapAccess::Unknown:
             MOZ_CRASH("Failed to disassemble instruction");
         }

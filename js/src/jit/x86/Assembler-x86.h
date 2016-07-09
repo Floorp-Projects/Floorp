@@ -18,51 +18,51 @@
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register eax = { X86Encoding::rax };
-static MOZ_CONSTEXPR_VAR Register ecx = { X86Encoding::rcx };
-static MOZ_CONSTEXPR_VAR Register edx = { X86Encoding::rdx };
-static MOZ_CONSTEXPR_VAR Register ebx = { X86Encoding::rbx };
-static MOZ_CONSTEXPR_VAR Register esp = { X86Encoding::rsp };
-static MOZ_CONSTEXPR_VAR Register ebp = { X86Encoding::rbp };
-static MOZ_CONSTEXPR_VAR Register esi = { X86Encoding::rsi };
-static MOZ_CONSTEXPR_VAR Register edi = { X86Encoding::rdi };
+static constexpr Register eax = { X86Encoding::rax };
+static constexpr Register ecx = { X86Encoding::rcx };
+static constexpr Register edx = { X86Encoding::rdx };
+static constexpr Register ebx = { X86Encoding::rbx };
+static constexpr Register esp = { X86Encoding::rsp };
+static constexpr Register ebp = { X86Encoding::rbp };
+static constexpr Register esi = { X86Encoding::rsi };
+static constexpr Register edi = { X86Encoding::rdi };
 
-static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = FloatRegister(X86Encoding::xmm1, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = FloatRegister(X86Encoding::xmm2, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = FloatRegister(X86Encoding::xmm3, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = FloatRegister(X86Encoding::xmm4, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = FloatRegister(X86Encoding::xmm5, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = FloatRegister(X86Encoding::xmm6, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
+static constexpr FloatRegister xmm0 = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+static constexpr FloatRegister xmm1 = FloatRegister(X86Encoding::xmm1, FloatRegisters::Double);
+static constexpr FloatRegister xmm2 = FloatRegister(X86Encoding::xmm2, FloatRegisters::Double);
+static constexpr FloatRegister xmm3 = FloatRegister(X86Encoding::xmm3, FloatRegisters::Double);
+static constexpr FloatRegister xmm4 = FloatRegister(X86Encoding::xmm4, FloatRegisters::Double);
+static constexpr FloatRegister xmm5 = FloatRegister(X86Encoding::xmm5, FloatRegisters::Double);
+static constexpr FloatRegister xmm6 = FloatRegister(X86Encoding::xmm6, FloatRegisters::Double);
+static constexpr FloatRegister xmm7 = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
 
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Encoding::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = FloatRegister();
+static constexpr Register InvalidReg = { X86Encoding::invalid_reg };
+static constexpr FloatRegister InvalidFloatReg = FloatRegister();
 
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = ecx;
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = edx;
-static MOZ_CONSTEXPR_VAR Register StackPointer = esp;
-static MOZ_CONSTEXPR_VAR Register FramePointer = ebp;
-static MOZ_CONSTEXPR_VAR Register ReturnReg = eax;
-static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg, InvalidReg);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimd128Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Simd128);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Single);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimd128Reg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Simd128);
+static constexpr Register JSReturnReg_Type = ecx;
+static constexpr Register JSReturnReg_Data = edx;
+static constexpr Register StackPointer = esp;
+static constexpr Register FramePointer = ebp;
+static constexpr Register ReturnReg = eax;
+static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
+static constexpr FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
+static constexpr FloatRegister ReturnSimd128Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Simd128);
+static constexpr FloatRegister ScratchFloat32Reg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Single);
+static constexpr FloatRegister ScratchDoubleReg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
+static constexpr FloatRegister ScratchSimd128Reg = FloatRegister(X86Encoding::xmm7, FloatRegisters::Simd128);
 
 // Avoid ebp, which is the FramePointer, which is unavailable in some modes.
-static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = esi;
-static MOZ_CONSTEXPR_VAR Register CallTempReg0 = edi;
-static MOZ_CONSTEXPR_VAR Register CallTempReg1 = eax;
-static MOZ_CONSTEXPR_VAR Register CallTempReg2 = ebx;
-static MOZ_CONSTEXPR_VAR Register CallTempReg3 = ecx;
-static MOZ_CONSTEXPR_VAR Register CallTempReg4 = esi;
-static MOZ_CONSTEXPR_VAR Register CallTempReg5 = edx;
+static constexpr Register ArgumentsRectifierReg = esi;
+static constexpr Register CallTempReg0 = edi;
+static constexpr Register CallTempReg1 = eax;
+static constexpr Register CallTempReg2 = ebx;
+static constexpr Register CallTempReg3 = ecx;
+static constexpr Register CallTempReg4 = esi;
+static constexpr Register CallTempReg5 = edx;
 
 // We have no arg regs, so our NonArgRegs are just our CallTempReg*
-// Use "const" instead of MOZ_CONSTEXPR_VAR here to work around a bug
+// Use "const" instead of constexpr here to work around a bug
 // of VS2015 Update 1. See bug 1229604.
 static const Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };
 static const uint32_t NumCallTempNonArgRegs =
@@ -81,56 +81,56 @@ class ABIArgGenerator
 
 };
 
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = eax;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = ecx;
+static constexpr Register ABINonArgReg0 = eax;
+static constexpr Register ABINonArgReg1 = ecx;
 
 // Note: these three registers are all guaranteed to be different
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = ecx;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = edx;
-static MOZ_CONSTEXPR_VAR Register ABINonVolatileReg = ebx;
+static constexpr Register ABINonArgReturnReg0 = ecx;
+static constexpr Register ABINonArgReturnReg1 = edx;
+static constexpr Register ABINonVolatileReg = ebx;
 
 // Registers used for asm.js/wasm table calls. These registers must be disjoint
 // from the ABI argument registers and from each other.
-static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = ABINonArgReg0;
-static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = ABINonArgReg1;
+static constexpr Register WasmTableCallPtrReg = ABINonArgReg0;
+static constexpr Register WasmTableCallSigReg = ABINonArgReg1;
 
-static MOZ_CONSTEXPR_VAR Register OsrFrameReg = edx;
-static MOZ_CONSTEXPR_VAR Register PreBarrierReg = edx;
+static constexpr Register OsrFrameReg = edx;
+static constexpr Register PreBarrierReg = edx;
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = ecx;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = edi;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = eax;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = ebx;
+static constexpr Register AsmJSIonExitRegCallee = ecx;
+static constexpr Register AsmJSIonExitRegE0 = edi;
+static constexpr Register AsmJSIonExitRegE1 = eax;
+static constexpr Register AsmJSIonExitRegE2 = ebx;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = edx;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = ecx;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = edi;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = eax;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = esi;
+static constexpr Register AsmJSIonExitRegReturnData = edx;
+static constexpr Register AsmJSIonExitRegReturnType = ecx;
+static constexpr Register AsmJSIonExitRegD0 = edi;
+static constexpr Register AsmJSIonExitRegD1 = eax;
+static constexpr Register AsmJSIonExitRegD2 = esi;
 
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = CallTempReg0;
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = CallTempReg1;
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = CallTempReg2;
+static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
+static constexpr Register RegExpMatcherStringReg = CallTempReg1;
+static constexpr Register RegExpMatcherLastIndexReg = CallTempReg2;
 
 // Registerd used in RegExpTester instruction (do not use ReturnReg).
-static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = CallTempReg0;
-static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = CallTempReg2;
-static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = CallTempReg3;
+static constexpr Register RegExpTesterRegExpReg = CallTempReg0;
+static constexpr Register RegExpTesterStringReg = CallTempReg2;
+static constexpr Register RegExpTesterLastIndexReg = CallTempReg3;
 
 // GCC stack is aligned on 16 bytes. Ion does not maintain this for internal
 // calls. asm.js code does.
 #if defined(__GNUC__)
-static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 16;
+static constexpr uint32_t ABIStackAlignment = 16;
 #else
-static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 4;
+static constexpr uint32_t ABIStackAlignment = 4;
 #endif
-static MOZ_CONSTEXPR_VAR uint32_t CodeAlignment = 16;
-static MOZ_CONSTEXPR_VAR uint32_t JitStackAlignment = 16;
+static constexpr uint32_t CodeAlignment = 16;
+static constexpr uint32_t JitStackAlignment = 16;
 
-static MOZ_CONSTEXPR_VAR uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
+static constexpr uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
 static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >= 1,
   "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
@@ -138,8 +138,8 @@ static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >
 // this architecture or not. Rather than a method in the LIRGenerator, it is
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static MOZ_CONSTEXPR_VAR bool SupportsSimd = true;
-static MOZ_CONSTEXPR_VAR uint32_t SimdMemoryAlignment = 16;
+static constexpr bool SupportsSimd = true;
+static constexpr uint32_t SimdMemoryAlignment = 16;
 
 static_assert(CodeAlignment % SimdMemoryAlignment == 0,
   "Code alignment should be larger than any of the alignments which are used for "

@@ -88,7 +88,7 @@ static bool gTryRealloc = true;
 static class GLFunctions
 {
 public:
-  MOZ_CONSTEXPR GLFunctions() : fGetDisplay(nullptr),
+  constexpr GLFunctions() : fGetDisplay(nullptr),
                                 fEGLGetError(nullptr),
                                 fCreateImageKHR(nullptr),
                                 fDestroyImageKHR(nullptr),

@@ -278,7 +278,7 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
     }
 
     const auto formatUsage = Format();
-    if (!formatUsage->isRenderable) {
+    if (!formatUsage->IsRenderable()) {
         nsAutoCString attachName;
         AttachmentName(&attachName);
 

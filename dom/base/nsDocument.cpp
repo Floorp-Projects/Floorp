@@ -6291,13 +6291,13 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     {
       JSAutoCompartment ac(aCx, global);
 
-      htmlProto = HTMLElementBinding::GetProtoObjectHandle(aCx, global);
+      htmlProto = HTMLElementBinding::GetProtoObjectHandle(aCx);
       if (!htmlProto) {
         rv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
 
-      svgProto = SVGElementBinding::GetProtoObjectHandle(aCx, global);
+      svgProto = SVGElementBinding::GetProtoObjectHandle(aCx);
       if (!svgProto) {
         rv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;

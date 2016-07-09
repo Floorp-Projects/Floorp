@@ -107,7 +107,7 @@ struct Keyframe
   }
 
   Maybe<double>                 mOffset;
-  static MOZ_CONSTEXPR_VAR double kComputedOffsetNotSet = -1.0;
+  static constexpr double kComputedOffsetNotSet = -1.0;
   double                        mComputedOffset = kComputedOffsetNotSet;
   Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
                                                  // "linear"

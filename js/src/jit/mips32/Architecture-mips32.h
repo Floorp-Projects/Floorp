@@ -138,10 +138,10 @@ class FloatRegister : public FloatRegisterMIPSShared
     RegType kind_ : 1;
 
   public:
-    MOZ_CONSTEXPR FloatRegister(uint32_t code, RegType kind = Double)
+    constexpr FloatRegister(uint32_t code, RegType kind = Double)
       : code_ (Code(code)), kind_(kind)
     { }
-    MOZ_CONSTEXPR FloatRegister()
+    constexpr FloatRegister()
       : code_(Code(FloatRegisters::invalid_freg)), kind_(Double)
     { }
 

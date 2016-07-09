@@ -7678,23 +7678,50 @@ class LWasmBoundsCheck : public LInstructionHelper<0, 1, 0>
     }
 };
 
-class LWasmLoad : public LInstructionHelper<1, 1, 1>
+namespace details {
+
+// This is a base class for LWasmLoad/LWasmLoadI64.
+template<size_t Defs, size_t Temp>
+class LWasmLoadBase : public LInstructionHelper<Defs, 1, Temp>
 {
   public:
-    LIR_HEADER(WasmLoad);
-    explicit LWasmLoad(const LAllocation& ptr) {
-        setOperand(0, ptr);
-        setTemp(0, LDefinition::BogusTemp());
+    typedef LInstructionHelper<Defs, 1, Temp> Base;
+    explicit LWasmLoadBase(const LAllocation& ptr) {
+        Base::setOperand(0, ptr);
     }
     MWasmLoad* mir() const {
-        return mir_->toWasmLoad();
+        return Base::mir_->toWasmLoad();
     }
     const LAllocation* ptr() {
-        return getOperand(0);
+        return Base::getOperand(0);
     }
+};
+
+} // namespace details
+
+class LWasmLoad : public details::LWasmLoadBase<1, 1>
+{
+  public:
+    explicit LWasmLoad(const LAllocation& ptr)
+      : LWasmLoadBase(ptr)
+    {
+        setTemp(0, LDefinition::BogusTemp());
+    }
+
     const LDefinition* ptrCopy() {
-        return getTemp(0);
+        return Base::getTemp(0);
     }
+
+    LIR_HEADER(WasmLoad);
+};
+
+class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 0>
+{
+  public:
+    explicit LWasmLoadI64(const LAllocation& ptr)
+      : LWasmLoadBase(ptr)
+    {}
+    LIR_HEADER(WasmLoadI64);
 };
 
 class LWasmStore : public LInstructionHelper<0, 2, 1>

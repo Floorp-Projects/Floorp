@@ -511,10 +511,10 @@ SavedFrame::create(JSContext* cx)
 }
 
 bool
-SavedFrame::isSelfHosted()
+SavedFrame::isSelfHosted(JSContext* cx)
 {
     JSAtom* source = getSource();
-    return StringEqualsAscii(source, "self-hosted");
+    return source == cx->names().selfHosted;
 }
 
 /* static */ bool
@@ -560,7 +560,8 @@ GetFirstSubsumedFrame(JSContext* cx, HandleSavedFrame frame, JS::SavedFrameSelfH
 
     RootedSavedFrame rootedFrame(cx, frame);
     while (rootedFrame) {
-        if ((selfHosted == JS::SavedFrameSelfHosted::Include || !rootedFrame->isSelfHosted()) &&
+        if ((selfHosted == JS::SavedFrameSelfHosted::Include ||
+             !rootedFrame->isSelfHosted(cx)) &&
             SavedFrameSubsumedByCaller(cx, rootedFrame))
         {
             return rootedFrame;
@@ -902,7 +903,7 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
         js::RootedSavedFrame parent(cx);
         do {
             MOZ_ASSERT(SavedFrameSubsumedByCaller(cx, frame));
-            MOZ_ASSERT(!frame->isSelfHosted());
+            MOZ_ASSERT(!frame->isSelfHosted(cx));
 
             RootedString asyncCause(cx, frame->getAsyncCause());
             if (!asyncCause && skippedAsync)

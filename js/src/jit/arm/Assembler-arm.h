@@ -25,26 +25,26 @@ namespace jit {
 // refer to the link register as a link register (bl lr is much clearer than bl
 // r14). HOWEVER, this register can easily be a gpr when it is not busy holding
 // the return address.
-static MOZ_CONSTEXPR_VAR Register r0  = { Registers::r0 };
-static MOZ_CONSTEXPR_VAR Register r1  = { Registers::r1 };
-static MOZ_CONSTEXPR_VAR Register r2  = { Registers::r2 };
-static MOZ_CONSTEXPR_VAR Register r3  = { Registers::r3 };
-static MOZ_CONSTEXPR_VAR Register r4  = { Registers::r4 };
-static MOZ_CONSTEXPR_VAR Register r5  = { Registers::r5 };
-static MOZ_CONSTEXPR_VAR Register r6  = { Registers::r6 };
-static MOZ_CONSTEXPR_VAR Register r7  = { Registers::r7 };
-static MOZ_CONSTEXPR_VAR Register r8  = { Registers::r8 };
-static MOZ_CONSTEXPR_VAR Register r9  = { Registers::r9 };
-static MOZ_CONSTEXPR_VAR Register r10 = { Registers::r10 };
-static MOZ_CONSTEXPR_VAR Register r11 = { Registers::r11 };
-static MOZ_CONSTEXPR_VAR Register r12 = { Registers::ip };
-static MOZ_CONSTEXPR_VAR Register ip  = { Registers::ip };
-static MOZ_CONSTEXPR_VAR Register sp  = { Registers::sp };
-static MOZ_CONSTEXPR_VAR Register r14 = { Registers::lr };
-static MOZ_CONSTEXPR_VAR Register lr  = { Registers::lr };
-static MOZ_CONSTEXPR_VAR Register pc  = { Registers::pc };
+static constexpr Register r0  = { Registers::r0 };
+static constexpr Register r1  = { Registers::r1 };
+static constexpr Register r2  = { Registers::r2 };
+static constexpr Register r3  = { Registers::r3 };
+static constexpr Register r4  = { Registers::r4 };
+static constexpr Register r5  = { Registers::r5 };
+static constexpr Register r6  = { Registers::r6 };
+static constexpr Register r7  = { Registers::r7 };
+static constexpr Register r8  = { Registers::r8 };
+static constexpr Register r9  = { Registers::r9 };
+static constexpr Register r10 = { Registers::r10 };
+static constexpr Register r11 = { Registers::r11 };
+static constexpr Register r12 = { Registers::ip };
+static constexpr Register ip  = { Registers::ip };
+static constexpr Register sp  = { Registers::sp };
+static constexpr Register r14 = { Registers::lr };
+static constexpr Register lr  = { Registers::lr };
+static constexpr Register pc  = { Registers::pc };
 
-static MOZ_CONSTEXPR_VAR Register ScratchRegister = {Registers::ip};
+static constexpr Register ScratchRegister = {Registers::ip};
 
 // Helper class for ScratchRegister usage. Asserts that only one piece
 // of code thinks it has exclusive ownership of the scratch register.
@@ -55,22 +55,22 @@ struct ScratchRegisterScope : public AutoRegisterScope
     { }
 };
 
-static MOZ_CONSTEXPR_VAR Register OsrFrameReg = r3;
-static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = r8;
-static MOZ_CONSTEXPR_VAR Register CallTempReg0 = r5;
-static MOZ_CONSTEXPR_VAR Register CallTempReg1 = r6;
-static MOZ_CONSTEXPR_VAR Register CallTempReg2 = r7;
-static MOZ_CONSTEXPR_VAR Register CallTempReg3 = r8;
-static MOZ_CONSTEXPR_VAR Register CallTempReg4 = r0;
-static MOZ_CONSTEXPR_VAR Register CallTempReg5 = r1;
+static constexpr Register OsrFrameReg = r3;
+static constexpr Register ArgumentsRectifierReg = r8;
+static constexpr Register CallTempReg0 = r5;
+static constexpr Register CallTempReg1 = r6;
+static constexpr Register CallTempReg2 = r7;
+static constexpr Register CallTempReg3 = r8;
+static constexpr Register CallTempReg4 = r0;
+static constexpr Register CallTempReg5 = r1;
 
-static MOZ_CONSTEXPR_VAR Register IntArgReg0 = r0;
-static MOZ_CONSTEXPR_VAR Register IntArgReg1 = r1;
-static MOZ_CONSTEXPR_VAR Register IntArgReg2 = r2;
-static MOZ_CONSTEXPR_VAR Register IntArgReg3 = r3;
-static MOZ_CONSTEXPR_VAR Register GlobalReg = r10;
-static MOZ_CONSTEXPR_VAR Register HeapReg = r11;
-static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
+static constexpr Register IntArgReg0 = r0;
+static constexpr Register IntArgReg1 = r1;
+static constexpr Register IntArgReg2 = r2;
+static constexpr Register IntArgReg3 = r3;
+static constexpr Register GlobalReg = r10;
+static constexpr Register HeapReg = r11;
+static constexpr Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
@@ -103,35 +103,35 @@ class ABIArgGenerator
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 };
 
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = r4;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = r5;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = r4;
-static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = r5;
+static constexpr Register ABINonArgReg0 = r4;
+static constexpr Register ABINonArgReg1 = r5;
+static constexpr Register ABINonArgReturnReg0 = r4;
+static constexpr Register ABINonArgReturnReg1 = r5;
 
 // Registers used for asm.js/wasm table calls. These registers must be disjoint
 // from the ABI argument registers and from each other.
-static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = ABINonArgReg0;
-static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = ABINonArgReg1;
+static constexpr Register WasmTableCallPtrReg = ABINonArgReg0;
+static constexpr Register WasmTableCallSigReg = ABINonArgReg1;
 
-static MOZ_CONSTEXPR_VAR Register PreBarrierReg = r1;
+static constexpr Register PreBarrierReg = r1;
 
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg;
+static constexpr Register InvalidReg = { Registers::invalid_reg };
+static constexpr FloatRegister InvalidFloatReg;
 
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = r3;
-static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = r2;
-static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
-static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
-static MOZ_CONSTEXPR_VAR Register ReturnReg = r0;
-static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(InvalidReg, InvalidReg);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::d0, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimd128Reg = InvalidFloatReg;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::d30, VFPRegister::Single };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::d15, VFPRegister::Double };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimd128Reg = InvalidFloatReg;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchUIntReg = { FloatRegisters::d15, VFPRegister::UInt };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchIntReg = { FloatRegisters::d15, VFPRegister::Int };
+static constexpr Register JSReturnReg_Type = r3;
+static constexpr Register JSReturnReg_Data = r2;
+static constexpr Register StackPointer = sp;
+static constexpr Register FramePointer = InvalidReg;
+static constexpr Register ReturnReg = r0;
+static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
+static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::d0, VFPRegister::Double};
+static constexpr FloatRegister ReturnSimd128Reg = InvalidFloatReg;
+static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::d30, VFPRegister::Single };
+static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::d15, VFPRegister::Double };
+static constexpr FloatRegister ScratchSimd128Reg = InvalidFloatReg;
+static constexpr FloatRegister ScratchUIntReg = { FloatRegisters::d15, VFPRegister::UInt };
+static constexpr FloatRegister ScratchIntReg = { FloatRegisters::d15, VFPRegister::Int };
 
 struct ScratchFloat32Scope : public AutoFloatRegisterScope
 {
@@ -152,56 +152,56 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope
 static const int32_t AsmJSGlobalRegBias = 1024;
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r4;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = r0;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = r1;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = r2;
+static constexpr Register AsmJSIonExitRegCallee = r4;
+static constexpr Register AsmJSIonExitRegE0 = r0;
+static constexpr Register AsmJSIonExitRegE1 = r1;
+static constexpr Register AsmJSIonExitRegE2 = r2;
 
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (lr).
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = r2;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = r3;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = r0;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = r1;
-static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = r4;
+static constexpr Register AsmJSIonExitRegReturnData = r2;
+static constexpr Register AsmJSIonExitRegReturnType = r3;
+static constexpr Register AsmJSIonExitRegD0 = r0;
+static constexpr Register AsmJSIonExitRegD1 = r1;
+static constexpr Register AsmJSIonExitRegD2 = r4;
 
 // Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = CallTempReg0;
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = CallTempReg1;
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = CallTempReg2;
+static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
+static constexpr Register RegExpMatcherStringReg = CallTempReg1;
+static constexpr Register RegExpMatcherLastIndexReg = CallTempReg2;
 
 // Registerd used in RegExpTester instruction (do not use ReturnReg).
-static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = CallTempReg0;
-static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = CallTempReg1;
-static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = CallTempReg2;
+static constexpr Register RegExpTesterRegExpReg = CallTempReg0;
+static constexpr Register RegExpTesterStringReg = CallTempReg1;
+static constexpr Register RegExpTesterLastIndexReg = CallTempReg2;
 
-static MOZ_CONSTEXPR_VAR FloatRegister d0  = {FloatRegisters::d0, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d1  = {FloatRegisters::d1, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d2  = {FloatRegisters::d2, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d3  = {FloatRegisters::d3, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d4  = {FloatRegisters::d4, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d5  = {FloatRegisters::d5, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d6  = {FloatRegisters::d6, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d7  = {FloatRegisters::d7, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d8  = {FloatRegisters::d8, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d9  = {FloatRegisters::d9, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d10 = {FloatRegisters::d10, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d11 = {FloatRegisters::d11, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d12 = {FloatRegisters::d12, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d13 = {FloatRegisters::d13, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d14 = {FloatRegisters::d14, VFPRegister::Double};
-static MOZ_CONSTEXPR_VAR FloatRegister d15 = {FloatRegisters::d15, VFPRegister::Double};
+static constexpr FloatRegister d0  = {FloatRegisters::d0, VFPRegister::Double};
+static constexpr FloatRegister d1  = {FloatRegisters::d1, VFPRegister::Double};
+static constexpr FloatRegister d2  = {FloatRegisters::d2, VFPRegister::Double};
+static constexpr FloatRegister d3  = {FloatRegisters::d3, VFPRegister::Double};
+static constexpr FloatRegister d4  = {FloatRegisters::d4, VFPRegister::Double};
+static constexpr FloatRegister d5  = {FloatRegisters::d5, VFPRegister::Double};
+static constexpr FloatRegister d6  = {FloatRegisters::d6, VFPRegister::Double};
+static constexpr FloatRegister d7  = {FloatRegisters::d7, VFPRegister::Double};
+static constexpr FloatRegister d8  = {FloatRegisters::d8, VFPRegister::Double};
+static constexpr FloatRegister d9  = {FloatRegisters::d9, VFPRegister::Double};
+static constexpr FloatRegister d10 = {FloatRegisters::d10, VFPRegister::Double};
+static constexpr FloatRegister d11 = {FloatRegisters::d11, VFPRegister::Double};
+static constexpr FloatRegister d12 = {FloatRegisters::d12, VFPRegister::Double};
+static constexpr FloatRegister d13 = {FloatRegisters::d13, VFPRegister::Double};
+static constexpr FloatRegister d14 = {FloatRegisters::d14, VFPRegister::Double};
+static constexpr FloatRegister d15 = {FloatRegisters::d15, VFPRegister::Double};
 
 
 // For maximal awesomeness, 8 should be sufficent. ldrd/strd (dual-register
 // load/store) operate in a single cycle when the address they are dealing with
 // is 8 byte aligned. Also, the ARM abi wants the stack to be 8 byte aligned at
 // function boundaries. I'm trying to make sure this is always true.
-static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 8;
-static MOZ_CONSTEXPR_VAR uint32_t CodeAlignment = 8;
-static MOZ_CONSTEXPR_VAR uint32_t JitStackAlignment = 8;
+static constexpr uint32_t ABIStackAlignment = 8;
+static constexpr uint32_t CodeAlignment = 8;
+static constexpr uint32_t JitStackAlignment = 8;
 
-static MOZ_CONSTEXPR_VAR uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
+static constexpr uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
 static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >= 1,
   "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
@@ -209,8 +209,8 @@ static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >
 // this architecture or not. Rather than a method in the LIRGenerator, it is
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static MOZ_CONSTEXPR_VAR bool SupportsSimd = false;
-static MOZ_CONSTEXPR_VAR uint32_t SimdMemoryAlignment = 8;
+static constexpr bool SupportsSimd = false;
+static constexpr uint32_t SimdMemoryAlignment = 8;
 
 static_assert(CodeAlignment % SimdMemoryAlignment == 0,
   "Code alignment should be larger than any of the alignments which are used for "
@@ -224,12 +224,12 @@ static_assert(JitStackAlignment % SimdMemoryAlignment == 0,
 static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+static constexpr bool SupportsUint32x4FloatConversions = false;
 
 // Does this architecture support comparisons of unsigned integer vectors?
-static MOZ_CONSTEXPR_VAR bool SupportsUint8x16Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint16x8Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
+static constexpr bool SupportsUint8x16Compares = false;
+static constexpr bool SupportsUint16x8Compares = false;
+static constexpr bool SupportsUint32x4Compares = false;
 
 static const Scale ScalePointer = TimesFour;
 
@@ -257,7 +257,7 @@ uint32_t VM(VFPRegister vr);
 
 // For being passed into the generic vfp instruction generator when there is an
 // instruction that only takes two registers.
-static MOZ_CONSTEXPR_VAR VFPRegister NoVFPRegister(VFPRegister::Double, 0, false, true);
+static constexpr VFPRegister NoVFPRegister(VFPRegister::Double, 0, false, true);
 
 struct ImmTag : public Imm32
 {
@@ -546,8 +546,8 @@ struct Imm8VFPImmData
     // have a constructor, the initialization for DoubleEncoder's internal
     // table (see below) would require a rather large static constructor on
     // some of our supported compilers. The known solution to this is to mark
-    // the constructor MOZ_CONSTEXPR, but, again, some of our supported
-    // compilers don't support MOZ_CONSTEXPR! So we are reduced to public
+    // the constructor constexpr, but, again, some of our supported
+    // compilers don't support constexpr! So we are reduced to public
     // members and eschewing a constructor in hopes that the initialization
     // of DoubleEncoder's table is correct.
     uint32_t imm4L : 4;

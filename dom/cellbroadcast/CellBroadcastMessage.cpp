@@ -24,12 +24,12 @@ struct StaticEnumConverter
   typedef T WebidlEnumType;
   typedef uint32_t XpidlEnumType;
 
-  static MOZ_CONSTEXPR WebidlEnumType
+  static constexpr WebidlEnumType
   x2w(XpidlEnumType aXpidlEnum) { return static_cast<WebidlEnumType>(aXpidlEnum); }
 };
 
 template<class T>
-MOZ_CONSTEXPR T
+constexpr T
 ToWebidlEnum(uint32_t aXpidlEnum) { return EnumConverter<T>::x2w(aXpidlEnum); }
 
 // Declare converters here:

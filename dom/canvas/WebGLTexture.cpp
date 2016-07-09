@@ -748,7 +748,7 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     // texture-filterable according to table 3.13, an INVALID_OPERATION error
     // is generated.
     const auto usage = baseImageInfo.mFormat;
-    bool canGenerateMipmap = (usage->isRenderable && usage->isFilterable);
+    bool canGenerateMipmap = (usage->IsRenderable() && usage->isFilterable);
     switch (usage->format->effectiveFormat) {
     case webgl::EffectiveFormat::Luminance8:
     case webgl::EffectiveFormat::Alpha8:

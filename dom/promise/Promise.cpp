@@ -1367,7 +1367,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
       return;
     }
 
-    JSObject* defaultCtor = PromiseBinding::GetConstructorObject(aCx, global);
+    JSObject* defaultCtor = PromiseBinding::GetConstructorObject(aCx);
     if (!defaultCtor) {
       aRv.NoteJSContextException(aCx);
       return;
@@ -1706,12 +1706,10 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
   // Step 3.  We want to use aCalleeGlobal here because it will do the
   // right thing for us via Xrays (where we won't find @@species on
   // our promise constructor for now).
-  JS::Rooted<JSObject*> calleeGlobal(aCx, aCalleeGlobal);
   JS::Rooted<JS::Value> defaultCtorVal(aCx);
   { // Scope for JSAutoCompartment
     JSAutoCompartment ac(aCx, aCalleeGlobal);
-    JSObject* defaultCtor =
-      PromiseBinding::GetConstructorObject(aCx, calleeGlobal);
+    JSObject* defaultCtor = PromiseBinding::GetConstructorObject(aCx);
     if (!defaultCtor) {
       aRv.NoteJSContextException(aCx);
       return;

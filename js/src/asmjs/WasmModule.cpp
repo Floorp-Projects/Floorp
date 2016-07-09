@@ -25,6 +25,7 @@
 #include "asmjs/WasmSerialize.h"
 
 #include "vm/ArrayBufferObject-inl.h"
+#include "vm/Debugger-inl.h"
 
 using namespace js;
 using namespace js::wasm;
@@ -95,41 +96,11 @@ LinkData::SymbolicLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) cons
 }
 
 size_t
-LinkData::FuncTable::serializedSize() const
-{
-    return sizeof(globalDataOffset) +
-           SerializedPodVectorSize(elemOffsets);
-}
-
-uint8_t*
-LinkData::FuncTable::serialize(uint8_t* cursor) const
-{
-    cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
-    cursor = SerializePodVector(cursor, elemOffsets);
-    return cursor;
-}
-
-const uint8_t*
-LinkData::FuncTable::deserialize(const uint8_t* cursor)
-{
-    (cursor = ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
-    (cursor = DeserializePodVector(cursor, &elemOffsets));
-    return cursor;
-}
-
-size_t
-LinkData::FuncTable::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return elemOffsets.sizeOfExcludingThis(mallocSizeOf);
-}
-
-size_t
 LinkData::serializedSize() const
 {
     return sizeof(pod()) +
            SerializedPodVectorSize(internalLinks) +
-           symbolicLinks.serializedSize() +
-           SerializedVectorSize(funcTables);
+           symbolicLinks.serializedSize();
 }
 
 uint8_t*
@@ -138,7 +109,6 @@ LinkData::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializePodVector(cursor, internalLinks);
     cursor = symbolicLinks.serialize(cursor);
-    cursor = SerializeVector(cursor, funcTables);
     return cursor;
 }
 
@@ -147,8 +117,7 @@ LinkData::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = DeserializePodVector(cursor, &internalLinks)) &&
-    (cursor = symbolicLinks.deserialize(cursor)) &&
-    (cursor = DeserializeVector(cursor, &funcTables));
+    (cursor = symbolicLinks.deserialize(cursor));
     return cursor;
 }
 
@@ -156,19 +125,18 @@ size_t
 LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return internalLinks.sizeOfExcludingThis(mallocSizeOf) +
-           symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcTables, mallocSizeOf);
+           symbolicLinks.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
-ImportName::serializedSize() const
+Import::serializedSize() const
 {
     return module.serializedSize() +
            func.serializedSize();
 }
 
 uint8_t*
-ImportName::serialize(uint8_t* cursor) const
+Import::serialize(uint8_t* cursor) const
 {
     cursor = module.serialize(cursor);
     cursor = func.serialize(cursor);
@@ -176,7 +144,7 @@ ImportName::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-ImportName::deserialize(const uint8_t* cursor)
+Import::deserialize(const uint8_t* cursor)
 {
     (cursor = module.deserialize(cursor)) &&
     (cursor = func.deserialize(cursor));
@@ -184,7 +152,7 @@ ImportName::deserialize(const uint8_t* cursor)
 }
 
 size_t
-ImportName::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return module.sizeOfExcludingThis(mallocSizeOf) +
            func.sizeOfExcludingThis(mallocSizeOf);
@@ -221,13 +189,43 @@ ExportMap::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 size_t
+ElemSegment::serializedSize() const
+{
+    return sizeof(globalDataOffset) +
+           SerializedPodVectorSize(elems);
+}
+
+uint8_t*
+ElemSegment::serialize(uint8_t* cursor) const
+{
+    cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
+    cursor = SerializePodVector(cursor, elems);
+    return cursor;
+}
+
+const uint8_t*
+ElemSegment::deserialize(const uint8_t* cursor)
+{
+    (cursor = ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
+    (cursor = DeserializePodVector(cursor, &elems));
+    return cursor;
+}
+
+size_t
+ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return elems.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t
 Module::serializedSize() const
 {
     return SerializedPodVectorSize(code_) +
            linkData_.serializedSize() +
-           SerializedVectorSize(importNames_) +
+           SerializedVectorSize(imports_) +
            exportMap_.serializedSize() +
            SerializedPodVectorSize(dataSegments_) +
+           SerializedVectorSize(elemSegments_) +
            metadata_->serializedSize() +
            SerializedPodVectorSize(bytecode_->bytes);
 }
@@ -237,9 +235,10 @@ Module::serialize(uint8_t* cursor) const
 {
     cursor = SerializePodVector(cursor, code_);
     cursor = linkData_.serialize(cursor);
-    cursor = SerializeVector(cursor, importNames_);
+    cursor = SerializeVector(cursor, imports_);
     cursor = exportMap_.serialize(cursor);
     cursor = SerializePodVector(cursor, dataSegments_);
+    cursor = SerializeVector(cursor, elemSegments_);
     cursor = metadata_->serialize(cursor);
     cursor = SerializePodVector(cursor, bytecode_->bytes);
     return cursor;
@@ -258,8 +257,8 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
     if (!cursor)
         return nullptr;
 
-    ImportNameVector importNames;
-    cursor = DeserializeVector(cursor, &importNames);
+    ImportVector imports;
+    cursor = DeserializeVector(cursor, &imports);
     if (!cursor)
         return nullptr;
 
@@ -270,6 +269,11 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
 
     DataSegmentVector dataSegments;
     cursor = DeserializePodVector(cursor, &dataSegments);
+    if (!cursor)
+        return nullptr;
+
+    ElemSegmentVector elemSegments;
+    cursor = DeserializeVector(cursor, &elemSegments);
     if (!cursor)
         return nullptr;
 
@@ -295,9 +299,10 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
 
     *module = js::MakeUnique<Module>(Move(code),
                                      Move(linkData),
-                                     Move(importNames),
+                                     Move(imports),
                                      Move(exportMap),
                                      Move(dataSegments),
+                                     Move(elemSegments),
                                      *metadata,
                                      *bytecode);
     if (!*module)
@@ -316,63 +321,187 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              code_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
-             importNames_.sizeOfExcludingThis(mallocSizeOf) +
+             SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              exportMap_.sizeOfExcludingThis(mallocSizeOf) +
              dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
+             SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
              metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }
 
+// asm.js module instantiation supplies its own buffer, but for wasm, create and
+// initialize the buffer if one is requested. Either way, the buffer is wrapped
+// in a WebAssembly.Memory object which is what the Instance stores.
 bool
-Module::instantiate(JSContext* cx,
-                    Handle<FunctionVector> funcImports,
-                    HandleArrayBufferObjectMaybeShared asmJSBuffer,
-                    HandleWasmInstanceObject instanceObj) const
+Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const
 {
-    MOZ_ASSERT(funcImports.length() == metadata_->imports.length());
+    if (!metadata_->usesMemory()) {
+        MOZ_ASSERT(!memory);
+        MOZ_ASSERT(dataSegments_.empty());
+        return true;
+    }
 
-    // asm.js module instantiation supplies its own buffer, but for wasm, create
-    // and initialize the buffer if one is requested. Either way, the buffer is
-    // wrapped in a WebAssembly.Memory object which is what the Instance stores.
-
-    RootedWasmMemoryObject memory(cx);
-    uint8_t* memoryBase = nullptr;
-    uint32_t memoryLength = 0;
     RootedArrayBufferObjectMaybeShared buffer(cx);
-    if (metadata_->usesMemory()) {
-        if (metadata_->isAsmJS()) {
-            MOZ_ASSERT(asmJSBuffer);
-            buffer = asmJSBuffer;
-        } else {
-            buffer = ArrayBufferObject::createForWasm(cx, metadata_->minMemoryLength,
-                                                      metadata_->assumptions.usesSignal.forOOB);
-            if (!buffer)
-                return false;
+    if (memory) {
+        buffer = &memory->buffer();
+        uint32_t length = buffer->byteLength();
+        if (length < metadata_->minMemoryLength || length > metadata_->maxMemoryLength) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MEM_IMP_SIZE);
+            return false;
         }
+
+        // This can't happen except via the shell toggling signals.enabled.
+        if (metadata_->assumptions.usesSignal.forOOB &&
+            !buffer->is<SharedArrayBufferObject>() &&
+            !buffer->as<ArrayBufferObject>().isWasmMapped())
+        {
+            JS_ReportError(cx, "can't access same buffer with and without signals enabled");
+            return false;
+        }
+    } else {
+        buffer = ArrayBufferObject::createForWasm(cx, metadata_->minMemoryLength,
+                                                  metadata_->assumptions.usesSignal.forOOB);
+        if (!buffer)
+            return false;
 
         RootedObject proto(cx);
         if (metadata_->assumptions.newFormat)
             proto = &cx->global()->getPrototype(JSProto_WasmMemory).toObject();
 
-        memory = WasmMemoryObject::create(cx, buffer, proto);
+        memory.set(WasmMemoryObject::create(cx, buffer, proto));
         if (!memory)
             return false;
-
-        memoryBase = buffer->dataPointerEither().unwrap(/* memcpy and code patching */);
-        memoryLength = buffer->byteLength();
-
-        const uint8_t* bytecode = bytecode_->begin();
-        for (const DataSegment& seg : dataSegments_)
-            memcpy(memoryBase + seg.memoryOffset, bytecode + seg.bytecodeOffset, seg.length);
-    } else {
-        MOZ_ASSERT(!asmJSBuffer);
-        MOZ_ASSERT(dataSegments_.empty());
     }
 
-    // Create a new, specialized CodeSegment for the new Instance (for now).
+    MOZ_ASSERT(buffer->is<SharedArrayBufferObject>() || buffer->as<ArrayBufferObject>().isWasm());
 
-    auto cs = CodeSegment::create(cx, code_, linkData_, *metadata_, memoryBase, memoryLength);
+    uint8_t* memoryBase = memory->buffer().dataPointerEither().unwrap(/* memcpy */);
+    for (const DataSegment& seg : dataSegments_)
+        memcpy(memoryBase + seg.memoryOffset, bytecode_->begin() + seg.bytecodeOffset, seg.length);
+
+    return true;
+}
+
+bool
+Module::instantiateTable(JSContext* cx, const CodeSegment& cs) const
+{
+    for (const ElemSegment& seg : elemSegments_) {
+        auto array = reinterpret_cast<void**>(cs.globalData() + seg.globalDataOffset);
+        for (size_t i = 0; i < seg.elems.length(); i++)
+            array[i] = cs.code() + seg.elems[i];
+    }
+
+    return true;
+}
+
+static bool
+WasmCall(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedFunction callee(cx, &args.callee().as<JSFunction>());
+
+    Instance& instance = ExportedFunctionToInstance(callee);
+    uint32_t exportIndex = ExportedFunctionToExportIndex(callee);
+
+    return instance.callExport(cx, exportIndex, args);
+}
+
+static JSFunction*
+NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint32_t exportIndex)
+{
+    Instance& instance = instanceObj->instance();
+    const Metadata& metadata = instance.metadata();
+    const Export& exp = metadata.exports[exportIndex];
+    unsigned numArgs = exp.sig().args().length();
+
+    RootedAtom name(cx, instance.getFuncAtom(cx, exp.funcIndex()));
+    if (!name)
+        return nullptr;
+
+    JSFunction* fun = NewNativeConstructor(cx, WasmCall, numArgs, name,
+                                           gc::AllocKind::FUNCTION_EXTENDED, GenericObject,
+                                           JSFunction::ASMJS_CTOR);
+    if (!fun)
+        return nullptr;
+
+    fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
+    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
+    return fun;
+}
+
+static bool
+CreateExportObject(JSContext* cx,
+                   HandleWasmInstanceObject instanceObj,
+                   HandleWasmMemoryObject memoryObj,
+                   const ExportMap& exportMap,
+                   const Metadata& metadata,
+                   MutableHandleObject exportObj)
+{
+    MOZ_ASSERT(exportMap.fieldNames.length() == exportMap.fieldsToExports.length());
+
+    if (metadata.isAsmJS() &&
+        exportMap.fieldNames.length() == 1 &&
+        strlen(exportMap.fieldNames[0].get()) == 0)
+    {
+        exportObj.set(NewExportedFunction(cx, instanceObj, 0));
+        return !!exportObj;
+    }
+
+    exportObj.set(JS_NewPlainObject(cx));
+    if (!exportObj)
+        return false;
+
+    Rooted<ValueVector> vals(cx, ValueVector(cx));
+    for (size_t exportIndex = 0; exportIndex < metadata.exports.length(); exportIndex++) {
+        JSFunction* fun = NewExportedFunction(cx, instanceObj, exportIndex);
+        if (!fun || !vals.append(ObjectValue(*fun)))
+            return false;
+    }
+
+    for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
+        const char* fieldName = exportMap.fieldNames[fieldIndex].get();
+        JSAtom* atom = AtomizeUTF8Chars(cx, fieldName, strlen(fieldName));
+        if (!atom)
+            return false;
+
+        RootedId id(cx, AtomToId(atom));
+        RootedValue val(cx);
+        uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
+        if (exportIndex == MemoryExport) {
+            if (metadata.assumptions.newFormat)
+                val = ObjectValue(*memoryObj);
+            else
+                val = ObjectValue(memoryObj->buffer());
+        } else {
+            val = vals[exportIndex];
+        }
+
+        if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
+            return false;
+    }
+
+    return true;
+}
+
+static const char ExportField[] = "exports";
+
+bool
+Module::instantiate(JSContext* cx,
+                    Handle<FunctionVector> funcImports,
+                    HandleWasmMemoryObject memImport,
+                    HandleWasmInstanceObject instanceObj) const
+{
+    MOZ_ASSERT(funcImports.length() == metadata_->funcImports.length());
+
+    RootedWasmMemoryObject memory(cx, memImport);
+    if (!instantiateMemory(cx, &memory))
+        return false;
+
+    auto cs = CodeSegment::create(cx, code_, linkData_, *metadata_, memory);
     if (!cs)
+        return false;
+
+    if (!instantiateTable(cx, *cs))
         return false;
 
     // To support viewing the source of an instance (Instance::createText), the
@@ -381,6 +510,7 @@ Module::instantiate(JSContext* cx,
     // developer actually cares: when the compartment is debuggable (which is
     // true when the web console is open) or a names section is implied (since
     // this going to be stripped for non-developer builds).
+
     const ShareableBytes* maybeBytecode = nullptr;
     if (cx->compartment()->isDebuggee() || !metadata_->funcNames.empty())
         maybeBytecode = bytecode_.get();
@@ -388,14 +518,74 @@ Module::instantiate(JSContext* cx,
     // Store a summary of LinkData::FuncTableVector, only as much is needed
     // for runtime toggling of profiling mode. Currently, only asm.js has typed
     // function tables.
+
     TypedFuncTableVector typedFuncTables;
     if (metadata_->isAsmJS()) {
-        if (!typedFuncTables.reserve(linkData_.funcTables.length()))
+        if (!typedFuncTables.reserve(elemSegments_.length()))
             return false;
-        for (const LinkData::FuncTable& tbl : linkData_.funcTables)
-            typedFuncTables.infallibleEmplaceBack(tbl.globalDataOffset, tbl.elemOffsets.length());
+        for (const ElemSegment& seg : elemSegments_)
+            typedFuncTables.infallibleEmplaceBack(seg.globalDataOffset, seg.elems.length());
     }
 
-    return Instance::create(cx, Move(cs), *metadata_, maybeBytecode, Move(typedFuncTables),
-                            memory, funcImports, exportMap_, instanceObj);
+    // Create the Instance, ensuring that it is traceable via 'instanceObj'
+    // before any GC can occur and invalidate the pointers stored in global
+    // memory.
+
+    {
+        auto instance = cx->make_unique<Instance>(Move(cs),
+                                                  *metadata_,
+                                                  maybeBytecode,
+                                                  Move(typedFuncTables),
+                                                  memory,
+                                                  funcImports);
+        if (!instance)
+            return false;
+
+        instanceObj->init(Move(instance));
+    }
+
+    // Create the export object.
+
+    RootedObject exportObj(cx);
+    if (!CreateExportObject(cx, instanceObj, memory, exportMap_, *metadata_, &exportObj))
+        return false;
+
+    instanceObj->initExportsObject(exportObj);
+
+    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+
+    RootedValue val(cx, ObjectValue(*exportObj));
+    if (!JS_DefinePropertyById(cx, instanceObj, id, val, JSPROP_ENUMERATE))
+        return false;
+
+    // Done! Notify the Debugger of the new Instance.
+
+    Debugger::onNewWasmInstance(cx, instanceObj);
+
+    return true;
+}
+
+bool
+wasm::IsExportedFunction(JSFunction* fun)
+{
+    return fun->maybeNative() == WasmCall;
+}
+
+Instance&
+wasm::ExportedFunctionToInstance(JSFunction* fun)
+{
+    MOZ_ASSERT(IsExportedFunction(fun));
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
+    return v.toObject().as<WasmInstanceObject>().instance();
+}
+
+uint32_t
+wasm::ExportedFunctionToExportIndex(JSFunction* fun)
+{
+    MOZ_ASSERT(IsExportedFunction(fun));
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
+    return v.toInt32();
 }
