@@ -111,6 +111,7 @@ struct YCbCrDescriptor {
   uint32_t cbOffset;
   uint32_t crOffset;
   StereoMode stereoMode;
+  bool hasIntermediateBuffer;
 };
 
 union BufferDescriptor {
