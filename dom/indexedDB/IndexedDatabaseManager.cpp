@@ -553,11 +553,11 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
 
 // static
 bool
-IndexedDatabaseManager::ResolveSandboxBinding(JSContext* aCx,
-                                              JS::Handle<JSObject*> aGlobal)
+IndexedDatabaseManager::ResolveSandboxBinding(JSContext* aCx)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+  MOZ_ASSERT(js::GetObjectClass(JS::CurrentGlobalOrNull(aCx))->flags &
+             JSCLASS_DOM_GLOBAL,
              "Passed object is not a global object!");
 
   // We need to ensure that the manager has been created already here so that we
@@ -566,19 +566,19 @@ IndexedDatabaseManager::ResolveSandboxBinding(JSContext* aCx,
     return false;
   }
 
-  if (!IDBCursorBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBCursorWithValueBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBDatabaseBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBFactoryBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBIndexBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBKeyRangeBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBLocaleAwareKeyRangeBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBMutableFileBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBObjectStoreBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBOpenDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBTransactionBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBVersionChangeEventBinding::GetConstructorObject(aCx, aGlobal))
+  if (!IDBCursorBinding::GetConstructorObject(aCx) ||
+      !IDBCursorWithValueBinding::GetConstructorObject(aCx) ||
+      !IDBDatabaseBinding::GetConstructorObject(aCx) ||
+      !IDBFactoryBinding::GetConstructorObject(aCx) ||
+      !IDBIndexBinding::GetConstructorObject(aCx) ||
+      !IDBKeyRangeBinding::GetConstructorObject(aCx) ||
+      !IDBLocaleAwareKeyRangeBinding::GetConstructorObject(aCx) ||
+      !IDBMutableFileBinding::GetConstructorObject(aCx) ||
+      !IDBObjectStoreBinding::GetConstructorObject(aCx) ||
+      !IDBOpenDBRequestBinding::GetConstructorObject(aCx) ||
+      !IDBRequestBinding::GetConstructorObject(aCx) ||
+      !IDBTransactionBinding::GetConstructorObject(aCx) ||
+      !IDBVersionChangeEventBinding::GetConstructorObject(aCx))
   {
     return false;
   }

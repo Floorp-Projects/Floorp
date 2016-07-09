@@ -354,16 +354,16 @@ IsInterfacePrototype(DOMObjectType type)
 
 typedef JSObject* (*ParentGetter)(JSContext* aCx, JS::Handle<JSObject*> aObj);
 
-typedef JSObject* (*ProtoGetter)(JSContext* aCx,
-                                 JS::Handle<JSObject*> aGlobal);
+typedef JSObject* (*ProtoGetter)(JSContext* aCx);
+
 /**
- * Returns a handle to the relevent WebIDL prototype object for the given global
- * (which may be a handle to null on out of memory).  Once allocated, the
- * prototype object is guaranteed to exist as long as the global does, since the
- * global traces its array of WebIDL prototypes and constructors.
+ * Returns a handle to the relevant WebIDL prototype object for the current
+ * compartment global (which may be a handle to null on out of memory).  Once
+ * allocated, the prototype object is guaranteed to exist as long as the global
+ * does, since the global traces its array of WebIDL prototypes and
+ * constructors.
  */
-typedef JS::Handle<JSObject*> (*ProtoHandleGetter)(JSContext* aCx,
-                                                   JS::Handle<JSObject*> aGlobal);
+typedef JS::Handle<JSObject*> (*ProtoHandleGetter)(JSContext* aCx);
 
 // Special JSClass for reflected DOM objects.
 struct DOMJSClass
