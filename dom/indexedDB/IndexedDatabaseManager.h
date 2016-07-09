@@ -188,7 +188,7 @@ public:
   CommonPostHandleEvent(EventChainPostVisitor& aVisitor, IDBFactory* aFactory);
 
   static bool
-  ResolveSandboxBinding(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+  ResolveSandboxBinding(JSContext* aCx);
 
   static bool
   DefineIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal);

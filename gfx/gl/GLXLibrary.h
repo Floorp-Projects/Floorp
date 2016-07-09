@@ -32,7 +32,7 @@ namespace gl {
 class GLXLibrary
 {
 public:
-    MOZ_CONSTEXPR GLXLibrary()
+    constexpr GLXLibrary()
     : xDestroyContextInternal(nullptr)
     , xMakeCurrentInternal(nullptr)
     , xGetCurrentContextInternal(nullptr)

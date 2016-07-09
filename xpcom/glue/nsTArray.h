@@ -575,22 +575,22 @@ struct nsTArray_CopyWithMemutils
 {
   const static bool allowRealloc = true;
 
-  static void CopyElements(void* aDest, const void* aSrc, size_t aCount,
-                           size_t aElemSize)
-  {
-    memcpy(aDest, aSrc, aCount * aElemSize);
-  }
-
-  static void CopyHeaderAndElements(void* aDest, const void* aSrc,
-                                    size_t aCount, size_t aElemSize)
+  static void MoveNonOverlappingRegionWithHeader(void* aDest, const void* aSrc,
+                                                 size_t aCount, size_t aElemSize)
   {
     memcpy(aDest, aSrc, sizeof(nsTArrayHeader) + aCount * aElemSize);
   }
 
-  static void MoveElements(void* aDest, const void* aSrc, size_t aCount,
-                           size_t aElemSize)
+  static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                    size_t aElemSize)
   {
     memmove(aDest, aSrc, aCount * aElemSize);
+  }
+
+  static void MoveNonOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                       size_t aElemSize)
+  {
+    memcpy(aDest, aSrc, aCount * aElemSize);
   }
 };
 
@@ -605,8 +605,52 @@ struct nsTArray_CopyWithConstructors
 
   const static bool allowRealloc = false;
 
-  static void CopyElements(void* aDest, void* aSrc, size_t aCount,
-                           size_t aElemSize)
+  static void MoveNonOverlappingRegionWithHeader(void* aDest, void* aSrc, size_t aCount,
+                                                 size_t aElemSize)
+  {
+    nsTArrayHeader* destHeader = static_cast<nsTArrayHeader*>(aDest);
+    nsTArrayHeader* srcHeader = static_cast<nsTArrayHeader*>(aSrc);
+    *destHeader = *srcHeader;
+    MoveNonOverlappingRegion(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
+                             static_cast<uint8_t*>(aSrc) + sizeof(nsTArrayHeader),
+                             aCount, aElemSize);
+  }
+
+  // These functions are defined by analogy with memmove and memcpy.
+  // What they actually do is slightly different: MoveOverlappingRegion
+  // checks to see which direction the movement needs to take place,
+  // whether from back-to-front of the range to be moved or from
+  // front-to-back.  MoveNonOverlappingRegion assumes that moving
+  // front-to-back is always valid.  So they're really more like
+  // std::move{_backward,} in that respect.  We keep these names because
+  // we think they read slightly better, and MoveNonOverlappingRegion is
+  // only ever called on overlapping regions from MoveOverlappingRegion.
+  static void MoveOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                    size_t aElemSize)
+  {
+    ElemType* destElem = static_cast<ElemType*>(aDest);
+    ElemType* srcElem = static_cast<ElemType*>(aSrc);
+    ElemType* destElemEnd = destElem + aCount;
+    ElemType* srcElemEnd = srcElem + aCount;
+    if (destElem == srcElem) {
+      return;  // In practice, we don't do this.
+    }
+
+    // Figure out whether to copy back-to-front or front-to-back.
+    if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
+      while (destElemEnd != destElem) {
+        --destElemEnd;
+        --srcElemEnd;
+        traits::Construct(destElemEnd, mozilla::Move(*srcElemEnd));
+        traits::Destruct(srcElemEnd);
+      }
+    } else {
+      MoveNonOverlappingRegion(aDest, aSrc, aCount, aElemSize);
+    }
+  }
+
+  static void MoveNonOverlappingRegion(void* aDest, void* aSrc, size_t aCount,
+                                       size_t aElemSize)
   {
     ElemType* destElem = static_cast<ElemType*>(aDest);
     ElemType* srcElem = static_cast<ElemType*>(aSrc);
@@ -616,42 +660,10 @@ struct nsTArray_CopyWithConstructors
     MOZ_ASSERT(srcElemEnd <= destElem || srcElemEnd > destElemEnd);
 #endif
     while (destElem != destElemEnd) {
-      traits::Construct(destElem, *srcElem);
+      traits::Construct(destElem, mozilla::Move(*srcElem));
       traits::Destruct(srcElem);
       ++destElem;
       ++srcElem;
-    }
-  }
-
-  static void CopyHeaderAndElements(void* aDest, void* aSrc, size_t aCount,
-                                    size_t aElemSize)
-  {
-    nsTArrayHeader* destHeader = static_cast<nsTArrayHeader*>(aDest);
-    nsTArrayHeader* srcHeader = static_cast<nsTArrayHeader*>(aSrc);
-    *destHeader = *srcHeader;
-    CopyElements(static_cast<uint8_t*>(aDest) + sizeof(nsTArrayHeader),
-                 static_cast<uint8_t*>(aSrc) + sizeof(nsTArrayHeader),
-                 aCount, aElemSize);
-  }
-
-  static void MoveElements(void* aDest, void* aSrc, size_t aCount,
-                           size_t aElemSize)
-  {
-    ElemType* destElem = static_cast<ElemType*>(aDest);
-    ElemType* srcElem = static_cast<ElemType*>(aSrc);
-    ElemType* destElemEnd = destElem + aCount;
-    ElemType* srcElemEnd = srcElem + aCount;
-    if (destElem == srcElem) {
-      return;  // In practice, we don't do this.
-    } else if (srcElemEnd > destElem && srcElemEnd < destElemEnd) {
-      while (destElemEnd != destElem) {
-        --destElemEnd;
-        --srcElemEnd;
-        traits::Construct(destElemEnd, *srcElemEnd);
-        traits::Destruct(srcElem);
-      }
-    } else {
-      CopyElements(aDest, aSrc, aCount, aElemSize);
     }
   }
 };
@@ -1260,20 +1272,8 @@ public:
 protected:
   template<class Item, typename ActualAlloc = Alloc>
   elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               const Item* aArray, size_type aArrayLen)
-  {
-    // Adjust memory allocation up-front to catch errors.
-    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
-          Length() + aArrayLen - aCount, sizeof(elem_type)))) {
-      return nullptr;
-    }
-    DestructRange(aStart, aCount);
-    this->template ShiftData<ActualAlloc>(aStart, aCount, aArrayLen,
-                                          sizeof(elem_type),
-                                          MOZ_ALIGNOF(elem_type));
-    AssignRange(aStart, aArrayLen, aArray);
-    return Elements() + aStart;
-  }
+                               const Item* aArray, size_type aArrayLen);
+
 public:
 
   template<class Item>
@@ -1374,18 +1374,8 @@ public:
   // @return A pointer to the newly inserted element, or null on OOM.
 protected:
   template<typename ActualAlloc = Alloc>
-  elem_type* InsertElementAt(index_type aIndex)
-  {
-    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
-          Length() + 1, sizeof(elem_type)))) {
-      return nullptr;
-    }
-    this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(elem_type),
-                                          MOZ_ALIGNOF(elem_type));
-    elem_type* elem = Elements() + aIndex;
-    elem_traits::Construct(elem);
-    return elem;
-  }
+  elem_type* InsertElementAt(index_type aIndex);
+
 public:
 
   MOZ_MUST_USE
@@ -1397,18 +1387,8 @@ public:
   // Insert a new element, move constructing if possible.
 protected:
   template<class Item, typename ActualAlloc = Alloc>
-  elem_type* InsertElementAt(index_type aIndex, Item&& aItem)
-  {
-    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
-          Length() + 1, sizeof(elem_type)))) {
-      return nullptr;
-    }
-    this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(elem_type),
-                                          MOZ_ALIGNOF(elem_type));
-    elem_type* elem = Elements() + aIndex;
-    elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
-    return elem;
-  }
+  elem_type* InsertElementAt(index_type aIndex, Item&& aItem);
+
 public:
 
   template<class Item>
@@ -1503,17 +1483,8 @@ public:
   //                  the operation failed due to insufficient memory.
 protected:
   template<class Item, typename ActualAlloc = Alloc>
-  elem_type* AppendElements(const Item* aArray, size_type aArrayLen)
-  {
-    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
-          Length() + aArrayLen, sizeof(elem_type)))) {
-      return nullptr;
-    }
-    index_type len = Length();
-    AssignRange(len, aArrayLen, aArray);
-    this->IncrementLength(aArrayLen);
-    return Elements() + len;
-  }
+  elem_type* AppendElements(const Item* aArray, size_type aArrayLen);
+
 public:
 
   template<class Item>
@@ -1545,27 +1516,8 @@ public:
   // @return A pointer to the newly appended elements, or null on OOM.
 protected:
   template<class Item, class Allocator, typename ActualAlloc = Alloc>
-  elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray)
-  {
-    MOZ_ASSERT(&aArray != this, "argument must be different aArray");
-    if (Length() == 0) {
-      SwapElements<ActualAlloc>(aArray);
-      return Elements();
-    }
+  elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray);
 
-    index_type len = Length();
-    index_type otherLen = aArray.Length();
-    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
-          len + otherLen, sizeof(elem_type)))) {
-      return nullptr;
-    }
-    copy_type::CopyElements(Elements() + len, aArray.Elements(), otherLen,
-                            sizeof(elem_type));
-    this->IncrementLength(otherLen);
-    aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
-                                     MOZ_ALIGNOF(elem_type));
-    return Elements() + len;
-  }
 public:
 
   template<class Item, class Allocator, typename ActualAlloc = Alloc>
@@ -1579,17 +1531,8 @@ public:
   // Append a new element, move constructing if possible.
 protected:
   template<class Item, typename ActualAlloc = Alloc>
-  elem_type* AppendElement(Item&& aItem)
-  {
-    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
-          Length() + 1, sizeof(elem_type)))) {
-      return nullptr;
-    }
-    elem_type* elem = Elements() + Length();
-    elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
-    this->IncrementLength(1);
-    return elem;
-  }
+  elem_type* AppendElement(Item&& aItem);
+
 public:
 
   template<class Item>
@@ -1647,17 +1590,7 @@ public:
   // This method removes a range of elements from this array.
   // @param aStart The starting index of the elements to remove.
   // @param aCount The number of elements to remove.
-  void RemoveElementsAt(index_type aStart, size_type aCount)
-  {
-    MOZ_ASSERT(aCount == 0 || aStart < Length(), "Invalid aStart index");
-    MOZ_ASSERT(aStart + aCount <= Length(), "Invalid length");
-    // Check that the previous assert didn't overflow
-    MOZ_ASSERT(aStart <= aStart + aCount, "Start index plus length overflows");
-    DestructRange(aStart, aCount);
-    this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
-                                              sizeof(elem_type),
-                                              MOZ_ALIGNOF(elem_type));
-  }
+  void RemoveElementsAt(index_type aStart, size_type aCount);
 
   // A variation on the RemoveElementsAt method defined above.
   void RemoveElementAt(index_type aIndex) { RemoveElementsAt(aIndex, 1); }
@@ -1859,23 +1792,8 @@ public:
 protected:
   template<class Item, typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex, size_type aCount,
-                              const Item& aItem)
-  {
-    if (!base_type::template InsertSlotsAt<ActualAlloc>(aIndex, aCount,
-                                                        sizeof(elem_type),
-                                                        MOZ_ALIGNOF(elem_type))) {
-      return nullptr;
-    }
+                              const Item& aItem);
 
-    // Initialize the extra array elements
-    elem_type* iter = Elements() + aIndex;
-    elem_type* iend = iter + aCount;
-    for (; iter != iend; ++iter) {
-      elem_traits::Construct(iter, aItem);
-    }
-
-    return Elements() + aIndex;
-  }
 public:
 
   template<class Item>
@@ -1922,83 +1840,6 @@ public:
   // 'operator<' is defined for elem_type.
   void Sort() { Sort(nsDefaultComparator<elem_type, elem_type>()); }
 
-  //
-  // Binary Heap
-  //
-
-  // Sorts the array into a binary heap.
-  // @param aComp The Comparator used to create the heap
-  template<class Comparator>
-  void MakeHeap(const Comparator& aComp)
-  {
-    if (!Length()) {
-      return;
-    }
-    index_type index = (Length() - 1) / 2;
-    do {
-      SiftDown(index, aComp);
-    } while (index--);
-  }
-
-  // A variation on the MakeHeap method defined above.
-  void MakeHeap()
-  {
-    MakeHeap(nsDefaultComparator<elem_type, elem_type>());
-  }
-
-  // Adds an element to the heap
-  // @param aItem The item to add
-  // @param aComp The Comparator used to sift-up the item
-  template<class Item, class Comparator>
-  elem_type* PushHeap(const Item& aItem, const Comparator& aComp)
-  {
-    if (!base_type::template InsertSlotsAt<Alloc>(Length(), 1, sizeof(elem_type),
-                                                  MOZ_ALIGNOF(elem_type))) {
-      return nullptr;
-    }
-    // Sift up the new node
-    elem_type* elem = Elements();
-    index_type index = Length() - 1;
-    index_type parent_index = (index - 1) / 2;
-    while (index && aComp.LessThan(elem[parent_index], aItem)) {
-      elem[index] = elem[parent_index];
-      index = parent_index;
-      parent_index = (index - 1) / 2;
-    }
-    elem[index] = aItem;
-    return &elem[index];
-  }
-
-  // A variation on the PushHeap method defined above.
-  template<class Item>
-  elem_type* PushHeap(const Item& aItem)
-  {
-    return PushHeap(aItem, nsDefaultComparator<elem_type, Item>());
-  }
-
-  // Delete the root of the heap and restore the heap
-  // @param aComp The Comparator used to restore the heap
-  template<class Comparator>
-  void PopHeap(const Comparator& aComp)
-  {
-    if (!Length()) {
-      return;
-    }
-    index_type last_index = Length() - 1;
-    elem_type* elem = Elements();
-    elem[0] = elem[last_index];
-    TruncateLength(last_index);
-    if (Length()) {
-      SiftDown(0, aComp);
-    }
-  }
-
-  // A variation on the PopHeap method defined above.
-  void PopHeap()
-  {
-    PopHeap(nsDefaultComparator<elem_type, elem_type>());
-  }
-
 protected:
   using base_type::Hdr;
   using base_type::ShrinkCapacity;
@@ -2026,38 +1867,149 @@ protected:
                          mozilla::IsSame<Item, elem_type>::value>
                          ::implementation(Elements(), aStart, aCount, aValues);
   }
-
-  // This method sifts an item down to its proper place in a binary heap
-  // @param aIndex The index of the node to start sifting down from
-  // @param aComp  The Comparator used to sift down
-  template<class Comparator>
-  void SiftDown(index_type aIndex, const Comparator& aComp)
-  {
-    elem_type* elem = Elements();
-    elem_type item = elem[aIndex];
-    index_type iend = Length() - 1;
-    while ((aIndex * 2) < iend) {
-      const index_type left = (aIndex * 2) + 1;
-      const index_type right = (aIndex * 2) + 2;
-      const index_type parent_index = aIndex;
-      if (aComp.LessThan(item, elem[left])) {
-        if (left < iend &&
-            aComp.LessThan(elem[left], elem[right])) {
-          aIndex = right;
-        } else {
-          aIndex = left;
-        }
-      } else if (left < iend &&
-                 aComp.LessThan(item, elem[right])) {
-        aIndex = right;
-      } else {
-        break;
-      }
-      elem[parent_index] = elem[aIndex];
-    }
-    elem[aIndex] = item;
-  }
 };
+
+template<typename E, class Alloc>
+template<class Item, typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::ReplaceElementsAt(index_type aStart, size_type aCount,
+                                           const Item* aArray, size_type aArrayLen) -> elem_type* 
+{
+  // Adjust memory allocation up-front to catch errors.
+  if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
+        Length() + aArrayLen - aCount, sizeof(elem_type)))) {
+    return nullptr;
+  }
+  DestructRange(aStart, aCount);
+  this->template ShiftData<ActualAlloc>(aStart, aCount, aArrayLen,
+                                        sizeof(elem_type),
+                                        MOZ_ALIGNOF(elem_type));
+  AssignRange(aStart, aArrayLen, aArray);
+  return Elements() + aStart;
+}
+
+template<typename E, class Alloc>
+void
+nsTArray_Impl<E, Alloc>::RemoveElementsAt(index_type aStart, size_type aCount)
+{
+  MOZ_ASSERT(aCount == 0 || aStart < Length(), "Invalid aStart index");
+  MOZ_ASSERT(aStart + aCount <= Length(), "Invalid length");
+  // Check that the previous assert didn't overflow
+  MOZ_ASSERT(aStart <= aStart + aCount, "Start index plus length overflows");
+  DestructRange(aStart, aCount);
+  this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
+                                            sizeof(elem_type),
+                                            MOZ_ALIGNOF(elem_type));
+}
+
+template<typename E, class Alloc>
+template<class Item, typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::InsertElementsAt(index_type aIndex, size_type aCount,
+                                          const Item& aItem) -> elem_type*
+{
+  if (!base_type::template InsertSlotsAt<ActualAlloc>(aIndex, aCount,
+                                                      sizeof(elem_type),
+                                                      MOZ_ALIGNOF(elem_type))) {
+    return nullptr;
+  }
+
+  // Initialize the extra array elements
+  elem_type* iter = Elements() + aIndex;
+  elem_type* iend = iter + aCount;
+  for (; iter != iend; ++iter) {
+    elem_traits::Construct(iter, aItem);
+  }
+
+  return Elements() + aIndex;
+}
+
+template<typename E, class Alloc>
+template<typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::InsertElementAt(index_type aIndex) -> elem_type*
+{
+  if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
+        Length() + 1, sizeof(elem_type)))) {
+    return nullptr;
+  }
+  this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(elem_type),
+                                        MOZ_ALIGNOF(elem_type));
+  elem_type* elem = Elements() + aIndex;
+  elem_traits::Construct(elem);
+  return elem;
+}
+
+template<typename E, class Alloc>
+template<class Item, typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::InsertElementAt(index_type aIndex, Item&& aItem) -> elem_type*
+{
+  if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
+         Length() + 1, sizeof(elem_type)))) {
+    return nullptr;
+  }
+  this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(elem_type),
+                                        MOZ_ALIGNOF(elem_type));
+  elem_type* elem = Elements() + aIndex;
+  elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
+  return elem;
+}
+
+template<typename E, class Alloc>
+template<class Item, typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::AppendElements(const Item* aArray, size_type aArrayLen) -> elem_type*
+{
+  if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
+        Length() + aArrayLen, sizeof(elem_type)))) {
+    return nullptr;
+  }
+  index_type len = Length();
+  AssignRange(len, aArrayLen, aArray);
+  this->IncrementLength(aArrayLen);
+  return Elements() + len;
+}
+
+template<typename E, class Alloc>
+template<class Item, class Allocator, typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::AppendElements(nsTArray_Impl<Item, Allocator>&& aArray) -> elem_type*
+{
+  MOZ_ASSERT(&aArray != this, "argument must be different aArray");
+  if (Length() == 0) {
+    SwapElements<ActualAlloc>(aArray);
+    return Elements();
+  }
+
+  index_type len = Length();
+  index_type otherLen = aArray.Length();
+  if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+        len + otherLen, sizeof(elem_type)))) {
+    return nullptr;
+  }
+  copy_type::MoveNonOverlappingRegion(Elements() + len, aArray.Elements(), otherLen,
+                                      sizeof(elem_type));
+  this->IncrementLength(otherLen);
+  aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
+                                   MOZ_ALIGNOF(elem_type));
+  return Elements() + len;
+}
+
+template<typename E, class Alloc>
+template<class Item, typename ActualAlloc>
+auto
+nsTArray_Impl<E, Alloc>::AppendElement(Item&& aItem) -> elem_type*
+{
+  if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
+         Length() + 1, sizeof(elem_type)))) {
+    return nullptr;
+  }
+  elem_type* elem = Elements() + Length();
+  elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
+  this->IncrementLength(1);
+  return elem;
+}
 
 template<typename E, typename Alloc>
 inline void

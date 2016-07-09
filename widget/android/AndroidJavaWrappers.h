@@ -11,7 +11,6 @@
 #include <android/log.h>
 #include <android/api-level.h>
 
-#include "nsGeoPosition.h"
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -405,21 +404,6 @@ public:
     };
 };
 
-class AndroidLocation : public WrappedJavaObject
-{
-public:
-    static void InitLocationClass(JNIEnv *jEnv);
-    static nsGeoPosition* CreateGeoPosition(JNIEnv *jenv, jobject jobj);
-    static jclass jLocationClass;
-    static jmethodID jGetLatitudeMethod;
-    static jmethodID jGetLongitudeMethod;
-    static jmethodID jGetAltitudeMethod;
-    static jmethodID jGetAccuracyMethod;
-    static jmethodID jGetBearingMethod;
-    static jmethodID jGetSpeedMethod;
-    static jmethodID jGetTimeMethod;
-};
-
 class AndroidGeckoEvent : public WrappedJavaObject
 {
 private:
@@ -495,7 +479,6 @@ public:
     int Flags() { return mFlags; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
-    nsGeoPosition* GeoPosition() { return mGeoPosition; }
     int ConnectionType() { return mConnectionType; }
     bool IsWifi() { return mIsWifi; }
     int DHCPGateway() { return mDHCPGateway; }
@@ -536,7 +519,6 @@ protected:
     double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
-    RefPtr<nsGeoPosition> mGeoPosition;
     int mConnectionType;
     bool mIsWifi;
     int mDHCPGateway;
@@ -600,7 +582,6 @@ protected:
     static jfieldID jFlagsField;
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
-    static jfieldID jLocationField;
 
     static jfieldID jConnectionTypeField;
     static jfieldID jIsWifiField;
@@ -623,8 +604,6 @@ public:
     enum {
         NATIVE_POKE = 0,
         MOTION_EVENT = 2,
-        SENSOR_EVENT = 3,
-        LOCATION_EVENT = 5,
         LOAD_URI = 12,
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow

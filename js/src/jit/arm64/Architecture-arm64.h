@@ -397,7 +397,7 @@ struct FloatRegister
     bool equiv(FloatRegister other) const {
         return k_ == other.k_;
     }
-    MOZ_CONSTEXPR uint32_t size() const {
+    constexpr uint32_t size() const {
         return k_ == FloatRegisters::Double ? sizeof(double) : sizeof(float);
     }
     uint32_t numAlignedAliased() {

@@ -329,7 +329,7 @@ class TenuredCell : public Cell
 /* Cells are aligned to CellShift, so the largest tagged null pointer is: */
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellShift) - 1;
 
-MOZ_CONSTEXPR size_t
+constexpr size_t
 DivideAndRoundUp(size_t numerator, size_t divisor) {
     return (numerator + divisor - 1) / divisor;
 }

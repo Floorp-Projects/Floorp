@@ -590,7 +590,8 @@ class FunctionCompiler
     }
 
   private:
-    MDefinition* loadHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access)
+    MDefinition* loadHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access,
+                                 bool isInt64 = false)
     {
         if (inDeadCode())
             return nullptr;
@@ -599,7 +600,7 @@ class FunctionCompiler
         if (mg().kind == ModuleKind::Wasm) {
             if (!mg().usesSignal.forOOB)
                 curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
-            load = MWasmLoad::New(alloc(), base, access);
+            load = MWasmLoad::New(alloc(), base, access, isInt64);
         } else {
             load = MAsmJSLoadHeap::New(alloc(), base, access);
         }
@@ -626,10 +627,10 @@ class FunctionCompiler
     }
 
   public:
-    MDefinition* loadHeap(MDefinition* base, const MWasmMemoryAccess& access)
+    MDefinition* loadHeap(MDefinition* base, const MWasmMemoryAccess& access, bool isInt64)
     {
         MOZ_ASSERT(!Scalar::isSimdType(access.accessType()), "SIMD loads should use loadSimdHeap");
-        return loadHeapPrivate(base, access);
+        return loadHeapPrivate(base, access, isInt64);
     }
     MDefinition* loadSimdHeap(MDefinition* base, const MWasmMemoryAccess& access)
     {
@@ -1731,9 +1732,9 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
-    const TableModuleGeneratorData& table = f.mg().kind == ModuleKind::AsmJS
-                                            ? f.mg().asmJSSigToTable[sigIndex]
-                                            : f.mg().wasmTable;
+    const TableGenDesc& table = f.mg().kind == ModuleKind::AsmJS
+                                ? f.mg().asmJSSigToTable[sigIndex]
+                                : f.mg().wasmTable;
 
     MDefinition* def;
     if (!f.funcPtrCall(sigIndex, table.numElems, table.globalDataOffset, callee, args, &def))
@@ -1751,13 +1752,13 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
-    uint32_t importIndex;
+    uint32_t funcImportIndex;
     uint32_t arity;
-    if (!f.iter().readCallImport(&importIndex, &arity))
+    if (!f.iter().readCallImport(&funcImportIndex, &arity))
         return false;
 
-    const ImportModuleGeneratorData& import = f.mg().imports[importIndex];
-    const Sig& sig = *import.sig;
+    const FuncImportGenDesc& funcImport = f.mg().funcImports[funcImportIndex];
+    const Sig& sig = *funcImport.sig;
 
     FunctionCompiler::CallArgs args(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, &args))
@@ -1767,7 +1768,7 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
         return false;
 
     MDefinition* def;
-    if (!f.ffiCall(import.globalDataOffset, args, sig.ret(), &def))
+    if (!f.ffiCall(funcImport.globalDataOffset, args, sig.ret(), &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -2081,7 +2082,7 @@ EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MWasmMemoryAccess access(viewType, addr.align, addr.offset);
-    f.iter().setResult(f.loadHeap(addr.base, access));
+    f.iter().setResult(f.loadHeap(addr.base, access, type == ValType::I64));
     return true;
 }
 
@@ -2933,6 +2934,28 @@ EmitExpr(FunctionCompiler& f)
         return EmitUnary<MCtz>(f, ValType::I64);
       case Expr::I64Popcnt:
         return EmitUnary<MPopcnt>(f, ValType::I64);
+      case Expr::I64Load8S:
+        return EmitLoad(f, ValType::I64, Scalar::Int8);
+      case Expr::I64Load8U:
+        return EmitLoad(f, ValType::I64, Scalar::Uint8);
+      case Expr::I64Load16S:
+        return EmitLoad(f, ValType::I64, Scalar::Int16);
+      case Expr::I64Load16U:
+        return EmitLoad(f, ValType::I64, Scalar::Uint16);
+      case Expr::I64Load32S:
+        return EmitLoad(f, ValType::I64, Scalar::Int32);
+      case Expr::I64Load32U:
+        return EmitLoad(f, ValType::I64, Scalar::Uint32);
+      case Expr::I64Load:
+        return EmitLoad(f, ValType::I64, Scalar::Int64);
+      case Expr::I64Store8:
+        return EmitStore(f, ValType::I64, Scalar::Int8);
+      case Expr::I64Store16:
+        return EmitStore(f, ValType::I64, Scalar::Int16);
+      case Expr::I64Store32:
+        return EmitStore(f, ValType::I64, Scalar::Int32);
+      case Expr::I64Store:
+        return EmitStore(f, ValType::I64, Scalar::Int64);
 
       // F32
       case Expr::F32Const: {
@@ -3286,17 +3309,6 @@ EmitExpr(FunctionCompiler& f)
         return EmitAtomicsExchange(f);
 
       // Future opcodes
-      case Expr::I64Load8S:
-      case Expr::I64Load16S:
-      case Expr::I64Load32S:
-      case Expr::I64Load8U:
-      case Expr::I64Load16U:
-      case Expr::I64Load32U:
-      case Expr::I64Load:
-      case Expr::I64Store8:
-      case Expr::I64Store16:
-      case Expr::I64Store32:
-      case Expr::I64Store:
       case Expr::CurrentMemory:
       case Expr::GrowMemory:
         MOZ_CRASH("NYI");

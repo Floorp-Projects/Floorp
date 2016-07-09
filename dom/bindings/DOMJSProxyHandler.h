@@ -47,7 +47,7 @@ template<typename T> struct Prefable;
 class BaseDOMProxyHandler : public js::BaseProxyHandler
 {
 public:
-  explicit MOZ_CONSTEXPR BaseDOMProxyHandler(const void* aProxyFamily, bool aHasPrototype = false)
+  explicit constexpr BaseDOMProxyHandler(const void* aProxyFamily, bool aHasPrototype = false)
     : js::BaseProxyHandler(aProxyFamily, aHasPrototype)
   {}
 
@@ -98,7 +98,7 @@ protected:
 class DOMProxyHandler : public BaseDOMProxyHandler
 {
 public:
-  MOZ_CONSTEXPR DOMProxyHandler()
+  constexpr DOMProxyHandler()
     : BaseDOMProxyHandler(&family)
   {}
 

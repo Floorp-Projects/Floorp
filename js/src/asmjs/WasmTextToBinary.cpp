@@ -2341,9 +2341,6 @@ ParseTypeDef(WasmParseContext& c)
 static AstSegment*
 ParseSegment(WasmParseContext& c)
 {
-    if (!c.ts.match(WasmToken::Segment, c.error))
-        return nullptr;
-
     WasmToken dstOffset;
     if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
         return nullptr;
@@ -2355,28 +2352,40 @@ ParseSegment(WasmParseContext& c)
     return new(c.lifo) AstSegment(dstOffset.index(), text.text());
 }
 
-static AstMemory*
-ParseMemory(WasmParseContext& c)
+static bool
+ParseMemorySignature(WasmParseContext& c, AstMemorySignature* memSig)
 {
-    WasmToken initialSize;
-    if (!c.ts.match(WasmToken::Index, &initialSize, c.error))
-        return nullptr;
+    WasmToken initial;
+    if (!c.ts.match(WasmToken::Index, &initial, c.error))
+        return false;
 
-    Maybe<uint32_t> maxSize;
+    Maybe<uint32_t> maximum;
     WasmToken token;
     if (c.ts.getIf(WasmToken::Index, &token))
-        maxSize.emplace(token.index());
+        maximum.emplace(token.index());
 
-    AstSegmentVector segments(c.lifo);
+    *memSig = AstMemorySignature(initial.index(), maximum);
+    return true;
+}
+
+static AstMemory*
+ParseMemory(WasmParseContext& c, AstModule* module)
+{
+    AstMemorySignature memSig;
+    if (!ParseMemorySignature(c, &memSig))
+        return nullptr;
+
     while (c.ts.getIf(WasmToken::OpenParen)) {
+        if (!c.ts.match(WasmToken::Segment, c.error))
+            return nullptr;
         AstSegment* segment = ParseSegment(c);
-        if (!segment || !segments.append(segment))
+        if (!segment || !module->append(segment))
             return nullptr;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
             return nullptr;
     }
 
-    return new(c.lifo) AstMemory(initialSize.index(), maxSize, Move(segments));
+    return new(c.lifo) AstMemory(memSig);
 }
 
 static AstImport*
@@ -2388,13 +2397,22 @@ ParseImport(WasmParseContext& c, AstModule* module)
     if (!c.ts.match(WasmToken::Text, &moduleName, c.error))
         return nullptr;
 
-    WasmToken funcName;
-    if (!c.ts.match(WasmToken::Text, &funcName, c.error))
+    WasmToken fieldName;
+    if (!c.ts.match(WasmToken::Text, &fieldName, c.error))
         return nullptr;
 
     AstRef sigRef;
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+        if (c.ts.getIf(WasmToken::Memory)) {
+            AstMemorySignature memSig;
+            if (!ParseMemorySignature(c, &memSig))
+                return nullptr;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return nullptr;
+            return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), memSig);
+        }
+
         if (c.ts.getIf(WasmToken::Type)) {
             if (!c.ts.matchRef(&sigRef, c.error))
                 return nullptr;
@@ -2416,7 +2434,7 @@ ParseImport(WasmParseContext& c, AstModule* module)
         sigRef.setIndex(sigIndex);
     }
 
-    return new(c.lifo) AstImport(name, moduleName.text(), funcName.text(), sigRef);
+    return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), sigRef);
 }
 
 static AstExport*
@@ -2482,10 +2500,20 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Memory: {
-            AstMemory* memory = ParseMemory(c);
+            AstMemory* memory = ParseMemory(c, module);
             if (!memory)
                 return nullptr;
             if (!module->setMemory(memory)) {
+                c.ts.generateError(section, c.error);
+                return nullptr;
+            }
+            break;
+          }
+          case WasmToken::Segment: {
+            AstSegment* segment = ParseSegment(c);
+            if (!segment)
+                return nullptr;
+            if (!module->append(segment)) {
                 c.ts.generateError(section, c.error);
                 return nullptr;
             }
@@ -2967,10 +2995,17 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     size_t numImports = module->imports().length();
     for (size_t i = 0; i < numImports; i++) {
         AstImport* imp = module->imports()[i];
-        if (!r.resolveSignature(imp->sig()))
-            return false;
         if (!r.registerImportName(imp->name(), i))
             return r.fail("duplicate import");
+
+        switch (imp->kind()) {
+          case DefinitionKind::Function:
+            if (!r.resolveSignature(imp->funcSig()))
+                return false;
+            break;
+          case DefinitionKind::Memory:
+            break;
+        }
     }
 
     for (AstExport* export_ : module->exports()) {
@@ -3393,16 +3428,37 @@ EncodeBytes(Encoder& e, AstName wasmName)
 }
 
 static bool
+EncodeMemorySignature(Encoder& e, const AstMemorySignature& memSig)
+{
+    uint32_t flags = uint32_t(MemoryFlags::Default);
+    if (memSig.maximum())
+        flags |= uint32_t(MemoryFlags::HasMaximum);
+
+    if (!e.writeVarU32(flags))
+        return false;
+
+    if (!e.writeVarU32(memSig.initial()))
+        return false;
+
+    if (memSig.maximum()) {
+        if (!e.writeVarU32(*memSig.maximum()))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
 {
     if (!newFormat) {
-        if (!e.writeVarU32(imp.sig().index()))
+        if (!e.writeVarU32(imp.funcSig().index()))
             return false;
 
         if (!EncodeBytes(e, imp.module()))
             return false;
 
-        if (!EncodeBytes(e, imp.func()))
+        if (!EncodeBytes(e, imp.field()))
             return false;
 
         return true;
@@ -3411,14 +3467,22 @@ EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
     if (!EncodeBytes(e, imp.module()))
         return false;
 
-    if (!EncodeBytes(e, imp.func()))
+    if (!EncodeBytes(e, imp.field()))
         return false;
 
-    if (!e.writeVarU32(uint32_t(DefinitionKind::Function)))
+    if (!e.writeVarU32(uint32_t(imp.kind())))
         return false;
 
-    if (!e.writeVarU32(imp.sig().index()))
-        return false;
+    switch (imp.kind()) {
+      case DefinitionKind::Function:
+        if (!e.writeVarU32(imp.funcSig().index()))
+            return false;
+        break;
+      case DefinitionKind::Memory:
+        if (!EncodeMemorySignature(e, imp.memSig()))
+            return false;
+        break;
+    }
 
     return true;
 }
@@ -3457,14 +3521,17 @@ EncodeMemorySection(Encoder& e, bool newFormat, AstModule& module)
 
     AstMemory& memory = *module.maybeMemory();
 
-    if (!e.writeVarU32(memory.initialSize()))
-        return false;
+    if (newFormat) {
+        if (!EncodeMemorySignature(e, memory))
+            return false;
+    } else {
+        if (!e.writeVarU32(memory.initial()))
+            return false;
 
-    uint32_t maxSize = memory.maxSize() ? *memory.maxSize() : memory.initialSize();
-    if (!e.writeVarU32(maxSize))
-        return false;
+        uint32_t maxSize = memory.maximum() ? *memory.maximum() : memory.initial();
+        if (!e.writeVarU32(maxSize))
+            return false;
 
-    if (!newFormat) {
         uint8_t exported = 0;
         for (AstExport* exp : module.exports()) {
             if (exp->kind() == DefinitionKind::Memory) {
@@ -3618,8 +3685,16 @@ EncodeCodeSection(Encoder& e, AstModule& module)
 }
 
 static bool
-EncodeDataSegment(Encoder& e, AstSegment& segment)
+EncodeDataSegment(Encoder& e, bool newFormat, AstSegment& segment)
 {
+    if (newFormat) {
+        if (!e.writeVarU32(0))  // linear memory index
+            return false;
+
+        if (!e.writeExpr(Expr::I32Const))
+            return false;
+    }
+
     if (!e.writeVarU32(segment.offset()))
         return false;
 
@@ -3644,22 +3719,20 @@ EncodeDataSegment(Encoder& e, AstSegment& segment)
 }
 
 static bool
-EncodeDataSection(Encoder& e, AstModule& module)
+EncodeDataSection(Encoder& e, bool newFormat, AstModule& module)
 {
-    if (!module.maybeMemory() || module.maybeMemory()->segments().empty())
+    if (module.segments().empty())
         return true;
-
-    const AstSegmentVector& segments = module.maybeMemory()->segments();
 
     size_t offset;
     if (!e.startSection(DataSectionId, &offset))
         return false;
 
-    if (!e.writeVarU32(segments.length()))
+    if (!e.writeVarU32(module.segments().length()))
         return false;
 
-    for (AstSegment* segment : segments) {
-        if (!EncodeDataSegment(e, *segment))
+    for (AstSegment* segment : module.segments()) {
+        if (!EncodeDataSegment(e, newFormat, *segment))
             return false;
     }
 
@@ -3699,7 +3772,7 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
     if (!EncodeCodeSection(e, module))
         return false;
 
-    if (!EncodeDataSection(e, module))
+    if (!EncodeDataSection(e, newFormat, module))
         return false;
 
     return true;

@@ -11,6 +11,65 @@ using namespace mozilla;
 
 namespace TestTArray {
 
+struct Copyable
+{
+  Copyable()
+    : mDestructionCounter(nullptr)
+  {
+  }
+
+  ~Copyable()
+  {
+    if (mDestructionCounter) {
+      (*mDestructionCounter)++;
+    }
+  }
+
+  Copyable(const Copyable&) = default;
+  Copyable& operator=(const Copyable&) = default;
+
+  uint32_t* mDestructionCounter;
+};
+
+struct Movable
+{
+  Movable()
+    : mDestructionCounter(nullptr)
+  {
+  }
+
+  ~Movable()
+  {
+    if (mDestructionCounter) {
+      (*mDestructionCounter)++;
+    }
+  }
+
+  Movable(Movable&& aOther)
+    : mDestructionCounter(aOther.mDestructionCounter)
+  {
+    aOther.mDestructionCounter = nullptr;
+  }
+
+  uint32_t* mDestructionCounter;
+};
+
+} // namespace TestTArray
+
+template<>
+struct nsTArray_CopyChooser<TestTArray::Copyable>
+{
+  typedef nsTArray_CopyWithConstructors<TestTArray::Copyable> Type;
+};
+
+template<>
+struct nsTArray_CopyChooser<TestTArray::Movable>
+{
+  typedef nsTArray_CopyWithConstructors<TestTArray::Movable> Type;
+};
+
+namespace TestTArray {
+
 const nsTArray<int>& DummyArray()
 {
   static nsTArray<int> sArray;
@@ -81,6 +140,67 @@ TEST(TArray, AssignmentOperatorSelfAssignment)
   ASSERT_EQ(DummyArray(), array);
   array = Move(array);
   ASSERT_EQ(DummyArray(), array);
+}
+
+TEST(TArray, CopyOverlappingForwards)
+{
+  nsTArray<Movable> array;
+  const size_t rangeLength = 8;
+  const size_t initialLength = 2 * rangeLength;
+  array.AppendElements(initialLength);
+
+  uint32_t destructionCounters[initialLength];
+  for (uint32_t i = 0; i < initialLength; ++i) {
+    destructionCounters[i] = 0;
+  }
+  for (uint32_t i = 0; i < initialLength; ++i) {
+    array[i].mDestructionCounter = &destructionCounters[i];
+  }
+
+  const size_t removedLength = rangeLength / 2;
+  array.RemoveElementsAt(0, removedLength);
+
+  for (uint32_t i = 0; i < removedLength; ++i) {
+    ASSERT_EQ(destructionCounters[i], 1u);
+  }
+  for (uint32_t i = removedLength; i < initialLength; ++i) {
+    ASSERT_EQ(destructionCounters[i], 0u);
+  }
+}
+
+// The code to copy overlapping regions had a bug in that it wouldn't correctly
+// destroy all over the source elements being copied.
+TEST(TArray, CopyOverlappingBackwards)
+{
+  nsTArray<Copyable> array;
+  const size_t rangeLength = 8;
+  const size_t initialLength = 2 * rangeLength;
+  array.SetCapacity(3 * rangeLength);
+  array.AppendElements(initialLength);
+  // To tickle the bug, we need to copy a source region:
+  //
+  //   ..XXXXX..
+  //
+  // such that it overlaps the destination region:
+  //
+  //   ....XXXXX
+  //
+  // so we are forced to copy back-to-front to ensure correct behavior.
+  // The easiest way to do that is to call InsertElementsAt, which will force
+  // the desired kind of shift.
+  uint32_t destructionCounters[initialLength];
+  for (uint32_t i = 0; i < initialLength; ++i) {
+    destructionCounters[i] = 0;
+  }
+  for (uint32_t i = 0; i < initialLength; ++i) {
+    array[i].mDestructionCounter = &destructionCounters[i];
+  }
+
+  array.InsertElementsAt(0, rangeLength);
+
+  for (uint32_t i = 0; i < initialLength; ++i) {
+    ASSERT_EQ(destructionCounters[i], 1u);
+  }
 }
 
 } // namespace TestTArray

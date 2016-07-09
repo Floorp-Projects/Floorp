@@ -321,5 +321,8 @@
     macro(symbol, symbol, "symbol") \
     /* Function names for properties named by symbols. */ \
     macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \
+    /* Not really a property name, but we use this to compare to atomized
+       script source strings */ \
+    macro(selfHosted, selfHosted, "self-hosted") \
 
 #endif /* vm_CommonPropertyNames_h */

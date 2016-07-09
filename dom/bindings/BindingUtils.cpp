@@ -1998,7 +1998,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   // First we clone the reflector. We get a copy of its properties and clone its
   // expando chain.
 
-  JS::Handle<JSObject*> proto = (domClass->mGetProto)(aCx, newParent);
+  JS::Handle<JSObject*> proto = (domClass->mGetProto)(aCx);
   if (!proto) {
     return NS_ERROR_FAILURE;
   }

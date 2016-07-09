@@ -46,7 +46,7 @@ struct JustificationInfo
   bool mIsStartJustifiable;
   bool mIsEndJustifiable;
 
-  MOZ_CONSTEXPR JustificationInfo()
+  constexpr JustificationInfo()
     : mInnerOpportunities(0)
     , mIsStartJustifiable(false)
     , mIsEndJustifiable(false)
@@ -76,7 +76,7 @@ struct JustificationAssignment
   uint8_t mGapsAtStart : 2;
   uint8_t mGapsAtEnd : 2;
 
-  MOZ_CONSTEXPR JustificationAssignment()
+  constexpr JustificationAssignment()
     : mGapsAtStart(0)
     , mGapsAtEnd(0)
   {

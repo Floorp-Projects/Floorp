@@ -91,7 +91,7 @@ WrapperOwner::idOf(JSObject* obj)
 class CPOWProxyHandler : public BaseProxyHandler
 {
   public:
-    MOZ_CONSTEXPR CPOWProxyHandler()
+    constexpr CPOWProxyHandler()
       : BaseProxyHandler(&family) {}
 
     virtual bool finalizeInBackground(Value priv) const override {

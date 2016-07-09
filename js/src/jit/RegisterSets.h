@@ -111,7 +111,7 @@ class ValueOperand
     Register payload_;
 
   public:
-    MOZ_CONSTEXPR ValueOperand(Register type, Register payload)
+    constexpr ValueOperand(Register type, Register payload)
       : type_(type), payload_(payload)
     { }
 
@@ -138,7 +138,7 @@ class ValueOperand
     Register value_;
 
   public:
-    explicit MOZ_CONSTEXPR ValueOperand(Register value)
+    explicit constexpr ValueOperand(Register value)
       : value_(value)
     { }
 
@@ -315,13 +315,13 @@ class TypedRegisterSet
     SetType bits_;
 
   public:
-    explicit MOZ_CONSTEXPR TypedRegisterSet(SetType bits)
+    explicit constexpr TypedRegisterSet(SetType bits)
       : bits_(bits)
     { }
 
-    MOZ_CONSTEXPR TypedRegisterSet() : bits_(0)
+    constexpr TypedRegisterSet() : bits_(0)
     { }
-    MOZ_CONSTEXPR TypedRegisterSet(const TypedRegisterSet<T>& set) : bits_(set.bits_)
+    constexpr TypedRegisterSet(const TypedRegisterSet<T>& set) : bits_(set.bits_)
     { }
 
     static inline TypedRegisterSet All() {
@@ -433,7 +433,7 @@ class RegisterSet {
   public:
     RegisterSet()
     { }
-    MOZ_CONSTEXPR RegisterSet(const GeneralRegisterSet& gpr, const FloatRegisterSet& fpu)
+    constexpr RegisterSet(const GeneralRegisterSet& gpr, const FloatRegisterSet& fpu)
       : gpr_(gpr),
         fpu_(fpu)
     { }
@@ -473,13 +473,13 @@ class RegisterSet {
     bool emptyFloat() const {
         return fpu_.empty();
     }
-    MOZ_CONSTEXPR GeneralRegisterSet gprs() const {
+    constexpr GeneralRegisterSet gprs() const {
         return gpr_;
     }
     GeneralRegisterSet& gprs() {
         return gpr_;
     }
-    MOZ_CONSTEXPR FloatRegisterSet fpus() const {
+    constexpr FloatRegisterSet fpus() const {
         return fpu_;
     }
     FloatRegisterSet& fpus() {
@@ -567,8 +567,8 @@ class AllocatableSetAccessors
 
   public:
     AllocatableSetAccessors() : set_() {}
-    explicit MOZ_CONSTEXPR AllocatableSetAccessors(SetType set) : set_(set) {}
-    explicit MOZ_CONSTEXPR AllocatableSetAccessors(RegSet set) : set_(set) {}
+    explicit constexpr AllocatableSetAccessors(SetType set) : set_(set) {}
+    explicit constexpr AllocatableSetAccessors(RegSet set) : set_(set) {}
 
     bool has(RegType reg) const {
         return set_.hasAllocatable(reg);
@@ -597,8 +597,8 @@ class AllocatableSetAccessors<RegisterSet>
 
   public:
     AllocatableSetAccessors() : set_() {}
-    explicit MOZ_CONSTEXPR AllocatableSetAccessors(SetType) = delete;
-    explicit MOZ_CONSTEXPR AllocatableSetAccessors(RegisterSet set) : set_(set) {}
+    explicit constexpr AllocatableSetAccessors(SetType) = delete;
+    explicit constexpr AllocatableSetAccessors(RegisterSet set) : set_(set) {}
 
     bool has(Register reg) const {
         return set_.gprs().hasAllocatable(reg);
@@ -649,8 +649,8 @@ class LiveSetAccessors
 
   public:
     LiveSetAccessors() : set_() {}
-    explicit MOZ_CONSTEXPR LiveSetAccessors(SetType set) : set_(set) {}
-    explicit MOZ_CONSTEXPR LiveSetAccessors(RegSet set) : set_(set) {}
+    explicit constexpr LiveSetAccessors(SetType set) : set_(set) {}
+    explicit constexpr LiveSetAccessors(RegSet set) : set_(set) {}
 
     bool has(RegType reg) const {
         return set_.hasRegisterIndex(reg);
@@ -679,8 +679,8 @@ class LiveSetAccessors<RegisterSet>
 
   public:
     LiveSetAccessors() : set_() {}
-    explicit MOZ_CONSTEXPR LiveSetAccessors(SetType) = delete;
-    explicit MOZ_CONSTEXPR LiveSetAccessors(RegisterSet set) : set_(set) {}
+    explicit constexpr LiveSetAccessors(SetType) = delete;
+    explicit constexpr LiveSetAccessors(RegisterSet set) : set_(set) {}
 
     bool has(Register reg) const {
         return set_.gprs().hasRegisterIndex(reg);
@@ -709,9 +709,9 @@ class LiveSetAccessors<RegisterSet>
     typedef typename Parent::RegType RegType;                         \
     typedef typename Parent::SetType SetType;                         \
                                                                       \
-    MOZ_CONSTEXPR_TMPL REGSET() : Parent() {}                         \
-    explicit MOZ_CONSTEXPR_TMPL REGSET(SetType set) : Parent(set) {}  \
-    explicit MOZ_CONSTEXPR_TMPL REGSET(RegSet set) : Parent(set) {}
+    constexpr REGSET() : Parent() {}                                  \
+    explicit constexpr REGSET(SetType set) : Parent(set) {}           \
+    explicit constexpr REGSET(RegSet set) : Parent(set) {}
 
 // This class adds checked accessors on top of the unchecked variants defined by
 // AllocatableSet and LiveSet accessors. Also it defines interface which are
@@ -1026,10 +1026,10 @@ class AllocatableSet : public CommonRegSet<AllocatableSetAccessors<Set>, Set>
     typedef Parent::RegType RegType;                                        \
     typedef Parent::SetType SetType;                                        \
                                                                             \
-    MOZ_CONSTEXPR_TMPL REGSET() : Parent() {}                               \
-    explicit MOZ_CONSTEXPR_TMPL REGSET(SetType) = delete;                   \
-    explicit MOZ_CONSTEXPR_TMPL REGSET(RegSet set) : Parent(set) {}         \
-    MOZ_CONSTEXPR_TMPL REGSET(GeneralRegisterSet gpr, FloatRegisterSet fpu) \
+    constexpr REGSET() : Parent() {}                                        \
+    explicit constexpr REGSET(SetType) = delete;                            \
+    explicit constexpr REGSET(RegSet set) : Parent(set) {}                  \
+    constexpr REGSET(GeneralRegisterSet gpr, FloatRegisterSet fpu)          \
       : Parent(RegisterSet(gpr, fpu))                                       \
     {}                                                                      \
     REGSET(REGSET<GeneralRegisterSet> gpr, REGSET<FloatRegisterSet> fpu)    \

@@ -69,8 +69,7 @@ class CodeSegment
                                     const Bytes& code,
                                     const LinkData& linkData,
                                     const Metadata& metadata,
-                                    uint8_t* memoryBase,
-                                    uint32_t memoryLength);
+                                    HandleWasmMemoryObject memory);
     ~CodeSegment();
 
     uint8_t* code() const { return bytes_; }
@@ -176,11 +175,13 @@ class Export
 
 typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
-// An Import describes a wasm module import. Currently, only functions can be
-// imported in wasm. A function import includes the signature used within the
-// module to call it.
+// An FuncImport contains the runtime metadata needed to implement a call to an
+// imported function. Each function import has two call stubs: an optimized path
+// into JIT code and a slow path into the generic C++ js::Invoke and these
+// offsets of these stubs are stored so that function-import callsites can be
+// dynamically patched at runtime.
 
-class Import
+class FuncImport
 {
     Sig sig_;
     struct CacheablePod {
@@ -190,8 +191,8 @@ class Import
     } pod;
 
   public:
-    Import() = default;
-    Import(Sig&& sig, uint32_t exitGlobalDataOffset)
+    FuncImport() = default;
+    FuncImport(Sig&& sig, uint32_t exitGlobalDataOffset)
       : sig_(Move(sig))
     {
         pod.exitGlobalDataOffset_ = exitGlobalDataOffset;
@@ -221,10 +222,10 @@ class Import
         return pod.jitExitCodeOffset_;
     }
 
-    WASM_DECLARE_SERIALIZABLE(Import)
+    WASM_DECLARE_SERIALIZABLE(FuncImport)
 };
 
-typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
+typedef Vector<FuncImport, 0, SystemAllocPolicy> FuncImportVector;
 
 // A CodeRange describes a single contiguous range of code within a wasm
 // module's code segment. A CodeRange describes what the code does and, for
@@ -414,6 +415,7 @@ struct MetadataCacheablePod
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
     uint32_t              minMemoryLength;
+    uint32_t              maxMemoryLength;
 
     MetadataCacheablePod() { mozilla::PodZero(this); }
 };
@@ -425,7 +427,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     MetadataCacheablePod& pod() { return *this; }
     const MetadataCacheablePod& pod() const { return *this; }
 
-    ImportVector          imports;
+    FuncImportVector      funcImports;
     ExportVector          exports;
     MemoryAccessVector    memoryAccesses;
     BoundsCheckVector     boundsChecks;

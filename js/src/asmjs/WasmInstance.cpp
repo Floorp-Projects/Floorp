@@ -26,15 +26,14 @@
 #include "asmjs/WasmJS.h"
 #include "asmjs/WasmModule.h"
 #include "builtin/SIMD.h"
+#include "jit/BaselineJIT.h"
 #include "jit/JitCommon.h"
-#include "jit/JitOptions.h"
+#include "jit/JitCompartment.h"
 #include "vm/StringBuffer.h"
 
-#include "jsatominlines.h"
+#include "jsobjinlines.h"
 
 #include "vm/ArrayBufferObject-inl.h"
-#include "vm/Debugger-inl.h"
-#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -48,10 +47,10 @@ Instance::addressOfMemoryBase() const
     return (uint8_t**)(codeSegment_->globalData() + HeapGlobalDataOffset);
 }
 
-ImportExit&
-Instance::importToExit(const Import& import)
+FuncImportExit&
+Instance::funcImportToExit(const FuncImport& fi)
 {
-    return *(ImportExit*)(codeSegment_->globalData() + import.exitGlobalDataOffset());
+    return *(FuncImportExit*)(codeSegment_->globalData() + fi.exitGlobalDataOffset());
 }
 
 WasmActivation*&
@@ -178,19 +177,19 @@ CreateI64Object(JSContext* cx, int64_t i64)
 }
 
 bool
-Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uint64_t* argv,
+Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
-    const Import& import = metadata_->imports[importIndex];
+    const FuncImport& fi = metadata_->funcImports[funcImportIndex];
 
     InvokeArgs args(cx);
     if (!args.init(argc))
         return false;
 
     bool hasI64Arg = false;
-    MOZ_ASSERT(import.sig().args().length() == argc);
+    MOZ_ASSERT(fi.sig().args().length() == argc);
     for (size_t i = 0; i < argc; i++) {
-        switch (import.sig().args()[i]) {
+        switch (fi.sig().args()[i]) {
           case ValType::I32:
             args[i].set(Int32Value(*(int32_t*)&argv[i]));
             break;
@@ -221,7 +220,8 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
         }
     }
 
-    RootedValue fval(cx, ObjectValue(*importToExit(import).fun));
+    FuncImportExit& exit = funcImportToExit(fi);
+    RootedValue fval(cx, ObjectValue(*exit.fun));
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
         return false;
@@ -229,13 +229,11 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
     // Don't try to optimize if the function has at least one i64 arg or if
     // it returns an int64. GenerateJitExit relies on this, as does the
     // type inference code below in this function.
-    if (hasI64Arg || import.sig().ret() == ExprType::I64)
+    if (hasI64Arg || fi.sig().ret() == ExprType::I64)
         return true;
 
-    ImportExit& exit = importToExit(import);
-
     // The exit may already have become optimized.
-    void* jitExitCode = codeSegment_->code() + import.jitExitCodeOffset();
+    void* jitExitCode = codeSegment_->code() + fi.jitExitCodeOffset();
     if (exit.code == jitExitCode)
         return true;
 
@@ -256,7 +254,7 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
         return true;
 
     // Currently we can't rectify arguments. Therefore disable if argc is too low.
-    if (exit.fun->nargs() > import.sig().args().length())
+    if (exit.fun->nargs() > fi.sig().args().length())
         return true;
 
     // Ensure the argument types are included in the argument TypeSets stored in
@@ -271,7 +269,7 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
         return true;
     for (uint32_t i = 0; i < exit.fun->nargs(); i++) {
         TypeSet::Type type = TypeSet::UnknownType();
-        switch (import.sig().args()[i]) {
+        switch (fi.sig().args()[i]) {
           case ValType::I32:   type = TypeSet::Int32Type(); break;
           case ValType::I64:   MOZ_CRASH("can't happen because of above guard");
           case ValType::F32:   type = TypeSet::DoubleType(); break;
@@ -290,7 +288,7 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
     }
 
     // Let's optimize it!
-    if (!script->baselineScript()->addDependentWasmImport(cx, *this, importIndex))
+    if (!script->baselineScript()->addDependentWasmImport(cx, *this, funcImportIndex))
         return false;
 
     exit.code = jitExitCode;
@@ -299,241 +297,84 @@ Instance::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const u
 }
 
 /* static */ int32_t
-Instance::callImport_void(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_void(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    return activation->instance().callImport(cx, importIndex, argc, argv, &rval);
+    return activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval);
 }
 
 /* static */ int32_t
-Instance::callImport_i32(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i32(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToInt32(cx, rval, (int32_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_i64(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_i64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ReadI64Object(cx, rval, (int64_t*)argv);
 }
 
 /* static */ int32_t
-Instance::callImport_f64(int32_t importIndex, int32_t argc, uint64_t* argv)
+Instance::callImport_f64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
 
     RootedValue rval(cx);
-    if (!activation->instance().callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->instance().callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
 
     return ToNumber(cx, rval, (double*)argv);
-}
-
-static bool
-WasmCall(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction callee(cx, &args.callee().as<JSFunction>());
-
-    Instance& instance = ExportedFunctionToInstance(callee);
-    uint32_t exportIndex = ExportedFunctionToExportIndex(callee);
-
-    return instance.callExport(cx, exportIndex, args);
-}
-
-static JSFunction*
-NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint32_t exportIndex)
-{
-    Instance& instance = instanceObj->instance();
-    const Metadata& metadata = instance.metadata();
-    const Export& exp = metadata.exports[exportIndex];
-    unsigned numArgs = exp.sig().args().length();
-
-    RootedAtom name(cx, instance.getFuncAtom(cx, exp.funcIndex()));
-    if (!name)
-        return nullptr;
-
-    JSFunction* fun = NewNativeConstructor(cx, WasmCall, numArgs, name,
-                                           gc::AllocKind::FUNCTION_EXTENDED, GenericObject,
-                                           JSFunction::ASMJS_CTOR);
-    if (!fun)
-        return nullptr;
-
-    fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
-    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
-    return fun;
-}
-
-static bool
-CreateExportObject(JSContext* cx,
-                   HandleWasmInstanceObject instanceObj,
-                   HandleObject memoryObj,
-                   const ExportMap& exportMap,
-                   const ExportVector& exports,
-                   MutableHandleObject exportObj)
-{
-    MOZ_ASSERT(exportMap.fieldNames.length() == exportMap.fieldsToExports.length());
-
-    for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
-        const char* fieldName = exportMap.fieldNames[fieldIndex].get();
-        if (!*fieldName) {
-            MOZ_ASSERT(!exportObj);
-            uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-            if (exportIndex == MemoryExport) {
-                MOZ_ASSERT(memoryObj);
-                exportObj.set(memoryObj);
-            } else {
-                exportObj.set(NewExportedFunction(cx, instanceObj, exportIndex));
-                if (!exportObj)
-                    return false;
-            }
-            break;
-        }
-    }
-
-    Rooted<ValueVector> vals(cx, ValueVector(cx));
-    for (size_t exportIndex = 0; exportIndex < exports.length(); exportIndex++) {
-        JSFunction* fun = NewExportedFunction(cx, instanceObj, exportIndex);
-        if (!fun || !vals.append(ObjectValue(*fun)))
-            return false;
-    }
-
-    if (!exportObj) {
-        exportObj.set(JS_NewPlainObject(cx));
-        if (!exportObj)
-            return false;
-    }
-
-    for (size_t fieldIndex = 0; fieldIndex < exportMap.fieldNames.length(); fieldIndex++) {
-        const char* fieldName = exportMap.fieldNames[fieldIndex].get();
-        if (!*fieldName)
-            continue;
-
-        JSAtom* atom = AtomizeUTF8Chars(cx, fieldName, strlen(fieldName));
-        if (!atom)
-            return false;
-
-        RootedId id(cx, AtomToId(atom));
-        RootedValue val(cx);
-        uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-        if (exportIndex == MemoryExport)
-            val = ObjectValue(*memoryObj);
-        else
-            val = vals[exportIndex];
-
-        if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
-            return false;
-    }
-
-    return true;
 }
 
 Instance::Instance(UniqueCodeSegment codeSegment,
                    const Metadata& metadata,
                    const ShareableBytes* maybeBytecode,
                    TypedFuncTableVector&& typedFuncTables,
-                   HandleWasmMemoryObject memory)
+                   HandleWasmMemoryObject memory,
+                   Handle<FunctionVector> funcImports)
   : codeSegment_(Move(codeSegment)),
     metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
     typedFuncTables_(Move(typedFuncTables)),
     memory_(memory),
     profilingEnabled_(false)
-{}
-
-static const char ExportField[] = "exports";
-
-/* static */ bool
-Instance::create(JSContext* cx,
-                 UniqueCodeSegment codeSegment,
-                 const Metadata& metadata,
-                 const ShareableBytes* maybeBytecode,
-                 TypedFuncTableVector&& typedFuncTables,
-                 HandleWasmMemoryObject memory,
-                 Handle<FunctionVector> funcImports,
-                 const ExportMap& exportMap,
-                 HandleWasmInstanceObject instanceObj)
 {
-    // Ensure that the Instance is traceable via 'instanceObj' before any GC.
-
-    {
-        auto instance = cx->make_unique<Instance>(Move(codeSegment), metadata, maybeBytecode,
-                                                  Move(typedFuncTables), memory);
-        if (!instance)
-            return false;
-
-        instanceObj->init(Move(instance));
-    }
-
-    // Initialize the instance.
-
-    Instance& instance = instanceObj->instance();
-
-    for (size_t i = 0; i < metadata.imports.length(); i++) {
-        const Import& import = metadata.imports[i];
-        ImportExit& exit = instance.importToExit(import);
-        exit.code = instance.codeSegment().code() + import.interpExitCodeOffset();
+    MOZ_ASSERT(funcImports.length() == metadata.funcImports.length());
+    for (size_t i = 0; i < metadata.funcImports.length(); i++) {
+        const FuncImport& fi = metadata.funcImports[i];
+        FuncImportExit& exit = funcImportToExit(fi);
+        exit.code = codeSegment_->code() + fi.interpExitCodeOffset();
         exit.fun = funcImports[i];
         exit.baselineScript = nullptr;
     }
 
     if (memory)
-        *instance.addressOfMemoryBase() = memory->buffer().dataPointerEither().unwrap();
-
-    // Create the export object.
-
-    RootedObject memoryObj(cx);
-    if (metadata.assumptions.newFormat)
-        memoryObj = memory;
-    else
-        memoryObj = memory ? &memory->buffer() : nullptr;
-
-    RootedObject exportObj(cx);
-    if (!CreateExportObject(cx, instanceObj, memoryObj, exportMap, metadata.exports, &exportObj))
-        return false;
-
-    // Attach the export object to the instance object.
-
-    instanceObj->initExportsObject(exportObj);
-
-    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-
-    RootedValue val(cx, ObjectValue(*exportObj));
-    if (!JS_DefinePropertyById(cx, instanceObj, id, val, JSPROP_ENUMERATE))
-        return false;
-
-    // Notify the Debugger of the new Instance.
-
-    Debugger::onNewWasmInstance(cx, instanceObj);
-
-    return true;
+        *addressOfMemoryBase() = memory->buffer().dataPointerEither().unwrap();
 }
 
 Instance::~Instance()
 {
-    for (unsigned i = 0; i < metadata_->imports.length(); i++) {
-        ImportExit& exit = importToExit(metadata_->imports[i]);
+    for (unsigned i = 0; i < metadata_->funcImports.length(); i++) {
+        FuncImportExit& exit = funcImportToExit(metadata_->funcImports[i]);
         if (exit.baselineScript)
             exit.baselineScript->removeDependentWasmImport(*this, i);
     }
@@ -542,8 +383,8 @@ Instance::~Instance()
 void
 Instance::trace(JSTracer* trc)
 {
-    for (const Import& import : metadata_->imports)
-        TraceNullableEdge(trc, &importToExit(import).fun, "wasm function import");
+    for (const FuncImport& fi : metadata_->funcImports)
+        TraceNullableEdge(trc, &funcImportToExit(fi).fun, "wasm function import");
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
 
@@ -808,11 +649,11 @@ Instance::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
 }
 
 void
-Instance::deoptimizeImportExit(uint32_t importIndex)
+Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const Import& import = metadata_->imports[importIndex];
-    ImportExit& exit = importToExit(import);
-    exit.code = codeSegment_->code() + import.interpExitCodeOffset();
+    const FuncImport& fi = metadata_->funcImports[funcImportIndex];
+    FuncImportExit& exit = funcImportToExit(fi);
+    exit.code = codeSegment_->code() + fi.interpExitCodeOffset();
     exit.baselineScript = nullptr;
 }
 
@@ -894,26 +735,4 @@ Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 
     if (maybeBytecode_)
         *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
-}
-
-bool
-wasm::IsExportedFunction(JSFunction* fun)
-{
-    return fun->maybeNative() == WasmCall;
-}
-
-Instance&
-wasm::ExportedFunctionToInstance(JSFunction* fun)
-{
-    MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
-    return v.toObject().as<WasmInstanceObject>().instance();
-}
-
-uint32_t
-wasm::ExportedFunctionToExportIndex(JSFunction* fun)
-{
-    MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
-    return v.toInt32();
 }

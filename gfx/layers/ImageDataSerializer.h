@@ -69,7 +69,7 @@ uint8_t* GetCbChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
 uint8_t* GetCrChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
 
 already_AddRefed<gfx::DataSourceSurface>
-DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
+DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor, gfx::DataSourceSurface* aSurface = nullptr);
 
 } // ImageDataSerializer
 

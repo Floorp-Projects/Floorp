@@ -15,7 +15,7 @@ namespace xpc {
 
 class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
   public:
-    explicit MOZ_CONSTEXPR WaiveXrayWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags) { }
+    explicit constexpr WaiveXrayWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags) { }
 
     virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,

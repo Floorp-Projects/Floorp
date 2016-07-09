@@ -2463,7 +2463,7 @@ Validate(mozIStorageConnection* aConn)
 typedef nsresult (*MigrationFunc)(mozIStorageConnection*, bool&);
 struct Migration
 {
-  MOZ_CONSTEXPR Migration(int32_t aFromVersion, MigrationFunc aFunc)
+  constexpr Migration(int32_t aFromVersion, MigrationFunc aFunc)
     : mFromVersion(aFromVersion)
     , mFunc(aFunc)
   { }

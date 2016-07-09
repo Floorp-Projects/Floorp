@@ -61,10 +61,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.RectF;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.location.Location;
-import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -132,9 +128,7 @@ public abstract class GeckoApp
     GeckoEventListener,
     GeckoMenu.Callback,
     GeckoMenu.MenuPresenter,
-    LocationListener,
     NativeEventListener,
-    SensorEventListener,
     Tabs.OnTabsChangedListener,
     ViewTreeObserver.OnGlobalLayoutListener {
 
@@ -247,16 +241,6 @@ public abstract class GeckoApp
 
     @Override
     public Activity getActivity() {
-        return this;
-    }
-
-    @Override
-    public LocationListener getLocationListener() {
-        return this;
-    }
-
-    @Override
-    public SensorEventListener getSensorEventListener() {
         return this;
     }
 
@@ -2529,38 +2513,6 @@ public abstract class GeckoApp
 
     @Override
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
-
-    // Accelerometer.
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
-    }
-
-    // Geolocation.
-    @Override
-    public void onLocationChanged(Location location) {
-        // No logging here: user-identifying information.
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
-    }
-
-    @Override
-    public void onProviderDisabled(String provider)
-    {
-    }
-
-    @Override
-    public void onProviderEnabled(String provider)
-    {
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras)
-    {
-    }
 
     private static final String CPU = "cpu";
     private static final String SCREEN = "screen";

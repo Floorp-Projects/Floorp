@@ -12,31 +12,31 @@
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register BaselineFrameReg = s5;
-static MOZ_CONSTEXPR_VAR Register BaselineStackReg = sp;
+static constexpr Register BaselineFrameReg = s5;
+static constexpr Register BaselineStackReg = sp;
 
-static MOZ_CONSTEXPR_VAR ValueOperand R0(a3, a2);
-static MOZ_CONSTEXPR_VAR ValueOperand R1(s7, s6);
-static MOZ_CONSTEXPR_VAR ValueOperand R2(t7, t6);
+static constexpr ValueOperand R0(a3, a2);
+static constexpr ValueOperand R1(s7, s6);
+static constexpr ValueOperand R2(t7, t6);
 
 // ICTailCallReg and ICStubReg
 // These use registers that are not preserved across calls.
-static MOZ_CONSTEXPR_VAR Register ICTailCallReg = ra;
-static MOZ_CONSTEXPR_VAR Register ICStubReg = t5;
+static constexpr Register ICTailCallReg = ra;
+static constexpr Register ICStubReg = t5;
 
-static MOZ_CONSTEXPR_VAR Register ExtractTemp0 = InvalidReg;
-static MOZ_CONSTEXPR_VAR Register ExtractTemp1 = InvalidReg;
+static constexpr Register ExtractTemp0 = InvalidReg;
+static constexpr Register ExtractTemp1 = InvalidReg;
 
 // Register used internally by MacroAssemblerMIPS.
-static MOZ_CONSTEXPR_VAR Register BaselineSecondScratchReg = SecondScratchReg;
+static constexpr Register BaselineSecondScratchReg = SecondScratchReg;
 
 // Note that ICTailCallReg is actually just the link register.
 // In MIPS code emission, we do not clobber ICTailCallReg since we keep
 // the return address for calls there.
 
 // FloatReg0 must be equal to ReturnFloatReg.
-static MOZ_CONSTEXPR_VAR FloatRegister FloatReg0 = f0;
-static MOZ_CONSTEXPR_VAR FloatRegister FloatReg1 = f2;
+static constexpr FloatRegister FloatReg0 = f0;
+static constexpr FloatRegister FloatReg1 = f2;
 
 } // namespace jit
 } // namespace js

@@ -1215,6 +1215,46 @@ public:
 
     static auto NotifyWakeLockChanged(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
+    struct OnLocationChanged_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                double,
+                double,
+                double,
+                float,
+                float,
+                float,
+                int64_t> Args;
+        static constexpr char name[] = "onLocationChanged";
+        static constexpr char signature[] =
+                "(DDDFFFJ)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct OnSensorChanged_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                float,
+                float,
+                float,
+                float,
+                int32_t,
+                int64_t> Args;
+        static constexpr char name[] = "onSensorChanged";
+        static constexpr char signature[] =
+                "(IFFFFIJ)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct OpenUriExternal_t {
         typedef GeckoAppShell Owner;
         typedef bool ReturnType;

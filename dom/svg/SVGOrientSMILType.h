@@ -60,7 +60,7 @@ protected:
 
 private:
   // Private constructor: prevent instances beyond my singleton.
-  MOZ_CONSTEXPR SVGOrientSMILType() {}
+  constexpr SVGOrientSMILType() {}
 };
 
 } // namespace mozilla

@@ -21,12 +21,12 @@ namespace js {
 namespace jit {
 
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
+static constexpr bool SupportsUint32x4FloatConversions = false;
 
 // Does this architecture support comparisons of unsigned integer vectors?
-static MOZ_CONSTEXPR_VAR bool SupportsUint8x16Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint16x8Compares = false;
-static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
+static constexpr bool SupportsUint8x16Compares = false;
+static constexpr bool SupportsUint16x8Compares = false;
+static constexpr bool SupportsUint32x4Compares = false;
 
 #if defined(JS_CODEGEN_X86)
 // In bytes: slots needed for potential memory->memory move spills.
@@ -350,13 +350,13 @@ struct FloatRegister {
     static const size_t RegMask = (1 << RegSize) - 1;
 
   public:
-    MOZ_CONSTEXPR FloatRegister()
+    constexpr FloatRegister()
         : reg_(Codes::Encoding(0)), type_(Codes::Single), isInvalid_(true)
     { }
-    MOZ_CONSTEXPR FloatRegister(uint32_t r, Codes::ContentType k)
+    constexpr FloatRegister(uint32_t r, Codes::ContentType k)
         : reg_(Codes::Encoding(r)), type_(k), isInvalid_(false)
     { }
-    MOZ_CONSTEXPR FloatRegister(Codes::Encoding r, Codes::ContentType k)
+    constexpr FloatRegister(Codes::Encoding r, Codes::ContentType k)
         : reg_(r), type_(k), isInvalid_(false)
     { }
 

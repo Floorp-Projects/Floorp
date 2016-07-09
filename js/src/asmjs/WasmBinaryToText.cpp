@@ -1114,7 +1114,7 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
 static bool
 RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector& sigs)
 {
-    const AstSig* sig = sigs[import.sig().index()];
+    const AstSig* sig = sigs[import.funcSig().index()];
     if (!RenderIndent(c))
         return false;
     if (!c.buffer.append("(import "))
@@ -1131,8 +1131,8 @@ RenderImport(WasmRenderContext& c, AstImport& import, const AstModule::SigVector
     if (!c.buffer.append("\" \""))
         return false;
 
-    const AstName& funcName = import.func();
-    if (!RenderEscapedString(c, funcName))
+    const AstName& fieldName = import.field();
+    if (!RenderEscapedString(c, fieldName))
         return false;
 
     if (!c.buffer.append("\""))
@@ -1284,7 +1284,7 @@ RenderCodeSection(WasmRenderContext& c, const AstModule::FuncVector& funcs, cons
 
 
 static bool
-RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
+RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory, const AstModule::SegmentVector& segments)
 {
     if (!maybeMemory)
         return true;
@@ -1293,9 +1293,9 @@ RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
         return false;
     if (!c.buffer.append("(memory "))
         return false;
-    if (!RenderInt32(c, maybeMemory->initialSize()))
+    if (!RenderInt32(c, maybeMemory->initial()))
        return false;
-    Maybe<uint32_t> memMax = maybeMemory->maxSize();
+    Maybe<uint32_t> memMax = maybeMemory->maximum();
     if (memMax) {
         if (!c.buffer.append(" "))
             return false;
@@ -1305,7 +1305,7 @@ RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
 
     c.indent++;
 
-    uint32_t numSegments = maybeMemory->segments().length();
+    uint32_t numSegments = segments.length();
     if (!numSegments) {
       if (!c.buffer.append(")\n"))
           return false;
@@ -1315,7 +1315,7 @@ RenderDataSection(WasmRenderContext& c, AstMemory* maybeMemory)
         return false;
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        const AstSegment* segment = maybeMemory->segments()[i];
+        const AstSegment* segment = segments[i];
 
         if (!RenderIndent(c))
             return false;
@@ -1362,7 +1362,7 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     if (!RenderCodeSection(c, module.funcs(), module.sigs()))
         return false;
 
-    if (!RenderDataSection(c, module.maybeMemory()))
+    if (!RenderDataSection(c, module.maybeMemory(), module.segments()))
         return false;
 
     c.indent--;

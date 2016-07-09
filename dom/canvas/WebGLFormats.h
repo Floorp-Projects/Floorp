@@ -199,6 +199,10 @@ struct FormatInfo
     const UnsizedFormat unsizedFormat;
     const ComponentType componentType;
     const uint8_t estimatedBytesPerPixel; // 0 iff `!!compression`. Only use this for
+    const uint8_t r;
+    const uint8_t g;
+    const uint8_t b;
+    const uint8_t a;
     const bool isColorFormat;             // memory usage estimation. Use
     const bool isSRGB;                    // BytesPerPixel(packingFormat, packingType) for
     const bool hasAlpha;                  // calculating pack/unpack byte count.
@@ -206,6 +210,10 @@ struct FormatInfo
     const bool hasStencil;
 
     const CompressedFormatInfo* const compression;
+
+    std::map<UnsizedFormat, const FormatInfo*> copyDecayFormats;
+
+    const FormatInfo* GetCopyDecayFormat(UnsizedFormat) const;
 };
 
 struct PackingInfo
@@ -246,7 +254,9 @@ GLenum ComponentType(const FormatInfo* format);
 struct FormatUsageInfo
 {
     const FormatInfo* const format;
+private:
     bool isRenderable;
+public:
     bool isFilterable;
 
     std::map<PackingInfo, DriverUnpackInfo> validUnpacks;
@@ -270,6 +280,9 @@ struct FormatUsageInfo
         , maxSamplesKnown(false)
         , maxSamples(0)
     { }
+
+    bool IsRenderable() const { return isRenderable; }
+    void SetRenderable();
 
     bool IsUnpackValid(const PackingInfo& key,
                        const DriverUnpackInfo** const out_value) const;

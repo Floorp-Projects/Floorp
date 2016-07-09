@@ -224,6 +224,7 @@ class CPUInfo
     static bool avxPresent;
     static bool avxEnabled;
     static bool popcntPresent;
+    static bool needAmdBugWorkaround;
 
     static void SetSSEVersion();
 
@@ -240,6 +241,7 @@ class CPUInfo
     static bool IsSSE41Present() { return GetSSEVersion() >= SSE4_1; }
     static bool IsSSE42Present() { return GetSSEVersion() >= SSE4_2; }
     static bool IsPOPCNTPresent() { return popcntPresent; }
+    static bool NeedAmdBugWorkaround() { return needAmdBugWorkaround; }
 
     static void SetSSE3Disabled() { maxEnabledSSEVersion = SSE2; avxEnabled = false; }
     static void SetSSE4Disabled() { maxEnabledSSEVersion = SSSE3; avxEnabled = false; }
@@ -908,6 +910,7 @@ class AssemblerX86Shared : public AssemblerShared
 
   public:
     void nop() { masm.nop(); }
+    void nop(size_t n) { masm.insert_nop(n); }
     void j(Condition cond, Label* label) { jSrc(cond, label); }
     void jmp(Label* label) { jmpSrc(label); }
     void j(Condition cond, RepatchLabel* label) { jSrc(cond, label); }
