@@ -8,6 +8,8 @@
  * possible visibility states of a frame. @OnNonvisible is an enumeration that
  * allows callers to request a specific action when a frame transitions from
  * visible to nonvisible.
+ *
+ * IPC serializers are available in VisibilityIPC.h.
  */
 
 #ifndef mozilla_layout_generic_Visibility_h
@@ -18,21 +20,35 @@ namespace mozilla {
 // Visibility states for frames.
 enum class Visibility : uint8_t
 {
-  // Indicates that we're not tracking visibility for this frame.
+  // We're not tracking visibility for this frame.
   UNTRACKED,
 
-  // Indicates that the frame is probably nonvisible. Visible frames *may* be
-  // APPROXIMATELY_NONVISIBLE because approximate visibility is not updated
-  // synchronously. Some truly nonvisible frames may be marked
-  // APPROXIMATELY_VISIBLE instead if our heuristics lead us to think they may
-  // be visible soon.
-  APPROXIMATELY_NONVISIBLE,
+  // This frame is nonvisible - i.e., it was not within the displayport as of
+  // the last paint (in which case it'd be IN_DISPLAYPORT) and our heuristics
+  // aren't telling us that it may become visible soon (in which case it'd be
+  // MAY_BECOME_VISIBLE).
+  NONVISIBLE,
 
-  // Indicates that the frame is either visible now or is likely to be visible
-  // soon according to our heuristics. As with APPROXIMATELY_NONVISIBLE, it's
-  // important to note that approximately visibility is not updated
-  // synchronously, so this information may be out of date.
-  APPROXIMATELY_VISIBLE
+  // This frame is nonvisible now, but our heuristics tell us it may become
+  // visible soon. These heuristics are updated on a relatively slow timer, so a
+  // frame being marked MAY_BECOME_VISIBLE does not imply any particular
+  // relationship between the frame and the displayport.
+  MAY_BECOME_VISIBLE,
+
+  // This frame was within the displayport as of the last paint. That doesn't
+  // necessarily mean that the frame is visible - it may still lie outside the
+  // viewport - but it does mean that the user may scroll the frame into view
+  // asynchronously at any time (due to APZ), so for most purposes such a frame
+  // should be treated as truly visible.
+  IN_DISPLAYPORT
+};
+
+// The subset of the states in @Visibility which have a per-frame counter. This
+// is used in the implementation of visibility tracking.
+enum class VisibilityCounter : uint8_t
+{
+  MAY_BECOME_VISIBLE,
+  IN_DISPLAYPORT
 };
 
 // Requested actions when frames transition to the nonvisible state.
