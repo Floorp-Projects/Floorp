@@ -143,7 +143,6 @@
                 <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
                 <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
               </radiogroup>
-              <checkbox id="networkProxySOCKSRemoteDNS"  preference="network.proxy.socks_remote_dns" label="&socksRemoteDNS.label;" accesskey="&socksRemoteDNS.accesskey;" />
               </box>
             </row>
             <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
@@ -168,6 +167,7 @@
               accesskey="&autologinproxy.accesskey;"
               preference="signon.autologin.proxy"
               tooltiptext="&autologinproxy.tooltip;"/>
+    <checkbox id="networkProxySOCKSRemoteDNS"  preference="network.proxy.socks_remote_dns" label="&socksRemoteDNS.label2;" accesskey="&socksRemoteDNS.accesskey;" />
     <separator/>
   </prefpane>
 </prefwindow>
