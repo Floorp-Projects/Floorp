@@ -224,7 +224,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
   bool isCollapsed = selection->Collapsed();
 
-  // Only the nsHTMLEditor::FindUserSelectAllNode returns a node.
+  // Only the HTMLEditor::FindUserSelectAllNode returns a node.
   nsCOMPtr<nsIDOMNode> userSelectNode = FindUserSelectAllNode(newSelectionParent);
   if (userSelectNode)
   {

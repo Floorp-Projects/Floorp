@@ -12,7 +12,6 @@
 #include "nscore.h"                 // for nsAString, nsresult, nullptr
 
 class nsComputedDOMStyle;
-class nsHTMLEditor;
 class nsIAtom;
 class nsIContent;
 class nsIDOMCSSStyleDeclaration;
@@ -23,6 +22,7 @@ class nsString;
 
 namespace mozilla {
 
+class HTMLEditor;
 namespace dom {
 class Element;
 } // namespace dom
@@ -36,7 +36,7 @@ typedef void (*nsProcessValueFunc)(const nsAString* aInputString,
 class CSSEditUtils final
 {
 public:
-  explicit CSSEditUtils(nsHTMLEditor* aEditor);
+  explicit CSSEditUtils(HTMLEditor* aEditor);
   ~CSSEditUtils();
 
   enum nsCSSEditableProperty
@@ -454,7 +454,7 @@ private:
                                     nsAString& aValue, StyleType aStyleType);
 
 private:
-  nsHTMLEditor* mHTMLEditor;
+  HTMLEditor* mHTMLEditor;
   bool mIsCSSPrefChecked;
 };
 
