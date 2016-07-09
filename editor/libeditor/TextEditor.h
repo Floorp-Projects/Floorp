@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPlaintextEditor_h__
-#define nsPlaintextEditor_h__
+#ifndef mozilla_TextEditor_h
+#define mozilla_TextEditor_h
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -28,80 +28,75 @@ class nsISelectionController;
 class nsITransferable;
 
 namespace mozilla {
+
 class AutoEditInitRulesTrigger;
 class HTMLEditRules;
 class TextEditRules;
 namespace dom {
 class Selection;
 } // namespace dom
-} // namespace mozilla
 
 /**
  * The text editor implementation.
  * Use to edit text document represented as a DOM tree.
  */
-class nsPlaintextEditor : public nsEditor,
-                          public nsIPlaintextEditor,
-                          public nsIEditorMailSupport
+class TextEditor : public nsEditor
+                 , public nsIPlaintextEditor
+                 , public nsIEditorMailSupport
 {
-
 public:
-
-// Interfaces for addref and release and queryinterface
-// NOTE macro used is for classes that inherit from
-// another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPlaintextEditor, nsEditor)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextEditor, nsEditor)
 
-  /* below used by TypedText() */
-  enum ETypingAction {
+  enum ETypingAction
+  {
     eTypedText,  /* user typed text */
     eTypedBR,    /* user typed shift-enter to get a br */
     eTypedBreak  /* user typed enter */
   };
 
-  nsPlaintextEditor();
+  TextEditor();
 
-  /* ------------ nsIPlaintextEditor methods -------------- */
+  // nsIPlaintextEditor methods
   NS_DECL_NSIPLAINTEXTEDITOR
 
-  /* ------------ nsIEditorMailSupport overrides -------------- */
+  // nsIEditorMailSupport overrides
   NS_DECL_NSIEDITORMAILSUPPORT
 
-  /* ------------ Overrides of nsEditor interface methods -------------- */
-  NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
-                                      const nsAString & aAttribute,
-                                      const nsAString & aValue,
+  // Overrides of nsEditor interface methods
+  NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement* aElement,
+                                      const nsAString& aAttribute,
+                                      const nsAString& aValue,
                                       bool aSuppressTransaction) override;
-  NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                         const nsAString & aAttribute,
+  NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
+                                         const nsAString& aAttribute,
                                          bool aSuppressTransaction) override;
 
-  /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
-                  nsISelectionController *aSelCon, uint32_t aFlags,
+  NS_IMETHOD Init(nsIDOMDocument* aDoc, nsIContent* aRoot,
+                  nsISelectionController* aSelCon, uint32_t aFlags,
                   const nsAString& aValue) override;
 
-  NS_IMETHOD GetDocumentIsEmpty(bool *aDocumentIsEmpty) override;
-  NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable) override;
+  NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
+  NS_IMETHOD GetIsDocumentEditable(bool* aIsDocumentEditable) override;
 
   NS_IMETHOD DeleteSelection(EDirection aAction,
                              EStripWrappers aStripWrappers) override;
 
-  NS_IMETHOD SetDocumentCharacterSet(const nsACString & characterSet) override;
+  NS_IMETHOD SetDocumentCharacterSet(const nsACString& characterSet) override;
 
   NS_IMETHOD Undo(uint32_t aCount) override;
   NS_IMETHOD Redo(uint32_t aCount) override;
 
   NS_IMETHOD Cut() override;
-  NS_IMETHOD CanCut(bool *aCanCut) override;
+  NS_IMETHOD CanCut(bool* aCanCut) override;
   NS_IMETHOD Copy() override;
-  NS_IMETHOD CanCopy(bool *aCanCopy) override;
-  NS_IMETHOD CanDelete(bool *aCanDelete) override;
+  NS_IMETHOD CanCopy(bool* aCanCopy) override;
+  NS_IMETHOD CanDelete(bool* aCanDelete) override;
   NS_IMETHOD Paste(int32_t aSelectionType) override;
-  NS_IMETHOD CanPaste(int32_t aSelectionType, bool *aCanPaste) override;
-  NS_IMETHOD PasteTransferable(nsITransferable *aTransferable) override;
-  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste) override;
+  NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
+  NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
+  NS_IMETHOD CanPasteTransferable(nsITransferable* aTransferable,
+                                  bool* aCanPaste) override;
 
   NS_IMETHOD OutputToString(const nsAString& aFormatType,
                             uint32_t aFlags,
@@ -112,40 +107,45 @@ public:
                             const nsACString& aCharsetOverride,
                             uint32_t aFlags) override;
 
-
-  /** All editor operations which alter the doc should be prefaced
-   *  with a call to StartOperation, naming the action and direction */
+  /**
+   * All editor operations which alter the doc should be prefaced
+   * with a call to StartOperation, naming the action and direction.
+   */
   NS_IMETHOD StartOperation(EditAction opID,
                             nsIEditor::EDirection aDirection) override;
 
-  /** All editor operations which alter the doc should be followed
-   *  with a call to EndOperation */
+  /**
+   * All editor operations which alter the doc should be followed
+   * with a call to EndOperation.
+   */
   NS_IMETHOD EndOperation() override;
 
-  /** make the given selection span the entire document */
+  /**
+   * Make the given selection span the entire document.
+   */
   virtual nsresult SelectEntireDocument(Selection* aSelection) override;
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent) override;
 
-  virtual already_AddRefed<mozilla::dom::EventTarget> GetDOMEventTarget() override;
+  virtual already_AddRefed<dom::EventTarget> GetDOMEventTarget() override;
 
-  virtual nsresult BeginIMEComposition(mozilla::WidgetCompositionEvent* aEvent) override;
+  virtual nsresult BeginIMEComposition(WidgetCompositionEvent* aEvent) override;
   virtual nsresult UpdateIMEComposition(nsIDOMEvent* aTextEvent) override;
 
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
 
-  /* ------------ Utility Routines, not part of public API -------------- */
+  // Utility Routines, not part of public API
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
 
-  nsresult InsertTextAt(const nsAString &aStringToInsert,
-                        nsIDOMNode *aDestinationNode,
+  nsresult InsertTextAt(const nsAString& aStringToInsert,
+                        nsIDOMNode* aDestinationNode,
                         int32_t aDestOffset,
                         bool aDoDeleteSelection);
 
-  virtual nsresult InsertFromDataTransfer(mozilla::dom::DataTransfer *aDataTransfer,
+  virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
                                           int32_t aIndex,
-                                          nsIDOMDocument *aSourceDoc,
-                                          nsIDOMNode *aDestinationNode,
+                                          nsIDOMDocument* aSourceDoc,
+                                          nsIDOMNode* aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) override;
 
@@ -157,32 +157,33 @@ public:
    * extension.
    */
   nsresult ExtendSelectionForDelete(Selection* aSelection,
-                                    nsIEditor::EDirection *aAction);
+                                    nsIEditor::EDirection* aAction);
 
-  // Return true if the data is safe to insert as the source and destination
-  // principals match, or we are in a editor context where this doesn't matter.
-  // Otherwise, the data must be sanitized first.
+  /**
+   * Return true if the data is safe to insert as the source and destination
+   * principals match, or we are in a editor context where this doesn't matter.
+   * Otherwise, the data must be sanitized first.
+   */
   bool IsSafeToInsertData(nsIDOMDocument* aSourceDoc);
 
-  static void GetDefaultEditorPrefs(int32_t &aNewLineHandling,
-                                    int32_t &aCaretStyle);
+  static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
+                                    int32_t& aCaretStyle);
 
 protected:
-  virtual  ~nsPlaintextEditor();
+  virtual ~TextEditor();
 
-  NS_IMETHOD  InitRules();
-  void        BeginEditorInit();
-  nsresult    EndEditorInit();
+  NS_IMETHOD InitRules();
+  void BeginEditorInit();
+  nsresult EndEditorInit();
 
-  // Helpers for output routines
   NS_IMETHOD GetAndInitDocEncoder(const nsAString& aFormatType,
                                   uint32_t aFlags,
                                   const nsACString& aCharset,
                                   nsIDocumentEncoder** encoder);
 
-  // key event helpers
-  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset,
-                      nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
+  NS_IMETHOD CreateBR(nsIDOMNode* aNode, int32_t aOffset,
+                      nsCOMPtr<nsIDOMNode>* outBRNode,
+                      EDirection aSelect = eNone);
   Element* CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
                         EDirection aSelect);
   nsresult CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
@@ -191,46 +192,54 @@ protected:
                         EDirection aSelect);
   nsresult InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode);
 
-  // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
-  NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
-  NS_IMETHOD InsertTextFromTransferable(nsITransferable *transferable,
-                                        nsIDOMNode *aDestinationNode,
+  /**
+   * Factored methods for handling insertion of data from transferables
+   * (drag&drop or clipboard).
+   */
+  NS_IMETHOD PrepareTransferable(nsITransferable** transferable);
+  NS_IMETHOD InsertTextFromTransferable(nsITransferable* transferable,
+                                        nsIDOMNode* aDestinationNode,
                                         int32_t aDestOffset,
                                         bool aDoDeleteSelection);
 
-  /** shared outputstring; returns whether selection is collapsed and resulting string */
-  nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed, nsAString& aResult);
+  /**
+   * Shared outputstring; returns whether selection is collapsed and resulting
+   * string.
+   */
+  nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
+                              nsAString& aResult);
 
-  /* small utility routine to test the eEditorReadonly bit */
+  /**
+   * Small utility routine to test the eEditorReadonly bit.
+   */
   bool IsModifiable();
 
-  enum PasswordFieldAllowed {
+  enum PasswordFieldAllowed
+  {
     ePasswordFieldAllowed,
     ePasswordFieldNotAllowed
   };
   bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed);
-  bool FireClipboardEvent(mozilla::EventMessage aEventMessage,
+  bool FireClipboardEvent(EventMessage aEventMessage,
                           int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 
   bool UpdateMetaCharset(nsIDOMDocument* aDocument,
                          const nsACString& aCharacterSet);
 
-// Data members
 protected:
-
-  nsCOMPtr<nsIEditRules>        mRules;
+  nsCOMPtr<nsIEditRules> mRules;
   int32_t mWrapColumn;
   int32_t mMaxTextLength;
   int32_t mInitTriggerCounter;
   int32_t mNewlineHandling;
   int32_t mCaretStyle;
 
-  // friends
-  friend class mozilla::AutoEditInitRulesTrigger;
-  friend class mozilla::HTMLEditRules;
-  friend class mozilla::TextEditRules;
+  friend class AutoEditInitRulesTrigger;
+  friend class HTMLEditRules;
+  friend class TextEditRules;
 };
 
-#endif //nsPlaintextEditor_h__
+} // namespace mozilla
 
+#endif // #ifndef mozilla_TextEditor_h

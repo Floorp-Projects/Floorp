@@ -18,11 +18,11 @@
 
 class nsIDOMElement;
 class nsIDOMNode;
-class nsPlaintextEditor;
 
 namespace mozilla {
 
 class AutoLockRulesSniffing;
+class TextEditor;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -55,7 +55,7 @@ public:
   TextEditRules();
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsPlaintextEditor* aTextEditor) override;
+  NS_IMETHOD Init(TextEditor* aTextEditor) override;
   NS_IMETHOD SetInitialValue(const nsAString& aValue) override;
   NS_IMETHOD DetachEditor() override;
   NS_IMETHOD BeforeEdit(EditAction action,
@@ -225,7 +225,7 @@ protected:
   bool DontEchoPassword() const;
 
   // Note that we do not refcount the editor.
-  nsPlaintextEditor* mEditor;
+  TextEditor* mTextEditor;
   // A buffer we use to store the real value of password editors.
   nsString mPasswordText;
   // A buffer we use to track the IME composition string.

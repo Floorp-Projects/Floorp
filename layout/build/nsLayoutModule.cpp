@@ -137,7 +137,6 @@ using mozilla::dom::AudioChannelAgent;
 // Editor stuff
 #include "nsEditorCID.h"
 #include "nsEditor.h"
-#include "nsPlaintextEditor.h"
 #include "mozilla/EditorController.h" //CID
 #include "mozilla/HTMLEditor.h"
 
@@ -277,7 +276,7 @@ using mozilla::dom::NotificationTelemetryService;
 { 0x1f15dbc8, 0xbfaa, 0x45de, \
   { 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
+NS_GENERIC_FACTORY_CONSTRUCTOR(TextEditor)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
 
@@ -1069,7 +1068,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, DOMSessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, DOMLocalStorageManagerConstructor },
   { &kNS_DOMJSON_CID, false, nullptr, NS_NewJSON },
-  { &kNS_TEXTEDITOR_CID, false, nullptr, nsPlaintextEditorConstructor },
+  { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
   { &kSERVICEWORKERMANAGER_CID, false, nullptr, ServiceWorkerManagerConstructor },
