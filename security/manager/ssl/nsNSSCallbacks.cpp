@@ -1104,7 +1104,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                            infoObject->GetPort(),
                                            versions.max);
 
-  bool usesWeakCipher = false;
+  bool usesFallbackCipher = false;
   SSLChannelInfo channelInfo;
   rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
   MOZ_ASSERT(rv == SECSuccess);
@@ -1124,7 +1124,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                 sizeof cipherInfo);
     MOZ_ASSERT(rv == SECSuccess);
     if (rv == SECSuccess) {
-      usesWeakCipher = cipherInfo.symCipher == ssl_calg_rc4;
+      usesFallbackCipher = cipherInfo.keaType == ssl_kea_dh;
 
       // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
       Telemetry::Accumulate(
@@ -1207,20 +1207,19 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                                              status);
 
   uint32_t state;
-  if (usesWeakCipher || renegotiationUnsafe) {
+  if (renegotiationUnsafe) {
     state = nsIWebProgressListener::STATE_IS_BROKEN;
-    if (usesWeakCipher) {
-      state |= nsIWebProgressListener::STATE_USES_WEAK_CRYPTO;
-    }
   } else {
     state = nsIWebProgressListener::STATE_IS_SECURE |
             nsIWebProgressListener::STATE_SECURE_HIGH;
-    SSLVersionRange defVersion;
-    rv = SSL_VersionRangeGetDefault(ssl_variant_stream, &defVersion);
-    if (rv == SECSuccess && versions.max >= defVersion.max) {
-      // we know this site no longer requires a weak cipher
-      ioLayerHelpers.removeInsecureFallbackSite(infoObject->GetHostName(),
-                                                infoObject->GetPort());
+    if (!usesFallbackCipher) {
+      SSLVersionRange defVersion;
+      rv = SSL_VersionRangeGetDefault(ssl_variant_stream, &defVersion);
+      if (rv == SECSuccess && versions.max >= defVersion.max) {
+        // we know this site no longer requires a fallback cipher
+        ioLayerHelpers.removeInsecureFallbackSite(infoObject->GetHostName(),
+                                                  infoObject->GetPort());
+      }
     }
   }
 
