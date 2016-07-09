@@ -296,7 +296,7 @@ public:
   uint32_t line() const override { return get().line; }
   uint32_t column() const override { return get().column; }
   bool isSystem() const override { return get().isSystem; }
-  bool isSelfHosted() const override { return get().isSelfHosted; }
+  bool isSelfHosted(JSContext* cx) const override { return get().isSelfHosted; }
   void trace(JSTracer* trc) override { }
   AtomOrTwoByteChars source() const override {
     return AtomOrTwoByteChars(get().source);
