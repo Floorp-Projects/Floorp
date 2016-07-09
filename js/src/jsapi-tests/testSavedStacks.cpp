@@ -139,7 +139,7 @@ BEGIN_TEST(testSavedStacks_selfHostedFrames)
     JS::Rooted<js::SavedFrame*> savedFrame(cx, &obj->as<js::SavedFrame>());
 
     JS::Rooted<js::SavedFrame*> selfHostedFrame(cx, savedFrame->getParent());
-    CHECK(selfHostedFrame->isSelfHosted());
+    CHECK(selfHostedFrame->isSelfHosted(cx));
 
     // Source
     JS::RootedString str(cx);

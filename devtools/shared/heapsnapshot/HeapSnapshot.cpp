@@ -1165,7 +1165,7 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
     data->set_line(frame.line());
     data->set_column(frame.column());
     data->set_issystem(frame.isSystem());
-    data->set_isselfhosted(frame.isSelfHosted());
+    data->set_isselfhosted(frame.isSelfHosted(cx));
 
     auto dupeSource = TwoByteString::from(frame.source());
     if (!attachTwoByteString(dupeSource,
@@ -1228,7 +1228,7 @@ public:
   }
 
   virtual bool writeNode(const JS::ubi::Node& ubiNode,
-                         EdgePolicy includeEdges) final {
+                         EdgePolicy includeEdges) override final {
     // NB: de-duplicated string properties must be written in the same order
     // here as they are read in `HeapSnapshot::saveNode` or else indices in
     // references to already serialized strings will be off.
