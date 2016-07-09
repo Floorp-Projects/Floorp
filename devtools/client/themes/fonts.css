@@ -35,7 +35,7 @@
   cursor: pointer;
   position: absolute;
   bottom: 0;
-  right: 0;
+  offset-inline-end: 0;
 }
 
 .dim > #font-container,
