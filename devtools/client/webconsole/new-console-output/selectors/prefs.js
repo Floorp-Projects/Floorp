@@ -5,10 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { messages } = require("./messages");
-const { prefs } = require("./prefs");
+function getLogLimit(state) {
+  return state.prefs.logLimit;
+}
 
-exports.reducers = {
-  messages,
-  prefs,
-};
+exports.getLogLimit = getLogLimit;
