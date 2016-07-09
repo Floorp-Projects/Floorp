@@ -79,7 +79,8 @@ public:
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) override;
 
-  void OnVisibilityChange(Visibility aNewVisibility,
+  void OnVisibilityChange(Visibility aOldVisibility,
+                          Visibility aNewVisibility,
                           Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
   virtual void Init(nsIContent*       aContent,
@@ -158,7 +159,7 @@ nsSVGImageFrame::Init(nsIContent*       aContent,
   if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
     // Non-display frames are likely to be patterns, masks or the like.
     // Treat them as always visible.
-    IncApproximateVisibleCount();
+    IncVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
   }
 
   mListener = new nsSVGImageListener(this);
@@ -178,7 +179,7 @@ nsSVGImageFrame::Init(nsIContent*       aContent,
 nsSVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
-    DecApproximateVisibleCount();
+    DecVisibilityCount(VisibilityCounter::IN_DISPLAYPORT);
   }
 
   if (mReflowCallbackPosted) {
@@ -240,18 +241,22 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsSVGImageFrame::OnVisibilityChange(Visibility aNewVisibility,
+nsSVGImageFrame::OnVisibilityChange(Visibility aOldVisibility,
+                                    Visibility aNewVisibility,
                                     Maybe<OnNonvisible> aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
-    nsSVGPathGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsSVGPathGeometryFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                               aNonvisibleAction);
     return;
   }
 
-  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  imageLoader->OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                  aNonvisibleAction);
 
-  nsSVGPathGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsSVGPathGeometryFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                             aNonvisibleAction);
 }
 
 gfx::Matrix
