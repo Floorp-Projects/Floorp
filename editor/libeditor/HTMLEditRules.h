@@ -18,7 +18,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-class nsHTMLEditor;
 class nsIAtom;
 class nsIDOMCharacterData;
 class nsIDOMDocument;
@@ -31,6 +30,7 @@ class nsRange;
 
 namespace mozilla {
 
+class HTMLEditor;
 class RulesInfo;
 struct EditorDOMPoint;
 namespace dom {
@@ -357,7 +357,7 @@ protected:
   void DocumentModifiedWorker();
 
 protected:
-  nsHTMLEditor* mHTMLEditor;
+  HTMLEditor* mHTMLEditor;
   RefPtr<nsRange> mDocChangeRange;
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;

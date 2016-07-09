@@ -6,20 +6,19 @@
 #include "HTMLEditorEventListener.h"
 
 #include "HTMLEditUtils.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"
-#include "nsHTMLEditor.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsISupportsImpl.h"
@@ -39,22 +38,22 @@ HTMLEditorEventListener::Connect(nsEditor* aEditor)
   nsCOMPtr<nsIHTMLInlineTableEditor> htmlInlineTableEditor =
     do_QueryObject(aEditor);
   NS_PRECONDITION(htmlEditor && htmlInlineTableEditor,
-                  "Set nsHTMLEditor or its sub class");
+                  "Set HTMLEditor or its sub class");
   return EditorEventListener::Connect(aEditor);
 }
 #endif
 
-nsHTMLEditor*
+HTMLEditor*
 HTMLEditorEventListener::GetHTMLEditor()
 {
-  // mEditor must be nsHTMLEditor or its subclass.
-  return static_cast<nsHTMLEditor*>(mEditor);
+  // mEditor must be HTMLEditor or its subclass.
+  return static_cast<HTMLEditor*>(mEditor);
 }
 
 nsresult
 HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 {
-  nsHTMLEditor* htmlEditor = GetHTMLEditor();
+  HTMLEditor* htmlEditor = GetHTMLEditor();
 
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult rv = aMouseEvent->AsEvent()->GetTarget(getter_AddRefs(target));
@@ -73,7 +72,7 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 nsresult
 HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
-  nsHTMLEditor* htmlEditor = GetHTMLEditor();
+  HTMLEditor* htmlEditor = GetHTMLEditor();
   // Contenteditable should disregard mousedowns outside it.
   // IsAcceptableInputEvent() checks it for a mouse event.
   if (!htmlEditor->IsAcceptableInputEvent(aMouseEvent->AsEvent())) {

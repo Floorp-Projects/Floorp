@@ -13,11 +13,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
 
-class nsHTMLEditor;
 class nsIDOMNode;
 
 namespace mozilla {
 
+class HTMLEditor;
 class HTMLEditRules;
 struct EditorDOMPoint;
 
@@ -165,13 +165,13 @@ public:
   enum {eAfter  = 1 << 1};
   enum {eBoth   = eBefore | eAfter};
 
-  WSRunObject(nsHTMLEditor* aHTMLEditor, nsINode* aNode, int32_t aOffset);
-  WSRunObject(nsHTMLEditor* aHTMLEditor, nsIDOMNode* aNode, int32_t aOffset);
+  WSRunObject(HTMLEditor* aHTMLEditor, nsINode* aNode, int32_t aOffset);
+  WSRunObject(HTMLEditor* aHTMLEditor, nsIDOMNode* aNode, int32_t aOffset);
   ~WSRunObject();
 
   // ScrubBlockBoundary removes any non-visible whitespace at the specified
   // location relative to a block node.
-  static nsresult ScrubBlockBoundary(nsHTMLEditor* aHTMLEditor,
+  static nsresult ScrubBlockBoundary(HTMLEditor* aHTMLEditor,
                                      BlockBoundary aBoundary,
                                      nsINode* aBlock,
                                      int32_t aOffset = -1);
@@ -179,7 +179,7 @@ public:
   // PrepareToJoinBlocks fixes up ws at the end of aLeftBlock and the
   // beginning of aRightBlock in preperation for them to be joined.  Example
   // of fixup: trailingws in aLeftBlock needs to be removed.
-  static nsresult PrepareToJoinBlocks(nsHTMLEditor* aHTMLEditor,
+  static nsresult PrepareToJoinBlocks(HTMLEditor* aHTMLEditor,
                                       dom::Element* aLeftBlock,
                                       dom::Element* aRightBlock);
 
@@ -190,7 +190,7 @@ public:
   // adjusting ws.
   // example of fixup: trailingws before {aStartNode,aStartOffset}
   //                   needs to be removed.
-  static nsresult PrepareToDeleteRange(nsHTMLEditor* aHTMLEditor,
+  static nsresult PrepareToDeleteRange(HTMLEditor* aHTMLEditor,
                                        nsCOMPtr<nsINode>* aStartNode,
                                        int32_t* aStartOffset,
                                        nsCOMPtr<nsINode>* aEndNode,
@@ -199,7 +199,7 @@ public:
   // PrepareToDeleteNode fixes up ws before and after aContent in preparation
   // for aContent to be deleted.  Example of fixup: trailingws before
   // aContent needs to be removed.
-  static nsresult PrepareToDeleteNode(nsHTMLEditor* aHTMLEditor,
+  static nsresult PrepareToDeleteNode(HTMLEditor* aHTMLEditor,
                                       nsIContent* aContent);
 
   // PrepareToSplitAcrossBlocks fixes up ws before and after
@@ -207,7 +207,7 @@ public:
   // Note that the aSplitNode and aSplitOffset are adjusted in response to
   // any DOM changes we make while adjusting ws.  Example of fixup: normalws
   // before {aSplitNode,aSplitOffset} needs to end with nbsp.
-  static nsresult PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEditor,
+  static nsresult PrepareToSplitAcrossBlocks(HTMLEditor* aHTMLEditor,
                                              nsCOMPtr<nsINode>* aSplitNode,
                                              int32_t* aSplitOffset);
 
@@ -398,12 +398,12 @@ protected:
   WSFragment* mEndRun;
 
   // Non-owning.
-  nsHTMLEditor* mHTMLEditor;
+  HTMLEditor* mHTMLEditor;
 
   // Opening this class up for pillaging.
   friend class HTMLEditRules;
   // Opening this class up for more pillaging.
-  friend class nsHTMLEditor;
+  friend class HTMLEditor;
 };
 
 } // namespace mozilla

@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/HTMLEditor.h"
+
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
@@ -21,7 +23,6 @@
 #include "nsEditor.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLEditor.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -43,11 +44,12 @@
 
 class nsISupports;
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 static bool
-IsEmptyTextNode(nsHTMLEditor* aThis, nsINode* aNode)
+IsEmptyTextNode(HTMLEditor* aThis, nsINode* aNode)
 {
   bool isEmptyTextNode = false;
   return nsEditor::IsTextNode(aNode) &&
@@ -55,9 +57,10 @@ IsEmptyTextNode(nsHTMLEditor* aThis, nsINode* aNode)
          isEmptyTextNode;
 }
 
-NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty,
-                                            const nsAString & aAttribute,
-                                            const nsAString & aValue)
+NS_IMETHODIMP
+HTMLEditor::AddDefaultProperty(nsIAtom* aProperty,
+                               const nsAString& aAttribute,
+                               const nsAString& aValue)
 {
   nsString outValue;
   int32_t index;
@@ -76,9 +79,10 @@ NS_IMETHODIMP nsHTMLEditor::AddDefaultProperty(nsIAtom *aProperty,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty,
-                                   const nsAString & aAttribute,
-                                   const nsAString & aValue)
+NS_IMETHODIMP
+HTMLEditor::RemoveDefaultProperty(nsIAtom* aProperty,
+                                  const nsAString& aAttribute,
+                                  const nsAString& aValue)
 {
   nsString outValue;
   int32_t index;
@@ -91,7 +95,8 @@ NS_IMETHODIMP nsHTMLEditor::RemoveDefaultProperty(nsIAtom *aProperty,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
+NS_IMETHODIMP
+HTMLEditor::RemoveAllDefaultProperties()
 {
   uint32_t j, defcon = mDefaultStyles.Length();
   for (j=0; j<defcon; j++)
@@ -104,9 +109,9 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
 
 
 NS_IMETHODIMP
-nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
-                                const nsAString& aAttribute,
-                                const nsAString& aValue)
+HTMLEditor::SetInlineProperty(nsIAtom* aProperty,
+                              const nsAString& aAttribute,
+                              const nsAString& aValue)
 {
   NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
@@ -221,15 +226,13 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
   return NS_OK;
 }
 
-
-
 // Helper function for SetInlinePropertyOn*: is aNode a simple old <b>, <font>,
 // <span style="">, etc. that we can reuse instead of creating a new one?
 bool
-nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
-                                     nsIAtom* aProperty,
-                                     const nsAString* aAttribute,
-                                     const nsAString* aValue)
+HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
+                                   nsIAtom* aProperty,
+                                   const nsAString* aAttribute,
+                                   const nsAString* aValue)
 {
   // aContent can be null, in which case we'll return false in a few lines
   MOZ_ASSERT(aProperty);
@@ -298,14 +301,13 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
   return mCSSEditUtils->ElementsSameStyle(newSpan, element);
 }
 
-
 nsresult
-nsHTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
-                                          int32_t aStartOffset,
-                                          int32_t aEndOffset,
-                                          nsIAtom& aProperty,
-                                          const nsAString* aAttribute,
-                                          const nsAString& aValue)
+HTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset,
+                                        nsIAtom& aProperty,
+                                        const nsAString* aAttribute,
+                                        const nsAString& aValue)
 {
   if (!aText.GetParentNode() ||
       !CanContainTag(*aText.GetParentNode(), aProperty)) {
@@ -363,12 +365,11 @@ nsHTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
   return SetInlinePropertyOnNode(*text, aProperty, aAttribute, aValue);
 }
 
-
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
-                                          nsIAtom& aProperty,
-                                          const nsAString* aAttribute,
-                                          const nsAString& aValue)
+HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
+                                        nsIAtom& aProperty,
+                                        const nsAString* aAttribute,
+                                        const nsAString& aValue)
 {
   nsCOMPtr<nsIAtom> attrAtom = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
 
@@ -469,12 +470,11 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
   return NS_OK;
 }
 
-
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
-                                      nsIAtom& aProperty,
-                                      const nsAString* aAttribute,
-                                      const nsAString& aValue)
+HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
+                                    nsIAtom& aProperty,
+                                    const nsAString* aAttribute,
+                                    const nsAString& aValue)
 {
   nsCOMPtr<nsIContent> previousSibling = aNode.GetPreviousSibling(),
                        nextSibling = aNode.GetNextSibling();
@@ -514,10 +514,10 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
   return NS_OK;
 }
 
-
 nsresult
-nsHTMLEditor::SplitStyleAboveRange(nsRange* inRange, nsIAtom* aProperty,
-                                   const nsAString* aAttribute)
+HTMLEditor::SplitStyleAboveRange(nsRange* inRange,
+                                 nsIAtom* aProperty,
+                                 const nsAString* aAttribute)
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
   nsresult res;
@@ -550,13 +550,13 @@ nsHTMLEditor::SplitStyleAboveRange(nsRange* inRange, nsIAtom* aProperty,
 }
 
 nsresult
-nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
-                                   int32_t* aOffset,
-                                   // null here means we split all properties
-                                   nsIAtom* aProperty,
-                                   const nsAString* aAttribute,
-                                   nsIContent** aOutLeftNode,
-                                   nsIContent** aOutRightNode)
+HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
+                                 int32_t* aOffset,
+                                 // null here means we split all properties
+                                 nsIAtom* aProperty,
+                                 const nsAString* aAttribute,
+                                 nsIContent** aOutLeftNode,
+                                 nsIContent** aOutRightNode)
 {
   NS_ENSURE_TRUE(aNode && *aNode && aOffset, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE((*aNode)->IsContent(), NS_OK);
@@ -603,8 +603,10 @@ nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
 }
 
 nsresult
-nsHTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                         nsIAtom* aProperty, const nsAString* aAttribute)
+HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
+                       int32_t* aOffset,
+                       nsIAtom* aProperty,
+                       const nsAString* aAttribute)
 {
   nsCOMPtr<nsIContent> leftNode, rightNode;
   nsresult res = SplitStyleAbovePoint(aNode, aOffset, aProperty,
@@ -683,13 +685,14 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
 }
 
 bool
-nsHTMLEditor::NodeIsProperty(nsINode& aNode)
+HTMLEditor::NodeIsProperty(nsINode& aNode)
 {
   return IsContainer(&aNode) && IsEditable(&aNode) && !IsBlockNode(&aNode) &&
          !aNode.IsHTMLElement(nsGkAtoms::a);
 }
 
-nsresult nsHTMLEditor::ApplyDefaultProperties()
+nsresult
+HTMLEditor::ApplyDefaultProperties()
 {
   nsresult res = NS_OK;
   uint32_t j, defcon = mDefaultStyles.Length();
@@ -704,10 +707,10 @@ nsresult nsHTMLEditor::ApplyDefaultProperties()
 }
 
 nsresult
-nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
-                                nsIAtom* aProperty,
-                                const nsAString* aAttribute,
-                                const bool aChildrenOnly /* = false */)
+HTMLEditor::RemoveStyleInside(nsIContent& aNode,
+                              nsIAtom* aProperty,
+                              const nsAString* aAttribute,
+                              const bool aChildrenOnly /* = false */)
 {
   if (aNode.GetAsText()) {
     return NS_OK;
@@ -815,8 +818,8 @@ nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
 }
 
 bool
-nsHTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
-                              const nsAString& aAttribute)
+HTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
+                            const nsAString& aAttribute)
 {
   MOZ_ASSERT(aContent);
 
@@ -842,7 +845,7 @@ nsHTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
 }
 
 nsresult
-nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
+HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 {
   // We assume that <a> is not nested.
   nsCOMPtr<nsINode> startNode = aRange.GetStartParent();
@@ -884,7 +887,7 @@ nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 }
 
 nsresult
-nsHTMLEditor::PromoteInlineRange(nsRange& aRange)
+HTMLEditor::PromoteInlineRange(nsRange& aRange)
 {
   nsCOMPtr<nsINode> startNode = aRange.GetStartParent();
   int32_t startOffset = aRange.StartOffset();
@@ -917,7 +920,8 @@ nsHTMLEditor::PromoteInlineRange(nsRange& aRange)
 }
 
 bool
-nsHTMLEditor::IsAtFrontOfNode(nsINode& aNode, int32_t aOffset)
+HTMLEditor::IsAtFrontOfNode(nsINode& aNode,
+                            int32_t aOffset)
 {
   if (!aOffset) {
     return true;
@@ -936,7 +940,8 @@ nsHTMLEditor::IsAtFrontOfNode(nsINode& aNode, int32_t aOffset)
 }
 
 bool
-nsHTMLEditor::IsAtEndOfNode(nsINode& aNode, int32_t aOffset)
+HTMLEditor::IsAtEndOfNode(nsINode& aNode,
+                          int32_t aOffset)
 {
   if (aOffset == (int32_t)aNode.Length()) {
     return true;
@@ -956,14 +961,14 @@ nsHTMLEditor::IsAtEndOfNode(nsINode& aNode, int32_t aOffset)
 
 
 nsresult
-nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
-                                    const nsAString* aAttribute,
-                                    const nsAString* aValue,
-                                    bool* aFirst,
-                                    bool* aAny,
-                                    bool* aAll,
-                                    nsAString* outValue,
-                                    bool aCheckDefaults)
+HTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
+                                  const nsAString* aAttribute,
+                                  const nsAString* aValue,
+                                  bool* aFirst,
+                                  bool* aAny,
+                                  bool* aAll,
+                                  nsAString* outValue,
+                                  bool aCheckDefaults)
 {
   *aAny = false;
   *aAll = true;
@@ -1129,13 +1134,13 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
-                                              const nsAString &aAttribute,
-                                              const nsAString &aValue,
-                                              bool *aFirst,
-                                              bool *aAny,
-                                              bool *aAll)
+NS_IMETHODIMP
+HTMLEditor::GetInlineProperty(nsIAtom* aProperty,
+                              const nsAString& aAttribute,
+                              const nsAString& aValue,
+                              bool* aFirst,
+                              bool* aAny,
+                              bool* aAll)
 {
   NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
   const nsAString *att = nullptr;
@@ -1147,14 +1152,14 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
   return GetInlinePropertyBase(*aProperty, att, val, aFirst, aAny, aAll, nullptr);
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
-                                              const nsAString &aAttribute,
-                                              const nsAString &aValue,
-                                              bool *aFirst,
-                                              bool *aAny,
-                                              bool *aAll,
-                                              nsAString &outValue)
+NS_IMETHODIMP
+HTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom* aProperty,
+                                           const nsAString& aAttribute,
+                                           const nsAString& aValue,
+                                           bool* aFirst,
+                                           bool* aAny,
+                                           bool* aAll,
+                                           nsAString& outValue)
 {
   NS_ENSURE_TRUE(aProperty && aFirst && aAny && aAll, NS_ERROR_NULL_POINTER);
   const nsAString *att = nullptr;
@@ -1166,8 +1171,8 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
   return GetInlinePropertyBase(*aProperty, att, val, aFirst, aAny, aAll, &outValue);
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
+NS_IMETHODIMP
+HTMLEditor::RemoveAllInlineProperties()
 {
   AutoEditBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::resetTextProperties,
@@ -1178,14 +1183,16 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
   return ApplyDefaultProperties();
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsAString &aAttribute)
+NS_IMETHODIMP
+HTMLEditor::RemoveInlineProperty(nsIAtom* aProperty,
+                                 const nsAString& aAttribute)
 {
   return RemoveInlinePropertyImpl(aProperty, &aAttribute);
 }
 
 nsresult
-nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
-                                       const nsAString* aAttribute)
+HTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
+                                     const nsAString* aAttribute)
 {
   MOZ_ASSERT_IF(aProperty, aAttribute);
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
@@ -1317,18 +1324,20 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::IncreaseFontSize()
+NS_IMETHODIMP
+HTMLEditor::IncreaseFontSize()
 {
   return RelativeFontChange(FontSize::incr);
 }
 
-NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
+NS_IMETHODIMP
+HTMLEditor::DecreaseFontSize()
 {
   return RelativeFontChange(FontSize::decr);
 }
 
 nsresult
-nsHTMLEditor::RelativeFontChange(FontSize aDir)
+HTMLEditor::RelativeFontChange(FontSize aDir)
 {
   ForceCompositionEnd();
 
@@ -1438,10 +1447,10 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
 }
 
 nsresult
-nsHTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
-                                           Text& aTextNode,
-                                           int32_t aStartOffset,
-                                           int32_t aEndOffset)
+HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
+                                         Text& aTextNode,
+                                         int32_t aStartOffset,
+                                         int32_t aEndOffset)
 {
   // Don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) {
@@ -1499,9 +1508,9 @@ nsHTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   return NS_OK;
 }
 
-
 nsresult
-nsHTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode)
+HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
+                                     nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
 
@@ -1539,9 +1548,9 @@ nsHTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode)
   return NS_OK;
 }
 
-
 nsresult
-nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode)
+HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
+                                     nsIContent* aNode)
 {
   MOZ_ASSERT(aNode);
   // Can only change font size by + or - 1
@@ -1607,7 +1616,8 @@ nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetFontFaceState(bool *aMixed, nsAString &outFace)
+HTMLEditor::GetFontFaceState(bool* aMixed,
+                             nsAString& outFace)
 {
   NS_ENSURE_TRUE(aMixed, NS_ERROR_FAILURE);
   *aMixed = true;
@@ -1648,7 +1658,8 @@ nsHTMLEditor::GetFontFaceState(bool *aMixed, nsAString &outFace)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetFontColorState(bool *aMixed, nsAString &aOutColor)
+HTMLEditor::GetFontColorState(bool* aMixed,
+                              nsAString& aOutColor)
 {
   NS_ENSURE_TRUE(aMixed, NS_ERROR_NULL_POINTER);
   *aMixed = true;
@@ -1681,14 +1692,15 @@ nsHTMLEditor::GetFontColorState(bool *aMixed, nsAString &aOutColor)
 // can handle CSS styles (for instance, Composer can, Messenger can't) and if
 // the CSS preference is checked
 nsresult
-nsHTMLEditor::GetIsCSSEnabled(bool *aIsCSSEnabled)
+HTMLEditor::GetIsCSSEnabled(bool* aIsCSSEnabled)
 {
   *aIsCSSEnabled = IsCSSEnabled();
   return NS_OK;
 }
 
 static bool
-HasNonEmptyAttribute(dom::Element* aElement, nsIAtom* aName)
+HasNonEmptyAttribute(Element* aElement,
+                     nsIAtom* aName)
 {
   MOZ_ASSERT(aElement);
 
@@ -1697,7 +1709,7 @@ HasNonEmptyAttribute(dom::Element* aElement, nsIAtom* aName)
 }
 
 bool
-nsHTMLEditor::HasStyleOrIdOrClass(dom::Element* aElement)
+HTMLEditor::HasStyleOrIdOrClass(Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
@@ -1709,7 +1721,7 @@ nsHTMLEditor::HasStyleOrIdOrClass(dom::Element* aElement)
 }
 
 nsresult
-nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(dom::Element& aElement)
+HTMLEditor::RemoveElementIfNoStyleOrIdOrClass(Element& aElement)
 {
   // early way out if node is not the right kind of element
   if ((!aElement.IsHTMLElement(nsGkAtoms::span) &&
@@ -1720,3 +1732,5 @@ nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(dom::Element& aElement)
 
   return RemoveContainer(&aElement);
 }
+
+} // namespace mozilla
