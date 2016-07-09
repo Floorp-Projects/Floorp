@@ -1233,7 +1233,7 @@ public:
     return mObservesMutationsForPrint;
   }
 
-  virtual void SetIsActive(bool aIsActive, bool aIsHidden = true) = 0;
+  virtual nsresult SetIsActive(bool aIsActive, bool aIsHidden = true) = 0;
 
   bool IsActive()
   {
