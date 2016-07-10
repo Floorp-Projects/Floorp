@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=535043
+-->
+<head>
+  <title>Test for Bug 535043</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input {
+      outline: 2px solid lime;
+    }
+    input:in-range {
+      outline: 2px solid red;
+    }
+    input:out-of-range {
+      outline: 2px solid orange;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=535043">Mozilla Bug 535043</a>
+<p id="display"></p>
+<div id="content">
+
+</head>
+<body>
+  <input type="number" value=0 min=0 max=10> Active in-range
+  <br><br>
+  <input type="number" value=0 min=0 max=10 disabled> Disabled in-range
+  <br><br>
+  <input type="number" value=0 min=0 max=10 readonly> Read-only in-range
+  <br><br>
+  <input type="number" value=11 min=0 max=10> Active out-of-range
+  <br><br>
+  <input type="number" value=11 min=0 max=10 disabled> Disabled out-of-range
+  <br><br>
+  <input type="number" value=11 min=0 max=10 readonly> Read-only out-of-range
+</div>
+<pre id="test">
+<script type="text/javascript">
+
+/** Test for Bug 1264157 **/
+SimpleTest.waitForFocus(function() {
+  // Check the initial values.
+  let active = [].slice.call(document.querySelectorAll("input:not(:disabled):not(:-moz-read-only)"));
+  let disabled = [].slice.call(document.querySelectorAll("input:disabled"));
+  let readonly = [].slice.call(document.querySelectorAll("input:-moz-read-only"));
+  ok(active.length == 2, "Test is messed up: missing non-disabled/non-readonly inputs");
+  ok(disabled.length == 2, "Test is messed up: missing disabled inputs");
+  ok(readonly.length == 2, "Test is messed up: missing readonly inputs");
+
+  is(document.querySelectorAll("input:in-range").length, 1,
+     "Wrong number of in-range elements selected.");
+  is(document.querySelectorAll("input:out-of-range").length, 1,
+     "Wrong number of out-of-range elements selected.");
+
+  // Dynamically change the values to see if that works too.
+  active[0].value = -1;
+  is(document.querySelectorAll("input:in-range").length, 0,
+     "Wrong number of in-range elements selected after value changed.");
+  is(document.querySelectorAll("input:out-of-range").length, 2,
+     "Wrong number of out-of-range elements selected after value changed.");
+  active[0].value = 0;
+  is(document.querySelectorAll("input:in-range").length, 1,
+     "Wrong number of in-range elements selected after value changed back.");
+  is(document.querySelectorAll("input:out-of-range").length, 1,
+     "Wrong number of out-of-range elements selected after value changed back.");
+
+  // Dynamically change the attributes to see if that works too.
+  disabled.forEach(function(e) { e.removeAttribute("disabled"); });
+  readonly.forEach(function(e) { e.removeAttribute("readonly"); });
+  active.forEach(function(e) { e.setAttribute("readonly", true); });
+
+  is(document.querySelectorAll("input:in-range").length, 2,
+     "Wrong number of in-range elements selected after attribute changed.");
+  is(document.querySelectorAll("input:out-of-range").length, 2,
+     "Wrong number of out-of-range elements selected after attribute changed.");
+
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
