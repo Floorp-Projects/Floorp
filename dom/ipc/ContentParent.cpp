@@ -5505,15 +5505,15 @@ ContentParent::PermissionManagerRelease(const ContentParentId& aCpId,
 }
 
 bool
-ContentParent::RecvGetBrowserConfiguration(const nsCString& aURI, BrowserConfiguration* aConfig)
+ContentParent::RecvGetBrowserConfiguration(BrowserConfiguration* aConfig)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  return GetBrowserConfiguration(aURI, *aConfig);;
+  return GetBrowserConfiguration(*aConfig);;
 }
 
 /*static*/ bool
-ContentParent::GetBrowserConfiguration(const nsCString& aURI, BrowserConfiguration& aConfig)
+ContentParent::GetBrowserConfiguration(BrowserConfiguration& aConfig)
 {
   if (XRE_IsParentProcess()) {
     RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
@@ -5523,7 +5523,7 @@ ContentParent::GetBrowserConfiguration(const nsCString& aURI, BrowserConfigurati
     return true;
   }
 
-  return ContentChild::GetSingleton()->SendGetBrowserConfiguration(aURI, &aConfig);
+  return ContentChild::GetSingleton()->SendGetBrowserConfiguration(&aConfig);
 }
 
 bool
