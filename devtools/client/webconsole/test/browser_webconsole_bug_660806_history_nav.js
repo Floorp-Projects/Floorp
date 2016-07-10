@@ -25,12 +25,12 @@ function consoleOpened(HUD) {
     ok(false, "popup shown");
   };
 
-  jsterm.execute("window.foobarBug660806 = {\
-    'location': 'value0',\
-    'locationbar': 'value1'\
-  }");
+  jsterm.execute(`window.foobarBug660806 = {
+    'location': 'value0',
+    'locationbar': 'value1'
+  }`);
 
-  popup._panel.addEventListener("popupshown", onShown, false);
+  popup.on("popup-opened", onShown);
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -47,7 +47,7 @@ function consoleOpened(HUD) {
 
   executeSoon(function () {
     ok(!popup.isOpen, "popup is not open");
-    popup._panel.removeEventListener("popupshown", onShown, false);
+    popup.off("popup-opened", onShown);
     executeSoon(deferred.resolve);
   });
   return deferred.promise;

@@ -100,12 +100,17 @@ function* testCompletion([key, modifiers, completion, open, selected, change],
              : null;
   }
 
+  // Also listening for popup opened/closed events if needed.
+  let popupEvent = open ? "popup-opened" : "popup-closed";
+  let onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
+
   info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
   yield onDone;
+  yield onPopupEvent;
 
   info("Checking the state");
-  if (completion != null) {
+  if (completion !== null) {
     // The key might have been a TAB or shift-TAB, in which case the editor will
     // be a new one
     editor = inplaceEditor(view.styleDocument.activeElement);
@@ -114,8 +119,7 @@ function* testCompletion([key, modifiers, completion, open, selected, change],
   if (!open) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
-    ok(editor.popup._panel.state == "open" ||
-       editor.popup._panel.state == "showing", "Popup is open");
-    is(editor.popup.selectedIndex != -1, selected, "An item is selected");
+    ok(editor.popup.isOpen, "Popup is open");
+    is(editor.popup.selectedIndex !== -1, selected, "An item is selected");
   }
 }

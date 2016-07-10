@@ -48,7 +48,7 @@ add_task(function* () {
   let [host, win, doc] = yield createHost();
 
   let xulDocument = win.top.document;
-  let popup = new AutocompletePopup(xulDocument, { autoSelect: true });
+  let popup = new AutocompletePopup({ doc: xulDocument }, { autoSelect: true });
   yield new Promise(resolve => {
     createInplaceEditorAndClick({
       start: runPropertyAutocompletionTest,
@@ -58,6 +58,7 @@ add_task(function* () {
     }, doc);
   });
 
+  popup.destroy();
   host.destroy();
   gBrowser.removeCurrentTab();
 });
