@@ -45,12 +45,12 @@ var validTypes =
   ["date", true],
   ["time", true],
   ["color", false],
+  ["month", true],
 ];
 
 var todoTypes =
 [
   ["datetime", true],
-  ["month", true],
   ["week", true],
   ["datetime-local", true],
 ];
@@ -195,7 +195,6 @@ function checkDateGet()
          "when the element value is not a valid date");
     }
   }
-
 }
 
 function checkDateSet()
@@ -368,8 +367,12 @@ function checkWithBustedPrototype()
        "prototype is the same");
 
     // However the Date should have the correct information.
-    var witnessDate = new Date(element.valueAsNumber);
-    is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+    // Skip type=month for now, since .valueAsNumber returns number of months
+    // and not milliseconds.
+    if (type != "month") {
+      var witnessDate = new Date(element.valueAsNumber);
+      is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+    }
 
     // Same test as above but using NaN instead of {}.
 
@@ -396,14 +399,103 @@ function checkWithBustedPrototype()
        "prototype is the same");
 
     // However the Date should have the correct information.
-    var witnessDate = new Date(element.valueAsNumber);
-    is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+    // Skip type=month for now, since .valueAsNumber returns number of months
+    // and not milliseconds.
+    if (type != "month") {
+      var witnessDate = new Date(element.valueAsNumber);
+      is(element.valueAsDate.valueOf(), witnessDate.valueOf(), "correct Date");
+    }
 
     Date.prototype.getUTCFullYear = backupPrototype.getUTCFullYear;
     Date.prototype.getUTCMonth = backupPrototype.getUTCMonth;
     Date.prototype.getUTCDate = backupPrototype.getUTCDate;
     Date.prototype.getTime = backupPrototype.getTime;
     Date.prototype.setUTCFullYear = backupPrototype.setUTCFullYear;
+  }
+}
+
+function checkMonthGet()
+{
+  var validData =
+  [
+    [ "2016-07",   1467331200000    ],
+    [ "1970-01",   0                ],
+    [ "1970-02",   2678400000       ],
+    [ "1969-12",   -2678400000      ],
+    [ "0001-01",   -62135596800000  ],
+    [ "275760-09", 8639998963200000 ],
+  ];
+
+  var invalidData =
+  [
+    [ "invalidmonth" ],
+    [ "0000-01"      ],
+    [ "2016-00"      ],
+    [ "123-01"       ],
+    [ "2017-13"      ],
+    [ ""             ],
+    // This month is valid for the input element, but is out of
+    // the date object range. In this case, on getting valueAsDate,
+    // a Date object will be created, but it will have a NaN internal value,
+    // and will return the string "Invalid Date".
+    [ "275760-10", true ],
+  ];
+
+  element.type = "month";
+  for (data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this month");
+  }
+
+  for (data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid month");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid month");
+    }
+  }
+}
+
+function checkMonthSet()
+{
+  var testData =
+  [
+    [ 1342051200000,      "2012-07" ],
+    [ 0,                  "1970-01" ],
+    // Maximum valid month (limited by the ecma date object range).
+    [ 8640000000000000,   "275760-09" ],
+    // Minimum valid month (limited by the input element minimum valid value).
+    [ -62135596800000 ,   "0001-01" ],
+    [ 1330473600000,      "2012-02" ],
+    [ 1298851200000,      "2011-02" ],
+    // "Values must be truncated to valid months"
+    [ 42.1234,            "1970-01" ],
+    [ 123.123456789123,   "1970-01" ],
+    [ 1e-1,               "1970-01" ],
+    [ 1298851200010,      "2011-02" ],
+    [ -1,                 "1969-12" ],
+    [ -86400000,          "1969-12" ],
+    [ 86400000,           "1970-01" ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding month string is the empty string
+    [ -62135596800001,    "" ],
+  ];
+
+  element.type = "month";
+  for (data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to "
+                                + data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
   }
 }
 
@@ -418,6 +510,10 @@ checkDateSet();
 // Test <input type='time'>.
 checkTimeGet();
 checkTimeSet();
+
+// Test <input type='month'>.
+checkMonthGet();
+checkMonthSet();
 
 </script>
 </pre>
