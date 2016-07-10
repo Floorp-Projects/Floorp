@@ -538,9 +538,9 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   }
 
   // Find the frame under point.
-  nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint,
+  nsWeakFrame ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
-  if (!ptFrame) {
+  if (!ptFrame.IsAlive()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -552,6 +552,14 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   AC_LOG("%s: Found %s focusable", __FUNCTION__,
          focusableFrame ? focusableFrame->ListTag().get() : "no frame");
 #endif
+
+  // Get ptInFrame here so that we don't need to check whether rootFrame is
+  // alive later. Note that if ptFrame is being moved by
+  // IMEStateManager::NotifyIME() or ChangeFocusToOrClearOldFocus() below,
+  // something under the original point will be selected, which may not be the
+  // original text the user wants to select.
+  nsPoint ptInFrame = aPoint;
+  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
 
   // Firstly check long press on an empty editable content.
   Element* newFocusEditingHost = GetEditingHostForFrame(ptFrame);
@@ -585,9 +593,17 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   // is any) before changing the focus.
   IMEStateManager::NotifyIME(widget::REQUEST_TO_COMMIT_COMPOSITION,
                              mPresShell->GetPresContext());
+  if (!ptFrame.IsAlive()) {
+    // Cannot continue because ptFrame died.
+    return NS_ERROR_FAILURE;
+  }
 
   // ptFrame is selectable. Now change the focus.
   ChangeFocusToOrClearOldFocus(focusableFrame);
+  if (!ptFrame.IsAlive()) {
+    // Cannot continue because ptFrame died.
+    return NS_ERROR_FAILURE;
+  }
 
   if (GetCaretMode() == CaretMode::Selection &&
       !mFirstCaret->IsLogicallyVisible() && !mSecondCaret->IsLogicallyVisible()) {
@@ -600,9 +616,6 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   }
 
   // Then try select a word under point.
-  nsPoint ptInFrame = aPoint;
-  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
-
   nsresult rv = SelectWord(ptFrame, ptInFrame);
   UpdateCaretsWithHapticFeedback();
 
