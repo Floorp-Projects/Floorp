@@ -24,7 +24,6 @@
 #include <dlfcn.h>
 #include <CoreVideo/CoreVideo.h>
 
-#include "nsCocoaFeatures.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "VsyncSource.h"
 
@@ -367,14 +366,6 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
     }
 
     return threshold;
-}
-
-bool
-gfxPlatformMac::UseProgressivePaint()
-{
-  // Progressive painting requires cross-process mutexes, which don't work so
-  // well on OS X 10.6 so we disable there.
-  return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseProgressivePaint();
 }
 
 bool

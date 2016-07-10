@@ -6,10 +6,6 @@
 #include "GLContext.h"
 #include "nsPrintfCString.h"
 
-#ifdef XP_MACOSX
-#include "nsCocoaFeatures.h"
-#endif
-
 namespace mozilla {
 namespace gl {
 
@@ -884,16 +880,6 @@ GLContext::InitFeatures()
                           IsSupported(feature) ? "enabled" : "disabled",
                           GetFeatureName(feature));
         }
-    }
-
-    if (WorkAroundDriverBugs()) {
-#ifdef XP_MACOSX
-        // MacOSX 10.6 reports to support EXT_framebuffer_sRGB and EXT_texture_sRGB but
-        // fails to convert from sRGB to linear when reading from an sRGB texture attached
-        // to an FBO. (bug 843668)
-        if (!nsCocoaFeatures::OnLionOrLater())
-            MarkUnsupported(GLFeature::sRGB_framebuffer);
-#endif // XP_MACOSX
     }
 }
 
