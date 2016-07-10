@@ -438,6 +438,7 @@ public:
     case SYS_SOCKET: // DANGEROUS
     case SYS_CONNECT: // DANGEROUS
     case SYS_ACCEPT:
+    case SYS_ACCEPT4:
     case SYS_BIND:
     case SYS_LISTEN:
     case SYS_GETSOCKOPT:
