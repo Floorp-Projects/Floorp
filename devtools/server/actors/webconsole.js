@@ -355,6 +355,10 @@ WebConsoleActor.prototype =
       this.networkMonitorChild.destroy();
       this.networkMonitorChild = null;
     }
+    if (this.stackTraceCollector) {
+      this.stackTraceCollector.destroy();
+      this.stackTraceCollector = null;
+    }
     if (this.consoleProgressListener) {
       this.consoleProgressListener.destroy();
       this.consoleProgressListener = null;
