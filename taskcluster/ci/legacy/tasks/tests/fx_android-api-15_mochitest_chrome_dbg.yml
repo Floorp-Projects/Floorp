@@ -1,9 +1,0 @@
-$inherits:
-  from: 'tasks/tests/fx_android-api-15_mochitest_chrome.yml'
-task:
-  payload:
-    command:
-      - --download-symbols=true
-  extra:
-    treeherder:
-      tier: 1
