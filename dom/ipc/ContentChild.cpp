@@ -36,6 +36,7 @@
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
@@ -222,6 +223,7 @@ using namespace mozilla::dom::mobileconnection;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
 using namespace mozilla::dom::voicemail;
+using namespace mozilla::dom::workers;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
 using namespace mozilla::gmp;
@@ -927,7 +929,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   }
 
   if (!urlToLoad.IsEmpty()) {
-    newChild->RecvLoadURL(urlToLoad, BrowserConfiguration(), showInfo);
+    newChild->RecvLoadURL(urlToLoad, showInfo);
   }
 
   nsCOMPtr<mozIDOMWindowProxy> win = do_GetInterface(newChild->WebNavigation());
@@ -1042,6 +1044,14 @@ ContentChild::InitXPCOM()
     ProcessGlobal* global = ProcessGlobal::Get();
     global->SetInitialProcessData(data);
   }
+
+  // Loading the ServiceWorker configuration.
+  BrowserConfiguration configuration;
+  SendGetBrowserConfiguration(&configuration);
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+  swm->LoadRegistrations(configuration.serviceWorkerRegistrations());
 
   InitOnContentProcessCreated();
 }

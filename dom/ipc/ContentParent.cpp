@@ -1166,7 +1166,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
       }
       tabId = AllocateTabId(openerTabId,
                             aContext.AsIPCTabContext(),
-                           constructorSender->ChildID());
+                            constructorSender->ChildID());
     }
     if (constructorSender) {
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -5509,21 +5509,11 @@ ContentParent::RecvGetBrowserConfiguration(BrowserConfiguration* aConfig)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  return GetBrowserConfiguration(*aConfig);;
-}
+  RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+  MOZ_ASSERT(swr);
 
-/*static*/ bool
-ContentParent::GetBrowserConfiguration(BrowserConfiguration& aConfig)
-{
-  if (XRE_IsParentProcess()) {
-    RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(swr);
-
-    swr->GetRegistrations(aConfig.serviceWorkerRegistrations());
-    return true;
-  }
-
-  return ContentChild::GetSingleton()->SendGetBrowserConfiguration(&aConfig);
+  swr->GetRegistrations(aConfig->serviceWorkerRegistrations());
+  return true;
 }
 
 bool
