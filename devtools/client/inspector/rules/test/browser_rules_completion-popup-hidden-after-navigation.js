@@ -24,11 +24,13 @@ add_task(function* () {
 
   info("Pressing key VK_DOWN");
   let onSuggest = once(editor.input, "keypress");
+  let onPopupOpened = once(editor.popup, "popup-opened");
+
   EventUtils.synthesizeKey("VK_DOWN", {}, view.styleWindow);
 
   info("Waiting for autocomplete popup to be displayed");
   yield onSuggest;
-  yield waitForTick();
+  yield onPopupOpened;
 
   ok(view.popup && view.popup.isOpen, "Popup should be opened");
 
