@@ -720,10 +720,9 @@ TabParent::SendLoadRemoteScript(const nsString& aURL,
 }
 
 bool
-TabParent::InitBrowserConfiguration(const nsCString& aURI,
-                                    BrowserConfiguration& aConfiguration)
+TabParent::InitBrowserConfiguration(BrowserConfiguration& aConfiguration)
 {
-  return ContentParent::GetBrowserConfiguration(aURI, aConfiguration);
+  return ContentParent::GetBrowserConfiguration(aConfiguration);
 }
 
 void
@@ -755,7 +754,7 @@ TabParent::LoadURL(nsIURI* aURI)
 
     // This object contains the configuration for this new app.
     BrowserConfiguration configuration;
-    if (NS_WARN_IF(!InitBrowserConfiguration(spec, configuration))) {
+    if (NS_WARN_IF(!InitBrowserConfiguration(configuration))) {
       return;
     }
 
