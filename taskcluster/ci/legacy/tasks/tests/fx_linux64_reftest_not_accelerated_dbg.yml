@@ -1,7 +1,0 @@
----
-$inherits:
-  from: 'tasks/tests/fx_linux64_reftest_not_accelerated.yml'
-task:
-  payload:
-    command:
-      - --download-symbols=true

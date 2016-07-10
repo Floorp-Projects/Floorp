@@ -1,7 +1,0 @@
----
-$inherits:
-  from: 'tasks/tests/fx_linux64_fxui_functional_remote_e10s.yml'
-task:
-  payload:
-    command:
-      - --download-symbols=ondemand
