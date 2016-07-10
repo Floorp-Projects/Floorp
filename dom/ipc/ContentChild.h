@@ -180,8 +180,7 @@ public:
                                             const uint32_t& aChromeFlags,
                                             const ContentParentId& aCpID,
                                             const bool& aIsForApp,
-                                            const bool& aIsForBrowser)
-                                            override;
+                                            const bool& aIsForBrowser) override;
 
   virtual bool DeallocPBrowserChild(PBrowserChild*) override;
 
