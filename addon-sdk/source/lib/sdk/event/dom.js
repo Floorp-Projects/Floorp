@@ -12,10 +12,11 @@ const { Ci } = require("chrome");
 
 var { emit } = require("./core");
 var { when: unload } = require("../system/unload");
-var listeners = new Map();
+var listeners = new WeakMap();
 
 const { Cu } = require("chrome");
 const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");
+const { ThreadSafeChromeUtils } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 var getWindowFrom = x =>
                     x instanceof Ci.nsIDOMWindow ? x :
@@ -69,7 +70,8 @@ function open(target, type, options) {
 }
 
 unload(() => {
-  for (let window of listeners.keys())
+  let keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(listeners)
+  for (let window of keys)
     removeFromListeners.call(window);
 });
 
