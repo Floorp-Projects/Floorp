@@ -653,8 +653,6 @@ protected:
   virtual bool RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
                                                     const bool& aActive) override;
 
-  bool InitBrowserConfiguration(BrowserConfiguration& aConfiguration);
-
   ContentCacheInParent mContentCache;
 
   nsIntRect mRect;
