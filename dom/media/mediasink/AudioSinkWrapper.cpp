@@ -122,7 +122,6 @@ void
 AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate)
 {
   AssertOwnerThread();
-  mParams.mPlaybackRate = aPlaybackRate;
   if (!mAudioEnded) {
     // Pass the playback rate to the audio sink. The underlying AudioStream
     // will handle playback rate changes and report correct audio position.
@@ -133,6 +132,10 @@ AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate)
     mPlayDuration = GetVideoPosition(now);
     mPlayStartTime = now;
   }
+  // mParams.mPlaybackRate affects GetVideoPosition(). It should be updated
+  // after the calls to GetVideoPosition();
+  mParams.mPlaybackRate = aPlaybackRate;
+
   // Do nothing when not playing. Changes in playback rate will be taken into
   // account by GetVideoPosition().
 }
