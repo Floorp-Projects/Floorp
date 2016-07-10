@@ -470,5 +470,50 @@ promise_test(function(t) {
 }, 'animation with fill:backwards in delay phase is running on the ' +
    ' main-thread while it is in delay phase');
 
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate([{ opacity: 1, offset: 0 },
+                               { opacity: 1, offset: 0.99 },
+                               { opacity: 0, offset: 1 }], 100 * MS_PER_SEC);
+
+  var another = addDiv(t);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Opacity animation on a 100% opacity keyframe reports ' +
+                  'that it is running on the compositor from the begining');
+
+    animation.effect.target = another;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Opacity animation on a 100% opacity keyframe keeps ' +
+                  'running on the compositor after changing the target ' +
+                  'element');
+  });
+}, '100% opacity animations with keeps running on the ' +
+   'compositor after changing the target element');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ color: ['red', 'black'] }, 100 * MS_PER_SEC);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Color animation reports that it is not running on the ' +
+                  'compositor');
+
+    animation.effect.setKeyframes([{ opacity: 1, offset: 0 },
+                                   { opacity: 1, offset: 0.99 },
+                                   { opacity: 0, offset: 1 }]);
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  '100% opacity animation set by using setKeyframes reports ' +
+                  'that it is running on the compositor');
+  });
+}, '100% opacity animation set up by converting an existing animation with ' +
+   'cannot be run on the compositor, is running on the compositor');
+
 </script>
 </body>

@@ -2754,6 +2754,24 @@ ElementRestyler::AddLayerChangesForAnimation()
       }
       hint |= layerInfo.mChangeHint;
     }
+
+    // We consider it's the first paint for the frame if we have an animation
+    // for the property but have no layer.
+    // Note that in case of animations which has properties preventing running
+    // on the compositor, e.g., width or height, corresponding layer is not
+    // created at all, but even in such cases, we normally set valid change
+    // hint for such animations in each tick, i.e. restyles in each tick. As
+    // a result, we usually do restyles for such animations in every tick on
+    // the main-thread.  The only animations which will be affected by this
+    // explicit change hint are animations that have opacity/transform but did
+    // not have those properies just before. e.g,  setting transform by
+    // setKeyframes or changing target element from other target which prevents
+    // running on the compositor, etc.
+    if (!layer &&
+        nsLayoutUtils::HasRelevantAnimationOfProperty(mFrame,
+                                                      layerInfo.mProperty)) {
+      hint |= layerInfo.mChangeHint;
+    }
   }
   if (hint) {
     mChangeList->AppendChange(mFrame, mContent, hint);
