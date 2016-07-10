@@ -63,10 +63,10 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-function* testCompletion([key, completion, isOpen, isSelected], editor, view) {
+function* testCompletion([key, completion, open, isSelected], editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion);
-  info("Is popup opened: " + isOpen);
+  info("Is popup opened: " + open);
   info("Is item selected: " + isSelected);
 
   let onSuggest;
@@ -79,21 +79,24 @@ function* testCompletion([key, completion, isOpen, isSelected], editor, view) {
     onSuggest = editor.once("after-suggest");
   }
 
+  // Also listening for popup opened/closed events if needed.
+  let popupEvent = open ? "popup-opened" : "popup-closed";
+  let onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
+
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);
 
   yield onSuggest;
-  yield waitForTick();
+  yield onPopupEvent;
 
   info("Checking the state");
-  if (completion != null) {
+  if (completion !== null) {
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
-  if (!isOpen) {
+  if (!open) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
-    ok(editor.popup._panel.state == "open" ||
-       editor.popup._panel.state == "showing", "Popup is open");
-    is(editor.popup.selectedIndex != -1, isSelected, "An item is selected");
+    ok(editor.popup.isOpen, "Popup is open");
+    is(editor.popup.selectedIndex !== -1, isSelected, "An item is selected");
   }
 }

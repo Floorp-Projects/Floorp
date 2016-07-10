@@ -14,7 +14,7 @@ add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   let popup = hud.jsterm.autocompletePopup;
-  let popupShown = once(popup._panel, "popupshown");
+  let popupShown = once(popup, "popup-opened");
 
   hud.jsterm.setInputValue("sc");
   EventUtils.synthesizeKey("r", {});
