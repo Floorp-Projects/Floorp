@@ -353,9 +353,6 @@ public:
   static bool
   PermissionManagerRelease(const ContentParentId& aCpId, const TabId& aTabId);
 
-  static bool
-  GetBrowserConfiguration(BrowserConfiguration& aConfig);
-
   void ReportChildAlreadyBlocked();
 
   bool RequestRunToCompletion();

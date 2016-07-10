@@ -311,7 +311,6 @@ public:
                           const Maybe<ZoomConstraints>& aConstraints) override;
 
   virtual bool RecvLoadURL(const nsCString& aURI,
-                           const BrowserConfiguration& aConfiguration,
                            const ShowInfo& aInfo) override;
 
   virtual bool RecvCacheFileDescriptor(const nsString& aPath,
