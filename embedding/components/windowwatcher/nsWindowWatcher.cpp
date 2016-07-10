@@ -454,8 +454,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent,
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
-// nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID or equal to the
-// userContextId of subjectPrincipal, if not null.
+// the userContextId of subjectPrincipal, if not null.
 static bool
 CheckUserContextCompatibility(nsIDocShell* aDocShell)
 {
@@ -464,16 +463,14 @@ CheckUserContextCompatibility(nsIDocShell* aDocShell)
   uint32_t userContextId =
     static_cast<nsDocShell*>(aDocShell)->GetOriginAttributes().mUserContextId;
 
-  if (userContextId == nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
-    return true;
-  }
-
   nsCOMPtr<nsIPrincipal> subjectPrincipal =
     nsContentUtils::GetCurrentJSContext()
       ? nsContentUtils::SubjectPrincipal() : nullptr;
 
+  // If we don't have a valid principal, probably we are in e10s mode, parent
+  // side.
   if (!subjectPrincipal) {
-    return false;
+    return true;
   }
 
   // DocShell can have UsercontextID set but loading a document with system
