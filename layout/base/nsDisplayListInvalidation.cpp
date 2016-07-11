@@ -108,6 +108,7 @@ nsDisplayBoxShadowOuterGeometry::nsDisplayBoxShadowOuterGeometry(nsDisplayItem* 
 
 nsDisplaySVGEffectsGeometry::nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
+  , nsImageGeometryMixin(aItem, aBuilder)
   , mBBox(aItem->BBoxInUserSpace())
   , mUserSpaceOffset(aItem->UserSpaceOffset())
   , mFrameOffsetToReferenceFrame(aItem->ToReferenceFrame())
