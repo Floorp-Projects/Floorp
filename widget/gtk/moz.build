@@ -63,6 +63,9 @@ if CONFIG['MOZ_X11']:
     UNIFIED_SOURCES += [
         'nsClipboard.cpp',
         'nsDragService.cpp',
+        'WindowSurfaceX11.cpp',
+        'WindowSurfaceX11Image.cpp',
+        'WindowSurfaceXRender.cpp',
     ]
 
 if CONFIG['ACCESSIBILITY']:
