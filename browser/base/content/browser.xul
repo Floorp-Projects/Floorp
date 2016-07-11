@@ -563,7 +563,7 @@
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+#if defined(MOZ_WIDGET_GTK)
              autohide="true"
 #endif
 #endif
@@ -592,7 +592,7 @@
              context="toolbar-context-menu"
              collapsed="true">
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+#if defined(MOZ_WIDGET_GTK)
       <hbox id="private-browsing-indicator"
             skipintoolbarset="true"/>
 #endif
@@ -642,7 +642,7 @@
         </menupopup>
       </toolbarbutton>
 
-#if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
+#if !defined(MOZ_WIDGET_GTK)
       <hbox class="private-browsing-indicator" skipintoolbarset="true"/>
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
