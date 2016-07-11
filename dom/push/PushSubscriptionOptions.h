@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushSubscriptionOptions)
 
   PushSubscriptionOptions(nsIGlobalObject* aGlobal,
-                          nsTArray<uint8_t>&& aAppServerKey);
+                          nsTArray<uint8_t>&& aRawAppServerKey);
 
   nsIGlobalObject*
   GetParentObject() const
@@ -46,7 +46,8 @@ private:
   ~PushSubscriptionOptions();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsTArray<uint8_t> mAppServerKey;
+  nsTArray<uint8_t> mRawAppServerKey;
+  JS::Heap<JSObject*> mAppServerKey;
 };
 
 } // namespace dom

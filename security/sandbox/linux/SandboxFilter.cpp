@@ -511,6 +511,7 @@ public:
     case __NR_rmdir:
     case __NR_getcwd:
     CASES_FOR_statfs:
+    CASES_FOR_fstatfs:
     case __NR_chmod:
     case __NR_rename:
     case __NR_symlink:
@@ -606,8 +607,8 @@ public:
 
     CASES_FOR_getrlimit:
     case __NR_clock_getres:
-    case __NR_getresuid:
-    case __NR_getresgid:
+    CASES_FOR_getresuid:
+    CASES_FOR_getresgid:
       return Allow();
 
     case __NR_umask:
@@ -624,6 +625,11 @@ public:
     case __NR_inotify_rm_watch:
       return Allow();
 
+#ifdef __NR_memfd_create
+    case __NR_memfd_create:
+      return Allow();
+#endif
+
 #ifdef __NR_rt_tgsigqueueinfo
       // Only allow to send signals within the process.
     case __NR_rt_tgsigqueueinfo: {
@@ -631,6 +637,11 @@ public:
       return If(tgid == getpid(), Allow())
         .Else(InvalidSyscall());
     }
+#endif
+
+#ifdef __NR_semget
+    case __NR_semget:
+      return Allow();
 #endif
 
 #endif // DESKTOP

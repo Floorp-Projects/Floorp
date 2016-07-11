@@ -94,9 +94,6 @@
           case "unwantedBlocked" :
             error = "unwanted";
             break;
-          case "forbiddenBlocked" :
-            error = "forbidden";
-            break;
           default:
             return;
         }
@@ -130,24 +127,6 @@
           el.parentNode.removeChild(el);
         }
 
-        if (error !== "forbidden") {
-          el = document.getElementById("errorTitleText_forbidden");
-          el.parentNode.removeChild(el);
-          el = document.getElementById("errorShortDescText_forbidden");
-          el.parentNode.removeChild(el);
-          el = document.getElementById("whyForbiddenButton");
-          el.parentNode.removeChild(el);
-        } else {
-          el = document.getElementById("ignoreWarningButton");
-          el.parentNode.removeChild(el);
-          el = document.getElementById("reportButton");
-          el.parentNode.removeChild(el);
-
-          // Remove red style: A "forbidden site" does not warrant the same level
-          // of anxiety as a security concern.
-          document.documentElement.className = "";
-        }
-
         // Set sitename
         document.getElementById(error + "_sitename").textContent = getHostString();
         document.title = document.getElementById("errorTitleText_" + error)
@@ -175,7 +154,6 @@
         <h1 class="title-text" id="errorTitleText_phishing">&safeb.blocked.phishingPage.title2;</h1>
         <h1 class="title-text" id="errorTitleText_malware">&safeb.blocked.malwarePage.title;</h1>
         <h1 class="title-text" id="errorTitleText_unwanted">&safeb.blocked.unwantedPage.title;</h1>
-        <h1 class="title-text" id="errorTitleText_forbidden">&safeb.blocked.forbiddenPage.title2;</h1>
       </div>
 
       <div id="errorLongContent">
@@ -185,7 +163,6 @@
           <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc2;</p>
           <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
           <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc;</p>
-          <p id="errorShortDescText_forbidden">&safeb.blocked.forbiddenPage.shortDesc2;</p>
         </div>
 
         <!-- Long Description -->
@@ -201,7 +178,6 @@
           <button id="getMeOutButton" class="primary">&safeb.palm.accept.label;</button>
           <div class="button-spacer"></div>
           <button id="reportButton">&safeb.palm.reportPage.label;</button>
-          <button id="whyForbiddenButton">&safeb.palm.whyForbidden.label;</button>
         </div>
       </div>
       <div id="ignoreWarning">

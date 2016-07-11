@@ -232,6 +232,10 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
     return;
   }
 
+  // Style context change might cause CSS cascade level,
+  // e.g removing !important, so we should update the cascading result.
+  effectSet->MarkCascadeNeedsUpdate();
+
   for (KeyframeEffectReadOnly* effect : *effectSet) {
     effect->UpdateProperties(aStyleContext);
   }
@@ -240,11 +244,12 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
 void
 EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                                            CSSPseudoElementType aPseudoType,
-                                           CascadeLevel aCascadeLevel)
+                                           CascadeLevel aCascadeLevel,
+                                           nsStyleContext* aStyleContext)
 {
   // First update cascade results since that may cause some elements to
   // be marked as needing a restyle.
-  MaybeUpdateCascadeResults(aElement, aPseudoType);
+  MaybeUpdateCascadeResults(aElement, aPseudoType, aStyleContext);
 
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
@@ -262,7 +267,8 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
 nsIStyleRule*
 EffectCompositor::GetAnimationRule(dom::Element* aElement,
                                    CSSPseudoElementType aPseudoType,
-                                   CascadeLevel aCascadeLevel)
+                                   CascadeLevel aCascadeLevel,
+                                   nsStyleContext* aStyleContext)
 {
   // NOTE: We need to be careful about early returns in this method where
   // we *don't* update mElementsToRestyle. When we get a call to
@@ -288,7 +294,7 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
     return nullptr;
   }
 
-  MaybeUpdateAnimationRule(aElement, aPseudoType, aCascadeLevel);
+  MaybeUpdateAnimationRule(aElement, aPseudoType, aCascadeLevel, aStyleContext);
 
 #ifdef DEBUG
   {
@@ -386,7 +392,9 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
     }
 
     for (auto& pseudoElem : elementsToRestyle) {
-      MaybeUpdateCascadeResults(pseudoElem.mElement, pseudoElem.mPseudoType);
+      MaybeUpdateCascadeResults(pseudoElem.mElement,
+                                pseudoElem.mPseudoType,
+                                nullptr);
 
       ComposeAnimationRule(pseudoElem.mElement,
                            pseudoElem.mPseudoType,
@@ -455,17 +463,8 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
     return;
   }
 
-  UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
-
-  MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
-}
-
-/* static */ void
-EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
-                                            CSSPseudoElementType aPseudoType)
-{
-  nsStyleContext* styleContext = nullptr;
-  {
+  nsStyleContext* styleContext = aStyleContext;
+  if (!styleContext) {
     dom::Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
     if (elementToRestyle) {
       nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
@@ -474,8 +473,9 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
       }
     }
   }
+  UpdateCascadeResults(*effects, aElement, aPseudoType, styleContext);
 
-  MaybeUpdateCascadeResults(aElement, aPseudoType, styleContext);
+  MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
 
 namespace {
@@ -798,7 +798,8 @@ EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
   nsIStyleRule *rule =
     mCompositor->GetAnimationRule(aData->mElement,
                                   CSSPseudoElementType::NotPseudo,
-                                  mCascadeLevel);
+                                  mCascadeLevel,
+                                  nullptr);
   if (rule) {
     aData->mRuleWalker->Forward(rule);
     aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
@@ -817,7 +818,8 @@ EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
   nsIStyleRule *rule =
     mCompositor->GetAnimationRule(aData->mElement,
                                   aData->mPseudoType,
-                                  mCascadeLevel);
+                                  mCascadeLevel,
+                                  nullptr);
   if (rule) {
     aData->mRuleWalker->Forward(rule);
     aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
