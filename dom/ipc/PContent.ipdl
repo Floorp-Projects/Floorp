@@ -67,7 +67,7 @@ include PluginTypes;
 include ProtocolTypes;
 include PBackgroundSharedTypes;
 include PContentPermission;
-include BrowserConfiguration;
+include ServiceWorkerConfiguration;
 include GraphicsMessages;
 include ProfilerTypes;
 
@@ -1123,8 +1123,8 @@ parent:
     /**
      * Send ServiceWorkerRegistrationData to child process.
      */
-    sync GetBrowserConfiguration()
-        returns (BrowserConfiguration aConfig);
+    sync GetServiceWorkerConfiguration()
+        returns (ServiceWorkerConfiguration aConfig);
 
     /*
      * Tells the parent to start the gamepad listening service if it hasn't already.
