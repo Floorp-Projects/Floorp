@@ -99,20 +99,15 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
 
-if test -n "$gonkdir" ; then
+if test -n "$gonkdir"; then
     dnl export for js/src/configure. We can't pass the option down normally,
     dnl because it's a `--enable-project=b2g`-only option.
     export gonkdir
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
-    dnl Default to ICS
-    ANDROID_VERSION=15
-    if test -n "${PLATFORM_SDK_VERSION}"; then
-        ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
-    fi
 
-    case "$ANDROID_VERSION" in
+    case "$android_version" in
     15)
         CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
         MOZ_NFC=1
@@ -160,7 +155,7 @@ if test -n "$gonkdir" ; then
         MOZ_RTSP=1
         ;;
     *)
-        AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
+        AC_MSG_ERROR([Unsupported platform version: $android_version])
         ;;
     esac
 
@@ -180,10 +175,14 @@ if test -n "$gonkdir" ; then
     LIBS="$LIBS -llog"
 
     AC_DEFINE(ANDROID)
-    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $ANDROID_VERSION)
-    AC_SUBST(ANDROID_VERSION)
+    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
+
+    dnl ANDROID_VERSION is only required for the AC_SUBST below
+    ANDROID_VERSION=$android_version
+    AC_SUBST(ANDROID_VERSION)
+
     direct_nspr_config=1
 
 else
@@ -3527,9 +3526,9 @@ dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
 
-if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$ANDROID_VERSION"; then
-    # we now know for sure that $ANDROID_VERSION is not an empty string!
-    if test "$ANDROID_VERSION" -ge "18"; then
+if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$android_version"; then
+    # we now know for sure that $android_version is not an empty string!
+    if test "$android_version" -ge "18"; then
         MOZ_GONK_MEDIACODEC=1
         AC_SUBST(MOZ_GONK_MEDIACODEC)
     fi

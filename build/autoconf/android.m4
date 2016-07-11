@@ -39,7 +39,24 @@ case "$target" in
         ;;
     esac
 
-    android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_name"
+    dnl Not all Android releases have their own platform release. We use
+    dnl the next lower platform version in these cases.
+    case $android_version in
+    11|10)
+        android_platform_version=9
+        ;;
+    20)
+        android_platform_version=19
+        ;;
+    22)
+        android_platform_version=21
+        ;;
+    *)
+        android_platform_version=$android_version
+        ;;
+    esac
+
+    android_platform="$android_ndk"/platforms/android-"$android_platform_version"/arch-"$target_name"
 
     if test -d "$android_platform" ; then
         AC_MSG_RESULT([$android_platform])
