@@ -188,6 +188,18 @@ AccessibleCaret::Contains(const nsPoint& aPoint) const
 }
 
 void
+AccessibleCaret::EnsureApzAware()
+{
+  // If the caret element was cloned, the listener might have been lost. So
+  // if that's the case we register a dummy listener if there isn't one on
+  // the element already.
+  if (!CaretElement()->HasApzAwareListeners()) {
+    CaretElement()->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                     mDummyTouchListener, false);
+  }
+}
+
+void
 AccessibleCaret::InjectCaretElement(nsIDocument* aDocument)
 {
   ErrorResult rv;
@@ -200,8 +212,7 @@ AccessibleCaret::InjectCaretElement(nsIDocument* aDocument)
   // InsertAnonymousContent will clone the element to make an AnonymousContent.
   // Since event listeners are not being cloned when cloning a node, we need to
   // add the listener here.
-  CaretElement()->AddEventListener(NS_LITERAL_STRING("touchstart"),
-                                   mDummyTouchListener, false);
+  EnsureApzAware();
 }
 
 already_AddRefed<Element>

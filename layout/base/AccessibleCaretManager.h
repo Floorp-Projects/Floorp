@@ -98,6 +98,10 @@ public:
   // Handle key event.
   virtual void OnKeyboardEvent();
 
+  // The canvas frame holding the accessible caret anonymous content elements
+  // was reconstructed, resulting in the content elements getting cloned.
+  virtual void OnFrameReconstruction();
+
 protected:
   // This enum representing the number of AccessibleCarets on the screen.
   enum class CaretMode : uint8_t {
