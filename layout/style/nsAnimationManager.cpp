@@ -440,10 +440,6 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     newAnimations[newAnimIdx]->CancelFromStyle();
   }
 
-  EffectCompositor::UpdateCascadeResults(aElement,
-                                         aStyleContext->GetPseudoType(),
-                                         aStyleContext);
-
   mPresContext->EffectCompositor()->
     MaybeUpdateAnimationRule(aElement,
                              aStyleContext->GetPseudoType(),

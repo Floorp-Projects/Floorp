@@ -420,9 +420,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     EffectCompositor::CascadeLevel::Transitions;
 
   if (collection) {
-    EffectCompositor::UpdateCascadeResults(aElement, pseudoType,
-                                           newStyleContext);
-
     collection->UpdateCheckGeneration(mPresContext);
     mPresContext->EffectCompositor()->MaybeUpdateAnimationRule(aElement,
                                                                pseudoType,
