@@ -111,15 +111,37 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 //  - the sentinel value MemoryExport indicating an export of linear memory; or
 //  - the index of an export into the ExportVector in Metadata
 //
+// ExportMap also contains the start function's export index, which maps to the
+// export that is called at each instantiation of a given module.
+//
 // ExportMap is built incrementally by ModuleGenerator and then stored immutably
 // by Module.
 
 static const uint32_t MemoryExport = UINT32_MAX;
 
-struct ExportMap
+static const uint32_t NO_START_FUNCTION = UINT32_MAX;
+
+class ExportMap
 {
+    uint32_t startExportIndex;
+
+  public:
     CacheableCharsVector fieldNames;
     Uint32Vector fieldsToExports;
+
+    ExportMap() : startExportIndex(NO_START_FUNCTION) {}
+
+    bool hasStartFunction() const {
+        return startExportIndex != NO_START_FUNCTION;
+    }
+    void setStartFunction(uint32_t index) {
+        MOZ_ASSERT(!hasStartFunction());
+        startExportIndex = index;
+    }
+    uint32_t startFunctionExportIndex() const {
+        MOZ_ASSERT(hasStartFunction());
+        return startExportIndex;
+    }
 
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
