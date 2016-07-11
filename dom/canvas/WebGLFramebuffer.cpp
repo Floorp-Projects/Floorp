@@ -562,7 +562,7 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
         switch (format->componentType) {
         case webgl::ComponentType::Special:
             MOZ_ASSERT(false, "Should never happen.");
-            MOZ_FALLTHROUGH;
+            break;
         case webgl::ComponentType::None:
             ret = LOCAL_GL_NONE;
             break;
