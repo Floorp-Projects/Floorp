@@ -14,7 +14,7 @@ namespace mozilla {
 namespace gfx {
 
 static const int32_t kTileSize = 256;
-static const size_t kMaxTiles = 100;
+static const size_t kMaxTiles = 1000;
 
 /**
  * TiledRegionImpl stores an array of non-empty rectangles (pixman_box32_ts) to
