@@ -435,36 +435,31 @@ nsBMPDecoder::FinishRow()
   mCurrentRow--;
 }
 
-void
+Maybe<TerminalState>
 nsBMPDecoder::DoDecode(const char* aBuffer, size_t aLength)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aLength > 0);
 
-  Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aLength, [=](State aState,
-                                     const char* aData, size_t aLength) {
-      switch (aState) {
-        case State::FILE_HEADER:      return ReadFileHeader(aData, aLength);
-        case State::INFO_HEADER_SIZE: return ReadInfoHeaderSize(aData, aLength);
-        case State::INFO_HEADER_REST: return ReadInfoHeaderRest(aData, aLength);
-        case State::BITFIELDS:        return ReadBitfields(aData, aLength);
-        case State::COLOR_TABLE:      return ReadColorTable(aData, aLength);
-        case State::GAP:              return SkipGap();
-        case State::AFTER_GAP:        return AfterGap();
-        case State::PIXEL_ROW:        return ReadPixelRow(aData);
-        case State::RLE_SEGMENT:      return ReadRLESegment(aData);
-        case State::RLE_DELTA:        return ReadRLEDelta(aData);
-        case State::RLE_ABSOLUTE:     return ReadRLEAbsolute(aData, aLength);
-        default:
-          MOZ_CRASH("Unknown State");
-      }
-    });
-
-  if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
-  }
+  return mLexer.Lex(aBuffer, aLength,
+                    [=](State aState, const char* aData, size_t aLength) {
+    switch (aState) {
+      case State::FILE_HEADER:      return ReadFileHeader(aData, aLength);
+      case State::INFO_HEADER_SIZE: return ReadInfoHeaderSize(aData, aLength);
+      case State::INFO_HEADER_REST: return ReadInfoHeaderRest(aData, aLength);
+      case State::BITFIELDS:        return ReadBitfields(aData, aLength);
+      case State::COLOR_TABLE:      return ReadColorTable(aData, aLength);
+      case State::GAP:              return SkipGap();
+      case State::AFTER_GAP:        return AfterGap();
+      case State::PIXEL_ROW:        return ReadPixelRow(aData);
+      case State::RLE_SEGMENT:      return ReadRLESegment(aData);
+      case State::RLE_DELTA:        return ReadRLEDelta(aData);
+      case State::RLE_ABSOLUTE:     return ReadRLEAbsolute(aData, aLength);
+      default:
+        MOZ_CRASH("Unknown State");
+    }
+  });
 }
 
 LexerTransition<nsBMPDecoder::State>

@@ -149,7 +149,7 @@ public:
     mDoesHaveTransparency = true;
   }
 
-  void DoDecode(const char* aBuffer, size_t aLength) override;
+  Maybe<TerminalState> DoDecode(const char* aBuffer, size_t aLength) override;
   virtual void BeforeFinishInternal() override;
   virtual void FinishInternal() override;
 

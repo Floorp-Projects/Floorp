@@ -454,67 +454,62 @@ ConvertColormap(uint32_t* aColormap, uint32_t aColors)
   }
 }
 
-void
+Maybe<TerminalState>
 nsGIFDecoder2::DoDecode(const char* aBuffer, size_t aLength)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aLength > 0);
 
-  Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aLength, [=](State aState,
-                                     const char* aData, size_t aLength) {
-        switch(aState) {
-          case State::GIF_HEADER:
-            return ReadGIFHeader(aData);
-          case State::SCREEN_DESCRIPTOR:
-            return ReadScreenDescriptor(aData);
-          case State::GLOBAL_COLOR_TABLE:
-            return ReadGlobalColorTable(aData, aLength);
-          case State::FINISHED_GLOBAL_COLOR_TABLE:
-            return FinishedGlobalColorTable();
-          case State::BLOCK_HEADER:
-            return ReadBlockHeader(aData);
-          case State::EXTENSION_HEADER:
-            return ReadExtensionHeader(aData);
-          case State::GRAPHIC_CONTROL_EXTENSION:
-            return ReadGraphicControlExtension(aData);
-          case State::APPLICATION_IDENTIFIER:
-            return ReadApplicationIdentifier(aData);
-          case State::NETSCAPE_EXTENSION_SUB_BLOCK:
-            return ReadNetscapeExtensionSubBlock(aData);
-          case State::NETSCAPE_EXTENSION_DATA:
-            return ReadNetscapeExtensionData(aData);
-          case State::IMAGE_DESCRIPTOR:
-            return ReadImageDescriptor(aData);
-          case State::LOCAL_COLOR_TABLE:
-            return ReadLocalColorTable(aData, aLength);
-          case State::FINISHED_LOCAL_COLOR_TABLE:
-            return FinishedLocalColorTable();
-          case State::IMAGE_DATA_BLOCK:
-            return ReadImageDataBlock(aData);
-          case State::IMAGE_DATA_SUB_BLOCK:
-            return ReadImageDataSubBlock(aData);
-          case State::LZW_DATA:
-            return ReadLZWData(aData, aLength);
-          case State::SKIP_LZW_DATA:
-            return Transition::ContinueUnbuffered(State::SKIP_LZW_DATA);
-          case State::FINISHED_LZW_DATA:
-            return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
-          case State::SKIP_SUB_BLOCKS:
-            return SkipSubBlocks(aData);
-          case State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS:
-            return Transition::ContinueUnbuffered(State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS);
-          case State::FINISHED_SKIPPING_DATA:
-            return Transition::To(State::SKIP_SUB_BLOCKS, SUB_BLOCK_HEADER_LEN);
-          default:
-            MOZ_CRASH("Unknown State");
-        }
-      });
-
-  if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
-  }
+  return mLexer.Lex(aBuffer, aLength,
+                    [=](State aState, const char* aData, size_t aLength) {
+    switch(aState) {
+      case State::GIF_HEADER:
+        return ReadGIFHeader(aData);
+      case State::SCREEN_DESCRIPTOR:
+        return ReadScreenDescriptor(aData);
+      case State::GLOBAL_COLOR_TABLE:
+        return ReadGlobalColorTable(aData, aLength);
+      case State::FINISHED_GLOBAL_COLOR_TABLE:
+        return FinishedGlobalColorTable();
+      case State::BLOCK_HEADER:
+        return ReadBlockHeader(aData);
+      case State::EXTENSION_HEADER:
+        return ReadExtensionHeader(aData);
+      case State::GRAPHIC_CONTROL_EXTENSION:
+        return ReadGraphicControlExtension(aData);
+      case State::APPLICATION_IDENTIFIER:
+        return ReadApplicationIdentifier(aData);
+      case State::NETSCAPE_EXTENSION_SUB_BLOCK:
+        return ReadNetscapeExtensionSubBlock(aData);
+      case State::NETSCAPE_EXTENSION_DATA:
+        return ReadNetscapeExtensionData(aData);
+      case State::IMAGE_DESCRIPTOR:
+        return ReadImageDescriptor(aData);
+      case State::LOCAL_COLOR_TABLE:
+        return ReadLocalColorTable(aData, aLength);
+      case State::FINISHED_LOCAL_COLOR_TABLE:
+        return FinishedLocalColorTable();
+      case State::IMAGE_DATA_BLOCK:
+        return ReadImageDataBlock(aData);
+      case State::IMAGE_DATA_SUB_BLOCK:
+        return ReadImageDataSubBlock(aData);
+      case State::LZW_DATA:
+        return ReadLZWData(aData, aLength);
+      case State::SKIP_LZW_DATA:
+        return Transition::ContinueUnbuffered(State::SKIP_LZW_DATA);
+      case State::FINISHED_LZW_DATA:
+        return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
+      case State::SKIP_SUB_BLOCKS:
+        return SkipSubBlocks(aData);
+      case State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS:
+        return Transition::ContinueUnbuffered(State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS);
+      case State::FINISHED_SKIPPING_DATA:
+        return Transition::To(State::SKIP_SUB_BLOCKS, SUB_BLOCK_HEADER_LEN);
+      default:
+        MOZ_CRASH("Unknown State");
+    }
+  });
 }
 
 LexerTransition<nsGIFDecoder2::State>
