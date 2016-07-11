@@ -911,11 +911,15 @@ DToStrResult(JSContext* cx, double d, JSDToStrMode mode, int precision, const Ca
  * In the following three implementations, we allow a larger range of precision
  * than ECMA requires; this is permitted by ECMA-262.
  */
+// ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.3.
 MOZ_ALWAYS_INLINE bool
 num_toFixed_impl(JSContext* cx, const CallArgs& args)
 {
+    // Step 1.
     MOZ_ASSERT(IsNumber(args.thisv()));
+    double d = Extract(args.thisv());
 
+    // Steps 2-3.
     int precision;
     if (args.length() == 0) {
         precision = 0;
@@ -928,6 +932,24 @@ num_toFixed_impl(JSContext* cx, const CallArgs& args)
             return false;
     }
 
+    // Step 4.
+    if (mozilla::IsNaN(d)) {
+        args.rval().setString(cx->names().NaN);
+        return true;
+    }
+
+    // Steps 5-7, 9 (optimized path for Infinity).
+    if (mozilla::IsInfinite(d)) {
+        if(d > 0) {
+            args.rval().setString(cx->names().Infinity);
+            return true;
+        }
+
+        args.rval().setString(cx->names().NegativeInfinity);
+        return true;
+    }
+
+    // Steps 5-9.
     return DToStrResult(cx, Extract(args.thisv()), DTOSTR_FIXED, precision, args);
 }
 
@@ -971,22 +993,11 @@ num_toExponential_impl(JSContext* cx, const CallArgs& args)
             return true;
         }
 
-        StringBuffer sb(cx);
-        if (!sb.append("-"))
-            return false;
-
-        if (!sb.append(cx->names().Infinity))
-            return false;
-
-        JSString* str = sb.finishString();
-        if (!str)
-            return false;
-
-        args.rval().setString(str);
+        args.rval().setString(cx->names().NegativeInfinity);
         return true;
     }
 
-    // Steps 8-15.
+    // Steps 5-6, 8-15.
     int precision = 0;
     if (mode == DTOSTR_EXPONENTIAL) {
         if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, prec, &precision))
@@ -1040,22 +1051,11 @@ num_toPrecision_impl(JSContext* cx, const CallArgs& args)
             return true;
         }
 
-        StringBuffer sb(cx);
-        if (!sb.append("-"))
-            return false;
-
-        if (!sb.append(cx->names().Infinity))
-            return false;
-
-        JSString* str = sb.finishString();
-        if (!str)
-            return false;
-
-        args.rval().setString(str);
+        args.rval().setString(cx->names().NegativeInfinity);
         return true;
     }
 
-    // Steps 8-14.
+    // Steps 5-6, 8-14.
     int precision = 0;
     if (!ComputePrecisionInRange(cx, 1, MAX_PRECISION, prec, &precision))
         return false;
