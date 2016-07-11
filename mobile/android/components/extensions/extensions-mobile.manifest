@@ -1,0 +1,5 @@
+# scripts
+category webextension-scripts pageAction chrome://browser/content/ext-pageAction.js
+
+# schemas
+category webextension-schemas page_action chrome://browser/content/schemas/page_action.json

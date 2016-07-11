@@ -85,32 +85,6 @@ var Frames = {
 };
 Frames.init();
 
-// Manage the collection of ext-*.js scripts that define the extension API.
-var Scripts = {
-  scripts: new Set(),
-
-  register(script) {
-    this.scripts.add(script);
-  },
-
-  getScripts() {
-    return this.scripts;
-  },
-};
-
-// Manage the collection of schemas/*.json schemas that define the extension API.
-var Schemas = {
-  schemas: new Set(),
-
-  register(schema) {
-    this.schemas.add(schema);
-  },
-
-  getSchemas() {
-    return this.schemas;
-  },
-};
-
 // This object manages various platform-level issues related to
 // moz-extension:// URIs. It lives here so that it can be used in both
 // the parent and child processes.
@@ -282,12 +256,6 @@ function getAPILevelForWindow(window, addonId) {
 this.ExtensionManagement = {
   startupExtension: Service.startupExtension.bind(Service),
   shutdownExtension: Service.shutdownExtension.bind(Service),
-
-  registerScript: Scripts.register.bind(Scripts),
-  getScripts: Scripts.getScripts.bind(Scripts),
-
-  registerSchema: Schemas.register.bind(Schemas),
-  getSchemas: Schemas.getSchemas.bind(Schemas),
 
   getFrameId: Frames.getId.bind(Frames),
   getParentFrameId: Frames.getParentId.bind(Frames),
