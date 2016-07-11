@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.InsetDrawable;
+import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
@@ -26,13 +27,13 @@ import java.lang.ref.WeakReference;
  * Helper class for creating and dismissing snackbars. Use this class to guarantee a consistent style and behavior
  * across the app.
  */
-public class SnackbarHelper {
+public class SnackbarBuilder {
     /**
      * Combined interface for handling all callbacks from a snackbar because anonymous classes can only extend one
      * interface or class.
      */
     public static abstract class SnackbarCallback extends Snackbar.Callback implements View.OnClickListener {}
-    public static final String LOGTAG = "GeckoSnackbarHelper";
+    public static final String LOGTAG = "GeckoSnackbarBuilder";
 
     /**
      * SnackbarCallback implementation for delegating snackbar events to an EventCallback.
@@ -68,25 +69,112 @@ public class SnackbarHelper {
     private static final Object currentSnackbarLock = new Object();
     private static WeakReference<Snackbar> currentSnackbar = new WeakReference<>(null); // Guarded by 'currentSnackbarLock'
 
+    private final Activity activity;
+    private String message;
+    private int duration;
+    private String action;
+    private SnackbarCallback callback;
+    private Drawable icon;
+    private Integer backgroundColor;
+    private Integer actionColor;
+
     /**
-     * Show a snackbar to display a message.
-     *
      * @param activity Activity to show the snackbar in.
-     * @param message The text to show. Can be formatted text.
-     * @param duration How long to display the message.
      */
-    public static void showSnackbar(Activity activity, String message, int duration) {
-        showSnackbarWithAction(activity, message, duration, null, null);
+    private SnackbarBuilder(final Activity activity) {
+        this.activity = activity;
+    }
+
+    public static SnackbarBuilder builder(final Activity activity) {
+        return new SnackbarBuilder(activity);
     }
 
     /**
-     * Build and show a snackbar from a Gecko Snackbar:Show event.
+     * @param message The text to show. Can be formatted text.
      */
-    public static void showSnackbar(Activity activity, final NativeJSObject object, final EventCallback callback) {
-        final String message = object.getString("message");
-        final int duration = object.getInt("duration");
+    public SnackbarBuilder message(final String message) {
+        this.message = message;
+        return this;
+    }
 
-        Integer backgroundColor = null;
+    /**
+     * @param id The id of the string resource to show. Can be formatted text.
+     */
+    public SnackbarBuilder message(@StringRes final int id) {
+        message = activity.getResources().getString(id);
+        return this;
+    }
+
+    /**
+     * @param duration How long to display the message.
+     */
+    public SnackbarBuilder duration(final int duration) {
+        this.duration = duration;
+        return this;
+    }
+
+    /**
+     * @param action Action text to display.
+     */
+    public SnackbarBuilder action(final String action) {
+        this.action = action;
+        return this;
+    }
+
+    /**
+     * @param id The id of the string resource for the action text to display.
+     */
+    public SnackbarBuilder action(@StringRes final int id) {
+        action = activity.getResources().getString(id);
+        return this;
+    }
+
+    /**
+     * @param callback Callback to be invoked when the action is clicked or the snackbar is dismissed.
+     */
+    public SnackbarBuilder callback(final SnackbarCallback callback) {
+        this.callback = callback;
+        return this;
+    }
+
+    /**
+     * @param callback Callback to be invoked when the action is clicked or the snackbar is dismissed.
+     */
+    public SnackbarBuilder callback(final EventCallback callback) {
+        this.callback = new SnackbarEventCallback(callback);
+        return this;
+    }
+
+    /**
+     * @param icon Icon to be displayed with the snackbar text.
+     */
+    public SnackbarBuilder icon(final Drawable icon) {
+        this.icon = icon;
+        return this;
+    }
+
+    /**
+     * @param backgroundColor Snackbar background color.
+     */
+    public SnackbarBuilder backgroundColor(final Integer backgroundColor) {
+        this.backgroundColor = backgroundColor;
+        return this;
+    }
+
+    /**
+     * @param actionColor Action text color.
+     */
+    public SnackbarBuilder actionColor(final Integer actionColor) {
+        this.actionColor = actionColor;
+        return this;
+    }
+
+    /**
+     * @param object Populate the builder with data from a Gecko Snackbar:Show event.
+     */
+    public SnackbarBuilder fromEvent(final NativeJSObject object) {
+        message = object.getString("message");
+        duration = object.getInt("duration");
 
         if (object.has("backgroundColor")) {
             final String providedColor = object.getString("backgroundColor");
@@ -97,48 +185,21 @@ public class SnackbarHelper {
             }
         }
 
-        NativeJSObject action = object.optObject("action", null);
-
-        showSnackbarWithActionAndColors(activity,
-                message,
-                duration,
-                action != null ? action.optString("label", null) : null,
-                new SnackbarHelper.SnackbarEventCallback(callback),
-                null,
-                backgroundColor,
-                null
-        );
+        NativeJSObject actionObject = object.optObject("action", null);
+        if (actionObject != null) {
+            action = actionObject.optString("label", null);
+        }
+        return this;
     }
 
-    /**
-     * Show a snackbar to display a message and an action.
-     *
-     * @param activity Activity to show the snackbar in.
-     * @param message The text to show. Can be formatted text.
-     * @param duration How long to display the message.
-     * @param action Action text to display.
-     * @param callback Callback to be invoked when the action is clicked or the snackbar is dismissed.
-     */
-    public static void showSnackbarWithAction(Activity activity, String message, int duration, String action, SnackbarCallback callback) {
-        showSnackbarWithActionAndColors(activity, message, duration, action, callback, null, null, null);
-    }
-
-
-    public static void showSnackbarWithActionAndColors(Activity activity,
-                                                       String message,
-                                                       int duration,
-                                                       String action,
-                                                       SnackbarCallback callback,
-                                                       Drawable icon,
-                                                       Integer backgroundColor,
-                                                       Integer actionColor) {
+    public void buildAndShow() {
         final View parentView = findBestParentView(activity);
         final Snackbar snackbar = Snackbar.make(parentView, message, duration);
 
         if (callback != null && !TextUtils.isEmpty(action)) {
             snackbar.setAction(action, callback);
             if (actionColor == null) {
-                ContextCompat.getColor(activity, R.color.fennec_ui_orange);
+                snackbar.setActionTextColor(ContextCompat.getColor(activity, R.color.fennec_ui_orange));
             } else {
                 snackbar.setActionTextColor(actionColor);
             }

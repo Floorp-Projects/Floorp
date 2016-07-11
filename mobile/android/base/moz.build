@@ -565,7 +565,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'SharedPreferencesHelper.java',
     'SiteIdentity.java',
     'SmsManager.java',
-    'SnackbarHelper.java',
+    'SnackbarBuilder.java',
     'sqlite/ByteBufferInputStream.java',
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',

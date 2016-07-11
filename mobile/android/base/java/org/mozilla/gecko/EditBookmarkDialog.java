@@ -217,9 +217,10 @@ public class EditBookmarkDialog {
 
                     @Override
                     public void onPostExecute(Void result) {
-                        SnackbarHelper.showSnackbar((Activity) context,
-                                context.getString(R.string.bookmark_updated),
-                                Snackbar.LENGTH_LONG);
+                        SnackbarBuilder.builder((Activity) context)
+                                .message(R.string.bookmark_updated)
+                                .duration(Snackbar.LENGTH_LONG)
+                                .buildAndShow();
                     }
                 }).execute();
             }
