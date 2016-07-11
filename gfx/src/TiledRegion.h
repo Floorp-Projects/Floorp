@@ -110,7 +110,12 @@ public:
 
     for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
       RectT r = iter.Get();
-      MOZ_ASSERT(!r.IsEmpty());
+      if (r.IsEmpty()) {
+        // This can happen if a negative-width rect was wrapped into a region.
+        // Treat it the same as we would if such a rect was passed to the
+        // Add(const RectT&) function.
+        continue;
+      }
       if (!mImpl.AddRect(RectToBox(r))) {
         FallBackToBounds();
         return;
@@ -144,6 +149,9 @@ public:
 
   bool Contains(const RectT& aRect) const
   {
+    if (aRect.IsEmpty()) {
+      return true;
+    }
     if (!mBounds.Contains(aRect)) {
       return false;
     }
