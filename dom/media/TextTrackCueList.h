@@ -41,6 +41,11 @@ public:
     return mList.Length();
   }
 
+  bool IsEmpty() const
+  {
+    return mList.Length() == 0;
+  }
+
   TextTrackCue* IndexedGetter(uint32_t aIndex, bool& aFound);
   TextTrackCue* operator[](uint32_t aIndex);
   TextTrackCue* GetCueById(const nsAString& aId);
