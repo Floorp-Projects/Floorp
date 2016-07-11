@@ -30,7 +30,7 @@ class WasmInstanceObject;
 
 namespace wasm {
 
-struct ExportMap;
+class ExportMap;
 
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
@@ -100,9 +100,9 @@ class Instance
     bool profilingEnabled() const { return profilingEnabled_; }
     const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
 
-    // If the source binary was saved (by passing the bytecode to 'create'),
-    // this method will render the binary as text. Otherwise, a diagnostic
-    // string will be returned.
+    // If the source binary was saved (by passing the bytecode to the
+    // constructor), this method will render the binary as text. Otherwise, a
+    // diagnostic string will be returned.
 
     JSString* createText(JSContext* cx);
 
