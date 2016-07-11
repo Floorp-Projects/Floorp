@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
+/* import-globals-from head.js */
 
 "use strict";
 
@@ -8,6 +9,7 @@
  * Helper methods for the HTMLTooltip integration tests.
  */
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 const { editableField } = require("devtools/client/shared/inplace-editor");
 
 /**
@@ -21,8 +23,7 @@ const { editableField } = require("devtools/client/shared/inplace-editor");
  * @param {String} textContent
  *        (optional) String that will be used as the text content of the span.
  */
-function createInplaceEditorAndClick(options, doc, textContent) {
-  doc.body.innerHTML = "";
+const createInplaceEditorAndClick = Task.async(function* (options, doc, textContent) {
   let span = options.element = createSpan(doc);
   if (textContent) {
     span.textContent = textContent;
@@ -33,7 +34,7 @@ function createInplaceEditorAndClick(options, doc, textContent) {
 
   info("Clicking on the inplace-editor field to turn to edit mode");
   span.click();
-}
+});
 
 /**
  * Helper to create a span in the provided document.
@@ -44,11 +45,21 @@ function createInplaceEditorAndClick(options, doc, textContent) {
  */
 function createSpan(doc) {
   info("Creating a new span element");
-  let span = doc.createElement("span");
+  let div = doc.createElementNS(HTML_NS, "div");
+  let span = doc.createElementNS(HTML_NS, "span");
   span.setAttribute("tabindex", "0");
   span.style.fontSize = "11px";
+  span.style.display = "inline-block";
+  span.style.width = "100px";
+  span.style.border = "1px solid red";
   span.style.fontFamily = "monospace";
-  doc.body.appendChild(span);
+
+  div.style.height = "100%";
+  div.style.position = "absolute";
+  div.appendChild(span);
+
+  let parent = doc.querySelector("window") || doc.body;
+  parent.appendChild(div);
   return span;
 }
 
@@ -68,8 +79,13 @@ function* testCompletion([key, completion, index, total], editor) {
   info("Pressing key " + key);
   info("Expecting " + completion);
 
-  let onSuggest;
+  let onVisibilityChange = null;
+  let open = total > 0;
+  if (editor.popup.isOpen != open) {
+    onVisibilityChange = editor.popup.once(open ? "popup-opened" : "popup-closed");
+  }
 
+  let onSuggest;
   if (/(left|right|back_space|escape)/ig.test(key)) {
     info("Adding event listener for right|back_space|escape keys");
     onSuggest = once(editor.input, "keypress");
@@ -82,17 +98,17 @@ function* testCompletion([key, completion, index, total], editor) {
   EventUtils.synthesizeKey(key, {}, editor.input.defaultView);
 
   yield onSuggest;
+  yield onVisibilityChange;
   yield waitForTick();
 
   info("Checking the state");
-  if (completion != null) {
+  if (completion !== null) {
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
   if (total === 0) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
-    ok(editor.popup._panel.state == "open" ||
-       editor.popup._panel.state == "showing", "Popup is open");
+    ok(editor.popup.isOpen, "Popup is open");
     is(editor.popup.getItems().length, total, "Number of suggestions match");
     is(editor.popup.selectedIndex, index, "Expected item is selected");
   }

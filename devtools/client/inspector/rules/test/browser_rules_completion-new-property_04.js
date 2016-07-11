@@ -39,8 +39,8 @@ add_task(function* () {
 
   info("Select the background-color suggestion with a mouse click.");
   let onSuggest = editor.once("after-suggest");
-  let node = editor.popup._list.childNodes[itemIndex];
-  EventUtils.synthesizeMouseAtCenter(node, {}, view.styleWindow);
+  let node = editor.popup.elements.get(bgcItem);
+  EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
   yield onSuggest;
   is(editor.input.value, "background-color", "Correct value is autocompleted");
 
