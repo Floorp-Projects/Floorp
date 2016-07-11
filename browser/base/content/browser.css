@@ -273,7 +273,7 @@ toolbar[customizing] > .overflow-button {
 }
 %endif
 
-%if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
+%if !defined(MOZ_WIDGET_GTK)
 #TabsToolbar > .private-browsing-indicator {
   -moz-box-ordinal-group: 1000;
 }

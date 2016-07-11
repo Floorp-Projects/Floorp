@@ -1763,7 +1763,6 @@ if test -n "$MOZ_X11"; then
     AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
         [MISSING_X="$MISSING_X -lXext"], $XLIBS)
 
-    if test "$MOZ_WIDGET_TOOLKIT" != qt; then
     AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
         unset ac_cv_lib_Xt_XtFree
         AC_CHECK_LIB(ICE, IceFlush, [XT_LIBS="-lICE $XT_LIBS"],, $XT_LIBS $XLIBS)
@@ -1771,7 +1770,6 @@ if test -n "$MOZ_X11"; then
         AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt $XT_LIBS"],
             [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
         ])
-    fi
 
     dnl ========================================================
     dnl = Check for XShm
@@ -5968,9 +5966,6 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
 
     case "$MOZ_WIDGET_TOOLKIT" in
-      qt)
-        QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
-        ;;
       cocoa | uikit)
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
