@@ -65,7 +65,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mInitialized(false)
   , mMetadataDecode(false)
   , mInFrame(false)
-  , mDataDone(false)
+  , mReachedTerminalState(false)
   , mDecodeDone(false)
   , mDataError(false)
   , mDecodeAborted(false)
@@ -143,8 +143,6 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
         return NS_OK;
 
       case SourceBufferIterator::COMPLETE:
-        mDataDone = true;
-
         // Normally even if the data is truncated, we want decoding to
         // succeed so we can display whatever we got. However, if the
         // SourceBuffer was completed with a failing status, we want to fail.
@@ -175,6 +173,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
   } while (!terminalState);
 
   MOZ_ASSERT(terminalState);
+  mReachedTerminalState = true;
 
   // If decoding failed, record that fact.
   if (terminalState == Some(TerminalState::FAILURE)) {
