@@ -727,6 +727,7 @@ protected:
   // Whether the outer window of the DOM event target has focus or not.
   bool     OurWindowHasFocus();
 
+public:
   // This function is used to insert a string of HTML input optionally with some
   // context information into the editable field.  The HTML input either comes
   // from a transferable object created as part of a drop/paste operation, or from
@@ -748,6 +749,7 @@ protected:
                                    bool aTrustedInput,
                                    bool aClearStyle = true);
 
+protected:
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);
 

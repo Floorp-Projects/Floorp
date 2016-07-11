@@ -19,6 +19,7 @@
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
@@ -52,6 +53,7 @@
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIEditorMailSupport.h"
+#include "nsIEditorUtils.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
@@ -1010,6 +1012,106 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, char16_t **aStuffToPaste, char16_
   return NS_OK;
 }
 
+namespace {
+
+nsresult
+ImgFromData(const nsACString& aType, const nsACString& aData, nsString& aOutput)
+{
+  nsAutoCString data64;
+  nsresult rv = Base64Encode(aData, data64);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOutput.AssignLiteral("<IMG src=\"data:");
+  AppendUTF8toUTF16(aType, aOutput);
+  aOutput.AppendLiteral(";base64,");
+  AppendUTF8toUTF16(data64, aOutput);
+  aOutput.AppendLiteral("\" alt=\"\" >");
+  return NS_OK;
+}
+
+class BlobReader final : public nsIEditorBlobListener
+{
+public:
+  BlobReader(BlobImpl* aBlob, nsHTMLEditor* aEditor,
+             bool aIsSafe, nsIDOMDocument *aSourceDoc,
+             nsIDOMNode *aDestinationNode, int32_t aDestOffset,
+             bool aDoDeleteSelection);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEDITORBLOBLISTENER
+
+private:
+  ~BlobReader()
+  {
+  }
+
+  RefPtr<BlobImpl> mBlob;
+  RefPtr<nsHTMLEditor> mEditor;
+  bool mIsSafe;
+  nsCOMPtr<nsIDOMDocument> mSourceDoc;
+  nsCOMPtr<nsIDOMNode> mDestinationNode;
+  int32_t mDestOffset;
+  bool mDoDeleteSelection;
+};
+
+NS_IMPL_ISUPPORTS(BlobReader, nsIEditorBlobListener)
+
+BlobReader::BlobReader(BlobImpl* aBlob, nsHTMLEditor* aEditor,
+                       bool aIsSafe, nsIDOMDocument *aSourceDoc,
+                       nsIDOMNode *aDestinationNode, int32_t aDestOffset,
+                       bool aDoDeleteSelection)
+  : mBlob(aBlob)
+  , mEditor(aEditor)
+  , mIsSafe(aIsSafe)
+  , mSourceDoc(aSourceDoc)
+  , mDestinationNode(aDestinationNode)
+  , mDestOffset(aDestOffset)
+  , mDoDeleteSelection(aDoDeleteSelection)
+{
+  MOZ_ASSERT(mBlob);
+  MOZ_ASSERT(mEditor);
+  MOZ_ASSERT(mDestinationNode);
+}
+
+NS_IMETHODIMP
+BlobReader::OnResult(const nsACString& aResult)
+{
+  nsString blobType;
+  mBlob->GetType(blobType);
+
+  NS_ConvertUTF16toUTF8 type(blobType);
+  nsAutoString stuffToPaste;
+  nsresult rv = ImgFromData(type, aResult, stuffToPaste);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoEditBatch beginBatching(mEditor);
+  rv = mEditor->DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
+                                        NS_LITERAL_STRING(kFileMime),
+                                        mSourceDoc,
+                                        mDestinationNode, mDestOffset,
+                                        mDoDeleteSelection,
+                                        mIsSafe, false);
+  return rv;
+}
+
+NS_IMETHODIMP
+BlobReader::OnError(const nsAString& aError)
+{
+  nsCOMPtr<nsINode> destNode = do_QueryInterface(mDestinationNode);
+
+  nsString error;
+  error.AssignLiteral("Dropping a file into a contenteditable element failed: ");
+  error.Append(aError);
+
+  nsContentUtils::ReportToConsoleNonLocalized(error,
+                                              nsIScriptError::warningFlag,
+                                              NS_LITERAL_CSTRING("Editor"),
+                                              destNode->OwnerDoc());
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
                                     nsIDOMDocument *aSourceDoc,
                                     nsIDOMNode *aDestinationNode,
@@ -1017,6 +1119,23 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
                                     bool aDoDeleteSelection)
 {
   nsresult rv;
+
+  if (nsCOMPtr<BlobImpl> blob = do_QueryInterface(aObject)) {
+    RefPtr<BlobReader> br = new BlobReader(blob, this, aIsSafe, aSourceDoc,
+                                           aDestinationNode, aDestOffset,
+                                           aDoDeleteSelection);
+    nsCOMPtr<nsIEditorUtils> utils =
+      do_GetService("@mozilla.org/editor-utils;1");
+    NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsINode> node = do_QueryInterface(aDestinationNode);
+    MOZ_ASSERT(node);
+
+    nsCOMPtr<nsIDOMBlob> domBlob = Blob::Create(node->GetOwnerGlobal(), blob);
+    MOZ_ASSERT(domBlob);
+
+    return utils->SlurpBlob(domBlob, node->OwnerDoc()->GetWindow(), br);
+  }
 
   nsAutoCString type(aType);
 
@@ -1065,16 +1184,10 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsAutoCString data64;
-    rv = Base64Encode(imageData, data64);
+    nsAutoString stuffToPaste;
+    rv = ImgFromData(type, imageData, stuffToPaste);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString stuffToPaste;
-    stuffToPaste.AssignLiteral("<IMG src=\"data:");
-    AppendUTF8toUTF16(type, stuffToPaste);
-    stuffToPaste.AppendLiteral(";base64,");
-    AppendUTF8toUTF16(data64, stuffToPaste);
-    stuffToPaste.AppendLiteral("\" alt=\"\" >");
     nsAutoEditBatch beginBatching(this);
     rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
                                  NS_LITERAL_STRING(kFileMime),
