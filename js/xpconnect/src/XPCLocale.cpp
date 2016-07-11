@@ -53,15 +53,15 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   }
 
   /**
-   * Return the XPCLocaleCallbacks that's hidden away in |rt|. (This impl uses
-   * the locale callbacks struct to store away its per-runtime data.)
+   * Return the XPCLocaleCallbacks that's hidden away in |cx|. (This impl uses
+   * the locale callbacks struct to store away its per-context data.)
    */
   static XPCLocaleCallbacks*
-  This(JSRuntime* rt)
+  This(JSContext* cx)
   {
-    // Locale information for |rt| was associated using xpc_LocalizeRuntime;
+    // Locale information for |cx| was associated using xpc_LocalizeContext;
     // assert and double-check this.
-    const JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(rt);
+    const JSLocaleCallbacks* lc = JS_GetLocaleCallbacks(cx);
     MOZ_ASSERT(lc);
     MOZ_ASSERT(lc->localeToUpperCase == LocaleToUpperCase);
     MOZ_ASSERT(lc->localeToLowerCase == LocaleToLowerCase);
@@ -88,13 +88,13 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
   static bool
   LocaleToUnicode(JSContext* cx, const char* src, MutableHandleValue rval)
   {
-    return This(JS_GetRuntime(cx))->ToUnicode(cx, src, rval);
+    return This(cx)->ToUnicode(cx, src, rval);
   }
 
   static bool
   LocaleCompare(JSContext* cx, HandleString src1, HandleString src2, MutableHandleValue rval)
   {
-    return This(JS_GetRuntime(cx))->Compare(cx, src1, src2, rval);
+    return This(cx)->Compare(cx, src1, src2, rval);
   }
 
 private:
@@ -248,16 +248,16 @@ private:
 };
 
 bool
-xpc_LocalizeRuntime(JSRuntime* rt)
+xpc_LocalizeContext(JSContext* cx)
 {
-  JS_SetLocaleCallbacks(rt, new XPCLocaleCallbacks());
+  JS_SetLocaleCallbacks(cx, new XPCLocaleCallbacks());
 
   // Set the default locale.
 
   // Check a pref to see if we should use US English locale regardless
   // of the system locale.
   if (Preferences::GetBool("javascript.use_us_english_locale", false)) {
-    return JS_SetDefaultLocale(rt, "en-US");
+    return JS_SetDefaultLocale(cx, "en-US");
   }
 
   // No pref has been found, so get the default locale from the
@@ -277,13 +277,13 @@ xpc_LocalizeRuntime(JSRuntime* rt)
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to get app locale info");
   NS_LossyConvertUTF16toASCII locale(localeStr);
 
-  return !!JS_SetDefaultLocale(rt, locale.get());
+  return JS_SetDefaultLocale(cx, locale.get());
 }
 
 void
-xpc_DelocalizeRuntime(JSRuntime* rt)
+xpc_DelocalizeContext(JSContext* cx)
 {
-  const XPCLocaleCallbacks* lc = XPCLocaleCallbacks::This(rt);
-  JS_SetLocaleCallbacks(rt, nullptr);
+  const XPCLocaleCallbacks* lc = XPCLocaleCallbacks::This(cx);
+  JS_SetLocaleCallbacks(cx, nullptr);
   delete lc;
 }
