@@ -77,6 +77,25 @@ Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv * arg0, jclass arg1,
 
 #ifdef JNI_STUBS
 
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited_t)(JNIEnv *, jclass, jstring);
+static Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited;
+extern "C" NS_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv * arg0, jclass arg1, jstring arg2) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited", &f_Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange_t)(JNIEnv *, jclass, jdouble, jboolean, jdouble);
 static Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange;
 extern "C" NS_EXPORT void MOZ_JNICALL
