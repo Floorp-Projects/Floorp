@@ -72,6 +72,8 @@ child:
 
   async Invalidate();
 
+  async CloseAfterInvalidationComplete();
+
   async PBackgroundIDBVersionChangeTransaction(uint64_t currentVersion,
                                                uint64_t requestedVersion,
                                                int64_t nextObjectStoreId,

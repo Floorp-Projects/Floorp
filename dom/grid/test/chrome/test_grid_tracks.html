@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+body {
+	margin: 40px;
+}
+.wrapper {
+	display: grid;
+	width: 400px;
+	grid-gap: 10px;
+	grid-template-columns: 100px 1fr 1fr 100px;
+	background-color: #f00;
+}
+.box {
+	background-color: #444;
+	color: #fff;
+}
+</style>
+
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+	var wrapper = document.getElementById("wrapper");
+	var grid = wrapper.getGridFragments()[0];
+	var boxA = document.getElementById("boxA");
+	var boxB = document.getElementById("boxB");
+	
+	// test property existence
+	isnot(typeof(grid.cols.tracks), "undefined", "Grid.cols.tracks property exists.");
+	isnot(typeof(grid.rows.tracks), "undefined", "Grid.rows.tracks property exists.");
+	
+	if ((typeof(grid.cols.tracks) != "undefined") &&
+		(typeof(grid.rows.tracks) != "undefined")) {
+		// test column and row track counts
+		is(grid.cols.tracks.length, 4,
+			"Grid.cols.tracks property has length that matches grid-template-columns."
+		);
+		is(grid.rows.tracks.length, 2,
+			"Grid.rows.tracks property has length that matches content."
+		);
+	
+		if((grid.cols.tracks.length == 4) &&
+		   (grid.rows.tracks.length == 2)) {
+			// test column track position
+			is(grid.cols.tracks[1].start, 110, "Grid column track 2 position is as expected.");
+	
+			// test column track width
+			is(grid.cols.tracks[0].breadth, boxA.offsetWidth,
+				"Grid column track width (fixed size) matches item width."
+			);
+			is(grid.cols.tracks[1].breadth, boxB.offsetWidth,
+				"Grid column track width (flexible size) matches item width."
+			);
+			is(grid.cols.tracks[1].breadth, grid.cols.tracks[2].breadth,
+				"Grid column track widths with equal proportion flexible size actually are same size."
+			);
+		}
+	}
+	
+	SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+	<div id="wrapper" class="wrapper">
+		<div id="boxA" class="box a">A</div>
+		<div id="boxB" class="box b">B</div>
+		<div class="box c">C</div>
+		<div class="box d">D</div>
+		<div class="box e">E</div>
+		<div class="box f">F</div>
+		<div class="box g">G</div>
+		<div class="box h">H</div>
+	</div>
+	
+</body>
+</html>

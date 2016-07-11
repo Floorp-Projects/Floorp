@@ -419,6 +419,9 @@ private:
   virtual bool
   RecvInvalidate() override;
 
+  virtual bool
+  RecvCloseAfterInvalidationComplete() override;
+
   bool
   SendDeleteMe() = delete;
 };
