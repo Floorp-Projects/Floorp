@@ -185,12 +185,6 @@ public:
                             CSSPseudoElementType aPseudoType,
                             nsStyleContext* aStyleContext);
 
-  // An overload of MaybeUpdateCascadeResults that uses the style context
-  // of the primary frame of the specified (pseudo-)element, when available.
-  static void
-  MaybeUpdateCascadeResults(dom::Element* aElement,
-                            CSSPseudoElementType aPseudoType);
-
   // Update the mWinsInCascade member for each property in effects targetting
   // the specified (pseudo-)element.
   //
