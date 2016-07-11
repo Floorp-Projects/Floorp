@@ -9,7 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 
-var tps;
+var pcs;
 
 // Call |run_next_test| if all functions in |names| are called
 function makeJointSuccess(names) {
@@ -56,10 +56,10 @@ const ANSWER_ADDRESS = '192.168.321.321';
 const ANSWER_PORT = 321;
 
 function loopOfferAnser() {
-  tps = Cc["@mozilla.org/presentation/control-service;1"]
+  pcs = Cc["@mozilla.org/presentation/control-service;1"]
         .createInstance(Ci.nsIPresentationControlService);
-  tps.id = 'controllerID';
-  tps.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
+  pcs.id = 'controllerID';
+  pcs.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
 
   testPresentationServer();
 }
@@ -70,11 +70,11 @@ function testPresentationServer() {
                                    'presenterControlChannelClose']);
   let controllerControlChannel;
 
-  tps.listener = {
+  pcs.listener = {
 
     onSessionRequest: function(deviceInfo, url, presentationId, controlChannel) {
       controllerControlChannel = controlChannel;
-      Assert.equal(deviceInfo.id, tps.id, 'expected device id');
+      Assert.equal(deviceInfo.id, pcs.id, 'expected device id');
       Assert.equal(deviceInfo.address, '127.0.0.1', 'expected device address');
       Assert.equal(url, 'http://example.com', 'expected url');
       Assert.equal(presentationId, 'testPresentationId', 'expected presentation id');
@@ -135,7 +135,7 @@ function testPresentationServer() {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
   };
 
-  let presenterControlChannel = tps.connect(presenterDeviceInfo);
+  let presenterControlChannel = pcs.connect(presenterDeviceInfo);
 
   presenterControlChannel.listener = {
     status: 'created',
@@ -182,10 +182,10 @@ function testPresentationServer() {
 }
 
 function setOffline() {
-  tps.listener = {
+  pcs.listener = {
     onPortChange: function(aPort) {
       Assert.notEqual(aPort, 0, 'TCPPresentationServer port changed and the port should be valid');
-      tps.close();
+      pcs.close();
       run_next_test();
     },
   };
@@ -197,7 +197,7 @@ function setOffline() {
 
 function oneMoreLoop() {
   try {
-    tps.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
+    pcs.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
     testPresentationServer();
   } catch (e) {
     Assert.ok(false, 'TCP presentation init fail:' + e);
@@ -208,13 +208,13 @@ function oneMoreLoop() {
 
 function shutdown()
 {
-  tps.listener = {
+  pcs.listener = {
     onPortChange: function(aPort) {
       Assert.ok(false, 'TCPPresentationServer port changed');
     },
   };
-  tps.close();
-  Assert.equal(tps.port, 0, "TCPPresentationServer closed");
+  pcs.close();
+  Assert.equal(pcs.port, 0, "TCPPresentationServer closed");
   run_next_test();
 }
 
