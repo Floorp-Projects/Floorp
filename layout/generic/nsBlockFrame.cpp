@@ -13,6 +13,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -37,7 +38,6 @@
 #include "prenv.h"
 #include "plstr.h"
 #include "nsError.h"
-#include "nsAutoPtr.h"
 #include "nsIScrollableFrame.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
@@ -4759,7 +4759,7 @@ nsBlockFrame::DrainOverflowLines()
 bool
 nsBlockFrame::DrainSelfOverflowList()
 {
-  nsAutoPtr<FrameLines> ourOverflowLines(RemoveOverflowLines());
+  UniquePtr<FrameLines> ourOverflowLines(RemoveOverflowLines());
   if (!ourOverflowLines) {
     return false;
   }
@@ -6535,7 +6535,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   aBuilder->MarkFramesForDisplayList(this, mFloats, aDirtyRect);
 
   // Prepare for text-overflow processing.
-  nsAutoPtr<TextOverflow> textOverflow(
+  UniquePtr<TextOverflow> textOverflow(
     TextOverflow::WillProcessLines(aBuilder, this));
 
   // We'll collect our lines' display items here, & then append this to aLists.
@@ -6564,7 +6564,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           break;
         }
         DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                    linesDisplayListCollection, this, textOverflow);
+                    linesDisplayListCollection, this, textOverflow.get());
       }
     }
   } else {
@@ -6577,7 +6577,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
          ++line) {
       nsRect lineArea = line->GetVisualOverflowArea();
       DisplayLine(aBuilder, lineArea, aDirtyRect, line, depth, drawnLines,
-                  linesDisplayListCollection, this, textOverflow);
+                  linesDisplayListCollection, this, textOverflow.get());
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY
             || lineArea.YMost() < lastYMost) {

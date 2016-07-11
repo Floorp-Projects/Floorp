@@ -217,6 +217,10 @@ xpcAccessibleDocument::GetXPCAccessible(ProxyAccessible* aProxy)
   if (aProxy->mHasValue) {
     interfaces |= eValue;
   }
+  
+  if (aProxy->mIsHyperLink) {
+    interfaces |= eHyperLink;
+  }
 
   acc = new xpcAccessibleGeneric(aProxy, interfaces);
   mCache.Put(aProxy, acc);
