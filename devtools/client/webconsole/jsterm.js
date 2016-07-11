@@ -246,17 +246,21 @@ JSTerm.prototype = {
     let autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
-      panelId: "webConsole_autocompletePopup",
-      listBoxId: "webConsole_autocompletePopupListBox",
-      position: "before_start",
+      listId: "webConsole_autocompletePopupListBox",
+      position: "top",
       theme: "auto",
-      direction: "ltr",
       autoSelect: true
     };
-    this.autocompletePopup = new AutocompletePopup(this.hud.document,
-                                                   autocompleteOptions);
 
     let doc = this.hud.document;
+
+    let toolbox = gDevTools.getToolbox(this.hud.owner.target);
+    if (!toolbox) {
+      // In some cases (e.g. Browser Console), there is no toolbox.
+      toolbox = { doc };
+    }
+    this.autocompletePopup = new AutocompletePopup(toolbox, autocompleteOptions);
+
     let inputContainer = doc.querySelector(".jsterm-input-container");
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");
@@ -1700,12 +1704,6 @@ JSTerm.prototype = {
 
     this.autocompletePopup.destroy();
     this.autocompletePopup = null;
-
-    let popup = this.hud.owner.chromeWindow.document
-                .getElementById("webConsole_autocompletePopup");
-    if (popup) {
-      popup.parentNode.removeChild(popup);
-    }
 
     if (this._onPaste) {
       this.inputNode.removeEventListener("paste", this._onPaste, false);

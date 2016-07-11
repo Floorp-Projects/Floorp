@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /* Tooltip widget (see devtools/client/shared/widgets/Tooltip.js) */
 
 .devtools-tooltip .panel-arrowcontent {
@@ -107,6 +106,7 @@
   background: transparent;
   pointer-events: none;
   overflow: hidden;
+  filter: drop-shadow(0 3px 4px var(--theme-tooltip-shadow));
 }
 
 .tooltip-xul-wrapper {
@@ -144,11 +144,7 @@
 
 /* Tooltip : arrow style */
 
-.tooltip-container[type="arrow"] {
-  filter: drop-shadow(0 3px 4px var(--theme-tooltip-shadow));
-}
-
-.tooltip-xul-wrapper .tooltip-container[type="arrow"] {
+.tooltip-xul-wrapper .tooltip-container {
   /* When displayed in a XUL panel the drop shadow would be abruptly cut by the panel */
   filter: none;
 }
@@ -389,4 +385,26 @@
 
 .stack-frame-line {
   color: var(--theme-highlight-orange);
+}
+
+/* Tooltip: HTML Search */
+
+#searchbox-panel-listbox {
+  width: 250px;
+  max-width: 250px;
+  overflow-x: hidden;
+}
+
+#searchbox-panel-listbox .autocomplete-item,
+#searchbox-panel-listbox .autocomplete-item[selected] {
+  overflow-x: hidden;
+}
+
+#searchbox-panel-listbox .autocomplete-item > .initial-value {
+  max-width: 130px;
+  margin-left: 15px;
+}
+
+#searchbox-panel-listbox .autocomplete-item > .autocomplete-value {
+  max-width: 150px;
 }
