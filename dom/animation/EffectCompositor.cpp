@@ -232,6 +232,10 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
     return;
   }
 
+  // Style context change might cause CSS cascade level,
+  // e.g removing !important, so we should update the cascading result.
+  effectSet->MarkCascadeNeedsUpdate();
+
   for (KeyframeEffectReadOnly* effect : *effectSet) {
     effect->UpdateProperties(aStyleContext);
   }
