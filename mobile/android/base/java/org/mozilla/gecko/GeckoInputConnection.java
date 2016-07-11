@@ -72,6 +72,9 @@ class GeckoInputConnection
     private boolean mBatchTextChanged;
     private final InputConnection mKeyInputConnection;
 
+    // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
+    private volatile boolean mSoftInputReentrancyGuard;
+
     public static GeckoEditableListener create(View targetView,
                                                GeckoEditableClient editable) {
         if (DEBUG)
@@ -234,6 +237,9 @@ class GeckoInputConnection
     }
 
     private void showSoftInput() {
+        if (mSoftInputReentrancyGuard) {
+            return;
+        }
         final View v = getView();
         final InputMethodManager imm = getInputMethodManager();
         if (v == null || imm == null) {
@@ -249,16 +255,23 @@ class GeckoInputConnection
                     v.clearFocus();
                     v.requestFocus();
                 }
+                mSoftInputReentrancyGuard = true;
                 imm.showSoftInput(v, 0);
+                mSoftInputReentrancyGuard = false;
             }
         });
     }
 
     private void hideSoftInput() {
+        if (mSoftInputReentrancyGuard) {
+            return;
+        }
         final InputMethodManager imm = getInputMethodManager();
         if (imm != null) {
             final View v = getView();
+            mSoftInputReentrancyGuard = true;
             imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            mSoftInputReentrancyGuard = false;
         }
     }
 
