@@ -30,6 +30,7 @@
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 // ----------------------------------------------------------------------
 
@@ -474,7 +475,7 @@ ComputeMaskGeometry(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
                                                                 : IntRect();
 }
 
-static void
+static DrawResult
 GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
                     float aOpacity, nsStyleContext* aSC,
                     const nsTArray<nsSVGMaskFrame *>& aMaskFrames,
@@ -497,14 +498,14 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
                                             cssPxToDevPxMatrix, aOpacity,
                                             &aOutMaskTransform,
                                             svgReset->mMask.mLayers[0].mMaskMode);
-    return;
+    return DrawResult::SUCCESS;
   }
 
   IntRect maskSurfaceRect = ComputeMaskGeometry(aParams, svgReset,
                                                 aOffsetToUserSpace,
                                                 aMaskFrames);
   if (maskSurfaceRect.IsEmpty()) {
-    return;
+    return DrawResult::SUCCESS;
   }
 
   // Mask composition result on CoreGraphic::A8 surface is not correct
@@ -518,7 +519,7 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
     : ctx.GetDrawTarget()->CreateSimilarDrawTarget(maskSurfaceRect.Size(),
                                                    SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
-    return;
+    return DrawResult::TEMPORARY_ERROR;
   }
 
   RefPtr<gfxContext> maskContext = gfxContext::CreateOrNull(maskDT);
@@ -575,21 +576,25 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
                                                       nsCSSRendering::PAINTBG_MASK_IMAGE,
                                                       i, compositionOp);
 
-      // FIXME We should use the return value, see bug 1258510.
-      Unused << nsCSSRendering::PaintBackgroundWithSC(params, aSC,
-                                                      *aParams.frame->StyleBorder());
+      DrawResult result =
+        nsCSSRendering::PaintBackgroundWithSC(params, aSC,
+                                              *aParams.frame->StyleBorder());
+      if (result != DrawResult::SUCCESS) {
+        return result;
+      }
     }
   }
 
   aOutMaskTransform = ToMatrix(maskSurfaceMatrix);
   if (!aOutMaskTransform.Invert()) {
-    return;
+    return DrawResult::SUCCESS;
   }
 
   aOutMaskSurface = maskDT->Snapshot();
+  return DrawResult::SUCCESS;
 }
 
-void
+DrawResult
 nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 {
 #ifdef DEBUG
@@ -619,16 +624,16 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(frame);
     if (!svgChildFrame || !frame->GetContent()->IsSVGElement()) {
       NS_ASSERTION(false, "why?");
-      return;
+      return DrawResult::BAD_ARGS;
     }
     if (!static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-      return; // The SVG spec says not to draw _anything_
+      return DrawResult::SUCCESS; // The SVG spec says not to draw _anything_
     }
   }
 
   float opacity = frame->StyleEffects()->mOpacity;
   if (opacity == 0.0f) {
-    return;
+    return DrawResult::SUCCESS;
   }
   if (opacity != 1.0f &&
       (nsSVGUtils::CanOptimizeOpacity(frame) ||
@@ -709,6 +714,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   IntPoint targetOffset;
 
   bool complexEffects = false;
+  DrawResult result = DrawResult::SUCCESS;
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (opacity != 1.0f ||  (clipPathFrame && !isTrivialClip)
@@ -724,17 +730,17 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
                                   *drawTarget));
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
-
     if (shouldGenerateMaskLayer) {
-      GenerateMaskSurface(aParams, opacity, firstFrame->StyleContext(),
-                          maskFrames, offsetToUserSpace,
-                          maskTransform, maskSurface);
+      result = GenerateMaskSurface(aParams, opacity,
+                                  firstFrame->StyleContext(),
+                                  maskFrames, offsetToUserSpace,
+                                  maskTransform, maskSurface);
     }
 
     if (shouldGenerateMaskLayer && !maskSurface) {
       // Entire surface is clipped out.
       context.Restore();
-      return;
+      return result;
     }
 
     if (frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
@@ -753,7 +759,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
       RefPtr<DrawTarget> targetDT = context.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::B8G8R8A8);
       if (!targetDT || !targetDT->IsValid()) {
         context.Restore();
-        return;
+        return result;
       }
       target = gfxContext::CreateOrNull(targetDT);
       MOZ_ASSERT(target); // already checked the draw target above
@@ -815,7 +821,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 
   /* No more effects, we're done. */
   if (!complexEffects) {
-    return;
+    return result;
   }
 
   if (opacity != 1.0f || shouldGenerateMaskLayer ||
@@ -835,6 +841,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   }
 
   context.Restore();
+  return result;
 }
 
 gfxMatrix

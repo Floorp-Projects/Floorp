@@ -37,6 +37,7 @@ struct nsSize;
 class nsSVGIntegrationUtils final
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::image::DrawResult DrawResult;
 
 public:
   /**
@@ -145,7 +146,7 @@ public:
   /**
    * Paint non-SVG frame with SVG effects.
    */
-  static void
+  static DrawResult
   PaintFramesWithEffects(const PaintFramesParams& aParams);
 
   /**
