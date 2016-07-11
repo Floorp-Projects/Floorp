@@ -131,12 +131,14 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     Bytes bytecode;
-    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength()))
+    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     CompileArgs compileArgs;
     if (!compileArgs.init(cx))
-        return true;
+        return false;
 
     JS::AutoFilename af;
     if (DescribeScriptedCaller(cx, &af)) {
