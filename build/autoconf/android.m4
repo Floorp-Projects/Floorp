@@ -39,7 +39,24 @@ case "$target" in
         ;;
     esac
 
-    android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_name"
+    dnl Not all Android releases have their own platform release. We use
+    dnl the next lower platform version in these cases.
+    case $android_version in
+    11|10)
+        android_platform_version=9
+        ;;
+    20)
+        android_platform_version=19
+        ;;
+    22)
+        android_platform_version=21
+        ;;
+    *)
+        android_platform_version=$android_version
+        ;;
+    esac
+
+    android_platform="$android_ndk"/platforms/android-"$android_platform_version"/arch-"$target_name"
 
     if test -d "$android_platform" ; then
         AC_MSG_RESULT([$android_platform])
@@ -52,11 +69,12 @@ case "$target" in
     CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS"
     ASFLAGS="-idirafter $android_platform/usr/include -DANDROID $ASFLAGS"
 
-    dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
     dnl undefined symbol (present on the hardware, just not in the
     dnl NDK.)
-    LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
+    LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -Wl,--allow-shlib-undefined $LDFLAGS"
+    dnl Add -llog by default, since we use it all over the place.
+    LIBS="-llog $LIBS"
     ANDROID_PLATFORM="${android_platform}"
 
     AC_DEFINE(ANDROID)
