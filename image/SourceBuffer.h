@@ -323,6 +323,18 @@ public:
   SourceBufferIterator Iterator();
 
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Consumer methods.
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * The minimum chunk capacity we'll allocate, if we don't know the correct
+   * capacity (which would happen because ExpectLength() wasn't called or gave
+   * us the wrong value). This is only exposed for use by tests; if normal code
+   * is using this, it's doing something wrong.
+   */
+  static const size_t MIN_CHUNK_CAPACITY = 4096;
+
 private:
   friend class SourceBufferIterator;
 
@@ -423,8 +435,6 @@ private:
   //////////////////////////////////////////////////////////////////////////////
   // Member variables.
   //////////////////////////////////////////////////////////////////////////////
-
-  static const size_t MIN_CHUNK_CAPACITY = 4096;
 
   /// All private members are protected by mMutex.
   mutable Mutex mMutex;
