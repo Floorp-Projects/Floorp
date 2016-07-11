@@ -178,6 +178,14 @@ public:
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
 
+  /**
+   * Report an error for the given scope to any window we think might be
+   * interested, failing over to the Browser Console if we couldn't find any.
+   *
+   * Error messages should be localized, so you probably want to call
+   * LocalizeAndReportToAllClients instead, which in turn calls us after
+   * localizing the error.
+   */
   void
   ReportToAllClients(const nsCString& aScope,
                      const nsString& aMessage,
@@ -186,6 +194,33 @@ public:
                      uint32_t aLineNumber,
                      uint32_t aColumnNumber,
                      uint32_t aFlags);
+
+  /**
+   * Report a localized error for the given scope to any window we think might
+   * be interested.
+   *
+   * Note that this method takes an nsTArray<nsString> for the parameters, not
+   * bare chart16_t*[].  You can use a std::initializer_list constructor inline
+   * so that argument might look like: nsTArray<nsString> { some_nsString,
+   * PromiseFlatString(some_nsSubString_aka_nsAString),
+   * NS_ConvertUTF8toUTF16(some_nsCString_or_nsCSubString),
+   * NS_LITERAL_STRING("some literal") }.  If you have anything else, like a
+   * number, you can use an nsAutoString with AppendInt/friends.
+   *
+   * @param [aFlags]
+   *   The nsIScriptError flag, one of errorFlag (0x0), warningFlag (0x1),
+   *   infoFlag (0x8).  We default to error if omitted because usually we're
+   *   logging exceptional and/or obvious breakage.
+   */
+  static void
+  LocalizeAndReportToAllClients(const nsCString& aScope,
+                                const char* aStringKey,
+                                const nsTArray<nsString>& aParamArray,
+                                uint32_t aFlags = 0x0,
+                                const nsString& aFilename = EmptyString(),
+                                const nsString& aLine = EmptyString(),
+                                uint32_t aLineNumber = 0,
+                                uint32_t aColumnNumber = 0);
 
   // Always consumes the error by reporting to consoles of all controlled
   // documents.

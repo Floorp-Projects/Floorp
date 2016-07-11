@@ -1206,10 +1206,7 @@ public:
 
     virtual void Load() {
         nsAutoreleasePool localPool;
-        // bug 975460 - async font loader crashes sometimes under 10.6, disable
-        if (nsCocoaFeatures::OnLionOrLater()) {
-            FontInfoData::Load();
-        }
+        FontInfoData::Load();
     }
 
     // loads font data for all members of a given family

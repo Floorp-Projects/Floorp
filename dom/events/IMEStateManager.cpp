@@ -880,8 +880,8 @@ IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   }
 
   // nsIContent::GetDesiredIMEState() may cause a call of UpdateIMEState()
-  // from nsEditor::PostCreate() because GetDesiredIMEState() needs to retrieve
-  // an editor instance for the element if it's editable element.
+  // from EditorBase::PostCreate() because GetDesiredIMEState() needs to
+  // retrieve an editor instance for the element if it's editable element.
   // For avoiding such nested IME state updates, we should set
   // sIsGettingNewIMEState here and UpdateIMEState() should check it.
   GettingNewIMEStateBlocker blocker;
