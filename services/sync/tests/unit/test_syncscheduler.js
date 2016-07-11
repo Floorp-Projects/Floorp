@@ -90,6 +90,7 @@ function run_test() {
 
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.scheduler").level = Log.Level.Trace;
+  validate_all_future_pings();
 
   // The scheduler checks Weave.fxaEnabled to determine whether to use
   // FxA defaults or legacy defaults.  As .fxaEnabled checks the username, we
