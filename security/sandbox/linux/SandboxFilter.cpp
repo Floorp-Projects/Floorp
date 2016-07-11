@@ -187,6 +187,7 @@ public:
       // Simple I/O
     case __NR_write:
     case __NR_read:
+    case __NR_readv:
     case __NR_writev: // see SandboxLogging.cpp
     CASES_FOR_lseek:
       return Allow();
