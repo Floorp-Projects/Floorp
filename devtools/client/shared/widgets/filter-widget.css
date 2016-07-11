@@ -2,23 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html, body {
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-  font: message-box;
-  color: var(--theme-body-color);
-}
-
 /* Main container: Displays the filters and presets in 2 columns */
 
-#container {
+#filter-container {
   height: 100%;
   display: flex;
   position: relative;
+  padding: 5px;
+  /* when opened in a xul:panel, a gray color is applied to text */
+  color: var(--theme-body-color);
 }
 
-#container.dragging {
+#filter-container.dragging {
   -moz-user-select: none;
 }
 
@@ -49,13 +44,13 @@ html, body {
   margin-top: 4px;
 }
 
-#container:not(.show-presets) .presets-list {
+#filter-container:not(.show-presets) .presets-list {
   width: 0;
   border-left: none;
   padding-left: 0;
 }
 
-#container.show-presets .filters-list {
+#filter-container.show-presets .filters-list {
   width: 300px;
 }
 
@@ -211,14 +206,14 @@ input {
   display: none !important;
 }
 
-#container .dragging {
+#filter-container .dragging {
   position: relative;
   z-index: 10;
   cursor: grab;
 }
 
 /* message shown when there's no filter specified */
-#container p {
+#filter-container p {
   text-align: center;
   line-height: 20px;
 }

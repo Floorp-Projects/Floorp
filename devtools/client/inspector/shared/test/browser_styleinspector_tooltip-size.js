@@ -70,12 +70,13 @@ function* testPickerDimension(ruleView) {
 
   // The colorpicker spectrum's iframe has a fixed width height, so let's
   // make sure the tooltip is at least as big as that
-  let w = cPicker.tooltip.panel.querySelector("iframe").width;
-  let h = cPicker.tooltip.panel.querySelector("iframe").height;
-  let panelRect = cPicker.tooltip.panel.getBoundingClientRect();
+  let spectrumRect = cPicker.spectrum.element.getBoundingClientRect();
+  let panelRect = cPicker.tooltip.container.getBoundingClientRect();
 
-  ok(panelRect.width >= w, "The panel is wide enough to show the picker");
-  ok(panelRect.height >= h, "The panel is high enough to show the picker");
+  ok(panelRect.width >= spectrumRect.width,
+    "The panel is wide enough to show the picker");
+  ok(panelRect.height >= spectrumRect.height,
+    "The panel is high enough to show the picker");
 
   let onHidden = cPicker.tooltip.once("hidden");
   let onRuleViewChanged = ruleView.once("ruleview-changed");

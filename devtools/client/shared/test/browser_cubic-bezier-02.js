@@ -6,21 +6,26 @@
 
 // Tests the CubicBezierWidget events
 
-const TEST_URI = "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xhtml";
 const {CubicBezierWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
+// In this test we have to use a slightly more complete HTML tree, with <body>
+// in order to remove its margin and prevent shifted positions
+const TEST_URI = `data:text/html,
+  <html><body>
+    <div id="cubic-bezier-container"/>
+  </body></html>`;
+
 add_task(function* () {
-  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   // Required or widget will be clipped inside of 'bottom'
   // host by -14. Setting `fixed` zeroes this which is needed for
   // calculating offsets. Occurs in test env only.
-  doc.body.setAttribute("style", "position: fixed");
+  doc.body.setAttribute("style", "position: fixed; margin: 0;");
 
-  let container = doc.querySelector("#container");
+  let container = doc.querySelector("#cubic-bezier-container");
   let w = new CubicBezierWidget(container, PREDEFINED.linear);
 
   let rect = w.curve.getBoundingClientRect();
@@ -34,7 +39,6 @@ add_task(function* () {
 
   w.destroy();
   host.destroy();
-  gBrowser.removeCurrentTab();
 });
 
 function* pointsCanBeDragged(widget, win, doc, offsets) {
