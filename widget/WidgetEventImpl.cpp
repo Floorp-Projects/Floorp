@@ -214,6 +214,7 @@ WidgetEvent::HasDragEventMessage() const
     case eDragOver:
     case eDragExit:
     case eLegacyDragDrop:
+    case eLegacyDragGesture:
     case eDrag:
     case eDragEnd:
     case eDragStart:

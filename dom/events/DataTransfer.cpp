@@ -102,7 +102,8 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   // external usage, cache the data from the native clipboard or drag.
   if (aEventMessage == eCut ||
       aEventMessage == eCopy ||
-      aEventMessage == eDragStart) {
+      aEventMessage == eDragStart ||
+      aEventMessage == eLegacyDragGesture) {
     mReadOnly = false;
   } else if (mIsExternal) {
     if (aEventMessage == ePaste) {
@@ -148,10 +149,11 @@ DataTransfer::DataTransfer(nsISupports* aParent,
   mItems = aItems->Clone(this);
   // The items are copied from aItems into mItems. There is no need to copy
   // the actual data in the items as the data transfer will be read only. The
-  // dragstart event is the only time when items are
+  // draggesture and dragstart events are the only times when items are
   // modifiable, but those events should have been using the first constructor
   // above.
-  NS_ASSERTION(aEventMessage != eDragStart,
+  NS_ASSERTION(aEventMessage != eLegacyDragGesture &&
+               aEventMessage != eDragStart,
                "invalid event type for DataTransfer constructor");
 }
 
