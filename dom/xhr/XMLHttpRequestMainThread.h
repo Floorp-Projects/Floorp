@@ -56,6 +56,7 @@ namespace dom {
 class Blob;
 class BlobSet;
 class FormData;
+class URLSearchParams;
 class XMLHttpRequestUpload;
 
 // A helper for building up an ArrayBuffer object's data
@@ -263,6 +264,11 @@ private:
     {
       mValue.mBlob = &aBlob;
     }
+    explicit RequestBody(mozilla::dom::URLSearchParams& aURLSearchParams) :
+      mType(eURLSearchParams)
+    {
+      mValue.mURLSearchParams = &aURLSearchParams;
+    }
     explicit RequestBody(nsIDocument* aDocument) : mType(eDocument)
     {
       mValue.mDocument = aDocument;
@@ -288,7 +294,8 @@ private:
       eDocument,
       eDOMString,
       eFormData,
-      eInputStream
+      eInputStream,
+      eURLSearchParams
     };
     union Value {
       const ArrayBuffer* mArrayBuffer;
@@ -298,6 +305,7 @@ private:
       const nsAString* mString;
       FormData* mFormData;
       nsIInputStream* mStream;
+      URLSearchParams* mURLSearchParams;
     };
 
     Type GetType() const
@@ -366,6 +374,12 @@ public:
   Send(JSContext* /*aCx*/, Blob& aBlob, ErrorResult& aRv) override
   {
     aRv = Send(RequestBody(aBlob));
+  }
+
+  virtual void Send(JSContext* /*aCx*/, URLSearchParams& aURLSearchParams,
+                    ErrorResult& aRv) override
+  {
+    aRv = Send(RequestBody(aURLSearchParams));
   }
 
   virtual void
