@@ -96,15 +96,20 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
     return NS_ERROR_FAILURE;
   }
 
+  FlattenedConstraints c(aConstraints);
+
   // Mock failure for automated tests.
-  if (aConstraints.mDeviceId.IsString() &&
-      aConstraints.mDeviceId.GetAsString().EqualsASCII("bad device")) {
+  if (c.mDeviceId.mIdeal.find(NS_LITERAL_STRING("bad device")) !=
+      c.mDeviceId.mIdeal.end()) {
     return NS_ERROR_FAILURE;
   }
 
+
   mOpts = aPrefs;
-  mOpts.mWidth = mOpts.mWidth ? mOpts.mWidth : MediaEngine::DEFAULT_43_VIDEO_WIDTH;
-  mOpts.mHeight = mOpts.mHeight ? mOpts.mHeight : MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
+  mOpts.mWidth = c.mWidth.Get(aPrefs.mWidth ? aPrefs.mWidth :
+                              MediaEngine::DEFAULT_43_VIDEO_WIDTH);
+  mOpts.mHeight = c.mHeight.Get(aPrefs.mHeight ? aPrefs.mHeight :
+                                MediaEngine::DEFAULT_43_VIDEO_HEIGHT);
   mState = kAllocated;
   aOutHandle = nullptr;
   return NS_OK;
