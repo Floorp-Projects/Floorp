@@ -48,6 +48,12 @@ const PRIVACY_FULL = 2;
 const PREFS_RESTORE_FROM_CRASH = "browser.sessionstore.resume_from_crash";
 const PREFS_MAX_CRASH_RESUMES = "browser.sessionstore.max_resumed_crashes";
 
+const MINIMUM_SAVE_DELAY = 2000;
+// We reduce the delay in background because we could be killed at any moment,
+// however we don't set it to 0 in order to allow for multiple events arriving
+// one after the other to be batched together in one write operation.
+const MINIMUM_SAVE_DELAY_BACKGROUND = 200;
+
 function SessionStore() { }
 
 SessionStore.prototype = {
@@ -61,6 +67,7 @@ SessionStore.prototype = {
   _windows: {},
   _lastSaveTime: 0,
   _interval: 10000,
+  _minSaveDelay: MINIMUM_SAVE_DELAY,
   _maxTabsUndo: 5,
   _pendingWrite: 0,
   _scrollSavePending: null,
@@ -78,8 +85,10 @@ SessionStore.prototype = {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
+    this._sessionFileTemp = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
+    this._sessionFileTemp.append(this._sessionFile.leafName + ".tmp");
 
     this._loadState = STATE_STOPPED;
     this._startupRestoreFinished = false;
@@ -102,6 +111,7 @@ SessionStore.prototype = {
   _clearDisk: function ss_clearDisk() {
     OS.File.remove(this._sessionFile.path);
     OS.File.remove(this._sessionFileBackup.path);
+    OS.File.remove(this._sessionFileTemp.path);
   },
 
   observe: function ss_observe(aSubject, aTopic, aData) {
@@ -119,6 +129,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "Session:Restore", true);
         observerService.addObserver(this, "Session:NotifyLocationChange", true);
         observerService.addObserver(this, "application-background", true);
+        observerService.addObserver(this, "application-foreground", true);
         observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
         observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
         observerService.addObserver(this, "last-pb-context-exited", true);
@@ -266,7 +277,17 @@ SessionStore.prototype = {
         // point without notice; therefore, we must synchronously write out any
         // pending save state to ensure that this data does not get lost.
         log("application-background");
+        // Tab events dispatched immediately before the application was backgrounded
+        // might actually arrive after this point, therefore save them without delay.
+        this._interval = 0;
+        this._minSaveDelay = MINIMUM_SAVE_DELAY_BACKGROUND; // A small delay allows successive tab events to be batched together.
         this.flushPendingState();
+        break;
+      case "application-foreground":
+        // Reset minimum interval between session store writes back to default.
+        log("application-foreground");
+        this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
+        this._minSaveDelay = MINIMUM_SAVE_DELAY;
         break;
       case "ClosedTabs:StartNotifications":
         this._notifyClosedTabs = true;
@@ -779,10 +800,10 @@ SessionStore.prototype = {
   saveStateDelayed: function ss_saveStateDelayed() {
     if (!this._saveTimer) {
       // Interval until the next disk operation is allowed
-      let minimalDelay = this._lastSaveTime + this._interval - Date.now();
+      let currentDelay = this._lastSaveTime + this._interval - Date.now();
 
       // If we have to wait, set a timer, otherwise saveState directly
-      let delay = Math.max(minimalDelay, 2000);
+      let delay = Math.max(currentDelay, this._minSaveDelay);
       if (delay > 0) {
         this._pendingWrite++;
         this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -793,8 +814,9 @@ SessionStore.prototype = {
         log("saveStateDelayed() no delay");
         this.saveState();
       }
+    } else {
+      log("saveStateDelayed() timer already running, taking no action");
     }
-    log("saveStateDelayed() timer already running, taking no action");
   },
 
   saveState: function ss_saveState() {
@@ -859,7 +881,7 @@ SessionStore.prototype = {
     } else {
       log("_saveState() writing empty normal data");
     }
-    this._writeFile(this._sessionFile, normalData, aAsync);
+    this._writeFile(this._sessionFile, this._sessionFileTemp, normalData, aAsync);
 
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
@@ -943,10 +965,11 @@ SessionStore.prototype = {
    * Writes the session state to a disk file, while doing some telemetry and notification
    * bookkeeping.
    * @param aFile nsIFile used for saving the session
+   * @param aFileTemp nsIFile used as a temporary file in writing the data
    * @param aData JSON session state
    * @param aAsync boolelan used to determine the method of saving the state
    */
-  _writeFile: function ss_writeFile(aFile, aData, aAsync) {
+  _writeFile: function ss_writeFile(aFile, aFileTemp, aData, aAsync) {
     TelemetryStopwatch.start("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
     let state = JSON.stringify(aData);
     TelemetryStopwatch.finish("FX_SESSION_RESTORE_SERIALIZE_DATA_MS");
@@ -960,7 +983,7 @@ SessionStore.prototype = {
 
     log("_writeFile(aAsync = " + aAsync + "), _pendingWrite = " + this._pendingWrite);
     let pendingWrite = this._pendingWrite;
-    this._write(aFile, buffer, aAsync).then(() => {
+    this._write(aFile, aFileTemp, buffer, aAsync).then(() => {
       let stopWriteMs = Cu.now();
 
       // Make sure this._pendingWrite is the same value it was before we
@@ -982,23 +1005,27 @@ SessionStore.prototype = {
   /**
    * Writes the session state to a disk file, using async or sync methods
    * @param aFile nsIFile used for saving the session
+   * @param aFileTemp nsIFile used as a temporary file in writing the data
    * @param aBuffer UTF-8 encoded ArrayBuffer of the session state
    * @param aAsync boolelan used to determine the method of saving the state
    * @return Promise that resolves when the file has been written
    */
-  _write: function ss_write(aFile, aBuffer, aAsync) {
+  _write: function ss_write(aFile, aFileTemp, aBuffer, aAsync) {
     // Use async file writer and just return it's promise
     if (aAsync) {
       log("_write() writing asynchronously");
-      return OS.File.writeAtomic(aFile.path, aBuffer, { tmpPath: aFile.path + ".tmp" });
+      return OS.File.writeAtomic(aFile.path, aBuffer, { tmpPath: aFileTemp.path });
     }
 
     // Convert buffer to an encoded string and sync write to disk
     let bytes = String.fromCharCode.apply(null, new Uint16Array(aBuffer));
     let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    stream.init(aFile, 0x02 | 0x08 | 0x20, 0o666, 0);
+    stream.init(aFileTemp, 0x02 | 0x08 | 0x20, 0o666, 0);
     stream.write(bytes, bytes.length);
     stream.close();
+    // Mimic writeAtomic behaviour when tmpPath is set and write
+    // to a temp file which is then renamed at the end.
+    aFileTemp.renameTo(null, aFile.leafName);
     log("_write() writing synchronously");
 
     // Return a resolved promise to make the caller happy

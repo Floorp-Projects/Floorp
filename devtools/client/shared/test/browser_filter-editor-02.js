@@ -5,15 +5,15 @@
 
 // Tests that the Filter Editor Widget renders filters correctly
 
-const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
+const TEST_URI = `data:text/html,<div id="filter-container" />`;
+
 add_task(function* () {
-  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   const TEST_DATA = [
@@ -68,7 +68,7 @@ add_task(function* () {
     }
   ];
 
-  const container = doc.querySelector("#container");
+  const container = doc.querySelector("#filter-container");
   let widget = new CSSFilterEditorWidget(container, "none");
 
   info("Test rendering of different types");

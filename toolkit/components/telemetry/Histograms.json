@@ -102,6 +102,15 @@
     "n_buckets": 50,
     "description": "The length of time (in milliseconds) for the subsequent opens of AudioStream."
   },
+  "AUDIOSTREAM_BACKEND_USED": {
+    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org"],
+    "bug_numbers": [1280630],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
+    "releaseChannelCollection": "opt-out"
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "expires_in_version": "never",
     "kind": "enumerated",

@@ -6,13 +6,16 @@
 // Ensure that the sources listed when debugging an addon are either from the
 // addon itself, or the SDK, with proper groups and labels.
 
-const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
+const ADDON_ID = "jid1-ami3akps3baaeg@jetpack";
+const ADDON_PATH = "addon3.xpi";
+const ADDON_URL = getTemporaryAddonURLFromPath(ADDON_PATH);
+
 var gClient;
 
 function test() {
   Task.spawn(function* () {
-    let addon = yield addAddon(ADDON_URL);
-    let addonDebugger = yield initAddonDebugger(ADDON_URL);
+    let addon = yield addTemporaryAddon(ADDON_PATH);
+    let addonDebugger = yield initAddonDebugger(ADDON_ID);
 
     is(addonDebugger.title, `Developer Tools - browser_dbg_addon3 - ${ADDON_URL}`,
        "Saw the right toolbox title.");
@@ -25,7 +28,7 @@ function test() {
 
     let sources = groups[0].sources;
     is(sources.length, 2, "Should be two sources");
-    ok(sources[0].url.endsWith("/jid1-ami3akps3baaeg@jetpack.xpi!/bootstrap.js"), "correct url for bootstrap code");
+    ok(sources[0].url.endsWith("/addon3.xpi!/bootstrap.js"), "correct url for bootstrap code");
     is(sources[0].label, "bootstrap.js", "correct label for bootstrap code");
     is(sources[1].url, "resource://jid1-ami3akps3baaeg-at-jetpack/browser_dbg_addon3/lib/main.js", "correct url for add-on code");
     is(sources[1].label, "resources/browser_dbg_addon3/lib/main.js", "correct label for add-on code");

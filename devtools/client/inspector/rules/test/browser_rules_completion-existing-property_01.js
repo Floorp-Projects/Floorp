@@ -85,21 +85,17 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   yield selectNode("h1", inspector);
 
   info("Focusing the css property editable field");
-  let propertyName = view.styleDocument
-    .querySelectorAll(".ruleview-propertyname")[0];
+  let propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyname")[0];
   let editor = yield focusEditableField(view, propertyName);
 
   info("Starting to test for css property completion");
-  let previousPopupSize = 0;
   for (let i = 0; i < testData.length; i++) {
-    let expectPopupHiddenEvent = previousPopupSize > 0 && testData[3] === 0;
-    yield testCompletion(testData[i], expectPopupHiddenEvent, editor, view);
-    previousPopupSize = testData[3];
+    yield testCompletion(testData[i], editor, view);
   }
 }
 
 function* testCompletion([key, completion, open, selected],
-                         expectPopupHiddenEvent, editor, view) {
+                         editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion);
   info("Is popup opened: " + open);
@@ -117,26 +113,24 @@ function* testCompletion([key, completion, open, selected],
     onSuggest = editor.once("after-suggest");
   }
 
-  // Also listening for popup hiding if needed.
-  let onMaybePopupHidden = expectPopupHiddenEvent
-                           ? once(editor.popup._panel, "hidden")
-                           : null;
+  // Also listening for popup opened/closed events if needed.
+  let popupEvent = open ? "popup-opened" : "popup-closed";
+  let onPopupEvent = editor.popup.isOpen !== open ? once(editor.popup, popupEvent) : null;
 
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);
 
   yield onSuggest;
-  yield onMaybePopupHidden;
+  yield onPopupEvent;
 
   info("Checking the state");
-  if (completion != null) {
+  if (completion !== null) {
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
   if (!open) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
-    ok(editor.popup._panel.state == "open" ||
-       editor.popup._panel.state == "showing", "Popup is open");
-    is(editor.popup.selectedIndex != -1, selected, "An item is selected");
+    ok(editor.popup.isOpen, "Popup is open");
+    is(editor.popup.selectedIndex !== -1, selected, "An item is selected");
   }
 }

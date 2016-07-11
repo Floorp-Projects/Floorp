@@ -6,7 +6,7 @@
 #ifndef MATHMLTEXTRUNFACTORY_H_
 #define MATHMLTEXTRUNFACTORY_H_
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTextRunTransformations.h"
 
 /**
@@ -14,10 +14,10 @@
  */
 class MathMLTextRunFactory : public nsTransformingTextRunFactory {
 public:
-  MathMLTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
+  MathMLTextRunFactory(UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
                        uint32_t aFlags, uint8_t aSSTYScriptLevel,
                        float aFontInflation)
-    : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
+    : mInnerTransformingTextRunFactory(Move(aInnerTransformingTextRunFactory)),
       mFlags(aFlags),
       mFontInflation(aFontInflation),
       mSSTYScriptLevel(aSSTYScriptLevel) {}
@@ -33,7 +33,7 @@ public:
   };
 
 protected:
-  nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
+  UniquePtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
   uint32_t mFlags;
   float mFontInflation;
   uint8_t mSSTYScriptLevel;

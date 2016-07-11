@@ -212,6 +212,9 @@ const Decimal HTMLInputElement::kDefaultStep = Decimal(1);
 const Decimal HTMLInputElement::kDefaultStepTime = Decimal(60);
 const Decimal HTMLInputElement::kStepAny = Decimal(0);
 
+const double HTMLInputElement::kMaximumYear = 275760;
+const double HTMLInputElement::kMinimumYear = 1;
+
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
   0xdc3b3d14,                                      \
@@ -947,7 +950,8 @@ bool
 HTMLInputElement::ValueAsDateEnabled(JSContext* cx, JSObject* obj)
 {
   return Preferences::GetBool("dom.experimental_forms", false) ||
-    Preferences::GetBool("dom.forms.datepicker", false);
+    Preferences::GetBool("dom.forms.datepicker", false) ||
+    Preferences::GetBool("dom.forms.datetime", false);
 }
 
 NS_IMETHODIMP
@@ -2222,6 +2226,12 @@ HTMLInputElement::ClearFiles(bool aSetValueChanged)
   SetFilesOrDirectories(data, aSetValueChanged);
 }
 
+int32_t
+HTMLInputElement::MonthsSinceJan1970(uint32_t aYear, uint32_t aMonth) const
+{
+  return (aYear - 1970) * 12 + aMonth - 1;
+}
+
 /* static */ Decimal
 HTMLInputElement::StringToDecimal(const nsAString& aValue)
 {
@@ -2273,6 +2283,26 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
 
       aResultValue = Decimal(int32_t(milliseconds));
       return true;
+    case NS_FORM_INPUT_MONTH:
+      {
+        uint32_t year, month;
+        if (!ParseMonth(aValue, &year, &month)) {
+          return false;
+        }
+
+        // Maximum valid month is 275760-09.
+        if (year < kMinimumYear || year > kMaximumYear) {
+          return false;
+        }
+
+        if (year == kMaximumYear && month > 9) {
+          return false;
+        }
+
+        int32_t months = MonthsSinceJan1970(year, month);
+        aResultValue = Decimal(int32_t(months));
+        return true;
+      }
     default:
       MOZ_ASSERT(false, "Unrecognized input type");
       return false;
@@ -2490,6 +2520,27 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
 
         return true;
       }
+    case NS_FORM_INPUT_MONTH:
+      {
+        aValue = aValue.floor();
+
+        double month = NS_floorModulo(aValue, Decimal(12)).toDouble();
+        month = (month < 0 ? month + 12 : month);
+
+        double year = 1970 + (aValue.toDouble() - month) / 12;
+
+        // Maximum valid month is 275760-09.
+        if (year < kMinimumYear || year > kMaximumYear) {
+          return false;
+        }
+
+        if (year == kMaximumYear && month > 8) {
+          return false;
+        }
+
+        aResultString.AppendPrintf("%04.0f-%02.0f", year, month + 1);
+        return true;
+      }
     default:
       MOZ_ASSERT(false, "Unrecognized input type");
       return false;
@@ -2500,7 +2551,7 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
 Nullable<Date>
 HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 {
-  if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
+  if (!IsDateTimeInputType(mType)) {
     return Nullable<Date>();
   }
 
@@ -2532,6 +2583,18 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
                  "never clip");
       return Nullable<Date>(Date(time));
     }
+    case NS_FORM_INPUT_MONTH:
+    {
+      uint32_t year, month;
+      nsAutoString value;
+      GetValueInternal(value);
+      if (!ParseMonth(value, &year, &month)) {
+        return Nullable<Date>();
+      }
+
+      JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, 1));
+      return Nullable<Date>(Date(time));
+    }
   }
 
   MOZ_ASSERT(false, "Unrecognized input type");
@@ -2542,7 +2605,7 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 void
 HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
 {
-  if (mType != NS_FORM_INPUT_DATE && mType != NS_FORM_INPUT_TIME) {
+  if (!IsDateTimeInputType(mType)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -2552,7 +2615,24 @@ HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
     return;
   }
 
-  SetValue(Decimal::fromDouble(aDate.Value().TimeStamp().toDouble()));
+  double milliseconds = aDate.Value().TimeStamp().toDouble();
+
+  if (mType != NS_FORM_INPUT_MONTH) {
+    SetValue(Decimal::fromDouble(milliseconds));
+    return;
+  }
+
+  // type=month expects the value to be number of months.
+  double year = JS::YearFromTime(milliseconds);
+  double month = JS::MonthFromTime(milliseconds);
+
+  if (IsNaN(year) || IsNaN(month)) {
+    SetValue(EmptyString());
+    return;
+  }
+
+  int32_t months = MonthsSinceJan1970(year, month + 1);
+  SetValue(Decimal(int32_t(months)));
 }
 
 NS_IMETHODIMP

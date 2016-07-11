@@ -81,15 +81,14 @@
      let deferred = promise.defer();
      let popup = jsterm.autocompletePopup;
 
-     popup._panel.addEventListener("popuphidden", function popupHidden() {
-       popup._panel.removeEventListener("popuphidden", popupHidden, false);
+     popup.once("popup-closed", () => {
        ok(!popup.isOpen,
         "Auto complete popup is hidden.");
        ok(toolbox.splitConsole,
         "Split console is open after hiding the autocomplete popup.");
 
        deferred.resolve();
-     }, false);
+     });
 
      EventUtils.sendKey("ESCAPE", toolbox.win);
 
@@ -136,19 +135,13 @@
    }
 
    function showAutoCompletePopoup() {
-     let deferred = promise.defer();
-     let popupPanel = jsterm.autocompletePopup._panel;
-
-     popupPanel.addEventListener("popupshown", function popupShown() {
-       popupPanel.removeEventListener("popupshown", popupShown, false);
-       deferred.resolve();
-     }, false);
+     let onPopupShown = jsterm.autocompletePopup.once("popup-opened");
 
      jsterm.focus();
      jsterm.setInputValue("document.location.");
      EventUtils.sendKey("TAB", hud.iframeWindow);
 
-     return deferred.promise;
+     return onPopupShown;
    }
 
    function finish() {

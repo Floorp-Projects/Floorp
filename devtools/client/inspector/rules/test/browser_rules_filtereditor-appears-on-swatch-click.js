@@ -28,6 +28,5 @@ add_task(function* () {
   ok(!inplaceEditor(swatch.parentNode),
   "The inplace editor wasn't shown as a result of the filter swatch click");
 
-  yield filterTooltip.widget;
   yield hideTooltipAndWaitForRuleViewChanged(filterTooltip, view);
 });

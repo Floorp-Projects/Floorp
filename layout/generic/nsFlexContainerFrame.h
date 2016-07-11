@@ -11,6 +11,7 @@
 #define nsFlexContainerFrame_h___
 
 #include "nsContainerFrame.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 template <class T> class LinkedList;
@@ -136,7 +137,7 @@ protected:
    * returned FlexItem will be ready to participate in the "Resolve the
    * Flexible Lengths" step of the Flex Layout Algorithm.)
    */
-  FlexItem* GenerateFlexItemForChild(nsPresContext* aPresContext,
+  mozilla::UniquePtr<FlexItem> GenerateFlexItemForChild(nsPresContext* aPresContext,
                                      nsIFrame* aChildFrame,
                                      const nsHTMLReflowState& aParentReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
