@@ -19,7 +19,7 @@ var gTest = {
     // Linearly dependent vectors are ignored.
     context.listener.setOrientation(0, 0, -6.311749985202524e+307, 0, 0, 6.311749985202524e+307);
     var panner = context.createPanner();
-    panner.setPosition(2, 0, 0); // directly above
+    panner.positionX.value = 2; // directly above
     panner.rolloffFactor = 0; // no distance gain
     panner.panningModel = "equalpower"; // no effect when directly above
 

@@ -30,7 +30,7 @@ else:
     DEFINES['WEBRTC_POSIX'] = True
 
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+if CONFIG['OS_TARGET'] == 'Android':
     EXPORTS += [
         'OpenSLESProvider.h'
     ]

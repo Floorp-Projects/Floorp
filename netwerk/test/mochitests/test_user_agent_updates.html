@@ -194,6 +194,7 @@ function testBadUpdate(callback) {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("Test sets timeouts to wait for updates to happen.");
+SimpleTest.requestCompleteLog();
 
 SpecialPowers.pushPrefEnv({
   set: [
