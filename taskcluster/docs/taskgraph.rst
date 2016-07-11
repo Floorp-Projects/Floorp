@@ -126,6 +126,26 @@ the target task set is almost the entire task graph, so targetted tasks are
 considered for optimization.  This behavior is controlled with the
 ``optimize_target_tasks`` parameter.
 
+Action Tasks
+------------
+
+Action Tasks are tasks which help you to schedule new jobs via Treeherder's
+"Add New Jobs" feature. The Decision Task creates a YAML file named
+``action.yml`` which can be used to schedule Action Tasks after suitably replacing
+``{{decision_task_id}}`` and ``{{task_labels}}``, which correspond to the decision
+task ID of the push and a comma separated list of task labels which need to be
+scheduled.
+
+This task invokes ``mach taskgraph action-task`` which builds up a task graph of
+the requested tasks. This graph is optimized using the tasks running initially in
+the same push, due to the decision task.
+
+So for instance, if you had already requested a build task in the ``try`` command,
+and you wish to add a test which depends on this build, the original build task
+is re-used.
+
+This feature is only present on ``try`` pushes for now.
+
 Mach commands
 -------------
 
@@ -159,6 +179,11 @@ Finally, the ``mach taskgraph decision`` subcommand performs the entire
 task-graph generation process, then creates the tasks.  This command should
 only be used within a decision task, as it assumes it is running in that
 context.
+
+The ``mach taskgraph action-task`` subcommand is used by Action Tasks to
+create a task graph of the requested jobs and its non-optimized dependencies.
+Action Tasks are currently scheduled by
+[pulse_actions](https://github.com/mozilla/pulse_actions)
 
 Taskgraph JSON Format
 ---------------------
