@@ -14,7 +14,7 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -100,13 +100,10 @@ public class OfflineTabStatusDelegate extends TabsTrayVisibilityAwareDelegate im
 
         Telemetry.sendUIEvent(TelemetryContract.Event.NETERROR, TelemetryContract.Method.TOAST, "usecache");
 
-        SnackbarHelper.showSnackbarWithActionAndColors(
-                activity,
-                activity.getResources().getString(R.string.tab_offline_version),
-                Snackbar.LENGTH_INDEFINITE,
-                null, null, null,
-                ContextCompat.getColor(activity, R.color.link_blue),
-                null
-        );
+        SnackbarBuilder.builder(activity)
+                .message(R.string.tab_offline_version)
+                .duration(Snackbar.LENGTH_INDEFINITE)
+                .backgroundColor(ContextCompat.getColor(activity, R.color.link_blue))
+                .buildAndShow();
     }
 }
