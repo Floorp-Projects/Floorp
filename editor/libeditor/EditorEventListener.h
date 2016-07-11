@@ -72,6 +72,7 @@ protected:
   nsresult DragOver(nsIDOMDragEvent* aDragEvent);
   nsresult DragExit(nsIDOMDragEvent* aDragEvent);
   nsresult Drop(nsIDOMDragEvent* aDragEvent);
+  nsresult DragGesture(nsIDOMDragEvent* aDragEvent);
 
   bool CanDrop(nsIDOMDragEvent* aEvent);
   void CleanupDragDropCaret();
