@@ -26,6 +26,7 @@ const char16_t* kErrorEventType = MOZ_UTF16("error");
 const char16_t* kSuccessEventType = MOZ_UTF16("success");
 const char16_t* kUpgradeNeededEventType = MOZ_UTF16("upgradeneeded");
 const char16_t* kVersionChangeEventType = MOZ_UTF16("versionchange");
+const char16_t* kCloseEventType = MOZ_UTF16("close");
 
 already_AddRefed<nsIDOMEvent>
 CreateGenericEvent(EventTarget* aOwner,

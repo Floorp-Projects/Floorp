@@ -560,6 +560,7 @@ AudioCallbackDriver::Init()
   cubeb_stream_params output;
   cubeb_stream_params input;
   uint32_t latency;
+  bool firstStream = CubebUtils::GetFirstStream();
 
   MOZ_ASSERT(!NS_IsMainThread(),
       "This is blocking and should never run on the main thread.");
@@ -629,11 +630,13 @@ AudioCallbackDriver::Init()
       DebugOnly<int> rv = cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());
       NS_WARN_IF_FALSE(rv == CUBEB_OK,
           "Could not set the audio stream volume in GraphDriver.cpp");
+      CubebUtils::ReportCubebBackendUsed();
     } else {
 #ifdef MOZ_WEBRTC
       StaticMutexAutoUnlock unlock(AudioInputCubeb::Mutex());
 #endif
       NS_WARNING("Could not create a cubeb stream for MediaStreamGraph, falling back to a SystemClockDriver");
+      CubebUtils::ReportCubebStreamInitFailure(firstStream);
       // Fall back to a driver using a normal thread.
       MonitorAutoLock lock(GraphImpl()->GetMonitor());
       SetNextDriver(new SystemClockDriver(GraphImpl()));
