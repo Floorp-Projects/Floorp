@@ -7615,6 +7615,16 @@ function defineAddonWrapperProperty(name, getter) {
 ["sourceURI", "releaseNotesURI"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
+
+    // Temporary Installed Addons do not have a "sourceURI",
+    // But we can use the "_sourceBundle" as an alternative,
+    // which points to the path of the addon xpi installed
+    // or its source dir (if it has been installed from a
+    // directory).
+    if (aProp == "sourceURI" && this.temporarilyInstalled) {
+      return Services.io.newFileURI(addon._sourceBundle);
+    }
+
     let [target, fromRepo] = chooseValue(addon, addon, aProp);
     if (!target)
       return null;

@@ -42,7 +42,7 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
     value: "rgb(0, 0, 0)"
   });
 
-  let spectrum = yield picker.spectrum;
+  let spectrum = picker.spectrum;
 
   let onModifications = waitForNEvents(ruleView, "ruleview-changed", 2);
   let onHidden = picker.tooltip.once("hidden");

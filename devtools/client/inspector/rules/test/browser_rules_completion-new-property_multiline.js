@@ -60,7 +60,7 @@ add_task(function* () {
 
   info("Check that UP/DOWN navigates in the input, even when next to a number");
   EventUtils.synthesizeKey("VK_DOWN", {}, view.styleWindow);
-  ok(editor.input.selectionStart != pos, "Input caret moved");
+  ok(editor.input.selectionStart !== pos, "Input caret moved");
   is(editor.input.value, LONG_CSS_VALUE, "Input value was not decremented.");
 
   info("Move the caret to the end of the gradient definition.");
@@ -95,8 +95,10 @@ add_task(function* () {
   info("Select the background-color suggestion with a mouse click.");
   let onRuleviewChanged = view.once("ruleview-changed");
   let onSuggest = editor.once("after-suggest");
+
   let node = editor.popup._list.childNodes[editor.popup.selectedIndex];
-  EventUtils.synthesizeMouseAtCenter(node, {}, view.styleWindow);
+  EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
+
   yield onSuggest;
   yield onRuleviewChanged;
 

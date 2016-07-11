@@ -5,12 +5,13 @@
 /* Based on Lea Verou www.cubic-bezier.com
    See https://github.com/LeaVerou/cubic-bezier */
 
-#container {
+.cubic-bezier-container {
   display: flex;
   width: 500px;
   height: 370px;
   flex-direction: row-reverse;
   overflow: hidden;
+  padding: 5px;
 }
 
 .display-wrap {
@@ -64,13 +65,13 @@
 
   -moz-user-select: none;
 }
-canvas#curve {
+canvas.curve {
   background: linear-gradient(-45deg, transparent 49.7%, rgba(0,0,0,.2) 49.7%, rgba(0,0,0,.2) 50.3%, transparent 50.3%) center no-repeat;
   background-size: 100% 100%;
   background-position: 0 0;
 }
 
-.theme-dark canvas#curve {
+.theme-dark canvas.curve {
   background: linear-gradient(-45deg, transparent 49.7%, #eee 49.7%, #eee 50.3%, transparent 50.3%) center no-repeat;
 }
 
@@ -107,30 +108,6 @@ canvas#curve {
   border-radius: 50%;
   border: 2px solid white;
   background: #4C9ED9;
-}
-
-.timing-function-preview .dot.animate {
-  animation-duration: 2.5s;
-  animation-fill-mode: forwards;
-  animation-name: timing-function-preview;
-}
-
-@keyframes timing-function-preview {
-  0% {
-    left: -7px;
-  }
-  33% {
-    left: 143px;
-  }
-  50% {
-    left: 143px;
-  }
-  83% {
-    left: -7px;
-  }
-  100% {
-    left: -7px;
-  }
 }
 
 /* Preset Widget */

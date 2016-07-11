@@ -358,9 +358,14 @@ function getRuleViewSelectorHighlighterIcon(view, selectorText) {
  */
 var simulateColorPickerChange = Task.async(function* (ruleView, colorPicker,
     newRgba, expectedChange) {
+  let onComputedStyleChanged;
+  if (expectedChange) {
+    let {selector, name, value} = expectedChange;
+    onComputedStyleChanged = waitForComputedStyleProperty(selector, null, name, value);
+  }
   let onRuleViewChanged = ruleView.once("ruleview-changed");
   info("Getting the spectrum colorpicker object");
-  let spectrum = yield colorPicker.spectrum;
+  let spectrum = colorPicker.spectrum;
   info("Setting the new color");
   spectrum.rgb = newRgba;
   info("Applying the change");
@@ -371,8 +376,7 @@ var simulateColorPickerChange = Task.async(function* (ruleView, colorPicker,
 
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
-    let {selector, name, value} = expectedChange;
-    yield waitForComputedStyleProperty(selector, null, name, value);
+    yield onComputedStyleChanged;
   }
 });
 
