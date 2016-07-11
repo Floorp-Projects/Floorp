@@ -15,65 +15,25 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
                                      const LayoutDeviceIntRegion& aRegion)
 {
   auto& vr = *mVibrantRegions.LookupOrAdd(uint32_t(aType));
-  if (vr.region == aRegion) {
-    return;
-  }
-
-  // We need to construct the required region using as many EffectViews
-  // as necessary. We try to update the geometry of existing views if
-  // possible, or create new ones or remove old ones if the number of
-  // rects in the region has changed.
-
-  nsTArray<NSView*> viewsToRecycle;
-  vr.effectViews.SwapElements(viewsToRecycle);
-  // vr.effectViews is now empty.
-
-  size_t i = 0;
-  for (auto iter = aRegion.RectIter();
-       !iter.Done() || i < viewsToRecycle.Length();
-       i++) {
-    if (!iter.Done()) {
-      NSView* view = nil;
-      NSRect rect = mCoordinateConverter.DevPixelsToCocoaPoints(iter.Get());
-      if (i < viewsToRecycle.Length()) {
-        view = viewsToRecycle[i];
-        [view setFrame:rect];
-        [view setNeedsDisplay:YES];
-      } else {
-        view = CreateEffectView(aType, rect);
-        [mContainerView addSubview:view];
-
-        // Now that the view is in the view hierarchy, it'll be kept alive by
-        // its superview, so we can drop our reference.
-        [view release];
-      }
-      vr.effectViews.AppendElement(view);
-      iter.Next();
-    } else {
-      // Our new region is made of less rects than the old region, so we can
-      // remove this view. We only have a weak reference to it, so removing it
-      // from the view hierarchy will release it.
-      [viewsToRecycle[i] removeFromSuperview];
-    }
-  }
-
-  vr.region = aRegion;
+  vr.UpdateRegion(aRegion, mCoordinateConverter, mContainerView, ^() {
+    return this->CreateEffectView(aType);
+  });
 }
 
 void
 VibrancyManager::ClearVibrantAreas() const
 {
   for (auto iter = mVibrantRegions.ConstIter(); !iter.Done(); iter.Next()) {
-    ClearVibrantRegion(*iter.UserData());
+    ClearVibrantRegion(iter.UserData()->Region());
   }
 }
 
 void
-VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
+VibrancyManager::ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion) const
 {
   [[NSColor clearColor] set];
 
-  for (auto iter = aVibrantRegion.region.RectIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = aVibrantRegion.RectIter(); !iter.Done(); iter.Next()) {
     NSRectFill(mCoordinateConverter.DevPixelsToCocoaPoints(iter.Get()));
   }
 }
@@ -98,15 +58,13 @@ AdjustedColor(NSColor* aFillColor, VibrancyType aType)
 NSColor*
 VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
 {
-  const nsTArray<NSView*>& views =
-    mVibrantRegions.LookupOrAdd(uint32_t(aType))->effectViews;
+  NSView* view = mVibrantRegions.LookupOrAdd(uint32_t(aType))->GetAnyView();
 
-  if (!views.IsEmpty() &&
-      [views[0] respondsToSelector:@selector(_currentFillColor)]) {
+  if (view && [view respondsToSelector:@selector(_currentFillColor)]) {
     // -[NSVisualEffectView _currentFillColor] is the color that our view
     // would draw during its drawRect implementation, if we hadn't
     // disabled that.
-    return AdjustedColor([views[0] _currentFillColor], aType);
+    return AdjustedColor([view _currentFillColor], aType);
   }
   return [NSColor whiteColor];
 }
@@ -118,12 +76,10 @@ VibrancyManager::VibrancyFillColorForType(VibrancyType aType)
 NSColor*
 VibrancyManager::VibrancyFontSmoothingBackgroundColorForType(VibrancyType aType)
 {
-  const nsTArray<NSView*>& views =
-    mVibrantRegions.LookupOrAdd(uint32_t(aType))->effectViews;
+  NSView* view = mVibrantRegions.LookupOrAdd(uint32_t(aType))->GetAnyView();
 
-  if (!views.IsEmpty() &&
-      [views[0] respondsToSelector:@selector(fontSmoothingBackgroundColor)]) {
-    return [views[0] fontSmoothingBackgroundColor];
+  if (view && [view respondsToSelector:@selector(fontSmoothingBackgroundColor)]) {
+    return [view fontSmoothingBackgroundColor];
   }
   return [NSColor clearColor];
 }
@@ -253,14 +209,14 @@ enum {
 @end
 
 NSView*
-VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
+VibrancyManager::CreateEffectView(VibrancyType aType)
 {
   static Class EffectViewClassWithoutForegroundVibrancy = CreateEffectViewClass(NO);
   static Class EffectViewClassWithForegroundVibrancy = CreateEffectViewClass(YES);
 
   Class EffectViewClass = HasVibrantForeground(aType)
     ? EffectViewClassWithForegroundVibrancy : EffectViewClassWithoutForegroundVibrancy;
-  NSView* effectView = [[EffectViewClass alloc] initWithFrame:aRect];
+  NSView* effectView = [[EffectViewClass alloc] initWithFrame:NSZeroRect];
   [effectView performSelector:@selector(setAppearance:)
                    withObject:AppearanceForVibrancyType(aType)];
   [effectView setState:VisualEffectStateForVibrancyType(aType)];
