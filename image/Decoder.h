@@ -194,8 +194,7 @@ public:
   bool HasAnimation() const { return mImageMetadata.HasAnimation(); }
 
   // Error tracking
-  bool HasError() const { return HasDataError(); }
-  bool HasDataError() const { return mDataError; }
+  bool HasError() const { return mError; }
   bool ShouldReportError() const { return mShouldReportError; }
 
   /// Did we finish decoding enough that calling Decode() again would be useless?
@@ -366,16 +365,6 @@ protected:
   // means a single iteration, stopping on the last frame.
   void PostDecodeDone(int32_t aLoopCount = 0);
 
-  // Report an error in the image data.
-  void PostDataError();
-
-  /**
-   * CompleteDecode() finishes up the decoding process after Decode() determines
-   * that we're finished. It records final progress and does all the cleanup
-   * that's possible off-main-thread.
-   */
-  void CompleteDecode();
-
   /**
    * Allocates a new frame, making it our current frame if successful.
    *
@@ -396,6 +385,17 @@ protected:
     return AllocateFrame(0, size, nsIntRect(nsIntPoint(), size),
                          gfx::SurfaceFormat::B8G8R8A8);
   }
+
+private:
+  /// Report that an error was encountered while decoding.
+  void PostError();
+
+  /**
+   * CompleteDecode() finishes up the decoding process after Decode() determines
+   * that we're finished. It records final progress and does all the cleanup
+   * that's possible off-main-thread.
+   */
+  void CompleteDecode();
 
   RawAccessFrameRef AllocateFrameInternal(uint32_t aFrameNum,
                                           const nsIntSize& aTargetSize,
@@ -433,7 +433,7 @@ private:
   bool mInFrame : 1;
   bool mReachedTerminalState : 1;
   bool mDecodeDone : 1;
-  bool mDataError : 1;
+  bool mError : 1;
   bool mDecodeAborted : 1;
   bool mShouldReportError : 1;
 };
