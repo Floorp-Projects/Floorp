@@ -71,8 +71,8 @@ public:
   size_t FirstResourceOffset() const;
 
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
-  virtual void FinishInternal() override;
-  virtual void FinishWithErrorInternal() override;
+  nsresult FinishInternal() override;
+  nsresult FinishWithErrorInternal() override;
 
 private:
   friend class DecoderFactory;
@@ -85,7 +85,7 @@ private:
   bool WriteToContainedDecoder(const char* aBuffer, uint32_t aCount);
 
   // Gets decoder state from the contained decoder so it's visible externally.
-  void GetFinalStateFromContainedDecoder();
+  nsresult GetFinalStateFromContainedDecoder();
 
   /**
    * Verifies that the width and height values in @aBIH are valid and match the

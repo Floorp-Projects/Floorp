@@ -150,8 +150,8 @@ public:
   }
 
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
-  virtual void BeforeFinishInternal() override;
-  virtual void FinishInternal() override;
+  nsresult BeforeFinishInternal() override;
+  nsresult FinishInternal() override;
 
 private:
   friend class DecoderFactory;

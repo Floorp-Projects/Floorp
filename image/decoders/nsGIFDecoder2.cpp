@@ -100,7 +100,7 @@ nsGIFDecoder2::~nsGIFDecoder2()
   free(mGIFStruct.local_colormap);
 }
 
-void
+nsresult
 nsGIFDecoder2::FinishInternal()
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call FinishInternal after error!");
@@ -113,6 +113,8 @@ nsGIFDecoder2::FinishInternal()
     PostDecodeDone(mGIFStruct.loop_count - 1);
     mGIFOpen = false;
   }
+
+  return NS_OK;
 }
 
 void
