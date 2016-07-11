@@ -60,7 +60,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mInFrame(false)
   , mReachedTerminalState(false)
   , mDecodeDone(false)
-  , mDataError(false)
+  , mError(false)
   , mDecodeAborted(false)
   , mShouldReportError(false)
 { }
@@ -170,7 +170,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
 
   // If decoding failed, record that fact.
   if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
+    PostError();
   }
 
   // We're done decoding; perform final cleanup.
@@ -194,18 +194,18 @@ Decoder::CompleteDecode()
   // Implementation-specific finalization.
   nsresult rv = BeforeFinishInternal();
   if (NS_FAILED(rv)) {
-    PostDataError();
+    PostError();
   }
 
   rv = HasError() ? FinishWithErrorInternal()
                   : FinishInternal();
   if (NS_FAILED(rv)) {
-    PostDataError();
+    PostError();
   }
 
   // If this was a metadata decode and we never got a size, the decode failed.
   if (IsMetadataDecode() && !HasSize()) {
-    PostDataError();
+    PostError();
   }
 
   // If the implementation left us mid-frame, finish that up.
@@ -516,9 +516,9 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
 }
 
 void
-Decoder::PostDataError()
+Decoder::PostError()
 {
-  mDataError = true;
+  mError = true;
 
   if (mInFrame && mCurrentFrame) {
     mCurrentFrame->Abort();
