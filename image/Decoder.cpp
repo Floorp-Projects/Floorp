@@ -145,7 +145,15 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
 
     MOZ_ASSERT(newState == SourceBufferIterator::READY);
 
-    Write(mIterator->Data(), mIterator->Length());
+    {
+      PROFILER_LABEL("ImageDecoder", "Write",
+        js::ProfileEntry::Category::GRAPHICS);
+
+      AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
+
+      // Pass the data along to the implementation.
+      WriteInternal(mIterator->Data(), mIterator->Length());
+    }
   }
 
   CompleteDecode();
@@ -159,21 +167,6 @@ Decoder::ShouldSyncDecode(size_t aByteLimit)
   MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
 
   return mIterator->RemainingBytesIsNoMoreThan(aByteLimit);
-}
-
-void
-Decoder::Write(const char* aBuffer, uint32_t aCount)
-{
-  PROFILER_LABEL("ImageDecoder", "Write",
-    js::ProfileEntry::Category::GRAPHICS);
-
-  MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT(aCount > 0);
-
-  AutoRecordDecoderTelemetry telemetry(this, aCount);
-
-  // Pass the data along to the implementation.
-  WriteInternal(aBuffer, aCount);
 }
 
 void
