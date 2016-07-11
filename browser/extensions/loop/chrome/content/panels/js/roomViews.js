@@ -342,7 +342,7 @@ loop.roomViews = function (mozL10n) {
                 localPosterUrl: this.props.localPosterUrl, 
                 localSrcMediaElement: this.state.localSrcMediaElement, 
                 localVideoMuted: this.state.videoMuted, 
-                matchMedia: this.state.matchMedia || window.matchMedia.bind(window), 
+                matchMedia: this.state.matchMedia || window.matchMedia, 
                 remotePosterUrl: this.props.remotePosterUrl, 
                 remoteSrcMediaElement: this.state.remoteSrcMediaElement, 
                 renderRemoteVideo: this.shouldRenderRemoteVideo(), 

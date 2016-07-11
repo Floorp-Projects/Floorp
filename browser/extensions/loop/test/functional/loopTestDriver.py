@@ -5,7 +5,6 @@ from marionette_driver.errors import NoSuchElementException, StaleElementExcepti
 # noinspection PyUnresolvedReferences
 from marionette_driver import Wait
 
-import pyperclip
 import re
 import urlparse
 import time
@@ -126,6 +125,32 @@ class LoopTestDriver():
         # url that the server gives us to use the local standalone.
         return re.sub("https?://.*/", ROOMS_WEB_APP_URL_BASE + "/", room_url)
 
+    def get_text_from_clipboard(self):
+        """
+        This assumes we're already in the chrome context!
+        """
+        script = ("""
+var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+                          .getService(Components.interfaces.nsIClipboard);
+var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+                      .createInstance(Components.interfaces.nsITransferable);
+
+trans.init(null);
+trans.addDataFlavor("text/unicode");
+
+clipboard.getData(trans, clipboard.kGlobalClipboard);
+
+var str = new Object();
+var strLength = new Object();
+trans.getTransferData("text/unicode", str, strLength);
+
+if (str)
+  str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+
+return str ? str.data.substring(0, strLength.value / 2) : "";
+""")
+        return self.marionette.execute_script(script, sandbox="system")
+
     def local_get_and_verify_room_url(self):
         self.switch_to_chatbox()
         button = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
@@ -133,7 +158,7 @@ class LoopTestDriver():
         button.click()
 
         # click the element
-        room_url = pyperclip.paste()
+        room_url = self.get_text_from_clipboard()
 
         room_url = self.adjust_url(room_url)
 
