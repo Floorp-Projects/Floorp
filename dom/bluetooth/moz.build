@@ -72,6 +72,12 @@ if CONFIG['MOZ_B2G_BT']:
             LOCAL_INCLUDES += [
                 'bluez',
             ]
+            LOCAL_INCLUDES += [
+                '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+                    'external/bluetooth/bluez/lib',
+                    'external/dbus',
+                ]
+            ]
             DEFINES['MOZ_B2G_BT_BLUEZ'] = True
         elif CONFIG['MOZ_B2G_BT_DAEMON']:
             SOURCES += [
