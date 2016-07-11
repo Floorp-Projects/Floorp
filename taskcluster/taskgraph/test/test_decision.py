@@ -36,12 +36,14 @@ class TestDecision(unittest.TestCase):
                 'attributes': {'attr': 'a-task', 'kind': 'test'},
                 'task': {},
                 'dependencies': {'edgelabel': 'b'},
+                'kind_implementation': 'taskgraph.test.util:TestTask',
             },
             'b': {
                 'label': 'b',
                 'attributes': {'kind': 'test'},
                 'task': {'task': 'def'},
                 'dependencies': {},
+                'kind_implementation': 'taskgraph.test.util:TestTask',
             }
         })
 
