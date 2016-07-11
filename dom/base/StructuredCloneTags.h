@@ -54,6 +54,9 @@ enum StructuredCloneTags {
 
   SCTAG_DOM_DIRECTORY,
 
+  // This tag is used by both main thread and workers.
+  SCTAG_DOM_URLSEARCHPARAMS,
+
   SCTAG_DOM_MAX
 };
 
