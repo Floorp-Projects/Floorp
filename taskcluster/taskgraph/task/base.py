@@ -39,16 +39,12 @@ class Task(object):
 
         self.attributes['kind'] = kind
 
-        if not (all(isinstance(x, basestring) for x in self.attributes.iterkeys()) and
-                all(isinstance(x, basestring) for x in self.attributes.itervalues())):
-            raise TypeError("attribute names and values must be strings")
-
     def __eq__(self, other):
         return self.kind == other.kind and \
-               self.label == other.label and \
-               self.attributes == other.attributes and \
-               self.task == other.task and \
-               self.task_id == other.task_id
+            self.label == other.label and \
+            self.attributes == other.attributes and \
+            self.task == other.task and \
+            self.task_id == other.task_id
 
     @classmethod
     @abc.abstractmethod
@@ -97,3 +93,16 @@ class Task(object):
         The default never optimizes.
         """
         return False, None
+
+    @classmethod
+    def from_json(cls, task_dict):
+        """
+        Given a data structure as produced by taskgraph.to_json, re-construct
+        the original Task object.  This is used to "resume" the task-graph
+        generation process, for example in Action tasks.
+        """
+        return cls(
+            kind=task_dict['attributes']['kind'],
+            label=task_dict['label'],
+            attributes=task_dict['attributes'],
+            task=task_dict['task'])

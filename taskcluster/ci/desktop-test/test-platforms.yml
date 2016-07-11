@@ -1,0 +1,27 @@
+# This file maps build platforms to test platforms.  In some cases, a
+# single build may be tested on multiple test platforms, but a single test
+# platform can only link to one build platform.  Both build and test platforms
+# are represented as <platform>/<type>, where <type> is what Treeherder calls a
+# collection.
+#
+# Each test platform further specifies the set of tests that will be scheduled
+# for the platform, referring to tests defined in test-sets.yml.
+#
+# Note that set does not depend on the tree; tree-dependent job selection
+# should be performed in the target task selection phase of task-graph
+# generation.
+
+linux64/debug:
+    build-platform: linux64/debug
+    test-set: all-tests
+linux64/opt:
+    build-platform: linux64/opt
+    test-set: all-tests
+
+# TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
+linux64-pgo/opt:
+    build-platform: linux64-pgo/opt
+    test-set: all-tests
+linux64-asan/opt:
+    build-platform: linux64-asan/opt
+    test-set: asan-tests
