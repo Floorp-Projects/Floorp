@@ -10,7 +10,7 @@ Components.utils.import("resource://gre/modules/Services.jsm")
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource:///modules/ContextualIdentityService.jsm");
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
 
 var gCookiesWindow = {
   _cm               : Components.classes["@mozilla.org/cookiemanager;1"]
