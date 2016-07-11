@@ -69,14 +69,13 @@ var checkPingsSaved = Task.async(function* (pingIds) {
   return allFound;
 });
 
-function run_test() {
+add_task(function* test_setup() {
   // Trigger a proper telemetry init.
   do_get_profile(true);
   // Make sure we don't generate unexpected pings due to pref changes.
-  setEmptyPrefWatchlist();
+  yield setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  run_next_test();
-}
+});
 
 // Test the ping sending logic.
 add_task(function* test_sendPendingPings() {
