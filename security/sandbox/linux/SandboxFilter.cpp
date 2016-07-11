@@ -638,6 +638,11 @@ public:
     }
 #endif
 
+#ifdef __NR_semget
+    case __NR_semget:
+      return Allow();
+#endif
+
 #endif // DESKTOP
 
 #ifdef __NR_getrandom
