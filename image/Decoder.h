@@ -290,7 +290,7 @@ protected:
    * call PostDataError().
    */
   virtual void InitInternal();
-  virtual Maybe<TerminalState> DoDecode(const char* aBuffer, size_t aLength) = 0;
+  virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) = 0;
   virtual void BeforeFinishInternal();
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();

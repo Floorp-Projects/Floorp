@@ -58,7 +58,7 @@ public:
   }
 
   virtual void InitInternal() override;
-  Maybe<TerminalState> DoDecode(const char* aBuffer, size_t aLength) override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
   virtual void FinishInternal() override;
 
   virtual Telemetry::ID SpeedHistogram() override;
