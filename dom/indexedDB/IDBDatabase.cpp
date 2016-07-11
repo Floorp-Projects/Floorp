@@ -873,7 +873,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
           }
         }
 
-        transaction->Abort(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
       }
 
       static const char kWarningMessage[] =

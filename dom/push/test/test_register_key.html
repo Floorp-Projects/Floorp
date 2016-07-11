@@ -111,6 +111,9 @@ http://creativecommons.org/licenses/publicdomain/
     });
     is(pushSubscription.endpoint, "https://example.com/push/1",
       "Wrong endpoint for subscription with key");
+    is(pushSubscription.options.applicationServerKey,
+       pushSubscription.options.applicationServerKey,
+       "App server key getter should return the same object");
   });
 
   add_task(function* retrieveKey() {

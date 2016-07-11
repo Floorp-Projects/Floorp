@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_XMLHttpRequestMainThread_h
 #define mozilla_dom_XMLHttpRequestMainThread_h
 
+#include <bitset>
 #include "nsAutoPtr.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
@@ -127,6 +128,17 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   friend class nsXMLHttpRequestXPCOMifier;
 
 public:
+  enum class ProgressEventType : uint8_t {
+    loadstart,
+    progress,
+    error,
+    abort,
+    timeout,
+    load,
+    loadend,
+    ENUM_MAX
+  };
+
   XMLHttpRequestMainThread();
 
   void Construct(nsIPrincipal* aPrincipal,
@@ -508,11 +520,11 @@ public:
                JS::MutableHandle<JS::Value> aRetval,
                ErrorResult& aRv) override;
 
-  // This creates a trusted readystatechange event, which is not cancelable and
+  // This fires a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
-  nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
+  nsresult FireReadystatechangeEvent();
   void DispatchProgressEvent(DOMEventTargetHelper* aTarget,
-                             const nsAString& aType,
+                             const ProgressEventType aType,
                              bool aLengthComputable,
                              int64_t aLoaded, int64_t aTotal);
 
@@ -547,6 +559,16 @@ public:
     return sDontWarnAboutSyncXHR;
   }
 protected:
+  // XHR states are meant to mirror the XHR2 spec:
+  //   https://xhr.spec.whatwg.org/#states
+  enum class State : uint8_t {
+    unsent,           // object has been constructed.
+    opened,           // open() has been successfully invoked.
+    headers_received, // redirects followed and response headers received.
+    loading,          // response body is being received.
+    done,             // data transfer concluded, whether success or error.
+  };
+
   nsresult DetectCharset();
   nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
@@ -560,7 +582,7 @@ protected:
   bool CreateDOMBlob(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
-  nsresult ChangeState(uint32_t aState, bool aBroadcast = true);
+  nsresult ChangeState(State aState, bool aBroadcast = true);
   already_AddRefed<nsILoadGroup> GetLoadGroup() const;
   nsIURI *GetBaseURI();
 
@@ -664,7 +686,23 @@ protected:
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
-  uint32_t mState;
+  State mState;
+
+  bool mFlagSynchronous;
+  bool mFlagAborted;
+  bool mFlagParseBody;
+  bool mFlagSyncLooping;
+  bool mFlagBackgroundRequest;
+  bool mFlagHadUploadListenersOnSend;
+  bool mFlagACwithCredentials;
+  bool mFlagTimedOut;
+  bool mFlagDeleted;
+
+  // The XHR2 spec's send() flag. Set when the XHR begins uploading, until it
+  // finishes downloading (or an error/abort has occurred during either phase).
+  // Used to guard against the user trying to alter headers/etc when it's too
+  // late, and ensure the XHR only handles one in-flight request at once.
+  bool mFlagSend;
 
   RefPtr<XMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
@@ -714,10 +752,8 @@ protected:
    * events.
    *
    * @param aType The progress event type.
-   * @param aFlag A XML_HTTP_REQUEST_* state flag defined in
-   *              XMLHttpRequestMainthread.cpp.
    */
-  void CloseRequestWithError(const nsAString& aType, const uint32_t aFlag);
+  void CloseRequestWithError(const ProgressEventType aType);
 
   bool mFirstStartRequestSeen;
   bool mInLoadProgressEvent;

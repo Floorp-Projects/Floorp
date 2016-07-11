@@ -10,7 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIObjectFrame.h"
 #include "nsFrame.h"
 #include "nsRegion.h"
@@ -336,7 +336,7 @@ private:
   // updates.
   RefPtr<nsRootPresContext> mRootPresContextRegisteredWith;
 
-  nsAutoPtr<PluginFrameDidCompositeObserver> mDidCompositeObserver;
+  mozilla::UniquePtr<PluginFrameDidCompositeObserver> mDidCompositeObserver;
 
   // Tracks windowed plugin visibility during scroll operations. See
   // SetScrollVisibility.
