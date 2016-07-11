@@ -80,6 +80,8 @@ public:
   explicit SourceBufferIterator(SourceBuffer* aOwner)
     : mOwner(aOwner)
     , mState(START)
+    , mChunkCount(0)
+    , mByteCount(0)
   {
     MOZ_ASSERT(aOwner);
     mData.mIterating.mChunk = 0;
@@ -92,6 +94,8 @@ public:
     : mOwner(Move(aOther.mOwner))
     , mState(aOther.mState)
     , mData(aOther.mData)
+    , mChunkCount(aOther.mChunkCount)
+    , mByteCount(aOther.mByteCount)
   { }
 
   ~SourceBufferIterator();
@@ -101,6 +105,8 @@ public:
     mOwner = Move(aOther.mOwner);
     mState = aOther.mState;
     mData = aOther.mData;
+    mChunkCount = aOther.mChunkCount;
+    mByteCount = aOther.mByteCount;
     return *this;
   }
 
@@ -140,6 +146,12 @@ public:
     return mState == READY ? mData.mIterating.mLength : 0;
   }
 
+  /// @return a count of the chunks we've advanced through.
+  uint32_t ChunkCount() const { return mChunkCount; }
+
+  /// @return a count of the bytes in all chunks we've advanced through.
+  size_t ByteCount() const { return mByteCount; }
+
 private:
   friend class SourceBuffer;
 
@@ -152,10 +164,17 @@ private:
                 size_t aOffset, size_t aLength)
   {
     MOZ_ASSERT(mState != COMPLETE);
+
+    // Update state.
     mData.mIterating.mChunk = aChunk;
     mData.mIterating.mData = aData;
     mData.mIterating.mOffset = aOffset;
     mData.mIterating.mLength = aLength;
+
+    // Update metrics.
+    mChunkCount++;
+    mByteCount += aLength;
+
     return mState = READY;
   }
 
@@ -192,6 +211,9 @@ private:
       nsresult mStatus;
     } mAtEnd;
   } mData;
+
+  uint32_t mChunkCount;  // Count of chunks we've advanced through.
+  size_t mByteCount;     // Count of bytes in all chunks we've advanced through.
 };
 
 /**
