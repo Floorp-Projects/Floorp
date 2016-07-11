@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1255240 - Test content policy types within content policies for targeted links in iframes</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * Let's load a link into a targeted iframe and make sure the content policy
+ * type used for content policy checks is of TYPE_SUBDOCUMENT both times.
+ */
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+const EXPECTED_CONTENT_TYPE = Ci.nsIContentPolicy.TYPE_SUBDOCUMENT;
+const EXPECTED_URL = 
+  "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
+const TEST_FRAME_URL =
+  "file_contentpolicytype_targeted_link_iframe.sjs?testframe";
+
+// we should get two content policy chcks with the same content policy type
+const EXPECTED_RESULTS = 2;
+var testCounter = 0;
+
+// -----  START Content Policy implementation for the test
+var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+
+const POLICYNAME = "@mozilla.org/iframetestpolicy;1";
+const POLICYID = SpecialPowers.wrap(SpecialPowers.Components)
+                              .ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
+
+var policy = {
+  // nsISupports implementation
+  QueryInterface: function(iid) {
+    iid = SpecialPowers.wrap(iid);
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+      return this;
+
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIContentPolicy implementation
+  shouldLoad: function(contentType, contentLocation, requestOrigin,
+                       context, mimeTypeGuess, extra) {
+
+    // make sure we get the right amount of content policy calls
+    // e.g. about:blank also gets chrcked by content policies
+    if (contentLocation.asciiSpec === EXPECTED_URL) {
+      is(contentType, EXPECTED_CONTENT_TYPE,
+         "content policy type should TYPESUBDOCUMENT");
+      testCounter++;
+    }
+
+    if (testCounter === EXPECTED_RESULTS) {
+      categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
+      SimpleTest.finish();
+    }
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
+
+  shouldProcess: function(contentType, contentLocation, requestOrigin,
+                          context, mimeTypeGuess, extra) {
+    return Ci.nsIContentPolicy.ACCEPT;
+  }
+}
+policy = SpecialPowers.wrapCallbackObject(policy);
+
+// Register content policy
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
+                                    .QueryInterface(Ci.nsIComponentRegistrar);
+
+componentManager.registerFactory(POLICYID, "Test content policy", POLICYNAME, policy);
+categoryManager.addCategoryEntry("content-policy", POLICYNAME, POLICYNAME, false, true);
+
+// ----- END Content Policy implementation for the test
+
+
+// start the test
+SimpleTest.waitForExplicitFinish();
+var testframe = document.getElementById("testframe");
+testframe.src = TEST_FRAME_URL;
+
+</script>
+</body>
+</html>

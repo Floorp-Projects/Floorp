@@ -15,6 +15,7 @@ GeckoCppUnitTests([
 MOCHITEST_MANIFESTS += [
     'cors/mochitest.ini',
     'csp/mochitest.ini',
+    'general/mochitest.ini',
     'mixedcontentblocker/mochitest.ini',
     'sri/mochitest.ini',
 ]
