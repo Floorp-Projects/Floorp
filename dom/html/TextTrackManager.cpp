@@ -12,6 +12,7 @@
 #include "mozilla/dom/TextTrackCue.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
 #include "nsVariant.h"
 #include "nsVideoFrame.h"
@@ -96,6 +97,7 @@ TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
   , mLastTimeMarchesOnCalled(0.0)
   , mTimeMarchesOnDispatched(false)
   , performedTrackSelection(false)
+  , mCueTelemetryReported(false)
   , mShutdown(false)
 {
   nsISupports* parentObject =
@@ -143,6 +145,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
     mTextTracks->AddTextTrack(aKind, aLabel, aLanguage, aMode, aReadyState,
                               aTextTrackSource, CompareTextTracks(mMediaElement));
   AddCues(ttrack);
+  ReportTelemetryForTrack(ttrack);
 
   if (aTextTrackSource == Track) {
     NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection));
@@ -159,6 +162,8 @@ TextTrackManager::AddTextTrack(TextTrack* aTextTrack)
   }
   mTextTracks->AddTextTrack(aTextTrack, CompareTextTracks(mMediaElement));
   AddCues(aTextTrack);
+  ReportTelemetryForTrack(aTextTrack);
+
   if (aTextTrack->GetTextTrackSource() == Track) {
     NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection));
   }
@@ -262,6 +267,7 @@ TextTrackManager::NotifyCueAdded(TextTrackCue& aCue)
     mNewCues->AddCue(aCue);
   }
   DispatchTimeMarchesOn();
+  ReportTelemetryForCue();
 }
 
 void
@@ -745,6 +751,29 @@ void
 TextTrackManager::NotifyReset()
 {
   mLastTimeMarchesOnCalled = 0.0;
+}
+
+void
+TextTrackManager::ReportTelemetryForTrack(TextTrack* aTextTrack) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTextTrack);
+  MOZ_ASSERT(mTextTracks->Length() > 0);
+
+  TextTrackKind kind = aTextTrack->Kind();
+  Telemetry::Accumulate(Telemetry::WEBVTT_TRACK_KINDS, uint32_t(kind));
+}
+
+void
+TextTrackManager::ReportTelemetryForCue()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNewCues->IsEmpty() || !mLastActiveCues->IsEmpty());
+
+  if (!mCueTelemetryReported) {
+    Telemetry::Accumulate(Telemetry::WEBVTT_USED_VTT_CUES, 1);
+    mCueTelemetryReported = true;
+  }
 }
 
 } // namespace dom
