@@ -447,7 +447,8 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   mPresContext->EffectCompositor()->
     MaybeUpdateAnimationRule(aElement,
                              aStyleContext->GetPseudoType(),
-                             EffectCompositor::CascadeLevel::Animations);
+                             EffectCompositor::CascadeLevel::Animations,
+                             aStyleContext);
 
   // We don't actually dispatch the pending events now.  We'll either
   // dispatch them the next time we get a refresh driver notification

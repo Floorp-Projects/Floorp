@@ -240,11 +240,12 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
 void
 EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                                            CSSPseudoElementType aPseudoType,
-                                           CascadeLevel aCascadeLevel)
+                                           CascadeLevel aCascadeLevel,
+                                           nsStyleContext* aStyleContext)
 {
   // First update cascade results since that may cause some elements to
   // be marked as needing a restyle.
-  MaybeUpdateCascadeResults(aElement, aPseudoType);
+  MaybeUpdateCascadeResults(aElement, aPseudoType, aStyleContext);
 
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
@@ -262,7 +263,8 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
 nsIStyleRule*
 EffectCompositor::GetAnimationRule(dom::Element* aElement,
                                    CSSPseudoElementType aPseudoType,
-                                   CascadeLevel aCascadeLevel)
+                                   CascadeLevel aCascadeLevel,
+                                   nsStyleContext* aStyleContext)
 {
   // NOTE: We need to be careful about early returns in this method where
   // we *don't* update mElementsToRestyle. When we get a call to
@@ -288,7 +290,7 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
     return nullptr;
   }
 
-  MaybeUpdateAnimationRule(aElement, aPseudoType, aCascadeLevel);
+  MaybeUpdateAnimationRule(aElement, aPseudoType, aCascadeLevel, aStyleContext);
 
 #ifdef DEBUG
   {
@@ -455,7 +457,17 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
     return;
   }
 
-  UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
+  nsStyleContext* styleContext = aStyleContext;
+  if (!styleContext) {
+    dom::Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
+    if (elementToRestyle) {
+      nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
+      if (frame) {
+        styleContext = frame->StyleContext();
+      }
+    }
+  }
+  UpdateCascadeResults(*effects, aElement, aPseudoType, styleContext);
 
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
@@ -798,7 +810,8 @@ EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
   nsIStyleRule *rule =
     mCompositor->GetAnimationRule(aData->mElement,
                                   CSSPseudoElementType::NotPseudo,
-                                  mCascadeLevel);
+                                  mCascadeLevel,
+                                  nullptr);
   if (rule) {
     aData->mRuleWalker->Forward(rule);
     aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
@@ -817,7 +830,8 @@ EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
   nsIStyleRule *rule =
     mCompositor->GetAnimationRule(aData->mElement,
                                   aData->mPseudoType,
-                                  mCascadeLevel);
+                                  mCascadeLevel,
+                                  nullptr);
   if (rule) {
     aData->mRuleWalker->Forward(rule);
     aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();

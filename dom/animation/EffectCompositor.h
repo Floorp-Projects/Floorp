@@ -123,13 +123,30 @@ public:
   // specified (pseudo-)element for cascade level |aLevel|.
   // If the animation rule is not marked as needing an update,
   // no work is done.
+  // |aStyleContext| is used for UpdateCascadingResults.
+  // |aStyleContext| can be nullptr if style context, which is associated with
+  // the primary frame of the specified (pseudo-)element, is the current style
+  // context.
+  // If we are resolving a new style context, we shoud pass the newly created
+  // style context, otherwise we may use an old style context, it will result
+  // unexpected cascading results.
   void MaybeUpdateAnimationRule(dom::Element* aElement,
                                 CSSPseudoElementType aPseudoType,
-                                CascadeLevel aCascadeLevel);
+                                CascadeLevel aCascadeLevel,
+                                nsStyleContext *aStyleContext);
 
+  // We need to pass the newly resolved style context as |aStyleContext| when
+  // we call this function during resolving style context because this function
+  // calls UpdateCascadingResults with a style context if necessary, at the
+  // time, we end up using the previous style context if we don't pass the new
+  // style context.
+  // When we are not resolving style context, |aStyleContext| can be nullptr, we
+  // will use a style context associated with the primary frame of the specified
+  // (pseudo-)element.
   nsIStyleRule* GetAnimationRule(dom::Element* aElement,
                                  CSSPseudoElementType aPseudoType,
-                                 CascadeLevel aCascadeLevel);
+                                 CascadeLevel aCascadeLevel,
+                                 nsStyleContext* aStyleContext);
 
   bool HasPendingStyleUpdates() const;
   bool HasThrottledStyleUpdates() const;
@@ -158,6 +175,8 @@ public:
   // but only if we have marked the cascade as needing an update due a
   // the change in the set of effects or a change in one of the effects'
   // "in effect" state.
+  // |aStyleContext| may be nullptr in which case we will use the
+  // nsStyleContext of the primary frame of the specified (pseudo-)element.
   //
   // This method does NOT detect if other styles that apply above the
   // animation level of the cascade have changed.
