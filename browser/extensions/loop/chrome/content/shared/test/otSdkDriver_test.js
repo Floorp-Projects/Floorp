@@ -74,7 +74,8 @@ describe("loop.OTSdkDriver", function () {
       ExceptionCodes: { 
         CONNECT_FAILED: 1006, 
         TERMS_OF_SERVICE_FAILURE: 1026, 
-        UNABLE_TO_PUBLISH: 1500 } };
+        UNABLE_TO_PUBLISH: 1500, 
+        PUBLISHER_ICE_WORKFLOW_FAILED: 1553 } };
 
 
 
@@ -903,7 +904,6 @@ describe("loop.OTSdkDriver", function () {
 
 
     describe("streamCreated: session/remote", function () {
-
       it("should dispatch a VideoDimensionsChanged action", function () {
         session.trigger("streamCreated", { stream: fakeStream });
 
@@ -916,26 +916,21 @@ describe("loop.OTSdkDriver", function () {
 
 
 
-      it("should dispatch a ConnectionStatus action", function () {
-        driver._metrics.connections = 1;
-
-        session.trigger("streamCreated", { stream: fakeStream });
-
-        sinon.assert.called(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch, 
-        new sharedActions.ConnectionStatus({ 
-          event: "Session.streamCreated", 
-          state: "receiving", 
-          connections: 1, 
-          recvStreams: 1, 
-          sendStreams: 0 }));});
-
-
-
       describe("Audio/Video streams", function () {
-        beforeEach(function () {
-          session.subscribe.yieldsOn(driver, null, fakeSubscriberObject, 
-          videoElement).returns(this.fakeSubscriberObject);});
+        it("should dispatch a ConnectionStatus action", function () {
+          driver._metrics.connections = 1;
+
+          session.trigger("streamCreated", { stream: fakeStream });
+
+          sinon.assert.called(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch, 
+          new sharedActions.ConnectionStatus({ 
+            event: "Session.av.streamCreated", 
+            state: "receiving", 
+            connections: 1, 
+            recvStreams: 1, 
+            sendStreams: 0 }));});
+
 
 
         it("should subscribe to a camera stream", function () {
@@ -947,66 +942,71 @@ describe("loop.OTSdkDriver", function () {
           sinon.match.func);});
 
 
-        it("should dispatch MediaStreamCreated after streamCreated is triggered on the session", function () {
-          driver.session = session;
-          fakeStream.connection = fakeConnection;
-          fakeStream.hasVideo = true;
-          fakeStream.hasAudio = true;
-
-          session.trigger("streamCreated", { stream: fakeStream });
-
-          sinon.assert.called(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch, 
-          new sharedActions.MediaStreamCreated({ 
-            hasAudio: true, 
-            hasVideo: true, 
-            isLocal: false, 
-            srcMediaElement: videoElement }));});
+        describe("A/V Subscribe Completed", function () {
+          beforeEach(function () {
+            session.subscribe.yieldsOn(driver, null, fakeSubscriberObject, 
+            videoElement).returns(this.fakeSubscriberObject);});
 
 
+          it("should dispatch MediaStreamCreated", function () {
+            driver.session = session;
+            fakeStream.connection = fakeConnection;
+            fakeStream.hasVideo = true;
+            fakeStream.hasAudio = true;
 
-        it("should dispatch MediaStreamCreated after streamCreated with audio-only indication if hasVideo=false", function () {
-          fakeStream.connection = fakeConnection;
-          fakeStream.hasVideo = false;
+            session.trigger("streamCreated", { stream: fakeStream });
 
-          session.trigger("streamCreated", { stream: fakeStream });
-
-          sinon.assert.called(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch, 
-          new sharedActions.MediaStreamCreated({ 
-            hasAudio: true, 
-            hasVideo: false, 
-            isLocal: false, 
-            srcMediaElement: videoElement }));});
+            sinon.assert.called(dispatcher.dispatch);
+            sinon.assert.calledWithExactly(dispatcher.dispatch, 
+            new sharedActions.MediaStreamCreated({ 
+              hasAudio: true, 
+              hasVideo: true, 
+              isLocal: false, 
+              srcMediaElement: videoElement }));});
 
 
 
-        it("should dispatch a mediaConnected action if both streams are up", function () {
-          driver._publishedLocalStream = true;
+          it("should dispatch MediaStreamCreated with audio-only indication if hasVideo=false", function () {
+            fakeStream.connection = fakeConnection;
+            fakeStream.hasVideo = false;
 
-          session.trigger("streamCreated", { stream: fakeStream });
+            session.trigger("streamCreated", { stream: fakeStream });
 
-          // Called twice due to the VideoDimensionsChanged above.
-          sinon.assert.called(dispatcher.dispatch);
-          sinon.assert.calledWithMatch(dispatcher.dispatch, 
-          new sharedActions.MediaConnected({}));});
+            sinon.assert.called(dispatcher.dispatch);
+            sinon.assert.calledWithExactly(dispatcher.dispatch, 
+            new sharedActions.MediaStreamCreated({ 
+              hasAudio: true, 
+              hasVideo: false, 
+              isLocal: false, 
+              srcMediaElement: videoElement }));});
 
 
-        it("should dispatch a connectionStatus action if both streams are up", function () {
-          driver._publishedLocalStream = true;
 
-          session.trigger("streamCreated", { stream: fakeStream });
+          it("should dispatch a mediaConnected action if both streams are up", function () {
+            driver._publishedLocalStream = true;
 
-          // Called twice due to the VideoDimensionsChanged above.
-          sinon.assert.called(dispatcher.dispatch);
-          sinon.assert.calledWithMatch(dispatcher.dispatch, 
-          new sharedActions.ConnectionStatus({ 
-            event: "Session.subscribeCompleted", 
-            state: "receiving", 
-            // Local stream connection is faked, so connections/sendStreams=0.
-            connections: 0, 
-            sendStreams: 0, 
-            recvStreams: 1 }));});
+            session.trigger("streamCreated", { stream: fakeStream });
+
+            // Called twice due to the VideoDimensionsChanged above.
+            sinon.assert.called(dispatcher.dispatch);
+            sinon.assert.calledWithMatch(dispatcher.dispatch, 
+            new sharedActions.MediaConnected({}));});
+
+
+          it("should dispatch a connectionStatus action", function () {
+            session.trigger("streamCreated", { stream: fakeStream });
+
+            // Called twice due to the VideoDimensionsChanged above.
+            sinon.assert.called(dispatcher.dispatch);
+            sinon.assert.calledWithMatch(dispatcher.dispatch, 
+            new sharedActions.ConnectionStatus({ 
+              event: "Session.subscribeCompleted", 
+              state: "receiving", 
+              // Local stream connection is faked, so connections/sendStreams=0.
+              connections: 0, 
+              sendStreams: 0, 
+              recvStreams: 1 }));});});
+
 
 
 
@@ -1018,7 +1018,9 @@ describe("loop.OTSdkDriver", function () {
             fakeStream.connection = fakeConnection;
             driver._useDataChannels = true;
 
-            sandbox.stub(console, "error");});
+            sandbox.stub(console, "error");
+            session.subscribe.yieldsOn(driver, null, fakeSubscriberObject, 
+            videoElement).returns(this.fakeSubscriberObject);});
 
 
           it("should trigger a readyForDataChannel signal after subscribe is complete", function () {
@@ -1136,10 +1138,28 @@ describe("loop.OTSdkDriver", function () {
 
 
 
-      describe("screen sharing streams", function () {
-        it("should subscribe to a screen sharing stream", function () {
-          fakeStream.videoType = "screen";
+      describe("Screen Sharing Streams", function () {
+        beforeEach(function () {
+          fakeStream.videoType = "screen";});
 
+
+        it("should dispatch a ConnectionStatus action", function () {
+          driver._metrics.connections = 1;
+
+          session.trigger("streamCreated", { stream: fakeStream });
+
+          sinon.assert.called(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch, 
+          new sharedActions.ConnectionStatus({ 
+            event: "Session.screen.streamCreated", 
+            state: "receiving", 
+            connections: 1, 
+            recvStreams: 1, 
+            sendStreams: 0 }));});
+
+
+
+        it("should subscribe to a screen sharing stream", function () {
           session.trigger("streamCreated", { stream: fakeStream });
 
           sinon.assert.calledOnce(session.subscribe);
@@ -1150,7 +1170,6 @@ describe("loop.OTSdkDriver", function () {
 
         it("should not dispatch a mediaConnected action for screen sharing streams", function () {
           driver._publishedLocalStream = true;
-          fakeStream.videoType = "screen";
 
           session.trigger("streamCreated", { stream: fakeStream });
 
@@ -1159,6 +1178,8 @@ describe("loop.OTSdkDriver", function () {
 
 
         it("should not dispatch a ReceivingScreenShare action for camera streams", function () {
+          fakeStream.videoType = "camera";
+
           session.trigger("streamCreated", { stream: fakeStream });
 
           sinon.assert.neverCalledWithMatch(dispatcher.dispatch, 
@@ -1638,17 +1659,51 @@ describe("loop.OTSdkDriver", function () {
 
 
     describe("exception", function () {
-      it("should notify metrics", function () {
+      var fakeSubscriber;
+      var fakeScreenSubscriber;
+
+      beforeEach(function () {
+        fakeSubscriber = { 
+          _subscriber: "a/v" };
+
+        fakeScreenSubscriber = { 
+          _subscriber: "screen" };});
+
+
+
+      it("should notify metrics for a/v streams", function () {
         sdk.trigger("exception", { 
           code: OT.ExceptionCodes.CONNECT_FAILED, 
-          message: "Fake", 
+          message: "Failed", 
+          target: fakeSubscriber, 
           title: "Connect Failed" });
 
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch, 
         new sharedActions.ConnectionStatus({ 
-          event: "sdk.exception." + OT.ExceptionCodes.CONNECT_FAILED, 
+          event: "sdk.exception." + OT.ExceptionCodes.CONNECT_FAILED + ".Failed", 
+          state: "starting", 
+          connections: 0, 
+          sendStreams: 0, 
+          recvStreams: 0 }));});
+
+
+
+      it("should notify metrics for screen sharing streams", function () {
+        driver._screenSubscriber = fakeScreenSubscriber;
+
+        sdk.trigger("exception", { 
+          code: OT.ExceptionCodes.CONNECT_FAILED, 
+          message: "Failed", 
+          target: fakeScreenSubscriber, 
+          title: "Connect Failed" });
+
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch, 
+        new sharedActions.ConnectionStatus({ 
+          event: "sdk.exception.screen." + OT.ExceptionCodes.CONNECT_FAILED + ".Failed", 
           state: "starting", 
           connections: 0, 
           sendStreams: 0, 
@@ -1660,7 +1715,8 @@ describe("loop.OTSdkDriver", function () {
         it("should dispatch a ConnectionFailure action", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.TERMS_OF_SERVICE_FAILURE, 
-            message: "Fake" });
+            message: "Fake", 
+            target: fakeSubscriber });
 
 
           sinon.assert.calledTwice(dispatcher.dispatch);
@@ -1673,7 +1729,8 @@ describe("loop.OTSdkDriver", function () {
         it("should notify metrics", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.TERMS_OF_SERVICE_FAILURE, 
-            message: "Fake" });
+            message: "Fake", 
+            target: fakeSubscriber });
 
 
           sinon.assert.calledTwice(dispatcher.dispatch);
@@ -1692,7 +1749,8 @@ describe("loop.OTSdkDriver", function () {
         it("should dispatch a ConnectionFailure action (Publisher)", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED, 
-            message: "ICE failed" });
+            message: "ICE failed", 
+            target: fakeSubscriber });
 
 
           sinon.assert.calledTwice(dispatcher.dispatch);
@@ -1705,7 +1763,8 @@ describe("loop.OTSdkDriver", function () {
         it("should dispatch a ConnectionFailure action (Subscriber)", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.SUBSCRIBER_ICE_WORKFLOW_FAILED, 
-            message: "ICE failed" });
+            message: "ICE failed", 
+            target: fakeSubscriber });
 
 
           sinon.assert.calledTwice(dispatcher.dispatch);
@@ -1718,13 +1777,16 @@ describe("loop.OTSdkDriver", function () {
         it("should notify metrics", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED, 
-            message: "ICE failed" });
+            message: "ICE failed", 
+            target: fakeSubscriber });
 
 
           sinon.assert.calledTwice(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch, 
           new sharedActions.ConnectionStatus({ 
-            event: "sdk.exception." + OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED, 
+            event: "sdk.exception." + 
+            OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED + 
+            ".ICE failed", 
             state: "starting", 
             connections: 0, 
             sendStreams: 0, 
@@ -1737,7 +1799,8 @@ describe("loop.OTSdkDriver", function () {
         it("should not do anything if the message is 'GetUserMedia'", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.UNABLE_TO_PUBLISH, 
-            message: "GetUserMedia" });
+            message: "GetUserMedia", 
+            target: fakeSubscriber });
 
 
           sinon.assert.notCalled(dispatcher.dispatch);});
@@ -1746,7 +1809,8 @@ describe("loop.OTSdkDriver", function () {
         it("should notify metrics", function () {
           sdk.trigger("exception", { 
             code: OT.ExceptionCodes.UNABLE_TO_PUBLISH, 
-            message: "General Media Fail" });
+            message: "General Media Fail", 
+            target: fakeSubscriber });
 
 
           sinon.assert.calledOnce(dispatcher.dispatch);
