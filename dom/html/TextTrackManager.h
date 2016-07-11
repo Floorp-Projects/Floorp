@@ -146,6 +146,13 @@ private:
                            nsTArray<TextTrack*>& aTextTracks);
   bool TrackIsDefault(TextTrack* aTextTrack);
 
+  void ReportTelemetryForTrack(TextTrack* aTextTrack) const;
+  void ReportTelemetryForCue();
+
+  // If there is at least one cue has been added to the cue list once, we would
+  // report the usage of cue to Telemetry.
+  bool mCueTelemetryReported;
+
   class ShutdownObserverProxy final : public nsIObserver
   {
     NS_DECL_ISUPPORTS
