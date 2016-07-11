@@ -8,7 +8,7 @@ import unittest
 import tempfile
 import os
 
-from ..kind import docker_image
+from ..task import docker_image
 from mozunit import main
 
 

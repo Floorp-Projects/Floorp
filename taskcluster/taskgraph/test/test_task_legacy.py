@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from ..kind.legacy import (
+from ..task.legacy import (
     validate_build_task,
     BuildTaskValidationException
 )

@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import copy
 import json
 import logging
 import os
@@ -566,77 +565,6 @@ class LegacyTask(base.Task):
                 post_task['attributes']['legacy_kind'] = 'post_build'
                 post_task['attributes']['post_build'] = post_build['job_flag']
                 graph['tasks'].append(post_task)
-
-            for test in build['dependents']:
-                test = test['allowed_build_tasks'][build['task']]
-                # TODO additional-parameters is currently not an option, only
-                # enabled for build tasks
-                test_parameters = merge_dicts(build_parameters,
-                                              test.get('additional-parameters', {}))
-                test_parameters = copy.copy(build_parameters)
-
-                test_definition = templates.load(test['task'], {})['task']
-                chunk_config = test_definition['extra'].get('chunks', {})
-
-                # Allow branch configs to override task level chunking...
-                if 'chunks' in test:
-                    chunk_config['total'] = test['chunks']
-
-                chunked = 'total' in chunk_config
-                if chunked:
-                    test_parameters['total_chunks'] = chunk_config['total']
-
-                if 'suite' in test_definition['extra']:
-                    suite_config = test_definition['extra']['suite']
-                    test_parameters['suite'] = suite_config['name']
-                    test_parameters['flavor'] = suite_config.get('flavor', '')
-
-                for chunk in range(1, chunk_config.get('total', 1) + 1):
-                    if 'only_chunks' in test and chunked and \
-                            chunk not in test['only_chunks']:
-                        continue
-
-                    if chunked:
-                        test_parameters['chunk'] = chunk
-                    test_task = configure_dependent_task(test['task'],
-                                                         test_parameters,
-                                                         mklabel(),
-                                                         templates,
-                                                         build_treeherder_config)
-                    set_interactive_task(test_task, interactive)
-
-                    decorate_task_treeherder_routes(test_task['task'],
-                                                    test_parameters['project'],
-                                                    test_parameters['head_rev'],
-                                                    test_parameters['pushlog_id'])
-
-                    if project == "try":
-                        set_expiration(test_task, TRY_EXPIRATION)
-
-                    test_task['attributes'] = attributes.copy()
-                    test_task['attributes']['legacy_kind'] = 'unittest'
-                    test_task['attributes']['test_platform'] = attributes['build_platform']
-                    test_task['attributes']['unittest_try_name'] = test['unittest_try_name']
-                    for param, attr in [
-                            ('suite', 'unittest_suite'),
-                            ('flavor', 'unittest_flavor'),
-                            ('chunk', 'test_chunk')]:
-                        if param in test_parameters:
-                            test_task['attributes'][attr] = str(test_parameters[param])
-
-                    # This will schedule test jobs N times
-                    for i in range(0, trigger_tests):
-                        graph['tasks'].append(test_task)
-                        # If we're scheduling more tasks each have to be unique
-                        test_task = copy.deepcopy(test_task)
-                        test_task['taskId'] = mklabel()
-
-                    define_task = DEFINE_TASK.format(
-                        test_task['task']['workerType']
-                    )
-
-                    graph['scopes'].add(define_task)
-                    graph['scopes'] |= set(test_task['task'].get('scopes', []))
 
         graph['scopes'] = sorted(graph['scopes'])
 

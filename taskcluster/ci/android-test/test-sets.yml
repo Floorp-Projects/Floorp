@@ -1,0 +1,37 @@
+# Each key in this file specifies a set of tests to run.  Different test sets
+# may, for example, be bound to different test platforms.
+#
+# Note that set does not depend on the tree; tree-dependent job selection
+# should be performed in the target task selection phase of task-graph
+# generation.
+#
+# A test set has a name, and a list of tests that it contains.
+#
+# Test names given here reference tests.yml.
+
+debug-tests:
+    - cppunit
+    - crashtest
+    - jsreftest
+    - mochitest
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-gpu
+    - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - xpcshell
+
+opt-tests:
+    - cppunit
+    - crashtest
+    - jsreftest
+    - mochitest
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-gpu
+    - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - robocop
+    - xpcshell
