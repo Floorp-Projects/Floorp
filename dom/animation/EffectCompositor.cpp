@@ -392,7 +392,9 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
     }
 
     for (auto& pseudoElem : elementsToRestyle) {
-      MaybeUpdateCascadeResults(pseudoElem.mElement, pseudoElem.mPseudoType);
+      MaybeUpdateCascadeResults(pseudoElem.mElement,
+                                pseudoElem.mPseudoType,
+                                nullptr);
 
       ComposeAnimationRule(pseudoElem.mElement,
                            pseudoElem.mPseudoType,
@@ -474,24 +476,6 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
   UpdateCascadeResults(*effects, aElement, aPseudoType, styleContext);
 
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
-}
-
-/* static */ void
-EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
-                                            CSSPseudoElementType aPseudoType)
-{
-  nsStyleContext* styleContext = nullptr;
-  {
-    dom::Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
-    if (elementToRestyle) {
-      nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
-      if (frame) {
-        styleContext = frame->StyleContext();
-      }
-    }
-  }
-
-  MaybeUpdateCascadeResults(aElement, aPseudoType, styleContext);
 }
 
 namespace {
