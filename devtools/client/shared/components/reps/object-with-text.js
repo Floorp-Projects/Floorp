@@ -43,7 +43,7 @@ define(function (require, exports, module) {
     },
 
     getDescription: function (grip) {
-      return (grip.preview.kind == "ObjectWithText") ? grip.preview.text : "";
+      return "\"" + grip.preview.text + "\"";
     },
 
     render: function () {
