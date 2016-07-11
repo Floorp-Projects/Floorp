@@ -33,9 +33,7 @@ function consoleOpened() {
 
   ok(!popup.isOpen, "popup is not open");
 
-  popup._panel.addEventListener("popupshown", function onShown() {
-    popup._panel.removeEventListener("popupshown", onShown, false);
-
+  popup.once("popup-opened", () => {
     ok(popup.isOpen, "popup is open");
 
     is(popup.itemCount, jsterm._autocompleteCache.length,
@@ -47,10 +45,11 @@ function consoleOpened() {
     isnot(jsterm._autocompleteCache.indexOf("ATTRIBUTE_NODE"), -1,
           "ATTRIBUTE_NODE is in the list of suggestions");
 
-    popup._panel.addEventListener("popuphidden", deferred.resolve, false);
-
+    popup.once("popup-closed", () => {
+      deferred.resolve();
+    });
     EventUtils.synthesizeKey("VK_ESCAPE", {});
-  }, false);
+  });
 
   jsterm.setInputValue("document.body");
   EventUtils.synthesizeKey(".", {});
@@ -64,9 +63,6 @@ function autocompletePopupHidden() {
   let jsterm = gHUD.jsterm;
   let popup = jsterm.autocompletePopup;
   let completeNode = jsterm.completeNode;
-
-  popup._panel.removeEventListener("popuphidden", autocompletePopupHidden,
-                                   false);
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -89,8 +85,8 @@ function testPropertyPanel() {
   let jsterm = gHUD.jsterm;
   jsterm.clearOutput();
   jsterm.execute("document", (msg) => {
-    jsterm.once("variablesview-fetched", (aEvent, aView) => {
-      deferred.resolve(aView);
+    jsterm.once("variablesview-fetched", (evt, view) => {
+      deferred.resolve(view);
     });
     let anchor = msg.querySelector(".message-body a");
     EventUtils.synthesizeMouse(anchor, 2, 2, {}, gHUD.iframeWindow);

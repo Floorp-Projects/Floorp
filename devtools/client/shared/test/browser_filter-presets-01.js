@@ -5,15 +5,14 @@
 
 // Tests saving presets
 
-const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 
-add_task(function* () {
-  yield addTab("about:blank");
+const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
+add_task(function* () {
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
-  const container = doc.querySelector("#container");
+  const container = doc.querySelector("#filter-container");
   let widget = new CSSFilterEditorWidget(container, "none");
   // First render
   yield widget.once("render");

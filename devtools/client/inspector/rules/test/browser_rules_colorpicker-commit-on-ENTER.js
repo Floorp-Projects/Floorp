@@ -45,7 +45,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
     "The text of the border css property was updated");
 
   let onModified = ruleView.once("ruleview-changed");
-  let spectrum = yield cPicker.spectrum;
+  let spectrum = cPicker.spectrum;
   let onHidden = cPicker.tooltip.once("hidden");
   EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
   yield onHidden;
