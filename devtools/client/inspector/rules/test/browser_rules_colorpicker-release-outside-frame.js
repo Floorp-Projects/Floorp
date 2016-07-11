@@ -17,7 +17,7 @@ add_task(function* () {
     .querySelector(".ruleview-colorswatch");
 
   let picker = yield openColorPickerForSwatch(cSwatch, view);
-  let spectrum = yield picker.spectrum;
+  let spectrum = picker.spectrum;
   let change = spectrum.once("changed");
 
   info("Pressing mouse down over color picker.");

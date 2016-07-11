@@ -261,10 +261,10 @@ exports.TooltipsOverlay = TooltipsOverlay;
 
 TooltipsOverlay.prototype = {
   get isEditing() {
-    return this.colorPicker.tooltip.isShown() ||
+    return this.colorPicker.tooltip.isVisible() ||
            this.colorPicker.eyedropperOpen ||
-           this.cubicBezier.tooltip.isShown() ||
-           this.filterEditor.tooltip.isShown();
+           this.cubicBezier.tooltip.isVisible() ||
+           this.filterEditor.tooltip.isVisible();
   },
 
   /**
@@ -290,11 +290,12 @@ TooltipsOverlay.prototype = {
 
     if (this.isRuleView) {
       // Color picker tooltip
-      this.colorPicker = new SwatchColorPickerTooltip(panelDoc);
+      let { toolbox } = this.view.inspector;
+      this.colorPicker = new SwatchColorPickerTooltip(toolbox);
       // Cubic bezier tooltip
-      this.cubicBezier = new SwatchCubicBezierTooltip(panelDoc);
+      this.cubicBezier = new SwatchCubicBezierTooltip(toolbox);
       // Filter editor tooltip
-      this.filterEditor = new SwatchFilterTooltip(panelDoc);
+      this.filterEditor = new SwatchFilterTooltip(toolbox);
     }
 
     this._isStarted = true;
@@ -381,12 +382,12 @@ TooltipsOverlay.prototype = {
       return false;
     }
 
-    if (this.isRuleView && this.colorPicker.tooltip.isShown()) {
+    if (this.isRuleView && this.colorPicker.tooltip.isVisible()) {
       this.colorPicker.revert();
       this.colorPicker.hide();
     }
 
-    if (this.isRuleView && this.cubicBezier.tooltip.isShown()) {
+    if (this.isRuleView && this.cubicBezier.tooltip.isVisible()) {
       this.cubicBezier.revert();
       this.cubicBezier.hide();
     }
@@ -395,7 +396,7 @@ TooltipsOverlay.prototype = {
       this.cssDocs.hide();
     }
 
-    if (this.isRuleView && this.filterEditor.tooltip.isShown()) {
+    if (this.isRuleView && this.filterEditor.tooltip.isVisible()) {
       this.filterEditor.revert();
       this.filterEdtior.hide();
     }

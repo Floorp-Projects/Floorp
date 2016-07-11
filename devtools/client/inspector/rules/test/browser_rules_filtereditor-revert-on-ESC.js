@@ -38,7 +38,6 @@ function* testPressingEscapeRevertsChanges(view) {
 function* testPressingEscapeRevertsChangesAndDisables(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
-  let swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
 
   info("Disabling filter property");
   let onRuleViewChanged = view.once("ruleview-changed");
@@ -56,6 +55,7 @@ function* testPressingEscapeRevertsChangesAndDisables(view) {
   let newValue = yield getRulePropertyValue("filter");
   is(newValue, "", "filter should have been unset.");
 
+  let swatch = propEditor.valueSpan.querySelector(".ruleview-filterswatch");
   yield clickOnFilterSwatch(swatch, view);
 
   ok(!propEditor.element.classList.contains("ruleview-overridden"),
@@ -103,9 +103,8 @@ function* setValueInFilterWidget(value, view) {
   info("Setting the CSS filter value in the tooltip");
 
   let filterTooltip = view.tooltips.filterEditor;
-  let widget = yield filterTooltip.widget;
   let onRuleViewChanged = view.once("ruleview-changed");
-  widget.setCssValue(value);
+  filterTooltip.widget.setCssValue(value);
   yield onRuleViewChanged;
 }
 
@@ -113,8 +112,7 @@ function* pressEscapeToCloseTooltip(view) {
   info("Pressing ESCAPE to close the tooltip");
 
   let filterTooltip = view.tooltips.filterEditor;
-  let widget = yield filterTooltip.widget;
   let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.sendKey("ESCAPE", widget.styleWindow);
+  EventUtils.sendKey("ESCAPE", filterTooltip.widget.styleWindow);
   yield onRuleViewChanged;
 }

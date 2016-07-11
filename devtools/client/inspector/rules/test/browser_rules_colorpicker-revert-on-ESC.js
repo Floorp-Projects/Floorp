@@ -35,7 +35,7 @@ function* testPressingEscapeRevertsChanges(view) {
   is(propEditor.valueSpan.textContent, "#000",
     "The text of the background-color css property was updated");
 
-  let spectrum = yield cPicker.spectrum;
+  let spectrum = cPicker.spectrum;
 
   info("Pressing ESCAPE to close the tooltip");
   let onHidden = cPicker.tooltip.once("hidden");
@@ -76,7 +76,7 @@ function* testPressingEscapeRevertsChangesAndDisables(view) {
   is(textProp.editor.enable.style.visibility, "hidden",
     "property enable checkbox is hidden.");
 
-  let spectrum = yield cPicker.spectrum;
+  let spectrum = cPicker.spectrum;
 
   info("Pressing ESCAPE to close the tooltip");
   let onHidden = cPicker.tooltip.once("hidden");
