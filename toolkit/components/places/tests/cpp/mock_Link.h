@@ -215,6 +215,14 @@ URLSearchParams::NotifyObserver()
   NS_NOTREACHED("Unexpected call to URLSearchParams::NotifyObserver");
 }
 
+NS_IMETHODIMP
+URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                             nsACString& aContentType, nsACString& aCharset)
+{
+  NS_NOTREACHED("Unexpected call to URLSearchParams::GetSendInfo");
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla
 
