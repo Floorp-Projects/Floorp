@@ -5,7 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 modules = []
 modules += [
-    'immutable.js'
+    'immutable.js',
+    'jsol.js'
 ]
 
 # react-dev is used if either debug mode is enabled,
