@@ -142,26 +142,12 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aCount > 0);
 
-  // We're strict about decoder errors
-  MOZ_ASSERT(!HasDecoderError(),
-             "Not allowed to make more decoder calls after error!");
-
   // Begin recording telemetry data.
   TimeStamp start = TimeStamp::Now();
   mChunkCount++;
 
   // Keep track of the total number of bytes written.
   mBytesDecoded += aCount;
-
-  // If a data error occured, just ignore future data.
-  if (HasDataError()) {
-    return;
-  }
-
-  if (IsMetadataDecode() && HasSize()) {
-    // More data came in since we found the size. We have nothing to do here.
-    return;
-  }
 
   // Pass the data along to the implementation.
   WriteInternal(aBuffer, aCount);
