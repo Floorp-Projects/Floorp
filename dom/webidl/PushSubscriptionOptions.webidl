@@ -10,6 +10,6 @@
 [Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled"]
 interface PushSubscriptionOptions
 {
-  [Throws]
+  [SameObject, Throws]
   readonly attribute ArrayBuffer? applicationServerKey;
 };

@@ -79,8 +79,8 @@ public:
 #define CASES_FOR_getgid   case __NR_getgid32
 #define CASES_FOR_geteuid   case __NR_geteuid32
 #define CASES_FOR_getegid   case __NR_getegid32
-#define CASES_FOR_getresuid   case __NR_getresuid32
-#define CASES_FOR_getresgid   case __NR_getresgid32
+#define CASES_FOR_getresuid   case __NR_getresuid32: case __NR_getresuid
+#define CASES_FOR_getresgid   case __NR_getresgid32: case __NR_getresgid
 // The set*id syscalls are omitted; we'll probably never need to allow them.
 #else
 #define CASES_FOR_getuid   case __NR_getuid
@@ -97,6 +97,7 @@ public:
 #define CASES_FOR_fstat   case __NR_fstat64
 #define CASES_FOR_fstatat   case __NR_fstatat64
 #define CASES_FOR_statfs   case __NR_statfs64: case __NR_statfs
+#define CASES_FOR_fstatfs   case __NR_fstatfs64: case __NR_fstatfs
 #define CASES_FOR_fcntl   case __NR_fcntl64
 // We're using the 32-bit version on 32-bit desktop for some reason.
 #define CASES_FOR_getdents   case __NR_getdents64: case __NR_getdents
@@ -108,6 +109,7 @@ public:
 #define CASES_FOR_lstat   case __NR_lstat
 #define CASES_FOR_fstatat   case __NR_newfstatat
 #define CASES_FOR_fstat   case __NR_fstat
+#define CASES_FOR_fstatfs   case __NR_fstatfs
 #define CASES_FOR_statfs   case __NR_statfs
 #define CASES_FOR_fcntl   case __NR_fcntl
 #define CASES_FOR_getdents   case __NR_getdents

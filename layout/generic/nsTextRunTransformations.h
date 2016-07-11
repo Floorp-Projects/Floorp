@@ -8,8 +8,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 #include "gfxTextRun.h"
-#include "nsAutoPtr.h"
 #include "nsStyleContext.h"
 
 class nsTransformedTextRun;
@@ -78,9 +78,9 @@ public:
   // via the fontgroup.
   
   // Takes ownership of aInnerTransformTextRunFactory
-  explicit nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
+  explicit nsCaseTransformTextRunFactory(UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
                                          bool aAllUppercase = false)
-    : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
+    : mInnerTransformingTextRunFactory(Move(aInnerTransformingTextRunFactory)),
       mAllUppercase(aAllUppercase) {}
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
@@ -108,8 +108,8 @@ public:
                               nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray = nullptr);
 
 protected:
-  nsAutoPtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
-  bool                                    mAllUppercase;
+  mozilla::UniquePtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
+  bool mAllUppercase;
 };
 
 /**

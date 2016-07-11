@@ -18,6 +18,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/unused.h"
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -71,12 +72,12 @@
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
-#include "nsAutoPtr.h"
 
 #include "nsPrintfCString.h"
 
 #include "gfxContext.h"
 
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
 
@@ -195,7 +196,7 @@ private:
  * list when the frame is deleted, unregistering the observers.
  */
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(TextFrameGlyphObservers,
-                                    nsTArray<nsAutoPtr<GlyphObserver>>)
+                                    nsTArray<UniquePtr<GlyphObserver>>)
 
 static const nsFrameState TEXT_REFLOW_FLAGS =
    TEXT_FIRST_LETTER |
@@ -738,8 +739,8 @@ CreateObserverForAnimatedGlyphs(nsTextFrame* aFrame, const nsTArray<gfxFont*>& a
     return;
   }
 
-  nsTArray<nsAutoPtr<GlyphObserver> >* observers =
-    new nsTArray<nsAutoPtr<GlyphObserver> >();
+  nsTArray<UniquePtr<GlyphObserver>>* observers =
+    new nsTArray<UniquePtr<GlyphObserver>>();
   for (uint32_t i = 0, count = aFonts.Length(); i < count; ++i) {
     observers->AppendElement(new GlyphObserver(aFonts[i], aFrame));
   }
@@ -955,7 +956,7 @@ public:
 private:
   AutoTArray<MappedFlow,10>   mMappedFlows;
   AutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
-  AutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
+  AutoTArray<UniquePtr<BreakSink>,10> mBreakSinks;
   AutoTArray<UniquePtr<gfxTextRun>,5> mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
@@ -2114,15 +2115,15 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   }
 
   // Setup factory chain
-  nsAutoPtr<nsTransformingTextRunFactory> transformingFactory;
+  UniquePtr<nsTransformingTextRunFactory> transformingFactory;
   if (anyTextTransformStyle) {
     transformingFactory =
-      new nsCaseTransformTextRunFactory(transformingFactory.forget());
+      MakeUnique<nsCaseTransformTextRunFactory>(Move(transformingFactory));
   }
   if (anyMathMLStyling) {
     transformingFactory =
-      new MathMLTextRunFactory(transformingFactory.forget(), mathFlags,
-                               sstyScriptLevel, fontInflation);
+      MakeUnique<MathMLTextRunFactory>(Move(transformingFactory), mathFlags,
+                                       sstyScriptLevel, fontInflation);
   }
   nsTArray<RefPtr<nsTransformedCharStyle>> styles;
   if (transformingFactory) {
@@ -2172,7 +2173,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
                                                  Move(styles), true);
       if (textRun) {
         // ownership of the factory has passed to the textrun
-        transformingFactory.forget();
+        // TODO: bug 1285316: clean up ownership transfer from the factory to
+        // the textrun
+        Unused << transformingFactory.release();
       }
     } else {
       textRun = fontGroup->MakeTextRun(text, transformedLength, &params,
@@ -2187,7 +2190,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
                                                  Move(styles), true);
       if (textRun) {
         // ownership of the factory has passed to the textrun
-        transformingFactory.forget();
+        // TODO: bug 1285316: clean up ownership transfer from the factory to
+        // the textrun
+        Unused << transformingFactory.release();
       }
     } else {
       textRun = fontGroup->MakeTextRun(text, transformedLength, &params,
@@ -2389,8 +2394,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     iterNext.AdvanceOriginal(mappedFlow->GetContentEnd() -
             mappedFlow->mStartFrame->GetContentOffset());
 
-    nsAutoPtr<BreakSink>* breakSink =
-      mBreakSinks.AppendElement(new BreakSink(aTextRun, mDrawTarget, offset));
+    UniquePtr<BreakSink>* breakSink =
+      mBreakSinks.AppendElement(MakeUnique<BreakSink>(aTextRun, mDrawTarget, offset));
     if (!breakSink || !*breakSink)
       return;
 

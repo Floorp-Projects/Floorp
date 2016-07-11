@@ -102,6 +102,15 @@
     "n_buckets": 50,
     "description": "The length of time (in milliseconds) for the subsequent opens of AudioStream."
   },
+  "AUDIOSTREAM_BACKEND_USED": {
+    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org"],
+    "bug_numbers": [1280630],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
+    "releaseChannelCollection": "opt-out"
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -9972,6 +9981,23 @@
     "kind": "count",
     "bug_numbers": [1280229],
     "description": "Number of the use of XHR in workers."
+  },
+  "WEBVTT_TRACK_KINDS": {
+    "alert_emails": ["alwu@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1280644],
+    "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
+    "releaseChannelCollection": "opt-out"
+  },
+  "WEBVTT_USED_VTT_CUES": {
+    "alert_emails": ["alwu@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "bug_numbers": [1280644],
+    "description": "Number of the use of the vtt cues.",
+    "releaseChannelCollection": "opt-out"
   },
   "BLINK_FILESYSTEM_USED": {
     "alert_emails": ["amarchesini@mozilla.com"],
