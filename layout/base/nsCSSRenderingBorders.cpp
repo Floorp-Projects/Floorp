@@ -1090,13 +1090,15 @@ nsCSSBorderRenderer::GetOuterAndInnerBezier(Bezier* aOuterBezier,
   mozilla::css::Side sideH(GetHorizontalSide(aCorner));
   mozilla::css::Side sideV(GetVerticalSide(aCorner));
 
-  Size innerCornerSize(std::max(0.0f, mBorderRadii[aCorner].width -
-                                mBorderWidths[sideV]),
-                       std::max(0.0f, mBorderRadii[aCorner].height -
-                                mBorderWidths[sideH]));
+  Size outerCornerSize(ceil(mBorderRadii[aCorner].width),
+                       ceil(mBorderRadii[aCorner].height));
+  Size innerCornerSize(ceil(std::max(0.0f, mBorderRadii[aCorner].width -
+                                     mBorderWidths[sideV])),
+                       ceil(std::max(0.0f, mBorderRadii[aCorner].height -
+                                     mBorderWidths[sideH])));
 
   GetBezierPointsForCorner(aOuterBezier, aCorner, mOuterRect.AtCorner(aCorner),
-                           mBorderRadii[aCorner]);
+                           outerCornerSize);
 
   GetBezierPointsForCorner(aInnerBezier, aCorner, mInnerRect.AtCorner(aCorner),
                            innerCornerSize);

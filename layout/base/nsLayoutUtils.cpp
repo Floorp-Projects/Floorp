@@ -7616,7 +7616,7 @@ nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
   // contenteditable only works with HTML document.
   // Note: Use nsIDOMHTMLDocument rather than nsIHTMLDocument for getting the
   //       body node because nsIDOMHTMLDocument::GetBody() does something
-  //       additional work for some cases and nsEditor uses them.
+  //       additional work for some cases and EditorBase uses them.
   nsCOMPtr<nsIDOMHTMLDocument> domHTMLDoc = do_QueryInterface(aDocument);
   if (!domHTMLDoc) {
     return nullptr;

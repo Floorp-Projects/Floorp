@@ -32,6 +32,9 @@ interface DataTransfer {
 partial interface DataTransfer {
   [Throws, Pref="dom.input.dirpicker"]
   Promise<sequence<(File or Directory)>> getFilesAndDirectories();
+
+  [Throws, Pref="dom.input.dirpicker"]
+  Promise<sequence<File>>                getFiles(optional boolean recursiveFlag = false);
 };
 
 // Mozilla specific stuff
