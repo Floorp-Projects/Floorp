@@ -120,22 +120,13 @@ function* checkData(data, editor, inspector) {
 
   if (selEnd != -1) {
     is(editor.input.value, completion, "Completed value is correct");
-    is(editor.input.selectionStart, selStart,
-       "Selection start position is correct");
+    is(editor.input.selectionStart, selStart, "Selection start position is correct");
     is(editor.input.selectionEnd, selEnd, "Selection end position is correct");
-    if (popupOpen) {
-      ok(editor.popup.isOpen, "Popup is open");
-    } else {
-      ok(editor.popup._panel.state != "open" &&
-         editor.popup._panel.state != "showing",
-        "Popup is closed");
-    }
+    is(editor.popup.isOpen, popupOpen, "Popup is " + (popupOpen ? "open" : "closed"));
   } else {
     let nodeFront = yield getNodeFront("#node14", inspector);
     let container = getContainerForNodeFront(nodeFront, inspector);
-    let attr = container.editor.attrElements.get("style")
-                                            .querySelector(".editable");
-    is(attr.textContent, completion,
-       "Correct value is persisted after pressing Enter");
+    let attr = container.editor.attrElements.get("style").querySelector(".editable");
+    is(attr.textContent, completion, "Correct value is persisted after pressing Enter");
   }
 }
