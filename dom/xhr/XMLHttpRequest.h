@@ -19,6 +19,7 @@ namespace dom {
 
 class Blob;
 class FormData;
+class URLSearchParams;
 class XMLHttpRequestUpload;
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget
@@ -87,6 +88,9 @@ public:
 
   virtual void
   Send(JSContext* aCx, Blob& aBlob, ErrorResult& aRv) = 0;
+
+  virtual void
+  Send(JSContext* aCx, URLSearchParams& aURLSearchParams, ErrorResult& aRv) = 0;
 
   virtual void
   Send(JSContext* aCx, nsIDocument& aDoc, ErrorResult& aRv) = 0;
