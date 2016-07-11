@@ -287,13 +287,13 @@ protected:
    *
    * BeforeFinishInternal() can be used to detect if decoding is in an
    * incomplete state, e.g. due to file truncation, in which case it should
-   * call PostDataError().
+   * return a failing nsresult.
    */
   virtual nsresult InitInternal();
   virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) = 0;
-  virtual void BeforeFinishInternal();
-  virtual void FinishInternal();
-  virtual void FinishWithErrorInternal();
+  virtual nsresult BeforeFinishInternal();
+  virtual nsresult FinishInternal();
+  virtual nsresult FinishWithErrorInternal();
 
   /*
    * Progress notifications.

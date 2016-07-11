@@ -67,26 +67,26 @@ nsICODecoder::nsICODecoder(RasterImage* aImage)
   , mHasMaskAlpha(false)
 { }
 
-void
+nsresult
 nsICODecoder::FinishInternal()
 {
   // We shouldn't be called in error cases
   MOZ_ASSERT(!HasError(), "Shouldn't call FinishInternal after error!");
 
-  GetFinalStateFromContainedDecoder();
+  return GetFinalStateFromContainedDecoder();
 }
 
-void
+nsresult
 nsICODecoder::FinishWithErrorInternal()
 {
-  GetFinalStateFromContainedDecoder();
+  return GetFinalStateFromContainedDecoder();
 }
 
-void
+nsresult
 nsICODecoder::GetFinalStateFromContainedDecoder()
 {
   if (!mContainedDecoder) {
-    return;
+    return NS_OK;
   }
 
   MOZ_ASSERT(mContainedSourceBuffer,
@@ -95,20 +95,23 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
   // Let the contained decoder finish up if necessary.
   if (!mContainedSourceBuffer->IsComplete()) {
     mContainedSourceBuffer->Complete(NS_OK);
-    if (NS_FAILED(mContainedDecoder->Decode(mDoNotResume))) {
-      PostDataError();
-    }
+    mContainedDecoder->Decode(mDoNotResume);
   }
 
   // Make our state the same as the state of the contained decoder.
   mDecodeDone = mContainedDecoder->GetDecodeDone();
-  mDataError = mDataError || mContainedDecoder->HasDataError();
   mDecodeAborted = mContainedDecoder->WasAborted();
   mProgress |= mContainedDecoder->TakeProgress();
   mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
   mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
 
-  MOZ_ASSERT(HasError() || !mCurrentFrame || mCurrentFrame->IsFinished());
+  // Propagate errors.
+  nsresult rv = HasError() || mContainedDecoder->HasError()
+              ? NS_ERROR_FAILURE
+              : NS_OK;
+
+  MOZ_ASSERT(NS_FAILED(rv) || !mCurrentFrame || mCurrentFrame->IsFinished());
+  return rv;
 }
 
 bool
@@ -647,22 +650,25 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount)
   // reading from.
   mContainedSourceBuffer->Append(aBuffer, aCount);
 
+  bool succeeded = true;
+
   // Write to the contained decoder. If we run out of data, the ICO decoder will
   // get resumed when there's more data available, as usual, so we don't need
   // the contained decoder to get resumed too. To avoid that, we provide an
   // IResumable which just does nothing.
   if (NS_FAILED(mContainedDecoder->Decode(mDoNotResume))) {
-    PostDataError();
+    succeeded = false;
   }
 
-  // Make our state the same as the state of the contained decoder.
+  // Make our state the same as the state of the contained decoder, and
+  // propagate errors.
   mProgress |= mContainedDecoder->TakeProgress();
   mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
   if (mContainedDecoder->HasDataError()) {
-    PostDataError();
+    succeeded = false;
   }
 
-  return !HasError();
+  return succeeded;
 }
 
 } // namespace image

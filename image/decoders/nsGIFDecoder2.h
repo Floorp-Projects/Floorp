@@ -25,7 +25,7 @@ public:
   ~nsGIFDecoder2();
 
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
-  virtual void FinishInternal() override;
+  nsresult FinishInternal() override;
   virtual Telemetry::ID SpeedHistogram() override;
 
 private:
