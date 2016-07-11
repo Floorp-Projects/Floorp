@@ -1492,6 +1492,36 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
   }
 }
 
+/* static */
+void
+ServiceWorkerManager::LocalizeAndReportToAllClients(
+                                          const nsCString& aScope,
+                                          const char* aStringKey,
+                                          const nsTArray<nsString>& aParamArray,
+                                          uint32_t aFlags,
+                                          const nsString& aFilename,
+                                          const nsString& aLine,
+                                          uint32_t aLineNumber,
+                                          uint32_t aColumnNumber)
+{
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    return;
+  }
+
+  nsresult rv;
+  nsXPIDLString message;
+  rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             aStringKey, aParamArray, message);
+  if (NS_SUCCEEDED(rv)) {
+    swm->ReportToAllClients(aScope, message,
+                            aFilename, aLine, aLineNumber, aColumnNumber,
+                            aFlags);
+  } else {
+    NS_WARNING("Failed to format and therefore report localized error.");
+  }
+}
+
 void
 ServiceWorkerManager::HandleError(JSContext* aCx,
                                   nsIPrincipal* aPrincipal,

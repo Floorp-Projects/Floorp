@@ -773,7 +773,7 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex,
   }
   
   // We want to return the buffer not offset by startOfData because it will be 
-  // parsed out later (probably by nsHTMLEditor::ParseCFHTML) when it is still
+  // parsed out later (probably by HTMLEditor::ParseCFHTML) when it is still
   // in CF_HTML format.
 
   // We return the byte offset from the start of the data buffer to where the
