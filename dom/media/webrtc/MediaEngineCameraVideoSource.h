@@ -25,6 +25,7 @@ class MediaEngineCameraVideoSource : public MediaEngineVideoSource,
                                      protected MediaConstraintsHelper
 {
 public:
+  // Some subclasses use an index to track multiple instances.
   explicit MediaEngineCameraVideoSource(int aIndex,
                                         const char* aMonitorName = "Camera.Monitor")
     : MediaEngineVideoSource(kReleased)
@@ -38,6 +39,8 @@ public:
     , mTrackID(0)
   {}
 
+  explicit MediaEngineCameraVideoSource(const char* aMonitorName = "Camera.Monitor")
+    : MediaEngineCameraVideoSource(0, aMonitorName) {}
 
   void GetName(nsAString& aName) const override;
   void GetUUID(nsACString& aUUID) const override;
