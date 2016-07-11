@@ -6,6 +6,7 @@
 
 const { Ci, Cc } = require("chrome");
 const { memoize } = require("sdk/lang/functional");
+const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 
 loader.lazyRequireGetter(this, "setIgnoreLayoutChanges", "devtools/server/actors/layout", true);
 exports.setIgnoreLayoutChanges = (...args) =>
@@ -377,7 +378,7 @@ function safelyGetContentWindow(frame) {
                .createInstance(Ci.inIDeepTreeWalker);
   walker.showSubDocuments = true;
   walker.showDocumentsAsNodes = true;
-  walker.init(frame, Ci.nsIDOMNodeFilter.SHOW_ALL);
+  walker.init(frame, nodeFilterConstants.SHOW_ALL);
   walker.currentNode = frame;
 
   let document = walker.nextNode();
