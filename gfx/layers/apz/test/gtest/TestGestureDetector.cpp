@@ -604,7 +604,10 @@ TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
 
   uint64_t touchBlockId = 0;
   uint64_t wheelBlockId = 0;
-  TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &touchBlockId);
+  nsEventStatus status = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &touchBlockId);
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(apzc, touchBlockId);
+  }
   mcc->AdvanceByMillis(10);
   Wheel(apzc, ScreenIntPoint(10, 10), ScreenPoint(0, -10), mcc->Time(), &wheelBlockId);
   EXPECT_NE(touchBlockId, wheelBlockId);
