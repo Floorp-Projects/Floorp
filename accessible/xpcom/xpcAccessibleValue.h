@@ -32,7 +32,7 @@ protected:
   virtual ~xpcAccessibleValue() {}
 
 private:
-  Accessible* Intl();
+  AccessibleOrProxy Intl();
 
   xpcAccessibleValue(const xpcAccessibleValue&) = delete;
   xpcAccessibleValue& operator =(const xpcAccessibleValue&) = delete;
@@ -40,5 +40,4 @@ private:
 
 } // namespace a11y
 } // namespace mozilla
-
 #endif
