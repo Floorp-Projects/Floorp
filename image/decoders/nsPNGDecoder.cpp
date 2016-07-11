@@ -349,15 +349,15 @@ nsPNGDecoder::InitInternal()
 }
 
 void
-nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
+nsPNGDecoder::DoDecode(const char* aBuffer, size_t aLength)
 {
-  MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
   MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT(aCount > 0);
+  MOZ_ASSERT(aLength > 0);
 
   Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aCount, [=](State aState,
-                                    const char* aData, size_t aLength) {
+    mLexer.Lex(aBuffer, aLength, [=](State aState,
+                                     const char* aData, size_t aLength) {
       switch (aState) {
         case State::PNG_DATA:
           return ReadPNGData(aData, aLength);

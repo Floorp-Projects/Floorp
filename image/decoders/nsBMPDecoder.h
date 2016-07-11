@@ -149,8 +149,7 @@ public:
     mDoesHaveTransparency = true;
   }
 
-  virtual void WriteInternal(const char* aBuffer,
-                             uint32_t aCount) override;
+  void DoDecode(const char* aBuffer, size_t aLength) override;
   virtual void BeforeFinishInternal() override;
   virtual void FinishInternal() override;
 
