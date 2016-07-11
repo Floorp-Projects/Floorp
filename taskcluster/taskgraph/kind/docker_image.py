@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import json
 import os
+import re
 import urllib2
 import tarfile
 import time
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
+INDEX_REGEX = r'index\.(docker\.images\.v1\.(.+)\.(.+)\.hash\.(.+))'
 
 
 class DockerImageTask(base.Task):
@@ -29,6 +31,10 @@ class DockerImageTask(base.Task):
     def __init__(self, *args, **kwargs):
         self.index_paths = kwargs.pop('index_paths')
         super(DockerImageTask, self).__init__(*args, **kwargs)
+
+    def __eq__(self, other):
+        return super(DockerImageTask, self).__eq__(other) and \
+               self.index_paths == other.index_paths
 
     @classmethod
     def load_tasks(cls, kind, path, config, params, loaded_tasks):
@@ -134,3 +140,22 @@ class DockerImageTask(base.Task):
 
         with tarfile.open(destination, 'w:gz') as tar:
             tar.add(context_dir, arcname=image_name)
+
+    @classmethod
+    def from_json(cls, task_dict):
+        # Generating index_paths for optimization
+        routes = task_dict['task']['routes']
+        index_paths = []
+        for route in routes:
+            index_path_regex = re.compile(INDEX_REGEX)
+            result = index_path_regex.search(route)
+            if result is None:
+                continue
+            index_paths.append(result.group(1))
+            index_paths.append(result.group(1).replace(result.group(2), 'mozilla-central'))
+        docker_image_task = cls(kind='docker-image',
+                                label=task_dict['label'],
+                                attributes=task_dict['attributes'],
+                                task=task_dict['task'],
+                                index_paths=index_paths)
+        return docker_image_task
