@@ -152,7 +152,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
       AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
 
       // Pass the data along to the implementation.
-      WriteInternal(mIterator->Data(), mIterator->Length());
+      DoDecode(mIterator->Data(), mIterator->Length());
     }
   }
 

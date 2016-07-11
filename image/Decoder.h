@@ -288,7 +288,7 @@ protected:
    * call PostDataError().
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) = 0;
+  virtual void DoDecode(const char* aBuffer, size_t aLength) = 0;
   virtual void BeforeFinishInternal();
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();

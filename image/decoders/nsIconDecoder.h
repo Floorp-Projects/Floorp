@@ -37,7 +37,7 @@ class nsIconDecoder : public Decoder
 public:
   virtual ~nsIconDecoder();
 
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  void DoDecode(const char* aBuffer, size_t aLength) override;
 
 private:
   friend class DecoderFactory;
