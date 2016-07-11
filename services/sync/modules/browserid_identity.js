@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["BrowserIDManager"];
+this.EXPORTED_SYMBOLS = ["BrowserIDManager", "AuthenticationError"];
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -65,8 +65,9 @@ function deriveKeyBundle(kB) {
   some other error object (which should do the right thing when toString() is
   called on it)
 */
-function AuthenticationError(details) {
+function AuthenticationError(details, source) {
   this.details = details;
+  this.source = source;
 }
 
 AuthenticationError.prototype = {
@@ -110,6 +111,14 @@ this.BrowserIDManager.prototype = {
     } catch (e) {
       return false;
     }
+  },
+
+  // Get the FxA UID. Throws if there is no signed in user
+  userUID() {
+    if (!this._signedInUser) {
+      throw new Error("userUID(): No signed in user");
+    }
+    return this._signedInUser.uid;
   },
 
   initialize: function() {
@@ -625,13 +634,13 @@ this.BrowserIDManager.prototype = {
         // both tokenserverclient and hawkclient.
         // A tokenserver error thrown based on a bad response.
         if (err.response && err.response.status === 401) {
-          err = new AuthenticationError(err);
+          err = new AuthenticationError(err, "tokenserver");
         // A hawkclient error.
         } else if (err.code && err.code === 401) {
-          err = new AuthenticationError(err);
+          err = new AuthenticationError(err, "hawkclient");
         // An FxAccounts.jsm error.
         } else if (err.message == fxAccountsCommon.ERROR_AUTH_ERROR) {
-          err = new AuthenticationError(err);
+          err = new AuthenticationError(err, "fxaccounts");
         }
 
         // TODO: write tests to make sure that different auth error cases are handled here

@@ -86,6 +86,7 @@ function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
+  validate_all_future_pings();
 
   run_next_test();
 }
