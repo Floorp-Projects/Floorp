@@ -140,7 +140,6 @@ LOCAL_INCLUDES += [
     '/dom/security',
     '/dom/storage',
     '/dom/workers',
-    '/editor/libeditor',
     '/embedding/components/printingui/ipc',
     '/extensions/cookie',
     '/extensions/spellcheck/src',
