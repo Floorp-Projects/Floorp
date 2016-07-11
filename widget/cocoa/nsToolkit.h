@@ -7,7 +7,6 @@
 #define nsToolkit_h_
 
 #include "nscore.h"
-#include "nsCocoaFeatures.h"
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
