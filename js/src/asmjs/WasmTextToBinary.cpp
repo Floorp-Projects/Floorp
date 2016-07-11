@@ -90,8 +90,6 @@ class WasmToken
         If,
         Import,
         Index,
-        UnsignedInteger,
-        SignedInteger,
         Memory,
         NegativeZero,
         Load,
@@ -108,6 +106,8 @@ class WasmToken
         Return,
         Segment,
         SetLocal,
+        SignedInteger,
+        Start,
         Store,
         Table,
         TernaryOpcode,
@@ -116,6 +116,7 @@ class WasmToken
         Type,
         UnaryOpcode,
         Unreachable,
+        UnsignedInteger,
         ValueType
     };
   private:
@@ -1320,6 +1321,8 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::SetLocal, begin, cur_);
         if (consume(MOZ_UTF16("segment")))
             return WasmToken(WasmToken::Segment, begin, cur_);
+        if (consume(MOZ_UTF16("start")))
+            return WasmToken(WasmToken::Start, begin, cur_);
         break;
 
       case 't':
@@ -2405,6 +2408,21 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
     return true;
 }
 
+static bool
+ParseStartFunc(WasmParseContext& c, WasmToken token, AstModule* module)
+{
+    AstRef func;
+    if (!c.ts.matchRef(&func, c.error))
+        return false;
+
+    if (!module->setStartFunc(AstStartFunc(func))) {
+        c.ts.generateError(token, c.error);
+        return false;
+    }
+
+    return true;
+}
+
 static AstImport*
 ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
 {
@@ -2552,6 +2570,11 @@ ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* 
           case WasmToken::Type: {
             AstSig* sig = ParseTypeDef(c);
             if (!sig || !module->append(sig))
+                return nullptr;
+            break;
+          }
+          case WasmToken::Start: {
+            if (!ParseStartFunc(c, section, module))
                 return nullptr;
             break;
           }
@@ -3065,6 +3088,11 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 
     for (AstFunc* func : module->funcs()) {
         if (!ResolveFunc(r, *func))
+            return false;
+    }
+
+    if (module->hasStartFunc()) {
+        if (!r.resolveFunction(module->startFunc().func()))
             return false;
     }
 
@@ -3723,6 +3751,23 @@ EncodeFunctionBody(Encoder& e, AstFunc& func)
 }
 
 static bool
+EncodeStartSection(Encoder& e, AstModule& module)
+{
+    if (!module.hasStartFunc())
+        return true;
+
+    size_t offset;
+    if (!e.startSection(StartSectionId, &offset))
+        return false;
+
+    if (!e.writeVarU32(module.startFunc().func().index()))
+        return false;
+
+    e.finishSection(offset);
+    return true;
+}
+
+static bool
 EncodeCodeSection(Encoder& e, AstModule& module)
 {
     if (module.funcs().empty())
@@ -3871,6 +3916,9 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
         return false;
 
     if (!EncodeExportSection(e, newFormat, module))
+        return false;
+
+    if (!EncodeStartSection(e, module))
         return false;
 
     if (!EncodeCodeSection(e, module))
