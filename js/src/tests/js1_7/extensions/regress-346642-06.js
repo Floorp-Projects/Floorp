@@ -50,20 +50,13 @@ function test()
 
   expect = 3;
   actual = '';
-  f = function () { return { set x([a]) { yield; } } }
-  var obj = f();
-  uneval(obj); actual = 3;
+  "" + function () { for(;; ([[,]] = p)) { } }; actual = 3;
   reportCompare(expect, actual, summary + ': 4');
 
   expect = 3;
   actual = '';
-  "" + function () { for(;; ([[,]] = p)) { } }; actual = 3;
-  reportCompare(expect, actual, summary + ': 5');
-
-  expect = 3;
-  actual = '';
   actual = 1; try {for(x in (function ([y]) { })() ) { }}catch(ex){} actual = 3;
-  reportCompare(expect, actual, summary + ': 6');
+  reportCompare(expect, actual, summary + ': 5');
 
   exitFunc ('test');
 }

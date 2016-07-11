@@ -330,6 +330,7 @@ MSG_DEF(JSMSG_VAR_HIDES_ARG,           1, JSEXN_TYPEERR, "variable {0} redeclare
 MSG_DEF(JSMSG_WHILE_AFTER_DO,          0, JSEXN_SYNTAXERR, "missing while after do-loop body")
 MSG_DEF(JSMSG_YIELD_IN_ARROW,          0, JSEXN_SYNTAXERR, "arrow function may not contain yield")
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,        0, JSEXN_SYNTAXERR, "yield in default expression")
+MSG_DEF(JSMSG_YIELD_IN_METHOD,         0, JSEXN_SYNTAXERR, "non-generator method definitions may not contain yield")
 MSG_DEF(JSMSG_BAD_COLUMN_NUMBER,       0, JSEXN_RANGEERR, "column number out of range")
 MSG_DEF(JSMSG_COMPUTED_NAME_IN_PATTERN,0, JSEXN_SYNTAXERR, "computed property names aren't supported in this destructuring declaration")
 MSG_DEF(JSMSG_DEFAULT_IN_PATTERN,      0, JSEXN_SYNTAXERR, "destructuring defaults aren't supported in this destructuring declaration")
