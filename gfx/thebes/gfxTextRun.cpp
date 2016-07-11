@@ -2859,11 +2859,6 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
         return ret.forget();
     }
 
-    // never fall back for characters from unknown scripts
-    if (aRunScript == Script::UNKNOWN) {
-        return nullptr;
-    }
-
     // for known "space" characters, don't do a full system-fallback search;
     // we'll synthesize appropriate-width spaces instead of missing-glyph boxes
     if (GetGeneralCategory(aCh) ==
