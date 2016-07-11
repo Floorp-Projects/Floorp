@@ -29,7 +29,7 @@ EXTRA_COMPONENTS += [
     'WebappsUpdateTimer.js',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+if CONFIG['OS_TARGET'] != 'Android':
     EXTRA_COMPONENTS += [
       'CommandLine.js',
       'OopCommandLine.js',

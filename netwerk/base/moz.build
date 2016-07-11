@@ -287,17 +287,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'NetworkInfoServiceCocoa.cpp',
         'nsNetworkInfoService.cpp',
     ]
-elif CONFIG['OS_TARGET'] == 'Linux':
-    SOURCES += [
-        'NetworkInfoServiceLinux.cpp',
-        'nsNetworkInfoService.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    SOURCES += [
-        'NetworkInfoServiceLinux.cpp',
-        'nsNetworkInfoService.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+elif CONFIG['OS_ARCH'] == 'Linux':
     SOURCES += [
         'NetworkInfoServiceLinux.cpp',
         'nsNetworkInfoService.cpp',
