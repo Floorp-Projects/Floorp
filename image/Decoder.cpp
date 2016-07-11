@@ -177,12 +177,21 @@ Decoder::ShouldSyncDecode(size_t aByteLimit)
 void
 Decoder::CompleteDecode()
 {
-  // Implementation-specific finalization
-  BeforeFinishInternal();
-  if (!HasError()) {
-    FinishInternal();
-  } else {
-    FinishWithErrorInternal();
+  // Implementation-specific finalization.
+  nsresult rv = BeforeFinishInternal();
+  if (NS_FAILED(rv)) {
+    PostDataError();
+  }
+
+  rv = HasError() ? FinishWithErrorInternal()
+                  : FinishInternal();
+  if (NS_FAILED(rv)) {
+    PostDataError();
+  }
+
+  // If this was a metadata decode and we never got a size, the decode failed.
+  if (IsMetadataDecode() && !HasSize()) {
+    PostDataError();
   }
 
   // If the implementation left us mid-frame, finish that up.
@@ -277,8 +286,6 @@ Decoder::AllocateFrame(uint32_t aFrameNum,
       MOZ_ASSERT(!mInFrame, "Starting new frame but not done with old one!");
       mInFrame = true;
     }
-  } else {
-    PostDataError();
   }
 
   return mCurrentFrame ? NS_OK : NS_ERROR_FAILURE;
@@ -390,9 +397,9 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
  */
 
 nsresult Decoder::InitInternal() { return NS_OK; }
-void Decoder::BeforeFinishInternal() { }
-void Decoder::FinishInternal() { }
-void Decoder::FinishWithErrorInternal() { }
+nsresult Decoder::BeforeFinishInternal() { return NS_OK; }
+nsresult Decoder::FinishInternal() { return NS_OK; }
+nsresult Decoder::FinishWithErrorInternal() { return NS_OK; }
 
 /*
  * Progress Notifications

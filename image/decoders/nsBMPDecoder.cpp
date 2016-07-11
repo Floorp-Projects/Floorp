@@ -222,15 +222,17 @@ nsBMPDecoder::GetCompressedImageSize() const
        : mH.mImageSize;
 }
 
-void
+nsresult
 nsBMPDecoder::BeforeFinishInternal()
 {
   if (!IsMetadataDecode() && !mImageData) {
-    PostDataError();
+    return NS_ERROR_FAILURE;  // No image; something went wrong.
   }
+
+  return NS_OK;
 }
 
-void
+nsresult
 nsBMPDecoder::FinishInternal()
 {
   // We shouldn't be called in error cases.
@@ -268,6 +270,8 @@ nsBMPDecoder::FinishInternal()
     }
     PostDecodeDone();
   }
+
+  return NS_OK;
 }
 
 // ----------------------------------------
@@ -469,7 +473,6 @@ nsBMPDecoder::ReadFileHeader(const char* aData, size_t aLength)
 
   bool signatureOk = aData[0] == 'B' && aData[1] == 'M';
   if (!signatureOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 
@@ -496,7 +499,6 @@ nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
                    (mH.mBIHSize >= InfoHeaderLength::OS2_V2_MIN &&
                     mH.mBIHSize <= InfoHeaderLength::OS2_V2_MAX);
   if (!bihSizeOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
   // ICO BMPs must have a WinBMPv3 header. nsICODecoder should have already
@@ -551,7 +553,6 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   bool sizeOk = 0 <= mH.mWidth && mH.mWidth <= k64KWidth &&
                 mH.mHeight != INT_MIN;
   if (!sizeOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 
@@ -570,7 +571,6 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
        mH.mBIHSize == InfoHeaderLength::WIN_V5) &&
       (mH.mBpp == 16 || mH.mBpp == 32));
   if (!bppCompressionOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 
@@ -715,7 +715,6 @@ nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
   // points into the middle of the color palette instead of past the end) and
   // we give up.
   if (mPreGapLength > mH.mDataOffset) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 

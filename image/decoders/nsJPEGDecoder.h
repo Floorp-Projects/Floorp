@@ -59,7 +59,7 @@ public:
 
   nsresult InitInternal() override;
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
-  virtual void FinishInternal() override;
+  nsresult FinishInternal() override;
 
   virtual Telemetry::ID SpeedHistogram() override;
   void NotifyDone();

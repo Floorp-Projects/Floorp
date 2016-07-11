@@ -169,7 +169,7 @@ nsJPEGDecoder::InitInternal()
   return NS_OK;
 }
 
-void
+nsresult
 nsJPEGDecoder::FinishInternal()
 {
   // If we're not in any sort of error case, force our state to JPEG_DONE.
@@ -178,6 +178,8 @@ nsJPEGDecoder::FinishInternal()
       !IsMetadataDecode()) {
     mState = JPEG_DONE;
   }
+
+  return NS_OK;
 }
 
 Maybe<TerminalState>
@@ -301,7 +303,6 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
           break;
         default:
           mState = JPEG_ERROR;
-          PostDataError();
           MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
                  ("} (unknown colorpsace (1))"));
           return Transition::TerminateFailure();
@@ -318,7 +319,6 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
             break;
           default:
             mState = JPEG_ERROR;
-            PostDataError();
             MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
                    ("} (unknown colorpsace (2))"));
             return Transition::TerminateFailure();
@@ -377,7 +377,6 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
           break;
         default:
           mState = JPEG_ERROR;
-          PostDataError();
           MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
                  ("} (unknown colorpsace (3))"));
           return Transition::TerminateFailure();
