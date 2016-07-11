@@ -24,7 +24,7 @@ import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
@@ -623,9 +623,10 @@ OnSharedPreferenceChangeListener
                 boolean success = message.getBoolean("success");
                 final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
 
-                SnackbarHelper.showSnackbar(GeckoPreferences.this,
-                        getString(stringRes),
-                        Snackbar.LENGTH_LONG);
+                SnackbarBuilder.builder(GeckoPreferences.this)
+                        .message(stringRes)
+                        .duration(Snackbar.LENGTH_LONG)
+                        .buildAndShow();
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -635,7 +636,10 @@ OnSharedPreferenceChangeListener
     @Override
     public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
         if ("Snackbar:Show".equals(event)) {
-            SnackbarHelper.showSnackbar(this, message, callback);
+            SnackbarBuilder.builder(this)
+                    .fromEvent(message)
+                    .callback(callback)
+                    .buildAndShow();
         }
     }
 
