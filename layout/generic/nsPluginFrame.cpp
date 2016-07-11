@@ -1537,9 +1537,9 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     {
       RefPtr<ClientLayerManager> lm = aBuilder->GetWidgetLayerManager()->AsClientLayerManager();
       if (!mDidCompositeObserver || !mDidCompositeObserver->IsValid(lm)) {
-        mDidCompositeObserver = new PluginFrameDidCompositeObserver(mInstanceOwner, lm);
+        mDidCompositeObserver = MakeUnique<PluginFrameDidCompositeObserver>(mInstanceOwner, lm);
       }
-      lm->AddDidCompositeObserver(mDidCompositeObserver);
+      lm->AddDidCompositeObserver(mDidCompositeObserver.get());
     }
 #ifdef MOZ_WIDGET_ANDROID
   } else if (aItem->GetType() == nsDisplayItem::TYPE_PLUGIN_VIDEO) {

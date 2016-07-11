@@ -51,11 +51,15 @@ private:
 
   void RequestVideoData();
 
-  bool IsAudioSeekComplete();
+  bool NeedMoreVideo() const;
 
-  bool IsVideoSeekComplete();
+  bool IsVideoRequestPending() const;
 
-  void CheckIfSeekComplete();
+  bool IsAudioSeekComplete() const;
+
+  bool IsVideoSeekComplete() const;
+
+  void MaybeFinishSeek();
 
   void OnAudioDecoded(MediaData* aAudioSample);
 
