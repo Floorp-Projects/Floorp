@@ -54,7 +54,7 @@ CompareTextTracks::LessThan(TextTrack* aOne, TextTrack* aTwo) const
   TextTrackSource sourceOne = aOne->GetTextTrackSource();
   TextTrackSource sourceTwo = aTwo->GetTextTrackSource();
   if (sourceOne != sourceTwo) {
-    return sourceOne == Track ||
+    return sourceOne == TextTrackSource::Track ||
            (sourceOne == AddTextTrack && sourceTwo == MediaResourceSpecific);
   }
   switch (sourceOne) {
@@ -141,17 +141,17 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
   if (!mMediaElement || !mTextTracks) {
     return nullptr;
   }
-  RefPtr<TextTrack> ttrack =
+  RefPtr<TextTrack> track =
     mTextTracks->AddTextTrack(aKind, aLabel, aLanguage, aMode, aReadyState,
                               aTextTrackSource, CompareTextTracks(mMediaElement));
-  AddCues(ttrack);
-  ReportTelemetryForTrack(ttrack);
+  AddCues(track);
+  ReportTelemetryForTrack(track);
 
-  if (aTextTrackSource == Track) {
+  if (aTextTrackSource == TextTrackSource::Track) {
     NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection));
   }
 
-  return ttrack.forget();
+  return track.forget();
 }
 
 void
@@ -164,7 +164,7 @@ TextTrackManager::AddTextTrack(TextTrack* aTextTrack)
   AddCues(aTextTrack);
   ReportTelemetryForTrack(aTextTrack);
 
-  if (aTextTrack->GetTextTrackSource() == Track) {
+  if (aTextTrack->GetTextTrackSource() == TextTrackSource::Track) {
     NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection));
   }
 }
