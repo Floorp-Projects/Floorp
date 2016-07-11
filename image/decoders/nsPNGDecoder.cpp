@@ -349,13 +349,13 @@ nsPNGDecoder::InitInternal()
 }
 
 Maybe<TerminalState>
-nsPNGDecoder::DoDecode(const char* aBuffer, size_t aLength)
+nsPNGDecoder::DoDecode(SourceBufferIterator& aIterator)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
-  MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT(aLength > 0);
+  MOZ_ASSERT(aIterator.Data());
+  MOZ_ASSERT(aIterator.Length() > 0);
 
-  return mLexer.Lex(aBuffer, aLength,
+  return mLexer.Lex(aIterator.Data(), aIterator.Length(),
                     [=](State aState, const char* aData, size_t aLength) {
     switch (aState) {
       case State::PNG_DATA:
