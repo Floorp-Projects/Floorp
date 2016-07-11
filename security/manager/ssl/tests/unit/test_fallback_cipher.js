@@ -234,7 +234,7 @@ add_task(function* () {
                     port, Cr.NS_OK, {isPrivate: true});
   // make sure that we remember the TLS intolerance
   yield startClient("server: fallback only, client: second try after fallback success, private",
-                    port, Cr.NS_OK);
+                    port, Cr.NS_OK, {isPrivate: true});
 });
 
 do_register_cleanup(function() {
