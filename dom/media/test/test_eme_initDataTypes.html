@@ -39,9 +39,9 @@ var tests = [
   {
     name: "Two keyIds, persistent session, type before kids",
     initDataType: 'keyids',
-    initData: '{"type":"persistent", "kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
-    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"persistent"}',
-    sessionType: 'persistent',
+    initData: '{"type":"persistent-license", "kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"persistent-license"}',
+    sessionType: 'persistent-license',
     expectPass: true,
   },
   {
@@ -62,7 +62,7 @@ var tests = [
     name: "SessionType in license doesn't match MediaKeySession's sessionType",
     initDataType: 'keyids',
     initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}',
-    sessionType: 'persistent',
+    sessionType: 'persistent-license',
     expectPass: false,
   },
   {
@@ -108,10 +108,13 @@ function PrepareInitData(initDataType, initData)
 
 function Test(test) {
   return new Promise(function(resolve, reject) {
-    navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{initDataTypes: [test.initDataType]}]).then(
-      (access) => access.createMediaKeys()
-      ).then(
-        (mediaKeys) => {
+    var configs = [{
+      initDataTypes: [test.initDataType],
+      videoCapabilities: [{contentType: 'video/mp4' }],
+    }];
+    navigator.requestMediaKeySystemAccess('org.w3.clearkey', configs)
+      .then((access) => access.createMediaKeys())
+      .then((mediaKeys) => {
           var session = mediaKeys.createSession(test.sessionType);
           session.addEventListener("message", function(event) {
             is(event.messageType, "license-request", "'" + test.name + "' MediaKeyMessage type should be license-request.");

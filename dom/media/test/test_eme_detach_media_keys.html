@@ -14,18 +14,18 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const keysystem = 'org.w3.clearkey';
-
 function createAndSet() {
   return new Promise(function(resolve, reject) {
     var m;
-    navigator.requestMediaKeySystemAccess(keysystem, [{initDataTypes: ['cenc']}])
+    navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, gCencMediaKeySystemConfig)
     .then(function (access) {
       return access.createMediaKeys();
-    }).then(function (mediaKeys) {
+    })
+    .then(function (mediaKeys) {
       m = mediaKeys;
       return document.getElementById("v").setMediaKeys(mediaKeys);
-    }).then(function() {
+    })
+    .then(function() {
       resolve(m);
     });
   }

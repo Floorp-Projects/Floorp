@@ -36,7 +36,7 @@ function Test(test) {
   var name = "'" + test.keySystem + "'";
   return p.then(function() {
     return new Promise(function(resolve, reject) {
-      navigator.requestMediaKeySystemAccess(test.keySystem, [{initDataTypes:["cenc"]}])
+      navigator.requestMediaKeySystemAccess(test.keySystem, gCencMediaKeySystemConfig)
       .then(
         function(keySystemAccess) {
           return keySystemAccess.createMediaKeys();
@@ -59,29 +59,27 @@ function Test(test) {
   });
 }
 
-const CLEARKEY_ID = 'org.w3.clearkey';
-
 var tests = [
   {
-    keySystem: CLEARKEY_ID,
+    keySystem: CLEARKEY_KEYSYSTEM,
     shouldPass: false,
     expectedStatus: 'api-disabled',
     prefs: [["media.eme.enabled", false], ["media.eme.clearkey.enabled", true]]
   },
   {
-    keySystem: CLEARKEY_ID,
+    keySystem: CLEARKEY_KEYSYSTEM,
     shouldPass: false,
     expectedStatus: 'cdm-disabled',
     prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", false]]
   },
   {
-    keySystem: CLEARKEY_ID + '.10000' , // A stupendously high min CDM version, presumably not installed.
+    keySystem: CLEARKEY_KEYSYSTEM + '.10000' , // A stupendously high min CDM version, presumably not installed.
     shouldPass: false,
     expectedStatus: 'cdm-insufficient-version',
     prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", true]]
   },
   {
-    keySystem: CLEARKEY_ID,
+    keySystem: CLEARKEY_KEYSYSTEM,
     shouldPass: true,
     expectedStatus: 'cdm-created',
     prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", true]]
