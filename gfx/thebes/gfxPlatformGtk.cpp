@@ -99,6 +99,15 @@ gfxPlatformGtk::gfxPlatformGtk()
     uint32_t contentMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
     InitBackendPrefs(canvasMask, BackendType::CAIRO,
                      contentMask, BackendType::CAIRO);
+
+#ifdef MOZ_X11
+    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+      mCompositorDisplay = XOpenDisplay(nullptr);
+      MOZ_ASSERT(mCompositorDisplay, "Failed to create compositor display!");
+    } else {
+      mCompositorDisplay = nullptr;
+    }
+#endif // MOZ_X11
 }
 
 gfxPlatformGtk::~gfxPlatformGtk()
@@ -108,6 +117,12 @@ gfxPlatformGtk::~gfxPlatformGtk()
         sFontconfigUtils = nullptr;
         gfxPangoFontGroup::Shutdown();
     }
+
+#ifdef MOZ_X11
+    if (mCompositorDisplay) {
+      XCloseDisplay(mCompositorDisplay);
+    }
+#endif // MOZ_X11
 }
 
 void
