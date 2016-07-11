@@ -58,7 +58,7 @@ public:
   }
 
   virtual void InitInternal() override;
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  void DoDecode(const char* aBuffer, size_t aLength) override;
   virtual void FinishInternal() override;
 
   virtual Telemetry::ID SpeedHistogram() override;
