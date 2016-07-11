@@ -57,7 +57,7 @@ public:
     mSampleSize = aSampleSize;
   }
 
-  virtual void InitInternal() override;
+  nsresult InitInternal() override;
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
   virtual void FinishInternal() override;
 

@@ -103,8 +103,6 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
   // Make our state the same as the state of the contained decoder.
   mDecodeDone = mContainedDecoder->GetDecodeDone();
   mDataError = mDataError || mContainedDecoder->HasDataError();
-  mFailCode = NS_SUCCEEDED(mFailCode) ? mContainedDecoder->GetDecoderError()
-                                      : mFailCode;
   mDecodeAborted = mContainedDecoder->WasAborted();
   mProgress |= mContainedDecoder->TakeProgress();
   mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
@@ -662,9 +660,6 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount)
   mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
   if (mContainedDecoder->HasDataError()) {
     PostDataError();
-  }
-  if (mContainedDecoder->HasDecoderError()) {
-    PostDecoderError(mContainedDecoder->GetDecoderError());
   }
 
   return !HasError();
