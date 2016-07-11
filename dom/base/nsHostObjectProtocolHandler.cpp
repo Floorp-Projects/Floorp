@@ -30,7 +30,7 @@ using mozilla::net::LoadInfo;
 // Hash table
 struct DataInfo
 {
-  // mObject is expected to be an nsIDOMBlob, DOMMediaStream, or MediaSource
+  // mObject is expected to be an BlobImpl, DOMMediaStream, or MediaSource
   nsCOMPtr<nsISupports> mObject;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mStack;
@@ -73,14 +73,13 @@ class BlobURLsReporter final : public nsIMemoryReporter
       return NS_OK;
     }
 
-    nsDataHashtable<nsPtrHashKey<nsIDOMBlob>, uint32_t> refCounts;
+    nsDataHashtable<nsPtrHashKey<BlobImpl>, uint32_t> refCounts;
 
-    // Determine number of URLs per blob, to handle the case where it's > 1.
+    // Determine number of URLs per BlobImpl, to handle the case where it's > 1.
     for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
-      nsCOMPtr<nsIDOMBlob> blob =
-        do_QueryInterface(iter.UserData()->mObject);
-      if (blob) {
-        refCounts.Put(blob, refCounts.Get(blob) + 1);
+      nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(iter.UserData()->mObject);
+      if (blobImpl) {
+        refCounts.Put(blobImpl, refCounts.Get(blobImpl) + 1);
       }
     }
 
@@ -88,11 +87,8 @@ class BlobURLsReporter final : public nsIMemoryReporter
       nsCStringHashKey::KeyType key = iter.Key();
       DataInfo* info = iter.UserData();
 
-      nsCOMPtr<nsIDOMBlob> tmp = do_QueryInterface(info->mObject);
-      RefPtr<mozilla::dom::Blob> blob =
-        static_cast<mozilla::dom::Blob*>(tmp.get());
-
-      if (blob) {
+      nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(iter.UserData()->mObject);
+      if (blobImpl) {
         NS_NAMED_LITERAL_CSTRING(desc,
           "A blob URL allocated with URL.createObjectURL; the referenced "
           "blob cannot be freed until all URLs for it have been explicitly "
@@ -101,17 +97,17 @@ class BlobURLsReporter final : public nsIMemoryReporter
         nsCOMPtr<nsIURI> principalURI;
         uint64_t size = 0;
         uint32_t refCount = 1;
-        DebugOnly<bool> blobWasCounted;
+        DebugOnly<bool> blobImplWasCounted;
 
-        blobWasCounted = refCounts.Get(blob, &refCount);
-        MOZ_ASSERT(blobWasCounted);
+        blobImplWasCounted = refCounts.Get(blobImpl, &refCount);
+        MOZ_ASSERT(blobImplWasCounted);
         MOZ_ASSERT(refCount > 0);
 
-        bool isMemoryFile = blob->IsMemoryFile();
+        bool isMemoryFile = blobImpl->IsMemoryFile();
 
         if (isMemoryFile) {
           ErrorResult rv;
-          size = blob->GetSize(rv);
+          size = blobImpl->GetSize(rv);
           if (NS_WARN_IF(rv.Failed())) {
             rv.SuppressException();
             size = 0;
@@ -125,7 +121,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
           nsAutoCString addrStr;
 
           addrStr = "0x";
-          addrStr.AppendInt((uint64_t)(nsIDOMBlob*)blob, 16);
+          addrStr.AppendInt((uint64_t)(BlobImpl*)blobImpl, 16);
 
           path += " ";
           path.AppendInt(refCount);
@@ -324,6 +320,15 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
                                           nsIPrincipal* aPrincipal,
                                           nsACString& aUri)
 {
+#ifdef DEBUG
+  nsCOMPtr<BlobImpl> blobImpl(do_QueryInterface(aObject));
+  nsCOMPtr<MediaSource> mediaSource(do_QueryInterface(aObject));
+  nsCOMPtr<DOMMediaStream> mediaStream(do_QueryInterface(aObject));
+
+  // We support only these types.
+  MOZ_ASSERT(blobImpl || mediaSource || mediaStream);
+#endif
+
   Init();
 
   nsresult rv = GenerateURIString(aScheme, aPrincipal, aUri);

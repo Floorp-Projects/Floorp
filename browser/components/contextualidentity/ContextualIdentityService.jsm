@@ -18,35 +18,50 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
 this.ContextualIdentityService = {
   _identities: [
     { userContextId: 1,
+      public: true,
       icon: "chrome://browser/skin/usercontext/personal.svg",
       color: "#00a7e0",
       label: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
       alreadyOpened: false },
     { userContextId: 2,
+      public: true,
       icon: "chrome://browser/skin/usercontext/work.svg",
       color: "#f89c24",
       label: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
       alreadyOpened: false },
     { userContextId: 3,
+      public: true,
       icon: "chrome://browser/skin/usercontext/banking.svg",
       color: "#7dc14c",
       label: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
       alreadyOpened: false },
     { userContextId: 4,
+      public: true,
       icon: "chrome://browser/skin/usercontext/shopping.svg",
       color: "#ee5195",
       label: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
+      alreadyOpened: false },
+    { userContextId: Math.pow(2, 31) - 1,
+      public: false,
+      icon: "",
+      color: "",
+      label: "userContextIdInternal.thumbnail",
+      accessKey: "",
       alreadyOpened: false },
   ],
 
   _cssRule: false,
 
   getIdentities() {
-    return this._identities;
+    return this._identities.filter(info => info.public);
+  },
+
+  getPrivateIdentity(label) {
+    return this._identities.find(info => !info.public && info.label == label);
   },
 
   getIdentityFromId(userContextId) {
@@ -55,6 +70,9 @@ this.ContextualIdentityService = {
 
   getUserContextLabel(userContextId) {
     let identity = this.getIdentityFromId(userContextId);
+    if (!identity.public) {
+      return "";
+    }
     return gBrowserBundle.GetStringFromName(identity.label);
   },
 

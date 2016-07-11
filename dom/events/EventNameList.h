@@ -719,7 +719,7 @@ NON_IDL_EVENT(speakerforcedchange,
 
 // Events that only have on* attributes on XUL elements
 
- // "text" event is legacy event for modifying composition string in nsEditor.
+ // "text" event is legacy event for modifying composition string in EditorBase.
  // This shouldn't be used by web/xul apps.  "compositionupdate" should be
  // used instead.
 NON_IDL_EVENT(text,

@@ -17,22 +17,41 @@ function handleRequest(req, resp) {
   }
   catch (err) {}
 
-  if (opts.setRedCookie)
+  let setCookieScript = "";
+  if (opts.setRedCookie) {
     resp.setHeader("Set-Cookie", "red", false);
+    setCookieScript = '<script>document.cookie="red";</script>';
+  }
 
-  if (opts.setGreenCookie)
+  if (opts.setGreenCookie) {
     resp.setHeader("Set-Cookie", "green", false);
+    setCookieScript = '<script>document.cookie="green";</script>';
+  }
+
+  if (opts.iframe) {
+    setCookieScript += '<iframe src="' + opts.iframe + '" />';
+  }
+
+  if (opts.xhr) {
+    setCookieScript += `
+      <script>
+         var req = new XMLHttpRequest();
+         req.open("GET", "${opts.xhr}", true);
+         req.send();
+      </script>
+    `;
+  }
 
   if (req.hasHeader("Cookie") &&
       req.getHeader("Cookie").split(";").indexOf("red") >= 0) {
-    resp.write('<html style="background: #f00;"></html>');
+    resp.write('<html style="background: #f00;">' + setCookieScript + '</html>');
     resp.finish();
     return;
   }
 
   if (req.hasHeader("Cookie") &&
       req.getHeader("Cookie").split(";").indexOf("green") >= 0) {
-    resp.write('<html style="background: #0f0;"></html>');
+    resp.write('<html style="background: #0f0;">' + setCookieScript + '</html>');
     resp.finish();
     return;
   }
@@ -55,6 +74,6 @@ function handleRequest(req, resp) {
     return;
   }
 
-  resp.write("<pre>" + JSON.stringify(opts, undefined, 2) + "</pre>");
+  resp.write("<pre>" + JSON.stringify(opts, undefined, 2) + "</pre>" + setCookieScript);
   resp.finish();
 }
