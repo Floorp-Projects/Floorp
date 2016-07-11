@@ -348,28 +348,23 @@ nsPNGDecoder::InitInternal()
 
 }
 
-void
+Maybe<TerminalState>
 nsPNGDecoder::DoDecode(const char* aBuffer, size_t aLength)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aLength > 0);
 
-  Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aLength, [=](State aState,
-                                     const char* aData, size_t aLength) {
-      switch (aState) {
-        case State::PNG_DATA:
-          return ReadPNGData(aData, aLength);
-        case State::FINISHED_PNG_DATA:
-          return FinishedPNGData();
-      }
-      MOZ_CRASH("Unknown State");
-    });
-
-  if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
-  }
+  return mLexer.Lex(aBuffer, aLength,
+                    [=](State aState, const char* aData, size_t aLength) {
+    switch (aState) {
+      case State::PNG_DATA:
+        return ReadPNGData(aData, aLength);
+      case State::FINISHED_PNG_DATA:
+        return FinishedPNGData();
+    }
+    MOZ_CRASH("Unknown State");
+  });
 }
 
 LexerTransition<nsPNGDecoder::State>
