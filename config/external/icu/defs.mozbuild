@@ -33,7 +33,5 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
 DISABLE_STL_WRAPPING = True
 ALLOW_COMPILER_WARNINGS = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
+if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
     LOCAL_INCLUDES += ['/build/gabi++/include']
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    LOCAL_INCLUDES += ['%' + CONFIG['ANDROID_SOURCE'] + '/abi/cpp/include']
