@@ -315,6 +315,8 @@ loop.OTSdkDriver = function () {
       delete this._mockPublisherEl;
       delete this._publisherChannel;
       delete this._subscriberChannel;
+      delete this._screenSubscriber;
+      delete this._subscriber;
       this.connections = {};}, 
 
 
@@ -494,7 +496,8 @@ loop.OTSdkDriver = function () {
         case "Publisher.streamDestroyed":
           this._metrics.sendStreams--;
           break;
-        case "Session.streamCreated":
+        case "Session.av.streamCreated":
+        case "Session.screen.streamCreated":
           this._metrics.recvStreams++;
           break;
         case "Session.streamDestroyed":
@@ -548,7 +551,7 @@ loop.OTSdkDriver = function () {
 
       // There's no audio for screen shares so we don't need to worry about mute.
       this._mockScreenShareEl = document.createElement("div");
-      this.session.subscribe(stream, this._mockScreenShareEl, 
+      this._screenSubscriber = this.session.subscribe(stream, this._mockScreenShareEl, 
       this._getCopyPublisherConfig, 
       this._onScreenShareSubscribeCompleted.bind(this));}, 
 
@@ -560,8 +563,6 @@ loop.OTSdkDriver = function () {
      * https://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
      */
     _onRemoteStreamCreated: function _onRemoteStreamCreated(event) {
-      this._notifyMetricsEvent("Session.streamCreated");
-
       if (event.stream[STREAM_PROPERTIES.HAS_VIDEO]) {
         this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({ 
           isLocal: false, 
@@ -571,6 +572,7 @@ loop.OTSdkDriver = function () {
 
 
       if (event.stream.videoType === "screen") {
+        this._notifyMetricsEvent("Session.screen.streamCreated");
         this._handleRemoteScreenShareCreated(event.stream);
         return;}
 
@@ -586,7 +588,9 @@ loop.OTSdkDriver = function () {
       // the UI (bug 1171896).
       this._mockSubscribeEl = document.createElement("div");
 
-      this.subscriber = this.session.subscribe(event.stream, 
+      this._notifyMetricsEvent("Session.av.streamCreated");
+
+      this._subscriber = this.session.subscribe(event.stream, 
       this._mockSubscribeEl, this._getCopyPublisherConfig, 
       this._onSubscribeCompleted.bind(this));}, 
 
@@ -868,6 +872,7 @@ loop.OTSdkDriver = function () {
 
         delete this._subscriberChannel;
         delete this._mockSubscribeEl;
+        delete this._subscriber;
         return;}
 
 
@@ -876,7 +881,8 @@ loop.OTSdkDriver = function () {
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({ 
         receiving: false }));
 
-      delete this._mockScreenShareEl;}, 
+      delete this._mockScreenShareEl;
+      delete this._screenSubscriber;}, 
 
 
     /**
@@ -977,7 +983,9 @@ loop.OTSdkDriver = function () {
      */
     _onOTException: function _onOTException(event) {
       var baseException = "sdk.exception.";
-      if (event.target && event.target === this.screenshare) {
+      if (event.target && 
+      event.target === this.screenshare || 
+      event.target === this._screenSubscriber) {
         baseException += "screen.";}
 
 
@@ -987,7 +995,7 @@ loop.OTSdkDriver = function () {
           this.dispatcher.dispatch(new sharedActions.ConnectionFailure({ 
             reason: FAILURE_DETAILS.ICE_FAILED }));
 
-          this._notifyMetricsEvent(baseException + event.code);
+          this._notifyMetricsEvent(baseException + event.code + "." + event.message);
           break;
         case OT.ExceptionCodes.TERMS_OF_SERVICE_FAILURE:
           this.dispatcher.dispatch(new sharedActions.ConnectionFailure({ 
@@ -1005,7 +1013,7 @@ loop.OTSdkDriver = function () {
 
           break;
         default:
-          this._notifyMetricsEvent(baseException + event.code);
+          this._notifyMetricsEvent(baseException + event.code + "." + event.message);
           break;}}, 
 
 
