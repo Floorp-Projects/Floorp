@@ -76,7 +76,7 @@ public class PushService implements BundleEventListener {
     @ReflectionTarget
     public static synchronized void onCreate(Context context) {
         if (sInstance != null) {
-            throw new IllegalStateException("PushService already created!");
+            return;
         }
         sInstance = new PushService(context);
 
