@@ -7,12 +7,14 @@
 #ifndef mozilla_dom_URLSearchParams_h
 #define mozilla_dom_URLSearchParams_h
 
+#include "js/StructuredClone.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsIXMLHttpRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -108,6 +110,12 @@ public:
     return mParams[aIndex].mValue;
   }
 
+  bool
+  ReadStructuredClone(JSStructuredCloneReader* aReader);
+
+  bool
+  WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
+
 private:
   void DecodeString(const nsACString& aInput, nsAString& aOutput);
   void ConvertString(const nsACString& aInput, nsAString& aOutput);
@@ -122,17 +130,19 @@ private:
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 };
 
-class URLSearchParams final : public nsISupports,
+class URLSearchParams final : public nsIXHRSendable,
                               public nsWrapperCache
 {
   ~URLSearchParams();
 
 public:
+  NS_DECL_NSIXHRSENDABLE
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URLSearchParams)
 
   URLSearchParams(nsISupports* aParent,
-                  URLSearchParamsObserver* aObserver);
+                  URLSearchParamsObserver* aObserver=nullptr);
 
   URLSearchParams(nsISupports* aParent,
                   const URLSearchParams& aOther);
@@ -188,6 +198,12 @@ public:
 
     return true;
   }
+
+  bool
+  ReadStructuredClone(JSStructuredCloneReader* aReader);
+
+  bool
+  WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
 
 private:
   void AppendInternal(const nsAString& aName, const nsAString& aValue);
