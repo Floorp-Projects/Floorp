@@ -5,6 +5,7 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
  * Spectrum creates a color picker widget in any container you give it.
@@ -32,7 +33,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 function Spectrum(parentEl, rgb) {
   EventEmitter.decorate(this);
 
-  this.element = parentEl.ownerDocument.createElement("div");
+  this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
   this.parentEl = parentEl;
 
   this.element.className = "spectrum-container";
@@ -131,21 +132,6 @@ Spectrum.rgbToHsv = function (r, g, b, a) {
   return [h, s, v, a];
 };
 
-Spectrum.getOffset = function (el) {
-  let curleft = 0, curtop = 0;
-  if (el.offsetParent) {
-    while (el) {
-      curleft += el.offsetLeft;
-      curtop += el.offsetTop;
-      el = el.offsetParent;
-    }
-  }
-  return {
-    left: curleft,
-    top: curtop
-  };
-};
-
 Spectrum.draggable = function (element, onmove, onstart, onstop) {
   onmove = onmove || function () {};
   onstart = onstart || function () {};
@@ -188,7 +174,7 @@ Spectrum.draggable = function (element, onmove, onstart, onstop) {
         maxHeight = element.offsetHeight;
         maxWidth = element.offsetWidth;
 
-        offset = Spectrum.getOffset(element);
+        offset = element.getBoundingClientRect();
 
         move(e);
 

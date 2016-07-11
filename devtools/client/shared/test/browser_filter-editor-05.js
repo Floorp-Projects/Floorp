@@ -7,7 +7,6 @@ requestLongerTimeout(2);
 
 // Tests the Filter Editor Widget's label-dragging
 
-const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 
 const FAST_VALUE_MULTIPLIER = 10;
@@ -17,11 +16,12 @@ const DEFAULT_VALUE_MULTIPLIER = 1;
 const GRAYSCALE_MAX = 100,
   GRAYSCALE_MIN = 0;
 
+const TEST_URI = `data:text/html,<div id="filter-container" />`;
+
 add_task(function* () {
-  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
-  const container = doc.querySelector("#container");
+  const container = doc.querySelector("#filter-container");
   let widget = new CSSFilterEditorWidget(container, "grayscale(0%) url(test.svg)");
 
   const filters = widget.el.querySelector("#filters");
