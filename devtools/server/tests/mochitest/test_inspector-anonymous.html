@@ -12,11 +12,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777674
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
 window.onload = function() {
-  const Ci = Components.interfaces;
   const {InspectorFront} =
     require("devtools/shared/fronts/inspector");
   const {_documentWalker} =
     require("devtools/server/actors/inspector");
+  const nodeFilterConstants =
+    require("devtools/shared/dom-node-filter-constants");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
   SpecialPowers.pushPrefEnv({"set": [
@@ -76,9 +77,9 @@ window.onload = function() {
     let docwalker = new _documentWalker(
       gInspectee.querySelector("select"),
       gInspectee.defaultView,
-      Ci.nsIDOMNodeFilter.SHOW_ALL,
+      nodeFilterConstants.SHOW_ALL,
       () => {
-        return Ci.nsIDOMNodeFilter.FILTER_ACCEPT
+        return nodeFilterConstants.FILTER_ACCEPT
       }
     );
     let scrollbar = docwalker.lastChild();
