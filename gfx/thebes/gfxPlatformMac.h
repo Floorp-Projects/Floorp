@@ -76,7 +76,6 @@ public:
       return true;
     }
 
-    virtual bool UseProgressivePaint() override;
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 
     // lower threshold on font anti-aliasing

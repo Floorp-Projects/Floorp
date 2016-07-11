@@ -21,7 +21,6 @@ LOCAL_INCLUDES += [
     '../hunspell/glue',
     '../hunspell/src',
     '/dom/base',
-    '/editor/libeditor',
 ]
 EXPORTS.mozilla += [
      'mozSpellChecker.h',

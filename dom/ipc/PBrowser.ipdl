@@ -20,7 +20,6 @@ include protocol PRemotePrintJob;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
-include BrowserConfiguration;
 include PPrintingTypes;
 include PTabContext;
 
@@ -588,7 +587,7 @@ child:
                bool parentIsActive,
                nsSizeMode sizeMode);
 
-    async LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
+    async LoadURL(nsCString uri, ShowInfo info);
 
     async CacheFileDescriptor(nsString path, FileDescriptor fd);
 

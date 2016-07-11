@@ -57,7 +57,6 @@ LOCAL_INCLUDES += [
     '/dom/xul',
     '/dom/xul/templates',
     '/editor/composer',
-    '/editor/libeditor',
     '/editor/txmgr',
     '/editor/txtsvc',
     '/extensions/cookie',

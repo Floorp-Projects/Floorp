@@ -879,6 +879,13 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
   return p.forget();
 }
 
+already_AddRefed<Promise>
+DataTransfer::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
+{
+  // Currently we don't support directories.
+  return GetFilesAndDirectories(aRv);
+}
+
 void
 DataTransfer::AddElement(Element& aElement, ErrorResult& aRv)
 {

@@ -6,13 +6,13 @@
 #ifndef __mozinlinespellchecker_h__
 #define __mozinlinespellchecker_h__
 
+#include "mozilla/EditorBase.h"
 #include "nsRange.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIEditActionListener.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsWeakReference.h"
-#include "nsEditor.h"
 #include "nsIDOMEventListener.h"
 #include "nsWeakReference.h"
 #include "mozISpellI18NUtil.h"

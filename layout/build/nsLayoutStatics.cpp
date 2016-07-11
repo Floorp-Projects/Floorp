@@ -23,7 +23,6 @@
 #include "nsCSSRendering.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMClassInfo.h"
-#include "nsEditorEventListener.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsFrame.h"
 #include "nsGlobalWindow.h"
@@ -84,7 +83,6 @@
 #include "nsMenuBarListener.h"
 #endif
 
-#include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
 #ifdef MOZ_WEBSPEECH
