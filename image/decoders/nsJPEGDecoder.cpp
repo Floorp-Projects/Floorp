@@ -128,7 +128,7 @@ nsJPEGDecoder::SpeedHistogram()
   return Telemetry::IMAGE_DECODE_SPEED_JPEG;
 }
 
-void
+nsresult
 nsJPEGDecoder::InitInternal()
 {
   mCMSMode = gfxPlatform::GetCMSMode();
@@ -142,10 +142,9 @@ nsJPEGDecoder::InitInternal()
   mErr.pub.error_exit = my_error_exit;
   // Establish the setjmp return context for my_error_exit to use.
   if (setjmp(mErr.setjmp_buffer)) {
-    // If we get here, the JPEG code has signaled an error.
-    // We need to clean up the JPEG object, close the input file, and return.
-    PostDecoderError(NS_ERROR_FAILURE);
-    return;
+    // If we get here, the JPEG code has signaled an error, and initialization
+    // has failed.
+    return NS_ERROR_FAILURE;
   }
 
   // Step 1: allocate and initialize JPEG decompression object
@@ -166,6 +165,8 @@ nsJPEGDecoder::InitInternal()
   for (uint32_t m = 0; m < 16; m++) {
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
   }
+
+  return NS_OK;
 }
 
 void
@@ -217,7 +218,6 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
              ("} (setjmp returned NS_ERROR_FAILURE)"));
     } else {
       // Error for another reason. (Possibly OOM.)
-      PostDecoderError(error_code);
       mState = JPEG_ERROR;
       MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
              ("} (setjmp returned an error)"));

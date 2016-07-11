@@ -58,7 +58,6 @@ Decoder::Decoder(RasterImage* aImage)
   , mImage(aImage)
   , mProgress(NoProgress)
   , mFrameCount(0)
-  , mFailCode(NS_OK)
   , mChunkCount(0)
   , mDecoderFlags(DefaultDecoderFlags())
   , mSurfaceFlags(DefaultSurfaceFlags())
@@ -92,7 +91,7 @@ Decoder::~Decoder()
  * Common implementation of the decoder interface.
  */
 
-void
+nsresult
 Decoder::Init()
 {
   // No re-initializing
@@ -106,10 +105,12 @@ Decoder::Init()
   // will be retrievable.
   MOZ_ASSERT(ShouldUseSurfaceCache() || IsFirstFrameDecode());
 
-  // Implementation-specific initialization
-  InitInternal();
+  // Implementation-specific initialization.
+  nsresult rv = InitInternal();
 
   mInitialized = true;
+
+  return rv;
 }
 
 nsresult
@@ -196,9 +197,9 @@ Decoder::CompleteDecode()
   if (!IsMetadataDecode() && !mDecodeDone && !WasAborted()) {
     mShouldReportError = true;
 
-    // If we only have a data error, we're usable if we have at least one
-    // complete frame.
-    if (!HasDecoderError() && GetCompleteFrameCount() > 0) {
+    // Even if we encountered an error, we're still usable if we have at least
+    // one complete frame.
+    if (GetCompleteFrameCount() > 0) {
       // We're usable, so do exactly what we should have when the decoder
       // completed.
 
@@ -291,7 +292,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
                                uint8_t aPaletteDepth,
                                imgFrame* aPreviousFrame)
 {
-  if (mDataError || NS_FAILED(mFailCode)) {
+  if (HasError()) {
     return RawAccessFrameRef();
   }
 
@@ -388,7 +389,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
  * Hook stubs. Override these as necessary in decoder implementations.
  */
 
-void Decoder::InitInternal() { }
+nsresult Decoder::InitInternal() { return NS_OK; }
 void Decoder::BeforeFinishInternal() { }
 void Decoder::FinishInternal() { }
 void Decoder::FinishWithErrorInternal() { }
@@ -497,22 +498,6 @@ void
 Decoder::PostDataError()
 {
   mDataError = true;
-
-  if (mInFrame && mCurrentFrame) {
-    mCurrentFrame->Abort();
-  }
-}
-
-void
-Decoder::PostDecoderError(nsresult aFailureCode)
-{
-  MOZ_ASSERT(NS_FAILED(aFailureCode), "Not a failure code!");
-
-  mFailCode = aFailureCode;
-
-  // XXXbholley - we should report the image URI here, but imgContainer
-  // needs to know its URI first
-  NS_WARNING("Image decoding error - This is probably a bug!");
 
   if (mInFrame && mCurrentFrame) {
     mCurrentFrame->Abort();

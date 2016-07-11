@@ -22,7 +22,7 @@ class nsPNGDecoder : public Decoder
 public:
   virtual ~nsPNGDecoder();
 
-  virtual void InitInternal() override;
+  nsresult InitInternal() override;
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
   virtual Telemetry::ID SpeedHistogram() override;
 

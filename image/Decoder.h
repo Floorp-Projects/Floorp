@@ -37,8 +37,10 @@ public:
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
+   *
+   * @return NS_OK if the decoder could be initialized successfully.
    */
-  void Init();
+  nsresult Init();
 
   /**
    * Decodes, reading all data currently available in the SourceBuffer.
@@ -184,11 +186,9 @@ public:
   bool HasAnimation() const { return mImageMetadata.HasAnimation(); }
 
   // Error tracking
-  bool HasError() const { return HasDataError() || HasDecoderError(); }
+  bool HasError() const { return HasDataError(); }
   bool HasDataError() const { return mDataError; }
-  bool HasDecoderError() const { return NS_FAILED(mFailCode); }
   bool ShouldReportError() const { return mShouldReportError; }
-  nsresult GetDecoderError() const { return mFailCode; }
 
   /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
@@ -289,7 +289,7 @@ protected:
    * incomplete state, e.g. due to file truncation, in which case it should
    * call PostDataError().
    */
-  virtual void InitInternal();
+  virtual nsresult InitInternal();
   virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) = 0;
   virtual void BeforeFinishInternal();
   virtual void FinishInternal();
@@ -358,9 +358,8 @@ protected:
   // means a single iteration, stopping on the last frame.
   void PostDecodeDone(int32_t aLoopCount = 0);
 
-  // Data errors are the fault of the source data, decoder errors are our fault
+  // Report an error in the image data.
   void PostDataError();
-  void PostDecoderError(nsresult aFailCode);
 
   /**
    * CompleteDecode() finishes up the decoding process after Decode() determines
@@ -414,8 +413,6 @@ private:
   Progress mProgress;
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
-
-  nsresult mFailCode;
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;
