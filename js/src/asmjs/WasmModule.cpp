@@ -162,7 +162,8 @@ size_t
 ExportMap::serializedSize() const
 {
     return SerializedVectorSize(fieldNames) +
-           SerializedPodVectorSize(fieldsToExports);
+           SerializedPodVectorSize(fieldsToExports) +
+           sizeof(uint32_t);
 }
 
 uint8_t*
@@ -170,6 +171,7 @@ ExportMap::serialize(uint8_t* cursor) const
 {
     cursor = SerializeVector(cursor, fieldNames);
     cursor = SerializePodVector(cursor, fieldsToExports);
+    cursor = WriteScalar(cursor, startExportIndex);
     return cursor;
 }
 
@@ -177,7 +179,8 @@ const uint8_t*
 ExportMap::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializeVector(cursor, &fieldNames)) &&
-    (cursor = DeserializePodVector(cursor, &fieldsToExports));
+    (cursor = DeserializePodVector(cursor, &fieldsToExports)) &&
+    (cursor = ReadScalar(cursor, &startExportIndex));
     return cursor;
 }
 
@@ -563,6 +566,16 @@ Module::instantiate(JSContext* cx,
     // Done! Notify the Debugger of the new Instance.
 
     Debugger::onNewWasmInstance(cx, instanceObj);
+
+    // Call the start function, if there's one. By specification, it does not
+    // take any arguments nor does it return a value, so just create a dummy
+    // arguments object.
+
+    if (exportMap_.hasStartFunction()) {
+        FixedInvokeArgs<0> args(cx);
+        if (!instanceObj->instance().callExport(cx, exportMap_.startFunctionExportIndex(), args))
+            return false;
+    }
 
     return true;
 }
