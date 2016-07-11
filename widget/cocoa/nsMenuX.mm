@@ -14,7 +14,6 @@
 #include "nsObjCExceptions.h"
 
 #include "nsToolkit.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsCOMPtr.h"
 #include "prinrval.h"
