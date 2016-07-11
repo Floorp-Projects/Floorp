@@ -205,11 +205,6 @@ public:
   // completion state.
   void Wait()
   {
-    if (mInitialized) {
-      // Maybe avoid locking...
-      return;
-    }
-
     ReentrantMonitorAutoEnter mon(mMon);
     while (!mInitialized) {
       mon.Wait();

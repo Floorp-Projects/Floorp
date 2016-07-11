@@ -51,7 +51,8 @@ function createGraph(context, nodeCount) {
 
         var angle = angleStep * k;
         position[k] = {angle : angle, x : Math.cos(angle), z : Math.sin(angle)};
-        panner[k].setPosition(position[k].x, 0, position[k].z);
+        panner[k].positionX.value = position[k].x;
+        panner[k].positionZ.value = position[k].z;
 
         bufferSource[k].connect(panner[k]);
         panner[k].connect(context.destination);
