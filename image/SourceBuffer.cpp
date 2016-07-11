@@ -105,6 +105,8 @@ SourceBufferIterator::RemainingBytesIsNoMoreThan(size_t aBytes) const
 // SourceBuffer implementation.
 //////////////////////////////////////////////////////////////////////////////
 
+const size_t SourceBuffer::MIN_CHUNK_CAPACITY;
+
 SourceBuffer::SourceBuffer()
   : mMutex("image::SourceBuffer")
   , mConsumerCount(0)
