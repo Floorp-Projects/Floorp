@@ -31,8 +31,8 @@ function startTest() {
   var rightPanner = ctx.createPanner();
   leftPanner.type = "HRTF";
   rightPanner.type = "HRTF";
-  leftPanner.setPosition(-1,0,0);
-  rightPanner.setPosition(1,0,0);
+  leftPanner.positionX.value = -1;
+  rightPanner.positionX.value = 1;
 
   // Test that PannerNode processes the signal consistently irrespective of
   // the offset in the processing block.  This is done by inserting a delay of

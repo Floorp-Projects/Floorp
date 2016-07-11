@@ -90,7 +90,6 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    'BrowserConfiguration.ipdlh',
     'DOMTypes.ipdlh',
     'PBlob.ipdl',
     'PBlobStream.ipdl',
@@ -112,6 +111,7 @@ IPDL_SOURCES += [
     'PProcessHangMonitor.ipdl',
     'PScreenManager.ipdl',
     'PTabContext.ipdlh',
+    'ServiceWorkerConfiguration.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
