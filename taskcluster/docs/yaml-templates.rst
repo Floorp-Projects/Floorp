@@ -1,9 +1,9 @@
 Task Definition YAML Templates
 ==============================
 
-Many kinds of tasks are described using YAML files.  These files allow some
-limited forms of inheritance and template substitution as well as the usual
-YAML features, as described below.
+Many kinds of tasks are described using templated YAML files.  These files
+allow some limited forms of inheritance and template substitution as well as
+the usual YAML features, as described below.
 
 Please use these features sparingly.  In many cases, it is better to add a
 feature to the implementation of a task kind rather than add complexity to the

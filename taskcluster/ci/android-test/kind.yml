@@ -1,0 +1,12 @@
+implementation: taskgraph.task.test:TestTask
+
+kind-dependencies:
+    - legacy
+
+transforms:
+   - taskgraph.transforms.tests.test_description:validate
+   - taskgraph.transforms.tests.android_test:transforms
+   - taskgraph.transforms.tests.all_kinds:transforms
+   - taskgraph.transforms.tests.test_description:validate
+   - taskgraph.transforms.tests.make_task_description:transforms
+   - taskgraph.transforms.make_task:transforms

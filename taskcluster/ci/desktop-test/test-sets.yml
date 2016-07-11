@@ -1,0 +1,54 @@
+# Each key in this file specifies a set of tests to run.  Different test sets
+# may, for example, be bound to different test platforms.
+#
+# Note that set does not depend on the tree; tree-dependent job selection
+# should be performed in the target task selection phase of task-graph
+# generation.
+#
+# A test set has a name, and a list of tests that it contains.
+#
+# Test names given here reference tests.yml.
+
+all-tests:
+    - cppunit
+    - crashtest
+    - external-media-tests
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
+    - gtest
+    - jittests
+    - jsreftest
+    - marionette
+    - mochitest
+    - mochitest-a11y
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - reftest-no-accel
+    - web-platform-tests
+    - web-platform-tests-reftests
+    - xpcshell
+
+asan-tests:
+    - cppunit
+    - crashtest
+    - gtest
+    - jittests
+    - jsreftest
+    - marionette
+    - mochitest
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-webgl
+    - xpcshell
