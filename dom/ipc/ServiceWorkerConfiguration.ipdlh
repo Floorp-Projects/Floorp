@@ -9,7 +9,7 @@ include ServiceWorkerRegistrarTypes;
 namespace mozilla {
 namespace dom {
 
-struct BrowserConfiguration
+struct ServiceWorkerConfiguration
 {
   ServiceWorkerRegistrationData[] serviceWorkerRegistrations;
 };
