@@ -24,6 +24,15 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
+  boolean_kind:
+    bug_numbers:
+      - 1281214
+    description: A boolean test type with a one line comment that works just fine!
+    expires: never
+    kind: boolean
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
   expired:
     bug_numbers:
       - 1276190
