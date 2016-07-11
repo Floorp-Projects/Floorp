@@ -40,6 +40,11 @@ PersistentBufferProviderBasic::ReturnDrawTarget(already_AddRefed<gfx::DrawTarget
 {
   RefPtr<gfx::DrawTarget> dt(aDT);
   MOZ_ASSERT(mDrawTarget == dt);
+  if (dt) {
+    // Since SkiaGL default to storing drawing command until flush
+    // we have to flush it before present.
+    dt->Flush();
+  }
   return true;
 }
 
