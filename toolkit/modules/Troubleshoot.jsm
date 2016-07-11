@@ -420,7 +420,6 @@ var dataProviders = {
       data.direct2DEnabledMessage =
         statusMsgForFeature(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
 
-    //////
 
     let doc =
       Cc["@mozilla.org/xmlextras/domparser;1"]
@@ -432,7 +431,6 @@ var dataProviders = {
         canvas.width = 1;
         canvas.height = 1;
 
-        ///////
 
         let creationError = "(no info)";
 
@@ -450,7 +448,6 @@ var dataProviders = {
         if (!gl)
             return creationError;
 
-        ///////
 
         let infoExt = gl.getExtension("WEBGL_debug_renderer_info");
         // This extension is unconditionally available to chrome. No need to check.
@@ -459,23 +456,19 @@ var dataProviders = {
 
         let contextInfo = vendor + " -- " + renderer;
 
-        ///////
 
         // Eagerly free resources.
         let loseExt = gl.getExtension("WEBGL_lose_context");
         loseExt.loseContext();
 
-        ///////
 
         return contextInfo;
     }
 
-    //////
 
     data.webglRenderer = GetWebGLInfo("webgl");
     data.webgl2Renderer = GetWebGLInfo("webgl2");
 
-    //////
 
     let infoInfo = gfxInfo.getInfo();
     if (infoInfo)
