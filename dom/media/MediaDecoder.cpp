@@ -988,15 +988,7 @@ const char*
 MediaDecoder::PlayStateStr()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  switch (mPlayState) {
-    case PLAY_STATE_START: return "PLAY_STATE_START";
-    case PLAY_STATE_LOADING: return "PLAY_STATE_LOADING";
-    case PLAY_STATE_PAUSED: return "PLAY_STATE_PAUSED";
-    case PLAY_STATE_PLAYING: return "PLAY_STATE_PLAYING";
-    case PLAY_STATE_ENDED: return "PLAY_STATE_ENDED";
-    case PLAY_STATE_SHUTDOWN: return "PLAY_STATE_SHUTDOWN";
-    default: return "INVALID_PLAY_STATE";
-  }
+  return ToPlayStateStr(mPlayState);
 }
 
 void
@@ -1365,8 +1357,7 @@ MediaDecoder::ChangeState(PlayState aState)
     return;
   }
 
-  DECODER_LOG("ChangeState %s => %s",
-              ToPlayStateStr(mPlayState), ToPlayStateStr(aState));
+  DECODER_LOG("ChangeState %s => %s", PlayStateStr(), ToPlayStateStr(aState));
   mPlayState = aState;
 
   if (mPlayState == PLAY_STATE_PLAYING) {
