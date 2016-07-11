@@ -114,6 +114,7 @@ var PrintUtils = {
     let mm = aBrowser.messageManager;
     mm.sendAsyncMessage("Printing:Print", {
       windowID: aWindowID,
+      simplifiedMode: this._shouldSimplify,
     });
   },
 
