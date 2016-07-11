@@ -36036,6 +36036,12 @@
             "url": "/html/semantics/embedded-content/the-embed-element/embed-in-object-fallback.html"
           }
         ],
+        "fetch/api/basic/request-referrer.html": [
+          {
+            "path": "fetch/api/basic/request-referrer.html",
+            "url": "/fetch/api/basic/request-referrer.html"
+          }
+        ],
         "service-workers/service-worker/controller-on-disconnect.https.html": [
           {
             "path": "service-workers/service-worker/controller-on-disconnect.https.html",
