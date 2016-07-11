@@ -193,8 +193,8 @@ public:
   /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
   {
-    return mDecodeDone || (mMetadataDecode && HasSize()) ||
-           HasError() || mDataDone;
+    return mReachedTerminalState || mDecodeDone ||
+           (mMetadataDecode && HasSize()) || HasError();
   }
 
   /// Are we in the middle of a frame right now? Used for assertions only.
@@ -425,7 +425,7 @@ private:
   bool mInitialized : 1;
   bool mMetadataDecode : 1;
   bool mInFrame : 1;
-  bool mDataDone : 1;
+  bool mReachedTerminalState : 1;
   bool mDecodeDone : 1;
   bool mDataError : 1;
   bool mDecodeAborted : 1;
