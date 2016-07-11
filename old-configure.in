@@ -115,8 +115,6 @@ if test -n "$gonkdir" ; then
     case "$ANDROID_VERSION" in
     15)
         GONK_INCLUDES="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper"
-        MOZ_B2G_BT=1
-        MOZ_B2G_BT_BLUEZ=1
         MOZ_NFC=1
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
@@ -126,15 +124,6 @@ if test -n "$gonkdir" ; then
         ;;
     17|18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
-        if test -d "$gonkdir/external/bluetooth/bluez"; then
-            GONK_INCLUDES="$GONK_INCLUDES -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_BLUEZ=1
-        elif test -d "$gonkdir/system/bluetoothd"; then
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_DAEMON=1
-        fi
-
         MOZ_RTSP=1
         MOZ_NFC=1
         MOZ_B2G_CAMERA=1
@@ -148,10 +137,6 @@ if test -n "$gonkdir" ; then
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
         MOZ_B2G_CAMERA=1
-        if test -d "$gonkdir/system/bluetoothd"; then
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_DAEMON=1
-        fi
         MOZ_NFC=1
         MOZ_RTSP=1
         MOZ_OMX_DECODER=1
@@ -171,10 +156,6 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         MOZ_B2G_CAMERA=1
-        if test -d "$gonkdir/system/bluetoothd"; then
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_DAEMON=1
-        fi
         MOZ_NFC=1
         MOZ_RTSP=1
         ;;
@@ -182,6 +163,16 @@ if test -n "$gonkdir" ; then
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
         ;;
     esac
+
+    dnl Enable Bluetooth backends depending on available drivers
+    if test -d "$gonkdir/system/bluetoothd"; then
+        MOZ_B2G_BT=1
+        MOZ_B2G_BT_DAEMON=1
+    fi
+    if test -d "$gonkdir/external/bluetooth/bluez"; then
+        MOZ_B2G_BT=1
+        MOZ_B2G_BT_BLUEZ=1
+    fi
 
     CPPFLAGS="-I$gonkdir/system -I$gonkdir/system/core/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $GONK_INCLUDES $CPPFLAGS"
     LDFLAGS="-L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib $LDFLAGS"
