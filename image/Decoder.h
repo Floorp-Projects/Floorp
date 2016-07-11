@@ -164,13 +164,21 @@ public:
     return bool(mDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY);
   }
 
-  size_t BytesDecoded() const { return mBytesDecoded; }
+  size_t BytesDecoded() const
+  {
+    MOZ_ASSERT(mIterator);
+    return mIterator->ByteCount();
+  }
 
   // The amount of time we've spent inside DoDecode() so far for this decoder.
   TimeDuration DecodeTime() const { return mDecodeTime; }
 
   // The number of chunks this decoder's input was divided into.
-  uint32_t ChunkCount() const { return mChunkCount; }
+  uint32_t ChunkCount() const
+  {
+    MOZ_ASSERT(mIterator);
+    return mIterator->ChunkCount();
+  }
 
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
@@ -416,11 +424,9 @@ private:
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;
-  uint32_t mChunkCount;
 
   DecoderFlags mDecoderFlags;
   SurfaceFlags mSurfaceFlags;
-  size_t mBytesDecoded;
 
   bool mInitialized : 1;
   bool mMetadataDecode : 1;
