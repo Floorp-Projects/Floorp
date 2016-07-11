@@ -39,7 +39,7 @@ function PageError(props) {
     dom.span(
       {className: "message-body-wrapper message-body devtools-monospace"},
       dom.span({},
-        message.data.errorMessage
+        message.messageText
       )
     ),
     repeat

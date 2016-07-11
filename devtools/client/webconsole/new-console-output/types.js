@@ -18,10 +18,13 @@ exports.ConsoleCommand = Immutable.Record({
 
 exports.ConsoleMessage = Immutable.Record({
   allowRepeating: true,
-  category: "output",
-  severity: "log",
-  data: null,
-  messageType: null,
+  source: null,
+  type: null,
+  level: null,
+  messageText: null,
+  parameters: null,
   repeat: 1,
   repeatId: null,
+  category: "output",
+  severity: "log",
 });
