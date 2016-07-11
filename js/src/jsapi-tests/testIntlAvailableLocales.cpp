@@ -17,7 +17,7 @@ BEGIN_TEST(testIntlAvailableLocales)
 
     // Assumption: our Intl support always includes "de" (German) support,
     // and our Intl support *does not* natively support de-ZA-ghijk.  :-)
-    CHECK(JS_SetDefaultLocale(rt, "de-ZA-abcde-x-private"));
+    CHECK(JS_SetDefaultLocale(cx, "de-ZA-abcde-x-private"));
 
     EXEC("if (Intl.Collator().resolvedOptions().locale !== 'de-ZA-abcde-x-private') \n"
          "    throw 'unexpected default locale';");
@@ -41,18 +41,18 @@ BEGIN_TEST(testIntlAvailableLocales)
     EXEC("if (Intl.Collator('de').resolvedOptions().locale !== 'de') \n"
          "    throw 'bad locale when using most-truncated default';");
 
-    CHECK(JS_SetDefaultLocale(rt, "en-US-u-co-phonebk"));
+    CHECK(JS_SetDefaultLocale(cx, "en-US-u-co-phonebk"));
     EXEC("if (Intl.Collator().resolvedOptions().locale !== 'en-US') \n"
          "    throw 'unexpected default locale where proposed default included a Unicode extension';");
 
-    CHECK(JS_SetDefaultLocale(rt, "this is not a language tag at all, yo"));
+    CHECK(JS_SetDefaultLocale(cx, "this is not a language tag at all, yo"));
 
     EXEC("if (Intl.Collator().resolvedOptions().locale !== 'en-GB') \n"
          "    throw 'unexpected last-ditch locale';");
     EXEC("if (Intl.Collator('en-GB').resolvedOptions().locale !== 'en-GB') \n"
          "    throw 'unexpected used locale when specified, with last-ditch locale as default';");
 
-    JS_ResetDefaultLocale(rt);
+    JS_ResetDefaultLocale(cx);
     return true;
 }
 END_TEST(testIntlAvailableLocales)
