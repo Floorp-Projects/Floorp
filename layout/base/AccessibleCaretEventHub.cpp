@@ -401,6 +401,10 @@ AccessibleCaretEventHub::~AccessibleCaretEventHub()
 void
 AccessibleCaretEventHub::Init()
 {
+  if (mInitialized && mManager) {
+    mManager->OnFrameReconstruction();
+  }
+
   if (mInitialized || !mPresShell || !mPresShell->GetCanvasFrame() ||
       !mPresShell->GetCanvasFrame()->GetCustomContentContainer()) {
     return;
