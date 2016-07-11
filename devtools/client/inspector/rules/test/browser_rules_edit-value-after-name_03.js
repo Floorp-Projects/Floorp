@@ -64,6 +64,6 @@ add_task(function* () {
   ok(!inplaceEditor(propEditor.valueSpan),
     "The inplace editor wasn't shown as a result of the color swatch click");
 
-  let spectrum = yield colorPicker.spectrum;
+  let spectrum = colorPicker.spectrum;
   is(spectrum.rgb, "200,170,140,0.5", "The correct color picker was shown");
 });

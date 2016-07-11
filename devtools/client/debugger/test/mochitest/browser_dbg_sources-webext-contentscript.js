@@ -7,6 +7,7 @@
  * Make sure eval scripts appear in the source list
  */
 
+const ADDON_PATH = "addon-webext-contentscript.xpi";
 const TAB_URL = EXAMPLE_URL + "doc_script_webext_contentscript.html";
 
 let {getExtensionUUID} = Cu.import("resource://gre/modules/Extension.jsm", {});
@@ -30,7 +31,7 @@ function test() {
   };
 
   return Task.spawn(function* () {
-    gAddon = yield addAddon(EXAMPLE_URL + "/addon-webext-contentscript.xpi");
+    gAddon = yield addTemporaryAddon(ADDON_PATH);
     let uuid = getExtensionUUID(gAddon.id);
 
     let options = {

@@ -44,7 +44,7 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
     value: 'url("chrome://global/skin/icons/warning-64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)'
   });
 
-  let spectrum = yield picker.spectrum;
+  let spectrum = picker.spectrum;
   let onHidden = picker.tooltip.once("hidden");
   let onModifications = ruleView.once("ruleview-changed");
   EventUtils.sendKey("RETURN", spectrum.element.ownerDocument.defaultView);
