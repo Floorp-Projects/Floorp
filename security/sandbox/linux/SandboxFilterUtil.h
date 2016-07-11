@@ -97,6 +97,7 @@ public:
 #define CASES_FOR_fstat   case __NR_fstat64
 #define CASES_FOR_fstatat   case __NR_fstatat64
 #define CASES_FOR_statfs   case __NR_statfs64: case __NR_statfs
+#define CASES_FOR_fstatfs   case __NR_fstatfs64: case __NR_fstatfs
 #define CASES_FOR_fcntl   case __NR_fcntl64
 // We're using the 32-bit version on 32-bit desktop for some reason.
 #define CASES_FOR_getdents   case __NR_getdents64: case __NR_getdents
@@ -108,6 +109,7 @@ public:
 #define CASES_FOR_lstat   case __NR_lstat
 #define CASES_FOR_fstatat   case __NR_newfstatat
 #define CASES_FOR_fstat   case __NR_fstat
+#define CASES_FOR_fstatfs   case __NR_fstatfs
 #define CASES_FOR_statfs   case __NR_statfs
 #define CASES_FOR_fcntl   case __NR_fcntl
 #define CASES_FOR_getdents   case __NR_getdents
