@@ -99,24 +99,17 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
 
-if test -n "$gonkdir" ; then
+if test -n "$gonkdir"; then
     dnl export for js/src/configure. We can't pass the option down normally,
     dnl because it's a `--enable-project=b2g`-only option.
     export gonkdir
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
-    dnl Default to ICS
-    ANDROID_VERSION=15
-    if test -n "${PLATFORM_SDK_VERSION}"; then
-        ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
-    fi
 
-    case "$ANDROID_VERSION" in
+    case "$android_version" in
     15)
-        GONK_INCLUDES="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper"
-        MOZ_B2G_BT=1
-        MOZ_B2G_BT_BLUEZ=1
+        CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
         MOZ_NFC=1
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
@@ -125,16 +118,7 @@ if test -n "$gonkdir" ; then
         MOZ_SECUREELEMENT=1
         ;;
     17|18)
-        GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
-        if test -d "$gonkdir/external/bluetooth/bluez"; then
-            GONK_INCLUDES="$GONK_INCLUDES -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_BLUEZ=1
-        elif test -d "$gonkdir/system/bluetoothd"; then
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_DAEMON=1
-        fi
-
+        CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
         MOZ_RTSP=1
         MOZ_NFC=1
         MOZ_B2G_CAMERA=1
@@ -146,12 +130,8 @@ if test -n "$gonkdir" ; then
         MOZ_SECUREELEMENT=1
         ;;
     19)
-        GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
+        CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
         MOZ_B2G_CAMERA=1
-        if test -d "$gonkdir/system/bluetoothd"; then
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_DAEMON=1
-        fi
         MOZ_NFC=1
         MOZ_RTSP=1
         MOZ_OMX_DECODER=1
@@ -163,7 +143,7 @@ if test -n "$gonkdir" ; then
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         ;;
     21|22)
-        GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
+        CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
         MOZ_AUDIO_OFFLOAD=1
         MOZ_OMX_DECODER=1
         MOZ_OMX_ENCODER=1
@@ -171,28 +151,36 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         MOZ_B2G_CAMERA=1
-        if test -d "$gonkdir/system/bluetoothd"; then
-            MOZ_B2G_BT=1
-            MOZ_B2G_BT_DAEMON=1
-        fi
         MOZ_NFC=1
         MOZ_RTSP=1
         ;;
     *)
-        AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
+        AC_MSG_ERROR([Unsupported platform version: $android_version])
         ;;
     esac
 
-    CPPFLAGS="-I$gonkdir/system -I$gonkdir/system/core/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $GONK_INCLUDES $CPPFLAGS"
+    dnl Enable Bluetooth backends depending on available drivers
+    if test -d "$gonkdir/system/bluetoothd"; then
+        MOZ_B2G_BT=1
+        MOZ_B2G_BT_DAEMON=1
+    fi
+    if test -d "$gonkdir/external/bluetooth/bluez"; then
+        MOZ_B2G_BT=1
+        MOZ_B2G_BT_BLUEZ=1
+    fi
+
+    CPPFLAGS="-I$gonkdir/system -I$gonkdir/system/core/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $CPPFLAGS"
     LDFLAGS="-L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib $LDFLAGS"
-    dnl Add -llog by default, since we use it all over the place.
-    LIBS="$LIBS -llog"
 
     AC_DEFINE(ANDROID)
-    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $ANDROID_VERSION)
-    AC_SUBST(ANDROID_VERSION)
+    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
+
+    dnl ANDROID_VERSION is only required for the AC_SUBST below
+    ANDROID_VERSION=$android_version
+    AC_SUBST(ANDROID_VERSION)
+
     direct_nspr_config=1
 
 else
@@ -3536,9 +3524,9 @@ dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
 
-if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$ANDROID_VERSION"; then
-    # we now know for sure that $ANDROID_VERSION is not an empty string!
-    if test "$ANDROID_VERSION" -ge "18"; then
+if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$android_version"; then
+    # we now know for sure that $android_version is not an empty string!
+    if test "$android_version" -ge "18"; then
         MOZ_GONK_MEDIACODEC=1
         AC_SUBST(MOZ_GONK_MEDIACODEC)
     fi

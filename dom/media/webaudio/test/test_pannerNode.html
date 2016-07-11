@@ -46,7 +46,15 @@ addLoadEvent(function() {
   is(panner.channelInterpretation, "speakers", "Correct channelCountInterpretation for the panner node");
 
   panner.setPosition(1, 1, 1);
-  panner.setOrientation(1, 1, 1);
+  near(panner.positionX.value, 1, "setPosition sets AudioParam properly");
+  near(panner.positionY.value, 1, "setPosition sets AudioParam properly");
+  near(panner.positionZ.value, 1, "setPosition sets AudioParam properly");
+
+  panner.setOrientation(0, 1, 0);
+  near(panner.orientationX.value, 0, "setOrientation sets AudioParam properly");
+  near(panner.orientationY.value, 1, "setOrientation sets AudioParam properly");
+  near(panner.orientationZ.value, 0, "setOrientation sets AudioParam properly");
+
   panner.setVelocity(1, 1, 1);
 
   source.start(0);

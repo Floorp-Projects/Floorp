@@ -1453,3 +1453,7 @@ pref("dom.mozBrowserFramesEnabled", true);
 pref("extensions.pocket.enabled", true);
 
 pref("signon.schemeUpgrades", true);
+
+// Enable the "Simplify Page" feature in Print Preview
+pref("print.use_simplify_page", true);
+

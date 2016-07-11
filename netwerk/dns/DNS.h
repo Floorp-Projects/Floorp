@@ -109,8 +109,9 @@ union NetAddr {
     char path[104];                 /* null-terminated pathname */
   } local;
 #endif
-  // introduced to support nsTArray<NetAddr> (for DNSRequestParent.cpp)
+  // introduced to support nsTArray<NetAddr> comparisons and sorting
   bool operator == (const NetAddr& other) const;
+  bool operator < (const NetAddr &other) const;
 };
 
 // This class wraps a NetAddr union to provide C++ linked list

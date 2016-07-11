@@ -243,7 +243,30 @@ NetAddr::operator == (const NetAddr& other) const
   return false;
 }
 
-
+bool
+NetAddr::operator < (const NetAddr& other) const
+{
+    if (this->raw.family != other.raw.family) {
+        return this->raw.family < other.raw.family;
+    } else if (this->raw.family == AF_INET) {
+        if (this->inet.ip == other.inet.ip) {
+            return this->inet.port < other.inet.port;
+        } else {
+            return this->inet.ip < other.inet.ip;
+        }
+    } else if (this->raw.family == AF_INET6) {
+        int cmpResult = memcmp(&this->inet6.ip, &other.inet6.ip,
+                               sizeof(this->inet6.ip));
+        if (cmpResult) {
+            return cmpResult < 0;
+        } else if (this->inet6.port != other.inet6.port) {
+            return this->inet6.port < other.inet6.port;
+        } else {
+            return this->inet6.flowinfo < other.inet6.flowinfo;
+        }
+    }
+    return false;
+}
 
 NetAddrElement::NetAddrElement(const PRNetAddr *prNetAddr)
 {
