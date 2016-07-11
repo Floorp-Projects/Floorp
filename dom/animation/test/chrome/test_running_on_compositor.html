@@ -515,5 +515,25 @@ promise_test(function(t) {
 }, '100% opacity animation set up by converting an existing animation with ' +
    'cannot be run on the compositor, is running on the compositor');
 
+promise_test(function(t) {
+  var div = addDiv(t, { style: "opacity: 1 ! important" });
+
+  var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+      'Opacity animation on an element which has 100% opacity style with ' +
+      '!important flag reports that it is not running on the compositor');
+    // Clear important flag from the opacity style on the target element.
+    div.style.setProperty("opacity", "1", "");
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Opacity animation reports that it is running on the compositor after '
+      + 'clearing the !important flag');
+  });
+}, 'Clearing *important* opacity style on the target element sends the ' +
+   'animation to the compositor');
+
 </script>
 </body>
