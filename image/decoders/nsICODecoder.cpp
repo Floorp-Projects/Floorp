@@ -597,51 +597,46 @@ nsICODecoder::FinishResource()
   return Transition::TerminateSuccess();
 }
 
-void
+Maybe<TerminalState>
 nsICODecoder::DoDecode(const char* aBuffer, size_t aLength)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aLength > 0);
 
-  Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aLength,
-               [=](ICOState aState, const char* aData, size_t aLength) {
-      switch (aState) {
-        case ICOState::HEADER:
-          return ReadHeader(aData);
-        case ICOState::DIR_ENTRY:
-          return ReadDirEntry(aData);
-        case ICOState::SKIP_TO_RESOURCE:
-          return Transition::ContinueUnbuffered(ICOState::SKIP_TO_RESOURCE);
-        case ICOState::FOUND_RESOURCE:
-          return Transition::To(ICOState::SNIFF_RESOURCE, PNGSIGNATURESIZE);
-        case ICOState::SNIFF_RESOURCE:
-          return SniffResource(aData);
-        case ICOState::READ_PNG:
-          return ReadPNG(aData, aLength);
-        case ICOState::READ_BIH:
-          return ReadBIH(aData);
-        case ICOState::READ_BMP:
-          return ReadBMP(aData, aLength);
-        case ICOState::PREPARE_FOR_MASK:
-          return PrepareForMask();
-        case ICOState::READ_MASK_ROW:
-          return ReadMaskRow(aData);
-        case ICOState::FINISH_MASK:
-          return FinishMask();
-        case ICOState::SKIP_MASK:
-          return Transition::ContinueUnbuffered(ICOState::SKIP_MASK);
-        case ICOState::FINISHED_RESOURCE:
-          return FinishResource();
-        default:
-          MOZ_CRASH("Unknown ICOState");
-      }
-    });
-
-  if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
-  }
+  return mLexer.Lex(aBuffer, aLength,
+                    [=](ICOState aState, const char* aData, size_t aLength) {
+    switch (aState) {
+      case ICOState::HEADER:
+        return ReadHeader(aData);
+      case ICOState::DIR_ENTRY:
+        return ReadDirEntry(aData);
+      case ICOState::SKIP_TO_RESOURCE:
+        return Transition::ContinueUnbuffered(ICOState::SKIP_TO_RESOURCE);
+      case ICOState::FOUND_RESOURCE:
+        return Transition::To(ICOState::SNIFF_RESOURCE, PNGSIGNATURESIZE);
+      case ICOState::SNIFF_RESOURCE:
+        return SniffResource(aData);
+      case ICOState::READ_PNG:
+        return ReadPNG(aData, aLength);
+      case ICOState::READ_BIH:
+        return ReadBIH(aData);
+      case ICOState::READ_BMP:
+        return ReadBMP(aData, aLength);
+      case ICOState::PREPARE_FOR_MASK:
+        return PrepareForMask();
+      case ICOState::READ_MASK_ROW:
+        return ReadMaskRow(aData);
+      case ICOState::FINISH_MASK:
+        return FinishMask();
+      case ICOState::SKIP_MASK:
+        return Transition::ContinueUnbuffered(ICOState::SKIP_MASK);
+      case ICOState::FINISHED_RESOURCE:
+        return FinishResource();
+      default:
+        MOZ_CRASH("Unknown ICOState");
+    }
+  });
 }
 
 bool

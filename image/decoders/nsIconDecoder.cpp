@@ -26,31 +26,26 @@ nsIconDecoder::nsIconDecoder(RasterImage* aImage)
 nsIconDecoder::~nsIconDecoder()
 { }
 
-void
+Maybe<TerminalState>
 nsIconDecoder::DoDecode(const char* aBuffer, size_t aLength)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aLength > 0);
 
-  Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aLength, [=](State aState,
-                                     const char* aData, size_t aLength) {
-      switch (aState) {
-        case State::HEADER:
-          return ReadHeader(aData);
-        case State::ROW_OF_PIXELS:
-          return ReadRowOfPixels(aData, aLength);
-        case State::FINISH:
-          return Finish();
-        default:
-          MOZ_CRASH("Unknown State");
-      }
-    });
-
-  if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
-  }
+  return mLexer.Lex(aBuffer, aLength,
+                    [=](State aState, const char* aData, size_t aLength) {
+    switch (aState) {
+      case State::HEADER:
+        return ReadHeader(aData);
+      case State::ROW_OF_PIXELS:
+        return ReadRowOfPixels(aData, aLength);
+      case State::FINISH:
+        return Finish();
+      default:
+        MOZ_CRASH("Unknown State");
+    }
+  });
 }
 
 LexerTransition<nsIconDecoder::State>

@@ -8,6 +8,7 @@
 
 #include "FrameAnimator.h"
 #include "RasterImage.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "DecodePool.h"
@@ -16,6 +17,7 @@
 #include "ImageMetadata.h"
 #include "Orientation.h"
 #include "SourceBuffer.h"
+#include "StreamingLexer.h"
 #include "SurfaceFlags.h"
 
 namespace mozilla {
@@ -288,7 +290,7 @@ protected:
    * call PostDataError().
    */
   virtual void InitInternal();
-  virtual void DoDecode(const char* aBuffer, size_t aLength) = 0;
+  virtual Maybe<TerminalState> DoDecode(const char* aBuffer, size_t aLength) = 0;
   virtual void BeforeFinishInternal();
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();

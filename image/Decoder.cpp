@@ -152,7 +152,12 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
       AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
 
       // Pass the data along to the implementation.
-      DoDecode(mIterator->Data(), mIterator->Length());
+      Maybe<TerminalState> terminalState =
+        DoDecode(mIterator->Data(), mIterator->Length());
+
+      if (terminalState == Some(TerminalState::FAILURE)) {
+        PostDataError();
+      }
     }
   }
 
