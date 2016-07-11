@@ -25,9 +25,6 @@
 #if defined(MOZ_WIDGET_GTK)
 #include "base/message_pump_glib.h"
 #endif
-#ifdef MOZ_WIDGET_QT
-#include "base/message_pump_qt.h"
-#endif
 #endif
 #ifdef ANDROID
 #include "base/message_pump_android.h"
