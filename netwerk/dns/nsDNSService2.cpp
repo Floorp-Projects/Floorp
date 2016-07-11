@@ -147,8 +147,7 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
             mDone = true;
             return NS_ERROR_NOT_AVAILABLE;
         }
-    }
-    else {
+    } else {
         mHostRecord->addr_info_lock.Unlock();
 
         if (!mHostRecord->addr) {
@@ -165,8 +164,7 @@ nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr)
     port = htons(port);
     if (addr->raw.family == AF_INET) {
         addr->inet.port = port;
-    }
-    else if (addr->raw.family == AF_INET6) {
+    } else if (addr->raw.family == AF_INET6) {
         addr->inet6.port = port;
     }
 
@@ -343,8 +341,6 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
     if (NS_SUCCEEDED(status)) {
         NS_ASSERTION(hostRecord, "no host record");
         rec = new nsDNSRecord(hostRecord);
-        if (!rec)
-            status = NS_ERROR_OUT_OF_MEMORY;
     }
 
     mListener->OnLookupComplete(this, rec, status);

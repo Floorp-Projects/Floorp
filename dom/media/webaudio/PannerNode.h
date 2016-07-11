@@ -12,6 +12,7 @@
 #include "ThreeDPoint.h"
 #include "mozilla/WeakPtr.h"
 #include "WebAudioUtils.h"
+#include <limits>
 #include <set>
 
 namespace mozilla {
@@ -69,28 +70,28 @@ public:
 
   void SetPosition(double aX, double aY, double aZ)
   {
-    if (WebAudioUtils::FuzzyEqual(mPosition.x, aX) &&
-        WebAudioUtils::FuzzyEqual(mPosition.y, aY) &&
-        WebAudioUtils::FuzzyEqual(mPosition.z, aZ)) {
+    if (fabs(aX) > std::numeric_limits<float>::max() ||
+        fabs(aY) > std::numeric_limits<float>::max() ||
+        fabs(aZ) > std::numeric_limits<float>::max()) {
       return;
     }
-    mPosition.x = aX;
-    mPosition.y = aY;
-    mPosition.z = aZ;
-    SendThreeDPointParameterToStream(POSITION, mPosition);
+    mPositionX->SetValue(aX);
+    mPositionY->SetValue(aY);
+    mPositionZ->SetValue(aZ);
+    SendThreeDPointParameterToStream(POSITION, ConvertAudioParamTo3DP(mPositionX, mPositionY, mPositionZ));
   }
 
   void SetOrientation(double aX, double aY, double aZ)
   {
-    ThreeDPoint orientation(aX, aY, aZ);
-    if (!orientation.IsZero()) {
-      orientation.Normalize();
-    }
-    if (mOrientation.FuzzyEqual(orientation)) {
+    if (fabs(aX) > std::numeric_limits<float>::max() ||
+        fabs(aY) > std::numeric_limits<float>::max() ||
+        fabs(aZ) > std::numeric_limits<float>::max()) {
       return;
     }
-    mOrientation = orientation;
-    SendThreeDPointParameterToStream(ORIENTATION, mOrientation);
+    mOrientationX->SetValue(aX);
+    mOrientationY->SetValue(aY);
+    mOrientationZ->SetValue(aZ);
+    SendThreeDPointParameterToStream(ORIENTATION, ConvertAudioParamTo3DP(mOrientationX, mOrientationY, mOrientationZ));
   }
 
   void SetVelocity(double aX, double aY, double aZ)
@@ -185,6 +186,37 @@ public:
     SendDoubleParameterToStream(CONE_OUTER_GAIN, mConeOuterGain);
   }
 
+  AudioParam* PositionX()
+  {
+    return mPositionX;
+  }
+
+  AudioParam* PositionY()
+  {
+    return mPositionY;
+  }
+
+  AudioParam* PositionZ()
+  {
+    return mPositionZ;
+  }
+
+  AudioParam* OrientationX()
+  {
+    return mOrientationX;
+  }
+
+  AudioParam* OrientationY()
+  {
+    return mOrientationY;
+  }
+
+  AudioParam* OrientationZ()
+  {
+    return mOrientationZ;
+  }
+
+
   float ComputeDopplerShift();
   void SendDopplerToSourcesIfNeeded();
   void FindConnectedSources();
@@ -214,7 +246,13 @@ private:
     PANNING_MODEL,
     DISTANCE_MODEL,
     POSITION,
+    POSITIONX,
+    POSITIONY,
+    POSITIONZ,
     ORIENTATION, // unit length or zero
+    ORIENTATIONX,
+    ORIENTATIONY,
+    ORIENTATIONZ,
     VELOCITY,
     REF_DISTANCE,
     MAX_DISTANCE,
@@ -224,12 +262,21 @@ private:
     CONE_OUTER_GAIN
   };
 
-private:
+  ThreeDPoint ConvertAudioParamTo3DP(RefPtr <AudioParam> aX, RefPtr <AudioParam> aY, RefPtr <AudioParam> aZ)
+  {
+    return ThreeDPoint(aX->GetValue(), aY->GetValue(), aZ->GetValue());
+  }
+
   PanningModelType mPanningModel;
   DistanceModelType mDistanceModel;
-  ThreeDPoint mPosition;
-  ThreeDPoint mOrientation;
+  RefPtr<AudioParam> mPositionX;
+  RefPtr<AudioParam> mPositionY;
+  RefPtr<AudioParam> mPositionZ;
+  RefPtr<AudioParam> mOrientationX;
+  RefPtr<AudioParam> mOrientationY;
+  RefPtr<AudioParam> mOrientationZ;
   ThreeDPoint mVelocity;
+
   double mRefDistance;
   double mMaxDistance;
   double mRolloffFactor;
