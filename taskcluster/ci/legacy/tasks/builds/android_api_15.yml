@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/mobile_base.yml'
   variables:
-    build_name: 'android'
+    build_name: 'android-api-15'
     build_type: 'opt'
 task:
   metadata:
