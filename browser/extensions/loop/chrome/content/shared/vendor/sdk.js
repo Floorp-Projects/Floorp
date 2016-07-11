@@ -38430,7 +38430,7 @@ var StylableComponent =               require('../stylable_component.js');
 var VideoDisabledIndicator =          require('../chrome/video_disabled_indicator.js');
 var WidgetView =                      require('../../helpers/widget_view.js');
 
-var BIND_VIDEO_DELAY_MAX = 15000;
+var BIND_VIDEO_DELAY_MAX = 30000;
 
 /**
  * The Subscriber object is a representation of the local video element that is playing back
