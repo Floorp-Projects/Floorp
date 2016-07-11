@@ -3176,10 +3176,6 @@ nsDocument::GetContentType(nsAString& aContentType)
 void
 nsDocument::SetContentType(const nsAString& aContentType)
 {
-  NS_ASSERTION(GetContentTypeInternal().IsEmpty() ||
-               GetContentTypeInternal().Equals(NS_ConvertUTF16toUTF8(aContentType)),
-               "Do you really want to change the content-type?");
-
   SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
 }
 
