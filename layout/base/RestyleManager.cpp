@@ -1566,7 +1566,7 @@ RestyleManager::RestyleForRemove(Element* aContainer,
 {
   if (aOldChild->IsRootOfAnonymousSubtree()) {
     // This should be an assert, but this is called incorrectly in
-    // nsHTMLEditor::DeleteRefToAnonymousNode and the assertions were clogging
+    // HTMLEditor::DeleteRefToAnonymousNode and the assertions were clogging
     // up the logs.  Make it an assert again when that's fixed.
     MOZ_ASSERT(aOldChild->GetProperty(nsGkAtoms::restylableAnonymousNode),
                "anonymous nodes should not be in child lists (bug 439258)");
