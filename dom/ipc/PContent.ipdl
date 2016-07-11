@@ -1087,7 +1087,7 @@ parent:
     /**
      * Send ServiceWorkerRegistrationData to child process.
      */
-    sync GetBrowserConfiguration(nsCString aUri)
+    sync GetBrowserConfiguration()
         returns (BrowserConfiguration aConfig);
 
     async Profile(nsCString aProfile);

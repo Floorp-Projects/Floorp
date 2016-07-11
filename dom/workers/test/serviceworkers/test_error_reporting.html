@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Error Reporting of Service Worker Failures</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/**
+ * Test that a bunch of service worker coding errors and failure modes that
+ * might otherwise be hard to diagnose are surfaced as console error messages.
+ * The driving use-case is minimizing cursing from a developer looking at a
+ * document in Firefox testing a page that involves service workers.
+ *
+ * This test assumes that errors will be reported via
+ * ServiceWorkerManager::ReportToAllClients and that that method is reliable and
+ * tested via some other file.
+ **/
+
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.caches.testing.enabled", true],
+  ]});
+});
+
+/**
+ * Ensure an error is logged during the initial registration of a SW when a 404
+ * is received.
+ */
+add_task(function* register_404() {
+  // Start monitoring for the error
+  let expectedMessage = expect_console_message(
+    "ServiceWorkerRegisterNetworkError",
+    [make_absolute_url("network_error/"), "404", make_absolute_url("404.js")]);
+
+  // Register, generating the 404 error.  This will reject with a TypeError
+  // which we need to consume so it doesn't get thrown at our generator.
+  yield navigator.serviceWorker.register("404.js", { scope: "network_error/" })
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "TypeError", "404 failed as expected"); });
+
+  yield wait_for_expected_message(expectedMessage);
+});
+
+/**
+ * Ensure an error is logged when the service worker is being served with a
+ * MIME type of text/plain rather than a JS type.
+ */
+add_task(function* register_bad_mime_type() {
+  let expectedMessage = expect_console_message(
+    "ServiceWorkerRegisterMimeTypeError",
+    [make_absolute_url("bad_mime_type/"), "text/plain",
+     make_absolute_url("sw_bad_mime_type.js")]);
+
+  // consume the expected rejection so it doesn't get thrown at us.
+  yield navigator.serviceWorker.register("sw_bad_mime_type.js", { scope: "bad_mime_type/" })
+    .then(
+      () => { ok(false, "should have rejected"); },
+      (e) => { ok(e.name === "SecurityError", "bad MIME type failed as expected"); });
+
+  yield wait_for_expected_message(expectedMessage);
+});
+</script>
+
+</body>
+</html>

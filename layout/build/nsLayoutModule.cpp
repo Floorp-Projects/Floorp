@@ -136,11 +136,9 @@ using mozilla::dom::AudioChannelAgent;
 
 // Editor stuff
 #include "nsEditorCID.h"
-#include "nsEditor.h"
-#include "nsPlaintextEditor.h"
-#include "nsEditorController.h" //CID
+#include "mozilla/EditorController.h" //CID
+#include "mozilla/HTMLEditor.h"
 
-#include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 #include "nsTextServicesCID.h"
 
@@ -155,23 +153,6 @@ using mozilla::dom::AudioChannelAgent;
 #endif
 #endif
 #include "nsParserUtils.h"
-
-#define NS_EDITORCOMMANDTABLE_CID \
-{ 0x4f5e62b8, 0xd659, 0x4156, { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 }}
-
-#define NS_EDITINGCOMMANDTABLE_CID \
-{ 0xcb38a746, 0xbeb8, 0x43f3, { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 }}
-
-#define NS_HAPTICFEEDBACK_CID \
-{ 0x1f15dbc8, 0xbfaa, 0x45de, \
-{ 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 
 #include "nsHTMLCanvasFrame.h"
 
@@ -281,6 +262,26 @@ using mozilla::dom::time::TimeService;
 using mozilla::net::StreamingProtocolControllerService;
 using mozilla::gmp::GeckoMediaPluginService;
 using mozilla::dom::NotificationTelemetryService;
+
+#define NS_EDITORCOMMANDTABLE_CID \
+{ 0x4f5e62b8, 0xd659, 0x4156, \
+  { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 } }
+
+#define NS_EDITINGCOMMANDTABLE_CID \
+{ 0xcb38a746, 0xbeb8, 0x43f3, \
+  { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 } }
+
+#define NS_HAPTICFEEDBACK_CID \
+{ 0x1f15dbc8, 0xbfaa, 0x45de, \
+  { 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(TextEditor)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(HTMLEditor)
 
 // Transformiix
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */
@@ -911,8 +912,7 @@ CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
 // Constructor of a controller which is set up to use, internally, a
 // singleton command-table pre-filled with editor commands.
 static nsresult
-nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
-                              void **aResult)
+EditorControllerConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsresult rv;
   nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
@@ -968,7 +968,7 @@ nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsEditorController::RegisterEditorCommands(commandTable);
+  rv = EditorController::RegisterEditorCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   // we don't know here whether we're being created as an instance,
@@ -987,7 +987,7 @@ nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsEditorController::RegisterEditingCommands(commandTable);
+  rv = EditorController::RegisterEditingCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   // we don't know here whether we're being created as an instance,
@@ -1067,7 +1067,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, DOMSessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, DOMLocalStorageManagerConstructor },
   { &kNS_DOMJSON_CID, false, nullptr, NS_NewJSON },
-  { &kNS_TEXTEDITOR_CID, false, nullptr, nsPlaintextEditorConstructor },
+  { &kNS_TEXTEDITOR_CID, false, nullptr, TextEditorConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
   { &kSERVICEWORKERMANAGER_CID, false, nullptr, ServiceWorkerManagerConstructor },
@@ -1087,8 +1087,8 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_VOLUMESERVICE_CID, true, nullptr, nsVolumeServiceConstructor },
 #endif
   { &kNS_AUDIOCHANNELAGENT_CID, true, nullptr, AudioChannelAgentConstructor },
-  { &kNS_HTMLEDITOR_CID, false, nullptr, nsHTMLEditorConstructor },
-  { &kNS_EDITORCONTROLLER_CID, false, nullptr, nsEditorControllerConstructor },
+  { &kNS_HTMLEDITOR_CID, false, nullptr, HTMLEditorConstructor },
+  { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
   { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
