@@ -21,11 +21,15 @@ var { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 var EventEmitter = require("devtools/shared/event-emitter");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
+const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
+
 // Override promise with deprecated-sync-thenables
 promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
+const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/";
+const CHROME_URI = Services.io.newURI(CHROME_URL, null, null);
 
 registerCleanupFunction(function* () {
   info("finish() was called, cleaning up...");
@@ -111,27 +115,20 @@ this.removeTab = function removeTab(aTab, aWindow) {
   return deferred.promise;
 };
 
-function addAddon(aUrl) {
-  info("Installing addon: " + aUrl);
+function getAddonURIFromPath(aPath) {
+  let chromeURI = Services.io.newURI(aPath, null, CHROME_URI);
+  return chromeRegistry.convertChromeURL(chromeURI).QueryInterface(Ci.nsIFileURL);
+}
 
-  let deferred = promise.defer();
+function getTemporaryAddonURLFromPath(aPath) {
+  return getAddonURIFromPath(aPath).spec;
+}
 
-  AddonManager.getInstallForURL(aUrl, aInstaller => {
-    aInstaller.install();
-    let listener = {
-      onInstallEnded: function (aAddon, aAddonInstall) {
-        aInstaller.removeListener(listener);
+function addTemporaryAddon(aPath) {
+  let addonFile = getAddonURIFromPath(aPath).file;
+  info("Installing addon: " + addonFile.path);
 
-        // Wait for add-on's startup scripts to execute. See bug 997408
-        executeSoon(function () {
-          deferred.resolve(aAddonInstall);
-        });
-      }
-    };
-    aInstaller.addListener(listener);
-  }, "application/x-xpinstall");
-
-  return deferred.promise;
+  return AddonManager.installTemporaryAddon(addonFile);
 }
 
 function removeAddon(aAddon) {
@@ -165,13 +162,13 @@ function getTabActorForUrl(aClient, aUrl) {
   return deferred.promise;
 }
 
-function getAddonActorForUrl(aClient, aUrl) {
-  info("Get addon actor for URL: " + aUrl);
+function getAddonActorForId(aClient, aAddonId) {
+  info("Get addon actor for ID: " + aAddonId);
   let deferred = promise.defer();
 
   aClient.listAddons(aResponse => {
-    let addonActor = aResponse.addons.filter(aGrip => aGrip.url == aUrl).pop();
-    info("got addon actor for URL: " + addonActor.actor);
+    let addonActor = aResponse.addons.filter(aGrip => aGrip.id == aAddonId).pop();
+    info("got addon actor for ID: " + aAddonId);
     deferred.resolve(addonActor);
   });
 
@@ -614,9 +611,9 @@ let initDebugger = Task.async(function*(urlOrTab, options) {
 
 // Creates an add-on debugger for a given add-on. The returned AddonDebugger
 // object must be destroyed before finishing the test
-function initAddonDebugger(aUrl) {
+function initAddonDebugger(aAddonId) {
   let addonDebugger = new AddonDebugger();
-  return addonDebugger.init(aUrl).then(() => addonDebugger);
+  return addonDebugger.init(aAddonId).then(() => addonDebugger);
 }
 
 function AddonDebugger() {
@@ -626,7 +623,7 @@ function AddonDebugger() {
 }
 
 AddonDebugger.prototype = {
-  init: Task.async(function* (aUrl) {
+  init: Task.async(function* (aAddonId) {
     info("Initializing an addon debugger panel.");
 
     if (!DebuggerServer.initialized) {
@@ -645,7 +642,7 @@ AddonDebugger.prototype = {
 
     yield this.client.connect();
 
-    let addonActor = yield getAddonActorForUrl(this.client, aUrl);
+    let addonActor = yield getAddonActorForId(this.client, aAddonId);
 
     let targetOptions = {
       form: addonActor,
@@ -951,10 +948,10 @@ function reopenVarPopup(...aArgs) {
   return hideVarPopup.apply(this, aArgs).then(() => openVarPopup.apply(this, aArgs));
 }
 
-function attachAddonActorForUrl(aClient, aUrl) {
+function attachAddonActorForId(aClient, aAddonId) {
   let deferred = promise.defer();
 
-  getAddonActorForUrl(aClient, aUrl).then(aGrip => {
+  getAddonActorForId(aClient, aAddonId).then(aGrip => {
     aClient.attachAddon(aGrip.actor, aResponse => {
       deferred.resolve([aGrip, aResponse]);
     });

@@ -23,8 +23,8 @@ using mozilla::TimeStamp;
 
 static const long NanoSecPerSec = 1000000000;
 
-// Android has the clock functions, but not pthread_condattr_setclock.
-#if defined(HAVE_CLOCK_MONOTONIC) && !defined(__ANDROID__)
+// Android & macOS 10.12 has the clock functions, but not pthread_condattr_setclock.
+#if defined(HAVE_CLOCK_MONOTONIC) && !defined(__ANDROID__) && !defined(__APPLE__)
 # define USE_CLOCK_API
 #endif
 

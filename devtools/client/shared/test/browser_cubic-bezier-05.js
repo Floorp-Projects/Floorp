@@ -6,17 +6,17 @@
 
 // Tests that the CubicBezierPresetWidget cycles menus
 
-const TEST_URI = "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xhtml";
 const {CubicBezierPresetWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} =
   require("devtools/client/shared/widgets/CubicBezierPresets");
 
+const TEST_URI = `data:text/html,<div id="cubic-bezier-container" />`;
+
 add_task(function* () {
-  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
-  let container = doc.querySelector("#container");
+  let container = doc.querySelector("#cubic-bezier-container");
   let w = new CubicBezierPresetWidget(container);
 
   info("Checking that preset is selected if coordinates are known");
@@ -45,5 +45,4 @@ add_task(function* () {
 
   w.destroy();
   host.destroy();
-  gBrowser.removeCurrentTab();
 });
