@@ -198,10 +198,7 @@ protected:
 class MediaEngineDefault : public MediaEngine
 {
 public:
-  explicit MediaEngineDefault(bool aHasFakeTracks = false)
-    : mHasFakeTracks(aHasFakeTracks)
-    , mMutex("mozilla::MediaEngineDefault")
-  {}
+  explicit MediaEngineDefault() : mMutex("mozilla::MediaEngineDefault") {}
 
   void EnumerateVideoDevices(dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaEngineVideoSource> >*) override;
@@ -213,9 +210,6 @@ public:
     mVSources.Clear();
     mASources.Clear();
   };
-
-protected:
-  bool mHasFakeTracks;
 
 private:
   ~MediaEngineDefault() {
