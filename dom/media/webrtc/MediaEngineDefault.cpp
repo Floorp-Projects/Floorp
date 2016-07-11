@@ -43,7 +43,7 @@ NS_IMPL_ISUPPORTS(MediaEngineDefaultVideoSource, nsITimerCallback)
  */
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
-  : MediaEngineVideoSource(kReleased)
+  : MediaEngineCameraVideoSource("FakeVideo.Monitor")
   , mTimer(nullptr)
   , mMonitor("Fake video")
   , mCb(16), mCr(16)

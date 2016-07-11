@@ -18,6 +18,7 @@
 #include "VideoSegment.h"
 #include "AudioSegment.h"
 #include "StreamTracks.h"
+#include "MediaEngineCameraVideoSource.h"
 #include "MediaStreamGraph.h"
 #include "MediaTrackConstraints.h"
 
@@ -33,8 +34,7 @@ class MediaEngineDefault;
  * The default implementation of the MediaEngine interface.
  */
 class MediaEngineDefaultVideoSource : public nsITimerCallback,
-                                      public MediaEngineVideoSource,
-                                      private MediaConstraintsHelper
+                                      public MediaEngineCameraVideoSource
 {
 public:
   MediaEngineDefaultVideoSource();
