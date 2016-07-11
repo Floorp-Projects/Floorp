@@ -38,7 +38,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   // mechanisms as appropriate.
   copy->mSameOriginDataURL = true;
   copy->mPreserveContentCodings = true;
-  // The default referrer is already about:client.
+  copy->mReferrer = mReferrer;
   copy->mReferrerPolicy = mReferrerPolicy;
   copy->mEnvironmentReferrerPolicy = mEnvironmentReferrerPolicy;
 
