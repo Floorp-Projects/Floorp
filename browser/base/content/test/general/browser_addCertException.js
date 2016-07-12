@@ -9,49 +9,15 @@
 // using the button contained therein to load the certificate exception
 // dialog, using that to add an exception, and finally successfully visiting
 // the site, including showing the right identity box and control center icons.
-function test() {
-  waitForExplicitFinish();
-  whenNewTabLoaded(window, loadBadCertPage);
-}
-
-// Attempt to load https://expired.example.com (which has an expired cert).
-function loadBadCertPage() {
-  Services.obs.addObserver(certExceptionDialogObserver,
-                           "cert-exception-ui-ready", false);
-  let startedLoad = BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
-                                             "https://expired.example.com");
-  startedLoad.then(() => promiseErrorPageLoaded(gBrowser.selectedBrowser)).then(function() {
-    ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
-      content.document.getElementById("exceptionDialogButton").click();
-    });
-  });
-}
-
-// When the certificate exception dialog has opened, click the button to add
-// an exception.
-const EXCEPTION_DIALOG_URI = "chrome://pippki/content/exceptionDialog.xul";
-var certExceptionDialogObserver = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "cert-exception-ui-ready") {
-      Services.obs.removeObserver(this, "cert-exception-ui-ready");
-      let certExceptionDialog = getDialog(EXCEPTION_DIALOG_URI);
-      ok(certExceptionDialog, "found exception dialog");
-      executeSoon(function() {
-        BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(realPageLoaded);
-        certExceptionDialog.documentElement.getButton("extra1").click();
-      });
-    }
-  }
-};
-
-// Finally, we should successfully load https://expired.example.com.
-function realPageLoaded() {
+add_task(function* () {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+  yield loadBadCertPage("https://expired.example.com");
   checkControlPanelIcons();
   let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                               .getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1);
-  BrowserTestUtils.removeTab(gBrowser.selectedTab).then(finish);
-};
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
 
 // Check for the correct icons in the identity box and control center.
 function checkControlPanelIcons() {
@@ -82,30 +48,3 @@ function checkControlPanelIcons() {
   gIdentityHandler._identityPopup.hidden = true;
 }
 
-// Utility function to get a handle on the certificate exception dialog.
-// Modified from toolkit/components/passwordmgr/test/prompt_common.js
-function getDialog(aLocation) {
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-             .getService(Ci.nsIWindowMediator);
-  let enumerator = wm.getXULWindowEnumerator(null);
-
-  while (enumerator.hasMoreElements()) {
-    let win = enumerator.getNext();
-    let windowDocShell = win.QueryInterface(Ci.nsIXULWindow).docShell;
-
-    let containedDocShells = windowDocShell.getDocShellEnumerator(
-                                      Ci.nsIDocShellTreeItem.typeChrome,
-                                      Ci.nsIDocShell.ENUMERATE_FORWARDS);
-    while (containedDocShells.hasMoreElements()) {
-      // Get the corresponding document for this docshell
-      let childDocShell = containedDocShells.getNext();
-      let childDoc = childDocShell.QueryInterface(Ci.nsIDocShell)
-                                  .contentViewer
-                                  .DOMDocument;
-
-      if (childDoc.location.href == aLocation) {
-        return childDoc;
-      }
-    }
-  }
-}
