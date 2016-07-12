@@ -142,13 +142,6 @@ public:
   /// bitmap has been fully decoded.)
   bool HasTransparency() const { return mDoesHaveTransparency; }
 
-  /// Force transparency from outside. (Used by the ICO decoder.)
-  void SetHasTransparency()
-  {
-    mMayHaveTransparency = true;
-    mDoesHaveTransparency = true;
-  }
-
   Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
   nsresult BeforeFinishInternal() override;
   nsresult FinishInternal() override;

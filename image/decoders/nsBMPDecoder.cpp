@@ -262,12 +262,19 @@ nsBMPDecoder::FinishInternal()
     nsIntRect r(0, 0, mH.mWidth, AbsoluteHeight());
     PostInvalidation(r);
 
-    if (mDoesHaveTransparency) {
-      MOZ_ASSERT(mMayHaveTransparency);
-      PostFrameStop(Opacity::SOME_TRANSPARENCY);
-    } else {
-      PostFrameStop(Opacity::FULLY_OPAQUE);
-    }
+    MOZ_ASSERT_IF(mDoesHaveTransparency, mMayHaveTransparency);
+
+    // We have transparency if we either detected some in the image itself
+    // (i.e., |mDoesHaveTransparency| is true) or we're in an ICO, which could
+    // mean we have an AND mask that provides transparency (i.e., |mIsWithinICO|
+    // is true).
+    // XXX(seth): We can tell when we create the decoder if the AND mask is
+    // present, so we could be more precise about this.
+    const Opacity opacity = mDoesHaveTransparency || mIsWithinICO
+                          ? Opacity::SOME_TRANSPARENCY
+                          : Opacity::FULLY_OPAQUE;
+
+    PostFrameStop(opacity);
     PostDecodeDone();
   }
 
