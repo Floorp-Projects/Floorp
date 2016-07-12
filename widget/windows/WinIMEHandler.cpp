@@ -706,44 +706,13 @@ IMEHandler::NeedOnScreenKeyboard()
 
   // To determine whether a keyboard is present on the device, we do the
   // following:-
-  // 1. Check whether the device supports auto rotation. If it does then
-  //    it possibly supports flipping from laptop to slate mode. If it
-  //    does not support auto rotation, then we assume it is a desktop
-  //    or a normal laptop and assume that there is a keyboard.
+  // 1. If the platform role is that of a mobile or slate device, check the
+  //    system metric SM_CONVERTIBLESLATEMODE to see if it is being used
+  //    in slate mode. If it is, also check that the last input was a touch.
+  //    If all of this is true, then we should show the on-screen keyboard.
 
-  // 2. If the device supports auto rotation, then we get its platform role
-  //    and check the system metric SM_CONVERTIBLESLATEMODE to see if it is
-  //    being used in slate mode. If not then we return false here to ensure
-  //    that the OSK is not displayed.
-
-  // 3. If step 1 and 2 both confirm this *could* be a device with no usable
-  //    keyboard, we check whether the last input was touch-based. If so,
-  //    we return true immediately to get an on-screen keyboard.
-
-  // 4. If this was a mouse or (on-screen) keyboard event, we check if
+  // 2. If step 1 didn't determine we should show the keyboard, we check if
   //    this device has keyboards attached to it.
-
-  typedef BOOL (WINAPI* GetAutoRotationState)(PAR_STATE state);
-  GetAutoRotationState get_rotation_state =
-    reinterpret_cast<GetAutoRotationState>(::GetProcAddress(
-      ::GetModuleHandleW(L"user32.dll"), "GetAutoRotationState"));
-
-  if (get_rotation_state) {
-    AR_STATE auto_rotation_state = AR_ENABLED;
-    get_rotation_state(&auto_rotation_state);
-    // If there is no auto rotation sensor or rotation is not supported in
-    // the current configuration, then we can assume that this is a desktop
-    // or a traditional laptop.
-    if (auto_rotation_state & AR_NOSENSOR) {
-      Preferences::SetString(kOskDebugReason,
-                             L"IKPOS: Rotation sensor not found.");
-      return false;
-    } else if (auto_rotation_state & AR_NOT_SUPPORTED) {
-      Preferences::SetString(kOskDebugReason,
-                             L"IKPOS: Auto-rotation not supported.");
-      return false;
-    }
-  }
 
   // Check if the device is being used as a laptop or a tablet. This can be
   // checked by first checking the role of the device and then the
@@ -762,27 +731,16 @@ IMEHandler::NeedOnScreenKeyboard()
     }
   }
 
-  // If this is not a mobile or slate (tablet) device, we don't need to
-  // do anything here.
-  if (sPowerPlatformRole != PlatformRoleMobile &&
-      sPowerPlatformRole != PlatformRoleSlate) {
-    Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRole is neither Mobile nor Slate.");
-    return false;
-  }
-
-  // Likewise, if the tablet/mobile isn't in "slate" mode, we should bail:
-  if (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0) {
-    Preferences::SetString(kOskDebugReason, L"IKPOS: ConvertibleSlateMode is non-zero");
-    return false;
-  }
-
-  // Before we check for a keyboard, we should check if the last input was touch,
-  // in which case we ignore whether or not a keyboard is present:
-  if (sLastContextActionCause == InputContextAction::CAUSE_TOUCH) {
-    Preferences::SetString(kOskDebugReason,
-      L"IKPOS: Used touch to focus control, ignoring keyboard presence");
+  // If this a mobile or slate (tablet) device, check if it is in slate mode.
+  // If the last input was touch, ignore whether or not a keyboard is present.
+  if ((sPowerPlatformRole == PlatformRoleMobile ||
+       sPowerPlatformRole == PlatformRoleSlate) &&
+      ::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0 &&
+      sLastContextActionCause == InputContextAction::CAUSE_TOUCH) {
+    Preferences::SetString(kOskDebugReason, L"IKPOS: Mobile/Slate Platform role, in slate mode with touch event.");
     return true;
   }
+
   return !IMEHandler::IsKeyboardPresentOnSlate();
 }
 

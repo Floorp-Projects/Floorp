@@ -465,6 +465,8 @@ public:
     case SHMCTL:
     case SHMAT:
     case SHMDT:
+    case SEMGET:
+    case SEMCTL:
       return Some(Allow());
     default:
       return SandboxPolicyCommon::EvaluateIpcCall(aCall);
@@ -640,11 +642,6 @@ public:
       return If(tgid == getpid(), Allow())
         .Else(InvalidSyscall());
     }
-#endif
-
-#ifdef __NR_semget
-    case __NR_semget:
-      return Allow();
 #endif
 
     case __NR_mlock:
