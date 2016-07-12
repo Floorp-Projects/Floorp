@@ -558,7 +558,7 @@ LinkBackgroundCodeGen(JSContext* cx, IonBuilder* builder)
 }
 
 void
-jit::LinkIonScript(JSContext* cx, HandleScript calleeScript)
+jit::LazyLink(JSContext* cx, HandleScript calleeScript)
 {
     IonBuilder* builder;
 
@@ -601,7 +601,7 @@ jit::LazyLinkTopActivation(JSContext* cx)
     LazyLinkExitFrameLayout* ll = it.exitFrame()->as<LazyLinkExitFrameLayout>();
     RootedScript calleeScript(cx, ScriptFromCalleeToken(ll->jsFrame()->calleeToken()));
 
-    LinkIonScript(cx, calleeScript);
+    LazyLink(cx, calleeScript);
 
     MOZ_ASSERT(calleeScript->hasBaselineScript());
     MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
@@ -2042,6 +2042,7 @@ AttachFinishedCompilations(JSContext* cx)
         return;
 
     {
+        AutoEnterAnalysis enterTypes(cx);
         AutoLockHelperThreadState lock;
 
         GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList();
@@ -2060,13 +2061,10 @@ AttachFinishedCompilations(JSContext* cx)
             cx->runtime()->ionLazyLinkListAdd(builder);
 
             // Don't keep more than 100 lazy link builders.
-            // Link the oldest ones immediately.
+            // Throw away the oldest items.
             while (cx->runtime()->ionLazyLinkListSize() > 100) {
                 jit::IonBuilder* builder = cx->runtime()->ionLazyLinkList().getLast();
-                RootedScript script(cx, builder->script());
-
-                AutoUnlockHelperThreadState unlock(lock);
-                jit::LinkIonScript(cx, script);
+                jit::FinishOffThreadBuilder(cx->runtime(), builder);
             }
 
             continue;
@@ -2553,7 +2551,7 @@ jit::CanEnter(JSContext* cx, RunState& state)
     }
 
     if (state.script()->baselineScript()->hasPendingIonBuilder()) {
-        LinkIonScript(cx, state.script());
+        LazyLink(cx, state.script());
         if (!state.script()->hasIonScript())
             return jit::Method_Skipped;
     }
@@ -2621,7 +2619,7 @@ BaselineCanEnterAtBranch(JSContext* cx, HandleScript script, BaselineFrame* osrF
     // Check if the jitcode still needs to get linked and do this
     // to have a valid IonScript.
     if (script->baselineScript()->hasPendingIonBuilder())
-        LinkIonScript(cx, script);
+        LazyLink(cx, script);
 
     // By default a recompilation doesn't happen on osr mismatch.
     // Decide if we want to force a recompilation if this happens too much.
