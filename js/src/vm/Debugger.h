@@ -1144,6 +1144,12 @@ enum class DebuggerFrameType {
     Module
 };
 
+enum class DebuggerFrameImplementation {
+    Interpreter,
+    Baseline,
+    Ion
+};
+
 class DebuggerFrame : public NativeObject
 {
   public:
@@ -1177,6 +1183,7 @@ class DebuggerFrame : public NativeObject
     bool isGenerator() const;
     bool isLive() const;
     DebuggerFrameType type() const;
+    DebuggerFrameImplementation implementation() const;
 
   private:
     static const ClassOps classOps_;
@@ -1199,6 +1206,7 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool olderGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc, Value* vp);
 
     AbstractFramePtr referent() const;
     Debugger* owner() const;
