@@ -2448,6 +2448,14 @@ gfxPlatform::BumpDeviceCounter()
 void
 gfxPlatform::InitOpenGLConfig()
 {
+  #ifdef XP_WIN
+  // Don't enable by default on Windows, since it could show up in about:support even
+  // though it'll never get used. Only attempt if user enables the pref
+  if (!Preferences::GetBool("layers.prefer-opengl")){
+    return;
+  }
+  #endif
+
   FeatureState& openGLFeature = gfxConfig::GetFeature(Feature::OPENGL_COMPOSITING);
 
   // Check to see hw comp supported
@@ -2458,11 +2466,9 @@ gfxPlatform::InitOpenGLConfig()
   }
 
   #ifdef XP_WIN
-  // Don't enable by default on Windows, since it could show up in about:support even
-  // though it'll never get used.
   openGLFeature.SetDefaultFromPref(
     gfxPrefs::GetLayersPreferOpenGLPrefName(),
-    false,
+    true,
     gfxPrefs::GetLayersPreferOpenGLPrefDefault());
   #else
     openGLFeature.EnableByDefault();

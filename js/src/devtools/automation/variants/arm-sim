@@ -1,6 +1,4 @@
---enable-optimize
---enable-debug
---enable-stdcxx-compat
---enable-simulator=arm
---target=i686-pc-linux
---host=i686-pc-linux
+{
+    "configure-args": "--enable-optimize --enable-debug --enable-stdcxx-compat --enable-simulator=arm --target=i686-pc-linux --host=i686-pc-linux",
+    "bits": 32
+}

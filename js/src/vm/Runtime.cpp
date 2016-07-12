@@ -863,7 +863,9 @@ bool
 JSRuntime::activeGCInAtomsZone()
 {
     Zone* zone = atomsCompartment_->zone();
-    return zone->needsIncrementalBarrier() || zone->isGCScheduled() || zone->wasGCStarted();
+    return (zone->needsIncrementalBarrier() && !gc.isVerifyPreBarriersEnabled()) ||
+           zone->isGCScheduled() ||
+           zone->wasGCStarted();
 }
 
 void

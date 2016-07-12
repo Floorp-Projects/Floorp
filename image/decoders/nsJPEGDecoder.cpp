@@ -179,28 +179,23 @@ nsJPEGDecoder::FinishInternal()
   }
 }
 
-void
-nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
+Maybe<TerminalState>
+nsJPEGDecoder::DoDecode(SourceBufferIterator& aIterator)
 {
-  MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
-  MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT(aCount > 0);
+  MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
+  MOZ_ASSERT(aIterator.Data());
+  MOZ_ASSERT(aIterator.Length() > 0);
 
-  Maybe<TerminalState> terminalState =
-    mLexer.Lex(aBuffer, aCount, [=](State aState,
-                                    const char* aData, size_t aLength) {
-      switch (aState) {
-        case State::JPEG_DATA:
-          return ReadJPEGData(aData, aLength);
-        case State::FINISHED_JPEG_DATA:
-          return FinishedJPEGData();
-      }
-      MOZ_CRASH("Unknown State");
-    });
-
-  if (terminalState == Some(TerminalState::FAILURE)) {
-    PostDataError();
-  }
+  return mLexer.Lex(aIterator.Data(), aIterator.Length(),
+                    [=](State aState, const char* aData, size_t aLength) {
+    switch (aState) {
+      case State::JPEG_DATA:
+        return ReadJPEGData(aData, aLength);
+      case State::FINISHED_JPEG_DATA:
+        return FinishedJPEGData();
+    }
+    MOZ_CRASH("Unknown State");
+  });
 }
 
 LexerTransition<nsJPEGDecoder::State>
