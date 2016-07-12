@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html reftest-async-scroll>
+  <head>
+    <title>CSS Test: Sticky Positioning - inline, async scrolling</title>
+    <link rel="author" title="Corey Ford" href="mailto:corey@coreyford.name">
+    <link rel="match" href="inline-4-ref.html">
+    <meta name="assert" content="Sticky positioning on inline elements should keep continuations aligned during async scrolling">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroller {
+        margin-top: 100px;
+        height: 200px;
+        width: 500px;
+        overflow: hidden;
+      }
+      #container {
+        background: pink;
+        position: relative;
+        margin: 50px;
+        height: 400px;
+        margin-bottom: 1000px;
+      }
+      #sticky {
+        position: sticky;
+        left: 0px;
+        top: 75px;
+        outline: 1px dotted purple;
+        font: 10px/1 Ahem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroller"
+         reftest-displayport-x="0" reftest-displayport-y="0"
+         reftest-displayport-w="500" reftest-displayport-h="300"
+         reftest-async-scroll-y="30">
+      <div id="container">
+        <span id="sticky">
+          First line<br>
+          Second line<br>
+          Third line<br>
+        </span>
+      </div>
+    </div>
+  </body>
+</html>
