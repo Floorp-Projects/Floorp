@@ -1,4 +1,8 @@
---enable-optimize
---enable-debug
---enable-stdcxx-compat
---enable-simulator=arm64
+{
+    "configure-args": "--enable-optimize --enable-debug --enable-stdcxx-compat --enable-simulator=arm64",
+    "env": {
+        "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/arm64-jstests-slow.txt",
+        "JITTEST_EXTRA_ARGS": "--jitflags=none --args=--baseline-eager -x ion/ -x asm.js/"
+    },
+    "bits": 64
+}
