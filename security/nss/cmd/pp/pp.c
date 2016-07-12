@@ -177,6 +177,8 @@ main(int argc, char **argv)
         return -1;
     }
 
+    PORT_Free(typeTag);
+
     if (inFile != PR_STDIN)
         PR_Close(inFile);
     PORT_Free(der.data);

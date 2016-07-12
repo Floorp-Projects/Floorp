@@ -77,6 +77,7 @@ function setUp() {
 
 function run_test() {
   initTestLogging("Trace");
+  validate_all_future_pings();
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 

@@ -3298,6 +3298,9 @@ dump_file(bltestCipherMode mode, char *filename)
     bltestIO keydata;
     PLArenaPool *arena = NULL;
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
+    if (!arena) {
+        return SECFailure;
+    }
     if (mode == bltestRSA || mode == bltestRSA_PSS || mode == bltestRSA_OAEP) {
         RSAPrivateKey *key;
         load_file_data(arena, &keydata, filename, bltestBase64Encoded);

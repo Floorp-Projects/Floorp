@@ -118,6 +118,14 @@ var PerformanceView = {
    * "empty", "recording", "console-recording", "recorded".
    */
   setState: function (state) {
+    // Make sure that the focus isn't captured on a hidden iframe. This fixes a
+    // XUL bug where shortcuts stop working.
+    const iframes = window.document.querySelectorAll('iframe');
+    for (let iframe of iframes) {
+      iframe.blur();
+    }
+    window.focus();
+
     let viewConfig = this.states[state];
     if (!viewConfig) {
       throw new Error(`Invalid state for PerformanceView: ${state}`);

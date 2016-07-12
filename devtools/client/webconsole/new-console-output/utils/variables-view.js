@@ -12,6 +12,6 @@
  *
  * Once JSTerm is also written in React/Redux, these will be actions.
  */
-exports.openVariablesView = (objectActor) => {
-  window.jsterm.openVariablesView({objectActor});
+exports.openVariablesView = (object) => {
+  window.jsterm.openVariablesView({objectActor: object});
 };

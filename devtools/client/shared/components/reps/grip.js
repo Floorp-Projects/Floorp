@@ -30,8 +30,13 @@ define(function (require, exports, module) {
       mode: React.PropTypes.string,
     },
 
-    getTitle: function () {
-      return this.props.object.class || "Object";
+    getTitle: function (object) {
+      if (this.props.objectLink) {
+        return this.props.objectLink({
+          object: object
+        }, object.class);
+      }
+      return object.class || "Object";
     },
 
     longPropIterator: function (object) {
@@ -81,9 +86,14 @@ define(function (require, exports, module) {
       // one and append 'more...' postfix in such case.
       if (props.length > max) {
         props.pop();
+
+        let objectLink = this.props.objectLink || span;
+
         props.push(Caption({
           key: "more",
-          object: "more...",
+          object: objectLink({
+            object: object
+          }, "more...")
         }));
       } else if (props.length > 0) {
         // Remove the last comma.
@@ -146,20 +156,34 @@ define(function (require, exports, module) {
         this.longPropIterator(object) :
         this.shortPropIterator(object);
 
+      let objectLink = this.props.objectLink || span;
       if (this.props.mode == "tiny" || !props.length) {
         return (
           ObjectBox({className: "object"},
-            span({className: "objectTitle"}, this.getTitle(object))
+            this.getTitle(object),
+            objectLink({
+              className: "objectLeftBrace",
+              role: "presentation",
+              object: object
+            }, "")
           )
         );
       }
 
       return (
         ObjectBox({className: "object"},
-          span({className: "objectTitle"}, this.getTitle(object)),
-          span({className: "objectLeftBrace", role: "presentation"}, " {"),
+          this.getTitle(object),
+          objectLink({
+            className: "objectLeftBrace",
+            role: "presentation",
+            object: object
+          }, " {"),
           props,
-          span({className: "objectRightBrace"}, "}")
+          objectLink({
+            className: "objectRightBrace",
+            role: "presentation",
+            object: object
+          }, "}")
         )
       );
     },

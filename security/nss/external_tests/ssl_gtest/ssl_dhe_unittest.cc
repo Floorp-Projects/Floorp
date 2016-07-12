@@ -10,6 +10,7 @@
 #include "sslproto.h"
 #include <memory>
 #include <functional>
+#include <set>
 
 #include "scoped_ptrs.h"
 #include "tls_parser.h"
@@ -25,22 +26,131 @@ TEST_P(TlsConnectGeneric, ConnectDhe) {
   CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
 }
 
+// Track groups and make sure that there are no duplicates.
+class CheckDuplicateGroup {
+ public:
+  void AddAndCheckGroup(uint16_t group) {
+    EXPECT_EQ(groups_.end(), groups_.find(group))
+        << "Group " << group << " should not be duplicated";
+    groups_.insert(group);
+  }
+
+ private:
+  std::set<uint16_t> groups_;
+};
+
+// Check the group of each of the supported groups
+static void CheckGroups(const DataBuffer& groups,
+                        std::function<void(uint16_t)> check_group) {
+  CheckDuplicateGroup group_set;
+  uint32_t tmp;
+  EXPECT_TRUE(groups.Read(0, 2, &tmp));
+  EXPECT_EQ(groups.len() - 2, static_cast<size_t>(tmp));
+  for (size_t i = 2; i < groups.len(); i += 2) {
+    EXPECT_TRUE(groups.Read(i, 2, &tmp));
+    uint16_t group = static_cast<uint16_t>(tmp);
+    group_set.AddAndCheckGroup(group);
+    check_group(group);
+  }
+}
+
+// Check the group of each of the shares
+static void CheckShares(const DataBuffer& shares,
+                        std::function<void(uint16_t)> check_group) {
+  CheckDuplicateGroup group_set;
+  uint32_t tmp;
+  EXPECT_TRUE(shares.Read(0, 2, &tmp));
+  EXPECT_EQ(shares.len() - 2, static_cast<size_t>(tmp));
+  size_t i;
+  for(i = 2; i < shares.len(); i += 4 + tmp) {
+    ASSERT_TRUE(shares.Read(i, 2, &tmp));
+    uint16_t group = static_cast<uint16_t>(tmp);
+    group_set.AddAndCheckGroup(group);
+    check_group(group);
+    ASSERT_TRUE(shares.Read(i + 2, 2, &tmp));
+  }
+  EXPECT_EQ(shares.len(), i);
+}
+
+#ifdef NSS_ENABLE_TLS_1_3
+TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+  client_->EnableCiphersByKeyExchange(ssl_kea_dh);
+
+  auto groups_capture = new TlsExtensionCapture(ssl_supported_groups_xtn);
+  auto shares_capture = new TlsExtensionCapture(ssl_tls13_key_share_xtn);
+  std::vector<PacketFilter*> captures;
+  captures.push_back(groups_capture);
+  captures.push_back(shares_capture);
+  client_->SetPacketFilter(new ChainedPacketFilter(captures));
+
+  Connect();
+
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  bool ec, dh;
+  auto track_group_type = [&ec, &dh](uint16_t group) {
+    if ((group & 0xff00U) == 0x100U) {
+      dh = true;
+    } else {
+      ec = true;
+    }
+  };
+  CheckGroups(groups_capture->extension(), track_group_type);
+  CheckShares(shares_capture->extension(), track_group_type);
+  EXPECT_TRUE(ec) << "Should include an EC group and share";
+  EXPECT_TRUE(dh) << "Should include an FFDHE group and share";
+}
+
+TEST_P(TlsConnectTls13, NoDheOnEcdheConnections) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  auto groups_capture = new TlsExtensionCapture(ssl_supported_groups_xtn);
+  auto shares_capture = new TlsExtensionCapture(ssl_tls13_key_share_xtn);
+  std::vector<PacketFilter*> captures;
+  captures.push_back(groups_capture);
+  captures.push_back(shares_capture);
+  client_->SetPacketFilter(new ChainedPacketFilter(captures));
+
+  Connect();
+
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  auto is_ecc = [](uint16_t group) {
+                EXPECT_NE(0x100U, group & 0xff00U);
+  };
+  CheckGroups(groups_capture->extension(), is_ecc);
+  CheckShares(shares_capture->extension(), is_ecc);
+}
+#endif
+
 TEST_P(TlsConnectGeneric, ConnectFfdheClient) {
   EnableOnlyDheCiphers();
   EXPECT_EQ(SECSuccess,
             SSL_OptionSet(client_->ssl_fd(),
                           SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
-  auto clientCapture = new TlsExtensionCapture(ssl_supported_groups_xtn);
-  client_->SetPacketFilter(clientCapture);
+  auto groups_capture = new TlsExtensionCapture(ssl_supported_groups_xtn);
+  auto shares_capture = new TlsExtensionCapture(ssl_tls13_key_share_xtn);
+  std::vector<PacketFilter*> captures;
+  captures.push_back(groups_capture);
+  captures.push_back(shares_capture);
+  client_->SetPacketFilter(new ChainedPacketFilter(captures));
 
   Connect();
 
   CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
-
-  // Extension value: length + FFDHE 2048 group identifier.
-  const uint8_t val[] = { 0x00, 0x02, 0x01, 0x00 };
-  DataBuffer expected_groups(val, sizeof(val));
-  EXPECT_EQ(expected_groups, clientCapture->extension());
+  auto is_ffdhe_2048 = [](uint16_t group) {
+    EXPECT_EQ(0x100U, group);
+  };
+  CheckGroups(groups_capture->extension(), is_ffdhe_2048);
+  if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
+    CheckShares(shares_capture->extension(), is_ffdhe_2048);
+  } else {
+    EXPECT_EQ(0U, shares_capture->extension().len());
+  }
 }
 
 // Requiring the FFDHE extension on the server alone means that clients won't be
@@ -412,12 +522,7 @@ TEST_P(TlsConnectGenericPre13, WeakDHGroup) {
   Connect();
 }
 
-#ifdef NSS_ENABLE_TLS_1_3
-
-// In the absence of HelloRetryRequest, enabling only the 3072-bit group causes
-// the TLS 1.3 handshake to fail because the client will only add the 2048-bit
-// group to its ClientHello.
-TEST_P(TlsConnectTls13, DisableFfdhe2048) {
+TEST_P(TlsConnectGeneric, Ffdhe3072) {
   EnableOnlyDheCiphers();
   static const SSLDHEGroupType groups[] = { ssl_ff_dhe_3072_group };
   EXPECT_EQ(SECSuccess,
@@ -426,15 +531,11 @@ TEST_P(TlsConnectTls13, DisableFfdhe2048) {
   EXPECT_EQ(SECSuccess,
             SSL_DHEGroupPrefSet(server_->ssl_fd(), groups,
                                 PR_ARRAY_SIZE(groups)));
-  EXPECT_EQ(SECSuccess,
-            SSL_OptionSet(server_->ssl_fd(),
-                          SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE));
 
-  ConnectExpectFail();
-
-  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
-  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  Connect();
 }
+
+#ifdef NSS_ENABLE_TLS_1_3
 
 TEST_P(TlsConnectTls13, ResumeFfdhe) {
   EnableOnlyDheCiphers();

@@ -190,12 +190,13 @@ main(int argc, char **argv)
                             progName);
                     return -1;
                 }
-                rcpt->nickname = strdup(optstate->value);
+                rcpt->nickname = PORT_Strdup(optstate->value);
                 rcpt->cert = NULL;
                 rcpt->next = NULL;
                 break;
         }
     }
+    PL_DestroyOptState(optstate);
 
     if (!recipients)
         Usage(progName);
@@ -232,6 +233,27 @@ main(int argc, char **argv)
 
     if (EncryptFile(outFile, inFile, recipients, progName)) {
         SECU_PrintError(progName, "problem encrypting data");
+        return -1;
+    }
+
+    /* free certs */
+    for (rcpt = recipients; rcpt != NULL; ) {
+        struct recipient *next = rcpt->next;
+        CERT_DestroyCertificate(rcpt->cert);
+        PORT_Free(rcpt->nickname);
+        PORT_Free(rcpt);
+        rcpt = next;
+    }
+
+    if (inFile && inFile != stdin) {
+        fclose(inFile);
+    }
+    if (outFile && outFile != stdout) {
+        fclose(outFile);
+    }
+
+    if (NSS_Shutdown() != SECSuccess) {
+        SECU_PrintError(progName, "NSS shutdown:");
         return -1;
     }
 

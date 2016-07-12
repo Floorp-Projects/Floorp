@@ -1,9 +1,6 @@
 toolkit.jar:
 %  content global %content/global/ contentaccessible=yes
 %  content global-platform %content/global-platform/ platform
-# provide the nsTransferable in nsDragAndDrop.js to extensions that have to
-# work with Geckos from before 1.9, when there was a separate file
-%  override chrome://global/content/nsTransferable.js chrome://global/content/nsDragAndDrop.js
 *  content/global/license.html
    content/global/XPCNativeWrapper.js
    content/global/minimal-xul.css
@@ -59,7 +56,6 @@ toolkit.jar:
    content/global/filepicker.properties
    content/global/globalOverlay.js
    content/global/mozilla.xhtml
-   content/global/nsDragAndDrop.js
    content/global/process-content.js
    content/global/resetProfile.css
    content/global/resetProfile.js

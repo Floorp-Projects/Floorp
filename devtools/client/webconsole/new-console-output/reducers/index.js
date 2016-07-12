@@ -6,7 +6,9 @@
 "use strict";
 
 const { messages } = require("./messages");
+const { prefs } = require("./prefs");
 
 exports.reducers = {
-  messages
+  messages,
+  prefs,
 };

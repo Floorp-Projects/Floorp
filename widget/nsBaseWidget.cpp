@@ -2915,7 +2915,6 @@ case _value: eventName.AssignLiteral(_name) ; break
   switch(aGuiEvent->mMessage)
   {
     _ASSIGN_eventName(eBlur,"eBlur");
-    _ASSIGN_eventName(eLegacyDragGesture,"eLegacyDragGesture");
     _ASSIGN_eventName(eDrop,"eDrop");
     _ASSIGN_eventName(eDragEnter,"eDragEnter");
     _ASSIGN_eventName(eDragExit,"eDragExit");

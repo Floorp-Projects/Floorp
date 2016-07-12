@@ -32,6 +32,7 @@ Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/stages/enginesync.js");
 Cu.import("resource://services-sync/stages/declined.js");
 Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/telemetry.js");
 Cu.import("resource://services-sync/userapi.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -548,7 +549,8 @@ Sync11Service.prototype = {
     // Always check for errors; this is also where we look for X-Weave-Alert.
     this.errorHandler.checkServerError(info);
     if (!info.success) {
-      throw "Aborting sync: failed to get collections.";
+      this._log.error("Aborting sync: failed to get collections.")
+      throw info;
     }
     return info;
   },

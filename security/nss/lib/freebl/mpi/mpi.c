@@ -525,7 +525,7 @@ mp_err mp_div_d(const mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
 {
   mp_err   res;
   mp_int   qp;
-  mp_digit rem;
+  mp_digit rem = 0;
   int      pow;
 
   ARGCHK(a != NULL, MP_BADARG);
@@ -561,8 +561,9 @@ mp_err mp_div_d(const mp_int *a, mp_digit d, mp_int *q, mp_digit *r)
   if(s_mp_cmp_d(&qp, 0) == 0)
     SIGN(q) = ZPOS;
 
-  if(r)
+  if(r) {
     *r = rem;
+  }
 
   if(q)
     s_mp_exch(&qp, q);
@@ -3290,7 +3291,7 @@ mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
   mp_word   w = 0, q;
 #else
-  mp_digit  w, q;
+  mp_digit  w = 0, q;
 #endif
   int       ix;
   mp_err    res;
@@ -3378,8 +3379,9 @@ mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
 #endif
 
   /* Deliver the remainder, if desired */
-  if(r)
+  if(r) {
     *r = (mp_digit)w;
+  }
 
   s_mp_clamp(&quot);
   mp_exch(&quot, mp);

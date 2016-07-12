@@ -102,8 +102,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   // external usage, cache the data from the native clipboard or drag.
   if (aEventMessage == eCut ||
       aEventMessage == eCopy ||
-      aEventMessage == eDragStart ||
-      aEventMessage == eLegacyDragGesture) {
+      aEventMessage == eDragStart) {
     mReadOnly = false;
   } else if (mIsExternal) {
     if (aEventMessage == ePaste) {
@@ -149,11 +148,10 @@ DataTransfer::DataTransfer(nsISupports* aParent,
   mItems = aItems->Clone(this);
   // The items are copied from aItems into mItems. There is no need to copy
   // the actual data in the items as the data transfer will be read only. The
-  // draggesture and dragstart events are the only times when items are
+  // dragstart event is the only time when items are
   // modifiable, but those events should have been using the first constructor
   // above.
-  NS_ASSERTION(aEventMessage != eLegacyDragGesture &&
-               aEventMessage != eDragStart,
+  NS_ASSERTION(aEventMessage != eDragStart,
                "invalid event type for DataTransfer constructor");
 }
 
@@ -618,8 +616,7 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   // we only allow access to data of the same principal. During other events,
   // only allow access to the data with the same principal.
   bool checkFormatItemPrincipal = mIsCrossDomainSubFrameDrop ||
-      (mEventMessage != eDrop && mEventMessage != eLegacyDragDrop &&
-       mEventMessage != ePaste);
+      (mEventMessage != eDrop && mEventMessage != ePaste);
   MOZ_ASSERT(aSubjectPrincipal);
 
   RefPtr<DataTransferItem> item = mItems->MozItemByTypeAt(format, aIndex);
