@@ -155,6 +155,23 @@
   flex-grow: 1;
 }
 
+/* type="arrow" overrides: remove arrow decorations for the xul <panel> wrapper */
+
+.tooltip-xul-wrapper[type="arrow"] {
+  margin: 0;
+}
+
+/* The arrow image is hidden because the panel is opened using openPopupAtScreen(). */
+
+/* Remove all decorations on .panel-arrowcontent is the tooltip content container. */
+.tooltip-xul-wrapper[type="arrow"] .panel-arrowcontent {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
 /* Tooltip : arrow style */
 
 .tooltip-xul-wrapper .tooltip-container {
