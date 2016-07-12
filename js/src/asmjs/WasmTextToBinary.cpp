@@ -2389,7 +2389,7 @@ ParseMemory(WasmParseContext& c, AstModule* module)
 }
 
 static AstImport*
-ParseImport(WasmParseContext& c, AstModule* module)
+ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
 {
     AstName name = c.ts.getIfName();
 
@@ -2404,7 +2404,7 @@ ParseImport(WasmParseContext& c, AstModule* module)
     AstRef sigRef;
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
-        if (c.ts.getIf(WasmToken::Memory)) {
+        if (newFormat && c.ts.getIf(WasmToken::Memory)) {
             AstMemorySignature memSig;
             if (!ParseMemorySignature(c, &memSig))
                 return nullptr;
@@ -2476,7 +2476,7 @@ ParseTable(WasmParseContext& c)
 }
 
 static AstModule*
-ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
+ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* error)
 {
     WasmParseContext c(text, lifo, error);
 
@@ -2520,7 +2520,7 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Import: {
-            AstImport* imp = ParseImport(c, module);
+            AstImport* imp = ParseImport(c, newFormat, module);
             if (!imp || !module->append(imp))
                 return nullptr;
             break;
@@ -3784,7 +3784,7 @@ bool
 wasm::TextToBinary(const char16_t* text, bool newFormat, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
-    AstModule* module = ParseModule(text, lifo, error);
+    AstModule* module = ParseModule(text, newFormat, lifo, error);
     if (!module)
         return false;
 
