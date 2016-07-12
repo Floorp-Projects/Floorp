@@ -210,7 +210,7 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
 bool
 MP4VideoInfo::IsValid() const
 {
-  return mDisplay.width > 0 && mDisplay.height > 0;
+  return mImage.width > 0 && mImage.height > 0;
 }
 
 }
