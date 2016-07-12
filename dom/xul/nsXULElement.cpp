@@ -1280,8 +1280,7 @@ nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
          aVisitor.mEvent->mMessage == eMouseDoubleClick ||
          aVisitor.mEvent->mMessage == eXULCommand ||
          aVisitor.mEvent->mMessage == eContextMenu ||
-         aVisitor.mEvent->mMessage == eDragStart ||
-         aVisitor.mEvent->mMessage == eLegacyDragGesture)) {
+         aVisitor.mEvent->mMessage == eDragStart)) {
         // Don't propagate these events from native anonymous scrollbar.
         aVisitor.mCanHandle = true;
         aVisitor.mParentTarget = nullptr;

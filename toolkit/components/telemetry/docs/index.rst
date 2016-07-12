@@ -25,5 +25,6 @@ Client-side, this consists of:
    crash-ping
    uitour-ping
    heartbeat-ping
+   sync-ping
    preferences
    crashes

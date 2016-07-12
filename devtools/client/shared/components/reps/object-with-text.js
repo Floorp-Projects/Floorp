@@ -12,7 +12,7 @@ define(function (require, exports, module) {
 
   // Reps
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectLink } = createFactories(require("./object-link"));
+  const { ObjectBox } = createFactories(require("./object-box"));
 
   // Shortcuts
   const { span } = React.DOM;
@@ -27,6 +27,17 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired,
     },
 
+    getTitle: function (grip) {
+      if (this.props.objectLink) {
+        return ObjectBox({},
+          this.props.objectLink({
+            object: grip
+          }, this.getType(grip))
+        );
+      }
+      return "";
+    },
+
     getType: function (grip) {
       return grip.class;
     },
@@ -38,7 +49,8 @@ define(function (require, exports, module) {
     render: function () {
       let grip = this.props.object;
       return (
-        ObjectLink({className: this.getType(grip)},
+        ObjectBox({className: this.getType(grip)},
+          this.getTitle(grip),
           span({className: "objectPropValue"},
             this.getDescription(grip)
           )

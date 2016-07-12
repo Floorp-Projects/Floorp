@@ -285,6 +285,9 @@ hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
     int byteval = 0;
     int tmp = PORT_Strlen(str);
 
+    PORT_Assert(arena);
+    PORT_Assert(item);
+
     if ((tmp % 2) != 0) {
         return NULL;
     }
@@ -295,19 +298,22 @@ hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
         tmp -= 2;
     }
 
-    if (SECITEM_AllocItem(arena, item, tmp / 2) == NULL) {
+    item = SECITEM_AllocItem(arena, item, tmp / 2);
+    if (item == NULL) {
         return NULL;
     }
 
     while (str[i]) {
-        if ((str[i] >= '0') && (str[i] <= '9'))
+        if ((str[i] >= '0') && (str[i] <= '9')) {
             tmp = str[i] - '0';
-        else if ((str[i] >= 'a') && (str[i] <= 'f'))
+        } else if ((str[i] >= 'a') && (str[i] <= 'f')) {
             tmp = str[i] - 'a' + 10;
-        else if ((str[i] >= 'A') && (str[i] <= 'F'))
+        } else if ((str[i] >= 'A') && (str[i] <= 'F')) {
             tmp = str[i] - 'A' + 10;
-        else
+        } else {
+            /* item is in arena and gets freed by the caller */
             return NULL;
+        }
 
         byteval = byteval * 16 + tmp;
         if ((i % 2) != 0) {
@@ -574,6 +580,7 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads)
     }
 
     if ((curve < ECCurve_noName) || (curve > ECCurve_pastLastCurve)) {
+        PORT_FreeArena(arena, PR_FALSE);
         return SECFailure;
     }
 

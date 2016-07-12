@@ -23,7 +23,7 @@ function run_test() {
   Log.repository.getLogger("Sync.Service").level       = Log.Level.Trace;
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   initTestLogging();
-
+  validate_all_future_pings();
   ensureLegacyIdentityManager();
 
   Service.engineManager.register(RotaryEngine);

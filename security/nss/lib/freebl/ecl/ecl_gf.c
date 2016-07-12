@@ -803,6 +803,7 @@ ec_GFp_sub_5(const mp_int *a, const mp_int *b, mp_int *r,
 		MP_ADD_CARRY(b1, r1, r1, borrow);
 		MP_ADD_CARRY(b2, r2, r2, borrow);
 		MP_ADD_CARRY(b3, r3, r3, borrow);
+		MP_ADD_CARRY(b4, r4, r4, borrow);
 	}
 	MP_CHECKOK(s_mp_pad(r, 5));
 	MP_DIGIT(r, 4) = r4;
@@ -880,6 +881,7 @@ ec_GFp_sub_6(const mp_int *a, const mp_int *b, mp_int *r,
 		MP_ADD_CARRY(b2, r2, r2, borrow);
 		MP_ADD_CARRY(b3, r3, r3, borrow);
 		MP_ADD_CARRY(b4, r4, r4, borrow);
+		MP_ADD_CARRY(b5, r5, r5, borrow);
 	}
 
 	MP_CHECKOK(s_mp_pad(r, 6));

@@ -171,10 +171,12 @@ add_test(function test_sync() {
     do_check_false(engine.enabled);
     do_check_false(engine.wasSynced);
     engine.sync();
+
     do_check_false(engine.wasSynced);
 
     _("Engine.sync calls _sync if it's enabled");
     engine.enabled = true;
+
     engine.sync();
     do_check_true(engine.wasSynced);
     do_check_eq(engineObserver.topics[0], "weave:engine:sync:start");

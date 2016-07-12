@@ -131,12 +131,14 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     Bytes bytecode;
-    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength()))
+    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     CompileArgs compileArgs;
     if (!compileArgs.init(cx))
-        return true;
+        return false;
 
     JS::AutoFilename af;
     if (DescribeScriptedCaller(cx, &af)) {
@@ -641,9 +643,6 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
     if (!JS_DefineProperties(cx, proto, Class::properties))
         return false;
 
-    MOZ_ASSERT(global->as<GlobalObject>().getPrototype(Class::KEY).isUndefined());
-    global->as<GlobalObject>().setPrototype(Class::KEY, ObjectValue(*proto));
-
     RootedAtom className(cx, Atomize(cx, name, strlen(name)));
     if (!className)
         return false;
@@ -657,7 +656,12 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
 
     RootedId id(cx, AtomToId(className));
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
+    if (!DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0))
+        return false;
+
+    MOZ_ASSERT(global->as<GlobalObject>().getPrototype(Class::KEY).isUndefined());
+    global->as<GlobalObject>().setPrototype(Class::KEY, ObjectValue(*proto));
+    return true;
 }
 
 JSObject*

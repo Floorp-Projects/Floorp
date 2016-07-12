@@ -120,13 +120,18 @@ main(int argc, char **argv)
                 break;
         }
     }
+    PL_DestroyOptState(optstate);
     if (optstatus == PL_OPT_BAD)
         Usage(progName);
 
-    if (!dbDir) {
-        dbDir = SECU_DefaultSSLDir(); /* Look in $SSL_DIR */
+    if (dbDir) {
+        char *tmp = dbDir;
+        dbDir = SECU_ConfigDirectory(tmp);
+        PORT_Free(tmp);
+    } else {
+        /* Look in $SSL_DIR */
+        dbDir = SECU_ConfigDirectory(SECU_DefaultSSLDir());
     }
-    dbDir = SECU_ConfigDirectory(dbDir);
     PR_fprintf(PR_STDERR, "dbdir selected is %s\n\n", dbDir);
 
     if (dbDir[0] == '\0') {
@@ -162,6 +167,7 @@ main(int argc, char **argv)
                     PR_fprintf(PR_STDERR, errStrings[FILE_NOT_WRITEABLE_ERR],
                                dbString);
                 }
+                PR_smprintf_free(dbString);
             }
         }
     }

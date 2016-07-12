@@ -5367,11 +5367,10 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
     return NS_OK;
   }
 
-  // For draggesture and dragstart events, the data transfer object is
+  // For dragstart events, the data transfer object is
   // created before the event fires, so it should already be set. For other
   // drag events, get the object from the drag session.
-  NS_ASSERTION(aDragEvent->mMessage != eLegacyDragGesture &&
-               aDragEvent->mMessage != eDragStart,
+  NS_ASSERTION(aDragEvent->mMessage != eDragStart,
                "draggesture event created without a dataTransfer");
 
   nsCOMPtr<nsIDragSession> dragSession = GetDragSession();
@@ -5398,8 +5397,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
   }
 
   bool isCrossDomainSubFrameDrop = false;
-  if (aDragEvent->mMessage == eDrop ||
-      aDragEvent->mMessage == eLegacyDragDrop) {
+  if (aDragEvent->mMessage == eDrop) {
     isCrossDomainSubFrameDrop = CheckForSubFrameDrop(dragSession, aDragEvent);
   }
 
@@ -5423,7 +5421,6 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
                                  FilterDropEffect(action, effectAllowed));
   }
   else if (aDragEvent->mMessage == eDrop ||
-           aDragEvent->mMessage == eLegacyDragDrop ||
            aDragEvent->mMessage == eDragEnd) {
     // For the drop and dragend events, set the drop effect based on the
     // last value that the dropEffect had. This will have been set in

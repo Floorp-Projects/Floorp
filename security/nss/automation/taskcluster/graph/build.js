@@ -12,6 +12,7 @@ var flatmap = require("flatmap");
 // Default values for debugging.
 var TC_OWNER = process.env.TC_OWNER || "{{tc_owner}}";
 var TC_SOURCE = process.env.TC_SOURCE || "{{tc_source}}";
+var TC_PROJECT = process.env.TC_PROJECT || "{{tc_project}}";
 var NSS_PUSHLOG_ID = process.env.NSS_PUSHLOG_ID || "{{nss_pushlog_id}}";
 var NSS_HEAD_REPOSITORY = process.env.NSS_HEAD_REPOSITORY || "{{nss_head_repo}}";
 var NSS_HEAD_REVISION = process.env.NSS_HEAD_REVISION || "{{nss_head_rev}}";
@@ -66,8 +67,8 @@ function decorateTask(task) {
 
   // TreeHerder routes.
   task.task.routes = [
-    "tc-treeherder-stage.v2.nss." + NSS_HEAD_REVISION + "." + NSS_PUSHLOG_ID,
-    "tc-treeherder.v2.nss." + NSS_HEAD_REVISION + "." + NSS_PUSHLOG_ID
+    "tc-treeherder-stage.v2." + TC_PROJECT + "." + NSS_HEAD_REVISION + "." + NSS_PUSHLOG_ID,
+    "tc-treeherder.v2." + TC_PROJECT + "." + NSS_HEAD_REVISION + "." + NSS_PUSHLOG_ID
   ];
 }
 

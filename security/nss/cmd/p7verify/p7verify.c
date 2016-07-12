@@ -171,6 +171,7 @@ HashDecodeAndVerify(FILE *out, FILE *content, PRFileDesc *signature,
         fprintf(out, "invalid (Reason: %s).\n",
                 SECU_Strerror(PORT_GetError()));
 
+    SECITEM_FreeItem(&derdata, PR_FALSE);
     SEC_PKCS7DestroyContentInfo(cinfo);
     return 0;
 }
@@ -245,6 +246,7 @@ main(int argc, char **argv)
             }
         }
     }
+    PL_DestroyOptState(optstate);
 
     if (!contentFile)
         Usage(progName);
@@ -265,6 +267,12 @@ main(int argc, char **argv)
                             certUsage, progName)) {
         SECU_PrintError(progName, "problem decoding/verifying signature");
         return -1;
+    }
+
+    fclose(contentFile);
+    PR_Close(signatureFile);
+    if (outFile && outFile != stdout) {
+        fclose(outFile);
     }
 
     if (NSS_Shutdown() != SECSuccess) {

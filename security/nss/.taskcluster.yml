@@ -62,6 +62,7 @@ tasks:
         env:
           TC_OWNER: {{owner}}
           TC_SOURCE: {{{source}}}
+          TC_PROJECT: {{project}}
           NSS_PUSHLOG_ID: '{{pushlog_id}}'
           NSS_HEAD_REPOSITORY: '{{{url}}}'
           NSS_HEAD_REVISION: '{{revision}}'
