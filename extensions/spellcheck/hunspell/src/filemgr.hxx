@@ -72,21 +72,21 @@
  */
 
 /* file manager class - read lines of files [filename] OR [filename.hz] */
-#ifndef _FILEMGR_HXX_
-#define _FILEMGR_HXX_
-
-#include "hunvisapi.h"
+#ifndef FILEMGR_HXX_
+#define FILEMGR_HXX_
 
 #include "hunzip.hxx"
 #include <stdio.h>
+#include <string>
+#include <fstream>
 
-class LIBHUNSPELL_DLL_EXPORTED FileMgr {
+class FileMgr {
  private:
   FileMgr(const FileMgr&);
   FileMgr& operator=(const FileMgr&);
 
  protected:
-  FILE* fin;
+  std::ifstream fin;
   Hunzip* hin;
   char in[BUFSIZE + 50];  // input buffer
   int fail(const char* err, const char* par);
@@ -95,7 +95,7 @@ class LIBHUNSPELL_DLL_EXPORTED FileMgr {
  public:
   FileMgr(const char* filename, const char* key = NULL);
   ~FileMgr();
-  char* getline();
+  bool getline(std::string&);
   int getlinenum();
 };
 #endif
