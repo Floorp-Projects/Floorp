@@ -23,6 +23,10 @@ const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 const { ConsoleMessage } = require("../types");
 
 function prepareMessage(packet) {
+  if (packet.source) {
+    return packet;
+  }
+
   if (packet._type) {
     packet = convertCachedPacket(packet);
   }
