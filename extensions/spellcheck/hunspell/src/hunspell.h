@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MYSPELLMGR_H_
-#define _MYSPELLMGR_H_
+#ifndef MYSPELLMGR_H_
+#define MYSPELLMGR_H_
 
 #include "hunvisapi.h"
 
