@@ -15,9 +15,7 @@ doXHR("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=xhr_ba
 fetch("http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs?testid=fetch_good");
 fetch("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=fetch_bad");
 navigator.sendBeacon("http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs?testid=beacon_good");
-try {
-  navigator.sendBeacon("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=beacon_bad");
-} catch(ex) {}
+navigator.sendBeacon("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=beacon_bad");
 
 var topWorkerBlob;
 var nestedWorkerBlob;
