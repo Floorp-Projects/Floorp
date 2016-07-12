@@ -129,6 +129,7 @@ namespace jit {
     _(NewArray)                                                             \
     _(NewArrayCopyOnWrite)                                                  \
     _(NewArrayDynamicLength)                                                \
+    _(NewTypedArray)                                                        \
     _(NewObject)                                                            \
     _(NewTypedObject)                                                       \
     _(NewDeclEnvObject)                                                     \
