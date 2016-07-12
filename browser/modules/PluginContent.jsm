@@ -395,7 +395,9 @@ PluginContent.prototype = {
 
       case "PluginVulnerableUpdatable":
         let updateLink = this.getPluginUI(plugin, "checkForUpdatesLink");
-        this.addLinkClickCallback(updateLink, "forwardCallback", "openPluginUpdatePage");
+        let { pluginTag } = this._getPluginInfo(plugin);
+        this.addLinkClickCallback(updateLink, "forwardCallback",
+                                  "openPluginUpdatePage", pluginTag);
         /* FALLTHRU */
 
       case "PluginVulnerableNoUpdate":
@@ -544,8 +546,9 @@ PluginContent.prototype = {
   },
 
   // Forward a link click callback to the chrome process.
-  forwardCallback: function (name) {
-    this.global.sendAsyncMessage("PluginContent:LinkClickCallback", { name: name });
+  forwardCallback: function (name, pluginTag) {
+    this.global.sendAsyncMessage("PluginContent:LinkClickCallback",
+      { name, pluginTag });
   },
 
   submitReport: function submitReport(plugin) {

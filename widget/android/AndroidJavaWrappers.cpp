@@ -333,11 +333,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case VISITED: {
-            ReadCharactersField(jenv);
-            break;
-        }
-
         case THUMBNAIL: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             ReadPointArray(mPoints, jenv, jPoints, 1);

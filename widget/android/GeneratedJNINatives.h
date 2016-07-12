@@ -55,7 +55,7 @@ template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:
-    static const JNINativeMethod methods[4];
+    static const JNINativeMethod methods[5];
 };
 
 template<class Impl>
@@ -64,6 +64,10 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoAppShell::NotifyObservers_t>(
             mozilla::jni::NativeStub<GeckoAppShell::NotifyObservers_t, Impl>
             ::template Wrap<&Impl::NotifyObservers>),
+
+    mozilla::jni::MakeNativeMethod<GeckoAppShell::NotifyUriVisited_t>(
+            mozilla::jni::NativeStub<GeckoAppShell::NotifyUriVisited_t, Impl>
+            ::template Wrap<&Impl::NotifyUriVisited>),
 
     mozilla::jni::MakeNativeMethod<GeckoAppShell::OnLocationChanged_t>(
             mozilla::jni::NativeStub<GeckoAppShell::OnLocationChanged_t, Impl>

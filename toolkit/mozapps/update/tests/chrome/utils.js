@@ -86,7 +86,6 @@ const IS_WIN = ("@mozilla.org/windows-registry-key;1" in Cc);
 // app update wizard's access method being random.
 const PAGEID_DUMMY            = "dummy";                 // Done
 const PAGEID_CHECKING         = "checking";              // Done
-const PAGEID_PLUGIN_UPDATES   = "pluginupdatesfound";
 const PAGEID_NO_UPDATES_FOUND = "noupdatesfound";        // Done
 const PAGEID_MANUAL_UPDATE    = "manualUpdate";          // Done
 const PAGEID_UNSUPPORTED      = "unsupported";           // Done

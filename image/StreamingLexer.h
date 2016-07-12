@@ -211,8 +211,8 @@ private:
  *  - Add an instance of StreamingLexer<State> to your decoder class. Initialize
  *    it with a Transition::To() the state that you want to start lexing in.
  *
- *  - In your decoder's WriteInternal method(), call Lex(), passing in the input
- *    data and length that are passed to WriteInternal(). You also need to pass
+ *  - In your decoder's DoDecode() method, call Lex(), passing in the input
+ *    data and length that are passed to DoDecode(). You also need to pass
  *    a lambda which dispatches to lexing code for each state based on the State
  *    value that's passed in. The lambda generally should just continue a
  *    |switch| statement that calls different methods for each State value. Each
@@ -228,7 +228,7 @@ private:
  * That's all there is to it. The StreamingLexer will track your position in the
  * input and buffer enough data so that your lexing methods can process
  * everything in one pass. Lex() returns Nothing() if more data is needed, in
- * which case you should just return from WriteInternal(). If lexing reaches a
+ * which case you should just return from DoDecode(). If lexing reaches a
  * terminal state, Lex() returns Some(State::SUCCESS) or Some(State::FAILURE),
  * and you can check which one to determine if lexing succeeded or failed and do
  * any necessary cleanup.

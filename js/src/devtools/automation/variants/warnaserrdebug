@@ -1,2 +1,4 @@
---enable-debug
---enable-warnings-as-errors
+{
+    "configure-args": "--enable-debug --enable-warnings-as-errors"
+}
+

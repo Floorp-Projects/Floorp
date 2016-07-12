@@ -249,9 +249,8 @@ public class GeckoAppShell
 
     private static native void reportJavaCrash(String stackTrace);
 
-    public static void notifyUriVisited(String uri) {
-        sendEventToGecko(GeckoEvent.createVisitedEvent(uri));
-    }
+    @WrapForJNI
+    public static native void notifyUriVisited(String uri);
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 

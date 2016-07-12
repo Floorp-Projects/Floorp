@@ -60,6 +60,9 @@ TouchActionHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDevic
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aPoint, viewFrame);
 
   nsIFrame *target = nsLayoutUtils::GetFrameForPoint(viewFrame, relativePoint, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
+  if (!target) {
+    return behavior;
+  }
   nsIScrollableFrame *nearestScrollableParent = nsLayoutUtils::GetNearestScrollableFrame(target, 0);
   nsIFrame* nearestScrollableFrame = do_QueryFrame(nearestScrollableParent);
 

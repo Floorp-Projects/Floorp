@@ -96,8 +96,6 @@ add_task(function* () {
   });
 
   let promise = waitForEvent(gBrowser.tabContainer, "TabOpen", null, true);
-  let pluginUpdateURL = Services.urlFormatter.formatURLPref("plugins.update.url");
-  info(pluginUpdateURL);
 
   yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let doc = content.document;

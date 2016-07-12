@@ -17,9 +17,11 @@ pushd $PACKAGE_DIR
 
 tar -xjvf $UPLOAD_DIR/mozjs-*.tar.bz2
 
+: ${PYTHON:=python2.7}
+
 # Build the freshly extracted, packaged SpiderMonkey.
 pushd ./mozjs-*/js/src
-RUN_MAKE_CHECKS=false AUTOMATION=1 ./devtools/automation/autospider.sh $SPIDERMONKEY_VARIANT
+AUTOMATION=1 $PYTHON ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 popd
 
 # Copy artifacts for upload by TaskCluster
