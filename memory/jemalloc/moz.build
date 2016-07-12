@@ -25,13 +25,13 @@ UNIFIED_SOURCES += [
     'src/src/prof.c',
     'src/src/quarantine.c',
     'src/src/rtree.c',
+    'src/src/spin.c',
     'src/src/stats.c',
     'src/src/tcache.c',
     'src/src/ticker.c',
     'src/src/tsd.c',
     'src/src/util.c',
-    # FIXME do we ever want valgrind.c?
-    # 'src/src/valgrind.c',
+    'src/src/witness.c',
 ]
 
 SOURCES += [
