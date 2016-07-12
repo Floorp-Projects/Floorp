@@ -54,8 +54,6 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-enum Op { Resolve, Detach };
-
 static bool
 IsSameDimension(dom::ScreenOrientationInternal o1, dom::ScreenOrientationInternal o2)
 {
@@ -68,55 +66,6 @@ static bool
 ContentMightReflowOnOrientationChange(const IntRect& rect)
 {
   return rect.width != rect.height;
-}
-
-template<Op OP>
-static void
-WalkTheTree(Layer* aLayer,
-            bool& aReady,
-            const TargetConfig& aTargetConfig,
-            CompositorBridgeParent* aCompositor,
-            bool& aHasRemote,
-            bool aWillResolvePlugins,
-            bool& aDidResolvePlugins)
-{
-
-  ForEachNode<ForwardIterator>(
-      aLayer,
-      [&](Layer* layer)
-      {
-        if (RefLayer* ref = layer->AsRefLayer()) {
-          aHasRemote = true;
-          if (const CompositorBridgeParent::LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(ref->GetReferentId())) {
-            if (Layer* referent = state->mRoot) {
-              if (!ref->GetLocalVisibleRegion().IsEmpty()) {
-                dom::ScreenOrientationInternal chromeOrientation = aTargetConfig.orientation();
-                dom::ScreenOrientationInternal contentOrientation = state->mTargetConfig.orientation();
-                if (!IsSameDimension(chromeOrientation, contentOrientation) &&
-                    ContentMightReflowOnOrientationChange(aTargetConfig.naturalBounds())) {
-                  aReady = false;
-                }
-              }
-
-              if (OP == Resolve) {
-                ref->ConnectReferentLayer(referent);
-      #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-                if (aCompositor && aWillResolvePlugins) {
-                  aDidResolvePlugins |=
-                    aCompositor->UpdatePluginWindowState(ref->GetReferentId());
-                }
-      #endif
-              } else {
-                ref->DetachReferentLayer(referent);
-                WalkTheTree<OP>(referent, aReady, aTargetConfig,
-                                aCompositor, aHasRemote, aWillResolvePlugins,
-                                aDidResolvePlugins);
-              }
-            }
-          }
-        }
-        return TraversalFlag::Continue;
-      });
 }
 
 AsyncCompositionManager::AsyncCompositionManager(LayerManagerComposite* aManager)
@@ -155,13 +104,49 @@ AsyncCompositionManager::ResolveRefLayers(CompositorBridgeParent* aCompositor,
   mReadyForCompose = true;
   bool hasRemoteContent = false;
   bool didResolvePlugins = false;
-  WalkTheTree<Resolve>(mLayerManager->GetRoot(),
-                       mReadyForCompose,
-                       mTargetConfig,
-                       aCompositor,
-                       hasRemoteContent,
-                       willResolvePlugins,
-                       didResolvePlugins);
+
+  ForEachNode<ForwardIterator>(
+    mLayerManager->GetRoot(),
+    [&](Layer* layer)
+    {
+      RefLayer* refLayer = layer->AsRefLayer();
+      if (!refLayer) {
+        return;
+      }
+
+      hasRemoteContent = true;
+      const CompositorBridgeParent::LayerTreeState* state =
+        CompositorBridgeParent::GetIndirectShadowTree(refLayer->GetReferentId());
+      if (!state) {
+        return;
+      }
+
+      Layer* referent = state->mRoot;
+      if (!referent) {
+        return;
+      }
+
+      if (!refLayer->GetLocalVisibleRegion().IsEmpty()) {
+        dom::ScreenOrientationInternal chromeOrientation =
+          mTargetConfig.orientation();
+        dom::ScreenOrientationInternal contentOrientation =
+          state->mTargetConfig.orientation();
+        if (!IsSameDimension(chromeOrientation, contentOrientation) &&
+            ContentMightReflowOnOrientationChange(mTargetConfig.naturalBounds())) {
+          mReadyForCompose = false;
+        }
+      }
+
+      refLayer->ConnectReferentLayer(referent);
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      if (aCompositor && willResolvePlugins) {
+        didResolvePlugins |=
+          aCompositor->UpdatePluginWindowState(refLayer->GetReferentId());
+      }
+#endif
+    });
+
   if (aHasRemoteContent) {
     *aHasRemoteContent = hasRemoteContent;
   }
@@ -176,13 +161,28 @@ AsyncCompositionManager::DetachRefLayers()
   if (!mLayerManager->GetRoot()) {
     return;
   }
-  CompositorBridgeParent* dummy = nullptr;
-  bool ignored = false;
-  WalkTheTree<Detach>(mLayerManager->GetRoot(),
-                      mReadyForCompose,
-                      mTargetConfig,
-                      dummy,
-                      ignored, ignored, ignored);
+
+  mReadyForCompose = false;
+
+  ForEachNodePostOrder<ForwardIterator>(mLayerManager->GetRoot(),
+    [&](Layer* layer)
+    {
+      RefLayer* refLayer = layer->AsRefLayer();
+      if (!refLayer) {
+        return;
+      }
+
+      const CompositorBridgeParent::LayerTreeState* state =
+        CompositorBridgeParent::GetIndirectShadowTree(refLayer->GetReferentId());
+      if (!state) {
+        return;
+      }
+
+      Layer* referent = state->mRoot;
+      if (referent) {
+        refLayer->DetachReferentLayer(referent);
+      }
+    });
 }
 
 void
