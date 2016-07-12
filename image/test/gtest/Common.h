@@ -15,6 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "Decoder.h"
 #include "gfxColor.h"
+#include "imgITools.h"
 #include "nsCOMPtr.h"
 #include "SurfacePipe.h"
 #include "SurfacePipeFactory.h"
@@ -98,6 +99,23 @@ struct BGRAColor
 ///////////////////////////////////////////////////////////////////////////////
 // General Helpers
 ///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * A RAII class that ensure that ImageLib services are available. Any tests that
+ * require ImageLib to be initialized (for example, any test that uses the
+ * SurfaceCache; see image::EnsureModuleInitialized() for the full list) can
+ * use this class to ensure that ImageLib services are available. Failure to do
+ * so can result in strange, non-deterministic failures.
+ */
+struct AutoInitializeImageLib
+{
+  AutoInitializeImageLib()
+  {
+    // Ensure that ImageLib services are initialized.
+    nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+    EXPECT_TRUE(imgTools != nullptr);
+  }
+};
 
 /// Loads a file from the current directory. @return an nsIInputStream for it.
 already_AddRefed<nsIInputStream> LoadFile(const char* aRelativePath);
