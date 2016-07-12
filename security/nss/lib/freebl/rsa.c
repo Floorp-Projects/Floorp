@@ -553,7 +553,6 @@ rsa_get_primes_from_exponents(mp_int *e, mp_int *d, mp_int *p, mp_int *q,
 	    if (err != MP_OKAY) {
 		if (err == MP_NO) {
 		    /* No, then we still have the wrong phi */
-		    err = MP_OKAY;
         	    continue;
 		}
 		goto cleanup;
@@ -1259,7 +1258,8 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
 
 	    /* Put this at head of queue of usable params. */
 	    PZ_Lock(blindingParamsList.lock);
-	    holdingLock = PR_TRUE;
+            holdingLock = PR_TRUE;
+            (void)holdingLock;
 	    /* initialize RSABlindingParamsStr */
 	    bp->counter = RSA_BLINDING_PARAMS_MAX_REUSE;
 	    bp->next    = rsabp->bp;
@@ -1285,6 +1285,7 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
 	PR_WaitCondVar( blindingParamsList.cVar, PR_INTERVAL_NO_TIMEOUT );
 	PZ_Unlock(blindingParamsList.lock); 
 	holdingLock = PR_FALSE;
+        (void)holdingLock;
     } while (1);
 
 cleanup:
@@ -1304,7 +1305,6 @@ cleanup:
     }
     if (holdingLock) {
 	PZ_Unlock(blindingParamsList.lock);
-	holdingLock = PR_FALSE;
     }
     if (err) {
 	MP_TO_SEC_ERROR(err);

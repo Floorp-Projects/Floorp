@@ -894,7 +894,7 @@ restartHandshakeAfterServerCertIfNeeded(PRFileDesc *fd,
 int
 main(int argc, char **argv)
 {
-    PRFileDesc *s;
+    PRFileDesc *s = NULL;
     PRFileDesc *std_out;
     char *host = NULL;
     char *certDir = NULL;
@@ -1210,7 +1210,8 @@ main(int argc, char **argv)
                                         PR_AI_ADDRCONFIG | PR_AI_NOCANONNAME);
         if (!addrInfo) {
             SECU_PrintError(progName, "error looking up host");
-            return 1;
+            error = 1;
+            goto done;
         }
         for (;;) {
             enumPtr = PR_EnumerateAddrInfo(enumPtr, addrInfo, portno, &addr);
@@ -1224,11 +1225,21 @@ main(int argc, char **argv)
         PR_FreeAddrInfo(addrInfo);
         if (enumPtr == NULL) {
             SECU_PrintError(progName, "error looking up host address");
-            return 1;
+            error = 1;
+            goto done;
         }
     }
 
     printHostNameAndAddr(host, &addr);
+
+    if (!certDir) {
+        certDir = SECU_DefaultSSLDir(); /* Look in $SSL_DIR */
+        certDir = SECU_ConfigDirectory(certDir);
+    } else {
+        char *certDirTmp = certDir;
+        certDir = SECU_ConfigDirectory(certDirTmp);
+        PORT_Free(certDirTmp);
+    }
 
     if (pingServerFirst) {
         int iter = 0;
@@ -1243,15 +1254,17 @@ main(int argc, char **argv)
             s = PR_OpenTCPSocket(addr.raw.family);
             if (s == NULL) {
                 SECU_PrintError(progName, "Failed to create a TCP socket");
+                error = 1;
+                goto done;
             }
             opt.option = PR_SockOpt_Nonblocking;
             opt.value.non_blocking = PR_FALSE;
             prStatus = PR_SetSocketOption(s, &opt);
             if (prStatus != PR_SUCCESS) {
-                PR_Close(s);
                 SECU_PrintError(progName,
                                 "Failed to set blocking socket option");
-                return 1;
+                error = 1;
+                goto done;
             }
             if (pingTimeoutSeconds >= 0) {
                 timeoutInterval = PR_SecondsToInterval(pingTimeoutSeconds);
@@ -1259,45 +1272,39 @@ main(int argc, char **argv)
             prStatus = PR_Connect(s, &addr, timeoutInterval);
             if (prStatus == PR_SUCCESS) {
                 PR_Shutdown(s, PR_SHUTDOWN_BOTH);
-                PR_Close(s);
-                PR_Cleanup();
-                return 0;
+                goto done;
             }
             err = PR_GetError();
             if ((err != PR_CONNECT_REFUSED_ERROR) &&
                 (err != PR_CONNECT_RESET_ERROR)) {
                 SECU_PrintError(progName, "TCP Connection failed");
-                return 1;
+                error = 1;
+                goto done;
             }
             PR_Close(s);
+            s = NULL;
             PR_Sleep(PR_MillisecondsToInterval(WAIT_INTERVAL));
         } while (++iter < max_attempts);
         SECU_PrintError(progName,
                         "Client timed out while waiting for connection to server");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* open the cert DB, the key DB, and the secmod DB. */
-    if (!certDir) {
-        certDir = SECU_DefaultSSLDir(); /* Look in $SSL_DIR */
-        certDir = SECU_ConfigDirectory(certDir);
-    } else {
-        char *certDirTmp = certDir;
-        certDir = SECU_ConfigDirectory(certDirTmp);
-        PORT_Free(certDirTmp);
-    }
-
     if (openDB) {
         rv = NSS_Init(certDir);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "unable to open cert database");
-            return 1;
+            error = 1;
+            goto done;
         }
     } else {
         rv = NSS_NoDB_Init(NULL);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "failed to initialize NSS");
-            return 1;
+            error = 1;
+            goto done;
         }
     }
 
@@ -1324,7 +1331,8 @@ main(int argc, char **argv)
     s = PR_OpenTCPSocket(addr.raw.family);
     if (s == NULL) {
         SECU_PrintError(progName, "error creating socket");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     opt.option = PR_SockOpt_Nonblocking;
@@ -1338,19 +1346,22 @@ main(int argc, char **argv)
     s = SSL_ImportFD(NULL, s);
     if (s == NULL) {
         SECU_PrintError(progName, "error importing socket");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     rv = SSL_OptionSet(s, SSL_SECURITY, 1);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling socket");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     rv = SSL_OptionSet(s, SSL_HANDSHAKE_AS_CLIENT, 1);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling client handshake");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* all SSL3 cipher suites are enabled by default. */
@@ -1399,49 +1410,56 @@ main(int argc, char **argv)
     rv = SSL_VersionRangeSet(s, &enabledVersions);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error setting SSL/TLS version range ");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* enable PKCS11 bypass */
     rv = SSL_OptionSet(s, SSL_BYPASS_PKCS11, bypassPKCS11);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling PKCS11 bypass");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* disable SSL socket locking */
     rv = SSL_OptionSet(s, SSL_NO_LOCKS, disableLocking);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error disabling SSL socket locking");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* enable Session Ticket extension. */
     rv = SSL_OptionSet(s, SSL_ENABLE_SESSION_TICKETS, enableSessionTickets);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling Session Ticket extension");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* enable compression. */
     rv = SSL_OptionSet(s, SSL_ENABLE_DEFLATE, enableCompression);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling compression");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* enable false start. */
     rv = SSL_OptionSet(s, SSL_ENABLE_FALSE_START, enableFalseStart);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling false start");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     if (forceFallbackSCSV) {
         rv = SSL_OptionSet(s, SSL_ENABLE_FALLBACK_SCSV, PR_TRUE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "error forcing fallback scsv");
-            return 1;
+            error = 1;
+            goto done;
         }
     }
 
@@ -1449,7 +1467,8 @@ main(int argc, char **argv)
     rv = SSL_OptionSet(s, SSL_ENABLE_OCSP_STAPLING, enableCertStatus);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling cert status (OCSP stapling)");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     /* enable extended master secret mode */
@@ -1457,7 +1476,8 @@ main(int argc, char **argv)
         rv = SSL_OptionSet(s, SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "error enabling extended master secret");
-            return 1;
+            error = 1;
+            goto done;
         }
     }
 
@@ -1466,7 +1486,8 @@ main(int argc, char **argv)
         rv = SSL_OptionSet(s, SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "error enabling extended master secret");
-            return 1;
+            error = 1;
+            goto done;
         }
     }
 
@@ -1475,7 +1496,8 @@ main(int argc, char **argv)
                        enableSignedCertTimestamps);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling signed cert timestamps");
-        return 1;
+        error = 1;
+        goto done;
     }
 
     SSL_SetPKCS11PinArg(s, &pwdata);
@@ -1511,14 +1533,16 @@ main(int argc, char **argv)
                 filesReady = PR_Poll(pollset, 1, PR_INTERVAL_NO_TIMEOUT);
                 if (filesReady < 0) {
                     SECU_PrintError(progName, "unable to connect (poll)");
-                    return 1;
+                    error = 1;
+                    goto done;
                 }
                 FPRINTF(stderr,
                         "%s: PR_Poll returned 0x%02x for socket out_flags.\n",
                         progName, pollset[SSOCK_FD].out_flags);
                 if (filesReady == 0) { /* shouldn't happen! */
                     FPRINTF(stderr, "%s: PR_Poll returned zero!\n", progName);
-                    return 1;
+                    error = 1;
+                    goto done;
                 }
                 status = PR_GetConnectStatus(pollset);
                 if (status == PR_SUCCESS) {
@@ -1526,14 +1550,16 @@ main(int argc, char **argv)
                 }
                 if (PR_GetError() != PR_IN_PROGRESS_ERROR) {
                     SECU_PrintError(progName, "unable to connect (poll)");
-                    return 1;
+                    error = 1;
+                    goto done;
                 }
                 SECU_PrintError(progName, "poll");
                 milliPause(50 * multiplier);
             }
         } else {
             SECU_PrintError(progName, "unable to connect");
-            return 1;
+            error = 1;
+            goto done;
         }
     }
 
@@ -1611,7 +1637,8 @@ main(int argc, char **argv)
         }
         if (filesReady == 0) { /* shouldn't happen! */
             FPRINTF(stderr, "%s: PR_Poll returned zero!\n", progName);
-            return 1;
+            error = 1;
+            goto done;
         }
         FPRINTF(stderr, "%s: PR_Poll returned!\n", progName);
         if (pollset[STDIN_FD].in_flags) {
@@ -1738,10 +1765,15 @@ done:
     }
     PORT_Free(host);
 
-    PR_Close(s);
-    SSL_ClearSessionCache();
-    if (NSS_Shutdown() != SECSuccess) {
-        exit(1);
+    if (s) {
+        PR_Close(s);
+    }
+
+    if (NSS_IsInitialized()) {
+        SSL_ClearSessionCache();
+        if (NSS_Shutdown() != SECSuccess) {
+            error = 1;
+        }
     }
 
     FPRINTF(stderr, "tstclnt: exiting with return code %d\n", error);

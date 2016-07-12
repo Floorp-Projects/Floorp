@@ -25,11 +25,14 @@
           lsan: true
 
   tests:
+    - chains
     - cipher
+    - db
     - ec
     - gtests
     - lowhash
     - merge
-    - ocsp
-    - pkits
     - sdr
+    - smime
+    - ssl
+    - tools
