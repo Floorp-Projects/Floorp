@@ -64,29 +64,30 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     }
   };
 
-  // Try to parse input as a time stamp.
-  function parseTimeStamp(input) {
-
+  // See spec, https://w3c.github.io/webvtt/#collect-a-webvtt-timestamp.
+  function collectTimeStamp(input) {
     function computeSeconds(h, m, s, f) {
+      if (m > 59 || s > 59) {
+        return null;
+      }
+      // The attribute of the milli-seconds can only be three digits.
+      if (f.length !== 3) {
+        return null;
+      }
       return (h | 0) * 3600 + (m | 0) * 60 + (s | 0) + (f | 0) / 1000;
     }
 
-    var m = input.match(/^(\d+):(\d{2})(:\d{2})?\.(\d{3})/);
-    if (!m) {
+    var timestamp = input.match(/^(\d+:)?(\d{2}):(\d{2})\.(\d+)/);
+    if (!timestamp || timestamp.length !== 5) {
       return null;
     }
 
-    if (m[3]) {
-      // Timestamp takes the form of [hours]:[minutes]:[seconds].[milliseconds]
-      return computeSeconds(m[1], m[2], m[3].replace(":", ""), m[4]);
-    } else if (m[1] > 59) {
-      // Timestamp takes the form of [hours]:[minutes].[milliseconds]
-      // First position is hours as it's over 59.
-      return computeSeconds(m[1], m[2], 0,  m[4]);
-    } else {
-      // Timestamp takes the form of [minutes]:[seconds].[milliseconds]
-      return computeSeconds(0, m[1], m[2], m[4]);
-    }
+    let hours = timestamp[1]? timestamp[1].replace(":", "") : 0;
+    let minutes = timestamp[2];
+    let seconds = timestamp[3];
+    let milliSeconds = timestamp[4];
+
+    return computeSeconds(hours, minutes, seconds, milliSeconds);
   }
 
   // A settings object holds key/value pairs and will ignore anything but the first
@@ -96,9 +97,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
   }
 
   Settings.prototype = {
-    // Only accept the first assignment to any key.
     set: function(k, v) {
-      if (!this.get(k) && v !== "") {
+      if (v !== "") {
         this.values[k] = v;
       }
     },
@@ -126,10 +126,12 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
       }
     },
-    // Accept a setting if its a valid (signed) integer.
-    integer: function(k, v) {
-      if (/^-?\d+$/.test(v)) { // integer
-        this.set(k, parseInt(v, 10));
+    // Accept a setting if its a valid digits value (int or float)
+    digitsValue: function(k, v) {
+      if (/^-0+(\.[0]*)?$/.test(v)) { // special case for -0.0
+        this.set(k, 0.0);
+      } else if (/^-?\d+(\.[\d]*)?$/.test(v)) {
+        this.set(k, parseFloat(v));
       }
     },
     // Accept a setting if its a valid percentage.
@@ -169,7 +171,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     var oInput = input;
     // 4.1 WebVTT timestamp
     function consumeTimeStamp() {
-      var ts = parseTimeStamp(input);
+      var ts = collectTimeStamp(input);
       if (ts === null) {
         throw new ParsingError(ParsingError.Errors.BadTimeStamp,
                               "Malformed timestamp: " + oInput);
@@ -200,7 +202,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         case "line":
           var vals = v.split(","),
               vals0 = vals[0];
-          settings.integer(k, vals0);
+          settings.digitsValue(k, vals0);
           settings.percent(k, vals0) ? settings.set("snapToLines", false) : null;
           settings.alt(k, vals0, ["auto"]);
           if (vals.length === 2) {
@@ -236,7 +238,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     }
 
     function skipWhitespace() {
-      input = input.replace(/^\s+/, "");
+      input = input.replace(/^[ \f\n\r\t]+/, "");
     }
 
     // 4.1 WebVTT cue timings.
@@ -354,7 +356,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           // Otherwise just ignore the end tag.
           continue;
         }
-        var ts = parseTimeStamp(t.substr(1, t.length - 2));
+        var ts = collectTimeStamp(t.substr(1, t.length - 2));
         var node;
         if (ts) {
           // Timestamps are lead nodes as well.
@@ -1268,7 +1270,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
             settings.percent(k, v);
             break;
           case "lines":
-            settings.integer(k, v);
+            settings.digitsValue(k, v);
             break;
           case "regionanchor":
           case "viewportanchor":
@@ -1315,6 +1317,14 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
       }
 
+      // WebVTT parser algorithm step1 - step9.
+      function parseSignature(input) {
+        let signature = collectNextLine();
+        if (!/^WEBVTT([ \t].*)?$/.test(signature)) {
+          throw new ParsingError(ParsingError.Errors.BadSignature);
+        }
+      }
+
       // 3.2 WebVTT metadata header syntax
       function parseHeader(input) {
         parseOptions(input, function (k, v) {
@@ -1329,23 +1339,12 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
 
       // 5.1 WebVTT file parsing.
       try {
-        var line;
         if (self.state === "INITIAL") {
-          // We can't start parsing until we have the first line.
-          if (!/\r\n|\n/.test(self.buffer)) {
-            return this;
-          }
-
-          line = collectNextLine();
-
-          var m = line.match(/^WEBVTT([ \t].*)?$/);
-          if (!m || !m[0]) {
-            throw new ParsingError(ParsingError.Errors.BadSignature);
-          }
-
+          parseSignature();
           self.state = "HEADER";
         }
 
+        var line;
         var alreadyCollectedLine = false;
         while (self.buffer) {
           // We can't parse a line until we have the full line.

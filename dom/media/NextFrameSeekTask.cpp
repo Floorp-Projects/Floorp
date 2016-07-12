@@ -12,44 +12,26 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
 extern LazyLogModule gMediaSampleLog;
 
-// avoid redefined macro in unified build
-#undef LOG
-#undef DECODER_LOG
-#undef VERBOSE_LOG
-
-#define LOG(m, l, x, ...) \
-  MOZ_LOG(m, l, ("[NextFrameSeekTask] Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
-#define DECODER_LOG(x, ...) \
-  LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
-#define VERBOSE_LOG(x, ...) \
-  LOG(gMediaDecoderLog, LogLevel::Verbose, x, ##__VA_ARGS__)
-#define SAMPLE_LOG(x, ...) \
-  LOG(gMediaSampleLog, LogLevel::Debug, x, ##__VA_ARGS__)
-
-// Somehow MSVC doesn't correctly delete the comma before ##__VA_ARGS__
-// when __VA_ARGS__ expands to nothing. This is a workaround for it.
-#define DECODER_WARN_HELPER(a, b) NS_WARNING b
-#define DECODER_WARN(x, ...) \
-  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get()))
+#define SAMPLE_LOG(x, ...) MOZ_LOG(gMediaSampleLog, LogLevel::Debug, \
+  ("[NextFrameSeekTask] Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
 
 namespace media {
 
 NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
-                                   AbstractThread* aThread,
-                                   MediaDecoderReaderWrapper* aReader,
-                                   SeekJob&& aSeekJob,
-                                   const MediaInfo& aInfo,
-                                   const media::TimeUnit& aDuration,
-                                   int64_t aCurrentMediaTime,
-                                   MediaQueue<MediaData>& aAudioQueue,
-                                   MediaQueue<MediaData>& aVideoQueue)
+                                     AbstractThread* aThread,
+                                     MediaDecoderReaderWrapper* aReader,
+                                     SeekJob&& aSeekJob,
+                                     const MediaInfo& aInfo,
+                                     const media::TimeUnit& aDuration,
+                                     int64_t aCurrentTime,
+                                     MediaQueue<MediaData>& aAudioQueue,
+                                     MediaQueue<MediaData>& aVideoQueue)
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
-  , mCurrentTimeBeforeSeek(aCurrentMediaTime)
+  , mCurrentTime(aCurrentTime)
   , mDuration(aDuration)
 {
   AssertOwnerThread();
@@ -89,56 +71,20 @@ NextFrameSeekTask::NeedToResetMDSM() const
   return false;
 }
 
-static int64_t
-FindNextFrame(MediaQueue<MediaData>& aQueue, int64_t aTime)
+/*
+ * Remove samples from the queue until aCompare() returns false.
+ * aCompare A function object with the signature bool(int64_t) which returns
+ *          true for samples that should be removed.
+ */
+template <typename Function> static void
+DiscardFrames(MediaQueue<MediaData>& aQueue, const Function& aCompare)
 {
-  AutoTArray<RefPtr<MediaData>, 16> frames;
-  aQueue.GetFirstElements(aQueue.GetSize(), &frames);
-  for (auto&& frame : frames) {
-    if (frame->mTime > aTime) {
-      return frame->mTime;
-    }
-  }
-  return -1;
-}
-
-static void
-DropFramesUntil(MediaQueue<MediaData>& aQueue, int64_t aTime) {
-  while (aQueue.GetSize() > 0) {
-    if (aQueue.PeekFront()->mTime < aTime) {
+  while(aQueue.GetSize() > 0) {
+    if (aCompare(aQueue.PeekFront()->mTime)) {
       RefPtr<MediaData> releaseMe = aQueue.PopFront();
       continue;
     }
     break;
-  }
-}
-
-static void
-DropAllFrames(MediaQueue<MediaData>& aQueue) {
-  while(aQueue.GetSize() > 0) {
-    RefPtr<MediaData> releaseMe = aQueue.PopFront();
-  }
-}
-
-static void
-DropAllMediaDataBeforeCurrentPosition(MediaQueue<MediaData>& aAudioQueue,
-                                      MediaQueue<MediaData>& aVideoQueue,
-                                      int64_t const aCurrentTimeBeforeSeek)
-{
-  // Drop all audio/video data before GetMediaTime();
-  int64_t newPos = FindNextFrame(aVideoQueue, aCurrentTimeBeforeSeek);
-  if (newPos < 0) {
-    // In this case, we cannot find the next frame in the video queue, so
-    // the NextFrameSeekTask needs to decode video data.
-    DropAllFrames(aVideoQueue);
-    if (aVideoQueue.IsFinished()) {
-      DropAllFrames(aAudioQueue);
-    }
-  } else {
-    DropFramesUntil(aVideoQueue, newPos);
-    DropFramesUntil(aAudioQueue, newPos);
-    // So now, the 1st data in the video queue should be the target of the
-    // NextFrameSeekTask.
   }
 }
 
@@ -147,63 +93,23 @@ NextFrameSeekTask::Seek(const media::TimeUnit&)
 {
   AssertOwnerThread();
 
-  DropAllMediaDataBeforeCurrentPosition(mAudioQueue, mVideoQueue,
-                                        mCurrentTimeBeforeSeek);
+  auto currentTime = mCurrentTime;
+  DiscardFrames(mVideoQueue, [currentTime] (int64_t aSampleTime) {
+    return aSampleTime <= currentTime;
+  });
 
-  if (NeedMoreVideo()) {
-    EnsureVideoDecodeTaskQueued();
+  RefPtr<SeekTaskPromise> promise = mSeekTaskPromise.Ensure(__func__);
+  if (!IsVideoRequestPending() && NeedMoreVideo()) {
+    RequestVideoData();
   }
-  if (!IsAudioSeekComplete() || !IsVideoSeekComplete()) {
-    return mSeekTaskPromise.Ensure(__func__);
-  }
-
-  UpdateSeekTargetTime();
-  SeekTaskResolveValue val = {};  // Zero-initialize data members.
-  return SeekTask::SeekTaskPromise::CreateAndResolve(val, __func__);
-}
-
-bool
-NextFrameSeekTask::IsVideoDecoding() const
-{
-  AssertOwnerThread();
-  return !mIsVideoQueueFinished;
-}
-
-void
-NextFrameSeekTask::EnsureVideoDecodeTaskQueued()
-{
-  AssertOwnerThread();
-  SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
-             IsVideoDecoding(), VideoRequestStatus());
-
-  if (!IsVideoDecoding() || IsVideoRequestPending()) {
-    return;
-  }
-
-  RequestVideoData();
-}
-
-const char*
-NextFrameSeekTask::VideoRequestStatus()
-{
-  AssertOwnerThread();
-
-  if (mReader->IsRequestingVideoData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingVideoData());
-    return "pending";
-  } else if (mReader->IsWaitingVideoData()) {
-    return "waiting";
-  }
-  return "idle";
+  MaybeFinishSeek(); // Might resolve mSeekTaskPromise and modify audio queue.
+  return promise;
 }
 
 void
 NextFrameSeekTask::RequestVideoData()
 {
   AssertOwnerThread();
-  SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o",
-             !!mSeekedVideoData, mReader->SizeOfVideoQueueInFrames());
-
   mReader->RequestVideoData(false, media::TimeUnit());
 }
 
@@ -249,6 +155,12 @@ NextFrameSeekTask::MaybeFinishSeek()
   AssertOwnerThread();
   if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
     UpdateSeekTargetTime();
+
+    auto time = mSeekJob.mTarget.GetTime().ToMicroseconds();
+    DiscardFrames(mAudioQueue, [time] (int64_t aSampleTime) {
+      return aSampleTime < time;
+    });
+
     Resolve(__func__); // Call to MDSM::SeekCompleted();
   }
 }
@@ -304,12 +216,12 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
              aVideoSample->GetEndTime(),
              aVideoSample->mDiscontinuity);
 
-  if (aVideoSample->mTime > mCurrentTimeBeforeSeek) {
+  if (aVideoSample->mTime > mCurrentTime) {
     mSeekedVideoData = aVideoSample;
   }
 
   if (NeedMoreVideo()) {
-    EnsureVideoDecodeTaskQueued();
+    RequestVideoData();
     return;
   }
 
@@ -332,6 +244,10 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
   if (NeedMoreVideo()) {
     switch (aReason) {
       case MediaDecoderReader::DECODE_ERROR:
+        // We might lose the audio sample after canceling the callbacks.
+        // However it doesn't really matter because MDSM is gonna shut down
+        // when seek fails.
+        CancelCallbacks();
         // Reject the promise since we can't finish video seek anyway.
         RejectIfExist(__func__);
         break;
@@ -339,7 +255,7 @@ NextFrameSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReaso
         mReader->WaitForData(MediaData::VIDEO_DATA);
         break;
       case MediaDecoderReader::CANCELED:
-        EnsureVideoDecodeTaskQueued();
+        RequestVideoData();
         break;
       case MediaDecoderReader::END_OF_STREAM:
         MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
@@ -388,9 +304,10 @@ NextFrameSeekTask::SetCallbacks()
     OwnerThread(), [this] (WaitCallbackData aData) {
     if (NeedMoreVideo()) {
       if (aData.is<MediaData::Type>()) {
-        EnsureVideoDecodeTaskQueued();
+        RequestVideoData();
       } else {
         // Reject if we can't finish video seeking.
+        CancelCallbacks();
         RejectIfExist(__func__);
       }
       return;
@@ -403,10 +320,10 @@ void
 NextFrameSeekTask::CancelCallbacks()
 {
   AssertOwnerThread();
-  mAudioCallback.Disconnect();
-  mVideoCallback.Disconnect();
-  mAudioWaitCallback.Disconnect();
-  mVideoWaitCallback.Disconnect();
+  mAudioCallback.DisconnectIfExists();
+  mVideoCallback.DisconnectIfExists();
+  mAudioWaitCallback.DisconnectIfExists();
+  mVideoWaitCallback.DisconnectIfExists();
 }
 
 void
