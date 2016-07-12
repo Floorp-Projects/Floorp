@@ -670,11 +670,31 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
   media::TimeUnit duration = GetSampleDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
+  nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
+
+  if (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
+      mLayersBackend != LayersBackend::LAYERS_D3D11) {
+    RefPtr<VideoData> v = VideoData::Create(mVideoInfo,
+                                            mImageContainer,
+                                            aStreamOffset,
+                                            pts.ToMicroseconds(),
+                                            duration.ToMicroseconds(),
+                                            b,
+                                            false,
+                                            -1,
+                                            pictureRegion);
+    if (twoDBuffer) {
+      twoDBuffer->Unlock2D();
+    } else {
+      buffer->Unlock();
+    }
+    v.forget(aOutVideoData);
+    return S_OK;
+  }
 
   RefPtr<layers::PlanarYCbCrImage> image =
     new IMFYCbCrImage(buffer, twoDBuffer);
 
-  nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
   VideoData::SetVideoDataToImage(image,
                                  mVideoInfo,
                                  b,
