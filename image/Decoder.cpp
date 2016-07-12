@@ -148,12 +148,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
                       ? Some(TerminalState::SUCCESS)
                       : Some(TerminalState::FAILURE);
 
-        if (terminalState == Some(TerminalState::FAILURE)) {
-          PostDataError();
-        }
-
-        CompleteDecode();
-        return terminalState == Some(TerminalState::SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+        break;
 
       case SourceBufferIterator::READY: {
         PROFILER_LABEL("ImageDecoder", "Decode",
@@ -178,7 +173,11 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
     PostDataError();
   }
 
-  CompleteDecode();
+  // If we're done decoding, perform final cleanup.
+  if (terminalState) {
+    CompleteDecode();
+  }
+
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
