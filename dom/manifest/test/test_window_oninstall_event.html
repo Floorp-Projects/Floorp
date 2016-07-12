@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265279
     .then(checkAddEventListenerFires)
     .then(finish)
     .catch(err => {
-      dump(`${err}: ${err.stack}`);
+      ok(false, err.stack);
       finish();
     });
 
@@ -59,7 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265279
       is(ifrWindow.oninstall, null, "window install is initially set to null");
 
       // Check that enumerable, configurable, and has a getter and setter.
-      const objDescriptor = Object.getOwnPropertyDescriptor(window, "oninstall");
+      const objDescriptor = Object.getOwnPropertyDescriptor(ifrWindow, "oninstall");
       ok(objDescriptor.enumerable, "is enumerable");
       ok(objDescriptor.configurable, "is configurable");
       ok(objDescriptor.hasOwnProperty("get"), "has getter");

@@ -164,6 +164,25 @@ Gecko_GetElementId(RawGeckoElement* aElement)
   return attr ? attr->GetAtomValue() : nullptr;
 }
 
+// Dirtiness tracking.
+uint32_t
+Gecko_GetNodeFlags(RawGeckoNode* aNode)
+{
+  return aNode->GetFlags();
+}
+
+void
+Gecko_SetNodeFlags(RawGeckoNode* aNode, uint32_t aFlags)
+{
+  aNode->SetFlags(aFlags);
+}
+
+void
+Gecko_UnsetNodeFlags(RawGeckoNode* aNode, uint32_t aFlags)
+{
+  aNode->UnsetFlags(aFlags);
+}
+
 template<class MatchFn>
 bool
 DoMatch(RawGeckoElement* aElement, nsIAtom* aNS, nsIAtom* aName, MatchFn aMatch)

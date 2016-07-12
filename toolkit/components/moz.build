@@ -19,6 +19,7 @@ DIRS += [
     'asyncshutdown',
     'commandlines',
     'contentprefs',
+    'contextualidentity',
     'cookie',
     'crashmonitor',
     'diskspacewatcher',

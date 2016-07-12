@@ -26,6 +26,14 @@ public:
     : mStart(aPtr, aPtr, aPtr + aLength),
       mEnd(aPtr + aLength, aPtr, aPtr + aLength)
   {}
+  Range(const RangedPtr<T>& aStart, const RangedPtr<T>& aEnd)
+    : mStart(aStart.get(), aStart.get(), aEnd.get()),
+      mEnd(aEnd.get(), aStart.get(), aEnd.get())
+  {
+    // Only accept two RangedPtrs within the same range.
+    aStart.checkIdenticalRange(aEnd);
+    MOZ_ASSERT(aStart <= aEnd);
+  }
 
   RangedPtr<T> start() const { return mStart; }
   RangedPtr<T> end() const { return mEnd; }

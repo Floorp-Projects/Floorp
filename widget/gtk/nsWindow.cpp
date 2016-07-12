@@ -1351,31 +1351,35 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
     }
 
 #if defined(MOZ_ENABLE_STARTUP_NOTIFICATION)
-    GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
-  
-    GdkScreen* screen = gdk_window_get_screen(gdkWindow);
-    SnDisplay* snd =
-        sn_display_new(gdk_x11_display_get_xdisplay(gdk_window_get_display(gdkWindow)), 
-                       nullptr, nullptr);
-    if (!snd)
-        return;
-    SnLauncheeContext* ctx =
-        sn_launchee_context_new(snd, gdk_screen_get_number(screen),
-                                desktopStartupID.get());
-    if (!ctx) {
+    // TODO - Implement for non-X11 Gtk backends (Bug 726479)
+    if (mIsX11Display) {
+        GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
+
+        GdkScreen* screen = gdk_window_get_screen(gdkWindow);
+        SnDisplay* snd =
+            sn_display_new(gdk_x11_display_get_xdisplay(gdk_window_get_display(gdkWindow)),
+                           nullptr, nullptr);
+        if (!snd)
+            return;
+        SnLauncheeContext* ctx =
+            sn_launchee_context_new(snd, gdk_screen_get_number(screen),
+                                    desktopStartupID.get());
+        if (!ctx) {
+            sn_display_unref(snd);
+            return;
+        }
+
+        if (sn_launchee_context_get_id_has_timestamp(ctx)) {
+            gdk_x11_window_set_user_time(gdkWindow,
+                sn_launchee_context_get_timestamp(ctx));
+        }
+
+        sn_launchee_context_setup_window(ctx, gdk_x11_window_get_xid(gdkWindow));
+        sn_launchee_context_complete(ctx);
+
+        sn_launchee_context_unref(ctx);
         sn_display_unref(snd);
-        return;
     }
-
-    if (sn_launchee_context_get_id_has_timestamp(ctx)) {
-        gdk_x11_window_set_user_time(gdkWindow, sn_launchee_context_get_timestamp(ctx));
-    }
-
-    sn_launchee_context_setup_window(ctx, gdk_x11_window_get_xid(gdkWindow));
-    sn_launchee_context_complete(ctx);
-
-    sn_launchee_context_unref(ctx);
-    sn_display_unref(snd);
 #endif
 
     // If we used the startup ID, that already contains the focus timestamp;
