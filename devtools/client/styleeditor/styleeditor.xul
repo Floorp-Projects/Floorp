@@ -97,12 +97,10 @@
              <xul:hbox class="devtools-toolbarbutton-group">
               <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
                           accesskey="&newButton.accesskey;"
-                          tooltiptext="&newButton.tooltip;"
-                          label="&newButton.label;"/>
+                          tooltiptext="&newButton.tooltip;"/>
               <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
                           accesskey="&importButton.accesskey;"
-                          tooltiptext="&importButton.tooltip;"
-                          label="&importButton.label;"/>
+                          tooltiptext="&importButton.tooltip;"/>
             </xul:hbox>
             <xul:spacer/>
             <xul:toolbarbutton id="style-editor-options"
