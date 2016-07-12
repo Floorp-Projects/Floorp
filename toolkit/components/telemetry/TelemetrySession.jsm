@@ -1838,7 +1838,7 @@ var Impl = {
       // content-child-shutdown is only registered for content processes.
       Services.obs.removeObserver(this, "content-child-shutdown");
       this.uninstall();
-
+      Telemetry.flushBatchedChildTelemetry();
       this.sendContentProcessPing(REASON_SAVED_SESSION);
       break;
     case TOPIC_CYCLE_COLLECTOR_BEGIN:
