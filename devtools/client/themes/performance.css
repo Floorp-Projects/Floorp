@@ -91,11 +91,15 @@
   list-style-image: url(images/profiler-stopwatch.svg);
 }
 
-#main-record-button .button-icon {
+#import-button {
+  list-style-image: url(images/import.svg);
+}
+
+#main-record-button .button-icon, #import-button .button-icon {
   margin: 0;
 }
 
-#main-record-button .button-text {
+#main-record-button .button-text, #import-button .button-text {
   display: none;
 }
 
