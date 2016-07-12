@@ -719,7 +719,8 @@ public:
         mPrevDirtyRect(aBuilder->mDirtyRect),
         mPrevAGR(aBuilder->mCurrentAGR),
         mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
-        mPrevAncestorHasApzAwareEventHandler(aBuilder->mAncestorHasApzAwareEventHandler)
+        mPrevAncestorHasApzAwareEventHandler(aBuilder->mAncestorHasApzAwareEventHandler),
+        mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems)
     {
       if (aForChild->IsTransformed()) {
         aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
@@ -759,6 +760,9 @@ public:
       return *mBuilder->mCurrentAGR == mBuilder->mCurrentFrame;
 
     }
+    void RestoreBuildingInvisibleItemsValue() {
+      mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
+    }
     ~AutoBuildingDisplayList() {
       mBuilder->mCurrentFrame = mPrevFrame;
       mBuilder->mCurrentReferenceFrame = mPrevReferenceFrame;
@@ -768,6 +772,7 @@ public:
       mBuilder->mCurrentAGR = mPrevAGR;
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
       mBuilder->mAncestorHasApzAwareEventHandler = mPrevAncestorHasApzAwareEventHandler;
+      mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
     }
   private:
     nsDisplayListBuilder* mBuilder;
@@ -780,6 +785,7 @@ public:
     AnimatedGeometryRoot* mPrevAGR;
     bool                  mPrevIsAtRootOfPseudoStackingContext;
     bool                  mPrevAncestorHasApzAwareEventHandler;
+    bool                  mPrevBuildingInvisibleItems;
   };
 
   /**
@@ -1129,6 +1135,11 @@ public:
     mPreserves3DCtx.mDirtyRect = aDirtyRect;
   }
 
+  bool IsBuildingInvisibleItems() const { return mBuildingInvisibleItems; }
+  void SetBuildingInvisibleItems(bool aBuildingInvisibleItems) {
+    mBuildingInvisibleItems = aBuildingInvisibleItems;
+  }
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -1278,6 +1289,7 @@ private:
   bool                           mIsBuildingForPopup;
   bool                           mForceLayerForScrollParent;
   bool                           mAsyncPanZoomEnabled;
+  bool                           mBuildingInvisibleItems;
 };
 
 class nsDisplayItem;
@@ -1877,6 +1889,7 @@ protected:
   // of the item. Paint implementations can use this to limit their drawing.
   // Guaranteed to be contained in GetBounds().
   nsRect    mVisibleRect;
+  bool      mForceNotVisible;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool      mPainted;
