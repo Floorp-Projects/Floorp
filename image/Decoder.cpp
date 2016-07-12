@@ -126,7 +126,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
 
   // We keep decoding chunks until the decode completes or there are no more
   // chunks available.
-  while (!GetDecodeDone() && !HasError()) {
+  do {
     switch (mIterator->AdvanceOrScheduleResume(aOnResume.get())) {
       case SourceBufferIterator::WAITING:
         // We can't continue because the rest of the data hasn't arrived from
@@ -172,7 +172,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
         MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
         Maybe<TerminalState> terminalState = Some(TerminalState::FAILURE);
     }
-  }
+  } while (!GetDecodeDone() && !HasError());
 
   CompleteDecode();
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
