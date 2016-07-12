@@ -157,20 +157,20 @@ function testIncomingMessage() {
   });
 }
 
-function testTerminateConnection() {
+function testCloseConnection() {
   return new Promise(function(aResolve, aReject) {
     frameScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       frameScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
-    connection.onterminate = function() {
-      connection.onterminate = null;
-      is(connection.state, "terminated", "Connection should be terminated.");
+    connection.onclose = function() {
+      connection.onclose = null;
+      is(connection.state, "closed", "Connection should be closed.");
       aResolve();
     };
 
-    connection.terminate();
+    connection.close();
   });
 }
 
@@ -192,7 +192,7 @@ function runTests() {
   then(testStartConnection).
   then(testSend).
   then(testIncomingMessage).
-  then(testTerminateConnection).
+  then(testCloseConnection).
   then(teardown);
 }
 
