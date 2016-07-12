@@ -194,7 +194,6 @@ function testBadUpdate(callback) {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("Test sets timeouts to wait for updates to happen.");
-SimpleTest.requestCompleteLog();
 
 SpecialPowers.pushPrefEnv({
   set: [
@@ -202,6 +201,10 @@ SpecialPowers.pushPrefEnv({
   ]
 }, function () {
   chromeScript.sendSyncMessage("UAO-uninit");
+
+  // Sets the OVERRIDES var in the chrome script.
+  // We do this to avoid code duplication.
+  chromeScript.sendSyncMessage("set-overrides", OVERRIDES);
 
   // testProfileLoad, testDownload, and testProfileSave must run in this order
   //  because testDownload depends on testProfileLoad to call UAO.init()
@@ -359,7 +362,6 @@ chromeScript.addMessageListener("is-message", function(params) {
 chromeScript.addMessageListener("info-message", function(message) {
   info(message);
 });
-chromeScript.sendAsyncMessage("set-overrides", OVERRIDES);
 
 </script>
 </pre>
