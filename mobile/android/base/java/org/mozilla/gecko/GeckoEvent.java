@@ -69,7 +69,6 @@ public class GeckoEvent {
         LOAD_URI(12),
         NOOP(15),
         VIEWPORT(20),
-        VISITED(21),
         NETWORK_CHANGED(22),
         THUMBNAIL(25),
         SCREENORIENTATION_CHANGED(27),
@@ -363,12 +362,6 @@ public class GeckoEvent {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
         event.mCharacters = uri;
         event.mCharactersExtra = "-bookmark";
-        return event;
-    }
-
-    public static GeckoEvent createVisitedEvent(String data) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.VISITED);
-        event.mCharacters = data;
         return event;
     }
 
