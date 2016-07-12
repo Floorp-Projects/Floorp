@@ -132,6 +132,7 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert,
     rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL,
                          NULL, &pwdata);
 
+    SECITEM_FreeItem(&data2sign, PR_FALSE);
     SEC_PKCS7DestroyContentInfo(cinfo);
 
     if (rv != SECSuccess)
@@ -212,6 +213,7 @@ main(int argc, char **argv)
                 break;
         }
     }
+    PL_DestroyOptState(optstate);
 
     if (!keyName)
         Usage(progName);

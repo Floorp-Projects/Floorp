@@ -176,9 +176,13 @@ static unsigned int
 HASH_ResultLen(HASH_HashType type)
 {
     const SECHashObject *hash_obj = HASH_GetRawHashObject(type);
+    PORT_Assert(hash_obj != NULL);
     if (hash_obj == NULL) {
-	return 0;
+        /* type is always a valid HashType. Thus a null hash_obj must be a bug */
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return 0;
     }
+    PORT_Assert(hash_obj->length != 0);
     return hash_obj->length;
 }
 

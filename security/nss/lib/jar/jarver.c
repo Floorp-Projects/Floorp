@@ -339,17 +339,20 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
            of the MF file, still in the "met" structure. */
 
         if (type == jarTypeSF) {
-            if (!PORT_Strcasecmp(line, "MD5-Digest"))
+            if (!PORT_Strcasecmp(line, "MD5-Digest")) {
                 sf_md5 = (char *)met->info;
-
-            if (!PORT_Strcasecmp(line, "SHA1-Digest") ||
-                !PORT_Strcasecmp(line, "SHA-Digest"))
+            } else if (!PORT_Strcasecmp(line, "SHA1-Digest") ||
+                       !PORT_Strcasecmp(line, "SHA-Digest")) {
                 sf_sha1 = (char *)met->info;
+            } else {
+                PORT_Free(met->info);
+                met->info = NULL;
+            }
         }
 
         if (type != jarTypeMF) {
             PORT_Free(met->header);
-            if (type != jarTypeSF) {
+            if ((type != jarTypeSF || !jar->globalmeta) && met->info) {
                 PORT_Free(met->info);
             }
             PORT_Free(met);
@@ -369,11 +372,13 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
 
             md5_digest = ATOB_AsciiToData(sf_md5, &md5_length);
             PORT_Assert(md5_length == MD5_LENGTH);
+            PORT_Free(sf_md5);
 
             if (md5_length != MD5_LENGTH)
                 return JAR_ERR_CORRUPT;
 
             match = PORT_Memcmp(md5_digest, glob->md5, MD5_LENGTH);
+            PORT_Free(md5_digest);
         }
 
         if (sf_sha1 && match == 0) {
@@ -382,11 +387,13 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
 
             sha1_digest = ATOB_AsciiToData(sf_sha1, &sha1_length);
             PORT_Assert(sha1_length == SHA1_LENGTH);
+            PORT_Free(sf_sha1);
 
             if (sha1_length != SHA1_LENGTH)
                 return JAR_ERR_CORRUPT;
 
             match = PORT_Memcmp(sha1_digest, glob->sha1, SHA1_LENGTH);
+            PORT_Free(sha1_digest);
         }
 
         if (match != 0) {
@@ -510,6 +517,7 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
             }
             memcpy(dig->md5, binary_digest, MD5_LENGTH);
             dig->md5_status = jarHashPresent;
+            PORT_Free(binary_digest);
         }
 
         if (*x_sha) {
@@ -524,6 +532,7 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
             }
             memcpy(dig->sha1, binary_digest, SHA1_LENGTH);
             dig->sha1_status = jarHashPresent;
+            PORT_Free(binary_digest);
         }
 
         PORT_Assert(type == jarTypeMF || type == jarTypeSF);

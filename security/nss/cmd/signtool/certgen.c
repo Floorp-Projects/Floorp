@@ -348,6 +348,8 @@ GenerateSelfSignedObjectSigningCert(char *nickname, CERTCertDBHandle *db,
     PK11_FreeSlot(slot);
     SECKEY_DestroyPrivateKey(privk);
     SECKEY_DestroyPublicKey(pubk);
+    CERT_DestroyCertificate(temp_cert);
+    CERT_DestroyCertificateRequest(req);
 
     return cert;
 }
@@ -387,6 +389,7 @@ ChangeTrustAttributes(CERTCertDBHandle *db, CERTCertificate *cert, char *trusts)
         return SECFailure;
     }
 
+    PORT_Free(trust);
     return SECSuccess;
 }
 
@@ -627,6 +630,7 @@ make_cert(CERTCertificateRequest *req, unsigned long serial,
     }
 
     cert = CERT_CreateCertificate(serial, ca_subject, validity, req);
+    CERT_DestroyValidity(validity);
 
     if (cert == NULL) {
         /* should probably be more precise here */
@@ -650,7 +654,7 @@ output_ca_cert(CERTCertificate *cert, CERTCertDBHandle *db)
 
     SECItem *encodedCertChain;
     SEC_PKCS7ContentInfo *certChain;
-    char *filename;
+    char *filename, *certData;
 
     /* the raw */
 
@@ -695,11 +699,11 @@ output_ca_cert(CERTCertificate *cert, CERTCertDBHandle *db)
         return;
     }
 
-    fprintf(out, "%s\n%s\n%s\n",
-            NS_CERT_HEADER,
-            BTOA_DataToAscii(cert->derCert.data, cert->derCert.len),
-            NS_CERT_TRAILER);
+    certData = BTOA_DataToAscii(cert->derCert.data, cert->derCert.len);
+    fprintf(out, "%s\n%s\n%s\n", NS_CERT_HEADER, certData, NS_CERT_TRAILER);
+    PORT_Free(certData);
 
+    PORT_Free(filename);
     fclose(out);
 
     if (verbosity >= 0) {
