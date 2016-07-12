@@ -125,10 +125,12 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
       }
     },
-    // Accept a setting if its a valid (signed) integer.
-    integer: function(k, v) {
-      if (/^-?\d+$/.test(v)) { // integer
-        this.set(k, parseInt(v, 10));
+    // Accept a setting if its a valid digits value (int or float)
+    digitsValue: function(k, v) {
+      if (/^-0+(\.[0]*)?$/.test(v)) { // special case for -0.0
+        this.set(k, 0.0);
+      } else if (/^-?\d+(\.[\d]*)?$/.test(v)) {
+        this.set(k, parseFloat(v));
       }
     },
     // Accept a setting if its a valid percentage.
@@ -199,7 +201,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         case "line":
           var vals = v.split(","),
               vals0 = vals[0];
-          settings.integer(k, vals0);
+          settings.digitsValue(k, vals0);
           settings.percent(k, vals0) ? settings.set("snapToLines", false) : null;
           settings.alt(k, vals0, ["auto"]);
           if (vals.length === 2) {
@@ -1267,7 +1269,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
             settings.percent(k, v);
             break;
           case "lines":
-            settings.integer(k, v);
+            settings.digitsValue(k, v);
             break;
           case "regionanchor":
           case "viewportanchor":
