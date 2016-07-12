@@ -577,7 +577,7 @@ public class AndroidFxAccount {
   protected void broadcastAccountStateChangedIntent() {
     final Intent intent = new Intent(FxAccountConstants.ACCOUNT_STATE_CHANGED_ACTION);
     intent.putExtra(Constants.JSON_KEY_ACCOUNT, account.name);
-    context.sendBroadcast(intent, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION);
+    LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
   }
 
   public synchronized State getState() {
@@ -637,12 +637,12 @@ public class AndroidFxAccount {
   }
 
   /**
-   * Create an intent announcing that a Firefox account will be deleted.
+   * Populate an intent used for starting FxAccountDeletedService service.
    *
-   * @return <code>Intent</code> to broadcast.
+   * @param intent Intent to populate with necessary extras
+   * @return <code>Intent</code> with a deleted action and account/OAuth information extras
    */
-  public Intent makeDeletedAccountIntent() {
-    final Intent intent = new Intent(FxAccountConstants.ACCOUNT_DELETED_ACTION);
+  public Intent populateDeletedAccountIntent(final Intent intent) {
     final List<String> tokens = new ArrayList<>();
 
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_VERSION_KEY,

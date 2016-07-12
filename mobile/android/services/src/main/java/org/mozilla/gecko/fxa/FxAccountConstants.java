@@ -42,23 +42,6 @@ public class FxAccountConstants {
   public static final String ACCOUNT_PICKLE_FILENAME = "fxa.account.json";
 
 
-
-  /**
-   * This action is broadcast when an Android Firefox Account is deleted.
-   * This allows each installed Firefox to delete any Firefox Account pickle
-   * file.
-   * <p>
-   * It is protected by signing-level permission PER_ACCOUNT_TYPE_PERMISSION and
-   * can be received only by Firefox channels sharing the same Android Firefox
-   * Account type.
-   * <p>
-   * See {@link org.mozilla.gecko.fxa.AndroidFxAccount#makeDeletedAccountIntent()}
-   * for contents of the intent.
-   *
-   * See bug 790931 for additional information in the context of Sync.
-   */
-  public static final String ACCOUNT_DELETED_ACTION = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE + ".accounts.ACCOUNT_DELETED_ACTION";
-
   /**
    * Version number of contents of SYNC_ACCOUNT_DELETED_ACTION intent.
    */
@@ -68,12 +51,6 @@ public class FxAccountConstants {
   public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_KEY = "account_deleted_intent_account";
   public static final String ACCOUNT_OAUTH_SERVICE_ENDPOINT_KEY = "account_oauth_service_endpoint";
   public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_AUTH_TOKENS = "account_deleted_intent_auth_tokens";
-
-  /**
-   * This signing-level permission protects broadcast intents that should be
-   * received only by Firefox channels sharing the same Android Firefox Account type.
-   */
-  public static final String PER_ACCOUNT_TYPE_PERMISSION = AppConstants.MOZ_ANDROID_SHARED_FXACCOUNT_TYPE + ".permission.PER_ACCOUNT_TYPE";
 
   /**
    * This action is broadcast when an Android Firefox Account's internal state

@@ -30,6 +30,7 @@ import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
+import org.mozilla.gecko.fxa.receivers.FxAccountDeletedService;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -363,10 +364,12 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
             "deleting saved pickle file '" + FxAccountConstants.ACCOUNT_PICKLE_FILENAME + "'.");
     deletePickle();
 
-    final Intent intent = androidFxAccount.makeDeletedAccountIntent();
+    final Intent serviceIntent = androidFxAccount.populateDeletedAccountIntent(
+            new Intent(context, FxAccountDeletedService.class)
+    );
     Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
-        "broadcasting secure intent " + intent.getAction() + ".");
-    context.sendBroadcast(intent, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION);
+        "starting FxAccountDeletedService with action: " + serviceIntent.getAction() + ".");
+    context.startService(serviceIntent);
 
     return result;
   }
