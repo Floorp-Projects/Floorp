@@ -39,18 +39,16 @@ gEffectEasingTests.forEach(function(options) {
   }, options.desc);
 });
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
-  assert_throws({ name: 'TypeError' },
-                function() {
-                  anim.effect.timing.easing = '';
-                });
-  assert_throws({ name: 'TypeError' },
-                function() {
-                  anim.effect.timing.easing = 'test';
-                });
-}, 'Test invalid easing value');
+gInvalidEasingTests.forEach(function(options) {
+  test(function(t) {
+    var div = createDiv(t);
+    var anim = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+    assert_throws({ name: 'TypeError' },
+                  function() {
+                    anim.effect.timing.easing = options.easing;
+                  });
+  }, 'Invalid effect easing value test: \'' + options.easing + '\'');
+});
 
 test(function(t) {
   var delay = 1000 * MS_PER_SEC;
