@@ -80,25 +80,6 @@ class LAsmJSUInt32ToFloat32 : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
-{
-  public:
-    LIR_HEADER(AsmJSLoadFuncPtr);
-    LAsmJSLoadFuncPtr(const LAllocation& index, const LDefinition& temp) {
-        setOperand(0, index);
-        setTemp(0, temp);
-    }
-    MAsmJSLoadFuncPtr* mir() const {
-        return mir_->toAsmJSLoadFuncPtr();
-    }
-    const LAllocation* index() {
-        return getOperand(0);
-    }
-    const LDefinition* temp() {
-        return getTemp(0);
-    }
-};
-
 class LDivOrModI64 : public LBinaryMath<1>
 {
   public:

@@ -456,12 +456,6 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 }
 
 void
-LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
-{
-    define(new(alloc()) LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
-}
-
-void
 LIRGeneratorX86::lowerDivI64(MDiv* div)
 {
     MOZ_CRASH("NYI");

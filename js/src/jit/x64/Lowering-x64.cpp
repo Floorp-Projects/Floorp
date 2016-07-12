@@ -354,12 +354,6 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 }
 
 void
-LIRGeneratorX64::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
-{
-    define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
-}
-
-void
 LIRGeneratorX64::visitSubstr(MSubstr* ins)
 {
     LSubstr* lir = new (alloc()) LSubstr(useRegister(ins->string()),

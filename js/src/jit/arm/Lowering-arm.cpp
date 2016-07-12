@@ -580,12 +580,6 @@ LIRGeneratorARM::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 }
 
 void
-LIRGeneratorARM::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
-{
-    define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
-}
-
-void
 LIRGeneratorARM::lowerTruncateDToInt32(MTruncateToInt32* ins)
 {
     MDefinition* opd = ins->input();
