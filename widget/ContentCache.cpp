@@ -503,11 +503,23 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   // So, we don't support to query contents relative to composition start
   // offset with XP linebreaks.
   if (NS_WARN_IF(!aEvent.mUseNativeLineBreak)) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Error,
+      ("0x%p HandleQueryContentEvent(), FAILED due to query with XP linebreaks",
+       this));
     return false;
   }
 
-  if (NS_WARN_IF(!aEvent.mInput.IsValidOffset()) ||
-      NS_WARN_IF(!aEvent.mInput.IsValidEventMessage(aEvent.mMessage))) {
+  if (NS_WARN_IF(!aEvent.mInput.IsValidOffset())) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Error,
+      ("0x%p HandleQueryContentEvent(), FAILED due to invalid offset",
+       this));
+    return false;
+  }
+
+  if (NS_WARN_IF(!aEvent.mInput.IsValidEventMessage(aEvent.mMessage))) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Error,
+      ("0x%p HandleQueryContentEvent(), FAILED due to invalid event message",
+       this));
     return false;
   }
 
@@ -515,15 +527,40 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   if (isRelativeToInsertionPoint) {
     if (aWidget->PluginHasFocus()) {
       if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(0))) {
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+          ("0x%p HandleQueryContentEvent(), FAILED due to "
+           "aEvent.mInput.MakeOffsetAbsolute(0) failure, aEvent={ mMessage=%s, "
+           "mInput={ mOffset=%d, mLength=%d } }",
+           this, ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
+           aEvent.mInput.mLength));
         return false;
       }
     } else if (mIsComposing) {
       if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(mCompositionStart))) {
+        MOZ_LOG(sContentCacheLog, LogLevel::Error,
+          ("0x%p HandleQueryContentEvent(), FAILED due to "
+           "aEvent.mInput.MakeOffsetAbsolute(mCompositionStart) failure, "
+           "mCompositionStart=%d, aEvent={ mMessage=%s, "
+           "mInput={ mOffset=%d, mLength=%d } }",
+           this, mCompositionStart, ToChar(aEvent.mMessage),
+           aEvent.mInput.mOffset, aEvent.mInput.mLength));
         return false;
       }
-    } else if (NS_WARN_IF(!mSelection.IsValid()) ||
-               NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
+    } else if (NS_WARN_IF(!mSelection.IsValid())) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+        ("0x%p HandleQueryContentEvent(), FAILED due to mSelection is invalid",
+         this));
+      return false;
+    } else if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
                                            mSelection.StartOffset()))) {
+      MOZ_LOG(sContentCacheLog, LogLevel::Error,
+        ("0x%p HandleQueryContentEvent(), FAILED due to "
+         "aEvent.mInput.MakeOffsetAbsolute(mSelection.StartOffset()) "
+         "failure, mSelection={ StartOffset()=%d, Length()=%d }, "
+         "aEvent={ mMessage=%s, mInput={ mOffset=%d, mLength=%d } }",
+         this, mSelection.StartOffset(), mSelection.Length(),
+         ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
+         aEvent.mInput.mLength));
       return false;
     }
   }
