@@ -7043,6 +7043,8 @@ DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr refere
 DebuggerFrame::getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
                          MutableHandle<DebuggerObject*> result)
 {
+    MOZ_ASSERT(frame->isLive());
+
     AbstractFramePtr referent = frame->referent();
     if (!referent.isFunctionFrame()) {
         result.set(nullptr);
@@ -7058,6 +7060,8 @@ DebuggerFrame::getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
 /* static */ bool
 DebuggerFrame::getIsConstructing(JSContext* cx, Handle<DebuggerFrame*> frame, bool& result)
 {
+    MOZ_ASSERT(frame->isLive());
+
     Maybe<ScriptFrameIter> maybeIter;
     if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
         return false;
@@ -7108,6 +7112,8 @@ UpdateFrameIterPc(FrameIter& iter)
 DebuggerFrame::getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
                               MutableHandle<DebuggerEnvironment*> result)
 {
+    MOZ_ASSERT(frame->isLive());
+
     Debugger* dbg = frame->owner();
 
     Maybe<ScriptFrameIter> maybeIter;
@@ -7131,6 +7137,24 @@ DebuggerFrame::getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
 DebuggerFrame::isGenerator() const
 {
     return referent().script()->isGenerator();
+}
+
+/* statuc */ bool
+DebuggerFrame::isLive() const
+{
+    return !!getPrivate();
+}
+
+/* static */ bool
+DebuggerFrame::requireLive(JSContext* cx, Handle<DebuggerFrame*> frame)
+{
+    if (!frame->isLive()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
+                             "Debugger.Frame");
+        return false;
+    }
+
+    return true;
 }
 
 /* static */ bool
@@ -7189,7 +7213,7 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
         return nullptr;
     }
 
-    DebuggerFrame* nthisobj = &thisobj->as<DebuggerFrame>();
+    Rooted<DebuggerFrame*> frame(cx, &thisobj->as<DebuggerFrame>());
 
     /*
      * Forbid Debugger.Frame.prototype, which is of class DebuggerFrame::class_
@@ -7197,19 +7221,18 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
      * is distinguished by having a nullptr private value. Also, forbid popped
      * frames.
      */
-    if (!nthisobj->getPrivate()) {
-        if (nthisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                                 "Debugger.Frame", fnname, "prototype object");
-            return nullptr;
-        }
-        if (checkLive) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_LIVE,
-                                 "Debugger.Frame");
-            return nullptr;
-        }
+    if (!frame->getPrivate() &&
+        frame->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined())
+    {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debugger.Frame", fnname, "prototype object");
+        return nullptr;
     }
-    return nthisobj;
+
+    if (checkLive && !DebuggerFrame::requireLive(cx, frame))
+        return nullptr;
+
+    return frame;
 }
 
 /*
@@ -7566,15 +7589,15 @@ DebuggerFrame_getOffset(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getLive(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::liveGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    NativeObject* thisobj = DebuggerFrame::checkThis(cx, args, "get live", false);
-    if (!thisobj)
+    Rooted<DebuggerFrame*> frame(cx, DebuggerFrame::checkThis(cx, args, "get live", false));
+    if (!frame)
         return false;
-    bool hasFrame = !!thisobj->getPrivate();
-    args.rval().setBoolean(hasFrame);
+
+    args.rval().setBoolean(frame->isLive());
     return true;
 }
 
@@ -7884,7 +7907,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("constructing", DebuggerFrame::constructingGetter, 0),
     JS_PSG("environment", DebuggerFrame::environmentGetter, 0),
     JS_PSG("generator", DebuggerFrame::generatorGetter, 0),
-    JS_PSG("live", DebuggerFrame_getLive, 0),
+    JS_PSG("live", DebuggerFrame::liveGetter, 0),
     JS_PSG("offset", DebuggerFrame_getOffset, 0),
     JS_PSG("older", DebuggerFrame_getOlder, 0),
     JS_PSG("script", DebuggerFrame_getScript, 0),
