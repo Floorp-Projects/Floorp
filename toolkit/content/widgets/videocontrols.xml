@@ -659,7 +659,31 @@
                 },
 
                 hasError : function () {
-                    return (this.video.error != null || this.video.networkState == this.video.NETWORK_NO_SOURCE);
+                    // We either have an explicit error, or the resource selection
+                    // algorithm is running and we've tried to load something and failed.
+                    // Note: we don't consider the case where we've tried to load but
+                    // there's no sources to load as an error condition, as sites may
+                    // do this intentionally to work around requires-user-interaction to
+                    // play restrictions, and we don't want to display a debug message
+                    // if that's the case.
+                    return this.video.error != null ||
+                          (this.video.networkState == this.video.NETWORK_NO_SOURCE &&
+                           this.hasSources());
+                },
+
+                hasSources : function() {
+                    if (this.video.hasAttribute('src') &&
+                        this.video.getAttribute('src') !== "") {
+                        return true;
+                    }
+                    for (var child = this.video.firstChild;
+                         child !== null;
+                         child = child.nextElementSibling) {
+                        if (child instanceof HTMLSourceElement) {
+                            return true;
+                        }
+                    }
+                    return false;
                 },
 
                 updateErrorText : function () {
