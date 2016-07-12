@@ -1314,6 +1314,14 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
       }
 
+      // WebVTT parser algorithm step1 - step9.
+      function parseSignature(input) {
+        let signature = collectNextLine();
+        if (!/^WEBVTT([ \t].*)?$/.test(signature)) {
+          throw new ParsingError(ParsingError.Errors.BadSignature);
+        }
+      }
+
       // 3.2 WebVTT metadata header syntax
       function parseHeader(input) {
         parseOptions(input, function (k, v) {
@@ -1328,23 +1336,12 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
 
       // 5.1 WebVTT file parsing.
       try {
-        var line;
         if (self.state === "INITIAL") {
-          // We can't start parsing until we have the first line.
-          if (!/\r\n|\n/.test(self.buffer)) {
-            return this;
-          }
-
-          line = collectNextLine();
-
-          var m = line.match(/^WEBVTT([ \t].*)?$/);
-          if (!m || !m[0]) {
-            throw new ParsingError(ParsingError.Errors.BadSignature);
-          }
-
+          parseSignature();
           self.state = "HEADER";
         }
 
+        var line;
         var alreadyCollectedLine = false;
         while (self.buffer) {
           // We can't parse a line until we have the full line.
