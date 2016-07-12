@@ -1355,13 +1355,19 @@ GeckoDriver.prototype.getActiveFrame = function(cmd, resp) {
       // no frame means top-level
       resp.body.value = null;
       if (this.curFrame) {
-        resp.body.value = this.curBrowser.seenEls
+        let elRef = this.curBrowser.seenEls
             .add(this.curFrame.frameElement);
+        let el = element.makeWebElement(elRef);
+        resp.body.value = el;
       }
       break;
 
     case Context.CONTENT:
-      resp.body.value = this.currentFrameElement;
+      resp.body.value = null;
+      if (this.currentFrameElement !== null) {
+        let el = element.makeWebElement(this.currentFrameElement);
+        resp.body.value = el;
+      }
       break;
   }
 };
