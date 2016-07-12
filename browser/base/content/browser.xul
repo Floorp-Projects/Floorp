@@ -225,16 +225,14 @@
            orient="vertical"
            role="alert">
      <vbox>
-      <hbox pack="end">
-        <toolbarbutton id="UITourTooltipClose" class="close-icon"
-                       tooltiptext="&uiTour.infoPanel.close;"/>
-      </hbox>
       <hbox id="UITourTooltipBody">
-        <vbox id="UITourTooltipIconContainer">
-          <image id="UITourTooltipIcon"/>
-        </vbox>
+        <image id="UITourTooltipIcon"/>
         <vbox flex="1">
-          <label id="UITourTooltipTitle" flex="1"/>
+          <hbox id="UITourTooltipTitleContainer">
+            <label id="UITourTooltipTitle" flex="1"/>
+            <toolbarbutton id="UITourTooltipClose" class="close-icon"
+                           tooltiptext="&uiTour.infoPanel.close;"/>
+          </hbox>
           <description id="UITourTooltipDescription" flex="1"/>
         </vbox>
       </hbox>
