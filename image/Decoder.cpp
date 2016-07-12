@@ -164,10 +164,6 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
         // Pass the data along to the implementation.
         terminalState = DoDecode(*mIterator);
 
-        if (terminalState == Some(TerminalState::FAILURE)) {
-          PostDataError();
-        }
-
         break;
       }
 
@@ -175,7 +171,12 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
         MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
         terminalState = Some(TerminalState::FAILURE);
     }
-  } while (!GetDecodeDone() && !HasError());
+  } while (!GetDecodeDone() && !terminalState);
+
+  // If decoding failed, record that fact.
+  if (terminalState == Some(TerminalState::FAILURE)) {
+    PostDataError();
+  }
 
   CompleteDecode();
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
