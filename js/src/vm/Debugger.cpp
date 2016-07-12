@@ -7243,6 +7243,16 @@ DebuggerFrame::type() const
     MOZ_CRASH("Unknown frame type");
 }
 
+DebuggerFrameImplementation
+DebuggerFrame::implementation() const
+{
+    if (referent().isBaselineFrame())
+        return DebuggerFrameImplementation::Baseline;
+    else if (referent().isRematerializedFrame())
+        return DebuggerFrameImplementation::Ion;
+    return DebuggerFrameImplementation::Interpreter;
+}
+
 /* static */ bool
 DebuggerFrame::requireLive(JSContext* cx, Handle<DebuggerFrame*> frame)
 {
@@ -7403,10 +7413,8 @@ DebuggerFrame::typeGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER_FRAME(cx, argc, vp, "get type", args, frame);
 
-    DebuggerFrameType type = frame->type();
-
     JSString* str;
-    switch (type) {
+    switch (frame->type()) {
       case DebuggerFrameType::Eval:
         str = cx->names().eval;
         break;
@@ -7427,18 +7435,25 @@ DebuggerFrame::typeGetter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getImplementation(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerFrame::implementationGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_FRAME(cx, argc, vp, "get implementation", args, thisobj, frame);
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get implementation", args, frame);
 
     const char* s;
-    if (frame.isBaselineFrame())
+    switch (frame->implementation()) {
+      case DebuggerFrameImplementation::Baseline:
         s = "baseline";
-    else if (frame.isRematerializedFrame())
+        break;
+      case DebuggerFrameImplementation::Ion:
         s = "ion";
-    else
+        break;
+      case DebuggerFrameImplementation::Interpreter:
         s = "interpreter";
+        break;
+      default:
+        MOZ_CRASH("bad DebuggerFrameImplementation value");
+    }
 
     JSAtom* str = Atomize(cx, s, strlen(s));
     if (!str)
@@ -8013,7 +8028,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("script", DebuggerFrame_getScript, 0),
     JS_PSG("this", DebuggerFrame::thisGetter, 0),
     JS_PSG("type", DebuggerFrame::typeGetter, 0),
-    JS_PSG("implementation", DebuggerFrame_getImplementation, 0),
+    JS_PSG("implementation", DebuggerFrame::implementationGetter, 0),
     JS_PSGS("onStep", DebuggerFrame_getOnStep, DebuggerFrame_setOnStep, 0),
     JS_PSGS("onPop", DebuggerFrame_getOnPop, DebuggerFrame_setOnPop, 0),
     JS_PS_END
