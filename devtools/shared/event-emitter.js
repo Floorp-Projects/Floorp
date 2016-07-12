@@ -21,8 +21,6 @@
           return Cu.import("resource://gre/modules/Promise.jsm", {}).Promise.defer;
         case "Services":
           return Cu.import("resource://gre/modules/Services.jsm", {}).Services;
-        case "resource://gre/modules/Console.jsm":
-          return Cu.import("resource://gre/modules/Console.jsm", {});
         case "chrome":
           return {
             Cu,
@@ -40,7 +38,6 @@
 
   // See comment in JSM module boilerplate when adding a new dependency.
   const { components } = require("chrome");
-  const { console } = require("resource://gre/modules/Console.jsm");
   const Services = require("Services");
   const defer = require("devtools/shared/defer");
   let loggingEnabled = true;
