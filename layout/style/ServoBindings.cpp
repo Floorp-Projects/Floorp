@@ -571,9 +571,9 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen) {
   aLayers->mLayers.EnsureLengthAtLeast(aLen);
 }
 
-void Gecko_InitializeImageLayer(nsStyleImageLayers_Layer* aLayer, uint8_t aLayerType) {
-  auto layer = reinterpret_cast<nsStyleImageLayers::Layer*>(aLayer);
-  layer->Initialize(static_cast<nsStyleImageLayers::LayerType>(aLayerType));
+void Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* aLayer,
+                                nsStyleImageLayers::LayerType aLayerType) {
+  aLayer->Initialize(aLayerType);
 }
 
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
