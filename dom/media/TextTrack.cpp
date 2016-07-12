@@ -318,5 +318,16 @@ TextTrack::GetLanguage(nsAString& aLanguage) const
   }
 }
 
+void
+TextTrack::DispatchAsyncTrustedEvent(const nsString& aEventName)
+{
+  RefPtr<TextTrack> self = this;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([self, aEventName]() {
+      self->DispatchTrustedEvent(aEventName);
+    })
+  );
+}
+
 } // namespace dom
 } // namespace mozilla
