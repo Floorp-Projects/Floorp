@@ -156,8 +156,6 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   // Call Seek of MediaDecoderStateMachine to suppress seek events.
   GetStateMachine()->InvokeSeek(target);
 
-  mNextState = mPlayState;
-  ChangeState(PLAY_STATE_LOADING);
   // exit dormant state
   GetStateMachine()->DispatchSetDormant(false);
   UpdateLogicalPosition();
