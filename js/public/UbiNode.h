@@ -681,6 +681,8 @@ class Node {
     void construct(T* ptr) {
         static_assert(sizeof(Concrete<T>) == sizeof(*base()),
                       "ubi::Base specializations must be the same size as ubi::Base");
+        static_assert(mozilla::IsBaseOf<Base, Concrete<T>>::value,
+                      "ubi::Concrete<T> must inherit from ubi::Base");
         Concrete<T>::construct(base(), ptr);
     }
     struct ConstructFunctor;

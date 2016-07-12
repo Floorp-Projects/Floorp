@@ -93,10 +93,8 @@ public:
   // For using WeakPtr when MOZ_REFCOUNTED_LEAK_CHECKING defined
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(DisplayDeviceProvider)
 
-  nsresult RequestSession(HDMIDisplayDevice* aDevice,
-                          const nsAString& aUrl,
-                          const nsAString& aPresentationId,
-                          nsIPresentationControlChannel** aControlChannel);
+  nsresult Connect(HDMIDisplayDevice* aDevice,
+                   nsIPresentationControlChannel** aControlChannel);
 private:
   virtual ~DisplayDeviceProvider();
 

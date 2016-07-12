@@ -139,8 +139,14 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   // namespace set to HTML Namespace use the registry of the associated
   // document to the new instance.
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
+
   if (aNamespaceURI.EqualsLiteral("http://www.w3.org/1999/xhtml")) {
+    doc->SetContentType(NS_LITERAL_STRING("application/xhtml+xml"));
     doc->UseRegistryFromDocument(mOwner);
+  } else if (aNamespaceURI.EqualsLiteral("http://www.w3.org/2000/svg")) {
+    doc->SetContentType(NS_LITERAL_STRING("image/svg+xml"));
+  } else {
+    doc->SetContentType(NS_LITERAL_STRING("application/xml"));
   }
 
   doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
