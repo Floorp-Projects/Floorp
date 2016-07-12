@@ -51,6 +51,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 // ============================================================================
 // Utility functions
@@ -3199,7 +3200,8 @@ nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder,
 
   gfxContext* ctx = aCtx->ThebesContext();
   ctx->Save();
-  static_cast<SVGTextFrame*>(mFrame)->PaintSVG(*ctx, tm);
+  DrawResult result = static_cast<SVGTextFrame*>(mFrame)->PaintSVG(*ctx, tm);
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   ctx->Restore();
 }
 
@@ -3635,7 +3637,7 @@ ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret)
   return false;
 }
 
-nsresult
+DrawResult
 SVGTextFrame::PaintSVG(gfxContext& aContext,
                        const gfxMatrix& aTransform,
                        const nsIntRect *aDirtyRect)
@@ -3644,7 +3646,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
-    return NS_OK;
+    return DrawResult::SUCCESS;
 
   nsPresContext* presContext = PresContext();
 
@@ -3657,7 +3659,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     // dirty.
     if (presContext->PresShell()->InDrawWindowNotFlushing() &&
         NS_SUBTREE_DIRTY(this)) {
-      return NS_OK;
+      return DrawResult::SUCCESS;
     }
     // Text frames inside <clipPath>, <mask>, etc. will never have had
     // ReflowSVG called on them, so call UpdateGlyphPositioning to do this now.
@@ -3666,12 +3668,12 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     // If we are asked to paint before reflow has recomputed mPositions etc.
     // directly via PaintSVG, rather than via a display list, then we need
     // to bail out here too.
-    return NS_OK;
+    return DrawResult::SUCCESS;
   }
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render text element!");
-    return NS_ERROR_FAILURE;
+    return DrawResult::BAD_ARGS;
   }
 
   gfxMatrix matrixForPaintServers = aTransform * initialMatrix;
@@ -3693,7 +3695,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(
         GetCanvasTM().TransformBounds(frameRect), 1);
     if (!canvasRect.Intersects(dirtyRect)) {
-      return NS_OK;
+      return DrawResult::SUCCESS;
     }
   }
 
@@ -3780,7 +3782,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     run = it.Next();
   }
 
-  return NS_OK;
+  return DrawResult::SUCCESS;
 }
 
 nsIFrame*
