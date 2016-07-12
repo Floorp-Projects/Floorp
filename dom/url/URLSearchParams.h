@@ -141,8 +141,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URLSearchParams)
 
-  URLSearchParams(nsISupports* aParent,
-                  URLSearchParamsObserver* aObserver=nullptr);
+  explicit URLSearchParams(nsISupports* aParent,
+                           URLSearchParamsObserver* aObserver=nullptr);
 
   URLSearchParams(nsISupports* aParent,
                   const URLSearchParams& aOther);
