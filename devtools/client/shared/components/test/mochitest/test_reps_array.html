@@ -1,0 +1,185 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test ArrayRep rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - ArrayRep</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { ArrayRep } = browserRequire("devtools/client/shared/components/reps/array");
+
+  let componentUnderTest = ArrayRep;
+
+  try {
+    yield testBasic();
+
+    // Test property iterator
+    yield testMaxProps();
+    yield testMoreThanMaxProps();
+    yield testRecursiveArray();
+
+    // Test that properties are rendered as expected by ItemRep
+    yield testNested();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testBasic() {
+    // Test that correct rep is chosen
+    const stub = [];
+    const renderedRep = shallowRenderComponent(Rep, { object: stub });
+    is(renderedRep.type, ArrayRep.rep, `Rep correctly selects ${ArrayRep.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `[]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[0]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testBasic", componentUnderTest, stub);
+  }
+
+  function testMaxProps() {
+    const stub = [1, "foo", {}];
+    const defaultOutput = `[1, "foo", Object]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[3]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testMaxProps", componentUnderTest, stub);
+  }
+
+  function testMoreThanMaxProps() {
+    const stub = Array(302).fill("foo");
+    const defaultOutput = `["foo", "foo", "foo", more...]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[302]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: `[${Array(300).fill("\"foo\"").join(", ")}, more...]`,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testMoreThanMaxProps", componentUnderTest, stub);
+  }
+
+  function testRecursiveArray() {
+    let stub = [1];
+    stub.push(stub);
+    const defaultOutput = `[1, [...]]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[2]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testRecursiveArray", componentUnderTest, stub);
+  }
+
+  function testNested() {
+    let stub = [
+      {
+        p1: "s1",
+        p2: ["a1", "a2", "a3"],
+        p3: "s3",
+        p4: "s4"
+      }
+    ];
+    const defaultOutput = `[Object{p1: "s1", p3: "s3", p4: "s4", more...}]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[1]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testNested", componentUnderTest, stub);
+  }
+});
+</script>
+</pre>
+</body>
+</html>

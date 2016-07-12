@@ -247,3 +247,7 @@
 .theme-firebug #command-button-frames {
   min-width: 32px;
 }
+
+.theme-firebug #element-picker {
+  min-height: 21px;
+}

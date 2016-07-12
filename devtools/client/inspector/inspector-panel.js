@@ -890,7 +890,7 @@ InspectorPanel.prototype = {
     menu.append(new MenuItem({
       id: "node-menu-expand",
       label: strings.GetStringFromName("inspectorExpandNode.label"),
-      disabled: !isNodeWithChildren || markupContainer.expanded,
+      disabled: !isNodeWithChildren,
       click: () => this.expandNode(),
     }));
     menu.append(new MenuItem({
