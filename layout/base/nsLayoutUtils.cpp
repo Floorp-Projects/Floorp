@@ -9365,3 +9365,11 @@ nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame)
   }
   return delta;
 }
+
+/* static */ bool
+nsLayoutUtils::SupportsServoStyleBackend(nsIDocument* aDocument)
+{
+  return nsPresContext::StyloEnabled() &&
+         aDocument->IsHTMLOrXHTML() &&
+         static_cast<nsDocument*>(aDocument)->IsContentDocument();
+}

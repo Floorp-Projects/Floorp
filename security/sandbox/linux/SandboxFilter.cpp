@@ -187,6 +187,7 @@ public:
       // Simple I/O
     case __NR_write:
     case __NR_read:
+    case __NR_readv:
     case __NR_writev: // see SandboxLogging.cpp
     CASES_FOR_lseek:
       return Allow();
@@ -438,6 +439,7 @@ public:
     case SYS_SOCKET: // DANGEROUS
     case SYS_CONNECT: // DANGEROUS
     case SYS_ACCEPT:
+    case SYS_ACCEPT4:
     case SYS_BIND:
     case SYS_LISTEN:
     case SYS_GETSOCKOPT:
@@ -517,6 +519,7 @@ public:
     case __NR_symlink:
     case __NR_quotactl:
     case __NR_utimes:
+    case __NR_link:
     case __NR_unlink:
     case __NR_fchown:
     case __NR_fchmod:
@@ -643,6 +646,9 @@ public:
     case __NR_semget:
       return Allow();
 #endif
+
+    case __NR_mlock:
+      return Allow();
 
 #endif // DESKTOP
 

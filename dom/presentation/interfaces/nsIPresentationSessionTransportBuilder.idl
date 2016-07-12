@@ -55,7 +55,7 @@ interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSes
   /**
    * The following creation function will trigger |listener.onSessionTransport|
    * if the session transport is successfully built, |listener.onError| if some
-   * error occurs during creating session transport. The |notifyOpened| of
+   * error occurs during creating session transport. The |notifyConnected| of
    * |aControlChannel| should be called before calling
    * |buildDataChannelTransport|.
    */
@@ -67,5 +67,5 @@ interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSes
   void onOffer(in nsIPresentationChannelDescription offer);
   void onAnswer(in nsIPresentationChannelDescription answer);
   void onIceCandidate(in DOMString candidate);
-  void notifyClosed(in nsresult reason);
+  void notifyDisconnected(in nsresult reason);
 };

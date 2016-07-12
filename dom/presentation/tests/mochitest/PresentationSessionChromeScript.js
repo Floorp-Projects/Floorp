@@ -141,9 +141,11 @@ const mockedControlChannel = {
     }
     return isValid;
   },
-  close: function(reason) {
+  launch: function(presentationId, url) {
+  },
+  disconnect: function(reason) {
     sendAsyncMessage('control-channel-closed', reason);
-    this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyClosed(reason);
+    this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyDisconnected(reason);
   },
   simulateReceiverReady: function() {
     this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyReceiverReady();
@@ -156,9 +158,9 @@ const mockedControlChannel = {
     sendAsyncMessage('answer-received');
     this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).onAnswer(mockedChannelDescription);
   },
-  simulateNotifyOpened: function() {
+  simulateNotifyConnected: function() {
     sendAsyncMessage('control-channel-opened');
-    this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyOpened();
+    this._listener.QueryInterface(Ci.nsIPresentationControlChannelListener).notifyConnected();
   },
 };
 
@@ -403,11 +405,11 @@ addMessageListener('trigger-incoming-transport', function() {
 });
 
 addMessageListener('trigger-control-channel-open', function(reason) {
-  mockedControlChannel.simulateNotifyOpened();
+  mockedControlChannel.simulateNotifyConnected();
 });
 
 addMessageListener('trigger-control-channel-close', function(reason) {
-  mockedControlChannel.close(reason);
+  mockedControlChannel.disconnect(reason);
 });
 
 addMessageListener('trigger-data-transport-close', function(reason) {

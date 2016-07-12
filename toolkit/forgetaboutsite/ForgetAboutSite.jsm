@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource:///modules/ContextualIdentityService.jsm");
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
 
 this.EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
