@@ -30,6 +30,22 @@ SourceBufferIterator::~SourceBufferIterator()
   }
 }
 
+SourceBufferIterator&
+SourceBufferIterator::operator=(SourceBufferIterator&& aOther)
+{
+  if (mOwner) {
+    mOwner->OnIteratorRelease();
+  }
+
+  mOwner = Move(aOther.mOwner);
+  mState = aOther.mState;
+  mData = aOther.mData;
+  mChunkCount = aOther.mChunkCount;
+  mByteCount = aOther.mByteCount;
+
+  return *this;
+}
+
 SourceBufferIterator::State
 SourceBufferIterator::AdvanceOrScheduleResume(IResumable* aConsumer)
 {
