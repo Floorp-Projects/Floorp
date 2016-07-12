@@ -410,7 +410,6 @@ mp_size mpl_significant_bits(const mp_int *a)
 
   ARGCHK(a != NULL, MP_BADARG);
 
-  ix = MP_USED(a);
   for (ix = MP_USED(a); ix > 0; ) {
     mp_digit d;
     d = MP_DIGIT(a, --ix);

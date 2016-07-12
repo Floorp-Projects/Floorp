@@ -231,6 +231,8 @@ verify_global(JAR *jar)
                                    "global metadigest is not available, strange.\n");
                     }
 
+                    PORT_Free(md5_digest);
+                    PORT_Free(sha1_digest);
                     fclose(fp);
                 }
             }

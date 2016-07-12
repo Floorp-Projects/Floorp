@@ -155,6 +155,7 @@ DecodeAndPrintFile(FILE *out, PRFileDesc *in, char *progName)
     fprintf(out, "There were%s certs or crls included.\n",
             SEC_PKCS7ContainsCertsOrCrls(cinfo) ? "" : " no");
 
+    SECITEM_FreeItem(&derdata, PR_FALSE);
     SEC_PKCS7DestroyContentInfo(cinfo);
     return 0;
 }
@@ -172,6 +173,7 @@ main(int argc, char **argv)
     PLOptState *optstate;
     PLOptStatus status;
     SECStatus rv;
+    int error = 0;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName + 1 : argv[0];
@@ -194,7 +196,8 @@ main(int argc, char **argv)
                 if (!inFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
                             progName, optstate->value);
-                    return -1;
+                    error = -1;
+                    goto done;
                 }
                 break;
 
@@ -203,7 +206,8 @@ main(int argc, char **argv)
                 if (!outFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
                             progName, optstate->value);
-                    return -1;
+                    error = -1;
+                    goto done;
                 }
                 break;
 
@@ -222,6 +226,8 @@ main(int argc, char **argv)
                 break;
         }
     }
+    PL_DestroyOptState(optstate);
+
     if (status == PL_OPT_BAD)
         Usage(progName);
 
@@ -235,19 +241,29 @@ main(int argc, char **argv)
     rv = NSS_Init(SECU_ConfigDirectory(NULL));
     if (rv != SECSuccess) {
         SECU_PrintPRandOSError(progName);
-        return -1;
+        error = -1;
+        goto done;
     }
 
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     if (DecodeAndPrintFile(outFile, inFile, progName)) {
         SECU_PrintError(progName, "problem decoding data");
-        return -1;
+        error = -1;
+        goto done;
+    }
+
+done:
+    if (inFile && inFile != PR_STDIN) {
+        PR_Close(inFile);
+    }
+    if (outFile && outFile != stdout) {
+        fclose(outFile);
     }
 
     if (NSS_Shutdown() != SECSuccess) {
-        exit(1);
+        error = -1;
     }
 
-    return 0;
+    return error;
 }
