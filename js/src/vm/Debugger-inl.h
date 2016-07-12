@@ -79,6 +79,13 @@ js::Debugger::onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmI
         slowPathOnNewWasmInstance(cx, wasmInstance);
 }
 
+inline bool
+js::Debugger::getScriptFrame(JSContext* cx, const ScriptFrameIter& iter,
+                             MutableHandle<DebuggerFrame*> result)
+{
+    return getScriptFrameWithIter(cx, iter.abstractFramePtr(), &iter, result);
+}
+
 inline js::Debugger*
 js::DebuggerEnvironment::owner() const
 {
