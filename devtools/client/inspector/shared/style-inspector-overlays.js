@@ -12,7 +12,7 @@
 // - in-content highlighters that appear when hovering over property values
 // - etc.
 
-const {getTheme} = require("devtools/client/shared/theme");
+const {getColor} = require("devtools/client/shared/theme");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {
   getImageDimensions,
@@ -472,7 +472,7 @@ TooltipsOverlay.prototype = {
     font = font.replace("!important", "");
     font = font.trim();
 
-    let fillStyle = getTheme() === "light" ? "black" : "white";
+    let fillStyle = getColor("body-color");
     let {data, size: maxDim} = yield nodeFront.getFontFamilyDataURL(font, fillStyle);
 
     let imageUrl = yield data.string();
