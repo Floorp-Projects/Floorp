@@ -220,7 +220,7 @@ public:
 
   bool IsValid() const override
   {
-    return mDisplay.width > 0 && mDisplay.height > 0;
+    return mImage.width > 0 && mImage.height > 0;
   }
 
   VideoInfo* GetAsVideoInfo() override
