@@ -184,8 +184,9 @@ protected:
   NS_IMETHOD CreateBR(nsIDOMNode* aNode, int32_t aOffset,
                       nsCOMPtr<nsIDOMNode>* outBRNode,
                       EDirection aSelect = eNone);
-  Element* CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
-                        EDirection aSelect);
+  already_AddRefed<Element> CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
+                                         int32_t* aInOutOffset,
+                                         EDirection aSelect);
   nsresult CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
                         int32_t* aInOutOffset,
                         nsCOMPtr<nsIDOMNode>* outBRNode,
