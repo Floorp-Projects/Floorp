@@ -109,9 +109,36 @@ public:
   bool RemainingBytesIsNoMoreThan(size_t aBytes) const;
 
   /**
-   * Advances the iterator through the SourceBuffer if possible. If not,
-   * arranges to call the @aConsumer's Resume() method when more data is
-   * available.
+   * Advances the iterator through the SourceBuffer if possible.
+   *
+   * This is a wrapper around AdvanceOrScheduleResume() that makes it clearer at
+   * the callsite when the no resuming is intended.
+   *
+   * @return State::READY if the iterator was successfully advanced.
+   *         State::WAITING if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer, but the SourceBuffer
+   *           may still receive additional data.
+   *         State::COMPLETE if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer and the SourceBuffer is
+   *           marked complete (i.e., it will never receive any additional
+   *           data).
+   */
+  State Advance() { return AdvanceOrScheduleResume(nullptr); }
+
+  /**
+   * Advances the iterator through the SourceBuffer if possible. If advancing is
+   * not possible and @aConsumer is not null, arranges to call the @aConsumer's
+   * Resume() method when more data is available.
+   *
+   * @return State::READY if the iterator was successfully advanced.
+   *         State::WAITING if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer, but the SourceBuffer
+   *           may still receive additional data. @aConsumer's Resume() method
+   *           will be called when additional data is available.
+   *         State::COMPLETE if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer and the SourceBuffer is
+   *           marked complete (i.e., it will never receive any additional
+   *           data).
    */
   State AdvanceOrScheduleResume(IResumable* aConsumer);
 

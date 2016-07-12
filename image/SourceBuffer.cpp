@@ -237,7 +237,9 @@ SourceBuffer::AddWaitingConsumer(IResumable* aConsumer)
 
   MOZ_ASSERT(!mStatus, "Waiting when we're complete?");
 
-  mWaitingConsumers.AppendElement(aConsumer);
+  if (aConsumer) {
+    mWaitingConsumers.AppendElement(aConsumer);
+  }
 }
 
 void
