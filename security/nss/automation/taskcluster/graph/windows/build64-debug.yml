@@ -27,9 +27,6 @@
     - gtests
     - lowhash
     - merge
-    - ocsp
-    - pkits
-    - pkix
     - sdr
     - smime
     - tools
@@ -57,13 +54,13 @@
 
 - task:
     metadata:
-      name: "Windows 2012 64 (debug, NO_PKCS11_BYPASS=1)"
-      description: "Windows 2012 64 (debug, NO_PKCS11_BYPASS=1)"
+      name: "Windows 2012 64 (debug, NSS_NO_PKCS11_BYPASS=1)"
+      description: "Windows 2012 64 (debug, NSS_NO_PKCS11_BYPASS=1)"
 
     payload:
       env:
+        NSS_NO_PKCS11_BYPASS: 1
         NSS_ENABLE_TLS_1_3: 1
-        NO_PKCS11_BYPASS: 1
         USE_64: 1
 
     extra:

@@ -10,6 +10,7 @@ Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 function run_test() {
+  validate_all_future_pings();
   let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 

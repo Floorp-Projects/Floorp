@@ -5,6 +5,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
+  validate_all_future_pings();
   let debug = [];
   let info  = [];
 

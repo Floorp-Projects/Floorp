@@ -145,7 +145,7 @@ this.makeIdentityConfig = function(overrides) {
         kA: 'kA',
         kB: 'kB',
         sessionToken: 'sessionToken',
-        uid: 'user_uid',
+        uid: "a".repeat(32),
         verified: true,
       },
       token: {

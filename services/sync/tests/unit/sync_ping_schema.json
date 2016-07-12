@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "schema for Sync pings, documentation avaliable in toolkit/components/telemetry/docs/sync-ping.rst",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["when", "version", "took", "uid"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 0 },
+    "didLogin": { "type": "boolean" },
+    "when": { "type": "integer" },
+    "status": {
+      "type": "object",
+      "anyOf": [
+        {"required": ["sync"]},
+        {"required": ["service"]}
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sync": { "type": "string" },
+        "service": { "type": "string" }
+      }
+    },
+    "why": { "enum": ["startup", "schedule", "score", "user", "tabs"] },
+    "took": { "type": "integer", "minimum": -1 },
+    "uid": {
+      "type": "string",
+      "oneOf": [
+        { "pattern": "^[0-9a-f]{32}$" },
+        { "maxLength": 0 }
+      ]
+    },
+    "failureReason": { "$ref": "#/definitions/error" },
+    "engines": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/engine" }
+    }
+  },
+  "definitions": {
+    "engine": {
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "failureReason": { "$ref": "#/definitions/error" },
+        "name": { "enum": ["addons", "bookmarks", "clients", "forms", "history", "passwords", "prefs", "tabs"] },
+        "took": { "type": "integer", "minimum": 1 },
+        "status": { "type": "string" },
+        "incoming": {
+          "type": "object",
+          "additionalProperties": false,
+          "anyOf": [
+            {"required": ["applied"]},
+            {"required": ["failed"]},
+            {"required": ["newFailed"]},
+            {"required": ["reconciled"]}
+          ],
+          "properties": {
+            "applied": { "type": "integer", "minimum": 1 },
+            "failed": { "type": "integer", "minimum": 1 },
+            "newFailed": { "type": "integer", "minimum": 1 },
+            "reconciled": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "outgoing": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/outgoingBatch" }
+        },
+        "validation": {
+          "type": "array",
+          "minItems": 1,
+          "$ref": "#/definitions/validationProblem"
+        }
+      }
+    },
+    "outgoingBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "anyOf": [
+        {"required": ["sent"]},
+        {"required": ["failed"]}
+      ],
+      "properties": {
+        "sent": { "type": "integer", "minimum": 1 },
+        "failed": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "error": {
+      "oneOf": [
+        { "$ref": "#/definitions/httpError" },
+        { "$ref": "#/definitions/nsError" },
+        { "$ref": "#/definitions/shutdownError" },
+        { "$ref": "#/definitions/authError" },
+        { "$ref": "#/definitions/otherError" },
+        { "$ref": "#/definitions/unexpectedError" }
+      ]
+    },
+    "httpError": {
+      "required": ["name", "code"],
+      "properties": {
+        "name": { "enum": ["httperror"] },
+        "code": { "type": "integer" }
+      }
+    },
+    "nsError": {
+      "required": ["name", "code"],
+      "properties": {
+        "name": { "enum": ["nserror"] },
+        "code": { "type": "integer" }
+      }
+    },
+    "shutdownError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["shutdownerror"] }
+      }
+    },
+    "authError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["autherror"] },
+        "from": { "enum": ["tokenserver", "fxaccounts", "hawkclient"] }
+      }
+    },
+    "otherError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["othererror"] },
+        "error": { "type": "string" }
+      }
+    },
+    "unexpectedError": {
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["unexpectederror"] },
+        "error": { "type": "string" }
+      }
+    },
+    "validationProblem": {
+      "required": ["name", "count"],
+      "properties": {
+        "name": { "type": "string" },
+        "count": { "type": "integer" }
+      }
+    }
+  }
+}
