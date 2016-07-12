@@ -142,6 +142,8 @@ public abstract class GeckoApp
     public static final String ACTION_LOAD                 = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW              = "org.mozilla.gecko.INIT_PW";
 
+    public static final String INTENT_REGISTER_STUMBLER_LISTENER = "org.mozilla.gecko.STUMBLER_REGISTER_LOCAL_LISTENER";
+
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
@@ -1127,6 +1129,13 @@ public abstract class GeckoApp
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception starting favicon cache. Corrupt resources?", e);
         }
+
+        // Tell Stumbler to register a local broadcast listener to listen for preference intents.
+        // We do this via intents since we can't easily access Stumbler directly,
+        // as it might be compiled outside of Fennec.
+        getApplicationContext().sendBroadcast(
+                new Intent(INTENT_REGISTER_STUMBLER_LISTENER)
+        );
 
         // Did the OS locale change while we were backgrounded? If so,
         // we need to die so that Gecko will re-init add-ons that touch
