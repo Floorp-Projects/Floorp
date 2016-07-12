@@ -28,18 +28,10 @@ public:
 protected:
   ~ExtensionProtocolHandler() {}
 
-  bool ResolveSpecialCases(const nsACString& aHost, const nsACString& aPath, nsACString& aResult) override
-  {
-    // Create a special about:blank-like moz-extension://foo/_blank.html for all
-    // registered extensions. We can't just do this as a substitution because
-    // substitutions can only match on host.
-    if (SubstitutingProtocolHandler::HasSubstitution(aHost) && aPath.EqualsLiteral("/_blank.html")) {
-      aResult.AssignLiteral("about:blank");
-      return true;
-    }
-
-    return false;
-  }
+  bool ResolveSpecialCases(const nsACString& aHost,
+                           const nsACString& aPath,
+                           const nsACString& aPathname,
+                           nsACString& aResult) override;
 
   virtual nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result) override;
 };

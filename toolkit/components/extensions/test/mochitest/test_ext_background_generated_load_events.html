@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test load events in _generated_background_page.html</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+/* eslint-disable mozilla/balanced-listeners */
+
+add_task(function* test_DOMContentLoaded_in_generated_background_page() {
+  function backgroundScript() {
+    function reportListener(event) {
+      browser.test.sendMessage("eventname", event.type);
+    }
+    document.addEventListener("DOMContentLoaded", reportListener);
+    window.addEventListener("load", reportListener);
+  }
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      background: {
+        scripts: ["bg.js"],
+      },
+      web_accessible_resources: ["_generated_background_page.html"],
+    },
+    files: {
+      "bg.js": `(${backgroundScript})();`,
+    },
+  });
+
+  yield extension.startup();
+  is("DOMContentLoaded", yield extension.awaitMessage("eventname"));
+  is("load", yield extension.awaitMessage("eventname"));
+
+  yield extension.unload();
+});
+
+</script>
+</body>
+</html>
