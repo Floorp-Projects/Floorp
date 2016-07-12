@@ -274,9 +274,9 @@ void
 StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
                                        nsRect* aInner) const
 {
-  // We need to use the first in flow; ComputeStickyLimits requires
-  // this, at the very least because its call to
-  // nsLayoutUtils::GetAllInFlowRectsUnion requires it.
+  // We need to use the first in flow; continuation frames should not move
+  // relative to each other and should get identical scroll ranges.
+  // Also, ComputeStickyLimits requires this.
   nsIFrame *firstCont =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
 
@@ -287,7 +287,7 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
   aOuter->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
   aInner->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
-  const nsPoint normalPosition = aFrame->GetNormalPosition();
+  const nsPoint normalPosition = firstCont->GetNormalPosition();
 
   // Bottom and top
   if (stick.YMost() != nscoord_MAX/2) {
