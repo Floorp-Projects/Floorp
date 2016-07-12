@@ -13,7 +13,8 @@ function messages(state = Immutable.List(), action) {
     case constants.MESSAGE_ADD:
       let newMessage = action.message;
 
-      if (newMessage.data.level === "clear") {
+      // @TODO clean this up once we've switched to Chrome RDP packet structure.
+      if (newMessage.data && newMessage.data.level === "clear") {
         return Immutable.List([newMessage]);
       }
 
