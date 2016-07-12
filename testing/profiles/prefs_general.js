@@ -114,8 +114,6 @@ user_pref("extensions.getAddons.search.browseURL", "http://%(server)s/extensions
 user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy/repositorySearchURL");
 // Ensure blocklist updates don't hit the network
 user_pref("services.settings.server", "http://%(server)s/dummy-kinto/v1");
-// Make sure that opening the plugins check page won't hit the network
-user_pref("plugins.update.url", "http://%(server)s/plugins-dummy/updateCheckURL");
 // Make sure SNTP requests don't hit the network
 user_pref("network.sntp.pools", "%(server)s");
 // We know the SNTP request will fail, since localhost isn't listening on

@@ -129,57 +129,67 @@ AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
               uint8_t d, uint8_t s, UnsizedFormat unsizedFormat, bool isSRGB,
               ComponentType componentType)
 {
-#ifdef DEBUG
-    uint8_t totalBits = r + g + b + a + d + s;
-    if (format == EffectiveFormat::RGB9_E5) {
-        totalBits = 9 + 9 + 9 + 5;
-    }
-    MOZ_ASSERT(totalBits == bytesPerPixel*8);
-#endif
-
-    bool isColorFormat = false;
-    bool hasAlpha = false;
-    bool hasDepth = false;
-    bool hasStencil = false;
-
     switch (unsizedFormat) {
-    case UnsizedFormat::L:
     case UnsizedFormat::R:
-    case UnsizedFormat::RG:
-    case UnsizedFormat::RGB:
-        isColorFormat = true;
+        MOZ_ASSERT(r && !g && !b && !a && !d && !s);
         break;
 
-    case UnsizedFormat::A: // Alpha is a 'color format' since it's 'color-attachable'.
-    case UnsizedFormat::LA:
+    case UnsizedFormat::RG:
+        MOZ_ASSERT(r && g && !b && !a && !d && !s);
+        break;
+
+    case UnsizedFormat::RGB:
+        MOZ_ASSERT(r && g && b && !a && !d && !s);
+        break;
+
     case UnsizedFormat::RGBA:
-        isColorFormat = true;
-        hasAlpha = true;
+        MOZ_ASSERT(r && g && b && a && !d && !s);
+        break;
+
+    case UnsizedFormat::L:
+        MOZ_ASSERT(r && !g && !b && !a && !d && !s);
+        break;
+
+    case UnsizedFormat::A:
+        MOZ_ASSERT(!r && !g && !b && a && !d && !s);
+        break;
+
+    case UnsizedFormat::LA:
+        MOZ_ASSERT(r && !g && !b && a && !d && !s);
         break;
 
     case UnsizedFormat::D:
-        hasDepth = true;
+        MOZ_ASSERT(!r && !g && !b && !a && d && !s);
         break;
 
     case UnsizedFormat::S:
-        hasStencil = true;
+        MOZ_ASSERT(!r && !g && !b && !a && !d && s);
         break;
 
     case UnsizedFormat::DS:
-        hasDepth = true;
-        hasStencil = true;
+        MOZ_ASSERT(!r && !g && !b && !a && d && s);
         break;
-
-    default:
-        MOZ_CRASH("GFX: Missing UnsizedFormat case.");
     }
 
     const CompressedFormatInfo* compressedFormatInfo = GetCompressedFormatInfo(format);
     MOZ_ASSERT(!bytesPerPixel == bool(compressedFormatInfo));
 
+#ifdef DEBUG
+    uint8_t totalBits = r + g + b + a + d + s;
+    if (format == EffectiveFormat::RGB9_E5) {
+        totalBits = 9 + 9 + 9 + 5;
+    }
+
+    if (compressedFormatInfo) {
+        MOZ_ASSERT(totalBits);
+        MOZ_ASSERT(!bytesPerPixel);
+    } else {
+        MOZ_ASSERT(totalBits == bytesPerPixel*8);
+    }
+#endif
+
     const FormatInfo info = { format, name, sizedFormat, unsizedFormat, componentType,
-                              bytesPerPixel, r,g,b,a, isColorFormat, isSRGB, hasAlpha,
-                              hasDepth, hasStencil, compressedFormatInfo };
+                              isSRGB, compressedFormatInfo, bytesPerPixel, r,g,b,a,d,s };
     AlwaysInsert(gFormatInfoMap, format, info);
 }
 
@@ -258,36 +268,36 @@ InitFormatInfo()
 
     // GLES 3.0.4, p147, table 3.19
     // GLES 3.0.4  p286+  $C.1 "ETC Compressed Texture Image Formats"
-    AddFormatInfo(FOO(COMPRESSED_RGB8_ETC2                     ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SRGB8_ETC2                    ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , true , ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA8_ETC2_EAC                ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SRGB8_ALPHA8_ETC2_EAC         ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_R11_EAC                       ), 0, 0,0,0,0, 0,0, UnsizedFormat::R   , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RG11_EAC                      ), 0, 0,0,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SIGNED_R11_EAC                ), 0, 0,0,0,0, 0,0, UnsizedFormat::R   , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(COMPRESSED_SIGNED_RG11_EAC               ), 0, 0,0,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB8_ETC2                     ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB8_ETC2                    ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA8_ETC2_EAC                ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB8_ALPHA8_ETC2_EAC         ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_R11_EAC                       ), 0, 1,0,0,0, 0,0, UnsizedFormat::R   , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RG11_EAC                      ), 0, 1,1,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SIGNED_R11_EAC                ), 0, 1,0,0,0, 0,0, UnsizedFormat::R   , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(COMPRESSED_SIGNED_RG11_EAC               ), 0, 1,1,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
 
     // AMD_compressed_ATC_texture
-    AddFormatInfo(FOO(ATC_RGB_AMD                    ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(ATC_RGBA_EXPLICIT_ALPHA_AMD    ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(ATC_RGBA_INTERPOLATED_ALPHA_AMD), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ATC_RGB_AMD                    ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ATC_RGBA_EXPLICIT_ALPHA_AMD    ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ATC_RGBA_INTERPOLATED_ALPHA_AMD), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // EXT_texture_compression_s3tc
-    AddFormatInfo(FOO(COMPRESSED_RGB_S3TC_DXT1_EXT ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT1_EXT), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT3_EXT), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT5_EXT), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB_S3TC_DXT1_EXT ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT1_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT3_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT5_EXT), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // IMG_texture_compression_pvrtc
-    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_4BPPV1 ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_4BPPV1), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_2BPPV1 ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_2BPPV1), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_4BPPV1 ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_4BPPV1), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_2BPPV1 ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_2BPPV1), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // OES_compressed_ETC1_RGB8_texture
-    AddFormatInfo(FOO(ETC1_RGB8_OES), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ETC1_RGB8_OES), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB, false, ComponentType::NormUInt);
 
 #undef FOO
 
@@ -639,7 +649,7 @@ FormatUsageInfo::SetRenderable()
 
 #ifdef DEBUG
     const auto format = this->format;
-    if (format->isColorFormat) {
+    if (format->IsColorFormat()) {
         const auto& map = format->copyDecayFormats;
         const auto itr = map.find(format->unsizedFormat);
         MOZ_ASSERT(itr != map.end(), "Renderable formats must be in copyDecayFormats.");
@@ -923,7 +933,6 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
 
     // GLES 3.0.4, p147, table 3.19
     // GLES 3.0.4, p286+, $C.1 "ETC Compressed Texture Image Formats"
-#if ALLOW_ES3_FORMATS
     // Note that all compressed texture formats are filterable:
     // GLES 3.0.4 p161:
     // "[A] texture is complete unless any of the following conditions hold true:
@@ -943,7 +952,7 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
     fnAllowES3TexFormat(FOO(COMPRESSED_SIGNED_RG11_EAC               ), false, true);
     fnAllowES3TexFormat(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), false, true);
     fnAllowES3TexFormat(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), false, true);
-#endif
+
 #undef FOO
 
     // GLES 3.0.4, p206, "Required Renderbuffer Formats":

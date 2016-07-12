@@ -1,1 +1,6 @@
---enable-debug
+{
+    "configure-args": "--enable-debug",
+    "env": {
+        "JSTESTS_EXTRA_ARGS": "--jitflags=debug"
+    }
+}

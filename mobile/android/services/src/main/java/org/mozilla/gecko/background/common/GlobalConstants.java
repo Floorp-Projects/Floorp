@@ -14,13 +14,6 @@ public class GlobalConstants {
   public static final String BROWSER_INTENT_PACKAGE = AppConstants.ANDROID_PACKAGE_NAME;
   public static final String BROWSER_INTENT_CLASS = AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
 
-  /**
-   * Bug 800244: this signing-level permission protects broadcast intents that
-   * should be received only by the Firefox versions with the given Android
-   * package name.
-   */
-  public static final String PER_ANDROID_PACKAGE_PERMISSION = AppConstants.ANDROID_PACKAGE_NAME + ".permission.PER_ANDROID_PACKAGE";
-
   public static final int SHARED_PREFERENCES_MODE = 0;
 
   // Common time values.

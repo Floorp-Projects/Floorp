@@ -608,7 +608,6 @@ public:
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,
-        VISITED = 21,
         NETWORK_CHANGED = 22,
         THUMBNAIL = 25,
         SCREENORIENTATION_CHANGED = 27,

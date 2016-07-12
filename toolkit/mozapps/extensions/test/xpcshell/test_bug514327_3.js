@@ -122,11 +122,6 @@ function run_test() {
 function test_part_1() {
   // plugin should now be marked as outdated
   do_check_true(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
-  // and the notifyUser pref should be set to true
-  do_check_true(gPrefs.getBoolPref("plugins.update.notifyUser"));
-
-  // preternd the user has been notified, reset the pref
-  gPrefs.setBoolPref("plugins.update.notifyUser", false);
 
   // update blocklist with data that marks the plugin as outdated
   do_update_blocklist("test_bug514327_3_outdated_2.xml", test_part_2);
@@ -135,8 +130,6 @@ function test_part_1() {
 function test_part_2() {
   // plugin should still be marked as outdated
   do_check_true(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
-  // and the notifyUser pref should NOT be set to true, as the plugin was already outdated
-  do_check_false(gPrefs.getBoolPref("plugins.update.notifyUser"));
 
   finish();
 }

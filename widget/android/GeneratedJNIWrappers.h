@@ -1198,6 +1198,20 @@ public:
 
     static auto NotifyDefaultPrevented(bool) -> void;
 
+    struct NotifyUriVisited_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "notifyUriVisited";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct NotifyWakeLockChanged_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;

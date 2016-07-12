@@ -13,7 +13,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
-import android.support.v4.content.AsyncTaskLoader;
+import android.os.Looper;
+import android.content.AsyncTaskLoader;
+import android.support.v4.content.LocalBroadcastManager;
+
+import java.lang.ref.WeakReference;
 
 /**
  * A Loader that queries and updates based on the existence of Firefox and
@@ -35,7 +39,11 @@ public class AccountLoader extends AsyncTaskLoader<Account> {
   protected Account account = null;
   protected BroadcastReceiver broadcastReceiver = null;
 
-  public AccountLoader(Context context) {
+  // Hold a weak reference to AccountLoader instance in this Runnable to avoid potentially leaking it
+  // after posting to a Handler in the BroadcastReceiver returned from makeNewObserver.
+  private final BroadcastReceiverRunnable broadcastReceiverRunnable = new BroadcastReceiverRunnable(this);
+
+  public AccountLoader(final Context context) {
     super(context);
   }
 
@@ -82,7 +90,8 @@ public class AccountLoader extends AsyncTaskLoader<Account> {
     // Begin monitoring the underlying data source.
     if (broadcastReceiver == null) {
       broadcastReceiver = makeNewObserver();
-      registerObserver(broadcastReceiver);
+      registerLocalObserver(getContext(), broadcastReceiver);
+      registerSystemObserver(getContext(), broadcastReceiver);
     }
 
     if (takeContentChanged() || account == null) {
@@ -122,12 +131,12 @@ public class AccountLoader extends AsyncTaskLoader<Account> {
     if (broadcastReceiver != null) {
       final BroadcastReceiver observer = broadcastReceiver;
       broadcastReceiver = null;
-      unregisterObserver(observer);
+      unregisterObserver(getContext(), observer);
     }
   }
 
   @Override
-  public void onCanceled(Account data) {
+  public void onCanceled(final Account data) {
     // Attempt to cancel the current asynchronous load.
     super.onCanceled(data);
 
@@ -136,42 +145,83 @@ public class AccountLoader extends AsyncTaskLoader<Account> {
     releaseResources(data);
   }
 
+  // Observer which receives notifications when the data changes.
+  protected BroadcastReceiver makeNewObserver() {
+    return new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        // onContentChanged must be called on the main thread.
+        // If we're already on the main thread, call it directly.
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+          onContentChanged();
+          return;
+        }
+
+        // Otherwise, post a Runnable to a Handler bound to the main thread's message loop.
+        final Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainHandler.post(broadcastReceiverRunnable);
+      }
+    };
+  }
+
+  private static class BroadcastReceiverRunnable implements Runnable {
+    private final WeakReference<AccountLoader> accountLoaderWeakReference;
+
+    public BroadcastReceiverRunnable(final AccountLoader accountLoader) {
+      accountLoaderWeakReference = new WeakReference<>(accountLoader);
+    }
+
+    @Override
+    public void run() {
+      final AccountLoader accountLoader = accountLoaderWeakReference.get();
+      if (accountLoader != null) {
+        accountLoader.onContentChanged();
+      }
+    }
+  }
+
   private void releaseResources(Account data) {
     // For a simple List, there is nothing to do. For something like a Cursor, we
     // would close it in this method. All resources associated with the Loader
     // should be released here.
   }
 
-  // Observer which receives notifications when the data changes.
-  protected BroadcastReceiver makeNewObserver() {
-    final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-      @Override
-      public void onReceive(Context context, Intent intent) {
-        // Must be called on the main thread of the process. We register the
-        // broadcast receiver with a null Handler (see registerObserver), which
-        // ensures we're on the main thread when we receive this intent.
-        onContentChanged();
-      }
-    };
-    return broadcastReceiver;
-  }
-
-  protected void registerObserver(BroadcastReceiver observer) {
+  /**
+   * Register provided observer with the LocalBroadcastManager to listen for internal events.
+   *
+   * @param context <code>Context</code> to use for obtaining LocalBroadcastManager instance.
+   * @param observer <code>BroadcastReceiver</code> which will handle local events.
+   */
+  protected static void registerLocalObserver(final Context context, final BroadcastReceiver observer) {
     final IntentFilter intentFilter = new IntentFilter();
-    // Android Account added or removed.
-    intentFilter.addAction(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION);
     // Firefox Account internal state changed.
     intentFilter.addAction(FxAccountConstants.ACCOUNT_STATE_CHANGED_ACTION);
     // Firefox Account profile state changed.
     intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION);
 
-    // null means: "the main thread of the process will be used." We must call
-    // onContentChanged on the main thread of the process; this ensures we do.
-    final Handler handler = null;
-    getContext().registerReceiver(observer, intentFilter, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION, handler);
+    LocalBroadcastManager.getInstance(context).registerReceiver(observer, intentFilter);
   }
 
-  protected void unregisterObserver(BroadcastReceiver observer) {
-    getContext().unregisterReceiver(observer);
+  /**
+   * Register provided observer for handling system-wide broadcasts.
+   *
+   * @param context <code>Context</code> to use for registering a receiver.
+   * @param observer <code>BroadcastReceiver</code> which will handle system events.
+   */
+  protected static void registerSystemObserver(final Context context, final BroadcastReceiver observer) {
+    context.registerReceiver(observer,
+            // Android Account added or removed.
+            new IntentFilter(AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION),
+            // No broadcast permissions required.
+            null,
+            // Null handler ensures that broadcasts will be handled on the main thread.
+            null
+    );
+  }
+
+  protected static void unregisterObserver(final Context context, final BroadcastReceiver observer) {
+    LocalBroadcastManager.getInstance(context).unregisterReceiver(observer);
+    context.unregisterReceiver(observer);
   }
 }
+
