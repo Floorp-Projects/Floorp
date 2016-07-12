@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # ***** BEGIN LICENSE BLOCK *****
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -12,6 +13,7 @@ mozharness.
 
 import codecs
 from contextlib import contextmanager
+import datetime
 import errno
 import gzip
 import inspect
@@ -1866,9 +1868,8 @@ class BaseScript(ScriptMixin, LogMixin, object):
             self.log_obj = SimpleFileLogger(**log_config)
 
     def action_message(self, message):
-        self.info("#####")
-        self.info("##### %s" % message)
-        self.info("#####")
+        self.info("[mozharness: %sZ] %s" % (
+            datetime.datetime.utcnow().isoformat(' '), message))
 
     def summary(self):
         """Print out all the summary lines added via add_summary()
