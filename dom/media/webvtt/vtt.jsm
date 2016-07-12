@@ -96,9 +96,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
   }
 
   Settings.prototype = {
-    // Only accept the first assignment to any key.
     set: function(k, v) {
-      if (!this.get(k) && v !== "") {
+      if (v !== "") {
         this.values[k] = v;
       }
     },
