@@ -1788,8 +1788,6 @@ loser:
  * random numbers. For Mail usage RandomB should be NULL. In the Sender's
  * case RandomA is generate, outherwize it is passed.
  */
-static unsigned char *rb_email = NULL;
-
 PK11SymKey *
 PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
    PRBool isSender, SECItem *randomA, SECItem *randomB, 
@@ -1800,15 +1798,6 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
     CK_MECHANISM mechanism;
     PK11SymKey *symKey;
     CK_RV crv;
-
-
-    if (rb_email == NULL) {
-	rb_email = PORT_ZAlloc(128);
-	if (rb_email == NULL) {
-	    return NULL;
-	}
-	rb_email[127] = 1;
-    }
 
     /* get our key Structure */
     symKey = pk11_CreateSymKey(slot, target, PR_TRUE, PR_TRUE, wincx);
@@ -1829,11 +1818,13 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
     case keaKey:
     case fortezzaKey:
 	{
+	    static unsigned char rb_email[128] = { 0 };
 	    CK_KEA_DERIVE_PARAMS param;
 	    param.isSender = (CK_BBOOL) isSender;
 	    param.ulRandomLen = randomA->len;
 	    param.pRandomA = randomA->data;
 	    param.pRandomB = rb_email;
+	    param.pRandomB[127] = 1;
 	    if (randomB)
 		 param.pRandomB = randomB->data;
 	    if (pubKey->keyType == fortezzaKey) {

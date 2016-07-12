@@ -1,22 +1,6 @@
 ---
 - task:
     metadata:
-      name: "MemLeak tests (ocsp)"
-      description: "MemLeak tests (ocsp)"
-
-    payload:
-      env:
-        NSS_MEMLEAK_TESTS: ocsp
-        NSS_TESTS: memleak
-
-    extra:
-      treeherder:
-        symbol: ocsp
-        collection:
-          memleak: true
-
-- task:
-    metadata:
       name: "MemLeak tests (ssl_server, standard)"
       description: "MemLeak tests (ssl_server, standard)"
 

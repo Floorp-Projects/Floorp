@@ -1207,6 +1207,7 @@ DecodeNameSection(Decoder& d, ModuleGenerator& mg)
         // This section does not cause validation for the whole module to fail and
         // is instead treated as if the section was absent.
         d.ignoreSection(sectionStart, sectionSize);
+        d.clearError();
         return true;
     }
 
@@ -1231,7 +1232,12 @@ bool
 CompileArgs::init(ExclusiveContext* cx)
 {
     alwaysBaseline = cx->options().wasmAlwaysBaseline();
-    return assumptions.init(SignalUsage(cx), cx->buildIdOp());
+    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
 }
 
 UniqueModule
@@ -1287,6 +1293,8 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
 
     if (!DecodeUnknownSections(d))
         return nullptr;
+
+    MOZ_ASSERT(!*error, "unreported error in decoding");
 
     SharedBytes sharedBytes = js_new<ShareableBytes>(Move(bytecode));
     if (!sharedBytes)
