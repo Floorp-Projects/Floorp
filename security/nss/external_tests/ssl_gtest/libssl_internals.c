@@ -184,15 +184,16 @@ PRBool sslint_DamageTrafficSecret(PRFileDesc *fd,
     return PR_FALSE;
   }
   keyPtr = (PK11SymKey **)((char *)&ss->ssl3.hs + offset);
-  if (!keyPtr)
+  if (!*keyPtr) {
     return PR_FALSE;
+  }
   PK11_FreeSymKey(*keyPtr);
-  *keyPtr = PK11_ImportSymKey(slot,
-                              CKM_NSS_HKDF_SHA256, PK11_OriginUnwrap,
+  *keyPtr = PK11_ImportSymKey(slot, CKM_NSS_HKDF_SHA256, PK11_OriginUnwrap,
                               CKA_DERIVE, &key_item, NULL);
   PK11_FreeSlot(slot);
-  if (!*keyPtr)
+  if (!*keyPtr) {
     return PR_FALSE;
+  }
 
   return PR_TRUE;
 }

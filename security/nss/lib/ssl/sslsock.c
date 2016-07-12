@@ -260,7 +260,10 @@ ssl_DupSocket(sslSocket *os)
 
     ss->opt = os->opt;
     ss->opt.useSocks = PR_FALSE;
-    SECITEM_CopyItem(NULL, &ss->opt.nextProtoNego, &os->opt.nextProtoNego);
+    rv = SECITEM_CopyItem(NULL, &ss->opt.nextProtoNego, &os->opt.nextProtoNego);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
     ss->vrange = os->vrange;
 
     ss->peerID = !os->peerID ? NULL : PORT_Strdup(os->peerID);
