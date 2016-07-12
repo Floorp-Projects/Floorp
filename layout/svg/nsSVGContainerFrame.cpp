@@ -248,7 +248,7 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-nsresult
+DrawResult
 nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                                      const gfxMatrix& aTransform,
                                      const nsIntRect *aDirtyRect)
@@ -260,7 +260,7 @@ nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                "SVG should take this code path");
 
   if (StyleEffects()->mOpacity == 0.0) {
-    return NS_OK;
+    return DrawResult::SUCCESS;
   }
 
   gfxMatrix matrix = aTransform;
@@ -268,7 +268,7 @@ nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
     matrix = static_cast<const nsSVGElement*>(GetContent())->
                PrependLocalTransformsTo(matrix, eChildToUserSpace);
     if (matrix.IsSingular()) {
-      return NS_OK;
+      return DrawResult::SUCCESS;
     }
   }
 
@@ -291,7 +291,7 @@ nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
     nsSVGUtils::PaintFrameWithEffects(kid, aContext, m, aDirtyRect);
   }
 
-  return NS_OK;
+  return DrawResult::SUCCESS;
 }
 
 nsIFrame*
