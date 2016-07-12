@@ -226,7 +226,7 @@ PresentationSessionInfo::Shutdown(nsresult aReason)
 
   // Close the control channel if any.
   if (mControlChannel) {
-    NS_WARN_IF(NS_FAILED(mControlChannel->Close(aReason)));
+    NS_WARN_IF(NS_FAILED(mControlChannel->Disconnect(aReason)));
   }
 
   // Close the data transport channel if any.
@@ -467,7 +467,7 @@ PresentationSessionInfo::SendIceCandidate(const nsAString& candidate)
 NS_IMETHODIMP
 PresentationSessionInfo::Close(nsresult reason)
 {
-  return mControlChannel->Close(reason);
+  return mControlChannel->Disconnect(reason);
 }
 
 /**
@@ -478,7 +478,7 @@ PresentationSessionInfo::Close(nsresult reason)
  * 4 is not guaranteed.)
  * 1. |Init| is called to open a socket |mServerSocket| for data transport
  *    channel.
- * 2. |NotifyOpened| of |nsIPresentationControlChannelListener| is called to
+ * 2. |NotifyConnected| of |nsIPresentationControlChannelListener| is called to
  *    indicate the control channel is ready to use. Then send the offer to the
  *    receiver via the control channel.
  * 3.1 |OnSocketAccepted| of |nsIServerSocketListener| is called to indicate the
@@ -673,7 +673,7 @@ PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescri
   mIsResponderReady = true;
 
   // Close the control channel since it's no longer needed.
-  nsresult rv = mControlChannel->Close(NS_OK);
+  nsresult rv = mControlChannel->Disconnect(NS_OK);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
@@ -688,9 +688,14 @@ PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescri
 }
 
 NS_IMETHODIMP
-PresentationControllingInfo::NotifyOpened()
+PresentationControllingInfo::NotifyConnected()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = mControlChannel->Launch(GetSessionId(), GetUrl());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (!Preferences::GetBool("dom.presentation.session_transport.data_channel.enable")) {
     // Build TCP session transport
@@ -731,10 +736,10 @@ PresentationControllingInfo::NotifyOpened()
   if (NS_WARN_IF(!dataChannelBuilder)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsresult rv = dataChannelBuilder->
-                  BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
-                                            window,
-                                            this);
+  rv = dataChannelBuilder->
+         BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
+                                   window,
+                                   this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -742,7 +747,7 @@ PresentationControllingInfo::NotifyOpened()
 }
 
 NS_IMETHODIMP
-PresentationControllingInfo::NotifyClosed(nsresult aReason)
+PresentationControllingInfo::NotifyDisconnected(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -750,7 +755,7 @@ PresentationControllingInfo::NotifyClosed(nsresult aReason)
     nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
       builder = do_QueryInterface(mBuilder);
     if (builder) {
-      NS_WARN_IF(NS_FAILED(builder->NotifyClosed(aReason)));
+      NS_WARN_IF(NS_FAILED(builder->NotifyDisconnected(aReason)));
     }
   }
 
@@ -1132,14 +1137,14 @@ PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
 }
 
 NS_IMETHODIMP
-PresentationPresentingInfo::NotifyOpened()
+PresentationPresentingInfo::NotifyConnected()
 {
   // Do nothing.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationPresentingInfo::NotifyClosed(nsresult aReason)
+PresentationPresentingInfo::NotifyDisconnected(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1147,7 +1152,7 @@ PresentationPresentingInfo::NotifyClosed(nsresult aReason)
     nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
       builder = do_QueryInterface(mBuilder);
     if (builder) {
-      NS_WARN_IF(NS_FAILED(builder->NotifyClosed(aReason)));
+      NS_WARN_IF(NS_FAILED(builder->NotifyDisconnected(aReason)));
     }
   }
 

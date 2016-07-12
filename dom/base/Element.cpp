@@ -1526,7 +1526,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     ClearSubtreeRootPointer();
 
     // Being added to a document.
-    SetInDocument();
+    SetIsInDocument();
 
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
