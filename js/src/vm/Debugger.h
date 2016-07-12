@@ -1137,13 +1137,6 @@ class DebuggerEnvironment : public NativeObject
     static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc, Value* vp);
 };
 
-enum class DebuggerFrameType {
-    Eval,
-    Global,
-    Call,
-    Module
-};
-
 class DebuggerFrame : public NativeObject
 {
   public:
@@ -1171,12 +1164,9 @@ class DebuggerFrame : public NativeObject
                                        size_t& offset);
     static MOZ_MUST_USE bool getOlder(JSContext* cx, Handle<DebuggerFrame*> frame,
                                       MutableHandle<DebuggerFrame*> result);
-    static MOZ_MUST_USE bool getThis(JSContext* cx, Handle<DebuggerFrame*> frame,
-                                     MutableHandleValue result);
 
     bool isGenerator() const;
     bool isLive() const;
-    DebuggerFrameType type() const;
 
   private:
     static const ClassOps classOps_;
@@ -1197,8 +1187,6 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool liveGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool offsetGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool olderGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
 
     AbstractFramePtr referent() const;
     Debugger* owner() const;

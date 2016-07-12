@@ -7189,31 +7189,6 @@ DebuggerFrame::getOlder(JSContext* cx, Handle<DebuggerFrame*> frame,
 }
 
 /* static */ bool
-DebuggerFrame::getThis(JSContext* cx, Handle<DebuggerFrame*> frame, MutableHandleValue result)
-{
-    MOZ_ASSERT(frame->isLive());
-
-    Debugger* dbg = frame->owner();
-
-    Maybe<ScriptFrameIter> maybeIter;
-    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
-        return false;
-    ScriptFrameIter& iter = *maybeIter;
-
-    {
-        AbstractFramePtr frame = iter.abstractFramePtr();
-        AutoCompartment ac(cx, frame.scopeChain());
-
-        UpdateFrameIterPc(iter);
-
-        if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, iter.pc(), result))
-            return false;
-    }
-
-    return dbg->wrapDebuggeeValue(cx, result);
-}
-
-/* static */ bool
 DebuggerFrame::isGenerator() const
 {
     return referent().script()->isGenerator();
@@ -7223,24 +7198,6 @@ DebuggerFrame::isGenerator() const
 DebuggerFrame::isLive() const
 {
     return !!getPrivate();
-}
-
-DebuggerFrameType
-DebuggerFrame::type() const
-{
-    /*
-     * Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
-     * order of checks here is significant.
-     */
-    if (referent().isEvalFrame())
-        return DebuggerFrameType::Eval;
-    else if (referent().isGlobalFrame())
-        return DebuggerFrameType::Global;
-    else if (referent().isFunctionFrame())
-        return DebuggerFrameType::Call;
-    else if (referent().isModuleFrame())
-        return DebuggerFrameType::Module;
-    MOZ_CRASH("Unknown frame type");
 }
 
 /* static */ bool
@@ -7398,32 +7355,27 @@ DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     THIS_FRAME_ITER(cx, argc, vp, fnname, args, thisobj, maybeIter, iter);               \
     Debugger* dbg = Debugger::fromChildJSObject(thisobj)
 
-/* static */ bool
-DebuggerFrame::typeGetter(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DebuggerFrame_getType(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGGER_FRAME(cx, argc, vp, "get type", args, frame);
+    THIS_FRAME(cx, argc, vp, "get type", args, thisobj, frame);
 
-    DebuggerFrameType type = frame->type();
-
-    JSString* str;
-    switch (type) {
-      case DebuggerFrameType::Eval:
-        str = cx->names().eval;
-        break;
-      case DebuggerFrameType::Global:
-        str = cx->names().global;
-        break;
-      case DebuggerFrameType::Call:
-        str = cx->names().call;
-        break;
-      case DebuggerFrameType::Module:
-        str = cx->names().module;
-        break;
-      default:
-        MOZ_CRASH("bad DebuggerFrameType value");
-    }
-
-    args.rval().setString(str);
+    /*
+     * Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
+     * order of checks here is significant.
+     */
+    JSString* type;
+    if (frame.isEvalFrame())
+        type = cx->names().eval;
+    else if (frame.isGlobalFrame())
+        type = cx->names().global;
+    else if (frame.isFunctionFrame())
+        type = cx->names().call;
+    else if (frame.isModuleFrame())
+        type = cx->names().module;
+    else
+        MOZ_CRASH("Unknown frame type");
+    args.rval().setString(type);
     return true;
 }
 
@@ -7496,8 +7448,8 @@ DebuggerFrame::constructingGetter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* static */ bool
-DebuggerFrame::thisGetter(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DebuggerFrame_getThis(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_FRAME_ITER(cx, argc, vp, "get this", args, thisobj, _, iter);
     RootedValue thisv(cx);
@@ -8011,8 +7963,8 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("offset", DebuggerFrame::offsetGetter, 0),
     JS_PSG("older", DebuggerFrame::olderGetter, 0),
     JS_PSG("script", DebuggerFrame_getScript, 0),
-    JS_PSG("this", DebuggerFrame::thisGetter, 0),
-    JS_PSG("type", DebuggerFrame::typeGetter, 0),
+    JS_PSG("this", DebuggerFrame_getThis, 0),
+    JS_PSG("type", DebuggerFrame_getType, 0),
     JS_PSG("implementation", DebuggerFrame_getImplementation, 0),
     JS_PSGS("onStep", DebuggerFrame_getOnStep, DebuggerFrame_setOnStep, 0),
     JS_PSGS("onPop", DebuggerFrame_getOnPop, DebuggerFrame_setOnPop, 0),
