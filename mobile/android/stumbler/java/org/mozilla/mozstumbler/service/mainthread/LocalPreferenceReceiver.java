@@ -12,23 +12,15 @@ import android.util.Log;
 import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.stumblerthread.StumblerService;
 
-/* Starts the StumblerService, an Intent service, which by definition runs on its own thread.
- * Registered as a receiver in the AndroidManifest.xml.
+/**
+ * Starts the StumblerService, an Intent service, which by definition runs on its own thread.
+ * Registered as a local broadcast receiver in SafeReceiver.
  * Starts the StumblerService in passive listening mode.
  *
- * The received intent serves these purposes:
- * 1) The host application enables (or disables) the StumblerService.
- *    Enabling requires passing in the upload API key. Both the enabled state, and the API key are stored in prefs.
- *
- * 2) If previously enabled by (1), notify the service to start (such as with a BOOT Intent).
- *    The StumblerService is where the enabled state is checked, and if not enabled, the
- *    service stops immediately.
- *
- * 3) Upload notification: onReceive intents are used to tell the StumblerService to check for upload.
- *    In the Fennec host app use, startup and pause are used as indicators to the StumblerService that now
- *    is a good time to try upload, as it is likely that the network is in use.
+ * The received intent contains enabled state, upload API key and user agent,
+ * and is used to initialize the StumblerService.
  */
-public class PassiveServiceReceiver extends BroadcastReceiver {
+public class LocalPreferenceReceiver extends BroadcastReceiver {
     // This allows global debugging logs to be enabled by doing
     // |adb shell setprop log.tag.PassiveStumbler DEBUG|
     static final String LOG_TAG = "PassiveStumbler";
@@ -44,19 +36,10 @@ public class PassiveServiceReceiver extends BroadcastReceiver {
         // This does not guard against dumping PII (PII in stumbler is location, wifi BSSID, cell tower details).
         AppGlobals.isDebug = Log.isLoggable(LOG_TAG, Log.DEBUG);
 
-        final String action = intent.getAction();
-        final boolean isIntentFromHostApp = (action != null) && action.contains(".STUMBLER_PREF");
-        if (!isIntentFromHostApp) {
-            Log.d(LOG_TAG, "Stumbler: received intent external to host app");
-            Intent startServiceIntent = new Intent(context, StumblerService.class);
-            startServiceIntent.putExtra(StumblerService.ACTION_NOT_FROM_HOST_APP, true);
-            context.startService(startServiceIntent);
-            return;
-        }
-
         StumblerService.sFirefoxStumblingEnabled.set(intent.getBooleanExtra("enabled", false));
 
         if (!StumblerService.sFirefoxStumblingEnabled.get()) {
+            Log.d(LOG_TAG, "Stopping StumblerService | isDebug:" + AppGlobals.isDebug);
             // This calls the service's onDestroy(), and the service's onHandleIntent(...) is not called
             context.stopService(new Intent(context, StumblerService.class));
             // For testing service messages were received
@@ -67,14 +50,20 @@ public class PassiveServiceReceiver extends BroadcastReceiver {
         // For testing service messages were received
         context.sendBroadcast(new Intent(AppGlobals.ACTION_TEST_SETTING_ENABLED));
 
-        Log.d(LOG_TAG, "Stumbler: Sending passive start message | isDebug:" + AppGlobals.isDebug);
+        Log.d(LOG_TAG, "Sending passive start message | isDebug:" + AppGlobals.isDebug);
 
         final Intent startServiceIntent = new Intent(context, StumblerService.class);
+
         startServiceIntent.putExtra(StumblerService.ACTION_START_PASSIVE, true);
-        final String mozApiKey = intent.getStringExtra("moz_mozilla_api_key");
-        startServiceIntent.putExtra(StumblerService.ACTION_EXTRA_MOZ_API_KEY, mozApiKey);
-        final String userAgent = intent.getStringExtra("user_agent");
-        startServiceIntent.putExtra(StumblerService.ACTION_EXTRA_USER_AGENT, userAgent);
+        startServiceIntent.putExtra(
+                StumblerService.ACTION_EXTRA_MOZ_API_KEY,
+                intent.getStringExtra("moz_mozilla_api_key")
+        );
+        startServiceIntent.putExtra(
+                StumblerService.ACTION_EXTRA_USER_AGENT,
+                intent.getStringExtra("user_agent")
+        );
+
         context.startService(startServiceIntent);
     }
 }

@@ -19,14 +19,6 @@
         </activity>
 
         <receiver
-            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedReceiver"
-            android:permission="@ANDROID_PACKAGE_NAME@_fxaccount.permission.PER_ACCOUNT_TYPE">
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@_fxaccount.accounts.ACCOUNT_DELETED_ACTION"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name="org.mozilla.gecko.fxa.receivers.FxAccountUpgradeReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_REPLACED" />

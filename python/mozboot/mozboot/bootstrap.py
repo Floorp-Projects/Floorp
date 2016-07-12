@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import platform
 import sys
-import os.path
+import os
 import subprocess
 
 # Don't forgot to add new mozboot modules to the bootstrap download
@@ -20,6 +20,7 @@ from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.archlinux import ArchlinuxBootstrapper
 from mozboot.windows import WindowsBootstrapper
+from mozboot.mozillabuild import MozillaBuildBootstrapper
 from mozboot.util import (
     get_state_dir,
 )
@@ -190,7 +191,10 @@ class Bootstrapper(object):
             args['flavor'] = platform.system()
 
         elif sys.platform.startswith('win32') or sys.platform.startswith('msys'):
-            cls = WindowsBootstrapper
+            if 'MOZILLABUILD' in os.environ:
+                cls = MozillaBuildBootstrapper
+            else:
+                cls = WindowsBootstrapper
 
         if cls is None:
             raise NotImplementedError('Bootstrap support is not yet available '

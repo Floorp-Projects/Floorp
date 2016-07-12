@@ -324,6 +324,10 @@ class ExtensionContext extends BaseContext {
     this.extension = ExtensionManager.get(extensionId);
     this.extensionId = extensionId;
     this.contentWindow = contentWindow;
+    this.windowId = getInnerWindowID(contentWindow);
+
+    contentWindow.addEventListener("pageshow", this, true);
+    contentWindow.addEventListener("pagehide", this, true);
 
     let frameId = WebNavigationFrames.getFrameId(contentWindow);
     this.frameId = frameId;
@@ -371,7 +375,7 @@ class ExtensionContext extends BaseContext {
       // the content script to be associated with both the extension and
       // the tab holding the content page.
       let metadata = {
-        "inner-window-id": getInnerWindowID(contentWindow),
+        "inner-window-id": this.windowId,
         addonId: attrs.addonId,
       };
 
@@ -430,6 +434,14 @@ class ExtensionContext extends BaseContext {
     }
   }
 
+  handleEvent(event) {
+    if (event.type == "pageshow") {
+      this.active = true;
+    } else if (event.type == "pagehide") {
+      this.active = false;
+    }
+  }
+
   get cloneScope() {
     return this.sandbox;
   }
@@ -461,6 +473,11 @@ class ExtensionContext extends BaseContext {
 
   close() {
     super.unload();
+
+    if (this.windowId === getInnerWindowID(this.contentWindow)) {
+      this.contentWindow.removeEventListener("pageshow", this, true);
+      this.contentWindow.removeEventListener("pagehide", this, true);
+    }
 
     for (let script of this.scripts) {
       if (script.requiresCleanup) {
