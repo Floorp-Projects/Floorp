@@ -92,9 +92,7 @@ DisplayDeviceProvider::HDMIDisplayDevice::GetWindowId(nsACString& aWindowId)
 
 NS_IMETHODIMP
 DisplayDeviceProvider::HDMIDisplayDevice
-                     ::EstablishControlChannel(const nsAString& aUrl,
-                                               const nsAString& aPresentationId,
-                                               nsIPresentationControlChannel** aControlChannel)
+                     ::EstablishControlChannel(nsIPresentationControlChannel** aControlChannel)
 {
   nsresult rv = OpenTopLevelWindow();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -105,7 +103,7 @@ DisplayDeviceProvider::HDMIDisplayDevice
   if (NS_WARN_IF(!provider)) {
     return NS_ERROR_FAILURE;
   }
-  return provider->RequestSession(this, aUrl, aPresentationId, aControlChannel);
+  return provider->Connect(this, aControlChannel);
 }
 
 NS_IMETHODIMP
@@ -436,10 +434,8 @@ DisplayDeviceProvider::Observe(nsISupports* aSubject,
 }
 
 nsresult
-DisplayDeviceProvider::RequestSession(HDMIDisplayDevice* aDevice,
-                                      const nsAString& aUrl,
-                                      const nsAString& aPresentationId,
-                                      nsIPresentationControlChannel** aControlChannel)
+DisplayDeviceProvider::Connect(HDMIDisplayDevice* aDevice,
+                               nsIPresentationControlChannel** aControlChannel)
 {
   MOZ_ASSERT(aDevice);
   MOZ_ASSERT(mPresentationService);
@@ -450,10 +446,7 @@ DisplayDeviceProvider::RequestSession(HDMIDisplayDevice* aDevice,
                                                             aDevice->Address(),
                                                             mPort);
 
-  return mPresentationService->RequestSession(deviceInfo,
-                                              aUrl,
-                                              aPresentationId,
-                                              aControlChannel);
+  return mPresentationService->Connect(deviceInfo, aControlChannel);
 }
 
 } // namespace presentation

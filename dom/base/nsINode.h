@@ -181,8 +181,20 @@ enum {
 
   NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS =    NODE_FLAG_BIT(20),
 
+  // These two bits are shared by Gecko's and Servo's restyle systems for
+  // different purposes. They should not be accessed directly, and access to
+  // them should be properly guarded by asserts.
+  NODE_SHARED_RESTYLE_BIT_1 =             NODE_FLAG_BIT(21),
+  NODE_SHARED_RESTYLE_BIT_2 =             NODE_FLAG_BIT(22),
+
+  // Whether this node is dirty for Servo's style system.
+  NODE_IS_DIRTY_FOR_SERVO =               NODE_SHARED_RESTYLE_BIT_1,
+
+  // Whether this node has dirty descendants for Servo's style system.
+  NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO =  NODE_SHARED_RESTYLE_BIT_2,
+
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET =        21
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =        23
 };
 
 // Make sure we have space for our bits
@@ -955,6 +967,45 @@ public:
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   /**
+   * Returns true if this is a node belonging to a document that uses the Servo
+   * style system.
+   */
+#ifdef MOZ_STYLO
+  bool IsStyledByServo() const;
+#else
+  bool IsStyledByServo() const { return false; }
+#endif
+
+  inline bool IsDirtyForServo() const
+  {
+    MOZ_ASSERT(IsStyledByServo());
+    return HasFlag(NODE_IS_DIRTY_FOR_SERVO);
+  }
+
+  inline bool HasDirtyDescendantsForServo() const
+  {
+    MOZ_ASSERT(IsStyledByServo());
+    return HasFlag(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  inline void SetIsDirtyForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    SetFlags(NODE_IS_DIRTY_FOR_SERVO);
+  }
+
+  inline void SetHasDirtyDescendantsForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    SetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  inline void SetIsDirtyAndHasDirtyDescendantsForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    SetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO | NODE_IS_DIRTY_FOR_SERVO);
+  }
+
+  inline void UnsetRestyleFlagsIfGecko();
+
+  /**
    * Adds a mutation observer to be notified when this node, or any of its
    * descendants, are modified. The node will hold a weak reference to the
    * observer, which means that it is the responsibility of the observer to
@@ -1676,7 +1727,17 @@ public:
   }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
-  void SetInDocument() { SetBoolFlag(IsInDocument); }
+  /**
+   * This is a special case of SetIsInDocument used to special-case it for the
+   * document constructor (which can't do the IsStyledByServo() check).
+   */
+  void SetIsDocument() { SetBoolFlag(IsInDocument); }
+  void SetIsInDocument() {
+    if (IsStyledByServo()) {
+      SetIsDirtyAndHasDirtyDescendantsForServo();
+    }
+    SetBoolFlag(IsInDocument);
+  }
   void SetNodeIsContent() { SetBoolFlag(NodeIsContent); }
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
   void SetIsElement() { SetBoolFlag(NodeIsElement); }
@@ -2008,8 +2069,8 @@ public:
 
   void SetServoNodeData(ServoNodeData* aData) {
 #ifdef MOZ_STYLO
-  MOZ_ASSERT(!mServoNodeData);
-  mServoNodeData = aData;
+    MOZ_ASSERT(!mServoNodeData);
+    mServoNodeData = aData;
 #else
     MOZ_CRASH("Setting servo node data in non-stylo build");
 #endif

@@ -88,11 +88,6 @@ function Object_toLocaleString() {
 
 // ES7 draft (2016 March 8) B.2.2.3
 function ObjectDefineSetter(name, setter) {
-    if (this === null || this === undefined)
-        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
-    else
-        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
-
     // Step 1.
     var object = ToObject(this);
 
@@ -119,11 +114,6 @@ function ObjectDefineSetter(name, setter) {
 
 // ES7 draft (2016 March 8) B.2.2.2
 function ObjectDefineGetter(name, getter) {
-    if (this === null || this === undefined)
-        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
-    else
-        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
-
     // Step 1.
     var object = ToObject(this);
 

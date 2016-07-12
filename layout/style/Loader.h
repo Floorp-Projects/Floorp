@@ -201,19 +201,6 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Loader)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(Loader)
 
-  /**
-   * Returns the StyleBackendType that will be used for style sheets created
-   * by this Loader.  If SetStyleBackendType has been called, that value
-   * will be returned by GetStyleBackendType.  For Loaders created with the
-   * nsIDocument* constructor and which haven't had SetStyleBackendType
-   * called on them, the document's StyleBackendType will be returned.
-   */
-  StyleBackendType GetStyleBackendType() const;
-
-  void SetStyleBackendType(StyleBackendType aType) {
-    mStyleBackendType = Some(aType);
-  }
-
   void DropDocumentReference(); // notification that doc is going away
 
   void SetCompatibilityMode(nsCompatibility aCompatMode)
@@ -552,6 +539,8 @@ private:
   void DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
                        LoadDataArray& aDatasToNotify);
 
+  StyleBackendType GetStyleBackendType() const;
+
   struct Sheets {
     nsBaseHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey,
                     StyleSheetHandle::RefPtr,
@@ -588,6 +577,8 @@ private:
   nsCompatibility   mCompatMode;
   nsString          mPreferredSheet;  // title of preferred sheet
 
+  // Set explicitly when the Loader(StyleBackendType) constructor is used, or
+  // taken from the document when the Loader(nsIDocument*) constructor is used.
   mozilla::Maybe<StyleBackendType> mStyleBackendType;
 
   bool              mEnabled; // is enabled to load new styles
