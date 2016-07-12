@@ -2596,8 +2596,11 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
 // It releases the lock before calling out to IPC code which can (and does)
 // Accumulate (which would deadlock)
 //
-// To ensure non-reentrancy, the timer is not released until the method
-// completes
+// To ensure we don't loop IPCTimerFired->AccumulateChild->arm timer, we don't
+// unset gIPCTimerArmed until the IPC completes
+//
+// This function may be re-entered. The shared datastructures gAccumulations and
+// gKeyedAccumulations are guarded by the lock.
 void
 TelemetryHistogram::IPCTimerFired(nsITimer* aTimer, void* aClosure)
 {
