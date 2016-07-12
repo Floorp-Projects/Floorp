@@ -7134,23 +7134,6 @@ DebuggerFrame::getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
 }
 
 /* static */ bool
-DebuggerFrame::getOffset(JSContext* cx, Handle<DebuggerFrame*> frame, size_t& result)
-{
-    MOZ_ASSERT(frame->isLive());
-
-    Maybe<ScriptFrameIter> maybeIter;
-    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
-        return false;
-    ScriptFrameIter& iter = *maybeIter;
-
-    JSScript* script = iter.script();
-    UpdateFrameIterPc(iter);
-    jsbytecode* pc = iter.pc();
-    result = script->pcToOffset(pc);
-    return true;
-}
-
-/* static */ bool
 DebuggerFrame::isGenerator() const
 {
     return referent().script()->isGenerator();
@@ -7594,16 +7577,15 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* static */ bool
-DebuggerFrame::offsetGetter(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DebuggerFrame_getOffset(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGGER_FRAME(cx, argc, vp, "get offset", args, frame);
-
-    size_t result;
-    if (!DebuggerFrame::getOffset(cx, frame, result))
-        return false;
-
-    args.rval().setNumber(double(result));
+    THIS_FRAME_ITER(cx, argc, vp, "get offset", args, thisobj, _, iter);
+    JSScript* script = iter.script();
+    UpdateFrameIterPc(iter);
+    jsbytecode* pc = iter.pc();
+    size_t offset = script->pcToOffset(pc);
+    args.rval().setNumber(double(offset));
     return true;
 }
 
@@ -7926,7 +7908,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("environment", DebuggerFrame::environmentGetter, 0),
     JS_PSG("generator", DebuggerFrame::generatorGetter, 0),
     JS_PSG("live", DebuggerFrame::liveGetter, 0),
-    JS_PSG("offset", DebuggerFrame::offsetGetter, 0),
+    JS_PSG("offset", DebuggerFrame_getOffset, 0),
     JS_PSG("older", DebuggerFrame_getOlder, 0),
     JS_PSG("script", DebuggerFrame_getScript, 0),
     JS_PSG("this", DebuggerFrame_getThis, 0),
