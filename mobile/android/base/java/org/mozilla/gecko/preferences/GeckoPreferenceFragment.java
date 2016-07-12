@@ -17,7 +17,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
-import org.mozilla.gecko.fxa.AccountLoaderNative;
+import org.mozilla.gecko.fxa.AccountLoader;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 
 import android.accounts.Account;
@@ -270,7 +270,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
     private class AccountLoaderCallbacks implements LoaderManager.LoaderCallbacks<Account> {
         @Override
         public Loader<Account> onCreateLoader(int id, Bundle args) {
-            return new AccountLoaderNative(getActivity());
+            return new AccountLoader(getActivity());
         }
 
         @Override

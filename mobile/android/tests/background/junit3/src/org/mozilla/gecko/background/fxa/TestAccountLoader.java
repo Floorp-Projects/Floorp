@@ -18,12 +18,11 @@ package org.mozilla.gecko.background.fxa;
 
 import android.accounts.Account;
 import android.content.Context;
+import android.content.Loader;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.content.Loader;
-import android.support.v4.content.Loader.OnLoadCompleteListener;
 
 import org.mozilla.gecko.background.sync.AndroidSyncTestCaseWithAccounts;
 import org.mozilla.gecko.fxa.AccountLoader;
@@ -93,7 +92,7 @@ public class TestAccountLoader extends AndroidSyncTestCaseWithAccounts {
 
     // This callback runs on the "main" thread and unblocks the test thread
     // when it puts the result into the blocking queue
-    final OnLoadCompleteListener<T> listener = new OnLoadCompleteListener<T>() {
+    final Loader.OnLoadCompleteListener<T> listener = new Loader.OnLoadCompleteListener<T>() {
       @Override
       public void onLoadComplete(Loader<T> completedLoader, T data) {
         // Shut the loader down
@@ -144,7 +143,7 @@ public class TestAccountLoader extends AndroidSyncTestCaseWithAccounts {
     final boolean firefoxAccountsExist = FirefoxAccounts.firefoxAccountsExist(context);
 
     if (firefoxAccountsExist) {
-      assertFirefoxAccount(getLoaderResultSynchronously(loader));
+      assertFirefoxAccount(getLoaderResultSynchronously((Loader<Account>) loader));
       return;
     }
 
@@ -154,7 +153,7 @@ public class TestAccountLoader extends AndroidSyncTestCaseWithAccounts {
         TEST_USERNAME, TEST_PROFILE, TEST_AUTH_SERVER_URI, TEST_TOKEN_SERVER_URI, TEST_PROFILE_SERVER_URI,
         state, AndroidSyncTestCaseWithAccounts.TEST_SYNC_AUTOMATICALLY_MAP_WITH_ALL_AUTHORITIES_DISABLED);
     assertNotNull(account);
-    assertFirefoxAccount(getLoaderResultSynchronously(loader));
+    assertFirefoxAccount(getLoaderResultSynchronously((Loader<Account>) loader));
   }
 
   protected void assertFirefoxAccount(Account account) {

@@ -22,7 +22,6 @@ EXTRA_JS_MODULES += [
     'Messaging.jsm',
     'NetErrorHelper.jsm',
     'Notifications.jsm',
-    'OrderedBroadcast.jsm',
     'PageActions.jsm',
     'Prompt.jsm',
     'RuntimePermissions.jsm',
