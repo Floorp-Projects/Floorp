@@ -99,7 +99,7 @@ function serverForFoo(engine) {
   });
 }
 
-add_test(function test_processIncoming_error_orderChildren() {
+add_task(function* test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
 
   let engine = new BookmarksEngine(Service);
@@ -146,11 +146,11 @@ add_test(function test_processIncoming_error_orderChildren() {
 
     let error;
     try {
-      engine.sync();
+      yield sync_engine_and_validate_telem(engine, true)
     } catch(ex) {
       error = ex;
     }
-    do_check_true(!!error);
+    ok(!!error);
 
     // Verify that the bookmark order has been applied.
     let new_children = store.createRecord(folder1_guid).children;
@@ -165,7 +165,7 @@ add_test(function test_processIncoming_error_orderChildren() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    server.stop(run_next_test);
+    yield new Promise(resolve => server.stop(resolve));
   }
 });
 
@@ -218,7 +218,7 @@ add_task(function* test_restorePromptsReupload() {
 
     let error;
     try {
-      engine.sync();
+      yield sync_engine_and_validate_telem(engine, false);
     } catch(ex) {
       error = ex;
       _("Got error: " + Log.exceptionStr(ex));
@@ -262,7 +262,7 @@ add_task(function* test_restorePromptsReupload() {
 
     _("Sync again. This'll wipe bookmarks from the server.");
     try {
-      engine.sync();
+      yield sync_engine_and_validate_telem(engine, false);
     } catch(ex) {
       error = ex;
       _("Got error: " + Log.exceptionStr(ex));

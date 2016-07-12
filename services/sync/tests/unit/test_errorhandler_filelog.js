@@ -35,6 +35,8 @@ function run_test() {
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
+  validate_all_future_pings();
+
   run_next_test();
 }
 

@@ -59,6 +59,7 @@ add_task(function* test_locally_changed_keys() {
     Service.clusterURL = server.baseURI;
 
     Service.engineManager.register(HistoryEngine);
+    Service.engineManager.unregister("addons");
 
     function corrupt_local_keys() {
       Service.collectionKeys._default.keyPair = [Svc.Crypto.generateRandomKey(),
@@ -86,7 +87,7 @@ add_task(function* test_locally_changed_keys() {
     do_check_true(Service.isLoggedIn);
 
     // Sync should upload records.
-    Service.sync();
+    yield sync_and_validate_telem();
 
     // Tabs exist.
     _("Tabs modified: " + johndoe.modified("tabs"));
@@ -139,7 +140,9 @@ add_task(function* test_locally_changed_keys() {
 
     _("HMAC error count: " + hmacErrorCount);
     // Now syncing should succeed, after one HMAC error.
-    Service.sync();
+    let ping = yield wait_for_ping(() => Service.sync(), true);
+    equal(ping.engines.find(e => e.name == "history").incoming.applied, 5);
+
     do_check_eq(hmacErrorCount, 1);
     _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
 
@@ -183,7 +186,9 @@ add_task(function* test_locally_changed_keys() {
     Service.lastHMACEvent = 0;
 
     _("Syncing...");
-    Service.sync();
+    ping = yield sync_and_validate_telem(true);
+
+    do_check_eq(ping.engines.find(e => e.name == "history").incoming.failed, 5);
     _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
     do_check_true(johndoe.modified("crypto") > old_key_time);
@@ -204,6 +209,7 @@ add_task(function* test_locally_changed_keys() {
 function run_test() {
   let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
+  validate_all_future_pings();
 
   ensureLegacyIdentityManager();
 
