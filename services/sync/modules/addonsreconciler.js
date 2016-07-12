@@ -417,7 +417,7 @@ AddonsReconciler.prototype = {
    *        Addon instance being updated.
    */
   rectifyStateFromAddon: function rectifyStateFromAddon(addon) {
-    this._log.debug("Rectifying state for addon: " + addon.id);
+    this._log.debug(`Rectifying state for addon ${addon.name} (version=${addon.version}, id=${addon.id})`);
     this._ensureStateLoaded();
 
     let id = addon.id;
