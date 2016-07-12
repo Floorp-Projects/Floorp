@@ -6,7 +6,7 @@
 const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { Task } = require("devtools/shared/task");
-const { CSS_PROPERTIES } = require("devtools/shared/css-properties-db");
+const { CSS_PROPERTIES_DB } = require("devtools/shared/css-properties-db");
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
@@ -53,14 +53,15 @@ exports.CssPropertiesFront = CssPropertiesFront;
  * Prototype functions are bound to 'this' so they can be passed around as helper
  * functions.
  *
- * @param {Array}  propertiesList
- *                 A list of known properties.
+ * @param {Object} db
+ *                 A database of CSS properties
  * @param {Object} inheritedList
  *                 The key is the property name, the value is whether or not
  *                 that property is inherited.
  */
-function CssProperties(properties) {
-  this.properties = properties;
+function CssProperties(db) {
+  this.properties = db.properties;
+  this.pseudoElements = db.pseudoElements;
 
   this.isKnown = this.isKnown.bind(this);
   this.isInherited = this.isInherited.bind(this);
@@ -128,21 +129,31 @@ exports.initCssProperties = Task.async(function* (toolbox) {
     front = CssPropertiesFront(client, toolbox.target.form);
     db = yield front.getCSSDatabase();
 
-    // Even if the target has the cssProperties actor, it may not be the latest version.
-    // So, the "supports" data may be missing.
-    // Start with the server's list (because that's the correct one), and add the supports
-    // information if required.
-    if (!db.color.supports) {
-      for (let name in db) {
-        if (typeof CSS_PROPERTIES[name] === "object") {
-          db[name].supports = CSS_PROPERTIES[name].supports;
+    // Even if the target has the cssProperties actor, the returned data may
+    // not be in the same shape or have all of the data we need. The following
+    // code normalizes this data.
+
+    // Firefox 49's getCSSDatabase() just returned the properties object, but
+    // now it returns an object with multiple types of CSS information.
+    if (!db.properties) {
+      db = { properties: db };
+    }
+
+    // Fill in any missing DB information from the static database.
+    db = Object.assign({}, CSS_PROPERTIES_DB, db);
+
+    // Add "supports" information to the css properties if it's missing.
+    if (!db.properties.color.supports) {
+      for (let name in db.properties) {
+        if (typeof CSS_PROPERTIES_DB.properties[name] === "object") {
+          db.properties[name].supports = CSS_PROPERTIES_DB.properties[name].supports;
         }
       }
     }
   } else {
     // The target does not support this actor, so require a static list of supported
     // properties.
-    db = CSS_PROPERTIES;
+    db = CSS_PROPERTIES_DB;
   }
 
   const cssProperties = new CssProperties(db);
