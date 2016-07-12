@@ -3,7 +3,6 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../test/head.js */
-
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
@@ -14,6 +13,7 @@ Services.scriptloader.loadSubScript(
 var {CssRuleView} = require("devtools/client/inspector/rules/rules");
 var {getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/client/shared/inplace-editor");
+const {getColor: getThemeColor} = require("devtools/client/shared/theme");
 
 const TEST_URL_ROOT =
   "http://example.com/browser/devtools/client/inspector/shared/test/";
@@ -240,8 +240,7 @@ function waitForSuccess(validatorFn, name = "untitled") {
  *        font family tooltip contents.
  */
 var getFontFamilyDataURL = Task.async(function* (font, nodeFront) {
-  let fillStyle = (Services.prefs.getCharPref("devtools.theme") === "light") ?
-      "black" : "white";
+  let fillStyle = getThemeColor("body-color");
 
   let {data} = yield nodeFront.getFontFamilyDataURL(font, fillStyle);
   let dataURL = yield data.string();
