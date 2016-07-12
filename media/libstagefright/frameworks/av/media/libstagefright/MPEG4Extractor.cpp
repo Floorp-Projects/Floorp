@@ -835,6 +835,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
 
             off64_t entriesoffset = data_offset + 8;
+            bool nonEmptyCount = false;
             for (uint32_t i = 0; i < entry_count; i++) {
                 if (mHeaderTimescale == 0) {
                     ALOGW("ignoring edit list because timescale is 0");
@@ -876,11 +877,14 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                     }
                     mLastTrack->empty_duration = segment_duration;
                     continue;
-                } else if (i > 1) {
+                } else if (nonEmptyCount) {
                     // we only support a single non-empty entry at the moment, for gapless playback
                     ALOGW("multiple edit list entries, A/V sync will be wrong");
                     break;
+                } else {
+                    nonEmptyCount = true;
                 }
+
                 if (!mLastTrack) {
                   return ERROR_MALFORMED;
                 }
