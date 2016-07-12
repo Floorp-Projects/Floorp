@@ -7,6 +7,15 @@
 
 const Immutable = require("devtools/client/shared/vendor/immutable");
 
+exports.ConsoleCommand = Immutable.Record({
+  allowRepeating: false,
+  messageText: null,
+  source: null,
+  type: null,
+  category: null,
+  severity: null,
+});
+
 exports.ConsoleMessage = Immutable.Record({
   allowRepeating: true,
   category: "output",
