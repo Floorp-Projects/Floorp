@@ -17,14 +17,16 @@
 
 add_task(function* test_simple() {
   function runTests(cx) {
-    function xhr(url) {
-      return new Promise((resolve, reject) => {
-        let req = new XMLHttpRequest();
-        req.open("GET", url);
-        req.addEventListener("load", resolve);
-        req.addEventListener("error", reject);
-        req.send();
-      });
+    function xhr(XMLHttpRequest) {
+      return (url) => {
+        return new Promise((resolve, reject) => {
+          let req = new XMLHttpRequest();
+          req.open("GET", url);
+          req.addEventListener("load", resolve);
+          req.addEventListener("error", reject);
+          req.send();
+        });
+      };
     }
 
     function run(shouldFail, fetch) {
@@ -43,10 +45,14 @@ add_task(function* test_simple() {
       }
     }
 
-    return run(true, xhr)
-      .then(() => run(false, xhr))
+    return run(true, xhr(XMLHttpRequest))
+      .then(() => run(false, xhr(XMLHttpRequest)))
+      .then(() => run(true, xhr(window.XMLHttpRequest)))
+      .then(() => run(false, xhr(window.XMLHttpRequest)))
       .then(() => run(true, fetch))
       .then(() => run(false, fetch))
+      .then(() => run(true, window.fetch))
+      .then(() => run(false, window.fetch))
       .catch(err => {
         browser.test.fail(`Error: ${err} :: ${err.stack}`);
         browser.test.notifyFail("permission_xhr");
