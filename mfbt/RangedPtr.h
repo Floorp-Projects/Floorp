@@ -117,6 +117,12 @@ public:
 
   explicit operator bool() const { return mPtr != nullptr; }
 
+  void checkIdenticalRange(const RangedPtr<T>& aOther) const
+  {
+    MOZ_ASSERT(mRangeStart == aOther.mRangeStart);
+    MOZ_ASSERT(mRangeEnd == aOther.mRangeEnd);
+  }
+
   /*
    * You can only assign one RangedPtr into another if the two pointers have
    * the same valid range:
@@ -129,8 +135,7 @@ public:
    */
   RangedPtr<T>& operator=(const RangedPtr<T>& aOther)
   {
-    MOZ_ASSERT(mRangeStart == aOther.mRangeStart);
-    MOZ_ASSERT(mRangeEnd == aOther.mRangeEnd);
+    checkIdenticalRange(aOther);
     mPtr = aOther.mPtr;
     checkSanity();
     return *this;

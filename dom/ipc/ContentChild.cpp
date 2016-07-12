@@ -629,10 +629,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
   XRE_InstallX11ErrorHandler();
 #endif
 
-#ifdef MOZ_NUWA_PROCESS
-  SetTransport(aChannel);
-#endif
-
   NS_ASSERTION(!sSingleton, "only one ContentChild per child");
 
   // Once we start sending IPC messages, we need the thread manager to be
