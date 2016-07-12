@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    bug: "1273652",
+    title: "Video receiver still renders after renegotiation",
+    visible: true
+  });
+
+  var pc1 = new RTCPeerConnection();
+  var pc2 = new RTCPeerConnection();
+
+  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+  pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+  pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
+  var v1, v2;
+  var delivered = new Promise(resolve => pc2.ontrack = e => {
+    // Test RTCTrackEvent here.
+    ok(e.streams.length > 0, "has streams");
+    ok(e.streams[0].getTrackById(e.track.id), "has track");
+    ok(pc2.getReceivers().some(receiver => receiver == e.receiver), "has receiver");
+    if (e.streams[0].getTracks().length == 1) {
+      // Test RTCTrackEvent required args here.
+      mustThrowWith("RTCTrackEvent wo/required args",
+                    "TypeError", () => new RTCTrackEvent("track", {}));
+      v2.srcObject = e.streams[0];
+      resolve();
+    }
+  });
+
+  runNetworkTest(function() {
+    var h = new CaptureStreamTestHelper2D();
+    var canvas = document.createElement('canvas');
+    canvas.id = 'source_canvas';
+    canvas.width = canvas.height = 10;
+    document.getElementById('content').appendChild(canvas);
+
+    v2 = createMediaElement('video', 'v2');
+    is(v2.currentTime, 0, "v2.currentTime is zero at outset");
+
+    h.drawColor(canvas, h.blue);
+    var stream = canvas.captureStream(0);
+    stream.getTracks().forEach(t => pc1.addTrack(t, stream));
+
+    pc1.createOffer({})
+    .then(offer => pc1.setLocalDescription(offer))
+    .then(() => pc2.setRemoteDescription(pc1.localDescription))
+    .then(() => pc2.createAnswer({}))  // check that createAnswer accepts arg.
+    .then(answer => pc2.setLocalDescription(answer))
+    .then(() => pc1.setRemoteDescription(pc2.localDescription))
+
+    // re-negotiate to trigger the race condition in the jitter buffer
+    .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
+    .then(offer => pc1.setLocalDescription(offer))
+    .then(() => pc2.setRemoteDescription(pc1.localDescription))
+    .then(() => pc2.createAnswer({}))
+    .then(answer => pc2.setLocalDescription(answer))
+    .then(() => pc1.setRemoteDescription(pc2.localDescription))
+    .then(() => delivered)
+
+    // now verify that actually something gets rendered into the remote video
+    // element
+    .then(() => h.waitForPixelColor(v2, h.blue, 128,
+                                    "pcRemote's video should become green"))
+    .then(() => {
+      stream.requestFrame();
+      h.drawColor(canvas, h.red);
+      })
+    .then(() => h.waitForPixelColor(v2, h.red, 128,
+                                    "pcRemote's video should become green"))
+
+    .catch(reason => ok(false, "unexpected failure: " + reason))
+    .then(networkTestFinished);
+  });
+</script>
+</pre>
+</body>
+</html>
