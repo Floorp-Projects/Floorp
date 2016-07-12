@@ -65,19 +65,20 @@ interface nsIPresentationControlService: nsISupports
   void startServer([optional] in uint16_t aPort);
 
   /**
-   * Request session to designated remote presentation control receiver.
+   * Request connection to designated remote presentation control receiver.
    * @param   aDeviceInfo
    *          The remtoe device info for establish connection.
-   * @param   aUrl
-   *          The URL requested to open by remote device.
-   * @param   aPresentationId
-   *          The Id for representing this session.
    * @returns The control channel for this session.
    * @throws  NS_ERROR_FAILURE if the Id hasn't been inited.
    */
-  nsIPresentationControlChannel requestSession(in nsITCPDeviceInfo aDeviceInfo,
-                                               in DOMString aUrl,
-                                               in DOMString aPresentationId);
+  nsIPresentationControlChannel connect(in nsITCPDeviceInfo aDeviceInfo);
+
+  /**
+   * Check the compatibility to remote presentation control server.
+   * @param  aVersion
+   *         The version of remote server.
+   */
+  boolean isCompatibleServer(in uint32_t aVersion);
 
   /**
    * Close server socket and call |listener.onClose(NS_OK)|
@@ -89,6 +90,11 @@ interface nsIPresentationControlService: nsISupports
    * the server socket is not inited or closed.
    */
   readonly attribute uint16_t port;
+
+  /**
+   * The protocol version implemented by this server.
+   */
+  readonly attribute uint32_t version;
 
   /**
    * The id of the TCP presentation server. |requestSession| won't

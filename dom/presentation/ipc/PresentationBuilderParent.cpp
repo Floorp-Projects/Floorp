@@ -89,7 +89,7 @@ PresentationBuilderParent::OnAnswer(nsIPresentationChannelDescription* aDescript
 }
 
 NS_IMETHODIMP
-PresentationBuilderParent::NotifyClosed(nsresult aReason)
+PresentationBuilderParent::NotifyDisconnected(nsresult aReason)
 {
   return NS_OK;
 }

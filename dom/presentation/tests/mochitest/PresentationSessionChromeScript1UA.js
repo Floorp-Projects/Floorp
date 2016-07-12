@@ -169,11 +169,11 @@ const mockControlChannelOfSender = {
   get listener() {
     return this._listener;
   },
-  notifyOpened: function() {
-    // send offer after notifyOpened immediately
+  notifyConnected: function() {
+    // send offer after notifyConnected immediately
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyOpened();
+        .notifyConnected();
   },
   sendOffer: function(offer) {
     sendAsyncMessage('offer-sent');
@@ -183,11 +183,14 @@ const mockControlChannelOfSender = {
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
         .onAnswer(answer);
   },
-  close: function(reason) {
+  launch: function(presentationId, url) {
+    sendAsyncMessage('sender-launch', url);
+  },
+  disconnect: function(reason) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyClosed(reason);
-    mockControlChannelOfReceiver.close();
+        .notifyDisconnected(reason);
+    mockControlChannelOfReceiver.disconnect();
   }
 };
 
@@ -202,15 +205,24 @@ const mockControlChannelOfReceiver = {
       debug('set listener for mockControlChannelOfReceiver with null');
     }
     this._listener = listener;
+
+    if (this._pendingOpened) {
+      this._pendingOpened = false;
+      this.notifyConnected();
+    }
   },
   get listener() {
     return this._listener;
   },
-  notifyOpened: function() {
+  notifyConnected: function() {
     // do nothing
+    if (!this._listener) {
+      this._pendingOpened = true;
+      return;
+    }
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyOpened();
+        .notifyConnected();
   },
   onOffer: function(offer) {
     this._listener
@@ -223,10 +235,10 @@ const mockControlChannelOfReceiver = {
         .notifyTransportReady();
     sendAsyncMessage('answer-sent');
   },
-  close: function(reason) {
+  disconnect: function(reason) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyClosed(reason);
+        .notifyDisconnected(reason);
     sendAsyncMessage('control-channel-receiver-closed', reason);
   }
 };
@@ -357,8 +369,8 @@ function initMockAndListener() {
 
   addMessageListener('trigger-control-channel-open', function(reason) {
     debug('Got message: trigger-control-channel-open');
-    mockControlChannelOfSender.notifyOpened();
-    mockControlChannelOfReceiver.notifyOpened();
+    mockControlChannelOfSender.notifyConnected();
+    mockControlChannelOfReceiver.notifyConnected();
   });
 
   addMessageListener('trigger-on-offer', function() {
