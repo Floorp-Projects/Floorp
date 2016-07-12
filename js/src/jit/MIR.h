@@ -3281,12 +3281,51 @@ class MNewArrayDynamicLength
     }
 };
 
+class MNewTypedArray : public MNullaryInstruction
+{
+    CompilerGCPointer<TypedArrayObject*> templateObject_;
+    gc::InitialHeap initialHeap_;
+
+    MNewTypedArray(CompilerConstraintList* constraints, TypedArrayObject* templateObject,
+                   gc::InitialHeap initialHeap)
+      : templateObject_(templateObject),
+        initialHeap_(initialHeap)
+    {
+        MOZ_ASSERT(!templateObject->isSingleton());
+        setResultType(MIRType::Object);
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewTypedArray)
+
+    static MNewTypedArray* New(TempAllocator& alloc,
+                               CompilerConstraintList* constraints,
+                               TypedArrayObject* templateObject,
+                               gc::InitialHeap initialHeap)
+    {
+        return new(alloc) MNewTypedArray(constraints, templateObject, initialHeap);
+    }
+
+    TypedArrayObject* templateObject() const {
+        return templateObject_;
+    }
+
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    virtual AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 class MNewObject
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
   public:
-    enum Mode { ObjectLiteral, ObjectCreate, TypedArray };
+    enum Mode { ObjectLiteral, ObjectCreate };
 
   private:
     gc::InitialHeap initialHeap_;

@@ -5415,6 +5415,36 @@ CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir)
     masm.bind(ool->rejoin());
 }
 
+typedef TypedArrayObject* (*TypedArrayConstructorOneArgFn)(JSContext*, HandleObject, int32_t length);
+static const VMFunction TypedArrayConstructorOneArgInfo =
+    FunctionInfo<TypedArrayConstructorOneArgFn>(TypedArrayCreateWithTemplate);
+
+void
+CodeGenerator::visitNewTypedArray(LNewTypedArray* lir)
+{
+    Register objReg = ToRegister(lir->output());
+    Register tempReg = ToRegister(lir->temp1());
+    Register lengthReg = ToRegister(lir->temp2());
+    LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+
+    JSObject* templateObject = lir->mir()->templateObject();
+    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+
+    TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
+    uint32_t n = ttemplate->length();
+
+    OutOfLineCode* ool = oolCallVM(TypedArrayConstructorOneArgInfo, lir,
+                                   ArgList(ImmGCPtr(templateObject), Imm32(n)),
+                                   StoreRegisterTo(objReg));
+
+    masm.createGCObject(objReg, tempReg, templateObject, initialHeap,
+                        ool->entry(), /*initContents*/true, /*convertDoubleElements*/false);
+
+    masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(), ttemplate);
+
+    masm.bind(ool->rejoin());
+}
+
 // Out-of-line object allocation for JSOP_NEWOBJECT.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
 {
@@ -5447,12 +5477,6 @@ typedef PlainObject* (*ObjectCreateWithTemplateFn)(JSContext*, HandlePlainObject
 static const VMFunction ObjectCreateWithTemplateInfo =
     FunctionInfo<ObjectCreateWithTemplateFn>(ObjectCreateWithTemplate, "ObjectCreateWithTemplate");
 
-typedef TypedArrayObject* (*TypedArrayCreateWithTemplateFn)(JSContext*, HandleObject);
-static const VMFunction TypedArrayCreateWithTemplateInfo =
-    FunctionInfo<TypedArrayCreateWithTemplateFn>(TypedArrayCreateWithTemplate,
-                                                 "TypedArrayCreateWithTemplate");
-
-
 void
 CodeGenerator::visitNewObjectVMCall(LNewObject* lir)
 {
@@ -5463,16 +5487,11 @@ CodeGenerator::visitNewObjectVMCall(LNewObject* lir)
 
     JSObject* templateObject = lir->mir()->templateObject();
 
-    MNewObject::Mode mode_ = lir->mir()->mode();
-
-    MOZ_ASSERT_IF(mode_ != MNewObject::TypedArray && templateObject,
-                  !templateObject->is<TypedArrayObject>());
-
     // If we're making a new object with a class prototype (that is, an object
     // that derives its class from its prototype instead of being
     // PlainObject::class_'d) from self-hosted code, we need a different init
     // function.
-    switch (mode_) {
+    switch (lir->mir()->mode()) {
       case MNewObject::ObjectLiteral:
         if (templateObject) {
             pushArg(ImmGCPtr(templateObject));
@@ -5487,10 +5506,6 @@ CodeGenerator::visitNewObjectVMCall(LNewObject* lir)
       case MNewObject::ObjectCreate:
         pushArg(ImmGCPtr(templateObject));
         callVM(ObjectCreateWithTemplateInfo, lir);
-        break;
-      case MNewObject::TypedArray:
-        pushArg(ImmGCPtr(templateObject));
-        callVM(TypedArrayCreateWithTemplateInfo, lir);
         break;
     }
 

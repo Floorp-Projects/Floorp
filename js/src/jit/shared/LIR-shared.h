@@ -1061,6 +1061,29 @@ class LNewArrayDynamicLength : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LNewTypedArray : public LInstructionHelper<1, 0, 2>
+{
+  public:
+    LIR_HEADER(NewTypedArray)
+
+    explicit LNewTypedArray(const LDefinition& temp1, const LDefinition& temp2) {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+
+    const LDefinition* temp1() {
+        return getTemp(0);
+    }
+
+    const LDefinition* temp2() {
+        return getTemp(1);
+    }
+
+    MNewTypedArray* mir() const {
+        return mir_->toNewTypedArray();
+    }
+};
+
 class LNewObject : public LInstructionHelper<1, 0, 1>
 {
   public:

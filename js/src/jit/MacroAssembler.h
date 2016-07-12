@@ -1514,6 +1514,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                                     const Value& v);
     void fillSlotsWithUndefined(Address addr, Register temp, uint32_t start, uint32_t end);
     void fillSlotsWithUninitialized(Address addr, Register temp, uint32_t start, uint32_t end);
+
     void initGCSlots(Register obj, Register temp, NativeObject* templateObj, bool initContents);
 
   public:
@@ -1525,6 +1526,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void initGCThing(Register obj, Register temp, JSObject* templateObj,
                      bool initContents = true, bool convertDoubleElements = false);
+    void initTypedArraySlots(Register obj, Register temp, Register lengthReg,
+                             LiveRegisterSet liveRegs, Label* fail,
+                             TypedArrayObject* templateObj);
 
     void initUnboxedObjectContents(Register object, UnboxedPlainObject* templateObject);
 
