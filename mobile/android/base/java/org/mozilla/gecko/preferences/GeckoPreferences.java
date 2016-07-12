@@ -75,6 +75,7 @@ import android.preference.SwitchPreference;
 import android.preference.TwoStatePreference;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.text.Editable;
 import android.text.InputType;
@@ -163,7 +164,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_APP_UPDATE_LAST_BUILD_ID = "app.update.last_build_id";
     public static final String PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_customizations_provider";
 
-    private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
+    private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 
 
     // This isn't a Gecko pref, even if it looks like one.
@@ -960,7 +961,7 @@ OnSharedPreferenceChangeListener
 
     public static void broadcastAction(final Context context, final Intent intent) {
         fillIntentWithProfileInfo(context, intent);
-        context.sendBroadcast(intent, GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private static void fillIntentWithProfileInfo(final Context context, final Intent intent) {
