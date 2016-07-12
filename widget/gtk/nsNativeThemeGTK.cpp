@@ -307,6 +307,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
 
           if (CheckBooleanAttr(aFrame, nsGkAtoms::active)) {
             aState->active = TRUE;
+            // Set hover state to emulate Gtk style of active scrollbar thumb 
+            aState->inHover = TRUE;
           }
         }
 

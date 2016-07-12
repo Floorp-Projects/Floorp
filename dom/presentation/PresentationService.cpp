@@ -130,7 +130,7 @@ PresentationDeviceRequest::CreateSessionInfo(nsIPresentationDevice* aDevice)
   // Establish a control channel. If we failed to do so, the callback is called
   // with an error message.
   nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
-  nsresult rv = aDevice->EstablishControlChannel(mRequestUrl, mId, getter_AddRefs(ctrlChannel));
+  nsresult rv = aDevice->EstablishControlChannel(getter_AddRefs(ctrlChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
@@ -283,21 +283,21 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   nsAutoString url;
   rv = aRequest->GetUrl(url);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(rv);
+    ctrlChannel->Disconnect(rv);
     return rv;
   }
 
   nsAutoString sessionId;
   rv = aRequest->GetPresentationId(sessionId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(rv);
+    ctrlChannel->Disconnect(rv);
     return rv;
   }
 
   nsCOMPtr<nsIPresentationDevice> device;
   rv = aRequest->GetDevice(getter_AddRefs(device));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(rv);
+    ctrlChannel->Disconnect(rv);
     return rv;
   }
 
@@ -306,19 +306,19 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), url);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(NS_ERROR_DOM_BAD_URI);
+    ctrlChannel->Disconnect(NS_ERROR_DOM_BAD_URI);
     return rv;
   }
 
   bool isApp;
   rv = uri->SchemeIs("app", &isApp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(rv);
+    ctrlChannel->Disconnect(rv);
     return rv;
   }
 
   if (NS_WARN_IF(isApp && !IsAppInstalled(uri))) {
-    ctrlChannel->Close(NS_ERROR_DOM_NOT_FOUND_ERR);
+    ctrlChannel->Disconnect(NS_ERROR_DOM_NOT_FOUND_ERR);
     return NS_OK;
   }
 #endif
@@ -328,14 +328,14 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
     GetSessionInfo(sessionId, nsIPresentationService::ROLE_RECEIVER);
   if (NS_WARN_IF(info)) {
     // TODO Bug 1195605. Update here after session join/resume becomes supported.
-    ctrlChannel->Close(NS_ERROR_DOM_OPERATION_ERR);
+    ctrlChannel->Disconnect(NS_ERROR_DOM_OPERATION_ERR);
     return NS_ERROR_DOM_ABORT_ERR;
   }
 
   info = new PresentationPresentingInfo(url, sessionId, device);
   rv = info->Init(ctrlChannel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(rv);
+    ctrlChannel->Disconnect(rv);
     return rv;
   }
 
@@ -345,13 +345,13 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   nsCOMPtr<nsIPresentationRequestUIGlue> glue =
     do_CreateInstance(PRESENTATION_REQUEST_UI_GLUE_CONTRACTID);
   if (NS_WARN_IF(!glue)) {
-    ctrlChannel->Close(NS_ERROR_DOM_OPERATION_ERR);
+    ctrlChannel->Disconnect(NS_ERROR_DOM_OPERATION_ERR);
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<nsISupports> promise;
   rv = glue->SendRequest(url, sessionId, device, getter_AddRefs(promise));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    ctrlChannel->Close(rv);
+    ctrlChannel->Disconnect(rv);
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<Promise> realPromise = do_QueryInterface(promise);

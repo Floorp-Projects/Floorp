@@ -135,6 +135,8 @@ public:
     inline nsresult ReparentStyleContext(nsIFrame* aFrame);
     inline bool HasPendingRestyles();
     inline uint64_t GetRestyleGeneration() const;
+    inline uint32_t GetHoverGeneration() const;
+    inline void SetObservingRefreshDriver(bool aObserving);
 
   private:
     // Stores a pointer to an RestyleManager or a ServoRestyleManager.  The least

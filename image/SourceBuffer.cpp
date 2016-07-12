@@ -103,6 +103,7 @@ SourceBuffer::CreateChunk(size_t aCapacity, bool aRoundUp /* = true */)
   // so if we could store the source data in the SurfaceCache, we assume that
   // there's no way we'll be able to store the decoded version.
   if (MOZ_UNLIKELY(!SurfaceCache::CanHold(finalCapacity))) {
+    NS_WARNING("SourceBuffer refused to create chunk too large for SurfaceCache");
     return Nothing();
   }
 

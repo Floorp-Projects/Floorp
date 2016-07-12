@@ -279,9 +279,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
       for (uint32_t i = childX; i < numChildren; i++) {
         nsIContent *child = mContent->GetChildAt(i);
         child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-        if (child->IsElement()) {
-          child->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
-        }
+        child->UnsetRestyleFlagsIfGecko();
       }
       break;
     }
@@ -289,9 +287,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
     child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
     // Also clear the restyle flags in the child like
     // nsCSSFrameConstructor::ProcessChildren does.
-    if (child->IsElement()) {
-      child->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
-    }
+    child->UnsetRestyleFlagsIfGecko();
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed
@@ -642,12 +638,12 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
     switch (aEvent->mMessage) {
       case eMouseMove:
         MouseDrag(aPresContext, aEvent);
-	      break;
+        break;
       case eMouseUp:
         if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
           EndMouseDrag(aPresContext);
         }
-	      break;
+        break;
       default:
         break;
     }
