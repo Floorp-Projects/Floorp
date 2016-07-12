@@ -6,4 +6,5 @@
 DevToolsModules(
     'index.js',
     'messages.js',
+    'prefs.js',
 )

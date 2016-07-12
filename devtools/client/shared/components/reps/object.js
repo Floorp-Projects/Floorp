@@ -27,7 +27,12 @@ define(function (require, exports, module) {
       mode: React.PropTypes.string,
     },
 
-    getTitle: function () {
+    getTitle: function (object) {
+      if (this.props.objectLink) {
+        return this.props.objectLink({
+          object: object
+        }, object.class);
+      }
       return "Object";
     },
 
@@ -75,9 +80,13 @@ define(function (require, exports, module) {
 
       if (props.length > max) {
         props.pop();
+        let objectLink = this.props.objectLink || span;
+
         props.push(Caption({
           key: "more",
-          object: "more...",
+          object: objectLink({
+            object: object
+          }, "more...")
         }));
       } else if (props.length > 0) {
         // Remove the last comma.
@@ -133,21 +142,30 @@ define(function (require, exports, module) {
     render: function () {
       let object = this.props.object;
       let props = this.shortPropIterator(object);
+      let objectLink = this.props.objectLink || span;
 
       if (this.props.mode == "tiny" || !props.length) {
         return (
           ObjectBox({className: "object"},
-            span({className: "objectTitle"}, this.getTitle())
+            objectLink({className: "objectTitle"}, this.getTitle())
           )
         );
       }
 
       return (
         ObjectBox({className: "object"},
-          span({className: "objectTitle"}, this.getTitle()),
-          span({className: "objectLeftBrace", role: "presentation"}, "{"),
+          this.getTitle(object),
+          objectLink({
+            className: "objectLeftBrace",
+            role: "presentation",
+            object: object
+          }, "{"),
           props,
-          span({className: "objectRightBrace"}, "}")
+          objectLink({
+            className: "objectRightBrace",
+            role: "presentation",
+            object: object
+          }, "}")
         )
       );
     },
@@ -155,6 +173,7 @@ define(function (require, exports, module) {
   function supportsObject(object, type) {
     return true;
   }
+
   // Exports from this module
   exports.Obj = {
     rep: Obj,

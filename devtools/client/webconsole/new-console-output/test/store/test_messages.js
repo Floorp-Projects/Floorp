@@ -82,3 +82,43 @@ add_task(function*() {
   deepEqual(messages.toArray(), [prepareMessage(clearPacket)],
     "console.clear clears existing messages and add a new one");
 });
+
+/**
+ * Test message limit on the store.
+ */
+add_task(function* () {
+  const { getState, dispatch } = storeFactory();
+  const logLimit = 1000;
+  const messageNumber = logLimit + 1;
+
+  let newPacket = Object.assign({}, packet);
+  for (let i = 1; i <= messageNumber; i++) {
+    newPacket.message.arguments = [i];
+    dispatch(actions.messageAdd(newPacket));
+  }
+
+  let messages = getAllMessages(getState());
+  equal(messages.count(), logLimit, "Messages are pruned up to the log limit");
+  deepEqual(messages.last().data.arguments, [messageNumber],
+    "The last message is the expected one");
+});
+
+/**
+ * Test message limit on the store with user set prefs.
+ */
+add_task(function* () {
+  const userSetLimit = 10;
+  Services.prefs.setIntPref("devtools.hud.loglimit", userSetLimit);
+
+  const { getState, dispatch } = storeFactory();
+
+  let newPacket = Object.assign({}, packet);
+  for (let i = 1; i <= userSetLimit + 1; i++) {
+    newPacket.message.arguments = [i];
+    dispatch(actions.messageAdd(newPacket));
+  }
+
+  let messages = getAllMessages(getState());
+  equal(messages.count(), userSetLimit,
+    "Messages are pruned up to the user set log limit");
+});

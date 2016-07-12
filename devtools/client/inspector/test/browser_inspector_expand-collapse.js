@@ -51,8 +51,11 @@ add_task(function* () {
   });
   nodeMenuCollapseElement =
     allMenuItems.find(item => item.id === "node-menu-collapse");
+  nodeMenuExpandElement =
+    allMenuItems.find(item => item.id === "node-menu-expand");
 
   ok(!nodeMenuCollapseElement.disabled, "Collapse option is enabled");
+  ok(!nodeMenuExpandElement.disabled, "ExpandAll option is enabled");
   nodeMenuCollapseElement.click();
 
   info("Waiting for collapse to occur");
