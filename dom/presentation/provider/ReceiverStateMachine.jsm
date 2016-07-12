@@ -36,7 +36,7 @@ var handlers = [
         break;
       case CommandType.DISCONNECT:
         stateMachine.state = State.CLOSED;
-        stateMachine._notifyClosed(command.reason);
+        stateMachine._notifyDisconnected(command.reason);
         break;
       default:
         debug("unexpected command: " + JSON.stringify(command));
@@ -48,7 +48,7 @@ var handlers = [
     switch (command.type) {
       case CommandType.DISCONNECT:
         stateMachine.state = State.CLOSED;
-        stateMachine._notifyClosed(command.reason);
+        stateMachine._notifyDisconnected(command.reason);
         break;
       case CommandType.LAUNCH:
         stateMachine._notifyLaunch(command.presentationId,
@@ -127,7 +127,7 @@ ReceiverStateMachine.prototype = {
       case State.CONNECTED:
         if (isByRemote) {
           this.state = State.CLOSED;
-          this._notifyClosed(reason);
+          this._notifyDisconnected(reason);
         } else {
           this._sendCommand({
             type: CommandType.DISCONNECT,
@@ -144,7 +144,7 @@ ReceiverStateMachine.prototype = {
             reason = this._closeReason;
             delete this._closeReason;
           }
-          this._notifyClosed(reason);
+          this._notifyDisconnected(reason);
         } else {
           // do nothing and wait for remote channel closed.
         }
@@ -163,8 +163,8 @@ ReceiverStateMachine.prototype = {
     this._channel.notifyDeviceConnected(deviceName);
   },
 
-  _notifyClosed: function _notifyClosed(reason) {
-    this._channel.notifyClosed(reason);
+  _notifyDisconnected: function _notifyDisconnected(reason) {
+    this._channel.notifyDisconnected(reason);
   },
 
   _notifyLaunch: function _notifyLaunch(presentationId, url) {
