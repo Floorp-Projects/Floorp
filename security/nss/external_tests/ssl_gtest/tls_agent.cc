@@ -187,6 +187,8 @@ SECStatus TlsAgent::GetClientAuthDataHook(void* self, PRFileDesc* fd,
                                           CERTCertificate** cert,
                                           SECKEYPrivateKey** privKey) {
   TlsAgent* agent = reinterpret_cast<TlsAgent*>(self);
+  ScopedCERTCertificate peerCert(SSL_PeerCertificate(agent->ssl_fd()));
+  EXPECT_TRUE(peerCert) << "Client should be able to see the server cert";
   if (agent->GetClientAuthCredentials(cert, privKey)) {
     return SECSuccess;
   }
