@@ -35,6 +35,7 @@
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
+#include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
 // * How to read/write MacroAssembler method declarations:
@@ -1528,7 +1529,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                      bool initContents = true, bool convertDoubleElements = false);
     void initTypedArraySlots(Register obj, Register temp, Register lengthReg,
                              LiveRegisterSet liveRegs, Label* fail,
-                             TypedArrayObject* templateObj);
+                             TypedArrayObject* templateObj, TypedArrayLength lengthKind);
 
     void initUnboxedObjectContents(Register object, UnboxedPlainObject* templateObject);
 
