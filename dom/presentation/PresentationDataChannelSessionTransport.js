@@ -221,8 +221,8 @@ PresentationTransportBuilder.prototype = {
     this._peerConnection.addIceCandidate(candidate).catch(e => this._reportError(e));
   },
 
-  notifyClosed: function(aReason) {
-    log("notifyClosed reason: " + aReason);
+  notifyDisconnected: function(aReason) {
+    log("notifyDisconnected reason: " + aReason);
 
     if (aReason != Cr.NS_OK) {
       this._cleanup(aReason);

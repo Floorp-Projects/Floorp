@@ -220,7 +220,7 @@ LegacyTCPControlChannel.prototype = {
 
     this._sendMessage(msg, function(e) {
       this.disconnect();
-      this._notifyClosed(e.result);
+      this._notifyDisconnected(e.result);
     });
   },
 
@@ -280,7 +280,7 @@ LegacyTCPControlChannel.prototype = {
     } catch (e) {
       DEBUG && log("LegacyTCPControlChannel - onInputStreamReady error: " + e.name); //jshint ignore:line
       // NS_ERROR_CONNECTION_REFUSED
-      this._listener.notifyClosed(e.result);
+      this._listener.notifyDisconnected(e.result);
     }
   },
 
@@ -295,7 +295,7 @@ LegacyTCPControlChannel.prototype = {
         this._createInputStreamPump();
       }
 
-      this._notifyOpened();
+      this._notifyConnected();
     }
   },
 
@@ -308,7 +308,7 @@ LegacyTCPControlChannel.prototype = {
   onStopRequest: function(aRequest, aContext, aStatus) {
     DEBUG && log("LegacyTCPControlChannel - onStopRequest: " + aStatus); //jshint ignore:line
     this.disconnect(aStatus);
-    this._notifyClosed(aStatus);
+    this._notifyDisconnected(aStatus);
   },
 
   // nsIStreamListener (Triggered by nsIInputStreamPump.asyncRead)
@@ -375,7 +375,7 @@ LegacyTCPControlChannel.prototype = {
     if (this._pendingOpen) {
       this._pendingOpen = false;
       DEBUG && log("LegacyTCPControlChannel - notify pending opened"); //jshint ignore:line
-      this._listener.notifyOpened();
+      this._listener.notifyConnected();
     }
 
     if (this._pendingAnswer) {
@@ -388,7 +388,7 @@ LegacyTCPControlChannel.prototype = {
 
     if (this._pendingClose) {
       DEBUG && log("LegacyTCPControlChannel - notify pending closed"); //jshint ignore:line
-      this._notifyClosed(this._pendingCloseReason);
+      this._notifyDisconnected(this._pendingCloseReason);
       this._pendingClose = null;
     }
   },
@@ -409,7 +409,7 @@ LegacyTCPControlChannel.prototype = {
     this._listener.onAnswer(new ChannelDescription(aAnswer));
   },
 
-  _notifyOpened: function() {
+  _notifyConnected: function() {
     this._connected = true;
     this._pendingClose = false;
     this._pendingCloseReason = Cr.NS_OK;
@@ -420,10 +420,10 @@ LegacyTCPControlChannel.prototype = {
     }
 
     DEBUG && log("LegacyTCPControlChannel - notify opened"); //jshint ignore:line
-    this._listener.notifyOpened();
+    this._listener.notifyConnected();
   },
 
-  _notifyClosed: function(aReason) {
+  _notifyDisconnected: function(aReason) {
     this._connected = false;
     this._pendingOpen = false;
     this._pendingAnswer = null;
@@ -440,7 +440,7 @@ LegacyTCPControlChannel.prototype = {
     }
 
     DEBUG && log("LegacyTCPControlChannel - notify closed"); //jshint ignore:line
-    this._listener.notifyClosed(aReason);
+    this._listener.notifyDisconnected(aReason);
   },
 
   disconnect: function(aReason) {

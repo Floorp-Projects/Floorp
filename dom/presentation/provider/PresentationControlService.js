@@ -418,7 +418,7 @@ TCPControlChannel.prototype = {
     } catch (e) {
       DEBUG && log("TCPControlChannel - onInputStreamReady error: " + e.name); // jshint ignore:line
       // NS_ERROR_CONNECTION_REFUSED
-      this._listener.notifyClosed(e.result);
+      this._listener.notifyDisconnected(e.result);
     }
   },
 
@@ -501,7 +501,7 @@ TCPControlChannel.prototype = {
     if (this._pendingOpen) {
       this._pendingOpen = false;
       DEBUG && log("TCPControlChannel - notify pending opened"); // jshint ignore:line
-      this._listener.notifyOpened();
+      this._listener.notifyConnected();
     }
 
     if (this._pendingOffer) {
@@ -522,7 +522,7 @@ TCPControlChannel.prototype = {
 
     if (this._pendingClose) {
       DEBUG && log("TCPControlChannel - notify pending closed"); // jshint ignore:line
-      this._notifyClosed(this._pendingCloseReason);
+      this._notifyDisconnected(this._pendingCloseReason);
       this._pendingClose = null;
     }
   },
@@ -557,7 +557,7 @@ TCPControlChannel.prototype = {
     this._listener.onAnswer(new ChannelDescription(aAnswer));
   },
 
-  _notifyOpened: function() {
+  _notifyConnected: function() {
     this._connected = true;
     this._pendingClose = false;
     this._pendingCloseReason = Cr.NS_OK;
@@ -569,10 +569,10 @@ TCPControlChannel.prototype = {
 
     DEBUG && log("TCPControlChannel - notify opened with role: " +
                  this._direction); // jshint ignore:line
-    this._listener.notifyOpened();
+    this._listener.notifyConnected();
   },
 
-  _notifyClosed: function(aReason) {
+  _notifyDisconnected: function(aReason) {
     this._connected = false;
     this._pendingOpen = false;
     this._pendingOffer = null;
@@ -591,7 +591,7 @@ TCPControlChannel.prototype = {
 
     DEBUG && log("TCPControlChannel - notify closed with role: " +
                  this._direction); // jshint ignore:line
-    this._listener.notifyClosed(aReason);
+    this._listener.notifyDisconnected(aReason);
   },
 
   _closeTransport: function() {
@@ -630,11 +630,11 @@ TCPControlChannel.prototype = {
         this._deviceInfo.id = deviceId;
         break;
     }
-    this._notifyOpened();
+    this._notifyConnected();
   },
 
-  notifyClosed: function(reason) {
-    this._notifyClosed(reason);
+  notifyDisconnected: function(reason) {
+    this._notifyDisconnected(reason);
     this._closeTransport();
     this._connected = false;
   },
