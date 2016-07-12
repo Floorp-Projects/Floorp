@@ -529,12 +529,21 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
     gl::GLContext* const gl = webgl->gl;
     MOZ_ALWAYS_TRUE( gl->MakeCurrent() );
 
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
+    const auto curEffectiveRowLength = FallbackOnZero(webgl->mPixelStore_UnpackRowLength,
+                                                      mWidth);
+
+    const bool changeRowLength = (mRowLength != curEffectiveRowLength);
+    if (changeRowLength) {
+        MOZ_ASSERT(webgl->IsWebGL2());
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
+    }
 
     *out_error = DoTexOrSubImage(isSubImage, gl, target.get(), level, dstDUI, xOffset,
                                  yOffset, zOffset, mWidth, mHeight, mDepth, uploadBytes);
 
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, webgl->mPixelStore_UnpackRowLength);
+    if (changeRowLength) {
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, webgl->mPixelStore_UnpackRowLength);
+    }
 
     return true;
 }
