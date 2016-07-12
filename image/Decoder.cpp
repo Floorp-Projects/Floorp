@@ -127,42 +127,50 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
   // We keep decoding chunks until the decode completes or there are no more
   // chunks available.
   while (!GetDecodeDone() && !HasError()) {
-    auto newState = mIterator->AdvanceOrScheduleResume(aOnResume.get());
+    switch (mIterator->AdvanceOrScheduleResume(aOnResume.get())) {
+      case SourceBufferIterator::WAITING:
+        // We can't continue because the rest of the data hasn't arrived from
+        // the network yet. We don't have to do anything special; the
+        // SourceBufferIterator will ensure that Decode() gets called again on a
+        // DecodePool thread when more data is available.
+        return NS_OK;
 
-    if (newState == SourceBufferIterator::WAITING) {
-      // We can't continue because the rest of the data hasn't arrived from the
-      // network yet. We don't have to do anything special; the
-      // SourceBufferIterator will ensure that Decode() gets called again on a
-      // DecodePool thread when more data is available.
-      return NS_OK;
-    }
+      case SourceBufferIterator::COMPLETE: {
+        mDataDone = true;
 
-    if (newState == SourceBufferIterator::COMPLETE) {
-      mDataDone = true;
+        // Normally even if the data is truncated, we want decoding to
+        // succeed so we can display whatever we got. However, if the
+        // SourceBuffer was completed with a failing status, we want to fail.
+        // This happens only in exceptional situations like SourceBuffer
+        // itself encountering a failure due to OOM.
+        nsresult finalStatus = mIterator->CompletionStatus();
+        if (NS_FAILED(finalStatus)) {
+          PostDataError();
+        }
 
-      nsresult finalStatus = mIterator->CompletionStatus();
-      if (NS_FAILED(finalStatus)) {
-        PostDataError();
+        CompleteDecode();
+        return finalStatus;
       }
 
-      CompleteDecode();
-      return finalStatus;
-    }
+      case SourceBufferIterator::READY: {
+        PROFILER_LABEL("ImageDecoder", "Decode",
+                       js::ProfileEntry::Category::GRAPHICS);
 
-    MOZ_ASSERT(newState == SourceBufferIterator::READY);
+        AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
 
-    {
-      PROFILER_LABEL("ImageDecoder", "Write",
-        js::ProfileEntry::Category::GRAPHICS);
+        // Pass the data along to the implementation.
+        Maybe<TerminalState> terminalState = DoDecode(*mIterator);
 
-      AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
+        if (terminalState == Some(TerminalState::FAILURE)) {
+          PostDataError();
+        }
 
-      // Pass the data along to the implementation.
-      Maybe<TerminalState> terminalState = DoDecode(*mIterator);
-
-      if (terminalState == Some(TerminalState::FAILURE)) {
-        PostDataError();
+        break;
       }
+
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
+        Maybe<TerminalState> terminalState = Some(TerminalState::FAILURE);
     }
   }
 
