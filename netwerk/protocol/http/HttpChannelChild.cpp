@@ -2506,7 +2506,9 @@ HttpChannelChild::ResetInterception()
 
   // Continue with the original cross-process request
   nsresult rv = ContinueAsyncOpen();
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    AsyncAbort(rv);
+  }
 }
 
 NS_IMETHODIMP
@@ -2537,7 +2539,9 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
     mShouldInterceptSubsequentRedirect = true;
     // Continue with the original cross-process request
     nsresult rv = ContinueAsyncOpen();
-    NS_ENSURE_SUCCESS_VOID(rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      AsyncAbort(rv);
+    }
     return;
   }
 
