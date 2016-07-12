@@ -987,6 +987,7 @@ class WorkerThreadPrimaryRunnable final : public Runnable
   WorkerPrivate* mWorkerPrivate;
   RefPtr<WorkerThread> mThread;
   JSRuntime* mParentRuntime;
+  JS::UniqueChars mDefaultLocale;
 
   class FinishedRunnable final : public Runnable
   {
@@ -1011,8 +1012,10 @@ class WorkerThreadPrimaryRunnable final : public Runnable
 public:
   WorkerThreadPrimaryRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerThread* aThread,
-                              JSRuntime* aParentRuntime)
-  : mWorkerPrivate(aWorkerPrivate), mThread(aThread), mParentRuntime(aParentRuntime)
+                              JSRuntime* aParentRuntime,
+                              JS::UniqueChars aDefaultLocale)
+  : mWorkerPrivate(aWorkerPrivate), mThread(aThread)
+  , mParentRuntime(aParentRuntime), mDefaultLocale(Move(aDefaultLocale))
   {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aThread);
@@ -1626,9 +1629,15 @@ RuntimeService::ScheduleWorker(WorkerPrivate* aWorkerPrivate)
   }
 
   JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
+  JSRuntime* parentRuntime = JS_GetParentRuntime(rt);
+  JS::UniqueChars defaultLocale = parentRuntime ? JS_GetDefaultLocale(parentRuntime) : nullptr;
+  if (!parentRuntime) {
+    NS_WARNING("Could not obtain parent runtime's locale!");
+  }
+
   nsCOMPtr<nsIRunnable> runnable =
-    new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread,
-                                    JS_GetParentRuntime(rt));
+    new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread, parentRuntime,
+                                    Move(defaultLocale));
   if (NS_FAILED(thread->DispatchPrimaryRunnable(friendKey, runnable.forget()))) {
     UnregisterWorker(aWorkerPrivate);
     return false;
@@ -2539,6 +2548,14 @@ WorkerThreadPrimaryRunnable::Run()
     }
 
     JSRuntime* rt = runtime.Runtime();
+
+    if (mDefaultLocale) {
+      if (!JS_SetDefaultLocale(rt, mDefaultLocale.get())) {
+        NS_WARNING("Could not set worker locale!");
+      }
+
+      mDefaultLocale = nullptr;
+    }
 
     JSContext* cx = InitJSContextForWorker(mWorkerPrivate, rt);
     if (!cx) {
