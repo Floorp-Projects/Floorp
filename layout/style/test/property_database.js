@@ -1063,6 +1063,7 @@ var gCSSProperties = {
             "repeat url('border.png') 27 27 27 27",
             "url('border.png') repeat 27 27 27 27",
             "url('border.png') fill 27 27 27 27 repeat",
+            "url('border.png') fill 27 27 27 27 repeat space",
             "url('border.png') 27 27 27 27 / 1em",
             "27 27 27 27 / 1em url('border.png') ",
             "url('border.png') 27 27 27 27 / 10 10 10 / 10 10 repeat",
@@ -1130,7 +1131,8 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "stretch", "stretch stretch" ],
-    other_values: [ "round", "repeat", "stretch round", "repeat round", "stretch repeat", "round round", "repeat repeat" ],
+    other_values: [ "round", "repeat", "stretch round", "repeat round", "stretch repeat", "round round", "repeat repeat",
+                    "space", "stretch space", "repeat space", "round space", "space space" ],
     invalid_values: [ "none", "stretch stretch stretch", "0", "10", "0%", "0px" ]
   },
   "-moz-border-left-colors": {
