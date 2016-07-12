@@ -351,20 +351,14 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
 void
 nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
 {
-  if (gDataTable) {
-    nsCString uriIgnoringRef;
-    int32_t hashPos = aUri.FindChar('#');
-    if (hashPos < 0) {
-      uriIgnoringRef = aUri;
-    }
-    else {
-      uriIgnoringRef = StringHead(aUri, hashPos);
-    }
-    gDataTable->Remove(uriIgnoringRef);
-    if (gDataTable->Count() == 0) {
-      delete gDataTable;
-      gDataTable = nullptr;
-    }
+  if (!gDataTable) {
+    return;
+  }
+
+  gDataTable->Remove(aUri);
+  if (gDataTable->Count() == 0) {
+    delete gDataTable;
+    gDataTable = nullptr;
   }
 }
 
