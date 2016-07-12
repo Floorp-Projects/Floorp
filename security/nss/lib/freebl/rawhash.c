@@ -153,7 +153,7 @@ const SECHashObject SECRawHashObjects[] = {
 const SECHashObject *
 HASH_GetRawHashObject(HASH_HashType hashType)
 {
-    if (hashType < HASH_AlgNULL || hashType >= HASH_AlgTOTAL) {
+    if (hashType <= HASH_AlgNULL || hashType >= HASH_AlgTOTAL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }

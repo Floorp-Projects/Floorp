@@ -27,9 +27,6 @@
     - gtests
     - lowhash
     - merge
-    - ocsp
-    - pkits
-    - pkix
     - sdr
     - smime
     - ssl
@@ -123,13 +120,13 @@
 
 - task:
     metadata:
-      name: "Linux 32 (debug, NO_PKCS11_BYPASS=1)"
-      description: "Linux 32 (debug, NO_PKCS11_BYPASS=1)"
+      name: "Linux 32 (debug, NSS_NO_PKCS11_BYPASS=1)"
+      description: "Linux 32 (debug, NSS_NO_PKCS11_BYPASS=1)"
 
     payload:
       env:
+        NSS_NO_PKCS11_BYPASS: 1
         NSS_ENABLE_TLS_1_3: 1
-        NO_PKCS11_BYPASS: 1
 
     extra:
       treeherder:

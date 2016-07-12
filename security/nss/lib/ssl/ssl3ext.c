@@ -1172,7 +1172,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss, SECItem *ticket_data)
     AESContext *aes_ctx;
     const SECHashObject *hashObj = NULL;
     PRUint64 hmac_ctx_buf[MAX_MAC_CONTEXT_LLONGS];
-    HMACContext *hmac_ctx;
+    HMACContext *hmac_ctx = NULL;
 #endif
     CK_MECHANISM_TYPE cipherMech = CKM_AES_CBC;
     PK11Context *aes_ctx_pkcs11;
@@ -1485,16 +1485,19 @@ ssl3_EncodeSessionTicket(sslSocket *ss, SECItem *ticket_data)
         hmac_ctx = (HMACContext *)hmac_ctx_buf;
         hashObj = HASH_GetRawHashObject(HASH_AlgSHA256);
         if (HMAC_Init(hmac_ctx, hashObj, mac_key,
-                      mac_key_length, PR_FALSE) != SECSuccess)
+                      mac_key_length, PR_FALSE) != SECSuccess) {
             goto loser;
+        }
 
         HMAC_Begin(hmac_ctx);
         HMAC_Update(hmac_ctx, key_name, SESS_TICKET_KEY_NAME_LEN);
         HMAC_Update(hmac_ctx, iv, sizeof(iv));
         HMAC_Update(hmac_ctx, (unsigned char *)length_buf, 2);
         HMAC_Update(hmac_ctx, ciphertext.data, ciphertext.len);
-        HMAC_Finish(hmac_ctx, computed_mac, &computed_mac_length,
-                    sizeof(computed_mac));
+        if (HMAC_Finish(hmac_ctx, computed_mac, &computed_mac_length,
+                        sizeof(computed_mac)) != SECSuccess) {
+            goto loser;
+        }
     } else
 #endif
     {
@@ -1568,12 +1571,20 @@ ssl3_EncodeSessionTicket(sslSocket *ss, SECItem *ticket_data)
     ticket_buf.data = NULL;
 
 loser:
-    if (hmac_ctx_pkcs11)
+#ifndef NO_PKCS11_BYPASS
+    if (hmac_ctx) {
+        HMAC_Destroy(hmac_ctx, PR_FALSE);
+    }
+#endif
+    if (hmac_ctx_pkcs11) {
         PK11_DestroyContext(hmac_ctx_pkcs11, PR_TRUE);
-    if (plaintext_item.data)
+    }
+    if (plaintext_item.data) {
         SECITEM_FreeItem(&plaintext_item, PR_FALSE);
-    if (ciphertext.data)
+    }
+    if (ciphertext.data) {
         SECITEM_FreeItem(&ciphertext, PR_FALSE);
+    }
     if (ticket_buf.data) {
         SECITEM_FreeItem(&ticket_buf, PR_FALSE);
     }
@@ -1699,9 +1710,12 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
         HMAC_Begin(hmac_ctx);
         HMAC_Update(hmac_ctx, extension_data.data,
                     extension_data.len - TLS_EX_SESS_TICKET_MAC_LENGTH);
-        if (HMAC_Finish(hmac_ctx, computed_mac, &computed_mac_length,
-                        sizeof(computed_mac)) != SECSuccess)
+        rv = HMAC_Finish(hmac_ctx, computed_mac, &computed_mac_length,
+                         sizeof(computed_mac));
+        HMAC_Destroy(hmac_ctx, PR_FALSE);
+        if (rv != SECSuccess) {
             goto no_ticket;
+        }
     } else
 #endif
     {
