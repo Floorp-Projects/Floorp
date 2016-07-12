@@ -23,7 +23,7 @@ public:
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal() override;
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
   virtual Telemetry::ID SpeedHistogram() override;
 
   /// @return true if this PNG is a valid ICO resource.

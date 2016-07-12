@@ -198,10 +198,6 @@ setting[type="menulist"] {
   display: none;
 }
 
-#addons-page .view-pane:not([type="plugin"]) .plugin-info-container {
-  display: none;
-}
-
 #addons-page .view-pane:not([type="experiment"]) .experiment-info-container {
   display: none;
 }

@@ -1,0 +1,299 @@
+#!/usr/bin/env python
+
+import argparse
+import json
+import logging
+import re
+import os
+import platform
+import posixpath
+import shutil
+import subprocess
+import sys
+
+from collections import namedtuple
+from os import environ as env
+from subprocess import Popen
+from threading import Timer
+
+Dirs = namedtuple('Dirs', ['scripts', 'js_src', 'source'])
+
+
+def directories(pathmodule, cwd, fixup=lambda s: s):
+    scripts = pathmodule.join(fixup(cwd), fixup(pathmodule.dirname(__file__)))
+    js_src = pathmodule.abspath(pathmodule.join(scripts, "..", ".."))
+    source = pathmodule.abspath(pathmodule.join(js_src, "..", ".."))
+    return Dirs(scripts, js_src, source)
+
+# Some scripts will be called with sh, which cannot use backslashed
+# paths. So for direct subprocess.* invocation, use normal paths from
+# DIR, but when running under the shell, use POSIX style paths.
+DIR = directories(os.path, os.getcwd())
+PDIR = directories(posixpath, os.environ["PWD"],
+                   fixup=lambda s: re.sub(r'^(\w):', r'/\1', s))
+
+parser = argparse.ArgumentParser(
+    description='Run a spidermonkey shell build job')
+parser.add_argument('--dep', action='store_true',
+                    help='do not clobber the objdir before building')
+parser.add_argument('--platform', '-p', type=str, metavar='PLATFORM',
+                    default='', help='build platform')
+parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
+                    default=10800,
+                    help='kill job after TIMEOUT seconds')
+parser.add_argument('--objdir', type=str, metavar='DIR',
+                    default=env.get('OBJDIR', 'obj-spider'),
+                    help='object directory')
+parser.add_argument('--skip-tests', '--skip', type=str, metavar='TESTSUITE',
+                    default='',
+                    help="comma-separated set of test suites to remove from the variant's default set")
+parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
+                    default='',
+                    help="comma-separated set of test suites to add to the variant's default set")
+parser.add_argument('variant', type=str,
+                    help='type of job requested, see variants/ subdir')
+args = parser.parse_args()
+
+
+def set_vars_from_script(script, vars):
+    '''Run a shell script, then dump out chosen environment variables. The build
+       system uses shell scripts to do some configuration that we need to
+       borrow. On Windows, the script itself must output the variable settings
+       (in the form "export FOO=<value>"), since otherwise there will be
+       problems with mismatched Windows/POSIX formats.
+    '''
+    script_text = 'source %s' % script
+    if platform.system() == 'Windows':
+        parse_state = 'parsing exports'
+    else:
+        script_text += '; echo VAR SETTINGS:; '
+        script_text += '; '.join('echo $' + var for var in vars)
+        parse_state = 'scanning'
+    stdout = subprocess.check_output(['sh', '-x', '-c', script_text])
+    tograb = vars[:]
+    originals = {}
+    for line in stdout.splitlines():
+        if parse_state == 'scanning':
+            if line == 'VAR SETTINGS:':
+                parse_state = 'grabbing'
+        elif parse_state == 'grabbing':
+            var = tograb.pop(0)
+            env[var] = line
+        elif parse_state == 'parsing exports':
+            m = re.match(r'export (\w+)=(.*)', line)
+            if m:
+                var, value = m.groups()
+                if var in tograb:
+                    env[var] = value
+                    print("Setting %s = %s" % (var, value))
+                if var.startswith("ORIGINAL_"):
+                    originals[var[9:]] = value
+
+    # An added wrinkle: on Windows developer systems, the sourced script will
+    # blow away current settings for eg LIBS, to point to the ones that would
+    # be installed via automation. So we will append the original settings. (On
+    # an automation system, the original settings will be empty or point to
+    # nonexistent stuff.)
+    if platform.system() == 'Windows':
+        for var in vars:
+            if var in originals and len(originals[var]) > 0:
+                env[var] = "%s;%s" % (env[var], originals[var])
+                print("orig appended, %s = %s" % (var, env[var]))
+
+
+def call_alternates(binaries, command_args, *args, **kwargs):
+    last_exception = None
+    for binary in binaries:
+        try:
+            return subprocess.call(['sh', '-c', binary] + command_args, *args, **kwargs)
+        except OSError as e:
+            # Assume the binary was not found.
+            last_exception = e
+    raise last_exception
+
+
+def ensure_dir_exists(name, clobber=True):
+    if clobber:
+        shutil.rmtree(name, ignore_errors=True)
+    try:
+        os.mkdir(name)
+    except OSError:
+        if clobber:
+            raise
+
+with open(os.path.join(DIR.scripts, "variants", args.variant)) as fh:
+    variant = json.load(fh)
+
+if args.variant == 'nonunified':
+    # Rewrite js/src/**/moz.build to replace UNIFIED_SOURCES to SOURCES.
+    # Note that this modifies the current checkout.
+    for dirpath, dirnames, filenames in os.walk(DIR.js_src):
+        if 'moz.build' in filenames:
+            subprocess.check_call(['sed', '-i', 's/UNIFIED_SOURCES/SOURCES/',
+                                   os.path.join(dirpath, 'moz.build')])
+
+autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
+if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
+    logging.error('autoconf failed')
+    sys.exit(1)
+
+OBJDIR = os.path.join(DIR.source, args.objdir)
+POBJDIR = posixpath.join(PDIR.source, args.objdir)
+AUTOMATION = env.get('AUTOMATION', False)
+MAKE = env.get('MAKE', 'make')
+MAKEFLAGS = '-j6'
+CONFIGURE_ARGS = variant['configure-args']
+UNAME_M = subprocess.check_output(['uname', '-m']).strip()
+
+# Some of the variants request a particular word size (eg ARM simulators).
+word_bits = variant.get('bits')
+
+# On Linux and Windows, we build 32- and 64-bit versions on a 64 bit
+# host, so the caller has to specify what is desired.
+if word_bits is None and args.platform:
+    platform_arch = args.platform.split('-')[0]
+    if platform_arch in ('win32', 'linux'):
+        word_bits = 32
+    elif platform_arch in ('win64', 'linux64'):
+        word_bits = 64
+
+# Fall back to the word size of the host.
+if word_bits is None:
+    word_bits = 64 if UNAME_M == 'x86_64' else 32
+
+if platform.system() == 'Darwin':
+    set_vars_from_script(os.path.join(DIR.scripts, 'macbuildenv.sh'),
+                         ['CC', 'CXX'])
+elif platform.system() == 'Linux':
+    if AUTOMATION:
+        GCCDIR = env.get('GCCDIR', os.path.join(DIR.source, '..', 'gcc'))
+        CONFIGURE_ARGS += ' --with-ccache'
+        env.setdefault('CC', os.path.join(GCCDIR, 'bin', 'gcc'))
+        env.setdefault('CXX', os.path.join(GCCDIR, 'bin', 'g++'))
+        platlib = 'lib64' if word_bits == 64 else 'lib'
+        env.setdefault('LD_LIBRARY_PATH', os.path.join(GCCDIR, platlib))
+elif platform.system() == 'Windows':
+    MAKE = env.get('MAKE', 'mozmake')
+    os.environ['SOURCE'] = DIR.source
+    if word_bits == 64:
+        os.environ['USE_64BIT'] = '1'
+    set_vars_from_script(posixpath.join(PDIR.scripts, 'winbuildenv.sh'),
+                         ['PATH', 'INCLUDE', 'LIB', 'LIBPATH', 'CC', 'CXX'])
+
+if word_bits == 64:
+    if platform.system() == 'Windows':
+        CONFIGURE_ARGS += ' --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32'
+else:
+    if platform.system() == 'Darwin':
+        env['CC'] = '{CC} -arch i386'.format(**env)
+        env['CXX'] = '{CXX} -arch i386'.format(**env)
+    elif platform.system() == 'Windows':
+        CONFIGURE_ARGS += ' --target=i686-pc-mingw32 --host=i686-pc-mingw32'
+    else:
+        env.setdefault('CC', 'gcc')
+        env.setdefault('CXX', 'g++')
+        env['CC'] = '{CC} -m32'.format(**env)
+        env['CXX'] = '{CXX} -m32'.format(**env)
+        env['AR'] = 'ar'
+
+    if platform.system() == 'Linux':
+        if AUTOMATION and UNAME_M != 'arm':
+            CONFIGURE_ARGS += ' --target=i686-pc-linux --host=i686-pc-linux'
+
+# Timeouts.
+ACTIVE_PROCESSES = set()
+
+
+def killall():
+    for proc in ACTIVE_PROCESSES:
+        proc.kill()
+    ACTIVE_PROCESSES.clear()
+
+timer = Timer(args.timeout, killall)
+timer.daemon = True
+timer.start()
+
+ensure_dir_exists(OBJDIR, clobber=not args.dep)
+
+
+def run_command(command, check=False, **kwargs):
+    proc = Popen(command, cwd=OBJDIR, **kwargs)
+    ACTIVE_PROCESSES.add(proc)
+    stdout, stderr = None, None
+    try:
+        stdout, stderr = proc.communicate()
+    finally:
+        ACTIVE_PROCESSES.discard(proc)
+    status = proc.wait()
+    if check and status != 0:
+        raise subprocess.CalledProcessError(status, command, output=stderr)
+    return stdout, stderr, status
+
+CONFIGURE_ARGS += ' --enable-nspr-build'
+CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
+run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
+
+run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
+
+COMMAND_PREFIX = []
+# On Linux, disable ASLR to make shell builds a bit more reproducible.
+if subprocess.call("type setarch >/dev/null 2>&1", shell=True) == 0:
+    COMMAND_PREFIX.extend(['setarch', UNAME_M, '-R'])
+
+
+def run_test_command(command, **kwargs):
+    _, _, status = run_command(COMMAND_PREFIX + command, check=False, **kwargs)
+    return status
+
+test_suites = set(['jstests', 'jittest', 'jsapitests', 'checks'])
+
+# Add in environment variable settings for this variant. Normally used to
+# modify the flags passed to the shell or to set the GC zeal mode.
+for k, v in variant.get('env', {}).items():
+    env[k] = v.format(DIR=DIR.scripts)
+
+# Need a platform name to use as a key in variant files.
+if args.platform:
+    variant_platform = args.platform.split("-")[0]
+elif platform.system() == 'Windows':
+    variant_platform = 'win64' if word_bits == 64 else 'win32'
+elif platform.system() == 'Linux':
+    variant_platform = 'linux64' if word_bits == 64 else 'linux'
+elif platform.system() == 'Darwin':
+    variant_platform = 'macosx64'
+else:
+    variant_platform = 'other'
+
+# Skip any tests that are not run on this platform.
+test_suites -= set(variant.get('skip-tests', {}).get(variant_platform, []))
+test_suites -= set(variant.get('skip-tests', {}).get('all', []))
+
+# Add in additional tests for this platform.
+test_suites |= set(variant.get('extra-tests', {}).get(variant_platform, []))
+test_suites |= set(variant.get('extra-tests', {}).get('all', []))
+
+# Now adjust the variant's default test list with command-line arguments.
+test_suites |= set(args.run_tests.split(","))
+test_suites -= set(args.skip_tests.split(","))
+
+# Always run all enabled tests, even if earlier ones failed. But return the
+# first failed status.
+results = []
+
+# 'checks' is a superset of 'check-style'.
+if 'checks' in test_suites:
+    results.append(run_test_command([MAKE, 'check']))
+elif 'check-style' in test_suites:
+    results.append(run_test_command([MAKE, 'check-style']))
+
+if 'jittest' in test_suites:
+    results.append(run_test_command([MAKE, 'check-jit-test']))
+if 'jsapitests' in test_suites:
+    jsapi_test_binary = os.path.join(OBJDIR, 'dist', 'bin', 'jsapi-tests')
+    results.append(run_test_command([jsapi_test_binary]))
+if 'jstests' in test_suites:
+    results.append(run_test_command([MAKE, 'check-jstests']))
+
+for st in results:
+    if st != 0:
+        sys.exit(st)

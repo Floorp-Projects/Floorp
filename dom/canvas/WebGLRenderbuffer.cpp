@@ -258,7 +258,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
         if (!mFormat)
             return 0;
 
-        if (!mFormat->format->hasStencil)
+        if (!mFormat->format->s)
             return 0;
 
         return 8;
