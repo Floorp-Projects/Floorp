@@ -715,12 +715,6 @@ protected:
   // True if MediaDecoder is in dormant state.
   bool mIsDormant;
 
-  // True if MediaDecoder was PLAY_STATE_ENDED state, when entering to dormant.
-  // When MediaCodec is in dormant during PLAY_STATE_ENDED state, PlayState
-  // becomes different from PLAY_STATE_ENDED. But the MediaDecoder need to act
-  // as in PLAY_STATE_ENDED state to MediaDecoderOwner.
-  bool mWasEndedWhenEnteredDormant;
-
   // True if heuristic dormant is supported.
   const bool mIsHeuristicDormantSupported;
 
