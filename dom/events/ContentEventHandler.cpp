@@ -1427,7 +1427,6 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
   uint32_t offset = aEvent->mInput.mOffset;
 
   LayoutDeviceIntRect rect;
-  WritingMode writingMode;
   while (aEvent->mInput.mLength > aEvent->mReply.mRectArray.Length()) {
     rv = SetRangeFromFlatTextOffset(range, offset, 1, lineBreakType, true,
                                     nullptr);
@@ -1465,6 +1464,10 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
       rect = LayoutDeviceIntRect::FromUnknownRect(
                charRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+
+      // Ensure at least 1px width and height for avoiding empty rect.
+      rect.height = std::max(1, rect.height);
+      rect.width = std::max(1, rect.width);
 
       aEvent->mReply.mRectArray.AppendElement(rect);
     }
