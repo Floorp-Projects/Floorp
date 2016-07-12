@@ -238,7 +238,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     }
 
     function skipWhitespace() {
-      input = input.replace(/^\s+/, "");
+      input = input.replace(/^[ \f\n\r\t]+/, "");
     }
 
     // 4.1 WebVTT cue timings.
