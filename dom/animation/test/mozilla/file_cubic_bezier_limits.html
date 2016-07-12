@@ -135,6 +135,32 @@ test(function(t) {
 
 }, 'Clamp y1 and y2 control point out of boundaries for CSS transition' );
 
+test(function(t) {
+  var div = addDiv(t);
+  var anim = div.animate({ }, { duration: 100 * MS_PER_SEC, fill: 'forwards' });
+
+  anim.pause();
+  // The positive steepest function on both edges.
+  anim.effect.timing.easing = 'cubic-bezier(0, 1e+39, 0, 1e+39)';
+  assert_equals(anim.effect.getComputedTiming().progress, 0.0,
+    'progress on lower edge for the highest value of y1 and y2 control points');
+
+  anim.finish();
+  assert_equals(anim.effect.getComputedTiming().progress, 1.0,
+    'progress on upper edge for the highest value of y1 and y2 control points');
+
+  // The negative steepest function on both edges.
+  anim.effect.timing.easing = 'cubic-bezier(0, -1e+39, 0, -1e+39)';
+  anim.currentTime = 0;
+  assert_equals(anim.effect.getComputedTiming().progress, 0.0,
+    'progress on lower edge for the lowest value of y1 and y2 control points');
+
+  anim.finish();
+  assert_equals(anim.effect.getComputedTiming().progress, 1.0,
+    'progress on lower edge for the lowest value of y1 and y2 control points');
+
+}, 'Calculated values on both edges');
+
 done();
 
 </script>
