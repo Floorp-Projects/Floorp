@@ -41,6 +41,10 @@
   margin-inline-end: 10px;
 }
 
+#notification-popup-box > .notification-anchor-icon:hover {
+  fill: #606060;
+}
+
 /* INDIVIDUAL NOTIFICATIONS */
 
 /* For the moment we apply the color filter only on the icons listed here.
@@ -50,6 +54,7 @@
 .camera-icon,
 .geo-icon,
 .indexedDB-icon,
+.install-icon,
 .login-icon,
 .microphone-icon,
 .plugin-icon,
