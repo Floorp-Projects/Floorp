@@ -23,7 +23,6 @@ const SPECIALVALUES = new Set([
  * This module is used to convert between various color types.
  *
  * Usage:
- *   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
  *   let {colorUtils} = require("devtools/shared/css-color");
  *   let color = new colorUtils.CssColor("red");
  *
