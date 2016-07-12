@@ -2344,10 +2344,6 @@ XMLHttpRequestMainThread::GetRequestBody(nsIVariant* aVariant,
                                          nsACString& aContentType,
                                          nsACString& aCharset)
 {
-  // null the content type and charset by default, as per XHR spec step 4
-  aContentType.SetIsVoid(true);
-  aCharset.SetIsVoid(true);
-
   if (aVariant) {
     return GetRequestBodyInternal(aVariant, aResult, aContentLength,
                                   aContentType, aCharset);
@@ -2516,10 +2512,11 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
       nsAutoCString contentType;
       if (NS_FAILED(httpChannel->
                       GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                       contentType))) {
+                                       contentType)) ||
+          contentType.IsEmpty()) {
         contentType = defaultContentType;
 
-        if (!charset.IsEmpty() && !contentType.IsVoid()) {
+        if (!charset.IsEmpty()) {
           // If we are providing the default content type, then we also need to
           // provide a charset declaration.
           contentType.Append(NS_LITERAL_CSTRING(";charset="));
