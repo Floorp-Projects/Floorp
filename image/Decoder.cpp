@@ -119,6 +119,11 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
   MOZ_ASSERT(mInitialized, "Should be initialized here");
   MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
 
+  // If we're already done, don't attempt to keep decoding.
+  if (GetDecodeDone()) {
+    return HasError() ? NS_ERROR_FAILURE : NS_OK;
+  }
+
   // We keep decoding chunks until the decode completes or there are no more
   // chunks available.
   while (!GetDecodeDone() && !HasError()) {
