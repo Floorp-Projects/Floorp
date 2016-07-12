@@ -115,16 +115,14 @@ html, body, #app, #memory-tool {
   background-image: url(chrome://devtools/skin/images/diff.svg);
 }
 
+#import-snapshot::before {
+  background-image: url(chrome://devtools/skin/images/import.svg);
+}
+
 #record-allocation-stacks-label,
 #pop-view-button-label {
   border-inline-end: 1px solid var(--theme-splitter-color);
   padding-inline-end: 5px;
-}
-
-#import-snapshot,
-#clear-snapshots {
-  -moz-box-align: center;
-  flex-grow: 1;
 }
 
 .spacer {

@@ -92,7 +92,7 @@
                          tooltiptext="&performanceUI.recordButton.tooltip;"/>
           <toolbarbutton id="import-button"
                          class="devtools-toolbarbutton"
-                         label="&performanceUI.importButton;"/>
+                         tooltiptext="&performanceUI.importButton;"/>
         </hbox>
       </toolbar>
       <vbox id="recordings-list" class="theme-sidebar" flex="1"/>
