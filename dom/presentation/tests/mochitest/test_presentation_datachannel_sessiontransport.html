@@ -110,8 +110,8 @@ const clientListener = {
     setTimeout(()=>this._remoteBuilder.onIceCandidate(aCandidate), 0);
   },
   disconnect: function(aReason) {
-    setTimeout(()=>this._localBuilder.notifyClosed(aReason), 0);
-    setTimeout(()=>this._remoteBuilder.notifyClosed(aReason), 0);
+    setTimeout(()=>this._localBuilder.notifyDisconnected(aReason), 0);
+    setTimeout(()=>this._remoteBuilder.notifyDisconnected(aReason), 0);
   },
   set remoteBuilder(aRemoteBuilder) {
     this._remoteBuilder = aRemoteBuilder;
@@ -142,8 +142,8 @@ const serverListener = {
     setTimeout(()=>this._remoteBuilder.onIceCandidate(aCandidate), 0);
   },
   disconnect: function(aReason) {
-    setTimeout(()=>this._localBuilder.notifyClosed(aReason), 0);
-    setTimeout(()=>this._remoteBuilder.notifyClosed(aReason), 0);
+    setTimeout(()=>this._localBuilder.notifyDisconnected(aReason), 0);
+    setTimeout(()=>this._remoteBuilder.notifyDisconnected(aReason), 0);
   },
   set remoteBuilder(aRemoteBuilder) {
     this._remoteBuilder = aRemoteBuilder;

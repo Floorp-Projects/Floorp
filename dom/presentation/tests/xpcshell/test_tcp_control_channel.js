@@ -111,11 +111,11 @@ function testPresentationServer() {
           }
           controllerControlChannel.disconnect(CLOSE_CONTROL_CHANNEL_REASON);
         },
-        notifyOpened: function() {
+        notifyConnected: function() {
           Assert.equal(this.status, 'created', '0. controllerControlChannel: opened');
           this.status = 'opened';
         },
-        notifyClosed: function(aReason) {
+        notifyDisconnected: function(aReason) {
           Assert.equal(this.status, 'onOffer', '4. controllerControlChannel: closed');
           Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, 'controllerControlChannel notify closed');
           this.status = 'closed';
@@ -160,7 +160,7 @@ function testPresentationServer() {
     onIceCandidate: function(aCandidate) {
       Assert.ok(false, 'get ICE candidate');
     },
-    notifyOpened: function() {
+    notifyConnected: function() {
       Assert.equal(this.status, 'created', '0. presenterControlChannel: opened, send offer');
       presenterControlChannel.launch('testPresentationId', 'http://example.com');
       this.status = 'opened';
@@ -172,7 +172,7 @@ function testPresentationServer() {
         Assert.ok(false, 'sending offer fails:' + e);
       }
     },
-    notifyClosed: function(aReason) {
+    notifyDisconnected: function(aReason) {
       this.status = 'closed';
       Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, '4. presenterControlChannel notify closed');
       yayFuncs.presenterControlChannelClose();

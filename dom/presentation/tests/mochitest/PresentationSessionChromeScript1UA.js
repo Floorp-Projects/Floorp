@@ -169,11 +169,11 @@ const mockControlChannelOfSender = {
   get listener() {
     return this._listener;
   },
-  notifyOpened: function() {
-    // send offer after notifyOpened immediately
+  notifyConnected: function() {
+    // send offer after notifyConnected immediately
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyOpened();
+        .notifyConnected();
   },
   sendOffer: function(offer) {
     sendAsyncMessage('offer-sent');
@@ -189,7 +189,7 @@ const mockControlChannelOfSender = {
   disconnect: function(reason) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyClosed(reason);
+        .notifyDisconnected(reason);
     mockControlChannelOfReceiver.disconnect();
   }
 };
@@ -208,13 +208,13 @@ const mockControlChannelOfReceiver = {
 
     if (this._pendingOpened) {
       this._pendingOpened = false;
-      this.notifyOpened();
+      this.notifyConnected();
     }
   },
   get listener() {
     return this._listener;
   },
-  notifyOpened: function() {
+  notifyConnected: function() {
     // do nothing
     if (!this._listener) {
       this._pendingOpened = true;
@@ -222,7 +222,7 @@ const mockControlChannelOfReceiver = {
     }
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyOpened();
+        .notifyConnected();
   },
   onOffer: function(offer) {
     this._listener
@@ -238,7 +238,7 @@ const mockControlChannelOfReceiver = {
   disconnect: function(reason) {
     this._listener
         .QueryInterface(Ci.nsIPresentationControlChannelListener)
-        .notifyClosed(reason);
+        .notifyDisconnected(reason);
     sendAsyncMessage('control-channel-receiver-closed', reason);
   }
 };
@@ -369,8 +369,8 @@ function initMockAndListener() {
 
   addMessageListener('trigger-control-channel-open', function(reason) {
     debug('Got message: trigger-control-channel-open');
-    mockControlChannelOfSender.notifyOpened();
-    mockControlChannelOfReceiver.notifyOpened();
+    mockControlChannelOfSender.notifyConnected();
+    mockControlChannelOfReceiver.notifyConnected();
   });
 
   addMessageListener('trigger-on-offer', function() {

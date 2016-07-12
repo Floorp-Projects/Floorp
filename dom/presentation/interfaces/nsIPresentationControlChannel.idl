@@ -54,16 +54,16 @@ interface nsIPresentationControlChannelListener: nsISupports
   void onIceCandidate(in DOMString candidate);
 
   /*
-   * The callback for notifying channel opened. This should be async called
+   * The callback for notifying channel connected. This should be async called
    * after nsIPresentationDevice::establishControlChannel.
    */
-  void notifyOpened();
+  void notifyConnected();
 
   /*
-   * The callback for notifying channel closed.
+   * The callback for notifying channel disconnected.
    * @param reason The reason of channel close, NS_OK represents normal close.
    */
-  void notifyClosed(in nsresult reason);
+  void notifyDisconnected(in nsresult reason);
 };
 
 /*

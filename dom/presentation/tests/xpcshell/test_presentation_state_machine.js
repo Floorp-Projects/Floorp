@@ -113,14 +113,14 @@ function disconnect() {
   controllerState.onChannelClosed(Cr.NS_OK, false);
   Assert.equal(controllerState.state, State.CLOSING, 'controller in closing state');
 
-  mockReceiverChannel.notifyClosed = function(reason) {
+  mockReceiverChannel.notifyDisconnected = function(reason) {
     Assert.equal(reason, Cr.NS_OK, 'receive close reason');
     Assert.equal(receiverState.state, State.CLOSED, 'receiver in closed state');
 
     receiverState.onChannelClosed(Cr.NS_OK, true);
     Assert.equal(receiverState.state, State.CLOSED, 'receiver in closed state');
 
-    mockControllerChannel.notifyClosed = function(reason) {
+    mockControllerChannel.notifyDisconnected = function(reason) {
       Assert.equal(reason, Cr.NS_OK, 'receive close reason');
       Assert.equal(controllerState.state, State.CLOSED, 'controller in closed state');
 
@@ -139,14 +139,14 @@ function receiverDisconnect() {
   receiverState.onChannelClosed(Cr.NS_OK, false);
   Assert.equal(receiverState.state, State.CLOSING, 'receiver in closing state');
 
-  mockControllerChannel.notifyClosed = function(reason) {
+  mockControllerChannel.notifyDisconnected = function(reason) {
     Assert.equal(reason, Cr.NS_OK, 'receive close reason');
     Assert.equal(controllerState.state, State.CLOSED, 'controller in closed state');
 
     controllerState.onChannelClosed(Cr.NS_OK, true);
     Assert.equal(controllerState.state, State.CLOSED, 'controller in closed state');
 
-    mockReceiverChannel.notifyClosed = function(reason) {
+    mockReceiverChannel.notifyDisconnected = function(reason) {
       Assert.equal(reason, Cr.NS_OK, 'receive close reason');
       Assert.equal(receiverState.state, State.CLOSED, 'receiver in closed state');
 
@@ -166,14 +166,14 @@ function abnormalDisconnect() {
   controllerState.onChannelClosed(testErrorReason, false);
   Assert.equal(controllerState.state, State.CLOSING, 'controller in closing state');
 
-  mockReceiverChannel.notifyClosed = function(reason) {
+  mockReceiverChannel.notifyDisconnected = function(reason) {
     Assert.equal(reason, testErrorReason, 'receive abnormal close reason');
     Assert.equal(receiverState.state, State.CLOSED, 'receiver in closed state');
 
     receiverState.onChannelClosed(Cr.NS_OK, true);
     Assert.equal(receiverState.state, State.CLOSED, 'receiver in closed state');
 
-    mockControllerChannel.notifyClosed = function(reason) {
+    mockControllerChannel.notifyDisconnected = function(reason) {
       Assert.equal(reason, testErrorReason, 'receive abnormal close reason');
       Assert.equal(controllerState.state, State.CLOSED, 'controller in closed state');
 
