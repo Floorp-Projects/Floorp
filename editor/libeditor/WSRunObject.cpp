@@ -166,7 +166,7 @@ WSRunObject::PrepareToSplitAcrossBlocks(HTMLEditor* aHTMLEditor,
   return wsObj.PrepareToSplitAcrossBlocksPriv();
 }
 
-Element*
+already_AddRefed<Element>
 WSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
                          int32_t* aInOutOffset,
                          nsIEditor::EDirection aSelect)
