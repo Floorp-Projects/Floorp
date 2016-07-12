@@ -220,6 +220,7 @@ let SourceActor = ActorClass({
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
       isPrettyPrinted: this.threadActor.sources.isPrettyPrinted(this.url),
       isSourceMapped: this.isSourceMapped,
+      sourceMapURL: source ? source.sourceMapURL : null,
       introductionUrl: introductionUrl ? introductionUrl.split(" -> ").pop() : null,
       introductionType: source ? source.introductionType : null
     };
