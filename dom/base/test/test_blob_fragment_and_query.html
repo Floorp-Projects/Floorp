@@ -12,15 +12,12 @@
 var  blob = new Blob(['hello world']);
 ok(blob, "We have a blob.");
 
-var url = URL.createObjectURL(blob);
-ok(url, "We have a URI");
-
 var tests = [
-  url,
-  url + "?aa",
-  url + "#bb",
-  url + "?cc#dd",
-  url + "#ee?ff",
+  { part: "", revoke: true },
+  { part: "?aa", revoke: false },
+  { part: "#bb", revoke: false },
+  { part: "?cc#dd", revoke: false },
+  { part: "#ee?ff", revoke: false }
 ];
 
 function runTest() {
@@ -29,15 +26,29 @@ function runTest() {
     return;
   }
 
+  var url = URL.createObjectURL(blob);
+  ok(url, "We have a URI");
+
   var test = tests.shift();
 
+  URL.revokeObjectURL(url + test.part);
+
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', test);
+  try {
+  xhr.open('GET', url + test.part);
+  } catch(e) {
+    ok(test.revoke, "This should fail!");
+    runTest();
+    return;
+  }
+
   xhr.onload = function() {
-    is(xhr.responseText, 'hello world', 'URL: ' + test);
+    is(xhr.responseText, 'hello world', 'URL: ' + url + test.part);
     runTest();
   }
+
   xhr.send();
+  ok(!test.revoke, "This should succeed!");
 }
 
 SimpleTest.waitForExplicitFinish();
