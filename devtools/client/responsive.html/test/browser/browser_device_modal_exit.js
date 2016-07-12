@@ -28,7 +28,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   uncheckedCb.click();
   closeButton.click();
 
-  ok(modal.classList.contains("hidden"),
+  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
     "The device modal is hidden on exit.");
 
   info("Check that the device list remains unchanged after exitting.");
