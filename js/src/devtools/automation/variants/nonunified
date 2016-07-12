@@ -1,1 +1,9 @@
---enable-debug
+{
+    "configure-args": "--enable-debug",
+    "skip-tests": {
+        "all": ["jstests", "jittest", "checks"]
+    },
+    "extra-tests": {
+        "all": ["check-style"]
+    }
+}

@@ -343,7 +343,7 @@ WebGLTexture::IsComplete(uint32_t texUnit, const char** const out_reason) const
         //    NEAREST nor NEAREST_MIPMAP_NEAREST."
         // Since all (GLES3) unsized color formats are filterable just like their sized
         // equivalents, we don't have to care whether its sized or not.
-        if (format->isColorFormat && !formatUsage->isFilterable) {
+        if (format->IsColorFormat() && !formatUsage->isFilterable) {
             *out_reason = "Because minification or magnification filtering is not NEAREST"
                           " or NEAREST_MIPMAP_NEAREST, and the texture's format is a"
                           " color format, its format must be \"texture-filterable\".";
@@ -363,7 +363,7 @@ WebGLTexture::IsComplete(uint32_t texUnit, const char** const out_reason) const
         // a DEPTH_STENCIL_OES texture with a min-filter of LINEAR. Therefore we relax
         // this restriction if WEBGL_depth_texture is enabled.
         if (!mContext->IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture)) {
-            if (format->hasDepth && mTexCompareMode != LOCAL_GL_NONE) {
+            if (format->d && mTexCompareMode != LOCAL_GL_NONE) {
                 *out_reason = "A depth or depth-stencil format with TEXTURE_COMPARE_MODE"
                               " of NONE must have minification or magnification filtering"
                               " of NEAREST or NEAREST_MIPMAP_NEAREST.";
@@ -486,9 +486,9 @@ WebGLTexture::GetFakeBlackType(const char* funcName, uint32_t texUnit,
 
     if (!hasInitializedData) {
         const auto format = ImageInfoAtFace(0, mBaseMipmapLevel).mFormat->format;
-        if (format->isColorFormat) {
-            *out_fakeBlack = (format->hasAlpha ? FakeBlackType::RGBA0000
-                                               : FakeBlackType::RGBA0001);
+        if (format->IsColorFormat()) {
+            *out_fakeBlack = (format->a ? FakeBlackType::RGBA0000
+                                        : FakeBlackType::RGBA0001);
             return true;
         }
 
@@ -736,7 +736,7 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
         return;
     }
 
-    if (format->hasDepth) {
+    if (format->d) {
         mContext->ErrorInvalidOperation("generateMipmap: Depth textures are not"
                                         " supported.");
         return;

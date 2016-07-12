@@ -162,6 +162,26 @@ WebGLContext::InitWebGL2(FailureReason* const out_failReason)
         gl->fEnable(LOCAL_GL_FRAMEBUFFER_SRGB_EXT);
     }
 
+    //////
+
+    static const GLenum kWebGL2_CompressedFormats[] = {
+        LOCAL_GL_COMPRESSED_R11_EAC,
+        LOCAL_GL_COMPRESSED_SIGNED_R11_EAC,
+        LOCAL_GL_COMPRESSED_RG11_EAC,
+        LOCAL_GL_COMPRESSED_SIGNED_RG11_EAC,
+        LOCAL_GL_COMPRESSED_RGB8_ETC2,
+        LOCAL_GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+        LOCAL_GL_COMPRESSED_RGBA8_ETC2_EAC,
+        LOCAL_GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+        LOCAL_GL_COMPRESSED_SRGB8_ETC2,
+        LOCAL_GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2
+    };
+
+    mCompressedTextureFormats.AppendElements(kWebGL2_CompressedFormats,
+                                             MOZ_ARRAY_LENGTH(kWebGL2_CompressedFormats));
+
+    //////
+
     return true;
 }
 

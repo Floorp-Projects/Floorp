@@ -36,24 +36,13 @@
 
   <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
-  <wizardpage id="checking" pageid="checking" next="pluginupdatesfound"
+  <wizardpage id="checking" pageid="checking" next="noupdatesfound"
               object="gCheckingPage" onpageshow="gCheckingPage.onPageShow();">
     <updateheader label="&checking.title;"/>
     <vbox class="update-content" flex="1">
       <label>&updateCheck.label;</label>
       <separator class="thin"/>
       <progressmeter id="checkingProgress" mode="undetermined"/>
-    </vbox>
-  </wizardpage>
-
-  <wizardpage id="pluginupdatesfound" pageid="pluginupdatesfound"
-              object="gPluginsPage" onpageshow="gPluginsPage.onPageShow();">
-    <updateheader label="&pluginupdatesfound.title;"/>
-    <vbox class="update-content" flex="1">
-      <label>&pluginupdatesfound.label;</label>
-      <separator class="thin"/>
-      <label id="pluginupdateslink" class="text-link"
-             onclick="openUpdateURL(event);">&pluginupdateslink.label;</label>
     </vbox>
   </wizardpage>
 

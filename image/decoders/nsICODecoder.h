@@ -70,7 +70,7 @@ public:
   /// @return The offset from the beginning of the ICO to the first resource.
   size_t FirstResourceOffset() const;
 
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
   virtual void FinishInternal() override;
   virtual void FinishWithErrorInternal() override;
 
