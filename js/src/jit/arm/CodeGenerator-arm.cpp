@@ -2734,7 +2734,6 @@ CodeGeneratorARM::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
     const MAsmJSLoadFuncPtr* mir = ins->mir();
 
     Register index = ToRegister(ins->index());
-    Register tmp = ToRegister(ins->temp());
     Register out = ToRegister(ins->output());
 
     if (mir->hasLimit()) {
@@ -2742,10 +2741,9 @@ CodeGeneratorARM::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    unsigned addr = mir->globalDataOffset();
-    masm.ma_mov(Imm32(addr - AsmJSGlobalRegBias), tmp);
-    masm.as_add(tmp, tmp, lsl(index, 2));
-    masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(tmp, LSL, 0)), out);
+    masm.ma_mov(Imm32(mir->globalDataOffset() - AsmJSGlobalRegBias), out);
+    masm.as_add(out, out, lsl(index, 2));
+    masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(out, LSL, 0)), out);
 }
 
 void

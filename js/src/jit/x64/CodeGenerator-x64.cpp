@@ -1249,10 +1249,9 @@ CodeGeneratorX64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
 void
 CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
 {
-    MAsmJSLoadFuncPtr* mir = ins->mir();
+    const MAsmJSLoadFuncPtr* mir = ins->mir();
 
     Register index = ToRegister(ins->index());
-    Register tmp = ToRegister(ins->temp());
     Register out = ToRegister(ins->output());
 
     if (mir->hasLimit()) {
@@ -1260,8 +1259,8 @@ CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    CodeOffset label = masm.leaRipRelative(tmp);
-    masm.loadPtr(Operand(tmp, index, ScalePointer, 0), out);
+    CodeOffset label = masm.leaRipRelative(out);
+    masm.loadPtr(Operand(out, index, ScalePointer, 0), out);
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
 }
 
