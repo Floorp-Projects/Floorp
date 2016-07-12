@@ -718,19 +718,6 @@ bool
 Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
                                  const ScriptFrameIter* maybeIter, MutableHandleValue vp)
 {
-    Rooted<DebuggerFrame*> result(cx);
-    if (!Debugger::getScriptFrameWithIter(cx, referent, maybeIter, &result))
-        return false;
-
-    vp.setObject(*result);
-    return true;
-}
-
-bool
-Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
-                                 const ScriptFrameIter* maybeIter,
-                                 MutableHandle<DebuggerFrame*> result)
-{
     MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == referent);
     MOZ_ASSERT(!referent.script()->selfHosted());
 
@@ -743,8 +730,8 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
         RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject());
         RootedNativeObject debugger(cx, object);
 
-        Rooted<DebuggerFrame*> frame(cx, DebuggerFrame::create(cx, proto, referent, maybeIter,
-                                                               debugger));
+        RootedNativeObject frame(cx, DebuggerFrame::create(cx, proto, referent, maybeIter,
+                                                           debugger));
         if (!frame)
             return false;
 
@@ -757,7 +744,7 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr referent,
         }
     }
 
-    result.set(&p->value()->as<DebuggerFrame>());
+    vp.setObject(*p->value());
     return true;
 }
 
@@ -7164,31 +7151,6 @@ DebuggerFrame::getOffset(JSContext* cx, Handle<DebuggerFrame*> frame, size_t& re
 }
 
 /* static */ bool
-DebuggerFrame::getOlder(JSContext* cx, Handle<DebuggerFrame*> frame,
-                        MutableHandle<DebuggerFrame*> result)
-{
-    MOZ_ASSERT(frame->isLive());
-
-    Debugger* dbg = frame->owner();
-
-    Maybe<ScriptFrameIter> maybeIter;
-    if (!DebuggerFrame::getScriptFrameIter(cx, frame, maybeIter))
-        return false;
-    ScriptFrameIter& iter = *maybeIter;
-
-    for (++iter; !iter.done(); ++iter) {
-        if (dbg->observesFrame(iter)) {
-            if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx))
-                return false;
-            return dbg->getScriptFrame(cx, iter, result);
-        }
-    }
-
-    result.set(nullptr);
-    return true;
-}
-
-/* static */ bool
 DebuggerFrame::isGenerator() const
 {
     return referent().script()->isGenerator();
@@ -7469,16 +7431,20 @@ DebuggerFrame_getThis(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* static */ bool
-DebuggerFrame::olderGetter(JSContext* cx, unsigned argc, Value* vp)
+static bool
+DebuggerFrame_getOlder(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGGER_FRAME(cx, argc, vp, "get older", args, frame);
+    THIS_FRAME_ITER(cx, argc, vp, "get this", args, thisobj, _, iter);
+    Debugger* dbg = Debugger::fromChildJSObject(thisobj);
 
-    Rooted<DebuggerFrame*> result(cx);
-    if (!DebuggerFrame::getOlder(cx, frame, &result))
-        return false;
-
-    args.rval().setObjectOrNull(result);
+    for (++iter; !iter.done(); ++iter) {
+        if (dbg->observesFrame(iter)) {
+            if (iter.isIon() && !iter.ensureHasRematerializedFrame(cx))
+                return false;
+            return dbg->getScriptFrame(cx, iter, args.rval());
+        }
+    }
+    args.rval().setNull();
     return true;
 }
 
@@ -7961,7 +7927,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("generator", DebuggerFrame::generatorGetter, 0),
     JS_PSG("live", DebuggerFrame::liveGetter, 0),
     JS_PSG("offset", DebuggerFrame::offsetGetter, 0),
-    JS_PSG("older", DebuggerFrame::olderGetter, 0),
+    JS_PSG("older", DebuggerFrame_getOlder, 0),
     JS_PSG("script", DebuggerFrame_getScript, 0),
     JS_PSG("this", DebuggerFrame_getThis, 0),
     JS_PSG("type", DebuggerFrame_getType, 0),
