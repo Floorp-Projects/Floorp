@@ -98,6 +98,10 @@ public:
   void GetId(nsAString& aResult) const { aResult = mId; }
   void SetId(const nsAString& aId);
   KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
+  void SetEffect(AnimationEffectReadOnly* aEffect)
+  {
+    // TODO: Merged with SetEffect(KeyframeEffectReadOnly*) in the next patch.
+  }
   void SetEffect(KeyframeEffectReadOnly* aEffect);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
   void SetTimeline(AnimationTimeline* aTimeline);
