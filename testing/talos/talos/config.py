@@ -138,8 +138,6 @@ DEFAULTS = dict(
             'http://127.0.0.1/extensions-dummy/repositoryBrowseURL',
         'extensions.getAddons.search.url':
             'http://127.0.0.1/extensions-dummy/repositorySearchURL',
-        'plugins.update.url':
-            'http://127.0.0.1/plugins-dummy/updateCheckURL',
         'media.gmp-manager.url':
             'http://127.0.0.1/gmpmanager-dummy/update.xml',
         'extensions.systemAddon.update.url':

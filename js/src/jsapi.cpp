@@ -5813,31 +5813,31 @@ JS_GetRegExpSource(JSContext* cx, HandleObject obj)
 /************************************************************************/
 
 JS_PUBLIC_API(bool)
-JS_SetDefaultLocale(JSRuntime* rt, const char* locale)
+JS_SetDefaultLocale(JSContext* cx, const char* locale)
 {
-    AssertHeapIsIdle(rt);
-    return rt->setDefaultLocale(locale);
+    AssertHeapIsIdle(cx);
+    return cx->setDefaultLocale(locale);
 }
 
 JS_PUBLIC_API(void)
-JS_ResetDefaultLocale(JSRuntime* rt)
+JS_ResetDefaultLocale(JSContext* cx)
 {
-    AssertHeapIsIdle(rt);
-    rt->resetDefaultLocale();
+    AssertHeapIsIdle(cx);
+    cx->resetDefaultLocale();
 }
 
 JS_PUBLIC_API(void)
-JS_SetLocaleCallbacks(JSRuntime* rt, const JSLocaleCallbacks* callbacks)
+JS_SetLocaleCallbacks(JSContext* cx, const JSLocaleCallbacks* callbacks)
 {
-    AssertHeapIsIdle(rt);
-    rt->localeCallbacks = callbacks;
+    AssertHeapIsIdle(cx);
+    cx->localeCallbacks = callbacks;
 }
 
 JS_PUBLIC_API(const JSLocaleCallbacks*)
-JS_GetLocaleCallbacks(JSRuntime* rt)
+JS_GetLocaleCallbacks(JSContext* cx)
 {
     /* This function can be called by a finalizer. */
-    return rt->localeCallbacks;
+    return cx->localeCallbacks;
 }
 
 /************************************************************************/

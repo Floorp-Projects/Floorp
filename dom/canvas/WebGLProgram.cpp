@@ -69,7 +69,7 @@ ParseName(const nsCString& name, nsCString* const out_baseName,
     return true;
 }
 
-static void
+static WebGLActiveInfo*
 AddActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
               const nsACString& baseUserName, const nsACString& baseMappedName,
               std::vector<RefPtr<WebGLActiveInfo>>* activeInfoList,
@@ -81,6 +81,7 @@ AddActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArra
     activeInfoList->push_back(info);
 
     infoLocMap->insert(std::make_pair(info->mBaseUserName, info.get()));
+    return info.get();
 }
 
 static void
@@ -168,8 +169,9 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 #endif
 
         const bool isArray = false;
-        AddActiveInfo(prog->mContext, elemCount, elemType, isArray, userName, mappedName,
-                      &info->activeAttribs, &info->attribMap);
+        const auto attrib = AddActiveInfo(prog->mContext, elemCount, elemType, isArray,
+                                          userName, mappedName, &info->activeAttribs,
+                                          &info->attribMap);
 
         // Collect active locations:
         GLint loc = gl->fGetAttribLocation(prog->mGLName, mappedName.BeginReading());
@@ -177,7 +179,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
             if (mappedName != "gl_InstanceID")
                 MOZ_CRASH("GFX: Active attrib has no location.");
         } else {
-            info->activeAttribLocs.insert(loc);
+            info->activeAttribLocs.insert({attrib, (GLuint)loc});
         }
     }
 
@@ -963,20 +965,15 @@ WebGLProgram::LinkProgram()
     }
 
     LinkAndUpdate();
-    if (IsLinked()) {
-        // Check if the attrib name conflicting to uniform name
-        for (const auto& uniform : mMostRecentLinkInfo->uniformMap) {
-            if (mMostRecentLinkInfo->attribMap.find(uniform.first) != mMostRecentLinkInfo->attribMap.end()) {
-                mLinkLog = nsPrintfCString("The uniform name (%s) conflicts with attribute name.",
-                                           uniform.first.get());
-                mMostRecentLinkInfo = nullptr;
-                break;
-            }
-        }
-    }
 
-    if (mMostRecentLinkInfo)
-        return;
+    if (mMostRecentLinkInfo) {
+        nsCString postLinkLog;
+        if (ValidateAfterTentativeLink(&postLinkLog))
+            return;
+
+        mMostRecentLinkInfo = nullptr;
+        mLinkLog = postLinkLog;
+    }
 
     // Failed link.
     if (mContext->ShouldGenerateWarnings()) {
@@ -991,6 +988,57 @@ WebGLProgram::LinkProgram()
                                       mLinkLog.BeginReading());
         }
     }
+}
+
+bool
+WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
+{
+    const auto& linkInfo = mMostRecentLinkInfo;
+
+    // Check if the attrib name conflicting to uniform name
+    for (const auto& uniform : linkInfo->uniformMap) {
+        if (linkInfo->attribMap.find(uniform.first) != linkInfo->attribMap.end()) {
+            *out_linkLog = nsPrintfCString("The uniform name (%s) conflicts with"
+                                           " attribute name.",
+                                           uniform.first.get());
+            return false;
+        }
+    }
+
+    std::map<GLuint, const WebGLActiveInfo*> attribsByLoc;
+    for (const auto& pair : linkInfo->activeAttribLocs) {
+        const auto dupe = attribsByLoc.find(pair.second);
+        if (dupe != attribsByLoc.end()) {
+            *out_linkLog = nsPrintfCString("Aliased location between active attribs"
+                                           " \"%s\" and \"%s\".",
+                                           dupe->second->mBaseUserName.BeginReading(),
+                                           pair.first->mBaseUserName.BeginReading());
+            return false;
+        }
+    }
+
+    for (const auto& pair : attribsByLoc) {
+        const GLuint attribLoc = pair.first;
+        const auto attrib = pair.second;
+
+        const auto elemSize = ElemSizeFromType(attrib->mElemType);
+        const GLuint locationsUsed = (elemSize + 3) / 4;
+        for (GLuint i = 1; i < locationsUsed; i++) {
+            const GLuint usedLoc = attribLoc + i;
+
+            const auto dupe = attribsByLoc.find(usedLoc);
+            if (dupe != attribsByLoc.end()) {
+                *out_linkLog = nsPrintfCString("Attrib \"%s\" of type \"0x%04x\" aliases"
+                                               " \"%s\" by overhanging its location.",
+                                               attrib->mBaseUserName.BeginReading(),
+                                               attrib->mElemType,
+                                               dupe->second->mBaseUserName.BeginReading());
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool
@@ -1061,7 +1109,7 @@ WebGLProgram::LinkAndUpdate()
         return;
 
     mMostRecentLinkInfo = QueryProgramInfo(this, gl);
-    MOZ_RELEASE_ASSERT(mMostRecentLinkInfo, "GFX: most rent link info not set.");
+    MOZ_RELEASE_ASSERT(mMostRecentLinkInfo, "GFX: most recent link info not set.");
 }
 
 bool

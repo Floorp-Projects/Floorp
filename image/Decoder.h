@@ -8,6 +8,7 @@
 
 #include "FrameAnimator.h"
 #include "RasterImage.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/RefPtr.h"
 #include "DecodePool.h"
@@ -16,6 +17,7 @@
 #include "ImageMetadata.h"
 #include "Orientation.h"
 #include "SourceBuffer.h"
+#include "StreamingLexer.h"
 #include "SurfaceFlags.h"
 
 namespace mozilla {
@@ -162,10 +164,10 @@ public:
 
   size_t BytesDecoded() const { return mBytesDecoded; }
 
-  // The amount of time we've spent inside Write() so far for this decoder.
+  // The amount of time we've spent inside DoDecode() so far for this decoder.
   TimeDuration DecodeTime() const { return mDecodeTime; }
 
-  // The number of times Write() has been called so far for this decoder.
+  // The number of chunks this decoder's input was divided into.
   uint32_t ChunkCount() const { return mChunkCount; }
 
   // The number of frames we have, including anything in-progress. Thus, this
@@ -272,6 +274,7 @@ public:
 
 
 protected:
+  friend class AutoRecordDecoderTelemetry;
   friend class nsICODecoder;
   friend class PalettedSurfaceSink;
   friend class SurfaceSink;
@@ -287,7 +290,7 @@ protected:
    * call PostDataError().
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) = 0;
+  virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) = 0;
   virtual void BeforeFinishInternal();
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();
@@ -358,16 +361,6 @@ protected:
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
-
-  /**
-   * Called by Decode() to write data to the decoder.
-   *
-   * @param aBuffer A buffer containing the data to be written.
-   * @param aCount The number of bytes to write.
-   *
-   * Any errors are reported by setting the appropriate state on the decoder.
-   */
-  void Write(const char* aBuffer, uint32_t aCount);
 
   /**
    * CompleteDecode() finishes up the decoding process after Decode() determines
