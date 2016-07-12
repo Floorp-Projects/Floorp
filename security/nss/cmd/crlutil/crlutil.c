@@ -456,10 +456,14 @@ CreateModifiedCRLCopy(PLArenaPool *arena, CERTCertDBHandle *certHandle,
     }
 
     signCrl->arena = arena;
+    signCrl->referenceCount = 1;
 
 loser:
     if (crlDER.data) {
         SECITEM_FreeItem(&crlDER, PR_FALSE);
+    }
+    if (modArena && (!modCrl || modCrl->arena != modArena)) {
+        PORT_FreeArena(modArena, PR_FALSE);
     }
     if (modCrl)
         SEC_DestroyCrl(modCrl);

@@ -130,9 +130,13 @@ freebl_RunLoaderOnce( void )
 
 const FREEBLVector *FREEBL_GetVector(void)
 {
-  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
       return NULL;
-  return (vector->p_FREEBL_GetVector)();
+  }
+  if (vector) {
+      return (vector->p_FREEBL_GetVector)();
+  }
+  return NULL;
 }
 
 NSSLOWInitContext *NSSLOW_Init(void) 

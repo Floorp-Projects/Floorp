@@ -607,10 +607,10 @@ ssl_stress()
           fi
 
           echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss $cparam \\"
-          echo "         $verbose ${HOSTADDR}"
+          echo "         -V ssl3:tls1.2 $verbose ${HOSTADDR}"
           echo "strsclnt started at `date`"
           ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss $cparam \
-                   $verbose ${HOSTADDR}
+                   -V ssl3:tls1.2 $verbose ${HOSTADDR}
           ret=$?
           echo "strsclnt completed at `date`"
           html_msg $ret $value \

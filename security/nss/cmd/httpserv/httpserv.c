@@ -640,6 +640,7 @@ handle_connection(
             if (isOcspRequest && caRevoInfos) {
                 CERTOCSPRequest *request = NULL;
                 PRBool failThisRequest = PR_FALSE;
+                PLArenaPool *arena = NULL;
 
                 if (ocspMethodsAllowed == ocspGetOnly && postData.len) {
                     failThisRequest = PR_TRUE;
@@ -660,11 +661,16 @@ handle_connection(
                  */
                 if (getData) {
                     if (urldecode_base64chars_inplace(getData) == SECSuccess) {
-                        NSSBase64_DecodeBuffer(NULL, &postData, getData, strlen(getData));
+                        /* The code below can handle a NULL arena */
+                        arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+                        NSSBase64_DecodeBuffer(arena, &postData, getData, strlen(getData));
                     }
                 }
                 if (postData.len) {
                     request = CERT_DecodeOCSPRequest(&postData);
+                }
+                if (arena) {
+                    PORT_FreeArena(arena, PR_FALSE);
                 }
                 if (!request || !request->tbsRequest ||
                     !request->tbsRequest->requestList ||
@@ -775,6 +781,7 @@ handle_connection(
                             PORT_FreeArena(arena, PR_FALSE);
                         }
                     }
+                    CERT_DestroyOCSPRequest(request);
                     break;
                 }
             } else if (local_file_fd) {
@@ -1367,6 +1374,7 @@ main(int argc, char **argv)
                 revoInfo->crl =
                     CERT_DecodeDERCrlWithFlags(NULL, &crlDER, SEC_CRL_TYPE,
                                                CRL_DECODE_DEFAULT_OPTIONS);
+                SECITEM_FreeItem(&crlDER, PR_FALSE);
                 if (!revoInfo->crl) {
                     fprintf(stderr, "unable to decode crl file %s\n",
                             revoInfo->crlFilename);

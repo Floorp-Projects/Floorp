@@ -376,7 +376,6 @@ ssl3_KeyAndMacDeriveBypass(
         */
         secret.data = &key_block[i];
         secret.len = effKeySize;
-        i += effKeySize;
         keyblk.data = key_block2;
         keyblk.len = keySize;
         status = TLS_PRF(&secret, "server write key", &crsr, &keyblk, isFIPS);
@@ -604,7 +603,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     *pcanbypass = PR_FALSE;
     return SECSuccess;
 #else
-    SECStatus rv;
+    SECStatus rv = SECFailure;
     int i;
     PRUint16 suite;
     PK11SymKey *pms = NULL;
@@ -633,7 +632,6 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
         return SECFailure;
 
     *pcanbypass = PR_TRUE;
-    rv = SECFailure;
 
     /* determine which KEAs to test */
     /* 0 (TLS_NULL_WITH_NULL_NULL) is used as a list terminator because
@@ -687,7 +685,6 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
         if (privKeytype == rsaKey && testrsa_export) {
             if (PK11_GetPrivateModulusLen(srvPrivkey) > EXPORT_RSA_KEY_LENGTH) {
                 *pcanbypass = PR_FALSE;
-                rv = SECSuccess;
                 break;
             } else
                 testrsa = PR_TRUE;
@@ -813,7 +810,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
                         SECKEY_DestroyPublicKey(keapub);
                     PORT_SetError(SEC_ERROR_KEYGEN_FAIL);
                     rv = SECFailure;
-                    break;
+                    goto done;
                 }
             } else {
                 /* TLS_ECDH_ECDSA */
@@ -832,7 +829,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
                 }
                 PORT_SetError(SEC_ERROR_KEYGEN_FAIL);
                 rv = SECFailure;
-                break;
+                goto done;
             }
             /* now do the server side */
             /* determine the PMS using client's public value */
