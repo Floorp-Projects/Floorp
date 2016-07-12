@@ -43,22 +43,24 @@ private:
   virtual ~CacheFileInputStream();
 
   nsresult CloseWithStatusLocked(nsresult aStatus);
+  void CleanUp();
   void ReleaseChunk();
   void EnsureCorrectChunk(bool aReleaseOnly);
 
   // CanRead returns negative value when output stream truncates the data before
   // the input stream's mPos.
-  void CanRead(int64_t *aCanRead, const char **aBuf);
+  int64_t CanRead(CacheFileChunkReadHandle *aHandle);
   void NotifyListener();
   void MaybeNotifyListener();
 
-  RefPtr<CacheFile>        mFile;
+  RefPtr<CacheFile>      mFile;
   RefPtr<CacheFileChunk> mChunk;
-  int64_t                  mPos;
-  bool                     mClosed;
-  nsresult                 mStatus;
-  bool                     mWaitingForUpdate;
-  int64_t                  mListeningForChunk;
+  int64_t                mPos;
+  nsresult               mStatus;
+  bool                   mClosed : 1;
+  bool                   mInReadSegments : 1;
+  bool                   mWaitingForUpdate : 1;
+  int64_t                mListeningForChunk;
 
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   uint32_t                         mCallbackFlags;
