@@ -188,6 +188,37 @@ bool RowHasPixels(gfx::SourceSurface* aSurface,
                   int32_t aRow,
                   const std::vector<BGRAColor>& aPixels);
 
+// ExpectNoResume is an IResumable implementation for use by tests that expect
+// Resume() to never get called.
+class ExpectNoResume final : public IResumable
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ExpectNoResume, override)
+
+  void Resume() override { FAIL() << "Resume() should not get called"; }
+
+private:
+  ~ExpectNoResume() override { }
+};
+
+// CountResumes is an IResumable implementation for use by tests that expect
+// Resume() to get called a certain number of times.
+class CountResumes : public IResumable
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CountResumes, override)
+
+  CountResumes() : mCount(0) { }
+
+  void Resume() override { mCount++; }
+  uint32_t Count() const { return mCount; }
+
+private:
+  ~CountResumes() override { }
+
+  uint32_t mCount;
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SurfacePipe Helpers
