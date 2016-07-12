@@ -5525,9 +5525,13 @@ MOZ_ARG_WITH_STRING(servo,
   SERVO_TARGET_DIR=$withval,
   SERVO_TARGET_DIR=)
 if test -n "$SERVO_TARGET_DIR"; then
-   MOZ_SERVO_LIBS="-L${SERVO_TARGET_DIR} -lgeckoservo"
-   AC_DEFINE(MOZ_STYLO)
-   AC_SUBST_LIST(MOZ_SERVO_LIBS)
+    if test -n "$_WIN32_MSVC"; then
+        MOZ_SERVO_LIBS="${SERVO_TARGET_DIR}/geckoservo"
+    else
+        MOZ_SERVO_LIBS="-L${SERVO_TARGET_DIR} -lgeckoservo"
+    fi
+    AC_DEFINE(MOZ_STYLO)
+    AC_SUBST_LIST(MOZ_SERVO_LIBS)
 fi
 
 dnl ========================================================
