@@ -22,7 +22,7 @@ BEGIN_TEST(testDateToLocaleString)
     // Date.prototype.toLocale{,Date,Time}String behavior.
 
     // Start with German.
-    CHECK(JS_SetDefaultLocale(rt, "de"));
+    CHECK(JS_SetDefaultLocale(cx, "de"));
 
     // The (constrained) Date object we'll use to test behavior.
     EXEC("var d = new Date(Date.UTC(2015, 9 - 1, 17));");
@@ -30,25 +30,25 @@ BEGIN_TEST(testDateToLocaleString)
     // Test that toLocaleString behavior changes with default locale changes.
     EXEC("var deAll = d.toLocaleString();");
 
-    CHECK(JS_SetDefaultLocale(rt, "en"));
+    CHECK(JS_SetDefaultLocale(cx, "en"));
     EXEC("if (d.toLocaleString() === deAll) \n"
          "  throw 'toLocaleString results should have changed with system locale change';");
 
     // Test that toLocaleDateString behavior changes with default locale changes.
     EXEC("var enDate = d.toLocaleDateString();");
 
-    CHECK(JS_SetDefaultLocale(rt, "de"));
+    CHECK(JS_SetDefaultLocale(cx, "de"));
     EXEC("if (d.toLocaleDateString() === enDate) \n"
          "  throw 'toLocaleDateString results should have changed with system locale change';");
 
     // Test that toLocaleTimeString behavior changes with default locale changes.
     EXEC("var deTime = d.toLocaleTimeString();");
 
-    CHECK(JS_SetDefaultLocale(rt, "en"));
+    CHECK(JS_SetDefaultLocale(cx, "en"));
     EXEC("if (d.toLocaleTimeString() === deTime) \n"
          "  throw 'toLocaleTimeString results should have changed with system locale change';");
 
-    JS_ResetDefaultLocale(rt);
+    JS_ResetDefaultLocale(cx);
     return true;
 }
 END_TEST(testDateToLocaleString)

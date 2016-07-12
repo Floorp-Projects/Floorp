@@ -373,6 +373,19 @@ public:
                                   aAccuracy, aBearing, aSpeed, aTime));
         gLocationCallback->Update(geoPosition);
     }
+
+    static void NotifyUriVisited(jni::String::Param aUri)
+    {
+#ifdef MOZ_ANDROID_HISTORY
+        nsCOMPtr<IHistory> history = services::GetHistoryService();
+        nsCOMPtr<nsIURI> visitedURI;
+        if (history &&
+            NS_SUCCEEDED(NS_NewURI(getter_AddRefs(visitedURI),
+                                   aUri->ToString()))) {
+            history->NotifyVisited(visitedURI);
+        }
+#endif
+    }
 };
 
 nsAppShell::nsAppShell()
@@ -820,19 +833,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         free(uri);
         if (flag)
             free(flag);
-        break;
-    }
-
-    case AndroidGeckoEvent::VISITED: {
-#ifdef MOZ_ANDROID_HISTORY
-        nsCOMPtr<IHistory> history = services::GetHistoryService();
-        nsCOMPtr<nsIURI> visitedURI;
-        if (history &&
-            NS_SUCCEEDED(NS_NewURI(getter_AddRefs(visitedURI),
-                                   curEvent->Characters()))) {
-            history->NotifyVisited(visitedURI);
-        }
-#endif
         break;
     }
 

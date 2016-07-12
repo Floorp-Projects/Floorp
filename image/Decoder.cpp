@@ -22,6 +22,34 @@ using mozilla::gfx::SurfaceFormat;
 namespace mozilla {
 namespace image {
 
+class MOZ_STACK_CLASS AutoRecordDecoderTelemetry final
+{
+public:
+  AutoRecordDecoderTelemetry(Decoder* aDecoder, uint32_t aByteCount)
+    : mDecoder(aDecoder)
+  {
+    MOZ_ASSERT(mDecoder);
+
+    // Begin recording telemetry data.
+    mStartTime = TimeStamp::Now();
+    mDecoder->mChunkCount++;
+
+    // Keep track of the total number of bytes written.
+    mDecoder->mBytesDecoded += aByteCount;
+
+  }
+
+  ~AutoRecordDecoderTelemetry()
+  {
+    // Finish telemetry.
+    mDecoder->mDecodeTime += (TimeStamp::Now() - mStartTime);
+  }
+
+private:
+  Decoder* mDecoder;
+  TimeStamp mStartTime;
+};
+
 Decoder::Decoder(RasterImage* aImage)
   : mImageData(nullptr)
   , mImageDataLength(0)
@@ -117,7 +145,19 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
 
     MOZ_ASSERT(newState == SourceBufferIterator::READY);
 
-    Write(mIterator->Data(), mIterator->Length());
+    {
+      PROFILER_LABEL("ImageDecoder", "Write",
+        js::ProfileEntry::Category::GRAPHICS);
+
+      AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
+
+      // Pass the data along to the implementation.
+      Maybe<TerminalState> terminalState = DoDecode(*mIterator);
+
+      if (terminalState == Some(TerminalState::FAILURE)) {
+        PostDataError();
+      }
+    }
   }
 
   CompleteDecode();
@@ -131,43 +171,6 @@ Decoder::ShouldSyncDecode(size_t aByteLimit)
   MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
 
   return mIterator->RemainingBytesIsNoMoreThan(aByteLimit);
-}
-
-void
-Decoder::Write(const char* aBuffer, uint32_t aCount)
-{
-  PROFILER_LABEL("ImageDecoder", "Write",
-    js::ProfileEntry::Category::GRAPHICS);
-
-  MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT(aCount > 0);
-
-  // We're strict about decoder errors
-  MOZ_ASSERT(!HasDecoderError(),
-             "Not allowed to make more decoder calls after error!");
-
-  // Begin recording telemetry data.
-  TimeStamp start = TimeStamp::Now();
-  mChunkCount++;
-
-  // Keep track of the total number of bytes written.
-  mBytesDecoded += aCount;
-
-  // If a data error occured, just ignore future data.
-  if (HasDataError()) {
-    return;
-  }
-
-  if (IsMetadataDecode() && HasSize()) {
-    // More data came in since we found the size. We have nothing to do here.
-    return;
-  }
-
-  // Pass the data along to the implementation.
-  WriteInternal(aBuffer, aCount);
-
-  // Finish telemetry.
-  mDecodeTime += (TimeStamp::Now() - start);
 }
 
 void

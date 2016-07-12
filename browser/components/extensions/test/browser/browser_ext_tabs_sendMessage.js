@@ -112,6 +112,92 @@ add_task(function* tabsSendMessageReply() {
   yield extension.unload();
 });
 
+
+add_task(function* tabsSendHidden() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+
+      "content_scripts": [{
+        "matches": ["http://example.com/content*"],
+        "js": ["content-script.js"],
+        "run_at": "document_start",
+      }],
+    },
+
+    background: function() {
+      let resolveContent;
+      browser.runtime.onMessage.addListener((msg, sender) => {
+        if (msg[0] == "content-ready") {
+          resolveContent(msg[1]);
+        }
+      });
+
+      let awaitContent = url => {
+        return new Promise(resolve => {
+          resolveContent = resolve;
+        }).then(result => {
+          browser.test.assertEq(url, result, "Expected content script URL");
+        });
+      };
+
+      const URL1 = "http://example.com/content1.html";
+      const URL2 = "http://example.com/content2.html";
+      browser.tabs.create({url: URL1}).then(tab => {
+        return awaitContent(URL1).then(() => {
+          return browser.tabs.sendMessage(tab.id, URL1);
+        }).then(url => {
+          browser.test.assertEq(URL1, url, "Should get response from expected content window");
+
+          return browser.tabs.update(tab.id, {url: URL2});
+        }).then(() => {
+          return awaitContent(URL2);
+        }).then(() => {
+          return browser.tabs.sendMessage(tab.id, URL2);
+        }).then(url => {
+          browser.test.assertEq(URL2, url, "Should get response from expected content window");
+
+          // Repeat once just to be sure the first message was processed by all
+          // listeners before we exit the test.
+          return browser.tabs.sendMessage(tab.id, URL2);
+        }).then(url => {
+          browser.test.assertEq(URL2, url, "Should get response from expected content window");
+
+          return browser.tabs.remove(tab.id);
+        });
+      }).then(() => {
+        browser.test.notifyPass("contentscript-bfcache-window");
+      }).catch(error => {
+        browser.test.fail(`Error: ${error} :: ${error.stack}`);
+        browser.test.notifyFail("contentscript-bfcache-window");
+      });
+    },
+
+    files: {
+      "content-script.js": function() {
+        // Store this in a local variable to make sure we don't touch any
+        // properties of the possibly-hidden content window.
+        let href = window.location.href;
+
+        browser.runtime.onMessage.addListener((msg, sender) => {
+          browser.test.assertEq(href, msg, "Should be in the expected content window");
+
+          return Promise.resolve(href);
+        });
+
+        browser.runtime.sendMessage(["content-ready", href]);
+      },
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("contentscript-bfcache-window");
+
+  yield extension.unload();
+});
+
+
 add_task(function* tabsSendMessageNoExceptionOnNonExistentTab() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

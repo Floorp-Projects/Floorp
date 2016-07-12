@@ -6,7 +6,9 @@
 
 stumbler_sources = [
     'java/org/mozilla/mozstumbler/service/AppGlobals.java',
-    'java/org/mozilla/mozstumbler/service/mainthread/PassiveServiceReceiver.java',
+    'java/org/mozilla/mozstumbler/service/mainthread/LocalPreferenceReceiver.java',
+    'java/org/mozilla/mozstumbler/service/mainthread/SafeReceiver.java',
+    'java/org/mozilla/mozstumbler/service/mainthread/SystemReceiver.java',
     'java/org/mozilla/mozstumbler/service/Prefs.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/blocklist/BSSIDBlockList.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/blocklist/SSIDBlockList.java',
