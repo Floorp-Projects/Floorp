@@ -697,13 +697,6 @@ AccessibleCaretManager::OnKeyboardEvent()
   }
 }
 
-void
-AccessibleCaretManager::OnFrameReconstruction()
-{
-  mFirstCaret->EnsureApzAware();
-  mSecondCaret->EnsureApzAware();
-}
-
 Selection*
 AccessibleCaretManager::GetSelection() const
 {
