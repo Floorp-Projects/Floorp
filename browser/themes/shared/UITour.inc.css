@@ -26,17 +26,18 @@
 }
 
 #UITourTooltipBody {
-  margin-inline-end: 14px;
-  margin-inline-start: 14px;
-  margin-top: -16px;
-  margin-bottom: 8px;
+  -moz-box-align: start;
+}
+
+#UITourTooltipTitleContainer {
+  -moz-box-align: start;
+  margin-bottom: 10px;
 }
 
 #UITourTooltipIcon {
   width: 48px;
   height: 48px;
-  margin-inline-start: 14px;
-  margin-inline-end: 14px;
+  margin-inline-end: 10px;
 }
 
 #UITourTooltipTitle,
@@ -47,11 +48,7 @@
 #UITourTooltipTitle {
   font-size: 1.45rem;
   font-weight: bold;
-  margin-inline-start: 0;
-  /* Avoid the title overlapping the close button */
-  margin-inline-end: 14px;
-  margin-top: 0;
-  margin-bottom: 9px;
+  margin: 0;
 }
 
 #UITourTooltipDescription {
@@ -81,7 +78,7 @@
   background-color: hsla(210,4%,10%,.07);
   border-top: 1px solid hsla(210,4%,10%,.14);
   margin: 10px -16px -16px;
-  padding: 2em 15px;
+  padding: 16px;
 }
 
 #UITourTooltipButtons > label,
@@ -92,6 +89,11 @@
 #UITourTooltipButtons > label:first-child,
 #UITourTooltipButtons > button:first-child {
   margin-inline-start: 0;
+}
+
+#UITourTooltipButtons > label:last-child,
+#UITourTooltipButtons > button:last-child {
+  margin-inline-end: 0;
 }
 
 #UITourTooltipButtons > button[image] > .button-box > .button-icon {
