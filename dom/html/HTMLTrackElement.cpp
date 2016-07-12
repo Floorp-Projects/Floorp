@@ -239,10 +239,6 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aDocument) {
-    return NS_OK;
-  }
-
   LOG(LogLevel::Debug, ("Track Element bound to tree."));
   if (!aParent || !aParent->IsNodeOfType(nsINode::eMEDIA)) {
     return NS_OK;
@@ -263,7 +259,7 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
       CreateTextTrack();
     }
     RefPtr<Runnable> r = NewRunnableMethod(this, &HTMLTrackElement::LoadResource);
-    mMediaParent->RunInStableState(r);
+    nsContentUtils::RunInStableState(r.forget());
   }
 
   return NS_OK;

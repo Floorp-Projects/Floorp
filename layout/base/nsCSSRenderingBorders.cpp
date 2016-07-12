@@ -21,6 +21,7 @@
 #include "GeckoProfiler.h"
 #include "nsExpirationTracker.h"
 #include "RoundedRect.h"
+#include "nsIScriptError.h"
 #include "nsClassHashtable.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"

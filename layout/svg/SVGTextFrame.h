@@ -399,8 +399,8 @@ public:
    * it.
    *
    * The only case where we have to do this is in response to a style change on
-   * a non-display <text>; the only caller of ScheduleReflowSVGNonDisplayText
-   * currently is SVGTextFrame::DidSetStyleContext.
+   * a non-display <text>. It is done in response to glyphs changes on
+   * non-display <text> (i.e., animated SVG-in-OpenType glyphs).
    */
   void ScheduleReflowSVGNonDisplayText();
 

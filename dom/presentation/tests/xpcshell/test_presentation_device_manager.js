@@ -21,7 +21,8 @@ TestPresentationControlChannel.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
   sendOffer: function(offer) {},
   sendAnswer: function(answer) {},
-  close: function() {},
+  disconnect: function() {},
+  launch: function() {},
   set listener(listener) {},
   get listener() {},
 };

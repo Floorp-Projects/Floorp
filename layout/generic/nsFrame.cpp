@@ -2799,12 +2799,20 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   CheckForApzAwareEventHandlers(aBuilder, child);
 
   if (savedOutOfFlowData) {
+    aBuilder->SetBuildingInvisibleItems(false);
+
     clipState.SetClipForContainingBlockDescendants(
       &savedOutOfFlowData->mContainingBlockClip);
     clipState.SetScrollClipForContainingBlockDescendants(
       savedOutOfFlowData->mContainingBlockScrollClip);
   } else if (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO &&
              isPlaceholder) {
+    NS_ASSERTION(dirty.IsEmpty(), "should have empty dirty rect");
+    // Every item we build from now until we descent into an out of flow that
+    // does have saved out of flow data should be invisible. This state gets
+    // restored when AutoBuildingDisplayList gets out of scope.
+    aBuilder->SetBuildingInvisibleItems(true);
+
     // If we have nested out-of-flow frames and the outer one isn't visible
     // then we won't have stored clip data for it. We can just clear the clip
     // instead since we know we won't render anything, and the inner out-of-flow
@@ -2898,7 +2906,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     DisplayDebugBorders(aBuilder, child, aLists);
 #endif
   }
-    
+
+  buildingForChild.RestoreBuildingInvisibleItemsValue();
+
   // Clear clip rect for the construction of the items below. Since we're
   // clipping all their contents, they themselves don't need to be clipped.
   clipState.Clear();

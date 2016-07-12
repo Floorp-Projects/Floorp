@@ -30,7 +30,7 @@ public:
                    SeekJob&& aSeekJob,
                    const MediaInfo& aInfo,
                    const media::TimeUnit& aDuration,
-                   int64_t aCurrentMediaTime,
+                   int64_t aCurrentTime,
                    MediaQueue<MediaData>& aAudioQueue,
                    MediaQueue<MediaData>& aVideoQueue);
 
@@ -42,12 +42,6 @@ public:
 
 private:
   ~NextFrameSeekTask();
-
-  bool IsVideoDecoding() const;
-
-  void EnsureVideoDecodeTaskQueued();
-
-  const char* VideoRequestStatus();
 
   void RequestVideoData();
 
@@ -86,7 +80,7 @@ private:
   /*
    * Internal state.
    */
-  const int64_t mCurrentTimeBeforeSeek;
+  const int64_t mCurrentTime;
   media::TimeUnit mDuration;
 
   MediaEventListener mAudioCallback;
