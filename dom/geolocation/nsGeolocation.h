@@ -72,6 +72,9 @@ public:
 
   nsresult Init();
 
+  void HandleMozsettingChanged(nsISupports* aSubject);
+  void HandleMozsettingValue(const bool aValue);
+
   // Management of the Geolocation objects
   void AddLocator(mozilla::dom::Geolocation* locator);
   void RemoveLocator(mozilla::dom::Geolocation* locator);
