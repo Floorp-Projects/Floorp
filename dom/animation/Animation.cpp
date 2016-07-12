@@ -94,12 +94,6 @@ Animation::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<Animation> animation = new Animation(global);
 
-  if (!aEffect) {
-    // Bug 1049975: We do not support null effect yet.
-    aRv.Throw(NS_ERROR_DOM_ANIM_NO_EFFECT_ERR);
-    return nullptr;
-  }
-
   AnimationTimeline* timeline;
   if (aTimeline.WasPassed()) {
     timeline = aTimeline.Value();
@@ -1123,6 +1117,10 @@ Animation::PostUpdate()
 {
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
+    return;
+  }
+
+  if (!mEffect) {
     return;
   }
 
