@@ -130,6 +130,7 @@ Animation::SetEffect(AnimationEffectReadOnly* aEffect)
   PostUpdate();
 }
 
+// https://w3c.github.io/web-animations/#setting-the-target-effect
 void
 Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
 {
@@ -138,12 +139,55 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
   if (mEffect == aEffect) {
     return;
   }
+
   if (mEffect) {
-    mEffect->SetAnimation(nullptr);
+    if (!aEffect) {
+      // If the new effect is null, call ResetPendingTasks before clearing
+      // mEffect since ResetPendingTasks needs it to get the appropriate
+      // PendingAnimationTracker.
+      ResetPendingTasks();
+    }
+
+    // Break links with the old effect and then drop it.
+    RefPtr<AnimationEffectReadOnly> oldEffect = mEffect;
+    mEffect = nullptr;
+    oldEffect->SetAnimation(nullptr);
   }
-  mEffect = aEffect;
-  if (mEffect) {
+
+  if (aEffect) {
+    // Break links from the new effect to its previous animation, if any.
+    RefPtr<AnimationEffectReadOnly> newEffect = aEffect;
+    Animation* prevAnim = aEffect->GetAnimation();
+    if (prevAnim) {
+      prevAnim->SetEffect(nullptr);
+    }
+
+    // Create links with the new effect.
+    mEffect = newEffect;
     mEffect->SetAnimation(this);
+
+    // Reschedule pending pause or pending play tasks.
+    // If we have a pending animation, it will either be registered
+    // in the pending animation tracker and have a null pending ready time,
+    // or, after it has been painted, it will be removed from the tracker
+    // and assigned a pending ready time.
+    // After updating the effect we'll typically need to repaint so if we've
+    // already been assigned a pending ready time, we should clear it and put
+    // the animation back in the tracker.
+    if (!mPendingReadyTime.IsNull()) {
+      mPendingReadyTime.SetNull();
+
+      nsIDocument* doc = GetRenderedDocument();
+      if (doc) {
+        PendingAnimationTracker* tracker =
+          doc->GetOrCreatePendingAnimationTracker();
+        if (mPendingState == PendingState::PlayPending) {
+          tracker->AddPlayPending(*this);
+        } else {
+          tracker->AddPausePending(*this);
+        }
+      }
+    }
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -1109,7 +1153,11 @@ Animation::UpdateEffect()
 {
   if (mEffect) {
     UpdateRelevance();
-    mEffect->NotifyAnimationTimingUpdated();
+
+    KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+    if (keyframeEffect) {
+      keyframeEffect->NotifyAnimationTimingUpdated();
+    }
   }
 }
 
