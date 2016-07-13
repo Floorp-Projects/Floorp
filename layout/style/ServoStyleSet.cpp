@@ -6,6 +6,7 @@
 
 #include "mozilla/ServoStyleSet.h"
 
+#include "mozilla/ServoRestyleManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIDocumentInlines.h"
@@ -379,7 +380,12 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 }
 
 void
-ServoStyleSet::RestyleSubtree(nsINode* aNode)
+ServoStyleSet::RestyleSubtree(nsINode* aNode, bool aForce)
 {
+  if (aForce) {
+    MOZ_ASSERT(aNode->IsContent());
+    ServoRestyleManager::DirtyTree(aNode->AsContent());
+  }
+
   Servo_RestyleSubtree(aNode, mRawSet.get());
 }
