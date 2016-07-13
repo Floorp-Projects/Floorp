@@ -10,8 +10,6 @@
 
 #include "./psnr.h"  // NOLINT
 
-#include <math.h>
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -34,26 +32,22 @@ typedef unsigned long long uint64;  // NOLINT
 #endif  // __LP64__
 #endif  // _MSC_VER
 
-// PSNR formula: psnr = 10 * log10 (Peak Signal^2 * size / sse)
-double ComputePSNR(double sse, double size) {
-  const double kMINSSE = 255.0 * 255.0 * size / pow(10., kMaxPSNR / 10.);
-  if (sse <= kMINSSE)
-    sse = kMINSSE;  // Produces max PSNR of 128
-  return 10.0 * log10(65025.0 * size / sse);
-}
+// libyuv provides this function when linking library for jpeg support.
+#if !defined(HAVE_JPEG)
 
-#if !defined(LIBYUV_DISABLE_NEON) && defined(__ARM_NEON__)
+#if !defined(LIBYUV_DISABLE_NEON) && defined(__ARM_NEON__) && \
+    !defined(__aarch64__)
 #define HAS_SUMSQUAREERROR_NEON
 static uint32 SumSquareError_NEON(const uint8* src_a,
                                   const uint8* src_b, int count) {
   volatile uint32 sse;
-  asm volatile (  // NOLINT
+  asm volatile (
     "vmov.u8    q7, #0                         \n"
     "vmov.u8    q9, #0                         \n"
     "vmov.u8    q8, #0                         \n"
     "vmov.u8    q10, #0                        \n"
 
-    "1:                                        \n"
+  "1:                                          \n"
     "vld1.u8    {q0}, [%0]!                    \n"
     "vld1.u8    {q1}, [%1]!                    \n"
     "vsubl.u8   q2, d0, d2                     \n"
@@ -77,6 +71,42 @@ static uint32 SumSquareError_NEON(const uint8* src_a,
       "=r"(sse)
     :
     : "memory", "cc", "q0", "q1", "q2", "q3", "q7", "q8", "q9", "q10");
+  return sse;
+}
+#elif !defined(LIBYUV_DISABLE_NEON) && defined(__aarch64__)
+#define HAS_SUMSQUAREERROR_NEON
+static uint32 SumSquareError_NEON(const uint8* src_a,
+                                  const uint8* src_b, int count) {
+  volatile uint32 sse;
+  asm volatile (
+    "eor        v16.16b, v16.16b, v16.16b      \n"
+    "eor        v18.16b, v18.16b, v18.16b      \n"
+    "eor        v17.16b, v17.16b, v17.16b      \n"
+    "eor        v19.16b, v19.16b, v19.16b      \n"
+
+  "1:                                          \n"
+    "ld1        {v0.16b}, [%0], #16            \n"
+    "ld1        {v1.16b}, [%1], #16            \n"
+    "subs       %w2, %w2, #16                  \n"
+    "usubl      v2.8h, v0.8b, v1.8b            \n"
+    "usubl2     v3.8h, v0.16b, v1.16b          \n"
+    "smlal      v16.4s, v2.4h, v2.4h           \n"
+    "smlal      v17.4s, v3.4h, v3.4h           \n"
+    "smlal2     v18.4s, v2.8h, v2.8h           \n"
+    "smlal2     v19.4s, v3.8h, v3.8h           \n"
+    "b.gt       1b                             \n"
+
+    "add        v16.4s, v16.4s, v17.4s         \n"
+    "add        v18.4s, v18.4s, v19.4s         \n"
+    "add        v19.4s, v16.4s, v18.4s         \n"
+    "addv       s0, v19.4s                     \n"
+    "fmov       %w3, s0                        \n"
+    : "+r"(src_a),
+      "+r"(src_b),
+      "+r"(count),
+      "=r"(sse)
+    :
+    : "cc", "v0", "v1", "v2", "v3", "v16", "v17", "v18", "v19");
   return sse;
 }
 #elif !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER)
@@ -176,7 +206,8 @@ static __inline void __cpuid(int cpu_info[4], int info_type) {
     : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
     : "a"(info_type));
 }
-#elif defined(__i386__) || defined(__x86_64__)
+// For gcc/clang but not clangcl.
+#elif (defined(__i386__) || defined(__x86_64__)) && !defined(_MSC_VER)
 static __inline void __cpuid(int cpu_info[4], int info_type) {
   asm volatile (  // NOLINT
     "cpuid                                     \n"
@@ -240,6 +271,16 @@ double ComputeSumSquareError(const uint8* src_a,
     sse += SumSquareError_C(src_a, src_b, remainder);
   }
   return static_cast<double>(sse);
+}
+#endif
+
+// PSNR formula: psnr = 10 * log10 (Peak Signal^2 * size / sse)
+// Returns 128.0 (kMaxPSNR) if sse is 0 (perfect match).
+double ComputePSNR(double sse, double size) {
+  const double kMINSSE = 255.0 * 255.0 * size / pow(10.0, kMaxPSNR / 10.0);
+  if (sse <= kMINSSE)
+    sse = kMINSSE;  // Produces max PSNR of 128
+  return 10.0 * log10(255.0 * 255.0 * size / sse);
 }
 
 #ifdef __cplusplus
