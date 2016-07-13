@@ -276,6 +276,7 @@ add_identity_test(this, function* test_resource_timeout() {
 });
 
 function run_test() {
+  validate_all_future_pings();
   engineManager.register(CatapultEngine);
   run_next_test();
 }

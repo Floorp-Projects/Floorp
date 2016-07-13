@@ -4,9 +4,18 @@
 "use strict";
 
 const { combineReducers, createStore } = require("devtools/client/shared/vendor/redux");
+const Immutable = require("devtools/client/shared/vendor/immutable");
 const { reducers } = require("./reducers/index");
+const Services = require("Services");
 
-function storeFactory(initialState = {}) {
+function storeFactory() {
+  const initialState = {
+    messages: Immutable.List(),
+    prefs: {
+      logLimit: Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1)
+    }
+  };
+
   return createStore(combineReducers(reducers), initialState);
 }
 

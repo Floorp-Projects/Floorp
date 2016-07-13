@@ -10,6 +10,7 @@ Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
 Cu.import("resource://services-sync/service.js");
 
 function run_test() {
+  validate_all_future_pings();
   _("When imported, Service.onStartup is called");
   initTestLogging("Trace");
 

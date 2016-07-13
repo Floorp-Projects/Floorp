@@ -35,6 +35,7 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/service.js',
     'modules/status.js',
     'modules/SyncedTabs.jsm',
+    'modules/telemetry.js',
     'modules/userapi.js',
     'modules/util.js',
 ]

@@ -12,7 +12,7 @@ define(function (require, exports, module) {
 
   // Reps
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectLink } = createFactories(require("./object-link"));
+  const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
 
   // Shortcuts
@@ -22,6 +22,7 @@ define(function (require, exports, module) {
    * Used to render a map of values provided as a grip.
    */
   let NamedNodeMap = React.createClass({
+    displayName: "NamedNodeMap",
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
@@ -29,13 +30,16 @@ define(function (require, exports, module) {
       provider: React.PropTypes.object,
     },
 
-    className: "NamedNodeMap",
-
     getLength: function (object) {
       return object.preview.length;
     },
 
     getTitle: function (object) {
+      if (this.props.objectLink && object.class) {
+        return this.props.objectLink({
+          object: object
+        }, object.class);
+      }
       return object.class ? object.class : "";
     },
 
@@ -46,9 +50,12 @@ define(function (require, exports, module) {
 
       if (items.length > max + 1) {
         items.pop();
+        let objectLink = this.props.objectLink || span;
         items.push(Caption({
           key: "more",
-          object: "more...",
+          object: objectLink({
+            object: this.props.object
+          }, "more...")
         }));
       }
 
@@ -98,22 +105,22 @@ define(function (require, exports, module) {
         items = this.getItems(grip, max);
       }
 
+      let objectLink = this.props.objectLink || span;
+
       return (
-        ObjectLink({className: "NamedNodeMap"},
-          span({className: "objectTitle"},
-            this.getTitle(grip)
-          ),
-          span({
+        ObjectBox({className: "NamedNodeMap"},
+          this.getTitle(grip),
+          objectLink({
             className: "arrayLeftBracket",
-            role: "presentation"},
-            "["
-          ),
+            role: "presentation",
+            object: grip
+          }, "["),
           items,
-          span({
+          objectLink({
             className: "arrayRightBracket",
-            role: "presentation"},
-            "]"
-          )
+            role: "presentation",
+            object: grip
+          }, "]")
         )
       );
     },
