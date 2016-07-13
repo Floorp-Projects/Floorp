@@ -591,61 +591,7 @@ if test -n "${CLANG_CXX}${CLANG_CL}"; then
     _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
 fi
 
-dnl ========================================================
-dnl = Use Address Sanitizer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(address-sanitizer,
-[  --enable-address-sanitizer       Enable Address Sanitizer (default=no)],
-    MOZ_ASAN=1,
-    MOZ_ASAN= )
-if test -n "$MOZ_ASAN"; then
-    MOZ_LLVM_HACKS=1
-    AC_DEFINE(MOZ_ASAN)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-fi
-AC_SUBST(MOZ_ASAN)
-
-dnl ========================================================
-dnl = Use Memory Sanitizer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(memory-sanitizer,
-[  --enable-memory-sanitizer       Enable Memory Sanitizer (default=no)],
-    MOZ_MSAN=1,
-    MOZ_MSAN= )
-if test -n "$MOZ_MSAN"; then
-    MOZ_LLVM_HACKS=1
-    AC_DEFINE(MOZ_MSAN)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-fi
-AC_SUBST(MOZ_MSAN)
-
-dnl ========================================================
-dnl = Use Thread Sanitizer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(thread-sanitizer,
-[  --enable-thread-sanitizer       Enable Thread Sanitizer (default=no)],
-   MOZ_TSAN=1,
-   MOZ_TSAN= )
-if test -n "$MOZ_TSAN"; then
-    MOZ_LLVM_HACKS=1
-    AC_DEFINE(MOZ_TSAN)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-fi
-AC_SUBST(MOZ_TSAN)
-
-# The LLVM symbolizer is used by all sanitizers
-AC_SUBST(LLVM_SYMBOLIZER)
-
-dnl ========================================================
-dnl = Enable hacks required for LLVM instrumentations
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(llvm-hacks,
-[  --enable-llvm-hacks       Enable workarounds required for several LLVM instrumentations (default=no)],
-    MOZ_LLVM_HACKS=1,
-    MOZ_LLVM_HACKS= )
-if test -n "$MOZ_LLVM_HACKS"; then
-    MOZ_NO_WLZDEFS=1
-fi
+MOZ_CONFIG_SANITIZE
 
 dnl ========================================================
 dnl = Enable treating compiler warnings as errors

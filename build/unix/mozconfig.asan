@@ -7,12 +7,6 @@ export CC="$topsrcdir/clang/bin/clang -fgnu89-inline"
 export CXX="$topsrcdir/clang/bin/clang++"
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
 
-# Mandatory flags for ASan
-export ASANFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC"
-export CFLAGS="$ASANFLAGS"
-export CXXFLAGS="$ASANFLAGS"
-export LDFLAGS="-fsanitize=address"
-
 # Use a newer binutils, from the tooltool gcc package, if it's there
 if [ -e "$topsrcdir/gcc/bin/ld" ]; then
     export CC="$CC -B $topsrcdir/gcc/bin"
