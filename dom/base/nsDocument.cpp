@@ -12365,79 +12365,6 @@ PointerLockRequest::Run()
   return NS_OK;
 }
 
-nsresult
-nsDocument::Observe(nsISupports *aSubject,
-                    const char *aTopic,
-                    const char16_t *aData)
-{
-  if (strcmp("app-theme-changed", aTopic) == 0) {
-    if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-        !IsUnstyledDocument()) {
-      // We don't want to style the chrome window, only app ones.
-      OnAppThemeChanged();
-    }
-  } else if (strcmp("service-worker-get-client", aTopic) == 0) {
-    // No need to generate the ID if it doesn't exist here.  The ID being
-    // requested must already be generated in order to passed in as
-    // aSubject.
-    nsString clientId = GetId();
-    if (!clientId.IsEmpty() && clientId.Equals(aData)) {
-      nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_QueryInterface(aSubject);
-      if (ifptr) {
-#ifdef DEBUG
-        nsCOMPtr<nsISupports> value;
-        MOZ_ALWAYS_SUCCEEDS(ifptr->GetData(getter_AddRefs(value)));
-        MOZ_ASSERT(!value);
-#endif
-        ifptr->SetData(static_cast<nsIDocument*>(this));
-        ifptr->SetDataIID(&NS_GET_IID(nsIDocument));
-      }
-    }
-  }
-  return NS_OK;
-}
-
-void
-nsDocument::OnAppThemeChanged()
-{
-  // Bail out if there is no theme support set up properly.
-  auto themeOrigin = Preferences::GetString("b2g.theme.origin");
-  if (!themeOrigin || !Preferences::GetBool("dom.mozApps.themable")) {
-    return;
-  }
-
-  for (int32_t i = 0; i < GetNumberOfStyleSheets(); i++) {
-    StyleSheetHandle::RefPtr sheet = GetStyleSheetAt(i);
-    if (!sheet) {
-      continue;
-    }
-
-    nsINode* owningNode = sheet->GetOwnerNode();
-    if (!owningNode) {
-      continue;
-    }
-    // Get a DOM stylesheet link to check the href against the theme origin.
-    nsIURI* sheetURI = sheet->GetOriginalURI();
-    if (!sheetURI) {
-      continue;
-    }
-    nsAutoString sheetOrigin;
-    nsContentUtils::GetUTFOrigin(sheetURI, sheetOrigin);
-    if (!sheetOrigin.Equals(themeOrigin)) {
-      continue;
-    }
-
-    // Finally getting a Stylesheet link.
-    nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(owningNode);
-    if (!link) {
-      continue;
-    }
-    bool willNotify;
-    bool isAlternate;
-    link->UpdateStyleSheet(nullptr, &willNotify, &isAlternate, true);
-  }
-}
-
 void
 nsDocument::RequestPointerLock(Element* aElement)
 {
@@ -12639,6 +12566,79 @@ nsIDocument::GetMozPointerLockElement()
   }
 
   return pointerLockedElement;
+}
+
+nsresult
+nsDocument::Observe(nsISupports *aSubject,
+                    const char *aTopic,
+                    const char16_t *aData)
+{
+  if (strcmp("app-theme-changed", aTopic) == 0) {
+    if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
+        !IsUnstyledDocument()) {
+      // We don't want to style the chrome window, only app ones.
+      OnAppThemeChanged();
+    }
+  } else if (strcmp("service-worker-get-client", aTopic) == 0) {
+    // No need to generate the ID if it doesn't exist here.  The ID being
+    // requested must already be generated in order to passed in as
+    // aSubject.
+    nsString clientId = GetId();
+    if (!clientId.IsEmpty() && clientId.Equals(aData)) {
+      nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_QueryInterface(aSubject);
+      if (ifptr) {
+#ifdef DEBUG
+        nsCOMPtr<nsISupports> value;
+        MOZ_ALWAYS_SUCCEEDS(ifptr->GetData(getter_AddRefs(value)));
+        MOZ_ASSERT(!value);
+#endif
+        ifptr->SetData(static_cast<nsIDocument*>(this));
+        ifptr->SetDataIID(&NS_GET_IID(nsIDocument));
+      }
+    }
+  }
+  return NS_OK;
+}
+
+void
+nsDocument::OnAppThemeChanged()
+{
+  // Bail out if there is no theme support set up properly.
+  auto themeOrigin = Preferences::GetString("b2g.theme.origin");
+  if (!themeOrigin || !Preferences::GetBool("dom.mozApps.themable")) {
+    return;
+  }
+
+  for (int32_t i = 0; i < GetNumberOfStyleSheets(); i++) {
+    StyleSheetHandle::RefPtr sheet = GetStyleSheetAt(i);
+    if (!sheet) {
+      continue;
+    }
+
+    nsINode* owningNode = sheet->GetOwnerNode();
+    if (!owningNode) {
+      continue;
+    }
+    // Get a DOM stylesheet link to check the href against the theme origin.
+    nsIURI* sheetURI = sheet->GetOriginalURI();
+    if (!sheetURI) {
+      continue;
+    }
+    nsAutoString sheetOrigin;
+    nsContentUtils::GetUTFOrigin(sheetURI, sheetOrigin);
+    if (!sheetOrigin.Equals(themeOrigin)) {
+      continue;
+    }
+
+    // Finally getting a Stylesheet link.
+    nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(owningNode);
+    if (!link) {
+      continue;
+    }
+    bool willNotify;
+    bool isAlternate;
+    link->UpdateStyleSheet(nullptr, &willNotify, &isAlternate, true);
+  }
 }
 
 void
