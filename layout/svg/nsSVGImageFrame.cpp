@@ -26,7 +26,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
-using namespace mozilla::image;
 
 class nsSVGImageFrame;
 
@@ -66,9 +65,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsISVGChildFrame interface:
-  virtual DrawResult PaintSVG(gfxContext& aContext,
-                              const gfxMatrix& aTransform,
-                              const nsIntRect* aDirtyRect = nullptr) override;
+  virtual nsresult PaintSVG(gfxContext& aContext,
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   virtual void ReflowSVG() override;
 
@@ -325,13 +324,15 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
-DrawResult
+nsresult
 nsSVGImageFrame::PaintSVG(gfxContext& aContext,
                           const gfxMatrix& aTransform,
                           const nsIntRect *aDirtyRect)
 {
+  nsresult rv = NS_OK;
+
   if (!StyleVisibility()->IsVisible())
-    return DrawResult::SUCCESS;
+    return NS_OK;
 
   float x, y, width, height;
   SVGImageElement *imgElem = static_cast<SVGImageElement*>(mContent);
@@ -350,7 +351,6 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       currentRequest->GetImage(getter_AddRefs(mImageContainer));
   }
 
-  DrawResult result = DrawResult::SUCCESS;
   if (mImageContainer) {
     gfxContextAutoSaveRestore autoRestorer(&aContext);
 
@@ -361,7 +361,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     }
 
     if (!TransformContextForPainting(&aContext, aTransform)) {
-      return DrawResult::SUCCESS;
+      return NS_ERROR_FAILURE;
     }
 
     // fill-opacity doesn't affect <image>, so if we're allowed to
@@ -417,7 +417,8 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // Note: Can't use DrawSingleUnscaledImage for the TYPE_VECTOR case.
       // That method needs our image to have a fixed native width & height,
       // and that's not always true for TYPE_VECTOR images.
-      result = nsLayoutUtils::DrawSingleImage(
+      // FIXME We should use the return value, see bug 1258510.
+      Unused << nsLayoutUtils::DrawSingleImage(
         aContext,
         PresContext(),
         mImageContainer,
@@ -427,7 +428,8 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         &context,
         drawFlags);
     } else { // mImageContainer->GetType() == TYPE_RASTER
-      result = nsLayoutUtils::DrawSingleUnscaledImage(
+      // FIXME We should use the return value, see bug 1258510.
+      Unused << nsLayoutUtils::DrawSingleUnscaledImage(
         aContext,
         PresContext(),
         mImageContainer,
@@ -443,7 +445,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext
   }
 
-  return result;
+  return rv;
 }
 
 nsIFrame*

@@ -18,7 +18,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
-using namespace mozilla::image;
 
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -58,7 +57,7 @@ nsSVGInnerSVGFrame::GetType() const
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-DrawResult
+nsresult
 nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
                              const nsIntRect *aDirtyRect)
@@ -76,7 +75,7 @@ nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
       GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
     if (width <= 0 || height <= 0) {
-      return DrawResult::SUCCESS;
+      return NS_OK;
     }
 
     autoSR.SetContext(&aContext);

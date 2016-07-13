@@ -95,9 +95,9 @@ public:
   gfxMatrix GetCanvasTM();
 protected:
   // nsISVGChildFrame interface:
-  virtual DrawResult PaintSVG(gfxContext& aContext,
-                             const gfxMatrix& aTransform,
-                             const nsIntRect* aDirtyRect = nullptr) override;
+  virtual nsresult PaintSVG(gfxContext& aContext,
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   virtual nsRect GetCoveredRegion() override;
   virtual void ReflowSVG() override;

@@ -486,7 +486,7 @@ public:
   }
 };
 
-DrawResult
+void
 nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                                   gfxContext& aContext,
                                   const gfxMatrix& aTransform,
@@ -500,16 +500,16 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
   nsISVGChildFrame *svgChildFrame = do_QueryFrame(aFrame);
   if (!svgChildFrame)
-    return DrawResult::BAD_ARGS;
+    return;
 
   float opacity = aFrame->StyleEffects()->mOpacity;
   if (opacity == 0.0f)
-    return DrawResult::SUCCESS;
+    return;
 
   const nsIContent* content = aFrame->GetContent();
   if (content->IsSVGElement() &&
       !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   /* Properties are added lazily and may have been removed by a restyle,
@@ -541,7 +541,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
             HasChildrenOnlyTransform(&childrenOnlyTM)) {
         // Undo the children-only transform:
         if (!childrenOnlyTM.Invert()) {
-          return DrawResult::SUCCESS;
+          return;
         }
         tm = ThebesMatrix(childrenOnlyTM) * tm;
       }
@@ -550,7 +550,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                          tm, aFrame->PresContext()).
                            ToOutsidePixels(appUnitsPerDevPx);
     if (!aDirtyRect->Intersects(bounds)) {
-      return DrawResult::SUCCESS;
+      return;
     }
   }
 
@@ -583,7 +583,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
   if (!isOK) {
     // Some resource is invalid. We shouldn't paint anything.
-    return DrawResult::SUCCESS;
+    return;
   }
 
   // These are used if we require a temporary surface for a custom blend mode.
@@ -604,7 +604,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
     if (maskFrame && !maskSurface) {
       // Entire surface is clipped out.
-      return DrawResult::SUCCESS;
+      return;
     }
 
     aContext.Save();
@@ -642,7 +642,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       target = gfxContext::CreateOrNull(targetDT);
       if (!target) {
         gfxDevCrash(LogReason::InvalidContext) << "SVGPaintWithEffects context problem " << gfx::hexa(targetDT);
-        return DrawResult::TEMPORARY_ERROR;
+        return;
       }
       target->SetMatrix(aContext.CurrentMatrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
       targetOffset = drawRect.TopLeft();
@@ -672,8 +672,6 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     clipPathFrame->ApplyClipPath(aContext, aFrame, aTransform);
   }
 
-  DrawResult result = DrawResult::SUCCESS;
-
   /* Paint the child */
   if (effectProperties.HasValidFilter()) {
     nsRegion* dirtyRegion = nullptr;
@@ -683,7 +681,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       // it in frame space.
       gfxMatrix userToDeviceSpace = GetUserToCanvasTM(aFrame);
       if (userToDeviceSpace.IsSingular()) {
-        return DrawResult::SUCCESS;
+        return;
       }
       gfxMatrix deviceToUserSpace = userToDeviceSpace;
       deviceToUserSpace.Invert();
@@ -701,7 +699,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
                                          aTransform, &paintCallback,
                                          dirtyRegion);
   } else {
-    result = svgChildFrame->PaintSVG(*target, aTransform, aDirtyRect);
+    svgChildFrame->PaintSVG(*target, aTransform, aDirtyRect);
   }
 
   if (clipPathFrame && isTrivialClip) {
@@ -710,8 +708,8 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
   /* No more effects, we're done. */
   if (!complexEffects)
-    return result;
-
+    return;
+  
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
     target->PopGroupAndBlend();
   }
@@ -728,7 +726,6 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   }
 
   aContext.Restore();
-  return result;
 }
 
 bool
@@ -1788,8 +1785,8 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
     m = static_cast<nsSVGElement*>(frame->GetContent())->
           PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
   }
-  DrawResult result = svgFrame->PaintSVG(*aContext, m);
-  return (result == DrawResult::SUCCESS);
+  nsresult rv = svgFrame->PaintSVG(*aContext, m);
+  return NS_SUCCEEDED(rv);
 }
 
 bool
