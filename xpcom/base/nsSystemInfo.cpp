@@ -811,6 +811,15 @@ nsSystemInfo::Init()
 }
 
 #ifdef MOZ_WIDGET_ANDROID
+// Prerelease versions of Android use a letter instead of version numbers.
+// Unfortunately this breaks websites due to the user agent.
+// Chrome works around this by hardcoding an Android version when a
+// numeric version can't be obtained. We're doing the same.
+// This version will need to be updated whenever there is a new official
+// Android release.
+// See: https://cs.chromium.org/chromium/src/base/sys_info_android.cc?l=61
+#define DEFAULT_ANDROID_VERSION "6.0.99"
+
 /* static */
 void
 nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo)
@@ -833,7 +842,15 @@ nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo)
   }
   if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
       "android/os/Build$VERSION", "RELEASE", str)) {
-    aInfo->release_version() = str;
+    int major_version;
+    int minor_version;
+    int bugfix_version;
+    int num_read = sscanf(NS_ConvertUTF16toUTF8(str).get(), "%d.%d.%d", &major_version, &minor_version, &bugfix_version);
+    if (num_read == 0) {
+      aInfo->release_version() = NS_LITERAL_STRING(DEFAULT_ANDROID_VERSION);
+    } else {
+      aInfo->release_version() = str;
+    }
   }
   if (mozilla::AndroidBridge::Bridge()->GetStaticStringField(
       "android/os/Build", "HARDWARE", str)) {
