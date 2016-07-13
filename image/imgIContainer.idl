@@ -207,6 +207,7 @@ interface imgIContainer : nsISupports
   const unsigned long FLAG_WANT_DATA_SURFACE               = 0x80;
   const unsigned long FLAG_BYPASS_SURFACE_CACHE            = 0x100;
   const unsigned long FLAG_FORCE_PRESERVEASPECTRATIO_NONE  = 0x200;
+  const unsigned long FLAG_FORCE_UNIFORM_SCALING           = 0x400;
 
   /**
    * A constant specifying the default set of decode flags (i.e., the default
