@@ -69,7 +69,7 @@ function mergeChanges(localRecords, changes) {
 
 function fetchCollectionMetadata(collection) {
   const client = new KintoHttpClient(collection.api.remote);
-  return client.bucket(collection.bucket).collection(collection.name).getMetadata()
+  return client.bucket(collection.bucket).collection(collection.name).getData()
     .then(result => {
       return result.signature;
     });
