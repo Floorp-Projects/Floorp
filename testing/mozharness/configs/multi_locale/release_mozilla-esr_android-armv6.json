@@ -15,9 +15,6 @@
     },{
         "repo": "https://hg.mozilla.org/build/tools",
         "dest": "tools"
-    },{
-        "repo": "https://hg.mozilla.org/build/compare-locales",
-        "tag": "RELEASE_AUTOMATION"
     }],
     "l10n_repos": [{
         "repo": "https://hg.mozilla.org/build/buildbot-configs",

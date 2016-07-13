@@ -106,4 +106,4 @@ runTest(`
 " $var0 = i32:8[8] = 0 | 1 ^ 2 & 3 == 4 <u 5 >>u 6 + 7 * !i32:16u[$var0];" +
 " f64[i32.trunc_u/f64(-(0.0 * (1.0 + f64.convert_s/i32(6 <s (7.0 == (f64[8] = $var1 = 9.0))))))];" +
 " unreachable; " +
-"} memory 0 {} ");
+"} memory 0, 0 {} ");

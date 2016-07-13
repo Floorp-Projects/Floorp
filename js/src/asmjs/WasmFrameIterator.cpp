@@ -708,7 +708,6 @@ ProfilingFrameIterator::label() const
     //     devtools/client/performance/modules/logic/frame-utils.js
     const char* importJitDescription = "fast FFI trampoline (in asm.js)";
     const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
-    const char* errorDescription = "error generation (in asm.js)";
     const char* nativeDescription = "native call (in asm.js)";
 
     switch (exitReason_) {
@@ -718,8 +717,6 @@ ProfilingFrameIterator::label() const
         return importJitDescription;
       case ExitReason::ImportInterp:
         return importInterpDescription;
-      case ExitReason::Error:
-        return errorDescription;
       case ExitReason::Native:
         return nativeDescription;
     }

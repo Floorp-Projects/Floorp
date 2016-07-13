@@ -89,11 +89,15 @@ add_task(function* smil_is_in_display_none_subtree() {
 
   div.style.display = "none";
   getComputedStyle(div).display;
+  yield waitForPaintFlushed();
+
   var displayNoneMarkers = yield observeStyling(5);
   is(displayNoneMarkers.length, 0, "should never restyle if display:none");
 
   div.style.display = "";
   getComputedStyle(div).display;
+  yield waitForPaintFlushed();
+
   var displayAgainMarkers = yield observeStyling(5);
   is(displayAgainMarkers.length, 5, "should restyle again");
 

@@ -776,7 +776,11 @@ BlobImplBase::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   nsAutoString contentType;
   GetType(contentType);
 
-  CopyUTF16toUTF8(contentType, aContentType);
+  if (contentType.IsEmpty()) {
+    aContentType.SetIsVoid(true);
+  } else {
+    CopyUTF16toUTF8(contentType, aContentType);
+  }
 
   aCharset.Truncate();
 

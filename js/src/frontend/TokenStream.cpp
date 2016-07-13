@@ -594,11 +594,9 @@ CompileError::~CompileError()
     message = nullptr;
 
     if (report.messageArgs) {
-        if (argumentsType == ArgumentsAreASCII) {
-            unsigned i = 0;
-            while (report.messageArgs[i])
-                js_free((void*)report.messageArgs[i++]);
-        }
+        unsigned i = 0;
+        while (report.messageArgs[i])
+            js_free((void*)report.messageArgs[i++]);
         js_free(report.messageArgs);
     }
 
@@ -649,10 +647,8 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
         }
     }
 
-    err.argumentsType = (flags & JSREPORT_UC) ? ArgumentsAreUnicode : ArgumentsAreASCII;
-
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
-                                err.argumentsType, &err.report, args))
+                                ArgumentsAreASCII, &err.report, args))
     {
         return false;
     }

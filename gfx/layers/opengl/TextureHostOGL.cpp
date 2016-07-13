@@ -667,7 +667,7 @@ EGLImageTextureHost::Lock()
   if (!mTextureSource) {
     gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8
                                           : gfx::SurfaceFormat::R8G8B8X8;
-    GLenum target = LOCAL_GL_TEXTURE_EXTERNAL;
+    GLenum target = gl->GetPreferredEGLImageTextureTarget();
     GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
     mTextureSource = new EGLImageTextureSource(mCompositor,
                                                mImage,

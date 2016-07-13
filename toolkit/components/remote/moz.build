@@ -18,10 +18,6 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     SOURCES += [
         'nsGTKRemoteService.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    SOURCES += [
-        'nsQtRemoteService.cpp',
-    ]
 
 FINAL_LIBRARY = 'xul'
 
