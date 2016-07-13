@@ -521,10 +521,7 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
 
     // Fill computed offsets in (keyframe A, keyframe B).
     if (aSpacingMode == SpacingMode::distribute) {
-      // Bug 1276573: Use the new constructor accepting two RangedPtr<T>
-      // arguments, so we can make the code simpler.
-      DistributeRange(Range<Keyframe>(keyframeA.get(),
-                                      keyframeB - keyframeA + 1));
+      DistributeRange(Range<Keyframe>(keyframeA, keyframeB + 1));
     } else {
       // a) Find Paced A (first paceable keyframe) and
       //    Paced B (last paceable keyframe) in [keyframe A, keyframe B].
@@ -546,18 +543,14 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
       }
       // b) Apply distributing offsets in (keyframe A, Paced A] and
       //    [Paced B, keyframe B).
-      DistributeRange(Range<Keyframe>(keyframeA.get(),
-                                      keyframeB - keyframeA + 1),
-                      Range<Keyframe>((keyframeA + 1).get(),
-                                      pacedA - keyframeA));
-      DistributeRange(Range<Keyframe>(keyframeA.get(),
-                                      keyframeB - keyframeA + 1),
-                      Range<Keyframe>(pacedB.get(),
-                                      keyframeB - pacedB));
+      DistributeRange(Range<Keyframe>(keyframeA, keyframeB + 1),
+                      Range<Keyframe>(keyframeA + 1, pacedA + 1));
+      DistributeRange(Range<Keyframe>(keyframeA, keyframeB + 1),
+                      Range<Keyframe>(pacedB, keyframeB));
       // c) Apply paced offsets to each paceable keyframe in (Paced A, Paced B).
       //    We pass the range [Paced A, Paced B] since PaceRange needs the end
       //    points of the range in order to calculate the correct offset.
-      PaceRange(Range<Keyframe>(pacedA.get(), pacedB - pacedA + 1),
+      PaceRange(Range<Keyframe>(pacedA, pacedB + 1),
                 Range<double>(&cumulativeDistances[pacedA - begin],
                               pacedB - pacedA + 1));
       // d) Fill in any computed offsets in (Paced A, Paced B) that are still
@@ -574,7 +567,7 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
                end->mComputedOffset == Keyframe::kComputedOffsetNotSet) {
           ++end;
         }
-        DistributeRange(Range<Keyframe>(start.get(), end - start + 1));
+        DistributeRange(Range<Keyframe>(start, end + 1));
         frame = end;
       }
     }
@@ -1487,9 +1480,8 @@ DistributeRange(const Range<Keyframe>& aSpacingRange)
 {
   // We don't need to apply distribute spacing to keyframe A and keyframe B.
   DistributeRange(aSpacingRange,
-                  Range<Keyframe>((aSpacingRange.start() + 1).get(),
-                                  aSpacingRange.end() - aSpacingRange.start()
-                                    - 2));
+                  Range<Keyframe>(aSpacingRange.start() + 1,
+                                  aSpacingRange.end() - 1));
 }
 
 /**
