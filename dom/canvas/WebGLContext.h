@@ -288,6 +288,7 @@ public:
     void ErrorInvalidEnumInfo(const char* info, const char* funcName,
                               GLenum enumValue);
     void ErrorOutOfMemory(const char* fmt = 0, ...);
+    void ErrorImplementationBug(const char* fmt = 0, ...);
 
     const char* ErrorName(GLenum error);
 
@@ -963,10 +964,6 @@ protected:
                                    WebGLTexture** const out_texture,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
 
-    bool GetUnpackValuesForImage(const char* funcName, uint32_t srcImageWidth,
-                                 uint32_t srcImageHeight, uint32_t* const out_rowLength,
-                                 uint32_t* const out_imageHeight);
-
     bool ValidateUnpackInfo(const char* funcName, GLenum format, GLenum type,
                             webgl::PackingInfo* const out);
 
@@ -1334,24 +1331,8 @@ protected:
                       WebGLTexelFormat dstFormat, bool dstPremultiplied,
                       size_t dstTexelSize);
 
-public:
-    nsLayoutUtils::SurfaceFromElementResult
-    SurfaceFromElement(dom::Element* elem)
-    {
-        uint32_t flags = nsLayoutUtils::SFE_WANT_IMAGE_SURFACE |
-                         nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR;
+    //////
 
-        if (mPixelStore_ColorspaceConversion == LOCAL_GL_NONE)
-            flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
-
-        if (!mPixelStore_PremultiplyAlpha)
-            flags |= nsLayoutUtils::SFE_PREFER_NO_PREMULTIPLY_ALPHA;
-
-        RefPtr<gfx::DrawTarget> idealDrawTarget = nullptr; // Don't care for now.
-        return nsLayoutUtils::SurfaceFromElement(elem, flags, idealDrawTarget);
-    }
-
-protected:
     // Returns false if `object` is null or not valid.
     template<class ObjectType>
     bool ValidateObject(const char* info, ObjectType* object);
@@ -1629,6 +1610,7 @@ public:
     friend class ScopedUnpackReset;
     friend class webgl::TexUnpackBlob;
     friend class webgl::TexUnpackBytes;
+    friend class webgl::TexUnpackImage;
     friend class webgl::TexUnpackSurface;
     friend class WebGLTexture;
     friend class WebGLFBAttachPoint;

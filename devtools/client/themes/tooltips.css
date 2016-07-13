@@ -131,6 +131,7 @@
 .tooltip-panel{
   background-color: var(--theme-tooltip-background);
   pointer-events: all;
+  flex-grow: 1;
 }
 
 .tooltip-visible {
@@ -142,6 +143,35 @@
   visibility: hidden;
 }
 
+/* Tooltip : flexible height styles */
+
+.tooltip-flexible-height .tooltip-panel {
+  /* In flexible mode the tooltip panel should only grow according to its content. */
+  flex-grow: 0;
+}
+
+.tooltip-flexible-height .tooltip-filler {
+  /* In flexible mode the filler should grow as much as possible. */
+  flex-grow: 1;
+}
+
+/* type="arrow" overrides: remove arrow decorations for the xul <panel> wrapper */
+
+.tooltip-xul-wrapper[type="arrow"] {
+  margin: 0;
+}
+
+/* The arrow image is hidden because the panel is opened using openPopupAtScreen(). */
+
+/* Remove all decorations on .panel-arrowcontent is the tooltip content container. */
+.tooltip-xul-wrapper[type="arrow"] .panel-arrowcontent {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
 /* Tooltip : arrow style */
 
 .tooltip-xul-wrapper .tooltip-container {
@@ -151,7 +181,6 @@
 
 .tooltip-container[type="arrow"] > .tooltip-panel {
   position: relative;
-  flex-grow: 0;
   min-height: 10px;
   box-sizing: border-box;
   width: 100%;
@@ -178,10 +207,6 @@
 
 .tooltip-arrow:-moz-locale-dir(rtl) {
   align-self: flex-end;
-}
-
-.tooltip-filler {
-  flex: 1;
 }
 
 .tooltip-top .tooltip-arrow {

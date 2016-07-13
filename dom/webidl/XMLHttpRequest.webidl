@@ -102,6 +102,8 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void send(FormData data);
   [Throws]
   void send(InputStream data);
+  [Throws]
+  void send(URLSearchParams data);
 
   [Throws]
   void abort();

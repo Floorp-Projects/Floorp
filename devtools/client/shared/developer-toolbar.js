@@ -10,6 +10,7 @@ const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const { TargetFactory } = require("devtools/client/framework/target");
 const Telemetry = require("devtools/client/shared/telemetry");
+const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -107,6 +108,13 @@ var CommandUtils = {
 
         button.addEventListener("click", () => {
           requisition.updateExec(typed);
+        }, false);
+
+        button.addEventListener("keypress", (event) => {
+          if (ViewHelpers.isSpaceOrReturn(event)) {
+            event.preventDefault();
+            requisition.updateExec(typed);
+          }
         }, false);
 
         // Allow the command button to be toggleable

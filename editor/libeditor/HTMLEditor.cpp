@@ -1123,7 +1123,7 @@ HTMLEditor::TabInTable(bool inIsShift,
   return NS_OK;
 }
 
-Element*
+already_AddRefed<Element>
 HTMLEditor::CreateBR(nsINode* aNode,
                      int32_t aOffset,
                      EDirection aSelect)
@@ -1134,7 +1134,7 @@ HTMLEditor::CreateBR(nsINode* aNode,
   // We assume everything is fine if the br is not null, irrespective of retval
   CreateBRImpl(address_of(parent), &offset, address_of(outBRNode), aSelect);
   nsCOMPtr<Element> ret = do_QueryInterface(outBRNode);
-  return ret;
+  return ret.forget();
 }
 
 NS_IMETHODIMP

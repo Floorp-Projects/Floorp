@@ -162,7 +162,8 @@ size_t
 ExportMap::serializedSize() const
 {
     return SerializedVectorSize(fieldNames) +
-           SerializedPodVectorSize(fieldsToExports);
+           SerializedPodVectorSize(fieldsToExports) +
+           sizeof(uint32_t);
 }
 
 uint8_t*
@@ -170,6 +171,7 @@ ExportMap::serialize(uint8_t* cursor) const
 {
     cursor = SerializeVector(cursor, fieldNames);
     cursor = SerializePodVector(cursor, fieldsToExports);
+    cursor = WriteScalar(cursor, startExportIndex);
     return cursor;
 }
 
@@ -177,7 +179,8 @@ const uint8_t*
 ExportMap::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializeVector(cursor, &fieldNames)) &&
-    (cursor = DeserializePodVector(cursor, &fieldsToExports));
+    (cursor = DeserializePodVector(cursor, &fieldsToExports)) &&
+    (cursor = ReadScalar(cursor, &startExportIndex));
     return cursor;
 }
 
@@ -191,14 +194,14 @@ ExportMap::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 size_t
 ElemSegment::serializedSize() const
 {
-    return sizeof(globalDataOffset) +
+    return sizeof(tableIndex) +
            SerializedPodVectorSize(elems);
 }
 
 uint8_t*
 ElemSegment::serialize(uint8_t* cursor) const
 {
-    cursor = WriteBytes(cursor, &globalDataOffset, sizeof(globalDataOffset));
+    cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
     cursor = SerializePodVector(cursor, elems);
     return cursor;
 }
@@ -206,7 +209,7 @@ ElemSegment::serialize(uint8_t* cursor) const
 const uint8_t*
 ElemSegment::deserialize(const uint8_t* cursor)
 {
-    (cursor = ReadBytes(cursor, &globalDataOffset, sizeof(globalDataOffset))) &&
+    (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
     (cursor = DeserializePodVector(cursor, &elems));
     return cursor;
 }
@@ -383,12 +386,22 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
 }
 
 bool
-Module::instantiateTable(JSContext* cx, const CodeSegment& cs) const
+Module::instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector* tables) const
 {
+    for (const TableDesc& tableDesc : metadata_->tables) {
+        SharedTable table = Table::create(cx, tableDesc.kind, tableDesc.length);
+        if (!table || !tables->emplaceBack(table))
+            return false;
+
+        for (size_t i = 0; i < table->length(); i++)
+            table->array()[i] = cs.badIndirectCallCode();
+    }
+
     for (const ElemSegment& seg : elemSegments_) {
-        auto array = reinterpret_cast<void**>(cs.globalData() + seg.globalDataOffset);
+        SharedTable& table = (*tables)[seg.tableIndex];
+        MOZ_ASSERT(seg.offset + seg.elems.length() <= table->length());
         for (size_t i = 0; i < seg.elems.length(); i++)
-            array[i] = cs.code() + seg.elems[i];
+            table->array()[seg.offset + i] = cs.code() + seg.elems[i];
     }
 
     return true;
@@ -501,31 +514,20 @@ Module::instantiate(JSContext* cx,
     if (!cs)
         return false;
 
-    if (!instantiateTable(cx, *cs))
+    SharedTableVector tables;
+    if (!instantiateTable(cx, *cs, &tables))
         return false;
 
     // To support viewing the source of an instance (Instance::createText), the
     // instance must hold onto a ref of the bytecode (keeping it alive). This
     // wastes memory for most users, so we try to only save the source when a
     // developer actually cares: when the compartment is debuggable (which is
-    // true when the web console is open) or a names section is implied (since
+    // true when the web console is open) or a names section is present (since
     // this going to be stripped for non-developer builds).
 
     const ShareableBytes* maybeBytecode = nullptr;
     if (cx->compartment()->isDebuggee() || !metadata_->funcNames.empty())
         maybeBytecode = bytecode_.get();
-
-    // Store a summary of LinkData::FuncTableVector, only as much is needed
-    // for runtime toggling of profiling mode. Currently, only asm.js has typed
-    // function tables.
-
-    TypedFuncTableVector typedFuncTables;
-    if (metadata_->isAsmJS()) {
-        if (!typedFuncTables.reserve(elemSegments_.length()))
-            return false;
-        for (const ElemSegment& seg : elemSegments_)
-            typedFuncTables.infallibleEmplaceBack(seg.globalDataOffset, seg.elems.length());
-    }
 
     // Create the Instance, ensuring that it is traceable via 'instanceObj'
     // before any GC can occur and invalidate the pointers stored in global
@@ -535,8 +537,8 @@ Module::instantiate(JSContext* cx,
         auto instance = cx->make_unique<Instance>(Move(cs),
                                                   *metadata_,
                                                   maybeBytecode,
-                                                  Move(typedFuncTables),
                                                   memory,
+                                                  Move(tables),
                                                   funcImports);
         if (!instance)
             return false;
@@ -564,6 +566,16 @@ Module::instantiate(JSContext* cx,
     // Done! Notify the Debugger of the new Instance.
 
     Debugger::onNewWasmInstance(cx, instanceObj);
+
+    // Call the start function, if there's one. By specification, it does not
+    // take any arguments nor does it return a value, so just create a dummy
+    // arguments object.
+
+    if (exportMap_.hasStartFunction()) {
+        FixedInvokeArgs<0> args(cx);
+        if (!instanceObj->instance().callExport(cx, exportMap_.startFunctionExportIndex(), args))
+            return false;
+    }
 
     return true;
 }

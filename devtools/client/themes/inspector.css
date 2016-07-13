@@ -79,9 +79,10 @@
 }
 
 /* Add element toolbar button */
-
 #inspector-element-add-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
+  list-style-image: url("chrome://devtools/skin/images/add.svg");
+  -moz-user-focus: normal;
 }
 
 /* "no results" warning message displayed in the ruleview and in the computed view */
