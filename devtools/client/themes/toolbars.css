@@ -31,7 +31,7 @@
 }
 
 .theme-firebug {
-  --magnifying-glass-image: url(images/firebug/filter.svg);
+  --magnifying-glass-image: url(images/search.svg);
   --icon-filter: invert(1);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
