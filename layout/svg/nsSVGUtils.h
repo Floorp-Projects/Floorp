@@ -185,7 +185,6 @@ public:
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
   typedef mozilla::gfx::Size Size;
   typedef mozilla::SVGTextContextPaint SVGTextContextPaint;
-  typedef mozilla::image::DrawResult DrawResult;
 
   static void Init();
 
@@ -283,7 +282,7 @@ public:
 
   /* Paint SVG frame with SVG effects - aDirtyRect is the area being
    * redrawn, in device pixel coordinates relative to the outer svg */
-  static DrawResult
+  static void
   PaintFrameWithEffects(nsIFrame *aFrame,
                         gfxContext& aContext,
                         const gfxMatrix& aTransform,

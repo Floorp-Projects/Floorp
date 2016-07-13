@@ -198,7 +198,7 @@ nsSVGForeignObjectFrame::IsSVGTransformed(Matrix *aOwnTransform,
   return foundTransform;
 }
 
-DrawResult
+nsresult
 nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                                   const gfxMatrix& aTransform,
                                   const nsIntRect* aDirtyRect)
@@ -209,15 +209,15 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                "SVG should take this code path");
 
   if (IsDisabled())
-    return DrawResult::SUCCESS;
+    return NS_OK;
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
-    return DrawResult::SUCCESS;
+    return NS_OK;
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
-    return DrawResult::BAD_ARGS;
+    return NS_ERROR_FAILURE;
   }
 
   nsRect kidDirtyRect = kid->GetVisualOverflowRect();
@@ -245,7 +245,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     // int32_t appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     // mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect)
     if (kidDirtyRect.IsEmpty())
-      return DrawResult::SUCCESS;
+      return NS_OK;
   }
 
   aContext.Save();
@@ -276,16 +276,14 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     flags |= PaintFrameFlags::PAINT_TO_WINDOW;
   }
   nsRenderingContext rendCtx(&aContext);
-  nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
-                            NS_RGBA(0,0,0,0),
-                            nsDisplayListBuilderMode::PAINTING, flags);
   nsresult rv = nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
-                                         NS_RGBA(0,0,0,0),
-                                         nsDisplayListBuilderMode::PAINTING,
-                                         flags);
+                                          NS_RGBA(0,0,0,0),
+                                          nsDisplayListBuilderMode::PAINTING,
+                                          flags);
+
   aContext.Restore();
 
-  return NS_FAILED(rv) ? DrawResult::BAD_ARGS : DrawResult::SUCCESS;
+  return rv;
 }
 
 nsIFrame*

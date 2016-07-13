@@ -43,7 +43,6 @@ public:
   typedef mozilla::SVGAnimatedLengthList SVGAnimatedLengthList;
   typedef mozilla::SVGLengthList SVGLengthList;
   typedef mozilla::SVGUserUnitList SVGUserUnitList;
-  typedef mozilla::image::DrawResult DrawResult;
 
   NS_DECL_QUERYFRAME_TARGET(nsISVGChildFrame)
 
@@ -74,9 +73,9 @@ public:
    * @param aDirtyRect The area being redrawn, in frame offset pixel
    *   coordinates.
    */
-  virtual DrawResult PaintSVG(gfxContext& aContext,
-                              const gfxMatrix& aTransform,
-                              const nsIntRect* aDirtyRect = nullptr) = 0;
+  virtual nsresult PaintSVG(gfxContext& aContext,
+                            const gfxMatrix& aTransform,
+                            const nsIntRect* aDirtyRect = nullptr) = 0;
 
   /**
    * Returns the frame that should handle pointer events at aPoint.  aPoint is
