@@ -44,6 +44,19 @@ namespace jit {
 class BaselineInspector;
 class Range;
 
+template <typename T>
+struct ResultWithOOM {
+    T value;
+    bool oom;
+
+    static ResultWithOOM<T> ok(T val) {
+        return { val, false };
+    }
+    static ResultWithOOM<T> fail() {
+        return { T(), true };
+    }
+};
+
 static inline
 MIRType MIRTypeFromValue(const js::Value& vp)
 {
