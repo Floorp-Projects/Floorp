@@ -6662,10 +6662,7 @@ nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder* aBuilder,
                                                   borderArea, aBuilder,
                                                   aManager, mOpacityItemCreated);
 
-  image::DrawResult result =
-    nsSVGIntegrationUtils::PaintFramesWithEffects(params);
-
-  nsDisplaySVGEffectsGeometry::UpdateDrawResult(this, result);
+  nsSVGIntegrationUtils::PaintFramesWithEffects(params);
 }
 
 LayerState
@@ -6804,11 +6801,6 @@ nsDisplaySVGEffects::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
     // some of these cases because filters can produce output even if there's
     // nothing in the filter input.
     aInvalidRegion->Or(bounds, geometry->mBounds);
-  }
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    aInvalidRegion->Or(*aInvalidRegion, bounds);
   }
 }
 
