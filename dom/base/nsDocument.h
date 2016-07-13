@@ -1268,8 +1268,6 @@ public:
   Element* GetFullscreenElement() override;
 
   void RequestPointerLock(Element* aElement) override;
-  bool ShouldLockPointer(Element* aElement, Element* aCurrentLock,
-                         bool aNoFocusCheck = false);
   bool SetPointerLock(Element* aElement, int aCursorStyle);
   static void UnlockPointer(nsIDocument* aDoc = nullptr);
 
