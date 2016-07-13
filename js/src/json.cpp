@@ -128,6 +128,8 @@ Quote(JSContext* cx, StringBuffer& sb, JSString* str)
 
 namespace {
 
+using ObjectSet = GCHashSet<JSObject*, MovableCellHasher<JSObject*>, SystemAllocPolicy>;
+
 class StringifyContext
 {
   public:
@@ -137,7 +139,7 @@ class StringifyContext
       : sb(sb),
         gap(gap),
         replacer(cx, replacer),
-        stack(cx, GCHashSet<JSObject*, MovableCellHasher<JSObject*>>(cx)),
+        stack(cx),
         propertyList(propertyList),
         depth(0),
         maybeSafely(maybeSafely)
@@ -153,7 +155,7 @@ class StringifyContext
     StringBuffer& sb;
     const StringBuffer& gap;
     RootedObject replacer;
-    Rooted<GCHashSet<JSObject*, MovableCellHasher<JSObject*>>> stack;
+    Rooted<ObjectSet> stack;
     const AutoIdVector& propertyList;
     uint32_t depth;
     bool maybeSafely;
@@ -311,7 +313,11 @@ class CycleDetector
                                  js_object_str);
             return false;
         }
-        return stack.add(addPtr, obj_);
+        if (!stack.add(addPtr, obj_)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
 
     ~CycleDetector() {
@@ -319,7 +325,7 @@ class CycleDetector
     }
 
   private:
-    MutableHandle<GCHashSet<JSObject*, MovableCellHasher<JSObject*>>> stack;
+    MutableHandle<ObjectSet> stack;
     HandleObject obj_;
 };
 
