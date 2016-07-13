@@ -595,20 +595,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
     }
 
-    static void*
-    allocateTypedArrayElementsBuffer(JSContext* cx, uint32_t len)
-    {
-        if (len == 0)
-            return nullptr;
-
-        void* buf = cx->runtime()->pod_callocCanGC<HeapSlot>(len);
-        if (!buf) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-        return buf;
-    }
-
     static TypedArrayObject*
     makeTypedArrayWithTemplate(JSContext* cx, TypedArrayObject* templateObj, uint32_t len)
     {
@@ -631,16 +617,18 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         NewObjectKind newKind = GenericObject;
 
-        void* buf = nullptr;
-        if (!fitsInline) {
-            buf = allocateTypedArrayElementsBuffer(cx, len);
-            if (!buf)
-                return nullptr;
-        }
-
         RootedObject tmp(cx, NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind));
         if (!tmp)
             return nullptr;
+
+        void* buf = nullptr;
+        if (!fitsInline && len > 0) {
+            buf = cx->runtime()->pod_callocCanGC<HeapSlot>(len);
+            if (!buf) {
+                ReportOutOfMemory(cx);
+                return nullptr;
+            }
+        }
 
         TypedArrayObject* obj = &tmp->as<TypedArrayObject>();
         initTypedArraySlots(obj, len, buf, allocKind);
