@@ -728,10 +728,6 @@ ClientLayerManager::ClearCachedResources(Layer* aSubtree)
   } else if (mRoot) {
     ClearLayer(mRoot);
   }
-
-  if (GetCompositorBridgeChild()) {
-    GetCompositorBridgeChild()->ClearTexturePool();
-  }
 }
 
 void

@@ -6,4 +6,4 @@ task:
       - --download-symbols=true
   extra:
     treeherder:
-      tier: 2
+      tier: 1
