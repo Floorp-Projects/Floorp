@@ -400,9 +400,8 @@ protected:
   // context. That's because calling GetStyleContextForElement when we are in
   // the process of building a style context may trigger various forms of
   // infinite recursion.
-  // If aDoc is nullptr, we will use the owner doc of the target element.
   already_AddRefed<nsStyleContext>
-  GetTargetStyleContext(nsIDocument* aDoc = nullptr);
+  GetTargetStyleContext();
 
   Maybe<OwningAnimationTarget> mTarget;
   RefPtr<Animation> mAnimation;
