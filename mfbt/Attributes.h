@@ -45,22 +45,9 @@
  * standardly, by checking whether __cplusplus has a C++11 or greater value.
  * Current versions of g++ do not correctly set __cplusplus, so we check both
  * for forward compatibility.
- *
- * Even though some versions of MSVC support explicit conversion operators, we
- * don't indicate support for them here, due to
- * http://stackoverflow.com/questions/20498142/visual-studio-2013-explicit-keyword-bug
  */
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
-#  if _MSC_VER >= 1900
-#    define MOZ_HAVE_EXPLICIT_CONVERSION
-#  endif
-#  ifdef __clang__
-     /* clang-cl probably supports explicit conversions. */
-#    if __has_extension(cxx_explicit_conversions)
-#      define MOZ_HAVE_EXPLICIT_CONVERSION
-#    endif
-#  endif
 #elif defined(__clang__)
    /*
     * Per Clang documentation, "Note that marketing version numbers should not
@@ -70,9 +57,6 @@
 #  ifndef __has_extension
 #    define __has_extension __has_feature /* compatibility, for older versions of clang */
 #  endif
-#  if __has_extension(cxx_explicit_conversions)
-#    define MOZ_HAVE_EXPLICIT_CONVERSION
-#  endif
 #  if __has_attribute(noinline)
 #    define MOZ_HAVE_NEVER_INLINE        __attribute__((noinline))
 #  endif
@@ -80,9 +64,6 @@
 #    define MOZ_HAVE_NORETURN            __attribute__((noreturn))
 #  endif
 #elif defined(__GNUC__)
-#  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#    define MOZ_HAVE_EXPLICIT_CONVERSION
-#  endif
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
 #  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
 #endif
@@ -95,31 +76,6 @@
 #  if __has_extension(attribute_analyzer_noreturn)
 #    define MOZ_HAVE_ANALYZER_NORETURN __attribute__((analyzer_noreturn))
 #  endif
-#endif
-
-/*
- * MOZ_EXPLICIT_CONVERSION is a specifier on a type conversion
- * overloaded operator that declares that a C++11 compiler should restrict
- * this operator to allow only explicit type conversions, disallowing
- * implicit conversions.
- *
- * Example:
- *
- *   template<typename T>
- *   class Ptr
- *   {
- *     T* mPtr;
- *     MOZ_EXPLICIT_CONVERSION operator bool() const
- *     {
- *       return mPtr != nullptr;
- *     }
- *   };
- *
- */
-#ifdef MOZ_HAVE_EXPLICIT_CONVERSION
-#  define MOZ_EXPLICIT_CONVERSION explicit
-#else
-#  define MOZ_EXPLICIT_CONVERSION /* no support */
 #endif
 
 /*
