@@ -93,9 +93,9 @@ AnimationEffectReadOnly::SetSpecifiedTiming(const TimingParams& aTiming)
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();
   }
-  // NotifyEffectTimingUpdated will eventually cause
-  // NotifyAnimationTimingUpdated to be called on this object which will
-  // update our registration with the target element.
+  // For keyframe effects, NotifyEffectTimingUpdated above will eventually cause
+  // KeyframeEffectReadOnly::NotifyAnimationTimingUpdated to be called so it can
+  // update its registration with the target element as necessary.
 }
 
 ComputedTiming
@@ -321,13 +321,6 @@ AnimationEffectReadOnly::GetComputedTimingAsDict(
                               currentTime,
                               SpecifiedTiming(),
                               aRetVal);
-}
-
-void
-AnimationEffectReadOnly::SetAnimation(Animation* aAnimation)
-{
-  mAnimation = aAnimation;
-  NotifyAnimationTimingUpdated();
 }
 
 AnimationEffectReadOnly::~AnimationEffectReadOnly()
