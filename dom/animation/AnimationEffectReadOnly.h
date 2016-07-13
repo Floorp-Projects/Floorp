@@ -24,12 +24,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadOnly)
 
-  explicit AnimationEffectReadOnly(nsISupports* aParent)
-    : mParent(aParent)
+  explicit AnimationEffectReadOnly(nsIDocument* aDocument)
+    : mDocument(aDocument)
   {
   }
 
-  nsISupports* GetParentObject() const { return mParent; }
+  nsISupports* GetParentObject() const { return mDocument; }
 
   virtual already_AddRefed<AnimationEffectTimingReadOnly> Timing() const = 0;
 
@@ -39,7 +39,7 @@ protected:
   virtual ~AnimationEffectReadOnly() = default;
 
 protected:
-  nsCOMPtr<nsISupports> mParent;
+  RefPtr<nsIDocument> mDocument;
 };
 
 } // namespace dom
