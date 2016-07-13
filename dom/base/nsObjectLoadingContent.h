@@ -446,6 +446,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsresult CloseChannel();
 
     /**
+     * If this object should be tested against blocking list.
+     */
+    bool ShouldBlockContent();
+
+    /**
      * If this object is allowed to play plugin content, or if it would display
      * click-to-play instead.
      * NOTE that this does not actually check if the object is a loadable plugin
@@ -652,6 +657,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Used to keep track of whether or not a plugin has been explicitly
     // activated by PlayPlugin(). (see ShouldPlay())
     bool                        mActivated : 1;
+
+    // Whether content blocking is enabled or not for this object.
+    bool                        mContentBlockingDisabled : 1;
 
     // Protects DoStopPlugin from reentry (bug 724781).
     bool                        mIsStopping : 1;

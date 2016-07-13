@@ -20,6 +20,7 @@
 #define wasm_module_h
 
 #include "asmjs/WasmCode.h"
+#include "asmjs/WasmTable.h"
 #include "js/TypeDecls.h"
 
 namespace js {
@@ -42,6 +43,7 @@ struct LinkDataCacheablePod
     uint32_t interruptOffset;
     uint32_t outOfBoundsOffset;
     uint32_t unalignedAccessOffset;
+    uint32_t badIndirectCallOffset;
 
     LinkDataCacheablePod() { mozilla::PodZero(this); }
 };
@@ -109,15 +111,37 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 //  - the sentinel value MemoryExport indicating an export of linear memory; or
 //  - the index of an export into the ExportVector in Metadata
 //
+// ExportMap also contains the start function's export index, which maps to the
+// export that is called at each instantiation of a given module.
+//
 // ExportMap is built incrementally by ModuleGenerator and then stored immutably
 // by Module.
 
 static const uint32_t MemoryExport = UINT32_MAX;
 
-struct ExportMap
+static const uint32_t NO_START_FUNCTION = UINT32_MAX;
+
+class ExportMap
 {
+    uint32_t startExportIndex;
+
+  public:
     CacheableCharsVector fieldNames;
     Uint32Vector fieldsToExports;
+
+    ExportMap() : startExportIndex(NO_START_FUNCTION) {}
+
+    bool hasStartFunction() const {
+        return startExportIndex != NO_START_FUNCTION;
+    }
+    void setStartFunction(uint32_t index) {
+        MOZ_ASSERT(!hasStartFunction());
+        startExportIndex = index;
+    }
+    uint32_t startFunctionExportIndex() const {
+        MOZ_ASSERT(hasStartFunction());
+        return startExportIndex;
+    }
 
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
@@ -139,12 +163,13 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
 struct ElemSegment
 {
-    uint32_t globalDataOffset;
+    uint32_t tableIndex;
+    uint32_t offset;
     Uint32Vector elems;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t globalDataOffset, Uint32Vector&& elems)
-      : globalDataOffset(globalDataOffset), elems(Move(elems))
+    ElemSegment(uint32_t tableIndex, uint32_t offset, Uint32Vector&& elems)
+      : tableIndex(tableIndex), offset(offset), elems(Move(elems))
     {}
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
@@ -176,7 +201,7 @@ class Module
     const SharedBytes       bytecode_;
 
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, const CodeSegment& cs) const;
+    bool instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector* tables) const;
 
   public:
     Module(Bytes&& code,

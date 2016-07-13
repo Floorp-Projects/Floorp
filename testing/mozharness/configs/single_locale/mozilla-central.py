@@ -23,10 +23,6 @@ config = {
         "repo": "https://hg.mozilla.org/mozilla-central",
         "revision": "default",
         "dest": "mozilla-central",
-    }, {
-        "vcs": "hgtool",
-        "repo": "https://hg.mozilla.org/build/compare-locales",
-        "revision": "RELEASE_AUTOMATION"
     }],
     # purge options
     'is_automation': True,

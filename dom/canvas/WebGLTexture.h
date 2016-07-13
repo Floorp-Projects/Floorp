@@ -412,6 +412,9 @@ TexImageTargetForTargetAndFace(TexTarget target, uint8_t face)
 already_AddRefed<mozilla::layers::Image>
 ImageFromVideo(dom::HTMLVideoElement* elem);
 
+bool
+IsTarget3D(TexImageTarget target);
+
 GLenum
 DoTexImage(gl::GLContext* gl, TexImageTarget target, GLint level,
            const webgl::DriverUnpackInfo* dui, GLsizei width, GLsizei height,

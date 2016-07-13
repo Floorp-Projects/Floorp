@@ -7,7 +7,7 @@
 %filter substitution
 %ifdef XP_MACOSX
 %include ../osx/shared.inc
-%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+%elif defined(MOZ_WIDGET_GTK)
 %include ../linux/linuxShared.inc
 %else
 %include ../windows/windowsShared.inc

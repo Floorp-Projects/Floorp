@@ -183,6 +183,30 @@ function ModuleNamespaceCreate(module, exports)
     return ns;
 }
 
+function GetModuleEnvironment(module)
+{
+    assert(IsModule(module), "Non-module passed to GetModuleEnvironment");
+
+    let env = UnsafeGetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT);
+    assert(env === undefined || env === null || IsModuleEnvironment(env),
+          "Module environment slot contains unexpected value");
+
+    // Check for a previous failed attempt to instantiate this module. This can
+    // only happen due to a bug in the module loader.
+    if (env === null)
+        ThrowInternalError(JSMSG_MODULE_INSTANTIATE_FAILED);
+
+    return env;
+}
+
+function RecordInstantationFailure(module)
+{
+    // Set the module's environment slot to 'null' to indicate a failed module
+    // instantiation.
+    assert(IsModule(module), "Non-module passed to RecordInstantationFailure");
+    UnsafeSetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT, null);
+}
+
 // 15.2.1.16.4 ModuleDeclarationInstantiation()
 function ModuleDeclarationInstantiation()
 {
@@ -200,46 +224,51 @@ function ModuleDeclarationInstantiation()
     CreateModuleEnvironment(module);
     let env = GetModuleEnvironment(module);
 
-    // Step 8
-    let requestedModules = module.requestedModules;
-    for (let i = 0; i < requestedModules.length; i++) {
-        let required = requestedModules[i];
-        let requiredModule = HostResolveImportedModule(module, required);
-        callFunction(requiredModule.declarationInstantiation, requiredModule);
-    }
-
-    // Step 9
-    let indirectExportEntries = module.indirectExportEntries;
-    for (let i = 0; i < indirectExportEntries.length; i++) {
-        let e = indirectExportEntries[i];
-        let resolution = callFunction(module.resolveExport, module, e.exportName);
-        if (resolution === null)
-            ThrowSyntaxError(JSMSG_MISSING_INDIRECT_EXPORT, e.exportName);
-        if (resolution === "ambiguous")
-            ThrowSyntaxError(JSMSG_AMBIGUOUS_INDIRECT_EXPORT, e.exportName);
-    }
-
-    // Step 12
-    let importEntries = module.importEntries;
-    for (let i = 0; i < importEntries.length; i++) {
-        let imp = importEntries[i];
-        let importedModule = HostResolveImportedModule(module, imp.moduleRequest);
-        if (imp.importName === "*") {
-            let namespace = GetModuleNamespace(importedModule);
-            CreateNamespaceBinding(env, imp.localName, namespace);
-        } else {
-            let resolution = callFunction(importedModule.resolveExport, importedModule,
-                                          imp.importName);
-            if (resolution === null)
-                ThrowSyntaxError(JSMSG_MISSING_IMPORT, imp.importName);
-            if (resolution === "ambiguous")
-                ThrowSyntaxError(JSMSG_AMBIGUOUS_IMPORT, imp.importName);
-            CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
+    try {
+        // Step 8
+        let requestedModules = module.requestedModules;
+        for (let i = 0; i < requestedModules.length; i++) {
+            let required = requestedModules[i];
+            let requiredModule = HostResolveImportedModule(module, required);
+            callFunction(requiredModule.declarationInstantiation, requiredModule);
         }
-    }
 
-    // Step 16.iv
-    InstantiateModuleFunctionDeclarations(module);
+        // Step 9
+        let indirectExportEntries = module.indirectExportEntries;
+        for (let i = 0; i < indirectExportEntries.length; i++) {
+            let e = indirectExportEntries[i];
+            let resolution = callFunction(module.resolveExport, module, e.exportName);
+            if (resolution === null)
+                ThrowSyntaxError(JSMSG_MISSING_INDIRECT_EXPORT, e.exportName);
+            if (resolution === "ambiguous")
+                ThrowSyntaxError(JSMSG_AMBIGUOUS_INDIRECT_EXPORT, e.exportName);
+        }
+
+        // Step 12
+        let importEntries = module.importEntries;
+        for (let i = 0; i < importEntries.length; i++) {
+            let imp = importEntries[i];
+            let importedModule = HostResolveImportedModule(module, imp.moduleRequest);
+            if (imp.importName === "*") {
+                let namespace = GetModuleNamespace(importedModule);
+                CreateNamespaceBinding(env, imp.localName, namespace);
+            } else {
+                let resolution = callFunction(importedModule.resolveExport, importedModule,
+                                              imp.importName);
+                if (resolution === null)
+                    ThrowSyntaxError(JSMSG_MISSING_IMPORT, imp.importName);
+                if (resolution === "ambiguous")
+                    ThrowSyntaxError(JSMSG_AMBIGUOUS_IMPORT, imp.importName);
+                CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
+            }
+        }
+
+        // Step 16.iv
+        InstantiateModuleFunctionDeclarations(module);
+    } catch (e) {
+        RecordInstantationFailure(module);
+        throw e;
+    }
 }
 _SetCanonicalName(ModuleDeclarationInstantiation, "ModuleDeclarationInstantiation");
 

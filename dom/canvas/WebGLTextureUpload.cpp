@@ -178,11 +178,12 @@ WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
 }
 
 static UniquePtr<webgl::TexUnpackBlob>
-BlobFromView(WebGLContext* webgl, const char* funcName, uint32_t width, uint32_t height,
-             uint32_t depth, const webgl::PackingInfo& pi,
+BlobFromView(WebGLContext* webgl, const char* funcName, TexImageTarget target,
+             uint32_t width, uint32_t height, uint32_t depth,
+             const webgl::PackingInfo& pi,
              const dom::Nullable<dom::ArrayBufferView>& maybeView)
 {
-    const void* bytes = nullptr;
+    const uint8_t* bytes = nullptr;
     uint32_t byteCount = 0;
 
     if (!maybeView.IsNull()) {
@@ -203,8 +204,8 @@ BlobFromView(WebGLContext* webgl, const char* funcName, uint32_t width, uint32_t
         }
     }
 
-    UniquePtr<webgl::TexUnpackBlob> blob(new webgl::TexUnpackBytes(webgl, width, height,
-                                                                   depth, bytes));
+    UniquePtr<webgl::TexUnpackBlob> blob(new webgl::TexUnpackBytes(webgl, target, width,
+                                                                   height, depth, bytes));
 
     //////
 
@@ -268,7 +269,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     if (!mContext->ValidateUnpackInfo(funcName, unpackFormat, unpackType, &pi))
         return;
 
-    const auto blob = BlobFromView(mContext, funcName, width, height, depth, pi,
+    const auto blob = BlobFromView(mContext, funcName, target, width, height, depth, pi,
                                    maybeView);
     if (!blob)
         return;
@@ -280,7 +281,7 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
 ////////////////////////////////////////
 // ImageData
 
-static already_AddRefed<gfx::SourceSurface>
+static already_AddRefed<gfx::DataSourceSurface>
 FromImageData(WebGLContext* webgl, const char* funcName, GLenum unpackType,
               dom::ImageData* imageData, dom::Uint8ClampedArray* scopedArr)
 {
@@ -299,7 +300,7 @@ FromImageData(WebGLContext* webgl, const char* funcName, GLenum unpackType,
 
     uint8_t* wrappableData = (uint8_t*)data;
 
-    RefPtr<gfx::SourceSurface> surf =
+    RefPtr<gfx::DataSourceSurface> surf =
         gfx::Factory::CreateWrappingDataSourceSurface(wrappableData,
                                                       stride,
                                                       size,
@@ -310,35 +311,6 @@ FromImageData(WebGLContext* webgl, const char* funcName, GLenum unpackType,
     }
 
     return surf.forget();
-}
-
-bool
-WebGLContext::GetUnpackValuesForImage(const char* funcName, uint32_t srcImageWidth,
-                                      uint32_t srcImageHeight,
-                                      uint32_t* const out_rowLength,
-                                      uint32_t* const out_imageHeight)
-{
-    uint32_t rowLength = mPixelStore_UnpackRowLength;
-    if (!rowLength) {
-        rowLength = srcImageWidth;
-    } else if (rowLength != srcImageWidth) {
-        ErrorInvalidOperation("%s: UNPACK_ROW_LENGTH, if set, must be == width of"
-                              " object.");
-        return false;
-    }
-
-    uint32_t imageHeight = mPixelStore_UnpackImageHeight;
-    if (!imageHeight) {
-        imageHeight = srcImageHeight;
-    } else if (imageHeight > srcImageHeight) {
-        ErrorInvalidOperation("%s: UNPACK_IMAGE_HEIGHT, if set, must be <= height of"
-                              " object");
-        return false;
-    }
-
-    *out_rowLength = rowLength;
-    *out_imageHeight = imageHeight;
-    return true;
 }
 
 void
@@ -362,27 +334,20 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     const uint32_t height = imageData->Height();
     const uint32_t depth = 1;
 
-    uint32_t rowLength, imageHeight;
-    if (!mContext->GetUnpackValuesForImage(funcName, imageData->Width(),
-                                           imageData->Height(), &rowLength, &imageHeight))
-    {
-        return;
-    }
-
-    dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(
-      nsContentUtils::RootingCx());
-    const RefPtr<gfx::SourceSurface> surf = FromImageData(mContext, funcName, unpackType,
-                                                          imageData, &scopedArr);
+    dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(nsContentUtils::RootingCx());
+    const RefPtr<gfx::DataSourceSurface> surf = FromImageData(mContext, funcName,
+                                                              unpackType, imageData,
+                                                              &scopedArr);
     if (!surf)
         return;
 
     // WhatWG "HTML Living Standard" (30 October 2015):
     // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
     //  non-premultiplied alpha values."
-    const bool surfIsAlphaPremult = false;
+    const bool isAlphaPremult = false;
 
-    const webgl::TexUnpackSurface blob(mContext, imageHeight, width, height, depth, surf,
-                                       surfIsAlphaPremult);
+    const webgl::TexUnpackSurface blob(mContext, target, width, height, depth, surf,
+                                       isAlphaPremult);
 
     const uint32_t fullRows = imageData->Height();
     const uint32_t tailPixels = 0;
@@ -407,7 +372,21 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     if (!mContext->ValidateUnpackInfo(funcName, unpackFormat, unpackType, &pi))
         return;
 
-    auto sfer = mContext->SurfaceFromElement(elem);
+    //////
+
+    uint32_t flags = nsLayoutUtils::SFE_WANT_IMAGE_SURFACE |
+                     nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR;
+
+    if (mContext->mPixelStore_ColorspaceConversion == LOCAL_GL_NONE)
+        flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
+
+    if (!mContext->mPixelStore_PremultiplyAlpha)
+        flags |= nsLayoutUtils::SFE_PREFER_NO_PREMULTIPLY_ALPHA;
+
+    RefPtr<gfx::DrawTarget> idealDrawTarget = nullptr; // Don't care for now.
+    auto sfer = nsLayoutUtils::SurfaceFromElement(elem, flags, idealDrawTarget);
+
+    //////
 
     uint32_t elemWidth = 0;
     uint32_t elemHeight = 0;
@@ -418,29 +397,35 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
         elemHeight = layersImage->GetSize().height;
     }
 
-    gfx::SourceSurface* surf = nullptr;
+    RefPtr<gfx::DataSourceSurface> dataSurf;
     if (!layersImage && sfer.GetSourceSurface()) {
-        surf = sfer.GetSourceSurface();
+        const auto surf = sfer.GetSourceSurface();
         elemWidth = surf->GetSize().width;
         elemHeight = surf->GetSize().height;
+
+        // WARNING: OSX can lose our MakeCurrent here.
+        dataSurf = surf->GetDataSurface();
     }
+
+    //////
 
     // Eventually, these will be args.
     const uint32_t width = elemWidth;
     const uint32_t height = elemHeight;
     const uint32_t depth = 1;
 
-    // While it's counter-intuitive, the shape of the SFEResult API means that we should
-    // try to pull out a surface first, and then, if we do pull out a surface, check
-    // CORS/write-only/etc..
-    if (!layersImage && !surf) {
-        webgl::TexUnpackBytes blob(mContext, width, height, depth, nullptr);
+    if (!layersImage && !dataSurf) {
+        const webgl::TexUnpackBytes blob(mContext, target, width, height, depth, nullptr);
         TexOrSubImageBlob(isSubImage, funcName, target, level, internalFormat, xOffset,
                           yOffset, zOffset, pi, &blob);
         return;
     }
 
     //////
+
+    // While it's counter-intuitive, the shape of the SFEResult API means that we should
+    // try to pull out a surface first, and then, if we do pull out a surface, check
+    // CORS/write-only/etc..
 
     if (!sfer.mCORSUsed) {
         auto& srcPrincipal = sfer.mPrincipal;
@@ -468,23 +453,16 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     //////
     // Ok, we're good!
 
-    uint32_t rowLength, imageHeight;
-    if (!mContext->GetUnpackValuesForImage(funcName, elemWidth, elemHeight, &rowLength,
-                                           &imageHeight))
-    {
-        return;
-    }
-
     UniquePtr<const webgl::TexUnpackBlob> blob;
     const bool isAlphaPremult = sfer.mIsPremultiplied;
 
     if (layersImage) {
-        blob.reset(new webgl::TexUnpackImage(mContext, imageHeight, width, height, depth,
+        blob.reset(new webgl::TexUnpackImage(mContext, target, width, height, depth,
                                              layersImage, isAlphaPremult));
     } else {
-        MOZ_ASSERT(surf);
-        blob.reset(new webgl::TexUnpackSurface(mContext, imageHeight, width, height,
-                                               depth, surf, isAlphaPremult));
+        MOZ_ASSERT(dataSurf);
+        blob.reset(new webgl::TexUnpackSurface(mContext, target, width, height, depth,
+                                               dataSurf, isAlphaPremult));
     }
 
     const uint32_t fullRows = elemHeight;
@@ -836,8 +814,8 @@ DoTexStorage(gl::GLContext* gl, TexTarget target, GLsizei levels, GLenum sizedFo
     return errorScope.GetError();
 }
 
-static bool
-Is3D(TexImageTarget target)
+bool
+IsTarget3D(TexImageTarget target)
 {
     switch (target.get()) {
     case LOCAL_GL_TEXTURE_2D:
@@ -867,7 +845,7 @@ DoTexImage(gl::GLContext* gl, TexImageTarget target, GLint level,
 
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    if (Is3D(target)) {
+    if (IsTarget3D(target)) {
         gl->fTexImage3D(target.get(), level, dui->internalFormat, width, height, depth,
                         border, dui->unpackFormat, dui->unpackType, data);
     } else {
@@ -886,7 +864,7 @@ DoTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level, GLint xOffs
 {
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    if (Is3D(target)) {
+    if (IsTarget3D(target)) {
         gl->fTexSubImage3D(target.get(), level, xOffset, yOffset, zOffset, width, height,
                            depth, pi.format, pi.type, data);
     } else {
@@ -908,7 +886,7 @@ DoCompressedTexImage(gl::GLContext* gl, TexImageTarget target, GLint level,
 
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    if (Is3D(target)) {
+    if (IsTarget3D(target)) {
         gl->fCompressedTexImage3D(target.get(), level, internalFormat, width, height,
                                   depth, border, dataSize, data);
     } else {
@@ -928,7 +906,7 @@ DoCompressedTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level,
 {
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    if (Is3D(target)) {
+    if (IsTarget3D(target)) {
         gl->fCompressedTexSubImage3D(target.get(), level, xOffset, yOffset, zOffset,
                                      width, height, depth, sizedUnpackFormat, dataSize,
                                      data);
@@ -950,7 +928,7 @@ DoCopyTexImage2D(gl::GLContext* gl, TexImageTarget target, GLint level,
 
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    MOZ_ASSERT(!Is3D(target));
+    MOZ_ASSERT(!IsTarget3D(target));
     gl->fCopyTexImage2D(target.get(), level, internalFormat, x, y, width, height,
                         border);
 
@@ -964,7 +942,7 @@ DoCopyTexSubImage(gl::GLContext* gl, TexImageTarget target, GLint level, GLint x
 {
     gl::GLContext::LocalErrorScope errorScope(*gl);
 
-    if (Is3D(target)) {
+    if (IsTarget3D(target)) {
         gl->fCopyTexSubImage3D(target.get(), level, xOffset, yOffset, zOffset, x, y,
                                width, height);
     } else {
@@ -1263,7 +1241,7 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
 
     if (!mContext->IsWebGL2() && dstFormat->d) {
         if (target != LOCAL_GL_TEXTURE_2D ||
-            blob->mHasData ||
+            blob->HasData() ||
             level != 0)
         {
             mContext->ErrorInvalidOperation("%s: With format %s, this function may only"
@@ -1284,7 +1262,7 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
     // slower.
 
     const ImageInfo newImageInfo(dstUsage, blob->mWidth, blob->mHeight, blob->mDepth,
-                                 blob->mHasData);
+                                 blob->HasData());
 
     const bool isSubImage = false;
     const bool needsRespec = (imageInfo->mWidth  != newImageInfo.mWidth ||

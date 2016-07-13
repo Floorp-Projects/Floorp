@@ -21,6 +21,7 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -2136,6 +2137,39 @@ XMLHttpRequestWorker::Send(JSContext* aCx, Blob& aBody, ErrorResult& aRv)
 
 void
 XMLHttpRequestWorker::Send(JSContext* aCx, FormData& aBody, ErrorResult& aRv)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (mCanceled) {
+    aRv.ThrowUncatchableException();
+    return;
+  }
+
+  if (!mProxy) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  JS::Rooted<JS::Value> value(aCx);
+  if (!GetOrCreateDOMReflector(aCx, &aBody, &value)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<SendRunnable> sendRunnable =
+    new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
+
+  sendRunnable->Write(aCx, value, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  SendInternal(sendRunnable, aRv);
+}
+
+void
+XMLHttpRequestWorker::Send(JSContext* aCx, URLSearchParams& aBody,
+                           ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 

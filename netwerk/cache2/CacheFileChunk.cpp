@@ -13,6 +13,227 @@ namespace net {
 
 #define kMinBufSize        512
 
+CacheFileChunkBuffer::CacheFileChunkBuffer(CacheFileChunk *aChunk)
+  : mChunk(aChunk)
+  , mBuf(nullptr)
+  , mBufSize(0)
+  , mDataSize(0)
+  , mReadHandlesCount(0)
+  , mWriteHandleExists(false)
+{
+}
+
+CacheFileChunkBuffer::~CacheFileChunkBuffer()
+{
+  if (mBuf) {
+    CacheFileUtils::FreeBuffer(mBuf);
+    mBuf = nullptr;
+    mChunk->BuffersAllocationChanged(mBufSize, 0);
+    mBufSize = 0;
+  }
+}
+
+void
+CacheFileChunkBuffer::CopyFrom(CacheFileChunkBuffer *aOther)
+{
+  MOZ_RELEASE_ASSERT(mBufSize >= aOther->mDataSize);
+  mDataSize = aOther->mDataSize;
+  memcpy(mBuf, aOther->mBuf, mDataSize);
+}
+
+nsresult
+CacheFileChunkBuffer::FillInvalidRanges(CacheFileChunkBuffer *aOther,
+                                        CacheFileUtils::ValidityMap *aMap)
+{
+  nsresult rv;
+
+  rv = EnsureBufSize(aOther->mDataSize);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint32_t invalidOffset = 0;
+  uint32_t invalidLength;
+
+  for (uint32_t i = 0; i < aMap->Length(); ++i) {
+    uint32_t validOffset = (*aMap)[i].Offset();
+    uint32_t validLength = (*aMap)[i].Len();
+
+    MOZ_RELEASE_ASSERT(invalidOffset <= validOffset);
+    invalidLength = validOffset - invalidOffset;
+    if (invalidLength > 0) {
+      MOZ_RELEASE_ASSERT(invalidOffset + invalidLength <= aOther->mBufSize);
+      memcpy(mBuf + invalidOffset, aOther->mBuf + invalidOffset, invalidLength);
+    }
+    invalidOffset = validOffset + validLength;
+  }
+
+  if (invalidOffset < aOther->mBufSize) {
+    invalidLength = aOther->mBufSize - invalidOffset;
+    memcpy(mBuf + invalidOffset, aOther->mBuf + invalidOffset, invalidLength);
+  }
+
+  return NS_OK;
+}
+
+MOZ_MUST_USE nsresult
+CacheFileChunkBuffer::EnsureBufSize(uint32_t aBufSize)
+{
+  AssertOwnsLock();
+
+  if (mBufSize >= aBufSize) {
+    return NS_OK;
+  }
+
+  // find smallest power of 2 greater than or equal to aBufSize
+  aBufSize--;
+  aBufSize |= aBufSize >> 1;
+  aBufSize |= aBufSize >> 2;
+  aBufSize |= aBufSize >> 4;
+  aBufSize |= aBufSize >> 8;
+  aBufSize |= aBufSize >> 16;
+  aBufSize++;
+
+  const uint32_t minBufSize = kMinBufSize;
+  const uint32_t maxBufSize = kChunkSize;
+  aBufSize = clamped(aBufSize, minBufSize, maxBufSize);
+
+  if (!mChunk->CanAllocate(aBufSize - mBufSize)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  char *newBuf = static_cast<char *>(realloc(mBuf, aBufSize));
+  if (!newBuf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mChunk->BuffersAllocationChanged(mBufSize, aBufSize);
+  mBuf = newBuf;
+  mBufSize = aBufSize;
+
+  return NS_OK;
+}
+
+void
+CacheFileChunkBuffer::SetDataSize(uint32_t aDataSize)
+{
+  MOZ_RELEASE_ASSERT(
+    mDataSize <= mBufSize ||
+    (mBufSize == 0 && mChunk->mState == CacheFileChunk::READING));
+  mDataSize = aDataSize;
+}
+
+void
+CacheFileChunkBuffer::AssertOwnsLock() const
+{
+  mChunk->AssertOwnsLock();
+}
+
+void
+CacheFileChunkBuffer::RemoveReadHandle()
+{
+  AssertOwnsLock();
+  MOZ_RELEASE_ASSERT(mReadHandlesCount);
+  MOZ_RELEASE_ASSERT(!mWriteHandleExists);
+  mReadHandlesCount--;
+
+  if (mReadHandlesCount == 0 && mChunk->mBuf != this) {
+    DebugOnly<bool> removed = mChunk->mOldBufs.RemoveElement(this);
+    MOZ_ASSERT(removed);
+  }
+}
+
+void
+CacheFileChunkBuffer::RemoveWriteHandle()
+{
+  AssertOwnsLock();
+  MOZ_RELEASE_ASSERT(mReadHandlesCount == 0);
+  MOZ_RELEASE_ASSERT(mWriteHandleExists);
+  mWriteHandleExists = false;
+}
+
+size_t
+CacheFileChunkBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  size_t n = mallocSizeOf(this);
+
+  if (mBuf) {
+    n += mallocSizeOf(mBuf);
+  }
+
+  return n;
+}
+
+uint32_t
+CacheFileChunkHandle::DataSize()
+{
+  MOZ_ASSERT(mBuf, "Unexpected call on dummy handle");
+  mBuf->AssertOwnsLock();
+  return mBuf->mDataSize;
+}
+
+uint32_t
+CacheFileChunkHandle::Offset()
+{
+  MOZ_ASSERT(mBuf, "Unexpected call on dummy handle");
+  mBuf->AssertOwnsLock();
+  return mBuf->mChunk->Index() * kChunkSize;
+}
+
+CacheFileChunkReadHandle::CacheFileChunkReadHandle(CacheFileChunkBuffer *aBuf)
+{
+  mBuf = aBuf;
+  mBuf->mReadHandlesCount++;
+}
+
+CacheFileChunkReadHandle::~CacheFileChunkReadHandle()
+{
+  mBuf->RemoveReadHandle();
+}
+
+const char *
+CacheFileChunkReadHandle::Buf()
+{
+  return mBuf->mBuf;
+}
+
+CacheFileChunkWriteHandle::CacheFileChunkWriteHandle(CacheFileChunkBuffer *aBuf)
+{
+  mBuf = aBuf;
+  if (mBuf) {
+    MOZ_ASSERT(!mBuf->mWriteHandleExists);
+    mBuf->mWriteHandleExists = true;
+  }
+}
+
+CacheFileChunkWriteHandle::~CacheFileChunkWriteHandle()
+{
+  if (mBuf) {
+    mBuf->RemoveWriteHandle();
+  }
+}
+
+char *
+CacheFileChunkWriteHandle::Buf()
+{
+  return mBuf ? mBuf->mBuf : nullptr;
+}
+
+void
+CacheFileChunkWriteHandle::UpdateDataSize(uint32_t aOffset, uint32_t aLen)
+{
+  MOZ_ASSERT(mBuf, "Write performed on dummy handle?");
+  MOZ_ASSERT(aOffset <= mBuf->mDataSize);
+  MOZ_ASSERT(aOffset + aLen <= mBuf->mBufSize);
+
+  if (aOffset + aLen > mBuf->mDataSize) {
+    mBuf->mDataSize = aOffset + aLen;
+  }
+
+  mBuf->mChunk->UpdateDataSize(aOffset, aLen);
+}
+
+
 class NotifyUpdateListenerEvent : public Runnable {
 public:
   NotifyUpdateListenerEvent(CacheFileChunkListener *aCallback,
@@ -109,56 +330,46 @@ CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex,
   , mStatus(NS_OK)
   , mIsDirty(false)
   , mActiveChunk(false)
-  , mDataSize(0)
-  , mReportedAllocation(0)
+  , mBuffersSize(0)
   , mLimitAllocation(!aFile->mOpenAsMemoryOnly && aInitByWriter)
   , mIsPriority(aFile->mPriority)
-  , mBuf(nullptr)
-  , mBufSize(0)
-  , mRWBuf(nullptr)
-  , mRWBufSize(0)
-  , mReadHash(0)
+  , mExpectedHash(0)
   , mFile(aFile)
 {
   LOG(("CacheFileChunk::CacheFileChunk() [this=%p, index=%u, initByWriter=%d]",
        this, aIndex, aInitByWriter));
   MOZ_COUNT_CTOR(CacheFileChunk);
+
+  mBuf = new CacheFileChunkBuffer(this);
 }
 
 CacheFileChunk::~CacheFileChunk()
 {
   LOG(("CacheFileChunk::~CacheFileChunk() [this=%p]", this));
   MOZ_COUNT_DTOR(CacheFileChunk);
+}
 
-  if (mBuf) {
-    CacheFileUtils::FreeBuffer(mBuf);
-    mBuf = nullptr;
-    mBufSize = 0;
-    ChunkAllocationChanged();
-  }
-
-  if (mRWBuf) {
-    CacheFileUtils::FreeBuffer(mRWBuf);
-    mRWBuf = nullptr;
-    mRWBufSize = 0;
-    ChunkAllocationChanged();
-  }
+void
+CacheFileChunk::AssertOwnsLock() const
+{
+  mFile->AssertOwnsLock();
 }
 
 void
 CacheFileChunk::InitNew()
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   LOG(("CacheFileChunk::InitNew() [this=%p]", this));
 
   MOZ_ASSERT(mState == INITIAL);
   MOZ_ASSERT(NS_SUCCEEDED(mStatus));
-  MOZ_ASSERT(!mBuf);
-  MOZ_ASSERT(!mRWBuf);
+  MOZ_ASSERT(!mBuf->Buf());
+  MOZ_ASSERT(!mWritingStateHandle);
+  MOZ_ASSERT(!mReadingStateBuf);
   MOZ_ASSERT(!mIsDirty);
-  MOZ_ASSERT(mDataSize == 0);
 
+  mBuf = new CacheFileChunkBuffer(this);
   mState = READY;
 }
 
@@ -167,46 +378,46 @@ CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
                      CacheHash::Hash16_t aHash,
                      CacheFileChunkListener *aCallback)
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   LOG(("CacheFileChunk::Read() [this=%p, handle=%p, len=%d, listener=%p]",
        this, aHandle, aLen, aCallback));
 
   MOZ_ASSERT(mState == INITIAL);
   MOZ_ASSERT(NS_SUCCEEDED(mStatus));
-  MOZ_ASSERT(!mBuf);
-  MOZ_ASSERT(!mRWBuf);
+  MOZ_ASSERT(!mBuf->Buf());
+  MOZ_ASSERT(!mWritingStateHandle);
+  MOZ_ASSERT(!mReadingStateBuf);
   MOZ_ASSERT(aLen);
 
   nsresult rv;
 
   mState = READING;
 
-  if (CanAllocate(aLen)) {
-    mRWBuf = static_cast<char *>(malloc(aLen));
-    if (mRWBuf) {
-      mRWBufSize = aLen;
-      ChunkAllocationChanged();
-    }
-  }
-
-  if (!mRWBuf) {
-    // Allocation was denied or failed
-    SetError(NS_ERROR_OUT_OF_MEMORY);
+  RefPtr<CacheFileChunkBuffer> tmpBuf = new CacheFileChunkBuffer(this);
+  rv = tmpBuf->EnsureBufSize(aLen);
+  if (NS_FAILED(rv)) {
+    SetError(rv);
     return mStatus;
   }
+  tmpBuf->SetDataSize(aLen);
 
-  DoMemoryReport(MemorySize());
-
-  rv = CacheFileIOManager::Read(aHandle, mIndex * kChunkSize, mRWBuf, aLen,
+  rv = CacheFileIOManager::Read(aHandle, mIndex * kChunkSize,
+                                tmpBuf->Buf(), aLen,
                                 this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     rv = mIndex ? NS_ERROR_FILE_CORRUPTED : NS_ERROR_FILE_NOT_FOUND;
     SetError(rv);
   } else {
+    mReadingStateBuf.swap(tmpBuf);
     mListener = aCallback;
-    mDataSize = aLen;
-    mReadHash = aHash;
+    // mBuf contains no data but we set datasize to size of the data that will
+    // be read from the disk. No handle is allowed to access the non-existent
+    // data until reading finishes, but data can be appended or overwritten.
+    // These pieces are tracked in mValidityMap and will be merged with the data
+    // read from disk in OnDataRead().
+    mBuf->SetDataSize(aLen);
+    mExpectedHash = aHash;
   }
 
   return rv;
@@ -216,28 +427,29 @@ nsresult
 CacheFileChunk::Write(CacheFileHandle *aHandle,
                       CacheFileChunkListener *aCallback)
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   LOG(("CacheFileChunk::Write() [this=%p, handle=%p, listener=%p]",
        this, aHandle, aCallback));
 
   MOZ_ASSERT(mState == READY);
   MOZ_ASSERT(NS_SUCCEEDED(mStatus));
-  MOZ_ASSERT(!mRWBuf);
-  MOZ_ASSERT(mBuf);
-  MOZ_ASSERT(mDataSize); // Don't write chunk when it is empty
+  MOZ_ASSERT(!mWritingStateHandle);
+  MOZ_ASSERT(mBuf->DataSize()); // Don't write chunk when it is empty
+  MOZ_ASSERT(mBuf->ReadHandlesCount() == 0);
+  MOZ_ASSERT(!mBuf->WriteHandleExists());
 
   nsresult rv;
 
   mState = WRITING;
-  mRWBuf = mBuf;
-  mRWBufSize = mBufSize;
-  mBuf = nullptr;
-  mBufSize = 0;
+  mWritingStateHandle = new CacheFileChunkReadHandle(mBuf);
 
-  rv = CacheFileIOManager::Write(aHandle, mIndex * kChunkSize, mRWBuf,
-                                 mDataSize, false, false, this);
+  rv = CacheFileIOManager::Write(aHandle, mIndex * kChunkSize,
+                                 mWritingStateHandle->Buf(),
+                                 mWritingStateHandle->DataSize(),
+                                 false, false, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    mWritingStateHandle = nullptr;
     SetError(rv);
   } else {
     mListener = aCallback;
@@ -250,7 +462,7 @@ CacheFileChunk::Write(CacheFileHandle *aHandle,
 void
 CacheFileChunk::WaitForUpdate(CacheFileChunkListener *aCallback)
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   LOG(("CacheFileChunk::WaitForUpdate() [this=%p, listener=%p]",
        this, aCallback));
@@ -281,7 +493,7 @@ CacheFileChunk::WaitForUpdate(CacheFileChunkListener *aCallback)
 nsresult
 CacheFileChunk::CancelWait(CacheFileChunkListener *aCallback)
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   LOG(("CacheFileChunk::CancelWait() [this=%p, listener=%p]", this, aCallback));
 
@@ -310,7 +522,7 @@ CacheFileChunk::CancelWait(CacheFileChunkListener *aCallback)
 nsresult
 CacheFileChunk::NotifyUpdateListeners()
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   LOG(("CacheFileChunk::NotifyUpdateListeners() [this=%p]", this));
 
@@ -339,55 +551,47 @@ CacheFileChunk::NotifyUpdateListeners()
 }
 
 uint32_t
-CacheFileChunk::Index()
+CacheFileChunk::Index() const
 {
   return mIndex;
 }
 
 CacheHash::Hash16_t
-CacheFileChunk::Hash()
+CacheFileChunk::Hash() const
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(IsReady());
 
-  return CacheHash::Hash16(mDataSize ? BufForReading() : nullptr, mDataSize);
+  return CacheHash::Hash16(mBuf->Buf(), mBuf->DataSize());
 }
 
 uint32_t
-CacheFileChunk::DataSize()
+CacheFileChunk::DataSize() const
 {
-  mFile->AssertOwnsLock();
-  return mDataSize;
+  return mBuf->DataSize();
 }
 
 void
-CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen, bool aEOF)
+CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen)
 {
-  mFile->AssertOwnsLock();
-
-  MOZ_ASSERT(!aEOF, "Implement me! What to do with opened streams?");
-  MOZ_ASSERT(aOffset <= mDataSize);
-  MOZ_ASSERT(aLen != 0);
+  AssertOwnsLock();
 
   // UpdateDataSize() is called only when we've written some data to the chunk
   // and we never write data anymore once some error occurs.
   MOZ_ASSERT(NS_SUCCEEDED(mStatus));
 
-  LOG(("CacheFileChunk::UpdateDataSize() [this=%p, offset=%d, len=%d, EOF=%d]",
-       this, aOffset, aLen, aEOF));
+  LOG(("CacheFileChunk::UpdateDataSize() [this=%p, offset=%d, len=%d]",
+       this, aOffset, aLen));
 
   mIsDirty = true;
 
   int64_t fileSize = kChunkSize * mIndex + aOffset + aLen;
   bool notify = false;
 
-  if (fileSize > mFile->mDataSize)
+  if (fileSize > mFile->mDataSize) {
     mFile->mDataSize = fileSize;
-
-  if (aOffset + aLen > mDataSize) {
-    mDataSize = aOffset + aLen;
     notify = true;
   }
 
@@ -435,27 +639,13 @@ CacheFileChunk::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
     MOZ_ASSERT(mState == WRITING);
     MOZ_ASSERT(mListener);
 
+    mWritingStateHandle = nullptr;
+
     if (NS_WARN_IF(NS_FAILED(aResult))) {
       SetError(aResult);
     }
 
     mState = READY;
-
-    if (!mBuf) {
-      mBuf = mRWBuf;
-      mBufSize = mRWBufSize;
-      mRWBuf = nullptr;
-      mRWBufSize = 0;
-    } else {
-      CacheFileUtils::FreeBuffer(mRWBuf);
-      mRWBuf = nullptr;
-      mRWBufSize = 0;
-      ChunkAllocationChanged();
-    }
-
-
-    DoMemoryReport(MemorySize());
-
     mListener.swap(listener);
   }
 
@@ -478,80 +668,32 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
 
     MOZ_ASSERT(mState == READING);
     MOZ_ASSERT(mListener);
+    MOZ_ASSERT(mReadingStateBuf);
+    MOZ_RELEASE_ASSERT(mBuf->ReadHandlesCount() == 0);
+    MOZ_RELEASE_ASSERT(!mBuf->WriteHandleExists());
+
+    RefPtr<CacheFileChunkBuffer> tmpBuf;
+    tmpBuf.swap(mReadingStateBuf);
 
     if (NS_SUCCEEDED(aResult)) {
-      CacheHash::Hash16_t hash = CacheHash::Hash16(mRWBuf, mRWBufSize);
-      if (hash != mReadHash) {
+      CacheHash::Hash16_t hash = CacheHash::Hash16(tmpBuf->Buf(),
+                                                   tmpBuf->DataSize());
+      if (hash != mExpectedHash) {
         LOG(("CacheFileChunk::OnDataRead() - Hash mismatch! Hash of the data is"
              " %hx, hash in metadata is %hx. [this=%p, idx=%d]",
-             hash, mReadHash, this, mIndex));
+             hash, mExpectedHash, this, mIndex));
         aResult = NS_ERROR_FILE_CORRUPTED;
-      }
-      else {
-        if (!mBuf) {
-          // Just swap the buffers if we don't have mBuf yet
-          MOZ_ASSERT(mDataSize == mRWBufSize);
-          mBuf = mRWBuf;
-          mBufSize = mRWBufSize;
-          mRWBuf = nullptr;
-          mRWBufSize = 0;
+      } else {
+        if (!mBuf->Buf()) {
+          // Just swap the buffers if mBuf is still empty
+          mBuf.swap(tmpBuf);
         } else {
           LOG(("CacheFileChunk::OnDataRead() - Merging buffers. [this=%p]",
                this));
 
-          // Merge data with write buffer
-          if (mRWBufSize >= mBufSize) {
-            // The new data will fit into the buffer that contains data read
-            // from the disk. Simply copy the valid pieces.
-            mValidityMap.Log();
-            for (uint32_t i = 0; i < mValidityMap.Length(); i++) {
-              if (mValidityMap[i].Offset() + mValidityMap[i].Len() > mBufSize) {
-                MOZ_CRASH("Unexpected error in validity map!");
-              }
-              memcpy(mRWBuf + mValidityMap[i].Offset(),
-                     mBuf + mValidityMap[i].Offset(), mValidityMap[i].Len());
-            }
-            mValidityMap.Clear();
-
-            CacheFileUtils::FreeBuffer(mBuf);
-            mBuf = mRWBuf;
-            mBufSize = mRWBufSize;
-            mRWBuf = nullptr;
-            mRWBufSize = 0;
-            ChunkAllocationChanged();
-          } else {
-            // Buffer holding the new data is larger. Use it as the destination
-            // buffer to avoid reallocating mRWBuf. We need to copy those pieces
-            // from mRWBuf which are not valid in mBuf.
-            uint32_t invalidOffset = 0;
-            uint32_t invalidLength;
-            mValidityMap.Log();
-            for (uint32_t i = 0; i < mValidityMap.Length(); i++) {
-              MOZ_ASSERT(invalidOffset <= mValidityMap[i].Offset());
-              invalidLength = mValidityMap[i].Offset() - invalidOffset;
-              if (invalidLength > 0) {
-                if (invalidOffset + invalidLength > mRWBufSize) {
-                  MOZ_CRASH("Unexpected error in validity map!");
-                }
-                memcpy(mBuf + invalidOffset, mRWBuf + invalidOffset,
-                       invalidLength);
-              }
-              invalidOffset = mValidityMap[i].Offset() + mValidityMap[i].Len();
-            }
-            if (invalidOffset < mRWBufSize) {
-              invalidLength = mRWBufSize - invalidOffset;
-              memcpy(mBuf + invalidOffset, mRWBuf + invalidOffset,
-                     invalidLength);
-            }
-            mValidityMap.Clear();
-
-            CacheFileUtils::FreeBuffer(mRWBuf);
-            mRWBuf = nullptr;
-            mRWBufSize = 0;
-            ChunkAllocationChanged();
-          }
-
-          DoMemoryReport(MemorySize());
+          mValidityMap.Log();
+          aResult = mBuf->FillInvalidRanges(tmpBuf, &mValidityMap);
+          mValidityMap.Clear();
         }
       }
     }
@@ -559,7 +701,7 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     if (NS_FAILED(aResult)) {
       aResult = mIndex ? NS_ERROR_FILE_CORRUPTED : NS_ERROR_FILE_NOT_FOUND;
       SetError(aResult);
-      mDataSize = 0;
+      mBuf->SetDataSize(0);
     }
 
     mState = READY;
@@ -601,7 +743,7 @@ CacheFileChunk::IsKilled()
 bool
 CacheFileChunk::IsReady() const
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   return (NS_SUCCEEDED(mStatus) && (mState == READY || mState == WRITING));
 }
@@ -609,7 +751,7 @@ CacheFileChunk::IsReady() const
 bool
 CacheFileChunk::IsDirty() const
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   return mIsDirty;
 }
@@ -617,7 +759,7 @@ CacheFileChunk::IsDirty() const
 nsresult
 CacheFileChunk::GetStatus()
 {
-  mFile->AssertOwnsLock();
+  AssertOwnsLock();
 
   return mStatus;
 }
@@ -625,6 +767,8 @@ CacheFileChunk::GetStatus()
 void
 CacheFileChunk::SetError(nsresult aStatus)
 {
+  LOG(("CacheFileChunk::SetError() [this=%p, status=0x%08x]", this, aStatus));
+
   MOZ_ASSERT(NS_FAILED(aStatus));
 
   if (NS_FAILED(mStatus)) {
@@ -635,89 +779,61 @@ CacheFileChunk::SetError(nsresult aStatus)
   mStatus = aStatus;
 }
 
-char *
-CacheFileChunk::BufForWriting() const
+CacheFileChunkReadHandle
+CacheFileChunk::GetReadHandle()
 {
-  mFile->AssertOwnsLock();
+  LOG(("CacheFileChunk::GetReadHandle() [this=%p]", this));
 
-  MOZ_ASSERT(mBuf); // Writer should always first call EnsureBufSize()
+  AssertOwnsLock();
 
-  MOZ_ASSERT(NS_SUCCEEDED(mStatus));
-  MOZ_ASSERT((mState == READY && !mRWBuf) ||
-             (mState == WRITING && mRWBuf) ||
-             (mState == READING && mRWBuf));
+  MOZ_RELEASE_ASSERT(mState == READY || mState == WRITING);
+  // We don't release the lock when writing the data and CacheFileOutputStream
+  // doesn't get the read handle, so there cannot be a write handle when read
+  // handle is obtained.
+  MOZ_RELEASE_ASSERT(!mBuf->WriteHandleExists());
 
-  return mBuf;
+  return CacheFileChunkReadHandle(mBuf);
 }
 
-const char *
-CacheFileChunk::BufForReading() const
+CacheFileChunkWriteHandle
+CacheFileChunk::GetWriteHandle(uint32_t aEnsuredBufSize)
 {
-  mFile->AssertOwnsLock();
+  LOG(("CacheFileChunk::GetWriteHandle() [this=%p, ensuredBufSize=%u]",
+       this, aEnsuredBufSize));
 
-  MOZ_ASSERT((mState == READY && mBuf && !mRWBuf) ||
-             (mState == WRITING && mRWBuf));
+  AssertOwnsLock();
 
-  return mBuf ? mBuf : mRWBuf;
-}
-
-MOZ_MUST_USE nsresult
-CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
-{
-  mFile->AssertOwnsLock();
-
-  // EnsureBufSize() is called only when we want to write some data to the chunk
-  // and we never write data anymore once some error occurs.
-  MOZ_ASSERT(NS_SUCCEEDED(mStatus));
-
-  if (mBufSize >= aBufSize) {
-    return NS_OK;
+  if (NS_FAILED(mStatus)) {
+    return CacheFileChunkWriteHandle(nullptr); // dummy handle
   }
 
-  bool copy = false;
-  if (!mBuf && mState == WRITING) {
-    // We need to duplicate the data that is being written on the background
-    // thread, so make sure that all the data fits into the new buffer.
-    copy = true;
+  nsresult rv;
 
-    if (mRWBufSize > aBufSize)
-      aBufSize = mRWBufSize;
+  // We don't support multiple write handles
+  MOZ_RELEASE_ASSERT(!mBuf->WriteHandleExists());
+
+  if (mBuf->ReadHandlesCount()) {
+    LOG(("CacheFileChunk::GetWriteHandle() - cloning buffer because of existing"
+         " read handle"));
+
+    MOZ_RELEASE_ASSERT(mState != READING);
+    RefPtr<CacheFileChunkBuffer> newBuf = new CacheFileChunkBuffer(this);
+    rv = newBuf->EnsureBufSize(std::max(aEnsuredBufSize, mBuf->DataSize()));
+    if (NS_SUCCEEDED(rv)) {
+      newBuf->CopyFrom(mBuf);
+      mOldBufs.AppendElement(mBuf);
+      mBuf = newBuf;
+    }
+  } else {
+    rv = mBuf->EnsureBufSize(aEnsuredBufSize);
   }
 
-  // find smallest power of 2 greater than or equal to aBufSize
-  aBufSize--;
-  aBufSize |= aBufSize >> 1;
-  aBufSize |= aBufSize >> 2;
-  aBufSize |= aBufSize >> 4;
-  aBufSize |= aBufSize >> 8;
-  aBufSize |= aBufSize >> 16;
-  aBufSize++;
-
-  const uint32_t minBufSize = kMinBufSize;
-  const uint32_t maxBufSize = kChunkSize;
-  aBufSize = clamped(aBufSize, minBufSize, maxBufSize);
-
-  if (!CanAllocate(aBufSize - mBufSize)) {
+  if (NS_FAILED(rv)) {
     SetError(NS_ERROR_OUT_OF_MEMORY);
-    return mStatus;
+    return CacheFileChunkWriteHandle(nullptr); // dummy handle
   }
 
-  char *newBuf = static_cast<char *>(realloc(mBuf, aBufSize));
-  if (!newBuf) {
-    SetError(NS_ERROR_OUT_OF_MEMORY);
-    return mStatus;
-  }
-
-  mBuf = newBuf;
-  mBufSize = aBufSize;
-  ChunkAllocationChanged();
-
-  if (copy)
-    memcpy(mBuf, mRWBuf, mRWBufSize);
-
-  DoMemoryReport(MemorySize());
-
-  return NS_OK;
+  return CacheFileChunkWriteHandle(mBuf);
 }
 
 // Memory reporting
@@ -725,9 +841,16 @@ CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
 size_t
 CacheFileChunk::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-  size_t n = 0;
-  n += mallocSizeOf(mBuf);
-  n += mallocSizeOf(mRWBuf);
+  size_t n = mBuf->SizeOfIncludingThis(mallocSizeOf);
+
+  if (mReadingStateBuf) {
+    n += mReadingStateBuf->SizeOfIncludingThis(mallocSizeOf);
+  }
+
+  for (uint32_t i = 0; i < mOldBufs.Length(); ++i) {
+    n += mOldBufs[i]->SizeOfIncludingThis(mallocSizeOf);
+  }
+
   n += mValidityMap.SizeOfExcludingThis(mallocSizeOf);
 
   return n;
@@ -740,7 +863,7 @@ CacheFileChunk::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 bool
-CacheFileChunk::CanAllocate(uint32_t aSize)
+CacheFileChunk::CanAllocate(uint32_t aSize) const
 {
   if (!mLimitAllocation) {
     return true;
@@ -763,24 +886,29 @@ CacheFileChunk::CanAllocate(uint32_t aSize)
 }
 
 void
-CacheFileChunk::ChunkAllocationChanged()
+CacheFileChunk::BuffersAllocationChanged(uint32_t aFreed, uint32_t aAllocated)
 {
+  uint32_t oldBuffersSize = mBuffersSize;
+  mBuffersSize += aAllocated;
+  mBuffersSize -= aFreed;
+
+  DoMemoryReport(sizeof(CacheFileChunk) + mBuffersSize);
+
   if (!mLimitAllocation) {
     return;
   }
 
-  ChunksMemoryUsage() -= mReportedAllocation;
-  mReportedAllocation = mBufSize + mRWBufSize;
-  ChunksMemoryUsage() += mReportedAllocation;
-  LOG(("CacheFileChunk::ChunkAllocationChanged() - %s chunks usage %u "
+  ChunksMemoryUsage() -= oldBuffersSize;
+  ChunksMemoryUsage() += mBuffersSize;
+  LOG(("CacheFileChunk::BuffersAllocationChanged() - %s chunks usage %u "
        "[this=%p]", mIsPriority ? "Priority" : "Normal",
        static_cast<uint32_t>(ChunksMemoryUsage()), this));
 }
 
-mozilla::Atomic<uint32_t>& CacheFileChunk::ChunksMemoryUsage()
+mozilla::Atomic<uint32_t, ReleaseAcquire>& CacheFileChunk::ChunksMemoryUsage() const
 {
-  static mozilla::Atomic<uint32_t> chunksMemoryUsage(0);
-  static mozilla::Atomic<uint32_t> prioChunksMemoryUsage(0);
+  static mozilla::Atomic<uint32_t, ReleaseAcquire> chunksMemoryUsage(0);
+  static mozilla::Atomic<uint32_t, ReleaseAcquire> prioChunksMemoryUsage(0);
   return mIsPriority ? prioChunksMemoryUsage : chunksMemoryUsage;
 }
 

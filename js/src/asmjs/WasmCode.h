@@ -50,6 +50,7 @@ class CodeSegment
     // These are pointers into code for stubs used for asynchronous
     // signal-handler control-flow transfer.
     uint8_t* interruptCode_;
+    uint8_t* badIndirectCallCode_;
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
@@ -79,6 +80,7 @@ class CodeSegment
     uint32_t totalLength() const { return codeLength_ + globalDataLength_; }
 
     uint8_t* interruptCode() const { return interruptCode_; }
+    uint8_t* badIndirectCallCode() const { return badIndirectCallCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
     uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
 
@@ -93,26 +95,6 @@ class CodeSegment
     }
     bool containsCodePC(void* pc) const {
         return pc >= code() && pc < (code() + codeLength_);
-    }
-};
-
-// This reusable base class factors out the logic for a resource that is shared
-// by multiple instances/modules but should only be counted once when computing
-// about:memory stats.
-
-template <class T>
-struct ShareableBase : RefCounted<T>
-{
-    using SeenSet = HashSet<const T*, DefaultHasher<const T*>, SystemAllocPolicy>;
-
-    size_t sizeOfIncludingThisIfNotSeen(MallocSizeOf mallocSizeOf, SeenSet* seen) const {
-        const T* self = static_cast<const T*>(this);
-        typename SeenSet::AddPtr p = seen->lookupForAdd(self);
-        if (p)
-            return 0;
-        bool ok = seen->add(p, self);
-        (void)ok;  // oh well
-        return mallocSizeOf(self) + self->sizeOfExcludingThis(mallocSizeOf);
     }
 };
 
@@ -226,6 +208,29 @@ class FuncImport
 };
 
 typedef Vector<FuncImport, 0, SystemAllocPolicy> FuncImportVector;
+
+// TableDesc contains the metadata describing a table as well as the
+// module-specific offset of the table's base pointer in global memory.
+// The element kind of this table. Currently, wasm only has "any function" and
+// asm.js only "typed function".
+
+enum class TableKind
+{
+    AnyFunction,
+    TypedFunction
+};
+
+struct TableDesc
+{
+    TableKind kind;
+    uint32_t globalDataOffset;
+    uint32_t length;
+
+    TableDesc() : kind(TableKind::AnyFunction), globalDataOffset(0), length(0) {}
+    explicit TableDesc(TableKind kind) : kind(kind) {}
+};
+
+WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
 
 // A CodeRange describes a single contiguous range of code within a wasm
 // module's code segment. A CodeRange describes what the code does and, for
@@ -429,6 +434,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
     FuncImportVector      funcImports;
     ExportVector          exports;
+    TableDescVector       tables;
     MemoryAccessVector    memoryAccesses;
     BoundsCheckVector     boundsChecks;
     CodeRangeVector       codeRanges;

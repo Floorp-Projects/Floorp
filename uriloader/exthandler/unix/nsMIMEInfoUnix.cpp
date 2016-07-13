@@ -4,13 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_WIDGET_QT
-#if (MOZ_ENABLE_CONTENTACTION)
-#include <contentaction/contentaction.h>
-#include "nsContentHandlerApp.h"
-#endif
-#endif
-
 #include "nsMIMEInfoUnix.h"
 #include "nsGNOMERegistry.h"
 #include "nsIGIOService.h"
@@ -20,22 +13,11 @@
 #ifdef MOZ_ENABLE_DBUS
 #include "nsDBusHandlerApp.h"
 #endif
-#ifdef MOZ_WIDGET_QT
-#include "nsMIMEInfoQt.h"
-#endif
 
 nsresult
 nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
 {
-  nsresult rv = nsGNOMERegistry::LoadURL(aURI);
-
-#ifdef MOZ_WIDGET_QT
-  if (NS_FAILED(rv)) {
-    rv = nsMIMEInfoQt::LoadUriInternal(aURI);
-  }
-#endif
-
-  return rv;
+  return nsGNOMERegistry::LoadURL(aURI);
 }
 
 NS_IMETHODIMP

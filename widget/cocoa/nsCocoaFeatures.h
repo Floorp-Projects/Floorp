@@ -18,9 +18,6 @@ public:
   static int32_t OSXVersionMajor();
   static int32_t OSXVersionMinor();
   static int32_t OSXVersionBugFix();
-  static bool OnLionOrLater();
-  static bool OnMountainLionOrLater();
-  static bool OnMavericksOrLater();
   static bool OnYosemiteOrLater();
   static bool OnElCapitanOrLater();
   static bool OnSierraOrLater();

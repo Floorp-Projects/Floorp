@@ -10,11 +10,10 @@
 #include "jsapi.h"
 #include "jsatom.h"
 
+#include "builtin/SelfHostingDefines.h"
 #include "gc/Zone.h"
-
 #include "js/GCVector.h"
 #include "js/Id.h"
-
 #include "vm/NativeObject.h"
 #include "vm/ProxyObject.h"
 
@@ -223,6 +222,9 @@ class ModuleObject : public NativeObject
         FunctionDeclarationsSlot,
         SlotCount
     };
+
+    static_assert(EnvironmentSlot == MODULE_OBJECT_ENVIRONMENT_SLOT,
+                  "EnvironmentSlot must match self-hosting define");
 
     static const Class class_;
 

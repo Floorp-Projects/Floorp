@@ -47,10 +47,12 @@ using mozilla::EnumeratedArray;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::MallocSizeOf;
+using mozilla::Nothing;
 using mozilla::PodZero;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::RefCounted;
+using mozilla::Some;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
@@ -87,6 +89,26 @@ typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
     uint8_t* serialize(uint8_t* cursor) const override;                         \
     const uint8_t* deserialize(const uint8_t* cursor) override;                 \
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+// This reusable base class factors out the logic for a resource that is shared
+// by multiple instances/modules but should only be counted once when computing
+// about:memory stats.
+
+template <class T>
+struct ShareableBase : RefCounted<T>
+{
+    using SeenSet = HashSet<const T*, DefaultHasher<const T*>, SystemAllocPolicy>;
+
+    size_t sizeOfIncludingThisIfNotSeen(MallocSizeOf mallocSizeOf, SeenSet* seen) const {
+        const T* self = static_cast<const T*>(this);
+        typename SeenSet::AddPtr p = seen->lookupForAdd(self);
+        if (p)
+            return 0;
+        bool ok = seen->add(p, self);
+        (void)ok;  // oh well
+        return mallocSizeOf(self) + self->sizeOfExcludingThis(mallocSizeOf);
+    }
+};
 
 // ValType/ExprType utilities
 
@@ -861,6 +883,7 @@ static const unsigned MaxExports                 =       64 * 1024;
 static const unsigned MaxTables                  =        4 * 1024;
 static const unsigned MaxTableElems              =      128 * 1024;
 static const unsigned MaxDataSegments            =       64 * 1024;
+static const unsigned MaxElemSegments            =       64 * 1024;
 static const unsigned MaxArgsPerFunc             =        4 * 1024;
 static const unsigned MaxBrTableElems            = 4 * 1024 * 1024;
 

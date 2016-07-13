@@ -121,15 +121,15 @@ function testIncomingMessage() {
   });
 }
 
-function testTerminateConnection() {
+function testCloseConnection() {
   return new Promise(function(aResolve, aReject) {
-    connection.onterminate = function() {
-      connection.onterminate = null;
-      is(connection.state, "terminated", "Connection should be terminated.");
+    connection.onclose = function() {
+      connection.onclose = null;
+      is(connection.state, "closed", "Connection should be closed.");
       aResolve();
     };
 
-    connection.terminate();
+    connection.close();
   });
 }
 
@@ -139,7 +139,7 @@ then(testConnectionAvailableSameOriginInnerIframe).
 then(testConnectionUnavailableDiffOriginInnerIframe).
 then(testConnectionListSameObject).
 then(testIncomingMessage).
-then(testTerminateConnection).
+then(testCloseConnection).
 then(finish);
 
 </script>

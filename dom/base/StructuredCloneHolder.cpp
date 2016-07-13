@@ -30,6 +30,7 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -395,7 +396,7 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     return ReadStructuredCloneImageData(aCx, aReader);
   }
 
-  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY) {
+  if (aTag == SCTAG_DOM_WEBCRYPTO_KEY || aTag == SCTAG_DOM_URLSEARCHPARAMS) {
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
     if (!global) {
       return nullptr;
@@ -404,11 +405,20 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
-      RefPtr<CryptoKey> key = new CryptoKey(global);
-      if (!key->ReadStructuredClone(aReader)) {
-        result = nullptr;
-      } else {
-        result = key->WrapObject(aCx, nullptr);
+      if (aTag == SCTAG_DOM_WEBCRYPTO_KEY) {
+        RefPtr<CryptoKey> key = new CryptoKey(global);
+        if (!key->ReadStructuredClone(aReader)) {
+         result = nullptr;
+        } else {
+          result = key->WrapObject(aCx, nullptr);
+        }
+      } else if (aTag == SCTAG_DOM_URLSEARCHPARAMS) {
+        RefPtr<URLSearchParams> usp = new URLSearchParams(global);
+       if (!usp->ReadStructuredClone(aReader)) {
+          result = nullptr;
+        } else {
+          result = usp->WrapObject(aCx, nullptr);
+        }
       }
     }
     return result;
@@ -501,6 +511,15 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
     ImageData* imageData = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
       return WriteStructuredCloneImageData(aCx, aWriter, imageData);
+    }
+  }
+
+  // Handle URLSearchParams cloning
+  {
+    URLSearchParams* usp = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(URLSearchParams, aObj, usp))) {
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_URLSEARCHPARAMS, 0) &&
+             usp->WriteStructuredClone(aWriter);
     }
   }
 
