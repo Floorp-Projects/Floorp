@@ -22,6 +22,7 @@ TEST_HARNESS_FILES.reftest += [
     '/testing/mochitest/server.js',
     'b2g_start_script.js',
     'gaia_lock_screen.js',
+    'mach_test_package_commands.py',
     'output.py',
     'reftest-preferences.js',
     'reftestcommandline.py',
