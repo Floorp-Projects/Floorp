@@ -1944,7 +1944,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
                              GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeight,
                              GLint border)
 {
-    const char funcName[] = "CopyTexImage2D";
+    const char funcName[] = "copyTexImage2D";
 
     ////////////////////////////////////
     // Get dest info
