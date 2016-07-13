@@ -10,7 +10,7 @@ task:
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
-    - 'docker-worker:cache:level-{{level}}-{{project}}-{{build_name}}-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-l10n-{{build_name}}-workspace'
 
   payload:
     image:
