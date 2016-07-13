@@ -680,16 +680,6 @@ struct AsmJSFrame
 static_assert(sizeof(AsmJSFrame) == 2 * sizeof(void*), "?!");
 static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
 
-struct AsmJSGlobalAccess
-{
-    CodeOffset patchAt;
-    unsigned globalDataOffset;
-
-    AsmJSGlobalAccess(CodeOffset patchAt, unsigned globalDataOffset)
-      : patchAt(patchAt), globalDataOffset(globalDataOffset)
-    {}
-};
-
 // Represents an instruction to be patched and the intended pointee. These
 // links are accumulated in the MacroAssembler, but patching is done outside
 // the MacroAssembler (in Module::staticallyLink).
@@ -702,6 +692,29 @@ struct AsmJSAbsoluteAddress
     wasm::SymbolicAddress target;
 };
 
+} // namespace jit
+
+namespace wasm {
+
+// Summarizes a global access for a mutable (in asm.js) or immutable value (in
+// asm.js or the MVP) that needs to get patched later.
+
+struct GlobalAccess
+{
+    GlobalAccess(jit::CodeOffset patchAt, unsigned globalDataOffset)
+      : patchAt(patchAt), globalDataOffset(globalDataOffset)
+    {}
+
+    jit::CodeOffset patchAt;
+    unsigned globalDataOffset;
+};
+
+typedef Vector<GlobalAccess, 0, SystemAllocPolicy> GlobalAccessVector;
+
+} // namespace wasm
+
+namespace jit {
+
 // The base class of all Assemblers for all archs.
 class AssemblerShared
 {
@@ -709,7 +722,7 @@ class AssemblerShared
     wasm::JumpSiteArray jumpsites_;
     wasm::MemoryAccessVector memoryAccesses_;
     wasm::BoundsCheckVector boundsChecks_;
-    Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
+    wasm::GlobalAccessVector globalAccesses_;
     Vector<AsmJSAbsoluteAddress, 0, SystemAllocPolicy> asmJSAbsoluteAddresses_;
 
   protected:
@@ -762,9 +775,8 @@ class AssemblerShared
     void append(wasm::BoundsCheck check) { enoughMemory_ &= boundsChecks_.append(check); }
     wasm::BoundsCheckVector&& extractBoundsChecks() { return Move(boundsChecks_); }
 
-    void append(AsmJSGlobalAccess access) { enoughMemory_ &= asmJSGlobalAccesses_.append(access); }
-    size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }
-    AsmJSGlobalAccess asmJSGlobalAccess(size_t i) const { return asmJSGlobalAccesses_[i]; }
+    void append(wasm::GlobalAccess access) { enoughMemory_ &= globalAccesses_.append(access); }
+    const wasm::GlobalAccessVector& globalAccesses() const { return globalAccesses_; }
 
     void append(AsmJSAbsoluteAddress link) { enoughMemory_ &= asmJSAbsoluteAddresses_.append(link); }
     size_t numAsmJSAbsoluteAddresses() const { return asmJSAbsoluteAddresses_.length(); }
@@ -808,10 +820,10 @@ class AssemblerShared
         for (; i < boundsChecks_.length(); i++)
             boundsChecks_[i].offsetBy(delta);
 
-        i = asmJSGlobalAccesses_.length();
-        enoughMemory_ &= asmJSGlobalAccesses_.appendAll(other.asmJSGlobalAccesses_);
-        for (; i < asmJSGlobalAccesses_.length(); i++)
-            asmJSGlobalAccesses_[i].patchAt.offsetBy(delta);
+        i = globalAccesses_.length();
+        enoughMemory_ &= globalAccesses_.appendAll(other.globalAccesses_);
+        for (; i < globalAccesses_.length(); i++)
+            globalAccesses_[i].patchAt.offsetBy(delta);
 
         i = asmJSAbsoluteAddresses_.length();
         enoughMemory_ &= asmJSAbsoluteAddresses_.appendAll(other.asmJSAbsoluteAddresses_);
