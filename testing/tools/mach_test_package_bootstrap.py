@@ -36,12 +36,14 @@ SEARCH_PATHS = [
     'mozbase/mozversion',
     'tools/mach',
     'tools/wptserve',
+    'xpcshell',
 ]
 
 # Individual files providing mach commands.
 MACH_MODULES = [
     'mochitest/mach_test_package_commands.py',
     'tools/mach/mach/commands/commandinfo.py',
+    'xpcshell/mach_test_package_commands.py',
 ]
 
 
