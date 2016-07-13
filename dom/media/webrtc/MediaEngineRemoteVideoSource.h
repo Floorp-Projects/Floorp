@@ -71,36 +71,16 @@ public:
                                dom::MediaSourceEnum aMediaSource,
                                const char* aMonitorName = "RemoteVideo.Monitor");
 
-  class AllocationHandle : public BaseAllocationHandle
-  {
-  public:
-    AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
-                     const nsACString& aOrigin,
-                     const MediaEnginePrefs& aPrefs,
-                     const nsString& aDeviceId)
-    : mConstraints(aConstraints),
-      mOrigin(aOrigin),
-      mPrefs(aPrefs),
-      mDeviceId(aDeviceId) {}
-  private:
-    ~AllocationHandle() override {}
-  public:
-    NormalizedConstraints mConstraints;
-    nsCString mOrigin;
-    MediaEnginePrefs mPrefs;
-    nsString mDeviceId;
-  };
-
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,

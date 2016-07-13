@@ -78,14 +78,14 @@ public:
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
     aOutHandle = nullptr;
     return NS_OK;
   }
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override
+  nsresult Deallocate(AllocationHandle* aHandle) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
     MOZ_ASSERT(!aHandle);
@@ -99,7 +99,7 @@ public:
                  TrackID aId,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aMediaStream, TrackID aId) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -458,14 +458,14 @@ public:
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream* aStream,
                  TrackID aID,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
