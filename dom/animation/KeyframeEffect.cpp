@@ -463,7 +463,7 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
   }
 
   nsTArray<Keyframe> keyframes =
-    KeyframeUtils::GetKeyframesFromObject(aContext, aKeyframes, aRv);
+    KeyframeUtils::GetKeyframesFromObject(aContext, mDocument, aKeyframes, aRv);
   if (aRv.Failed()) {
     return;
   }
