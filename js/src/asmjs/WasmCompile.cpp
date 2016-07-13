@@ -1087,39 +1087,6 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 }
 
 static bool
-DecodeStartSection(Decoder& d, ModuleGenerator& mg)
-{
-
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(StartSectionId, &sectionStart, &sectionSize))
-        return Fail(d, "failed to start section");
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t startFuncIndex;
-    if (!d.readVarU32(&startFuncIndex))
-        return Fail(d, "failed to read start func index");
-
-    if (startFuncIndex >= mg.numFuncSigs())
-        return Fail(d, "unknown start function");
-
-    const DeclaredSig& sig = mg.funcSig(startFuncIndex);
-    if (sig.ret() != ExprType::Void)
-        return Fail(d, "start function must not return anything");
-
-    if (sig.args().length())
-        return Fail(d, "start function must be nullary");
-
-    if (!mg.setStartFunction(startFuncIndex))
-        return false;
-
-    if (!d.finishSection(sectionStart, sectionSize))
-        return Fail(d, "data section byte size mismatch");
-
-    return true;
-}
-
-static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 {
     if (!mg.startFuncDefs())
@@ -1422,9 +1389,6 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
         return nullptr;
 
     if (!DecodeExportSection(d, newFormat, memoryExported, mg))
-        return nullptr;
-
-    if (!DecodeStartSection(d, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))

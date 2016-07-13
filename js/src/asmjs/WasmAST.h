@@ -590,20 +590,6 @@ class AstElemSegment : public AstNode
 
 typedef AstVector<AstElemSegment*> AstElemSegmentVector;
 
-class AstStartFunc : public AstNode
-{
-    AstRef func_;
-
-  public:
-    explicit AstStartFunc(AstRef func)
-      : func_(func)
-    {}
-
-    AstRef& func() {
-        return func_;
-    }
-};
-
 class AstModule : public AstNode
 {
   public:
@@ -622,7 +608,6 @@ class AstModule : public AstNode
     Maybe<AstResizable>  table_;
     Maybe<AstResizable>  memory_;
     ExportVector         exports_;
-    Maybe<AstStartFunc>  startFunc_;
     FuncVector           funcs_;
     AstDataSegmentVector dataSegments_;
     AstElemSegmentVector elemSegments_;
@@ -676,18 +661,6 @@ class AstModule : public AstNode
     }
     const AstElemSegmentVector& elemSegments() const {
         return elemSegments_;
-    }
-    bool hasStartFunc() const {
-        return !!startFunc_;
-    }
-    bool setStartFunc(AstStartFunc startFunc) {
-        if (startFunc_)
-            return false;
-        startFunc_.emplace(startFunc);
-        return true;
-    }
-    AstStartFunc& startFunc() {
-        return *startFunc_;
     }
     bool declare(AstSig&& sig, uint32_t* sigIndex) {
         SigMap::AddPtr p = sigMap_.lookupForAdd(sig);

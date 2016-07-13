@@ -262,7 +262,7 @@ var tooBigNameSection = {
 wasmEval(moduleWithSections([tooBigNameSection]));
 
 // Checking stack trace.
-function runStackTraceTest(namesContent, expectedName) {
+function runStartTraceTest(namesContent, expectedName) {
     var sections = [
         sigSection([v2vSig]),
         importSection([{sigIndex:0, module:"env", func:"callback"}]),
@@ -281,15 +281,15 @@ function runStackTraceTest(namesContent, expectedName) {
     assertEq(result, expectedName);
 };
 
-runStackTraceTest(null, 'wasm-function[0]');
-runStackTraceTest([{name: 'test'}], 'test');
-runStackTraceTest([{name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
-runStackTraceTest([{name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
-runStackTraceTest([{name: 'test1'}, {name: 'test2'}], 'test1');
-runStackTraceTest([{name: 'test☃'}], 'test☃');
-runStackTraceTest([{name: 'te\xE0\xFF'}], 'te\xE0\xFF');
-runStackTraceTest([], 'wasm-function[0]');
+runStartTraceTest(null, 'wasm-function[0]');
+runStartTraceTest([{name: 'test'}], 'test');
+runStartTraceTest([{name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
+runStartTraceTest([{name: 'test', locals: [{name: 'var1'}, {name: 'var2'}]}], 'test');
+runStartTraceTest([{name: 'test1'}, {name: 'test2'}], 'test1');
+runStartTraceTest([{name: 'test☃'}], 'test☃');
+runStartTraceTest([{name: 'te\xE0\xFF'}], 'te\xE0\xFF');
+runStartTraceTest([], 'wasm-function[0]');
 // Notice that invalid names section content shall not fail the parsing
-runStackTraceTest([{nameLen: 100, name: 'test'}], 'wasm-function[0]'); // invalid name size
-runStackTraceTest([{name: 'test', locals: [{nameLen: 40, name: 'var1'}]}], 'wasm-function[0]'); // invalid variable name size
-runStackTraceTest([{name: ''}], 'wasm-function[0]'); // empty name
+runStartTraceTest([{nameLen: 100, name: 'test'}], 'wasm-function[0]'); // invalid name size
+runStartTraceTest([{name: 'test', locals: [{nameLen: 40, name: 'var1'}]}], 'wasm-function[0]'); // invalid variable name size
+runStartTraceTest([{name: ''}], 'wasm-function[0]'); // empty name
