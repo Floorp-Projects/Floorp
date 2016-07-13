@@ -218,6 +218,7 @@ public:
   }
 
 protected:
+  friend struct CanvasBidiProcessor;
   friend class CanvasGeneralPattern;
 
   // Beginning of linear gradient.
@@ -3659,6 +3660,8 @@ CanvasRenderingContext2D::GetHitRegionRect(Element* aElement, nsRect& aRect)
  */
 struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcessor
 {
+  typedef CanvasRenderingContext2D::Style Style;
+
   CanvasBidiProcessor()
     : nsBidiPresUtils::BidiProcessor()
   {
@@ -3711,6 +3714,64 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     return NSToCoordRound(textRunMetrics.mAdvanceWidth);
   }
 
+  void SetFillGradientContext(gfxContext* aThebes)
+  {
+    RefPtr<gfxPattern> pattern;
+    CanvasGradient* gradient = mState->gradientStyles[Style::FILL];
+    CanvasGradient::Type type = gradient->GetType();
+
+    switch (type) {
+    case CanvasGradient::Type::RADIAL: {
+      CanvasRadialGradient* radial =
+        static_cast<CanvasRadialGradient*>(gradient);
+      pattern = new gfxPattern(radial->mCenter1.x, radial->mCenter1.y,
+                               radial->mRadius1, radial->mCenter2.x,
+                               radial->mCenter2.y, radial->mRadius2);
+      break;
+    }
+    case CanvasGradient::Type::LINEAR: {
+      CanvasLinearGradient* linear =
+        static_cast<CanvasLinearGradient*>(gradient);
+      pattern = new gfxPattern(linear->mBegin.x, linear->mBegin.y,
+                               linear->mEnd.x, linear->mEnd.y);
+      break;
+    }
+    default:
+      MOZ_ASSERT(false, "Should be linear or radial gradient.");
+      return;
+    }
+
+    for (auto stop : gradient->mRawStops) {
+      pattern->AddColorStop(stop.offset, stop.color);
+    }
+    aThebes->SetPattern(pattern);
+  }
+
+  gfx::ExtendMode CvtCanvasRepeatToGfxRepeat(
+    CanvasPattern::RepeatMode aRepeatMode)
+  {
+    switch (aRepeatMode) {
+    case CanvasPattern::RepeatMode::REPEAT:
+      return gfx::ExtendMode::REPEAT;
+    case CanvasPattern::RepeatMode::REPEATX:
+      return gfx::ExtendMode::REPEAT_X;
+    case CanvasPattern::RepeatMode::REPEATY:
+      return gfx::ExtendMode::REPEAT_Y;
+    case CanvasPattern::RepeatMode::NOREPEAT:
+      return gfx::ExtendMode::CLAMP;
+    default:
+      return gfx::ExtendMode::CLAMP;
+    }
+  }
+
+  void SetFillPatternContext(gfxContext* aThebes)
+  {
+    const CanvasPattern* pat = mState->patternStyles[Style::FILL];
+    RefPtr<gfxPattern> pattern = new gfxPattern(pat->mSurface, Matrix());
+    pattern->SetExtend(CvtCanvasRepeatToGfxRepeat(pat->mRepeat));
+    aThebes->SetPattern(pattern);
+  }
+
   virtual void DrawText(nscoord aXOffset, nscoord aWidth)
   {
     gfxPoint point = mPt;
@@ -3742,17 +3803,25 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
     mCtx->EnsureTarget();
 
-    // If the operation is 'fill' with a simple color, we defer to gfxTextRun
-    // which will handle color/svg-in-ot fonts appropriately. Such fonts will
-    // not render well via the code below.
-    if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
-        mState->StyleIsColor(CanvasRenderingContext2D::Style::FILL)) {
-      // TODO: determine if mCtx->mTarget is guaranteed to be non-null and valid
-      // here. If it's not, thebes will be null and we'll crash.
+    // If the operation is 'fill', we defer to gfxTextRun which will handle
+    // color/svg-in-ot fonts appropriately. Such fonts will not render well via
+    // the code below.
+    if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL) {
       RefPtr<gfxContext> thebes =
         gfxContext::CreatePreservingTransformOrNull(mCtx->mTarget);
-      nscolor fill = mState->colorStyles[CanvasRenderingContext2D::Style::FILL];
-      thebes->SetColor(Color::FromABGR(fill));
+
+      if (mState->StyleIsColor(Style::FILL)) { // Color
+        nscolor fill = mState->colorStyles[Style::FILL];
+        thebes->SetColor(Color::FromABGR(fill));
+      } else if (mState->gradientStyles[Style::FILL]) { // Gradient
+        SetFillGradientContext(thebes);
+      } else if (mState->patternStyles[Style::FILL]) { // Pattern
+        SetFillPatternContext(thebes);
+      } else {
+        MOZ_ASSERT(false, "Should never reach here.");
+        return;
+      }
+
       gfxTextRun::DrawParams params(thebes);
       mTextRun->Draw(gfxTextRun::Range(mTextRun.get()), point, params);
       return;
@@ -3904,14 +3973,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
       Rect bounds = mCtx->mTarget->GetTransform().
         TransformBounds(Rect(mBoundingBox.x, mBoundingBox.y,
                              mBoundingBox.width, mBoundingBox.height));
-      if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL) {
-        AdjustedTarget(mCtx, &bounds)->
-          FillGlyphs(scaledFont, buffer,
-                     CanvasGeneralPattern().
-                       ForStyle(mCtx, CanvasRenderingContext2D::Style::FILL, mCtx->mTarget),
-                     DrawOptions(mState->globalAlpha, mCtx->UsedOperation()),
-                     renderingOptions);
-      } else if (mOp == CanvasRenderingContext2D::TextDrawOperation::STROKE) {
+      if (mOp == CanvasRenderingContext2D::TextDrawOperation::STROKE) {
         // stroke glyphs one at a time to avoid poor CoreGraphics performance
         // when stroking a path with a very large number of points
         buffer.mGlyphs = &glyphBuf.front();
@@ -3930,8 +3992,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
         AdjustedTarget target(mCtx, &bounds);
 
         CanvasGeneralPattern cgp;
-        const Pattern& patForStyle
-          (cgp.ForStyle(mCtx, CanvasRenderingContext2D::Style::STROKE, mCtx->mTarget));
+        const Pattern& patForStyle(
+          cgp.ForStyle(mCtx, Style::STROKE, mCtx->mTarget));
         const DrawOptions drawOpts(state.globalAlpha, mCtx->UsedOperation());
 
         for (unsigned i = glyphBuf.size(); i > 0; --i) {
@@ -3939,6 +4001,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
           target->Stroke(path, patForStyle, strokeOpts, drawOpts);
           buffer.mGlyphs++;
         }
+      } else {
+        MOZ_ASSERT(false, "Should not reach here.");
       }
     }
   }
