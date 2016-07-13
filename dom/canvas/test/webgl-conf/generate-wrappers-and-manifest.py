@@ -19,10 +19,10 @@ DEST_MANIFEST_PATHSTR = 'generated-mochitest.ini'
 
 BASE_TEST_LIST_PATHSTR = 'checkout/00_test_list.txt'
 GENERATED_PATHSTR = 'generated'
-PATH_SEP_MANGLING = '__'
 
 SUPPORT_DIRS = [
-    'checkout',
+    'checkout/conformance',
+    'checkout/resources',
 ]
 
 EXTRA_SUPPORT_FILES = [
@@ -47,16 +47,11 @@ def GetTestList():
     if len(split) == 2:
         basePath = split[0]
 
-    allowWebGL1 = True
-    allowWebGL2 = True
-    alwaysFailEntry = TestEntry('always-fail.html', True, False)
-    testList = [alwaysFailEntry]
-    AccumTests(basePath, testListFile, allowWebGL1, allowWebGL2, testList)
+    curVersion = CURRENT_VERSION
+    testList = ['always-fail.html']
+    AccumTests(basePath, testListFile, curVersion, testList)
 
-    for x in testList:
-        x.path = os.path.relpath(x.path, basePath).replace(os.sep, '/')
-        continue
-
+    testList = [os.path.relpath(x, basePath).replace(os.sep, '/') for x in testList]
     return testList
 
 ##############################
@@ -83,15 +78,8 @@ def IsVersionLess(a, b):
 
     return False
 
-class TestEntry:
-    def __init__(self, path, webgl1, webgl2):
-        self.path = path
-        self.webgl1 = webgl1
-        self.webgl2 = webgl2
-        return
 
-
-def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
+def AccumTests(pathStr, listFile, curVersion, out_testList):
     listPathStr = pathStr + '/' + listFile
 
     listPath = listPathStr.replace('/', os.sep)
@@ -112,19 +100,18 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
             if curLine.startswith('#'):
                 continue
 
-            webgl1 = allowWebGL1
-            webgl2 = allowWebGL2
+            shouldSkip = False
             while curLine.startswith('--'): # '--min-version 1.0.2 foo.html'
                 (flag, curLine) = curLine.split(' ', 1)
                 if flag == '--min-version':
-                    (minVersion, curLine) = curLine.split(' ', 1)
-                    if not IsVersionLess(minVersion, "2.0.0"): # >= 2.0.0
-                        webgl1 = False
+                    (refVersion, curLine) = curLine.split(' ', 1)
+                    if IsVersionLess(curVersion, refVersion):
+                        shouldSkip = True
                         break
                 elif flag == '--max-version':
-                    (maxVersion, curLine) = curLine.split(' ', 1)
-                    if IsVersionLess(maxVersion, "2.0.0"):
-                        webgl2 = False
+                    (refVersion, curLine) = curLine.split(' ', 1)
+                    if IsVersionLess(refVersion, curVersion):
+                        shouldSkip = True
                         break
                 elif flag == '--slow':
                     continue # TODO
@@ -134,7 +121,8 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
                     assert False, text
                 continue
 
-            assert(webgl1 or webgl2)
+            if shouldSkip:
+                continue
 
             split = curLine.rsplit('.', 1)
             assert len(split) == 2, 'Bad split for `line`: ' + line
@@ -142,8 +130,7 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
 
             if ext == 'html':
                 newTestFilePathStr = pathStr + '/' + curLine
-                entry = TestEntry(newTestFilePathStr, webgl1, webgl2)
-                out_testList.append(entry)
+                out_testList.append(newTestFilePathStr)
                 continue
 
             assert ext == 'txt', 'Bad `ext` on `line`: ' + line
@@ -155,7 +142,7 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
                 nextPathStr = split[0]
 
             nextPathStr = pathStr + '/' + nextPathStr
-            AccumTests(nextPathStr, nextListFile, webgl1, webgl2, out_testList)
+            AccumTests(nextPathStr, nextListFile, curVersion, out_testList)
             continue
 
     return
@@ -284,35 +271,7 @@ class TemplateShell:
 ########################################################################
 # Output
 
-def WriteWrapper(entryPath, webgl2, templateShell, wrapperPathAccum):
-    mangledPath = entryPath.replace('/', PATH_SEP_MANGLING)
-    maybeWebGL2 = ''
-    if webgl2:
-        maybeWebGL2 = '2_'
-
-    # Mochitests must start with 'test_' or similar, or the test
-    # runner will ignore our tests.
-    # The error text is "is not a valid test".
-    wrapperFileName = 'test_{}{}'.format(maybeWebGL2, mangledPath)
-
-    wrapperPath = GENERATED_PATHSTR + '/' + wrapperFileName
-    print('Adding wrapper: ' + wrapperPath)
-
-    args = ''
-    if webgl2:
-        args = '?webglVersion=2'
-
-    templateDict = {
-        'TEST_PATH': entryPath,
-        'ARGS': args,
-    }
-
-    OutputFilledTemplate(templateShell, templateDict, wrapperPath)
-    wrapperPathAccum.append(wrapperPath)
-    return
-
-
-def WriteWrappers(testEntryList):
+def WriteWrappers(testWebPathStrList):
     templateShell = ImportTemplate(WRAPPER_TEMPLATE_FILE)
 
     generatedDirPath = GENERATED_PATHSTR.replace('/', os.sep)
@@ -320,16 +279,25 @@ def WriteWrappers(testEntryList):
         os.mkdir(generatedDirPath)
     assert os.path.isdir(generatedDirPath)
 
-    wrapperPathList = []
-    for entry in testEntryList:
-        if entry.webgl1:
-            WriteWrapper(entry.path, False, templateShell, wrapperPathList)
-        if entry.webgl2:
-            WriteWrapper(entry.path, True, templateShell, wrapperPathList)
+    wrapperManifestPathStrList = []
+    for testWebPathStr in testWebPathStrList:
+        # Mochitests must start with 'test_' or similar, or the test
+        # runner will ignore our tests.
+        # The error text is "is not a valid test".
+        wrapperFilePathStr = 'test_' + testWebPathStr.replace('/', '__')
+        wrapperFilePathStr = GENERATED_PATHSTR + '/' + wrapperFilePathStr
+        wrapperManifestPathStrList.append(wrapperFilePathStr)
+
+        templateDict = {
+            'HEADER': '<!-- GENERATED FILE, DO NOT EDIT -->',
+            'TEST_PATH': testWebPathStr,
+        }
+
+        print 'Adding wrapper: ' + wrapperFilePathStr
+        OutputFilledTemplate(templateShell, templateDict, wrapperFilePathStr)
         continue
 
-    print('{} wrappers written.\n'.format(len(wrapperPathList)))
-    return wrapperPathList
+    return wrapperManifestPathStrList
 
 
 kManifestRelPathStr = os.path.relpath('.', os.path.dirname(DEST_MANIFEST_PATHSTR))
@@ -455,7 +423,7 @@ def LoadErrata():
             continue
         elif sectionName != 'DEFAULT':
             path = sectionName.replace('/', os.sep)
-            assert os.path.exists(path), 'Errata line {}: Invalid file: {}'.format(sectionLineNum, sectionName)
+            assert os.path.exists(path), 'Line {}: {}'.format(sectionLineNum, sectionName)
 
         for (key, (lineNum, val)) in sectionMap.iteritems():
             assert key in ACCEPTABLE_ERRATA_KEYS, 'Line {}: {}'.format(lineNum, key)
@@ -501,8 +469,8 @@ if __name__ == '__main__':
     fileDir = os.path.dirname(__file__)
     assert not fileDir, 'Run this file from its directory, not ' + fileDir
 
-    testEntryList = GetTestList()
-    wrapperPathStrList = WriteWrappers(testEntryList)
+    testPathStrList = GetTestList()
+    wrapperPathStrList = WriteWrappers(testPathStrList)
 
     supportPathStrList = GetSupportFileList()
     WriteManifest(wrapperPathStrList, supportPathStrList)
