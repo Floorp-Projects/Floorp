@@ -478,7 +478,48 @@ AbstractTreeItem.prototype = {
   _getSiblingAtDelta: function (delta) {
     let childNodes = this._containerNode.childNodes;
     let indexOfSelf = Array.indexOf(childNodes, this._targetNode);
-    return childNodes[indexOfSelf + delta];
+    if (indexOfSelf + delta >= 0) {
+      return childNodes[indexOfSelf + delta];
+    }
+    return undefined;
+  },
+
+  _getNodesPerPageSize: function() {
+    let childNodes = this._containerNode.childNodes;
+    let nodeHeight = this._getHeight(childNodes[childNodes.length - 1]);
+    let containerHeight = this.bounds.height;
+    return Math.ceil(containerHeight / nodeHeight);
+  },
+
+  _getHeight: function(elem) {
+    let win = this.document.defaultView;
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils);
+    return utils.getBoundsWithoutFlushing(elem).height;
+  },
+
+  /**
+   * Focuses the first item in this tree.
+   */
+  _focusFirstNode: function () {
+    let childNodes = this._containerNode.childNodes;
+    // The root node of the tree may be hidden in practice, so uses for-loop
+    // here to find the next visible node.
+    for (let i = 0; i < childNodes.length; i++) {
+      // The height will be 0 if an element is invisible.
+      if (this._getHeight(childNodes[i])) {
+        childNodes[i].focus();
+        return;
+      }
+    }
+  },
+
+  /**
+   * Focuses the last item in this tree.
+   */
+  _focusLastNode: function () {
+    let childNodes = this._containerNode.childNodes;
+    childNodes[childNodes.length - 1].focus();
   },
 
   /**
@@ -569,6 +610,36 @@ AbstractTreeItem.prototype = {
         } else {
           this._focusNextNode();
         }
+        return;
+
+      case e.DOM_VK_PAGE_UP:
+        let pageUpElement =
+          this._getSiblingAtDelta(-this._getNodesPerPageSize());
+        // There's a chance that the root node is hidden. In this case, its
+        // height will be 0.
+        if (pageUpElement && this._getHeight(pageUpElement)) {
+          pageUpElement.focus();
+        } else {
+          this._focusFirstNode();
+        }
+        return;
+
+      case e.DOM_VK_PAGE_DOWN:
+        let pageDownElement =
+          this._getSiblingAtDelta(this._getNodesPerPageSize());
+        if (pageDownElement) {
+          pageDownElement.focus();
+        } else {
+          this._focusLastNode();
+        }
+        return;
+
+      case e.DOM_VK_HOME:
+        this._focusFirstNode();
+        return;
+
+      case e.DOM_VK_END:
+        this._focusLastNode();
         return;
     }
   },
