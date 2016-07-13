@@ -2055,8 +2055,6 @@ nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont)
   bool usePlatformFontList = true;
 #if defined(MOZ_WIDGET_GTK)
     usePlatformFontList = gfxPlatformGtk::UseFcFontList();
-#elif defined(MOZ_WIDGET_QT)
-    usePlatformFontList = false;
 #endif
 
   // xxx - until the Linux platform font list is always used, use full
