@@ -503,14 +503,14 @@ class AstFunc : public AstNode
     AstName name() const { return name_; }
 };
 
-class AstMemorySignature
+class AstResizable
 {
     uint32_t initial_;
     Maybe<uint32_t> maximum_;
 
   public:
-    AstMemorySignature() = default;
-    AstMemorySignature(uint32_t initial, Maybe<uint32_t> maximum)
+    AstResizable() : initial_(0), maximum_() {}
+    AstResizable(uint32_t initial, Maybe<uint32_t> maximum)
       : initial_(initial), maximum_(maximum)
     {}
     uint32_t initial() const { return initial_; }
@@ -524,21 +524,21 @@ class AstImport : public AstNode
     AstName field_;
     DefinitionKind kind_;
     AstRef funcSig_;
-    AstMemorySignature memSig_;
+    AstResizable resizable_;
 
   public:
     AstImport(AstName name, AstName module, AstName field, AstRef funcSig)
       : name_(name), module_(module), field_(field), kind_(DefinitionKind::Function), funcSig_(funcSig)
     {}
-    AstImport(AstName name, AstName module, AstName field, AstMemorySignature memSig)
-      : name_(name), module_(module), field_(field), kind_(DefinitionKind::Memory), memSig_(memSig)
+    AstImport(AstName name, AstName module, AstName field, AstResizable resizable)
+      : name_(name), module_(module), field_(field), kind_(DefinitionKind::Memory), resizable_(resizable)
     {}
     AstName name() const { return name_; }
     AstName module() const { return module_; }
     AstName field() const { return field_; }
     DefinitionKind kind() const { return kind_; }
     AstRef& funcSig() { MOZ_ASSERT(kind_ == DefinitionKind::Function); return funcSig_; }
-    const AstMemorySignature& memSig() const { MOZ_ASSERT(kind_ == DefinitionKind::Memory); return memSig_; }
+    AstResizable memory() const { MOZ_ASSERT(kind_ == DefinitionKind::Memory); return resizable_; }
 };
 
 class AstExport : public AstNode
@@ -570,28 +570,20 @@ class AstTable : public AstNode
     AstTableElemVector& elems() { return elems_; }
 };
 
-class AstSegment : public AstNode
+class AstDataSegment : public AstNode
 {
     uint32_t offset_;
     AstName text_;
 
   public:
-    AstSegment(uint32_t offset, AstName text)
+    AstDataSegment(uint32_t offset, AstName text)
       : offset_(offset), text_(text)
     {}
     uint32_t offset() const { return offset_; }
     AstName text() const { return text_; }
 };
 
-typedef AstVector<AstSegment*> AstSegmentVector;
-
-class AstMemory : public AstNode, public AstMemorySignature
-{
-  public:
-    explicit AstMemory(AstMemorySignature memSig)
-      : AstMemorySignature(memSig)
-    {}
-};
+typedef AstVector<AstDataSegment*> AstDataSegmentVector;
 
 class AstModule : public AstNode
 {
@@ -600,50 +592,51 @@ class AstModule : public AstNode
     typedef AstVector<AstImport*> ImportVector;
     typedef AstVector<AstExport*> ExportVector;
     typedef AstVector<AstSig*> SigVector;
-    typedef AstVector<AstSegment*> SegmentVector;
 
   private:
     typedef AstHashMap<AstSig*, uint32_t, AstSig> SigMap;
 
-    LifoAlloc& lifo_;
-    AstMemory* memory_;
-    SegmentVector segments_;
-    SigVector sigs_;
-    SigMap sigMap_;
-    ImportVector imports_;
-    ExportVector exports_;
-    AstTable* table_;
-    FuncVector funcs_;
+    LifoAlloc&           lifo_;
+    SigVector            sigs_;
+    SigMap               sigMap_;
+    ImportVector         imports_;
+    AstTable*            table_;
+    Maybe<AstResizable>  memory_;
+    ExportVector         exports_;
+    FuncVector           funcs_;
+    AstDataSegmentVector dataSegments_;
 
   public:
     explicit AstModule(LifoAlloc& lifo)
       : lifo_(lifo),
-        memory_(nullptr),
-        segments_(lifo),
         sigs_(lifo),
         sigMap_(lifo),
         imports_(lifo),
-        exports_(lifo),
         table_(nullptr),
-        funcs_(lifo)
+        exports_(lifo),
+        funcs_(lifo),
+        dataSegments_(lifo)
     {}
     bool init() {
         return sigMap_.init();
     }
-    bool setMemory(AstMemory* memory) {
+    bool setMemory(AstResizable memory) {
         if (memory_)
             return false;
-        memory_ = memory;
+        memory_.emplace(memory);
         return true;
     }
-    AstMemory* maybeMemory() const {
-        return memory_;
+    bool hasMemory() const {
+        return !!memory_;
     }
-    bool append(AstSegment* seg) {
-        return segments_.append(seg);
+    const AstResizable& memory() const {
+        return *memory_;
     }
-    const SegmentVector& segments() const {
-        return segments_;
+    bool append(AstDataSegment* seg) {
+        return dataSegments_.append(seg);
+    }
+    const AstDataSegmentVector& dataSegments() const {
+        return dataSegments_;
     }
     bool declare(AstSig&& sig, uint32_t* sigIndex) {
         SigMap::AddPtr p = sigMap_.lookupForAdd(sig);

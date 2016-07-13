@@ -69,8 +69,6 @@ class AstDecodeContext
     bool generateNames;
 
     uint32_t numTableElems;
-    Maybe<uint32_t> initialSizePages;
-    Maybe<uint32_t> maxSizePages;
 
   private:
     AstModule& module_;
@@ -87,8 +85,6 @@ class AstDecodeContext
        d(d),
        generateNames(generateNames),
        numTableElems(0),
-       initialSizePages(),
-       maxSizePages(),
        module_(module),
        funcSigs_(lifo),
        iter_(nullptr),
@@ -1266,11 +1262,6 @@ AstDecodeMemorySection(AstDecodeContext& c)
     if (!c.d.readFixedU8(&exported))
         return AstDecodeFail(c, "expected exported byte");
 
-    c.initialSizePages.emplace(initialSizePages);
-    if (initialSizePages != maxSizePages) {
-      c.maxSizePages.emplace(maxSizePages);
-    }
-
     if (exported) {
         AstExport* export_ = new(c.lifo) AstExport(AstName(MOZ_UTF16("memory")));
         if (!export_ || !c.module().append(export_))
@@ -1280,6 +1271,7 @@ AstDecodeMemorySection(AstDecodeContext& c)
     if (!c.d.finishSection(sectionStart, sectionSize))
         return AstDecodeFail(c, "memory section byte size mismatch");
 
+    c.module().setMemory(AstResizable(initialSizePages, Some(maxSizePages)));
     return true;
 }
 
@@ -1456,26 +1448,14 @@ AstDecodeDataSection(AstDecodeContext &c)
     uint32_t sectionStart, sectionSize;
     if (!c.d.startSection(DataSectionId, &sectionStart, &sectionSize))
         return AstDecodeFail(c, "failed to start section");
-
-    if (sectionStart == Decoder::NotStarted) {
-        if (!c.initialSizePages)
-            return true;
-
-        AstMemorySignature memSig(*c.initialSizePages, c.maxSizePages);
-        AstMemory* memory = new(c.lifo) AstMemory(memSig);
-        if (!memory)
-            return false;
-
-        c.module().setMemory(memory);
+    if (sectionStart == Decoder::NotStarted)
         return true;
-    }
 
     uint32_t numSegments;
     if (!c.d.readVarU32(&numSegments))
         return AstDecodeFail(c, "failed to read number of data segments");
 
-    uint32_t initialSizePages = c.initialSizePages ? *c.initialSizePages : 0;
-    uint32_t heapLength = initialSizePages * PageSize;
+    const uint32_t heapLength = c.module().hasMemory() ? c.module().memory().initial() : 0;
     uint32_t prevEnd = 0;
 
     for (uint32_t i = 0; i < numSegments; i++) {
@@ -1502,19 +1482,12 @@ AstDecodeDataSection(AstDecodeContext &c)
             buffer[i] = src[i];
 
         AstName name(buffer, numBytes);
-        AstSegment* segment = new(c.lifo) AstSegment(dstOffset, name);
+        AstDataSegment* segment = new(c.lifo) AstDataSegment(dstOffset, name);
         if (!segment || !c.module().append(segment))
             return false;
 
         prevEnd = dstOffset + numBytes;
     }
-
-    AstMemorySignature memSig(initialSizePages, c.maxSizePages);
-    AstMemory* memory = new(c.lifo) AstMemory(memSig);
-    if (!memory)
-        return false;
-
-    c.module().setMemory(memory);
 
     if (!c.d.finishSection(sectionStart, sectionSize))
         return AstDecodeFail(c, "data section byte size mismatch");

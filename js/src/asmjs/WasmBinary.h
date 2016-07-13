@@ -70,7 +70,7 @@ enum class DefinitionKind
     Memory                               = 0x01
 };
 
-enum class MemoryFlags
+enum class ResizableFlags
 {
     Default                              = 0x1,
     HasMaximum                           = 0x2,
