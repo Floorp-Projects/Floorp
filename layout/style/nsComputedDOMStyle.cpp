@@ -2135,7 +2135,26 @@ nsComputedDOMStyle::DoGetImageLayerImage(const nsStyleImageLayers& aLayers)
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
     const nsStyleImage& image = aLayers.mLayers[i].mImage;
-    SetValueToStyleImage(image, val);
+    // Layer::mImage::GetType() returns eStyleImageType_Null in two conditions:
+    // 1. The value of mask-image/bg-image is 'none'.
+    //    Since this layer does not refer to any source, Layer::mSourceURI must
+    //    be nullptr too.
+    // 2. This layer refers to a local resource, e.g. mask-image:url(#mymask).
+    //    For local references, there is no need to download any external
+    //    resource, so Layer::mImage is not used.
+    //    Instead, we store the local URI in one place -- on Layer::mSourceURI.
+    //    Hence, we must serialize using mSourceURI (instead of
+    //    SetValueToStyleImage()/mImage) in this case.
+    bool isLocalURI = image.GetType() == eStyleImageType_Null &&
+                      aLayers.mLayers[i].mSourceURI;
+    if (isLocalURI) {
+      // This is how we represent a 'mask-image' reference for a local URI,
+      // such as 'mask-image:url(#mymask)' or 'mask:url(#mymask)'
+      val->SetURI(aLayers.mLayers[i].mSourceURI);
+    } else {
+      SetValueToStyleImage(image, val);
+    }
+
     valueList->AppendCSSValue(val.forget());
   }
 
