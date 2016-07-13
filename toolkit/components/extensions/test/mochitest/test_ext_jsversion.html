@@ -35,23 +35,23 @@ add_task(function* test_versioned_js() {
       `,
 
       "background.js": "new " + function() {
-        browser.runtime.onMessage.addListener(msg => {
+        window.reportResult = msg => {
           browser.test.assertEq(
             msg, "background-script-3",
             "Expected a message only from the unversioned background script.");
 
           browser.test.sendMessage("finished");
-        });
+        };
       },
 
       "background-1.js": "new " + function() {
-        browser.runtime.sendMessage("background-script-1");
+        window.reportResult("background-script-1");
       },
       "background-2.js": "new " + function() {
-        browser.runtime.sendMessage("background-script-2");
+        window.reportResult("background-script-2");
       },
       "background-3.js": "new " + function() {
-        browser.runtime.sendMessage("background-script-3");
+        window.reportResult("background-script-3");
       },
     },
   });
