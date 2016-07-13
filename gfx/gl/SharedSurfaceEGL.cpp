@@ -79,8 +79,6 @@ SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
     , mFormats(formats)
     , mProdTex(prodTex)
     , mImage(image)
-    , mCurConsGL(nullptr)
-    , mConsTex(0)
     , mSync(0)
 {}
 
@@ -93,12 +91,6 @@ SharedSurface_EGLImage::~SharedSurface_EGLImage()
         // the ext if we have something to destroy.
         mEGL->fDestroySync(Display(), mSync);
         mSync = 0;
-    }
-
-    if (mConsTex) {
-        MOZ_ASSERT(mGarbageBin);
-        mGarbageBin->Trash(mConsTex);
-        mConsTex = 0;
     }
 
     if (!mGL->MakeCurrent())
@@ -155,28 +147,6 @@ EGLDisplay
 SharedSurface_EGLImage::Display() const
 {
     return mEGL->Display();
-}
-
-void
-SharedSurface_EGLImage::AcquireConsumerTexture(GLContext* consGL, GLuint* out_texture, GLuint* out_target)
-{
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(!mCurConsGL || consGL == mCurConsGL);
-
-    if (!mConsTex) {
-        consGL->fGenTextures(1, &mConsTex);
-        MOZ_ASSERT(mConsTex);
-
-        ScopedBindTexture autoTex(consGL, mConsTex, LOCAL_GL_TEXTURE_EXTERNAL);
-        consGL->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_EXTERNAL, mImage);
-
-        mCurConsGL = consGL;
-        mGarbageBin = consGL->TexGarbageBin();
-    }
-
-    MOZ_ASSERT(consGL == mCurConsGL);
-    *out_texture = mConsTex;
-    *out_target = LOCAL_GL_TEXTURE_EXTERNAL;
 }
 
 bool
