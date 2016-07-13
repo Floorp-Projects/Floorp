@@ -33,6 +33,7 @@ nsresult CreateSnapshots(unsigned int aDataset, bool aClearScalars,
 void Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
 void Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
 void Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue);
+void Set(mozilla::Telemetry::ScalarID aId, bool aValue);
 void SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
 
 // Only to be used for testing.

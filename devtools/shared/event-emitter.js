@@ -21,6 +21,8 @@
           return Cu.import("resource://gre/modules/Promise.jsm", {}).Promise.defer;
         case "Services":
           return Cu.import("resource://gre/modules/Services.jsm", {}).Services;
+        case "resource://gre/modules/Console.jsm":
+          return Cu.import("resource://gre/modules/Console.jsm", {});
         case "chrome":
           return {
             Cu,
@@ -42,13 +44,18 @@
   const defer = require("devtools/shared/defer");
   let loggingEnabled = true;
 
+  let console = {};
   if (!isWorker) {
+    console = require("resource://gre/modules/Console.jsm").console;
     loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
     Services.prefs.addObserver("devtools.dump.emit", {
       observe: () => {
         loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
       }
     }, false);
+  } else {
+    // Workers can't load JSMs, so we can't import Console.jsm here.
+    console.error = () => {};
   }
 
   /**

@@ -172,7 +172,7 @@ MarkupView.prototype = {
     this.eventDetailsTooltip = new HTMLTooltip(this._inspector.toolbox,
       {type: "arrow"});
     this.imagePreviewTooltip = new HTMLTooltip(this._inspector.toolbox,
-      {type: "arrow"});
+      {type: "arrow", useXulWrapper: "true"});
     this._enableImagePreviewTooltip();
   },
 
