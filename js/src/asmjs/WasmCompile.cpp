@@ -672,49 +672,72 @@ MaybeDecodeName(Decoder& d)
     return name;
 }
 
+struct Resizable
+{
+    uint32_t initial;
+    Maybe<uint32_t> maximum;
+};
+
 static bool
-DecodeMemorySignature(Decoder& d, ModuleGeneratorData* init)
+DecodeResizable(Decoder& d, Resizable* resizable)
 {
     uint32_t flags;
     if (!d.readVarU32(&flags))
-        return Fail(d, "expected memory flags");
+        return Fail(d, "expected flags");
 
-    if (flags & ~uint32_t(MemoryFlags::AllowedMask))
-        return Fail(d, "unexpected bits set in memory flags");
+    if (flags & ~uint32_t(ResizableFlags::AllowedMask))
+        return Fail(d, "unexpected bits set in flags");
 
-    if (!(flags & uint32_t(MemoryFlags::Default)))
-        return Fail(d, "currently, every memory must be declared default");
+    if (!(flags & uint32_t(ResizableFlags::Default)))
+        return Fail(d, "currently, every memory/table must be declared default");
 
-    uint32_t initialPages;
-    if (!d.readVarU32(&initialPages))
-        return Fail(d, "expected initial memory size");
+    if (!d.readVarU32(&resizable->initial))
+        return Fail(d, "expected initial length");
 
-    CheckedInt<uint32_t> initialBytes = initialPages;
+    if (flags & uint32_t(ResizableFlags::HasMaximum)) {
+        uint32_t maximum;
+        if (!d.readVarU32(&maximum))
+            return Fail(d, "expected maximum length");
+
+        if (resizable->initial > maximum)
+            return Fail(d, "maximum length less than initial length");
+
+        resizable->maximum.emplace(maximum);
+    }
+
+    return true;
+}
+
+static bool
+DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
+{
+    if (UsesMemory(init->memoryUsage))
+        return Fail(d, "already have default memory");
+
+    Resizable resizable;
+    if (!DecodeResizable(d, &resizable))
+        return false;
+
+    init->memoryUsage = MemoryUsage::Unshared;
+
+    CheckedInt<uint32_t> initialBytes = resizable.initial;
     initialBytes *= PageSize;
     if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
         return Fail(d, "initial memory size too big");
 
-    CheckedInt<uint32_t> maxBytes(UINT32_MAX);
-    if (flags & uint32_t(MemoryFlags::HasMaximum)) {
-        uint32_t maxPages;
-        if (!d.readVarU32(&maxPages))
-            return Fail(d, "expected maximum length");
+    init->minMemoryLength = initialBytes.value();
 
-        if (initialPages > maxPages)
-            return Fail(d, "maximum memory size less than initial memory size");
-
-        maxBytes = maxPages;
-        maxBytes *= PageSize;
-        if (!maxBytes.isValid())
+    if (resizable.maximum) {
+        CheckedInt<uint32_t> maximumBytes = *resizable.maximum;
+        maximumBytes *= PageSize;
+        if (!maximumBytes.isValid())
             return Fail(d, "maximum memory size too big");
+
+        init->maxMemoryLength = maximumBytes.value();
+    } else {
+        init->maxMemoryLength = UINT32_MAX;
     }
 
-    if (UsesMemory(init->memoryUsage))
-        return Fail(d, "already have default memory");
-
-    init->memoryUsage = MemoryUsage::Unshared;
-    init->minMemoryLength = initialBytes.value();
-    init->maxMemoryLength = maxBytes.value();
     return true;
 }
 
@@ -773,7 +796,7 @@ DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector
         break;
       }
       case DefinitionKind::Memory: {
-        if (!DecodeMemorySignature(d, init))
+        if (!DecodeResizableMemory(d, init))
             return false;
         break;
       }
@@ -821,7 +844,7 @@ DecodeMemorySection(Decoder& d, bool newFormat, ModuleGeneratorData* init, bool*
         return true;
 
     if (newFormat) {
-        if (!DecodeMemorySignature(d, init))
+        if (!DecodeResizableMemory(d, init))
             return false;
     } else {
         uint32_t initialSizePages;
