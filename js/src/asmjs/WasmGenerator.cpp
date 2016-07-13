@@ -409,9 +409,10 @@ ModuleGenerator::finishCodegen()
 
     // Fill in LinkData with the offsets of these stubs.
 
+    linkData_.interruptOffset = interruptExit.begin;
     linkData_.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
     linkData_.unalignedAccessOffset = jumpTargets[JumpTarget::UnalignedAccess].begin;
-    linkData_.interruptOffset = interruptExit.begin;
+    linkData_.badIndirectCallOffset = jumpTargets[JumpTarget::BadIndirectCall].begin;
 
     // Only call convertOutOfRangeBranchesToThunks after all other codegen that may
     // emit new jumps to JumpTargets has finished.
@@ -817,7 +818,7 @@ ModuleGenerator::finishFuncDefs()
 bool
 ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
-    MOZ_ASSERT(seg.elems.length() == shared_->tables[seg.tableIndex].length, "for now");
+    MOZ_ASSERT(seg.offset + seg.elems.length() <= shared_->tables[seg.tableIndex].length);
     return elemSegments_.append(Move(seg));
 }
 
@@ -854,7 +855,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
     MOZ_ASSERT(shared_->tables[tableIndex].length == elemFuncIndices.length());
 
-    return elemSegments_.emplaceBack(tableIndex, Move(elemFuncIndices));
+    return elemSegments_.emplaceBack(tableIndex, 0, Move(elemFuncIndices));
 }
 
 UniqueModule

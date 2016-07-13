@@ -389,13 +389,16 @@ Module::instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector
         SharedTable table = Table::create(cx, tableDesc.kind, tableDesc.length);
         if (!table || !tables->emplaceBack(table))
             return false;
+
+        for (size_t i = 0; i < table->length(); i++)
+            table->array()[i] = cs.badIndirectCallCode();
     }
 
     for (const ElemSegment& seg : elemSegments_) {
         SharedTable& table = (*tables)[seg.tableIndex];
-        MOZ_ASSERT(table->length() == seg.elems.length(), "temporary");
-        for (size_t i = 0; i < table->length(); i++)
-            table->array()[i] = cs.code() + seg.elems[i];
+        MOZ_ASSERT(seg.offset + seg.elems.length() <= table->length());
+        for (size_t i = 0; i < seg.elems.length(); i++)
+            table->array()[seg.offset + i] = cs.code() + seg.elems[i];
     }
 
     return true;

@@ -68,8 +68,6 @@ class AstDecodeContext
     Decoder& d;
     bool generateNames;
 
-    uint32_t numTableElems;
-
   private:
     AstModule& module_;
     AstIndexVector funcSigs_;
@@ -84,7 +82,6 @@ class AstDecodeContext
        lifo(lifo),
        d(d),
        generateNames(generateNames),
-       numTableElems(0),
        module_(module),
        funcSigs_(lifo),
        iter_(nullptr),
@@ -1116,17 +1113,18 @@ AstDecodeTableSection(AstDecodeContext& c)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!c.d.readVarU32(&c.numTableElems))
+    uint32_t numElems;
+    if (!c.d.readVarU32(&numElems))
         return AstDecodeFail(c, "expected number of table elems");
 
-    if (c.numTableElems > MaxTableElems)
+    if (numElems > MaxTableElems)
         return AstDecodeFail(c, "too many table elements");
 
-    AstTableElemVector elems(c.lifo);
-    if (!elems.resize(c.numTableElems))
+    AstRefVector elems(c.lifo);
+    if (!elems.resize(numElems))
         return false;
 
-    for (uint32_t i = 0; i < c.numTableElems; i++) {
+    for (uint32_t i = 0; i < numElems; i++) {
         uint32_t funcIndex;
         if (!c.d.readVarU32(&funcIndex))
             return AstDecodeFail(c, "expected table element");
@@ -1137,11 +1135,12 @@ AstDecodeTableSection(AstDecodeContext& c)
         elems[i] = AstRef(AstName(), funcIndex);
     }
 
-    AstTable* table = new(c.lifo) AstTable(Move(elems));
-    if (!table)
+    AstElemSegment* seg = new(c.lifo) AstElemSegment(0, Move(elems));
+    if (!seg || !c.module().append(seg))
         return false;
 
-    c.module().initTable(table);
+    if (!c.module().setTable(AstResizable(numElems, Nothing())))
+        return AstDecodeFail(c, "already have a table");
 
     if (!c.d.finishSection(sectionStart, sectionSize))
         return AstDecodeFail(c, "table section byte size mismatch");
