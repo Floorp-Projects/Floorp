@@ -1760,7 +1760,8 @@ class MOZ_STACK_CLASS ModuleValidator
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
             !genData->funcImports.resize(MaxImports) ||
-            !genData->asmJSSigToTable.resize(MaxTables))
+            !genData->tables.resize(MaxTables) ||
+            !genData->asmJSSigToTableIndex.resize(MaxSigs))
         {
             return false;
         }
