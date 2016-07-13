@@ -1214,6 +1214,8 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
         for (uint32_t i = 0; i < numElems; i++) {
             if (!d.readVarU32(&seg.elems[i]))
                 return Fail(d, "failed to read element function index");
+            if (seg.elems[i] >= mg.numFuncSigs())
+                return Fail(d, "table element out of range");
         }
 
         prevEnd = seg.offset + seg.elems.length();
