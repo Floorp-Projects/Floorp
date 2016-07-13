@@ -455,6 +455,9 @@ public:
 
   virtual bool RecvAppInit() override;
 
+  virtual bool
+  RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig) override;
+
   virtual bool RecvLastPrivateDocShellDestroyed() override;
 
   virtual bool RecvVolumes(InfallibleTArray<VolumeInfo>&& aVolumes) override;
