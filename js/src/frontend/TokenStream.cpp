@@ -594,11 +594,9 @@ CompileError::~CompileError()
     message = nullptr;
 
     if (report.messageArgs) {
-        if (argumentsType == ArgumentsAreASCII) {
-            unsigned i = 0;
-            while (report.messageArgs[i])
-                js_free((void*)report.messageArgs[i++]);
-        }
+        unsigned i = 0;
+        while (report.messageArgs[i])
+            js_free((void*)report.messageArgs[i++]);
         js_free(report.messageArgs);
     }
 
@@ -648,8 +646,6 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
             err.report.lineno = iter.computeLine(&err.report.column);
         }
     }
-
-    err.argumentsType = ArgumentsAreASCII;
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber, &err.message,
                                 ArgumentsAreASCII, &err.report, args))
