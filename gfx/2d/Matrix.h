@@ -346,7 +346,8 @@ public:
    */
   bool IsSingular() const
   {
-    return Determinant() == 0;
+    Float det = Determinant();
+    return !mozilla::IsFinite(det) || det == 0;
   }
 
   GFX2D_API Matrix &NudgeToIntegers();
