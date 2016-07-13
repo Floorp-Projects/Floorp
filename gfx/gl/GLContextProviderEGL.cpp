@@ -7,8 +7,6 @@
     #include <gdk/gdkx.h>
     // we're using default display for now
     #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW)))
-#elif defined(MOZ_WIDGET_QT)
-    #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW))
 #else
     #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
 #endif
