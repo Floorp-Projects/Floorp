@@ -514,10 +514,12 @@ int32_t VideoReceiver::ResetDecoder() {
   bool reset_key_request = false;
   {
     CriticalSectionScoped cs(_receiveCritSect);
+    _receiver.Initialize();
+    _timing.Reset();
+    reset_key_request = true;
     if (_decoder != NULL) {
-      _receiver.Initialize();
-      _timing.Reset();
-      reset_key_request = true;
+      //      _receiver.Initialize();
+      //      _timing.Reset();
       _decoder->Reset();
     }
   }

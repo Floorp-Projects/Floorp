@@ -225,16 +225,14 @@
            orient="vertical"
            role="alert">
      <vbox>
-      <hbox pack="end">
-        <toolbarbutton id="UITourTooltipClose" class="close-icon"
-                       tooltiptext="&uiTour.infoPanel.close;"/>
-      </hbox>
       <hbox id="UITourTooltipBody">
-        <vbox id="UITourTooltipIconContainer">
-          <image id="UITourTooltipIcon"/>
-        </vbox>
+        <image id="UITourTooltipIcon"/>
         <vbox flex="1">
-          <label id="UITourTooltipTitle" flex="1"/>
+          <hbox id="UITourTooltipTitleContainer">
+            <label id="UITourTooltipTitle" flex="1"/>
+            <toolbarbutton id="UITourTooltipClose" class="close-icon"
+                           tooltiptext="&uiTour.infoPanel.close;"/>
+          </hbox>
           <description id="UITourTooltipDescription" flex="1"/>
         </vbox>
       </hbox>
@@ -563,7 +561,7 @@
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+#if defined(MOZ_WIDGET_GTK)
              autohide="true"
 #endif
 #endif
@@ -592,7 +590,7 @@
              context="toolbar-context-menu"
              collapsed="true">
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+#if defined(MOZ_WIDGET_GTK)
       <hbox id="private-browsing-indicator"
             skipintoolbarset="true"/>
 #endif
@@ -642,7 +640,7 @@
         </menupopup>
       </toolbarbutton>
 
-#if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
+#if !defined(MOZ_WIDGET_GTK)
       <hbox class="private-browsing-indicator" skipintoolbarset="true"/>
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR

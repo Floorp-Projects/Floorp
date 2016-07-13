@@ -177,6 +177,7 @@ enum class GLRenderer {
     AdrenoTM205,
     AdrenoTM320,
     AdrenoTM420,
+    Mali400MP,
     SGX530,
     SGX540,
     Tegra,
@@ -3341,6 +3342,11 @@ public:
     void CleanDirtyScreen();
 
     virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
+
+    virtual GLenum GetPreferredEGLImageTextureTarget() const {
+        return IsExtensionSupported(OES_EGL_image_external) ?
+            LOCAL_GL_TEXTURE_EXTERNAL : LOCAL_GL_TEXTURE_2D;
+    }
 
     virtual bool RenewSurface(nsIWidget* aWidget) { return false; }
 

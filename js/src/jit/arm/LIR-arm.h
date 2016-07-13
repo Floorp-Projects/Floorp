@@ -412,25 +412,6 @@ class LSoftUDivOrMod : public LBinaryMath<3>
     }
 };
 
-class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
-{
-  public:
-    LIR_HEADER(AsmJSLoadFuncPtr);
-    LAsmJSLoadFuncPtr(const LAllocation& index, const LDefinition& temp) {
-        setOperand(0, index);
-        setTemp(0, temp);
-    }
-    const MAsmJSLoadFuncPtr* mir() const {
-        return mir_->toAsmJSLoadFuncPtr();
-    }
-    const LAllocation* index() {
-        return getOperand(0);
-    }
-    const LDefinition* temp() {
-        return getTemp(0);
-    }
-};
-
 class LAsmJSCompareExchangeCallout : public LCallInstructionHelper<1, 3, 0>
 {
   public:

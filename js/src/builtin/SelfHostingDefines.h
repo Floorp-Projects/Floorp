@@ -99,4 +99,6 @@
 #define REGEXP_STICKY_FLAG      0x08
 #define REGEXP_UNICODE_FLAG     0x10
 
+#define MODULE_OBJECT_ENVIRONMENT_SLOT 3
+
 #endif

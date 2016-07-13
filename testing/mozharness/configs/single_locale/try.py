@@ -28,10 +28,6 @@ config = {
         "clone_upstream_url": "https://hg.mozilla.org/mozilla-central",
         "clone_by_revision": True,
         "clone_with_purge": True,
-    }, {
-        "vcs": "hgtool",
-        "repo": "https://hg.mozilla.org/build/compare-locales",
-        "revision": "RELEASE_AUTOMATION"
     }],
     # purge options
     'is_automation': True,

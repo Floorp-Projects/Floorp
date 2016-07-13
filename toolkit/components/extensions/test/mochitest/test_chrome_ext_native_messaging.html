@@ -128,9 +128,9 @@ const STDERR_LINES = ["hello stderr", "this should be a separate line"];
 let STDERR_MSG = STDERR_LINES.join("\\n");
 
 // Python apparently line-buffers stderr even with the -u arg on
-// Windows 7.  Dealing with that is more hassle than its worth but
+// Windows.  Dealing with that is more hassle than its worth but
 // on other platforms, we want to keep testing partial lines.
-if (AppConstants.isPlatformAndVersionAtMost("win", "7")) {
+if (AppConstants.platform == "win") {
   STDERR_MSG += "\\n";
 }
 

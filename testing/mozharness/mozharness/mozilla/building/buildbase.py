@@ -1631,22 +1631,12 @@ or run without that action (ie: --no-{action})"
             self.fatal("'mach build' did not run successfully. Please check "
                        "log for errors.")
 
-    def _checkout_compare_locales(self):
-        dirs = self.query_abs_dirs()
-        dest = dirs['compare_locales_dir']
-        repo = self.config['compare_locales_repo']
-        rev = self.config['compare_locales_rev']
-        vcs = self.config['compare_locales_vcs']
-        abs_rev = self.vcs_checkout(repo=repo, dest=dest, revision=rev, vcs=vcs)
-        self.set_buildbot_property('compare_locales_revision', abs_rev, write_to_file=True)
-
     def multi_l10n(self):
         if not self.query_is_nightly():
             self.info("Not a nightly build, skipping multi l10n.")
             return
         self._initialize_taskcluster()
 
-        self._checkout_compare_locales()
         dirs = self.query_abs_dirs()
         base_work_dir = dirs['base_work_dir']
         objdir = dirs['abs_obj_dir']
