@@ -120,8 +120,8 @@ var Memory = exports.Memory = Class({
    */
   _onWindowReady: function({ isTopLevel }) {
     if (this.state == "attached") {
+      this._clearDebuggees();
       if (isTopLevel && this.isRecordingAllocations()) {
-        this._clearDebuggees();
         this._frameCache.initFrames();
       }
       this.dbg.addDebuggees();
@@ -140,15 +140,19 @@ var Memory = exports.Memory = Class({
    * Save a heap snapshot scoped to the current debuggees' portion of the heap
    * graph.
    *
+   * @param {Object|null} boundaries
+   *
    * @returns {String} The snapshot id.
    */
-  saveHeapSnapshot: expectState("attached", function () {
+  saveHeapSnapshot: expectState("attached", function (boundaries = null) {
     // If we are observing the whole process, then scope the snapshot
     // accordingly. Otherwise, use the debugger's debuggees.
-    const opts = this.parent instanceof ChromeActor || this.parent instanceof ChildProcessActor
-      ? { runtime: true }
-      : { debugger: this.dbg };
-    const path = ThreadSafeChromeUtils.saveHeapSnapshot(opts);
+    if (!boundaries) {
+      boundaries = this.parent instanceof ChromeActor || this.parent instanceof ChildProcessActor
+        ? { runtime: true }
+        : { debugger: this.dbg };
+    }
+    const path = ThreadSafeChromeUtils.saveHeapSnapshot(boundaries);
     return HeapSnapshotFileUtils.getSnapshotIdFromPath(path);
   }, "saveHeapSnapshot"),
 
