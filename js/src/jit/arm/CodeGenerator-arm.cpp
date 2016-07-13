@@ -2741,9 +2741,8 @@ CodeGeneratorARM::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    masm.ma_mov(Imm32(mir->globalDataOffset() - AsmJSGlobalRegBias), out);
-    masm.as_add(out, out, lsl(index, 2));
-    masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(out, LSL, 0)), out);
+    masm.ma_ldr(Address(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias), out);
+    masm.ma_ldr(DTRAddr(out, DtrRegImmShift(index, LSL, 2)), out);
 }
 
 void

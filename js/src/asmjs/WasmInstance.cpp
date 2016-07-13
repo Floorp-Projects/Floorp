@@ -47,9 +47,17 @@ Instance::addressOfMemoryBase() const
     return (uint8_t**)(codeSegment_->globalData() + HeapGlobalDataOffset);
 }
 
+void**
+Instance::addressOfTableBase(size_t tableIndex) const
+{
+    MOZ_ASSERT(metadata_->tables[tableIndex].globalDataOffset >= InitialGlobalDataBytes);
+    return (void**)(codeSegment_->globalData() + metadata_->tables[tableIndex].globalDataOffset);
+}
+
 FuncImportExit&
 Instance::funcImportToExit(const FuncImport& fi)
 {
+    MOZ_ASSERT(fi.exitGlobalDataOffset() >= InitialGlobalDataBytes);
     return *(FuncImportExit*)(codeSegment_->globalData() + fi.exitGlobalDataOffset());
 }
 
@@ -111,13 +119,17 @@ Instance::toggleProfiling(JSContext* cx)
         funcLabels_.clear();
     }
 
-    // Homogeneous table elements point directly to the prologue and must be
-    // updated to reflect the profiling mode. In wasm, table elements point to
-    // the (one) table entry which checks signature before jumping to the
-    // appropriate prologue (which is patched by ToggleProfiling).
-    for (const TypedFuncTable& table : typedFuncTables_) {
-        auto array = reinterpret_cast<void**>(codeSegment_->globalData() + table.globalDataOffset);
-        for (size_t i = 0; i < table.numElems; i++) {
+    // Typed-function tables' elements point directly to either the profiling or
+    // non-profiling prologue and must therefore be updated when the profiling
+    // mode is toggled.
+
+    for (const SharedTable& table : tables_) {
+        if (!table->isTypedFunction())
+            continue;
+
+        void** array = table->array();
+        uint32_t length = table->length();
+        for (size_t i = 0; i < length; i++) {
             const CodeRange* codeRange = lookupCodeRange(array[i]);
             void* from = codeSegment_->code() + codeRange->funcNonProfilingEntry();
             void* to = codeSegment_->code() + codeRange->funcProfilingEntry();
@@ -348,17 +360,19 @@ Instance::callImport_f64(int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 Instance::Instance(UniqueCodeSegment codeSegment,
                    const Metadata& metadata,
                    const ShareableBytes* maybeBytecode,
-                   TypedFuncTableVector&& typedFuncTables,
                    HandleWasmMemoryObject memory,
+                   SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports)
   : codeSegment_(Move(codeSegment)),
     metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
-    typedFuncTables_(Move(typedFuncTables)),
     memory_(memory),
+    tables_(Move(tables)),
     profilingEnabled_(false)
 {
     MOZ_ASSERT(funcImports.length() == metadata.funcImports.length());
+    MOZ_ASSERT(tables_.length() == metadata.tables.length());
+
     for (size_t i = 0; i < metadata.funcImports.length(); i++) {
         const FuncImport& fi = metadata.funcImports[i];
         FuncImportExit& exit = funcImportToExit(fi);
@@ -369,6 +383,9 @@ Instance::Instance(UniqueCodeSegment codeSegment,
 
     if (memory)
         *addressOfMemoryBase() = memory->buffer().dataPointerEither().unwrap();
+
+    for (size_t i = 0; i < tables_.length(); i++)
+        *addressOfTableBase(i) = tables_[i]->array();
 }
 
 Instance::~Instance()
@@ -725,13 +742,17 @@ void
 Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                         Metadata::SeenSet* seenMetadata,
                         ShareableBytes::SeenSet* seenBytes,
-                        size_t* code, size_t* data) const
+                        Table::SeenSet* seenTables,
+                        size_t* code,
+                        size_t* data) const
 {
     *code += codeSegment_->codeLength();
     *data += mallocSizeOf(this) +
              codeSegment_->globalDataLength() +
-             metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
-             typedFuncTables_.sizeOfExcludingThis(mallocSizeOf);
+             metadata_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata);
+
+    for (const SharedTable& table : tables_)
+         *data += table->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenTables);
 
     if (maybeBytecode_)
         *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);

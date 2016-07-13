@@ -602,16 +602,18 @@ DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* elemFunc
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!d.readVarU32(&init->wasmTable.numElems))
+    TableDesc table(TableKind::AnyFunction);
+
+    if (!d.readVarU32(&table.length))
         return Fail(d, "expected number of table elems");
 
-    if (init->wasmTable.numElems > MaxTableElems)
+    if (table.length > MaxTableElems)
         return Fail(d, "too many table elements");
 
-    if (!elemFuncIndices->resize(init->wasmTable.numElems))
+    if (!elemFuncIndices->resize(table.length))
         return false;
 
-    for (uint32_t i = 0; i < init->wasmTable.numElems; i++) {
+    for (uint32_t i = 0; i < table.length; i++) {
         uint32_t funcIndex;
         if (!d.readVarU32(&funcIndex))
             return Fail(d, "expected table element");
@@ -625,7 +627,8 @@ DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* elemFunc
     if (!d.finishSection(sectionStart, sectionSize))
         return Fail(d, "table section byte size mismatch");
 
-    return true;
+    MOZ_ASSERT(init->tables.empty());
+    return init->tables.append(table);
 }
 
 static bool
@@ -1077,7 +1080,12 @@ DecodeElemSection(Decoder& d, Uint32Vector&& elemFuncIndices, ModuleGenerator& m
 {
     // More fun here in the next patch:
 
-    if (!mg.addElemSegment(Move(elemFuncIndices)))
+    if (mg.tables().empty()) {
+        MOZ_ASSERT(elemFuncIndices.empty());
+        return true;
+    }
+
+    if (!mg.addElemSegment(ElemSegment(0, Move(elemFuncIndices))))
         return false;
 
     return true;
