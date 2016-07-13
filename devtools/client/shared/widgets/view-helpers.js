@@ -219,6 +219,17 @@ const ViewHelpers = exports.ViewHelpers = {
   },
 
   /**
+   * Check if the enter key or space was pressed
+   *
+   * @param event event
+   *        The event triggered by a keypress on an element
+   */
+  isSpaceOrReturn: function (event) {
+    return event.keyCode === event.DOM_VK_SPACE ||
+          event.keyCode === event.DOM_VK_RETURN;
+  },
+
+  /**
    * Sets a toggled pane hidden or visible. The pane can either be displayed on
    * the side (right or left depending on the locale) or at the bottom.
    *

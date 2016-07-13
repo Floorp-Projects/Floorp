@@ -610,3 +610,53 @@ function* waitForScrollStop(doc) {
 
   return lastScrollTop;
 }
+
+/**
+ * Select a node in the inspector and try to delete it using the provided key. After that,
+ * check that the expected element is focused.
+ *
+ * @param {InspectorPanel} inspector
+ *        The current inspector-panel instance.
+ * @param {String} key
+ *        The key to simulate to delete the node
+ * @param {Object}
+ *        - {String} selector: selector of the element to delete.
+ *        - {String} focusedSelector: selector of the element that should be selected
+ *        after deleting the node.
+ *        - {String} pseudo: optional, "before" or "after" if the element focused after
+ *        deleting the node is supposed to be a before/after pseudo-element.
+ */
+function* checkDeleteAndSelection(inspector, key, {selector, focusedSelector, pseudo}) {
+  info("Test deleting node " + selector + " with " + key + ", " +
+       "expecting " + focusedSelector + " to be focused");
+
+  info("Select node " + selector + " and make sure it is focused");
+  yield selectNode(selector, inspector);
+  yield clickContainer(selector, inspector);
+
+  info("Delete the node with: " + key);
+  let mutated = inspector.once("markupmutation");
+  EventUtils.sendKey(key, inspector.panelWin);
+  yield Promise.all([mutated, inspector.once("inspector-updated")]);
+
+  let nodeFront = yield getNodeFront(focusedSelector, inspector);
+  if (pseudo) {
+    // Update the selector for logging in case of failure.
+    focusedSelector = focusedSelector + "::" + pseudo;
+    // Retrieve the :before or :after pseudo element of the nodeFront.
+    let {nodes} = yield inspector.walker.children(nodeFront);
+    nodeFront = pseudo === "before" ? nodes[0] : nodes[nodes.length - 1];
+  }
+
+  is(inspector.selection.nodeFront, nodeFront,
+     focusedSelector + " is selected after deletion");
+
+  info("Check that the node was really removed");
+  let node = yield getNodeFront(selector, inspector);
+  ok(!node, "The node can't be found in the page anymore");
+
+  info("Undo the deletion to restore the original markup");
+  yield undoChange(inspector);
+  node = yield getNodeFront(selector, inspector);
+  ok(node, "The node is back");
+}

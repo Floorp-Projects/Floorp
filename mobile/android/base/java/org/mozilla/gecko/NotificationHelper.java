@@ -120,7 +120,7 @@ public final class NotificationHelper implements GeckoEventListener {
             args.put(ID_ATTR, data.getQueryParameter(ID_ATTR));
             args.put(EVENT_TYPE_ATTR, notificationType);
             args.put(HANDLER_ATTR, data.getQueryParameter(HANDLER_ATTR));
-            args.put(COOKIE_ATTR, data.getQueryParameter(COOKIE_ATTR));
+            args.put(COOKIE_ATTR, intent.getStringExtra(COOKIE_ATTR));
 
             if (BUTTON_EVENT.equals(notificationType)) {
                 final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
