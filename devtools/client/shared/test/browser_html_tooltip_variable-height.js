@@ -22,14 +22,12 @@ const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
     </vbox>
   </window>`;
 
-const CONTAINER_HEIGHT = 200;
+const CONTAINER_HEIGHT = 300;
 const CONTAINER_WIDTH = 200;
 const TOOLTIP_HEIGHT = 50;
 
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");
-
-let useXulWrapper;
 
 add_task(function* () {
   // Force the toolbox to be 400px tall => 50px for each box.
@@ -38,21 +36,11 @@ add_task(function* () {
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
-  info("Run tests for a Tooltip without using a XUL panel");
-  useXulWrapper = false;
-  yield runTests(doc);
-
-  info("Run tests for a Tooltip with a XUL panel");
-  useXulWrapper = true;
-  yield runTests(doc);
-});
-
-function* runTests(doc) {
-  let tooltip = new HTMLTooltip({doc}, {useXulWrapper});
+  let tooltip = new HTMLTooltip({doc}, {useXulWrapper: false});
   info("Set tooltip content 50px tall, but request a container 200px tall");
   let tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: " + TOOLTIP_HEIGHT + "px; background: red;";
-  tooltip.setContent(tooltipContent, {width: CONTAINER_WIDTH, height: CONTAINER_HEIGHT});
+  tooltip.setContent(tooltipContent, {width: CONTAINER_WIDTH, height: Infinity});
 
   info("Show the tooltip and check the container and panel height.");
   yield showTooltip(tooltip, doc.getElementById("box1"));
@@ -78,11 +66,10 @@ function* runTests(doc) {
   yield onPanelClick;
   is(tooltip.isVisible(), true, "Tooltip is still visible");
 
-  info("Click below the tooltip container, the tooltip should be closed.");
+  info("Click above the tooltip container, the tooltip should be closed.");
   onHidden = once(tooltip, "hidden");
-  EventUtils.synthesizeMouse(tooltip.container, 100, CONTAINER_HEIGHT + 10,
-    {}, doc.defaultView);
+  EventUtils.synthesizeMouse(tooltip.container, 100, -10, {}, doc.defaultView);
   yield onHidden;
 
   tooltip.destroy();
-}
+});
