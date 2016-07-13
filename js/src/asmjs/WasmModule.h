@@ -43,6 +43,7 @@ struct LinkDataCacheablePod
     uint32_t interruptOffset;
     uint32_t outOfBoundsOffset;
     uint32_t unalignedAccessOffset;
+    uint32_t badIndirectCallOffset;
 
     LinkDataCacheablePod() { mozilla::PodZero(this); }
 };
@@ -141,11 +142,12 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 struct ElemSegment
 {
     uint32_t tableIndex;
+    uint32_t offset;
     Uint32Vector elems;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, Uint32Vector&& elems)
-      : tableIndex(tableIndex), elems(Move(elems))
+    ElemSegment(uint32_t tableIndex, uint32_t offset, Uint32Vector&& elems)
+      : tableIndex(tableIndex), offset(offset), elems(Move(elems))
     {}
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)

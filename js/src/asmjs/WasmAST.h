@@ -559,17 +559,6 @@ class AstExport : public AstNode
     AstRef& func() { return func_; }
 };
 
-typedef AstVector<AstRef> AstTableElemVector;
-
-class AstTable : public AstNode
-{
-    AstTableElemVector elems_;
-
-  public:
-    explicit AstTable(AstTableElemVector&& elems) : elems_(Move(elems)) {}
-    AstTableElemVector& elems() { return elems_; }
-};
-
 class AstDataSegment : public AstNode
 {
     uint32_t offset_;
@@ -584,6 +573,22 @@ class AstDataSegment : public AstNode
 };
 
 typedef AstVector<AstDataSegment*> AstDataSegmentVector;
+
+class AstElemSegment : public AstNode
+{
+    uint32_t offset_;
+    AstRefVector elems_;
+
+  public:
+    AstElemSegment(uint32_t offset, AstRefVector&& elems)
+      : offset_(offset), elems_(Move(elems))
+    {}
+    uint32_t offset() const { return offset_; }
+    AstRefVector& elems() { return elems_; }
+    const AstRefVector& elems() const { return elems_; }
+};
+
+typedef AstVector<AstElemSegment*> AstElemSegmentVector;
 
 class AstModule : public AstNode
 {
@@ -600,11 +605,12 @@ class AstModule : public AstNode
     SigVector            sigs_;
     SigMap               sigMap_;
     ImportVector         imports_;
-    AstTable*            table_;
+    Maybe<AstResizable>  table_;
     Maybe<AstResizable>  memory_;
     ExportVector         exports_;
     FuncVector           funcs_;
     AstDataSegmentVector dataSegments_;
+    AstElemSegmentVector elemSegments_;
 
   public:
     explicit AstModule(LifoAlloc& lifo)
@@ -612,10 +618,10 @@ class AstModule : public AstNode
         sigs_(lifo),
         sigMap_(lifo),
         imports_(lifo),
-        table_(nullptr),
         exports_(lifo),
         funcs_(lifo),
-        dataSegments_(lifo)
+        dataSegments_(lifo),
+        elemSegments_(lifo)
     {}
     bool init() {
         return sigMap_.init();
@@ -632,11 +638,29 @@ class AstModule : public AstNode
     const AstResizable& memory() const {
         return *memory_;
     }
+    bool setTable(AstResizable table) {
+        if (table_)
+            return false;
+        table_.emplace(table);
+        return true;
+    }
+    bool hasTable() const {
+        return !!table_;
+    }
+    const AstResizable& table() const {
+        return *table_;
+    }
     bool append(AstDataSegment* seg) {
         return dataSegments_.append(seg);
     }
     const AstDataSegmentVector& dataSegments() const {
         return dataSegments_;
+    }
+    bool append(AstElemSegment* seg) {
+        return elemSegments_.append(seg);
+    }
+    const AstElemSegmentVector& elemSegments() const {
+        return elemSegments_;
     }
     bool declare(AstSig&& sig, uint32_t* sigIndex) {
         SigMap::AddPtr p = sigMap_.lookupForAdd(sig);
@@ -677,15 +701,6 @@ class AstModule : public AstNode
     }
     const ExportVector& exports() const {
         return exports_;
-    }
-    bool initTable(AstTable* table) {
-        if (table_)
-            return false;
-        table_ = table;
-        return true;
-    }
-    AstTable* maybeTable() const {
-        return table_;
     }
 };
 

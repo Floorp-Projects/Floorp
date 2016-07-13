@@ -422,7 +422,7 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
     (export "i2v" 8)
 )`);
 
-const badIndirectCall = /wasm indirect call signature mismatch/;
+const badIndirectCall = /bad wasm indirect call/;
 
 assertEq(v2i(0), 13);
 assertEq(v2i(1), 42);

@@ -594,44 +594,6 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeTableSection(Decoder& d, ModuleGeneratorData* init, Uint32Vector* elemFuncIndices)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(TableSectionId, &sectionStart, &sectionSize))
-        return Fail(d, "failed to start section");
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    TableDesc table(TableKind::AnyFunction);
-
-    if (!d.readVarU32(&table.length))
-        return Fail(d, "expected number of table elems");
-
-    if (table.length > MaxTableElems)
-        return Fail(d, "too many table elements");
-
-    if (!elemFuncIndices->resize(table.length))
-        return false;
-
-    for (uint32_t i = 0; i < table.length; i++) {
-        uint32_t funcIndex;
-        if (!d.readVarU32(&funcIndex))
-            return Fail(d, "expected table element");
-
-        if (funcIndex >= init->funcSigs.length())
-            return Fail(d, "table element out of range");
-
-        (*elemFuncIndices)[i] = funcIndex;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize))
-        return Fail(d, "table section byte size mismatch");
-
-    MOZ_ASSERT(init->tables.empty());
-    return init->tables.append(table);
-}
-
-static bool
 CheckTypeForJS(Decoder& d, const Sig& sig)
 {
     bool allowI64 = IsI64Implemented() && JitOptions.wasmTestMode;
@@ -742,6 +704,21 @@ DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
+DecodeResizableTable(Decoder& d, ModuleGeneratorData* init)
+{
+    Resizable resizable;
+    if (!DecodeResizable(d, &resizable))
+        return false;
+
+    if (!init->tables.empty())
+        return Fail(d, "already have default table");
+
+    TableDesc table(TableKind::AnyFunction);
+    table.length = resizable.initial;
+    return init->tables.append(table);
+}
+
+static bool
 DecodeImport(Decoder& d, bool newFormat, ModuleGeneratorData* init, ImportVector* imports)
 {
     if (!newFormat) {
@@ -830,6 +807,52 @@ DecodeImportSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Impor
 
     if (!d.finishSection(sectionStart, sectionSize))
         return Fail(d, "import section byte size mismatch");
+
+    return true;
+}
+
+static bool
+DecodeTableSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Uint32Vector* oldElems)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(TableSectionId, &sectionStart, &sectionSize))
+        return Fail(d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    if (newFormat) {
+        if (!DecodeResizableTable(d, init))
+            return false;
+    } else {
+        TableDesc table(TableKind::AnyFunction);
+
+        if (!d.readVarU32(&table.length))
+            return Fail(d, "expected number of table elems");
+
+        if (table.length > MaxTableElems)
+            return Fail(d, "too many table elements");
+
+        if (!oldElems->resize(table.length))
+            return false;
+
+        for (uint32_t i = 0; i < table.length; i++) {
+            uint32_t funcIndex;
+            if (!d.readVarU32(&funcIndex))
+                return Fail(d, "expected table element");
+
+            if (funcIndex >= init->funcSigs.length())
+                return Fail(d, "table element out of range");
+
+            (*oldElems)[i] = funcIndex;
+        }
+
+        MOZ_ASSERT(init->tables.empty());
+        if (!init->tables.append(table))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize))
+        return Fail(d, "table section byte size mismatch");
 
     return true;
 }
@@ -1099,17 +1122,75 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeElemSection(Decoder& d, Uint32Vector&& elemFuncIndices, ModuleGenerator& mg)
+DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGenerator& mg)
 {
-    // More fun here in the next patch:
+    if (!newFormat) {
+        if (mg.tables().empty()) {
+            MOZ_ASSERT(oldElems.empty());
+            return true;
+        }
 
-    if (mg.tables().empty()) {
-        MOZ_ASSERT(elemFuncIndices.empty());
-        return true;
+        return mg.addElemSegment(ElemSegment(0, 0, Move(oldElems)));
     }
 
-    if (!mg.addElemSegment(ElemSegment(0, Move(elemFuncIndices))))
-        return false;
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(ElemSectionId, &sectionStart, &sectionSize))
+        return Fail(d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numSegments;
+    if (!d.readVarU32(&numSegments))
+        return Fail(d, "failed to read number of elem segments");
+
+    if (numSegments > MaxElemSegments)
+        return Fail(d, "too many elem segments");
+
+    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+        ElemSegment seg;
+        if (!d.readVarU32(&seg.tableIndex))
+            return Fail(d, "expected table index");
+
+        if (seg.tableIndex >= mg.tables().length())
+            return Fail(d, "table index out of range");
+
+        Expr expr;
+        if (!d.readExpr(&expr))
+            return Fail(d, "failed to read initializer expression");
+
+        if (expr != Expr::I32Const)
+            return Fail(d, "expected i32.const initializer expression");
+
+        if (!d.readVarU32(&seg.offset))
+            return Fail(d, "expected elem segment destination offset");
+
+        if (seg.offset < prevEnd)
+            return Fail(d, "elem segments must be disjoint and ordered");
+
+        uint32_t numElems;
+        if (!d.readVarU32(&numElems))
+            return Fail(d, "expected segment size");
+
+        uint32_t tableLength = mg.tables()[seg.tableIndex].length;
+        if (seg.offset > tableLength || tableLength - seg.offset < numElems)
+            return Fail(d, "element segment does not fit");
+
+        if (!seg.elems.resize(numElems))
+            return false;
+
+        for (uint32_t i = 0; i < numElems; i++) {
+            if (!d.readVarU32(&seg.elems[i]))
+                return Fail(d, "failed to read element function index");
+        }
+
+        prevEnd = seg.offset + seg.elems.length();
+
+        if (!mg.addElemSegment(Move(seg)))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize))
+        return Fail(d, "data section byte size mismatch");
 
     return true;
 }
@@ -1295,8 +1376,8 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
     if (!DecodeFunctionSection(d, init.get()))
         return nullptr;
 
-    Uint32Vector elemFuncIndices;
-    if (!DecodeTableSection(d, init.get(), &elemFuncIndices))
+    Uint32Vector oldElems;
+    if (!DecodeTableSection(d, newFormat, init.get(), &oldElems))
         return nullptr;
 
     bool memoryExported = false;
@@ -1313,7 +1394,7 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
     if (!DecodeCodeSection(d, mg))
         return nullptr;
 
-    if (!DecodeElemSection(d, Move(elemFuncIndices), mg))
+    if (!DecodeElemSection(d, newFormat, Move(oldElems), mg))
         return nullptr;
 
     if (!DecodeDataSection(d, newFormat, mg))

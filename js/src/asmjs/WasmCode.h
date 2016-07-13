@@ -50,6 +50,7 @@ class CodeSegment
     // These are pointers into code for stubs used for asynchronous
     // signal-handler control-flow transfer.
     uint8_t* interruptCode_;
+    uint8_t* badIndirectCallCode_;
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
@@ -79,6 +80,7 @@ class CodeSegment
     uint32_t totalLength() const { return codeLength_ + globalDataLength_; }
 
     uint8_t* interruptCode() const { return interruptCode_; }
+    uint8_t* badIndirectCallCode() const { return badIndirectCallCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
     uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
 

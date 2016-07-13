@@ -1397,19 +1397,19 @@ PrintTypeSection(WasmPrintContext& c, const AstModule::SigVector& sigs)
 }
 
 static bool
-PrintTableSection(WasmPrintContext& c, AstTable* maybeTable, const AstModule::FuncVector& funcs)
+PrintTableSection(WasmPrintContext& c, const AstModule& module)
 {
-    if (!maybeTable)
+    if (module.elemSegments().empty())
         return true;
 
-    uint32_t numTableElems = maybeTable->elems().length();
+    const AstElemSegment& segment = *module.elemSegments()[0];
 
     if (!c.buffer.append("table ["))
         return false;
 
-    for (uint32_t i = 0; i < numTableElems; i++) {
-        AstRef& elem = maybeTable->elems()[i];
-        AstFunc* func = funcs[elem.index()];
+    for (uint32_t i = 0; i < segment.elems().length(); i++) {
+        const AstRef& elem = segment.elems()[i];
+        AstFunc* func = module.funcs()[elem.index()];
         if (func->name().empty()) {
             if (!PrintInt32(c, elem.index()))
                 return false;
@@ -1417,7 +1417,7 @@ PrintTableSection(WasmPrintContext& c, AstTable* maybeTable, const AstModule::Fu
           if (!PrintName(c, func->name()))
               return false;
         }
-        if (i + 1 == numTableElems)
+        if (i + 1 == segment.elems().length())
             break;
         if (!c.buffer.append(", "))
             return false;
@@ -1679,7 +1679,7 @@ PrintModule(WasmPrintContext& c, AstModule& module)
     if (!PrintImportSection(c, module.imports(), module.sigs()))
         return false;
 
-    if (!PrintTableSection(c, module.maybeTable(), module.funcs()))
+    if (!PrintTableSection(c, module))
         return false;
 
     if (!PrintExportSection(c, module.exports(), module.funcs()))

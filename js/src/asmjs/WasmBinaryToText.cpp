@@ -1078,12 +1078,12 @@ RenderTypeSection(WasmRenderContext& c, const AstModule::SigVector& sigs)
 }
 
 static bool
-RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::FuncVector& funcs)
+RenderTableSection(WasmRenderContext& c, const AstModule& module)
 {
-    if (!maybeTable)
+    if (module.elemSegments().empty())
         return true;
 
-    uint32_t numTableElems = maybeTable->elems().length();
+    const AstElemSegment& segment = *module.elemSegments()[0];
 
     if (!RenderIndent(c))
         return false;
@@ -1091,11 +1091,10 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
     if (!c.buffer.append("(table"))
         return false;
 
-    for (uint32_t i = 0; i < numTableElems; i++) {
+    for (const AstRef& elem : segment.elems()) {
         if (!c.buffer.append(" "))
             return false;
-        AstRef& elem = maybeTable->elems()[i];
-        AstFunc* func = funcs[elem.index()];
+        AstFunc* func = module.funcs()[elem.index()];
         if (func->name().empty()) {
             if (!RenderInt32(c, elem.index()))
                 return false;
@@ -1353,7 +1352,7 @@ RenderModule(WasmRenderContext& c, AstModule& module)
     if (!RenderImportSection(c, module.imports(), module.sigs()))
         return false;
 
-    if (!RenderTableSection(c, module.maybeTable(), module.funcs()))
+    if (!RenderTableSection(c, module))
         return false;
 
     if (!RenderExportSection(c, module.exports(), module.funcs()))

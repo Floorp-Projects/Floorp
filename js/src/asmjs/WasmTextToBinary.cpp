@@ -78,6 +78,7 @@ class WasmToken
         Const,
         ConversionOpcode,
         Data,
+        Elem,
         Else,
         EndOfFile,
         Equal,
@@ -102,6 +103,7 @@ class WasmToken
         Offset,
         OpenParen,
         Param,
+        Resizable,
         Result,
         Return,
         Segment,
@@ -758,6 +760,8 @@ WasmTokenStream::next()
         break;
 
       case 'e':
+        if (consume(MOZ_UTF16("elem")))
+            return WasmToken(WasmToken::Elem, begin, cur_);
         if (consume(MOZ_UTF16("else")))
             return WasmToken(WasmToken::Else, begin, cur_);
         if (consume(MOZ_UTF16("export")))
@@ -1301,6 +1305,8 @@ WasmTokenStream::next()
         break;
 
       case 'r':
+        if (consume(MOZ_UTF16("resizable")))
+            return WasmToken(WasmToken::Resizable, begin, cur_);
         if (consume(MOZ_UTF16("result")))
             return WasmToken(WasmToken::Result, begin, cur_);
         if (consume(MOZ_UTF16("return")))
@@ -2472,10 +2478,49 @@ ParseExport(WasmParseContext& c)
 
 }
 
-static AstTable*
-ParseTable(WasmParseContext& c)
+static bool
+ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
 {
-    AstTableElemVector elems(c.lifo);
+    if (c.ts.getIf(WasmToken::OpenParen)) {
+        if (!c.ts.match(WasmToken::Resizable, c.error))
+            return false;
+        AstResizable table;
+        if (!ParseResizable(c, &table))
+            return false;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return false;
+        if (!module->setTable(table)) {
+            c.ts.generateError(token, c.error);
+            return false;
+        }
+        return true;
+    }
+
+    AstRefVector elems(c.lifo);
+
+    AstRef elem;
+    while (c.ts.getIfRef(&elem)) {
+        if (!elems.append(elem))
+            return false;
+    }
+
+    if (!module->setTable(AstResizable(elems.length(), Some<uint32_t>(elems.length())))) {
+        c.ts.generateError(token, c.error);
+        return false;
+    }
+
+    AstElemSegment* segment = new(c.lifo) AstElemSegment(0, Move(elems));
+    return segment && module->append(segment);
+}
+
+static AstElemSegment*
+ParseElemSegment(WasmParseContext& c)
+{
+    WasmToken offset;
+    if (!c.ts.match(WasmToken::Index, &offset, c.error))
+        return nullptr;
+
+    AstRefVector elems(c.lifo);
 
     AstRef elem;
     while (c.ts.getIfRef(&elem)) {
@@ -2483,7 +2528,7 @@ ParseTable(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstTable(Move(elems));
+    return new(c.lifo) AstElemSegment(offset.index(), Move(elems));
 }
 
 static AstModule*
@@ -2534,13 +2579,14 @@ ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* 
             break;
           }
           case WasmToken::Table: {
-            AstTable* table = ParseTable(c);
-            if (!table)
+            if (!ParseTable(c, section, module))
                 return nullptr;
-            if (!module->initTable(table)) {
-                c.ts.generateError(section, c.error);
+            break;
+          }
+          case WasmToken::Elem: {
+            AstElemSegment* segment = ParseElemSegment(c);
+            if (!segment || !module->append(segment))
                 return nullptr;
-            }
             break;
           }
           case WasmToken::Func: {
@@ -2987,8 +3033,8 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             return r.fail("duplicate function");
     }
 
-    if (module->maybeTable()) {
-        for (AstRef& ref : module->maybeTable()->elems()) {
+    for (AstElemSegment* seg : module->elemSegments()) {
+        for (AstRef& ref : seg->elems()) {
             if (!r.resolveFunction(ref))
                 return false;
         }
@@ -3619,21 +3665,33 @@ EncodeExportSection(Encoder& e, bool newFormat, AstModule& module)
 }
 
 static bool
-EncodeTableSection(Encoder& e, AstModule& module)
+EncodeTableSection(Encoder& e, bool newFormat, AstModule& module)
 {
-    if (!module.maybeTable())
+    if (!module.hasTable())
         return true;
 
     size_t offset;
     if (!e.startSection(TableSectionId, &offset))
         return false;
 
-    if (!e.writeVarU32(module.maybeTable()->elems().length()))
-        return false;
+    const AstResizable& table = module.table();
 
-    for (AstRef& ref : module.maybeTable()->elems()) {
-        if (!e.writeVarU32(ref.index()))
+    if (newFormat) {
+        if (!EncodeResizable(e, table))
             return false;
+    } else {
+        if (module.elemSegments().length() != 1)
+            return false;
+
+        const AstElemSegment& seg = *module.elemSegments()[0];
+
+        if (!e.writeVarU32(seg.elems().length()))
+            return false;
+
+        for (const AstRef& ref : seg.elems()) {
+            if (!e.writeVarU32(ref.index()))
+                return false;
+        }
     }
 
     e.finishSection(offset);
@@ -3743,6 +3801,50 @@ EncodeDataSection(Encoder& e, bool newFormat, AstModule& module)
 }
 
 static bool
+EncodeElemSegment(Encoder& e, AstElemSegment& segment)
+{
+    if (!e.writeVarU32(0)) // table index
+        return false;
+
+    if (!e.writeExpr(Expr::I32Const))
+        return false;
+    if (!e.writeVarU32(segment.offset()))
+        return false;
+
+    if (!e.writeVarU32(segment.elems().length()))
+        return false;
+
+    for (const AstRef& elem : segment.elems()) {
+        if (!e.writeVarU32(elem.index()))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+EncodeElemSection(Encoder& e, bool newFormat, AstModule& module)
+{
+    if (!newFormat || module.elemSegments().empty())
+        return true;
+
+    size_t offset;
+    if (!e.startSection(ElemSectionId, &offset))
+        return false;
+
+    if (!e.writeVarU32(module.elemSegments().length()))
+        return false;
+
+    for (AstElemSegment* segment : module.elemSegments()) {
+        if (!EncodeElemSegment(e, *segment))
+            return false;
+    }
+
+    e.finishSection(offset);
+    return true;
+}
+
+static bool
 EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
 {
     Encoder e(*bytes);
@@ -3762,7 +3864,7 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
     if (!EncodeFunctionSection(e, module))
         return false;
 
-    if (!EncodeTableSection(e, module))
+    if (!EncodeTableSection(e, newFormat, module))
         return false;
 
     if (!EncodeMemorySection(e, newFormat, module))
@@ -3775,6 +3877,9 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
         return false;
 
     if (!EncodeDataSection(e, newFormat, module))
+        return false;
+
+    if (!EncodeElemSection(e, newFormat, module))
         return false;
 
     return true;
