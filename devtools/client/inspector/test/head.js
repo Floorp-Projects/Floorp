@@ -297,7 +297,7 @@ function openComputedView() {
       toolbox: data.toolbox,
       inspector: data.inspector,
       testActor: data.testActor,
-      view: data.inspector.computedview.view
+      view: data.inspector.computedview.computedView
     };
   });
 }
@@ -323,7 +323,7 @@ function selectRuleView(inspector) {
  */
 function selectComputedView(inspector) {
   inspector.sidebar.select("computedview");
-  return inspector.computedview.view;
+  return inspector.computedview.computedView;
 }
 
 /**
