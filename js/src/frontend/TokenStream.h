@@ -258,8 +258,7 @@ struct Token
 struct CompileError {
     JSErrorReport report;
     char* message;
-    ErrorArgumentsType argumentsType;
-    CompileError() : message(nullptr), argumentsType(ArgumentsAreUnicode) {}
+    CompileError() : message(nullptr) {}
     ~CompileError();
     void throwError(JSContext* cx);
 
