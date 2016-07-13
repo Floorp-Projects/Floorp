@@ -45,6 +45,7 @@ SEARCH_PATHS = [
     'python/futures',
     'python/jsmin',
     'python/psutil',
+    'python/pylru',
     'python/which',
     'python/pystache',
     'python/pyyaml/lib',
