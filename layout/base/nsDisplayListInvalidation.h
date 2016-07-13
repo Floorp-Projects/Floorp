@@ -242,7 +242,6 @@ public:
 };
 
 class nsDisplaySVGEffectsGeometry : public nsDisplayItemGeometry
-  , public nsImageGeometryMixin<nsDisplaySVGEffectsGeometry>
 {
 public:
   nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder);
