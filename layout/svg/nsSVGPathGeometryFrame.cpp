@@ -31,7 +31,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::image;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -112,10 +111,7 @@ nsDisplaySVGPathGeometry::Paint(nsDisplayListBuilder* aBuilder,
 
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
-  DrawResult result =
-    static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(), tm);
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(), tm);
 }
 
 //----------------------------------------------------------------------
@@ -246,19 +242,19 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-DrawResult
+nsresult
 nsSVGPathGeometryFrame::PaintSVG(gfxContext& aContext,
                                  const gfxMatrix& aTransform,
                                  const nsIntRect* aDirtyRect)
 {
   if (!StyleVisibility()->IsVisible())
-    return DrawResult::SUCCESS;
+    return NS_OK;
 
   // Matrix to the geometry's user space:
   gfxMatrix newMatrix =
     aContext.CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
   if (newMatrix.IsSingular()) {
-    return DrawResult::BAD_ARGS;
+    return NS_OK;
   }
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
@@ -284,7 +280,7 @@ nsSVGPathGeometryFrame::PaintSVG(gfxContext& aContext,
     }
   }
 
-  return DrawResult::SUCCESS;
+  return NS_OK;
 }
 
 nsIFrame*
