@@ -4,6 +4,7 @@ load(libdir + 'asserts.js');
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Memory = WebAssembly.Memory;
+const Table = WebAssembly.Table;
 
 const mem1Page = new Memory({initial:1});
 const mem2Page = new Memory({initial:2});
