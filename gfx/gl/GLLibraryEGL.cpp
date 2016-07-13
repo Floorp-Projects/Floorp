@@ -211,7 +211,7 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
     }
 
     ScopedTexture destTex(mReadbackGL);
-    const GLuint target = LOCAL_GL_TEXTURE_EXTERNAL;
+    const GLuint target = mReadbackGL->GetPreferredEGLImageTextureTarget();
     ScopedBindTexture autoTex(mReadbackGL, destTex.Texture(), target);
     mReadbackGL->fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
     mReadbackGL->fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);

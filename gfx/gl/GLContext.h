@@ -3343,6 +3343,11 @@ public:
 
     virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
 
+    virtual GLenum GetPreferredEGLImageTextureTarget() const {
+        return IsExtensionSupported(OES_EGL_image_external) ?
+            LOCAL_GL_TEXTURE_EXTERNAL : LOCAL_GL_TEXTURE_2D;
+    }
+
     virtual bool RenewSurface(nsIWidget* aWidget) { return false; }
 
     // Shared code for GL extensions and GLX extensions.
