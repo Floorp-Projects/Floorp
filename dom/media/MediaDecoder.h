@@ -493,7 +493,7 @@ private:
   void UpdateReadyState()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (!mShuttingDown) {
+    if (!IsShutdown()) {
       mOwner->UpdateReadyState();
     }
   }
@@ -527,6 +527,8 @@ protected:
 
   // Return true if the decoder has reached the end of playback
   bool IsEnded() const;
+
+  bool IsShutdown() const;
 
   // Called by the state machine to notify the decoder that the duration
   // has changed.

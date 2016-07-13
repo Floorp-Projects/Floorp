@@ -138,7 +138,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG(LogLevel::Debug, ("%s current time %f", __PRETTY_FUNCTION__, mLogicalPosition));
 
-  if (mShuttingDown) {
+  if (IsShutdown()) {
     return;
   }
 
