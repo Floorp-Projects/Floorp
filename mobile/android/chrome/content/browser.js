@@ -133,7 +133,7 @@ var lazilyLoadedBrowserScripts = [
   ["CastingApps", "chrome://browser/content/CastingApps.js"],
   ["RemoteDebugger", "chrome://browser/content/RemoteDebugger.js"],
 ];
-if (AppConstants.NIGHTLY_BUILD) {
+if (!AppConstants.RELEASE_BUILD) {
   lazilyLoadedBrowserScripts.push(
     ["WebcompatReporter", "chrome://browser/content/WebcompatReporter.js"]);
 }
@@ -531,7 +531,7 @@ var BrowserApp = {
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
       InitLater(() => Messaging.sendRequest({ type: "Gecko:DelayedStartup" }));
 
-      if (AppConstants.NIGHTLY_BUILD) {
+      if (!AppConstants.RELEASE_BUILD) {
         InitLater(() => WebcompatReporter.init());
       }
 
