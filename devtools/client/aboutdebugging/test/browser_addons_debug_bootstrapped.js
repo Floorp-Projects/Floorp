@@ -2,6 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+// Avoid test timeouts that can occur while waiting for the "addon-console-works" message.
+requestLongerTimeout(2);
+
 const ADDON_ID = "test-devtools@mozilla.org";
 const ADDON_NAME = "test-devtools";
 
