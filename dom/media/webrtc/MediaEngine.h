@@ -8,6 +8,7 @@
 #include "mozilla/RefPtr.h"
 #include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
+#include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 
@@ -173,8 +174,16 @@ protected:
 
 /**
  * Common abstract base class for audio and video sources.
+ *
+ * By default, the base class implements Allocate and Deallocate using its
+ * UpdateSingleSource pattern, which manages allocation handles and calculates
+ * net constraints from competing allocations and updates a single shared device.
+ *
+ * Classes that don't operate as a single shared device can override Allocate
+ * and Deallocate and simply not pass the methods up.
  */
-class MediaEngineSource : public nsISupports
+class MediaEngineSource : public nsISupports,
+                          protected MediaConstraintsHelper
 {
 public:
   // code inside webrtc.org assumes these sizes; don't use anything smaller
@@ -182,9 +191,17 @@ public:
   static const unsigned int kMaxDeviceNameLength = 128;
   static const unsigned int kMaxUniqueIdLength = 256;
 
-  virtual ~MediaEngineSource() {}
+  virtual ~MediaEngineSource()
+  {
+    if (!mInShutdown) {
+      Shutdown();
+    }
+  }
 
-  virtual void Shutdown() = 0;
+  virtual void Shutdown()
+  {
+    mInShutdown = true;
+  };
 
   /* Populate the human readable name of this device in the nsAString */
   virtual void GetName(nsAString&) const = 0;
@@ -215,7 +232,30 @@ public:
   };
 
   /* Release the device back to the system. */
-  virtual nsresult Deallocate(AllocationHandle* aHandle) = 0;
+  virtual nsresult Deallocate(AllocationHandle* aHandle)
+  {
+    MOZ_ASSERT(aHandle);
+    RefPtr<AllocationHandle> handle = aHandle;
+
+    class Comparator {
+    public:
+      static bool Equals(const RefPtr<AllocationHandle>& a,
+                         const RefPtr<AllocationHandle>& b) {
+        return a.get() == b.get();
+      }
+    };
+    MOZ_ASSERT(mRegisteredHandles.Contains(handle, Comparator()));
+    mRegisteredHandles.RemoveElementAt(mRegisteredHandles.IndexOf(handle, 0,
+                                                                  Comparator()));
+    if (mRegisteredHandles.Length() && !mInShutdown) {
+      // Whenever constraints are removed, other parties may get closer to ideal.
+      auto& first = mRegisteredHandles[0];
+      const char* badConstraint = nullptr;
+      return ReevaluateAllocation(nullptr, nullptr, first->mPrefs,
+                                  first->mDeviceId, &badConstraint);
+    }
+    return NS_OK;
+  }
 
   /* Start the device and add the track to the provided SourceMediaStream, with
    * the provided TrackID. You may start appending data to the track
@@ -274,7 +314,20 @@ public:
                             const nsString& aDeviceId,
                             const nsACString& aOrigin,
                             AllocationHandle** aOutHandle,
-                            const char** aOutBadConstraint) = 0;
+                            const char** aOutBadConstraint)
+  {
+    MOZ_ASSERT(aOutHandle);
+    RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin,
+                                                           aPrefs, aDeviceId);
+    nsresult rv = ReevaluateAllocation(handle, nullptr, aPrefs, aDeviceId,
+                                       aOutBadConstraint);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mRegisteredHandles.AppendElement(handle);
+    handle.forget(aOutHandle);
+    return NS_OK;
+  }
 
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -293,7 +346,80 @@ protected:
 #ifdef DEBUG
     , mOwningThread(PR_GetCurrentThread())
 #endif
+    , mInShutdown(false)
   {}
+
+  /* UpdateSingleSource - Centralized abstract function to implement in those
+   * cases where a single device is being shared between users. Should apply net
+   * constraints and restart the device as needed.
+   *
+   * aHandle           - New or existing handle, or null to update after removal.
+   * aNetConstraints   - Net constraints to be applied to the single device.
+   * aPrefs            - As passed in (in case of changes in about:config).
+   * aDeviceId         - As passed in (origin dependent).
+   * aOutBadConstraint - Result: nonzero if failed to apply. Name of culprit.
+   */
+
+  virtual nsresult
+  UpdateSingleSource(const AllocationHandle* aHandle,
+                     const NormalizedConstraints& aNetConstraints,
+                     const MediaEnginePrefs& aPrefs,
+                     const nsString& aDeviceId,
+                     const char** aOutBadConstraint) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  };
+
+  /* ReevaluateAllocation - Call to change constraints for an allocation of
+   * a single device. Manages allocation handles, calculates net constraints
+   * from all competing allocations, and calls UpdateSingleSource with the net
+   * result, to restart the single device as needed.
+   *
+   * aHandle            - New or existing handle, or null to update after removal.
+   * aConstraintsUpdate - Constraints to be applied to existing handle, or null.
+   * aPrefs             - As passed in (in case of changes from about:config).
+   * aDeviceId          - As passed in (origin-dependent id).
+   * aOutBadConstraint  - Result: nonzero if failed to apply. Name of culprit.
+   */
+
+  nsresult
+  ReevaluateAllocation(AllocationHandle* aHandle,
+                       NormalizedConstraints* aConstraintsUpdate,
+                       const MediaEnginePrefs& aPrefs,
+                       const nsString& aDeviceId,
+                       const char** aOutBadConstraint)
+  {
+    // aHandle and/or aConstraintsUpdate may be nullptr (see below)
+
+    AutoTArray<const NormalizedConstraints*, 10> allConstraints;
+    for (auto& registered : mRegisteredHandles) {
+      if (aConstraintsUpdate && registered.get() == aHandle) {
+        continue; // Don't count old constraints
+      }
+      allConstraints.AppendElement(&registered->mConstraints);
+    }
+    if (aConstraintsUpdate) {
+      allConstraints.AppendElement(aConstraintsUpdate);
+    } else if (aHandle) {
+      // In the case of AddShareOfSingleSource, the handle isn't registered yet.
+      allConstraints.AppendElement(&aHandle->mConstraints);
+    }
+
+    NormalizedConstraints netConstraints(allConstraints);
+    if (netConstraints.mBadConstraint) {
+      *aOutBadConstraint = netConstraints.mBadConstraint;
+      return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = UpdateSingleSource(aHandle, netConstraints, aPrefs, aDeviceId,
+                                     aOutBadConstraint);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (aHandle && aConstraintsUpdate) {
+      aHandle->mConstraints = *aConstraintsUpdate;
+    }
+    return NS_OK;
+  }
 
   void AssertIsOnOwningThread()
   {
@@ -304,6 +430,9 @@ protected:
 #ifdef DEBUG
   PRThread* mOwningThread;
 #endif
+  nsTArray<RefPtr<AllocationHandle>> mRegisteredHandles;
+  bool mInShutdown;
+
   // Main-thread only:
   dom::MediaTrackSettings mSettings;
 };
