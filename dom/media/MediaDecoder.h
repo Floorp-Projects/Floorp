@@ -684,12 +684,6 @@ protected:
   // while seeking.
   bool mPinnedForSeek;
 
-  // True if the decoder is being shutdown. At this point all events that
-  // are currently queued need to return immediately to prevent javascript
-  // being run that operates on the element and decoder during shutdown.
-  // Read/Write from the main thread only.
-  bool mShuttingDown;
-
   // True if the playback is paused because the playback rate member is 0.0.
   bool mPausedForPlaybackRateNull;
 
