@@ -176,6 +176,9 @@ public:
   Send(JSContext* aCx, const ArrayBufferView& aBody, ErrorResult& aRv) override;
 
   virtual void
+  Send(JSContext* aCx, URLSearchParams& aBody, ErrorResult& aRv) override;
+
+  virtual void
   Send(JSContext* aCx, nsIDocument& aDoc, ErrorResult& aRv) override
   {
     MOZ_CRASH("This method cannot be called on workers.");

@@ -2025,9 +2025,9 @@ class BaseCompiler
         // CodeGeneratorX64::visitAsmJSLoadFuncPtr()
         {
             ScratchI32 scratch(*this);
-            CodeOffset label = masm.leaRipRelative(scratch);
-            masm.loadPtr(Operand(scratch, ptrReg, TimesEight, 0), ptrReg);
+            CodeOffset label = masm.loadRipRelativeInt64(scratch);
             masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+            masm.loadPtr(Operand(scratch, ptrReg, TimesEight, 0), ptrReg);
         }
 #elif defined(JS_CODEGEN_X86)
         // CodeGeneratorX86::visitAsmJSLoadFuncPtr()
@@ -4886,10 +4886,12 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
         return false;
 
     Stk& callee = peek(numArgs);
-    const TableGenDesc& table = isCompilingAsmJS()
-                                ? mg_.asmJSSigToTable[sigIndex]
-                                : mg_.wasmTable;
-    funcPtrCall(sig, sigIndex, table.numElems, table.globalDataOffset, callee, baselineCall);
+
+    const TableDesc& table = isCompilingAsmJS()
+                             ? mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]]
+                             : mg_.tables[0];
+
+    funcPtrCall(sig, sigIndex, table.length, table.globalDataOffset, callee, baselineCall);
 
     endCall(baselineCall);
 

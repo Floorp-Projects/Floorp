@@ -75,7 +75,7 @@
                           accesskey="&emailPageCmd.accesskey;"
                           command="Browser:SendLink"/>
                 <menuseparator/>
-#if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
+#if !defined(MOZ_WIDGET_GTK)
                 <menuitem id="menu_printSetup"
                           label="&printSetupCmd.label;"
                           accesskey="&printSetupCmd.accesskey;"

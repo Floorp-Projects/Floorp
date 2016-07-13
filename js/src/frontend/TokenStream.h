@@ -258,8 +258,7 @@ struct Token
 struct CompileError {
     JSErrorReport report;
     char* message;
-    ErrorArgumentsType argumentsType;
-    CompileError() : message(nullptr), argumentsType(ArgumentsAreUnicode) {}
+    CompileError() : message(nullptr) {}
     ~CompileError();
     void throwError(JSContext* cx);
 
@@ -1038,10 +1037,6 @@ class MOZ_STACK_CLASS TokenStream
     bool                mutedErrors;
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
 };
-
-// Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
-// message have const char16_t* type, not const char*.
-#define JSREPORT_UC 0x100
 
 extern const char*
 TokenKindToDesc(TokenKind tt);

@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/mobile_base.yml'
   variables:
-    build_name: 'android'
+    build_name: 'android-api-15'
     build_type: 'debug'
 task:
   metadata:
@@ -11,8 +11,8 @@ task:
   workerType: android-api-15
 
   routes:
-    - 'index.buildbot.branches.{{project}}.android-api-15-dbg'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15-dbg'
+    - 'index.buildbot.branches.{{project}}.android-api-15-debug'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15-debug'
 
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-15-dbg-workspace'

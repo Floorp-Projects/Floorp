@@ -808,8 +808,14 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
     contentLengthStr.AppendInt(aContentLength);
     SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr,
                      false);
-    SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType,
-                     false);
+    if (!aContentType.IsVoid()) {
+      if (aContentType.IsEmpty()) {
+        SetEmptyRequestHeader(NS_LITERAL_CSTRING("Content-Type"));
+      } else {
+        SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType,
+                         false);
+      }
+    }
   }
 
   mUploadStreamHasHeaders = aStreamHasHeaders;

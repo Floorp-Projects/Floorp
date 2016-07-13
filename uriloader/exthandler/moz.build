@@ -92,14 +92,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'android/nsExternalURLHandlerService.cpp',
         'android/nsMIMEInfoAndroid.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    SOURCES += [
-        'unix/nsMIMEInfoQt.cpp',
-    ]
-    UNIFIED_SOURCES += [
-        'unix/nsGNOMERegistry.cpp',
-        'unix/nsMIMEInfoUnix.cpp',
-    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
         'win/nsMIMEInfoWin.cpp',
@@ -142,6 +134,6 @@ if CONFIG['MOZ_ENABLE_DBUS']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
     CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     CXXFLAGS += CONFIG['TK_CFLAGS']
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

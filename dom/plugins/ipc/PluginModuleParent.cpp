@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_WIDGET_QT
-#include "PluginHelperQt.h"
-#endif
-
 #include "mozilla/plugins/PluginModuleParent.h"
 
 #include "base/process_util.h"
@@ -2859,18 +2855,7 @@ PluginModuleParent::ContentsScaleFactorChanged(NPP instance, double aContentsSca
 }
 #endif // #if defined(XP_MACOSX)
 
-#if defined(MOZ_WIDGET_QT)
-bool
-PluginModuleParent::AnswerProcessSomeEvents()
-{
-    PLUGIN_LOG_DEBUG(("Spinning mini nested loop ..."));
-    PluginHelperQt::AnswerProcessSomeEvents();
-    PLUGIN_LOG_DEBUG(("... quitting mini nested loop"));
-
-    return true;
-}
-
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 bool
 PluginModuleParent::AnswerProcessSomeEvents()
 {

@@ -659,9 +659,7 @@ TextAttrsMgr::FontWeightTextAttr::
   // font->GetStyle()->weight will give the absolute weight requested of the
   // font face. The gfxPangoFontGroup code uses the gfxFontEntry constructor
   // which doesn't initialize the weight field.
-#if defined(MOZ_WIDGET_QT)
-  useFontEntryWeight = false;
-#elif defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK)
   useFontEntryWeight = gfxPlatformGtk::UseFcFontList();
 #endif
 

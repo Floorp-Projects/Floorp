@@ -492,8 +492,8 @@ protected:
   bool SetCaretInTableCell(nsIDOMElement* aElement);
 
   NS_IMETHOD TabInTable(bool inIsShift, bool* outHandled);
-  Element* CreateBR(nsINode* aNode, int32_t aOffset,
-                    EDirection aSelect = eNone);
+  already_AddRefed<Element> CreateBR(nsINode* aNode, int32_t aOffset,
+                                     EDirection aSelect = eNone);
   NS_IMETHOD CreateBR(
                nsIDOMNode* aNode, int32_t aOffset,
                nsCOMPtr<nsIDOMNode>* outBRNode,

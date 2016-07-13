@@ -1234,7 +1234,7 @@ ExtendableMessageEvent::Constructor(mozilla::dom::EventTarget* aEventTarget,
       event->mClient = aOptions.mSource.Value().Value().GetAsClient();
     } else if (aOptions.mSource.Value().Value().IsServiceWorker()){
       event->mServiceWorker = aOptions.mSource.Value().Value().GetAsServiceWorker();
-    } else if (aOptions.mSource.Value().Value().IsServiceWorker()){
+    } else if (aOptions.mSource.Value().Value().IsMessagePort()){
       event->mMessagePort = aOptions.mSource.Value().Value().GetAsMessagePort();
     }
     MOZ_ASSERT(event->mClient || event->mServiceWorker || event->mMessagePort);

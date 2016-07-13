@@ -43,6 +43,13 @@ class Task(object):
                 all(isinstance(x, basestring) for x in self.attributes.itervalues())):
             raise TypeError("attribute names and values must be strings")
 
+    def __eq__(self, other):
+        return self.kind == other.kind and \
+               self.label == other.label and \
+               self.attributes == other.attributes and \
+               self.task == other.task and \
+               self.task_id == other.task_id
+
     @classmethod
     @abc.abstractmethod
     def load_tasks(cls, kind, path, config, parameters, loaded_tasks):

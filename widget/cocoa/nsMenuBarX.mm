@@ -9,7 +9,6 @@
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
 #include "nsChildView.h"
