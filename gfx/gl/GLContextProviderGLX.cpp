@@ -7,8 +7,6 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #define GET_NATIVE_WINDOW(aWidget) GDK_WINDOW_XID((GdkWindow*) aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#elif defined(MOZ_WIDGET_QT)
-#define GET_NATIVE_WINDOW(aWidget) (Window)(aWidget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW))
 #endif
 
 #include <X11/Xlib.h>
@@ -1117,7 +1115,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated
     // performance might be suboptimal.  But using the existing visual
     // is a relatively safe intermediate step.
 
-    Display* display = (Display*)aWidget->GetNativeData(NS_NATIVE_DISPLAY);
+    Display* display = (Display*)aWidget->GetNativeData(NS_NATIVE_COMPOSITOR_DISPLAY);
     if (!display) {
         NS_ERROR("X Display required for GLX Context provider");
         return nullptr;

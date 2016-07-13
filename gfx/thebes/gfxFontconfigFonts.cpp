@@ -12,9 +12,6 @@
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
 #endif
-#ifdef MOZ_WIDGET_QT
-#include "gfxQtPlatform.h"
-#endif
 #include "gfxFontconfigFonts.h"
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"

@@ -3686,6 +3686,8 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
      */
     if (is<TypedArrayObject>() && !as<TypedArrayObject>().hasBuffer()) {
         size_t nbytes = as<TypedArrayObject>().byteLength();
+        if (nbytes >= TypedArrayObject::INLINE_BUFFER_LIMIT)
+            return GetGCObjectKind(getClass());
         return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
     }
 

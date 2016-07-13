@@ -22,7 +22,7 @@ function test_policy(test) {
   } else {
     var header = chan.getRequestHeader("Referer");
     do_check_eq(header, test.expectedReferrerSpec);
-    do_check_eq(chan.referrer.spec, test.expectedReferrerSpec);
+    do_check_eq(chan.referrer.asciiSpec, test.expectedReferrerSpec);
   }
 }
 
@@ -33,6 +33,12 @@ var gTests = [
     url: "https://test.example/foo",
     referrer: "https://test.example/referrer",
     expectedReferrerSpec: "https://test.example/referrer"
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+    url: "https://sub1.\xe4lt.example/foo",
+    referrer: "https://sub1.\xe4lt.example/referrer",
+    expectedReferrerSpec: "https://sub1.xn--lt-uia.example/referrer"
   },
   {
     policy: nsIHttpChannel.REFERRER_POLICY_DEFAULT,
@@ -53,6 +59,12 @@ var gTests = [
     expectedReferrerSpec: "https://test.example/"
   },
   {
+    policy: nsIHttpChannel.REFERRER_POLICY_ORIGIN,
+    url: "https://sub1.\xe4lt.example/foo",
+    referrer: "https://sub1.\xe4lt.example/referrer",
+    expectedReferrerSpec: "https://sub1.xn--lt-uia.example/"
+  },
+  {
     policy: nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
     url: "https://test.example/foo",
     referrer: "https://test.example/referrer",
@@ -60,9 +72,21 @@ var gTests = [
   },
   {
     policy: nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+    url: "https://sub1.\xe4lt.example/foo",
+    referrer: "https://sub1.\xe4lt.example/referrer",
+    expectedReferrerSpec: "https://sub1.xn--lt-uia.example/referrer"
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
     url: "http://test.example/foo",
     referrer: "https://test.example/referrer",
     expectedReferrerSpec: "https://test.example/referrer"
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+    url: "http://sub1.\xe4lt.example/foo",
+    referrer: "https://sub1.\xe4lt.example/referrer",
+    expectedReferrerSpec: "https://sub1.xn--lt-uia.example/referrer"
   },
 ];
 

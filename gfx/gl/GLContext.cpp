@@ -807,6 +807,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         "Adreno (TM) 205",
         "Adreno (TM) 320",
         "Adreno (TM) 420",
+        "Mali-400 MP",
         "PowerVR SGX 530",
         "PowerVR SGX 540",
         "NVIDIA Tegra",
@@ -1762,6 +1763,13 @@ GLContext::InitExtensions()
         {
             // Bug 980048
             MarkExtensionUnsupported(OES_EGL_sync);
+        }
+
+        if (Vendor() == GLVendor::ARM &&
+            Renderer() == GLRenderer::Mali400MP)
+        {
+            // Bug 1264505
+            MarkExtensionUnsupported(OES_EGL_image_external);
         }
 
         if (Renderer() == GLRenderer::AndroidEmulator) {

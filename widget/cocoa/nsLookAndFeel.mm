@@ -411,7 +411,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = [NSColor currentControlTint] == NSGraphiteControlTint;
       break;
     case eIntID_MacLionTheme:
-      aResult = nsCocoaFeatures::OnLionOrLater();
+      aResult = 1;
       break;
     case eIntID_MacYosemiteTheme:
       aResult = nsCocoaFeatures::OnYosemiteOrLater();

@@ -2511,6 +2511,14 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     Unused << SendSetAudioSessionData(id, sessionName, iconPath);
   }
 #endif
+
+  RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+  MOZ_ASSERT(swr);
+
+  nsTArray<ServiceWorkerRegistrationData> registrations;
+  swr->GetRegistrations(registrations);
+
+  Unused << SendInitServiceWorkers(ServiceWorkerConfiguration(registrations));
 }
 
 bool
@@ -5483,18 +5491,6 @@ ContentParent::PermissionManagerRelease(const ContentParentId& aCpId,
     return true;
   }
   return false;
-}
-
-bool
-ContentParent::RecvGetServiceWorkerConfiguration(ServiceWorkerConfiguration* aConfig)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
-  MOZ_ASSERT(swr);
-
-  swr->GetRegistrations(aConfig->serviceWorkerRegistrations());
-  return true;
 }
 
 bool

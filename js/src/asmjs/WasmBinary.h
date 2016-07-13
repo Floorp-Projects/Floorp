@@ -33,7 +33,9 @@ static const char FunctionSectionId[]    = "function";
 static const char TableSectionId[]       = "table";
 static const char MemorySectionId[]      = "memory";
 static const char ExportSectionId[]      = "export";
+static const char StartSectionId[]       = "start";
 static const char CodeSectionId[]        = "code";
+static const char ElemSectionId[]        = "elem";
 static const char DataSectionId[]        = "data";
 static const char NameSectionId[]        = "name";
 
@@ -70,7 +72,7 @@ enum class DefinitionKind
     Memory                               = 0x01
 };
 
-enum class MemoryFlags
+enum class ResizableFlags
 {
     Default                              = 0x1,
     HasMaximum                           = 0x2,

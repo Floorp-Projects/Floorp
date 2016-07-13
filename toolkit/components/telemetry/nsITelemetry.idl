@@ -33,9 +33,11 @@ interface nsITelemetry : nsISupports
    * Scalar types:
    * SCALAR_COUNT - for storing a numeric value
    * SCALAR_STRING - for storing a string value
+   * SCALAR_BOOLEAN - for storing a boolean value
    */
   const unsigned long SCALAR_COUNT = 0;
   const unsigned long SCALAR_STRING = 1;
+  const unsigned long SCALAR_BOOLEAN = 2;
 
   /**
    * Dataset types:

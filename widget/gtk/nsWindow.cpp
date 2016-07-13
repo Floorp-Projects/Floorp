@@ -1768,6 +1768,10 @@ nsWindow::GetNativeData(uint32_t aDataType)
         }
         return mIMContext.get();
     }
+#ifdef MOZ_X11
+    case NS_NATIVE_COMPOSITOR_DISPLAY:
+        return gfxPlatformGtk::GetPlatform()->GetCompositorDisplay();
+#endif // MOZ_X11
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nullptr;

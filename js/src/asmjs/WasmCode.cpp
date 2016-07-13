@@ -211,6 +211,7 @@ CodeSegment::create(JSContext* cx,
     cs->interruptCode_ = cs->code() + linkData.interruptOffset;
     cs->outOfBoundsCode_ = cs->code() + linkData.outOfBoundsOffset;
     cs->unalignedAccessCode_ = cs->code() + linkData.unalignedAccessOffset;
+    cs->badIndirectCallCode_ = cs->code() + linkData.badIndirectCallOffset;
 
     {
         JitContext jcx(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread()));
@@ -449,6 +450,7 @@ Metadata::serializedSize() const
     return sizeof(pod()) +
            SerializedVectorSize(funcImports) +
            SerializedVectorSize(exports) +
+           SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(boundsChecks) +
            SerializedPodVectorSize(codeRanges) +
@@ -465,6 +467,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, exports);
+    cursor = SerializePodVector(cursor, tables);
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, boundsChecks);
     cursor = SerializePodVector(cursor, codeRanges);
@@ -482,6 +485,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &exports)) &&
+    (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
     (cursor = DeserializePodVector(cursor, &codeRanges)) &&
@@ -498,6 +502,7 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
            SizeOfVectorExcludingThis(exports, mallocSizeOf) +
+           tables.sizeOfExcludingThis(mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            boundsChecks.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +

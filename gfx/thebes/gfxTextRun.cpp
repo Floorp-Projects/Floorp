@@ -1610,8 +1610,6 @@ gfxFontGroup::BuildFontList()
 #if defined(MOZ_WIDGET_GTK)
     // xxx - eliminate this once gfxPangoFontGroup is no longer needed
     enumerateFonts = gfxPlatformGtk::UseFcFontList();
-#elif defined(MOZ_WIDGET_QT)
-    enumerateFonts = false;
 #endif
     if (!enumerateFonts) {
         return;

@@ -629,6 +629,8 @@ ModuleEnvironmentObject*
 ModuleObject::environment() const
 {
     Value value = getReservedSlot(EnvironmentSlot);
+    MOZ_ASSERT(!value.isNull());
+
     if (value.isUndefined())
         return nullptr;
 
