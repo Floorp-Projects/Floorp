@@ -1143,9 +1143,6 @@ private:
   virtual bool RecvUpdateDropEffect(const uint32_t& aDragAction,
                                     const uint32_t& aDropEffect) override;
 
-  virtual bool
-  RecvGetServiceWorkerConfiguration(ServiceWorkerConfiguration* aConfig) override;
-
   virtual bool RecvGamepadListenerAdded() override;
 
   virtual bool RecvGamepadListenerRemoved() override;
