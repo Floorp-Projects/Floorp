@@ -163,33 +163,38 @@ var code = textToBinary('(module (table) (export "tbl" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "tbl");
 assertEq(e.tbl instanceof Table, true);
+assertEq(e.tbl.length, 0);
 
-var code = textToBinary('(module (table (resizable 1)) (export "t1" table) (export "t2" table))');
+var code = textToBinary('(module (table (resizable 2)) (export "t1" table) (export "t2" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t1,t2");
 assertEq(e.t1 instanceof Table, true);
 assertEq(e.t2 instanceof Table, true);
 assertEq(e.t1, e.t2);
+assertEq(e.t1.length, 2);
 
-var code = textToBinary('(module (table) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" 0))');
+var code = textToBinary('(module (table (resizable 2)) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" 0))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t,m,f");
 assertEq(e.f(), undefined);
 assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
+assertEq(e.t.length, 2);
 
-var code = textToBinary('(module (table) (memory 1 1) (func) (export "m" memory) (export "f" 0) (export "t" table))');
+var code = textToBinary('(module (table (resizable 1)) (memory 1 1) (func) (export "m" memory) (export "f" 0) (export "t" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "m,f,t");
 assertEq(e.f(), undefined);
 assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
++assertEq(e.t.length, 1);
 
 var code = textToBinary('(module (table) (export "" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
 assertEq(e[""] instanceof Table, true);
++assertEq(e[""].length, 0);
 
 // Re-exports:
 
