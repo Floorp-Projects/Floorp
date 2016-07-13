@@ -54,7 +54,6 @@ tasks:
         # Bug 1269443: cache scopes, etc. must be listed explicitly
         - "docker-worker:cache:level-{{level}}-*"
         - "docker-worker:cache:tooltool-cache"
-        - "secrets:get:project/taskcluster/gecko/hgfingerprint"
         # mozilla-taskcluster will append the appropriate assume:repo:<repo>
         # scope here.
 

@@ -280,7 +280,8 @@ TooltipsOverlay.prototype = {
 
     // Image, fonts, ... preview tooltip
     this.previewTooltip = new HTMLTooltip(this.view.inspector.toolbox, {
-      type: "arrow"
+      type: "arrow",
+      useXulWrapper: true
     });
     this.previewTooltip.startTogglingOnHover(this.view.element,
       this._onPreviewTooltipTargetHover.bind(this));

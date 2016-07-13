@@ -10,7 +10,8 @@ from shared_telemetry_utils import add_expiration_postfix
 # nsITelemetry::SCALAR_* type constants.
 SCALAR_TYPES_MAP = {
     'uint': 'nsITelemetry::SCALAR_COUNT',
-    'string': 'nsITelemetry::SCALAR_STRING'
+    'string': 'nsITelemetry::SCALAR_STRING',
+    'boolean': 'nsITelemetry::SCALAR_BOOLEAN'
 }
 
 class ScalarType:

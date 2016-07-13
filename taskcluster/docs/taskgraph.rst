@@ -188,6 +188,10 @@ Each task has the following properties:
 ``task``
    The task's TaskCluster task definition.
 
+``kind_implementation``
+   The module and the class name which was used to implement this particular task.
+   It is always of the form ``<module-path>:<object-path>``
+
 The task definition may contain "relative datestamps" of the form
 ``{"relative-datestamp": "certain number of seconds/hours/days/years"}``.
 These will be replaced in the last step, while creating tasks.

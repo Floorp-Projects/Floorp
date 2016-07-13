@@ -4,6 +4,7 @@
 
 const UINT_SCALAR = "telemetry.test.unsigned_int_kind";
 const STRING_SCALAR = "telemetry.test.string_kind";
+const BOOLEAN_SCALAR = "telemetry.test.boolean_kind";
 
 add_task(function* test_serializationFormat() {
   Telemetry.clearScalars();
@@ -13,6 +14,7 @@ add_task(function* test_serializationFormat() {
   const expectedString = "some value";
   Telemetry.scalarSet(UINT_SCALAR, expectedUint);
   Telemetry.scalarSet(STRING_SCALAR, expectedString);
+  Telemetry.scalarSet(BOOLEAN_SCALAR, true);
 
   // Get a snapshot of the scalars.
   const scalars =
@@ -29,6 +31,10 @@ add_task(function* test_serializationFormat() {
                STRING_SCALAR + " must be serialized to the correct format.");
   Assert.equal(scalars[STRING_SCALAR], expectedString,
                STRING_SCALAR + " must have the correct value.");
+  Assert.equal(typeof(scalars[BOOLEAN_SCALAR]), "boolean",
+               BOOLEAN_SCALAR + " must be serialized to the correct format.");
+  Assert.equal(scalars[BOOLEAN_SCALAR], true,
+               BOOLEAN_SCALAR + " must have the correct value.");
 });
 
 add_task(function* test_nonexistingScalar() {
@@ -178,6 +184,52 @@ add_task(function* test_stringScalar() {
   checkExpectedString(LONG_STRING.substr(0, 50));
 });
 
+add_task(function* test_booleanScalar() {
+  let checkExpectedBool = (expectedBoolean) => {
+    const scalars =
+      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    Assert.equal(scalars[BOOLEAN_SCALAR], expectedBoolean,
+                 BOOLEAN_SCALAR + " must contain the expected boolean value.");
+  };
+
+  Telemetry.clearScalars();
+
+  // Set a test boolean value.
+  let expected = false;
+  Telemetry.scalarSet(BOOLEAN_SCALAR, expected);
+  checkExpectedBool(expected);
+  expected = true;
+  Telemetry.scalarSet(BOOLEAN_SCALAR, expected);
+  checkExpectedBool(expected);
+
+  // Check that setting a numeric value implicitly converts to boolean.
+  Telemetry.scalarSet(BOOLEAN_SCALAR, 1);
+  checkExpectedBool(true);
+  Telemetry.scalarSet(BOOLEAN_SCALAR, 0);
+  checkExpectedBool(false);
+  Telemetry.scalarSet(BOOLEAN_SCALAR, 1.0);
+  checkExpectedBool(true);
+  Telemetry.scalarSet(BOOLEAN_SCALAR, 0.0);
+  checkExpectedBool(false);
+
+  // Check that unsupported operations for booleans throw.
+  Assert.throws(() => Telemetry.scalarAdd(BOOLEAN_SCALAR, 1),
+                /NS_ERROR_NOT_AVAILABLE/,
+                "Using an unsupported operation must throw.");
+  Assert.throws(() => Telemetry.scalarAdd(BOOLEAN_SCALAR, "string value"),
+                /NS_ERROR_NOT_AVAILABLE/,
+                "Using an unsupported operation must throw.");
+  Assert.throws(() => Telemetry.scalarSetMaximum(BOOLEAN_SCALAR, 1),
+                /NS_ERROR_NOT_AVAILABLE/,
+                "Using an unsupported operation must throw.");
+  Assert.throws(() => Telemetry.scalarSetMaximum(BOOLEAN_SCALAR, "string value"),
+                /NS_ERROR_NOT_AVAILABLE/,
+                "Using an unsupported operation must throw.");
+  Assert.throws(() => Telemetry.scalarSet(BOOLEAN_SCALAR, "true"),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "The boolean scalar must throw if we're not setting a boolean.");
+});
+
 add_task(function* test_scalarRecording() {
   const OPTIN_SCALAR = "telemetry.test.release_optin";
   const OPTOUT_SCALAR = "telemetry.test.release_optout";
@@ -226,6 +278,7 @@ add_task(function* test_subsession() {
   // Set the scalars to a known value.
   Telemetry.scalarSet(UINT_SCALAR, 3785);
   Telemetry.scalarSet(STRING_SCALAR, "some value");
+  Telemetry.scalarSet(BOOLEAN_SCALAR, false);
 
   // Get a snapshot and reset the subsession. The value we set must be there.
   let scalars =
@@ -234,6 +287,8 @@ add_task(function* test_subsession() {
                UINT_SCALAR + " must contain the expected value.");
   Assert.equal(scalars[STRING_SCALAR], "some value",
                STRING_SCALAR + " must contain the expected value.");
+  Assert.equal(scalars[BOOLEAN_SCALAR], false,
+               BOOLEAN_SCALAR + " must contain the expected value.");
 
   // Get a new snapshot and reset the subsession again. Since no new value
   // was set, the scalars should not be reported.
@@ -241,4 +296,5 @@ add_task(function* test_subsession() {
     Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
   Assert.ok(!(UINT_SCALAR in scalars), UINT_SCALAR + " must be empty and not reported.");
   Assert.ok(!(STRING_SCALAR in scalars), STRING_SCALAR + " must be empty and not reported.");
+  Assert.ok(!(BOOLEAN_SCALAR in scalars), BOOLEAN_SCALAR + " must be empty and not reported.");
 });
