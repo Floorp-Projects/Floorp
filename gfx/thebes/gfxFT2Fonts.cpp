@@ -6,10 +6,6 @@
 #if defined(MOZ_WIDGET_GTK)
 #include "gfxPlatformGtk.h"
 #define gfxToolkitPlatform gfxPlatformGtk
-#elif defined(MOZ_WIDGET_QT)
-#include <qfontinfo.h>
-#include "gfxQtPlatform.h"
-#define gfxToolkitPlatform gfxQtPlatform
 #elif defined(XP_WIN)
 #include "gfxWindowsPlatform.h"
 #define gfxToolkitPlatform gfxWindowsPlatform

@@ -1209,9 +1209,6 @@ RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const
       case MNewObject::ObjectCreate:
         resultObject = ObjectCreateWithTemplate(cx, templateObject.as<PlainObject>());
         break;
-      case MNewObject::TypedArray:
-        resultObject = TypedArrayCreateWithTemplate(cx, templateObject.as<TypedArrayObject>());
-        break;
     }
 
     if (!resultObject)

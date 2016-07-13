@@ -42,11 +42,33 @@
     // Always require parenthesis for new calls
     "new-parens": 2,
 
+    // Disallow use of alert(), confirm(), and prompt().
+    "no-alert": 2,
+
     // Use [] instead of Array()
     "no-array-constructor": 2,
 
+    // Disallow use of arguments.caller or arguments.callee.
+    "no-caller": 2,
+
+    // Disallow modifying variables of class declarations.
+    "no-class-assign": 2,
+
+    // Disallow assignment in conditional expressions, except if the assignment
+    // is within parentheses.
+    "no-cond-assign": [2, "except-parens"],
+
+    // Disallow use of the console API.
+    "no-console": 2,
+
+    // Disallow modifying variables that are declared using const.
+    "no-const-assign": 2,
+
     // Disallow use of debugger
     "no-debugger": 2,
+
+    // Disallow deletion of variables (deleting properties is fine though).
+    "no-delete-var": 2,
 
     // No duplicate arguments in function declarations
     "no-dupe-args": 2,
@@ -56,6 +78,9 @@
 
     // No duplicate cases in switch statements
     "no-duplicate-case": 2,
+
+    // Disallow use of eval().
+    "no-eval": 2,
 
     // No labels
     "no-labels": 2,
@@ -122,6 +147,12 @@
     // No redeclaring variables
     "no-redeclare": 2,
 
+    // Disallow use of assignment in return statement.
+    "no-return-assign": [2, "always"],
+
+    // Disallow self assignment such as |foo = foo|.
+    "no-self-assign": 2,
+
     // No unnecessary comparisons
     "no-self-compare": 2,
 
@@ -130,6 +161,9 @@
 
     // No spaces between function name and parentheses
     "no-spaced-func": 2,
+
+    // Disallow sparse arrays, eg. let arr = [,,2].
+    "no-sparse-arrays": 2,
 
     // Disallow throwing literals (eg. |throw "error"| instead of
     // |throw new Error("error")|)

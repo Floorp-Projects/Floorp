@@ -57,7 +57,7 @@ class gfxTextContextPaint;
 // we use a platform-dependent value to harmonize with the platform's own APIs.
 #ifdef XP_WIN
 #define OBLIQUE_SKEW_FACTOR  0.3
-#elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+#elif defined(MOZ_WIDGET_GTK)
 #define OBLIQUE_SKEW_FACTOR  0.2
 #else
 #define OBLIQUE_SKEW_FACTOR  0.25

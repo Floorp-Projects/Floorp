@@ -90,17 +90,10 @@ PresentationConnection::Init()
     return false;
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  GetLoadGroup(getter_AddRefs(loadGroup));
-  if(NS_WARN_IF(!loadGroup)) {
-    return false;
-  }
-
-  rv = loadGroup->AddRequest(this, nullptr);
+  rv = AddIntoLoadGroup();
   if(NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-  mWeakLoadGroup = do_GetWeakReference(loadGroup);
 
   return true;
 }
@@ -117,11 +110,8 @@ PresentationConnection::Shutdown()
   nsresult rv = service->UnregisterSessionListener(mId, mRole);
   NS_WARN_IF(NS_FAILED(rv));
 
-  nsCOMPtr<nsILoadGroup> loadGroup = do_QueryReferent(mWeakLoadGroup);
-  if (loadGroup) {
-    loadGroup->RemoveRequest(this, nullptr, NS_OK);
-    mWeakLoadGroup = nullptr;
-  }
+  rv = RemoveFromLoadGroup();
+  NS_WARN_IF(NS_FAILED(rv));
 }
 
 /* virtual */ void
@@ -176,20 +166,31 @@ PresentationConnection::Send(const nsAString& aData,
 void
 PresentationConnection::Close(ErrorResult& aRv)
 {
-  // It only works when the state is CONNECTED.
-  if (NS_WARN_IF(mState != PresentationConnectionState::Connected)) {
+  // It only works when the state is CONNECTED or CONNECTING.
+  if (NS_WARN_IF(mState != PresentationConnectionState::Connected &&
+                 mState != PresentationConnectionState::Connecting)) {
     return;
   }
 
-  // TODO Bug 1210340 - Support close semantics.
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if(NS_WARN_IF(!service)) {
+    aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  NS_WARN_IF(NS_FAILED(
+    service->CloseSession(mId,
+                          mRole,
+                          nsIPresentationService::CLOSED_REASON_CLOSED)));
 }
 
 void
 PresentationConnection::Terminate(ErrorResult& aRv)
 {
-  // It only works when the state is CONNECTED.
-  if (NS_WARN_IF(mState != PresentationConnectionState::Connected)) {
+  // It only works when the state is CONNECTED or CONNECTING.
+  if (NS_WARN_IF(mState != PresentationConnectionState::Connected &&
+                 mState != PresentationConnectionState::Connecting)) {
     return;
   }
 
@@ -276,7 +277,9 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
         CopyUTF8toUTF16(message, errorMsg);
       }
 
-      return DispatchConnectionClosedEvent(reason, errorMsg);
+      NS_WARN_IF(NS_FAILED(DispatchConnectionClosedEvent(reason, errorMsg)));
+
+      return RemoveFromLoadGroup();
     }
     case PresentationConnectionState::Terminated: {
       nsCOMPtr<nsIPresentationService> service =
@@ -292,7 +295,9 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
 
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this, NS_LITERAL_STRING("terminate"), false);
-      return asyncDispatcher->PostDOMEvent();
+      NS_WARN_IF(NS_FAILED(asyncDispatcher->PostDOMEvent()));
+
+      return RemoveFromLoadGroup();
     }
     default:
       MOZ_CRASH("Unknown presentation session state.");
@@ -473,5 +478,44 @@ PresentationConnection::GetLoadFlags(nsLoadFlags* aLoadFlags)
 NS_IMETHODIMP
 PresentationConnection::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
+  return NS_OK;
+}
+
+nsresult
+PresentationConnection::AddIntoLoadGroup()
+{
+  // Avoid adding to loadgroup multiple times
+  if (mWeakLoadGroup) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  nsresult rv = GetLoadGroup(getter_AddRefs(loadGroup));
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = loadGroup->AddRequest(this, nullptr);
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mWeakLoadGroup = do_GetWeakReference(loadGroup);
+  return NS_OK;
+}
+
+nsresult
+PresentationConnection::RemoveFromLoadGroup()
+{
+  if (!mWeakLoadGroup) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup = do_QueryReferent(mWeakLoadGroup);
+  if (loadGroup) {
+    mWeakLoadGroup = nullptr;
+    return loadGroup->RemoveRequest(this, nullptr, NS_OK);
+  }
+
   return NS_OK;
 }
