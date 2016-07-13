@@ -97,7 +97,7 @@ function* runTests(options) {
 
     let title = details.title || options.manifest.name;
 
-    is(button.getAttribute("image"), details.icon, "icon URL is correct");
+    is(getListStyleImage(button), details.icon, "icon URL is correct");
     is(button.getAttribute("tooltiptext"), title, "image title is correct");
     is(button.getAttribute("label"), title, "image label is correct");
     is(button.getAttribute("badge"), details.badge, "badge text is correct");
@@ -163,6 +163,11 @@ add_task(function* testTabSwitchContext() {
           "description": "Title",
         },
       },
+
+      "default.png": imageBuffer,
+      "default-2.png": imageBuffer,
+      "1.png": imageBuffer,
+      "2.png": imageBuffer,
     },
 
     getTests(tabs, expectDefaults) {
@@ -320,6 +325,10 @@ add_task(function* testDefaultTitle() {
       },
 
       "permissions": ["tabs"],
+    },
+
+    files: {
+      "icon.png": imageBuffer,
     },
 
     getTests(tabs, expectDefaults) {
