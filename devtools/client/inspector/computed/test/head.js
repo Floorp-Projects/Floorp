@@ -132,7 +132,7 @@ function getComputedViewPropertyValue(view, name, propertyName) {
  */
 function expandComputedViewPropertyByIndex(view, index) {
   info("Expanding property " + index + " in the computed view");
-  let expandos = view.styleDocument.querySelectorAll(".expandable");
+  let expandos = view.styleDocument.querySelectorAll("#propertyContainer .expandable");
   if (!expandos.length || !expandos[index]) {
     return promise.reject();
   }
