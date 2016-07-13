@@ -1276,7 +1276,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   // Check the type attribute to determine language and version.
   // If type exists, it trumps the deprecated 'language='
   nsAutoString type;
-  aElement->GetScriptType(type);
+  bool hasType = aElement->GetScriptType(type);
+
   nsScriptKind scriptKind = nsScriptKind::Classic;
   if (!type.IsEmpty()) {
     // Support type="module" only for chrome documents.
@@ -1285,7 +1286,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     } else {
       NS_ENSURE_TRUE(ParseTypeAttribute(type, &version), false);
     }
-  } else {
+  } else if (!hasType) {
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
     // HTML script elements.
