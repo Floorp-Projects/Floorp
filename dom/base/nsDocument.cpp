@@ -12283,7 +12283,7 @@ DispatchPointerLockChange(nsIDocument* aTarget)
 }
 
 static void
-DispatchPointerLockError(nsIDocument* aTarget)
+DispatchPointerLockError(nsIDocument* aTarget, const char* aMessage)
 {
   if (!aTarget) {
     return;
@@ -12295,6 +12295,10 @@ DispatchPointerLockError(nsIDocument* aTarget)
                              true,
                              false);
   asyncDispatcher->PostDOMEvent();
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("DOM"), aTarget,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aMessage);
 }
 
 class PointerLockRequest final : public Runnable
@@ -12314,63 +12318,57 @@ private:
   bool mUserInputOrChromeCaller;
 };
 
-static bool
-ShouldLockPointer(Element* aElement, Element* aCurrentLock,
-                  bool aNoFocusCheck = false)
+static const char*
+GetPointerLockError(Element* aElement, Element* aCurrentLock,
+                    bool aNoFocusCheck = false)
 {
   // Check if pointer lock pref is enabled
   if (!Preferences::GetBool("full-screen-api.pointer-lock.enabled")) {
-    NS_WARNING("ShouldLockPointer(): Pointer Lock pref not enabled");
-    return false;
+    return "PointerLockDeniedDisabled";
   }
 
   nsCOMPtr<nsIDocument> ownerDoc = aElement->OwnerDoc();
   if (aCurrentLock && aCurrentLock->OwnerDoc() != ownerDoc) {
-    NS_WARNING("ShouldLockPointer(): Existing pointer lock element in a different document");
-    return false;
+    return "PointerLockDeniedInUse";
   }
 
   if (!aElement->IsInUncomposedDoc()) {
-    NS_WARNING("ShouldLockPointer(): Element without Document");
-    return false;
+    return "PointerLockDeniedNotInDocument";
   }
 
   if (ownerDoc->GetSandboxFlags() & SANDBOXED_POINTER_LOCK) {
-    NS_WARNING("ShouldLockPointer(): Document is sandboxed and doesn't allow pointer-lock");
-    return false;
+    return "PointerLockDeniedSandboxed";
   }
 
   // Check if the element is in a document with a docshell.
   if (!ownerDoc->GetContainer()) {
-    return false;
+    return "PointerLockDeniedHidden";
   }
   nsCOMPtr<nsPIDOMWindowOuter> ownerWindow = ownerDoc->GetWindow();
   if (!ownerWindow) {
-    return false;
+    return "PointerLockDeniedHidden";
   }
   nsCOMPtr<nsPIDOMWindowInner> ownerInnerWindow = ownerDoc->GetInnerWindow();
   if (!ownerInnerWindow) {
-    return false;
+    return "PointerLockDeniedHidden";
   }
   if (ownerWindow->GetCurrentInnerWindow() != ownerInnerWindow) {
-    return false;
+    return "PointerLockDeniedHidden";
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> top = ownerWindow->GetScriptableTop();
   if (!top || !top->GetExtantDoc() || top->GetExtantDoc()->Hidden()) {
-    NS_WARNING("ShouldLockPointer(): Top document isn't visible.");
-    return false;
+    return "PointerLockDeniedHidden";
   }
 
   if (!aNoFocusCheck) {
     mozilla::ErrorResult rv;
     if (!top->GetExtantDoc()->HasFocus(rv)) {
-      NS_WARNING("ShouldLockPointer(): Top document isn't focused.");
-      return false;
+      return "PointerLockDeniedNotFocused";
     }
   }
 
-  return true;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -12379,33 +12377,32 @@ PointerLockRequest::Run()
   nsCOMPtr<Element> e = do_QueryReferent(mElement);
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
   nsDocument* d = static_cast<nsDocument*>(doc.get());
-  if (!e || !d || e->GetUncomposedDoc() != d) {
-    DispatchPointerLockError(d);
-    return NS_OK;
+  const char* error = nullptr;
+  if (!e || !d || !e->GetUncomposedDoc()) {
+    error = "PointerLockDeniedNotInDocument";
+  } else if (e->GetUncomposedDoc() != d) {
+    error = "PointerLockDeniedMovedDocument";
   }
-
-  nsCOMPtr<Element> pointerLockedElement =
-    do_QueryReferent(EventStateManager::sPointerLockedElement);
-  if (e == pointerLockedElement) {
-    DispatchPointerLockChange(d);
-    return NS_OK;
+  if (!error) {
+    nsCOMPtr<Element> pointerLockedElement =
+      do_QueryReferent(EventStateManager::sPointerLockedElement);
+    if (e == pointerLockedElement) {
+      DispatchPointerLockChange(d);
+      return NS_OK;
+    }
+    // Note, we must bypass focus change, so pass true as the last parameter!
+    error = GetPointerLockError(e, pointerLockedElement, true);
   }
-
-  // Note, we must bypass focus change, so pass true as the last parameter!
-  if (!ShouldLockPointer(e, pointerLockedElement, true)) {
-    DispatchPointerLockError(d);
-    return NS_OK;
-  }
-
   // If it is neither user input initiated, nor requested in fullscreen,
   // it should be rejected.
-  if (!mUserInputOrChromeCaller && !doc->GetFullscreenElement()) {
-    DispatchPointerLockError(d);
-    return NS_OK;
+  if (!error && !mUserInputOrChromeCaller && !doc->GetFullscreenElement()) {
+    error = "PointerLockDeniedNotInputDriven";
   }
-
-  if (!d->SetPointerLock(e, NS_STYLE_CURSOR_NONE)) {
-    DispatchPointerLockError(d);
+  if (!error && !d->SetPointerLock(e, NS_STYLE_CURSOR_NONE)) {
+    error = "PointerLockDeniedFailedToLock";
+  }
+  if (error) {
+    DispatchPointerLockError(d, error);
     return NS_OK;
   }
 
@@ -12437,8 +12434,8 @@ nsDocument::RequestPointerLock(Element* aElement)
     return;
   }
 
-  if (!ShouldLockPointer(aElement, pointerLockedElement)) {
-    DispatchPointerLockError(this);
+  if (const char* msg = GetPointerLockError(aElement, pointerLockedElement)) {
+    DispatchPointerLockError(this, msg);
     return;
   }
 
