@@ -211,6 +211,7 @@ CodeSegment::create(JSContext* cx,
     cs->interruptCode_ = cs->code() + linkData.interruptOffset;
     cs->outOfBoundsCode_ = cs->code() + linkData.outOfBoundsOffset;
     cs->unalignedAccessCode_ = cs->code() + linkData.unalignedAccessOffset;
+    cs->badIndirectCallCode_ = cs->code() + linkData.badIndirectCallOffset;
 
     {
         JitContext jcx(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread()));
