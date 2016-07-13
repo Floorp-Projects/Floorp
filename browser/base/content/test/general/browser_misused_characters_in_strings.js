@@ -100,10 +100,6 @@ let gWhitelist = [{
     file: "netErrorApp.dtd",
     key: "securityOverride.warningContent",
     type: "single-quote"
-  }, {
-    file: "sync.properties",
-    key: "client.name2",
-    type: "apostrophe"
   }
 ];
 
