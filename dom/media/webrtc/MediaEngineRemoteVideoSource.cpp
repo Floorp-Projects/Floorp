@@ -108,7 +108,7 @@ MediaEngineRemoteVideoSource::Allocate(
     const MediaEnginePrefs& aPrefs,
     const nsString& aDeviceId,
     const nsACString& aOrigin,
-    BaseAllocationHandle** aOutHandle,
+    AllocationHandle** aOutHandle,
     const char** aOutBadConstraint)
 {
   LOG((__PRETTY_FUNCTION__));
@@ -143,12 +143,12 @@ MediaEngineRemoteVideoSource::Allocate(
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineRemoteVideoSource::Deallocate(AllocationHandle* aHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
   MOZ_ASSERT(aHandle);
-  RefPtr<AllocationHandle> handle = static_cast<AllocationHandle*>(aHandle);
+  RefPtr<AllocationHandle> handle = aHandle;
 
   class Comparator {
   public:
@@ -267,7 +267,7 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
+MediaEngineRemoteVideoSource::Restart(AllocationHandle* aHandle,
                                       const dom::MediaTrackConstraints& aConstraints,
                                       const MediaEnginePrefs& aPrefs,
                                       const nsString& aDeviceId,
@@ -280,8 +280,7 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
   }
   MOZ_ASSERT(aHandle);
   NormalizedConstraints constraints(aConstraints);
-  return UpdateExisting(static_cast<AllocationHandle*>(aHandle), &constraints,
-                        aPrefs, aDeviceId, aOutBadConstraint);
+  return UpdateExisting(aHandle, &constraints, aPrefs, aDeviceId, aOutBadConstraint);
 }
 
 nsresult

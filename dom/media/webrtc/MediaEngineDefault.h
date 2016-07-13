@@ -48,12 +48,12 @@ public:
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,
@@ -123,12 +123,12 @@ public:
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
+                    AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
+  nsresult Restart(AllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId,

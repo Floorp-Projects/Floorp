@@ -84,7 +84,7 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
                                         const nsACString& aOrigin,
-                                        BaseAllocationHandle** aOutHandle,
+                                        AllocationHandle** aOutHandle,
                                         const char** aOutBadConstraint)
 {
   if (mState != kReleased) {
@@ -111,7 +111,7 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineDefaultVideoSource::Deallocate(AllocationHandle* aHandle)
 {
   MOZ_ASSERT(!aHandle);
   if (mState != kStopped && mState != kAllocated) {
@@ -207,7 +207,7 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 
 nsresult
 MediaEngineDefaultVideoSource::Restart(
-    BaseAllocationHandle* aHandle,
+    AllocationHandle* aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId,
@@ -398,7 +398,7 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
                                         const nsACString& aOrigin,
-                                        BaseAllocationHandle** aOutHandle,
+                                        AllocationHandle** aOutHandle,
                                         const char** aOutBadConstraint)
 {
   if (mState != kReleased) {
@@ -420,7 +420,7 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineDefaultAudioSource::Deallocate(AllocationHandle* aHandle)
 {
   MOZ_ASSERT(!aHandle);
   if (mState != kStopped && mState != kAllocated) {
@@ -496,7 +496,7 @@ MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Restart(BaseAllocationHandle* aHandle,
+MediaEngineDefaultAudioSource::Restart(AllocationHandle* aHandle,
                                        const dom::MediaTrackConstraints& aConstraints,
                                        const MediaEnginePrefs &aPrefs,
                                        const nsString& aDeviceId,

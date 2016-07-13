@@ -223,7 +223,7 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
                                             const MediaEnginePrefs &aPrefs,
                                             const nsString& aDeviceId,
                                             const nsACString& aOrigin,
-                                            BaseAllocationHandle** aOutHandle,
+                                            AllocationHandle** aOutHandle,
                                             const char** aOutBadConstraint)
 {
   AssertIsOnOwningThread();
@@ -265,7 +265,7 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Restart(BaseAllocationHandle* aHandle,
+MediaEngineWebRTCMicrophoneSource::Restart(AllocationHandle* aHandle,
                                            const dom::MediaTrackConstraints& aConstraints,
                                            const MediaEnginePrefs &aPrefs,
                                            const nsString& aDeviceId,
@@ -315,7 +315,7 @@ MediaEngineWebRTCMicrophoneSource::Restart(BaseAllocationHandle* aHandle,
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineWebRTCMicrophoneSource::Deallocate(AllocationHandle* aHandle)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aHandle);
@@ -847,7 +847,7 @@ MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
 
 nsresult
 MediaEngineWebRTCAudioCaptureSource::Restart(
-    BaseAllocationHandle* aHandle,
+    AllocationHandle* aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId,
