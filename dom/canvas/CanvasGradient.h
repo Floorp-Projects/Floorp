@@ -62,6 +62,8 @@ public:
   }
 
 protected:
+  friend struct CanvasBidiProcessor;
+
   CanvasGradient(CanvasRenderingContext2D* aContext, Type aType)
     : mContext(aContext)
     , mType(aType)
