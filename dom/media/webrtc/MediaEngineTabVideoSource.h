@@ -19,7 +19,6 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     NS_DECL_NSITIMERCALLBACK
     MediaEngineTabVideoSource();
 
-    void Shutdown() override {};
     void GetName(nsAString_internal&) const override;
     void GetUUID(nsACString_internal&) const override;
     nsresult Allocate(const dom::MediaTrackConstraints &,

@@ -39,8 +39,6 @@ class MediaEngineDefaultVideoSource : public nsITimerCallback,
 public:
   MediaEngineDefaultVideoSource();
 
-  void Shutdown() override {};
-
   void GetName(nsAString&) const override;
   void GetUUID(nsACString&) const override;
 
@@ -108,13 +106,10 @@ protected:
 class SineWaveGenerator;
 
 class MediaEngineDefaultAudioSource : public nsITimerCallback,
-                                      public MediaEngineAudioSource,
-                                      private MediaConstraintsHelper
+                                      public MediaEngineAudioSource
 {
 public:
   MediaEngineDefaultAudioSource();
-
-  void Shutdown() override {};
 
   void GetName(nsAString&) const override;
   void GetUUID(nsACString&) const override;
@@ -197,6 +192,7 @@ protected:
 
 class MediaEngineDefault : public MediaEngine
 {
+  typedef MediaEngine Super;
 public:
   explicit MediaEngineDefault() : mMutex("mozilla::MediaEngineDefault") {}
 
@@ -212,9 +208,7 @@ public:
   };
 
 private:
-  ~MediaEngineDefault() {
-    Shutdown();
-  }
+  ~MediaEngineDefault() {}
 
   Mutex mMutex;
   // protected with mMutex:

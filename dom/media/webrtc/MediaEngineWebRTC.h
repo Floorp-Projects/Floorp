@@ -91,10 +91,6 @@ public:
     MOZ_ASSERT(!aHandle);
     return NS_OK;
   }
-  void Shutdown() override
-  {
-    // Nothing to do here, everything is managed in MediaManager.cpp
-  }
   nsresult Start(SourceMediaStream* aMediaStream,
                  TrackID aId,
                  const PrincipalHandle& aPrincipalHandle) override;
@@ -139,7 +135,7 @@ public:
     const nsString& aDeviceId) const override;
 
 protected:
-  virtual ~MediaEngineWebRTCAudioCaptureSource() { Shutdown(); }
+  virtual ~MediaEngineWebRTCAudioCaptureSource() {}
   nsCString mUUID;
 };
 
@@ -419,9 +415,9 @@ private:
 };
 
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
-                                          public webrtc::VoEMediaProcess,
-                                          private MediaConstraintsHelper
+                                          public webrtc::VoEMediaProcess
 {
+  typedef MediaEngineAudioSource Super;
 public:
   MediaEngineWebRTCMicrophoneSource(nsIThread* aThread,
                                     webrtc::VoiceEngine* aVoiceEnginePtr,
@@ -515,9 +511,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
 protected:
-  ~MediaEngineWebRTCMicrophoneSource() {
-    Shutdown();
-  }
+  ~MediaEngineWebRTCMicrophoneSource() {}
 
 private:
   // These allocate/configure and release the channel
@@ -591,6 +585,7 @@ private:
 
 class MediaEngineWebRTC : public MediaEngine
 {
+  typedef MediaEngine Super;
 public:
   explicit MediaEngineWebRTC(MediaEnginePrefs& aPrefs);
 
@@ -607,7 +602,6 @@ public:
                              nsTArray<RefPtr<MediaEngineAudioSource>>*) override;
 private:
   ~MediaEngineWebRTC() {
-    Shutdown();
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
     AsyncLatencyLogger::Get()->Release();
 #endif

@@ -714,6 +714,7 @@ MediaEngineWebRTCMicrophoneSource::FreeChannel()
 void
 MediaEngineWebRTCMicrophoneSource::Shutdown()
 {
+  Super::Shutdown();
   if (mListener) {
     // breaks a cycle, since the WebRTCAudioDataListener has a RefPtr to us
     mListener->Shutdown();
