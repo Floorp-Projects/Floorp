@@ -96,7 +96,7 @@ protected:
   nsString mID;
   dom::MediaSourceEnum mMediaSource;
   RefPtr<MediaEngineSource> mSource;
-  RefPtr<MediaEngineSource::BaseAllocationHandle> mAllocationHandle;
+  RefPtr<MediaEngineSource::AllocationHandle> mAllocationHandle;
 public:
   dom::MediaSourceEnum GetMediaSource() {
     return mMediaSource;
