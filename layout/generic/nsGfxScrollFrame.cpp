@@ -1891,6 +1891,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mTransformingByAPZ(false)
   , mScrollableByAPZ(false)
   , mZoomableByAPZ(false)
+  , mScrollsClipOnUnscrolledOutOfFlow(false)
   , mVelocityQueue(aOuter->PresContext())
   , mAsyncScrollEvent(END_DOM)
 {
@@ -2116,6 +2117,12 @@ ScrollFrameHelper::HasPerspective() const
 {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   return disp->mChildPerspective.GetUnit() != eStyleUnit_None;
+}
+
+void
+ScrollFrameHelper::SetScrollsClipOnUnscrolledOutOfFlow()
+{
+  mScrollsClipOnUnscrolledOutOfFlow = true;
 }
 
 void
@@ -2755,11 +2762,11 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
       nsLayoutUtils::GetHighResolutionDisplayPort(content, &displayPort);
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
-    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d perspective %d\n",
+    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d perspective %d clip %d\n",
         Stringify(CSSPoint::FromAppUnits(GetScrollPosition())).c_str(),
         usingDisplayPort, displayPort.IsEqualEdges(oldDisplayPort),
-        mScrollableByAPZ, HasPluginFrames(), HasPerspective());
-    if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort) && !HasPerspective()) {
+        mScrollableByAPZ, HasPluginFrames(), HasPerspective(), mScrollsClipOnUnscrolledOutOfFlow);
+    if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort) && !HasPerspective() && !mScrollsClipOnUnscrolledOutOfFlow) {
       bool haveScrollLinkedEffects = content->GetComposedDoc()->HasScrollLinkedEffect();
       bool apzDisabled = haveScrollLinkedEffects && gfxPrefs::APZDisableForScrollLinkedEffects();
       if (!apzDisabled) {

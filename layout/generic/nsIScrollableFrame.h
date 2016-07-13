@@ -464,6 +464,8 @@ public:
    * Returns information required to determine where to snap to after a scroll.
    */
   virtual ScrollSnapInfo GetScrollSnapInfo() const = 0;
+
+  virtual void SetScrollsClipOnUnscrolledOutOfFlow() = 0;
 };
 
 #endif
