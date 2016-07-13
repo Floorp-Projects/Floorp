@@ -649,8 +649,6 @@ ModuleGenerator::funcImport(uint32_t funcImportIndex) const
 bool
 ModuleGenerator::declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex)
 {
-    MOZ_ASSERT(!exportMap_.hasStartFunction());
-
     if (!exportMap_.fieldNames.append(Move(fieldName)))
         return false;
 
@@ -687,23 +685,6 @@ ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 {
     return exportMap_.fieldNames.append(Move(fieldName)) &&
            exportMap_.fieldsToExports.append(MemoryExport);
-}
-
-bool
-ModuleGenerator::setStartFunction(uint32_t funcIndex)
-{
-    FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
-    if (p) {
-        exportMap_.setStartFunction(p->value());
-        return true;
-    }
-
-    Sig copy;
-    if (!copy.clone(funcSig(funcIndex)))
-        return false;
-
-    exportMap_.setStartFunction(metadata_->exports.length());
-    return metadata_->exports.emplaceBack(Move(copy), funcIndex);
 }
 
 bool
