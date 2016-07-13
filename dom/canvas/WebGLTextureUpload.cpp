@@ -1924,7 +1924,7 @@ WebGLTexture::ValidateCopyTexImageForFeedback(const char* funcName, uint32_t lev
         const auto& attach = fb->ColorAttachment(colorAttachment);
 
         if (attach.Texture() == this &&
-            attach.MipLevel() == uint32_t(level))
+            uint32_t(attach.MipLevel()) == level)
         {
             // Note that the TexImageTargets *don't* have to match for this to be
             // undefined per GLES 3.0.4 p211, thus an INVALID_OP in WebGL.
