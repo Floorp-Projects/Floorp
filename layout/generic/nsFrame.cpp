@@ -2599,7 +2599,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
 static nsDisplayItem*
 WrapInWrapList(nsDisplayListBuilder* aBuilder,
-               nsIFrame* aFrame, nsDisplayList* aList)
+               nsIFrame* aFrame, nsDisplayList* aList,
+               const DisplayItemScrollClip* aScrollClip)
 {
   nsDisplayItem* item = aList->GetBottom();
   if (!item) {
@@ -2617,7 +2618,7 @@ WrapInWrapList(nsDisplayListBuilder* aBuilder,
   }
 
   if (item->GetAbove() || itemFrame != aFrame) {
-    return new (aBuilder) nsDisplayWrapList(aBuilder, aFrame, aList);
+    return new (aBuilder) nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip);
   }
   aList->RemoveBottom();
   return item;
@@ -2908,17 +2909,20 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   }
 
   buildingForChild.RestoreBuildingInvisibleItemsValue();
-
+ 
   // Clear clip rect for the construction of the items below. Since we're
   // clipping all their contents, they themselves don't need to be clipped.
   clipState.Clear();
+
+  const DisplayItemScrollClip* containerItemScrollClip =
+    aBuilder->ClipState().CurrentAncestorScrollClipForStackingContextContents();
 
   if (isPositioned || isVisuallyAtomic ||
       (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     if (!list.IsEmpty()) {
-      nsDisplayItem* item = WrapInWrapList(aBuilder, child, &list);
+      nsDisplayItem* item = WrapInWrapList(aBuilder, child, &list, containerItemScrollClip);
       if (isSVG) {
         aLists.Content()->AppendNewToTop(item);
       } else {
@@ -2927,7 +2931,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     }
   } else if (!isSVG && disp->IsFloating(child)) {
     if (!list.IsEmpty()) {
-      aLists.Floats()->AppendNewToTop(WrapInWrapList(aBuilder, child, &list));
+      aLists.Floats()->AppendNewToTop(WrapInWrapList(aBuilder, child, &list, containerItemScrollClip));
     }
   } else {
     aLists.Content()->AppendToTop(&list);
