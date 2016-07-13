@@ -303,21 +303,7 @@ js::ReportAllocationOverflow(ExclusiveContext* cxArg)
 static bool
 checkReportFlags(JSContext* cx, unsigned* flags)
 {
-    if (JSREPORT_IS_STRICT_MODE_ERROR(*flags)) {
-        /*
-         * Error in strict code; warning with extra warnings option; okay
-         * otherwise.  We assume that if the top frame is a native, then it is
-         * strict if the nearest scripted frame is strict, see bug 536306.
-         */
-        jsbytecode* pc;
-        JSScript* script = cx->currentScript(&pc);
-        if (script && IsCheckStrictOp(JSOp(*pc)))
-            *flags &= ~JSREPORT_WARNING;
-        else if (cx->compartment()->behaviors().extraWarnings(cx))
-            *flags |= JSREPORT_WARNING;
-        else
-            return true;
-    } else if (JSREPORT_IS_STRICT(*flags)) {
+    if (JSREPORT_IS_STRICT(*flags)) {
         /* Warning/error only when JSOPTION_STRICT is set. */
         if (!cx->compartment()->behaviors().extraWarnings(cx))
             return true;

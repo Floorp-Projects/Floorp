@@ -5197,15 +5197,6 @@ class JSErrorReport
 #define JSREPORT_STRICT     0x4     /* error or warning due to strict option */
 
 /*
- * This condition is an error in strict mode code, a warning if
- * JS_HAS_STRICT_OPTION(cx), and otherwise should not be reported at
- * all.  We check the strictness of the context's top frame's script;
- * where that isn't appropriate, the caller should do the right checks
- * itself instead of using this flag.
- */
-#define JSREPORT_STRICT_MODE_ERROR 0x8
-
-/*
  * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
  * has been thrown for this runtime error, and the host should ignore it.
  * Exception-aware hosts should also check for JS_IsExceptionPending if
@@ -5215,8 +5206,7 @@ class JSErrorReport
 #define JSREPORT_IS_WARNING(flags)      (((flags) & JSREPORT_WARNING) != 0)
 #define JSREPORT_IS_EXCEPTION(flags)    (((flags) & JSREPORT_EXCEPTION) != 0)
 #define JSREPORT_IS_STRICT(flags)       (((flags) & JSREPORT_STRICT) != 0)
-#define JSREPORT_IS_STRICT_MODE_ERROR(flags) (((flags) &                      \
-                                              JSREPORT_STRICT_MODE_ERROR) != 0)
+
 namespace JS {
 
 typedef void
