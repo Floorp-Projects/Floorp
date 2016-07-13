@@ -1,3 +1,0 @@
-expando-loss-2.html
-instanceof-test.html
-uninitialized-test-2.html

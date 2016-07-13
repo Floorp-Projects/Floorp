@@ -39,7 +39,7 @@ th {
     min-width: 22em;
 }
 </style>
-<script src="../js/webgl-test-utils.js"> </script>
+<script src="../conformance/resources/webgl-test-utils.js"> </script>
 <script>
 "use strict";
 window.onload = main;
@@ -154,7 +154,7 @@ function main() {
         type: gl.FLOAT
       });
       formatsToTest.push({
-        description: 'RGB FLOAT (deprecated)',
+        description: 'RGB FLOAT',
         format: gl.RGB,
         type: gl.FLOAT
       });
