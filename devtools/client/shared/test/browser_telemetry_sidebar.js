@@ -28,7 +28,7 @@ function* testSidebar(toolbox) {
 
   let inspector = toolbox.getCurrentPanel();
   let sidebarTools = ["ruleview", "computedview", "fontinspector",
-                      "animationinspector"];
+                      "layoutview", "animationinspector"];
 
   // Concatenate the array with itself so that we can open each tool twice.
   sidebarTools.push.apply(sidebarTools, sidebarTools);
