@@ -76,7 +76,7 @@ xpcAccessibleValue::GetCurrentValue(double* aValue)
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->CurValue();
   } else { 
-    value = Intl().AsProxy()->MinValue();
+    value = Intl().AsProxy()->CurValue();
   }
 
   if (!IsNaN(value))
