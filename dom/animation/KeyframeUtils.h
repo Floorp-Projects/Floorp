@@ -43,6 +43,7 @@ public:
    * of keyframes to an array of Keyframe objects.
    *
    * @param aCx The JSContext that corresponds to |aFrames|.
+   * @param aDocument The document to use when parsing CSS properties.
    * @param aFrames The JS value, provided as an optional IDL |object?| value,
    *   that is the keyframe list specification.
    * @param aRv (out) Out-param to hold any error returned by this function.
@@ -53,6 +54,7 @@ public:
    */
   static nsTArray<Keyframe>
   GetKeyframesFromObject(JSContext* aCx,
+                         nsIDocument* aDocument,
                          JS::Handle<JSObject*> aFrames,
                          ErrorResult& aRv);
 
