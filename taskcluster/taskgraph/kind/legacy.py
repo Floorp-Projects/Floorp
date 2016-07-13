@@ -156,9 +156,15 @@ def remove_caches_from_task(task):
     ]
     try:
         caches = task["task"]["payload"]["cache"]
+        scopes = task["task"]["scopes"]
         for cache in caches.keys():
             if not any(pat.match(cache) for pat in whitelist):
                 caches.pop(cache)
+                scope = 'docker-worker:cache:' + cache
+                try:
+                    scopes.remove(scope)
+                except ValueError:
+                    raise ValueError("scope '{}' not in {}".format(scope, scopes))
     except KeyError:
         pass
 
