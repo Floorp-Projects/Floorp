@@ -2062,7 +2062,7 @@ class BaseCompiler
         {
             ScratchI32 scratch(*this);
             CodeOffset label = masm.loadRipRelativeInt64(scratch);
-            masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+            masm.append(GlobalAccess(label, globalDataOffset));
             masm.loadPtr(Operand(scratch, ptrReg, ScalePointer, 0), ptrReg);
         }
 #elif defined(JS_CODEGEN_X86)
@@ -2070,7 +2070,7 @@ class BaseCompiler
         {
             ScratchI32 scratch(*this);
             CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
-            masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+            masm.append(GlobalAccess(label, globalDataOffset));
             masm.loadPtr(Operand(scratch, ptrReg, ScalePointer), ptrReg);
         }
 #else
@@ -2089,11 +2089,11 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         // CodeGeneratorX64::visitAsmJSLoadFFIFunc()
         CodeOffset label = masm.loadRipRelativeInt64(ptrReg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         // CodeGeneratorX86::visitAsmJSLoadFFIFunc()
         CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), ptrReg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: ffiCall");
 #endif
@@ -2665,10 +2665,10 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.loadRipRelativeInt32(r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarI32");
 #endif
@@ -2678,7 +2678,7 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.loadRipRelativeInt64(r.reg.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarI64");
 #endif
@@ -2688,10 +2688,10 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.loadRipRelativeFloat32(r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         CodeOffset label = masm.vmovssWithPatch(PatchedAbsoluteAddress(), r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarF32");
 #endif
@@ -2701,10 +2701,10 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.loadRipRelativeDouble(r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         CodeOffset label = masm.vmovsdWithPatch(PatchedAbsoluteAddress(), r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: loadGlobalVarF32");
 #endif
@@ -2716,10 +2716,10 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.storeRipRelativeInt32(r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         CodeOffset label = masm.movlWithPatch(r.reg, PatchedAbsoluteAddress());
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarI32");
 #endif
@@ -2729,7 +2729,7 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.storeRipRelativeInt64(r.reg.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarI64");
 #endif
@@ -2739,10 +2739,10 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.storeRipRelativeFloat32(r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         CodeOffset label = masm.vmovssWithPatch(r.reg, PatchedAbsoluteAddress());
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarF32");
 #endif
@@ -2752,10 +2752,10 @@ class BaseCompiler
     {
 #if defined(JS_CODEGEN_X64)
         CodeOffset label = masm.storeRipRelativeDouble(r.reg);
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
         CodeOffset label = masm.vmovsdWithPatch(r.reg, PatchedAbsoluteAddress());
-        masm.append(AsmJSGlobalAccess(label, globalDataOffset));
+        masm.append(GlobalAccess(label, globalDataOffset));
 #else
         MOZ_CRASH("BaseCompiler platform hook: storeGlobalVarF64");
 #endif
