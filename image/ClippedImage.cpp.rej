@@ -1,0 +1,36 @@
+diff a/image/ClippedImage.cpp b/image/ClippedImage.cpp	(rejected hunks)
+@@ -1,15 +1,16 @@
+ /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+ /* This Source Code Form is subject to the terms of the Mozilla Public
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+ #include "ClippedImage.h"
+ 
++#include <algorithm>
+ #include <new>      // Workaround for bug in VS10; see bug 981264.
+ #include <cmath>
+ #include <utility>
+ 
+ #include "gfxDrawable.h"
+ #include "gfxPlatform.h"
+ #include "gfxUtils.h"
+ #include "mozilla/gfx/2D.h"
+@@ -23,16 +24,17 @@
+ #include "SVGImageContext.h"
+ 
+ namespace mozilla {
+ 
+ using namespace gfx;
+ using layers::LayerManager;
+ using layers::ImageContainer;
+ using std::make_pair;
++using std::max;
+ using std::modf;
+ using std::pair;
+ 
+ namespace image {
+ 
+ class ClippedImageCachedSurface
+ {
+ public:
