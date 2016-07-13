@@ -508,17 +508,29 @@ this.DownloadsCommon = {
       // or the file doesn't exist), try using the parent if we have it.
       let parent = aFile.parent;
       if (parent) {
-        try {
-          // Open the parent directory to show where the file should be.
-          parent.launch();
-        } catch (ex) {
-          // If launch also fails (probably because it's not implemented), let
-          // the OS handler try to open the parent.
-          Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-            .getService(Ci.nsIExternalProtocolService)
-            .loadUrl(NetUtil.newURI(parent));
-        }
+        this.showDirectory(parent);
       }
+    }
+  },
+
+  /**
+   * Show the specified folder in the system file manager.
+   *
+   * @param aDirectory
+   *        a directory to be opened with system file manager.
+   */
+  showDirectory(aDirectory) {
+    if (!(aDirectory instanceof Ci.nsIFile)) {
+      throw new Error("aDirectory must be a nsIFile object");
+    }
+    try {
+      aDirectory.launch();
+    } catch (ex) {
+      // If launch fails (probably because it's not implemented), let
+      // the OS handler try to open the directory.
+      Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+        .getService(Ci.nsIExternalProtocolService)
+        .loadUrl(NetUtil.newURI(aDirectory));
     }
   },
 
