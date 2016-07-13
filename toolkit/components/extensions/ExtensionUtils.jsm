@@ -474,10 +474,8 @@ let IconDetails = {
 
   // Returns the appropriate icon URL for the given icons object and the
   // screen resolution of the given window.
-  getURL(icons, window, extension, size = 16) {
+  getPreferredIcon(icons, extension = null, size = 16) {
     const DEFAULT = "chrome://browser/content/extension.svg";
-
-    size *= window.devicePixelRatio;
 
     let bestSize = null;
     if (icons[size]) {
