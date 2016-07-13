@@ -249,7 +249,6 @@ nsHttpHandler::nsHttpHandler()
     , mTCPKeepaliveLongLivedEnabled(false)
     , mTCPKeepaliveLongLivedIdleTimeS(600)
     , mEnforceH1Framing(FRAMECHECK_BARELY)
-    , mKeepEmptyResponseHeadersAsEmtpyString(false)
     , mDefaultHpackBuffer(4096)
     , mMaxHttpResponseHeaderSize(393216)
     , mFocusedWindowTransactionRatio(0.9f)
@@ -1845,14 +1844,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 val = 0;
             }
             mFastOpenConsecutiveFailureLimit = val;
-        }
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("keep_empty_response_headers_as_empty_string"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("keep_empty_response_headers_as_empty_string"),
-                                &cVar);
-        if (NS_SUCCEEDED(rv)) {
-            mKeepEmptyResponseHeadersAsEmtpyString = cVar;
         }
     }
 
