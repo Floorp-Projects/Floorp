@@ -25,7 +25,6 @@ add_task(function* () {
   let matchedExpander = propView.element;
 
   info("Focusing the property");
-  matchedExpander.scrollIntoView();
   let onMatchedExpanderFocus = once(matchedExpander, "focus", true);
   EventUtils.synthesizeMouseAtCenter(matchedExpander, {}, view.styleWindow);
   yield onMatchedExpanderFocus;

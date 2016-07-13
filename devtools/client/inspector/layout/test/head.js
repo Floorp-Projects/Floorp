@@ -55,7 +55,7 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
  * view is visible and ready
  */
 function openLayoutView() {
-  return openInspectorSidebarTab("computedview").then(data => {
+  return openInspectorSidebarTab("layoutview").then(data => {
     // The actual highligher show/hide methods are mocked in layoutview tests.
     // The highlighter is tested in devtools/inspector/test.
     function mockHighlighter({highlighter}) {
@@ -71,7 +71,7 @@ function openLayoutView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      view: data.inspector.computedview.layoutView,
+      view: data.inspector.layoutview,
       testActor: data.testActor
     };
   });
