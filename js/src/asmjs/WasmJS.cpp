@@ -575,7 +575,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-IsMemoryBuffer(HandleValue v)
+IsMemory(HandleValue v)
 {
     return v.isObject() && v.toObject().is<WasmMemoryObject>();
 }
@@ -591,7 +591,7 @@ static bool
 MemoryBufferGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMemoryBuffer, MemoryBufferGetterImpl>(cx, args);
+    return CallNonGenericMethod<IsMemory, MemoryBufferGetterImpl>(cx, args);
 }
 
 const JSPropertySpec WasmMemoryObject::properties[] =
@@ -634,9 +634,6 @@ const Class WasmTableObject::class_ =
     JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS),
     &WasmTableObject_classOps
 };
-
-const JSPropertySpec WasmTableObject::properties[] =
-{ JS_PS_END };
 
 /* static */ WasmTableObject*
 WasmTableObject::create(JSContext* cx, Table& table)
@@ -699,6 +696,32 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setObject(*tableObj);
     return true;
 }
+
+static bool
+IsTable(HandleValue v)
+{
+    return v.isObject() && v.toObject().is<WasmTableObject>();
+}
+
+static bool
+TableLengthGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    args.rval().setNumber(args.thisv().toObject().as<WasmTableObject>().table().length());
+    return true;
+}
+
+static bool
+TableLengthGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsTable, TableLengthGetterImpl>(cx, args);
+}
+
+const JSPropertySpec WasmTableObject::properties[] =
+{
+    JS_PSG("length", TableLengthGetter, 0),
+    JS_PS_END
+};
 
 Table&
 WasmTableObject::table() const
