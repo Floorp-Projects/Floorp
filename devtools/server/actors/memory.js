@@ -105,9 +105,12 @@ var MemoryActor = exports.MemoryActor = protocol.ActorClass({
     }
   }),
 
-  saveHeapSnapshot: method(function () {
-    return this.bridge.saveHeapSnapshot();
+  saveHeapSnapshot: method(function (boundaries) {
+    return this.bridge.saveHeapSnapshot(boundaries);
   }, {
+    request: {
+      boundaries: Arg(0, "nullable:json")
+    },
     response: {
       snapshotId: RetVal("string")
     }
