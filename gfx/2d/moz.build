@@ -202,12 +202,12 @@ FINAL_LIBRARY = 'xul'
 for var in ('USE_CAIRO', 'MOZ2D_HAS_MOZ_CAIRO'):
     DEFINES[var] = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']

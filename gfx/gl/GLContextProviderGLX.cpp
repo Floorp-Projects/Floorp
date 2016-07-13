@@ -7,8 +7,6 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #define GET_NATIVE_WINDOW(aWidget) GDK_WINDOW_XID((GdkWindow*) aWidget->GetNativeData(NS_NATIVE_WINDOW))
-#elif defined(MOZ_WIDGET_QT)
-#define GET_NATIVE_WINDOW(aWidget) (Window)(aWidget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW))
 #endif
 
 #include <X11/Xlib.h>

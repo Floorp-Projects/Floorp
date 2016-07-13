@@ -139,34 +139,6 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
             'gfxXlibSurface.cpp',
         ]
 
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    EXPORTS += [
-        'gfxFontconfigFonts.h',
-        'gfxFT2FontBase.h',
-        'gfxQtNativeRenderer.h',
-        'gfxQtPlatform.h',
-    ]
-    EXPORTS.mozilla.gfx += [
-        'PrintTargetPDF.h',
-    ]
-    SOURCES += [
-        'gfxFontconfigFonts.cpp',
-        'gfxFontconfigUtils.cpp',
-        'gfxFT2FontBase.cpp',
-        'gfxFT2Utils.cpp',
-        'gfxQtPlatform.cpp',
-        'PrintTargetPDF.cpp',
-    ]
-
-    if CONFIG['MOZ_X11']:
-        EXPORTS += [
-            'gfxXlibSurface.h',
-        ]
-        SOURCES += [
-            'gfxQtNativeRenderer.cpp',
-            'gfxXlibSurface.cpp',
-        ]
-
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
         'gfxDWriteFonts.h',
@@ -288,7 +260,7 @@ LOCAL_INCLUDES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
   LOCAL_INCLUDES += ['/widget/gonk']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -301,7 +273,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk', 'qt'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -309,7 +281,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     # top of the android java runtime.
     DEFINES['MOZ_USING_ANDROID_JAVA_WIDGETS'] = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'qt'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
