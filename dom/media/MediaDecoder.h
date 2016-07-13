@@ -220,7 +220,7 @@ public:
   virtual double GetDuration();
 
   // Return true if the stream is infinite (see SetInfinite).
-  virtual bool IsInfinite();
+  bool IsInfinite() const;
 
   // Called by MediaResource when some data has been received.
   // Call on the main thread only.
@@ -232,12 +232,12 @@ public:
 
   // Return true if we are currently seeking in the media resource.
   // Call on the main thread only.
-  virtual bool IsSeeking() const;
+  bool IsSeeking() const;
 
   // Return true if the decoder has reached the end of playback or the decoder
   // has shutdown.
   // Call on the main thread only.
-  virtual bool IsEndedOrShutdown() const;
+  bool IsEndedOrShutdown() const;
 
   // Return true if the MediaDecoderOwner's error attribute is not null.
   // If the MediaDecoder is shutting down, OwnerHasError will return true.
