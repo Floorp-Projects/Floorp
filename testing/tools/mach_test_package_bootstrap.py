@@ -107,6 +107,16 @@ def find_firefox(context):
             continue
 
 
+def normalize_test_path(test_root, path):
+    if os.path.isabs(path) or os.path.exists(path):
+        return os.path.normpath(os.path.abspath(path))
+
+    for parent in ancestors(test_root):
+        test_path = os.path.join(parent, path)
+        if os.path.exists(test_path):
+            return os.path.normpath(os.path.abspath(test_path))
+
+
 def bootstrap(test_package_root):
     test_package_root = os.path.abspath(test_package_root)
 
@@ -132,6 +142,7 @@ def bootstrap(test_package_root):
 
         context.ancestors = ancestors
         context.find_firefox = types.MethodType(find_firefox, context)
+        context.normalize_test_path = normalize_test_path
 
         # Search for a mozharness localconfig.json
         context.mozharness_config = None
