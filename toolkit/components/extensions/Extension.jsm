@@ -456,13 +456,20 @@ ParentAPIManager.init();
 
 // For extensions that have called setUninstallURL(), send an event
 // so the browser can display the URL.
-let UninstallObserver = {
+var UninstallObserver = {
   initialized: false,
 
   init: function() {
     if (!this.initialized) {
       AddonManager.addAddonListener(this);
       this.initialized = true;
+    }
+  },
+
+  uninit: function() {
+    if (this.initialized) {
+      AddonManager.removeAddonListener(this);
+      this.initialized = false;
     }
   },
 
@@ -479,11 +486,13 @@ GlobalManager = {
   // Map[extension ID -> Extension]. Determines which extension is
   // responsible for content under a particular extension ID.
   extensionMap: new Map(),
+  initialized: false,
 
   init(extension) {
     if (this.extensionMap.size == 0) {
       Services.obs.addObserver(this, "content-document-global-created", false);
       UninstallObserver.init();
+      this.initialized = true;
     }
 
     this.extensionMap.set(extension.id, extension);
@@ -492,8 +501,10 @@ GlobalManager = {
   uninit(extension) {
     this.extensionMap.delete(extension.id);
 
-    if (this.extensionMap.size == 0) {
+    if (this.extensionMap.size == 0 && this.initialized) {
       Services.obs.removeObserver(this, "content-document-global-created");
+      UninstallObserver.uninit();
+      this.initialized = false;
     }
   },
 
