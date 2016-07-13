@@ -43,6 +43,7 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 ModuleGenerator::ModuleGenerator()
   : alwaysBaseline_(false),
     numSigs_(0),
+    numTables_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     masmAlloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
@@ -126,6 +127,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
 
     if (!isAsmJS()) {
         numSigs_ = shared_->sigs.length();
+        numTables_ = shared_->tables.length();
 
         for (FuncImportGenDesc& funcImport : shared_->funcImports) {
             MOZ_ASSERT(!funcImport.globalDataOffset);
@@ -135,11 +137,14 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
                 return false;
         }
 
-        MOZ_ASSERT(linkData_.globalDataLength % sizeof(void*) == 0);
-        MOZ_ASSERT(shared_->asmJSSigToTable.empty());
-        MOZ_ASSERT(!shared_->wasmTable.globalDataOffset);
-        shared_->wasmTable.globalDataOffset = linkData_.globalDataLength;
-        linkData_.globalDataLength += shared_->wasmTable.numElems * sizeof(void*);
+        for (TableDesc& table : shared_->tables) {
+            if (!allocateGlobalBytes(sizeof(void*), sizeof(void*), &table.globalDataOffset))
+                return false;
+        }
+    } else {
+        MOZ_ASSERT(shared_->sigs.length() == MaxSigs);
+        MOZ_ASSERT(shared_->tables.length() == MaxTables);
+        MOZ_ASSERT(shared_->asmJSSigToTableIndex.length() == MaxSigs);
     }
 
     return true;
@@ -810,10 +815,10 @@ ModuleGenerator::finishFuncDefs()
 }
 
 bool
-ModuleGenerator::addElemSegment(Uint32Vector&& elemFuncIndices)
+ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
-    MOZ_ASSERT(!isAsmJS());
-    return elemSegments_.emplaceBack(shared_->wasmTable.globalDataOffset, Move(elemFuncIndices));
+    MOZ_ASSERT(seg.elems.length() == shared_->tables[seg.tableIndex].length, "for now");
+    return elemSegments_.append(Move(seg));
 }
 
 void
@@ -824,33 +829,32 @@ ModuleGenerator::setFuncNames(NameInBytecodeVector&& funcNames)
 }
 
 bool
-ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t numElems)
+ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t length)
 {
     MOZ_ASSERT(isAsmJS());
-    MOZ_ASSERT(numElems != 0);
-    MOZ_ASSERT(numElems <= MaxTableElems);
+    MOZ_ASSERT(length != 0);
+    MOZ_ASSERT(length <= MaxTableElems);
 
-    uint32_t globalDataOffset;
-    if (!allocateGlobalBytes(numElems * sizeof(void*), sizeof(void*), &globalDataOffset))
-        return false;
+    MOZ_ASSERT(shared_->asmJSSigToTableIndex[sigIndex] == 0);
+    shared_->asmJSSigToTableIndex[sigIndex] = numTables_;
 
-    TableGenDesc& table = shared_->asmJSSigToTable[sigIndex];
-    MOZ_ASSERT(table.numElems == 0);
-    table.numElems = numElems;
-    table.globalDataOffset = globalDataOffset;
-    return true;
+    TableDesc& table = shared_->tables[numTables_++];
+    MOZ_ASSERT(table.globalDataOffset == 0);
+    MOZ_ASSERT(table.length == 0);
+    table.kind = TableKind::TypedFunction;
+    table.length = length;
+    return allocateGlobalBytes(sizeof(void*), sizeof(void*), &table.globalDataOffset);
 }
 
 bool
 ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices)
 {
     MOZ_ASSERT(isAsmJS());
-    MOZ_ASSERT(!elemFuncIndices.empty());
 
-    TableGenDesc& table = shared_->asmJSSigToTable[sigIndex];
-    MOZ_ASSERT(table.numElems == elemFuncIndices.length());
+    uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
+    MOZ_ASSERT(shared_->tables[tableIndex].length == elemFuncIndices.length());
 
-    return elemSegments_.emplaceBack(table.globalDataOffset, Move(elemFuncIndices));
+    return elemSegments_.emplaceBack(tableIndex, Move(elemFuncIndices));
 }
 
 UniqueModule
@@ -858,6 +862,11 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(finishedFuncDefs_);
+
+    // Now that all asm.js tables have been created and the compiler threads are
+    // done, shrink the (no longer shared) tables vector down to size.
+    if (isAsmJS() && !shared_->tables.resize(numTables_))
+        return nullptr;
 
     if (!finishCodegen())
         return nullptr;
@@ -892,6 +901,12 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
     metadata_->memoryAccesses = masm_.extractMemoryAccesses();
     metadata_->boundsChecks = masm_.extractBoundsChecks();
 
+    // Copy over data from the ModuleGeneratorData.
+    metadata_->memoryUsage = shared_->memoryUsage;
+    metadata_->minMemoryLength = shared_->minMemoryLength;
+    metadata_->maxMemoryLength = shared_->maxMemoryLength;
+    metadata_->tables = Move(shared_->tables);
+
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
     metadata_->memoryAccesses.podResizeToFit();
@@ -899,11 +914,6 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
     metadata_->callThunks.podResizeToFit();
-
-    // Copy over data from the ModuleGeneratorData.
-    metadata_->memoryUsage = shared_->memoryUsage;
-    metadata_->minMemoryLength = shared_->minMemoryLength;
-    metadata_->maxMemoryLength = shared_->maxMemoryLength;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG

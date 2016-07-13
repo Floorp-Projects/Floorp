@@ -597,12 +597,12 @@ class FunctionCompiler
             return nullptr;
 
         MInstruction* load = nullptr;
-        if (mg().kind == ModuleKind::Wasm) {
+        if (mg().isAsmJS()) {
+            load = MAsmJSLoadHeap::New(alloc(), base, access);
+        } else {
             if (!mg().usesSignal.forOOB)
                 curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
             load = MWasmLoad::New(alloc(), base, access, isInt64);
-        } else {
-            load = MAsmJSLoadHeap::New(alloc(), base, access);
         }
 
         curBlock_->add(load);
@@ -615,12 +615,12 @@ class FunctionCompiler
             return;
 
         MInstruction* store = nullptr;
-        if (mg().kind == ModuleKind::Wasm) {
+        if (mg().isAsmJS()) {
+            store = MAsmJSStoreHeap::New(alloc(), base, access, v);
+        } else {
             if (!mg().usesSignal.forOOB)
                 curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
             store = MWasmStore::New(alloc(), base, access, v);
-        } else {
-            store = MAsmJSStoreHeap::New(alloc(), base, access, v);
         }
 
         curBlock_->add(store);
@@ -892,7 +892,7 @@ class FunctionCompiler
         }
 
         MAsmJSCall::Callee callee;
-        if (mg().kind == ModuleKind::AsmJS) {
+        if (mg().isAsmJS()) {
             MOZ_ASSERT(IsPowerOfTwo(length));
             MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
             curBlock_->add(mask);
@@ -1732,12 +1732,12 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
-    const TableGenDesc& table = f.mg().kind == ModuleKind::AsmJS
-                                ? f.mg().asmJSSigToTable[sigIndex]
-                                : f.mg().wasmTable;
+    const TableDesc& table = f.mg().isAsmJS()
+                             ? f.mg().tables[f.mg().asmJSSigToTableIndex[sigIndex]]
+                             : f.mg().tables[0];
 
     MDefinition* def;
-    if (!f.funcPtrCall(sigIndex, table.numElems, table.globalDataOffset, callee, args, &def))
+    if (!f.funcPtrCall(sigIndex, table.length, table.globalDataOffset, callee, args, &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -1885,13 +1885,13 @@ EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
         return false;
 
     if (resultType == ValType::I32) {
-        if (f.mg().kind == ModuleKind::AsmJS)
+        if (f.mg().isAsmJS())
             f.iter().setResult(f.truncate<MTruncateToInt32>(input, isUnsigned));
         else
             f.iter().setResult(f.truncate<MWasmTruncateToInt32>(input, isUnsigned));
     } else {
         MOZ_ASSERT(resultType == ValType::I64);
-        MOZ_ASSERT(f.mg().kind == ModuleKind::Wasm);
+        MOZ_ASSERT(!f.mg().isAsmJS());
         f.iter().setResult(f.truncate<MWasmTruncateToInt64>(input, isUnsigned));
     }
     return true;
@@ -2003,7 +2003,7 @@ EmitDiv(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isUnsign
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    bool trapOnError = f.mg().kind == ModuleKind::Wasm;
+    bool trapOnError = !f.mg().isAsmJS();
     f.iter().setResult(f.div(lhs, rhs, mirType, isUnsigned, trapOnError));
     return true;
 }
@@ -2016,7 +2016,7 @@ EmitRem(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isUnsign
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    bool trapOnError = f.mg().kind == ModuleKind::Wasm;
+    bool trapOnError = !f.mg().isAsmJS();
     f.iter().setResult(f.mod(lhs, rhs, mirType, isUnsigned, trapOnError));
     return true;
 }

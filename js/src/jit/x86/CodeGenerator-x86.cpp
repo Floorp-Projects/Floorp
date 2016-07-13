@@ -914,8 +914,10 @@ CodeGeneratorX86::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), index, ScalePointer, out);
+    CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), out);
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
+
+    masm.loadPtr(Operand(out, index, ScalePointer), out);
 }
 
 void

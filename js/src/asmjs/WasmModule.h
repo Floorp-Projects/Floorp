@@ -20,6 +20,7 @@
 #define wasm_module_h
 
 #include "asmjs/WasmCode.h"
+#include "asmjs/WasmTable.h"
 #include "js/TypeDecls.h"
 
 namespace js {
@@ -139,12 +140,12 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
 struct ElemSegment
 {
-    uint32_t globalDataOffset;
+    uint32_t tableIndex;
     Uint32Vector elems;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t globalDataOffset, Uint32Vector&& elems)
-      : globalDataOffset(globalDataOffset), elems(Move(elems))
+    ElemSegment(uint32_t tableIndex, Uint32Vector&& elems)
+      : tableIndex(tableIndex), elems(Move(elems))
     {}
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
@@ -176,7 +177,7 @@ class Module
     const SharedBytes       bytecode_;
 
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, const CodeSegment& cs) const;
+    bool instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector* tables) const;
 
   public:
     Module(Bytes&& code,
