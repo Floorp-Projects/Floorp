@@ -750,7 +750,11 @@ this.AeroPeek = {
 
   disable() {
     while (this.windows.length) {
-      this.windows[0].destroy(); // This will remove us from the array.
+      // We can't call onCloseWindow here because it'll bail if we're not
+      // enabled.
+      let tabWinObject = this.windows[0];
+      tabWinObject.destroy(); // This will remove us from the array.
+      delete tabWinObject.win.gTaskbarTabGroup; // Tidy up the window.
     }
   },
 
