@@ -1032,14 +1032,6 @@ ContentChild::InitXPCOM()
     global->SetInitialProcessData(data);
   }
 
-  // Loading the ServiceWorker configuration.
-  ServiceWorkerConfiguration configuration;
-  SendGetServiceWorkerConfiguration(&configuration);
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
-  swm->LoadRegistrations(configuration.serviceWorkerRegistrations());
-
   InitOnContentProcessCreated();
 }
 
@@ -2630,6 +2622,15 @@ ContentChild::RecvAppInit()
   }
 #endif
 
+  return true;
+}
+
+bool
+ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
+{
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+  swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
   return true;
 }
 
