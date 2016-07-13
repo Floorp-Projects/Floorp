@@ -467,6 +467,7 @@ public:
     case SHMDT:
     case SEMGET:
     case SEMCTL:
+    case SEMOP:
       return Some(Allow());
     default:
       return SandboxPolicyCommon::EvaluateIpcCall(aCall);
