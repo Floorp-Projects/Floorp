@@ -176,6 +176,17 @@ namespace {
     return false;
   }
 
+  static
+  MOZ_ALWAYS_INLINE nsDependentCString
+  getSharedString(mozIStorageValueArray* aValues, uint32_t aIndex) {
+    uint32_t len;
+    const char* str = aValues->AsSharedUTF8String(aIndex, &len);
+    if (!str) {
+      return nsDependentCString("", (uint32_t)0);
+    }
+    return nsDependentCString(str, len);
+  }
+
 } // End anonymous namespace
 
 namespace mozilla {
@@ -332,10 +343,10 @@ namespace places {
     #define HAS_BEHAVIOR(aBitName) \
       (searchBehavior & mozIPlacesAutoComplete::BEHAVIOR_##aBitName)
 
-    nsAutoCString searchString;
-    (void)aArguments->GetUTF8String(kArgSearchString, searchString);
-    nsCString url;
-    (void)aArguments->GetUTF8String(kArgIndexURL, url);
+    nsDependentCString searchString =
+      getSharedString(aArguments, kArgSearchString);
+    nsDependentCString url =
+      getSharedString(aArguments, kArgIndexURL);
 
     int32_t matchBehavior = aArguments->AsInt32(kArgIndexMatchBehavior);
 
@@ -352,8 +363,7 @@ namespace places {
     int32_t visitCount = aArguments->AsInt32(kArgIndexVisitCount);
     bool typed = aArguments->AsInt32(kArgIndexTyped) ? true : false;
     bool bookmark = aArguments->AsInt32(kArgIndexBookmark) ? true : false;
-    nsAutoCString tags;
-    (void)aArguments->GetUTF8String(kArgIndexTags, tags);
+    nsDependentCString tags = getSharedString(aArguments, kArgIndexTags);
     int32_t openPageCount = aArguments->AsInt32(kArgIndexOpenPageCount);
     bool matches = false;
     if (HAS_BEHAVIOR(RESTRICT)) {
@@ -389,8 +399,7 @@ namespace places {
     const nsDependentCSubstring& trimmedUrl =
       Substring(fixedUrl, 0, MAX_CHARS_TO_SEARCH_THROUGH);
 
-    nsAutoCString title;
-    (void)aArguments->GetUTF8String(kArgIndexTitle, title);
+    nsDependentCString title = getSharedString(aArguments, kArgIndexTitle);
     // Limit the number of chars we search through.
     const nsDependentCSubstring& trimmedTitle =
       Substring(title, 0, MAX_CHARS_TO_SEARCH_THROUGH);
