@@ -163,6 +163,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_NOTIFICATIONS_WHATS_NEW = NON_PREF_PREFIX + "notifications.whats_new";
     public static final String PREFS_APP_UPDATE_LAST_BUILD_ID = "app.update.last_build_id";
     public static final String PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_customizations_provider";
+    public static final String PREFS_READ_PARTNER_BOOKMARKS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_bookmarks_provider";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 

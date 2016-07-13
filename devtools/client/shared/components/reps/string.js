@@ -30,9 +30,11 @@ define(function (require, exports, module) {
         );
       }
 
+      let croppedString = this.props.cropLimit ?
+        cropMultipleLines(text, this.props.cropLimit) : cropMultipleLines(text);
+
       return (
-        ObjectBox({className: "string"},
-          "\"" + cropMultipleLines(text) + "\""
+        ObjectBox({className: "string"}, "\"" + croppedString + "\""
         )
       );
     },

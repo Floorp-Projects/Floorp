@@ -713,6 +713,7 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                          positionInSegment,
                                          computedTiming.mBeforeFlag);
 
+    MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
     StyleAnimationValue val;
     if (StyleAnimationValue::Interpolate(prop.mProperty,
                                          segment->mFromValue,
