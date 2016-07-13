@@ -30,8 +30,6 @@ class WasmInstanceObject;
 
 namespace wasm {
 
-class ExportMap;
-
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
 // structures with the Module from which they were instantiated and other
@@ -88,7 +86,7 @@ class Instance
     // Execute the given export given the JS call arguments, storing the return
     // value in args.rval.
 
-    MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t exportIndex, CallArgs args);
+    MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t funcExportIndex, CallArgs args);
 
     // An instance has a profiling mode that is updated to match the runtime's
     // profiling mode when calling an instance's exports when there are no other
