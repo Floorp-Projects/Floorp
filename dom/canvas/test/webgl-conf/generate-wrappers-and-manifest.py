@@ -9,6 +9,8 @@
 import os
 import re
 
+CURRENT_VERSION = '1.0.3'
+
 # All paths in this file are based where this file is run.
 WRAPPER_TEMPLATE_FILE = 'mochi-wrapper.html.template'
 MANIFEST_TEMPLATE_FILE = 'mochitest.ini.template'
@@ -17,9 +19,7 @@ DEST_MANIFEST_PATHSTR = 'generated-mochitest.ini'
 
 BASE_TEST_LIST_PATHSTR = 'checkout/00_test_list.txt'
 GENERATED_PATHSTR = 'generated'
-WEBGL2_TEST_MANGLE = '2_'
 PATH_SEP_MANGLING = '__'
-WEBGL2_SKIP_IF_CONDITION = "(os == 'android' || os == 'linux')"
 
 SUPPORT_DIRS = [
     'checkout',
@@ -284,20 +284,16 @@ class TemplateShell:
 ########################################################################
 # Output
 
-def IsWrapperWebGL2(wrapperPath):
-    return wrapperPath.startswith(GENERATED_PATHSTR + '/test_' + WEBGL2_TEST_MANGLE)
-
-
 def WriteWrapper(entryPath, webgl2, templateShell, wrapperPathAccum):
     mangledPath = entryPath.replace('/', PATH_SEP_MANGLING)
-    maybeWebGL2Mangle = ''
+    maybeWebGL2 = ''
     if webgl2:
-        maybeWebGL2Mangle = WEBGL2_TEST_MANGLE
+        maybeWebGL2 = '2_'
 
     # Mochitests must start with 'test_' or similar, or the test
     # runner will ignore our tests.
     # The error text is "is not a valid test".
-    wrapperFileName = 'test_' + maybeWebGL2Mangle + mangledPath
+    wrapperFileName = 'test_{}{}'.format(maybeWebGL2, mangledPath)
 
     wrapperPath = GENERATED_PATHSTR + '/' + wrapperFileName
     print('Adding wrapper: ' + wrapperPath)
@@ -312,10 +308,6 @@ def WriteWrapper(entryPath, webgl2, templateShell, wrapperPathAccum):
     }
 
     OutputFilledTemplate(templateShell, templateDict, wrapperPath)
-
-    if webgl2:
-        assert IsWrapperWebGL2(wrapperPath)
-
     wrapperPathAccum.append(wrapperPath)
     return
 
@@ -379,23 +371,10 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
         sectionName = '[' + wrapperManifestPathStr + ']'
         manifestTestLineList.append(sectionName)
 
-        errataLines = []
         if wrapperPathStr in errataMap:
-            errataLines = errataMap[wrapperPathStr]
+            manifestTestLineList += errataMap[wrapperPathStr]
             del errataMap[wrapperPathStr]
 
-        if IsWrapperWebGL2(wrapperPathStr):
-            needsSkip = True
-            for i in range(len(errataLines)):
-                if errataLines[i].startswith('skip-if'):
-                    errataLines[i] += ' || ' + WEBGL2_SKIP_IF_CONDITION
-                    needsSkip = False
-                continue
-
-            if needsSkip:
-                errataLines.append('skip-if = ' + WEBGL2_SKIP_IF_CONDITION)
-
-        manifestTestLineList += errataLines
         continue
 
     if errataMap:
