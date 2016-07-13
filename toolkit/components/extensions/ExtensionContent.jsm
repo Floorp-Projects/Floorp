@@ -386,12 +386,6 @@ class ExtensionContext extends BaseContext {
         isWebExtensionContentScript: true,
         wantGlobalProperties: ["XMLHttpRequest", "fetch"],
       });
-
-      Cu.evalInSandbox(`
-        window.JSON = JSON;
-        window.XMLHttpRequest = XMLHttpRequest;
-        window.fetch = fetch;
-      `, this.sandbox);
     }
 
     let delegate = {
