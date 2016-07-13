@@ -313,6 +313,10 @@ class LegacyTask(base.Task):
         self.task_dict = kwargs.pop('task_dict')
         super(LegacyTask, self).__init__(*args, **kwargs)
 
+    def __eq__(self, other):
+        return super(LegacyTask, self).__eq__(other) and \
+               self.task_dict == other.task_dict
+
     @classmethod
     def load_tasks(cls, kind, path, config, params, loaded_tasks):
         root = os.path.abspath(os.path.join(path, config['legacy_path']))
@@ -652,3 +656,12 @@ class LegacyTask(base.Task):
     def optimize(self):
         # no optimization for the moment
         return False, None
+
+    @classmethod
+    def from_json(cls, task_dict):
+        legacy_task = cls(kind='legacy',
+                          label=task_dict['label'],
+                          attributes=task_dict['attributes'],
+                          task=task_dict['task'],
+                          task_dict=task_dict)
+        return legacy_task

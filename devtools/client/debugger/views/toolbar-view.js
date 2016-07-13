@@ -21,6 +21,7 @@ function ToolbarView(DebuggerController, DebuggerView) {
   this.DebuggerController = DebuggerController;
   this.DebuggerView = DebuggerView;
 
+  this._onTogglePanesActivated = this._onTogglePanesActivated.bind(this);
   this._onTogglePanesPressed = this._onTogglePanesPressed.bind(this);
   this._onResumePressed = this._onResumePressed.bind(this);
   this._onStepOverPressed = this._onStepOverPressed.bind(this);
@@ -62,7 +63,10 @@ ToolbarView.prototype = {
     this._stepInTooltip = L10N.getFormatStr("stepInTooltip", stepInKey);
     this._stepOutTooltip = L10N.getFormatStr("stepOutTooltip", stepOutKey);
 
-    this._instrumentsPaneToggleButton.addEventListener("mousedown", this._onTogglePanesPressed, false);
+    this._instrumentsPaneToggleButton.addEventListener("mousedown",
+      this._onTogglePanesActivated, false);
+    this._instrumentsPaneToggleButton.addEventListener("keydown",
+      this._onTogglePanesPressed, false);
     this._resumeButton.addEventListener("mousedown", this._onResumePressed, false);
     this._stepOverButton.addEventListener("mousedown", this._onStepOverPressed, false);
     this._stepInButton.addEventListener("mousedown", this._onStepInPressed, false);
@@ -82,7 +86,10 @@ ToolbarView.prototype = {
   destroy: function () {
     dumpn("Destroying the ToolbarView");
 
-    this._instrumentsPaneToggleButton.removeEventListener("mousedown", this._onTogglePanesPressed, false);
+    this._instrumentsPaneToggleButton.removeEventListener("mousedown",
+      this._onTogglePanesActivated, false);
+    this._instrumentsPaneToggleButton.removeEventListener("keydown",
+      this._onTogglePanesPressed, false);
     this._resumeButton.removeEventListener("mousedown", this._onResumePressed, false);
     this._stepOverButton.removeEventListener("mousedown", this._onStepOverPressed, false);
     this._stepInButton.removeEventListener("mousedown", this._onStepInPressed, false);
@@ -169,9 +176,18 @@ ToolbarView.prototype = {
   },
 
   /**
+  * Listener handling the toggle button space and return key event.
+  */
+  _onTogglePanesPressed: function (event) {
+    if (ViewHelpers.isSpaceOrReturn(event)) {
+      this._onTogglePanesActivated();
+    }
+  },
+
+  /**
    * Listener handling the toggle button click event.
    */
-  _onTogglePanesPressed: function () {
+  _onTogglePanesActivated: function() {
     DebuggerView.toggleInstrumentsPane({
       visible: DebuggerView.instrumentsPaneHidden,
       animated: true,
