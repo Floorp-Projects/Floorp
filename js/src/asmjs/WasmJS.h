@@ -33,6 +33,7 @@ namespace wasm {
 
 class Module;
 class Instance;
+class Table;
 
 typedef UniquePtr<Module> UniqueModule;
 typedef UniquePtr<Instance> UniqueInstance;
@@ -82,6 +83,7 @@ class WasmModuleObject : public NativeObject
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];
+    static bool construct(JSContext*, unsigned, Value*);
 
     static WasmModuleObject* create(ExclusiveContext* cx,
                                     wasm::UniqueModule module,
@@ -110,6 +112,7 @@ class WasmInstanceObject : public NativeObject
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
     static const JSPropertySpec properties[];
+    static bool construct(JSContext*, unsigned, Value*);
 
     static WasmInstanceObject* create(ExclusiveContext* cx,
                                       HandleObject proto = nullptr);
@@ -136,6 +139,7 @@ class WasmMemoryObject : public NativeObject
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];
+    static bool construct(JSContext*, unsigned, Value*);
 
     static WasmMemoryObject* create(ExclusiveContext* cx,
                                     Handle<ArrayBufferObjectMaybeShared*> buffer,
@@ -147,6 +151,29 @@ typedef GCPtr<WasmMemoryObject*> GCPtrWasmMemoryObject;
 typedef Rooted<WasmMemoryObject*> RootedWasmMemoryObject;
 typedef Handle<WasmMemoryObject*> HandleWasmMemoryObject;
 typedef MutableHandle<WasmMemoryObject*> MutableHandleWasmMemoryObject;
+
+// The class of WebAssembly.Table. A WasmTableObject holds a refcount on a
+// wasm::Table, allowing a Table to be shared between multiple Instances
+// (eventually between multiple threads).
+
+class WasmTableObject : public NativeObject
+{
+    static const unsigned TABLE_SLOT = 0;
+  public:
+    static const JSProtoKey KEY = JSProto_WasmTable;
+    static const unsigned RESERVED_SLOTS = 1;
+    static const Class class_;
+    static const JSPropertySpec properties[];
+    static bool construct(JSContext*, unsigned, Value*);
+
+    static WasmTableObject* create(ExclusiveContext* cx,
+                                   wasm::Table& table,
+                                   HandleObject proto);
+    wasm::Table& table() const;
+};
+
+typedef Rooted<WasmTableObject*> RootedWasmTableObject;
+typedef Handle<WasmTableObject*> HandleWasmTableObject;
 
 } // namespace js
 

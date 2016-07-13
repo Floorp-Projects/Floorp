@@ -292,8 +292,8 @@ WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module, HandleObject
     return obj;
 }
 
-static bool
-ModuleConstructor(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs callArgs = CallArgsFromVp(argc, vp);
 
@@ -441,8 +441,8 @@ WasmInstanceObject::initExportsObject(HandleObject exportObj)
     initReservedSlot(EXPORTS_SLOT, ObjectValue(*exportObj));
 }
 
-static bool
-InstanceConstructor(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -522,8 +522,8 @@ WasmMemoryObject::create(ExclusiveContext* cx, HandleArrayBufferObjectMaybeShare
     return obj;
 }
 
-static bool
-MemoryConstructor(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -534,7 +534,7 @@ MemoryConstructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!args.get(0).isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MEM_ARG);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "memory");
         return false;
     }
 
@@ -553,7 +553,7 @@ MemoryConstructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (initialDbl < 0 || initialDbl > INT32_MAX / PageSize) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MEM_SIZE, "initial");
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory", "initial");
         return false;
     }
 
@@ -605,6 +605,105 @@ WasmMemoryObject::buffer() const
 }
 
 // ============================================================================
+// WebAssembly.Table class and methods
+
+static void
+WasmTableObject_finalize(FreeOp* fop, JSObject* obj)
+{
+    obj->as<WasmTableObject>().table().Release();
+}
+
+static const ClassOps WasmTableObject_classOps =
+{
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    WasmTableObject_finalize
+};
+
+const Class WasmTableObject::class_ =
+{
+    "WebAssembly.Table",
+    JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS),
+    &WasmTableObject_classOps
+};
+
+const JSPropertySpec WasmTableObject::properties[] =
+{ JS_PS_END };
+
+/* static */ WasmTableObject*
+WasmTableObject::create(ExclusiveContext* cx, Table& table, HandleObject proto)
+{
+    AutoSetNewObjectMetadata metadata(cx);
+    auto* obj = NewObjectWithGivenProto<WasmTableObject>(cx, proto);
+    if (!obj)
+        return nullptr;
+
+    obj->initReservedSlot(TABLE_SLOT, PrivateValue((void*)&table));
+    table.AddRef();
+    return obj;
+}
+
+/* static */ bool
+WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!ThrowIfNotConstructing(cx, args, "Table"))
+        return false;
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Table", 1))
+        return false;
+
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "table");
+        return false;
+    }
+
+    JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
+    if (!initialAtom)
+        return false;
+
+    RootedObject obj(cx, &args[0].toObject());
+    RootedId id(cx, AtomToId(initialAtom));
+    RootedValue initialVal(cx);
+    if (!GetProperty(cx, obj, obj, id, &initialVal))
+        return false;
+
+    double initialDbl;
+    if (!ToInteger(cx, initialVal, &initialDbl))
+        return false;
+
+    if (initialDbl < 0 || initialDbl > INT32_MAX) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Table", "initial");
+        return false;
+    }
+
+    SharedTable table = Table::create(cx, TableKind::AnyFunction, uint32_t(initialDbl));
+    if (!table)
+        return false;
+
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
+    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table, proto));
+    if (!tableObj)
+        return false;
+
+    args.rval().setObject(*tableObj);
+    return true;
+}
+
+Table&
+WasmTableObject::table() const
+{
+    return *(Table*)getReservedSlot(TABLE_SLOT).toPrivate();
+}
+
+// ============================================================================
 // WebAssembly class and static methods
 
 #if JS_HAS_TOSOURCE
@@ -633,8 +732,7 @@ const Class js::WebAssemblyClass =
 
 template <class Class>
 static bool
-InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const char* name,
-                Native native)
+InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const char* name)
 {
     RootedObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
     if (!proto)
@@ -647,7 +745,7 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
     if (!className)
         return false;
 
-    RootedFunction ctor(cx, NewNativeConstructor(cx, native, 1, className));
+    RootedFunction ctor(cx, NewNativeConstructor(cx, Class::construct, 1, className));
     if (!ctor)
         return false;
 
@@ -684,11 +782,13 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject global)
     if (!JS_DefineProperty(cx, wasm, "experimentalVersion", EncodingVersion, JSPROP_RESOLVING))
         return nullptr;
 
-    if (!InitConstructor<WasmModuleObject>(cx, global, wasm, "Module", ModuleConstructor))
+    if (!InitConstructor<WasmModuleObject>(cx, global, wasm, "Module"))
         return nullptr;
-    if (!InitConstructor<WasmInstanceObject>(cx, global, wasm, "Instance", InstanceConstructor))
+    if (!InitConstructor<WasmInstanceObject>(cx, global, wasm, "Instance"))
         return nullptr;
-    if (!InitConstructor<WasmMemoryObject>(cx, global, wasm, "Memory", MemoryConstructor))
+    if (!InitConstructor<WasmMemoryObject>(cx, global, wasm, "Memory"))
+        return nullptr;
+    if (!InitConstructor<WasmTableObject>(cx, global, wasm, "Table"))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))

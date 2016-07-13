@@ -121,8 +121,8 @@ assertErrorMessage(() => new Memory(1), TypeError, "first argument must be a mem
 assertErrorMessage(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
 assertErrorMessage(() => new Memory({initial:-1}), TypeError, /bad Memory initial size/);
 assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
-assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
 assertEq(new Memory({initial:1}) instanceof Memory, true);
+assertEq(new Memory({initial:1.5}).buffer.byteLength, 64*1024);
 
 // 'WebAssembly.Memory.prototype' property
 const memoryProtoDesc = Object.getOwnPropertyDescriptor(Memory, 'prototype');
@@ -157,3 +157,41 @@ assertErrorMessage(() => bufferGetter.call({}), TypeError, /called on incompatib
 assertEq(bufferGetter.call(mem1) instanceof ArrayBuffer, true);
 assertEq(bufferGetter.call(mem1).byteLength, 64 * 1024);
 
+// 'WebAssembly.Table' property
+const tableDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Table');
+assertEq(typeof tableDesc.value, "function");
+assertEq(tableDesc.writable, true);
+assertEq(tableDesc.enumerable, false);
+assertEq(tableDesc.configurable, true);
+
+// 'WebAssembly.Table' constructor function
+const Table = WebAssembly.Table;
+assertEq(Table, tableDesc.value);
+assertEq(Table.length, 1);
+assertEq(Table.name, "Table");
+assertErrorMessage(() => Table(), TypeError, /constructor without new is forbidden/);
+assertErrorMessage(() => new Table(1), TypeError, "first argument must be a table descriptor");
+assertErrorMessage(() => new Table({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
+assertErrorMessage(() => new Table({initial:-1}), TypeError, /bad Table initial size/);
+assertErrorMessage(() => new Table({initial:Math.pow(2,32)}), TypeError, /bad Table initial size/);
+assertEq(new Table({initial:1}) instanceof Table, true);
+assertEq(new Table({initial:1.5}) instanceof Table, true);
+
+// 'WebAssembly.Table.prototype' property
+const tableProtoDesc = Object.getOwnPropertyDescriptor(Table, 'prototype');
+assertEq(typeof tableProtoDesc.value, "object");
+assertEq(tableProtoDesc.writable, false);
+assertEq(tableProtoDesc.enumerable, false);
+assertEq(tableProtoDesc.configurable, false);
+
+// 'WebAssembly.Table.prototype' object
+const tableProto = Table.prototype;
+assertEq(tableProto, tableProtoDesc.value);
+assertEq(String(tableProto), "[object Object]");
+assertEq(Object.getPrototypeOf(tableProto), Object.prototype);
+
+// 'WebAssembly.Table' instance objects
+const tbl1 = new Table({initial:1});
+assertEq(typeof tbl1, "object");
+assertEq(String(tbl1), "[object WebAssembly.Table]");
+assertEq(Object.getPrototypeOf(tbl1), tableProto);
