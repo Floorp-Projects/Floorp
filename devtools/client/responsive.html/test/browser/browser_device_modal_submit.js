@@ -61,7 +61,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   uncheckedCb.click();
   submitButton.click();
 
-  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
+  ok(modal.classList.contains("hidden"),
     "The device modal is hidden on submit.");
 
   info("Checking that the new device is added to the user preference list.");
