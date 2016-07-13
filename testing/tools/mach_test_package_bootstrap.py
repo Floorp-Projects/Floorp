@@ -4,9 +4,11 @@
 
 from __future__ import print_function, unicode_literals
 
+import json
 import os
 import platform
 import sys
+import types
 
 
 SEARCH_PATHS = [
@@ -14,23 +16,24 @@ SEARCH_PATHS = [
     'marionette/marionette/runner/mixins/browsermob-proxy-py',
     'marionette/client',
     'mochitest',
+    'mozbase/manifestparser',
     'mozbase/mozcrash',
     'mozbase/mozdebug',
     'mozbase/mozdevice',
     'mozbase/mozfile',
     'mozbase/mozhttpd',
+    'mozbase/mozinfo',
+    'mozbase/mozinstall',
     'mozbase/mozleak',
     'mozbase/mozlog',
     'mozbase/moznetwork',
     'mozbase/mozprocess',
     'mozbase/mozprofile',
     'mozbase/mozrunner',
-    'mozbase/mozsystemmonitor',
-    'mozbase/mozinfo',
     'mozbase/mozscreenshot',
+    'mozbase/mozsystemmonitor',
     'mozbase/moztest',
     'mozbase/mozversion',
-    'mozbase/manifestparser',
     'tools/mach',
     'tools/wptserve',
 ]
@@ -60,10 +63,48 @@ CATEGORIES = {
     },
     'disabled': {
         'short': 'Disabled',
-        'long': 'The disabled commands are hidden by default. Use -v to display them. These commands are unavailable for your current context, run "mach <command>" to see why.',
+        'long': 'The disabled commands are hidden by default. Use -v to display them. '
+                'These commands are unavailable for your current context, '
+                'run "mach <command>" to see why.',
         'priority': 0,
     }
 }
+
+
+def ancestors(path, depth=0):
+    """Emit the parent directories of a path."""
+    count = 1
+    while path and count != depth:
+        yield path
+        newpath = os.path.dirname(path)
+        if newpath == path:
+            break
+        path = newpath
+        count += 1
+
+
+def find_firefox(context):
+    """Try to automagically find the firefox binary."""
+    import mozinstall
+    search_paths = []
+
+    # Check for a mozharness setup
+    if context.mozharness_config:
+        with open(context.mozharness_config, 'r') as f:
+            config = json.load(f)
+        workdir = os.path.join(config['base_work_dir'], config['work_dir'])
+        search_paths.append(os.path.join(workdir, 'application'))
+
+    # Check for test-stage setup
+    dist_bin = os.path.join(os.path.dirname(context.package_root), 'bin')
+    if os.path.isdir(dist_bin):
+        search_paths.append(dist_bin)
+
+    for path in search_paths:
+        try:
+            return mozinstall.get_binary(path, 'firefox')
+        except mozinstall.InvalidBinary:
+            continue
 
 
 def bootstrap(test_package_root):
@@ -85,9 +126,20 @@ def bootstrap(test_package_root):
             return
 
         context.package_root = test_package_root
-        context.certs_dir = os.path.join(test_package_root, 'certs')
         context.bin_dir = os.path.join(test_package_root, 'bin')
+        context.certs_dir = os.path.join(test_package_root, 'certs')
         context.modules_dir = os.path.join(test_package_root, 'modules')
+
+        context.ancestors = ancestors
+        context.find_firefox = types.MethodType(find_firefox, context)
+
+        # Search for a mozharness localconfig.json
+        context.mozharness_config = None
+        for dir_path in ancestors(test_package_root):
+            mozharness_config = os.path.join(dir_path, 'logs', 'localconfig.json')
+            if os.path.isfile(mozharness_config):
+                context.mozharness_config = mozharness_config
+                break
 
     mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context
