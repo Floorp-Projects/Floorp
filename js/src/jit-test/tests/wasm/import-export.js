@@ -53,8 +53,8 @@ assertEq(new Instance(m5, {a:{b:mem2Page}}) instanceof Instance, true);
 assertEq(new Instance(m5, {a:{b:mem3Page}}) instanceof Instance, true);
 assertEq(new Instance(m5, {a:{b:mem4Page}}) instanceof Instance, true);
 
-assertErrorMessage(() => new Module(textToBinary('(module (memory 2 1))')), TypeError, /maximum memory size less than initial memory size/);
-assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memory 2 1)))')), TypeError, /maximum memory size less than initial memory size/);
+assertErrorMessage(() => new Module(textToBinary('(module (memory 2 1))')), TypeError, /maximum length less than initial length/);
+assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memory 2 1)))')), TypeError, /maximum length less than initial length/);
 
 // Import order:
 
@@ -175,8 +175,8 @@ assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memor
 var m = new Module(textToBinary(`
     (module
         (import "a" "b" (memory 1 1))
-        (segment 0 "\\0a\\0b")
-        (segment 100 "\\0c\\0d")
+        (data 0 "\\0a\\0b")
+        (data 100 "\\0c\\0d")
         (func $get (param $p i32) (result i32)
             (i32.load8_u (get_local $p)))
         (export "get" $get))

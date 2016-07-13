@@ -51,6 +51,7 @@ using mozilla::PodZero;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::RefCounted;
+using mozilla::Some;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
