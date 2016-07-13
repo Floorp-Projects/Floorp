@@ -197,6 +197,8 @@ DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBu
   , mRestored(false)
 #endif
   , mClearedForStackingContextContents(false)
-{}
+{
+  mState.mStackingContextAncestorSC = mState.GetCurrentInnermostScrollClip();
+}
 
 } // namespace mozilla
