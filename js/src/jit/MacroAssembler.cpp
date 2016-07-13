@@ -1059,7 +1059,7 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
 void
 MacroAssembler::initTypedArraySlots(Register obj, Register temp, Register lengthReg,
                                     LiveRegisterSet liveRegs, Label* fail,
-                                    TypedArrayObject* templateObj, TypedArrayLength lengthKind)
+                                    TypedArrayObject* templateObj)
 {
     MOZ_ASSERT(templateObj->hasPrivate());
     MOZ_ASSERT(!templateObj->hasBuffer());
@@ -1074,7 +1074,7 @@ MacroAssembler::initTypedArraySlots(Register obj, Register temp, Register length
     int32_t length = templateObj->length();
     size_t nbytes = length * templateObj->bytesPerElement();
 
-    if (lengthKind == TypedArrayLength::Fixed && dataOffset + nbytes <= JSObject::MAX_BYTE_SIZE) {
+    if (dataOffset + nbytes <= JSObject::MAX_BYTE_SIZE) {
         MOZ_ASSERT(dataOffset + nbytes <= templateObj->tenuredSizeOfThis());
 
         // Store data elements inside the remaining JSObject slots.
@@ -1093,8 +1093,7 @@ MacroAssembler::initTypedArraySlots(Register obj, Register temp, Register length
         for (size_t i = 0; i < numZeroPointers; i++)
             storePtr(ImmWord(0), Address(obj, dataOffset + i * sizeof(char *)));
     } else {
-        if (lengthKind == TypedArrayLength::Fixed)
-            move32(Imm32(length), lengthReg);
+        move32(Imm32(length), lengthReg);
 
         // Allocate a buffer on the heap to store the data elements.
         liveRegs.addUnchecked(temp);
