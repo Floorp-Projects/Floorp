@@ -428,7 +428,12 @@ struct Zone : public JS::shadow::Zone,
         // If the cell was in the nursery, hopefully unlikely, then we need to
         // tell the nursery about it so that it can sweep the uid if the thing
         // does not get tenured.
-        return runtimeFromAnyThread()->gc.nursery.addedUniqueIdToCell(cell);
+        if (!runtimeFromAnyThread()->gc.nursery.addedUniqueIdToCell(cell)) {
+            uniqueIds_.remove(cell);
+            return false;
+        }
+
+        return true;
     }
 
     js::HashNumber getHashCodeInfallible(js::gc::Cell* cell) {
