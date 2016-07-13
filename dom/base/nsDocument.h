@@ -1651,11 +1651,7 @@ public:
   // terminated instead of letting it finish at its own pace.
   bool mParserAborted:1;
 
-  friend class nsPointerLockPermissionRequest;
   friend class nsCallRequestFullScreen;
-  // When set, trying to lock the pointer doesn't require permission from the
-  // user.
-  bool mAllowRelocking:1;
 
   // ScreenOrientation "pending promise" as described by
   // http://www.w3.org/TR/screen-orientation/
@@ -1673,10 +1669,6 @@ public:
   // Keeps track of whether we have a pending
   // 'style-sheet-applicable-state-changed' notification.
   bool mSSApplicableStateNotificationPending:1;
-
-  // The number of pointer lock requests which are cancelled by the user.
-  // The value is saturated to kPointerLockRequestLimit+1 = 3.
-  uint8_t mCancelledPointerLockRequests:2;
 
   // Whether we have reported use counters for this document with Telemetry yet.
   // Normally this is only done at document destruction time, but for image
