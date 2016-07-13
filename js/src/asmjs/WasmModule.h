@@ -103,48 +103,37 @@ struct Import
 
 typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
-// ExportMap describes all of a single module's exports. The ExportMap describes
-// how the Exports (stored in Metadata) are mapped to the fields of the export
-// object produced by instantiation. The 'fieldNames' vector provides the list
-// of names of the module's exports. For each field name, 'fieldsToExports'
-// provides either:
-//  - the sentinel value MemoryExport indicating an export of linear memory; or
-//  - the index of an export into the ExportVector in Metadata
+// Export describes the export of a definition in a Module to a field in the
+// export object. For functions, Export stores an index into the
+// FuncExportVector in Metadata. For memory and table exports, there is
+// at most one (default) memory/table so no index is needed. Note: a single
+// definition can be exported by multiple Exports in the ExportVector.
 //
-// ExportMap also contains the start function's export index, which maps to the
-// export that is called at each instantiation of a given module.
-//
-// ExportMap is built incrementally by ModuleGenerator and then stored immutably
-// by Module.
+// ExportVector is built incrementally by ModuleGenerator and then stored
+// immutably by Module.
 
-static const uint32_t MemoryExport = UINT32_MAX;
-
-static const uint32_t NO_START_FUNCTION = UINT32_MAX;
-
-class ExportMap
+class Export
 {
-    uint32_t startExportIndex;
+    CacheableChars fieldName_;
+    struct CacheablePod {
+        DefinitionKind kind_;
+        uint32_t funcExportIndex_;
+    } pod;
 
   public:
-    CacheableCharsVector fieldNames;
-    Uint32Vector fieldsToExports;
+    Export() = default;
+    explicit Export(UniqueChars fieldName, uint32_t funcExportIndex);
+    explicit Export(UniqueChars fieldName, DefinitionKind kind);
 
-    ExportMap() : startExportIndex(NO_START_FUNCTION) {}
+    const char* fieldName() const { return fieldName_.get(); }
 
-    bool hasStartFunction() const {
-        return startExportIndex != NO_START_FUNCTION;
-    }
-    void setStartFunction(uint32_t index) {
-        MOZ_ASSERT(!hasStartFunction());
-        startExportIndex = index;
-    }
-    uint32_t startFunctionExportIndex() const {
-        MOZ_ASSERT(hasStartFunction());
-        return startExportIndex;
-    }
+    DefinitionKind kind() const { return pod.kind_; }
+    uint32_t funcExportIndex() const;
 
-    WASM_DECLARE_SERIALIZABLE(ExportMap)
+    WASM_DECLARE_SERIALIZABLE(Export)
 };
+
+typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 // DataSegment describes the offset of a data segment in the bytecode that is
 // to be copied at a given offset into linear memory upon instantiation.
@@ -194,7 +183,7 @@ class Module
     const Bytes             code_;
     const LinkData          linkData_;
     const ImportVector      imports_;
-    const ExportMap         exportMap_;
+    const ExportVector      exports_;
     const DataSegmentVector dataSegments_;
     const ElemSegmentVector elemSegments_;
     const SharedMetadata    metadata_;
@@ -207,7 +196,7 @@ class Module
     Module(Bytes&& code,
            LinkData&& linkData,
            ImportVector&& imports,
-           ExportMap&& exportMap,
+           ExportVector&& exports,
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
            const Metadata& metadata,
@@ -215,7 +204,7 @@ class Module
       : code_(Move(code)),
         linkData_(Move(linkData)),
         imports_(Move(imports)),
-        exportMap_(Move(exportMap)),
+        exports_(Move(exports)),
         dataSegments_(Move(dataSegments)),
         elemSegments_(Move(elemSegments)),
         metadata_(&metadata),
