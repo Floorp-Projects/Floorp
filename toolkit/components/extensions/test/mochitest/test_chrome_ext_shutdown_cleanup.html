@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+
+const {
+ GlobalManager,
+ UninstallObserver,
+} = Cu.import("resource://gre/modules/Extension.jsm");
+
+/* eslint-disable mozilla/balanced-listeners */
+
+add_task(function* testShutdownCleanup() {
+  is(GlobalManager.initialized, false,
+     "GlobalManager start as not initialized");
+  is(UninstallObserver.initialized, false,
+     "UninstallObserver start as not initialized");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: "new " + function() {
+      browser.test.notifyPass("background page loaded");
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("background page loaded");
+
+  is(GlobalManager.initialized, true,
+     "GlobalManager has been initialized once an extension is started");
+  is(UninstallObserver.initialized, true,
+     "UninstallObserver has been initialized once an extension is started");
+
+  yield extension.unload();
+
+  is(GlobalManager.initialized, false,
+     "GlobalManager has been uninitialized once all the webextensions have been stopped");
+  is(UninstallObserver.initialized, false,
+     "UninstallObserver has been uninitialized once all the webextensions have been stopped");
+});
+</script>
+
+</body>
+</html>
