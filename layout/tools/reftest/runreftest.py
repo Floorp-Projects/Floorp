@@ -37,8 +37,11 @@ from mozscreenshot import printstatus, dump_screen
 try:
     from marionette import Marionette
     from marionette_driver.addons import Addons
-except ImportError:
-    Marionette=None
+except ImportError, e:
+    # Defer ImportError until attempt to use Marionette
+    def reraise(*args, **kwargs):
+        raise(e)
+    Marionette = reraise
 
 from output import OutputHandler, ReftestFormatter
 import reftestcommandline
@@ -724,6 +727,20 @@ def run(**kwargs):
 
     reftest = RefTest()
     parser.validate(options, reftest)
+
+    # We have to validate options.app here for the case when the mach
+    # command is able to find it after argument parsing. This can happen
+    # when running from a tests.zip.
+    if not options.app:
+        parser.error("could not find the application path, --appname must be specified")
+
+    options.app = reftest.getFullPath(options.app)
+    if not os.path.exists(options.app):
+        parser.error("Error: Path %(app)s doesn't exist. Are you executing "
+                     "$objdir/_tests/reftest/runreftest.py?" % {"app": options.app})
+
+    if options.xrePath is None:
+        options.xrePath = os.path.dirname(options.app)
 
     return reftest.runTests(options.tests, options)
 
