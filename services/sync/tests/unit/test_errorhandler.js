@@ -166,7 +166,7 @@ add_identity_test(this, function* test_401_logout() {
   yield setUp(server);
 
   // By calling sync, we ensure we're logged in.
-  Service.sync();
+  yield sync_and_validate_telem();
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
@@ -201,7 +201,8 @@ add_identity_test(this, function* test_401_logout() {
   Service._updateCachedURLs();
 
   _("Starting first sync.");
-  Service.sync();
+  let ping = yield sync_and_validate_telem(true);
+  deepEqual(ping.failureReason, { name: "httperror", code: 401 });
   _("First sync done.");
   yield deferred.promise;
 });
@@ -211,12 +212,18 @@ add_identity_test(this, function* test_credentials_changed_logout() {
   yield setUp(server);
 
   // By calling sync, we ensure we're logged in.
-  Service.sync();
+  yield sync_and_validate_telem();
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
   generateCredentialsChangedFailure();
-  Service.sync();
+
+  let ping = yield sync_and_validate_telem(true);
+  equal(ping.status.sync, CREDENTIALS_CHANGED);
+  deepEqual(ping.failureReason, {
+    name: "unexpectederror",
+    error: "Error: Aborting sync, remote setup failed"
+  });
 
   do_check_eq(Status.sync, CREDENTIALS_CHANGED);
   do_check_false(Service.isLoggedIn);
@@ -539,13 +546,20 @@ add_identity_test(this, function* test_sync_syncAndReportErrors_non_network_erro
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-
-    clean();
-    server.stop(deferred.resolve);
+    // If we clean this tick, telemetry won't get the right error
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
+  let ping = yield wait_for_ping(() => errorHandler.syncAndReportErrors(), true);
+  equal(ping.status.sync, CREDENTIALS_CHANGED);
+  deepEqual(ping.failureReason, {
+    name: "unexpectederror",
+    error: "Error: Aborting sync, remote setup failed"
+  });
   yield deferred.promise;
 });
 
@@ -589,13 +603,20 @@ add_identity_test(this, function* test_sync_syncAndReportErrors_prolonged_non_ne
   Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-
-    clean();
-    server.stop(deferred.resolve);
+    // If we clean this tick, telemetry won't get the right error
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
   });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.syncAndReportErrors();
+  let ping = yield wait_for_ping(() => errorHandler.syncAndReportErrors(), true);
+  equal(ping.status.sync, CREDENTIALS_CHANGED);
+  deepEqual(ping.failureReason, {
+    name: "unexpectederror",
+    error: "Error: Aborting sync, remote setup failed"
+  });
   yield deferred.promise;
 });
 
@@ -715,13 +736,20 @@ add_task(function* test_sync_prolonged_non_network_error() {
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
     do_check_true(errorHandler.didReportProlongedError);
-
-    clean();
-    server.stop(deferred.resolve);
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
   });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+
+  let ping = yield sync_and_validate_telem(true);
+  equal(ping.status.sync, PROLONGED_SYNC_FAILURE);
+  deepEqual(ping.failureReason, {
+    name: "unexpectederror",
+    error: "Error: Aborting sync, remote setup failed"
+  });
   yield deferred.promise;
 });
 
@@ -880,12 +908,17 @@ add_identity_test(this, function* test_sync_server_maintenance_error() {
     do_check_false(errorHandler.didReportProlongedError);
 
     Svc.Obs.remove("weave:ui:sync:error", onSyncError);
-    clean();
-    server.stop(deferred.resolve);
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    })
   });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  Service.sync();
+  let ping = yield sync_and_validate_telem(true);
+  equal(ping.status.sync, SERVER_MAINTENANCE);
+  deepEqual(ping.engines.find(e => e.failureReason).failureReason, { name: "httperror", code: 503 })
+
   yield deferred.promise;
 });
 
@@ -1040,14 +1073,19 @@ add_task(function* test_sync_prolonged_server_maintenance_error() {
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
     do_check_true(errorHandler.didReportProlongedError);
 
-    clean();
-    server.stop(deferred.resolve);
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
   });
 
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  let ping = yield sync_and_validate_telem(true);
+  deepEqual(ping.status.sync, PROLONGED_SYNC_FAILURE);
+  deepEqual(ping.engines.find(e => e.failureReason).failureReason,
+            { name: "httperror", code: 503 });
   yield deferred.promise;
 });
 
@@ -1264,9 +1302,10 @@ add_identity_test(this, function* test_wipeRemote_prolonged_server_maintenance_e
     do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
     do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
     do_check_true(errorHandler.didReportProlongedError);
-
-    clean();
-    server.stop(deferred.resolve);
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
   });
 
   do_check_false(Status.enforceBackoff);
@@ -1274,7 +1313,8 @@ add_identity_test(this, function* test_wipeRemote_prolonged_server_maintenance_e
 
   Svc.Prefs.set("firstSync", "wipeRemote");
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  let ping = yield sync_and_validate_telem(true);
+  deepEqual(ping.failureReason, { name: "httperror", code: 503 });
   yield deferred.promise;
 });
 
@@ -1770,10 +1810,10 @@ add_identity_test(this, function* test_wipeServer_login_syncAndReportErrors_prol
 add_task(function* test_sync_engine_generic_fail() {
   let server = sync_httpd_setup();
 
-  let engine = engineManager.get("catapult");
+let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.sync = function sync() {
-    Svc.Obs.notify("weave:engine:sync:error", "", "catapult");
+    Svc.Obs.notify("weave:engine:sync:error", ENGINE_UNKNOWN_FAIL, "catapult");
   };
 
   let log = Log.repository.getLogger("Sync.ErrorHandler");
@@ -1808,12 +1848,18 @@ add_task(function* test_sync_engine_generic_fail() {
       let syncErrors = sumHistogram("WEAVE_ENGINE_SYNC_ERRORS", { key: "catapult" });
       do_check_true(syncErrors, 1);
 
-      server.stop(deferred.resolve);
+      server.stop(() => {
+        clean();
+        deferred.resolve();
+      });
     });
   });
 
   do_check_true(yield setUp(server));
-  Service.sync();
+  let ping = yield sync_and_validate_telem(true);
+  deepEqual(ping.status.service, SYNC_FAILED_PARTIAL);
+  deepEqual(ping.engines.find(e => e.status).status, ENGINE_UNKNOWN_FAIL);
+
   yield deferred.promise;
 });
 

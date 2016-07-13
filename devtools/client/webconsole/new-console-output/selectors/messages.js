@@ -5,8 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { getLogLimit } = require("devtools/client/webconsole/new-console-output/selectors/prefs");
+
 function getAllMessages(state) {
-  return state.messages;
+  let messages = state.messages;
+  let messageCount = messages.count();
+  let logLimit = getLogLimit(state);
+
+  if (messageCount > logLimit) {
+    return messages.splice(0, messageCount - logLimit);
+  }
+
+  return messages;
 }
 
 exports.getAllMessages = getAllMessages;

@@ -50,6 +50,7 @@ Ping types
 * ``upgrade`` - *planned* - sent right after an upgrade
 * :doc:`heartbeat-ping` - contains information on Heartbeat surveys
 * :doc:`deletion <deletion-ping>` - sent when FHR upload is disabled, requesting deletion of the data associated with this user
+* :doc:`sync <sync-ping>` - sent after a sync is completed or fails, contains information on sync errors and performance.
 
 Archiving
 =========

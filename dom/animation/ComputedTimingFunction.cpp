@@ -72,6 +72,14 @@ ComputedTimingFunction::GetValue(
       return aPortion;
     }
 
+    // Ensure that we return 0 or 1 on both edges.
+    if (aPortion == 0.0) {
+      return 0.0;
+    }
+    if (aPortion == 1.0) {
+      return 1.0;
+    }
+
     // For negative values, try to extrapolate with tangent (p1 - p0) or,
     // if p1 is coincident with p0, with (p2 - p0).
     if (aPortion < 0.0) {

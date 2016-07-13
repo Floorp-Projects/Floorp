@@ -167,6 +167,8 @@
       <field name="_constructed">false</field>
       <property name="instantApply">
         <getter>
+          if (this.getAttribute("instantApply") == "false")
+            return false;
           return this.getAttribute("instantApply") == "true" || this.preferences.instantApply;
         </getter>
       </property>

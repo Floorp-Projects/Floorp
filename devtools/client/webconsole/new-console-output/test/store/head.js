@@ -7,6 +7,7 @@
 
 var { utils: Cu } = Components;
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Services = require("Services");
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;

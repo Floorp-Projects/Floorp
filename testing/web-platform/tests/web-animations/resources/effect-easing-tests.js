@@ -40,3 +40,30 @@ var gEffectEasingTests = [
     easingFunction: cubicBezier(0, 1.5, 1, 1.5)
   }
 ];
+
+var gInvalidEasingTests = [
+  {
+    easing: ''
+  },
+  {
+    easing: 'test'
+  },
+  {
+    easing: 'cubic-bezier(1.1, 0, 1, 1)'
+  },
+  {
+    easing: 'cubic-bezier(0, 0, 1.1, 1)'
+  },
+  {
+    easing: 'cubic-bezier(-0.1, 0, 1, 1)'
+  },
+  {
+    easing: 'cubic-bezier(0, 0, -0.1, 1)'
+  },
+  {
+    easing: 'steps(-1, start)'
+  },
+  {
+    easing: 'steps(0.1, start)'
+  },
+];
