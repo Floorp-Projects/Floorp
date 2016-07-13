@@ -34,7 +34,7 @@ define(function (require, exports, module) {
     },
 
     summarizeFunction: function (grip) {
-      let name = grip.displayName || grip.name || "function";
+      let name = grip.userDisplayName || grip.displayName || grip.name || "function";
       return cropString(name + "()", 100);
     },
 
