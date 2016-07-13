@@ -14,13 +14,13 @@
  */
 
 /*
- * This file is generated from kinto-client.js - do not modify directly.
+ * This file is generated from kinto-http.js - do not modify directly.
  */
 
 this.EXPORTED_SYMBOLS = ["KintoHttpClient"];
 
 /*
- * Version 0.6.0 - 6b6c736
+ * Version 2.0.0 - 61435f3
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.KintoHttpClient = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -104,9 +104,9 @@ var requests = _interopRequireWildcard(_requests);
 
 var _batch = require("./batch");
 
-var _bucket2 = require("./bucket");
+var _bucket = require("./bucket");
 
-var _bucket3 = _interopRequireDefault(_bucket2);
+var _bucket2 = _interopRequireDefault(_bucket);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -162,18 +162,14 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
   /**
    * Constructor.
    *
-   * @param  {String} remote  The remote URL.
-   * @param  {Object}  options The options object.
-   * @param  {Boolean} options.safe        Adds concurrency headers to every
-   * requests (default: `true`).
-   * @param  {EventEmitter} options.events The events handler. If none provided
-   * an `EventEmitter` instance will be created.
-   * @param  {Object}  options.headers     The key-value headers to pass to each
-   * request (default: `{}`).
-   * @param  {String}  options.bucket      The default bucket to use (default:
-   * `"default"`)
-   * @param  {String}  options.requestMode The HTTP request mode (from ES6 fetch
-   * spec).
+   * @param  {String}       remote  The remote URL.
+   * @param  {Object}       [options={}]                  The options object.
+   * @param  {Boolean}      [options.safe=true]           Adds concurrency headers to every requests.
+   * @param  {EventEmitter} [options.events=EventEmitter] The events handler instance.
+   * @param  {Object}       [options.headers={}]          The key-value headers to pass to each request.
+   * @param  {String}       [options.bucket="default"]    The default bucket to use.
+   * @param  {String}       [options.requestMode="cors"]  The HTTP request mode (from ES6 fetch spec).
+   * @param  {Number}       [options.timeout=5000]        The requests timeout in ms.
    */
   constructor(remote, options = {}) {
     if (typeof remote !== "string" || !remote.length) {
@@ -219,12 +215,13 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
      */
     this.events = options.events;
 
+    const { requestMode, timeout } = options;
     /**
      * The HTTP instance.
      * @ignore
      * @type {HTTP}
      */
-    this.http = new _http2.default(this.events, { requestMode: options.requestMode });
+    this.http = new _http2.default(this.events, { requestMode, timeout });
     this._registerHTTPEvents();
   }
 
@@ -281,24 +278,27 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @private
    */
   _registerHTTPEvents() {
-    this.events.on("backoff", backoffMs => {
-      this._backoffReleaseTime = backoffMs;
-    });
+    // Prevent registering event from a batch client instance
+    if (!this._isBatch) {
+      this.events.on("backoff", backoffMs => {
+        this._backoffReleaseTime = backoffMs;
+      });
+    }
   }
 
   /**
    * Retrieve a bucket object to perform operations on it.
    *
-   * @param  {String}  name    The bucket name.
-   * @param  {Object}  options The request options.
-   * @param  {Boolean} safe    The resulting safe option.
-   * @param  {String}  bucket  The resulting bucket name option.
-   * @param  {Object}  headers The extended headers object option.
+   * @param  {String}  name              The bucket name.
+   * @param  {Object}  [options={}]      The request options.
+   * @param  {Boolean} [options.safe]    The resulting safe option.
+   * @param  {String}  [options.bucket]  The resulting bucket name option.
+   * @param  {Object}  [options.headers] The extended headers object option.
    * @return {Bucket}
    */
   bucket(name, options = {}) {
     const bucketOptions = (0, _utils.omit)(this._getRequestOptions(options), "bucket");
-    return new _bucket3.default(this, name, bucketOptions);
+    return new _bucket2.default(this, name, bucketOptions);
   }
 
   /**
@@ -308,11 +308,11 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * Note: Headers won't be overriden but merged with instance default ones.
    *
    * @private
-   * @param    {Object} options The request options.
+   * @param    {Object}  [options={}]      The request options.
+   * @property {Boolean} [options.safe]    The resulting safe option.
+   * @property {String}  [options.bucket]  The resulting bucket name option.
+   * @property {Object}  [options.headers] The extended headers object option.
    * @return   {Object}
-   * @property {Boolean} safe    The resulting safe option.
-   * @property {String}  bucket  The resulting bucket name option.
-   * @property {Object}  headers The extended headers object option.
    */
   _getRequestOptions(options = {}) {
     return _extends({}, this.defaultReqOptions, options, {
@@ -326,14 +326,15 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * Retrieves server information and persist them locally. This operation is
    * usually performed a single time during the instance lifecycle.
    *
+   * @param  {Object}  [options={}] The request options.
    * @return {Promise<Object, Error>}
    */
-  fetchServerInfo() {
+  fetchServerInfo(options = {}) {
     if (this.serverInfo) {
       return Promise.resolve(this.serverInfo);
     }
     return this.http.request(this.remote + (0, _endpoint2.default)("root"), {
-      headers: this.defaultReqOptions.headers
+      headers: _extends({}, this.defaultReqOptions.headers, options.headers)
     }).then(({ json }) => {
       this.serverInfo = json;
       return this.serverInfo;
@@ -343,41 +344,45 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
   /**
    * Retrieves Kinto server settings.
    *
+   * @param  {Object}  [options={}] The request options.
    * @return {Promise<Object, Error>}
    */
 
-  fetchServerSettings() {
-    return this.fetchServerInfo().then(({ settings }) => settings);
+  fetchServerSettings(options = {}) {
+    return this.fetchServerInfo(options).then(({ settings }) => settings);
   }
 
   /**
    * Retrieve server capabilities information.
    *
+   * @param  {Object}  [options={}] The request options.
    * @return {Promise<Object, Error>}
    */
 
-  fetchServerCapabilities() {
-    return this.fetchServerInfo().then(({ capabilities }) => capabilities);
+  fetchServerCapabilities(options = {}) {
+    return this.fetchServerInfo(options).then(({ capabilities }) => capabilities);
   }
 
   /**
    * Retrieve authenticated user information.
    *
+   * @param  {Object}  [options={}] The request options.
    * @return {Promise<Object, Error>}
    */
 
-  fetchUser() {
-    return this.fetchServerInfo().then(({ user }) => user);
+  fetchUser(options = {}) {
+    return this.fetchServerInfo(options).then(({ user }) => user);
   }
 
   /**
    * Retrieve authenticated user information.
    *
+   * @param  {Object}  [options={}] The request options.
    * @return {Promise<Object, Error>}
    */
 
-  fetchHTTPApiVersion() {
-    return this.fetchServerInfo().then(({ http_api_version }) => {
+  fetchHTTPApiVersion(options = {}) {
+    return this.fetchServerInfo(options).then(({ http_api_version }) => {
       return http_api_version;
     });
   }
@@ -386,8 +391,8 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * Process batch requests, chunking them according to the batch_max_requests
    * server setting when needed.
    *
-   * @param  {Array}  requests The list of batch subrequests to perform.
-   * @param  {Object} options  The options object.
+   * @param  {Array}  requests     The list of batch subrequests to perform.
+   * @param  {Object} [options={}] The options object.
    * @return {Promise<Object, Error>}
    */
   _batchRequests(requests, options = {}) {
@@ -421,13 +426,12 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * Note: Reserved for internal use only.
    *
    * @ignore
-   * @param  {Function} fn      The function to use for describing batch ops.
-   * @param  {Object}   options The options object.
-   * @param  {Boolean}  options.safe      The safe option.
-   * @param  {String}   options.bucket    The bucket name option.
-   * @param  {Object}   options.headers   The headers object option.
-   * @param  {Boolean}  options.aggregate Produces an aggregated result object
-   * (default: `false`).
+   * @param  {Function} fn                        The function to use for describing batch ops.
+   * @param  {Object}   [options={}]              The options object.
+   * @param  {Boolean}  [options.safe]            The safe option.
+   * @param  {String}   [options.bucket]          The bucket name option.
+   * @param  {Object}   [options.headers]         The headers object option.
+   * @param  {Boolean}  [options.aggregate=false] Produces an aggregated result object.
    * @return {Promise<Object, Error>}
    */
 
@@ -460,11 +464,9 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * Executes an atomic HTTP request.
    *
    * @private
-   * @param  {Object}  request     The request object.
-   * @param  {Object}  options     The options object.
-   * @param  {Boolean} options.raw Resolve with full response object, including
-   * json body and headers (Default: `false`, so only the json body is
-   * retrieved).
+   * @param  {Object}  request             The request object.
+   * @param  {Object}  [options={}]        The options object.
+   * @param  {Boolean} [options.raw=false] If true, resolve with full response object, including json body and headers instead of just json.
    * @return {Promise<Object, Error>}
    */
   execute(request, options = { raw: false }) {
@@ -487,13 +489,13 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
   /**
    * Retrieves the list of buckets.
    *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
    * @return {Promise<Object[], Error>}
    */
   listBuckets(options = {}) {
     return this.execute({
-      path: (0, _endpoint2.default)("buckets"),
+      path: (0, _endpoint2.default)("bucket"),
       headers: _extends({}, this.defaultReqOptions.headers, options.headers)
     });
   }
@@ -501,46 +503,63 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
   /**
    * Creates a new bucket on the server.
    *
-   * @param  {String}   bucketName      The bucket name.
-   * @param  {Object}   options         The options object.
-   * @param  {Boolean}  options.safe    The safe option.
-   * @param  {Object}   options.headers The headers object option.
+   * @param  {String}   id                The bucket name.
+   * @param  {Object}   [options={}]      The options object.
+   * @param  {Boolean}  [options.data]    The bucket data option.
+   * @param  {Boolean}  [options.safe]    The safe option.
+   * @param  {Object}   [options.headers] The headers object option.
    * @return {Promise<Object, Error>}
    */
-  createBucket(bucketName, options = {}) {
+  createBucket(id, options = {}) {
+    if (!id) {
+      throw new Error("A bucket id is required.");
+    }
+    // Note that we simply ignore any "bucket" option passed here, as the one
+    // we're interested in is the one provided as a required argument.
     const reqOptions = this._getRequestOptions(options);
-    return this.execute(requests.createBucket(bucketName, reqOptions));
+    const { data = {}, permissions } = reqOptions;
+    data.id = id;
+    const path = (0, _endpoint2.default)("bucket", id);
+    return this.execute(requests.createRequest(path, { data, permissions }, reqOptions));
   }
 
   /**
    * Deletes a bucket from the server.
    *
    * @ignore
-   * @param  {Object|String} bucket          The bucket to delete.
-   * @param  {Object}        options         The options object.
-   * @param  {Boolean}       options.safe    The safe option.
-   * @param  {Object}        options.headers The headers object option.
+   * @param  {Object|String} bucket                  The bucket to delete.
+   * @param  {Object}        [options={}]            The options object.
+   * @param  {Boolean}       [options.safe]          The safe option.
+   * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
   deleteBucket(bucket, options = {}) {
-    const _bucket = typeof bucket === "object" ? bucket : { id: bucket };
-    const reqOptions = this._getRequestOptions(options);
-    return this.execute(requests.deleteBucket(_bucket, reqOptions));
+    const bucketObj = (0, _utils.toDataBody)(bucket);
+    if (!bucketObj.id) {
+      throw new Error("A bucket id is required.");
+    }
+    const path = (0, _endpoint2.default)("bucket", bucketObj.id);
+    const { last_modified } = { bucketObj };
+    const reqOptions = this._getRequestOptions(_extends({ last_modified }, options));
+    return this.execute(requests.deleteRequest(path, reqOptions));
   }
 
   /**
    * Deletes all buckets on the server.
    *
    * @ignore
-   * @param  {Object}  options         The options object.
-   * @param  {Boolean} options.safe    The safe option.
-   * @param  {Object}  options.headers The headers object option.
+   * @param  {Object}  [options={}]            The options object.
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
 
   deleteBuckets(options = {}) {
     const reqOptions = this._getRequestOptions(options);
-    return this.execute(requests.deleteBuckets(reqOptions));
+    const path = (0, _endpoint2.default)("bucket");
+    return this.execute(requests.deleteRequest(path, reqOptions));
   }
 }, (_applyDecoratedDescriptor(_class.prototype, "fetchServerSettings", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "fetchServerSettings"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchServerCapabilities", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "fetchServerCapabilities"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchUser", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "fetchUser"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchHTTPApiVersion", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "fetchHTTPApiVersion"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "batch", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "batch"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "deleteBuckets", [_dec6], Object.getOwnPropertyDescriptor(_class.prototype, "deleteBuckets"), _class.prototype)), _class));
 exports.default = KintoClientBase;
@@ -630,10 +649,11 @@ let Bucket = class Bucket {
   /**
    * Constructor.
    *
-   * @param  {KintoClient} client          The client instance.
-   * @param  {String}      name            The bucket name.
-   * @param  {Object}      options.headers The headers object option.
-   * @param  {Boolean}     options.safe    The safe option.
+   * @param  {KintoClient} client            The client instance.
+   * @param  {String}      name              The bucket name.
+   * @param  {Object}      [options={}]      The headers object option.
+   * @param  {Object}      [options.headers] The headers object option.
+   * @param  {Boolean}     [options.safe]    The safe option.
    */
   constructor(client, name, options = {}) {
     /**
@@ -661,8 +681,8 @@ let Bucket = class Bucket {
    * Merges passed request options with default bucket ones, if any.
    *
    * @private
-   * @param  {Object} options The options to merge.
-   * @return {Object}         The merged options.
+   * @param  {Object} [options={}] The options to merge.
+   * @return {Object}              The merged options.
    */
   _bucketOptions(options = {}) {
     const headers = _extends({}, this.options && this.options.headers, options.headers);
@@ -676,40 +696,71 @@ let Bucket = class Bucket {
   /**
    * Selects a collection.
    *
-   * @param  {String} name            The collection name.
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
-   * @param  {Boolean}  options.safe  The safe option.
+   * @param  {String}  name              The collection name.
+   * @param  {Object}  [options={}]      The options object.
+   * @param  {Object}  [options.headers] The headers object option.
+   * @param  {Boolean} [options.safe]    The safe option.
    * @return {Collection}
    */
-  collection(name, options) {
+  collection(name, options = {}) {
     return new _collection2.default(this.client, this, name, this._bucketOptions(options));
   }
 
   /**
-   * Retrieves bucket properties.
+   * Retrieves bucket data.
    *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
    * @return {Promise<Object, Error>}
    */
-  getAttributes(options = {}) {
+  getData(options = {}) {
     return this.client.execute({
       path: (0, _endpoint2.default)("bucket", this.name),
       headers: _extends({}, this.options.headers, options.headers)
-    });
+    }).then(res => res.data);
+  }
+
+  /**
+   * Set bucket data.
+   * @param  {Object}  data                    The bucket data object.
+   * @param  {Object}  [options={}]            The options object.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Boolean} [options.patch]         The patch option.
+   * @param  {Number}  [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  setData(data, options = {}) {
+    if (!(0, _utils.isObject)(data)) {
+      throw new Error("A bucket object is required.");
+    }
+
+    const bucket = _extends({}, data, { id: this.name });
+
+    // For default bucket, we need to drop the id from the data object.
+    // Bug in Kinto < 3.1.1
+    const bucketId = bucket.id;
+    if (bucket.id === "default") {
+      delete bucket.id;
+    }
+
+    const path = (0, _endpoint2.default)("bucket", bucketId);
+    const { permissions } = options;
+    const reqOptions = _extends({}, this._bucketOptions(options));
+    const request = requests.updateRequest(path, { data: bucket, permissions }, reqOptions);
+    return this.client.execute(request);
   }
 
   /**
    * Retrieves the list of collections in the current bucket.
    *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
    * @return {Promise<Array<Object>, Error>}
    */
   listCollections(options = {}) {
     return this.client.execute({
-      path: (0, _endpoint2.default)("collections", this.name),
+      path: (0, _endpoint2.default)("collection", this.name),
       headers: _extends({}, this.options.headers, options.headers)
     });
   }
@@ -717,76 +768,191 @@ let Bucket = class Bucket {
   /**
    * Creates a new collection in current bucket.
    *
-   * @param  {String|undefined}  id        The collection id.
-   * @param  {Object}  options             The options object.
-   * @param  {Boolean} options.safe        The safe option.
-   * @param  {Object}  options.headers     The headers object option.
-   * @param  {Object}  options.permissions The permissions object.
-   * @param  {Object}  options.data        The metadadata object.
-   * @param  {Object}  options.schema      The JSONSchema object.
+   * @param  {String|undefined}  id          The collection id.
+   * @param  {Object}  [options={}]          The options object.
+   * @param  {Boolean} [options.safe]        The safe option.
+   * @param  {Object}  [options.headers]     The headers object option.
+   * @param  {Object}  [options.permissions] The permissions object.
+   * @param  {Object}  [options.data]        The data object.
    * @return {Promise<Object, Error>}
    */
-  createCollection(id, options) {
+  createCollection(id, options = {}) {
     const reqOptions = this._bucketOptions(options);
-    const request = requests.createCollection(id, reqOptions);
+    const { permissions, data = {} } = reqOptions;
+    data.id = id;
+    const path = (0, _endpoint2.default)("collection", this.name, id);
+    const request = requests.createRequest(path, { data, permissions }, reqOptions);
     return this.client.execute(request);
   }
 
   /**
    * Deletes a collection from the current bucket.
    *
-   * @param  {Object|String} collection  The collection to delete.
-   * @param  {Object}    options         The options object.
-   * @param  {Object}    options.headers The headers object option.
-   * @param  {Boolean}   options.safe    The safe option.
+   * @param  {Object|String} collection              The collection to delete.
+   * @param  {Object}        [options={}]            The options object.
+   * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Boolean}       [options.safe]          The safe option.
+   * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  deleteCollection(collection, options) {
+  deleteCollection(collection, options = {}) {
+    const collectionObj = (0, _utils.toDataBody)(collection);
+    if (!collectionObj.id) {
+      throw new Error("A collection id is required.");
+    }
+    const { id, last_modified } = collectionObj;
+    const reqOptions = this._bucketOptions(_extends({ last_modified }, options));
+    const path = (0, _endpoint2.default)("collection", this.name, id);
+    const request = requests.deleteRequest(path, reqOptions);
+    return this.client.execute(request);
+  }
+
+  /**
+   * Retrieves the list of groups in the current bucket.
+   *
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
+   * @return {Promise<Array<Object>, Error>}
+   */
+  listGroups(options = {}) {
+    return this.client.execute({
+      path: (0, _endpoint2.default)("group", this.name),
+      headers: _extends({}, this.options.headers, options.headers)
+    });
+  }
+
+  /**
+   * Creates a new group in current bucket.
+   *
+   * @param  {String} id                The group id.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
+   * @return {Promise<Object, Error>}
+   */
+  getGroup(id, options = {}) {
+    return this.client.execute({
+      path: (0, _endpoint2.default)("group", this.name, id),
+      headers: _extends({}, this.options.headers, options.headers)
+    });
+  }
+
+  /**
+   * Creates a new group in current bucket.
+   *
+   * @param  {String|undefined}  id                    The group id.
+   * @param  {Array<String>}     [members=[]]          The list of principals.
+   * @param  {Object}            [options={}]          The options object.
+   * @param  {Object}            [options.data]        The data object.
+   * @param  {Object}            [options.permissions] The permissions object.
+   * @param  {Boolean}           [options.safe]        The safe option.
+   * @param  {Object}            [options.headers]     The headers object option.
+   * @return {Promise<Object, Error>}
+   */
+  createGroup(id, members = [], options = {}) {
     const reqOptions = this._bucketOptions(options);
-    const request = requests.deleteCollection((0, _utils.toDataBody)(collection), reqOptions);
+    const data = _extends({}, options.data, {
+      id,
+      members
+    });
+    const path = (0, _endpoint2.default)("group", this.name, id);
+    const { permissions } = options;
+    const request = requests.createRequest(path, { data, permissions }, reqOptions);
+    return this.client.execute(request);
+  }
+
+  /**
+   * Updates an existing group in current bucket.
+   *
+   * @param  {Object}  group                   The group object.
+   * @param  {Object}  [options={}]            The options object.
+   * @param  {Object}  [options.data]          The data object.
+   * @param  {Object}  [options.permissions]   The permissions object.
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Number}  [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  updateGroup(group, options = {}) {
+    if (!(0, _utils.isObject)(group)) {
+      throw new Error("A group object is required.");
+    }
+    if (!group.id) {
+      throw new Error("A group id is required.");
+    }
+    const reqOptions = this._bucketOptions(options);
+    const data = _extends({}, options.data, group);
+    const path = (0, _endpoint2.default)("group", this.name, group.id);
+    const { permissions } = options;
+    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
+    return this.client.execute(request);
+  }
+
+  /**
+   * Deletes a group from the current bucket.
+   *
+   * @param  {Object|String} group                   The group to delete.
+   * @param  {Object}        [options={}]            The options object.
+   * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Boolean}       [options.safe]          The safe option.
+   * @param  {Number}        [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  deleteGroup(group, options = {}) {
+    const groupObj = (0, _utils.toDataBody)(group);
+    const { id, last_modified } = groupObj;
+    const reqOptions = this._bucketOptions(_extends({ last_modified }, options));
+    const path = (0, _endpoint2.default)("group", this.name, id);
+    const request = requests.deleteRequest(path, reqOptions);
     return this.client.execute(request);
   }
 
   /**
    * Retrieves the list of permissions for this bucket.
    *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
    * @return {Promise<Object, Error>}
    */
-  getPermissions(options) {
-    return this.getAttributes(this._bucketOptions(options)).then(res => res.permissions);
+  getPermissions(options = {}) {
+    return this.client.execute({
+      path: (0, _endpoint2.default)("bucket", this.name),
+      headers: _extends({}, this.options.headers, options.headers)
+    }).then(res => res.permissions);
   }
 
   /**
-   * Recplaces all existing bucket permissions with the ones provided.
+   * Replaces all existing bucket permissions with the ones provided.
    *
-   * @param  {Object}  permissions           The permissions object.
-   * @param  {Object}  options               The options object
-   * @param  {Object}  options               The options object.
-   * @param  {Boolean} options.safe          The safe option.
-   * @param  {Object}  options.headers       The headers object option.
-   * @param  {Object}  options.last_modified The last_modified option.
+   * @param  {Object}  permissions             The permissions object.
+   * @param  {Object}  [options={}]            The options object
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Object}  [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
   setPermissions(permissions, options = {}) {
-    return this.client.execute(requests.updateBucket({
-      id: this.name,
-      last_modified: options.last_modified
-    }, _extends({}, this._bucketOptions(options), { permissions })));
+    if (!(0, _utils.isObject)(permissions)) {
+      throw new Error("A permissions object is required.");
+    }
+    const path = (0, _endpoint2.default)("bucket", this.name);
+    const reqOptions = _extends({}, this._bucketOptions(options));
+    const { last_modified } = options;
+    const data = { last_modified };
+    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
+    return this.client.execute(request);
   }
 
   /**
    * Performs batch operations at the current bucket level.
    *
-   * @param  {Function} fn                 The batch operation function.
-   * @param  {Object}   options            The options object.
-   * @param  {Object}   options.headers    The headers object option.
-   * @param  {Boolean}  options.safe       The safe option.
-   * @param  {Boolean}  options.aggregate  Produces a grouped result object.
+   * @param  {Function} fn                   The batch operation function.
+   * @param  {Object}   [options={}]         The options object.
+   * @param  {Object}   [options.headers]    The headers object option.
+   * @param  {Boolean}  [options.safe]       The safe option.
+   * @param  {Boolean}  [options.aggregate]  Produces a grouped result object.
    * @return {Promise<Object, Error>}
    */
-  batch(fn, options) {
+  batch(fn, options = {}) {
     return this.client.batch(fn, this._bucketOptions(options));
   }
 };
@@ -824,11 +990,12 @@ let Collection = class Collection {
   /**
    * Constructor.
    *
-   * @param  {KintoClient}  client          The client instance.
-   * @param  {Bucket}       bucket          The bucket instance.
-   * @param  {String}       name            The collection name.
-   * @param  {Object}       options.headers The headers object option.
-   * @param  {Boolean}      options.safe    The safe option.
+   * @param  {KintoClient}  client            The client instance.
+   * @param  {Bucket}       bucket            The bucket instance.
+   * @param  {String}       name              The collection name.
+   * @param  {Object}       [options={}]      The options object.
+   * @param  {Object}       [options.headers] The headers object option.
+   * @param  {Boolean}      [options.safe]    The safe option.
    */
   constructor(client, bucket, name, options = {}) {
     /**
@@ -864,180 +1031,161 @@ let Collection = class Collection {
    * any.
    *
    * @private
-   * @param  {Object} options The options to merge.
-   * @return {Object}         The merged options.
+   * @param  {Object} [options={}] The options to merge.
+   * @return {Object}              The merged options.
    */
   _collOptions(options = {}) {
     const headers = _extends({}, this.options && this.options.headers, options.headers);
     return _extends({}, this.options, options, {
-      headers,
-      // XXX soon to be removed once we've migrated everything from KintoClient
-      bucket: this.bucket.name
-    });
-  }
-
-  /**
-   * Updates current collection properties.
-   *
-   * @private
-   * @param  {Object} options  The request options.
-   * @return {Promise<Object, Error>}
-   */
-  _updateAttributes(options = {}) {
-    const collection = (0, _utils.toDataBody)(this.name);
-    const reqOptions = this._collOptions(options);
-    const request = requests.updateCollection(collection, reqOptions);
-    return this.client.execute(request);
-  }
-
-  /**
-   * Retrieves collection properties.
-   *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
-   * @return {Promise<Object, Error>}
-   */
-  getAttributes(options) {
-    const { headers } = this._collOptions(options);
-    return this.client.execute({
-      path: (0, _endpoint2.default)("collection", this.bucket.name, this.name),
       headers
     });
   }
 
   /**
-   * Retrieves the list of permissions for this collection.
+   * Retrieves collection data.
    *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
    * @return {Promise<Object, Error>}
    */
-  getPermissions(options) {
-    return this.getAttributes(options).then(res => res.permissions);
+  getData(options = {}) {
+    const { headers } = this._collOptions(options);
+    return this.client.execute({
+      path: (0, _endpoint2.default)("collection", this.bucket.name, this.name),
+      headers
+    }).then(res => res.data);
+  }
+
+  /**
+   * Set collection data.
+   * @param  {Object}   data                    The collection data object.
+   * @param  {Object}   [options={}]            The options object.
+   * @param  {Object}   [options.headers]       The headers object option.
+   * @param  {Boolean}  [options.safe]          The safe option.
+   * @param  {Boolean}  [options.patch]         The patch option.
+   * @param  {Number}   [options.last_modified] The last_modified option.
+   * @return {Promise<Object, Error>}
+   */
+  setData(data, options = {}) {
+    if (!(0, _utils.isObject)(data)) {
+      throw new Error("A collection object is required.");
+    }
+    const reqOptions = this._collOptions(options);
+    const { permissions } = reqOptions;
+
+    const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
+    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
+    return this.client.execute(request);
+  }
+
+  /**
+   * Retrieves the list of permissions for this collection.
+   *
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
+   * @return {Promise<Object, Error>}
+   */
+  getPermissions(options = {}) {
+    const { headers } = this._collOptions(options);
+    return this.client.execute({
+      path: (0, _endpoint2.default)("collection", this.bucket.name, this.name),
+      headers
+    }).then(res => res.permissions);
   }
 
   /**
    * Replaces all existing collection permissions with the ones provided.
    *
-   * @param  {Object}   permissions     The permissions object.
-   * @param  {Object}   options         The options object
-   * @param  {Object}   options.headers The headers object option.
-   * @param  {Boolean}  options.safe    The safe option.
-   * @param  {Number}   options.last_modified The last_modified option.
+   * @param  {Object}   permissions             The permissions object.
+   * @param  {Object}   [options={}]            The options object
+   * @param  {Object}   [options.headers]       The headers object option.
+   * @param  {Boolean}  [options.safe]          The safe option.
+   * @param  {Number}   [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  setPermissions(permissions, options) {
-    return this._updateAttributes(_extends({}, options, { permissions }));
-  }
-
-  /**
-   * Retrieves the JSON schema for this collection, if any.
-   *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
-   * @return {Promise<Object|null, Error>}
-   */
-  getSchema(options) {
-    return this.getAttributes(options).then(res => res.data && res.data.schema || null);
-  }
-
-  /**
-   * Sets the JSON schema for this collection.
-   *
-   * @param  {Object}   schema          The JSON schema object.
-   * @param  {Object}   options         The options object.
-   * @param  {Object}   options.headers The headers object option.
-   * @param  {Boolean}  options.safe    The safe option.
-   * @param  {Number}   options.last_modified The last_modified option.
-   * @return {Promise<Object|null, Error>}
-   */
-  setSchema(schema, options) {
-    return this._updateAttributes(_extends({}, options, { schema }));
-  }
-
-  /**
-   * Retrieves metadata attached to current collection.
-   *
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
-   * @return {Promise<Object, Error>}
-   */
-  getMetadata(options) {
-    return this.getAttributes(options).then(({ data }) => (0, _utils.omit)(data, "schema"));
-  }
-
-  /**
-   * Sets metadata for current collection.
-   *
-   * @param  {Object}   metadata        The metadata object.
-   * @param  {Object}   options         The options object.
-   * @param  {Object}   options.headers The headers object option.
-   * @param  {Boolean}  options.safe  The safe option.
-   * @param  {Number}   options.last_modified The last_modified option.
-   * @return {Promise<Object, Error>}
-   */
-  setMetadata(metadata, options) {
-    // Note: patching allows preventing overridding the schema, which lives
-    // within the "data" namespace.
-    return this._updateAttributes(_extends({}, options, { metadata, patch: true }));
+  setPermissions(permissions, options = {}) {
+    if (!(0, _utils.isObject)(permissions)) {
+      throw new Error("A permissions object is required.");
+    }
+    const reqOptions = this._collOptions(options);
+    const path = (0, _endpoint2.default)("collection", this.bucket.name, this.name);
+    const data = { last_modified: options.last_modified };
+    const request = requests.updateRequest(path, { data, permissions }, reqOptions);
+    return this.client.execute(request);
   }
 
   /**
    * Creates a record in current collection.
    *
-   * @param  {Object} record          The record to create.
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
-   * @param  {Boolean}  options.safe  The safe option.
+   * @param  {Object}  record            The record to create.
+   * @param  {Object}  [options={}]      The options object.
+   * @param  {Object}  [options.headers] The headers object option.
+   * @param  {Boolean} [options.safe]    The safe option.
    * @return {Promise<Object, Error>}
    */
-  createRecord(record, options) {
+  createRecord(record, options = {}) {
     const reqOptions = this._collOptions(options);
-    const request = requests.createRecord(this.name, record, reqOptions);
+    const { permissions } = reqOptions;
+    const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, record.id);
+    const request = requests.createRequest(path, { data: record, permissions }, reqOptions);
     return this.client.execute(request);
   }
 
   /**
    * Updates a record in current collection.
    *
-   * @param  {Object}  record                The record to update.
-   * @param  {Object}  options               The options object.
-   * @param  {Object}  options.headers       The headers object option.
-   * @param  {Boolean} options.safe          The safe option.
-   * @param  {Number}  options.last_modified The last_modified option.
+   * @param  {Object}  record                  The record to update.
+   * @param  {Object}  [options={}]            The options object.
+   * @param  {Object}  [options.headers]       The headers object option.
+   * @param  {Boolean} [options.safe]          The safe option.
+   * @param  {Number}  [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  updateRecord(record, options) {
+  updateRecord(record, options = {}) {
+    if (!(0, _utils.isObject)(record)) {
+      throw new Error("A record object is required.");
+    }
+    if (!record.id) {
+      throw new Error("A record id is required.");
+    }
     const reqOptions = this._collOptions(options);
-    const request = requests.updateRecord(this.name, record, reqOptions);
+    const { permissions } = reqOptions;
+    const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, record.id);
+    const request = requests.updateRequest(path, { data: record, permissions }, reqOptions);
     return this.client.execute(request);
   }
 
   /**
    * Deletes a record from the current collection.
    *
-   * @param  {Object|String} record          The record to delete.
-   * @param  {Object}        options         The options object.
-   * @param  {Object}        options.headers The headers object option.
-   * @param  {Boolean}       options.safe    The safe option.
-   * @param  {Number}        options.last_modified The last_modified option.
+   * @param  {Object|String} record                  The record to delete.
+   * @param  {Object}        [options={}]            The options object.
+   * @param  {Object}        [options.headers]       The headers object option.
+   * @param  {Boolean}       [options.safe]          The safe option.
+   * @param  {Number}        [options.last_modified] The last_modified option.
    * @return {Promise<Object, Error>}
    */
-  deleteRecord(record, options) {
-    const reqOptions = this._collOptions(options);
-    const request = requests.deleteRecord(this.name, (0, _utils.toDataBody)(record), reqOptions);
+  deleteRecord(record, options = {}) {
+    const recordObj = (0, _utils.toDataBody)(record);
+    if (!recordObj.id) {
+      throw new Error("A record id is required.");
+    }
+    const { id, last_modified } = recordObj;
+    const reqOptions = this._collOptions(_extends({ last_modified }, options));
+    const path = (0, _endpoint2.default)("record", this.bucket.name, this.name, id);
+    const request = requests.deleteRequest(path, reqOptions);
     return this.client.execute(request);
   }
 
   /**
    * Retrieves a record from the current collection.
    *
-   * @param  {String} id              The record id to retrieve.
-   * @param  {Object} options         The options object.
-   * @param  {Object} options.headers The headers object option.
+   * @param  {String} id                The record id to retrieve.
+   * @param  {Object} [options={}]      The options object.
+   * @param  {Object} [options.headers] The headers object option.
    * @return {Promise<Object, Error>}
    */
-  getRecord(id, options) {
+  getRecord(id, options = {}) {
     return this.client.execute(_extends({
       path: (0, _endpoint2.default)("record", this.bucket.name, this.name, id)
     }, this._collOptions(options)));
@@ -1051,7 +1199,7 @@ let Collection = class Collection {
    * - The field to order the results by, prefixed with `-` for descending.
    * Default: `-last_modified`.
    *
-   * @see http://kinto.readthedocs.org/en/latest/api/1.x/cliquet/resource.html#sorting
+   * @see http://kinto.readthedocs.io/en/stable/core/api/resource.html#sorting
    *
    * Filtering is done by passing a `filters` option object:
    *
@@ -1061,19 +1209,18 @@ let Collection = class Collection {
    * - `{not_fieldname: 0}`
    * - `{exclude_fieldname: "0,1"}`
    *
-   * @see http://kinto.readthedocs.org/en/latest/api/1.x/cliquet/resource.html#filtering
+   * @see http://kinto.readthedocs.io/en/stable/core/api/resource.html#filtering
    *
    * Paginating is done by passing a `limit` option, then calling the `next()`
    * method from the resolved result object to fetch the next page, if any.
    *
-   * @param  {Object}   options         The options object.
-   * @param  {Object}   options.headers The headers object option.
-   * @param  {Object}   options.filters The filters object.
-   * @param  {String}   options.sort    The sort field.
-   * @param  {String}   options.limit   The limit field.
-   * @param  {String}   options.pages   The number of result pages to aggregate.
-   * @param  {Number}   options.since   Only retrieve records modified since the
-   * provided timestamp.
+   * @param  {Object}   [options={}]                    The options object.
+   * @param  {Object}   [options.headers]               The headers object option.
+   * @param  {Object}   [options.filters=[]]            The filters object.
+   * @param  {String}   [options.sort="-last_modified"] The sort field.
+   * @param  {String}   [options.limit=null]            The limit field.
+   * @param  {String}   [options.pages=1]               The number of result pages to aggregate.
+   * @param  {Number}   [options.since=null]            Only retrieve records modified since the provided timestamp.
    * @return {Promise<Object, Error>}
    */
   listRecords(options = {}) {
@@ -1081,8 +1228,12 @@ let Collection = class Collection {
     const { sort, filters, limit, pages, since } = _extends({
       sort: "-last_modified"
     }, options);
+    // Safety/Consistency check on ETag value.
+    if (since && typeof since !== "string") {
+      throw new Error(`Invalid value for since (${ since }), should be ETag value.`);
+    }
     const collHeaders = this.options.headers;
-    const path = (0, _endpoint2.default)("records", this.bucket.name, this.name);
+    const path = (0, _endpoint2.default)("record", this.bucket.name, this.name);
     const querystring = (0, _utils.qsify)(_extends({}, filters, {
       _sort: sort,
       _limit: limit,
@@ -1103,8 +1254,10 @@ let Collection = class Collection {
     };
 
     const pageResults = (results, nextPage, etag) => {
+      // ETag string is supposed to be opaque and stored «as-is».
+      // ETag header values are quoted (because of * and W/"foo").
       return {
-        last_modified: etag,
+        last_modified: etag ? etag.replace(/"/g, "") : etag,
         data: results,
         next: next.bind(null, nextPage)
       };
@@ -1112,7 +1265,6 @@ let Collection = class Collection {
 
     const handleResponse = ({ headers, json }) => {
       const nextPage = headers.get("Next-Page");
-      // ETag are supposed to be opaque and stored «as-is».
       const etag = headers.get("ETag");
       if (!pages) {
         return pageResults(json.data, nextPage, etag);
@@ -1136,16 +1288,17 @@ let Collection = class Collection {
   /**
    * Performs batch operations at the current collection level.
    *
-   * @param  {Function} fn                 The batch operation function.
-   * @param  {Object}   options            The options object.
-   * @param  {Object}   options.headers    The headers object option.
-   * @param  {Boolean}  options.safe       The safe option.
-   * @param  {Boolean}  options.aggregate  Produces a grouped result object.
+   * @param  {Function} fn                   The batch operation function.
+   * @param  {Object}   [options={}]         The options object.
+   * @param  {Object}   [options.headers]    The headers object option.
+   * @param  {Boolean}  [options.safe]       The safe option.
+   * @param  {Boolean}  [options.aggregate]  Produces a grouped result object.
    * @return {Promise<Object, Error>}
    */
-  batch(fn, options) {
+  batch(fn, options = {}) {
     const reqOptions = this._collOptions(options);
     return this.client.batch(fn, _extends({}, reqOptions, {
+      bucket: this.bucket.name,
       collection: this.name
     }));
   }
@@ -1166,12 +1319,10 @@ exports.default = endpoint;
 const ENDPOINTS = {
   root: () => "/",
   batch: () => "/batch",
-  buckets: () => "/buckets",
-  bucket: bucket => `/buckets/${ bucket }`,
-  collections: bucket => `${ ENDPOINTS.bucket(bucket) }/collections`,
-  collection: (bucket, coll) => `${ ENDPOINTS.bucket(bucket) }/collections/${ coll }`,
-  records: (bucket, coll) => `${ ENDPOINTS.collection(bucket, coll) }/records`,
-  record: (bucket, coll, id) => `${ ENDPOINTS.records(bucket, coll) }/${ id }`
+  bucket: bucket => "/buckets" + (bucket ? `/${ bucket }` : ""),
+  collection: (bucket, coll) => `${ ENDPOINTS.bucket(bucket) }/collections` + (coll ? `/${ coll }` : ""),
+  group: (bucket, group) => `${ ENDPOINTS.bucket(bucket) }/groups` + (group ? `/${ group }` : ""),
+  record: (bucket, coll, id) => `${ ENDPOINTS.collection(bucket, coll) }/records` + (id ? `/${ id }` : "")
 };
 
 /**
@@ -1208,7 +1359,7 @@ exports.default = {
   112: "Content-Length header was not provided",
   113: "Request body too large",
   114: "Resource was modified meanwhile",
-  115: "Method not allowed on this end point",
+  115: "Method not allowed on this end point (hint: server may be readonly)",
   116: "Requested version not available on this server",
   117: "Client has sent too many requests",
   121: "Resource access is forbidden for this user",
@@ -1261,12 +1412,10 @@ let HTTP = class HTTP {
   /**
    * Constructor.
    *
-   * Options:
-   * - {Number} timeout      The request timeout in ms (default: `5000`).
-   * - {String} requestMode  The HTTP request mode (default: `"cors"`).
-   *
-   * @param {EventEmitter} events  The event handler.
-   * @param {Object}       options The options object.
+   * @param {EventEmitter} events                       The event handler.
+   * @param {Object}       [options={}}                 The options object.
+   * @param {Number}       [options.timeout=5000]       The request timeout in ms (default: `5000`).
+   * @param {String}       [options.requestMode="cors"] The HTTP request mode (default: `"cors"`).
    */
   constructor(events, options = {}) {
     // public properties
@@ -1279,35 +1428,31 @@ let HTTP = class HTTP {
     }
     this.events = events;
 
-    options = Object.assign({}, HTTP.defaultOptions, options);
-
     /**
      * The request mode.
      * @see  https://fetch.spec.whatwg.org/#requestmode
      * @type {String}
      */
-    this.requestMode = options.requestMode;
+    this.requestMode = options.requestMode || HTTP.defaultOptions.requestMode;
 
     /**
      * The request timeout.
      * @type {Number}
      */
-    this.timeout = options.timeout;
+    this.timeout = options.timeout || HTTP.defaultOptions.timeout;
   }
 
   /**
    * Performs an HTTP request to the Kinto server.
-   *
-   * Options:
-   * - `{Object} headers` The request headers object (default: {})
    *
    * Resolves with an objet containing the following HTTP response properties:
    * - `{Number}  status`  The HTTP status code.
    * - `{Object}  json`    The JSON response body.
    * - `{Headers} headers` The response headers object; see the ES6 fetch() spec.
    *
-   * @param  {String} url     The URL.
-   * @param  {Object} options The fetch() options object.
+   * @param  {String} url               The URL.
+   * @param  {Object} [options={}]      The fetch() options object.
+   * @param  {Object} [options.headers] The request headers object (default: {})
    * @return {Promise}
    */
   request(url, options = { headers: {} }) {
@@ -1338,6 +1483,7 @@ let HTTP = class HTTP {
       statusText = res.statusText;
       this._checkForDeprecationHeader(headers);
       this._checkForBackoffHeader(status, headers);
+      this._checkForRetryAfterHeader(status, headers);
       return res.text();
     })
     // Check if we have a body; if so parse it as JSON.
@@ -1399,6 +1545,15 @@ let HTTP = class HTTP {
     }
     this.events.emit("backoff", backoffMs);
   }
+
+  _checkForRetryAfterHeader(status, headers) {
+    let retryAfter = headers.get("Retry-After");
+    if (!retryAfter) {
+      return;
+    }
+    retryAfter = new Date().getTime() + parseInt(retryAfter, 10) * 1000;
+    this.events.emit("retry-after", retryAfter);
+  }
 };
 exports.default = HTTP;
 
@@ -1411,33 +1566,24 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-exports.createBucket = createBucket;
-exports.updateBucket = updateBucket;
-exports.deleteBucket = deleteBucket;
-exports.deleteBuckets = deleteBuckets;
-exports.createCollection = createCollection;
-exports.updateCollection = updateCollection;
-exports.deleteCollection = deleteCollection;
-exports.createRecord = createRecord;
-exports.updateRecord = updateRecord;
-exports.deleteRecord = deleteRecord;
+exports.createRequest = createRequest;
+exports.updateRequest = updateRequest;
+exports.deleteRequest = deleteRequest;
 
-var _endpoint = require("./endpoint");
-
-var _endpoint2 = _interopRequireDefault(_endpoint);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _utils = require("./utils");
 
 const requestDefaults = {
   safe: false,
   // check if we should set default content type here
   headers: {},
-  bucket: "default",
-  permissions: {},
-  data: {},
+  permissions: undefined,
+  data: undefined,
   patch: false
 };
 
+/**
+ * @private
+ */
 function safeHeader(safe, last_modified) {
   if (!safe) {
     return {};
@@ -1451,19 +1597,14 @@ function safeHeader(safe, last_modified) {
 /**
  * @private
  */
-function createBucket(bucketName, options = {}) {
-  if (!bucketName) {
-    throw new Error("A bucket name is required.");
-  }
-  // Note that we simply ignore any "bucket" option passed here, as the one
-  // we're interested in is the one provided as a required argument.
-  const { headers, permissions, safe } = _extends({}, requestDefaults, options);
+function createRequest(path, { data, permissions }, options = {}) {
+  const { headers, safe } = _extends({}, requestDefaults, options);
   return {
-    method: "PUT",
-    path: (0, _endpoint2.default)("bucket", bucketName),
+    method: data && data.id ? "PUT" : "POST",
+    path,
     headers: _extends({}, headers, safeHeader(safe)),
     body: {
-      // XXX We can't pass the data option just yet, see Kinto/kinto/issues/239
+      data,
       permissions
     }
   };
@@ -1472,20 +1613,24 @@ function createBucket(bucketName, options = {}) {
 /**
  * @private
  */
-function updateBucket(bucket, options = {}) {
-  if (typeof bucket !== "object") {
-    throw new Error("A bucket object is required.");
+function updateRequest(path, { data, permissions }, options = {}) {
+  const {
+    headers,
+    safe,
+    patch
+  } = _extends({}, requestDefaults, options);
+  const { last_modified } = _extends({}, data, options);
+
+  if (Object.keys((0, _utils.omit)(data, "id", "last_modified")).length === 0) {
+    data = undefined;
   }
-  if (!bucket.id) {
-    throw new Error("A bucket id is required.");
-  }
-  const { headers, permissions, safe, patch, last_modified } = _extends({}, requestDefaults, options);
+
   return {
     method: patch ? "PATCH" : "PUT",
-    path: (0, _endpoint2.default)("bucket", bucket.id),
-    headers: _extends({}, headers, safeHeader(safe, last_modified || bucket.last_modified)),
+    path,
+    headers: _extends({}, headers, safeHeader(safe, last_modified)),
     body: {
-      data: bucket,
+      data,
       permissions
     }
   };
@@ -1494,184 +1639,19 @@ function updateBucket(bucket, options = {}) {
 /**
  * @private
  */
-function deleteBucket(bucket, options = {}) {
-  if (typeof bucket !== "object") {
-    throw new Error("A bucket object is required.");
-  }
-  if (!bucket.id) {
-    throw new Error("A bucket id is required.");
-  }
-  const { headers, safe, last_modified } = _extends({}, requestDefaults, {
-    last_modified: bucket.last_modified
-  }, options);
-  if (safe && !last_modified) {
-    throw new Error("Safe concurrency check requires a last_modified value.");
-  }
-  return {
-    method: "DELETE",
-    path: (0, _endpoint2.default)("bucket", bucket.id),
-    headers: _extends({}, headers, safeHeader(safe, last_modified))
-  };
-}
-
-/**
- * @private
- */
-function deleteBuckets(options = {}) {
+function deleteRequest(path, options = {}) {
   const { headers, safe, last_modified } = _extends({}, requestDefaults, options);
   if (safe && !last_modified) {
     throw new Error("Safe concurrency check requires a last_modified value.");
   }
   return {
     method: "DELETE",
-    path: (0, _endpoint2.default)("buckets"),
-    headers: _extends({}, headers, safeHeader(safe, last_modified))
-  };
-}
-
-/**
- * @private
- */
-function createCollection(id, options = {}) {
-  const { bucket, headers, permissions, data, safe } = _extends({}, requestDefaults, options);
-  // XXX checks that provided data can't override schema when provided
-  const path = id ? (0, _endpoint2.default)("collection", bucket, id) : (0, _endpoint2.default)("collections", bucket);
-  return {
-    method: id ? "PUT" : "POST",
     path,
-    headers: _extends({}, headers, safeHeader(safe)),
-    body: { data, permissions }
-  };
-}
-
-/**
- * @private
- */
-function updateCollection(collection, options = {}) {
-  if (typeof collection !== "object") {
-    throw new Error("A collection object is required.");
-  }
-  if (!collection.id) {
-    throw new Error("A collection id is required.");
-  }
-  const {
-    bucket,
-    headers,
-    permissions,
-    schema,
-    metadata,
-    safe,
-    patch,
-    last_modified
-  } = _extends({}, requestDefaults, options);
-  const collectionData = _extends({}, metadata, collection);
-  if (options.schema) {
-    collectionData.schema = schema;
-  }
-  return {
-    method: patch ? "PATCH" : "PUT",
-    path: (0, _endpoint2.default)("collection", bucket, collection.id),
-    headers: _extends({}, headers, safeHeader(safe, last_modified || collection.last_modified)),
-    body: {
-      data: collectionData,
-      permissions
-    }
-  };
-}
-
-/**
- * @private
- */
-function deleteCollection(collection, options = {}) {
-  if (typeof collection !== "object") {
-    throw new Error("A collection object is required.");
-  }
-  if (!collection.id) {
-    throw new Error("A collection id is required.");
-  }
-  const { bucket, headers, safe, last_modified } = _extends({}, requestDefaults, {
-    last_modified: collection.last_modified
-  }, options);
-  if (safe && !last_modified) {
-    throw new Error("Safe concurrency check requires a last_modified value.");
-  }
-  return {
-    method: "DELETE",
-    path: (0, _endpoint2.default)("collection", bucket, collection.id),
     headers: _extends({}, headers, safeHeader(safe, last_modified))
   };
 }
 
-/**
- * @private
- */
-function createRecord(collName, record, options = {}) {
-  if (!collName) {
-    throw new Error("A collection name is required.");
-  }
-  const { bucket, headers, permissions, safe } = _extends({}, requestDefaults, options);
-  return {
-    // Note: Safe POST using a record id would fail.
-    // see https://github.com/Kinto/kinto/issues/489
-    method: record.id ? "PUT" : "POST",
-    path: record.id ? (0, _endpoint2.default)("record", bucket, collName, record.id) : (0, _endpoint2.default)("records", bucket, collName),
-    headers: _extends({}, headers, safeHeader(safe)),
-    body: {
-      data: record,
-      permissions
-    }
-  };
-}
-
-/**
- * @private
- */
-function updateRecord(collName, record, options = {}) {
-  if (!collName) {
-    throw new Error("A collection name is required.");
-  }
-  if (!record.id) {
-    throw new Error("A record id is required.");
-  }
-  const { bucket, headers, permissions, safe, patch, last_modified } = _extends({}, requestDefaults, options);
-  return {
-    method: patch ? "PATCH" : "PUT",
-    path: (0, _endpoint2.default)("record", bucket, collName, record.id),
-    headers: _extends({}, headers, safeHeader(safe, last_modified || record.last_modified)),
-    body: {
-      data: record,
-      permissions
-    }
-  };
-}
-
-/**
- * @private
- */
-function deleteRecord(collName, record, options = {}) {
-  if (!collName) {
-    throw new Error("A collection name is required.");
-  }
-  if (typeof record !== "object") {
-    throw new Error("A record object is required.");
-  }
-  if (!record.id) {
-    throw new Error("A record id is required.");
-  }
-  const { bucket, headers, safe, last_modified } = _extends({}, requestDefaults, {
-    last_modified: record.last_modified
-  }, options);
-  if (safe && !last_modified) {
-    throw new Error("Safe concurrency check requires a last_modified value.");
-  }
-  return {
-    method: "DELETE",
-    path: (0, _endpoint2.default)("record", bucket, collName, record.id),
-    headers: _extends({}, headers, safeHeader(safe, last_modified))
-  };
-}
-
-},{"./endpoint":6}],10:[function(require,module,exports){
+},{"./utils":10}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1684,7 +1664,9 @@ exports.toDataBody = toDataBody;
 exports.qsify = qsify;
 exports.checkVersion = checkVersion;
 exports.support = support;
+exports.capable = capable;
 exports.nobatch = nobatch;
+exports.isObject = isObject;
 /**
  * Chunks an array into n pieces.
  *
@@ -1747,17 +1729,17 @@ function omit(obj, ...keys) {
  * Always returns a resource data object from the provided argument.
  *
  * @private
- * @param  {Object|String} value
+ * @param  {Object|String} resource
  * @return {Object}
  */
-function toDataBody(value) {
-  if (typeof value === "object") {
-    return value;
+function toDataBody(resource) {
+  if (isObject(resource)) {
+    return resource;
   }
-  if (typeof value === "string") {
-    return { id: value };
+  if (typeof resource === "string") {
+    return { id: resource };
   }
-  throw new Error("Invalid collection argument.");
+  throw new Error("Invalid argument.");
 }
 
 /**
@@ -1832,6 +1814,40 @@ function support(min, max) {
 }
 
 /**
+ * Generates a decorator function ensuring that the specified capabilities are
+ * available on the server before executing it.
+ *
+ * @param  {Array<String>} capabilities The required capabilities.
+ * @return {Function}
+ */
+function capable(capabilities) {
+  return function (target, key, descriptor) {
+    const fn = descriptor.value;
+    return {
+      configurable: true,
+      get() {
+        const wrappedMethod = (...args) => {
+          // "this" is the current instance which its method is decorated.
+          const client = "client" in this ? this.client : this;
+          return client.fetchServerCapabilities().then(available => {
+            const missing = capabilities.filter(c => available.indexOf(c) < 0);
+            if (missing.length > 0) {
+              throw new Error(`Required capabilities ${ missing.join(", ") } ` + "not present on server");
+            }
+          }).then(Promise.resolve(fn.apply(this, args)));
+        };
+        Object.defineProperty(this, key, {
+          value: wrappedMethod,
+          configurable: true,
+          writable: true
+        });
+        return wrappedMethod;
+      }
+    };
+  };
+}
+
+/**
  * Generates a decorator function ensuring an operation is not performed from
  * within a batch request.
  *
@@ -1860,6 +1876,15 @@ function nobatch(message) {
       }
     };
   };
+}
+
+/**
+ * Returns true if the specified value is an object (i.e. not an array nor null).
+ * @param  {Object} thing The value to inspect.
+ * @return {bool}
+ */
+function isObject(thing) {
+  return typeof thing === "object" && thing !== null && !Array.isArray(thing);
 }
 
 },{}]},{},[1])(1)
