@@ -1449,8 +1449,7 @@ class PackageFrontend(MachCommandBase):
         self._activate_virtualenv()
         os.environ['PATH'] = original_path
 
-        for package in ('pylru==1.0.9',
-                        'taskcluster==0.0.32',
+        for package in ('taskcluster==0.0.32',
                         'mozregression==1.0.2'):
             self._install_pip_package(package)
 
