@@ -77,10 +77,6 @@ else:
         SOURCES += [
             'nsPluginNativeWindowGtk.cpp',
         ]
-    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-        UNIFIED_SOURCES += [
-            'nsPluginNativeWindowQt.cpp',
-        ]
     else:
         UNIFIED_SOURCES += [
             'nsPluginNativeWindow.cpp',
