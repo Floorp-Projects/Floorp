@@ -5820,11 +5820,11 @@ JS_SetDefaultLocale(JSContext* cx, const char* locale)
 }
 
 JS_PUBLIC_API(UniqueChars)
-JS_GetDefaultLocale(JSRuntime* rt)
+JS_GetDefaultLocale(JSContext* cx)
 {
-    AssertHeapIsIdle(rt);
-    if (const char* locale = rt->getDefaultLocale())
-        return UniqueChars(JS_strdup(rt, locale));
+    AssertHeapIsIdle(cx);
+    if (const char* locale = cx->getDefaultLocale())
+        return UniqueChars(JS_strdup(cx, locale));
 
     return nullptr;
 }
