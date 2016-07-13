@@ -118,8 +118,9 @@ add_task(function* test_kinto_update() {
     let updateResult = yield collection.update(copiedRecord);
     // check the field was updated
     do_check_eq(updateResult.data.foo, copiedRecord.foo);
-    // check the status has changed
-    do_check_eq(updateResult.data._status, "updated");
+    // check the status is still "created", since we haven't synced
+    // the record
+    do_check_eq(updateResult.data._status, "created");
   } finally {
     yield collection.db.close();
   }
