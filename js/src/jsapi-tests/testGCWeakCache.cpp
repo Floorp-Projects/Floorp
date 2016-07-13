@@ -24,9 +24,11 @@ BEGIN_TEST(testWeakCacheSet)
     JS::RootedObject nursery1(cx, JS_NewPlainObject(cx));
     JS::RootedObject nursery2(cx, JS_NewPlainObject(cx));
 
-    using ObjectSet = js::GCHashSet<JS::Heap<JSObject*>, js::MovableCellHasher<JS::Heap<JSObject*>>>;
+    using ObjectSet = js::GCHashSet<JS::Heap<JSObject*>,
+                                    js::MovableCellHasher<JS::Heap<JSObject*>>,
+                                    js::SystemAllocPolicy>;
     using Cache = JS::WeakCache<ObjectSet>;
-    auto cache = Cache(JS::GetObjectZone(tenured1), ObjectSet(cx));
+    auto cache = Cache(JS::GetObjectZone(tenured1), ObjectSet());
     CHECK(cache.init());
 
     cache.put(tenured1);

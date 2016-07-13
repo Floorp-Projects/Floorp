@@ -801,6 +801,8 @@ struct MovableCellHasher<PreBarriered<T>>
     using Key = PreBarriered<T>;
     using Lookup = T;
 
+    static bool hasHash(const Lookup& l) { return MovableCellHasher<T>::hasHash(l); }
+    static bool ensureHash(const Lookup& l) { return MovableCellHasher<T>::ensureHash(l); }
     static HashNumber hash(const Lookup& l) { return MovableCellHasher<T>::hash(l); }
     static bool match(const Key& k, const Lookup& l) { return MovableCellHasher<T>::match(k, l); }
     static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
@@ -812,6 +814,8 @@ struct MovableCellHasher<HeapPtr<T>>
     using Key = HeapPtr<T>;
     using Lookup = T;
 
+    static bool hasHash(const Lookup& l) { return MovableCellHasher<T>::hasHash(l); }
+    static bool ensureHash(const Lookup& l) { return MovableCellHasher<T>::ensureHash(l); }
     static HashNumber hash(const Lookup& l) { return MovableCellHasher<T>::hash(l); }
     static bool match(const Key& k, const Lookup& l) { return MovableCellHasher<T>::match(k, l); }
     static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
@@ -823,6 +827,8 @@ struct MovableCellHasher<ReadBarriered<T>>
     using Key = ReadBarriered<T>;
     using Lookup = T;
 
+    static bool hasHash(const Lookup& l) { return MovableCellHasher<T>::hasHash(l); }
+    static bool ensureHash(const Lookup& l) { return MovableCellHasher<T>::ensureHash(l); }
     static HashNumber hash(const Lookup& l) { return MovableCellHasher<T>::hash(l); }
     static bool match(const Key& k, const Lookup& l) {
         return MovableCellHasher<T>::match(k.unbarrieredGet(), l);
