@@ -330,8 +330,11 @@ Declaration::GetImageLayerValue(
                origin->mValue.GetUnit() == eCSSUnit_Enumerated,
                "should not have inherit/initial within list");
 
+    int32_t originDefaultValue =
+      (aTable == nsStyleImageLayers::kBackgroundLayerTable)
+      ? NS_STYLE_IMAGELAYER_ORIGIN_PADDING : NS_STYLE_IMAGELAYER_ORIGIN_BORDER;
     if (clip->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
-        origin->mValue.GetIntValue() != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
+        origin->mValue.GetIntValue() != originDefaultValue) {
 #ifdef DEBUG
       for (size_t i = 0; nsCSSProps::kImageLayerOriginKTable[i].mValue != -1; i++) {
         // For each keyword & value in kOriginKTable, ensure that

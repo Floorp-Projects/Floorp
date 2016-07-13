@@ -4,6 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
+from .graph import Graph
+from .util.python_path import find_object
+
+TASKCLUSTER_QUEUE_URL = "https://queue.taskcluster.net/v1/task/"
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
+
 
 class TaskGraph(object):
     """
@@ -25,11 +33,13 @@ class TaskGraph(object):
         tasks = {}
         for key in self.graph.visit_postorder():
             task = self.tasks[key]
+            implementation = task.__class__.__module__ + ":" + task.__class__.__name__
             task_json = {
                 'label': task.label,
                 'attributes': task.attributes,
                 'dependencies': named_links_dict.get(key, {}),
-                'task': task.task
+                'task': task.task,
+                'kind_implementation': implementation
             }
             if task.task_id:
                 task_json['task_id'] = task.task_id
@@ -49,3 +59,24 @@ class TaskGraph(object):
 
     def __eq__(self, other):
         return self.tasks == other.tasks and self.graph == other.graph
+
+    @classmethod
+    def from_json(cls, tasks_dict, root):
+        """
+        This code is used to generate the a TaskGraph using a dictionary
+        which is representative of the TaskGraph.
+        """
+        tasks = {}
+        edges = set()
+        for key, value in tasks_dict.iteritems():
+            # We get the implementation from JSON
+            implementation = value['kind_implementation']
+            # Loading the module and creating a Task from a dictionary
+            task_kind = find_object(implementation)
+            tasks[key] = task_kind.from_json(value)
+            if 'task_id' in value:
+                tasks[key].task_id = value['task_id']
+            for depname, dep in value['dependencies'].iteritems():
+                edges.add((key, dep, depname))
+        task_graph = cls(tasks, Graph(set(tasks), edges))
+        return tasks, task_graph

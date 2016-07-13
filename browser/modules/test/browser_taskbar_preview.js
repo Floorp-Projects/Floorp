@@ -35,13 +35,10 @@ function test() {
     ok(preview.visible, "Preview is shown as expected");
 
   gPrefService.setBoolPref(ENABLE_PREF_NAME, false);
-  checkPreviews(4, "Previews are unchanged when disabling");
-
-  for (let preview of AeroPeek.previews)
-    ok(!preview.visible, "Preview is not shown as expected after disabling");
+  is(0, AeroPeek.previews.length, "Should have 0 previews when disabled");
 
   gPrefService.setBoolPref(ENABLE_PREF_NAME, true);
-  checkPreviews(4, "Previews are unchanged when re-enabling");
+  checkPreviews(4, "Previews are back when re-enabling");
   for (let preview of AeroPeek.previews)
     ok(preview.visible, "Preview is shown as expected after re-enabling");
 
@@ -82,14 +79,14 @@ function test() {
   checkPreviews(1);
 
   if (gPrefService.prefHasUserValue(ENABLE_PREF_NAME))
-    gPrefService.clearUserPref(ENABLE_PREF_NAME);
+    gPrefService.setBoolPref(ENABLE_PREF_NAME, !gPrefService.getBoolPref(ENABLE_PREF_NAME));
 
   finish();
 
   function checkPreviews(aPreviews, msg) {
     let nPreviews = AeroPeek.previews.length;
-    is(aPreviews, gBrowser.tabs.length, "Browser has expected number of tabs");
-    is(nPreviews, gBrowser.tabs.length, "Browser has one preview per tab");
+    is(aPreviews, gBrowser.tabs.length, "Browser has expected number of tabs - " + msg);
+    is(nPreviews, gBrowser.tabs.length, "Browser has one preview per tab - " + msg);
     is(nPreviews, aPreviews, msg || "Got expected number of previews");
   }
 

@@ -99,7 +99,8 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
   this.onDetached = this.onDetached.bind(this);
-  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
+  this.onPaneToggleButtonActivated = this.onPaneToggleButtonActivated.bind(this);
+  this.onPaneToggleButtonPressed = this.onPaneToggleButtonPressed.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
 
   let doc = this.panelDoc;
@@ -447,7 +448,8 @@ InspectorPanel.prototype = {
       "devtools/client/shared/components/sidebar-toggle"));
 
     let sidebarToggle = SidebarToggle({
-      onClick: this.onPaneToggleButtonClicked,
+      onClick: this.onPaneToggleButtonActivated,
+      onKeyDown: this.onPaneToggleButtonPressed,
       collapsed: false,
       expandPaneTitle: strings.GetStringFromName("inspector.expandPane"),
       collapsePaneTitle: strings.GetStringFromName("inspector.collapsePane"),
@@ -1154,10 +1156,20 @@ InspectorPanel.prototype = {
   },
 
   /**
+  * When the pane toggle button is pressed with space and return keys toggle
+  * the pane, change the button state and tooltip.
+  */
+  onPaneToggleButtonPressed: function (event) {
+    if (ViewHelpers.isSpaceOrReturn(event)) {
+      this.onPaneToggleButtonActivated(event);
+    }
+  },
+
+  /**
    * When the pane toggle button is clicked, toggle the pane, change the button
    * state and tooltip.
    */
-  onPaneToggleButtonClicked: function (e) {
+  onPaneToggleButtonActivated: function (e) {
     let sidePane = this.panelDoc.querySelector("#inspector-sidebar");
     let isVisible = !this._sidebarToggle.state.collapsed;
 
