@@ -1913,6 +1913,31 @@ ValidateCopyDestUsage(const char* funcName, WebGLContext* webgl,
     return dstUsage;
 }
 
+bool
+WebGLTexture::ValidateCopyTexImageForFeedback(const char* funcName, uint32_t level) const
+{
+    const auto& fb = mContext->mBoundReadFramebuffer;
+    if (fb) {
+        const auto readBuffer = fb->ReadBufferMode();
+        MOZ_ASSERT(readBuffer != LOCAL_GL_NONE);
+        const uint32_t colorAttachment = readBuffer - LOCAL_GL_COLOR_ATTACHMENT0;
+        const auto& attach = fb->ColorAttachment(colorAttachment);
+
+        if (attach.Texture() == this &&
+            attach.MipLevel() == uint32_t(level))
+        {
+            // Note that the TexImageTargets *don't* have to match for this to be
+            // undefined per GLES 3.0.4 p211, thus an INVALID_OP in WebGL.
+            mContext->ErrorInvalidOperation("%s: Feedback loop detected, as this texture"
+                                            " is already attached to READ_FRAMEBUFFER's"
+                                            " READ_BUFFER-selected COLOR_ATTACHMENT%u.",
+                                            funcName, colorAttachment);
+            return false;
+        }
+    }
+    return true;
+}
+
 // There is no CopyTexImage3D.
 void
 WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
@@ -1950,6 +1975,9 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
                                         &srcMode))
         return;
     auto srcFormat = srcUsage->format;
+
+    if (!ValidateCopyTexImageForFeedback(funcName, level))
+        return;
 
     // GLES 3.0.4 p145:
     // "Calling CopyTexSubImage3D, CopyTexImage2D, or CopyTexSubImage2D will result in an
@@ -2091,6 +2119,9 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
                                         &srcMode))
         return;
     auto srcFormat = srcUsage->format;
+
+    if (!ValidateCopyTexImageForFeedback(funcName, level))
+        return;
 
     // GLES 3.0.4 p145:
     // "Calling CopyTexSubImage3D, CopyTexImage2D, or CopyTexSubImage2D will result in an
