@@ -1759,12 +1759,6 @@ pref("network.http.tcp_keepalive.long_lived_idle_time", 600);
 pref("network.http.enforce-framing.http1", false); // should be named "strict"
 pref("network.http.enforce-framing.soft", true);
 
-// If it is set to false, headers with empty value will not appear in the header
-// array - behavior as it used to be. If it is true: empty headers coming from
-// the network will exist in header array as empty string. Call SetHeader with
-// an empty value will still delete the header.(Bug 6699259)
-pref("network.http.keep_empty_response_headers_as_empty_string", true);
-
 // Max size, in bytes, for received HTTP response header.
 pref("network.http.max_response_header_size", 393216);
 
