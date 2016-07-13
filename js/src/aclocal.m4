@@ -30,6 +30,7 @@ builtin(include, ../../build/autoconf/ffi.m4)dnl
 builtin(include, ../../build/autoconf/clang-plugin.m4)dnl
 builtin(include, ../../build/autoconf/alloc.m4)dnl
 builtin(include, ../../build/autoconf/jemalloc.m4)dnl
+builtin(include, ../../build/autoconf/sanitize.m4)dnl
 builtin(include, ../../build/autoconf/ios.m4)dnl
 
 define([__MOZ_AC_INIT_PREPARE], defn([AC_INIT_PREPARE]))
