@@ -392,6 +392,7 @@ js::gc::GCRuntime::bufferGrayRoots()
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         MOZ_ASSERT(zone->gcGrayRoots.empty());
 
+
     BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&grayBufferer, grayRootTracer.data);
@@ -413,8 +414,6 @@ void
 BufferGrayRootsTracer::onChild(const JS::GCCellPtr& thing)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
-    MOZ_RELEASE_ASSERT(thing);
-    MOZ_RELEASE_ASSERT((uintptr_t(thing.asCell()) & 0xFFFFFF00) != 0xE5E5E500);
 
     if (bufferingGrayRootsFailed)
         return;
