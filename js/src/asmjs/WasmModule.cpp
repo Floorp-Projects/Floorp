@@ -464,9 +464,12 @@ CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
                    HandleWasmMemoryObject memoryObj,
                    const ExportVector& exports,
-                   const Metadata& metadata,
                    MutableHandleObject exportObj)
 {
+    const Instance& instance = instanceObj->instance();
+    const Metadata& metadata = instance.metadata();
+    const SharedTableVector& tables = instance.tables();
+
     if (metadata.isAsmJS() && exports.length() == 1 && strlen(exports[0].fieldName()) == 0) {
         exportObj.set(NewExportedFunction(cx, instanceObj, 0));
         return !!exportObj;
@@ -483,6 +486,7 @@ CreateExportObject(JSContext* cx,
             return false;
     }
 
+    RootedWasmTableObject tableObj(cx);
     for (const Export& exp : exports) {
         JSAtom* atom = AtomizeUTF8Chars(cx, exp.fieldName(), strlen(exp.fieldName()));
         if (!atom)
@@ -493,6 +497,15 @@ CreateExportObject(JSContext* cx,
         switch (exp.kind()) {
           case DefinitionKind::Function:
             val = vals[exp.funcExportIndex()];
+            break;
+          case DefinitionKind::Table:
+            MOZ_ASSERT(tables.length() == 1);
+            if (!tableObj) {
+                tableObj = WasmTableObject::create(cx, *tables[0]);
+                if (!tableObj)
+                    return false;
+            }
+            val = ObjectValue(*tableObj);
             break;
           case DefinitionKind::Memory:
             if (metadata.assumptions.newFormat)
@@ -562,7 +575,7 @@ Module::instantiate(JSContext* cx,
     // Create the export object.
 
     RootedObject exportObj(cx);
-    if (!CreateExportObject(cx, instanceObj, memory, exports_, *metadata_, &exportObj))
+    if (!CreateExportObject(cx, instanceObj, memory, exports_, &exportObj))
         return false;
 
     instanceObj->initExportsObject(exportObj);
