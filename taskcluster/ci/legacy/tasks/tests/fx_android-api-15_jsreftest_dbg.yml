@@ -10,4 +10,4 @@ task:
     chunks:
       total: 20
     treeherder:
-      tier: 2
+      tier: 1
