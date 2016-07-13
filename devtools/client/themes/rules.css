@@ -48,6 +48,7 @@
 
 #ruleview-toolbar {
   display: flex;
+  height: 23px;
 }
 
 #ruleview-toolbar > .devtools-searchbox:first-child {
