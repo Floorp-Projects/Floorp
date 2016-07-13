@@ -393,12 +393,12 @@ public:
     { return InsertChildAt(mChildren.Length(), aChild); }
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild);
 
-  bool InsertAfter(Accessible* aNewChild, Accessible* aRefChild)
-  {
-    MOZ_ASSERT(aNewChild, "No new child to insert");
-    return InsertChildAt(aRefChild ? aRefChild->IndexInParent() + 1 : 0,
-                         aNewChild);
-  }
+  /**
+   * Inserts a child after given sibling. If the child cannot be inserted,
+   * then the child is unbound from the document, and false is returned. Make
+   * sure to null out any references on the child object as it may be destroyed.
+   */
+  bool InsertAfter(Accessible* aNewChild, Accessible* aRefChild);
 
   virtual bool RemoveChild(Accessible* aChild);
 
