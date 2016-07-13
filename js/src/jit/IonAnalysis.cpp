@@ -1816,6 +1816,9 @@ TypeAnalyzer::specializeValidFloatOps()
             if (ins->type() == MIRType::Float32)
                 continue;
 
+            if (!alloc().ensureBallast())
+                return false;
+
             // This call will try to specialize the instruction iff all uses are consumers and
             // all inputs are producers.
             ins->trySpecializeFloat32(alloc());

@@ -1082,7 +1082,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("referer.trimmingPolicy"))) {
         rv = prefs->GetIntPref(HTTP_PREF("referer.trimmingPolicy"), &val);
         if (NS_SUCCEEDED(rv))
-            mReferrerTrimmingPolicy = (uint8_t) clamped(val, 0, 0xff);
+            mReferrerTrimmingPolicy = (uint8_t) clamped(val, 0, 2);
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.XOriginPolicy"))) {

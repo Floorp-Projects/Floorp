@@ -14,6 +14,8 @@ const caller = `(func $call (param $i i32) (result i32) (call_indirect 0 (get_lo
 const callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
 assertErrorMessage(() => new Module(textToBinary(`(module (elem 0 $f0) ${callee(0)})`)), TypeError, /table index out of range/);
+assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem 0 0))`)), TypeError, /table element out of range/);
+assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (func) (elem 0 0 1))`)), TypeError, /table element out of range/);
 assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem 10 $f0) ${callee(0)})`)), TypeError, /element segment does not fit/);
 assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem 8 $f0 $f0 $f0) ${callee(0)})`)), TypeError, /element segment does not fit/);
 assertErrorMessage(() => new Module(textToBinary(`(module (table (resizable 10)) (elem 1 $f0 $f0) (elem 0 $f0) ${callee(0)})`)), TypeError, /must be.*ordered/);
