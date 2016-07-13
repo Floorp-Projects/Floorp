@@ -109,37 +109,19 @@
 
 /* Debugging pane controls */
 #resume {
-  list-style-image: url(images/debugger-play.png);
+  list-style-image: url(images/play.svg);
 }
 
 #step-over {
-  list-style-image: url(images/debugger-step-over.png);
+  list-style-image: url(images/debugger-step-over.svg);
 }
 
 #step-in {
-  list-style-image: url(images/debugger-step-in.png);
+  list-style-image: url(images/debugger-step-in.svg);
 }
 
 #step-out {
-  list-style-image: url(images/debugger-step-out.png);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #resume {
-    list-style-image: url(images/debugger-play@2x.png);
-  }
-
-  #step-over {
-    list-style-image: url(images/debugger-step-over@2x.png);
-  }
-
-  #step-in {
-    list-style-image: url(images/debugger-step-in@2x.png);
-  }
-
-  #step-out {
-    list-style-image: url(images/debugger-step-out@2x.png);
-  }
+  list-style-image: url(images/debugger-step-out.svg);
 }
 
 #calls-slider {
@@ -196,16 +178,8 @@
 }
 
 .selected .call-item-gutter {
-  background-image: url("images/editor-debug-location.png");
-  background-repeat: no-repeat;
-  background-position: 6px center;
-  background-size: 12px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .selected .call-item-gutter {
-    background-image: url("images/editor-debug-location@2x.png");
-  }
+  background-color: #2cbb0f;
+  color: white;
 }
 
 .call-item-index {
