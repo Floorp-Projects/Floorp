@@ -482,7 +482,7 @@ MediaDecoder::SetInfinite(bool aInfinite)
 }
 
 bool
-MediaDecoder::IsInfinite()
+MediaDecoder::IsInfinite() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mInfiniteStream;
