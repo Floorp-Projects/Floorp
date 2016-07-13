@@ -20,8 +20,10 @@
 .theme-firebug #sources-toolbar image,
 .theme-firebug [id$="pane-toggle"] > image,
 .theme-firebug [id$="pane-toggle"]::before,
-.theme-firebug #global-toolbar .devtools-button::before,
+.theme-firebug .sidebar-toggle::before,
 .theme-firebug #element-picker::before,
+.theme-firebug #rewind-timeline::before,
+.theme-firebug #pause-resume-timeline::before,
 .theme-firebug #debugger-controls .toolbarbutton-icon,
 .theme-firebug #filter-button .toolbarbutton-icon {
   filter: none !important;
