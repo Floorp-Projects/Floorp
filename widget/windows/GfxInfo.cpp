@@ -155,6 +155,20 @@ static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName, nsAS
       }
       break;
     }
+    case REG_QWORD: {
+      // We only use this for vram size
+      LONGLONG qValue;
+      dwcbData = sizeof(qValue);
+      result = RegQueryValueExW(key, keyName, nullptr, &resultType,
+                                (LPBYTE)&qValue, &dwcbData);
+      if (result == ERROR_SUCCESS && resultType == REG_QWORD) {
+        qValue = qValue / 1024 / 1024;
+        destString.AppendInt(int32_t(qValue));
+      } else {
+        retval = NS_ERROR_FAILURE;
+      }
+      break;
+    }
     case REG_MULTI_SZ: {
       // A chain of null-separated strings; we convert the nulls to spaces
       WCHAR wCharValue[1024];
@@ -582,8 +596,11 @@ GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
-  if (NS_FAILED(GetKeyValue(mDeviceKey.get(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD)))
-    aAdapterRAM = L"Unknown";
+  if (NS_FAILED(GetKeyValue(mDeviceKey.get(), L"HardwareInformation.qwMemorySize", aAdapterRAM, REG_QWORD)) || aAdapterRAM.Length() == 0) {
+    if (NS_FAILED(GetKeyValue(mDeviceKey.get(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD))) {
+      aAdapterRAM = L"Unknown";
+    }
+  }
   return NS_OK;
 }
 
@@ -592,8 +609,10 @@ GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 {
   if (!mHasDualGPU) {
     aAdapterRAM.Truncate();
-  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.get(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD))) {
-    aAdapterRAM = L"Unknown";
+  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.get(), L"HardwareInformation.qwMemorySize", aAdapterRAM, REG_QWORD)) || aAdapterRAM.Length() == 0) {
+    if (NS_FAILED(GetKeyValue(mDeviceKey2.get(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD))) {
+      aAdapterRAM = L"Unknown";
+    }
   }
   return NS_OK;
 }
