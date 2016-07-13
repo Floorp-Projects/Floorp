@@ -1,3 +1,0 @@
-read-pixels-from-fbo-test.html
-read-pixels-into-pixel-pack-buffer.html
-read-pixels-pack-parameters.html
