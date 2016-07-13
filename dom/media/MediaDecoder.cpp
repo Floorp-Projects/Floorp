@@ -325,7 +325,6 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
 
   if (IsShutdown() ||
       !mDecoderStateMachine ||
-      mPlayState == PLAY_STATE_SHUTDOWN ||
       !mOwner->GetVideoFrameContainer() ||
       (mOwner->GetMediaElement() && mOwner->GetMediaElement()->IsBeingDestroyed()) ||
       !mDormantSupported)
@@ -425,12 +424,13 @@ void
 MediaDecoder::Pause()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mPlayState == PLAY_STATE_LOADING ||
-      IsEnded()) {
+  if (IsShutdown()) {
+    return;
+  }
+  if (mPlayState == PLAY_STATE_LOADING || IsEnded()) {
     mNextState = PLAY_STATE_PAUSED;
     return;
   }
-
   ChangeState(PLAY_STATE_PAUSED);
 }
 
@@ -504,7 +504,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mVideoFrameContainer(aOwner->GetVideoFrameContainer())
   , mPlaybackStatistics(new MediaChannelStatistics())
   , mPinnedForSeek(false)
-  , mShuttingDown(false)
   , mPausedForPlaybackRateNull(false)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
@@ -610,8 +609,6 @@ MediaDecoder::Shutdown()
   if (IsShutdown()) {
     return;
   }
-
-  mShuttingDown = true;
 
   // Unwatch all watch targets to prevent further notifications.
   mWatchManager.Shutdown();
@@ -1078,7 +1075,7 @@ bool
 MediaDecoder::IsEndedOrShutdown() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return IsEnded() || mPlayState == PLAY_STATE_SHUTDOWN;
+  return IsEnded() || IsShutdown();
 }
 
 bool
@@ -1127,7 +1124,7 @@ bool
 MediaDecoder::IsShutdown() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mShuttingDown;
+  return mPlayState == PLAY_STATE_SHUTDOWN;
 }
 
 void
@@ -1341,13 +1338,10 @@ void
 MediaDecoder::ChangeState(PlayState aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsShutdown(), "SHUTDOWN is the final state.");
 
   if (mNextState == aState) {
     mNextState = PLAY_STATE_PAUSED;
-  }
-
-  if (mPlayState == PLAY_STATE_SHUTDOWN) {
-    return;
   }
 
   DECODER_LOG("ChangeState %s => %s", PlayStateStr(), ToPlayStateStr(aState));
