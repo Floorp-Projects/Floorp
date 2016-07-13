@@ -62,8 +62,10 @@ js::AutoCycleDetector::init()
     AutoCycleDetector::Set& set = cx->cycleDetectorSet;
     hashsetAddPointer = set.lookupForAdd(obj);
     if (!hashsetAddPointer) {
-        if (!set.add(hashsetAddPointer, obj))
+        if (!set.add(hashsetAddPointer, obj)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
         cyclic = false;
         hashsetGenerationAtInit = set.generation();
     }
@@ -869,7 +871,6 @@ JSContext::JSContext(JSRuntime* parentRuntime)
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     resolvingList(nullptr),
     generatingError(false),
-    cycleDetectorSet(this),
     outstandingRequests(0),
     jitIsBroken(false)
 {
