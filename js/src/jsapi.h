@@ -5042,7 +5042,7 @@ JS_SetDefaultLocale(JSContext* cx, const char* locale);
  * Look up the default locale for the ECMAScript Internationalization API.
  */
 extern JS_PUBLIC_API(JS::UniqueChars)
-JS_GetDefaultLocale(JSRuntime* rt);
+JS_GetDefaultLocale(JSContext* cx);
 
 /**
  * Reset the default locale to OS defaults.

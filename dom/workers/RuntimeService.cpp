@@ -1630,7 +1630,8 @@ RuntimeService::ScheduleWorker(WorkerPrivate* aWorkerPrivate)
 
   JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
   JSRuntime* parentRuntime = JS_GetParentRuntime(rt);
-  JS::UniqueChars defaultLocale = parentRuntime ? JS_GetDefaultLocale(parentRuntime) : nullptr;
+  JS::UniqueChars defaultLocale =
+    parentRuntime ? JS_GetDefaultLocale(JS_GetContext(parentRuntime)) : nullptr;
   if (!parentRuntime) {
     NS_WARNING("Could not obtain parent runtime's locale!");
   }
@@ -2549,19 +2550,19 @@ WorkerThreadPrimaryRunnable::Run()
 
     JSRuntime* rt = runtime.Runtime();
 
-    if (mDefaultLocale) {
-      if (!JS_SetDefaultLocale(rt, mDefaultLocale.get())) {
-        NS_WARNING("Could not set worker locale!");
-      }
-
-      mDefaultLocale = nullptr;
-    }
-
     JSContext* cx = InitJSContextForWorker(mWorkerPrivate, rt);
     if (!cx) {
       // XXX need to fire an error at parent.
       NS_ERROR("Failed to create runtime and context!");
       return NS_ERROR_FAILURE;
+    }
+
+    if (mDefaultLocale) {
+      if (!JS_SetDefaultLocale(cx, mDefaultLocale.get())) {
+        NS_WARNING("Could not set worker locale!");
+      }
+
+      mDefaultLocale = nullptr;
     }
 
     {
