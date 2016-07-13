@@ -479,28 +479,6 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
     aResult.mStatus = mWifiHotspotUtils->do_wifi_connect_to_hostapd();
   } else if (aOptions.mCmd.EqualsLiteral("close_hostapd_connection")) {
     aResult.mStatus = mWifiHotspotUtils->do_wifi_close_hostapd_connection();
-  } else if (aOptions.mCmd.EqualsLiteral("hostapd_command")) {
-    size_t len = BUFFER_SIZE - 1;
-    char buffer[BUFFER_SIZE];
-    NS_ConvertUTF16toUTF8 request(aOptions.mRequest);
-    aResult.mStatus = mWifiHotspotUtils->do_wifi_hostapd_command(request.get(),
-                                                                 buffer,
-                                                                 &len);
-    nsString value;
-    if (aResult.mStatus == 0) {
-      if (buffer[len - 1] == '\n') { // remove trailing new lines.
-        len--;
-      }
-      buffer[len] = '\0';
-      CheckBuffer(buffer, len, value);
-    }
-    aResult.mReply = value;
-  } else if (aOptions.mCmd.EqualsLiteral("hostapd_get_stations")) {
-    aResult.mStatus = mWifiHotspotUtils->do_wifi_hostapd_get_stations();
-  } else if (aOptions.mCmd.EqualsLiteral("connect_to_hostapd")) {
-    aResult.mStatus = mWifiHotspotUtils->do_wifi_connect_to_hostapd();
-  } else if (aOptions.mCmd.EqualsLiteral("close_hostapd_connection")) {
-    aResult.mStatus = mWifiHotspotUtils->do_wifi_close_hostapd_connection();
 
   } else {
     NS_WARNING("WpaSupplicant::ExecuteCommand : Unknown command");

@@ -526,6 +526,11 @@ child:
                   nsCString ID, nsCString vendor);
     async AppInit();
 
+    /**
+     * Send ServiceWorkerRegistrationData to child process.
+     */
+    async InitServiceWorkers(ServiceWorkerConfiguration aConfig);
+
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
 
@@ -1083,12 +1088,6 @@ parent:
      */
     async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
                                     TabId tabId);
-
-    /**
-     * Send ServiceWorkerRegistrationData to child process.
-     */
-    sync GetServiceWorkerConfiguration()
-        returns (ServiceWorkerConfiguration aConfig);
 
     async Profile(nsCString aProfile);
 

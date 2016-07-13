@@ -13,13 +13,9 @@
 #if defined(MOZ_WIDGET_GTK)
 #  include <gdk/gdk.h>
 #  include <gdk/gdkx.h>
-#elif defined(MOZ_WIDGET_QT)
-#include "gfxQtPlatform.h"
-#undef CursorShape
-#  include <X11/Xlib.h>
 #else
 #  error Unknown toolkit
-#endif 
+#endif
 
 #include <string.h>                     // for memset
 #include "mozilla/Scoped.h"             // for SCOPED_TEMPLATE
@@ -34,8 +30,6 @@ DefaultXDisplay()
 {
 #if defined(MOZ_WIDGET_GTK)
   return GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-#elif defined(MOZ_WIDGET_QT)
-  return gfxQtPlatform::GetXDisplay();
 #endif
 }
 

@@ -1397,19 +1397,19 @@ PrintTypeSection(WasmPrintContext& c, const AstModule::SigVector& sigs)
 }
 
 static bool
-PrintTableSection(WasmPrintContext& c, AstTable* maybeTable, const AstModule::FuncVector& funcs)
+PrintTableSection(WasmPrintContext& c, const AstModule& module)
 {
-    if (!maybeTable)
+    if (module.elemSegments().empty())
         return true;
 
-    uint32_t numTableElems = maybeTable->elems().length();
+    const AstElemSegment& segment = *module.elemSegments()[0];
 
     if (!c.buffer.append("table ["))
         return false;
 
-    for (uint32_t i = 0; i < numTableElems; i++) {
-        AstRef& elem = maybeTable->elems()[i];
-        AstFunc* func = funcs[elem.index()];
+    for (uint32_t i = 0; i < segment.elems().length(); i++) {
+        const AstRef& elem = segment.elems()[i];
+        AstFunc* func = module.funcs()[elem.index()];
         if (func->name().empty()) {
             if (!PrintInt32(c, elem.index()))
                 return false;
@@ -1417,7 +1417,7 @@ PrintTableSection(WasmPrintContext& c, AstTable* maybeTable, const AstModule::Fu
           if (!PrintName(c, func->name()))
               return false;
         }
-        if (i + 1 == numTableElems)
+        if (i + 1 == segment.elems().length())
             break;
         if (!c.buffer.append(", "))
             return false;
@@ -1616,27 +1616,27 @@ PrintCodeSection(WasmPrintContext& c, const AstModule::FuncVector& funcs, const 
 
 
 static bool
-PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory, const AstModule::SegmentVector& segments)
+PrintDataSection(WasmPrintContext& c, const AstModule& module)
 {
-    if (!maybeMemory)
+    if (!module.hasMemory())
         return true;
 
     if (!PrintIndent(c))
         return false;
     if (!c.buffer.append("memory "))
         return false;
-    if (!PrintInt32(c, maybeMemory->initial()))
+    if (!PrintInt32(c, module.memory().initial()))
        return false;
-    if (maybeMemory->maximum()) {
+    if (module.memory().maximum()) {
         if (!c.buffer.append(", "))
             return false;
-        if (!PrintInt32(c, *maybeMemory->maximum()))
+        if (!PrintInt32(c, *module.memory().maximum()))
             return false;
     }
 
     c.indent++;
 
-    uint32_t numSegments = segments.length();
+    uint32_t numSegments = module.dataSegments().length();
     if (!numSegments) {
       if (!c.buffer.append(" {}\n\n"))
           return false;
@@ -1646,7 +1646,7 @@ PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory, const AstModule::S
         return false;
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        const AstSegment* segment = segments[i];
+        const AstDataSegment* segment = module.dataSegments()[i];
 
         if (!PrintIndent(c))
             return false;
@@ -1679,7 +1679,7 @@ PrintModule(WasmPrintContext& c, AstModule& module)
     if (!PrintImportSection(c, module.imports(), module.sigs()))
         return false;
 
-    if (!PrintTableSection(c, module.maybeTable(), module.funcs()))
+    if (!PrintTableSection(c, module))
         return false;
 
     if (!PrintExportSection(c, module.exports(), module.funcs()))
@@ -1688,7 +1688,7 @@ PrintModule(WasmPrintContext& c, AstModule& module)
     if (!PrintCodeSection(c, module.funcs(), module.sigs()))
         return false;
 
-    if (!PrintDataSection(c, module.maybeMemory(), module.segments()))
+    if (!PrintDataSection(c, module))
         return false;
 
     return true;

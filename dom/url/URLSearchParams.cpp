@@ -8,6 +8,8 @@
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsDOMString.h"
+#include "nsIInputStream.h"
+#include "nsStringStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -300,6 +302,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(URLSearchParams)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -442,6 +445,104 @@ const nsAString&
 URLSearchParams::GetValueAtIndex(uint32_t aIndex) const
 {
   return mParams->GetValueAtIndex(aIndex);
+}
+
+// Helper functions for structured cloning
+inline bool
+ReadString(JSStructuredCloneReader* aReader, nsString& aString)
+{
+  MOZ_ASSERT(aReader);
+
+  bool read;
+  uint32_t nameLength, zero;
+  read = JS_ReadUint32Pair(aReader, &nameLength, &zero);
+  if (!read) {
+    return false;
+  }
+  MOZ_ASSERT(zero == 0);
+  aString.SetLength(nameLength);
+  size_t charSize = sizeof(nsString::char_type);
+  read = JS_ReadBytes(aReader, (void*) aString.BeginWriting(),
+                      nameLength * charSize);
+  if (!read) {
+    return false;
+  }
+
+  return true;
+}
+
+inline bool
+WriteString(JSStructuredCloneWriter* aWriter, const nsString& aString)
+{
+  MOZ_ASSERT(aWriter);
+
+  size_t charSize = sizeof(nsString::char_type);
+  return JS_WriteUint32Pair(aWriter, aString.Length(), 0) &&
+         JS_WriteBytes(aWriter, aString.get(), aString.Length() * charSize);
+}
+
+bool
+URLParams::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
+{
+  const uint32_t& nParams = mParams.Length();
+  if (!JS_WriteUint32Pair(aWriter, nParams, 0)) {
+    return false;
+  }
+  for (uint32_t i = 0; i < nParams; ++i) {
+    if (!WriteString(aWriter, mParams[i].mKey) ||
+        !WriteString(aWriter, mParams[i].mValue)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+URLParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
+{
+  MOZ_ASSERT(aReader);
+
+  DeleteAll();
+
+  uint32_t nParams, zero;
+  nsAutoString key, value;
+  if (!JS_ReadUint32Pair(aReader, &nParams, &zero)) {
+    return false;
+  }
+  MOZ_ASSERT(zero == 0);
+  for (uint32_t i = 0; i < nParams; ++i) {
+    if (!ReadString(aReader, key) || !ReadString(aReader, value)) {
+      return false;
+    }
+    Append(key, value);
+  }
+  return true;
+}
+
+bool
+URLSearchParams::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
+{
+  return mParams->WriteStructuredClone(aWriter);
+}
+
+bool
+URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
+{
+ return mParams->ReadStructuredClone(aReader);
+}
+
+NS_IMETHODIMP
+URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                             nsACString& aContentType, nsACString& aCharset)
+{
+  aContentType.AssignLiteral("application/x-www-form-urlencoded");
+  aCharset.AssignLiteral("UTF-8");
+
+  nsAutoString serialized;
+  Serialize(serialized);
+  NS_ConvertUTF16toUTF8 converted(serialized);
+  *aContentLength = converted.Length();
+  return NS_NewCStringInputStream(aBody, converted);
 }
 
 } // namespace dom

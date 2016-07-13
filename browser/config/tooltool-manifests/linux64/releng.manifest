@@ -16,9 +16,9 @@
 "unpack": true
 },
 {
-"version": "gecko rust 1.9.0 (commit e4e8b666850a763fdf1c3c2c142856ab51e32779)",
-"size": 96854912,
-"digest": "d613d5528e83bb73917372948c05a766912a9dd0ec4e8a5fab69161a515c1545d52e9ed3394716df96a9dcdf1c086b6f970413e97c2df78a11e5f9151573921a",
+"version": "gecko rustc 1.10.0 (cfcb716cf 2016-07-03)",
+"size": 102276708,
+"digest": "8cc9ea8347fc7e6e6fdb15a8fd1faae977f1235a426b879b3f9128ec91d8f2b6268297ce80bf4eceb47738bd40bfeda13f143dc3fe85f1434b13adfbc095ab90",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true
