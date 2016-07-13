@@ -1,0 +1,17 @@
+[
+{
+"size": 357533004,
+"visibility": "internal",
+"digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
+"algorithm": "sha512",
+"filename": "android-ndk.tar.bz2",
+"unpack": true
+},
+{
+"size": 4086983, 
+"visibility": "public", 
+"digest": "f9b8922384b489cf4969b1d26d4fef93db5882dacadd9e679e728164220b237ce170e94f45e6a6ede1055f4d06097f994e5d0185f42cf90b9e3dc57dfc2d0005", 
+"algorithm": "sha512", 
+"filename": "dump_syms"
+}
+]
