@@ -59,7 +59,6 @@ public:
     return mTiming->AsTimingParams();
   }
   void SetSpecifiedTiming(const TimingParams& aTiming);
-  virtual void NotifyAnimationTimingUpdated() = 0;
 
   // This function takes as input the timing parameters of an animation and
   // returns the computed timing at the specified local time.
@@ -80,7 +79,7 @@ public:
   ComputedTiming GetComputedTiming(const TimingParams* aTiming = nullptr) const;
   void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const;
 
-  void SetAnimation(Animation* aAnimation);
+  virtual void SetAnimation(Animation* aAnimation) = 0;
   Animation* GetAnimation() const { return mAnimation; };
 
 protected:

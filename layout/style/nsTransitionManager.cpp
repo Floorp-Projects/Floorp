@@ -798,10 +798,6 @@ nsTransitionManager::ConsiderStartingTransition(
   animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(
     mPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration());
-  // The order of the following two calls is important since PlayFromStyle
-  // will add the animation to the PendingAnimationTracker of its effect's
-  // document. When we come to make effect writeable (bug 1049975) we should
-  // remove this dependency.
   animation->SetEffectFromStyle(pt);
   animation->PlayFromStyle();
 

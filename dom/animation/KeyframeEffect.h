@@ -230,7 +230,9 @@ public:
     mEffectOptions.GetSpacingAsString(aRetVal);
   }
 
-  void NotifyAnimationTimingUpdated() override;
+  void NotifyAnimationTimingUpdated();
+
+  void SetAnimation(Animation* aAnimation) override;
 
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
