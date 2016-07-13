@@ -110,6 +110,8 @@ GetImports(JSContext* cx, HandleObject importObj, const ImportVector& imports,
                 return false;
 
             break;
+          case DefinitionKind::Table:
+            MOZ_CRASH("NYI");
           case DefinitionKind::Memory:
             if (!v.isObject() || !v.toObject().is<WasmMemoryObject>())
                 return Throw(cx, "import object field is not a Memory");
@@ -637,8 +639,10 @@ const JSPropertySpec WasmTableObject::properties[] =
 { JS_PS_END };
 
 /* static */ WasmTableObject*
-WasmTableObject::create(ExclusiveContext* cx, Table& table, HandleObject proto)
+WasmTableObject::create(JSContext* cx, Table& table)
 {
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
+
     AutoSetNewObjectMetadata metadata(cx);
     auto* obj = NewObjectWithGivenProto<WasmTableObject>(cx, proto);
     if (!obj)
@@ -688,8 +692,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!table)
         return false;
 
-    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
-    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table, proto));
+    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table));
     if (!tableObj)
         return false;
 

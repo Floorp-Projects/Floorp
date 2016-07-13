@@ -166,14 +166,13 @@ class WasmTableObject : public NativeObject
     static const JSPropertySpec properties[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmTableObject* create(ExclusiveContext* cx,
-                                   wasm::Table& table,
-                                   HandleObject proto);
+    static WasmTableObject* create(JSContext* cx, wasm::Table& table);
     wasm::Table& table() const;
 };
 
 typedef Rooted<WasmTableObject*> RootedWasmTableObject;
 typedef Handle<WasmTableObject*> HandleWasmTableObject;
+typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
 
 } // namespace js
 

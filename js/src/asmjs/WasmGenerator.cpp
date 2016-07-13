@@ -681,6 +681,12 @@ ModuleGenerator::numExports() const
 }
 
 bool
+ModuleGenerator::addTableExport(UniqueChars fieldName)
+{
+    return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
+}
+
+bool
 ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 {
     return exports_.emplaceBack(Move(fieldName), DefinitionKind::Memory);

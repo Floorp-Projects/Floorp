@@ -80,6 +80,7 @@ class Instance
 
     const CodeSegment& codeSegment() const { return *codeSegment_; }
     const Metadata& metadata() const { return *metadata_; }
+    const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;
 
