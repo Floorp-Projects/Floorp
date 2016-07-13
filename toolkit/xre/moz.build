@@ -44,13 +44,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
         'nsNativeAppSupportDefault.cpp',
         'UIKitDirProvider.mm',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    EXPORTS += ['nsQAppInstance.h']
-    SOURCES += [
-        '!moc_nsNativeAppSupportQt.cpp',
-        'nsNativeAppSupportQt.cpp',
-        'nsQAppInstance.cpp',
-    ]
 elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     UNIFIED_SOURCES += [
         'nsNativeAppSupportUnix.cpp',

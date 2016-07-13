@@ -150,24 +150,6 @@ nsCocoaFeatures::OSXVersionBugFix()
 }
 
 /* static */ bool
-nsCocoaFeatures::OnLionOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);
-}
-
-/* static */ bool
-nsCocoaFeatures::OnMountainLionOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_8_HEX);
-}
-
-/* static */ bool
-nsCocoaFeatures::OnMavericksOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_9_HEX);
-}
-
-/* static */ bool
 nsCocoaFeatures::OnYosemiteOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_10_HEX);

@@ -144,16 +144,6 @@ X11Error(Display *display, XErrorEvent *event) {
 #endif
 #endif
 
-#ifdef MOZ_WIDGET_QT
-  // We should not abort here if MOZ_X_SYNC is not set
-  // until http://bugreports.qt.nokia.com/browse/QTBUG-4042
-  // not fixed, just print error value
-  if (!PR_GetEnv("MOZ_X_SYNC")) {
-    fprintf(stderr, "XError: %s\n", notes.get());
-    return 0; // temporary workaround for bug 161472
-  }
-#endif
-
   NS_RUNTIMEABORT(notes.get());
   return 0; // not reached
 }

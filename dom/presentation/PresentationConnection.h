@@ -79,6 +79,10 @@ private:
 
   nsresult ProcessConnectionWentAway();
 
+  nsresult AddIntoLoadGroup();
+
+  nsresult RemoveFromLoadGroup();
+
   nsString mId;
   uint8_t mRole;
   PresentationConnectionState mState;

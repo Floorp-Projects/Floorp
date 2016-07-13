@@ -98,10 +98,10 @@ xpcAccessibleSelectable::Intl()
   return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
 }
 
-inline Accessible*
+inline AccessibleOrProxy
 xpcAccessibleValue::Intl()
 {
-  return static_cast<xpcAccessibleGeneric*>(this)->mIntl.AsAccessible();
+  return static_cast<xpcAccessibleGeneric*>(this)->mIntl;
 }
 
 } // namespace a11y
