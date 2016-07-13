@@ -45,6 +45,8 @@ def get_jitflags(variant, **kwargs):
         return kwargs['none']
     return JITFLAGS[variant]
 
+def valid_jitflags():
+    return JITFLAGS.keys()
 
 def get_environment_overlay(js_shell):
     """
