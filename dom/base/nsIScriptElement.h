@@ -51,9 +51,10 @@ public:
   /**
    * Content type identifying the scripting language. Can be empty, in
    * which case javascript will be assumed.
+   * Return false if type attribute is not found.
    */
-  virtual void GetScriptType(nsAString& type) = 0;
-    
+  virtual bool GetScriptType(nsAString& type) = 0;
+
   /**
    * Location of script source text. Can return null, in which case
    * this is assumed to be an inline script element.
@@ -63,7 +64,7 @@ public:
     NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
     return mUri;
   }
-  
+
   /**
    * Script source text for inline script elements.
    */
@@ -93,7 +94,7 @@ public:
   bool GetScriptAsync()
   {
     NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
-    return mAsync;  
+    return mAsync;
   }
 
   /**
@@ -198,7 +199,7 @@ public:
       parser->EndEvaluatingParserInsertedScript();
     }
   }
-  
+
   /**
    * Retrieves a pointer to the creator parser if this has one or null if not
    */
@@ -264,17 +265,17 @@ protected:
    * The start line number of the script.
    */
   uint32_t mLineNumber;
-  
+
   /**
    * The "already started" flag per HTML5.
    */
   bool mAlreadyStarted;
-  
+
   /**
    * The script didn't have an end tag.
    */
   bool mMalformed;
-  
+
   /**
    * False if parser-inserted but the parser hasn't triggered running yet.
    */
@@ -290,17 +291,17 @@ protected:
    * Whether src, defer and async are frozen.
    */
   bool mFrozen;
-  
+
   /**
    * The effective deferredness.
    */
   bool mDefer;
-  
+
   /**
    * The effective asyncness.
    */
   bool mAsync;
-  
+
   /**
    * The effective externalness. A script can be external with mUri being null
    * if the src attribute contained an invalid URL string.
@@ -316,7 +317,7 @@ protected:
    * The effective src (or null if no src).
    */
   nsCOMPtr<nsIURI> mUri;
-  
+
   /**
    * The creator parser of a non-defer, non-async parser-inserted script.
    */
