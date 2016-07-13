@@ -52,11 +52,6 @@ class PCrashReporterChild;
 
 namespace plugins {
 
-#ifdef MOZ_WIDGET_QT
-class NestedLoopTimer;
-static const int kNestedLoopDetectorIntervalMs = 90;
-#endif
-
 class PluginInstanceChild;
 
 class PluginModuleChild : public PPluginModuleChild
@@ -263,10 +258,6 @@ private:
 
     virtual void EnteredCxxStack() override;
     virtual void ExitedCxxStack() override;
-#elif defined(MOZ_WIDGET_QT)
-
-    virtual void EnteredCxxStack() override;
-    virtual void ExitedCxxStack() override;
 #endif
 
     PRLibrary* mLibrary;
@@ -328,8 +319,6 @@ private:
     // MessagePumpForUI.
     int mTopLoopDepth;
 #  endif
-#elif defined (MOZ_WIDGET_QT)
-    NestedLoopTimer *mNestedLoopTimerObject;
 #endif
 
 public: // called by PluginInstanceChild
