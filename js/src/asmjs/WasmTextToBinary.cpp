@@ -2485,8 +2485,10 @@ ParseExport(WasmParseContext& c)
         return new(c.lifo) AstExport(name.text(), AstRef(AstName(), exportee.index()));
       case WasmToken::Name:
         return new(c.lifo) AstExport(name.text(), AstRef(exportee.name(), AstNoIndex));
+      case WasmToken::Table:
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Table);
       case WasmToken::Memory:
-        return new(c.lifo) AstExport(name.text());
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Memory);
       default:
         break;
     }
@@ -3075,6 +3077,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
                 return false;
             break;
           case DefinitionKind::Memory:
+          case DefinitionKind::Table:
             break;
         }
     }
@@ -3554,6 +3557,8 @@ EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
         if (!e.writeVarU32(imp.funcSig().index()))
             return false;
         break;
+      case DefinitionKind::Table:
+        MOZ_CRASH("NYI");
       case DefinitionKind::Memory:
         if (!EncodeResizable(e, imp.memory()))
             return false;
@@ -3651,6 +3656,7 @@ EncodeExport(Encoder& e, bool newFormat, AstExport& exp)
         if (!e.writeVarU32(exp.func().index()))
             return false;
         break;
+      case DefinitionKind::Table:
       case DefinitionKind::Memory:
         if (!e.writeVarU32(0))
             return false;

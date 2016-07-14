@@ -20,11 +20,7 @@
 
 "use strict";
 
-const {CssDocsTooltip} = require("devtools/client/shared/widgets/Tooltip");
 const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
-
-// frame to load the tooltip into
-const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
 
 /**
  * Test properties
@@ -45,14 +41,16 @@ const BASIC_EXPECTED_SYNTAX = [{type: "comment", text: "/* The part we want   */
                                {type: "property-value", text: "is-the-part-we-want"},
                                {type: "text", text: ";"}];
 
-const URI_PARAMS = "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaign=default";
+const URI_PARAMS =
+  "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaign=default";
 
 add_task(function* () {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
   yield addTab("about:blank");
-  let [host, win, doc] = yield createHost("bottom", MDN_DOCS_TOOLTIP_FRAME);
-  let widget = new MdnDocsWidget(win.document);
+  let [host, win] = yield createHost("bottom", "data:text/html," +
+    "<div class='mdn-container'></div>");
+  let widget = new MdnDocsWidget(win.document.querySelector("div"));
 
   yield testTheBasics(widget);
 

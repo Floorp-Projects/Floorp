@@ -102,7 +102,7 @@ function* checkEventsForNode(test, inspector, testActor) {
     EventUtils.synthesizeMouseAtCenter(header, {}, type.ownerGlobal);
     yield tooltip.once("event-tooltip-ready");
 
-    let editor = tooltip.eventEditors.get(contentBox).editor;
+    let editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
     is(editor.getText(), expected[i].handler,
        "handler matches for " + cssSelector);
   }
