@@ -906,6 +906,11 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
       return nullptr;
     }
 
+    if (NS_WARN_IF(!params.path().IsEmpty())) {
+      ASSERT_UNLESS_FUZZING();
+      return nullptr;
+    }
+
     metadata.mContentType = params.contentType();
     metadata.mName = params.name();
     metadata.mLength = params.length();
@@ -1713,6 +1718,7 @@ public:
                  BlobImpl* aRemoteBlobImpl,
                  const nsAString& aName,
                  const nsAString& aContentType,
+                 const nsAString& aPath,
                  uint64_t aLength,
                  int64_t aModDate,
                  bool aIsSameProcessBlob);
@@ -2024,12 +2030,15 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
                                BlobImpl* aRemoteBlobImpl,
                                const nsAString& aName,
                                const nsAString& aContentType,
+                               const nsAString& aPath,
                                uint64_t aLength,
                                int64_t aModDate,
                                bool aIsSameProcessBlob)
   : BlobImplBase(aName, aContentType, aLength, aModDate)
   , mIsSlice(false)
 {
+  SetPath(aPath);
+
   if (aIsSameProcessBlob) {
     MOZ_ASSERT(aRemoteBlobImpl);
     mSameProcessBlobImpl = aRemoteBlobImpl;
@@ -2934,14 +2943,18 @@ BlobChild::CommonInit(BlobChild* aOther, BlobImpl* aBlobImpl)
 
   RemoteBlobImpl* remoteBlob = nullptr;
   if (otherImpl->IsFile()) {
-    nsString name;
+    nsAutoString name;
     otherImpl->GetName(name);
+
+    nsAutoString path;
+    otherImpl->GetPath(path);
 
     int64_t modDate = otherImpl->GetLastModified(rv);
     MOZ_ASSERT(!rv.Failed());
 
-    remoteBlob = new RemoteBlobImpl(this, otherImpl, name, contentType, length,
-                                    modDate, false /* SameProcessBlobImpl */);
+    remoteBlob =
+      new RemoteBlobImpl(this, otherImpl, name, contentType, path,
+                         length, modDate, false /* SameProcessBlobImpl */);
   } else {
     remoteBlob = new RemoteBlobImpl(this, otherImpl, contentType, length,
                                     false /* SameProcessBlobImpl */);
@@ -2991,6 +3004,7 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
                                       nullptr,
                                       params.name(),
                                       params.contentType(),
+                                      params.path(),
                                       params.length(),
                                       params.modDate(),
                                       false /* SameProcessBlobImpl */);
@@ -3015,8 +3029,11 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
       blobImpl->GetType(contentType);
 
       if (blobImpl->IsFile()) {
-        nsString name;
+        nsAutoString name;
         blobImpl->GetName(name);
+
+        nsAutoString path;
+        blobImpl->GetPath(path);
 
         int64_t lastModifiedDate = blobImpl->GetLastModified(rv);
         MOZ_ASSERT(!rv.Failed());
@@ -3026,6 +3043,7 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
                              blobImpl,
                              name,
                              contentType,
+                             path,
                              size,
                              lastModifiedDate,
                              true /* SameProcessBlobImpl */);
@@ -3201,14 +3219,18 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
     MOZ_ASSERT(!rv.Failed());
 
     if (aBlobImpl->IsFile()) {
-      nsString name;
+      nsAutoString name;
       aBlobImpl->GetName(name);
+
+      nsAutoString path;
+      aBlobImpl->GetPath(path);
 
       int64_t modDate = aBlobImpl->GetLastModified(rv);
       MOZ_ASSERT(!rv.Failed());
 
       blobParams =
-        FileBlobConstructorParams(name, contentType, length, modDate, blobData);
+        FileBlobConstructorParams(name, contentType, path, length, modDate,
+                                  blobData);
     } else {
       blobParams = NormalBlobConstructorParams(contentType, length, blobData);
     }
@@ -3392,6 +3414,7 @@ BlobChild::SetMysteryBlobInfo(const nsString& aName,
 
   FileBlobConstructorParams params(aName,
                                    aContentType,
+                                   EmptyString(),
                                    aLength,
                                    aLastModifiedDate,
                                    void_t() /* optionalBlobData */);
@@ -3748,14 +3771,17 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
       MOZ_ASSERT(!rv.Failed());
 
       if (aBlobImpl->IsFile()) {
-        nsString name;
+        nsAutoString name;
         aBlobImpl->GetName(name);
+
+        nsAutoString path;
+        aBlobImpl->GetPath(path);
 
         int64_t modDate = aBlobImpl->GetLastModified(rv);
         MOZ_ASSERT(!rv.Failed());
 
         blobParams =
-          FileBlobConstructorParams(name, contentType, length, modDate,
+          FileBlobConstructorParams(name, contentType, path, length, modDate,
                                     void_t());
       } else {
         blobParams = NormalBlobConstructorParams(contentType, length, void_t());
