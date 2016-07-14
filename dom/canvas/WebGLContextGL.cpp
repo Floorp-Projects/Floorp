@@ -1891,316 +1891,268 @@ WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum
 ////////////////////////////////////////////////////////////////////////////////
 // Uniform setters.
 
+class ValidateIfSampler
+{
+    const WebGLUniformLocation* const mLoc;
+    const size_t mDataCount;
+    const GLint* const mData;
+    bool mIsValidatedSampler;
+
+public:
+    ValidateIfSampler(WebGLContext* webgl, const char* funcName,
+                      WebGLUniformLocation* loc, size_t dataCount, const GLint* data,
+                      bool* const out_error)
+        : mLoc(loc)
+        , mDataCount(dataCount)
+        , mData(data)
+        , mIsValidatedSampler(false)
+    {
+        if (!mLoc->mInfo->mSamplerTexList) {
+            *out_error = false;
+            return;
+        }
+
+        for (size_t i = 0; i < mDataCount; i++) {
+            const auto& val = mData[i];
+            if (val < 0 || uint32_t(val) >= webgl->GLMaxTextureUnits()) {
+                webgl->ErrorInvalidValue("%s: This uniform location is a sampler, but %d"
+                                         " is not a valid texture unit.",
+                                         funcName, val);
+                *out_error = true;
+                return;
+            }
+        }
+
+        mIsValidatedSampler = true;
+        *out_error = false;
+    }
+
+    ~ValidateIfSampler() {
+        if (!mIsValidatedSampler)
+            return;
+
+        auto& samplerValues = mLoc->mInfo->mSamplerValues;
+
+        for (size_t i = 0; i < mDataCount; i++) {
+            const size_t curIndex = mLoc->mArrayIndex + i;
+            if (curIndex >= samplerValues.size())
+                break;
+
+            samplerValues[curIndex] = mData[i];
+        }
+    }
+};
+
+////////////////////
+
 void
 WebGLContext::Uniform1i(WebGLUniformLocation* loc, GLint a1)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 1, LOCAL_GL_INT, "uniform1i", &rawLoc))
+    const char funcName[] = "uniform1i";
+    if (!ValidateUniformSetter(loc, 1, LOCAL_GL_INT, funcName))
         return;
 
-    // Only uniform1i can take sampler settings.
-    if (!loc->ValidateSamplerSetter(a1, this, "uniform1i"))
+    bool error;
+    const ValidateIfSampler validate(this, funcName, loc, 1, &a1, &error);
+    if (error)
         return;
 
     MakeContextCurrent();
-    gl->fUniform1i(rawLoc, a1);
+    gl->fUniform1i(loc->mLoc, a1);
 }
 
 void
 WebGLContext::Uniform2i(WebGLUniformLocation* loc, GLint a1, GLint a2)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 2, LOCAL_GL_INT, "uniform2i", &rawLoc))
+    const char funcName[] = "uniform2i";
+    if (!ValidateUniformSetter(loc, 2, LOCAL_GL_INT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform2i(rawLoc, a1, a2);
+    gl->fUniform2i(loc->mLoc, a1, a2);
 }
 
 void
 WebGLContext::Uniform3i(WebGLUniformLocation* loc, GLint a1, GLint a2, GLint a3)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 3, LOCAL_GL_INT, "uniform3i", &rawLoc))
+    const char funcName[] = "uniform3i";
+    if (!ValidateUniformSetter(loc, 3, LOCAL_GL_INT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform3i(rawLoc, a1, a2, a3);
+    gl->fUniform3i(loc->mLoc, a1, a2, a3);
 }
 
 void
 WebGLContext::Uniform4i(WebGLUniformLocation* loc, GLint a1, GLint a2, GLint a3,
                         GLint a4)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 4, LOCAL_GL_INT, "uniform4i", &rawLoc))
+    const char funcName[] = "uniform4i";
+    if (!ValidateUniformSetter(loc, 4, LOCAL_GL_INT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform4i(rawLoc, a1, a2, a3, a4);
+    gl->fUniform4i(loc->mLoc, a1, a2, a3, a4);
 }
+
+//////////
 
 void
 WebGLContext::Uniform1f(WebGLUniformLocation* loc, GLfloat a1)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 1, LOCAL_GL_FLOAT, "uniform1f", &rawLoc))
+    const char funcName[] = "uniform1f";
+    if (!ValidateUniformSetter(loc, 1, LOCAL_GL_FLOAT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform1f(rawLoc, a1);
+    gl->fUniform1f(loc->mLoc, a1);
 }
 
 void
 WebGLContext::Uniform2f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 2, LOCAL_GL_FLOAT, "uniform2f", &rawLoc))
+    const char funcName[] = "uniform2f";
+    if (!ValidateUniformSetter(loc, 2, LOCAL_GL_FLOAT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform2f(rawLoc, a1, a2);
+    gl->fUniform2f(loc->mLoc, a1, a2);
 }
 
 void
 WebGLContext::Uniform3f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2,
                         GLfloat a3)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 3, LOCAL_GL_FLOAT, "uniform3f", &rawLoc))
+    const char funcName[] = "uniform3f";
+    if (!ValidateUniformSetter(loc, 3, LOCAL_GL_FLOAT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform3f(rawLoc, a1, a2, a3);
+    gl->fUniform3f(loc->mLoc, a1, a2, a3);
 }
 
 void
 WebGLContext::Uniform4f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2,
                         GLfloat a3, GLfloat a4)
 {
-    GLuint rawLoc;
-    if (!ValidateUniformSetter(loc, 4, LOCAL_GL_FLOAT, "uniform4f", &rawLoc))
+    const char funcName[] = "uniform4f";
+    if (!ValidateUniformSetter(loc, 4, LOCAL_GL_FLOAT, funcName))
         return;
 
     MakeContextCurrent();
-    gl->fUniform4f(rawLoc, a1, a2, a3, a4);
+    gl->fUniform4f(loc->mLoc, a1, a2, a3, a4);
 }
 
 ////////////////////////////////////////
 // Array
 
 void
-WebGLContext::Uniform1iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLint* data)
+WebGLContext::UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                         const IntArr& arr)
 {
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 1, LOCAL_GL_INT, arrayLength,
-                                    "uniform1iv", &rawLoc,
+    uint32_t numElementsToUpload;
+    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_INT, arr.dataCount, funcName,
                                     &numElementsToUpload))
     {
         return;
     }
 
-    if (!loc->ValidateSamplerSetter(data[0], this, "uniform1iv"))
+    bool error;
+    const ValidateIfSampler samplerValidator(this, funcName, loc, numElementsToUpload,
+                                             arr.data, &error);
+    if (error)
         return;
 
+    static const decltype(&gl::GLContext::fUniform1iv) kFuncList[] = {
+        &gl::GLContext::fUniform1iv,
+        &gl::GLContext::fUniform2iv,
+        &gl::GLContext::fUniform3iv,
+        &gl::GLContext::fUniform4iv
+    };
+    const auto func = kFuncList[N-1];
+
     MakeContextCurrent();
-    gl->fUniform1iv(rawLoc, numElementsToUpload, data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, arr.data);
 }
 
 void
-WebGLContext::Uniform2iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLint* data)
+WebGL2Context::UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                           const UintArr& arr)
 {
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 2, LOCAL_GL_INT, arrayLength,
-                                    "uniform2iv", &rawLoc,
+    uint32_t numElementsToUpload;
+    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_UNSIGNED_INT, arr.dataCount,
+                                    funcName, &numElementsToUpload))
+    {
+        return;
+    }
+    MOZ_ASSERT(!loc->mInfo->mSamplerTexList, "Should not be a sampler.");
+
+    static const decltype(&gl::GLContext::fUniform1uiv) kFuncList[] = {
+        &gl::GLContext::fUniform1uiv,
+        &gl::GLContext::fUniform2uiv,
+        &gl::GLContext::fUniform3uiv,
+        &gl::GLContext::fUniform4uiv
+    };
+    const auto func = kFuncList[N-1];
+
+    MakeContextCurrent();
+    (gl->*func)(loc->mLoc, numElementsToUpload, arr.data);
+}
+
+void
+WebGLContext::UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                         const FloatArr& arr)
+{
+    uint32_t numElementsToUpload;
+    if (!ValidateUniformArraySetter(loc, N, LOCAL_GL_FLOAT, arr.dataCount, funcName,
                                     &numElementsToUpload))
     {
         return;
     }
+    MOZ_ASSERT(!loc->mInfo->mSamplerTexList, "Should not be a sampler.");
 
-    if (!loc->ValidateSamplerSetter(data[0], this, "uniform2iv") ||
-        !loc->ValidateSamplerSetter(data[1], this, "uniform2iv"))
-    {
-        return;
-    }
+    static const decltype(&gl::GLContext::fUniform1fv) kFuncList[] = {
+        &gl::GLContext::fUniform1fv,
+        &gl::GLContext::fUniform2fv,
+        &gl::GLContext::fUniform3fv,
+        &gl::GLContext::fUniform4fv
+    };
+    const auto func = kFuncList[N-1];
 
     MakeContextCurrent();
-    gl->fUniform2iv(rawLoc, numElementsToUpload, data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, arr.data);
 }
 
 void
-WebGLContext::Uniform3iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLint* data)
+WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
+                                 WebGLUniformLocation* loc, bool transpose,
+                                 const FloatArr& arr)
 {
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 3, LOCAL_GL_INT, arrayLength,
-                                    "uniform3iv", &rawLoc,
-                                    &numElementsToUpload))
+    uint32_t numElementsToUpload;
+    if (!ValidateUniformMatrixArraySetter(loc, A, B, LOCAL_GL_FLOAT, arr.dataCount,
+                                          transpose, funcName, &numElementsToUpload))
     {
         return;
     }
+    MOZ_ASSERT(!loc->mInfo->mSamplerTexList, "Should not be a sampler.");
 
-    if (!loc->ValidateSamplerSetter(data[0], this, "uniform3iv") ||
-        !loc->ValidateSamplerSetter(data[1], this, "uniform3iv") ||
-        !loc->ValidateSamplerSetter(data[2], this, "uniform3iv"))
-    {
-        return;
-    }
+    static const decltype(&gl::GLContext::fUniformMatrix2fv) kFuncList[] = {
+        &gl::GLContext::fUniformMatrix2fv,
+        &gl::GLContext::fUniformMatrix2x3fv,
+        &gl::GLContext::fUniformMatrix2x4fv,
+
+        &gl::GLContext::fUniformMatrix3x2fv,
+        &gl::GLContext::fUniformMatrix3fv,
+        &gl::GLContext::fUniformMatrix3x4fv,
+
+        &gl::GLContext::fUniformMatrix4x2fv,
+        &gl::GLContext::fUniformMatrix4x3fv,
+        &gl::GLContext::fUniformMatrix4fv
+    };
+    const auto func = kFuncList[3*(A-2) + (B-2)];
 
     MakeContextCurrent();
-    gl->fUniform3iv(rawLoc, numElementsToUpload, data);
-}
-
-void
-WebGLContext::Uniform4iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLint* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 4, LOCAL_GL_INT, arrayLength,
-                                    "uniform4iv", &rawLoc,
-                                    &numElementsToUpload))
-    {
-        return;
-    }
-
-    if (!loc->ValidateSamplerSetter(data[0], this, "uniform4iv") ||
-        !loc->ValidateSamplerSetter(data[1], this, "uniform4iv") ||
-        !loc->ValidateSamplerSetter(data[2], this, "uniform4iv") ||
-        !loc->ValidateSamplerSetter(data[3], this, "uniform4iv"))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniform4iv(rawLoc, numElementsToUpload, data);
-}
-
-void
-WebGLContext::Uniform1fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLfloat* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 1, LOCAL_GL_FLOAT, arrayLength,
-                                    "uniform1fv", &rawLoc,
-                                    &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniform1fv(rawLoc, numElementsToUpload, data);
-}
-
-void
-WebGLContext::Uniform2fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLfloat* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 2, LOCAL_GL_FLOAT, arrayLength,
-                                    "uniform2fv", &rawLoc,
-                                    &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniform2fv(rawLoc, numElementsToUpload, data);
-}
-
-void
-WebGLContext::Uniform3fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLfloat* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 3, LOCAL_GL_FLOAT, arrayLength,
-                                    "uniform3fv", &rawLoc,
-                                    &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniform3fv(rawLoc, numElementsToUpload, data);
-}
-
-void
-WebGLContext::Uniform4fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                              const GLfloat* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformArraySetter(loc, 4, LOCAL_GL_FLOAT, arrayLength,
-                                    "uniform4fv", &rawLoc,
-                                    &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniform4fv(rawLoc, numElementsToUpload, data);
-}
-
-////////////////////////////////////////
-// Matrix
-
-void
-WebGLContext::UniformMatrix2fv_base(WebGLUniformLocation* loc, bool transpose,
-                                    size_t arrayLength, const float* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformMatrixArraySetter(loc, 2, 2, LOCAL_GL_FLOAT, arrayLength,
-                                          transpose, "uniformMatrix2fv",
-                                          &rawLoc, &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniformMatrix2fv(rawLoc, numElementsToUpload, false, data);
-}
-
-void
-WebGLContext::UniformMatrix3fv_base(WebGLUniformLocation* loc, bool transpose,
-                                    size_t arrayLength, const float* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformMatrixArraySetter(loc, 3, 3, LOCAL_GL_FLOAT, arrayLength,
-                                          transpose, "uniformMatrix3fv",
-                                          &rawLoc, &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniformMatrix3fv(rawLoc, numElementsToUpload, false, data);
-}
-
-void
-WebGLContext::UniformMatrix4fv_base(WebGLUniformLocation* loc, bool transpose,
-                                    size_t arrayLength, const float* data)
-{
-    GLuint rawLoc;
-    GLsizei numElementsToUpload;
-    if (!ValidateUniformMatrixArraySetter(loc, 4, 4, LOCAL_GL_FLOAT, arrayLength,
-                                          transpose, "uniformMatrix4fv",
-                                          &rawLoc, &numElementsToUpload))
-    {
-        return;
-    }
-
-    MakeContextCurrent();
-    gl->fUniformMatrix4fv(rawLoc, numElementsToUpload, false, data);
+    (gl->*func)(loc->mLoc, numElementsToUpload, false, arr.data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
