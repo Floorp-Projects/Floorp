@@ -567,6 +567,15 @@ Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize) {
   base->EnsureCapacity<nsTArrayInfallibleAllocator>(aCapacity, aElemSize);
 }
 
+void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen) {
+  aLayers->mLayers.EnsureLengthAtLeast(aLen);
+}
+
+void Gecko_InitializeImageLayer(nsStyleImageLayers_Layer* aLayer, uint8_t aLayerType) {
+  auto layer = reinterpret_cast<nsStyleImageLayers::Layer*>(aLayer);
+  layer->Initialize(static_cast<nsStyleImageLayers::LayerType>(aLayerType));
+}
+
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \
