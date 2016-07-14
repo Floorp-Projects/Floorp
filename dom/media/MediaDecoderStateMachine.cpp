@@ -206,15 +206,11 @@ static void InitVideoQueuePrefs() {
 
 // Delay, in milliseconds, that tabs needs to be in background before video
 // decoding is suspended.
-static TimeDuration sSuspendBackgroundVideoDelay;
-
-static void
-InitSuspendBackgroundPref()
+static TimeDuration
+SuspendBackgroundVideoDelay()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-
-  sSuspendBackgroundVideoDelay = TimeDuration::FromMilliseconds(
-      MediaPrefs::MDSMSuspendBackgroundVideoDelay());
+  return TimeDuration::FromMilliseconds(
+    MediaPrefs::MDSMSuspendBackgroundVideoDelay());
 }
 
 #define INIT_WATCHABLE(name, val) \
@@ -294,7 +290,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   InitVideoQueuePrefs();
-  InitSuspendBackgroundPref();
 
   mBufferingWait = IsRealTime() ? 0 : 15;
   mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
@@ -1351,7 +1346,7 @@ void MediaDecoderStateMachine::VisibilityChanged()
 
   // Start timer to trigger suspended decoding state when going invisible.
   if (!mIsVisible) {
-    TimeStamp target = TimeStamp::Now() + sSuspendBackgroundVideoDelay;
+    TimeStamp target = TimeStamp::Now() + SuspendBackgroundVideoDelay();
 
     RefPtr<MediaDecoderStateMachine> self = this;
     mVideoDecodeSuspendTimer.Ensure(target,
