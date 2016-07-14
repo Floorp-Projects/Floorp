@@ -174,6 +174,7 @@ private:
   mozilla::Atomic<bool> mActive;
 
   MozPromiseRequestHolder<SourceBufferTask::AppendPromise> mPendingAppend;
+  MozPromiseRequestHolder<SourceBufferTask::RangeRemovalPromise> mPendingRemoval;
   const nsCString mType;
 
   RefPtr<TimeRanges> mBuffered;
