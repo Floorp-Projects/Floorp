@@ -1052,43 +1052,38 @@ WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
     const auto& linkInfo = mMostRecentLinkInfo;
 
     // Check if the attrib name conflicting to uniform name
-    for (const auto& uniform : linkInfo->uniformMap) {
-        if (linkInfo->attribMap.find(uniform.first) != linkInfo->attribMap.end()) {
-            *out_linkLog = nsPrintfCString("The uniform name (%s) conflicts with"
-                                           " attribute name.",
-                                           uniform.first.get());
-            return false;
+    for (const auto& attrib : linkInfo->attribs) {
+        const auto& attribName = attrib.mActiveInfo->mBaseUserName;
+
+        for (const auto& uniform : linkInfo->uniforms) {
+            const auto& uniformName = uniform->mActiveInfo->mBaseUserName;
+            if (attribName == uniformName) {
+                *out_linkLog = nsPrintfCString("Attrib name conflicts with uniform name:"
+                                               " %s",
+                                               attribName.BeginReading());
+                return false;
+            }
         }
     }
 
-    std::map<GLuint, const WebGLActiveInfo*> attribsByLoc;
-    for (const auto& pair : linkInfo->activeAttribLocs) {
-        const auto dupe = attribsByLoc.find(pair.second);
-        if (dupe != attribsByLoc.end()) {
-            *out_linkLog = nsPrintfCString("Aliased location between active attribs"
-                                           " \"%s\" and \"%s\".",
-                                           dupe->second->mBaseUserName.BeginReading(),
-                                           pair.first->mBaseUserName.BeginReading());
-            return false;
-        }
-    }
+    std::map<uint32_t, const webgl::AttribInfo*> attribsByLoc;
+    for (const auto& attrib : linkInfo->attribs) {
+        const uint32_t elemSize = ElemSizeFromType(attrib.mActiveInfo->mElemType);
+        const uint32_t numUsedLocation = (elemSize + 3) / 4;
+        for (uint32_t i = 0; i < numUsedLocation; i++) {
+            const uint32_t usedLoc = attrib.mLoc + i;
 
-    for (const auto& pair : attribsByLoc) {
-        const GLuint attribLoc = pair.first;
-        const auto attrib = pair.second;
-
-        const auto elemSize = ElemSizeFromType(attrib->mElemType);
-        const GLuint locationsUsed = (elemSize + 3) / 4;
-        for (GLuint i = 1; i < locationsUsed; i++) {
-            const GLuint usedLoc = attribLoc + i;
-
-            const auto dupe = attribsByLoc.find(usedLoc);
-            if (dupe != attribsByLoc.end()) {
-                *out_linkLog = nsPrintfCString("Attrib \"%s\" of type \"0x%04x\" aliases"
-                                               " \"%s\" by overhanging its location.",
-                                               attrib->mBaseUserName.BeginReading(),
-                                               attrib->mElemType,
-                                               dupe->second->mBaseUserName.BeginReading());
+            const auto res = attribsByLoc.insert({usedLoc, &attrib});
+            const bool& didInsert = res.second;
+            if (!didInsert) {
+                const auto& aliasingName = attrib.mActiveInfo->mBaseUserName;
+                const auto& itrExisting = res.first;
+                const auto& existingInfo = itrExisting->second;
+                const auto& existingName = existingInfo->mActiveInfo->mBaseUserName;
+                *out_linkLog = nsPrintfCString("Attrib \"%s\" aliases locations used by"
+                                               " attrib \"%s\".",
+                                               aliasingName.BeginReading(),
+                                               existingName.BeginReading());
                 return false;
             }
         }

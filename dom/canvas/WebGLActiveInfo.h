@@ -30,11 +30,10 @@ public:
         return mWebGL;
     }
 
-
     WebGLContext* const mWebGL;
 
     // ActiveInfo state:
-    const GLint mElemCount; // `size`
+    const uint32_t mElemCount; // `size`
     const GLenum mElemType; // `type`
     const nsCString mBaseUserName; // `name`, but ASCII, and without any final "[0]".
 
