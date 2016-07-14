@@ -5,6 +5,7 @@
 #sidebar-panel-layoutview {
   display: block;
   overflow: auto;
+  height: 100%;
 }
 
 #layout-wrapper {
