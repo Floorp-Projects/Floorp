@@ -107,11 +107,11 @@ protected:
                                           nsPIDOMWindowOuter* aParent,
                                           bool aWindowIsNew,
                                           mozIDOMWindowProxy** aOpenedWindow);
-  static void SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
-                                     mozIDOMWindowProxy* aParent,
-                                     bool aIsCallerChrome,
-                                     const SizeSpec& aSizeSpec,
-                                     float* aOpenerFullZoom);
+  static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
+                               mozIDOMWindowProxy* aParent,
+                               bool aIsCallerChrome,
+                               const SizeSpec& aSizeSpec,
+                               float* aOpenerFullZoom);
   static void GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
                                 nsIDocShellTreeItem** aResult);
   static void GetWindowTreeOwner(nsPIDOMWindowOuter* aWindow,

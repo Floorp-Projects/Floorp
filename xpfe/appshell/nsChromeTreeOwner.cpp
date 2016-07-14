@@ -269,6 +269,38 @@ nsChromeTreeOwner::GetPrimaryTabParent(nsITabParent** aTab)
   return mXULWindow->GetPrimaryTabParent(aTab);
 }
 
+NS_IMETHODIMP
+nsChromeTreeOwner::GetPrimaryContentSize(int32_t* aWidth,
+                                         int32_t* aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetPrimaryContentSize(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::SetPrimaryContentSize(int32_t aWidth,
+                                         int32_t aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->SetPrimaryContentSize(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::GetRootShellSize(int32_t* aWidth,
+                                    int32_t* aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetRootShellSize(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::SetRootShellSize(int32_t aWidth,
+                                    int32_t aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->SetRootShellSize(aWidth, aHeight);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    int32_t aCX, int32_t aCY)
 {
@@ -347,6 +379,13 @@ nsChromeTreeOwner::GetTargetableShellCount(uint32_t* aResult)
 {
   *aResult = 0;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::GetHasPrimaryContent(bool* aResult)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetHasPrimaryContent(aResult);
 }
 
 //*****************************************************************************

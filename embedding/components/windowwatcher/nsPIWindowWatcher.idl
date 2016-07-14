@@ -105,7 +105,7 @@ interface nsPIWindowWatcher : nsISupports
    *         window.
    */
   nsITabParent openWindowWithTabParent(in nsITabParent aOpeningTab,
-                                       in string aFeatures,
+                                       in ACString aFeatures,
                                        in boolean aCalledFromJS,
                                        in float aOpenerFullZoom);
 

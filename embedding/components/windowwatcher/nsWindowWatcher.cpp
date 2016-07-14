@@ -491,12 +491,12 @@ CheckUserContextCompatibility(nsIDocShell* aDocShell)
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindowWithoutParent(nsITabParent** aResult)
 {
-  return OpenWindowWithTabParent(nullptr, "", true, 1.0f, aResult);
+  return OpenWindowWithTabParent(nullptr, EmptyCString(), true, 1.0f, aResult);
 }
 
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
-                                         const char* aFeatures,
+                                         const nsACString& aFeatures,
                                          bool aCalledFromJS,
                                          float aOpenerFullZoom,
                                          nsITabParent** aResult)
@@ -569,8 +569,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   windowCreator2->SetScreenId(retval);
 #endif
 
-  nsAutoCString features(aFeatures);
-  uint32_t chromeFlags = CalculateChromeFlagsForChild(features);
+  uint32_t chromeFlags = CalculateChromeFlagsForChild(aFeatures);
 
   // A content process has asked for a new window, which implies
   // that the new window will need to be remote.
@@ -616,15 +615,15 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   // that will also run with out-of-process tabs.
   chromeContext->SetRemoteTabs(true);
 
-  if (PL_strcasestr(features.get(), "width=") ||
-      PL_strcasestr(features.get(), "height=")) {
+  if (PL_strcasestr(aFeatures.BeginReading(), "width=") ||
+      PL_strcasestr(aFeatures.BeginReading(), "height=")) {
     chromeTreeOwner->SetPersistence(false, false, false);
   }
 
   SizeSpec sizeSpec;
-  CalcSizeSpec(features, sizeSpec);
-  SizeOpenedDocShellItem(chromeTreeItem, parentWindowOuter, false, sizeSpec,
-                         &aOpenerFullZoom);
+  CalcSizeSpec(aFeatures, sizeSpec);
+  SizeOpenedWindow(chromeTreeOwner, parentWindowOuter, false, sizeSpec,
+                   &aOpenerFullZoom);
 
   nsCOMPtr<nsITabParent> newTabParent;
   chromeTreeOwner->GetPrimaryTabParent(getter_AddRefs(newTabParent));
@@ -1228,8 +1227,10 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   }
 
   if (isNewToplevelWindow) {
-    SizeOpenedDocShellItem(newDocShellItem, aParent, isCallerChrome, sizeSpec,
-                           aOpenerFullZoom);
+    nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
+    newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
+    SizeOpenedWindow(newTreeOwner, aParent, isCallerChrome, sizeSpec,
+                     aOpenerFullZoom);
   }
 
   // XXXbz isn't windowIsModal always true when windowIsModalContentDialog?
@@ -2236,18 +2237,34 @@ nsWindowWatcher::CalcSizeSpec(const nsACString& aFeatures, SizeSpec& aResult)
   }
 }
 
-/* Size and position the new window according to aSizeSpec. This method
+/* Size and position a new window according to aSizeSpec. This method
    is assumed to be called after the window has already been given
    a default position and size; thus its current position and size are
    accurate defaults. The new window is made visible at method end.
+   @param aTreeOwner
+          The top-level nsIDocShellTreeOwner of the newly opened window.
+   @param aParent (optional)
+          The parent window from which to inherit zoom factors from if
+          aOpenerFullZoom isn't passed.
+   @param aIsCallerChrome
+          True if the code requesting the new window is privileged.
+   @param aSizeSpec
+          The size that the new window should be.
+   @param aOpenerFullZoom
+          An optional pointer to a zoom factor to scale the content
+          to.
 */
 void
-nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
-                                        mozIDOMWindowProxy* aParent,
-                                        bool aIsCallerChrome,
-                                        const SizeSpec& aSizeSpec,
-                                        float* aOpenerFullZoom)
+nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
+                                  mozIDOMWindowProxy* aParent,
+                                  bool aIsCallerChrome,
+                                  const SizeSpec& aSizeSpec,
+                                  float* aOpenerFullZoom)
 {
+  // We should only be sizing top-level windows if we're in the parent
+  // process.
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   // position and size of window
   int32_t left = 0, top = 0, width = 100, height = 100;
   // difference between chrome and content size
@@ -2256,9 +2273,7 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
   bool sizeChromeWidth = true, sizeChromeHeight = true;
 
   // get various interfaces for aDocShellItem, used throughout this method
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  aDocShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(aTreeOwner));
   if (!treeOwnerAsWin) { // we'll need this to actually size the docshell
     return;
   }
@@ -2275,7 +2290,7 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
     }
   }
 
-  double scale;
+  double scale = 1.0;
   treeOwnerAsWin->GetUnscaledDevicePixelsPerCSSPixel(&scale);
 
   /* The current position and size will be unchanged if not specified
@@ -2291,16 +2306,16 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
   width = NSToIntRound(width / scale);
   height = NSToIntRound(height / scale);
   {
-    // scope shellWindow why not
-    nsCOMPtr<nsIBaseWindow> shellWindow(do_QueryInterface(aDocShellItem));
-    if (shellWindow) {
-      int32_t cox, coy;
-      double shellScale;
-      shellWindow->GetSize(&cox, &coy);
-      shellWindow->GetUnscaledDevicePixelsPerCSSPixel(&shellScale);
-      chromeWidth = width - NSToIntRound(cox / shellScale);
-      chromeHeight = height - NSToIntRound(coy / shellScale);
+    int32_t contentWidth, contentHeight;
+    bool hasPrimaryContent = false;
+    aTreeOwner->GetHasPrimaryContent(&hasPrimaryContent);
+    if (hasPrimaryContent) {
+      aTreeOwner->GetPrimaryContentSize(&contentWidth, &contentHeight);
+    } else {
+      aTreeOwner->GetRootShellSize(&contentWidth, &contentHeight);
     }
+    chromeWidth = width - contentWidth;
+    chromeHeight = height - contentHeight;
   }
 
   // Set up left/top
@@ -2352,7 +2367,6 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
   }
 
   if (!enabled) {
-
     // Security check failed.  Ensure all args meet minimum reqs.
 
     int32_t oldTop = top, oldLeft = left;
@@ -2451,7 +2465,13 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
        chrome or content sizes. If we have a mix, use the chrome size
        adjusted by the chrome/content differences calculated earlier. */
     if (!sizeChromeWidth && !sizeChromeHeight) {
-      treeOwner->SizeShellTo(aDocShellItem, width * scale, height * scale);
+      bool hasPrimaryContent = false;
+      aTreeOwner->GetHasPrimaryContent(&hasPrimaryContent);
+      if (hasPrimaryContent) {
+        aTreeOwner->SetPrimaryContentSize(width * scale, height * scale);
+      } else {
+        aTreeOwner->SetRootShellSize(width * scale, height * scale);
+      }
     } else {
       if (!sizeChromeWidth) {
         width += chromeWidth;
