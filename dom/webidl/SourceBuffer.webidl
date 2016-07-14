@@ -31,6 +31,11 @@ interface SourceBuffer : EventTarget {
   attribute double appendWindowStart;
   [SetterThrows]
   attribute unrestricted double appendWindowEnd;
+  attribute EventHandler onupdatestart;
+  attribute EventHandler onupdate;
+  attribute EventHandler onupdateend;
+  attribute EventHandler onerror;
+  attribute EventHandler onabort;
   [Throws]
   void appendBuffer(ArrayBuffer data);
   [Throws]
