@@ -229,7 +229,9 @@ nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight, bool aDelayR
     } else {
       mDelayedResize.SizeTo(aWidth, aHeight);
       if (mPresShell && mPresShell->GetDocument()) {
-        mPresShell->GetDocument()->SetNeedStyleFlush();
+        nsIDocument* doc = mPresShell->GetDocument();
+        doc->SetNeedStyleFlush();
+        doc->SetNeedLayoutFlush();
       }
     }
   }
