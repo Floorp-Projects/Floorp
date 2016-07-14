@@ -174,3 +174,47 @@ function friendlyPrefCategoryNameToInternalName(aName) {
 function internalPrefCategoryNameToFriendlyName(aName) {
   return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });
 }
+
+// Put up a confirm dialog with "ok to restart" and "revert without restarting"
+// buttons and returns the index of the button chosen.
+//
+// The constants are useful to interpret the return value of the function.
+const CONFIRM_RESTART_PROMPT_RESTART_NOW = 0;
+const CONFIRM_RESTART_PROMPT_CANCEL = 1;
+function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex) {
+  let brandName = document.getElementById("bundleBrand").getString("brandShortName");
+  let bundle = document.getElementById("bundlePreferences");
+  let msg = bundle.getFormattedString(aRestartToEnable ?
+                                      "featureEnableRequiresRestart" :
+                                      "featureDisableRequiresRestart",
+                                      [brandName]);
+  let title = bundle.getFormattedString("shouldRestartTitle", [brandName]);
+  let prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+
+  // Set up the first (index 0) button:
+  let button0Text = bundle.getFormattedString("okToRestartButton", [brandName]);
+  let buttonFlags = (Services.prompt.BUTTON_POS_0 *
+                     Services.prompt.BUTTON_TITLE_IS_STRING);
+
+
+  // Set up the second (index 1) button:
+  let button1Text = bundle.getString("revertNoRestartButton");
+  buttonFlags += (Services.prompt.BUTTON_POS_1 *
+                  Services.prompt.BUTTON_TITLE_IS_STRING);
+
+  switch(aDefaultButtonIndex) {
+    case 0:
+      buttonFlags += Services.prompt.BUTTON_POS_0_DEFAULT;
+      break;
+    case 1:
+      buttonFlags += Services.prompt.BUTTON_POS_1_DEFAULT;
+      break;
+    default:
+      break;
+  }
+
+  let buttonIndex = prompts.confirmEx(window, title, msg, buttonFlags,
+                                      button0Text, button1Text, null,
+                                      null, {});
+  return buttonIndex;
+}
