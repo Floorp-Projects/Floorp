@@ -22,6 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
+class Directory;
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
@@ -67,6 +68,15 @@ public:
    */
   virtual nsresult
   AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) = 0;
+
+  /**
+   * Submit a name/directory pair
+   *
+   * @param aName the name of the parameter
+   * @param aBlob the directory to submit.
+   */
+  virtual nsresult AddNameDirectoryPair(const nsAString& aName,
+                                        Directory* aDirectory) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -178,6 +188,9 @@ public:
 
   virtual nsresult
   AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
+
+  virtual nsresult
+  AddNameDirectoryPair(const nsAString& aName, Directory* aDirectory) override;
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
