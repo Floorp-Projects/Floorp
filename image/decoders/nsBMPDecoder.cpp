@@ -581,10 +581,8 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     return Transition::TerminateFailure();
   }
 
-  // Post our size to the superclass.
-  uint32_t absHeight = AbsoluteHeight();
-  PostSize(mH.mWidth, absHeight);
-  mCurrentRow = absHeight;
+  // Initialize our current row to the top of the image.
+  mCurrentRow = AbsoluteHeight();
 
   // Round it up to the nearest byte count, then pad to 4-byte boundary.
   // Compute this even for a metadate decode because GetCompressedImageSize()
@@ -651,6 +649,9 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   if (mMayHaveTransparency) {
     PostHasTransparency();
   }
+
+  // Post our size to the superclass.
+  PostSize(mH.mWidth, AbsoluteHeight());
 
   // We've now read all the headers. If we're doing a metadata decode, we're
   // done.
