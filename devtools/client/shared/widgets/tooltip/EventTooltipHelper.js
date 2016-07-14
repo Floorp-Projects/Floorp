@@ -42,7 +42,10 @@ function EventTooltip(tooltip, eventListenerInfos, toolbox) {
   this._tooltip = tooltip;
   this._eventListenerInfos = eventListenerInfos;
   this._toolbox = toolbox;
-  this._tooltip.eventEditors = new WeakMap();
+  this._eventEditors = new WeakMap();
+
+  // Used in tests: add a reference to the EventTooltip instance on the HTMLTooltip.
+  this._tooltip.eventTooltip = this;
 
   this._headerClicked = this._headerClicked.bind(this);
   this._debugClicked = this._debugClicked.bind(this);
@@ -145,7 +148,7 @@ EventTooltip.prototype = {
       // Content
       let content = doc.createElementNS(XHTML_NS, "div");
       let editor = new Editor(config);
-      this._tooltip.eventEditors.set(content, {
+      this._eventEditors.set(content, {
         editor: editor,
         handler: listener.handler,
         searchString: listener.searchString,
@@ -192,13 +195,13 @@ EventTooltip.prototype = {
 
       content.setAttribute("open", "");
 
-      let eventEditors = this._tooltip.eventEditors.get(content);
+      let eventEditor = this._eventEditors.get(content);
 
-      if (eventEditors.appended) {
+      if (eventEditor.appended) {
         return;
       }
 
-      let {editor, handler} = eventEditors;
+      let {editor, handler} = eventEditor;
 
       let iframe = doc.createElementNS(XHTML_NS, "iframe");
       iframe.setAttribute("style", "width: 100%; height: 100%; border-style: none;");
@@ -207,7 +210,7 @@ EventTooltip.prototype = {
         let tidied = beautify.js(handler, { "indent_size": 2 });
         editor.setText(tidied);
 
-        eventEditors.appended = true;
+        eventEditor.appended = true;
 
         let container = header.parentElement.getBoundingClientRect();
         if (header.getBoundingClientRect().top < container.top) {
@@ -225,7 +228,7 @@ EventTooltip.prototype = {
     let header = event.currentTarget;
     let content = header.nextElementSibling;
 
-    let {uri, searchString, dom0} = this._tooltip.eventEditors.get(content);
+    let {uri, searchString, dom0} = this._eventEditors.get(content);
 
     if (uri && uri !== "?") {
       // Save a copy of toolbox as it will be set to null when we hide the tooltip.
@@ -290,11 +293,12 @@ EventTooltip.prototype = {
       let boxes = this.container.querySelectorAll(".event-tooltip-content-box");
 
       for (let box of boxes) {
-        let {editor} = this._tooltip.eventEditors.get(box);
+        let {editor} = this._eventEditors.get(box);
         editor.destroy();
       }
 
-      this._tooltip.eventEditors = null;
+      this._eventEditors = null;
+      this._tooltip.eventTooltip = null;
     }
 
     let headerNodes = this.container.querySelectorAll(".event-header");

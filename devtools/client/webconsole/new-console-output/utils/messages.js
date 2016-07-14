@@ -20,6 +20,76 @@ const {
 const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+const { ConsoleMessage } = require("../types");
+
+function prepareMessage(packet) {
+  if (packet.source) {
+    return packet;
+  }
+
+  if (packet._type) {
+    packet = convertCachedPacket(packet);
+  }
+
+  switch (packet.type) {
+    case "consoleAPICall": {
+      let data = Object.assign({}, packet.message);
+      if (data.level === "clear") {
+        data.arguments = [l10n.getStr("consoleCleared")];
+      }
+
+      return new ConsoleMessage({
+        category: CATEGORY_CLASS_FRAGMENTS[CATEGORY_WEBDEV],
+        data,
+        messageType: "ConsoleApiCall",
+        repeatId: getRepeatId(data),
+        severity: SEVERITY_CLASS_FRAGMENTS[LEVELS[data.level]] || "log",
+      });
+    }
+    case "pageError": {
+      let data = Object.assign({}, packet.pageError);
+      let severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_ERROR];
+      if (data.warning || data.strict) {
+        severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_WARNING];
+      } else if (data.info) {
+        severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG];
+      }
+
+      return new ConsoleMessage({
+        category: CATEGORY_CLASS_FRAGMENTS[CATEGORY_JS],
+        data,
+        messageType: "PageError",
+        repeatId: getRepeatId(data),
+        severity,
+      });
+    }
+    case "evaluationResult":
+    default: {
+      let data;
+      if (typeof packet.result === "object") {
+        data = Object.assign({}, packet.result);
+      } else {
+        data = packet.result;
+      }
+
+      return new ConsoleMessage({
+        category: CATEGORY_CLASS_FRAGMENTS[CATEGORY_OUTPUT],
+        data,
+        messageType: "EvaluationResult",
+        repeatId: getRepeatId(data),
+        severity: SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG],
+      });
+    }
+  }
+}
+
+// Helpers
+function getRepeatId(message) {
+  let clonedMessage = JSON.parse(JSON.stringify(message));
+  delete clonedMessage.timeStamp;
+  delete clonedMessage.uniqueID;
+  return JSON.stringify(clonedMessage);
+}
 
 function convertCachedPacket(packet) {
   // The devtools server provides cached message packets in a different shape
@@ -35,84 +105,6 @@ function convertCachedPacket(packet) {
     throw new Error("Unexpected packet type");
   }
   return convertPacket;
-}
-
-function prepareMessage(packet) {
-  // @TODO turn this into an Immutable Record.
-  let allowRepeating;
-  let category;
-  let data;
-  let messageType;
-  let repeat;
-  let repeatId;
-  let severity;
-
-  if (packet._type) {
-    packet = convertCachedPacket(packet);
-  }
-
-  switch (packet.type) {
-    case "consoleAPICall":
-      data = Object.assign({}, packet.message);
-
-      if (data.level === "clear") {
-        data.arguments = [l10n.getStr("consoleCleared")];
-      }
-
-      allowRepeating = true;
-      category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_WEBDEV];
-      messageType = "ConsoleApiCall";
-      repeat = 1;
-      repeatId = getRepeatId(data);
-      severity = SEVERITY_CLASS_FRAGMENTS[LEVELS[data.level]] || "log";
-      break;
-    case "pageError":
-      data = Object.assign({}, packet.pageError);
-      allowRepeating = true;
-      category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_JS];
-      messageType = "PageError";
-      repeat = 1;
-      repeatId = getRepeatId(data);
-
-      severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_ERROR];
-      if (data.warning || data.strict) {
-        severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_WARNING];
-      } else {
-        severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG];
-      }
-      break;
-    case "evaluationResult":
-    default:
-      if (typeof packet.result === "object") {
-        data = Object.assign({}, packet.result);
-      } else {
-        data = packet.result;
-      }
-      allowRepeating = true;
-      category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_OUTPUT];
-      messageType = "EvaluationResult";
-      repeat = 1;
-      repeatId = getRepeatId(data);
-      severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG];
-      break;
-  }
-
-  return {
-    allowRepeating,
-    category,
-    data,
-    messageType,
-    repeat,
-    repeatId,
-    severity
-  };
-}
-
-function getRepeatId(message) {
-  let clonedMessage = JSON.parse(JSON.stringify(message));
-  delete clonedMessage.timeStamp;
-  delete clonedMessage.uniqueID;
-  return JSON.stringify(clonedMessage);
 }
 
 exports.prepareMessage = prepareMessage;

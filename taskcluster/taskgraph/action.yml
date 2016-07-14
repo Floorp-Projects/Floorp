@@ -1,0 +1,72 @@
+---
+created: '{{now}}'
+deadline: '{{#from_now}}1 day{{/from_now}}'
+expires: '{{#from_now}}14 day{{/from_now}}'
+metadata:
+  owner: mozilla-taskcluster-maintenance@mozilla.com
+  source: 'https://hg.mozilla.org/{{project}}/file/{{head_rev}}/taskcluster/taskgraph/action.yml'
+  name: "[tc] Action Task"
+  description: Helps schedule new jobs without new push
+
+workerType: "gecko-decision"
+provisionerId: "aws-provisioner-v1"
+
+tags:
+  createdForUser: {{owner}}
+
+scopes:
+  # Bug 1269443: cache scopes, etc. must be listed explicitly
+  - "docker-worker:cache:level-1-*"
+  - "docker-worker:cache:tooltool-cache"
+  - "secrets:get:project/taskcluster/gecko/hgfingerprint"
+  - "assume:repo:hg.mozilla.org/try:*"
+
+routes:
+  - "tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}"
+  - "tc-treeherder-stage.v2.{{project}}.{{head_rev}}.{{pushlog_id}}"
+
+payload:
+  env:
+    GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
+    GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
+    GECKO_HEAD_REF: '{{head_ref}}'
+    GECKO_HEAD_REV: '{{head_rev}}'
+
+  cache:
+    level-{{level}}-{{project}}-tc-vcs-public-sources: /home/worker/.tc-vcs/
+    level-{{level}}-{{project}}-gecko-decision: /home/worker/workspace
+
+  features:
+    taskclusterProxy: true
+
+  # Note: This task is built server side without the context or tooling that
+  # exist in tree so we must hard code the version
+  image: 'taskcluster/decision:0.1.0'
+
+  # Virtually no network or other potentially risky operations happen as part
+  # of the task timeout aside from the initial clone. We intentionally have
+  # set this to a lower value _all_ decision tasks should use a root
+  # repository which is cached.
+  maxRunTime: 1800
+
+  command:
+    - /bin/bash
+    - -cx
+    - >
+      mkdir -p /home/worker/artifacts &&
+      checkout-gecko workspace &&
+      cd workspace/gecko &&
+      ln -s /home/worker/artifacts artifacts &&
+      ./mach taskgraph action-task
+      --decision-id='{{decision_task_id}}'
+      --task-labels='{{task_labels}}'
+
+  artifacts:
+    'public':
+      type: 'directory'
+      path: '/home/worker/artifacts'
+      expires: '{{#from_now}}7 days{{/from_now}}'
+
+extra:
+  treeherder:
+    symbol: A

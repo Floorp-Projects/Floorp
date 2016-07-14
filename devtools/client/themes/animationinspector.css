@@ -7,34 +7,25 @@
 .theme-dark {
   --even-animation-timeline-background-color: rgba(255,255,255,0.03);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
-  --pause-image: url(chrome://devtools/skin/images/debugger-pause.png);
-  --pause-image-2x: url(chrome://devtools/skin/images/debugger-pause@2x.png);
-  --rewind-image: url(chrome://devtools/skin/images/rewind.png);
-  --rewind-image-2x: url(chrome://devtools/skin/images/rewind@2x.png);
-  --play-image: url(chrome://devtools/skin/images/debugger-play.png);
-  --play-image-2x: url(chrome://devtools/skin/images/debugger-play@2x.png);
+  --pause-image: url(chrome://devtools/skin/images/pause.svg);
+  --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
+  --play-image: url(chrome://devtools/skin/images/play.svg);
 }
 
 .theme-light {
   --even-animation-timeline-background-color: rgba(128,128,128,0.03);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
-  --pause-image: url(chrome://devtools/skin/images/debugger-pause.png);
-  --pause-image-2x: url(chrome://devtools/skin/images/debugger-pause@2x.png);
-  --rewind-image: url(chrome://devtools/skin/images/rewind.png);
-  --rewind-image-2x: url(chrome://devtools/skin/images/rewind@2x.png);
-  --play-image: url(chrome://devtools/skin/images/debugger-play.png);
-  --play-image-2x: url(chrome://devtools/skin/images/debugger-play@2x.png);
+  --pause-image: url(chrome://devtools/skin/images/pause.svg);
+  --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
+  --play-image: url(chrome://devtools/skin/images/play.svg);
 }
 
 .theme-firebug {
   --even-animation-timeline-background-color: rgba(128,128,128,0.03);
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
   --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
-  --pause-image-2x: url(chrome://devtools/skin/images/firebug/pause.svg);
   --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
-  --rewind-image-2x: url(chrome://devtools/skin/images/firebug/rewind.svg);
   --play-image: url(chrome://devtools/skin/images/firebug/play.svg);
-  --play-image-2x: url(chrome://devtools/skin/images/firebug/play.svg);
 }
 
 :root {
@@ -182,20 +173,6 @@ body {
 
 .pause-button.paused::before {
   background-image: var(--play-image);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .pause-button::before {
-    background-image: var(--pause-image-2x);
-  }
-
-  .pause-button.paused::before {
-    background-image: var(--play-image-2x);
-  }
-
-  #rewind-timeline::before {
-    background-image: var(--rewind-image-2x);
-  }
 }
 
 #timeline-rate select.devtools-button {

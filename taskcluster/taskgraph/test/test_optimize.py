@@ -93,7 +93,7 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'image'),
         )
-        annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {})
+        annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}, None)
         self.assert_annotations(
             graph,
             task1=(False, None),
@@ -107,7 +107,7 @@ class TestOptimize(unittest.TestCase):
         graph = self.make_graph(self.make_task('task1'))
         self.assertRaises(
             Exception,
-            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {})
+            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}, None)
         )
 
     def test_annotate_task_graph_optimize_away_dependency(self):
@@ -121,7 +121,7 @@ class TestOptimize(unittest.TestCase):
         )
         self.assertRaises(
             Exception,
-            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {})
+            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}, None)
         )
 
     def test_annotate_task_graph_do_not_optimize(self):
@@ -134,7 +134,7 @@ class TestOptimize(unittest.TestCase):
         )
         label_to_taskid = {}
         annotate_task_graph(graph, {'task1', 'task2'},
-                            graph.graph.named_links_dict(), label_to_taskid)
+                            graph.graph.named_links_dict(), label_to_taskid, None)
         self.assert_annotations(
             graph,
             task1=(False, None),
@@ -154,7 +154,7 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task3', 'image'),
         )
         annotate_task_graph(graph, set(),
-                            graph.graph.named_links_dict(), {})
+                            graph.graph.named_links_dict(), {}, None)
         self.assert_annotations(
             graph,
             task1=(False, None),

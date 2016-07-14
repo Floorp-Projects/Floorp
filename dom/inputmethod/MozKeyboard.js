@@ -695,11 +695,20 @@ MozInputMethod.prototype = {
     cpmm.sendAsyncMessage('System:RemoveFocus', {});
   },
 
+  // Only the system app needs that, so instead of testing a permission which
+  // is allowed for all chrome:// url, we explicitly test that this is the
+  // system app's start URL.
   _hasInputManagePerm: function(win) {
-    let principal = win.document.nodePrincipal;
-    let perm = Services.perms.testExactPermissionFromPrincipal(principal,
-                                                               "input-manage");
-    return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
+    let url = win.location.href;
+    let systemAppIndex;
+    try {
+      systemAppIndex = Services.prefs.getCharPref('b2g.system_startup_url');
+    } catch(e) {
+      dump('MozKeyboard.jsm: no system app startup url set (pref is b2g.system_startup_url)');
+    }
+
+    dump(`MozKeyboard.jsm expecting ${systemAppIndex}\n`);
+    return url == systemAppIndex;
   }
 };
 
