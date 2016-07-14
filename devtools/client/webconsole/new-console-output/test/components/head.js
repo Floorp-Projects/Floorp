@@ -39,7 +39,7 @@ testCommands.set("new Date()", {
   command: "new Date(448156800000)",
   commandType: "evaluationResult",
   // @TODO should output: Date 1984-03-15T00:00:00.000Z
-  expectedText: "1984-03-15T00:00:00.000Z"
+  expectedText: "Date1984-03-15T00:00:00.000Z"
 });
 testCommands.set("pageError", {
   command: null,
