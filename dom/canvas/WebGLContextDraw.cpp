@@ -42,26 +42,89 @@ public:
     ~ScopedResolveTexturesForDraw();
 };
 
+bool
+WebGLTexture::IsFeedback(WebGLContext* webgl, const char* funcName, uint32_t texUnit,
+                         const std::vector<const WebGLFBAttachPoint*>& fbAttachments) const
+{
+    auto itr = fbAttachments.cbegin();
+    for (; itr != fbAttachments.cend(); ++itr) {
+        const auto& attach = *itr;
+        if (attach->Texture() == this)
+            break;
+    }
+
+    if (itr == fbAttachments.cend())
+        return false;
+
+    ////
+
+    const auto minLevel = mBaseMipmapLevel;
+    uint32_t maxLevel;
+    if (!MaxEffectiveMipmapLevel(texUnit, &maxLevel)) {
+        // No valid mips. Will need fake-black.
+        return false;
+    }
+
+    ////
+
+    for (; itr != fbAttachments.cend(); ++itr) {
+        const auto& attach = *itr;
+        if (attach->Texture() != this)
+            continue;
+
+        const auto dstLevel = attach->MipLevel();
+
+        if (minLevel <= dstLevel && dstLevel <= maxLevel) {
+            webgl->ErrorInvalidOperation("%s: Feedback loop detected between tex target"
+                                         " 0x%04x, tex unit %u, levels %u-%u; and"
+                                         " framebuffer attachment 0x%04x, level %u.",
+                                         funcName, mTarget.get(), texUnit, minLevel,
+                                         maxLevel, attach->mAttachmentPoint, dstLevel);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
                                                            const char* funcName,
                                                            bool* const out_error)
     : mWebGL(webgl)
 {
-    MOZ_ASSERT(webgl->gl->IsCurrent());
+    MOZ_ASSERT(mWebGL->gl->IsCurrent());
 
-    typedef decltype(WebGLContext::mBound2DTextures) TexturesT;
+    std::vector<const WebGLFBAttachPoint*> fbAttachments;
+    if (mWebGL->mBoundDrawFramebuffer) {
+        const auto& fb = mWebGL->mBoundDrawFramebuffer;
+        fb->GatherAttachments(&fbAttachments);
+    }
 
-    const auto fnResolveAll = [this, funcName](const TexturesT& textures)
-    {
-        const auto len = textures.Length();
-        for (uint32_t texUnit = 0; texUnit < len; ++texUnit) {
-            WebGLTexture* tex = textures[texUnit];
+    MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
+    const auto& uniformSamplers = mWebGL->mActiveProgramLinkInfo->uniformSamplers;
+    for (const auto& uniform : uniformSamplers) {
+        const auto& texList = *(uniform->mSamplerTexList);
+
+        for (const auto& texUnit : uniform->mSamplerValues) {
+            if (texUnit >= texList.Length())
+                continue;
+
+            const auto& tex = texList[texUnit];
             if (!tex)
                 continue;
 
+            if (tex->IsFeedback(mWebGL, funcName, texUnit, fbAttachments)) {
+                *out_error = true;
+                return;
+            }
+
             FakeBlackType fakeBlack;
-            if (!tex->ResolveForDraw(funcName, texUnit, &fakeBlack))
-                return false;
+            if (!tex->ResolveForDraw(funcName, texUnit, &fakeBlack)) {
+                mWebGL->ErrorOutOfMemory("%s: Failed to resolve textures for draw.",
+                                         funcName);
+                *out_error = true;
+                return;
+            }
 
             if (fakeBlack == FakeBlackType::None)
                 continue;
@@ -69,21 +132,9 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
             mWebGL->BindFakeBlack(texUnit, tex->Target(), fakeBlack);
             mRebindRequests.push_back({texUnit, tex});
         }
-
-        return true;
-    };
-
-    bool ok = true;
-    ok &= fnResolveAll(mWebGL->mBound2DTextures);
-    ok &= fnResolveAll(mWebGL->mBoundCubeMapTextures);
-    ok &= fnResolveAll(mWebGL->mBound3DTextures);
-    ok &= fnResolveAll(mWebGL->mBound2DArrayTextures);
-
-    if (!ok) {
-        mWebGL->ErrorOutOfMemory("%s: Failed to resolve textures for draw.", funcName);
     }
 
-    *out_error = !ok;
+    *out_error = false;
 }
 
 ScopedResolveTexturesForDraw::~ScopedResolveTexturesForDraw()
@@ -603,8 +654,8 @@ WebGLContext::ValidateBufferFetching(const char* info)
 
     mBufferFetch_IsAttrib0Active = false;
 
-    for (const auto& pair : mActiveProgramLinkInfo->activeAttribLocs) {
-        const uint32_t attribLoc = pair.second;
+    for (const auto& attrib : mActiveProgramLinkInfo->attribs) {
+        const auto& attribLoc = attrib.mLoc;
 
         if (attribLoc >= attribCount)
             continue;
