@@ -46,6 +46,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
+#include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #ifdef MOZ_EME
 #include "mozilla/dom/MediaKeySystemAccess.h"
@@ -5741,4 +5742,47 @@ ContentParent::HandleWindowsMessages(const Message& aMsg) const
   }
 
   return true;
+}
+
+bool
+ContentParent::RecvGetFilesRequest(const nsID& aUUID,
+                                   const nsString& aDirectoryPath,
+                                   const bool& aRecursiveFlag)
+{
+  MOZ_ASSERT(!mGetFilesPendingRequests.GetWeak(aUUID));
+
+  ErrorResult rv;
+  RefPtr<GetFilesHelper> helper =
+    GetFilesHelperParent::Create(aUUID, aDirectoryPath, aRecursiveFlag, this,
+                                 rv);
+
+  if (NS_WARN_IF(rv.Failed())) {
+    return SendGetFilesResponse(aUUID,
+                                GetFilesResponseFailure(rv.StealNSResult()));
+  }
+
+  mGetFilesPendingRequests.Put(aUUID, helper);
+  return true;
+}
+
+bool
+ContentParent::RecvDeleteGetFilesRequest(const nsID& aUUID)
+{
+  GetFilesHelper* helper = mGetFilesPendingRequests.GetWeak(aUUID);
+  if (helper) {
+    mGetFilesPendingRequests.Remove(aUUID);
+  }
+
+  return true;
+}
+
+void
+ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
+                                             const GetFilesResponseResult& aResult)
+{
+  GetFilesHelper* helper = mGetFilesPendingRequests.GetWeak(aUUID);
+  if (helper) {
+    mGetFilesPendingRequests.Remove(aUUID);
+    Unused << SendGetFilesResponse(aUUID, aResult);
+  }
 }

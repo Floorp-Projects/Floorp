@@ -17,6 +17,8 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+class BlobImpl;
+class ContentParent;
 class File;
 class GetFilesHelperParent;
 class OwningFileOrDirectory;
@@ -74,6 +76,12 @@ protected:
     return mCanceled;
   }
 
+  virtual void
+  Work(ErrorResult& aRv);
+
+  virtual void
+  Cancel() {};
+
   NS_IMETHOD
   Run() override;
 
@@ -83,9 +91,11 @@ protected:
   void
   RunMainThread();
 
+  void
+  OperationCompleted();
+
   nsresult
   ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile);
-
   void
   ResolveOrRejectPromise(Promise* aPromise);
 
@@ -119,6 +129,50 @@ protected:
 
   // This variable is protected by mutex.
   bool mCanceled;
+};
+
+class GetFilesHelperChild final : public GetFilesHelper
+{
+public:
+  GetFilesHelperChild(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
+    : GetFilesHelper(aGlobal, aRecursiveFlag)
+    , mPendingOperation(false)
+  {}
+
+  virtual void
+  Work(ErrorResult& aRv) override;
+
+  virtual void
+  Cancel() override;
+
+  bool
+  AppendBlobImpl(BlobImpl* aBlobImpl);
+
+  void
+  Finished(nsresult aResult);
+
+private:
+  nsID mUUID;
+  bool mPendingOperation;
+};
+
+class GetFilesHelperParentCallback;
+
+class GetFilesHelperParent final : public GetFilesHelper
+{
+  friend class GetFilesHelperParentCallback;
+
+public:
+  static already_AddRefed<GetFilesHelperParent>
+  Create(const nsID& aUUID, const nsAString& aDirectoryPath,
+         bool aRecursiveFlag, ContentParent* aContentParent, ErrorResult& aRv);
+
+private:
+  GetFilesHelperParent(const nsID& aUUID, ContentParent* aContentParent,
+                       bool aRecursiveFlag);
+
+  RefPtr<ContentParent> mContentParent;
+  nsID mUUID;
 };
 
 } // dom namespace

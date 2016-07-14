@@ -16,6 +16,7 @@
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 #include "nsWeakPtr.h"
 #include "nsIWindowProvider.h"
@@ -47,6 +48,7 @@ class ConsoleListener;
 class PStorageChild;
 class ClonedMessageData;
 class TabChild;
+class GetFilesHelperChild;
 
 class ContentChild final : public PContentChild
                          , public nsIWindowProvider
@@ -627,6 +629,20 @@ public:
                           const nsString& aDisplayName,
                           const nsString& aIconPath) override;
 
+
+  // GetFiles for WebKit/Blink FileSystem API and Directory API must run on the
+  // parent process.
+  void
+  CreateGetFilesRequest(const nsAString& aDirectoryPath, bool aRecursiveFlag,
+                        nsID& aUUID, GetFilesHelperChild* aChild);
+
+  void
+  DeleteGetFilesRequest(nsID& aUUID, GetFilesHelperChild* aChild);
+
+  virtual bool
+  RecvGetFilesResponse(const nsID& aUUID,
+                       const GetFilesResponseResult& aResult) override;
+
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
   void StartForceKillTimer();
@@ -663,6 +679,11 @@ private:
 
   nsCOMPtr<nsIDomainPolicy> mPolicy;
   nsCOMPtr<nsITimer> mForceKillTimer;
+
+  // Hashtable to keep track of the pending GetFilesHelper objects.
+  // This GetFilesHelperChild objects are removed when RecvGetFilesResponse is
+  // received.
+ nsRefPtrHashtable<nsIDHashKey, GetFilesHelperChild> mGetFilesPendingRequests;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
