@@ -491,7 +491,8 @@ HTMLTooltip.prototype = {
     }
 
     this.hide();
-    if (this.consumeOutsideClicks) {
+    if (this.consumeOutsideClicks && e.button === 0) {
+      // Consume only left click events (button === 0).
       e.preventDefault();
       e.stopPropagation();
     }

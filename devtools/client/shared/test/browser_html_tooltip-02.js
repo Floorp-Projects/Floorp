@@ -46,6 +46,7 @@ function* runTests(doc) {
   yield testClickInTooltipContent(doc);
   yield testConsumeOutsideClicksFalse(doc);
   yield testConsumeOutsideClicksTrue(doc);
+  yield testConsumeWithRightClick(doc);
   yield testClickInOuterIframe(doc);
   yield testClickInInnerIframe(doc);
 }
@@ -101,6 +102,28 @@ function* testConsumeOutsideClicksTrue(doc) {
   yield onHidden;
 
   is(box4clicks, 0, "box4 catched no click event");
+  is(tooltip.isVisible(), false, "Tooltip is hidden");
+
+  tooltip.destroy();
+}
+
+function* testConsumeWithRightClick(doc) {
+  info("Test closing a tooltip with a right-click, with consumeOutsideClicks: true");
+  let box4 = doc.getElementById("box4");
+
+  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: true, useXulWrapper});
+  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  yield showTooltip(tooltip, doc.getElementById("box1"));
+
+  // Only left-click events should be consumed, so we expect to catch a click when using
+  // {button: 2}, which simulates a right-click.
+  info("Right click on box4, expect tooltip to be hidden, event should not be consumed");
+  let onBox4Clicked = once(box4, "click");
+  let onHidden = once(tooltip, "hidden");
+  EventUtils.synthesizeMouseAtCenter(box4, {button: 2}, doc.defaultView);
+  yield onHidden;
+  yield onBox4Clicked;
+
   is(tooltip.isVisible(), false, "Tooltip is hidden");
 
   tooltip.destroy();
