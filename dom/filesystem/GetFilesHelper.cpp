@@ -438,7 +438,7 @@ GetFilesHelperChild::Finished(nsresult aError)
 class GetFilesHelperParentCallback final : public GetFilesCallback
 {
 public:
-  GetFilesHelperParentCallback(GetFilesHelperParent* aParent)
+  explicit GetFilesHelperParentCallback(GetFilesHelperParent* aParent)
     : mParent(aParent)
   {
     MOZ_ASSERT(aParent);
