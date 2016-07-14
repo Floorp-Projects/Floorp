@@ -188,20 +188,22 @@ add_test(function test_categoryRegistration()
   // Load test components.
   do_load_manifest("CatRegistrationComponents.manifest");
 
-  const EXPECTED_ENTRIES = new Map([
-    ["CatRegisteredComponent", "@unit.test.com/cat-registered-component;1"],
-    ["CatAppRegisteredComponent", "@unit.test.com/cat-app-registered-component;1"],
-  ]);
+  const EXPECTED_ENTRIES = ["CatAppRegisteredComponent",
+                            "CatRegisteredComponent"];
 
-  // Verify the correct entries are registered in the "test-cat" category.
-  for (let [name, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_NAME)) {
-    print("Verify that the name/value pair exists in the expected entries.");
-    ok(EXPECTED_ENTRIES.has(name));
-    do_check_eq(EXPECTED_ENTRIES.get(name), value);
-    EXPECTED_ENTRIES.delete(name);
+  // Check who is registered in "test-cat" category.
+  let foundEntriesCount = 0;
+  let catMan = Cc["@mozilla.org/categorymanager;1"].
+               getService(Ci.nsICategoryManager);
+  let entries = catMan.enumerateCategory(CATEGORY_NAME);
+  while (entries.hasMoreElements()) {
+    foundEntriesCount++;
+    let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+    print("Check the found category entry (" + entry + ") is expected.");  
+    do_check_true(EXPECTED_ENTRIES.indexOf(entry) != -1);
   }
-  print("Check that all of the expected entries have been deleted.");
-  do_check_eq(EXPECTED_ENTRIES.size, 0);
+  print("Check there are no more or less than expected entries.");
+  do_check_eq(foundEntriesCount, EXPECTED_ENTRIES.length);
   run_next_test();
 });
 
