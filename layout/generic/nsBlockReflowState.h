@@ -16,11 +16,46 @@ class nsBlockFrame;
 class nsFrameList;
 class nsOverflowContinuationTracker;
 
-  // block reflow state flags
+// Block reflow state flags.
+//
+// BRS_UNCONSTRAINEDBSIZE is set in the nsBlockReflowState constructor when the
+// frame being reflowed has been given NS_UNCONSTRAINEDSIZE as its available
+// BSize in the nsHTMLReflowState. If set, NS_UNCONSTRAINEDSIZE is passed to
+// nsLineLayout as the available BSize.
 #define BRS_UNCONSTRAINEDBSIZE    0x00000001
-#define BRS_ISBSTARTMARGINROOT    0x00000002  // Is this frame a root for block
-#define BRS_ISBENDMARGINROOT      0x00000004  //  direction start/end margin collapsing?
-#define BRS_APPLYBSTARTMARGIN     0x00000008  // See ShouldApplyTopMargin
+// BRS_ISBSTARTMARGINROOT is set in the nsBlockReflowState constructor when
+// reflowing a "block margin root" frame (i.e. a frame with the
+// NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
+//
+// The flag is also set when reflowing a frame whose computed BStart border
+// padding is non-zero.
+#define BRS_ISBSTARTMARGINROOT    0x00000002
+// BRS_ISBENDMARGINROOT is set in the nsBlockReflowState constructor when
+// reflowing a "block margin root" frame (i.e. a frame with the
+// NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
+//
+// The flag is also set when reflowing a frame whose computed BEnd border
+// padding is non-zero.
+#define BRS_ISBENDMARGINROOT      0x00000004
+// BRS_APPLYBSTARTMARGIN is set if the BStart margin should be considered when
+// placing a linebox that contains a block frame. It may be set as a side-effect
+// of calling nsBlockFrame::ShouldApplyBStartMargin(); once set,
+// ShouldApplyBStartMargin() uses it as a fast-path way to return whether the
+// BStart margin should apply.
+//
+// If the flag hasn't been set in the block reflow state, then
+// ShouldApplyBStartMargin() will crawl the line list to see if a block frame
+// precedes the specified frame. If so, the BStart margin should be applied, and
+// the flag is set to cache the result. (If not, the BStart margin will be
+// applied as a result of the generational margin collapsing logic in
+// nsBlockReflowContext::ComputeCollapsedBStartMargin(). In this case, the flag
+// won't be set, so subsequent calls to ShouldApplyBStartMargin() will continue
+// crawl the line list.)
+//
+// This flag is also set in the nsBlockReflowState constructor if
+// BRS_ISBSTARTMARGINROOT is set; that is, the frame being reflowed is a margin
+// root by default.
+#define BRS_APPLYBSTARTMARGIN     0x00000008
 #define BRS_ISFIRSTINFLOW         0x00000010
 // Set when mLineAdjacentToTop is valid
 #define BRS_HAVELINEADJACENTTOTOP 0x00000020
@@ -36,6 +71,9 @@ class nsOverflowContinuationTracker;
 #define BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED 0x00000400
 #define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
 
+// nsBlockReflowState contains additional reflow state information that the
+// block frame uses along with nsHTMLReflowState. Like nsHTMLReflowState, this
+// is read-only data that is passed down from a parent frame to its children.
 class nsBlockReflowState {
 public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,

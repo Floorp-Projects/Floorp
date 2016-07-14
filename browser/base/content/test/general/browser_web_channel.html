@@ -33,6 +33,9 @@
       case "bubbles":
         test_bubbles();
         break;
+      case "object":
+        test_object();
+        break;
       default:
         throw new Error(`INVALID TEST NAME ${testName}`);
         break;
@@ -41,14 +44,14 @@
 
   function test_generic() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: "generic",
         message: {
           something: {
             nested: "hello",
           },
         }
-      }
+      })
     });
 
     window.dispatchEvent(event);
@@ -56,23 +59,23 @@
 
   function test_twoWay() {
     var firstMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: "twoway",
         message: {
           command: "one",
         },
-      }
+      })
     });
 
     window.addEventListener("WebChannelMessageToContent", function(e) {
       var secondMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-        detail: {
+        detail: JSON.stringify({
           id: "twoway",
           message: {
             command: "two",
             detail: e.detail.message,
           },
-        },
+        }),
       });
 
       if (!e.detail.message.error) {
@@ -85,17 +88,17 @@
 
   function test_multichannel() {
     var event1 = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: "wrongchannel",
         message: {},
-      }
+      })
     });
 
     var event2 = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: "multichannel",
         message: {},
-      }
+      })
     });
 
     window.dispatchEvent(event1);
@@ -132,12 +135,12 @@
 
   function test_bubbles() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: "not_a_window",
         message: {
           command: "start"
         }
-      }
+      })
     });
 
     var nonWindowTarget = document.getElementById("not_a_window");
@@ -150,12 +153,32 @@
     nonWindowTarget.dispatchEvent(event);
   }
 
+  function test_object() {
+    let objectMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: "objects",
+        message: { type: "object" }
+      }
+    });
+
+    let stringMessage = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: JSON.stringify({
+        id: "objects",
+        message: { type: "string" }
+      })
+    });
+    // Test fails if objectMessage is received, we send stringMessage to know
+    // when we should stop listening for objectMessage
+    window.dispatchEvent(objectMessage);
+    window.dispatchEvent(stringMessage);
+  }
+
   function echoEventToChannel(e, channelId) {
     var echoedEvent = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: channelId,
         message: e.detail.message,
-      }
+      })
     });
 
     e.target.dispatchEvent(echoedEvent);

@@ -99,7 +99,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Data that is moved into the result of finish()
     LinkData                        linkData_;
     MutableMetadata                 metadata_;
-    ExportMap                       exportMap_;
+    ExportVector                    exports_;
     DataSegmentVector               dataSegments_;
     ElemSegmentVector               elemSegments_;
 
@@ -112,7 +112,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::TempAllocator              masmAlloc_;
     jit::MacroAssembler             masm_;
     Uint32Vector                    funcIndexToCodeRange_;
-    FuncIndexMap                    funcIndexToExport_;
+    FuncIndexMap                    funcIndexToFuncExportIndex_;
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedBranches_;
     JumpSiteArray                   jumpThunks_;
@@ -173,10 +173,11 @@ class MOZ_STACK_CLASS ModuleGenerator
     const FuncImportGenDesc& funcImport(uint32_t funcImportIndex) const;
 
     // Exports:
-    MOZ_MUST_USE bool declareExport(UniqueChars fieldName, uint32_t funcIndex,
-                                    uint32_t* exportIndex = nullptr);
-    uint32_t numExports() const;
+    MOZ_MUST_USE bool declareFuncExport(UniqueChars fieldName, uint32_t funcIndex,
+                                        uint32_t* funcExportIndex = nullptr);
+    MOZ_MUST_USE bool addTableExport(UniqueChars fieldName);
     MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
+    uint32_t numExports() const;
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();

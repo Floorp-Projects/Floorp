@@ -551,12 +551,12 @@ class AstExport : public AstNode
     AstExport(AstName name, AstRef func)
       : name_(name), kind_(DefinitionKind::Function), func_(func)
     {}
-    explicit AstExport(AstName name)
-      : name_(name), kind_(DefinitionKind::Memory)
+    explicit AstExport(AstName name, DefinitionKind kind)
+      : name_(name), kind_(kind)
     {}
     AstName name() const { return name_; }
     DefinitionKind kind() const { return kind_; }
-    AstRef& func() { return func_; }
+    AstRef& func() { MOZ_ASSERT(kind_ == DefinitionKind::Function); return func_; }
 };
 
 class AstDataSegment : public AstNode

@@ -69,6 +69,34 @@ public:
   virtual ~GetWritingModeName() {}
 };
 
+class GetEscapedUTF8String final : public NS_ConvertUTF16toUTF8
+{
+public:
+  explicit GetEscapedUTF8String(const nsAString& aString)
+    : NS_ConvertUTF16toUTF8(aString)
+  {
+    Escape();
+  }
+  explicit GetEscapedUTF8String(const char16ptr_t aString)
+    : NS_ConvertUTF16toUTF8(aString)
+  {
+    Escape();
+  }
+  GetEscapedUTF8String(const char16ptr_t aString, uint32_t aLength)
+    : NS_ConvertUTF16toUTF8(aString, aLength)
+  {
+    Escape();
+  }
+
+private:
+  void Escape()
+  {
+    ReplaceSubstring("\r", "\\r");
+    ReplaceSubstring("\n", "\\n");
+    ReplaceSubstring("\t", "\\t");
+  }
+};
+
 /*****************************************************************************
  * mozilla::ContentCache
  *****************************************************************************/
@@ -548,7 +576,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "Succeeded, aEvent={ mReply={ mOffset=%u, mString=\"%s\", "
          "mReversed=%s, mHasSelection=%s, mWritingMode=%s } }",
          this, aEvent.mReply.mOffset,
-         NS_ConvertUTF16toUTF8(aEvent.mReply.mString).get(),
+         GetEscapedUTF8String(aEvent.mReply.mString).get(),
          GetBoolName(aEvent.mReply.mReversed),
          GetBoolName(aEvent.mReply.mHasSelection),
          GetWritingModeName(aEvent.mReply.mWritingMode).get()));
@@ -636,7 +664,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          "Succeeded, aEvent={ mReply={ mOffset=%u, mString=\"%s\", "
          "mWritingMode=%s, mRect=%s } }",
          this, aEvent.mReply.mOffset,
-         NS_ConvertUTF16toUTF8(aEvent.mReply.mString).get(),
+         GetEscapedUTF8String(aEvent.mReply.mString).get(),
          GetWritingModeName(aEvent.mReply.mWritingMode).get(),
          GetRectText(aEvent.mReply.mRect).get()));
       break;
@@ -886,7 +914,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
      "mPendingEventsNeedingAck=%u, mIsComposing=%s, "
      "mCommitStringByRequest=0x%p",
      this, ToChar(aEvent.mMessage),
-     NS_ConvertUTF16toUTF8(aEvent.mData).get(), aEvent.mData.Length(),
+     GetEscapedUTF8String(aEvent.mData).get(), aEvent.mData.Length(),
      aEvent.mRanges ? aEvent.mRanges->Length() : 0, mPendingEventsNeedingAck,
      GetBoolName(mIsComposing), mCommitStringByRequest));
 

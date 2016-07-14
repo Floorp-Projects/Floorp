@@ -4340,14 +4340,6 @@ ContentParent::RecvExtProtocolChannelConnectParent(const uint32_t& registrarId)
 bool
 ContentParent::HasNotificationPermission(const IPC::Principal& aPrincipal)
 {
-#ifdef MOZ_CHILD_PERMISSIONS
-  uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
-                                                 "desktop-notification");
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    return false;
-  }
-#endif /* MOZ_CHILD_PERMISSIONS */
-
   return true;
 }
 
@@ -4482,16 +4474,6 @@ bool
 ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
                                           const bool& aHighAccuracy)
 {
-#ifdef MOZ_CHILD_PERMISSIONS
-  if (!ContentParent::IgnoreIPCPrincipal()) {
-    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
-                                                   "geolocation");
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
-      return true;
-    }
-  }
-#endif /* MOZ_CHILD_PERMISSIONS */
-
   // To ensure no geolocation updates are skipped, we always force the
   // creation of a new listener.
   RecvRemoveGeolocationListener();

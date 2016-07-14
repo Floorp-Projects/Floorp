@@ -152,12 +152,14 @@ add_task(function* webchannel_switch() {
   }
 
   let replyCount = 0;
-  let replyPromise = new Promise(resolve => {
-    NewTabWebChannel.on("reply", function() {
-      replyCount += 1;
-      resolve();
-    }.bind(this));
-  });
+  function newReplyPromise() {
+    return new Promise(resolve => {
+      NewTabWebChannel.on("reply", function() {
+        replyCount += 1;
+        resolve();
+      });
+    });
+  }
 
   let unloadPromise = new Promise(resolve => {
     NewTabWebChannel.once("targetUnload", function() {
@@ -188,8 +190,19 @@ add_task(function* webchannel_switch() {
   is(NewTabWebChannel.numBrowsers, 1, "Correct number of targets");
 
   NewTabWebChannel.broadcast("respond", null);
-  yield replyPromise;
+  yield newReplyPromise();
   is(replyCount, 1, "only current channel is listened to for replies");
+
+  const webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";
+  let origWhitelist = Services.prefs.getCharPref(webchannelWhitelistPref);
+  let newWhitelist = origWhitelist + " http://mochi.test:8888";
+  Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
+  try {
+    NewTabWebChannel.broadcast("respond_object", null);
+    yield newReplyPromise();
+  } finally {
+    Services.prefs.clearUserPref(webchannelWhitelistPref);
+  }
 
   for (let tab of tabs) {
     yield BrowserTestUtils.removeTab(tab);

@@ -499,13 +499,35 @@ protected:
   };
   PerFrameData* mFrameFreeList;
 
+  // In nsLineLayout, a "span" is a container inline frame, and a "frame" is one
+  // of its children.
+  //
+  // nsLineLayout::BeginLineReflow() creates the initial PerSpanData which is
+  // called the "root span". nsInlineFrame::ReflowFrames() creates a new
+  // PerSpanData when it calls nsLineLayout::BeginSpan(); at this time, the
+  // nsLineLayout object's mCurrentSpan is switched to the new span. The new
+  // span records the old mCurrentSpan as its parent. After reflowing the child
+  // inline frames, nsInlineFrame::ReflowFrames() calls nsLineLayout::EndSpan(),
+  // which pops the PerSpanData and re-sets mCurrentSpan.
   struct PerSpanData {
     union {
       PerSpanData* mParent;
       PerSpanData* mNextFreeSpan;
     };
+
+    // The PerFrameData of the inline frame that "owns" the span, or null if
+    // this is the root span. mFrame is initialized to the containing inline
+    // frame's PerFrameData when a new PerSpanData is pushed in
+    // nsLineLayout::BeginSpan().
     PerFrameData* mFrame;
+
+    // The first PerFrameData structure in the span.
     PerFrameData* mFirstFrame;
+
+    // The last PerFrameData structure in the span. PerFrameData structures are
+    // added to the span as they are reflowed. mLastFrame may also be directly
+    // manipulated if a line is split, or if frames are pushed from one line to
+    // the next.
     PerFrameData* mLastFrame;
 
     const nsHTMLReflowState* mReflowState;

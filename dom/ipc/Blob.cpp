@@ -4364,13 +4364,6 @@ BlobParent::RecvGetFilePath(nsString* aFilePath)
 
   // In desktop e10s the file picker code sends this message.
 
-#if defined(MOZ_CHILD_PERMISSIONS) && !defined(MOZ_GRAPHENE)
-  if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    ASSERT_UNLESS_FUZZING();
-    return false;
-  }
-#endif
-
   nsString filePath;
   ErrorResult rv;
   mBlobImpl->GetMozFullPathInternal(filePath, rv);

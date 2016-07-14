@@ -263,6 +263,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame
   typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::Point Point;
   typedef mozilla::SVGTextContextPaint SVGTextContextPaint;
+  typedef mozilla::image::DrawResult DrawResult;
 
 protected:
   explicit SVGTextFrame(nsStyleContext* aContext)
@@ -325,9 +326,9 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) override;
-  virtual nsresult PaintSVG(gfxContext& aContext,
-                            const gfxMatrix& aTransform,
-                            const nsIntRect* aDirtyRect = nullptr) override;
+  virtual DrawResult PaintSVG(gfxContext& aContext,
+                              const gfxMatrix& aTransform,
+                              const nsIntRect* aDirtyRect = nullptr) override;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   virtual void ReflowSVG() override;
   virtual nsRect GetCoveredRegion() override;
