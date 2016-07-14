@@ -98,6 +98,9 @@ public:
   AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
 
   virtual nsresult
+  AddNameDirectoryPair(const nsAString& aName, Directory* aDirectory) override;
+
+  virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
   virtual bool SupportsIsindexSubmission() override
@@ -192,6 +195,14 @@ FSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
   nsAutoString filename;
   RetrieveFileName(aBlob, filename);
   return AddNameValuePair(aName, filename);
+}
+
+nsresult
+FSURLEncoded::AddNameDirectoryPair(const nsAString& aName,
+                                   Directory* aDirectory)
+{
+  // TODO
+  return NS_OK;
 }
 
 void
@@ -564,6 +575,14 @@ FSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
 }
 
 nsresult
+FSMultipartFormData::AddNameDirectoryPair(const nsAString& aName,
+                                          Directory* aDirectory)
+{
+  // TODO
+  return NS_OK;
+}
+
+nsresult
 FSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
                                           nsIInputStream** aPostDataStream)
 {
@@ -624,6 +643,9 @@ public:
   AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
 
   virtual nsresult
+  AddNameDirectoryPair(const nsAString& aName, Directory* aDirectory) override;
+
+  virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
 private:
@@ -648,6 +670,14 @@ FSTextPlain::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
   nsAutoString filename;
   RetrieveFileName(aBlob, filename);
   AddNameValuePair(aName, filename);
+  return NS_OK;
+}
+
+nsresult
+FSTextPlain::AddNameDirectoryPair(const nsAString& aName,
+                                  Directory* aDirectory)
+{
+  // TODO
   return NS_OK;
 }
 
