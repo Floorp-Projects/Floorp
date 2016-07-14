@@ -13,6 +13,7 @@
   --searcbox-no-match-border-color: #e52e2e;
   --magnifying-glass-image: url(images/search.svg);
   --filter-image: url(images/filter.svg);
+  --tool-options-image: url(images/tool-options.svg);
   --icon-filter: invert(1);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
@@ -26,12 +27,14 @@
   --searcbox-no-match-border-color: #cc3d3d;
   --magnifying-glass-image: url(images/search.svg);
   --filter-image: url(images/filter.svg);
+  --tool-options-image: url(images/tool-options.svg);
   --icon-filter: none;
   --toolbar-button-border-color: rgba(0, 0, 0, .4);
 }
 
 .theme-firebug {
   --magnifying-glass-image: url(images/search.svg);
+  --tool-options-image: url(images/firebug/tool-options.svg);
   --icon-filter: invert(1);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
