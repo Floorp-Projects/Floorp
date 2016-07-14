@@ -192,6 +192,10 @@ SourceBuffer::Abort(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
+  if (mPendingRemoval.Exists()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
   AbortBufferAppend();
   ResetParserState();
   mCurrentAttributes.SetAppendWindowStart(0);
@@ -248,11 +252,15 @@ SourceBuffer::RangeRemoval(double aStart, double aEnd)
   StartUpdating();
 
   RefPtr<SourceBuffer> self = this;
-  mTrackBuffersManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
-                                     TimeUnit::FromSeconds(aEnd))
-    ->Then(AbstractThread::MainThread(), __func__,
-           [self] (bool) { self->StopUpdating(); },
-           []() { MOZ_ASSERT(false); });
+  mPendingRemoval.Begin(
+    mTrackBuffersManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
+                                       TimeUnit::FromSeconds(aEnd))
+      ->Then(AbstractThread::MainThread(), __func__,
+             [self] (bool) {
+               self->mPendingRemoval.Complete();
+               self->StopUpdating();
+             },
+             []() { MOZ_ASSERT(false); }));
 }
 
 void
