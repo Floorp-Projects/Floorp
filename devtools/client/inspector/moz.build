@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'components',
     'computed',
     'fonts',
     'layout',
@@ -16,8 +15,7 @@ DevToolsModules(
     'breadcrumbs.js',
     'inspector-commands.js',
     'inspector-panel.js',
-    'inspector-search.js',
-    'toolsidebar.js',
+    'inspector-search.js'
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

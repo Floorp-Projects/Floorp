@@ -29,7 +29,7 @@ define(function (require, exports, module) {
     jsonPretty: null,
     json: jsonData,
     headers: JSON.parse(headers.textContent),
-    tabActive: 0,
+    tabActive: 1,
     prettified: false
   };
 
