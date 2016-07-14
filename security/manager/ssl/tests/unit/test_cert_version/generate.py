@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
 # vim: set filetype=python
 
 # This Source Code Form is subject to the terms of the Mozilla Public
