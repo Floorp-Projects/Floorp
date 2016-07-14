@@ -3243,6 +3243,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         destroysubtreevar = ExprVar('DestroySubtree')
         deallocsubtreevar = ExprVar('DeallocSubtree')
         deallocshmemvar = ExprVar('DeallocShmems')
+        deallocselfvar = ExprVar('Dealloc' + _actorName(ptype.name(), self.side))
 
         # OnProcesingError(code)
         codevar = ExprVar('aCode')
@@ -3321,7 +3322,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.NormalShutdown ])),
                 StmtExpr(ExprCall(deallocsubtreevar)),
-                StmtExpr(ExprCall(deallocshmemvar))
+                StmtExpr(ExprCall(deallocshmemvar)),
+                StmtExpr(ExprCall(deallocselfvar))
             ])
         else:
             onclose.addstmt(
@@ -3335,7 +3337,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.AbnormalShutdown ])),
                 StmtExpr(ExprCall(deallocsubtreevar)),
-                StmtExpr(ExprCall(deallocshmemvar))
+                StmtExpr(ExprCall(deallocshmemvar)),
+                StmtExpr(ExprCall(deallocselfvar))
             ])
         else:
             onerror.addstmt(
@@ -3556,6 +3559,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtExpr(ExprCall(ExprSelect(p.shmemMapVar(), '.', 'Clear')))
             ])
             self.cls.addstmts([ deallocshmem, Whitespace.NL ])
+
+            deallocself = MethodDefn(MethodDecl(deallocselfvar.name, virtual=1))
+            self.cls.addstmts([ deallocself, Whitespace.NL ])
 
         self.implementPickling()
 

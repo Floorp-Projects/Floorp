@@ -420,9 +420,9 @@ Instance::memoryLength() const
 }
 
 bool
-Instance::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
+Instance::callExport(JSContext* cx, uint32_t funcExportIndex, CallArgs args)
 {
-    const Export& exp = metadata_->exports[exportIndex];
+    const FuncExport& fe = metadata_->funcExports[funcExportIndex];
 
     // Enable/disable profiling in the Module to match the current global
     // profiling state. Don't do this if the Module is already active on the
@@ -442,13 +442,13 @@ Instance::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
     // value is stored in the first element of the array (which, therefore, must
     // have length >= 1).
     Vector<ExportArg, 8> exportArgs(cx);
-    if (!exportArgs.resize(Max<size_t>(1, exp.sig().args().length())))
+    if (!exportArgs.resize(Max<size_t>(1, fe.sig().args().length())))
         return false;
 
     RootedValue v(cx);
-    for (unsigned i = 0; i < exp.sig().args().length(); ++i) {
+    for (unsigned i = 0; i < fe.sig().args().length(); ++i) {
         v = i < args.length() ? args[i] : UndefinedValue();
-        switch (exp.sig().arg(i)) {
+        switch (fe.sig().arg(i)) {
           case ValType::I32:
             if (!ToInt32(cx, v, (int32_t*)&exportArgs[i]))
                 return false;
@@ -533,7 +533,7 @@ Instance::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
         JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
-        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeSegment_->code() + exp.stubOffset());
+        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeSegment_->code() + fe.stubOffset());
         if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), codeSegment_->globalData()))
             return false;
     }
@@ -552,7 +552,7 @@ Instance::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
 
     void* retAddr = &exportArgs[0];
     JSObject* retObj = nullptr;
-    switch (exp.sig().ret()) {
+    switch (fe.sig().ret()) {
       case ExprType::Void:
         args.rval().set(UndefinedValue());
         break;
