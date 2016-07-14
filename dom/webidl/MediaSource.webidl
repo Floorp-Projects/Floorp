@@ -34,6 +34,10 @@ interface MediaSource : EventTarget {
   void removeSourceBuffer(SourceBuffer sourceBuffer);
   [Throws]
   void endOfStream(optional MediaSourceEndOfStreamError error);
+  [Throws]
+  void setLiveSeekableRange(double start, double end);
+  [Throws]
+  void clearLiveSeekableRange();
   static boolean isTypeSupported(DOMString type);
   [ChromeOnly]
   readonly attribute DOMString mozDebugReaderData;
