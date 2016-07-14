@@ -68,7 +68,6 @@
     _(NewArrayCopyOnWrite)          \
     _(NewArrayDynamicLength)        \
     _(NewTypedArray)                \
-    _(NewTypedArrayDynamicLength)   \
     _(ArraySplice)                  \
     _(NewObject)                    \
     _(NewTypedObject)               \
