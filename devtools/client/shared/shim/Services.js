@@ -465,6 +465,26 @@ const Services = {
    * by devtools is implemented here.
    */
   prefs: new PrefBranch(null, "", ""),
+
+  /**
+   * An implementation of Services.appinfo that holds just the
+   * properties needed by devtools.
+   */
+  appinfo: {
+    get OS() {
+      const os = window.navigator.userAgent;
+      if (os) {
+        if (os.includes("Linux")) {
+          return "Linux";
+        } else if (os.includes("Windows")) {
+          return "WINNT";
+        } else if (os.includes("Mac")) {
+          return "Darwin";
+        }
+      }
+      return "Unknown";
+    }
+  },
 };
 
 /**
