@@ -22,6 +22,7 @@ class nsSVGClipPathFrame : public nsSVGContainerFrame
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::image::DrawResult DrawResult;
 
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
@@ -76,12 +77,14 @@ public:
    *   surface should be masked with.
    * @param [in, optional] aExtraMasksTransform The transform to use with
    *   aExtraMask. Should be passed when aExtraMask is passed.
+   * @param [out, optional] aResult returns the result of drawing action.
    */
   already_AddRefed<SourceSurface>
     GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
                 const gfxMatrix& aMatrix, Matrix* aMaskTransform,
                 SourceSurface* aExtraMask = nullptr,
-                const Matrix& aExtraMasksTransform = Matrix());
+                const Matrix& aExtraMasksTransform = Matrix(),
+                DrawResult* aResult = nullptr);
 
   /**
    * aPoint is expected to be in aClippedFrame's SVG user space.

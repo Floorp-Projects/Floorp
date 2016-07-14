@@ -559,6 +559,11 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
 
+  nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
+  }
+
   NS_DISPLAY_DECL_NAME("SVGOuterSVG", TYPE_SVG_OUTER_SVG)
 };
 
@@ -624,7 +629,10 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   // units (i.e. CSS px) in the matrix that we pass to our children):
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
-  nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext->ThebesContext(), tm, &contentAreaDirtyRect);
+  DrawResult result =
+    nsSVGUtils::PaintFrameWithEffects(mFrame, *aContext->ThebesContext(), tm,
+                                      &contentAreaDirtyRect);
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   aContext->ThebesContext()->Restore();
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
@@ -659,6 +667,15 @@ nsDisplayOuterSVG::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 
   nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
   aInvalidRegion->Or(*aInvalidRegion, result);
+
+  auto geometry =
+    static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
+
+  if (aBuilder->ShouldSyncDecodeImages() &&
+    geometry->ShouldInvalidateToSyncDecodeImages()) {
+    bool snap;
+    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+  }
 }
 
 nsresult
@@ -823,7 +840,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 
-nsresult
+DrawResult
 nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
                              const nsIntRect* aDirtyRect)

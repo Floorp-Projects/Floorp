@@ -450,12 +450,13 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
     ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
                          PreMultiply(deviceToFilterSpace));
 
-  mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty);
+  DrawResult result =
+    mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty);
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
   mSourceGraphic.mSurfaceRect = neededRect;
 
-  return NS_OK;
+  return (result == DrawResult::SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult

@@ -99,7 +99,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
 {
     alwaysBaseline_ = args.alwaysBaseline;
 
-    if (!funcIndexToExport_.init())
+    if (!funcIndexToFuncExportIndex_.init())
         return false;
 
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));;
@@ -355,7 +355,7 @@ ModuleGenerator::finishCodegen()
         if (!entries.resize(numExports()))
             return false;
         for (uint32_t i = 0; i < numExports(); i++)
-            entries[i] = GenerateEntry(masm, metadata_->exports[i], usesMemory());
+            entries[i] = GenerateEntry(masm, metadata_->funcExports[i], usesMemory());
 
         if (!interpExits.resize(numFuncImports()))
             return false;
@@ -380,7 +380,7 @@ ModuleGenerator::finishCodegen()
 
     for (uint32_t i = 0; i < numExports(); i++) {
         entries[i].offsetBy(offsetInWhole);
-        metadata_->exports[i].initStubOffset(entries[i].begin);
+        metadata_->funcExports[i].initStubOffset(entries[i].begin);
         if (!metadata_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
             return false;
     }
@@ -647,54 +647,59 @@ ModuleGenerator::funcImport(uint32_t funcImportIndex) const
 }
 
 bool
-ModuleGenerator::declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex)
+ModuleGenerator::declareFuncExport(UniqueChars fieldName, uint32_t funcIndex,
+                                   uint32_t* funcExportIndex /* = nullptr */)
 {
-    MOZ_ASSERT(!exportMap_.hasStartFunction());
+    MOZ_ASSERT(!metadata_->hasStartFunction());
 
-    if (!exportMap_.fieldNames.append(Move(fieldName)))
-        return false;
-
-    FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
+    FuncIndexMap::AddPtr p = funcIndexToFuncExportIndex_.lookupForAdd(funcIndex);
     if (p) {
-        if (exportIndex)
-            *exportIndex = p->value();
-        return exportMap_.fieldsToExports.append(p->value());
+        if (funcExportIndex)
+            *funcExportIndex = p->value();
+        return exports_.emplaceBack(Move(fieldName), p->value());
     }
 
-    uint32_t newExportIndex = metadata_->exports.length();
-    MOZ_ASSERT(newExportIndex < MaxExports);
+    uint32_t newFuncExportIndex = metadata_->funcExports.length();
+    MOZ_ASSERT(newFuncExportIndex < MaxExports);
 
-    if (exportIndex)
-        *exportIndex = newExportIndex;
+    if (funcExportIndex)
+        *funcExportIndex = newFuncExportIndex;
 
     Sig copy;
     if (!copy.clone(funcSig(funcIndex)))
         return false;
 
-    return metadata_->exports.emplaceBack(Move(copy), funcIndex) &&
-           exportMap_.fieldsToExports.append(newExportIndex) &&
-           funcIndexToExport_.add(p, funcIndex, newExportIndex);
+    return metadata_->funcExports.emplaceBack(Move(copy), funcIndex) &&
+           exports_.emplaceBack(Move(fieldName), newFuncExportIndex) &&
+           funcIndexToFuncExportIndex_.add(p, funcIndex, newFuncExportIndex);
 }
 
 uint32_t
 ModuleGenerator::numExports() const
 {
-    return metadata_->exports.length();
+    return metadata_->funcExports.length();
+}
+
+bool
+ModuleGenerator::addTableExport(UniqueChars fieldName)
+{
+    return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
 }
 
 bool
 ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 {
-    return exportMap_.fieldNames.append(Move(fieldName)) &&
-           exportMap_.fieldsToExports.append(MemoryExport);
+    return exports_.emplaceBack(Move(fieldName), DefinitionKind::Memory);
 }
 
 bool
 ModuleGenerator::setStartFunction(uint32_t funcIndex)
 {
-    FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
+    MOZ_ASSERT(!metadata_->hasStartFunction());
+
+    FuncIndexMap::AddPtr p = funcIndexToFuncExportIndex_.lookupForAdd(funcIndex);
     if (p) {
-        exportMap_.setStartFunction(p->value());
+        metadata_->initStartFuncExportIndex(p->value());
         return true;
     }
 
@@ -702,8 +707,8 @@ ModuleGenerator::setStartFunction(uint32_t funcIndex)
     if (!copy.clone(funcSig(funcIndex)))
         return false;
 
-    exportMap_.setStartFunction(metadata_->exports.length());
-    return metadata_->exports.emplaceBack(Move(copy), funcIndex);
+    metadata_->initStartFuncExportIndex(metadata_->funcExports.length());
+    return metadata_->funcExports.emplaceBack(Move(copy), funcIndex);
 }
 
 bool
@@ -960,7 +965,7 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
     return js::MakeUnique<Module>(Move(code),
                                   Move(linkData_),
                                   Move(imports),
-                                  Move(exportMap_),
+                                  Move(exports_),
                                   Move(dataSegments_),
                                   Move(elemSegments_),
                                   *metadata_,

@@ -56,6 +56,7 @@ assertEq(new Instance(m5, {a:{b:mem4Page}}) instanceof Instance, true);
 
 assertErrorMessage(() => new Module(textToBinary('(module (memory 2 1))')), TypeError, /maximum length less than initial length/);
 assertErrorMessage(() => new Module(textToBinary('(module (import "a" "b" (memory 2 1)))')), TypeError, /maximum length less than initial length/);
+assertErrorMessage(() => new Module(textToBinary('(module (table (resizable 2 1)))')), TypeError, /maximum length less than initial length/);
 
 // Import order:
 
@@ -158,6 +159,43 @@ assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
 assertEq(e[""] instanceof Memory, true);
 
+var code = textToBinary('(module (table) (export "tbl" table))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).join(), "tbl");
+assertEq(e.tbl instanceof Table, true);
+assertEq(e.tbl.length, 0);
+
+var code = textToBinary('(module (table (resizable 2)) (export "t1" table) (export "t2" table))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).join(), "t1,t2");
+assertEq(e.t1 instanceof Table, true);
+assertEq(e.t2 instanceof Table, true);
+assertEq(e.t1, e.t2);
+assertEq(e.t1.length, 2);
+
+var code = textToBinary('(module (table (resizable 2)) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" 0))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).join(), "t,m,f");
+assertEq(e.f(), undefined);
+assertEq(e.t instanceof Table, true);
+assertEq(e.m instanceof Memory, true);
+assertEq(e.t.length, 2);
+
+var code = textToBinary('(module (table (resizable 1)) (memory 1 1) (func) (export "m" memory) (export "f" 0) (export "t" table))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).join(), "m,f,t");
+assertEq(e.f(), undefined);
+assertEq(e.t instanceof Table, true);
+assertEq(e.m instanceof Memory, true);
++assertEq(e.t.length, 1);
+
+var code = textToBinary('(module (table) (export "" table))');
+var e = new Instance(new Module(code)).exports;
+assertEq(Object.keys(e).length, 1);
+assertEq(String(Object.keys(e)), "");
+assertEq(e[""] instanceof Table, true);
++assertEq(e[""].length, 0);
+
 // Re-exports:
 
 var code = textToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" memory) (export "bar" memory))');
@@ -165,6 +203,12 @@ var mem = new Memory({initial:1});
 var e = new Instance(new Module(code), {a:{b:mem}}).exports;
 assertEq(mem, e.foo);
 assertEq(mem, e.bar);
+
+// Non-existent export errors
+
+assertErrorMessage(() => new Module(textToBinary('(module (export "a" 0))')), TypeError, /exported function index out of bounds/);
+assertErrorMessage(() => new Module(textToBinary('(module (export "a" memory))')), TypeError, /exported memory index out of bounds/);
+assertErrorMessage(() => new Module(textToBinary('(module (export "a" table))')), TypeError, /exported table index out of bounds/);
 
 // Default memory rules
 

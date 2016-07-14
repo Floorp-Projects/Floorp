@@ -69,7 +69,8 @@ enum class TypeConstructor
 enum class DefinitionKind
 {
     Function                             = 0x00,
-    Memory                               = 0x01
+    Table                                = 0x01,
+    Memory                               = 0x02
 };
 
 enum class ResizableFlags

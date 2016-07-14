@@ -117,10 +117,10 @@ struct ShareableBytes : ShareableBase<ShareableBytes>
 typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
-// An Export represents a single function inside a wasm Module that has been
+// A FuncExport represents a single function inside a wasm Module that has been
 // exported one or more times.
 
-class Export
+class FuncExport
 {
     Sig sig_;
     struct CacheablePod {
@@ -129,8 +129,8 @@ class Export
     } pod;
 
   public:
-    Export() = default;
-    explicit Export(Sig&& sig, uint32_t funcIndex)
+    FuncExport() = default;
+    explicit FuncExport(Sig&& sig, uint32_t funcIndex)
       : sig_(Move(sig))
     {
         pod.funcIndex_ = funcIndex;
@@ -152,10 +152,10 @@ class Export
         return pod.stubOffset_;
     }
 
-    WASM_DECLARE_SERIALIZABLE(Export)
+    WASM_DECLARE_SERIALIZABLE(FuncExport)
 };
 
-typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
+typedef Vector<FuncExport, 0, SystemAllocPolicy> FuncExportVector;
 
 // An FuncImport contains the runtime metadata needed to implement a call to an
 // imported function. Each function import has two call stubs: an optimized path
@@ -415,14 +415,37 @@ typedef Vector<char16_t, 64> TwoByteName;
 // Metadata is built incrementally by ModuleGenerator and then shared immutably
 // between modules.
 
-struct MetadataCacheablePod
+
+class MetadataCacheablePod
 {
+    static const uint32_t NO_START_FUNCTION = UINT32_MAX;
+    static_assert(NO_START_FUNCTION > MaxFuncs, "sentinel value");
+
+    uint32_t              startFuncExportIndex_;
+
+  public:
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
     uint32_t              minMemoryLength;
     uint32_t              maxMemoryLength;
 
-    MetadataCacheablePod() { mozilla::PodZero(this); }
+    MetadataCacheablePod() {
+        mozilla::PodZero(this);
+        startFuncExportIndex_ = NO_START_FUNCTION;
+    }
+
+    bool hasStartFunction() const {
+        return startFuncExportIndex_ != NO_START_FUNCTION;
+    }
+    void initStartFuncExportIndex(uint32_t i) {
+        MOZ_ASSERT(!hasStartFunction());
+        startFuncExportIndex_ = i;
+        MOZ_ASSERT(hasStartFunction());
+    }
+    uint32_t startFuncExportIndex() const {
+        MOZ_ASSERT(hasStartFunction());
+        return startFuncExportIndex_;
+    }
 };
 
 struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
@@ -433,7 +456,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     const MetadataCacheablePod& pod() const { return *this; }
 
     FuncImportVector      funcImports;
-    ExportVector          exports;
+    FuncExportVector      funcExports;
     TableDescVector       tables;
     MemoryAccessVector    memoryAccesses;
     BoundsCheckVector     boundsChecks;

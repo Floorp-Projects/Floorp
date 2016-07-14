@@ -20283,25 +20283,9 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
   PermissionRequestBase::PermissionValue permission;
 
   if (QuotaManager::IsFirstPromptRequired(persistenceType, origin, isApp)) {
-#ifdef MOZ_CHILD_PERMISSIONS
-    if (aContentParent) {
-      if (NS_WARN_IF(!AssertAppPrincipal(aContentParent, principal))) {
-        IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
-
-      uint32_t intPermission =
-        mozilla::CheckPermission(aContentParent, principal, IDB_PREFIX);
-
-      permission =
-        PermissionRequestBase::PermissionValueForIntPermission(intPermission);
-    } else
-#endif // MOZ_CHILD_PERMISSIONS
-    {
-      rv = PermissionRequestBase::GetCurrentPermission(principal, &permission);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    rv = PermissionRequestBase::GetCurrentPermission(principal, &permission);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   } else {
     permission = PermissionRequestBase::kPermissionAllowed;
@@ -20380,65 +20364,7 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
   MOZ_ASSERT(aContentParent);
   MOZ_ASSERT(!aPermissionString.IsEmpty());
 
-#ifdef MOZ_CHILD_PERMISSIONS
-  const ManagedContainer<PBrowserParent>& browsers =
-    aContentParent->ManagedPBrowserParent();
-
-  if (!browsers.IsEmpty()) {
-    nsCOMPtr<nsIAppsService> appsService =
-      do_GetService(APPS_SERVICE_CONTRACTID);
-    if (NS_WARN_IF(!appsService)) {
-      return false;
-    }
-
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-    if (NS_WARN_IF(!ioService)) {
-      return false;
-    }
-
-    nsCOMPtr<nsIPermissionManager> permMan =
-      mozilla::services::GetPermissionManager();
-    if (NS_WARN_IF(!permMan)) {
-      return false;
-    }
-
-    const nsPromiseFlatCString permissionString =
-      PromiseFlatCString(aPermissionString);
-
-    for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-      uint32_t appId =
-        TabParent::GetFrom(iter.Get()->GetKey())->OwnOrContainingAppId();
-      MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID &&
-                 appId != nsIScriptSecurityManager::NO_APP_ID);
-
-      nsCOMPtr<mozIApplication> app;
-      nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(app));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
-
-      nsCOMPtr<nsIPrincipal> principal;
-      app->GetPrincipal(getter_AddRefs(principal));
-      NS_ENSURE_TRUE(principal, false);
-
-      uint32_t permission;
-      rv = permMan->TestExactPermissionFromPrincipal(principal,
-                                                     permissionString.get(),
-                                                     &permission);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
-
-      if (permission == nsIPermissionManager::ALLOW_ACTION) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-#else
   return true;
-#endif // MOZ_CHILD_PERMISSIONS
 }
 
 nsresult

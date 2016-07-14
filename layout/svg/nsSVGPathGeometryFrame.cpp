@@ -31,6 +31,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -69,13 +70,22 @@ public:
     MOZ_COUNT_DTOR(nsDisplaySVGPathGeometry);
   }
 #endif
- 
+
   NS_DISPLAY_DECL_NAME("nsDisplaySVGPathGeometry", TYPE_SVG_PATH_GEOMETRY)
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
+
+  nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
+  }
+
+  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                 const nsDisplayItemGeometry* aGeometry,
+                                 nsRegion *aInvalidRegion) override;
 };
 
 void
@@ -111,7 +121,28 @@ nsDisplaySVGPathGeometry::Paint(nsDisplayListBuilder* aBuilder,
 
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
-  static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(), tm);
+  DrawResult result =
+    static_cast<nsSVGPathGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(), tm);
+
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+}
+
+void
+nsDisplaySVGPathGeometry::ComputeInvalidationRegion(
+  nsDisplayListBuilder* aBuilder,
+  const nsDisplayItemGeometry* aGeometry,
+  nsRegion* aInvalidRegion)
+{
+  auto geometry =
+    static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
+
+  if (aBuilder->ShouldSyncDecodeImages() &&
+      geometry->ShouldInvalidateToSyncDecodeImages()) {
+    bool snap;
+    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
+  }
+
+  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
 }
 
 //----------------------------------------------------------------------
@@ -242,19 +273,19 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-nsresult
+DrawResult
 nsSVGPathGeometryFrame::PaintSVG(gfxContext& aContext,
                                  const gfxMatrix& aTransform,
                                  const nsIntRect* aDirtyRect)
 {
   if (!StyleVisibility()->IsVisible())
-    return NS_OK;
+    return DrawResult::SUCCESS;
 
   // Matrix to the geometry's user space:
   gfxMatrix newMatrix =
     aContext.CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
   if (newMatrix.IsSingular()) {
-    return NS_OK;
+    return DrawResult::BAD_ARGS;
   }
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
@@ -280,7 +311,7 @@ nsSVGPathGeometryFrame::PaintSVG(gfxContext& aContext,
     }
   }
 
-  return NS_OK;
+  return DrawResult::SUCCESS;
 }
 
 nsIFrame*
