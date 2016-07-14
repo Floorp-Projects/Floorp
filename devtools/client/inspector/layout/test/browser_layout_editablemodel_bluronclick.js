@@ -16,7 +16,8 @@ const TEST_URI =
   <div id="div1"></div>`;
 
 add_task(function* () {
-  // Make sure the toolbox is tall enough to have empty space below the layout-container.
+  // Make sure the toolbox is tall enough to have empty space below the
+  // layout-container.
   yield pushPref("devtools.toolbox.footer.height", 500);
 
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
@@ -59,8 +60,8 @@ function* testClickingBelowContainer(view) {
 
   let onBlur = once(editor, "blur");
   let container = view.doc.querySelector("#layout-container");
-  // Using getBoxQuads here because getBoundingClientRect (and therefore synthesizeMouse)
-  // use an erroneous height of ~50px for the layout container.
+  // Using getBoxQuads here because getBoundingClientRect (and therefore
+  // synthesizeMouse) use an erroneous height of ~50px for the layout container.
   let bounds = container.getBoxQuads({relativeTo: view.doc})[0].bounds;
   EventUtils.synthesizeMouseAtPoint(
     bounds.left + 10,
