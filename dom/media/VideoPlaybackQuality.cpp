@@ -16,9 +16,9 @@ namespace dom {
 
 VideoPlaybackQuality::VideoPlaybackQuality(HTMLMediaElement* aElement,
                                            DOMHighResTimeStamp aCreationTime,
-                                           uint64_t aTotalFrames,
-                                           uint64_t aDroppedFrames,
-                                           uint64_t aCorruptedFrames)
+                                           uint32_t aTotalFrames,
+                                           uint32_t aDroppedFrames,
+                                           uint32_t aCorruptedFrames)
   : mElement(aElement)
   , mCreationTime(aCreationTime)
   , mTotalFrames(aTotalFrames)
