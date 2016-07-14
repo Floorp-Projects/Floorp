@@ -452,18 +452,9 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     let options = {
       loadFromCache: true,
       policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
+      window: this.window,
       charset: this._getCSSCharset()
     };
-
-    // Bug 1282660 - We use the system principal to load the default internal
-    // stylesheets instead of the content principal since such stylesheets
-    // require system principal to load. At meanwhile, we strip the loadGroup
-    // for preventing the assertion of the userContextId mismatching.
-    // The default internal stylesheets load from the 'resource:' URL.
-    if (!/^resource:\/\//.test(this.href)) {
-      options.window = this.window;
-      options.principal = this.document.nodePrincipal;
-    }
 
     return fetch(this.href, options).then(({ content }) => {
       this.text = content;
