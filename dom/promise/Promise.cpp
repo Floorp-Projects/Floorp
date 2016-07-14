@@ -1904,8 +1904,11 @@ public:
         !JS_DefineElement(cx, values, index, value, JSPROP_ENUMERATE)) {
       MOZ_ASSERT(JS_IsExceptionPending(cx));
       JS::Rooted<JS::Value> exn(cx);
-      jsapi.StealException(&exn);
-      mPromise->MaybeReject(cx, exn);
+      if (!jsapi.StealException(&exn)) {
+        mPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+      } else {
+        mPromise->MaybeReject(cx, exn);
+      }
     }
 
     --mCountdown;

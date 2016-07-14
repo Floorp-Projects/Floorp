@@ -327,7 +327,9 @@ nsresult
 nsDOMClassInfo::DefineStaticJSVals()
 {
   AutoJSAPI jsapi;
-  jsapi.Init(xpc::UnprivilegedJunkScope());
+  if (!jsapi.Init(xpc::UnprivilegedJunkScope())) {
+    return NS_ERROR_UNEXPECTED;
+  }
   JSContext* cx = jsapi.cx();
 
 #define SET_JSID_TO_STRING(_id, _cx, _str)                              \
