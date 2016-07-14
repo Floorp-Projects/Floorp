@@ -334,6 +334,38 @@ nsContentTreeOwner::GetPrimaryTabParent(nsITabParent** aTab)
   return mXULWindow->GetPrimaryTabParent(aTab);
 }
 
+NS_IMETHODIMP
+nsContentTreeOwner::GetPrimaryContentSize(int32_t* aWidth,
+                                          int32_t* aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetPrimaryContentSize(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::SetPrimaryContentSize(int32_t aWidth,
+                                          int32_t aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->SetPrimaryContentSize(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::GetRootShellSize(int32_t* aWidth,
+                                     int32_t* aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetRootShellSize(aWidth, aHeight);
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::SetRootShellSize(int32_t aWidth,
+                                     int32_t aHeight)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->SetRootShellSize(aWidth, aHeight);
+}
+
 NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    int32_t aCX, int32_t aCY)
 {
@@ -442,6 +474,13 @@ nsContentTreeOwner::GetTargetableShellCount(uint32_t* aResult)
   NS_ENSURE_STATE(mXULWindow);
   *aResult = mXULWindow->mTargetableShells.Count();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::GetHasPrimaryContent(bool* aResult)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetHasPrimaryContent(aResult);
 }
 
 //*****************************************************************************

@@ -5414,8 +5414,6 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   nsCOMPtr<mozIDOMWindowProxy> window;
   TabParent::AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
-  const char* features = aFeatures.IsVoid() ? nullptr : aFeatures.get();
-
   nsCOMPtr<nsPIWindowWatcher> pwwatch =
     do_GetService(NS_WINDOWWATCHER_CONTRACTID, aResult);
 
@@ -5429,7 +5427,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     // to open a new window that is unrelated to a pre-existing tab.
     *aResult = pwwatch->OpenWindowWithoutParent(getter_AddRefs(newRemoteTab));
   } else {
-    *aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, features, aCalledFromJS,
+    *aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, aFeatures, aCalledFromJS,
                                                 aFullZoom, getter_AddRefs(newRemoteTab));
   }
 

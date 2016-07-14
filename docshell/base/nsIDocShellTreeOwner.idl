@@ -81,6 +81,26 @@ interface nsIDocShellTreeOwner : nsISupports
 	void sizeShellTo(in nsIDocShellTreeItem shell, in long cx, in long cy);
 
 	/*
+	Gets the size of the primary content area in CSS pixels. This should work
+	for both in-process and out-of-process content areas.
+	*/
+	void getPrimaryContentSize(out long width, out long height);
+	/*
+	Sets the size of the primary content area in CSS pixels. This should work
+	for both in-process and out-of-process content areas.
+	*/
+	void setPrimaryContentSize(in long width, in long height);
+
+	/*
+	Gets the size of the root docshell in CSS pixels.
+	*/
+	void getRootShellSize(out long width, out long height);
+	/*
+	Sets the size of the root docshell in CSS pixels.
+	*/
+	void setRootShellSize(in long width, in long height);
+
+	/*
 	Sets the persistence of different attributes of the window.
 	*/
 	void setPersistence(in boolean aPersistPosition,
@@ -98,4 +118,10 @@ interface nsIDocShellTreeOwner : nsISupports
 	Gets the number of targettable docshells.
 	*/
 	readonly attribute unsigned long targetableShellCount;
+
+	/*
+	Returns true if there is a primary content shell or a primary
+	tab parent.
+	*/
+	readonly attribute bool hasPrimaryContent;
 };
