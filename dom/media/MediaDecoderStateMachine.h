@@ -410,7 +410,7 @@ protected:
   bool OutOfDecodedVideo()
   {
     MOZ_ASSERT(OnTaskQueue());
-    return IsVideoDecoding() && !VideoQueue().IsFinished() && VideoQueue().GetSize() <= 1;
+    return IsVideoDecoding() && VideoQueue().GetSize() <= 1;
   }
 
 
