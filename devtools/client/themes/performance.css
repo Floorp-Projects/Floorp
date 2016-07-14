@@ -10,7 +10,7 @@
   --focus-cell-border-color: rgba(255,255,255,0.5);
   --row-alt-background-color: rgba(86, 117, 185, 0.15);
   --row-hover-background-color: rgba(86, 117, 185, 0.25);
-  --filter-image: url(chrome://devtools/skin/images/timeline-filter.svg);
+  --filter-image: url(chrome://devtools/skin/images/filter.svg);
 }
 
 .theme-light {
@@ -19,7 +19,7 @@
   --focus-cell-border-color: rgba(0,0,0,0.3);
   --row-alt-background-color: rgba(76,158,217,0.1);
   --row-hover-background-color: rgba(76,158,217,0.2);
-  --filter-image: url(chrome://devtools/skin/images/timeline-filter.svg);
+  --filter-image: url(chrome://devtools/skin/images/filter.svg);
 }
 
 .theme-firebug {
@@ -91,11 +91,15 @@
   list-style-image: url(images/profiler-stopwatch.svg);
 }
 
-#main-record-button .button-icon {
+#import-button {
+  list-style-image: url(images/import.svg);
+}
+
+#main-record-button .button-icon, #import-button .button-icon {
   margin: 0;
 }
 
-#main-record-button .button-text {
+#main-record-button .button-text, #import-button .button-text {
   display: none;
 }
 

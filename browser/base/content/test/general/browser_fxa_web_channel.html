@@ -32,7 +32,7 @@
 
   function test_profile_change() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: webChannelId,
         message: {
           command: "profile:change",
@@ -40,7 +40,7 @@
             uid: "abc123",
           },
         },
-      },
+      }),
     });
 
     window.dispatchEvent(event);
@@ -48,7 +48,7 @@
 
   function test_login() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: webChannelId,
         message: {
           command: "fxaccounts:login",
@@ -63,7 +63,7 @@
           },
           messageId: 1,
         },
-      },
+      }),
     });
 
     window.dispatchEvent(event);
@@ -75,17 +75,17 @@
       // fxaccounts_webchannel_response_echo WebChannel. The tests are
       // listening for events and do the appropriate checks.
       var event = new window.CustomEvent("WebChannelMessageToChrome", {
-        detail: {
+        detail: JSON.stringify({
           id: 'fxaccounts_webchannel_response_echo',
           message: e.detail.message,
-        }
+        })
       });
 
       window.dispatchEvent(event);
     }, true);
 
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: webChannelId,
         message: {
           command: "fxaccounts:can_link_account",
@@ -94,7 +94,7 @@
           },
           messageId: 2,
         },
-      },
+      }),
     });
 
     window.dispatchEvent(event);
@@ -102,7 +102,7 @@
 
   function test_logout() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: webChannelId,
         message: {
           command: "fxaccounts:logout",
@@ -111,7 +111,7 @@
           },
           messageId: 3,
         },
-      },
+      }),
     });
 
     window.dispatchEvent(event);
@@ -119,7 +119,7 @@
 
   function test_delete() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      detail: JSON.stringify({
         id: webChannelId,
         message: {
           command: "fxaccounts:delete",
@@ -128,7 +128,7 @@
           },
           messageId: 4,
         },
-      },
+      }),
     });
 
     window.dispatchEvent(event);

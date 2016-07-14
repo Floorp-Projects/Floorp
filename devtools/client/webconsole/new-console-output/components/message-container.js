@@ -13,35 +13,48 @@ const {
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
+const componentMap = new Map([
+  ["ConsoleApiCall", require("./message-types/console-api-call").ConsoleApiCall],
+  ["ConsoleCommand", require("./message-types/console-command").ConsoleCommand],
+  ["DefaultRenderer", require("./message-types/default-renderer").DefaultRenderer],
+  ["EvaluationResult", require("./message-types/evaluation-result").EvaluationResult],
+  ["PageError", require("./message-types/page-error").PageError]
+]);
+
 const MessageContainer = createClass({
+  displayName: "MessageContainer",
 
   propTypes: {
     message: PropTypes.object.isRequired
   },
 
-  displayName: "MessageContainer",
-
   render() {
     const { message } = this.props;
-    let MessageComponent = getMessageComponent(message.messageType);
+    let MessageComponent = createFactory(getMessageComponent(message));
     return MessageComponent({ message });
   }
 });
 
-function getMessageComponent(messageType) {
-  let MessageComponent;
-  switch (messageType) {
-    case "ConsoleApiCall":
-      MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call").ConsoleApiCall;
-      break;
-    case "EvaluationResult":
-      MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result").EvaluationResult;
-      break;
-    case "PageError":
-      MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/page-error").PageError;
+function getMessageComponent(message) {
+  // @TODO Once packets have been converted to Chrome RDP structure, remove.
+  if (message.messageType) {
+    let {messageType} = message;
+    if (!componentMap.has(messageType)) {
+      return componentMap.get("DefaultRenderer");
+    }
+    return componentMap.get(messageType);
+  }
+
+  switch (message.source) {
+    case "javascript":
+      switch (message.type) {
+        case "command":
+          return componentMap.get("ConsoleCommand");
+      }
       break;
   }
-  return createFactory(MessageComponent);
+
+  return componentMap.get("DefaultRenderer");
 }
 
 module.exports.MessageContainer = MessageContainer;

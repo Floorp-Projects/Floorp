@@ -58,7 +58,7 @@ function* chooseWithInspectElementContextMenu(selector, testActor) {
     button: 2
   }, gBrowser.selectedBrowser);
 
-  yield testActor.synthesizeKey({key: "Q", options: {}});
+  yield EventUtils.synthesizeKey("Q", {});
 }
 
 function waitForLinkedBrowserEvent(tab, event) {

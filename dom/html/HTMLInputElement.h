@@ -1391,12 +1391,10 @@ protected:
   RefPtr<GetFilesHelper> mGetFilesRecursiveHelper;
   RefPtr<GetFilesHelper> mGetFilesNonRecursiveHelper;
 
-#ifndef MOZ_CHILD_PERMISSIONS
   /**
    * Hack for bug 1086684: Stash the .value when we're a file picker.
    */
   nsString mFirstFilePath;
-#endif
 
   RefPtr<FileList>  mFileList;
   Sequence<RefPtr<Entry>> mEntries;
