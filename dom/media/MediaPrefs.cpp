@@ -69,4 +69,11 @@ void MediaPrefs::PrefAddVarCache(float* aVariable,
   Preferences::AddFloatVarCache(aVariable, aPref, aDefault);
 }
 
+void MediaPrefs::PrefAddVarCache(AtomicUint32* aVariable,
+                                 const char* aPref,
+                                 uint32_t aDefault)
+{
+  Preferences::AddAtomicUintVarCache(aVariable, aPref, aDefault);
+}
+
 } // namespace mozilla
