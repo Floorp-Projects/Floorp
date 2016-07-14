@@ -370,7 +370,8 @@ var gPrivacyPane = {
         return;
       }
 
-      let buttonIndex = confirmRestartPrompt(autoStart.checked, 1);
+      let buttonIndex = confirmRestartPrompt(autoStart.checked, 1,
+                                             true, false);
       if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
         const Cc = Components.classes, Ci = Components.interfaces;
         let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
