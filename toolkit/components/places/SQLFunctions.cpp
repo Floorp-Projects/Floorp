@@ -357,9 +357,9 @@ namespace places {
     // We only want to filter javascript: URLs if we are not supposed to search
     // for them, and the search does not start with "javascript:".
     if (matchBehavior != mozIPlacesAutoComplete::MATCH_ANYWHERE_UNMODIFIED &&
+        StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:")) &&
         !HAS_BEHAVIOR(JAVASCRIPT) &&
-        !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:")) &&
-        StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:"))) {
+        !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:"))) {
       NS_ADDREF(*_result = new IntegerVariant(0));
       return NS_OK;
     }
