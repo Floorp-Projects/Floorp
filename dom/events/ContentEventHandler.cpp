@@ -1397,20 +1397,20 @@ static nsINode* AdjustTextRectNode(nsINode* aNode,
 
 static
 nsIFrame*
-GetFirstFrameInRange(nsRange* aRange)
+GetFirstFrameInRange(nsRange* aRange, int32_t& aNodeOffset)
 {
   // used to iterate over all contents and their frames
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(aRange);
 
   // get the starting frame
-  int32_t nodeOffset = aRange->StartOffset();
+  aNodeOffset = aRange->StartOffset();
   nsINode* node = iter->GetCurrentNode();
   if (!node) {
-    node = AdjustTextRectNode(aRange->GetStartParent(), nodeOffset);
+    node = AdjustTextRectNode(aRange->GetStartParent(), aNodeOffset);
   }
   nsIFrame* firstFrame = nullptr;
-  GetFrameForTextRect(node, nodeOffset, true, &firstFrame);
+  GetFrameForTextRect(node, aNodeOffset, true, &firstFrame);
   return firstFrame;
 }
 
@@ -1436,7 +1436,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     }
 
     // get the starting frame
-    nsIFrame* firstFrame = GetFirstFrameInRange(range);
+    int32_t nodeOffset = -1;
+    nsIFrame* firstFrame = GetFirstFrameInRange(range, nodeOffset);
     if (NS_WARN_IF(!firstFrame)) {
       return NS_ERROR_FAILURE;
     }
@@ -1448,7 +1449,6 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       return rv;
     }
 
-    int32_t nodeOffset = range->StartOffset();
     AutoTArray<nsRect, 16> charRects;
     rv = firstFrame->GetCharacterRectsInRange(nodeOffset, kEndOffset - offset,
                                               charRects);
