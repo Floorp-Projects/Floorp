@@ -1,10 +1,10 @@
-misc/00_test_list.txt
-canvas/00_test_list.txt
-image/00_test_list.txt
-image_data/00_test_list.txt
-svg_image/00_test_list.txt
-video/00_test_list.txt
-webgl_canvas/00_test_list.txt
+//misc/00_test_list.txt
+//canvas/00_test_list.txt
+//image/00_test_list.txt
+//image_data/00_test_list.txt
+//svg_image/00_test_list.txt
+//video/00_test_list.txt
+//webgl_canvas/00_test_list.txt
 //image_bitmap_from_image_data/00_test_list.txt
 //image_bitmap_from_image/00_test_list.txt
 //image_bitmap_from_video/00_test_list.txt
