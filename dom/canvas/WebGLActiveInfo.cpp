@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-uint8_t
+static uint8_t
 ElemSizeFromType(GLenum elemType)
 {
     switch (elemType) {
