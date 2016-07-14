@@ -13,6 +13,7 @@ tabmodalprompt {
 .mainContainer {
   min-width: 20em;
   min-height: 12em;
+  -moz-user-focus: normal;
 }
 
 .info\.title {
