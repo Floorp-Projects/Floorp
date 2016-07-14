@@ -30,7 +30,8 @@ function setup_tests() {
     next();
   }
 
-  SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                     ["dom.webkitBlink.dirPicker.enabled", true],
                                      ["dom.webkitBlink.filesystem.enabled", true]]}, next);
 }
 
