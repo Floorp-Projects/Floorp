@@ -524,7 +524,7 @@ public:
     case __NR_utimes:
     case __NR_link:
     case __NR_unlink:
-    CASES_FOR_fchown:
+    case __NR_fchown:
     case __NR_fchmod:
 #endif
       return Allow();
