@@ -383,7 +383,6 @@ ClientEngine.prototype = {
       if (!commands) {
         return true;
       }
-      let URIsToDisplay = [];
       for (let key in commands) {
         let {command, args} = commands[key];
         this._log.debug("Processing command: " + command + "(" + args + ")");
@@ -406,16 +405,12 @@ ClientEngine.prototype = {
             this.service.logout();
             return false;
           case "displayURI":
-            let [uri, clientId, title] = args;
-            URIsToDisplay.push({ uri, clientId, title });
+            this._handleDisplayURI.apply(this, args);
             break;
           default:
             this._log.debug("Received an unknown command: " + command);
             break;
         }
-      }
-      if (URIsToDisplay.length) {
-        this._handleDisplayURIs(URIsToDisplay);
       }
 
       return true;
@@ -486,11 +481,11 @@ ClientEngine.prototype = {
   },
 
   /**
-   * Handle a bunch of received 'displayURI' commands.
+   * Handle a single received 'displayURI' command.
    *
-   * Interested parties should observe the "weave:engine:clients:display-uris"
-   * topic. The callback will receive an array as the subject parameter
-   * containing objects with the following keys:
+   * Interested parties should observe the "weave:engine:clients:display-uri"
+   * topic. The callback will receive an object as the subject parameter with
+   * the following keys:
    *
    *   uri       URI (string) that is requested for display.
    *   clientId  ID of client that sent the command.
@@ -498,18 +493,20 @@ ClientEngine.prototype = {
    *
    * The 'data' parameter to the callback will not be defined.
    *
-   * @param uris
-   *        An array containing URI objects to display
-   * @param uris[].uri
+   * @param uri
    *        String URI that was received
-   * @param uris[].clientId
+   * @param clientId
    *        ID of client that sent URI
-   * @param uris[].title
+   * @param title
    *        String title of page that URI corresponds to. Older clients may not
    *        send this.
    */
-  _handleDisplayURIs: function _handleDisplayURIs(uris) {
-    Svc.Obs.notify("weave:engine:clients:display-uris", uris);
+  _handleDisplayURI: function _handleDisplayURI(uri, clientId, title) {
+    this._log.info("Received a URI for display: " + uri + " (" + title +
+                   ") from " + clientId);
+
+    let subject = {uri: uri, client: clientId, title: title};
+    Svc.Obs.notify("weave:engine:clients:display-uri", subject);
   },
 
   _removeRemoteClient(id) {
