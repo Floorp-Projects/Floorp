@@ -572,9 +572,6 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return rv.StealNSResult();
   }
 
-  nsString type;
-  blob->GetType(type);
-
   if (blob->IsFile()) {
     nsString filename;
     blob->GetName(filename);
@@ -587,7 +584,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   }
 
   channel->SetOriginalURI(uri);
-  channel->SetContentType(NS_ConvertUTF16toUTF8(type));
+  channel->SetContentType(NS_ConvertUTF16toUTF8(contentType));
   channel->SetContentLength(size);
 
   channel.forget(result);
