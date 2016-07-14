@@ -252,6 +252,7 @@ protected:
                                    GLint zOffset, uint32_t width, uint32_t height,
                                    uint32_t depth,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
+    bool ValidateCopyTexImageForFeedback(const char* funcName, uint32_t level) const;
 
     bool ValidateUnpack(const char* funcName, const webgl::TexUnpackBlob* blob,
                         bool isFunc3D, const webgl::PackingInfo& srcPI) const;

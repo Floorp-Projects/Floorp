@@ -2073,10 +2073,13 @@ MessageChannel::NotifyMaybeChannelError()
         return;
     }
 
+    Clear();
+
     // Oops, error!  Let the listener know about it.
     mChannelState = ChannelError;
+
+    // After this, the channel may be deleted.
     mListener->OnChannelError();
-    Clear();
 }
 
 void
@@ -2228,11 +2231,12 @@ MessageChannel::NotifyChannelClosed()
     if (ChannelClosed != mChannelState)
         NS_RUNTIMEABORT("channel should have been closed!");
 
-    // OK, the IO thread just closed the channel normally.  Let the
-    // listener know about it.
-    mListener->OnChannelClose();
-
     Clear();
+
+    // OK, the IO thread just closed the channel normally.  Let the
+    // listener know about it. After this point the channel may be
+    // deleted.
+    mListener->OnChannelClose();
 }
 
 void
