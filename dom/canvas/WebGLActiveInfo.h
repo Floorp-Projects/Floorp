@@ -91,7 +91,6 @@ private:
 
 //////////
 
-uint8_t ElemSizeFromType(GLenum elemType);
 bool IsElemTypeSampler(GLenum elemType);
 
 } // namespace mozilla

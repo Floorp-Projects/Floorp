@@ -1046,6 +1046,32 @@ WebGLProgram::LinkProgram()
     }
 }
 
+static uint8_t
+NumUsedLocationsByElemType(GLenum elemType)
+{
+    // GLES 3.0.4 p55
+
+    switch (elemType) {
+    case LOCAL_GL_FLOAT_MAT2:
+    case LOCAL_GL_FLOAT_MAT2x3:
+    case LOCAL_GL_FLOAT_MAT2x4:
+        return 2;
+
+    case LOCAL_GL_FLOAT_MAT3x2:
+    case LOCAL_GL_FLOAT_MAT3:
+    case LOCAL_GL_FLOAT_MAT3x4:
+        return 3;
+
+    case LOCAL_GL_FLOAT_MAT4x2:
+    case LOCAL_GL_FLOAT_MAT4x3:
+    case LOCAL_GL_FLOAT_MAT4:
+        return 4;
+
+    default:
+        return 1;
+    }
+}
+
 bool
 WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
 {
@@ -1068,9 +1094,9 @@ WebGLProgram::ValidateAfterTentativeLink(nsCString* const out_linkLog) const
 
     std::map<uint32_t, const webgl::AttribInfo*> attribsByLoc;
     for (const auto& attrib : linkInfo->attribs) {
-        const uint32_t elemSize = ElemSizeFromType(attrib.mActiveInfo->mElemType);
-        const uint32_t numUsedLocation = (elemSize + 3) / 4;
-        for (uint32_t i = 0; i < numUsedLocation; i++) {
+        const auto& elemType = attrib.mActiveInfo->mElemType;
+        const auto numUsedLocs = NumUsedLocationsByElemType(elemType);
+        for (uint32_t i = 0; i < numUsedLocs; i++) {
             const uint32_t usedLoc = attrib.mLoc + i;
 
             const auto res = attribsByLoc.insert({usedLoc, &attrib});
