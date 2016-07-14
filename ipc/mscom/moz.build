@@ -8,6 +8,7 @@ EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
     'EnsureMTA.h',
+    'InterceptorLog.h',
     'MainThreadRuntime.h',
     'ProxyStream.h',
     'Registration.h',
@@ -21,8 +22,13 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     'EnsureMTA.cpp',
+    'InterceptorLog.cpp',
     'MainThreadRuntime.cpp',
     'ProxyStream.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/xpcom/build',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
