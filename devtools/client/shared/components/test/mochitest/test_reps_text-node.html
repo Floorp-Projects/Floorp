@@ -1,0 +1,60 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test text-node rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - text-node</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+window.onload = Task.async(function* () {
+  try {
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { TextNode } = browserRequire("devtools/client/shared/components/reps/text-node");
+
+    let gripStub = {
+      "type": "object",
+      "class": "Text",
+      "actor": "server1.conn1.child1/obj50",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 0,
+      "preview": {
+        "kind": "DOMNode",
+        "nodeType": 3,
+        "nodeName": "#text",
+        "textContent": "hello world"
+      }
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, TextNode.rep,
+      `Rep correctly selects ${TextNode.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(TextNode.rep, { object: gripStub });
+    is(renderedComponent.className, "objectBox objectBox-textNode",
+      "TextNode rep has expected class names");
+    is(renderedComponent.textContent, `"hello world"`,
+      "TextNode rep has expected text content");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
