@@ -286,8 +286,7 @@ public:
 
     bool ValidateForRead(const char* info,
                          const webgl::FormatUsageInfo** const out_format,
-                         uint32_t* const out_width, uint32_t* const out_height,
-                         GLenum* const out_mode);
+                         uint32_t* const out_width, uint32_t* const out_height);
 
     JS::Value GetAttachmentParameter(const char* funcName, JSContext* cx, GLenum target,
                                      GLenum attachment, GLenum pname,
