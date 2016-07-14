@@ -6,12 +6,16 @@ package org.mozilla.gecko.favicons;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.GeckoJarReader;
@@ -56,6 +60,12 @@ public class LoadFaviconTask {
      * in a possibly smaller icon size).
      */
     public static final int FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS = 2;
+
+    /**
+     * If downloading from the favicon URL failed then do NOT try to guess the default URL and
+     * download from the default URL.
+     */
+    public static final int FLAG_NO_DOWNLOAD_FROM_GUESSED_DEFAULT_URL = 4;
 
     private static final int MAX_REDIRECTS_TO_FOLLOW = 5;
     // The default size of the buffer to use for downloading Favicons in the event no size is given
@@ -196,6 +206,73 @@ public class LoadFaviconTask {
             }
         }
         return null;
+    }
+
+    /**
+     * Fetch icon from a content provider following the partner bookmarks provider contract.
+     */
+    private Bitmap fetchContentProviderFavicon(String uri, int targetWidthAndHeight) {
+        if (TextUtils.isEmpty(uri)) {
+            return null;
+        }
+
+        if (!uri.startsWith("content://")) {
+            return null;
+        }
+
+        Cursor cursor = context.getContentResolver().query(
+                Uri.parse(uri),
+                new String[] {
+                        PartnerBookmarksProviderProxy.PartnerContract.TOUCHICON,
+                        PartnerBookmarksProviderProxy.PartnerContract.FAVICON,
+                },
+                null,
+                null,
+                null
+        );
+
+        if (cursor == null) {
+            return null;
+        }
+
+        try {
+            if (!cursor.moveToFirst()) {
+                return null;
+            }
+
+            Bitmap icon = decodeFromCursor(cursor, PartnerBookmarksProviderProxy.PartnerContract.TOUCHICON, targetWidthAndHeight);
+            if (icon != null) {
+                return icon;
+            }
+
+            icon = decodeFromCursor(cursor, PartnerBookmarksProviderProxy.PartnerContract.FAVICON, targetWidthAndHeight);
+            if (icon != null) {
+                return icon;
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return null;
+    }
+
+    private Bitmap decodeFromCursor(Cursor cursor, String column, int targetWidthAndHeight) {
+        final int index = cursor.getColumnIndex(column);
+        if (index == -1) {
+            return null;
+        }
+
+        if (cursor.isNull(index)) {
+            return null;
+        }
+
+        final byte[] data = cursor.getBlob(index);
+        LoadFaviconResult result = FaviconDecoder.decodeFavicon(data, 0, data.length);
+        if (result == null) {
+            return null;
+        }
+
+        return result.getBestBitmap(targetWidthAndHeight);
     }
 
     // Runs in background thread.
@@ -423,6 +500,14 @@ public class LoadFaviconTask {
             return image;
         }
 
+        // Download from a content provider
+        image = fetchContentProviderFavicon(faviconURL, targetWidthAndHeight);
+        if (imageIsValid(image)) {
+            // We don't want to put this into the DB.
+            Favicons.putFaviconInMemCache(faviconURL, image);
+            return image;
+        }
+
         try {
             loadedBitmaps = downloadFavicon(new URI(faviconURL));
         } catch (URISyntaxException e) {
@@ -440,30 +525,12 @@ public class LoadFaviconTask {
                 saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
                 return pushToCacheAndGetResult(loadedBitmaps);
             } else {
-                final Map<Integer, Bitmap> iconMap = new HashMap<>();
-                final List<Integer> sizes = new ArrayList<>();
-
-                while (loadedBitmaps.getBitmaps().hasNext()) {
-                    final Bitmap b = loadedBitmaps.getBitmaps().next();
-
-                    // It's possible to receive null, most likely due to OOM or a zero-sized image,
-                    // from BitmapUtils.decodeByteArray(byte[], int, int, BitmapFactory.Options)
-                    if (b != null) {
-                        iconMap.put(b.getWidth(), b);
-                        sizes.add(b.getWidth());
-                    }
-                }
-
-                int bestSize = Favicons.selectBestSizeFromList(sizes, targetWidthAndHeight);
-
-                if (bestSize == -1) {
-                    // No icons found: this could occur if we weren't able to process any of the
-                    // supplied icons.
-                    return null;
-                }
-
-                return iconMap.get(bestSize);
+                return loadedBitmaps.getBestBitmap(targetWidthAndHeight);
             }
+        }
+
+        if ((FLAG_NO_DOWNLOAD_FROM_GUESSED_DEFAULT_URL & flags) == FLAG_NO_DOWNLOAD_FROM_GUESSED_DEFAULT_URL) {
+            return null;
         }
 
         if (isUsingDefaultURL) {
