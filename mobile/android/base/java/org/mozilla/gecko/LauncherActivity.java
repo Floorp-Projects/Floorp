@@ -12,6 +12,7 @@ import android.support.customtabs.CustomTabsIntent;
 
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueueService;
 
@@ -25,7 +26,7 @@ public class LauncherActivity extends Activity {
 
         GeckoAppShell.ensureCrashHandling();
 
-        if (AppConstants.MOZ_ANDROID_CUSTOM_TABS && isCustomTabsIntent()) {
+        if (AppConstants.MOZ_ANDROID_CUSTOM_TABS && isCustomTabsIntent() && isCustomTabsEnabled()) {
             dispatchCustomTabsIntent();
         } else if (isViewIntentWithURL()) {
             dispatchViewIntent();
@@ -83,5 +84,9 @@ public class LauncherActivity extends Activity {
     private boolean isCustomTabsIntent() {
         return isViewIntentWithURL()
                 && getIntent().hasExtra(CustomTabsIntent.EXTRA_SESSION);
+    }
+
+    private boolean isCustomTabsEnabled() {
+        return GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_CUSTOM_TABS, false);
     }
 }
