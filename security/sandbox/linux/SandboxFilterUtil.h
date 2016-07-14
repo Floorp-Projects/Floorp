@@ -74,12 +74,6 @@ public:
 #define CASES_FOR_mmap   case __NR_mmap
 #endif
 
-#ifdef __NR_fchown32
-#define CASES_FOR_fchown   case __NR_fchown32: case __NR_fchown
-#else
-#define CASES_FOR_fchown   case __NR_fchown
-#endif
-
 #ifdef __NR_getuid32
 #define CASES_FOR_getuid   case __NR_getuid32
 #define CASES_FOR_getgid   case __NR_getgid32
