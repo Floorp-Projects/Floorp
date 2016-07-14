@@ -621,15 +621,6 @@
   filter: none !important;
 }
 
-.theme-light .command-button:hover {
-  background-color: inherit;
-}
-
-.theme-light .command-button:hover:active,
-.theme-light .command-button[checked=true]:not(:hover) {
-  background-color: inherit;
-}
-
 .hidden-labels-box:not(.visible) > label,
 .hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
   display: none;
