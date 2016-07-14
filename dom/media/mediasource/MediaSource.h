@@ -72,6 +72,11 @@ public:
   static bool IsTypeSupported(const GlobalObject&, const nsAString& aType);
 
   static bool Enabled(JSContext* cx, JSObject* aGlobal);
+
+  IMPL_EVENT_HANDLER(sourceopen);
+  IMPL_EVENT_HANDLER(sourceended);
+  IMPL_EVENT_HANDLER(sourceclosed);
+
   /** End WebIDL Methods. */
 
   NS_DECL_ISUPPORTS_INHERITED
