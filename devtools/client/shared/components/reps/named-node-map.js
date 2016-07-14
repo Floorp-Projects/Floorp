@@ -55,7 +55,7 @@ define(function (require, exports, module) {
           key: "more",
           object: objectLink({
             object: this.props.object
-          }, "more...")
+          }, "more…")
         }));
       }
 
