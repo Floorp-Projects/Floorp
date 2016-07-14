@@ -32,6 +32,10 @@ JITFLAGS = {
         ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
         ['--baseline-eager'],
     ],
+    # Interpreter-only, for tools that cannot handle binary code generation.
+    'interp': [
+        ['--no-baseline', '--no-asmjs']
+    ],
     'none': [
         [] # no flags, normal baseline and ion
     ]
