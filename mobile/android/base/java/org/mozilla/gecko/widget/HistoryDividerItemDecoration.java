@@ -8,12 +8,13 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.home.CombinedHistoryItem;
 
-public class DividerItemDecoration extends RecyclerView.ItemDecoration {
+public class HistoryDividerItemDecoration extends RecyclerView.ItemDecoration {
     private final int mDividerHeight;
     private final Paint mDividerPaint;
 
-    public DividerItemDecoration(Context context) {
+    public HistoryDividerItemDecoration(Context context) {
         mDividerHeight = (int) context.getResources().getDimension(R.dimen.page_row_divider_height);
 
         mDividerPaint = new Paint();
@@ -23,7 +24,11 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        outRect.set(0, 0, 0, mDividerHeight);
+        final int position = parent.getChildAdapterPosition(view);
+        if (parent.getAdapter().getItemViewType(position) !=
+                CombinedHistoryItem.ItemType.itemTypeToViewType(CombinedHistoryItem.ItemType.SECTION_HEADER)) {
+            outRect.set(0, 0, 0, mDividerHeight);
+        }
     }
 
     @Override
@@ -33,8 +38,12 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         }
         for (int i = 0; i < parent.getChildCount(); i++) {
             final View child = parent.getChildAt(i);
-            final float bottom = child.getBottom() + child.getTranslationY();
-            c.drawRect(0, bottom, parent.getWidth(), bottom + mDividerHeight, mDividerPaint);
+            final int position = parent.getChildAdapterPosition(child);
+            if (parent.getAdapter().getItemViewType(position) !=
+                    CombinedHistoryItem.ItemType.itemTypeToViewType(CombinedHistoryItem.ItemType.SECTION_HEADER)) {
+                final float bottom = child.getBottom() + child.getTranslationY();
+                c.drawRect(0, bottom, parent.getWidth(), bottom + mDividerHeight, mDividerPaint);
+            }
         }
     }
 }
