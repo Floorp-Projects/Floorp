@@ -38,6 +38,11 @@
                     android:entryValues="@array/pref_char_encoding_values"
                     android:persistent="false" />
 
+    <SwitchPreference android:key="android.not_a_preference.customtabs"
+                      android:title="@string/pref_custom_tabs"
+                      android:summary="@string/pref_custom_tabs_summary"
+                      android:defaultValue="false" />
+
     <PreferenceCategory android:title="@string/pref_category_data_saver">
 
         <ListPreference android:key="browser.image_blocking"
