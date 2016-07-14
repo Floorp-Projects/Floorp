@@ -131,17 +131,17 @@ NS_IMETHODIMP
 nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
                                          nsACString& aVersion)
 {
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+      nsPrintfCString prefName("browser.safebrowsing.provider.%s.pver",
+                               nsCString(aProvider).get());
+      nsXPIDLCString version;
+      nsresult rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(version));
 
-  nsPrintfCString prefName("browser.safebrowsing.provider.%s.pver",
-                           nsCString(aProvider).get());
-
-  nsXPIDLCString version;
-  nsresult rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(version));
-
-  aVersion = NS_SUCCEEDED(rv) ? version
-                              : DEFAULT_PROTOCOL_VERSION;
+      aVersion = NS_SUCCEEDED(rv) ? version : DEFAULT_PROTOCOL_VERSION;
+  } else {
+      aVersion = DEFAULT_PROTOCOL_VERSION;
+  }
 
   return NS_OK;
 }
