@@ -6,10 +6,6 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
-EXTRA_COMPONENTS += [
-    'extensions-browser.manifest',
-]
-
 DIRS += ['schemas']
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
