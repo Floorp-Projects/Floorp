@@ -501,12 +501,15 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TIME_END(checkHashTables);
 
     // Resize the nursery.
+    static const double GrowThreshold   = 0.05;
+    static const double ShrinkThreshold = 0.01;
     TIME_START(resize);
     double promotionRate = mover.tenuredSize / double(allocationEnd() - start());
-    if (promotionRate > 0.05)
+    if (promotionRate > GrowThreshold)
         growAllocableSpace();
-    else if (promotionRate < 0.01)
+    else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
         shrinkAllocableSpace();
+    previousPromotionRate_ = promotionRate;
     TIME_END(resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
