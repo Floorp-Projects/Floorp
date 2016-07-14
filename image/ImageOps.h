@@ -42,17 +42,10 @@ public:
    *
    * @param aImage           The existing image.
    * @param aClip            The rectangle to clip the image against.
-   * @param aSVGViewportSize The specific viewort size of aImage. Unless aImage
-   *                         is a vector image without intrinsic size, this
-   *                         argument should be pass as Nothing().
    */
-  static already_AddRefed<Image> Clip(Image* aImage, nsIntRect aClip,
-                                      const Maybe<nsSize>& aSVGViewportSize =
-                                        Nothing());
+  static already_AddRefed<Image> Clip(Image* aImage, nsIntRect aClip);
   static already_AddRefed<imgIContainer> Clip(imgIContainer* aImage,
-                                              nsIntRect aClip,
-                                              const Maybe<nsSize>& aSVGViewportSize =
-                                                Nothing());
+                                              nsIntRect aClip);
 
   /**
    * Creates a version of an existing image which is rotated and/or flipped to

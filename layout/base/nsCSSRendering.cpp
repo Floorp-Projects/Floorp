@@ -3715,16 +3715,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
       nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
       nsRect subArea(sliceX[i], sliceY[j], sliceWidth[i], sliceHeight[j]);
-      if (subArea.IsEmpty())
-        continue;
 
       nsIntRect intSubArea = subArea.ToOutsidePixels(nsPresContext::AppUnitsPerCSSPixel());
-      // intrinsicSize.CanComputeConcreteSize() return false means we can not
-      // read intrinsic size from aStyleBorder.mBorderImageSource.
-      // In this condition, we pass imageSize(a resolved size comes from
-      // default sizing algorithm) to renderer as the viewport size.
-      Maybe<nsSize> svgViewportSize = intrinsicSize.CanComputeConcreteSize() ?
-        Nothing() : Some(imageSize);
 
       result &=
         renderer.DrawBorderImageComponent(aPresContext,
@@ -3734,8 +3726,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
                                                                intSubArea.width,
                                                                intSubArea.height),
                                           fillStyleH, fillStyleV,
-                                          unitSize, j * (RIGHT + 1) + i,
-                                          svgViewportSize);
+                                          unitSize, j * (RIGHT + 1) + i);
     }
   }
 
@@ -4775,8 +4766,7 @@ nsImageRenderer::PrepareImage()
           mImageContainer.swap(srcImage);
         } else {
           nsCOMPtr<imgIContainer> subImage = ImageOps::Clip(srcImage,
-                                                            actualCropRect,
-                                                            Nothing());
+                                                            actualCropRect);
           mImageContainer.swap(subImage);
         }
       }
@@ -5311,8 +5301,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                           uint8_t              aHFill,
                                           uint8_t              aVFill,
                                           const nsSize&        aUnitSize,
-                                          uint8_t              aIndex,
-                                          const Maybe<nsSize>& aSVGViewportSize)
+                                          uint8_t              aIndex)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5325,19 +5314,11 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
   if (mType == eStyleImageType_Image || mType == eStyleImageType_Element) {
     nsCOMPtr<imgIContainer> subImage;
 
-    // To draw one portion of an image into a border component, we stretch that
-    // portion to match the size of that border component and then draw onto.
-    // However, preserveAspectRatio attribute of a SVG image may break this rule.
-    // To get correct rendering result, we add
-    // FLAG_FORCE_PRESERVEASPECTRATIO_NONE flag here, to tell mImage to ignore
-    // preserveAspectRatio attribute, and always do non-uniform stretch.
-    uint32_t drawFlags = ConvertImageRendererToDrawFlags(mFlags) |
-                           imgIContainer::FLAG_FORCE_PRESERVEASPECTRATIO_NONE;
     // Retrieve or create the subimage we'll draw.
     nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
     if (mType == eStyleImageType_Image) {
       if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
-        subImage = ImageOps::Clip(mImageContainer, srcRect, aSVGViewportSize);
+        subImage = ImageOps::Clip(mImageContainer, srcRect);
         mImage->SetSubImage(aIndex, subImage);
       }
     } else {
@@ -5357,11 +5338,8 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       }
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
-      subImage = ImageOps::Clip(image, srcRect, aSVGViewportSize);
+      subImage = ImageOps::Clip(image, srcRect);
     }
-
-    MOZ_ASSERT_IF(aSVGViewportSize,
-                  subImage->GetType() == imgIContainer::TYPE_VECTOR);
 
     Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
@@ -5372,7 +5350,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                             filter,
                                             aFill, aDirtyRect,
                                             nullptr,
-                                            drawFlags);
+                                            ConvertImageRendererToDrawFlags(mFlags));
     }
 
     nsRect tile = ComputeTile(aFill, aHFill, aVFill, aUnitSize);
@@ -5381,7 +5359,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                     subImage,
                                     filter,
                                     tile, aFill, tile.TopLeft(), aDirtyRect,
-                                    drawFlags);
+                                    ConvertImageRendererToDrawFlags(mFlags));
   }
 
   nsRect destTile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)
