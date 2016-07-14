@@ -198,7 +198,7 @@ nsSVGForeignObjectFrame::IsSVGTransformed(Matrix *aOwnTransform,
   return foundTransform;
 }
 
-nsresult
+DrawResult
 nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                                   const gfxMatrix& aTransform,
                                   const nsIntRect* aDirtyRect)
@@ -209,15 +209,15 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                "SVG should take this code path");
 
   if (IsDisabled())
-    return NS_OK;
+    return DrawResult::SUCCESS;
 
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid)
-    return NS_OK;
+    return DrawResult::SUCCESS;
 
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
-    return NS_ERROR_FAILURE;
+    return DrawResult::BAD_ARGS;
   }
 
   nsRect kidDirtyRect = kid->GetVisualOverflowRect();
@@ -245,7 +245,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     // int32_t appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
     // mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect)
     if (kidDirtyRect.IsEmpty())
-      return NS_OK;
+      return DrawResult::SUCCESS;
   }
 
   aContext.Save();
@@ -277,13 +277,13 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   }
   nsRenderingContext rendCtx(&aContext);
   nsresult rv = nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
-                                          NS_RGBA(0,0,0,0),
-                                          nsDisplayListBuilderMode::PAINTING,
-                                          flags);
+                                         NS_RGBA(0,0,0,0),
+                                         nsDisplayListBuilderMode::PAINTING,
+                                         flags);
 
   aContext.Restore();
 
-  return rv;
+  return NS_FAILED(rv) ? DrawResult::BAD_ARGS : DrawResult::SUCCESS;
 }
 
 nsIFrame*
