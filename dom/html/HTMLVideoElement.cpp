@@ -229,9 +229,9 @@ already_AddRefed<VideoPlaybackQuality>
 HTMLVideoElement::GetVideoPlaybackQuality()
 {
   DOMHighResTimeStamp creationTime = 0;
-  uint64_t totalFrames = 0;
-  uint64_t droppedFrames = 0;
-  uint64_t corruptedFrames = 0;
+  uint32_t totalFrames = 0;
+  uint32_t droppedFrames = 0;
+  uint32_t corruptedFrames = 0;
 
   if (sVideoStatsEnabled) {
     if (nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow()) {
@@ -243,6 +243,8 @@ HTMLVideoElement::GetVideoPlaybackQuality()
 
     if (mDecoder) {
       FrameStatistics& stats = mDecoder->GetFrameStatistics();
+      static_assert(sizeof(uint32_t) >= sizeof (stats.GetParsedFrames()),
+                    "possible truncation from FrameStatistics to VideoPlaybackQuality");
       totalFrames = stats.GetParsedFrames();
       droppedFrames = stats.GetDroppedFrames();
       corruptedFrames = 0;
