@@ -12,7 +12,7 @@
  *
  * This file tests that:
  * - clicking the context menu item shows the tooltip
- * - pressing "Escape" while the tooltip is showing hides the tooltip
+ * - the tooltip content matches the property name for which the context menu was opened
  */
 
 "use strict";
@@ -36,10 +36,7 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf8," + encodeURIComponent(TEST_DOC));
   let {inspector, view} = yield openRuleView();
   yield selectNode("div", inspector);
-  yield testShowAndHideMdnTooltip(view);
-});
 
-function* testShowMdnTooltip(view) {
   setBaseCssDocsUrl(URL_ROOT);
 
   info("Setting the popupNode for the MDN docs tooltip");
@@ -57,30 +54,8 @@ function* testShowMdnTooltip(view) {
   menuitemShowMdnDocs.click();
   yield onShown;
   ok(true, "The MDN docs tooltip was shown");
-}
-
-/**
- * Test that:
- *  - the MDN tooltip is shown when we click the context menu item
- *  - the tooltip's contents have been initialized (we don't fully
- *  test this here, as it's fully tested with the tooltip test code)
- *  - the tooltip is hidden when we press Escape
- */
-function* testShowAndHideMdnTooltip(view) {
-  yield testShowMdnTooltip(view);
 
   info("Quick check that the tooltip contents are set");
-  let cssDocs = view.tooltips.cssDocs;
-
-  // FIXME: Remove the comment below when bug 1246896 is fixed.
-  /* eslint-disable mozilla/no-cpows-in-tests */
-  let tooltipDocument = cssDocs.tooltip.content.contentDocument;
-  let h1 = tooltipDocument.getElementById("property-name");
+  let h1 = cssDocs.tooltip.container.querySelector(".mdn-property-name");
   is(h1.textContent, PROPERTYNAME, "The MDN docs tooltip h1 is correct");
-
-  info("Simulate pressing the 'Escape' key");
-  let onHidden = cssDocs.tooltip.once("hidden");
-  EventUtils.sendKey("escape");
-  yield onHidden;
-  ok(true, "The MDN docs tooltip was hidden on pressing 'escape'");
-}
+});

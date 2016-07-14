@@ -20,9 +20,11 @@ const {
   setBrokenImageTooltip,
 } = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const {
+  CssDocsTooltip,
+} = require("devtools/client/shared/widgets/tooltip/CssDocsTooltip");
+const {
   SwatchColorPickerTooltip,
   SwatchCubicBezierTooltip,
-  CssDocsTooltip,
   SwatchFilterTooltip
 } = require("devtools/client/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -276,10 +278,10 @@ TooltipsOverlay.prototype = {
       return;
     }
 
-    let panelDoc = this.view.inspector.panelDoc;
+    let { toolbox } = this.view.inspector;
 
     // Image, fonts, ... preview tooltip
-    this.previewTooltip = new HTMLTooltip(this.view.inspector.toolbox, {
+    this.previewTooltip = new HTMLTooltip(toolbox, {
       type: "arrow",
       useXulWrapper: true
     });
@@ -287,11 +289,10 @@ TooltipsOverlay.prototype = {
       this._onPreviewTooltipTargetHover.bind(this));
 
     // MDN CSS help tooltip
-    this.cssDocs = new CssDocsTooltip(panelDoc);
+    this.cssDocs = new CssDocsTooltip(toolbox);
 
     if (this.isRuleView) {
       // Color picker tooltip
-      let { toolbox } = this.view.inspector;
       this.colorPicker = new SwatchColorPickerTooltip(toolbox);
       // Cubic bezier tooltip
       this.cubicBezier = new SwatchCubicBezierTooltip(toolbox);
@@ -393,7 +394,7 @@ TooltipsOverlay.prototype = {
       this.cubicBezier.hide();
     }
 
-    if (this.isRuleView && this.cssDocs.tooltip.isShown()) {
+    if (this.isRuleView && this.cssDocs.tooltip.isVisible()) {
       this.cssDocs.hide();
     }
 
