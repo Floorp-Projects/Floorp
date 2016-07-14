@@ -151,111 +151,68 @@ public:
     void VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset);
 
     // GL 3.0 & ES 3.0
-    void Uniform1ui(WebGLUniformLocation* location, GLuint v0);
-    void Uniform2ui(WebGLUniformLocation* location, GLuint v0, GLuint v1);
-    void Uniform3ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, GLuint v2);
-    void Uniform4ui(WebGLUniformLocation* location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
+    void Uniform1ui(WebGLUniformLocation* loc, GLuint v0);
+    void Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1);
+    void Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2);
+    void Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint v2,
+                    GLuint v3);
 
-private:
-    void Uniform1uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
-    void Uniform2uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
-    void Uniform3uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
-    void Uniform4uiv_base(WebGLUniformLocation* loc, size_t arrayLength, const GLuint* data);
+    ////////////////
 
-public:
-    void Uniform1uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform1uiv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform2uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform2uiv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform3uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform3uiv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform4uiv(WebGLUniformLocation* loc, const dom::Sequence<GLuint>& arr) {
-        Uniform4uiv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform1uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform1uiv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform2uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform2uiv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform3uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform3uiv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform4uiv(WebGLUniformLocation* loc, const dom::Uint32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform4uiv_base(loc, arr.Length(), arr.Data());
-    }
+protected:
+    typedef Arr<GLuint, dom::Uint32Array> UintArr;
 
-private:
-    void UniformMatrix2x3fv_base(WebGLUniformLocation* loc, bool transpose,
-                                 size_t arrayLength, const GLfloat* data);
-    void UniformMatrix3x2fv_base(WebGLUniformLocation* loc, bool transpose,
-                                 size_t arrayLength, const GLfloat* data);
-    void UniformMatrix2x4fv_base(WebGLUniformLocation* loc, bool transpose,
-                                 size_t arrayLength, const GLfloat* data);
-    void UniformMatrix4x2fv_base(WebGLUniformLocation* loc, bool transpose,
-                                 size_t arrayLength, const GLfloat* data);
-    void UniformMatrix3x4fv_base(WebGLUniformLocation* loc, bool transpose,
-                                 size_t arrayLength, const GLfloat* data);
-    void UniformMatrix4x3fv_base(WebGLUniformLocation* loc, bool transpose,
-                                 size_t arrayLength, const GLfloat* data);
+    void UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                     const UintArr& arr);
+
+    //////
 
 public:
-    // GL 2.1 & ES 3.0
-    void UniformMatrix2x3fv(WebGLUniformLocation* loc, bool transpose, const dom::Sequence<GLfloat>& value){
-        UniformMatrix2x3fv_base(loc, transpose, value.Length(), value.Elements());
+    template<typename T>
+    void Uniform1uiv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNuiv("uniform1uiv", 1, loc, UintArr(arr));
     }
-    void UniformMatrix2x4fv(WebGLUniformLocation* loc, bool transpose, const dom::Sequence<GLfloat>& value){
-        UniformMatrix2x4fv_base(loc, transpose, value.Length(), value.Elements());
+    template<typename T>
+    void Uniform2uiv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNuiv("uniform2uiv", 2, loc, UintArr(arr));
     }
-    void UniformMatrix3x2fv(WebGLUniformLocation* loc, bool transpose, const dom::Sequence<GLfloat>& value){
-        UniformMatrix3x2fv_base(loc, transpose, value.Length(), value.Elements());
+    template<typename T>
+    void Uniform3uiv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNuiv("uniform3uiv", 3, loc, UintArr(arr));
     }
-    void UniformMatrix3x4fv(WebGLUniformLocation* loc, bool transpose, const dom::Sequence<GLfloat>& value){
-        UniformMatrix3x4fv_base(loc, transpose, value.Length(), value.Elements());
-    }
-    void UniformMatrix4x2fv(WebGLUniformLocation* loc, bool transpose, const dom::Sequence<GLfloat>& value){
-        UniformMatrix4x2fv_base(loc, transpose, value.Length(), value.Elements());
-    }
-    void UniformMatrix4x3fv(WebGLUniformLocation* loc, bool transpose, const dom::Sequence<GLfloat>& value){
-        UniformMatrix4x3fv_base(loc, transpose, value.Length(), value.Elements());
+    template<typename T>
+    void Uniform4uiv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNuiv("uniform4uiv", 4, loc, UintArr(arr));
     }
 
-    void UniformMatrix2x3fv(WebGLUniformLocation* loc, bool transpose, const dom::Float32Array& value){
-        value.ComputeLengthAndData();
-        UniformMatrix2x3fv_base(loc, transpose, value.Length(), value.Data());
+    //////
+
+    template<typename T>
+    void UniformMatrix2x3fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix2x3fv", 2, 3, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix2x4fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix2x4fv", 2, 4, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix3x2fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix3x2fv", 3, 2, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix3x4fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix3x4fv", 3, 4, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix4x2fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix4x2fv", 4, 2, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix4x3fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix4x3fv", 4, 3, loc, transpose, FloatArr(arr));
     }
 
-    void UniformMatrix2x4fv(WebGLUniformLocation* loc, bool transpose, const dom::Float32Array& value){
-        value.ComputeLengthAndData();
-        UniformMatrix2x4fv_base(loc, transpose, value.Length(), value.Data());
-    }
-
-    void UniformMatrix3x2fv(WebGLUniformLocation* loc, bool transpose, const dom::Float32Array& value){
-        value.ComputeLengthAndData();
-        UniformMatrix3x2fv_base(loc, transpose, value.Length(), value.Data());
-    }
-
-    void UniformMatrix3x4fv(WebGLUniformLocation* loc, bool transpose, const dom::Float32Array& value){
-        value.ComputeLengthAndData();
-        UniformMatrix3x4fv_base(loc, transpose, value.Length(), value.Data());
-    }
-
-    void UniformMatrix4x2fv(WebGLUniformLocation* loc, bool transpose, const dom::Float32Array& value){
-        value.ComputeLengthAndData();
-        UniformMatrix4x2fv_base(loc, transpose, value.Length(), value.Data());
-    }
-
-    void UniformMatrix4x3fv(WebGLUniformLocation* loc, bool transpose, const dom::Float32Array& value){
-        value.ComputeLengthAndData();
-        UniformMatrix4x3fv_base(loc, transpose, value.Length(), value.Data());
-    }
+    ////////////////
 
 private:
     void VertexAttribI4iv(GLuint index, size_t length, const GLint* v);
