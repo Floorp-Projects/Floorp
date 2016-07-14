@@ -1424,10 +1424,11 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
   RefPtr<nsRange> range = new nsRange(mRootContent);
-  uint32_t offset = aEvent->mInput.mOffset;
 
   LayoutDeviceIntRect rect;
-  while (aEvent->mInput.mLength > aEvent->mReply.mRectArray.Length()) {
+  uint32_t offset = aEvent->mInput.mOffset;
+  const uint32_t kEndOffset = offset + aEvent->mInput.mLength;
+  while (offset < kEndOffset) {
     rv = SetRangeFromFlatTextOffset(range, offset, 1, lineBreakType, true,
                                     nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1449,11 +1450,9 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
 
     int32_t nodeOffset = range->StartOffset();
     AutoTArray<nsRect, 16> charRects;
-    rv = firstFrame->GetCharacterRectsInRange(
-           nodeOffset,
-           aEvent->mInput.mLength - aEvent->mReply.mRectArray.Length(),
-           charRects);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    rv = firstFrame->GetCharacterRectsInRange(nodeOffset, kEndOffset - offset,
+                                              charRects);
+    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
       return rv;
     }
 
@@ -1470,8 +1469,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       rect.width = std::max(1, rect.width);
 
       aEvent->mReply.mRectArray.AppendElement(rect);
+      offset++;
     }
-    offset += charRects.Length();
   }
   aEvent->mSucceeded = true;
   return NS_OK;
