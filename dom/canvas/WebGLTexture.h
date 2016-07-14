@@ -154,9 +154,10 @@ public:
         ImageInfo& operator =(const ImageInfo& a);
 
     public:
-        uint32_t MaxMipmapLevels() const {
+        uint32_t PossibleMipmapLevels() const {
             // GLES 3.0.4, 3.8 - Mipmapping: `floor(log2(largest_of_dims)) + 1`
-            uint32_t largest = std::max(std::max(mWidth, mHeight), mDepth);
+            const uint32_t largest = std::max(std::max(mWidth, mHeight), mDepth);
+            MOZ_ASSERT(largest != 0);
             return FloorLog2Size(largest) + 1;
         }
 
@@ -288,7 +289,7 @@ protected:
 
     void PopulateMipChain(uint32_t baseLevel, uint32_t maxLevel);
 
-    uint32_t MaxEffectiveMipmapLevel(uint32_t texUnit) const;
+    bool MaxEffectiveMipmapLevel(uint32_t texUnit, uint32_t* const out) const;
 
     static uint8_t FaceForTarget(TexImageTarget texImageTarget) {
         GLenum rawTexImageTarget = texImageTarget.get();
@@ -388,6 +389,9 @@ protected:
     bool GetFakeBlackType(const char* funcName, uint32_t texUnit,
                           FakeBlackType* const out_fakeBlack);
 public:
+    bool IsFeedback(WebGLContext* webgl, const char* funcName, uint32_t texUnit,
+                    const std::vector<const WebGLFBAttachPoint*>& fbAttachments) const;
+
     bool ResolveForDraw(const char* funcName, uint32_t texUnit,
                         FakeBlackType* const out_fakeBlack);
 
