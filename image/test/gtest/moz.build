@@ -50,6 +50,7 @@ TEST_HARNESS_FILES.gtest += [
     'green.icon',
     'green.jpg',
     'green.png',
+    'invalid-truncated-metadata.bmp',
     'no-frame-delay.gif',
     'rle4.bmp',
     'rle8.bmp',

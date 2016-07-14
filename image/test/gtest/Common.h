@@ -340,6 +340,7 @@ ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase();
 
 ImageTestCase CorruptTestCase();
+ImageTestCase CorruptBMPWithTruncatedHeader();
 ImageTestCase CorruptICOWithBadBMPWidthTestCase();
 ImageTestCase CorruptICOWithBadBMPHeightTestCase();
 

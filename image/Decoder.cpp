@@ -128,6 +128,12 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
   // terminal state) or there are no more chunks available.
   Maybe<TerminalState> terminalState;
   do {
+    if (GetDecodeDone()) {
+      MOZ_ASSERT_UNREACHABLE("Finished decode without reaching terminal state?");
+      terminalState = Some(TerminalState::SUCCESS);
+      break;
+    }
+
     switch (mIterator->AdvanceOrScheduleResume(aOnResume.get())) {
       case SourceBufferIterator::WAITING:
         // We can't continue because the rest of the data hasn't arrived from
@@ -166,17 +172,17 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
         MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
         terminalState = Some(TerminalState::FAILURE);
     }
-  } while (!GetDecodeDone() && !terminalState);
+  } while (!terminalState);
+
+  MOZ_ASSERT(terminalState);
 
   // If decoding failed, record that fact.
   if (terminalState == Some(TerminalState::FAILURE)) {
     PostDataError();
   }
 
-  // If we're done decoding, perform final cleanup.
-  if (terminalState) {
-    CompleteDecode();
-  }
+  // We're done decoding; perform final cleanup.
+  CompleteDecode();
 
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
 }

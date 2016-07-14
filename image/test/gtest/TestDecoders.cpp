@@ -340,6 +340,16 @@ TEST_F(ImageDecoders, CorruptMultiChunk)
   CheckDecoderMultiChunk(CorruptTestCase());
 }
 
+TEST_F(ImageDecoders, CorruptBMPWithTruncatedHeaderSingleChunk)
+{
+  CheckDecoderSingleChunk(CorruptBMPWithTruncatedHeader());
+}
+
+TEST_F(ImageDecoders, CorruptBMPWithTruncatedHeaderMultiChunk)
+{
+  CheckDecoderMultiChunk(CorruptBMPWithTruncatedHeader());
+}
+
 TEST_F(ImageDecoders, CorruptICOWithBadBMPWidthSingleChunk)
 {
   CheckDecoderSingleChunk(CorruptICOWithBadBMPWidthTestCase());

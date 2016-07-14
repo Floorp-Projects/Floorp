@@ -533,6 +533,15 @@ ImageTestCase CorruptTestCase()
                        TEST_CASE_HAS_ERROR);
 }
 
+ImageTestCase CorruptBMPWithTruncatedHeader()
+{
+  // This BMP has a header which is truncated right between the BIH and the
+  // bitfields, which is a particularly error-prone place w.r.t. the BMP decoder
+  // state machine.
+  return ImageTestCase("invalid-truncated-metadata.bmp", "image/bmp",
+                       IntSize(100, 100), TEST_CASE_HAS_ERROR);
+}
+
 ImageTestCase CorruptICOWithBadBMPWidthTestCase()
 {
   // This ICO contains a BMP icon which has a width that doesn't match the size
