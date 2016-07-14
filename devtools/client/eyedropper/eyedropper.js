@@ -32,10 +32,6 @@ loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
-loader.lazyGetter(this, "XULRuntime", function () {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-});
-
 loader.lazyGetter(this, "l10n", () => Services.strings
   .createBundle("chrome://devtools/locale/eyedropper.properties"));
 
@@ -117,7 +113,7 @@ function Eyedropper(chromeWindow, opts = { copyOnSelect: true, context: "other" 
   this._chromeWindow = chromeWindow;
   this._chromeDocument = chromeWindow.document;
 
-  this._OS = XULRuntime.OS;
+  this._OS = Services.appinfo.OS;
 
   this._dragging = true;
   this.loaded = false;

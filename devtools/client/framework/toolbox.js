@@ -70,9 +70,6 @@ loader.lazyRequireGetter(this, "KeyShortcuts",
 loader.lazyRequireGetter(this, "ZoomKeys",
   "devtools/client/shared/zoom-keys");
 
-loader.lazyGetter(this, "osString", () => {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-});
 loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/har/toolbox-overlay").register;
 });
