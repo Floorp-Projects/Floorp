@@ -346,7 +346,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mDecoderPosition.Connect(aDecoder->CanonicalDecoderPosition());
   mMediaSeekable.Connect(aDecoder->CanonicalMediaSeekable());
   mMediaSeekableOnlyInBufferedRanges.Connect(aDecoder->CanonicalMediaSeekableOnlyInBufferedRanges());
-  mIsVisible.Connect(aDecoder->CanonicalIsVisible());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
@@ -361,7 +360,11 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mExplicitDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mObservedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
-  mWatchManager.Watch(mIsVisible, &MediaDecoderStateMachine::VisibilityChanged);
+
+  if (MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
+    mIsVisible.Connect(aDecoder->CanonicalIsVisible());
+    mWatchManager.Watch(mIsVisible, &MediaDecoderStateMachine::VisibilityChanged);
+  }
 
   // Configure MediaDecoderReaderWrapper.
   SetMediaDecoderReaderWrapperCallback();
@@ -1343,14 +1346,9 @@ void MediaDecoderStateMachine::PlayStateChanged()
 void MediaDecoderStateMachine::VisibilityChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("VisibilityChanged: is visible = %d, video decode suspended = %d, "
-              "reader suspended = %d",
+  DECODER_LOG("VisibilityChanged: mIsVisible=%d, "
+              "mVideoDecodeSuspended=%d, mIsReaderSuspended=%d",
               mIsVisible.Ref(), mVideoDecodeSuspended, mIsReaderSuspended.Ref());
-
-  // Not suspending background videos so there's nothing to do.
-  if (!MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
-    return;
-  }
 
   if (!HasVideo()) {
     return;
@@ -2670,8 +2668,7 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
 bool MediaDecoderStateMachine::IsVideoDecodeSuspended() const
 {
   MOZ_ASSERT(OnTaskQueue());
-  return (MediaPrefs::MDSMSuspendBackgroundVideoEnabled() && mVideoDecodeSuspended) ||
-         mIsReaderSuspended;
+  return mVideoDecodeSuspended || mIsReaderSuspended;
 }
 
 void
