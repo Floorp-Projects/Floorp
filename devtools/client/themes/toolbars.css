@@ -506,7 +506,6 @@
 .devtools-sidebar-tabs {
   -moz-appearance: none;
   margin: 0;
-  height: 100%;
 }
 
 .devtools-sidebar-tabs > tabpanels {
