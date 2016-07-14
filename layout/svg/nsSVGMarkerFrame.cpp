@@ -154,12 +154,12 @@ nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
   nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
   // The CTM of each frame referencing us may be different.
   SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
-  nsSVGUtils::PaintFrameWithEffects(kid, aContext, markTM);
+  DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, aContext, markTM);
 
   if (StyleDisplay()->IsScrollableOverflow())
     aContext.Restore();
 
-  return NS_OK;
+  return (result == DrawResult::SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 SVGBBox

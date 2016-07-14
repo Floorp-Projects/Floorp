@@ -386,9 +386,9 @@ public:
     : mBuilder(aBuilder), mLayerManager(aManager),
       mOffset(aOffset) {}
 
-  virtual void Paint(gfxContext& aContext, nsIFrame *aTarget,
-                     const gfxMatrix& aTransform,
-                     const nsIntRect* aDirtyRect) override
+  virtual DrawResult Paint(gfxContext& aContext, nsIFrame *aTarget,
+                           const gfxMatrix& aTransform,
+                           const nsIntRect* aDirtyRect) override
   {
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
     basic->SetTarget(&aContext);
@@ -401,6 +401,7 @@ public:
     aContext.SetMatrix(aContext.CurrentMatrix().Translate(devPixelOffset));
 
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
+    return DrawResult::SUCCESS;
   }
 
 private:
@@ -769,8 +770,10 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 
     if (clipPathFrame && !isTrivialClip) {
       Matrix clippedMaskTransform;
-      RefPtr<SourceSurface> clipMaskSurface = clipPathFrame->GetClipMask(context, frame, cssPxToDevPxMatrix,
-                                                                         &clippedMaskTransform, maskSurface, maskTransform);
+      RefPtr<SourceSurface> clipMaskSurface =
+        clipPathFrame->GetClipMask(context, frame, cssPxToDevPxMatrix,
+                                   &clippedMaskTransform, maskSurface,
+                                   maskTransform, &result);
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;

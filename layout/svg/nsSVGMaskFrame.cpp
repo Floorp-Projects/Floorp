@@ -266,7 +266,10 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
       m = static_cast<nsSVGElement*>(kid->GetContent())->
             PrependLocalTransformsTo(m);
     }
-    nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m);
+    DrawResult result = nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m);
+    if (result != DrawResult::SUCCESS) {
+      return nullptr;
+    }
   }
 
   RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
