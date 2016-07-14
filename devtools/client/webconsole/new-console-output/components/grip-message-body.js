@@ -8,12 +8,10 @@
 
 // React
 const {
-  createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
 const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
-const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link").VariablesViewLink);
 const { Grip } = require("devtools/client/shared/components/reps/grip");
 
 GripMessageBody.displayName = "GripMessageBody";
@@ -25,7 +23,6 @@ GripMessageBody.propTypes = {
 function GripMessageBody(props) {
   return Rep({
     object: props.grip,
-    objectLink: VariablesViewLink,
     defaultRep: Grip
   });
 }
