@@ -443,11 +443,24 @@ JSTerm.prototype = {
       selectedNodeActor = inspectorSelection.nodeFront.actorID;
     }
 
-    let message = new Messages.Simple(executeString, {
-      category: "input",
-      severity: "log",
-    });
-    this.hud.output.addMessage(message);
+    if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
+      const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
+      let message = new ConsoleCommand({
+        messageText: executeString,
+        source: "javascript",
+        type: "command",
+        // @TODO remove category and severity
+        category: "input",
+        severity: "log",
+      });
+      this.hud.newConsoleOutput.dispatchMessageAdd(message);
+    } else {
+      let message = new Messages.Simple(executeString, {
+        category: "input",
+        severity: "log",
+      });
+      this.hud.output.addMessage(message);
+    }
     let onResult = this._executeResultCallback.bind(this, resultCallback);
 
     let options = {

@@ -51,6 +51,8 @@
 
 FRAME_STATE_GROUP(Generic, nsIFrame)
 
+// This bit is set when the frame is actively being reflowed. It is set in many
+// frames' Reflow() by calling MarkInReflow() and unset in DidReflow().
 FRAME_STATE_BIT(Generic, 0, NS_FRAME_IN_REFLOW)
 
 // This bit is set when a frame is created. After it has been reflowed
@@ -58,7 +60,7 @@ FRAME_STATE_BIT(Generic, 0, NS_FRAME_IN_REFLOW)
 // cleared.
 FRAME_STATE_BIT(Generic, 1, NS_FRAME_FIRST_REFLOW)
 
-// For a continuation frame, if this bit is set, then this a "fluid" 
+// For a continuation frame, if this bit is set, then this a "fluid"
 // continuation, i.e., across a line boundary. Otherwise it's a "hard"
 // continuation, e.g. a bidi continuation.
 FRAME_STATE_BIT(Generic, 2, NS_FRAME_IS_FLUID_CONTINUATION)
@@ -248,8 +250,8 @@ FRAME_STATE_BIT(Generic, 49, NS_FRAME_DESCENDANT_NEEDS_PAINT)
 FRAME_STATE_BIT(Generic, 50, NS_FRAME_IN_POPUP)
 
 // Frame has only descendant frames that needs painting - This includes
-// cross-doc children. This guarantees that all descendents have 
-// NS_FRAME_NEEDS_PAINT and NS_FRAME_ALL_DESCENDANTS_NEED_PAINT, or they 
+// cross-doc children. This guarantees that all descendents have
+// NS_FRAME_NEEDS_PAINT and NS_FRAME_ALL_DESCENDANTS_NEED_PAINT, or they
 // have no display items.
 FRAME_STATE_BIT(Generic, 51, NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)
 
@@ -360,7 +362,7 @@ FRAME_STATE_BIT(SVG, 22, NS_STATE_SVG_POSITIONING_DIRTY)
 //   <text x="10 20 30 40%">abc</text>
 //
 // NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES is used to determine whether
-// to recompute mPositions when the viewport size changes.  So although the 
+// to recompute mPositions when the viewport size changes.  So although the
 // first example above shows that NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES
 // can be true even if a viewport size change will not affect mPositions,
 // determining a completley accurate value for
@@ -452,18 +454,32 @@ FRAME_STATE_BIT(Text, 63, TEXT_IN_OFFSET_CACHE)
 
 FRAME_STATE_GROUP(Block, nsBlockFrame)
 
-// See the meanings at http://www-archive.mozilla.org/newlayout/doc/block-and-line.html
-
 // Something in the block has changed that requires Bidi resolution to be
-// performed on the block. This flag must be either set on all blocks in a 
+// performed on the block. This flag must be either set on all blocks in a
 // continuation chain or none of them.
 FRAME_STATE_BIT(Block, 20, NS_BLOCK_NEEDS_BIDI_RESOLUTION)
 
 FRAME_STATE_BIT(Block, 21, NS_BLOCK_HAS_PUSHED_FLOATS)
+
+// This indicates that this is a frame from which child margins can be
+// calculated. The absence of this flag implies that child margin calculations
+// should ignore the frame and look further up the parent chain. Used in
+// nsBlockReflowContext::ComputeCollapsedBStartMargin() via
+// nsBlockFrame::IsMarginRoot().
+//
+// This causes the nsBlockReflowState's constructor to set the
+// BRS_ISBSTARTMARGINROOT and BRS_ISBENDMARGINROOT flags.
 FRAME_STATE_BIT(Block, 22, NS_BLOCK_MARGIN_ROOT)
+
+// This indicates that a block frame should create its own float manager. This
+// is required by each block frame that can contain floats. The float manager is
+// used to reserve space for the floated frames.
 FRAME_STATE_BIT(Block, 23, NS_BLOCK_FLOAT_MGR)
+
 FRAME_STATE_BIT(Block, 24, NS_BLOCK_HAS_LINE_CURSOR)
+
 FRAME_STATE_BIT(Block, 25, NS_BLOCK_HAS_OVERFLOW_LINES)
+
 FRAME_STATE_BIT(Block, 26, NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)
 
 // Set on any block that has descendant frames in the normal

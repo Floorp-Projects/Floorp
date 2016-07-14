@@ -1262,7 +1262,8 @@ AstDecodeMemorySection(AstDecodeContext& c)
         return AstDecodeFail(c, "expected exported byte");
 
     if (exported) {
-        AstExport* export_ = new(c.lifo) AstExport(AstName(MOZ_UTF16("memory")));
+        AstName fieldName(MOZ_UTF16("memory"));
+        AstExport* export_ = new(c.lifo) AstExport(fieldName, DefinitionKind::Memory);
         if (!export_ || !c.module().append(export_))
             return false;
     }

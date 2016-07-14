@@ -396,8 +396,12 @@ int main(int argc, char** argv)
     return 1;
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    fail("prefs");
+    return 1;
+  }
   prefs->SetIntPref("hangmonitor.timeout", 0);
-  
+
   int rv = 0;
   nsresult scrv;
 

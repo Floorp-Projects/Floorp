@@ -785,7 +785,7 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
         nsAutoString uCharset;
         acceptCharsetValue.Mid(uCharset, offset, cnt);
 
-        if (EncodingUtils::FindEncodingForLabel(uCharset, oCharset))
+        if (EncodingUtils::FindEncodingForLabelNoReplacement(uCharset, oCharset))
           return;
       }
       offset = spPos + 1;

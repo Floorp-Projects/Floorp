@@ -382,8 +382,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
-            GLenum mode;
-            if (!ValidateCurFBForRead(funcName, &usage, &width, &height, &mode))
+            if (!ValidateCurFBForRead(funcName, &usage, &width, &height))
                 return JS::NullValue();
 
             GLint i = 0;
@@ -398,8 +397,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
-            GLenum mode;
-            if (!ValidateCurFBForRead(funcName, &usage, &width, &height, &mode))
+            if (!ValidateCurFBForRead(funcName, &usage, &width, &height))
                 return JS::NullValue();
 
             GLint i = 0;

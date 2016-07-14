@@ -96,7 +96,7 @@ static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of CodePtr to the export's signature's ABI.
 Offsets
-wasm::GenerateEntry(MacroAssembler& masm, const Export& exp, bool usesHeap)
+wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe, bool usesHeap)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -161,11 +161,11 @@ wasm::GenerateEntry(MacroAssembler& masm, const Export& exp, bool usesHeap)
     masm.andToStackPtr(Imm32(~(AsmJSStackAlignment - 1)));
 
     // Bump the stack for the call.
-    masm.reserveStack(AlignBytes(StackArgBytes(exp.sig().args()), AsmJSStackAlignment));
+    masm.reserveStack(AlignBytes(StackArgBytes(fe.sig().args()), AsmJSStackAlignment));
 
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
-    for (ABIArgValTypeIter iter(exp.sig().args()); !iter.done(); iter++) {
+    for (ABIArgValTypeIter iter(fe.sig().args()); !iter.done(); iter++) {
         unsigned argOffset = iter.index() * sizeof(ExportArg);
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
@@ -253,7 +253,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const Export& exp, bool usesHeap)
 
     // Call into the real function.
     masm.assertStackAlignment(AsmJSStackAlignment);
-    masm.call(CallSiteDesc(CallSiteDesc::Relative), exp.funcIndex());
+    masm.call(CallSiteDesc(CallSiteDesc::Relative), fe.funcIndex());
 
     // Recover the stack pointer value before dynamic alignment.
     masm.loadWasmActivation(scratch);
@@ -264,7 +264,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const Export& exp, bool usesHeap)
     masm.Pop(argv);
 
     // Store the return value in argv[0]
-    switch (exp.sig().ret()) {
+    switch (fe.sig().ret()) {
       case ExprType::Void:
         break;
       case ExprType::I32:

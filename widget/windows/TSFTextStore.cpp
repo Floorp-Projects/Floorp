@@ -663,6 +663,34 @@ public:
   virtual ~GetWritingModeName() {}
 };
 
+class GetEscapedUTF8String final : public NS_ConvertUTF16toUTF8
+{
+public:
+  explicit GetEscapedUTF8String(const nsAString& aString)
+    : NS_ConvertUTF16toUTF8(aString)
+  {
+    Escape();
+  }
+  explicit GetEscapedUTF8String(const char16ptr_t aString)
+    : NS_ConvertUTF16toUTF8(aString)
+  {
+    Escape();
+  }
+  GetEscapedUTF8String(const char16ptr_t aString, uint32_t aLength)
+    : NS_ConvertUTF16toUTF8(aString, aLength)
+  {
+    Escape();
+  }
+
+private:
+  void Escape()
+  {
+    ReplaceSubstring("\r", "\\r");
+    ReplaceSubstring("\n", "\\n");
+    ReplaceSubstring("\t", "\\t");
+  }
+};
+
 /******************************************************************/
 /* InputScopeImpl                                                 */
 /******************************************************************/
@@ -1690,7 +1718,7 @@ TSFTextStore::FlushPendingActions()
           ("0x%p   TSFTextStore::FlushPendingActions() "
            "flushing COMPOSITION_UPDATE={ mData=\"%s\", "
            "mRanges=0x%p, mRanges->Length()=%d }",
-           this, NS_ConvertUTF16toUTF8(action.mData).get(),
+           this, GetEscapedUTF8String(action.mData).get(),
            action.mRanges.get(),
            action.mRanges ? action.mRanges->Length() : 0));
 
@@ -1732,7 +1760,7 @@ TSFTextStore::FlushPendingActions()
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
           ("0x%p   TSFTextStore::FlushPendingActions() "
            "flushing COMPOSITION_END={ mData=\"%s\" }",
-           this, NS_ConvertUTF16toUTF8(action.mData).get()));
+           this, GetEscapedUTF8String(action.mData).get()));
 
         // Dispatching eCompositionCommit causes a DOM text event, then,
         // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
@@ -2056,10 +2084,10 @@ TSFTextStore::ContentForTSFRef()
      "mContentForTSF={ mText=\"%s\" (Length()=%u), "
      "mLastCompositionString=\"%s\" (Length()=%u), "
      "mMinTextModifiedOffset=%u }",
-     this, mContentForTSF.Text().Length() <= 20 ?
-       NS_ConvertUTF16toUTF8(mContentForTSF.Text()).get() : "<omitted>",
+     this, mContentForTSF.Text().Length() <= 40 ?
+       GetEscapedUTF8String(mContentForTSF.Text()).get() : "<omitted>",
      mContentForTSF.Text().Length(),
-     NS_ConvertUTF16toUTF8(mContentForTSF.LastCompositionString()).get(),
+     GetEscapedUTF8String(mContentForTSF.LastCompositionString()).get(),
      mContentForTSF.LastCompositionString().Length(),
      mContentForTSF.MinTextModifiedOffset()));
 
@@ -2455,7 +2483,7 @@ TSFTextStore::RecordCompositionUpdateAction()
      "mComposition={ mView=0x%p, mStart=%d, mString=\"%s\" "
      "(Length()=%d) }",
      this, mComposition.mView.get(), mComposition.mStart,
-     NS_ConvertUTF16toUTF8(mComposition.mString).get(),
+     GetEscapedUTF8String(mComposition.mString).get(),
      mComposition.mString.Length()));
 
   if (!mComposition.IsComposing()) {
@@ -2931,7 +2959,7 @@ TSFTextStore::SetText(DWORD dwFlags,
                                          "not-specified",
      acpStart, acpEnd, pchText,
      pchText && cch ?
-       NS_ConvertUTF16toUTF8(pchText, cch).get() : "",
+       GetEscapedUTF8String(pchText, cch).get() : "",
      cch, pChange, GetBoolName(mComposition.IsComposing())));
 
   // Per SDK documentation, and since we don't have better
@@ -3894,7 +3922,7 @@ TSFTextStore::InsertTextAtSelection(DWORD dwFlags,
            dwFlags == TF_IAS_NOQUERY ? "TF_IAS_NOQUERY" :
            dwFlags == TF_IAS_QUERYONLY ? "TF_IAS_QUERYONLY" : "Unknown",
      pchText,
-     pchText && cch ? NS_ConvertUTF16toUTF8(pchText, cch).get() : "",
+     pchText && cch ? GetEscapedUTF8String(pchText, cch).get() : "",
      cch, pacpStart, pacpEnd, pChange,
      GetBoolName(mComposition.IsComposing())));
 
@@ -3990,7 +4018,7 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
     ("0x%p   TSFTextStore::InsertTextAtSelectionInternal("
      "aInsertStr=\"%s\", aTextChange=0x%p), IsComposing=%s",
-     this, NS_ConvertUTF16toUTF8(aInsertStr).get(), aTextChange,
+     this, GetEscapedUTF8String(aInsertStr).get(), aTextChange,
      GetBoolName(mComposition.IsComposing())));
 
   Content& contentForTSF = ContentForTSFRef();
@@ -4023,7 +4051,7 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
        "(Length()=%u) }",
        this, compositionStart->mSelectionStart,
        compositionStart->mSelectionLength,
-       NS_ConvertUTF16toUTF8(compositionEnd->mData).get(),
+       GetEscapedUTF8String(compositionEnd->mData).get(),
        compositionEnd->mData.Length()));
   }
 
@@ -4183,7 +4211,7 @@ TSFTextStore::RecordCompositionEndAction()
     ("0x%p   TSFTextStore::RecordCompositionEndAction(), "
      "mComposition={ mView=0x%p, mString=\"%s\" }",
      this, mComposition.mView.get(),
-     NS_ConvertUTF16toUTF8(mComposition.mString).get()));
+     GetEscapedUTF8String(mComposition.mString).get()));
 
   MOZ_ASSERT(mComposition.IsComposing());
 
@@ -4346,7 +4374,7 @@ TSFTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
        "mComposition={ mStart=%ld, mString=\"%s\" }, "
        "SelectionForTSFRef()={ acpStart=%ld, acpEnd=%ld, style.ase=%s }",
        this, mComposition.mStart,
-       NS_ConvertUTF16toUTF8(mComposition.mString).get(),
+       GetEscapedUTF8String(mComposition.mString).get(),
        selectionForTSF.StartOffset(), selectionForTSF.EndOffset(),
        GetActiveSelEndName(selectionForTSF.ActiveSelEnd())));
   }
@@ -4360,7 +4388,7 @@ TSFTextStore::OnEndComposition(ITfCompositionView* pComposition)
     ("0x%p TSFTextStore::OnEndComposition(pComposition=0x%p), "
      "mComposition={ mView=0x%p, mString=\"%s\" }",
      this, pComposition, mComposition.mView.get(),
-     NS_ConvertUTF16toUTF8(mComposition.mString).get()));
+     GetEscapedUTF8String(mComposition.mString).get()));
 
   AutoPendingActionAndContentFlusher flusher(this);
 
@@ -5203,7 +5231,7 @@ TSFTextStore::CommitCompositionInternal(bool aDiscard)
      "mComposition.mString=\"%s\"",
      this, GetBoolName(aDiscard), mSink.get(), mContext.get(),
      mComposition.mView.get(),
-     NS_ConvertUTF16toUTF8(mComposition.mString).get()));
+     GetEscapedUTF8String(mComposition.mString).get()));
 
   // If the document is locked, TSF will fail to commit composition since
   // TSF needs another document lock.  So, let's put off the request.
@@ -5828,9 +5856,9 @@ TSFTextStore::Content::ReplaceTextWith(LONG aStart,
          "aLength=%d, aReplaceString=\"%s\"), mComposition={ mStart=%d, "
          "mString=\"%s\" }, mLastCompositionString=\"%s\", "
          "mMinTextModifiedOffset=%u, firstDifferentOffset=%u",
-         this, aStart, aLength, NS_ConvertUTF16toUTF8(aReplaceString).get(),
-         mComposition.mStart, NS_ConvertUTF16toUTF8(mComposition.mString).get(),
-         NS_ConvertUTF16toUTF8(mLastCompositionString).get(),
+         this, aStart, aLength, GetEscapedUTF8String(aReplaceString).get(),
+         mComposition.mStart, GetEscapedUTF8String(mComposition.mString).get(),
+         GetEscapedUTF8String(mLastCompositionString).get(),
          mMinTextModifiedOffset, firstDifferentOffset));
     } else {
       firstDifferentOffset =

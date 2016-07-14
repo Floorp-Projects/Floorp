@@ -2056,15 +2056,15 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
 
         // Declare which function is exported which gives us an index into the
-        // module ExportVector.
-        uint32_t exportIndex;
-        if (!mg_.declareExport(Move(fieldChars), func.index(), &exportIndex))
+        // module FuncExportVector.
+        uint32_t funcExportIndex;
+        if (!mg_.declareFuncExport(Move(fieldChars), func.index(), &funcExportIndex))
             return false;
 
         // The exported function might have already been exported in which case
         // the index will refer into the range of AsmJSExports.
-        MOZ_ASSERT(exportIndex <= asmJSMetadata_->asmJSExports.length());
-        return exportIndex < asmJSMetadata_->asmJSExports.length() ||
+        MOZ_ASSERT(funcExportIndex <= asmJSMetadata_->asmJSExports.length());
+        return funcExportIndex < asmJSMetadata_->asmJSExports.length() ||
                asmJSMetadata_->asmJSExports.emplaceBack(func.srcBegin() - asmJSMetadata_->srcStart,
                                                         func.srcEnd() - asmJSMetadata_->srcStart);
     }
