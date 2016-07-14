@@ -52,6 +52,9 @@ class BufferList : private AllocPolicy
     char* End() const { return mData + mSize; }
   };
 
+  template<typename OtherAllocPolicy>
+  friend class BufferList;
+
  public:
   // For the convenience of callers, all segments are required to be a multiple
   // of 8 bytes in capacity. Also, every buffer except the last one is required
@@ -258,6 +261,15 @@ class BufferList : private AllocPolicy
   BufferList<BorrowingAllocPolicy> Borrow(IterImpl& aIter, size_t aSize, bool* aSuccess,
                                           BorrowingAllocPolicy aAP = BorrowingAllocPolicy());
 
+  // Return a new BufferList and move storage from this BufferList to it. The
+  // new BufferList owns the buffers. Move can fail, in which case *aSuccess
+  // will be false upon return. The new BufferList can use a different
+  // AllocPolicy than the original one. The new OtherAllocPolicy is responsible
+  // for freeing buffers, so the OtherAllocPolicy must use freeing method
+  // compatible to the original one.
+  template<typename OtherAllocPolicy>
+  BufferList<OtherAllocPolicy> MoveFallible(bool* aSuccess, OtherAllocPolicy aAP = OtherAllocPolicy());
+
   // Return a new BufferList that adopts the byte range starting at Iter so that
   // range [aIter, aIter + aSize) is transplanted to the returned BufferList.
   // Contents of the buffer before aIter + aSize is left undefined.
@@ -428,7 +440,7 @@ BufferList<AllocPolicy>::Borrow(IterImpl& aIter, size_t aSize, bool* aSuccess,
   while (size) {
     size_t toAdvance = std::min(size, aIter.RemainingInSegment());
 
-    if (!toAdvance || !result.mSegments.append(Segment(aIter.mData, toAdvance, toAdvance))) {
+    if (!toAdvance || !result.mSegments.append(typename BufferList<BorrowingAllocPolicy>::Segment(aIter.mData, toAdvance, toAdvance))) {
       *aSuccess = false;
       return result;
     }
@@ -437,6 +449,30 @@ BufferList<AllocPolicy>::Borrow(IterImpl& aIter, size_t aSize, bool* aSuccess,
   }
 
   result.mSize = aSize;
+  *aSuccess = true;
+  return result;
+}
+
+template<typename AllocPolicy> template<typename OtherAllocPolicy>
+BufferList<OtherAllocPolicy>
+BufferList<AllocPolicy>::MoveFallible(bool* aSuccess, OtherAllocPolicy aAP)
+{
+  BufferList<OtherAllocPolicy> result(0, 0, mStandardCapacity, aAP);
+
+  IterImpl iter = Iter();
+  while (!iter.Done()) {
+    size_t toAdvance = iter.RemainingInSegment();
+
+    if (!toAdvance || !result.mSegments.append(typename BufferList<OtherAllocPolicy>::Segment(iter.mData, toAdvance, toAdvance))) {
+      *aSuccess = false;
+      return result;
+    }
+    iter.Advance(*this, toAdvance);
+  }
+
+  result.mSize = mSize;
+  mSegments.clear();
+  mSize = 0;
   *aSuccess = true;
   return result;
 }
