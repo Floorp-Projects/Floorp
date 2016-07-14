@@ -366,6 +366,58 @@ MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
   return Preferences::GetBool("media.mediasource.enabled");
 }
 
+void
+MediaSource::SetLiveSeekableRange(double aStart, double aEnd, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // 1. If the readyState attribute is not "open" then throw an InvalidStateError
+  // exception and abort these steps.
+  // 2. If the updating attribute equals true on any SourceBuffer in
+  // sourceBuffers, then throw an InvalidStateError exception and abort these
+  // steps.
+  if (mReadyState != MediaSourceReadyState::Open ||
+      mSourceBuffers->AnyUpdating()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // 3. If start is negative or greater than end, then throw a TypeError
+  // exception and abort these steps.
+  if (aStart < 0 || aStart > aEnd) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    return;
+  }
+
+  // 4. Set live seekable range to be a new normalized TimeRanges object
+  // containing a single range whose start position is start and end position is
+  // end.
+  mLiveSeekableRange =
+    Some(media::TimeInterval(media::TimeUnit::FromSeconds(aStart),
+                             media::TimeUnit::FromSeconds(aEnd)));
+}
+
+void
+MediaSource::ClearLiveSeekableRange(ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // 1. If the readyState attribute is not "open" then throw an InvalidStateError
+  // exception and abort these steps.
+  // 2. If the updating attribute equals true on any SourceBuffer in
+  // sourceBuffers, then throw an InvalidStateError exception and abort these
+  // steps.
+  if (mReadyState != MediaSourceReadyState::Open ||
+      mSourceBuffers->AnyUpdating()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // 3. If live seekable range contains a range, then set live seekable range to
+  // be a new empty TimeRanges object.
+  mLiveSeekableRange.reset();
+}
+
 bool
 MediaSource::Attach(MediaSourceDecoder* aDecoder)
 {
