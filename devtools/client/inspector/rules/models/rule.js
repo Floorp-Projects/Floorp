@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
+const {Ci} = require("chrome");
 const promise = require("promise");
 const CssLogic = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
@@ -14,11 +14,7 @@ const {TextProperty} =
       require("devtools/client/inspector/rules/models/text-property");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "osString", function () {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-});
+const Services = require("Services");
 
 /**
  * Rule is responsible for the following:
@@ -660,7 +656,7 @@ Rule.prototype = {
   stringifyRule: function () {
     let selectorText = this.selectorText;
     let cssText = "";
-    let terminator = osString === "WINNT" ? "\r\n" : "\n";
+    let terminator = Services.appinfo.OS === "WINNT" ? "\r\n" : "\n";
 
     for (let textProp of this.textProps) {
       if (!textProp.invisible) {
