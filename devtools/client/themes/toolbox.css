@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --tool-options-image: url(images/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
   --dock-bottom-image: url(chrome://devtools/skin/images/dock-bottom.svg);
   --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
@@ -24,7 +23,6 @@
 }
 
 .theme-firebug {
-  --tool-options-image: url(images/firebug/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
   --dock-bottom-image: url(chrome://devtools/skin/images/firebug/dock-bottom.svg);
   --dock-side-image: url(chrome://devtools/skin/images/firebug/dock-side.svg);
