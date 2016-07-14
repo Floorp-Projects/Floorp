@@ -13,7 +13,6 @@ def FirefoxBranding():
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         FINAL_TARGET_FILES['..'] += [
             'firefox.VisualElementsManifest.xml',
-            'VisualElementsManifest.xml',
         ]
         FINAL_TARGET_FILES.VisualElements += [
             'VisualElements_150.png',
