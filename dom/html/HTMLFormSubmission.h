@@ -211,6 +211,11 @@ protected:
   nsresult AddPostDataStream();
 
 private:
+  void AddDataChunk(const nsACString& aName,
+                    const nsACString& aFilename,
+                    const nsACString& aContentType,
+                    nsIInputStream* aInputStream,
+                    uint64_t aInputStreamSize);
   /**
    * The post data stream as it is so far.  This is a collection of smaller
    * chunks--string streams and file streams interleaved to make one big POST
