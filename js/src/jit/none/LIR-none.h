@@ -87,14 +87,6 @@ class LModI : public LBinaryMath<1>
     const LDefinition* callTemp() { MOZ_CRASH(); }
     MMod* mir() const { MOZ_CRASH(); }
 };
-class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
-{
-  public:
-    LAsmJSLoadFuncPtr(const LAllocation&, const LDefinition&) { MOZ_CRASH(); }
-    const MAsmJSLoadFuncPtr* mir() const { MOZ_CRASH(); }
-    const LAllocation* index() { MOZ_CRASH(); }
-    const LDefinition* temp() { MOZ_CRASH(); }
-};
 class LAsmJSUInt32ToDouble : public LInstructionHelper<1, 1, 0>
 {
   public:
