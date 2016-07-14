@@ -652,16 +652,19 @@ class DeviceManagerADB(DeviceManager):
 
     def chmodDir(self, remoteDir, mask="777"):
         if (self.dirExists(remoteDir)):
-            files = self.listFiles(remoteDir.strip())
-            for f in files:
-                remoteEntry = remoteDir.strip() + "/" + f.strip()
-                if (self.dirExists(remoteEntry)):
-                    self.chmodDir(remoteEntry)
-                else:
-                    self._checkCmd(["shell", "chmod", mask, remoteEntry], timeout=self.short_timeout)
-                    self._logger.info("chmod %s" % remoteEntry)
-            self._checkCmd(["shell", "chmod", mask, remoteDir], timeout=self.short_timeout)
-            self._logger.debug("chmod %s" % remoteDir)
+            if '/sdcard' in remoteDir:
+                self._logger.debug("chmod %s -- skipped (/sdcard)" % remoteDir)
+            else:
+                files = self.listFiles(remoteDir.strip())
+                for f in files:
+                    remoteEntry = remoteDir.strip() + "/" + f.strip()
+                    if (self.dirExists(remoteEntry)):
+                        self.chmodDir(remoteEntry)
+                    else:
+                        self._checkCmd(["shell", "chmod", mask, remoteEntry], timeout=self.short_timeout)
+                        self._logger.info("chmod %s" % remoteEntry)
+                self._checkCmd(["shell", "chmod", mask, remoteDir], timeout=self.short_timeout)
+                self._logger.debug("chmod %s" % remoteDir)
         else:
             self._checkCmd(["shell", "chmod", mask, remoteDir.strip()], timeout=self.short_timeout)
             self._logger.debug("chmod %s" % remoteDir.strip())
