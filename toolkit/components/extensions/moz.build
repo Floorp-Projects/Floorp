@@ -15,10 +15,6 @@ EXTRA_JS_MODULES += [
     'Schemas.jsm',
 ]
 
-EXTRA_COMPONENTS += [
-    'extensions-toolkit.manifest',
-]
-
 DIRS += ['schemas']
 
 JAR_MANIFESTS += ['jar.mn']

@@ -6,10 +6,6 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
-EXTRA_COMPONENTS += [
-    'extensions-mobile.manifest',
-]
-
 DIRS += ['schemas']
 
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
