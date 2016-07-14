@@ -38,10 +38,10 @@ add_task(function* () {
 
   info("Test invalid tab id");
   try {
-    yield targetFromURL(new URL("http://foo?type=tab&id=1"));
+    yield targetFromURL(new URL("http://foo?type=tab&id=10000"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(e.message, "targetFromURL, tab with outerWindowID:'1' doesn't exist");
+    is(e.message, "targetFromURL, tab with outerWindowID:'10000' doesn't exist");
   }
 
   info("Test parent process");
