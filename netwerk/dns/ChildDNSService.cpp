@@ -256,7 +256,6 @@ ChildDNSService::Init()
   int  proxyType = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  prefs->GetBoolPref(kPrefNameDisablePrefetch, &disablePrefetch);
   if (prefs) {
     prefs->GetIntPref("network.proxy.type", &proxyType);
     prefs->GetBoolPref(kPrefNameDisablePrefetch, &disablePrefetch);

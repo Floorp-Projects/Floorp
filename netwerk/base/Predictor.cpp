@@ -392,11 +392,6 @@ Predictor::InstallObserver()
   rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   Preferences::AddBoolVarCache(&mEnabled, PREDICTOR_ENABLED_PREF, true);
   Preferences::AddBoolVarCache(&mEnableHoverOnSSL,
                                PREDICTOR_SSL_HOVER_PREF, false);
