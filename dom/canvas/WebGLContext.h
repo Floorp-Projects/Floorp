@@ -570,160 +570,108 @@ public:
     void StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
                            GLenum dppass);
 
+    //////
+
     void Uniform1i(WebGLUniformLocation* loc, GLint x);
     void Uniform2i(WebGLUniformLocation* loc, GLint x, GLint y);
     void Uniform3i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z);
-    void Uniform4i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z,
-                   GLint w);
+    void Uniform4i(WebGLUniformLocation* loc, GLint x, GLint y, GLint z, GLint w);
 
     void Uniform1f(WebGLUniformLocation* loc, GLfloat x);
     void Uniform2f(WebGLUniformLocation* loc, GLfloat x, GLfloat y);
     void Uniform3f(WebGLUniformLocation* loc, GLfloat x, GLfloat y, GLfloat z);
-    void Uniform4f(WebGLUniformLocation* loc, GLfloat x, GLfloat y, GLfloat z,
-                   GLfloat w);
+    void Uniform4f(WebGLUniformLocation* loc, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
-    // Int array
-    void Uniform1iv(WebGLUniformLocation* loc, const dom::Int32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform1iv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform1iv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLint>& arr)
-    {
-        Uniform1iv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform1iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLint* data);
+    //////////////////////////
 
-    void Uniform2iv(WebGLUniformLocation* loc, const dom::Int32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform2iv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform2iv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLint>& arr)
-    {
-        Uniform2iv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform2iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLint* data);
+protected:
+    template<typename elemT, typename arrT>
+    struct Arr {
+        size_t dataCount;
+        const elemT* data;
 
-    void Uniform3iv(WebGLUniformLocation* loc, const dom::Int32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform3iv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform3iv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLint>& arr)
-    {
-        Uniform3iv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform3iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLint* data);
+        explicit Arr(const arrT& arr) {
+            arr.ComputeLengthAndData();
+            dataCount = arr.Length();
+            data = arr.Data();
+        }
 
-    void Uniform4iv(WebGLUniformLocation* loc, const dom::Int32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform4iv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform4iv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLint>& arr)
-    {
-        Uniform4iv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform4iv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLint* data);
+        explicit Arr(const dom::Sequence<elemT>& arr) {
+            dataCount = arr.Length();
+            data = arr.Elements();
+        }
+    };
 
-    // Float array
-    void Uniform1fv(WebGLUniformLocation* loc, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform1fv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform1fv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLfloat>& arr)
-    {
-        Uniform1fv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform1fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLfloat* data);
+    typedef Arr<GLint, dom::Int32Array> IntArr;
+    typedef Arr<GLfloat, dom::Float32Array> FloatArr;
 
-    void Uniform2fv(WebGLUniformLocation* loc, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform2fv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform2fv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLfloat>& arr)
-    {
-        Uniform2fv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform2fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLfloat* data);
+    ////////////////
 
-    void Uniform3fv(WebGLUniformLocation* loc, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform3fv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform3fv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLfloat>& arr)
-    {
-        Uniform3fv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform3fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLfloat* data);
+    void UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                    const IntArr& arr);
 
-    void Uniform4fv(WebGLUniformLocation* loc, const dom::Float32Array& arr) {
-        arr.ComputeLengthAndData();
-        Uniform4fv_base(loc, arr.Length(), arr.Data());
-    }
-    void Uniform4fv(WebGLUniformLocation* loc,
-                    const dom::Sequence<GLfloat>& arr)
-    {
-        Uniform4fv_base(loc, arr.Length(), arr.Elements());
-    }
-    void Uniform4fv_base(WebGLUniformLocation* loc, size_t arrayLength,
-                         const GLfloat* data);
+    void UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* loc,
+                    const FloatArr& arr);
 
-    // Matrix
-    void UniformMatrix2fv(WebGLUniformLocation* loc, WebGLboolean transpose,
-                          const dom::Float32Array& value)
-    {
-        value.ComputeLengthAndData();
-        UniformMatrix2fv_base(loc, transpose, value.Length(), value.Data());
-    }
-    void UniformMatrix2fv(WebGLUniformLocation* loc, WebGLboolean transpose,
-                          const dom::Sequence<float>& value)
-    {
-        UniformMatrix2fv_base(loc, transpose, value.Length(),
-                              value.Elements());
-    }
-    void UniformMatrix2fv_base(WebGLUniformLocation* loc, bool transpose,
-                               size_t arrayLength, const float* data);
+    void UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
+                            WebGLUniformLocation* loc, bool transpose,
+                            const FloatArr& arr);
 
-    void UniformMatrix3fv(WebGLUniformLocation* loc, WebGLboolean transpose,
-                          const dom::Float32Array& value)
-    {
-        value.ComputeLengthAndData();
-        UniformMatrix3fv_base(loc, transpose, value.Length(), value.Data());
-    }
-    void UniformMatrix3fv(WebGLUniformLocation* loc, WebGLboolean transpose,
-                          const dom::Sequence<float>& value)
-    {
-        UniformMatrix3fv_base(loc, transpose, value.Length(), value.Elements());
-    }
-    void UniformMatrix3fv_base(WebGLUniformLocation* loc, bool transpose,
-                               size_t arrayLength, const float* data);
+    ////////////////
 
-    void UniformMatrix4fv(WebGLUniformLocation* loc, WebGLboolean transpose,
-                          const dom::Float32Array& value)
-    {
-        value.ComputeLengthAndData();
-        UniformMatrix4fv_base(loc, transpose, value.Length(), value.Data());
+public:
+    template<typename T>
+    void Uniform1iv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNiv("uniform1iv", 1, loc, IntArr(arr));
     }
-    void UniformMatrix4fv(WebGLUniformLocation* loc, bool transpose,
-                          const dom::Sequence<float>& value)
-    {
-        UniformMatrix4fv_base(loc, transpose, value.Length(),
-                              value.Elements());
+    template<typename T>
+    void Uniform2iv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNiv("uniform2iv", 2, loc, IntArr(arr));
     }
-    void UniformMatrix4fv_base(WebGLUniformLocation* loc, bool transpose,
-                               size_t arrayLength, const float* data);
+    template<typename T>
+    void Uniform3iv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNiv("uniform3iv", 3, loc, IntArr(arr));
+    }
+    template<typename T>
+    void Uniform4iv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNiv("uniform4iv", 4, loc, IntArr(arr));
+    }
+
+    //////
+
+    template<typename T>
+    void Uniform1fv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNfv("uniform1fv", 1, loc, FloatArr(arr));
+    }
+    template<typename T>
+    void Uniform2fv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNfv("uniform2fv", 2, loc, FloatArr(arr));
+    }
+    template<typename T>
+    void Uniform3fv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNfv("uniform3fv", 3, loc, FloatArr(arr));
+    }
+    template<typename T>
+    void Uniform4fv(WebGLUniformLocation* loc, const T& arr) {
+        UniformNfv("uniform4fv", 4, loc, FloatArr(arr));
+    }
+
+    //////
+
+    template<typename T>
+    void UniformMatrix2fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix2fv", 2, 2, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix3fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix3fv", 3, 3, loc, transpose, FloatArr(arr));
+    }
+    template<typename T>
+    void UniformMatrix4fv(WebGLUniformLocation* loc, bool transpose, const T& arr) {
+        UniformMatrixAxBfv("uniformMatrix4fv", 4, 4, loc, transpose, FloatArr(arr));
+    }
+
+    ////////////////////////////////////
 
     void UseProgram(WebGLProgram* prog);
 
@@ -731,22 +679,19 @@ public:
                                    uint32_t arrayLength);
     bool ValidateUniformLocation(WebGLUniformLocation* loc, const char* funcName);
     bool ValidateUniformSetter(WebGLUniformLocation* loc, uint8_t setterSize,
-                               GLenum setterType, const char* info,
-                               GLuint* out_rawLoc);
+                               GLenum setterType, const char* funcName);
     bool ValidateUniformArraySetter(WebGLUniformLocation* loc,
                                     uint8_t setterElemSize, GLenum setterType,
-                                    size_t setterArraySize, const char* info,
-                                    GLuint* out_rawLoc,
-                                    GLsizei* out_numElementsToUpload);
+                                    uint32_t setterArraySize, const char* funcName,
+                                    uint32_t* out_numElementsToUpload);
     bool ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
                                           uint8_t setterCols,
                                           uint8_t setterRows,
                                           GLenum setterType,
-                                          size_t setterArraySize,
+                                          uint32_t setterArraySize,
                                           bool setterTranspose,
-                                          const char* info,
-                                          GLuint* out_rawLoc,
-                                          GLsizei* out_numElementsToUpload);
+                                          const char* funcName,
+                                          uint32_t* out_numElementsToUpload);
     void ValidateProgram(WebGLProgram* prog);
     bool ValidateUniformLocation(const char* info, WebGLUniformLocation* loc);
     bool ValidateSamplerUniformSetter(const char* info,
