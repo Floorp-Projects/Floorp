@@ -124,10 +124,10 @@ function closeBrowserAction(extension, win = window) {
   return Promise.resolve();
 }
 
-function* openContextMenu(id) {
+function* openContextMenu(selector="#img1") {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter(id, {type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
+  yield BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, gBrowser.selectedBrowser);
   yield popupShownPromise;
   return contentAreaContextMenu;
 }
@@ -139,8 +139,8 @@ function* closeContextMenu() {
   yield popupHiddenPromise;
 }
 
-function* openExtensionContextMenu() {
-  let contextMenu = yield openContextMenu("#img1");
+function* openExtensionContextMenu(selector="#img1") {
+  let contextMenu = yield openContextMenu(selector);
   let topLevelMenu = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
 
   // Return null if the extension only has one item and therefore no extension menu.
