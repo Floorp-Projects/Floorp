@@ -76,6 +76,8 @@ ElemSizeFromType(GLenum elemType)
     }
 }
 
+////////////////////
+
 WebGLActiveInfo::WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType,
                                  bool isArray, const nsACString& baseUserName,
                                  const nsACString& baseMappedName)
@@ -87,6 +89,32 @@ WebGLActiveInfo::WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum el
     , mElemSize(ElemSizeFromType(elemType))
     , mBaseMappedName(baseMappedName)
 { }
+
+bool
+WebGLActiveInfo::IsSampler() const
+{
+    switch (mElemType) {
+    case LOCAL_GL_SAMPLER_2D:
+    case LOCAL_GL_SAMPLER_3D:
+    case LOCAL_GL_SAMPLER_CUBE:
+    case LOCAL_GL_SAMPLER_2D_SHADOW:
+    case LOCAL_GL_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
+    case LOCAL_GL_SAMPLER_CUBE_SHADOW:
+    case LOCAL_GL_INT_SAMPLER_2D:
+    case LOCAL_GL_INT_SAMPLER_3D:
+    case LOCAL_GL_INT_SAMPLER_CUBE:
+    case LOCAL_GL_INT_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_3D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        return true;
+
+    default:
+        return false;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

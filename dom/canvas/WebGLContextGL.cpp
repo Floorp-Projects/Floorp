@@ -971,10 +971,10 @@ WebGLContext::GetUniform(JSContext* js, WebGLProgram* prog,
     if (!ValidateObject("getUniform: `location`", loc))
         return JS::NullValue();
 
-    if (!loc->ValidateForProgram(prog, this, "getUniform"))
+    if (!loc->ValidateForProgram(prog, "getUniform"))
         return JS::NullValue();
 
-    return loc->GetUniform(js, this);
+    return loc->GetUniform(js);
 }
 
 already_AddRefed<WebGLUniformLocation>
