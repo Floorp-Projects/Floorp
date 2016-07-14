@@ -16,8 +16,10 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -294,7 +296,11 @@ public abstract class HomeFragment extends Fragment {
             // For Top Sites grid items, position is required in case item is Pinned.
             final int position = info instanceof TopSitesGridContextMenuInfo ? info.position : -1;
 
-            (new RemoveItemByUrlTask(context, info.url, info.itemType, position)).execute();
+            if (info.hasPartnerBookmarkId()) {
+                new RemovePartnerBookmarkTask(context, info.bookmarkId).execute();
+            } else {
+                new RemoveItemByUrlTask(context, info.url, info.itemType, position).execute();
+            }
             return true;
         }
 
@@ -437,6 +443,37 @@ public abstract class HomeFragment extends Fragment {
         @Override
         public void onPostExecute(Void result) {
             SnackbarBuilder.builder((Activity) mContext)
+                    .message(R.string.page_removed)
+                    .duration(Snackbar.LENGTH_LONG)
+                    .buildAndShow();
+        }
+    }
+
+    private static class RemovePartnerBookmarkTask extends UIAsyncTask.WithoutParams<Void> {
+        private Context context;
+        private long bookmarkId;
+
+        public RemovePartnerBookmarkTask(Context context, long bookmarkId) {
+            super(ThreadUtils.getBackgroundHandler());
+
+            this.context = context;
+            this.bookmarkId = bookmarkId;
+        }
+
+        @Override
+        protected Void doInBackground() {
+            context.getContentResolver().delete(
+                    PartnerBookmarksProviderProxy.getUriForBookmark(context, bookmarkId),
+                    null,
+                    null
+            );
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            SnackbarBuilder.builder((Activity) context)
                     .message(R.string.page_removed)
                     .duration(Snackbar.LENGTH_LONG)
                     .buildAndShow();
