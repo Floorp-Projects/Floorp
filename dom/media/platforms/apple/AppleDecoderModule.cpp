@@ -13,6 +13,7 @@
 #include "MediaPrefs.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
+#include "gfxConfig.h"
 
 namespace mozilla {
 
@@ -52,8 +53,7 @@ AppleDecoderModule::Init()
 
   sIsVTHWAvailable = AppleVTLinker::skPropEnableHWAccel != nullptr;
 
-  sCanUseHardwareVideoDecoder = loaded &&
-    gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
+  sCanUseHardwareVideoDecoder = loaded && gfxConfig::IsEnabled(gfx::Feature::HW_VIDEO_DECODING);
 
   sInitialized = true;
 }
