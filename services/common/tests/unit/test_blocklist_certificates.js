@@ -105,6 +105,13 @@ add_task(function* test_something(){
   yield OneCRLBlocklistClient.maybeSync(3000, Date.now());
   let newValue = Services.prefs.getIntPref("services.blocklist.onecrl.checked");
   do_check_neq(newValue, 0);
+
+  // Check that a sync completes even when there's bad data in the
+  // collection. This will throw on fail, so just calling maybeSync is an
+  // acceptible test.
+  Services.prefs.setCharPref("services.settings.server",
+                             `http://localhost:${server.identity.primaryPort}/v1`);
+  yield OneCRLBlocklistClient.maybeSync(5000, Date.now());
 });
 
 function run_test() {
@@ -182,6 +189,32 @@ function getSampleResponse(req, port) {
         "pubKeyHash":"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
         "id":"dabafde9-df4a-ddba-2548-748da04cc02d",
         "last_modified":4000
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=4000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"5000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data":[{
+        "issuerName":"not a base64 encoded issuer",
+        "serialNumber":"not a base64 encoded serial",
+        "id":"dabafde9-df4a-ddba-2548-748da04cc02e",
+        "last_modified":5000
+      },{
+        "subject":"not a base64 encoded subject",
+        "pubKeyHash":"not a base64 encoded pubKeyHash",
+        "id":"dabafde9-df4a-ddba-2548-748da04cc02f",
+        "last_modified":5000
+      },{
+        "subject":"MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
+        "pubKeyHash":"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
+        "id":"dabafde9-df4a-ddba-2548-748da04cc02g",
+        "last_modified":5000
       }]})
     }
   };
