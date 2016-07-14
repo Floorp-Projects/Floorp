@@ -1489,7 +1489,8 @@ IMContextWrapper::DispatchCompositionChangeEvent(
     // on tab parent.
     mDispatchedCompositionString = aCompositionString;
     mLayoutChanged = false;
-    mCompositionTargetRange.mOffset = rangeArray->TargetClauseOffset();
+    mCompositionTargetRange.mOffset =
+        mCompositionStart + rangeArray->TargetClauseOffset();
     mCompositionTargetRange.mLength = rangeArray->TargetClauseLength();
 
     RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
