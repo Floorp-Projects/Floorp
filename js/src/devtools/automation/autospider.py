@@ -55,6 +55,8 @@ parser.add_argument('--skip-tests', '--skip', type=str, metavar='TESTSUITE',
 parser.add_argument('--build-only', '--build',
                     dest='skip_tests', action='store_const', const='all',
                     help="only do a build, do not run any tests")
+parser.add_argument('--nobuild', action='store_true',
+                    help='Do not do a build. Rerun tests on existing build.')
 parser.add_argument('variant', type=str,
                     help='type of job requested, see variants/ subdir')
 args = parser.parse_args()
@@ -136,10 +138,11 @@ if args.variant == 'nonunified':
             subprocess.check_call(['sed', '-i', 's/UNIFIED_SOURCES/SOURCES/',
                                    os.path.join(dirpath, 'moz.build')])
 
-autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
-if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
-    logging.error('autoconf failed')
-    sys.exit(1)
+if not args.nobuild:
+    autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
+    if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
+        logging.error('autoconf failed')
+        sys.exit(1)
 
 OBJDIR = os.path.join(DIR.source, args.objdir)
 OUTDIR = os.path.join(OBJDIR, "out")
@@ -237,7 +240,7 @@ timer = Timer(args.timeout, killall)
 timer.daemon = True
 timer.start()
 
-ensure_dir_exists(OBJDIR, clobber=not args.dep)
+ensure_dir_exists(OBJDIR, clobber=not args.dep and not args.nobuild)
 ensure_dir_exists(OUTDIR)
 
 
@@ -264,11 +267,12 @@ for k, v in variant.get('env', {}).items():
         OUTDIR=OUTDIR,
     )
 
-CONFIGURE_ARGS += ' --enable-nspr-build'
-CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
-run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
+if not args.nobuild:
+    CONFIGURE_ARGS += ' --enable-nspr-build'
+    CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
+    run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
 
-run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
+    run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
 
 COMMAND_PREFIX = []
 # On Linux, disable ASLR to make shell builds a bit more reproducible.
