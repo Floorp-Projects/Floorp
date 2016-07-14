@@ -831,32 +831,15 @@ VectorImage::Draw(gfxContext* aContext,
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
-  Maybe<SVGImageContext> svgContext;
-  // If FLAG_FORCE_PRESERVEASPECTRATIO_NONE bit is set, that mean we should
-  // overwrite SVG preserveAspectRatio attibute of this image with none, and
-  // always stretch this image to viewport non-uniformly.
-  // And we can do this only if the caller pass in the the SVG viewport, via
-  // aSVGContext.
-  if ((aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext.isSome()) {
-    Maybe<SVGPreserveAspectRatio> aspectRatio =
-      Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
-                                  SVG_MEETORSLICE_UNKNOWN));
-    svgContext =
-      Some(SVGImageContext(aSVGContext->GetViewportSize(),
-                           aspectRatio));
-  } else {
-    svgContext = aSVGContext;
-  }
-
   float animTime =
     (aWhichFrame == FRAME_FIRST) ? 0.0f
                                  : mSVGDocumentWrapper->GetCurrentTime();
-  AutoSVGRenderingState autoSVGState(svgContext, animTime,
+  AutoSVGRenderingState autoSVGState(aSVGContext, animTime,
                                      mSVGDocumentWrapper->GetRootSVGElem());
 
 
   SVGDrawingParameters params(aContext, aSize, aRegion, aFilter,
-                              svgContext, animTime, aFlags);
+                              aSVGContext, animTime, aFlags);
 
   if (aFlags & FLAG_BYPASS_SURFACE_CACHE) {
     CreateSurfaceAndShow(params);
