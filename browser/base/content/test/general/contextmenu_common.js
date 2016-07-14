@@ -41,24 +41,23 @@ function getVisibleMenuItems(aMenu, aData) {
         if (key)
             key = key.toLowerCase();
 
-        var isPageMenuItem = item.hasAttribute("generateditemid");
+        var isGenerated = item.hasAttribute("generateditemid");
 
         if (item.nodeName == "menuitem") {
-            var isGenerated = item.className == "spell-suggestion"
-                              || item.className == "sendtab-target";
-            if (isGenerated) {
-              is(item.id, "", "child menuitem #" + i + " is generated");
-            } else if (isPageMenuItem) {
-              is(item.id, "", "child menuitem #" + i + " is a generated page menu item");
+            var isSpellSuggestion = item.className == "spell-suggestion";
+            if (isSpellSuggestion) {
+              is(item.id, "", "child menuitem #" + i + " is a spelling suggestion");
+            } else if (isGenerated) {
+              is(item.id, "", "child menuitem #" + i + " is a generated item");
             } else {
               ok(item.id, "child menuitem #" + i + " has an ID");
             }
             var label = item.getAttribute("label");
             ok(label.length, "menuitem " + item.id + " has a label");
-            if (isGenerated) {
-              is(key, "", "Generated items shouldn't have an access key");
+            if (isSpellSuggestion) {
+              is(key, "", "Spell suggestions shouldn't have an access key");
               items.push("*" + label);
-            } else if (isPageMenuItem) {
+            } else if (isGenerated) {
               items.push("+" + label);
             } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
                        item.id != "spell-no-suggestions" &&
@@ -72,10 +71,10 @@ function getVisibleMenuItems(aMenu, aData) {
               else
                   accessKeys[key] = item.id;
             }
-            if (!isGenerated && !isPageMenuItem) {
+            if (!isSpellSuggestion && !isGenerated) {
               items.push(item.id);
             }
-            if (isPageMenuItem) {
+            if (isGenerated) {
               var p = {};
               p.type = item.getAttribute("type");
               p.icon = item.getAttribute("image");
@@ -90,11 +89,11 @@ function getVisibleMenuItems(aMenu, aData) {
             items.push("---");
             items.push(null);
         } else if (item.nodeName == "menu") {
-            if (isPageMenuItem) {
+            if (isGenerated) {
                 item.id = "generated-submenu-" + aData.generatedSubmenuId++;
             }
             ok(item.id, "child menu #" + i + " has an ID");
-            if (!isPageMenuItem) {
+            if (!isGenerated) {
                 ok(key, "menu has an access key");
                 if (accessKeys[key])
                     ok(false, "menu " + item.id + " has same accesskey as " + accessKeys[key]);
