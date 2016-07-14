@@ -3714,10 +3714,10 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     return NSToCoordRound(textRunMetrics.mAdvanceWidth);
   }
 
-  void SetFillGradientContext(gfxContext* aThebes)
+  already_AddRefed<gfxPattern> GetGradientFor(Style aStyle)
   {
     RefPtr<gfxPattern> pattern;
-    CanvasGradient* gradient = mState->gradientStyles[Style::FILL];
+    CanvasGradient* gradient = mState->gradientStyles[aStyle];
     CanvasGradient::Type type = gradient->GetType();
 
     switch (type) {
@@ -3738,13 +3738,14 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     }
     default:
       MOZ_ASSERT(false, "Should be linear or radial gradient.");
-      return;
+      return nullptr;
     }
 
     for (auto stop : gradient->mRawStops) {
       pattern->AddColorStop(stop.offset, stop.color);
     }
-    aThebes->SetPattern(pattern);
+
+    return pattern.forget();
   }
 
   gfx::ExtendMode CvtCanvasRepeatToGfxRepeat(
@@ -3764,12 +3765,12 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     }
   }
 
-  void SetFillPatternContext(gfxContext* aThebes)
+  already_AddRefed<gfxPattern> GetPatternFor(Style aStyle)
   {
-    const CanvasPattern* pat = mState->patternStyles[Style::FILL];
+    const CanvasPattern* pat = mState->patternStyles[aStyle];
     RefPtr<gfxPattern> pattern = new gfxPattern(pat->mSurface, Matrix());
     pattern->SetExtend(CvtCanvasRepeatToGfxRepeat(pat->mRepeat));
-    aThebes->SetPattern(pattern);
+    return pattern.forget();
   }
 
   virtual void DrawText(nscoord aXOffset, nscoord aWidth)
@@ -3777,7 +3778,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     gfxPoint point = mPt;
     bool rtl = mTextRun->IsRightToLeft();
     bool verticalRun = mTextRun->IsVertical();
-    bool centerBaseline = mTextRun->UseCenterBaseline();
+    RefPtr<gfxPattern> pattern;
 
     gfxFloat& inlineCoord = verticalRun ? point.y : point.x;
     inlineCoord += aXOffset;
@@ -3803,208 +3804,62 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
     mCtx->EnsureTarget();
 
-    // If the operation is 'fill', we defer to gfxTextRun which will handle
-    // color/svg-in-ot fonts appropriately. Such fonts will not render well via
-    // the code below.
-    if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL) {
-      RefPtr<gfxContext> thebes =
-        gfxContext::CreatePreservingTransformOrNull(mCtx->mTarget);
+    // Defer the tasks to gfxTextRun which will handle color/svg-in-ot fonts
+    // appropriately.
+    StrokeOptions strokeOpts;
+    DrawOptions drawOpts;
+    Style style = (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL)
+                    ? Style::FILL
+                    : Style::STROKE;
+    RefPtr<gfxContext> thebes =
+      gfxContext::CreatePreservingTransformOrNull(mCtx->mTarget);
+    gfxTextRun::DrawParams params(thebes);
 
-      if (mState->StyleIsColor(Style::FILL)) { // Color
-        nscolor fill = mState->colorStyles[Style::FILL];
-        thebes->SetColor(Color::FromABGR(fill));
-      } else if (mState->gradientStyles[Style::FILL]) { // Gradient
-        SetFillGradientContext(thebes);
-      } else if (mState->patternStyles[Style::FILL]) { // Pattern
-        SetFillPatternContext(thebes);
+    if (mState->StyleIsColor(style)) { // Color
+      nscolor fontColor = mState->colorStyles[style];
+      if (style == Style::FILL) {
+        params.context->SetColor(Color::FromABGR(fontColor));
+      } else {
+        params.textStrokeColor = fontColor;
+      }
+    } else {
+      if (mState->gradientStyles[style]) { // Gradient
+        pattern = GetGradientFor(style);
+      } else if (mState->patternStyles[style]) { // Pattern
+        pattern = GetPatternFor(style);
       } else {
         MOZ_ASSERT(false, "Should never reach here.");
         return;
       }
+      MOZ_ASSERT(pattern, "No valid pattern.");
 
-      gfxTextRun::DrawParams params(thebes);
-      mTextRun->Draw(gfxTextRun::Range(mTextRun.get()), point, params);
-      return;
+      if (style == Style::FILL) {
+        params.context->SetPattern(pattern);
+      } else {
+        params.textStrokePattern = pattern;
+      }
     }
 
-    uint32_t numRuns;
-    const gfxTextRun::GlyphRun *runs = mTextRun->GetGlyphRuns(&numRuns);
-    const int32_t appUnitsPerDevUnit = mAppUnitsPerDevPixel;
-    const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
-    Point baselineOrigin =
-      Point(point.x * devUnitsPerAppUnit, point.y * devUnitsPerAppUnit);
+    if (style == Style::STROKE) {
+      const ContextState& state = *mState;
+      drawOpts.mAlpha = state.globalAlpha;
+      drawOpts.mCompositionOp = mCtx->UsedOperation();
 
-    float advanceSum = 0;
+      strokeOpts.mLineWidth = state.lineWidth;
+      strokeOpts.mLineJoin = state.lineJoin;
+      strokeOpts.mLineCap = state.lineCap;
+      strokeOpts.mMiterLimit = state.miterLimit;
+      strokeOpts.mDashLength = state.dash.Length();
+      strokeOpts.mDashPattern =
+        (strokeOpts.mDashLength > 0) ? state.dash.Elements() : 0;
+      strokeOpts.mDashOffset = state.dashOffset;
 
-    for (uint32_t c = 0; c < numRuns; c++) {
-      gfxFont *font = runs[c].mFont;
-
-      bool verticalFont =
-        runs[c].mOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
-
-      const float& baselineOriginInline =
-        verticalFont ? baselineOrigin.y : baselineOrigin.x;
-      const float& baselineOriginBlock =
-        verticalFont ? baselineOrigin.x : baselineOrigin.y;
-
-      uint32_t endRun = 0;
-      if (c + 1 < numRuns) {
-        endRun = runs[c + 1].mCharacterOffset;
-      } else {
-        endRun = mTextRun->GetLength();
-      }
-
-      const gfxTextRun::CompressedGlyph *glyphs = mTextRun->GetCharacterGlyphs();
-
-      RefPtr<ScaledFont> scaledFont =
-        gfxPlatform::GetPlatform()->GetScaledFontForFont(mCtx->mTarget, font);
-
-      if (!scaledFont) {
-        // This can occur when something switched DirectWrite off.
-        return;
-      }
-
-      AutoRestoreTransform sidewaysRestore;
-      if (runs[c].mOrientation ==
-          gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT) {
-        sidewaysRestore.Init(mCtx->mTarget);
-        const gfxFont::Metrics& metrics = mTextRun->GetFontGroup()->
-          GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal);
-
-        gfx::Matrix mat = mCtx->mTarget->GetTransform().Copy().
-          PreTranslate(baselineOrigin).      // translate origin for rotation
-          PreRotate(gfx::Float(M_PI / 2.0)). // turn 90deg clockwise
-          PreTranslate(-baselineOrigin);     // undo the translation
-
-        if (centerBaseline) {
-          // TODO: The baseline adjustment here is kinda ad hoc; eventually
-          // perhaps we should check for horizontal and vertical baseline data
-          // in the font, and adjust accordingly.
-          // (The same will be true for HTML text layout.)
-          float offset = (metrics.emAscent - metrics.emDescent) / 2;
-          mat = mat.PreTranslate(Point(0, offset));
-                              // offset the (alphabetic) baseline of the
-                              // horizontally-shaped text from the (centered)
-                              // default baseline used for vertical
-        }
-
-        mCtx->mTarget->SetTransform(mat);
-      }
-
-      RefPtr<GlyphRenderingOptions> renderingOptions = font->GetGlyphRenderingOptions();
-
-      GlyphBuffer buffer;
-
-      std::vector<Glyph> glyphBuf;
-
-      // TODO:
-      // This more-or-less duplicates the code found in gfxTextRun::Draw
-      // and the gfxFont methods that uses (Draw, DrawGlyphs, DrawOneGlyph);
-      // it would be nice to refactor and share that code.
-      for (uint32_t i = runs[c].mCharacterOffset; i < endRun; i++) {
-        Glyph newGlyph;
-
-        float& inlinePos =
-          verticalFont ? newGlyph.mPosition.y : newGlyph.mPosition.x;
-        float& blockPos =
-          verticalFont ? newGlyph.mPosition.x : newGlyph.mPosition.y;
-
-        if (glyphs[i].IsSimpleGlyph()) {
-          newGlyph.mIndex = glyphs[i].GetSimpleGlyph();
-          if (rtl) {
-            inlinePos = baselineOriginInline - advanceSum -
-              glyphs[i].GetSimpleAdvance() * devUnitsPerAppUnit;
-          } else {
-            inlinePos = baselineOriginInline + advanceSum;
-          }
-          blockPos = baselineOriginBlock;
-          advanceSum += glyphs[i].GetSimpleAdvance() * devUnitsPerAppUnit;
-          glyphBuf.push_back(newGlyph);
-          continue;
-        }
-
-        if (!glyphs[i].GetGlyphCount()) {
-          continue;
-        }
-
-        const gfxTextRun::DetailedGlyph *d = mTextRun->GetDetailedGlyphs(i);
-
-        if (glyphs[i].IsMissing()) {
-          if (d->mAdvance > 0) {
-            // Perhaps we should render a hexbox here, but for now
-            // we just draw the font's .notdef glyph. (See bug 808288.)
-            newGlyph.mIndex = 0;
-            if (rtl) {
-              inlinePos = baselineOriginInline - advanceSum -
-                d->mAdvance * devUnitsPerAppUnit;
-            } else {
-              inlinePos = baselineOriginInline + advanceSum;
-            }
-            blockPos = baselineOriginBlock;
-            advanceSum += d->mAdvance * devUnitsPerAppUnit;
-            glyphBuf.push_back(newGlyph);
-          }
-          continue;
-        }
-
-        for (uint32_t c = 0; c < glyphs[i].GetGlyphCount(); c++, d++) {
-          newGlyph.mIndex = d->mGlyphID;
-          if (rtl) {
-            inlinePos = baselineOriginInline - advanceSum -
-              d->mAdvance * devUnitsPerAppUnit;
-          } else {
-            inlinePos = baselineOriginInline + advanceSum;
-          }
-          inlinePos += d->mXOffset * devUnitsPerAppUnit;
-          blockPos = baselineOriginBlock + d->mYOffset * devUnitsPerAppUnit;
-          glyphBuf.push_back(newGlyph);
-          advanceSum += d->mAdvance * devUnitsPerAppUnit;
-        }
-      }
-
-      if (!glyphBuf.size()) {
-        // This may happen for glyph runs for a 0 size font.
-        continue;
-      }
-
-      buffer.mGlyphs = &glyphBuf.front();
-      buffer.mNumGlyphs = glyphBuf.size();
-
-      Rect bounds = mCtx->mTarget->GetTransform().
-        TransformBounds(Rect(mBoundingBox.x, mBoundingBox.y,
-                             mBoundingBox.width, mBoundingBox.height));
-      if (mOp == CanvasRenderingContext2D::TextDrawOperation::STROKE) {
-        // stroke glyphs one at a time to avoid poor CoreGraphics performance
-        // when stroking a path with a very large number of points
-        buffer.mGlyphs = &glyphBuf.front();
-        buffer.mNumGlyphs = 1;
-        const ContextState& state = *mState;
-
-        const StrokeOptions strokeOpts(state.lineWidth, state.lineJoin,
-                                       state.lineCap, state.miterLimit,
-                                       state.dash.Length(),
-                                       state.dash.Elements(),
-                                       state.dashOffset);
-
-        // We need to adjust the bounds for the adjusted target
-        bounds.Inflate(MaxStrokeExtents(strokeOpts, mCtx->mTarget->GetTransform()));
-
-        AdjustedTarget target(mCtx, &bounds);
-
-        CanvasGeneralPattern cgp;
-        const Pattern& patForStyle(
-          cgp.ForStyle(mCtx, Style::STROKE, mCtx->mTarget));
-        const DrawOptions drawOpts(state.globalAlpha, mCtx->UsedOperation());
-
-        for (unsigned i = glyphBuf.size(); i > 0; --i) {
-          RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
-          target->Stroke(path, patForStyle, strokeOpts, drawOpts);
-          buffer.mGlyphs++;
-        }
-      } else {
-        MOZ_ASSERT(false, "Should not reach here.");
-      }
+      params.drawMode = DrawMode::GLYPH_STROKE;
+      params.strokeOpts = &strokeOpts;
+      params.drawOpts = &drawOpts;
     }
+
+    mTextRun->Draw(gfxTextRun::Range(mTextRun.get()), point, params);
   }
 
   // current text run

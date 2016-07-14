@@ -629,8 +629,10 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams) const
     params.isVerticalRun = IsVertical();
     params.isRTL = IsRightToLeft();
     params.direction = direction;
-    params.textStrokeWidth = aParams.textStrokeWidth;
+    params.strokeOpts = aParams.strokeOpts;
     params.textStrokeColor = aParams.textStrokeColor;
+    params.textStrokePattern = aParams.textStrokePattern;
+    params.drawOpts = aParams.drawOpts;
     params.drawMode = aParams.drawMode;
     params.callbacks = aParams.callbacks;
     params.runContextPaint = aParams.contextPaint;
