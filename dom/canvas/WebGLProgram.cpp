@@ -69,36 +69,60 @@ ParseName(const nsCString& name, nsCString* const out_baseName,
     return true;
 }
 
-static WebGLActiveInfo*
-AddActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
-              const nsACString& baseUserName, const nsACString& baseMappedName,
-              std::vector<RefPtr<WebGLActiveInfo>>* activeInfoList,
-              std::map<nsCString, const WebGLActiveInfo*>* infoLocMap)
-{
-    RefPtr<WebGLActiveInfo> info = new WebGLActiveInfo(webgl, elemCount, elemType,
-                                                       isArray, baseUserName,
-                                                       baseMappedName);
-    activeInfoList->push_back(info);
+//////////
 
-    infoLocMap->insert(std::make_pair(info->mBaseUserName, info.get()));
-    return info.get();
+/*static*/ const webgl::UniformInfo::TexListT*
+webgl::UniformInfo::GetTexList(WebGLActiveInfo* activeInfo)
+{
+    const auto& webgl = activeInfo->mWebGL;
+
+    switch (activeInfo->mElemType) {
+    case LOCAL_GL_SAMPLER_2D:
+    case LOCAL_GL_SAMPLER_2D_SHADOW:
+    case LOCAL_GL_INT_SAMPLER_2D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D:
+        return &webgl->mBound2DTextures;
+
+    case LOCAL_GL_SAMPLER_CUBE:
+    case LOCAL_GL_SAMPLER_CUBE_SHADOW:
+    case LOCAL_GL_INT_SAMPLER_CUBE:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_CUBE:
+        return &webgl->mBoundCubeMapTextures;
+
+    case LOCAL_GL_SAMPLER_3D:
+    case LOCAL_GL_INT_SAMPLER_3D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_3D:
+        return &webgl->mBound3DTextures;
+
+    case LOCAL_GL_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
+    case LOCAL_GL_INT_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        return &webgl->mBound2DArrayTextures;
+
+    default:
+        return nullptr;
+    }
 }
 
-static void
-AddActiveBlockInfo(const nsACString& baseUserName,
-                   const nsACString& baseMappedName,
-                   std::vector<RefPtr<webgl::UniformBlockInfo>>* activeInfoList)
+webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
+    : mActiveInfo(activeInfo)
+    , mSamplerTexList(GetTexList(activeInfo))
 {
-    RefPtr<webgl::UniformBlockInfo> info = new webgl::UniformBlockInfo(baseUserName, baseMappedName);
-
-    activeInfoList->push_back(info);
+    if (mSamplerTexList) {
+        mSamplerValues.assign(mActiveInfo->mElemCount, 0);
+    }
 }
+
+//////////
 
 //#define DUMP_SHADERVAR_MAPPINGS
 
 static already_AddRefed<const webgl::LinkedProgramInfo>
 QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 {
+    WebGLContext* const webgl = prog->mContext;
+
     RefPtr<webgl::LinkedProgramInfo> info(new webgl::LinkedProgramInfo(prog));
 
     GLuint maxAttribLenWithNull = 0;
@@ -154,33 +178,37 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
         mappedName.SetLength(lengthWithoutNull);
 
-        // Collect ActiveInfos:
-
         // Attribs can't be arrays, so we can skip some of the mess we have in the Uniform
         // path.
         nsDependentCString userName;
         if (!prog->FindAttribUserNameByMappedName(mappedName, &userName))
             userName.Rebind(mappedName, 0);
 
+        ///////
+
+        const GLint loc = gl->fGetAttribLocation(prog->mGLName,
+                                                 mappedName.BeginReading());
+        if (loc == -1) {
+            MOZ_ASSERT(mappedName == "gl_InstanceID",
+                       "Active attrib should have a location.");
+            continue;
+        }
+
 #ifdef DUMP_SHADERVAR_MAPPINGS
-        printf_stderr("[attrib %i] %s/%s\n", i, mappedName.BeginReading(),
+        printf_stderr("[attrib %i: %i] %s/%s\n", i, loc, mappedName.BeginReading(),
                       userName.BeginReading());
         printf_stderr("    lengthWithoutNull: %d\n", lengthWithoutNull);
 #endif
 
-        const bool isArray = false;
-        const auto attrib = AddActiveInfo(prog->mContext, elemCount, elemType, isArray,
-                                          userName, mappedName, &info->activeAttribs,
-                                          &info->attribMap);
+        ///////
 
-        // Collect active locations:
-        GLint loc = gl->fGetAttribLocation(prog->mGLName, mappedName.BeginReading());
-        if (loc == -1) {
-            if (mappedName != "gl_InstanceID")
-                MOZ_CRASH("GFX: Active attrib has no location.");
-        } else {
-            info->activeAttribLocs.insert({attrib, (GLuint)loc});
-        }
+        const bool isArray = false;
+        const RefPtr<WebGLActiveInfo> activeInfo = new WebGLActiveInfo(webgl, elemCount,
+                                                                       elemType, isArray,
+                                                                       userName,
+                                                                       mappedName);
+        const webgl::AttribInfo attrib = {activeInfo, uint32_t(loc)};
+        info->attribs.push_back(attrib);
     }
 
     // Uniforms
@@ -203,6 +231,8 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
         mappedName.SetLength(lengthWithoutNull);
 
+        ///////
+
         nsAutoCString baseMappedName;
         bool isArray;
         size_t arrayIndex;
@@ -212,8 +242,11 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         // Note that for good drivers, `isArray` should already be correct.
         // However, if FindUniform succeeds, it will be validator-guaranteed correct.
 
+        ///////
+
         nsAutoCString baseUserName;
         if (!prog->FindUniformByMappedName(baseMappedName, &baseUserName, &isArray)) {
+            // Validator likely missing.
             baseUserName = baseMappedName;
 
             if (needsCheckForArrays && !isArray) {
@@ -229,6 +262,8 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
             }
         }
 
+        ///////
+
 #ifdef DUMP_SHADERVAR_MAPPINGS
         printf_stderr("[uniform %i] %s/%i/%s/%s\n", i, mappedName.BeginReading(),
                       (int)isArray, baseMappedName.BeginReading(),
@@ -237,11 +272,23 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         printf_stderr("    isArray: %d\n", (int)isArray);
 #endif
 
-        AddActiveInfo(prog->mContext, elemCount, elemType, isArray, baseUserName,
-                      baseMappedName, &info->activeUniforms, &info->uniformMap);
+        ///////
+
+        const RefPtr<WebGLActiveInfo> activeInfo = new WebGLActiveInfo(webgl, elemCount,
+                                                                       elemType, isArray,
+                                                                       baseUserName,
+                                                                       baseMappedName);
+
+        auto* uniform = new webgl::UniformInfo(activeInfo);
+        info->uniforms.push_back(uniform);
+
+        if (uniform->mSamplerTexList) {
+            info->uniformSamplers.push_back(uniform);
+        }
     }
 
     // Uniform Blocks
+    // (no sampler types allowed!)
 
     if (gl->IsSupported(gl::GLFeature::uniform_buffer_object)) {
         GLuint numActiveUniformBlocks = 0;
@@ -281,14 +328,15 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
             }
 
 #ifdef DUMP_SHADERVAR_MAPPINGS
-            printf_stderr("[uniform block %i] %s/%i/%s/%s\n", i, mappedName.BeginReading(),
-                          (int)isArray, baseMappedName.BeginReading(),
-                          baseUserName.BeginReading());
+            printf_stderr("[uniform block %i] %s/%i/%s/%s\n", i,
+                          mappedName.BeginReading(), (int)isArray,
+                          baseMappedName.BeginReading(), baseUserName.BeginReading());
             printf_stderr("    lengthWithoutNull: %d\n", lengthWithoutNull);
             printf_stderr("    isArray: %d\n", (int)isArray);
 #endif
 
-            AddActiveBlockInfo(baseUserName, baseMappedName, &info->uniformBlocks);
+            const auto* block = new webgl::UniformBlockInfo(baseUserName, baseMappedName);
+            info->uniformBlocks.push_back(block);
         }
     }
 
@@ -304,18 +352,22 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
             mappedName.SetLength(maxTransformFeedbackVaryingLenWithNull - 1);
 
             GLint lengthWithoutNull;
-            GLsizei size;
-            GLenum type;
-            gl->fGetTransformFeedbackVarying(prog->mGLName, i, maxTransformFeedbackVaryingLenWithNull,
-                                             &lengthWithoutNull, &size, &type,
+            GLsizei elemCount;
+            GLenum elemType;
+            gl->fGetTransformFeedbackVarying(prog->mGLName, i,
+                                             maxTransformFeedbackVaryingLenWithNull,
+                                             &lengthWithoutNull, &elemCount, &elemType,
                                              mappedName.BeginWriting());
             mappedName.SetLength(lengthWithoutNull);
+
+            ////
 
             nsAutoCString baseMappedName;
             bool isArray;
             size_t arrayIndex;
             if (!ParseName(mappedName, &baseMappedName, &isArray, &arrayIndex))
                 MOZ_CRASH("GFX: Failed to parse `mappedName` received from driver.");
+
 
             nsAutoCString baseUserName;
             if (!prog->FindVaryingByMappedName(mappedName, &baseUserName, &isArray)) {
@@ -332,9 +384,15 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                 }
             }
 
-            AddActiveInfo(prog->mContext, size, type, isArray, baseUserName, mappedName,
-                          &info->transformFeedbackVaryings,
-                          &info->transformFeedbackVaryingsMap);
+            ////
+
+            const RefPtr<WebGLActiveInfo> activeInfo = new WebGLActiveInfo(webgl,
+                                                                           elemCount,
+                                                                           elemType,
+                                                                           isArray,
+                                                                           baseUserName,
+                                                                           mappedName);
+            info->transformFeedbackVaryings.push_back(activeInfo);
         }
     }
 
@@ -346,6 +404,16 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
     : prog(prog)
 { }
+
+webgl::LinkedProgramInfo::~LinkedProgramInfo()
+{
+    for (auto& cur : uniforms) {
+        delete cur;
+    }
+    for (auto& cur : uniformBlocks) {
+        delete cur;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // WebGLProgram
@@ -487,15 +555,15 @@ WebGLProgram::GetActiveAttrib(GLuint index) const
         return ret.forget();
     }
 
-    const auto& activeList = mMostRecentLinkInfo->activeAttribs;
+    const auto& attribs = mMostRecentLinkInfo->attribs;
 
-    if (index >= activeList.size()) {
+    if (index >= attribs.size()) {
         mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%i).",
-                                    index, "ACTIVE_ATTRIBS", activeList.size());
+                                    index, "ACTIVE_ATTRIBS", attribs.size());
         return nullptr;
     }
 
-    RefPtr<WebGLActiveInfo> ret = activeList[index];
+    RefPtr<WebGLActiveInfo> ret = attribs[index].mActiveInfo;
     return ret.forget();
 }
 
@@ -508,15 +576,15 @@ WebGLProgram::GetActiveUniform(GLuint index) const
         return ret.forget();
     }
 
-    const auto& activeList = mMostRecentLinkInfo->activeUniforms;
+    const auto& uniforms = mMostRecentLinkInfo->uniforms;
 
-    if (index >= activeList.size()) {
+    if (index >= uniforms.size()) {
         mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%i).",
-                                    index, "ACTIVE_UNIFORMS", activeList.size());
+                                    index, "ACTIVE_UNIFORMS", uniforms.size());
         return nullptr;
     }
 
-    RefPtr<WebGLActiveInfo> ret = activeList[index];
+    RefPtr<WebGLActiveInfo> ret = uniforms[index]->mActiveInfo;
     return ret.forget();
 }
 
@@ -545,16 +613,11 @@ WebGLProgram::GetAttribLocation(const nsAString& userName_wide) const
 
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
 
-    const WebGLActiveInfo* info;
+    const webgl::AttribInfo* info;
     if (!LinkInfo()->FindAttrib(userName, &info))
         return -1;
 
-    const nsCString& mappedName = info->mBaseMappedName;
-
-    gl::GLContext* gl = mContext->GL();
-    gl->MakeCurrent();
-
-    return gl->fGetAttribLocation(mGLName, mappedName.BeginReading());
+    return GLint(info->mLoc);
 }
 
 GLint
@@ -658,13 +721,12 @@ WebGLProgram::GetUniformBlockIndex(const nsAString& userName_wide) const
     if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
         return LOCAL_GL_INVALID_INDEX;
 
-    RefPtr<const webgl::UniformBlockInfo> info;
+    const webgl::UniformBlockInfo* info;
     if (!LinkInfo()->FindUniformBlock(baseUserName, &info)) {
         return LOCAL_GL_INVALID_INDEX;
     }
 
-    const nsCString& baseMappedName = info->mBaseMappedName;
-    nsAutoCString mappedName(baseMappedName);
+    nsAutoCString mappedName(info->mBaseMappedName);
     if (isArray) {
         mappedName.AppendLiteral("[");
         mappedName.AppendInt(uint32_t(arrayIndex));
@@ -799,13 +861,11 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
     if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
         return nullptr;
 
-    const WebGLActiveInfo* activeInfo;
-    if (!LinkInfo()->FindUniform(baseUserName, &activeInfo))
+    webgl::UniformInfo* info;
+    if (!LinkInfo()->FindUniform(baseUserName, &info))
         return nullptr;
 
-    const nsCString& baseMappedName = activeInfo->mBaseMappedName;
-
-    nsAutoCString mappedName(baseMappedName);
+    nsAutoCString mappedName(info->mActiveInfo->mBaseMappedName);
     if (isArray) {
         mappedName.AppendLiteral("[");
         mappedName.AppendInt(uint32_t(arrayIndex));
@@ -820,8 +880,7 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
         return nullptr;
 
     RefPtr<WebGLUniformLocation> locObj = new WebGLUniformLocation(mContext, LinkInfo(),
-                                                                   loc, arrayIndex,
-                                                                   activeInfo);
+                                                                   info, loc, arrayIndex);
     return locObj.forget();
 }
 
@@ -846,15 +905,13 @@ WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
             continue;
         }
 
-        const WebGLActiveInfo* activeInfo;
-        if (!LinkInfo()->FindUniform(baseUserName, &activeInfo)) {
+        webgl::UniformInfo* info;
+        if (!LinkInfo()->FindUniform(baseUserName, &info)) {
             arr.AppendElement(LOCAL_GL_INVALID_INDEX);
             continue;
         }
 
-        const nsCString& baseMappedName = activeInfo->mBaseMappedName;
-
-        nsAutoCString mappedName(baseMappedName);
+        nsAutoCString mappedName(info->mActiveInfo->mBaseMappedName);
         if (isArray) {
             mappedName.AppendLiteral("[");
             mappedName.AppendInt(uint32_t(arrayIndex));
@@ -879,8 +936,7 @@ WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockB
     }
 
     const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
-    GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
-    if (uniformBlockIndex >= uniformBlockCount) {
+    if (uniformBlockIndex >= linkInfo->uniformBlocks.size()) {
         mContext->ErrorInvalidValue("getActiveUniformBlockName: index %u invalid.", uniformBlockIndex);
         return;
     }
@@ -1228,6 +1284,50 @@ WebGLProgram::FindUniformBlockByMappedName(const nsACString& mappedName,
 
     if (mFragShader->FindUniformBlockByMappedName(mappedName, out_userName, out_isArray))
         return true;
+
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool
+webgl::LinkedProgramInfo::FindAttrib(const nsCString& baseUserName,
+                                     const webgl::AttribInfo** const out) const
+{
+    for (const auto& attrib : attribs) {
+        if (attrib.mActiveInfo->mBaseUserName == baseUserName) {
+            *out = &attrib;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
+webgl::LinkedProgramInfo::FindUniform(const nsCString& baseUserName,
+                                      webgl::UniformInfo** const out) const
+{
+    for (const auto& uniform : uniforms) {
+        if (uniform->mActiveInfo->mBaseUserName == baseUserName) {
+            *out = uniform;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
+webgl::LinkedProgramInfo::FindUniformBlock(const nsCString& baseUserName,
+                                           const webgl::UniformBlockInfo** const out) const
+{
+    for (const auto& block : uniformBlocks) {
+        if (block->mBaseUserName == baseUserName) {
+            *out = block;
+            return true;
+        }
+    }
 
     return false;
 }

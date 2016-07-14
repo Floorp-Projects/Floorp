@@ -35,11 +35,30 @@ template<typename> class Sequence;
 
 namespace webgl {
 
-struct UniformBlockInfo final
-    : public RefCounted<UniformBlockInfo>
+struct AttribInfo final
 {
-    MOZ_DECLARE_REFCOUNTED_TYPENAME(UniformBlockInfo);
+    const RefPtr<WebGLActiveInfo> mActiveInfo;
+    uint32_t mLoc;
+};
 
+struct UniformInfo final
+{
+    typedef decltype(WebGLContext::mBound2DTextures) TexListT;
+
+    const RefPtr<WebGLActiveInfo> mActiveInfo;
+    const TexListT* const mSamplerTexList;
+    std::vector<uint32_t> mSamplerValues;
+
+protected:
+    static const TexListT*
+    GetTexList(WebGLActiveInfo* activeInfo);
+
+public:
+    explicit UniformInfo(WebGLActiveInfo* activeInfo);
+};
+
+struct UniformBlockInfo final
+{
     const nsCString mBaseUserName;
     const nsCString mBaseMappedName;
 
@@ -57,61 +76,27 @@ struct LinkedProgramInfo final
     MOZ_DECLARE_REFCOUNTED_TYPENAME(LinkedProgramInfo)
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LinkedProgramInfo)
 
+    //////
+
     WebGLProgram* const prog;
-    std::vector<RefPtr<WebGLActiveInfo>> activeAttribs;
-    std::vector<RefPtr<WebGLActiveInfo>> activeUniforms;
+
+    std::vector<AttribInfo> attribs;
+    std::vector<UniformInfo*> uniforms; // Owns its contents.
+    std::vector<const UniformBlockInfo*> uniformBlocks; // Owns its contents.
     std::vector<RefPtr<WebGLActiveInfo>> transformFeedbackVaryings;
 
-    // Needed for Get{Attrib,Uniform}Location. The keys for these are non-mapped
-    // user-facing `GLActiveInfo::name`s, without any final "[0]".
-    std::map<nsCString, const WebGLActiveInfo*> attribMap;
-    std::map<nsCString, const WebGLActiveInfo*> uniformMap;
-    std::map<nsCString, const WebGLActiveInfo*> transformFeedbackVaryingsMap;
-
-    std::vector<RefPtr<UniformBlockInfo>> uniformBlocks;
-
     // Needed for draw call validation.
-    std::map<const WebGLActiveInfo*, GLuint> activeAttribLocs;
+    std::vector<UniformInfo*> uniformSamplers;
 
     //////
 
     explicit LinkedProgramInfo(WebGLProgram* prog);
+    ~LinkedProgramInfo();
 
-    bool FindAttrib(const nsCString& baseUserName,
-                    const WebGLActiveInfo** const out_activeInfo) const
-    {
-        auto itr = attribMap.find(baseUserName);
-        if (itr == attribMap.end())
-            return false;
-
-        *out_activeInfo = itr->second;
-        return true;
-    }
-
-    bool FindUniform(const nsCString& baseUserName,
-                     const WebGLActiveInfo** const out_activeInfo) const
-    {
-        auto itr = uniformMap.find(baseUserName);
-        if (itr == uniformMap.end())
-            return false;
-
-        *out_activeInfo = itr->second;
-        return true;
-    }
-
+    bool FindAttrib(const nsCString& baseUserName, const AttribInfo** const out) const;
+    bool FindUniform(const nsCString& baseUserName, UniformInfo** const out) const;
     bool FindUniformBlock(const nsCString& baseUserName,
-                          RefPtr<const UniformBlockInfo>* const out_info) const
-    {
-        const size_t count = uniformBlocks.size();
-        for (size_t i = 0; i < count; i++) {
-            if (baseUserName == uniformBlocks[i]->mBaseUserName) {
-                *out_info = uniformBlocks[i].get();
-                return true;
-            }
-        }
-
-        return false;
-    }
+                          const UniformBlockInfo** const out) const;
 };
 
 } // namespace webgl
