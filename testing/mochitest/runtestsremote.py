@@ -182,15 +182,6 @@ class MochiRemote(MochitestDesktop):
         if savedTestingModulesDir:
             options.testingModulesDir = savedTestingModulesDir
         self.localProfile = options.profilePath
-        self._dm.removeDir(self.remoteProfile)
-
-        try:
-            self._dm.pushDir(options.profilePath, self.remoteProfile)
-            self._dm.chmodDir(self.remoteProfile)
-        except mozdevice.DMError:
-            self.log.error(
-                "Automation Error: Unable to copy profile to device.")
-            raise
 
         restoreRemotePaths()
         options.profilePath = self.remoteProfile
