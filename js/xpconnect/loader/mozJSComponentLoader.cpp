@@ -47,6 +47,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla;
 using namespace mozilla::scache;
@@ -883,7 +884,8 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         // exception on this context.
         if (!script && !function && aPropagateExceptions &&
             jsapi.HasException()) {
-            jsapi.StealException(aException);
+            if (!jsapi.StealException(aException))
+                return NS_ERROR_OUT_OF_MEMORY;
         }
     }
 
@@ -948,7 +950,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
 
         if (!ok) {
             if (aPropagateExceptions && aes.HasException()) {
-                aes.StealException(aException);
+                // Ignore return value because we're returning an error code
+                // anyway.
+                Unused << aes.StealException(aException);
             }
             aObject.set(nullptr);
             aTableScript.set(nullptr);
