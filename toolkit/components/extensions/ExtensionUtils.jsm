@@ -1305,6 +1305,11 @@ Messenger.prototype = {
       let listener = {
         messageFilterPermissive: this.filter,
 
+        filterMessage: (sender, recipient) => {
+          // Ignore the message if it was sent by this Messenger.
+          return !MessageChannel.matchesFilter(this.sender, sender);
+        },
+
         receiveMessage: ({target, data: message, sender, recipient}) => {
           if (!this.context.active) {
             return;
@@ -1359,6 +1364,11 @@ Messenger.prototype = {
     return new SingletonEventManager(this.context, name, callback => {
       let listener = {
         messageFilterPermissive: this.filter,
+
+        filterMessage: (sender, recipient) => {
+          // Ignore the port if it was created by this Messenger.
+          return !MessageChannel.matchesFilter(this.sender, sender);
+        },
 
         receiveMessage: ({target, data: message, sender, recipient}) => {
           let {name, portId} = message;
