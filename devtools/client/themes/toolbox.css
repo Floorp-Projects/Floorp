@@ -276,9 +276,18 @@
   background-color: var(--toolbar-tab-hover);
 }
 
+.theme-light .command-button:hover {
+  background-color: inherit;
+}
+
 .command-button:hover:active,
 .command-button[checked=true]:not(:hover) {
   background-color: var(--toolbar-tab-hover-active)
+}
+
+.theme-light .command-button:hover:active,
+.theme-light .command-button[checked=true]:not(:hover) {
+  background-color: inherit;
 }
 
 .command-button:hover::before {
