@@ -9,7 +9,6 @@ const defer = require("devtools/shared/defer");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const {CubicBezierWidget} =
       require("devtools/client/shared/widgets/CubicBezierWidget");
-const {MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -33,9 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
   "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const MDN_DOCS_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
-const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
 
 /**
@@ -553,32 +550,6 @@ Tooltip.prototype = {
     this.content = iframe;
 
     return def.promise;
-  },
-
-  /**
-   * Set the content of this tooltip to the MDN docs widget.
-   *
-   * This is called when the tooltip is first constructed.
-   *
-   * @return {promise} A promise which is resolved with an MdnDocsWidget.
-   *
-   * It loads the tooltip's structure from a separate XHTML file
-   * into an iframe. When the iframe is loaded it constructs
-   * an MdnDocsWidget and passes that into resolve.
-   *
-   * The caller can use the MdnDocsWidget to update the tooltip's
-   * UI with new content each time the tooltip is shown.
-   */
-  setMdnDocsContent: function () {
-    let dimensions = {width: "410", height: "300"};
-    return this.setIFrameContent(dimensions, MDN_DOCS_FRAME).then(onLoaded);
-
-    function onLoaded(iframe) {
-      let win = iframe.contentWindow.wrappedJSObject;
-      // create an MdnDocsWidget, initializing it with the content document
-      let widget = new MdnDocsWidget(win.document);
-      return widget;
-    }
   }
 };
 
@@ -1003,45 +974,6 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     });
   }
 });
-
-/**
- * Tooltip for displaying docs for CSS properties from MDN.
- *
- * @param {XULDocument} doc
- */
-function CssDocsTooltip(doc) {
-  this.tooltip = new Tooltip(doc, {
-    consumeOutsideClick: true,
-    closeOnKeys: [ESCAPE_KEYCODE, RETURN_KEYCODE],
-    noAutoFocus: false
-  });
-  this.widget = this.tooltip.setMdnDocsContent();
-}
-
-module.exports.CssDocsTooltip = CssDocsTooltip;
-
-CssDocsTooltip.prototype = {
-  /**
-   * Load CSS docs for the given property,
-   * then display the tooltip.
-   */
-  show: function (anchor, propertyName) {
-    function loadCssDocs(widget) {
-      return widget.loadCssDocs(propertyName);
-    }
-
-    this.widget.then(loadCssDocs);
-    this.tooltip.show(anchor, "topcenter bottomleft");
-  },
-
-  hide: function () {
-    this.tooltip.hide();
-  },
-
-  destroy: function () {
-    this.tooltip.destroy();
-  }
-};
 
 /**
  * The swatch-based css filter tooltip class is a specific class meant to be

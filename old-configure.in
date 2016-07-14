@@ -3801,19 +3801,6 @@ if test -n "$MOZ_PERMISSIONS"; then
 fi
 
 dnl ========================================================
-dnl Child permissions, currently only used for b2g
-dnl ========================================================
-if test -n "$MOZ_B2G"; then
-    if test -n "$MOZ_PERMISSIONS"; then
-        MOZ_CHILD_PERMISSIONS=1
-        AC_DEFINE(MOZ_CHILD_PERMISSIONS)
-    else
-        AC_MSG_ERROR([You need to enable MOZ_PERMISSIONS for MOZ_CHILD_PERMISSIONS])
-    fi
-fi
-AC_SUBST(MOZ_CHILD_PERMISSIONS)
-
-dnl ========================================================
 dnl NegotiateAuth
 dnl ========================================================
 

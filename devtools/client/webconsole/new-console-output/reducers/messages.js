@@ -13,15 +13,17 @@ function messages(state = Immutable.List(), action) {
     case constants.MESSAGE_ADD:
       let newMessage = action.message;
 
-      if (newMessage.data.level === "clear") {
+      // @TODO clean this up once we've switched to Chrome RDP packet structure.
+      if (newMessage.data && newMessage.data.level === "clear") {
         return Immutable.List([newMessage]);
       }
 
       if (newMessage.allowRepeating && state.size > 0) {
         let lastMessage = state.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
-          newMessage.repeat = lastMessage.repeat + 1;
-          return state.pop().push(newMessage);
+          return state.pop().push(
+            newMessage.set("repeat", lastMessage.repeat + 1)
+          );
         }
       }
       return state.push(newMessage);
