@@ -11,7 +11,7 @@ add_task(function* () {
   info("Open the inspector in a side toolbox host");
   let {toolbox, inspector} = yield openInspectorForURL("about:blank", "side");
 
-  let panel = inspector.panelDoc.querySelector("#inspector-sidebar-container");
+  let panel = inspector.panelDoc.querySelector("#inspector-sidebar");
   let button = inspector.panelDoc.querySelector(".sidebar-toggle");
   ok(!panel.classList.contains("pane-collapsed"), "The panel is in expanded state");
 

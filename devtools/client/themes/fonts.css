@@ -8,7 +8,10 @@
   flex-direction: column;
   padding-bottom: 20px;
   width: 100%;
-  height: 100%;
+  /* Bug 1243598 - Reduce the container height by the tab height to make room
+     for the tabs above. */
+  height: calc(100% - 24px);
+  position: absolute;
 }
 
 #sidebar-panel-fontinspector > .devtools-toolbar {
