@@ -11,12 +11,12 @@
 #include <string>
 #include "mozilla/Attributes.h"
 
-class FakeDecryptor : public GMPDecryptor {
+class FakeDecryptor : public GMPDecryptor7 {
 public:
 
   explicit FakeDecryptor(GMPDecryptorHost* aHost);
 
-  void Init(GMPDecryptorCallback* aCallback, bool, bool) override {
+  void Init(GMPDecryptorCallback* aCallback) override {
     mCallback = aCallback;
   }
 
