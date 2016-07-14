@@ -272,9 +272,7 @@ module.exports = createClass({
               className: "devtools-toolbarbutton import-snapshot devtools-button",
               onClick: onImportClick,
               title: L10N.getStr("import-snapshot"),
-              "data-text-only": true,
-            },
-            L10N.getStr("import-snapshot")
+            }
           )
         ),
 

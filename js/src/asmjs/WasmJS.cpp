@@ -110,6 +110,8 @@ GetImports(JSContext* cx, HandleObject importObj, const ImportVector& imports,
                 return false;
 
             break;
+          case DefinitionKind::Table:
+            MOZ_CRASH("NYI");
           case DefinitionKind::Memory:
             if (!v.isObject() || !v.toObject().is<WasmMemoryObject>())
                 return Throw(cx, "import object field is not a Memory");
@@ -573,7 +575,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-IsMemoryBuffer(HandleValue v)
+IsMemory(HandleValue v)
 {
     return v.isObject() && v.toObject().is<WasmMemoryObject>();
 }
@@ -589,7 +591,7 @@ static bool
 MemoryBufferGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsMemoryBuffer, MemoryBufferGetterImpl>(cx, args);
+    return CallNonGenericMethod<IsMemory, MemoryBufferGetterImpl>(cx, args);
 }
 
 const JSPropertySpec WasmMemoryObject::properties[] =
@@ -633,12 +635,11 @@ const Class WasmTableObject::class_ =
     &WasmTableObject_classOps
 };
 
-const JSPropertySpec WasmTableObject::properties[] =
-{ JS_PS_END };
-
 /* static */ WasmTableObject*
-WasmTableObject::create(ExclusiveContext* cx, Table& table, HandleObject proto)
+WasmTableObject::create(JSContext* cx, Table& table)
 {
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
+
     AutoSetNewObjectMetadata metadata(cx);
     auto* obj = NewObjectWithGivenProto<WasmTableObject>(cx, proto);
     if (!obj)
@@ -688,14 +689,39 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!table)
         return false;
 
-    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
-    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table, proto));
+    RootedWasmTableObject tableObj(cx, WasmTableObject::create(cx, *table));
     if (!tableObj)
         return false;
 
     args.rval().setObject(*tableObj);
     return true;
 }
+
+static bool
+IsTable(HandleValue v)
+{
+    return v.isObject() && v.toObject().is<WasmTableObject>();
+}
+
+static bool
+TableLengthGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    args.rval().setNumber(args.thisv().toObject().as<WasmTableObject>().table().length());
+    return true;
+}
+
+static bool
+TableLengthGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsTable, TableLengthGetterImpl>(cx, args);
+}
+
+const JSPropertySpec WasmTableObject::properties[] =
+{
+    JS_PSG("length", TableLengthGetter, 0),
+    JS_PS_END
+};
 
 Table&
 WasmTableObject::table() const

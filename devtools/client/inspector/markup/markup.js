@@ -2645,25 +2645,23 @@ function MarkupElementContainer(markupView, node) {
 }
 
 MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
-  _buildEventTooltipContent: function (target, tooltip) {
+  _buildEventTooltipContent: Task.async(function* (target, tooltip) {
     if (target.hasAttribute("data-event")) {
-      tooltip.hide(target);
+      yield tooltip.hide();
 
-      this.node.getEventListenerInfo().then(listenerInfo => {
-        let toolbox = this.markup._inspector.toolbox;
-        setEventTooltip(tooltip, listenerInfo, toolbox);
-        // Disable the image preview tooltip while we display the event details
-        this.markup._disableImagePreviewTooltip();
-        tooltip.once("hidden", () => {
-          // Enable the image preview tooltip after closing the event details
-          this.markup._enableImagePreviewTooltip();
-        });
-        tooltip.show(target);
+      let listenerInfo = yield this.node.getEventListenerInfo();
+
+      let toolbox = this.markup._inspector.toolbox;
+      setEventTooltip(tooltip, listenerInfo, toolbox);
+      // Disable the image preview tooltip while we display the event details
+      this.markup._disableImagePreviewTooltip();
+      tooltip.once("hidden", () => {
+        // Enable the image preview tooltip after closing the event details
+        this.markup._enableImagePreviewTooltip();
       });
-      return true;
+      tooltip.show(target);
     }
-    return undefined;
-  },
+  }),
 
   /**
    * Generates the an image preview for this Element. The element must be an
