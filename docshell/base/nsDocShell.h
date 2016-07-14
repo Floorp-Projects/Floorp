@@ -898,6 +898,10 @@ protected:
   uint32_t mSandboxFlags;
   nsWeakPtr mOnePermittedSandboxedNavigator;
 
+  // The orientation lock as described by
+  // https://w3c.github.io/screen-orientation/
+  mozilla::dom::ScreenOrientationInternal mOrientationLock;
+
   // mFullscreenAllowed stores how we determine whether fullscreen is allowed
   // when GetFullscreenAllowed() is called. Fullscreen is allowed in a
   // docshell when all containing iframes have the allowfullscreen
@@ -910,7 +914,7 @@ protected:
   // parent across the content boundary has allowfullscreen=true in all its
   // containing iframes. mFullscreenAllowed defaults to CHECK_ATTRIBUTES and
   // is set otherwise when docshells which are content boundaries are created.
-  enum FullscreenAllowedState
+  enum FullscreenAllowedState : uint8_t
   {
     CHECK_ATTRIBUTES,
     PARENT_ALLOWS,
@@ -918,89 +922,89 @@ protected:
   };
   FullscreenAllowedState mFullscreenAllowed;
 
-  // The orientation lock as described by
-  // https://w3c.github.io/screen-orientation/
-  mozilla::dom::ScreenOrientationInternal mOrientationLock;
-
   // Cached value of the "browser.xul.error_pages.enabled" preference.
   static bool sUseErrorPages;
 
-  bool mCreated;
-  bool mAllowSubframes;
-  bool mAllowPlugins;
-  bool mAllowJavascript;
-  bool mAllowMetaRedirects;
-  bool mAllowImages;
-  bool mAllowMedia;
-  bool mAllowDNSPrefetch;
-  bool mAllowWindowControl;
-  bool mAllowContentRetargeting;
-  bool mAllowContentRetargetingOnChildren;
-  bool mCreatingDocument; // (should be) debugging only
-  bool mUseErrorPages;
-  bool mObserveErrorPages;
-  bool mAllowAuth;
-  bool mAllowKeywordFixup;
-  bool mIsOffScreenBrowser;
-  bool mIsActive;
-  bool mDisableMetaRefreshWhenInactive;
-  bool mIsPrerendered;
-  bool mIsAppTab;
-  bool mUseGlobalHistory;
-  bool mUseRemoteTabs;
-  bool mDeviceSizeIsPageSize;
-  bool mWindowDraggingAllowed;
-  bool mInFrameSwap;
+  bool mCreated : 1;
+  bool mAllowSubframes : 1;
+  bool mAllowPlugins : 1;
+  bool mAllowJavascript : 1;
+  bool mAllowMetaRedirects : 1;
+  bool mAllowImages : 1;
+  bool mAllowMedia : 1;
+  bool mAllowDNSPrefetch : 1;
+  bool mAllowWindowControl : 1;
+  bool mAllowContentRetargeting : 1;
+  bool mAllowContentRetargetingOnChildren : 1;
+  bool mUseErrorPages : 1;
+  bool mObserveErrorPages : 1;
+  bool mAllowAuth : 1;
+  bool mAllowKeywordFixup : 1;
+  bool mIsOffScreenBrowser : 1;
+  bool mIsActive : 1;
+  bool mDisableMetaRefreshWhenInactive : 1;
+  bool mIsPrerendered : 1;
+  bool mIsAppTab : 1;
+  bool mUseGlobalHistory : 1;
+  bool mUseRemoteTabs : 1;
+  bool mDeviceSizeIsPageSize : 1;
+  bool mWindowDraggingAllowed : 1;
+  bool mInFrameSwap : 1;
 
   // Because scriptability depends on the mAllowJavascript values of our
   // ancestors, we cache the effective scriptability and recompute it when
   // it might have changed;
-  bool mCanExecuteScripts;
+  bool mCanExecuteScripts : 1;
   void RecomputeCanExecuteScripts();
 
   // This boolean is set to true right before we fire pagehide and generally
   // unset when we embed a new content viewer. While it's true no navigation
   // is allowed in this docshell.
-  bool mFiredUnloadEvent;
+  bool mFiredUnloadEvent : 1;
 
   // this flag is for bug #21358. a docshell may load many urls
   // which don't result in new documents being created (i.e. a new
   // content viewer) we want to make sure we don't call a on load
   // event more than once for a given content viewer.
-  bool mEODForCurrentDocument;
-  bool mURIResultedInDocument;
+  bool mEODForCurrentDocument : 1;
+  bool mURIResultedInDocument : 1;
 
-  bool mIsBeingDestroyed;
+  bool mIsBeingDestroyed : 1;
 
-  bool mIsExecutingOnLoadHandler;
+  bool mIsExecutingOnLoadHandler : 1;
 
   // Indicates that a DocShell in this "docshell tree" is printing
-  bool mIsPrintingOrPP;
+  bool mIsPrintingOrPP : 1;
 
   // Indicates to CreateContentViewer() that it is safe to cache the old
   // presentation of the page, and to SetupNewViewer() that the old viewer
   // should be passed a SHEntry to save itself into.
-  bool mSavingOldViewer;
+  bool mSavingOldViewer : 1;
 
   // @see nsIDocShellHistory::createdDynamically
-  bool mDynamicallyCreated;
+  bool mDynamicallyCreated : 1;
+  bool mAffectPrivateSessionLifetime : 1;
+  bool mInvisible : 1;
+  bool mHasLoadedNonBlankURI : 1;
+
+  // This flag means that mTiming has been initialized but nulled out.
+  // We will check the innerWin's timing before creating a new one
+  // in MaybeInitTiming()
+  bool mBlankTiming : 1;
+
+  // The following two fields cannot be declared as bit fields
+  // because of uses with AutoRestore.
+  bool mCreatingDocument; // (should be) debugging only
 #ifdef DEBUG
   bool mInEnsureScriptEnv;
 #endif
-  bool mAffectPrivateSessionLifetime;
-  bool mInvisible;
-  bool mHasLoadedNonBlankURI;
+
   uint64_t mHistoryID;
   uint32_t mDefaultLoadFlags;
 
   static nsIURIFixup* sURIFixup;
 
   RefPtr<nsDOMNavigationTiming> mTiming;
-
-  // This flag means that mTiming has been initialized but nulled out.
-  // We will check the innerWin's timing before creating a new one
-  // in MaybeInitTiming()
-  bool mBlankTiming;
 
   // Are we a regular frame, a browser frame, or an app frame?
   uint32_t mFrameType;
