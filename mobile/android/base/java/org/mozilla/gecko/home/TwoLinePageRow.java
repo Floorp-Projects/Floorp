@@ -9,6 +9,9 @@ import java.lang.ref.WeakReference;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
+import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.Tab;
@@ -270,8 +273,8 @@ public class TwoLinePageRow extends LinearLayout
     protected void update(String title, String url, long bookmarkId, boolean hasReaderCacheItem) {
         if (mShowIcons) {
             // The bookmark id will be 0 (null in database) when the url
-            // is not a bookmark.
-            final boolean isBookmark = bookmarkId != 0;
+            // is not a bookmark and negative for 'fake' bookmarks.
+            final boolean isBookmark = bookmarkId > 0;
 
             updateStatusIcon(isBookmark, hasReaderCacheItem);
         } else {
@@ -293,9 +296,23 @@ public class TwoLinePageRow extends LinearLayout
 
         // Displayed RecentTabsPanel URLs may refer to pages opened in reader mode, so we
         // remove the about:reader prefix to ensure the Favicon loads properly.
-        final String pageURL = AboutPages.isAboutReader(url) ?
-            ReaderModeUtils.getUrlFromAboutReader(url) : url;
-        mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
+        final String pageURL = AboutPages.isAboutReader(url) ? ReaderModeUtils.getUrlFromAboutReader(url) : url;
+
+        if (bookmarkId < BrowserContract.Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {
+            mLoadFaviconJobId = Favicons.getSizedFavicon(
+                    getContext(),
+                    pageURL,
+                    PartnerBookmarksProviderProxy.getUriForIcon(getContext(), bookmarkId).toString(),
+                    Favicons.LoadType.PRIVILEGED,
+                    Favicons.defaultFaviconSize,
+                    // We want to load the favicon from the content provider but we do not want the
+                    // favicon loader to fallback to loading a favicon from the web using a guessed
+                    // default URL.
+                    LoadFaviconTask.FLAG_NO_DOWNLOAD_FROM_GUESSED_DEFAULT_URL,
+                    mFaviconListener);
+        } else {
+            mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
+        }
 
         updateDisplayedUrl(url, hasReaderCacheItem);
     }
