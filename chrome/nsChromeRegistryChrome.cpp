@@ -123,15 +123,17 @@ nsChromeRegistryChrome::Init()
   nsCOMPtr<nsIPrefService> prefserv (do_GetService(NS_PREFSERVICE_CONTRACTID));
   nsCOMPtr<nsIPrefBranch> prefs;
 
-  if (safeMode)
-    prefserv->GetDefaultBranch(nullptr, getter_AddRefs(prefs));
-  else
-    prefs = do_QueryInterface(prefserv);
+  if (prefserv) {
+    if (safeMode) {
+      prefserv->GetDefaultBranch(nullptr, getter_AddRefs(prefs));
+    } else {
+      prefs = do_QueryInterface(prefserv);
+    }
+  }
 
   if (!prefs) {
     NS_WARNING("Could not get pref service!");
-  }
-  else {
+  } else {
     nsXPIDLCString provider;
     rv = prefs->GetCharPref(SELECTED_SKIN_PREF, getter_Copies(provider));
     if (NS_SUCCEEDED(rv))
