@@ -61,7 +61,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
   }, "browser-delayed-startup-finished", false);
 }
 
-function updateTabContextMenu(tab, onOpened) {
+function updateTabContextMenu(tab) {
   let menu = document.getElementById("tabContextMenu");
   if (!tab)
     tab = gBrowser.selectedTab;
@@ -69,15 +69,7 @@ function updateTabContextMenu(tab, onOpened) {
   tab.dispatchEvent(evt);
   menu.openPopup(tab, "end_after", 0, 0, true, false, evt);
   is(TabContextMenu.contextTab, tab, "TabContextMenu context is the expected tab");
-  const onFinished = () => menu.hidePopup();
-  if (onOpened) {
-    return Task.spawn(function*() {
-      yield onOpened();
-      onFinished();
-    });
-  } else {
-    onFinished();
-  }
+  menu.hidePopup();
 }
 
 function openToolbarCustomizationUI(aCallback, aBrowserWin) {
@@ -1167,25 +1159,3 @@ function getCertExceptionDialog(aLocation) {
   }
 }
 
-function setupRemoteClientsFixture(fixture) {
-  let oldRemoteClientsGetter =
-    Object.getOwnPropertyDescriptor(gFxAccounts, "remoteClients").get;
-
-  Object.defineProperty(gFxAccounts, "remoteClients", {
-    get: function() { return fixture; }
-  });
-  return oldRemoteClientsGetter;
-}
-
-function restoreRemoteClients(getter) {
-  Object.defineProperty(gFxAccounts, "remoteClients", {
-    get: getter
-  });
-}
-
-function* openMenuItemSubmenu(id) {
-  let menuPopup = document.getElementById(id).menupopup;
-  let menuPopupPromise = BrowserTestUtils.waitForEvent(menuPopup, "popupshown");
-  menuPopup.showPopup();
-  yield menuPopupPromise;
-}
