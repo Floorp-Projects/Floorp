@@ -43,6 +43,8 @@ public:
     const uint8_t mElemSize;
     const nsCString mBaseMappedName; // Without any final "[0]".
 
+    bool IsSampler() const;
+
     WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
                     const nsACString& baseUserName, const nsACString& baseMappedName);
 
@@ -91,6 +93,7 @@ private:
 //////////
 
 uint8_t ElemSizeFromType(GLenum elemType);
+bool IsElemTypeSampler(GLenum elemType);
 
 } // namespace mozilla
 

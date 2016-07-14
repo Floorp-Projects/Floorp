@@ -122,6 +122,7 @@ namespace webgl {
 struct LinkedProgramInfo;
 class ShaderValidator;
 class TexUnpackBlob;
+struct UniformInfo;
 } // namespace webgl
 
 WebGLTexelFormat GetWebGLTexelFormat(TexInternalFormat format);
@@ -1607,6 +1608,9 @@ public:
     virtual UniquePtr<webgl::FormatUsageAuthority>
     CreateFormatUsage(gl::GLContext* gl) const = 0;
 
+
+    const decltype(mBound2DTextures)* TexListForElemType(GLenum elemType) const;
+
     // Friend list
     friend class ScopedCopyTexImageSource;
     friend class ScopedResolveTexturesForDraw;
@@ -1615,6 +1619,7 @@ public:
     friend class webgl::TexUnpackBytes;
     friend class webgl::TexUnpackImage;
     friend class webgl::TexUnpackSurface;
+    friend struct webgl::UniformInfo;
     friend class WebGLTexture;
     friend class WebGLFBAttachPoint;
     friend class WebGLFramebuffer;
