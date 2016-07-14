@@ -7034,8 +7034,7 @@ HTMLInputElement::HasPatternMismatch() const
 bool
 HTMLInputElement::IsRangeOverflow() const
 {
-  // TODO: this is temporary until bug 888324 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_MONTH) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -7055,8 +7054,7 @@ HTMLInputElement::IsRangeOverflow() const
 bool
 HTMLInputElement::IsRangeUnderflow() const
 {
-  // TODO: this is temporary until bug 888324 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_MONTH) {
+  if (!DoesMinMaxApply()) {
     return false;
   }
 
@@ -7443,8 +7441,8 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         DebugOnly<bool> ok = maximum.toString(buf, ArrayLength(buf));
         maxStr.AssignASCII(buf);
         MOZ_ASSERT(ok, "buf not big enough");
-      } else if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_TIME) {
-        msgTemplate = mType == NS_FORM_INPUT_DATE ? kDateOverTemplate : kTimeOverTemplate;
+      } else if (IsDateTimeInputType(mType)) {
+        msgTemplate = mType == NS_FORM_INPUT_TIME ? kTimeOverTemplate : kDateOverTemplate;
         GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
       } else {
         msgTemplate = kNumberOverTemplate;
@@ -7479,8 +7477,8 @@ HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
         DebugOnly<bool> ok = minimum.toString(buf, ArrayLength(buf));
         minStr.AssignASCII(buf);
         MOZ_ASSERT(ok, "buf not big enough");
-      } else if (mType == NS_FORM_INPUT_DATE || mType == NS_FORM_INPUT_TIME) {
-        msgTemplate = mType == NS_FORM_INPUT_DATE ? kDateUnderTemplate : kTimeUnderTemplate;
+      } else if (IsDateTimeInputType(mType)) {
+        msgTemplate = mType == NS_FORM_INPUT_TIME ? kTimeUnderTemplate : kDateUnderTemplate;
         GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
       } else {
         msgTemplate = kNumberUnderTemplate;
@@ -8035,8 +8033,7 @@ HTMLInputElement::UpdateHasRange()
 
   mHasRange = false;
 
-  // TODO: this is temporary until bug 888324 is fixed.
-  if (!DoesMinMaxApply() || mType == NS_FORM_INPUT_MONTH) {
+  if (!DoesMinMaxApply()) {
     return;
   }
 
