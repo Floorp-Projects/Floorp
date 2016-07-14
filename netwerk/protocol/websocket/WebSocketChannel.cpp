@@ -194,6 +194,9 @@ public:
 
     nsCOMPtr<nsIPrefBranch> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefService) {
+      return;
+    }
     bool boolpref = true;
     nsresult rv;
     rv = prefService->GetBoolPref("network.websocket.delay-failed-reconnects",
