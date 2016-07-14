@@ -1202,15 +1202,14 @@ WebGLFramebuffer::FinalizeAttachments() const
 bool
 WebGLFramebuffer::ValidateForRead(const char* funcName,
                                   const webgl::FormatUsageInfo** const out_format,
-                                  uint32_t* const out_width, uint32_t* const out_height,
-                                  GLenum* const out_mode)
+                                  uint32_t* const out_width, uint32_t* const out_height)
 {
     if (!ValidateAndInitAttachments(funcName))
         return false;
 
     if (mReadBufferMode == LOCAL_GL_NONE) {
-        mContext->ErrorInvalidOperation("%s: Read buffer mode must not be"
-                                        " NONE.", funcName);
+        mContext->ErrorInvalidOperation("%s: Read buffer mode must not be NONE.",
+                                        funcName);
         return false;
     }
 
@@ -1221,7 +1220,6 @@ WebGLFramebuffer::ValidateForRead(const char* funcName,
         return false;
     }
 
-    *out_mode = mReadBufferMode;
     *out_format = attachPoint->Format();
     attachPoint->Size(out_width, out_height);
     return true;
