@@ -10,12 +10,19 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserContract;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A proxy for the partner bookmarks provider. Bookmark and folder ids of the partner bookmarks providers
@@ -52,6 +59,59 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
 
     private static final int URI_MATCH_BOOKMARKS = 1000;
     private static final int URI_MATCH_ICON = 1001;
+    private static final int URI_MATCH_BOOKMARK = 1002;
+
+    private static final String PREF_DELETED_PARTNER_BOOKMARKS = "distribution.partner.bookmark.deleted";
+
+    /**
+     * Cursor wrapper for filtering empty folders.
+     */
+    private static class FilteredCursor extends CursorWrapper {
+        private HashSet<Integer> emptyFolderPositions;
+        private int count;
+
+        public FilteredCursor(PartnerBookmarksProviderProxy proxy, Cursor cursor) {
+            super(cursor);
+
+            emptyFolderPositions = new HashSet<>();
+            count = cursor.getCount();
+
+            for (int i = 0; i < cursor.getCount(); i++) {
+                cursor.moveToPosition(i);
+
+                final long id = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks._ID));
+                final int type = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.TYPE));
+
+                if (type == BrowserContract.Bookmarks.TYPE_FOLDER && proxy.isFolderEmpty(id)) {
+                    // We do not support deleting folders. So at least hide partner folders that are
+                    // empty because all bookmarks inside it are deleted/hidden.
+                    // Note that this will still show folders with empty folders in them. But multi-level
+                    // partner bookmarks are very unlikely.
+
+                    count--;
+                    emptyFolderPositions.add(i);
+                }
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return count;
+        }
+
+        @Override
+        public boolean moveToPosition(int position) {
+            final Cursor cursor = getWrappedCursor();
+            final int actualCount = cursor.getCount();
+
+            // Find the next position pointing to a bookmark or a non-empty folder
+            while (position < actualCount && emptyFolderPositions.contains(position)) {
+                position++;
+            }
+
+            return position < actualCount && cursor.moveToPosition(position);
+        }
+    }
 
     private static String getAuthority(Context context) {
         return context.getPackageName() + AUTHORITY_PREFIX;
@@ -75,6 +135,15 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
                 .build();
     }
 
+    public static Uri getUriForBookmark(Context context, long bookmarkId) {
+        return new Uri.Builder()
+                .scheme("content")
+                .authority(getAuthority(context))
+                .appendPath("bookmark")
+                .appendPath(String.valueOf(bookmarkId))
+                .build();
+    }
+
     private final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     @Override
@@ -83,15 +152,17 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
 
         uriMatcher.addURI(authority, "bookmarks/*", URI_MATCH_BOOKMARKS);
         uriMatcher.addURI(authority, "icons/*", URI_MATCH_ICON);
+        uriMatcher.addURI(authority, "bookmark/*", URI_MATCH_BOOKMARK);
 
         return true;
     }
 
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        final Context context = assertAndGetContext();
         final int match = uriMatcher.match(uri);
 
-        final ContentResolver contentResolver = assertAndGetContext().getContentResolver();
+        final ContentResolver contentResolver = context.getContentResolver();
 
         switch (match) {
             case URI_MATCH_BOOKMARKS:
@@ -99,7 +170,9 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
                 if (bookmarkId == -1) {
                     throw new IllegalArgumentException("Bookmark id is not a number");
                 }
-                return getBookmarksInFolder(contentResolver, bookmarkId);
+                final Cursor cursor = getBookmarksInFolder(contentResolver, bookmarkId);
+                cursor.setNotificationUri(context.getContentResolver(), uri);
+                return new FilteredCursor(this, cursor);
 
             case URI_MATCH_ICON:
                 return getIcon(contentResolver, ContentUris.parseId(uri));
@@ -107,13 +180,58 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown URI " + uri.toString());
         }
-    };
+    }
+
+    @Override
+    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
+        final int match = uriMatcher.match(uri);
+
+        switch (match) {
+            case URI_MATCH_BOOKMARK:
+                rememberRemovedBookmark(ContentUris.parseId(uri));
+                notifyBookmarkChange();
+                return 1;
+
+            default:
+                throw new UnsupportedOperationException("Unknown URI " + uri.toString());
+        }
+    }
+
+    private void notifyBookmarkChange() {
+        final Context context = assertAndGetContext();
+
+        context.getContentResolver().notifyChange(
+                new Uri.Builder()
+                        .scheme("content")
+                        .authority(getAuthority(context))
+                        .appendPath("bookmarks")
+                        .build(),
+                null);
+    }
+
+    private synchronized void rememberRemovedBookmark(long bookmarkId) {
+        Set<String> deletedIds = getRemovedBookmarkIds();
+
+        deletedIds.add(String.valueOf(bookmarkId));
+
+        GeckoSharedPrefs.forProfile(assertAndGetContext())
+                .edit()
+                .putStringSet(PREF_DELETED_PARTNER_BOOKMARKS, deletedIds)
+                .apply();
+    }
+
+    private synchronized Set<String> getRemovedBookmarkIds() {
+        SharedPreferences preferences = GeckoSharedPrefs.forProfile(assertAndGetContext());
+        return preferences.getStringSet(PREF_DELETED_PARTNER_BOOKMARKS, new HashSet<String>());
+    }
 
     private Cursor getBookmarksInFolder(ContentResolver contentResolver, long folderId) {
         // Use root folder id or transform negative id into actual (positive) folder id.
         final long actualFolderId = folderId == BrowserContract.Bookmarks.FIXED_ROOT_ID
                 ? PartnerContract.PARENT_ROOT_ID
                 : BrowserContract.Bookmarks.FAKE_PARTNER_BOOKMARKS_START - folderId;
+
+        final String removedBookmarkIds = TextUtils.join(",", getRemovedBookmarkIds());
 
         return contentResolver.query(
                 PartnerContract.CONTENT_URI,
@@ -131,10 +249,12 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
                         PartnerContract.ID + " as " + BrowserContract.Bookmarks.GUID
                 },
                 PartnerContract.PARENT + " = ?"
-                        // Only select entries with valid type
-                        + " AND (" + BrowserContract.Bookmarks.TYPE + " = ? OR " + BrowserContract.Bookmarks.TYPE + " = ?)"
+                        // We only want to read bookmarks or folders from the content provider
+                        + " AND " + BrowserContract.Bookmarks.TYPE + " IN (?,?)"
                         // Only select entries with non empty title
-                        + " AND " + BrowserContract.Bookmarks.TITLE + " <> ''",
+                        + " AND " + BrowserContract.Bookmarks.TITLE + " <> ''"
+                        // Filter all "deleted" ids
+                        + " AND " + BrowserContract.Combined.BOOKMARK_ID + " NOT IN (" + removedBookmarkIds + ")",
                 new String[] {
                         String.valueOf(actualFolderId),
                         String.valueOf(PartnerContract.TYPE_BOOKMARK),
@@ -142,6 +262,21 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
                 },
                 // Same order we use in our content provider (without position)
                 BrowserContract.Bookmarks.TYPE + " ASC, " + BrowserContract.Bookmarks._ID + " ASC");
+    }
+
+    private boolean isFolderEmpty(long folderId) {
+        final Context context = assertAndGetContext();
+        final Cursor cursor = getBookmarksInFolder(context.getContentResolver(), folderId);
+
+        if (cursor == null) {
+            return true;
+        }
+
+        try {
+            return cursor.getCount() == 0;
+        } finally {
+            cursor.close();
+        }
     }
 
     private Cursor getIcon(ContentResolver contentResolver, long bookmarkId) {
@@ -177,11 +312,6 @@ public class PartnerBookmarksProviderProxy extends ContentProvider {
 
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         throw new UnsupportedOperationException();
     }
 
