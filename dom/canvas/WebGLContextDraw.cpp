@@ -94,6 +94,12 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
 {
     MOZ_ASSERT(mWebGL->gl->IsCurrent());
 
+    if (!mWebGL->mActiveProgramLinkInfo) {
+        mWebGL->ErrorInvalidOperation("%s: The current program is not linked.", funcName);
+        *out_error = true;
+        return;
+    }
+
     std::vector<const WebGLFBAttachPoint*> fbAttachments;
     if (mWebGL->mBoundDrawFramebuffer) {
         const auto& fb = mWebGL->mBoundDrawFramebuffer;
@@ -243,12 +249,6 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
 
     // If count is 0, there's nothing to do.
     if (count == 0 || primcount == 0) {
-        return false;
-    }
-
-    // Any checks below this depend on a program being available.
-    if (!mCurrentProgram) {
-        ErrorInvalidOperation("%s: null CURRENT_PROGRAM", info);
         return false;
     }
 
@@ -408,14 +408,6 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
 
     if (!checked_byteCount.isValid()) {
         ErrorInvalidValue("%s: overflow in byteCount", info);
-        return false;
-    }
-
-    // Any checks below this depend on mActiveProgramLinkInfo being available.
-    if (!mActiveProgramLinkInfo) {
-        // Technically, this will only be null iff CURRENT_PROGRAM is null.
-        // But it's better to branch on what we actually care about.
-        ErrorInvalidOperation("%s: null CURRENT_PROGRAM", info);
         return false;
     }
 
