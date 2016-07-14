@@ -23,8 +23,6 @@
 #include <assert.h>
 #include "gmp-api/gmp-decryption.h"
 
-#define CLEARKEY_KEY_LEN ((size_t)16)
-
 #if 0
 void CK_Log(const char* aFmt, ...);
 #define CK_LOGE(...) CK_Log(__VA_ARGS__)
@@ -53,10 +51,6 @@ class ClearKeyUtils
 public:
   static void DecryptAES(const std::vector<uint8_t>& aKey,
                          std::vector<uint8_t>& aData, std::vector<uint8_t>& aIV);
-
-  static void ParseCENCInitData(const uint8_t* aInitData,
-                                uint32_t aInitDataSize,
-                                std::vector<Key>& aOutKeyIds);
 
   static bool ParseKeyIdsInitData(const uint8_t* aInitData,
                                   uint32_t aInitDataSize,
