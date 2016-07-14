@@ -51,20 +51,26 @@ toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-in
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   display: -moz-box;
-  height: 13px;
-  width: 13px;
-  background-size: contain;
-  border: none;
-  box-shadow: none;
-  filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
+  height: 8px;
+  width: 8px;
+  min-width: 0;
+  border-radius: 50%;
+  /* "!important" is necessary to override the rule in toolbarbutton.css */
+  margin-top: -1px !important;
+  margin-right: -2px !important;
+}
+
+#downloads-button[cui-areatype="toolbar"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  height: 7px;
+  width: 7px;
 }
 
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #D90000 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
+  background: #D90000;
 }
 
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
+  background: #FFBF00;
 }
 
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive,
