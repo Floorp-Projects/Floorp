@@ -626,6 +626,9 @@ MediaDecoder::Shutdown()
 
   mShuttingDown = true;
 
+  // Unwatch all watch targets to prevent further notifications.
+  mWatchManager.Shutdown();
+
   mResourceCallback->Disconnect();
 
 #ifdef MOZ_EME
@@ -642,8 +645,6 @@ MediaDecoder::Shutdown()
     mOnPlaybackEvent.Disconnect();
     mOnSeekingStart.Disconnect();
     mOnMediaNotSeekable.Disconnect();
-
-    mWatchManager.Unwatch(mIsAudioDataAudible, &MediaDecoder::NotifyAudibleStateChanged);
 
     mDecoderStateMachine->BeginShutdown()
       ->Then(AbstractThread::MainThread(), __func__, this,
