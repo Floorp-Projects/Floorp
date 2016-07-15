@@ -153,25 +153,6 @@ Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity(JNIEnv * arg0, jclas
 
 #ifdef JNI_STUBS
 
-typedef jobject (*Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits_t)(JNIEnv *, jclass, jobject);
-static Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits_t f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits;
-extern "C" NS_EXPORT jobject MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv * arg0, jclass arg1, jobject arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return nullptr;
-    }
-    return f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits", &f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface_t f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface;
 extern "C" NS_EXPORT void MOZ_JNICALL
