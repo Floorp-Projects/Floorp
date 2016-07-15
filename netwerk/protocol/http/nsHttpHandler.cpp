@@ -44,7 +44,6 @@
 #include "nsIStreamConverterService.h"
 #include "nsITimer.h"
 #include "nsCRT.h"
-#include "SpdyZlibReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsIParentalControlsService.h"
 #include "nsPIDOMWindow.h"
@@ -210,7 +209,6 @@ nsHttpHandler::nsHttpHandler()
     , mAllowExperiments(true)
     , mDebugObservations(false)
     , mEnableSpdy(false)
-    , mSpdyV31(true)
     , mHttp2Enabled(true)
     , mUseH2Deps(true)
     , mEnforceHttp2TlsProfile(true)
@@ -242,8 +240,6 @@ nsHttpHandler::nsHttpHandler()
     , mKeepEmptyResponseHeadersAsEmtpyString(false)
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
-
-    RegisterStrongMemoryReporter(new SpdyZlibReporter());
 
     MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
     gHttpHandler = this;
@@ -1317,12 +1313,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableSpdy = cVar;
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3-1"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3-1"), &cVar);
-        if (NS_SUCCEEDED(rv))
-            mSpdyV31 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enabled.http2"))) {

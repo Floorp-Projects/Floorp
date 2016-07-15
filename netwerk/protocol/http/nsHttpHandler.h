@@ -108,7 +108,6 @@ public:
     bool           AllowExperiments() { return mTelemetryEnabled && mAllowExperiments; }
 
     bool           IsSpdyEnabled() { return mEnableSpdy; }
-    bool           IsSpdyV31Enabled() { return mSpdyV31; }
     bool           IsHttp2Enabled() { return mHttp2Enabled; }
     bool           EnforceHttp2TlsProfile() { return mEnforceHttp2TlsProfile; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
@@ -513,7 +512,6 @@ private:
     uint32_t           mDebugObservations : 1;
 
     uint32_t           mEnableSpdy : 1;
-    uint32_t           mSpdyV31 : 1;
     uint32_t           mHttp2Enabled : 1;
     uint32_t           mUseH2Deps : 1;
     uint32_t           mEnforceHttp2TlsProfile : 1;
