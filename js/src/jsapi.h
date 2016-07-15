@@ -5541,7 +5541,6 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(ION_ENABLE, "ion.enable")                                     \
     Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
-    Register(SIGNALS_ENABLE, "signals.enable")                             \
     Register(JUMP_THRESHOLD, "jump-threshold")                             \
     Register(WASM_TEST_MODE, "wasm.test-mode")
 
