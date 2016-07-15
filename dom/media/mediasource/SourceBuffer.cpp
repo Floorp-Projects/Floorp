@@ -400,7 +400,7 @@ SourceBuffer::CheckEndTime()
   double endTime = mCurrentAttributes.GetGroupEndTimestamp().ToSeconds();
   double duration = mMediaSource->Duration();
   if (endTime > duration) {
-    mMediaSource->SetDuration(endTime, MSRangeRemovalAction::SKIP);
+    mMediaSource->SetDuration(endTime);
   }
 }
 
@@ -546,6 +546,15 @@ SourceBuffer::GetBufferedEnd()
   ErrorResult dummy;
   RefPtr<TimeRanges> ranges = GetBuffered(dummy);
   return ranges->Length() > 0 ? ranges->GetEndTime() : 0;
+}
+
+double
+SourceBuffer::HighestStartTime()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mTrackBuffersManager
+         ? mTrackBuffersManager->HighestStartTime().ToSeconds()
+         : 0.0;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SourceBuffer)

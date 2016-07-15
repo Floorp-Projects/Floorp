@@ -218,14 +218,13 @@ MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
   if (aDuration >= 0) {
     duration /= USECS_PER_S;
   }
-  SetMediaSourceDuration(duration, MSRangeRemovalAction::SKIP);
+  SetMediaSourceDuration(duration);
 }
 
 void
-MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction)
+MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  double oldDuration = ExplicitDuration();
   if (aDuration >= 0) {
     int64_t checkedDuration;
     if (NS_FAILED(SecondsToUsecs(aDuration, checkedDuration))) {
@@ -237,17 +236,6 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
   } else {
     SetExplicitDuration(PositiveInfinity<double>());
   }
-
-  if (mMediaSource && aAction != MSRangeRemovalAction::SKIP) {
-    mMediaSource->DurationChange(oldDuration, aDuration);
-  }
-}
-
-double
-MediaSourceDecoder::GetMediaSourceDuration()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return ExplicitDuration();
 }
 
 void

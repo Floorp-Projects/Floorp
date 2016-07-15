@@ -30,11 +30,6 @@ namespace mozilla {
 class ErrorResult;
 template <typename T> class AsyncEventRunner;
 
-enum MSRangeRemovalAction: uint8_t {
-  RUN = 0,
-  SKIP = 1
-};
-
 namespace dom {
 
 class GlobalObject;
@@ -116,9 +111,6 @@ public:
   }
 
 private:
-  // MediaSourceDecoder uses DurationChange to set the duration
-  // without hitting the checks in SetDuration.
-  friend class mozilla::MediaSourceDecoder;
   // SourceBuffer uses SetDuration and SourceBufferIsActive
   friend class mozilla::dom::SourceBuffer;
 
@@ -130,10 +122,10 @@ private:
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
-  void DurationChange(double aOldDuration, double aNewDuration);
+  void DurationChange(double aNewDuration, ErrorResult& aRv);
 
   // SetDuration with no checks.
-  void SetDuration(double aDuration, MSRangeRemovalAction aAction);
+  void SetDuration(double aDuration);
 
   // Mark SourceBuffer as active and rebuild ActiveSourceBuffers.
   void SourceBufferIsActive(SourceBuffer* aSourceBuffer);
