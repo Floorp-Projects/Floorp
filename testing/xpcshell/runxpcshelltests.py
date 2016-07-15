@@ -16,6 +16,7 @@ import random
 import re
 import shutil
 import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -23,6 +24,7 @@ import traceback
 
 from collections import deque, namedtuple
 from distutils import dir_util
+from distutils.version import LooseVersion
 from multiprocessing import cpu_count
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, STDOUT
@@ -993,7 +995,17 @@ class XPCShellTests(object):
         # the MOZ_NODE_PATH environment variable
         localPath = os.getenv('MOZ_NODE_PATH', None)
         if localPath and os.path.exists(localPath) and os.path.isfile(localPath):
-            nodeBin = localPath
+            try:
+                version_str = subprocess.check_output([localPath, "--version"],
+                                                      stderr=subprocess.STDOUT)
+                # nodejs prefixes its version strings with "v"
+                version = LooseVersion(version_str.lstrip('v'))
+                # Use node only if node version is >=5.0.0 because
+                # node did not support ALPN until this version.
+                if version >= LooseVersion("5.0.0"):
+                    nodeBin = localPath
+            except (subprocess.CalledProcessError, OSError), e:
+                self.log.error('Could not retrieve node version: %s' % str(e))
 
         if nodeBin:
             self.log.info('Found node at %s' % (nodeBin,))
