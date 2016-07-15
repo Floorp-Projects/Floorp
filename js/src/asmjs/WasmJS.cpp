@@ -132,8 +132,11 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!CheckCompilerSupport(cx))
         return false;
 
-    Bytes bytecode;
-    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
+    MutableBytes bytecode = cx->new_<ShareableBytes>();
+    if (!bytecode)
+        return false;
+
+    if (!bytecode->append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -150,7 +153,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     UniqueChars error;
-    SharedModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    SharedModule module = Compile(*bytecode, Move(compileArgs), &error);
     if (!module) {
         if (error)
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
@@ -311,14 +314,17 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    Bytes bytecode;
+    MutableBytes bytecode = cx->new_<ShareableBytes>();
+    if (!bytecode)
+        return false;
+
     if (callArgs[0].toObject().is<TypedArrayObject>()) {
         TypedArrayObject& view = callArgs[0].toObject().as<TypedArrayObject>();
-        if (!bytecode.append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
+        if (!bytecode->append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
             return false;
     } else if (callArgs[0].toObject().is<ArrayBufferObject>()) {
         ArrayBufferObject& buffer = callArgs[0].toObject().as<ArrayBufferObject>();
-        if (!bytecode.append(buffer.dataPointer(), buffer.byteLength()))
+        if (!bytecode->append(buffer.dataPointer(), buffer.byteLength()))
             return false;
     } else {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
@@ -342,7 +348,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    SharedModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    SharedModule module = Compile(*bytecode, Move(compileArgs), &error);
     if (!module) {
         if (error)
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
