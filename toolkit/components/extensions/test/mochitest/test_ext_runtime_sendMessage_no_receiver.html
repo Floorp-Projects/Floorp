@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(function* test_sendMessage_without_listener() {
+  function backgroundScript() {
+    browser.runtime.sendMessage("msg").then(reply => {
+      browser.test.assertEq(undefined, reply);
+      browser.test.notifyFail("Did not expect a reply to sendMessage");
+    }, error => {
+      browser.test.assertEq("Could not establish connection. Receiving end does not exist.", error.message);
+      browser.test.notifyPass("sendMessage callback was invoked");
+    });
+  }
+  let extensionData = {
+    background: `(${backgroundScript})();`,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  yield extension.awaitFinish("sendMessage callback was invoked");
+
+  yield extension.unload();
+});
+</script>
+</body>
