@@ -671,7 +671,7 @@ this.Utils = {
       // fall back on ua info string
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    return Str.sync.get("client.name3", [user, appName, system]);
+    return Str.sync.get("client.name2", [user, appName, system]);
   },
 
   getDeviceName() {
