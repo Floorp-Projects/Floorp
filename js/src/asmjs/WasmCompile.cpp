@@ -1397,7 +1397,7 @@ CompileArgs::init(ExclusiveContext* cx)
     return true;
 }
 
-UniqueModule
+SharedModule
 wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
 {
     bool newFormat = args.assumptions.newFormat;
