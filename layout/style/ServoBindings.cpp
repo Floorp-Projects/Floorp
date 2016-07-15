@@ -562,19 +562,46 @@ Gecko_CreateGradient(uint8_t aShape,
 }
 
 void
-Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize) {
+Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize)
+{
   auto base = reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils> *>(aArray);
   base->EnsureCapacity<nsTArrayInfallibleAllocator>(aCapacity, aElemSize);
 }
 
-void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen) {
+void
+Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen)
+{
   aLayers->mLayers.EnsureLengthAtLeast(aLen);
 }
 
-void Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* aLayer,
-                                nsStyleImageLayers::LayerType aLayerType) {
+void
+Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* aLayer,
+                                nsStyleImageLayers::LayerType aLayerType)
+{
   aLayer->Initialize(aLayerType);
 }
+
+void
+Gecko_ResetStyleCoord(nsStyleUnit* aUnit, nsStyleUnion* aValue)
+{
+  nsStyleCoord::Reset(*aUnit, *aValue);
+}
+
+void
+Gecko_SetStyleCoordCalcValue(nsStyleUnit* aUnit, nsStyleUnion* aValue, nsStyleCoord::CalcValue aCalc)
+{
+  // Calc units should be cleaned up first
+  MOZ_ASSERT(*aUnit != nsStyleUnit::eStyleUnit_Calc);
+  nsStyleCoord::Calc* calcRef = new nsStyleCoord::Calc();
+  calcRef->mLength = aCalc.mLength;
+  calcRef->mPercent = aCalc.mPercent;
+  calcRef->mHasPercent = aCalc.mHasPercent;
+  *aUnit = nsStyleUnit::eStyleUnit_Calc;
+  aValue->mPointer = calcRef;
+  calcRef->AddRef();
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
