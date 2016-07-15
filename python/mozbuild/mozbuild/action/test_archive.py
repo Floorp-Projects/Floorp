@@ -363,6 +363,7 @@ ARCHIVE_FILES = {
             'base': 'testing/xpcshell',
             'patterns': [
                 'head.js',
+                'mach_test_package_commands.py',
                 'moz-http2/**',
                 'moz-spdy/**',
                 'node-http2/**',

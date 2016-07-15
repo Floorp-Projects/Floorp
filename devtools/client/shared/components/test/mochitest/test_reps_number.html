@@ -21,6 +21,7 @@ window.onload = Task.async(function* () {
   try {
     yield testInt();
     yield testBoolean();
+    yield testNegativeZero();
     yield testUnsafeInt();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
@@ -48,6 +49,17 @@ window.onload = Task.async(function* () {
     is(renderedComponent.textContent, "false", "Number rep has expected text content for boolean false");
   }
 
+  function testNegativeZero() {
+    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testNegZeroGrip") });
+    is(renderedRep.type, Number.rep, `Rep correctly selects ${Number.rep.displayName} for negative zero value`);
+
+    let renderedComponent = renderComponent(Number.rep, { object: getGripStub("testNegZeroGrip") });
+    is(renderedComponent.textContent, "-0", "Number rep has expected text content for negative zero grip");
+
+    renderedComponent = renderComponent(Number.rep, { object: getGripStub("testNegZeroValue") });
+    is(renderedComponent.textContent, "-0", "Number rep has expected text content for negative zero value");
+  }
+
   function testUnsafeInt() {
     const renderedComponent = renderComponent(Number.rep, { object: getGripStub("testUnsafeInt") });
     is(renderedComponent.textContent, "900719925474099100", "Number rep has expected text content for a long number");
@@ -63,6 +75,14 @@ window.onload = Task.async(function* () {
 
       case "testFalse":
         return false;
+
+      case "testNegZeroValue":
+        return -0;
+
+      case "testNegZeroGrip":
+        return {
+          "type": "-0"
+        };
 
       case "testUnsafeInt":
         return 900719925474099122;

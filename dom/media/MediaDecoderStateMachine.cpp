@@ -217,6 +217,13 @@ InitSuspendBackgroundPref()
       MediaPrefs::MDSMSuspendBackgroundVideoDelay());
 }
 
+#define INIT_WATCHABLE(name, val) \
+  name(val, "MediaDecoderStateMachine::" #name)
+#define INIT_MIRROR(name, val) \
+  name(mTaskQueue, val, "MediaDecoderStateMachine::" #name " (Mirror)")
+#define INIT_CANONICAL(name, val) \
+  name(mTaskQueue, val, "MediaDecoderStateMachine::" #name " (Canonical)")
+
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
@@ -230,9 +237,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mRealTime(aRealTime),
   mDispatchedStateMachine(false),
   mDelayedScheduler(mTaskQueue),
-  mState(DECODER_STATE_DECODING_METADATA, "MediaDecoderStateMachine::mState"),
+  INIT_WATCHABLE(mState, DECODER_STATE_DECODING_METADATA),
   mCurrentFrameID(0),
-  mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
+  INIT_WATCHABLE(mObservedDuration, TimeUnit()),
   mFragmentEndTime(-1),
   mReader(new MediaDecoderReaderWrapper(aRealTime, mTaskQueue, aReader)),
   mDecodedAudioEndTime(0),
@@ -244,8 +251,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mIsAudioPrerolling(false),
   mIsVideoPrerolling(false),
   mAudioCaptured(false),
-  mAudioCompleted(false, "MediaDecoderStateMachine::mAudioCompleted"),
-  mVideoCompleted(false, "MediaDecoderStateMachine::mVideoCompleted"),
+  INIT_WATCHABLE(mAudioCompleted, false),
+  INIT_WATCHABLE(mVideoCompleted, false),
   mNotifyMetadataBeforeFirstFrame(false),
   mDispatchedEventToDecode(false),
   mQuickBuffering(false),
@@ -260,50 +267,29 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mOutputStreamManager(new OutputStreamManager()),
   mResource(aDecoder->GetResource()),
   mAudioOffloading(false),
-  mBuffered(mTaskQueue, TimeIntervals(),
-            "MediaDecoderStateMachine::mBuffered (Mirror)"),
-  mIsReaderSuspended(mTaskQueue, true,
-               "MediaDecoderStateMachine::mIsReaderSuspended (Mirror)"),
-  mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
-                    "MediaDecoderStateMachine::mEstimatedDuration (Mirror)"),
-  mExplicitDuration(mTaskQueue, Maybe<double>(),
-                    "MediaDecoderStateMachine::mExplicitDuration (Mirror)"),
-  mPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_LOADING,
-             "MediaDecoderStateMachine::mPlayState (Mirror)"),
-  mNextPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_PAUSED,
-                 "MediaDecoderStateMachine::mNextPlayState (Mirror)"),
-  mVolume(mTaskQueue, 1.0, "MediaDecoderStateMachine::mVolume (Mirror)"),
-  mLogicalPlaybackRate(mTaskQueue, 1.0,
-                       "MediaDecoderStateMachine::mLogicalPlaybackRate (Mirror)"),
-  mPreservesPitch(mTaskQueue, true,
-                  "MediaDecoderStateMachine::mPreservesPitch (Mirror)"),
-  mSameOriginMedia(mTaskQueue, false,
-                   "MediaDecoderStateMachine::mSameOriginMedia (Mirror)"),
-  mMediaPrincipalHandle(mTaskQueue, PRINCIPAL_HANDLE_NONE,
-                        "MediaDecoderStateMachine::mMediaPrincipalHandle (Mirror)"),
-  mPlaybackBytesPerSecond(mTaskQueue, 0.0,
-                          "MediaDecoderStateMachine::mPlaybackBytesPerSecond (Mirror)"),
-  mPlaybackRateReliable(mTaskQueue, true,
-                        "MediaDecoderStateMachine::mPlaybackRateReliable (Mirror)"),
-  mDecoderPosition(mTaskQueue, 0,
-                   "MediaDecoderStateMachine::mDecoderPosition (Mirror)"),
-  mMediaSeekable(mTaskQueue, true,
-                 "MediaDecoderStateMachine::mMediaSeekable (Mirror)"),
-  mMediaSeekableOnlyInBufferedRanges(mTaskQueue, false,
-                 "MediaDecoderStateMachine::mMediaSeekableOnlyInBufferedRanges (Mirror)"),
-  mIsVisible(mTaskQueue, true, "MediaDecoderStateMachine::mIsVisible (Mirror)"),
-  mDuration(mTaskQueue, NullableTimeUnit(),
-            "MediaDecoderStateMachine::mDuration (Canonical"),
-  mIsShutdown(mTaskQueue, false,
-              "MediaDecoderStateMachine::mIsShutdown (Canonical)"),
-  mNextFrameStatus(mTaskQueue, MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
-                   "MediaDecoderStateMachine::mNextFrameStatus (Canonical)"),
-  mCurrentPosition(mTaskQueue, 0,
-                   "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
-  mPlaybackOffset(mTaskQueue, 0,
-                  "MediaDecoderStateMachine::mPlaybackOffset (Canonical)"),
-  mIsAudioDataAudible(mTaskQueue, false,
-                     "MediaDecoderStateMachine::mIsAudioDataAudible (Canonical)")
+  INIT_MIRROR(mBuffered, TimeIntervals()),
+  INIT_MIRROR(mIsReaderSuspended, true),
+  INIT_MIRROR(mEstimatedDuration, NullableTimeUnit()),
+  INIT_MIRROR(mExplicitDuration, Maybe<double>()),
+  INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
+  INIT_MIRROR(mNextPlayState, MediaDecoder::PLAY_STATE_PAUSED),
+  INIT_MIRROR(mVolume, 1.0),
+  INIT_MIRROR(mLogicalPlaybackRate, 1.0),
+  INIT_MIRROR(mPreservesPitch, true),
+  INIT_MIRROR(mSameOriginMedia, false),
+  INIT_MIRROR(mMediaPrincipalHandle, PRINCIPAL_HANDLE_NONE),
+  INIT_MIRROR(mPlaybackBytesPerSecond, 0.0),
+  INIT_MIRROR(mPlaybackRateReliable, true),
+  INIT_MIRROR(mDecoderPosition, 0),
+  INIT_MIRROR(mMediaSeekable, true),
+  INIT_MIRROR(mMediaSeekableOnlyInBufferedRanges, false),
+  INIT_MIRROR(mIsVisible, true),
+  INIT_CANONICAL(mDuration, NullableTimeUnit()),
+  INIT_CANONICAL(mIsShutdown, false),
+  INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
+  INIT_CANONICAL(mCurrentPosition, 0),
+  INIT_CANONICAL(mPlaybackOffset, 0),
+  INIT_CANONICAL(mIsAudioDataAudible, false)
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -323,6 +309,10 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   timeBeginPeriod(1);
 #endif
 }
+
+#undef INIT_WATCHABLE
+#undef INIT_MIRROR
+#undef INIT_CANONICAL
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
 {

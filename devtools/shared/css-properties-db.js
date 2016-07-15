@@ -45,6 +45,21 @@ exports.ANGLE_TAKING_FUNCTIONS = ["linear-gradient", "-moz-linear-gradient",
                                   "skewY", "hue-rotate"];
 
 /**
+ * The list of all CSS Pseudo Elements. This list can be generated from:
+ *
+ * let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+ * domUtils.getCSSPseudoElementNames();
+ */
+exports.PSEUDO_ELEMENTS = [":after", ":before", ":backdrop", ":first-letter",
+                           ":first-line", ":-moz-selection", ":-moz-focus-inner",
+                           ":-moz-focus-outer", ":-moz-list-bullet",
+                           ":-moz-list-number", ":-moz-math-anonymous",
+                           ":-moz-progress-bar", ":-moz-range-track",
+                           ":-moz-range-progress", ":-moz-range-thumb",
+                           ":-moz-meter-bar", ":-moz-placeholder",
+                           ":-moz-color-swatch"];
+
+/**
  * This list is generated from the output of the CssPropertiesActor. If a server
  * does not support the actor, this is loaded as a backup. This list does not
  * guarantee that the server actually supports these CSS properties.
@@ -1742,4 +1757,9 @@ exports.CSS_PROPERTIES = {
     isInherited: false,
     supports: []
   }
+};
+
+exports.CSS_PROPERTIES_DB = {
+  properties: exports.CSS_PROPERTIES,
+  pseudoElements: exports.PSEUDO_ELEMENTS
 };

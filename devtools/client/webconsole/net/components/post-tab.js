@@ -6,8 +6,7 @@
 const React = require("devtools/client/shared/vendor/react");
 
 // Reps
-const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
-const { parseURLEncodedText } = require("devtools/client/shared/components/reps/url");
+const { createFactories, parseURLEncodedText } = require("devtools/client/shared/components/reps/rep-utils");
 const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
 const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
 
