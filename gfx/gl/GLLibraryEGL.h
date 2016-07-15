@@ -52,6 +52,10 @@
 #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
 #endif
 
+namespace angle {
+class Platform;
+}
+
 namespace mozilla {
 
 namespace gfx {
@@ -116,6 +120,8 @@ public:
     }
 
     void ClearSymbols() {
+        mSymbols.fANGLEPlatformInitialize = nullptr;
+        mSymbols.fANGLEPlatformShutdown = nullptr;
         mSymbols.fGetDisplay = nullptr;
         mSymbols.fGetPlatformDisplayEXT = nullptr;
         mSymbols.fTerminate = nullptr;
@@ -498,6 +504,22 @@ public:
         return ret;
     }
 
+    void fANGLEPlatformInitialize(angle::Platform* platform)
+    {
+        MOZ_ASSERT(mSymbols.fANGLEPlatformInitialize);
+        BEFORE_GL_CALL;
+        mSymbols.fANGLEPlatformInitialize(platform);
+        AFTER_GL_CALL;
+    }
+
+    void fANGLEPlatformShutdown()
+    {
+        MOZ_ASSERT(mSymbols.fANGLEPlatformShutdown);
+        BEFORE_GL_CALL;
+        mSymbols.fANGLEPlatformShutdown();
+        AFTER_GL_CALL;
+    }
+
     EGLDisplay Display() {
         MOZ_ASSERT(mInitialized);
         return mEGLDisplay;
@@ -622,6 +644,11 @@ public:
         pfnGetSyncAttrib fGetSyncAttrib;
         typedef EGLint (GLAPIENTRY * pfnDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
         pfnDupNativeFenceFDANDROID fDupNativeFenceFDANDROID;
+
+        typedef void (GLAPIENTRY * pfnANGLEPlatformInitialize)(angle::Platform* platform);
+        pfnANGLEPlatformInitialize fANGLEPlatformInitialize;
+        typedef void (GLAPIENTRY * pfnANGLEPlatformShutdown)();
+        pfnANGLEPlatformShutdown fANGLEPlatformShutdown;
     } mSymbols;
 
 #ifdef DEBUG
