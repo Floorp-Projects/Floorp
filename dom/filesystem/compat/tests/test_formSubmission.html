@@ -1,0 +1,266 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Directory form submission</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body onload="return next();">
+
+<iframe name="target_iframe" id="target_iframe"></iframe>
+
+<form action="../../../html/test/form_submit_server.sjs" target="target_iframe" id="form"
+      method="POST" enctype="multipart/form-data">
+</form>
+
+<script class="testbody" type="text/javascript;version=1.8">
+
+var form;
+var iframe;
+var input;
+var xhr;
+
+function setup_tests() {
+  form = document.getElementById("form");
+
+  iframe = document.getElementById("target_iframe");
+  iframe.onload = function() {
+    info("Frame loaded!");
+    next();
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                     ["dom.webkitBlink.dirPicker.enabled", true],
+                                     ["dom.webkitBlink.filesystem.enabled", true]]}, next);
+}
+
+function populate_entries(webkitDirectory) {
+  if (input) {
+    form.removeChild(input);
+  }
+
+  input = document.createElement('input');
+  input.setAttribute('id', 'input');
+  input.setAttribute('type', 'file');
+  input.setAttribute('name', 'input');
+
+  if (webkitDirectory) {
+    input.setAttribute('webkitdirectory', 'true');
+  }
+
+  form.appendChild(input);
+
+  var url = SimpleTest.getTestFileURL("script_entries.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    input.addEventListener("change", function onChange() {
+      input.removeEventListener("change", onChange);
+      next();
+    });
+
+    SpecialPowers.wrap(input).mozSetDndFilesAndDirectories([message.data[0]]);
+    script.destroy();
+  }
+
+  script.addMessageListener("entries.opened", onOpened);
+  script.sendAsyncMessage("entries.open");
+}
+
+function setup_plain() {
+  info("Preparing for a plain text submission...");
+  form.action = "../../../html/test/form_submit_server.sjs?plain";
+  form.method = "POST";
+  form.enctype = "text/plain";
+  form.submit();
+}
+
+function test_plain() {
+  var content = iframe.contentDocument.documentElement.textContent;
+  var submission = JSON.parse(content);
+  input.getFilesAndDirectories().then(function(array) {
+    is(submission, array.map(function(v) {
+       return "input=" + v.name + "\r\n";
+    }).join(""), "Data match");
+
+    next();
+  });
+}
+
+function setup_urlencoded() {
+  info("Preparing for a urlencoded submission...");
+  form.action = "../../../html/test/form_submit_server.sjs?url";
+  form.method = "POST";
+  form.enctype = "application/x-www-form-urlencoded";
+  form.submit();
+}
+
+function setup_urlencoded_get() {
+  info("Preparing for a urlencoded+GET submission...");
+  form.action = "../../../html/test/form_submit_server.sjs?xxyy";
+  form.method = "GET";
+  form.enctype = "";
+  form.submit();
+}
+
+function setup_urlencoded_empty() {
+  info("Preparing for a urlencoded+default values submission...");
+  form.action = "../../../html/test/form_submit_server.sjs";
+  form.method = "";
+  form.enctype = "";
+  form.submit();
+}
+
+function test_urlencoded() {
+  var content = iframe.contentDocument.documentElement.textContent;
+  var submission = JSON.parse(content);
+  input.getFilesAndDirectories().then(function(array) {
+    is(submission, array.map(function(v) {
+       return "input=" + v.name;
+    }).join("&"), "Data match");
+
+    next();
+  });
+}
+
+function setup_formData() {
+  info("Preparing for a fromData submission...");
+
+  xhr = new XMLHttpRequest();
+  xhr.onload = next;
+  xhr.open("POST", "../../../html/test/form_submit_server.sjs");
+  xhr.send(new FormData(form));
+}
+
+function test_multipart() {
+  var submission = JSON.parse(xhr.responseText);
+  input.getFilesAndDirectories().then(function(array) {
+    is(submission.length, array.length, "Same length");
+
+    for (var i = 0; i < array.length; ++i) {
+      if (array[i] instanceof Directory) {
+        is(submission[i].headers["Content-Disposition"],
+           "form-data; name=\"input\"; filename=\"/" + array[i].name + "\"",
+           "Correct Content-Disposition");
+        is(submission[i].headers["Content-Type"], "application/octet-stream",
+           "Correct Content-Type");
+        is(submission[i].body, "", "Correct body");
+      } else {
+        ok(array[i] instanceof File);
+        is(submission[i].headers["Content-Disposition"],
+           "form-data; name=\"input\"; filename=\"" + array[i].name + "\"",
+           "Correct Content-Disposition");
+        is(submission[i].headers["Content-Type"], array[i].type,
+           "Correct Content-Type");
+        is(submission[i].body, "", "Correct body");
+      }
+    }
+    next();
+  });
+}
+
+function test_webkit_plain() {
+  var content = iframe.contentDocument.documentElement.textContent;
+  var submission = JSON.parse(content);
+
+  input.getFiles(true).then(function(array) {
+    is(submission, array.map(function(v) {
+       return "input=" + v.name + "\r\n";
+    }).join(""), "Data match");
+
+    next();
+  });
+}
+
+function test_webkit_urlencoded() {
+  var content = iframe.contentDocument.documentElement.textContent;
+  var submission = JSON.parse(content);
+  input.getFiles(true).then(function(array) {
+    is(submission, array.map(function(v) {
+       return "input=" + v.name;
+    }).join("&"), "Data match");
+
+    next();
+  });
+}
+
+function test_webkit_multipart() {
+  var submission = JSON.parse(xhr.responseText);
+  input.getFiles(true).then(function(array) {
+    is(submission.length, array.length, "Same length");
+
+    for (var i = 0; i < array.length; ++i) {
+      if (array[i] instanceof Directory) {
+        is(submission[i].headers["Content-Disposition"],
+           "form-data; name=\"input\"; filename=\"/" + array[i].name + "\"",
+           "Correct Content-Disposition");
+        is(submission[i].headers["Content-Type"], "application/octet-stream",
+           "Correct Content-Type");
+        is(submission[i].body, "", "Correct body");
+      } else {
+        ok(array[i] instanceof File);
+        is(submission[i].headers["Content-Disposition"],
+           "form-data; name=\"input\"; filename=\"" + array[i].webkitRelativePath + "\"",
+           "Correct Content-Disposition");
+        is(submission[i].headers["Content-Type"], array[i].type,
+           "Correct Content-Type");
+        is(submission[i].body, "", "Correct body");
+      }
+    }
+    next();
+  });
+}
+
+var tests = [
+  setup_tests,
+  function() { populate_entries(false); },
+
+  setup_plain,
+  test_plain,
+
+  setup_urlencoded,
+  test_urlencoded,
+
+  setup_urlencoded_get,
+  test_urlencoded,
+
+  setup_urlencoded_empty,
+  test_urlencoded,
+
+  setup_formData,
+  test_multipart,
+
+  function() { populate_entries(true); },
+
+  setup_plain,
+  test_webkit_plain,
+
+  setup_urlencoded,
+  test_webkit_urlencoded,
+
+  setup_urlencoded_get,
+  test_webkit_urlencoded,
+
+  setup_urlencoded_empty,
+  test_webkit_urlencoded,
+
+  setup_formData,
+  test_webkit_multipart,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

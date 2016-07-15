@@ -76,7 +76,7 @@ xpcAccessibleValue::GetCurrentValue(double* aValue)
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->CurValue();
   } else { 
-    value = Intl().AsProxy()->MinValue();
+    value = Intl().AsProxy()->CurValue();
   }
 
   if (!IsNaN(value))
@@ -115,7 +115,7 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue)
   if (Intl().IsAccessible() && Intl().AsAccessible()->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  double value = Intl().AsAccessible()->Step();
+  double value;
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->Step();
   } else { 

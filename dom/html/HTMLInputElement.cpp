@@ -13,6 +13,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/dom/GetFilesHelper.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 
@@ -226,404 +227,11 @@ const double HTMLInputElement::kMinimumYear = 1;
 #define PROGRESS_STR "progress"
 static const uint32_t kProgressEventInterval = 50; // ms
 
-class GetFilesCallback
-{
-public:
-  NS_INLINE_DECL_REFCOUNTING(GetFilesCallback);
-
-  virtual void
-  Callback(nsresult aStatus, const Sequence<RefPtr<File>>& aFiles) = 0;
-
-protected:
-  virtual ~GetFilesCallback() {}
-};
-
-// Retrieving the list of files can be very time/IO consuming. We use this
-// helper class to do it just once.
-class GetFilesHelper final : public Runnable
-{
-public:
-  static already_AddRefed<GetFilesHelper>
-  Create(nsIGlobalObject* aGlobal,
-         const nsTArray<OwningFileOrDirectory>& aFilesOrDirectory,
-         bool aRecursiveFlag, ErrorResult& aRv)
-  {
-    MOZ_ASSERT(aGlobal);
-
-    RefPtr<GetFilesHelper> helper = new GetFilesHelper(aGlobal, aRecursiveFlag);
-
-    nsAutoString directoryPath;
-
-    for (uint32_t i = 0; i < aFilesOrDirectory.Length(); ++i) {
-      const OwningFileOrDirectory& data = aFilesOrDirectory[i];
-      if (data.IsFile()) {
-        if (!helper->mFiles.AppendElement(data.GetAsFile(), fallible)) {
-          aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-          return nullptr;
-        }
-      } else {
-        MOZ_ASSERT(data.IsDirectory());
-
-        // We support the upload of only 1 top-level directory from our
-        // directory picker. This means that we cannot have more than 1
-        // Directory object in aFilesOrDirectory array.
-        MOZ_ASSERT(directoryPath.IsEmpty());
-
-        RefPtr<Directory> directory = data.GetAsDirectory();
-        MOZ_ASSERT(directory);
-
-        aRv = directory->GetFullRealPath(directoryPath);
-        if (NS_WARN_IF(aRv.Failed())) {
-          return nullptr;
-        }
-      }
-    }
-
-    // No directories to explore.
-    if (directoryPath.IsEmpty()) {
-      helper->mListingCompleted = true;
-      return helper.forget();
-    }
-
-    MOZ_ASSERT(helper->mFiles.IsEmpty());
-    helper->SetDirectoryPath(directoryPath);
-
-    nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    MOZ_ASSERT(target);
-
-    aRv = target->Dispatch(helper, NS_DISPATCH_NORMAL);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    return helper.forget();
-  }
-
-  void
-  AddPromise(Promise* aPromise)
-  {
-    MOZ_ASSERT(aPromise);
-
-    // Still working.
-    if (!mListingCompleted) {
-      mPromises.AppendElement(aPromise);
-      return;
-    }
-
-    MOZ_ASSERT(mPromises.IsEmpty());
-    ResolveOrRejectPromise(aPromise);
-  }
-
-  void
-  AddCallback(GetFilesCallback* aCallback)
-  {
-    MOZ_ASSERT(aCallback);
-
-    // Still working.
-    if (!mListingCompleted) {
-      mCallbacks.AppendElement(aCallback);
-      return;
-    }
-
-    MOZ_ASSERT(mCallbacks.IsEmpty());
-    RunCallback(aCallback);
-  }
-
-  // CC methods
-  void Unlink()
-  {
-    mGlobal = nullptr;
-    mFiles.Clear();
-    mPromises.Clear();
-    mCallbacks.Clear();
-
-    MutexAutoLock lock(mMutex);
-    mCanceled = true;
-  }
-
-  void Traverse(nsCycleCollectionTraversalCallback &cb)
-  {
-    GetFilesHelper* tmp = this;
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal);
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFiles);
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromises);
-  }
-
-private:
-  GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
-    : mGlobal(aGlobal)
-    , mRecursiveFlag(aRecursiveFlag)
-    , mListingCompleted(false)
-    , mErrorResult(NS_OK)
-    , mMutex("GetFilesHelper::mMutex")
-    , mCanceled(false)
-  {
-    MOZ_ASSERT(aGlobal);
-  }
-
-  void
-  SetDirectoryPath(const nsAString& aDirectoryPath)
-  {
-    mDirectoryPath = aDirectoryPath;
-  }
-
-  bool
-  IsCanceled()
-  {
-    MutexAutoLock lock(mMutex);
-    return mCanceled;
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    MOZ_ASSERT(!mDirectoryPath.IsEmpty());
-    MOZ_ASSERT(!mListingCompleted);
-
-    // First step is to retrieve the list of file paths.
-    // This happens in the I/O thread.
-    if (!NS_IsMainThread()) {
-      RunIO();
-
-      // If this operation has been canceled, we don't have to go back to
-      // main-thread.
-      if (IsCanceled()) {
-        return NS_OK;
-      }
-
-      return NS_DispatchToMainThread(this);
-    }
-
-    // We are here, but we should not do anything on this thread because, in the
-    // meantime, the operation has been canceled.
-    if (IsCanceled()) {
-      return NS_OK;
-    }
-
-    RunMainThread();
-
-    // We mark the operation as completed here.
-    mListingCompleted = true;
-
-    // Let's process the pending promises.
-    nsTArray<RefPtr<Promise>> promises;
-    promises.SwapElements(mPromises);
-
-    for (uint32_t i = 0; i < promises.Length(); ++i) {
-      ResolveOrRejectPromise(promises[i]);
-    }
-
-    // Let's process the pending callbacks.
-    nsTArray<RefPtr<GetFilesCallback>> callbacks;
-    callbacks.SwapElements(mCallbacks);
-
-    for (uint32_t i = 0; i < callbacks.Length(); ++i) {
-      RunCallback(callbacks[i]);
-    }
-
-    return NS_OK;
-  }
-
-  void
-  RunIO()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!mDirectoryPath.IsEmpty());
-    MOZ_ASSERT(!mListingCompleted);
-
-    nsCOMPtr<nsIFile> file;
-    mErrorResult = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(mDirectoryPath), true,
-                                         getter_AddRefs(file));
-    if (NS_WARN_IF(NS_FAILED(mErrorResult))) {
-      return;
-    }
-
-    nsAutoString path;
-    path.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-
-    mErrorResult = ExploreDirectory(path, file);
-  }
-
-  void
-  RunMainThread()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!mDirectoryPath.IsEmpty());
-    MOZ_ASSERT(!mListingCompleted);
-
-    // If there is an error, do nothing.
-    if (NS_FAILED(mErrorResult)) {
-      return;
-    }
-
-    // Create the sequence of Files.
-    for (uint32_t i = 0; i < mTargetPathArray.Length(); ++i) {
-      nsCOMPtr<nsIFile> file;
-      mErrorResult =
-        NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(mTargetPathArray[i].mRealPath),
-                              true, getter_AddRefs(file));
-      if (NS_WARN_IF(NS_FAILED(mErrorResult))) {
-        mFiles.Clear();
-        return;
-      }
-
-      RefPtr<File> domFile =
-        File::CreateFromFile(mGlobal, file);
-      MOZ_ASSERT(domFile);
-
-      domFile->SetPath(mTargetPathArray[i].mDomPath);
-
-      if (!mFiles.AppendElement(domFile, fallible)) {
-        mErrorResult = NS_ERROR_OUT_OF_MEMORY;
-        mFiles.Clear();
-        return;
-      }
-    }
-  }
-
-  nsresult
-  ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(aFile);
-
-    // We check if this operation has to be terminated at each recursion.
-    if (IsCanceled()) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    nsresult rv = aFile->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    for (;;) {
-      bool hasMore = false;
-      if (NS_WARN_IF(NS_FAILED(entries->HasMoreElements(&hasMore))) || !hasMore) {
-        break;
-      }
-
-      nsCOMPtr<nsISupports> supp;
-      if (NS_WARN_IF(NS_FAILED(entries->GetNext(getter_AddRefs(supp))))) {
-        break;
-      }
-
-      nsCOMPtr<nsIFile> currFile = do_QueryInterface(supp);
-      MOZ_ASSERT(currFile);
-
-      bool isLink, isSpecial, isFile, isDir;
-      if (NS_WARN_IF(NS_FAILED(currFile->IsSymlink(&isLink)) ||
-                     NS_FAILED(currFile->IsSpecial(&isSpecial))) ||
-          isLink || isSpecial) {
-        continue;
-      }
-
-      if (NS_WARN_IF(NS_FAILED(currFile->IsFile(&isFile)) ||
-                     NS_FAILED(currFile->IsDirectory(&isDir))) ||
-          !(isFile || isDir)) {
-        continue;
-      }
-
-      // The new domPath
-      nsAutoString domPath;
-      domPath.Assign(aDOMPath);
-      if (!aDOMPath.EqualsLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL)) {
-        domPath.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-      }
-
-      nsAutoString leafName;
-      if (NS_WARN_IF(NS_FAILED(currFile->GetLeafName(leafName)))) {
-        continue;
-      }
-      domPath.Append(leafName);
-
-      if (isFile) {
-        FileData* data = mTargetPathArray.AppendElement(fallible);
-        if (!data) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        if (NS_WARN_IF(NS_FAILED(currFile->GetPath(data->mRealPath)))) {
-          continue;
-        }
-
-        data->mDomPath = domPath;
-        continue;
-      }
-
-      MOZ_ASSERT(isDir);
-      if (!mRecursiveFlag) {
-        continue;
-      }
-
-      // Recursive.
-      rv = ExploreDirectory(domPath, currFile);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    return NS_OK;
-  }
-
-  void
-  ResolveOrRejectPromise(Promise* aPromise)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mListingCompleted);
-    MOZ_ASSERT(aPromise);
-
-    // Error propagation.
-    if (NS_FAILED(mErrorResult)) {
-      aPromise->MaybeReject(mErrorResult);
-      return;
-    }
-
-    aPromise->MaybeResolve(mFiles);
-  }
-
-  void
-  RunCallback(GetFilesCallback* aCallback)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mListingCompleted);
-    MOZ_ASSERT(aCallback);
-
-    aCallback->Callback(mErrorResult, mFiles);
-  }
-
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-
-  bool mRecursiveFlag;
-  bool mListingCompleted;
-  nsString mDirectoryPath;
-
-  // We populate this array in the I/O thread with the paths of the Files that
-  // we want to send as result to the promise objects.
-  struct FileData {
-    nsString mDomPath;
-    nsString mRealPath;
-  };
-  FallibleTArray<FileData> mTargetPathArray;
-
-  // This is the real File sequence that we expose via Promises.
-  Sequence<RefPtr<File>> mFiles;
-
-  // Error code to propagate.
-  nsresult mErrorResult;
-
-  nsTArray<RefPtr<Promise>> mPromises;
-  nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
-
-  Mutex mMutex;
-
-  // This variable is protected by mutex.
-  bool mCanceled;
-};
-
 // An helper class for the dispatching of the 'change' event.
+// This class is used when the FilePicker finished its task (or when files and
+// directories are set by some chrome/test only method).
+// The task of this class is to postpone the dispatching of 'change' and 'input'
+// events at the end of the exploration of the directories.
 class DispatchChangeEventCallback final : public GetFilesCallback
 {
 public:
@@ -666,32 +274,6 @@ public:
 
 private:
   RefPtr<HTMLInputElement> mInputElement;
-};
-
-// This callback is used for postponing the calling of SetFilesOrDirectories
-// when the exploration of the directory is completed.
-class AfterSetFilesOrDirectoriesCallback : public GetFilesCallback
-{
-public:
-  AfterSetFilesOrDirectoriesCallback(HTMLInputElement* aInputElement,
-                                     bool aSetValueChanged)
-    : mInputElement(aInputElement)
-    , mSetValueChanged(aSetValueChanged)
-  {
-    MOZ_ASSERT(aInputElement);
-  }
-
-  void
-  Callback(nsresult aStatus, const Sequence<RefPtr<File>>& aFiles) override
-  {
-    if (NS_SUCCEEDED(aStatus)) {
-      mInputElement->AfterSetFilesOrDirectoriesInternal(mSetValueChanged);
-    }
-  }
-
-private:
-  RefPtr<HTMLInputElement> mInputElement;
-  bool mSetValueChanged;
 };
 
 class HTMLInputElementState final : public nsISupports
@@ -3298,6 +2880,7 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
   AfterSetFilesOrDirectories(aSetValueChanged);
 }
 
+// This method is used for testing only.
 void
 HTMLInputElement::MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
 {
@@ -3306,23 +2889,28 @@ HTMLInputElement::MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirect
   }
 
   SetFilesOrDirectories(aFilesOrDirectories, true);
+
+  RefPtr<DispatchChangeEventCallback> dispatchChangeEventCallback =
+    new DispatchChangeEventCallback(this);
+
+  if (Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
+    ErrorResult rv;
+    GetFilesHelper* helper = GetOrCreateGetFilesHelper(true /* recursionFlag */,
+                                                       rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return;
+    }
+
+    helper->AddCallback(dispatchChangeEventCallback);
+  } else {
+    dispatchChangeEventCallback->DispatchEvents();
+  }
 }
 
 void
 HTMLInputElement::AfterSetFilesOrDirectories(bool aSetValueChanged)
-{
-  if (Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
-      HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
-    // This will call AfterSetFilesOrDirectoriesInternal eventually.
-    ExploreDirectoryRecursively(aSetValueChanged);
-    return;
-  }
-
-  AfterSetFilesOrDirectoriesInternal(aSetValueChanged);
-}
-
-void
-HTMLInputElement::AfterSetFilesOrDirectoriesInternal(bool aSetValueChanged)
 {
   // No need to flush here, if there's no frame at this point we
   // don't need to force creation of one just to tell it about this
@@ -6570,16 +6158,18 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
     const nsTArray<OwningFileOrDirectory>& files =
       GetFilesOrDirectoriesInternal();
 
-    bool hasBlobs = false;
-    for (uint32_t i = 0; i < files.Length(); ++i) {
-      if (files[i].IsFile()) {
-        hasBlobs = true;
-        aFormSubmission->AddNameBlobOrNullPair(name, files[i].GetAsFile());
-      }
+    if (files.IsEmpty()) {
+      aFormSubmission->AddNameBlobOrNullPair(name, nullptr);
+      return NS_OK;
     }
 
-    if (!hasBlobs) {
-      aFormSubmission->AddNameBlobOrNullPair(name, nullptr);
+    for (uint32_t i = 0; i < files.Length(); ++i) {
+      if (files[i].IsFile()) {
+        aFormSubmission->AddNameBlobOrNullPair(name, files[i].GetAsFile());
+      } else {
+        MOZ_ASSERT(files[i].IsDirectory());
+        aFormSubmission->AddNameDirectoryPair(name, files[i].GetAsDirectory());
+      }
     }
 
     return NS_OK;
@@ -8511,22 +8101,6 @@ HTMLInputElement::GetOrCreateGetFilesHelper(bool aRecursiveFlag,
   }
 
   return mGetFilesNonRecursiveHelper;
-}
-
-void
-HTMLInputElement::ExploreDirectoryRecursively(bool aSetValueChanged)
-{
-  ErrorResult rv;
-  GetFilesHelper* helper = GetOrCreateGetFilesHelper(true /* recursionFlag */,
-                                                     rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    AfterSetFilesOrDirectoriesInternal(aSetValueChanged);
-    return;
-  }
-
-  RefPtr<AfterSetFilesOrDirectoriesCallback> callback =
-    new AfterSetFilesOrDirectoriesCallback(this, aSetValueChanged);
-  helper->AddCallback(callback);
 }
 
 void

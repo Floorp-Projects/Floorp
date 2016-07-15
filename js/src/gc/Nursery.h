@@ -104,6 +104,7 @@ class Nursery
         currentChunk_(0),
         numActiveChunks_(0),
         numNurseryChunks_(0),
+        previousPromotionRate_(0),
         profileThreshold_(0),
         enableProfiling_(false),
         freeMallocedBuffersTask(nullptr)
@@ -257,6 +258,9 @@ class Nursery
 
     /* Number of chunks allocated for the nursery. */
     int numNurseryChunks_;
+
+    /* Promotion rate for the previous minor collection. */
+    double previousPromotionRate_;
 
     /* Report minor collections taking more than this many us, if enabled. */
     int64_t profileThreshold_;

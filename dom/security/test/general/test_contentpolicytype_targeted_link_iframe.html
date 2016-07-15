@@ -64,11 +64,11 @@ var policy = {
       is(contentType, EXPECTED_CONTENT_TYPE,
          "content policy type should TYPESUBDOCUMENT");
       testCounter++;
-    }
-
-    if (testCounter === EXPECTED_RESULTS) {
-      categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
-      SimpleTest.finish();
+      
+      if (testCounter === EXPECTED_RESULTS) {
+        categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
+        SimpleTest.finish();
+      }
     }
     return Ci.nsIContentPolicy.ACCEPT;
   },

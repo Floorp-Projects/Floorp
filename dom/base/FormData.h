@@ -36,7 +36,7 @@ private:
   {
     nsString name;
     bool wasNullBlob;
-    OwningBlobOrUSVString value;
+    OwningBlobOrDirectoryOrUSVString value;
   };
 
   // Returns the FormDataTuple to modify. This may be null, in which case
@@ -52,6 +52,10 @@ private:
   void SetNameFilePair(FormDataTuple* aData,
                        const nsAString& aName,
                        File* aFile);
+
+  void SetNameDirectoryPair(FormDataTuple* aData,
+                            const nsAString& aName,
+                            Directory* aDirectory);
 
 public:
   explicit FormData(nsISupports* aOwner = nullptr);
@@ -80,15 +84,18 @@ public:
 
   void Append(const nsAString& aName, const nsAString& aValue,
               ErrorResult& aRv);
+
   void Append(const nsAString& aName, Blob& aBlob,
               const Optional<nsAString>& aFilename,
               ErrorResult& aRv);
 
+  void Append(const nsAString& aName, Directory* aDirectory);
+
   void Delete(const nsAString& aName);
 
-  void Get(const nsAString& aName, Nullable<OwningBlobOrUSVString>& aOutValue);
+  void Get(const nsAString& aName, Nullable<OwningBlobOrDirectoryOrUSVString>& aOutValue);
 
-  void GetAll(const nsAString& aName, nsTArray<OwningBlobOrUSVString>& aValues);
+  void GetAll(const nsAString& aName, nsTArray<OwningBlobOrDirectoryOrUSVString>& aValues);
 
   bool Has(const nsAString& aName);
 
@@ -102,7 +109,7 @@ public:
 
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
 
-  const OwningBlobOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
+  const OwningBlobOrDirectoryOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
 
   // HTMLFormSubmission
   virtual nsresult
@@ -119,8 +126,11 @@ public:
   virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
                                          Blob* aBlob) override;
 
+  virtual nsresult AddNameDirectoryPair(const nsAString& aName,
+                                        Directory* aDirectory) override;
+
   typedef bool (*FormDataEntryCallback)(const nsString& aName,
-                                        const OwningBlobOrUSVString& aValue,
+                                        const OwningBlobOrDirectoryOrUSVString& aValue,
                                         void* aClosure);
 
   uint32_t
