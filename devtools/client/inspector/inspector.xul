@@ -11,7 +11,12 @@
 <?xml-stylesheet href="chrome://devtools/skin/computed.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/fonts.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/layout.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/animationinspector.css" type="text/css"?>
 <?xml-stylesheet href="resource://devtools/client/shared/components/sidebar-toggle.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/tabs/tabs.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/tabs/tabbar.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/inspector/components/side-panel.css" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/inspector/components/inspector-tab-panel.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd"> %inspectorDTD;
@@ -50,156 +55,154 @@
       </html:div>
     </vbox>
     <splitter class="devtools-side-splitter"/>
-    <tabbox id="inspector-sidebar" handleCtrlTab="false" class="devtools-sidebar-tabs" hidden="true">
-      <tabs>
-        <tab id="sidebar-tab-ruleview"
-             label="&ruleViewTitle;"
-             crop="end"/>
-        <tab id="sidebar-tab-computedview"
-             label="&computedViewTitle;"
-             crop="end"/>
-        <tab id="sidebar-tab-layoutview"
-             label="&layoutViewTitle;"
-             crop="end"/>
-        <tab id="sidebar-tab-fontinspector"
-             label="&fontInspectorTitle;"
-             crop="end"
-             hidden="true"/>
-      </tabs>
-      <tabpanels flex="1">
-        <tabpanel id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div id="ruleview-toolbar-container" class="devtools-toolbar">
-            <html:div id="ruleview-toolbar">
-              <html:div class="devtools-searchbox">
-                <html:input id="ruleview-searchbox"
-                            class="devtools-filterinput devtools-rule-searchbox"
-                            type="search"
-                            placeholder="&filterStylesPlaceholder;"/>
-                <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
-              </html:div>
-              <html:div id="ruleview-command-toolbar">
-                <html:button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></html:button>
-                <html:button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></html:button>
-              </html:div>
-            </html:div>
-            <html:div id="pseudo-class-panel" hidden="true">
-              <html:label><html:input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</html:label>
-              <html:label><html:input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</html:label>
-              <html:label><html:input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</html:label>
-          </html:div>
-          </html:div>
+    <vbox id="inspector-sidebar-container">
+      <!-- Specify the XHTML namespace explicitly
+        otherwise the layout is broken. -->
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           id="inspector-sidebar"
+           hidden="true" />
+    </vbox>
 
-          <html:div id="ruleview-container" class="ruleview">
-          </html:div>
-        </tabpanel>
-
-        <tabpanel id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div class="devtools-toolbar">
+    <!-- Sidebar panel definitions -->
+    <html:div xmlns="http://www.w3.org/1999/xhtml" id="tabpanels" style="visibility:collapse">
+      <html:div id="sidebar-panel-ruleview" class="devtools-monospace theme-sidebar inspector-tabpanel">
+        <html:div id="ruleview-toolbar-container" class="devtools-toolbar">
+          <html:div id="ruleview-toolbar">
             <html:div class="devtools-searchbox">
-              <html:input id="computedview-searchbox"
+              <html:input id="ruleview-searchbox"
                           class="devtools-filterinput devtools-rule-searchbox"
                           type="search"
                           placeholder="&filterStylesPlaceholder;"/>
-              <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
+              <html:button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
             </html:div>
-            <checkbox id="browser-style-checkbox"
-                      class="includebrowserstyles"
-                      checked="false"
-                      label="&browserStylesLabel;"/>
+            <html:div id="ruleview-command-toolbar">
+              <html:button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></html:button>
+              <html:button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></html:button>
+            </html:div>
           </html:div>
+          <html:div id="pseudo-class-panel" hidden="true">
+            <html:label><html:input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</html:label>
+            <html:label><html:input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</html:label>
+            <html:label><html:input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</html:label>
+        </html:div>
+        </html:div>
 
-          <html:div id="propertyContainer">
+        <html:div id="ruleview-container" class="ruleview">
+        </html:div>
+      </html:div>
+
+      <html:div id="sidebar-panel-computedview" class="devtools-monospace theme-sidebar inspector-tabpanel">
+        <html:div class="devtools-toolbar">
+          <html:div class="devtools-searchbox">
+            <html:input id="computedview-searchbox"
+                        class="devtools-filterinput devtools-rule-searchbox"
+                        type="search"
+                        placeholder="&filterStylesPlaceholder;"/>
+            <html:button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></html:button>
           </html:div>
+          <html:label id="browser-style-checkbox-label" for="browser-style-checkbox">
+            <html:input id="browser-style-checkbox"
+                        type="checkbox"
+                        class="includebrowserstyles"
+                        label="&browserStylesLabel;"/>&browserStylesLabel;</html:label>
+        </html:div>
 
-          <html:div id="computedview-no-results" hidden="">
-            &noPropertiesFound;
-          </html:div>
-        </tabpanel>
+        <html:div id="propertyContainer">
+        </html:div>
 
-        <tabpanel id="sidebar-panel-layoutview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div id="layout-wrapper">
-            <html:div id="layout-container">
-              <html:p id="layout-header">
-                <html:span id="layout-element-size"></html:span>
-                <html:section id="layout-position-group">
-                  <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
-                  <html:span id="layout-element-position"></html:span>
-                </html:section>
-              </html:p>
+        <html:div id="computedview-no-results" hidden="">
+          &noPropertiesFound;
+        </html:div>
+      </html:div>
 
-              <html:div id="layout-main">
-                <html:span class="layout-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
-                <html:div id="layout-margins" data-box="margin" title="&margin.tooltip;">
-                  <html:span class="layout-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
-                  <html:div id="layout-borders" data-box="border" title="&border.tooltip;">
-                    <html:span class="layout-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
-                    <html:div id="layout-padding" data-box="padding" title="&padding.tooltip;">
-                      <html:div id="layout-content" data-box="content" title="&content.tooltip;">
-                      </html:div>
+      <html:div id="sidebar-panel-layoutview" class="devtools-monospace theme-sidebar inspector-tabpanel">
+        <html:div id="layout-wrapper">
+          <html:div id="layout-container">
+            <html:p id="layout-header">
+              <html:span id="layout-element-size"></html:span>
+              <html:section id="layout-position-group">
+                <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
+                <html:span id="layout-element-position"></html:span>
+              </html:section>
+            </html:p>
+
+            <html:div id="layout-main">
+              <html:span class="layout-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
+              <html:div id="layout-margins" data-box="margin" title="&margin.tooltip;">
+                <html:span class="layout-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
+                <html:div id="layout-borders" data-box="border" title="&border.tooltip;">
+                  <html:span class="layout-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
+                  <html:div id="layout-padding" data-box="padding" title="&padding.tooltip;">
+                    <html:div id="layout-content" data-box="content" title="&content.tooltip;">
                     </html:div>
                   </html:div>
                 </html:div>
-
-                <html:p class="layout-border layout-top"><html:span data-box="border" class="layout-editable" title="border-top"></html:span></html:p>
-                <html:p class="layout-border layout-right"><html:span data-box="border" class="layout-editable" title="border-right"></html:span></html:p>
-                <html:p class="layout-border layout-bottom"><html:span data-box="border" class="layout-editable" title="border-bottom"></html:span></html:p>
-                <html:p class="layout-border layout-left"><html:span data-box="border" class="layout-editable" title="border-left"></html:span></html:p>
-
-                <html:p class="layout-margin layout-top"><html:span data-box="margin" class="layout-editable" title="margin-top"></html:span></html:p>
-                <html:p class="layout-margin layout-right"><html:span data-box="margin" class="layout-editable" title="margin-right"></html:span></html:p>
-                <html:p class="layout-margin layout-bottom"><html:span data-box="margin" class="layout-editable" title="margin-bottom"></html:span></html:p>
-                <html:p class="layout-margin layout-left"><html:span data-box="margin" class="layout-editable" title="margin-left"></html:span></html:p>
-
-                <html:p class="layout-padding layout-top"><html:span data-box="padding" class="layout-editable" title="padding-top"></html:span></html:p>
-                <html:p class="layout-padding layout-right"><html:span data-box="padding" class="layout-editable" title="padding-right"></html:span></html:p>
-                <html:p class="layout-padding layout-bottom"><html:span data-box="padding" class="layout-editable" title="padding-bottom"></html:span></html:p>
-                <html:p class="layout-padding layout-left"><html:span data-box="padding" class="layout-editable" title="padding-left"></html:span></html:p>
-
-                <html:p class="layout-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
               </html:div>
 
-              <html:div style="display: none">
-                <html:p id="layout-dummy"></html:p>
-              </html:div>
+              <html:p class="layout-border layout-top"><html:span data-box="border" class="layout-editable" title="border-top"></html:span></html:p>
+              <html:p class="layout-border layout-right"><html:span data-box="border" class="layout-editable" title="border-right"></html:span></html:p>
+              <html:p class="layout-border layout-bottom"><html:span data-box="border" class="layout-editable" title="border-bottom"></html:span></html:p>
+              <html:p class="layout-border layout-left"><html:span data-box="border" class="layout-editable" title="border-left"></html:span></html:p>
+
+              <html:p class="layout-margin layout-top"><html:span data-box="margin" class="layout-editable" title="margin-top"></html:span></html:p>
+              <html:p class="layout-margin layout-right"><html:span data-box="margin" class="layout-editable" title="margin-right"></html:span></html:p>
+              <html:p class="layout-margin layout-bottom"><html:span data-box="margin" class="layout-editable" title="margin-bottom"></html:span></html:p>
+              <html:p class="layout-margin layout-left"><html:span data-box="margin" class="layout-editable" title="margin-left"></html:span></html:p>
+
+              <html:p class="layout-padding layout-top"><html:span data-box="padding" class="layout-editable" title="padding-top"></html:span></html:p>
+              <html:p class="layout-padding layout-right"><html:span data-box="padding" class="layout-editable" title="padding-right"></html:span></html:p>
+              <html:p class="layout-padding layout-bottom"><html:span data-box="padding" class="layout-editable" title="padding-bottom"></html:span></html:p>
+              <html:p class="layout-padding layout-left"><html:span data-box="padding" class="layout-editable" title="padding-left"></html:span></html:p>
+
+              <html:p class="layout-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
+            </html:div>
+
+            <html:div style="display: none">
+              <html:p id="layout-dummy"></html:p>
             </html:div>
           </html:div>
-        </tabpanel>
+        </html:div>
+      </html:div>
 
-        <tabpanel id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div class="devtools-toolbar">
-            <html:div class="devtools-searchbox">
-              <html:input id="font-preview-text-input"
-                          class="devtools-textinput"
-                          type="search"
-                          placeholder="&previewHint;"/>
+      <html:div id="sidebar-panel-fontinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
+        <html:div class="devtools-toolbar">
+          <html:div class="devtools-searchbox">
+            <html:input id="font-preview-text-input"
+                        class="devtools-textinput"
+                        type="search"
+                        placeholder="&previewHint;"/>
+          </html:div>
+        </html:div>
+
+        <html:div id="font-container">
+          <html:ul id="all-fonts"></html:ul>
+          <html:button id="font-showall">&showAllFonts;</html:button>
+        </html:div>
+
+        <html:div id="font-template">
+          <html:section class="font">
+            <html:div class="font-preview-container">
+              <html:img class="font-preview"></html:img>
             </html:div>
-          </html:div>
+            <html:div class="font-info">
+              <html:h1 class="font-name"></html:h1>
+              <html:span class="font-is-local">&system;</html:span>
+              <html:span class="font-is-remote">&remote;</html:span>
+              <html:p class="font-format-url">
+                <html:input readonly="readonly" class="font-url"></html:input>
+                <html:span class="font-format"></html:span>
+              </html:p>
+              <html:p class="font-css">&usedAs; "<html:span class="font-css-name"></html:span>"</html:p>
+              <html:pre class="font-css-code"></html:pre>
+            </html:div>
+          </html:section>
+        </html:div>
+      </html:div>
 
-          <html:div id="font-container">
-            <html:ul id="all-fonts"></html:ul>
-            <html:button id="font-showall">&showAllFonts;</html:button>
-          </html:div>
+      <html:div id="sidebar-panel-animationinspector" class="devtools-monospace theme-sidebar inspector-tabpanel">
+        <html:iframe class="devtools-inspector-tab-frame" />
+      </html:div>
+    </html:div>
 
-          <html:div id="font-template">
-            <html:section class="font">
-              <html:div class="font-preview-container">
-                <html:img class="font-preview"></html:img>
-              </html:div>
-              <html:div class="font-info">
-                <html:h1 class="font-name"></html:h1>
-                <html:span class="font-is-local">&system;</html:span>
-                <html:span class="font-is-remote">&remote;</html:span>
-                <html:p class="font-format-url">
-                  <html:input readonly="readonly" class="font-url"></html:input>
-                  <html:span class="font-format"></html:span>
-                </html:p>
-                <html:p class="font-css">&usedAs; "<html:span class="font-css-name"></html:span>"</html:p>
-                <html:pre class="font-css-code"></html:pre>
-              </html:div>
-            </html:section>
-          </html:div>
-        </tabpanel>
-      </tabpanels>
-    </tabbox>
   </box>
 </window>
