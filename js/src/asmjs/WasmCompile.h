@@ -19,9 +19,8 @@
 #ifndef wasm_compile_h
 #define wasm_compile_h
 
-#include "asmjs/WasmBinary.h"
 #include "asmjs/WasmJS.h"
-#include "asmjs/WasmTypes.h"
+#include "asmjs/WasmModule.h"
 
 namespace js {
 namespace wasm {
@@ -39,7 +38,7 @@ struct CompileArgs
     bool init(ExclusiveContext* cx);
 };
 
-UniqueModule
+SharedModule
 Compile(Bytes&& code, CompileArgs&& args, UniqueChars* error);
 
 }  // namespace wasm

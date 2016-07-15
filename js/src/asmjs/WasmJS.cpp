@@ -150,7 +150,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     UniqueChars error;
-    UniqueModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    SharedModule module = Compile(Move(bytecode), Move(compileArgs), &error);
     if (!module) {
         if (error)
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
@@ -279,18 +279,19 @@ const JSPropertySpec WasmModuleObject::properties[] =
 /* static */ void
 WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    fop->delete_(&obj->as<WasmModuleObject>().module());
+    obj->as<WasmModuleObject>().module().Release();
 }
 
 /* static */ WasmModuleObject*
-WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module, HandleObject proto)
+WasmModuleObject::create(ExclusiveContext* cx, Module& module, HandleObject proto)
 {
     AutoSetNewObjectMetadata metadata(cx);
     auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, proto);
     if (!obj)
         return nullptr;
 
-    obj->initReservedSlot(MODULE_SLOT, PrivateValue((void*)module.release()));
+    obj->initReservedSlot(MODULE_SLOT, PrivateValue((void*)&module));
+    module.AddRef();
     return obj;
 }
 
@@ -341,7 +342,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    UniqueModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    SharedModule module = Compile(Move(bytecode), Move(compileArgs), &error);
     if (!module) {
         if (error)
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
@@ -351,7 +352,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
-    RootedObject moduleObj(cx, WasmModuleObject::create(cx, Move(module), proto));
+    RootedObject moduleObj(cx, WasmModuleObject::create(cx, *module, proto));
     if (!moduleObj)
         return false;
 

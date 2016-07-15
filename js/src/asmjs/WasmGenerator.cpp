@@ -882,7 +882,7 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     return elemSegments_.emplaceBack(tableIndex, 0, Move(elemFuncIndices));
 }
 
-UniqueModule
+SharedModule
 ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(!activeFunc_);
@@ -962,12 +962,12 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
     if (!finishLinkData(code))
         return nullptr;
 
-    return js::MakeUnique<Module>(Move(code),
-                                  Move(linkData_),
-                                  Move(imports),
-                                  Move(exports_),
-                                  Move(dataSegments_),
-                                  Move(elemSegments_),
-                                  *metadata_,
-                                  bytecode);
+    return SharedModule(js_new<Module>(Move(code),
+                                       Move(linkData_),
+                                       Move(imports),
+                                       Move(exports_),
+                                       Move(dataSegments_),
+                                       Move(elemSegments_),
+                                       *metadata_,
+                                       bytecode));
 }
