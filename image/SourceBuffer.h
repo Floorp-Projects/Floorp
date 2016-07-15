@@ -87,7 +87,8 @@ public:
     mData.mIterating.mChunk = 0;
     mData.mIterating.mData = nullptr;
     mData.mIterating.mOffset = 0;
-    mData.mIterating.mLength = 0;
+    mData.mIterating.mAvailableLength = 0;
+    mData.mIterating.mNextReadLength = 0;
   }
 
   SourceBufferIterator(SourceBufferIterator&& aOther)
@@ -109,7 +110,9 @@ public:
   bool RemainingBytesIsNoMoreThan(size_t aBytes) const;
 
   /**
-   * Advances the iterator through the SourceBuffer if possible.
+   * Advances the iterator through the SourceBuffer if possible. Advances no
+   * more than @aRequestedBytes bytes. (Use SIZE_MAX to advance as much as
+   * possible.)
    *
    * This is a wrapper around AdvanceOrScheduleResume() that makes it clearer at
    * the callsite when the no resuming is intended.
@@ -123,12 +126,17 @@ public:
    *           marked complete (i.e., it will never receive any additional
    *           data).
    */
-  State Advance() { return AdvanceOrScheduleResume(nullptr); }
+  State Advance(size_t aRequestedBytes)
+  {
+    return AdvanceOrScheduleResume(aRequestedBytes, nullptr);
+  }
 
   /**
-   * Advances the iterator through the SourceBuffer if possible. If advancing is
-   * not possible and @aConsumer is not null, arranges to call the @aConsumer's
-   * Resume() method when more data is available.
+   * Advances the iterator through the SourceBuffer if possible. Advances no
+   * more than @aRequestedBytes bytes. (Use SIZE_MAX to advance as much as
+   * possible.) If advancing is not possible and @aConsumer is not null,
+   * arranges to call the @aConsumer's Resume() method when more data is
+   * available.
    *
    * @return State::READY if the iterator was successfully advanced.
    *         State::WAITING if the iterator could not be advanced because it's
@@ -140,7 +148,7 @@ public:
    *           marked complete (i.e., it will never receive any additional
    *           data).
    */
-  State AdvanceOrScheduleResume(IResumable* aConsumer);
+  State AdvanceOrScheduleResume(size_t aRequestedBytes, IResumable* aConsumer);
 
   /// If at the end, returns the status passed to SourceBuffer::Complete().
   nsresult CompletionStatus() const
@@ -162,7 +170,7 @@ public:
   size_t Length() const
   {
     MOZ_ASSERT(mState == READY, "Calling Length() in the wrong state");
-    return mState == READY ? mData.mIterating.mLength : 0;
+    return mState == READY ? mData.mIterating.mNextReadLength : 0;
   }
 
   /// @return a count of the chunks we've advanced through.
@@ -179,22 +187,39 @@ private:
 
   bool HasMore() const { return mState != COMPLETE; }
 
+  State AdvanceFromLocalBuffer(size_t aRequestedBytes)
+  {
+    MOZ_ASSERT(mState == READY, "Advancing in the wrong state");
+    MOZ_ASSERT(mData.mIterating.mAvailableLength > 0,
+               "The local buffer shouldn't be empty");
+    MOZ_ASSERT(mData.mIterating.mNextReadLength == 0,
+               "Advancing without consuming previous data");
+
+    mData.mIterating.mNextReadLength =
+      std::min(mData.mIterating.mAvailableLength, aRequestedBytes);
+
+    return READY;
+  }
+
   State SetReady(uint32_t aChunk, const char* aData,
-                size_t aOffset, size_t aLength)
+                 size_t aOffset, size_t aAvailableLength,
+                 size_t aRequestedBytes)
   {
     MOZ_ASSERT(mState != COMPLETE);
+    mState = READY;
 
     // Update state.
     mData.mIterating.mChunk = aChunk;
     mData.mIterating.mData = aData;
     mData.mIterating.mOffset = aOffset;
-    mData.mIterating.mLength = aLength;
+    mData.mIterating.mAvailableLength = aAvailableLength;
 
     // Update metrics.
     mChunkCount++;
-    mByteCount += aLength;
+    mByteCount += aAvailableLength;
 
-    return mState = READY;
+    // Attempt to advance by the requested number of bytes.
+    return AdvanceFromLocalBuffer(aRequestedBytes);
   }
 
   State SetWaiting()
@@ -224,7 +249,8 @@ private:
       uint32_t mChunk;
       const char* mData;
       size_t mOffset;
-      size_t mLength;
+      size_t mAvailableLength;
+      size_t mNextReadLength;
     } mIterating;
     struct {
       nsresult mStatus;
@@ -378,6 +404,7 @@ private:
   typedef SourceBufferIterator::State State;
 
   State AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
+                                        size_t aRequestedBytes,
                                         IResumable* aConsumer);
   bool RemainingBytesIsNoMoreThan(const SourceBufferIterator& aIterator,
                                   size_t aBytes) const;
