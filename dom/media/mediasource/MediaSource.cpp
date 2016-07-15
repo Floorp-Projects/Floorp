@@ -192,7 +192,7 @@ MediaSource::Duration()
     return UnspecifiedNaN<double>();
   }
   MOZ_ASSERT(mDecoder);
-  return mDecoder->GetMediaSourceDuration();
+  return mDecoder->GetDuration();
 }
 
 void
@@ -209,15 +209,15 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  SetDuration(aDuration, MSRangeRemovalAction::RUN);
+  DurationChange(aDuration, aRv);
 }
 
 void
-MediaSource::SetDuration(double aDuration, MSRangeRemovalAction aAction)
+MediaSource::SetDuration(double aDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetDuration(aDuration=%f)", aDuration);
-  mDecoder->SetMediaSourceDuration(aDuration, aAction);
+  mDecoder->SetMediaSourceDuration(aDuration);
 }
 
 already_AddRefed<SourceBuffer>
@@ -323,11 +323,7 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
   SetReadyState(MediaSourceReadyState::Ended);
   mSourceBuffers->Ended();
   if (!aError.WasPassed()) {
-    mDecoder->SetMediaSourceDuration(mSourceBuffers->GetHighestBufferedEndTime(),
-                                     MSRangeRemovalAction::SKIP);
-    if (aRv.Failed()) {
-      return;
-    }
+    DurationChange(mSourceBuffers->GetHighestBufferedEndTime(), aRv);
     // Notify reader that all data is now available.
     mDecoder->Ended(true);
     return;
@@ -525,16 +521,38 @@ MediaSource::QueueAsyncSimpleEvent(const char* aName)
 }
 
 void
-MediaSource::DurationChange(double aOldDuration, double aNewDuration)
+MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("DurationChange(aOldDuration=%f, aNewDuration=%f)", aOldDuration, aNewDuration);
+  MSE_DEBUG("DurationChange(aNewDuration=%f)", aNewDuration);
 
-  if (aNewDuration < aOldDuration) {
-    // Remove all buffered data from aNewDuration.
-    mSourceBuffers->RangeRemoval(aNewDuration, PositiveInfinity<double>());
+  // 1. If the current value of duration is equal to new duration, then return.
+  if (mDecoder->GetDuration() == aNewDuration) {
+    return;
   }
-  // TODO: If partial audio frames/text cues exist, clamp duration based on mSourceBuffers.
+
+  // 2. If new duration is less than the highest starting presentation timestamp
+  // of any buffered coded frames for all SourceBuffer objects in sourceBuffers,
+  // then throw an InvalidStateError exception and abort these steps.
+  if (aNewDuration < mSourceBuffers->HighestStartTime()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // 3. Update duration to new duration.
+  // 4. If a user agent is unable to partially render audio frames or text cues
+  // that start before and end after the duration, then run the following steps:
+  // Update new duration to the highest end time reported by the buffered
+  // attribute across all SourceBuffer objects in sourceBuffers.
+  //   1. Update new duration to the highest end time reported by the buffered
+  //      attribute across all SourceBuffer objects in sourceBuffers.
+  //   2. Update duration to new duration.
+  aNewDuration =
+    std::max(aNewDuration, mSourceBuffers->GetHighestBufferedEndTime());
+
+  // 5. Update the media duration to new duration and run the HTMLMediaElement
+  // duration change algorithm.
+  mDecoder->SetMediaSourceDuration(aNewDuration);
 }
 
 void

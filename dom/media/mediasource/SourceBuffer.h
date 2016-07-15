@@ -117,6 +117,7 @@ public:
 
   double GetBufferedStart();
   double GetBufferedEnd();
+  double HighestStartTime();
 
   // Runs the range removal algorithm as defined by the MSE spec.
   void RangeRemoval(double aStart, double aEnd);
