@@ -274,6 +274,40 @@ TEST_F(ImageStreamingLexer, OneByteChunksWithUnbufferedFromSourceBuffer)
   mSourceBuffer->Complete(NS_OK);
 }
 
+TEST_F(ImageStreamingLexer, ZeroLengthState)
+{
+  mSourceBuffer->Append(mData, sizeof(mData));
+  mSourceBuffer->Complete(NS_OK);
+
+  // Create a special StreamingLexer for this test because we want the first
+  // state to be zero length.
+  StreamingLexer<TestState> lexer(Transition::To(TestState::ONE, 0));
+
+  Maybe<TerminalState> result =
+    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStates);
+
+  EXPECT_TRUE(result.isSome());
+  EXPECT_EQ(Some(TerminalState::SUCCESS), result);
+}
+
+TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbuffered)
+{
+  mSourceBuffer->Append(mData, sizeof(mData));
+  mSourceBuffer->Complete(NS_OK);
+
+  // Create a special StreamingLexer for this test because we want the first
+  // state to be both zero length and unbuffered.
+  StreamingLexer<TestState> lexer(Transition::ToUnbuffered(TestState::ONE,
+                                                           TestState::UNBUFFERED,
+                                                           0));
+
+  Maybe<TerminalState> result =
+    lexer.Lex(mIterator, mExpectNoResume, DoLexWithZeroLengthStatesUnbuffered);
+
+  EXPECT_TRUE(result.isSome());
+  EXPECT_EQ(Some(TerminalState::SUCCESS), result);
+}
+
 TEST_F(ImageStreamingLexer, TerminateSuccessFromSourceBuffer)
 {
   mSourceBuffer->Append(mData, sizeof(mData));
