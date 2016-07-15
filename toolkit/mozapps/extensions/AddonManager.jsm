@@ -46,6 +46,7 @@ const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
+const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
 
 const UPDATE_REQUEST_VERSION          = 2;
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
@@ -65,6 +66,13 @@ var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY ?
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
+
+const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org", "addons.cdn.mozilla.net"];
+const WEBAPI_TEST_INSTALL_HOSTS = [
+  "addons.allizom.org", "addons-stage-cdn.allizom.org",
+  "addons-dev.allizom.org", "addons-dev-cdn-allizom.org",
+  "example.com",
+];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -2896,7 +2904,29 @@ var AddonManagerInternal = {
     },
 
     createInstall(target, options) {
-      return new Promise((resolve) => {
+      // Throw an appropriate error if the given URL is not valid
+      // as an installation source.  Return silently if it is okay.
+      function checkInstallUrl(url) {
+        let host = Services.io.newURI(options.url, null, null).host;
+        if (WEBAPI_INSTALL_HOSTS.includes(host)) {
+          return;
+        }
+        if (Services.prefs.getBoolPref(PREF_WEBAPI_TESTING)
+            && WEBAPI_TEST_INSTALL_HOSTS.includes(host)) {
+          return;
+        }
+
+        throw new Error(`Install from ${host} not permitted`);
+      }
+
+      return new Promise((resolve, reject) => {
+        try {
+          checkInstallUrl(options.url);
+        } catch (err) {
+          reject({message: err.message});
+          return;
+        }
+
         let newInstall = install => {
           let id = this.nextInstall++;
           let listener = this.makeListener(id, target);
