@@ -28,32 +28,45 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   },
 
   getCSSDatabase() {
-    const db = {};
-    const properties = DOMUtils.getCSSPropertyNames(DOMUtils.INCLUDE_ALIASES);
+    const properties = generateCssProperties();
+    const pseudoElements = DOMUtils.getCSSPseudoElementNames();
 
-    properties.forEach(name => {
-      // Get the list of CSS types this property supports.
-      let supports = [];
-      for (let type in CSS_TYPES) {
-        if (safeCssPropertySupportsType(name, DOMUtils["TYPE_" + type])) {
-          supports.push(CSS_TYPES[type]);
-        }
-      }
-
-      // In order to maintain any backwards compatible changes when debugging older
-      // clients, take the definition from the static CSS properties database, and fill it
-      // in with the most recent property definition from the server.
-      const clientDefinition = CSS_PROPERTIES[name] || {};
-      const serverDefinition = {
-        isInherited: DOMUtils.isInheritedProperty(name),
-        supports
-      };
-      db[name] = Object.assign(clientDefinition, serverDefinition);
-    });
-
-    return db;
+    return { properties, pseudoElements };
   }
 });
+
+/**
+ * Generate the CSS properties object. Every key is the property name, while
+ * the values are objects that contain information about that property.
+ *
+ * @return {Object}
+ */
+function generateCssProperties() {
+  const properties = {};
+  const propertyNames = DOMUtils.getCSSPropertyNames(DOMUtils.INCLUDE_ALIASES);
+
+  propertyNames.forEach(name => {
+    // Get the list of CSS types this property supports.
+    let supports = [];
+    for (let type in CSS_TYPES) {
+      if (safeCssPropertySupportsType(name, DOMUtils["TYPE_" + type])) {
+        supports.push(CSS_TYPES[type]);
+      }
+    }
+
+    // In order to maintain any backwards compatible changes when debugging older
+    // clients, take the definition from the static CSS properties database, and fill it
+    // in with the most recent property definition from the server.
+    const clientDefinition = CSS_PROPERTIES[name] || {};
+    const serverDefinition = {
+      isInherited: DOMUtils.isInheritedProperty(name),
+      supports
+    };
+    properties[name] = Object.assign(clientDefinition, serverDefinition);
+  });
+
+  return properties;
+}
 
 /**
  * Test if a CSS is property is known using server-code.

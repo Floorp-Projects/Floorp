@@ -243,6 +243,8 @@ public:
                              bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
+  // This method is used for test only. Onces the data is set, a 'change' event
+  // is dispatched.
   void MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirectory>& aSequence);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
@@ -971,7 +973,6 @@ protected:
    * This method can explore the directory recursively if needed.
    */
   void AfterSetFilesOrDirectories(bool aSetValueChanged);
-  void AfterSetFilesOrDirectoriesInternal(bool aSetValueChanged);
 
   /**
    * Recursively explore the directory and populate mFileOrDirectories correctly

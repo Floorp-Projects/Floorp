@@ -238,7 +238,9 @@ public:
         gfxContext* context;
         DrawMode drawMode = DrawMode::GLYPH_FILL;
         nscolor textStrokeColor = 0;
-        float textStrokeWidth = 0.0f;
+        gfxPattern* textStrokePattern = nullptr;
+        const mozilla::gfx::StrokeOptions *strokeOpts = nullptr;
+        const mozilla::gfx::DrawOptions *drawOpts = nullptr;
         PropertyProvider* provider = nullptr;
         // If non-null, the advance width of the substring is set.
         gfxFloat* advanceWidth = nullptr;

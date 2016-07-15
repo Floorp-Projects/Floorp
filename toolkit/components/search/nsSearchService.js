@@ -1623,15 +1623,6 @@ Engine.prototype = {
       return;
     }
 
-    var engineToUpdate = null;
-    if (aEngine._engineToUpdate) {
-      engineToUpdate = aEngine._engineToUpdate.wrappedJSObject;
-
-      // Make this new engine use the old engine's shortName,
-      // to preserve user-set metadata.
-      aEngine._shortName = engineToUpdate._shortName;
-    }
-
     var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
     var doc = parser.parseFromBuffer(aBytes, aBytes.length, "text/xml");
@@ -1647,9 +1638,27 @@ Engine.prototype = {
       return;
     }
 
-    // Check that when adding a new engine (e.g., not updating an
-    // existing one), a duplicate engine does not already exist.
-    if (!engineToUpdate) {
+    if (aEngine._engineToUpdate) {
+      let engineToUpdate = aEngine._engineToUpdate.wrappedJSObject;
+
+      // Make this new engine use the old engine's shortName, and preserve
+      // metadata.
+      aEngine._shortName = engineToUpdate._shortName;
+      Object.keys(engineToUpdate._metaData).forEach(key => {
+        aEngine.setAttr(key, engineToUpdate.getAttr(key));
+      });
+      aEngine._loadPath = engineToUpdate._loadPath;
+
+      // Keep track of the last modified date, so that we can make conditional
+      // requests for future updates.
+      aEngine.setAttr("updatelastmodified", (new Date()).toUTCString());
+
+      // Set the new engine's icon, if it doesn't yet have one.
+      if (!aEngine._iconURI && engineToUpdate._iconURI)
+        aEngine._iconURI = engineToUpdate._iconURI;
+    } else {
+      // Check that when adding a new engine (e.g., not updating an
+      // existing one), a duplicate engine does not already exist.
       if (Services.search.getEngineByName(aEngine.name)) {
         // If we're confirming the engine load, then display a "this is a
         // duplicate engine" prompt; otherwise, fail silently.
@@ -1663,38 +1672,24 @@ Engine.prototype = {
         LOG("_onLoad: duplicate engine found, bailing");
         return;
       }
-    }
 
-    // If requested, confirm the addition now that we have the title.
-    // This property is only ever true for engines added via
-    // nsIBrowserSearchService::addEngine.
-    if (aEngine._confirm) {
-      var confirmation = aEngine._confirmAddEngine();
-      LOG("_onLoad: confirm is " + confirmation.confirmed +
-          "; useNow is " + confirmation.useNow);
-      if (!confirmation.confirmed) {
-        onError();
-        return;
+      // If requested, confirm the addition now that we have the title.
+      // This property is only ever true for engines added via
+      // nsIBrowserSearchService::addEngine.
+      if (aEngine._confirm) {
+        var confirmation = aEngine._confirmAddEngine();
+        LOG("_onLoad: confirm is " + confirmation.confirmed +
+            "; useNow is " + confirmation.useNow);
+        if (!confirmation.confirmed) {
+          onError();
+          return;
+        }
+        aEngine._useNow = confirmation.useNow;
       }
-      aEngine._useNow = confirmation.useNow;
-    }
 
-    // If we don't yet have a shortName, get one now. We would already have one
-    // if this is an update and _file was set above.
-    if (!aEngine._shortName)
       aEngine._shortName = sanitizeName(aEngine.name);
-
-    aEngine._loadPath = aEngine.getAnonymizedLoadPath(null, aEngine._uri);
-    aEngine.setAttr("loadPathHash", getVerificationHash(aEngine._loadPath));
-
-    if (engineToUpdate) {
-      // Keep track of the last modified date, so that we can make conditional
-      // requests for future updates.
-      aEngine.setAttr("updatelastmodified", (new Date()).toUTCString());
-
-      // Set the new engine's icon, if it doesn't yet have one.
-      if (!aEngine._iconURI && engineToUpdate._iconURI)
-        aEngine._iconURI = engineToUpdate._iconURI;
+      aEngine._loadPath = aEngine.getAnonymizedLoadPath(null, aEngine._uri);
+      aEngine.setAttr("loadPathHash", getVerificationHash(aEngine._loadPath));
     }
 
     // Notify the search service of the successful load. It will deal with

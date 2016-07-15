@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef CDMCallbackProxy_h_
-#define CDMCallbackProxy_h_
+#ifndef GMPCDMCallbackProxy_h_
+#define GMPCDMCallbackProxy_h_
 
 #include "mozilla/CDMProxy.h"
 #include "gmp-decryption.h"
@@ -15,7 +15,7 @@ namespace mozilla {
 
 // Proxies call backs from the CDM on the GMP thread back to the MediaKeys
 // object on the main thread.
-class CDMCallbackProxy : public GMPDecryptorProxyCallback {
+class GMPCDMCallbackProxy : public GMPDecryptorProxyCallback {
 public:
   void SetSessionId(uint32_t aCreateSessionToken,
                     const nsCString& aSessionId) override;
@@ -53,11 +53,11 @@ public:
 
   void Terminated() override;
 
-  ~CDMCallbackProxy() {}
+  ~GMPCDMCallbackProxy() {}
 
 private:
   friend class CDMProxy;
-  explicit CDMCallbackProxy(CDMProxy* aProxy);
+  explicit GMPCDMCallbackProxy(CDMProxy* aProxy);
 
   // Warning: Weak ref.
   CDMProxy* mProxy;
@@ -65,4 +65,4 @@ private:
 
 } // namespace mozilla
 
-#endif // CDMCallbackProxy_h_
+#endif // GMPCDMCallbackProxy_h_

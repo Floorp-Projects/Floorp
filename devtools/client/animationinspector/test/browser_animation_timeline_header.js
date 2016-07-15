@@ -16,6 +16,12 @@ const TIME_GRADUATION_MIN_SPACING = 40;
 
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
+
+  // System scrollbar is enabled by default on our testing envionment and it
+  // would shrink width of inspector and affect number of time-ticks causing
+  // unexpected results. So, we set it wider to avoid this kind of edge case.
+  yield pushPref("devtools.toolsidebar-width.inspector", 350);
+
   let {panel} = yield openAnimationInspector();
 
   let timeline = panel.animationsTimelineComponent;
@@ -32,7 +38,7 @@ add_task(function* () {
   let interval = findOptimalTimeInterval(minTimeInterval);
   let nb = Math.ceil(animationDuration / interval);
 
-  is(headerEl.querySelectorAll(".time-tick").length, nb,
+  is(headerEl.querySelectorAll(".header-item").length, nb,
      "The expected number of time ticks were found");
 
   info("Make sure graduations are evenly distributed and show the right times");

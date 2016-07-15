@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/CDMCallbackProxy.h"
+#include "GMPCDMCallbackProxy.h"
 #include "mozilla/CDMProxy.h"
 #include "nsString.h"
 #include "mozilla/dom/MediaKeys.h"
@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-CDMCallbackProxy::CDMCallbackProxy(CDMProxy* aProxy)
+GMPCDMCallbackProxy::GMPCDMCallbackProxy(CDMProxy* aProxy)
   : mProxy(aProxy)
 {
 
@@ -45,8 +45,8 @@ public:
 };
 
 void
-CDMCallbackProxy::SetSessionId(uint32_t aToken,
-                               const nsCString& aSessionId)
+GMPCDMCallbackProxy::SetSessionId(uint32_t aToken,
+                                  const nsCString& aSessionId)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -78,7 +78,8 @@ public:
 };
 
 void
-CDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess)
+GMPCDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                               bool aSuccess)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -89,7 +90,7 @@ CDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess)
 }
 
 void
-CDMCallbackProxy::ResolvePromise(uint32_t aPromiseId)
+GMPCDMCallbackProxy::ResolvePromise(uint32_t aPromiseId)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -123,9 +124,9 @@ public:
 
 
 void
-CDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
-                                nsresult aException,
-                                const nsCString& aMessage)
+GMPCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
+                                   nsresult aException,
+                                   const nsCString& aMessage)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -163,9 +164,9 @@ public:
 };
 
 void
-CDMCallbackProxy::SessionMessage(const nsCString& aSessionId,
-                                 GMPSessionMessageType aMessageType,
-                                 const nsTArray<uint8_t>& aMessage)
+GMPCDMCallbackProxy::SessionMessage(const nsCString& aSessionId,
+                                    GMPSessionMessageType aMessageType,
+                                    const nsTArray<uint8_t>& aMessage)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -198,8 +199,8 @@ public:
 };
 
 void
-CDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
-                                   GMPTimestamp aExpiryTime)
+GMPCDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
+                                      GMPTimestamp aExpiryTime)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -211,7 +212,7 @@ CDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
 }
 
 void
-CDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
+GMPCDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -263,10 +264,10 @@ public:
 };
 
 void
-CDMCallbackProxy::SessionError(const nsCString& aSessionId,
-                               nsresult aException,
-                               uint32_t aSystemCode,
-                               const nsCString& aMessage)
+GMPCDMCallbackProxy::SessionError(const nsCString& aSessionId,
+                                  nsresult aException,
+                                  uint32_t aSystemCode,
+                                  const nsCString& aMessage)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -280,9 +281,9 @@ CDMCallbackProxy::SessionError(const nsCString& aSessionId,
 }
 
 void
-CDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
-                                   const nsTArray<uint8_t>& aKeyId,
-                                   GMPMediaKeyStatus aStatus)
+GMPCDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
+                                      const nsTArray<uint8_t>& aKeyId,
+                                      GMPMediaKeyStatus aStatus)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -303,9 +304,9 @@ CDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
 }
 
 void
-CDMCallbackProxy::Decrypted(uint32_t aId,
-                            GMPErr aResult,
-                            const nsTArray<uint8_t>& aDecryptedData)
+GMPCDMCallbackProxy::Decrypted(uint32_t aId,
+                               GMPErr aResult,
+                               const nsTArray<uint8_t>& aDecryptedData)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
@@ -313,7 +314,7 @@ CDMCallbackProxy::Decrypted(uint32_t aId,
 }
 
 void
-CDMCallbackProxy::Terminated()
+GMPCDMCallbackProxy::Terminated()
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
   nsCOMPtr<nsIRunnable> task = NewRunnableMethod(mProxy, &CDMProxy::Terminated);

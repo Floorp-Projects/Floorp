@@ -18,6 +18,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
 #include "nsStyleStruct.h"
+#include "nsTArray.h"
 #include "nsStyleUtil.h"
 #include "StyleStructContext.h"
 
@@ -558,6 +559,21 @@ Gecko_CreateGradient(uint8_t aShape,
   }
 
   return result;
+}
+
+void
+Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize) {
+  auto base = reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils> *>(aArray);
+  base->EnsureCapacity<nsTArrayInfallibleAllocator>(aCapacity, aElemSize);
+}
+
+void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen) {
+  aLayers->mLayers.EnsureLengthAtLeast(aLen);
+}
+
+void Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* aLayer,
+                                nsStyleImageLayers::LayerType aLayerType) {
+  aLayer->Initialize(aLayerType);
 }
 
 #define STYLE_STRUCT(name, checkdata_cb)                                      \

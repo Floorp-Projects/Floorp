@@ -614,29 +614,40 @@ AboutReader.prototype = {
     if (this._articlePromise) {
       article = yield this._articlePromise;
     } else {
-      article = yield this._getArticle(url);
+      try {
+        article = yield this._getArticle(url);
+      } catch (e) {
+        if (e && e.newURL) {
+          let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
+          this._win.location.replace(readerURL);
+          return;
+        }
+      }
     }
 
     if (this._windowUnloaded) {
       return;
     }
 
-    if (article) {
-      this._showContent(article);
-    } else if (this._articlePromise) {
-      // If we were promised an article, show an error message if there's a failure.
+    // Replace the loading message with an error message if there's a failure.
+    // Users are supposed to navigate away by themselves (because we cannot
+    // remove ourselves from session history.)
+    if (!article) {
       this._showError();
-    } else {
-      // Otherwise, just load the original URL. We can encounter this case when
-      // loading an about:reader URL directly (e.g. opening a reading list item).
-      this._win.location.href = url;
+      return;
     }
+
+    this._showContent(article);
   }),
 
   _getArticle: function(url) {
     return new Promise((resolve, reject) => {
       let listener = (message) => {
         this._mm.removeMessageListener("Reader:ArticleData", listener);
+        if (message.data.newURL) {
+          reject({ newURL: message.data.newURL });
+          return;
+        }
         resolve(message.data.article);
       };
       this._mm.addMessageListener("Reader:ArticleData", listener);
