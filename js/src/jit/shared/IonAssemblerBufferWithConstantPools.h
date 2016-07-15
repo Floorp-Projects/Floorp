@@ -726,7 +726,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
     static const unsigned OOM_FAIL = unsigned(-1);
-    static const unsigned NO_DATA = unsigned(-2);
+    static const unsigned DUMMY_INDEX = unsigned(-2);
 
     // Check if it is possible to add numInst instructions and numPoolEntries
     // constant pool entries without needing to flush the current pool.
@@ -810,7 +810,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         // The pool entry index is returned above when allocating an entry, but
         // when not allocating an entry a dummy value is returned - it is not
         // expected to be used by the caller.
-        return NO_DATA;
+        return DUMMY_INDEX;
     }
 
   public:
