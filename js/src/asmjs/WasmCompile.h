@@ -39,7 +39,7 @@ struct CompileArgs
 };
 
 SharedModule
-Compile(Bytes&& code, CompileArgs&& args, UniqueChars* error);
+Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

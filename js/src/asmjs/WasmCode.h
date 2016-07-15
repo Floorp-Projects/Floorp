@@ -103,9 +103,6 @@ class CodeSegment
 
 struct ShareableBytes : ShareableBase<ShareableBytes>
 {
-    ShareableBytes() = default;
-    explicit ShareableBytes(Bytes&& bytes) : bytes(Move(bytes)) {}
-
     // Vector is 'final', so instead make Vector a member and add boilerplate.
     Bytes bytes;
     size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
