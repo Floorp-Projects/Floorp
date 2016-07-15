@@ -142,7 +142,8 @@ public:
   /// bitmap has been fully decoded.)
   bool HasTransparency() const { return mDoesHaveTransparency; }
 
-  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
+                                IResumable* aOnResume) override;
   nsresult BeforeFinishInternal() override;
   nsresult FinishInternal() override;
 

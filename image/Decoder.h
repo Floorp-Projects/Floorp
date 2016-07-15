@@ -45,12 +45,12 @@ public:
   /**
    * Decodes, reading all data currently available in the SourceBuffer.
    *
-   * If more data is needed, Decode() will schedule @aOnResume to be called when
-   * more data is available.
+   * If more data is needed and @aOnResume is non-null, Decode() will schedule
+   * @aOnResume to be called when more data is available.
    *
    * Any errors are reported by setting the appropriate state on the decoder.
    */
-  nsresult Decode(NotNull<IResumable*> aOnResume);
+  nsresult Decode(IResumable* aOnResume = nullptr);
 
   /**
    * Given a maximum number of bytes we're willing to decode, @aByteLimit,
@@ -297,7 +297,8 @@ protected:
    * return a failing nsresult.
    */
   virtual nsresult InitInternal();
-  virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) = 0;
+  virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
+                                        IResumable* aOnResume) = 0;
   virtual nsresult BeforeFinishInternal();
   virtual nsresult FinishInternal();
   virtual nsresult FinishWithErrorInternal();
