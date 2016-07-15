@@ -15,9 +15,10 @@ print(BUGNUMBER + ": " + summary);
 
 var proxy = Proxy.revocable([], {}).proxy;
 
-// A depth of 500000 ought to be enough for any platform to consume its entire
-// stack.  If not, the assertEq should check for the proper expected value.
-for (var i = 0; i < 5e5; i++)
+// A depth of 100000 ought to be enough for any platform to consume its entire
+// stack, hopefully without making any recalcitrant platforms time out.  If no
+// timeout happens, the assertEq checks for the proper expected value.
+for (var i = 0; i < 1e5; i++)
   proxy = new Proxy(proxy, {});
 
 try
