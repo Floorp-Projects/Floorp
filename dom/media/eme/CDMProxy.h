@@ -20,7 +20,7 @@
 
 namespace mozilla {
 class MediaRawData;
-class CDMCallbackProxy;
+class GMPCDMCallbackProxy;
 
 namespace dom {
 class MediaKeySession;
@@ -338,7 +338,7 @@ private:
 
   GMPDecryptorProxy* mCDM;
   CDMCaps mCapabilites;
-  nsAutoPtr<CDMCallbackProxy> mCallback;
+  nsAutoPtr<GMPCDMCallbackProxy> mCallback;
 
   // Decryption jobs sent to CDM, awaiting result.
   // GMP thread only.

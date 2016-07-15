@@ -119,6 +119,17 @@ public:
     return JS::Handle<JSObject*>::fromMarkedLocation(mCallback.address());
   }
 
+  /*
+   * If the callback is known to be non-gray, then this method can be
+   * used instead of Callback() to avoid the overhead of
+   * ExposeObjectToActiveJS().
+   */
+  JS::Handle<JSObject*> CallbackKnownNotGray() const
+  {
+    MOZ_ASSERT(!JS::ObjectIsMarkedGray(mCallback.get()));
+    return CallbackPreserveColor();
+  }
+
   nsIGlobalObject* IncumbentGlobalOrNull() const
   {
     return mIncumbentGlobal;

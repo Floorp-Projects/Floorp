@@ -4,15 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Presentation.h"
+
 #include <ctype.h>
+
 #include "mozilla/dom/PresentationBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
 #include "nsIPresentationService.h"
+#include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
-#include "Presentation.h"
 #include "PresentationReceiver.h"
 
 using namespace mozilla;
@@ -54,6 +57,15 @@ void
 Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 {
   if (IsInPresentedContent()) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
+  if (NS_WARN_IF(!doc)) {
+    return;
+  }
+
+  if (doc->GetSandboxFlags() & SANDBOXED_PRESENTATION) {
     return;
   }
 

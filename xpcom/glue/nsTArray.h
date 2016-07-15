@@ -336,6 +336,8 @@ struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
   }
 };
 
+extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize);
+
 //
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the
@@ -349,6 +351,7 @@ class nsTArray_base
   // the same free().
   template<class Allocator, class Copier>
   friend class nsTArray_base;
+  friend void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize);
 
 protected:
   typedef nsTArrayHeader Header;

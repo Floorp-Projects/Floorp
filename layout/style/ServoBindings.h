@@ -9,6 +9,7 @@
 
 #include "stdint.h"
 #include "nsColor.h"
+#include "nsStyleStruct.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "nsProxyRelease.h"
 
@@ -180,6 +181,17 @@ void Gecko_CopyMozBindingFrom(nsStyleDisplay* des, const nsStyleDisplay* src);
 uint32_t Gecko_GetNodeFlags(RawGeckoNode* node);
 void Gecko_SetNodeFlags(RawGeckoNode* node, uint32_t flags);
 void Gecko_UnsetNodeFlags(RawGeckoNode* node, uint32_t flags);
+
+// `array` must be an nsTArray
+// If changing this signature, please update the
+// friend function declaration in nsTArray.h
+void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
+
+
+void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len);
+
+void Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* layer,
+                                nsStyleImageLayers::LayerType layer_type);
 
 // Styleset and Stylesheet management.
 //
