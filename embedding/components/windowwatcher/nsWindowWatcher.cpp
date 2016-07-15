@@ -494,6 +494,72 @@ nsWindowWatcher::OpenWindowWithoutParent(nsITabParent** aResult)
   return OpenWindowWithTabParent(nullptr, EmptyCString(), true, 1.0f, aResult);
 }
 
+nsresult
+nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
+                                    nsIWebBrowserChrome* aParentChrome,
+                                    uint32_t aChromeFlags,
+                                    uint32_t aContextFlags,
+                                    nsITabParent* aOpeningTabParent,
+                                    nsIWebBrowserChrome** aResult)
+{
+  nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
+  if (NS_WARN_IF(!windowCreator2)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // B2G multi-screen support. mozDisplayId is returned from the
+  // "display-changed" event, it is also platform-dependent.
+#ifdef MOZ_WIDGET_GONK
+  int retval = WinHasOption(aFeatures, "mozDisplayId", 0, nullptr);
+  windowCreator2->SetScreenId(retval);
+#endif
+
+  bool cancel = false;
+  nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
+  nsresult rv =
+    windowCreator2->CreateChromeWindow2(aParentChrome, aChromeFlags, aContextFlags,
+                                        aOpeningTabParent, &cancel,
+                                        getter_AddRefs(newWindowChrome));
+
+  if (NS_SUCCEEDED(rv) && cancel) {
+    newWindowChrome = nullptr;
+    return NS_ERROR_ABORT;
+  }
+
+  newWindowChrome.forget(aResult);
+  return NS_OK;
+}
+
+/**
+ * Disable persistence of size/position in popups (determined by
+ * determining whether the features parameter specifies width or height
+ * in any way). We consider any overriding of the window's size or position
+ * in the open call as disabling persistence of those attributes.
+ * Popup windows (which should not persist size or position) generally set
+ * the size.
+ *
+ * @param aFeatures
+ *        The features string that was used to open the window.
+ * @param aTreeOwner
+ *        The nsIDocShellTreeOwner of the newly opened window. If null,
+ *        this function is a no-op.
+ */
+void
+nsWindowWatcher::MaybeDisablePersistence(const nsACString& aFeatures,
+                                         nsIDocShellTreeOwner* aTreeOwner)
+{
+  if (!aTreeOwner) {
+    return;
+  }
+
+ // At the moment, the strings "height=" or "width=" never happen
+ // outside a size specification, so we can do this the Q&D way.
+  if (PL_strcasestr(aFeatures.BeginReading(), "width=") ||
+      PL_strcasestr(aFeatures.BeginReading(), "height=")) {
+    aTreeOwner->SetPersistence(false, false, false);
+  }
+}
+
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
                                          const nsACString& aFeatures,
@@ -562,32 +628,17 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
             nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
   }
 
-  // B2G multi-screen support. mozDisplayId is returned from the
-  // "display-changed" event, it is also platform-dependent.
-#ifdef MOZ_WIDGET_GONK
-  int retval = WinHasOption(features, "mozDisplayId", 0, nullptr);
-  windowCreator2->SetScreenId(retval);
-#endif
-
   uint32_t chromeFlags = CalculateChromeFlagsForChild(aFeatures);
 
   // A content process has asked for a new window, which implies
   // that the new window will need to be remote.
   chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
 
-  bool cancel = false;
   nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
-  nsresult rv =
-    windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags, contextFlags,
-                                        aOpeningTabParent, &cancel,
-                                        getter_AddRefs(newWindowChrome));
-
-  if (NS_SUCCEEDED(rv) && cancel) {
-    newWindowChrome = nullptr; // just in case
-    return NS_ERROR_ABORT;
-  }
+  CreateChromeWindow(aFeatures, parentChrome, chromeFlags, contextFlags,
+                     aOpeningTabParent, getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
     return NS_ERROR_UNEXPECTED;
@@ -615,10 +666,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   // that will also run with out-of-process tabs.
   chromeContext->SetRemoteTabs(true);
 
-  if (PL_strcasestr(aFeatures.BeginReading(), "width=") ||
-      PL_strcasestr(aFeatures.BeginReading(), "height=")) {
-    chromeTreeOwner->SetPersistence(false, false, false);
-  }
+  MaybeDisablePersistence(aFeatures, chromeTreeOwner);
 
   SizeSpec sizeSpec;
   CalcSizeSpec(aFeatures, sizeSpec);
@@ -961,22 +1009,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
             nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
         }
 
-        // B2G multi-screen support. mozDisplayId is returned from the
-        // "display-changed" event, it is also platform-dependent.
-#ifdef MOZ_WIDGET_GONK
-        int retval = WinHasOption(features, "mozDisplayId", 0, nullptr);
-        windowCreator2->SetScreenId(retval);
-#endif
+        rv = CreateChromeWindow(features, parentChrome, chromeFlags, contextFlags,
+                                nullptr, getter_AddRefs(newChrome));
 
-
-        bool cancel = false;
-        rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                                                 contextFlags, nullptr,
-                                                 &cancel, getter_AddRefs(newChrome));
-        if (NS_SUCCEEDED(rv) && cancel) {
-          newChrome = 0; // just in case
-          rv = NS_ERROR_ABORT;
-        }
       } else {
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
                                                 getter_AddRefs(newChrome));
@@ -1033,25 +1068,10 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     return rv;
   }
 
-  /* disable persistence of size/position in popups (determined by
-     determining whether the features parameter specifies width or height
-     in any way). We consider any overriding of the window's size or position
-     in the open call as disabling persistence of those attributes.
-     Popup windows (which should not persist size or position) generally set
-     the size. */
   if (isNewToplevelWindow) {
-    /* at the moment, the strings "height=" or "width=" never happen
-       outside a size specification, so we can do this the Q&D way. */
-
-    if (PL_strcasestr(features.get(), "width=") ||
-        PL_strcasestr(features.get(), "height=")) {
-
-      nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
-      newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
-      if (newTreeOwner) {
-        newTreeOwner->SetPersistence(false, false, false);
-      }
-    }
+    nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
+    newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
+    MaybeDisablePersistence(features, newTreeOwner);
   }
 
   if ((aDialog || windowIsModalContentDialog) && aArgv) {
