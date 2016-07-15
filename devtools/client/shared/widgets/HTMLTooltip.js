@@ -222,10 +222,11 @@ function HTMLTooltip(toolbox, {
   this.consumeOutsideClicks = consumeOutsideClicks;
   this.useXulWrapper = this._isXUL() && useXulWrapper;
 
-  this._position = null;
+  // The top window is used to attach click event listeners to close the tooltip if the
+  // user clicks on the content page.
+  this.topWindow = this._getTopWindow();
 
-  // Use the topmost window to listen for click events to close the tooltip
-  this.topWindow = this.doc.defaultView.top;
+  this._position = null;
 
   this._onClick = this._onClick.bind(this);
 
@@ -382,6 +383,8 @@ HTMLTooltip.prototype = {
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
       this._maybeFocusTooltip();
+      // Updated the top window reference each time in case the host changes.
+      this.topWindow = this._getTopWindow();
       this.topWindow.addEventListener("click", this._onClick, true);
       this.emit("shown");
     }, 0);
@@ -548,6 +551,10 @@ HTMLTooltip.prototype = {
     if (this.autofocus && focusableElement) {
       focusableElement.focus();
     }
+  },
+
+  _getTopWindow: function () {
+    return this.doc.defaultView.top;
   },
 
   /**
