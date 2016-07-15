@@ -255,7 +255,7 @@ nsHttpChannel::nsHttpChannel()
     , mCacheEntryIsWriteOnly(false)
     , mCacheEntriesToWaitFor(0)
     , mHasQueryString(0)
-    , mConcurentCacheAccess(0)
+    , mConcurrentCacheAccess(0)
     , mIsPartialRequest(0)
     , mHasAutoRedirectVetoNotifier(0)
     , mPinCacheContent(0)
@@ -945,6 +945,20 @@ nsHttpChannel::CallOnStartRequest()
 
     nsresult rv;
 
+    if (mOnStartRequestCalled) {
+        // This can only happen when a range request loading rest of the data
+        // after interrupted concurrent cache read asynchronously failed, e.g.
+        // the response range bytes are not as expected or this channel has
+        // been externally canceled.
+        //
+        // It's legal to bypass CallOnStartRequest for that case since we've
+        // already called OnStartRequest on our listener and also added all
+        // content converters before.
+        MOZ_ASSERT(mConcurrentCacheAccess);
+        LOG(("CallOnStartRequest already invoked before"));
+        return mStatus;
+    }
+
     mTracingEnabled = false;
 
     // Allow consumers to override our content type
@@ -1036,6 +1050,7 @@ nsHttpChannel::CallOnStartRequest()
             return rv;
     } else {
         NS_WARNING("OnStartRequest skipped because of null listener");
+        mOnStartRequestCalled = true;
     }
 
     // Install stream converter if required.
@@ -1065,7 +1080,7 @@ nsHttpChannel::CallOnStartRequest()
         // We must keep the cache entry in case of partial request.
         // Concurrent access is the same, we need the entry in
         // OnStopRequest.
-        if (!mCachedContentIsPartial && !mConcurentCacheAccess)
+        if (!mCachedContentIsPartial && !mConcurrentCacheAccess)
             CloseCacheEntry(false);
     }
 
@@ -1707,6 +1722,12 @@ nsHttpChannel::ProcessResponse()
         if ((httpStatus < 500) && (httpStatus != 421)) {
             ProcessAltService();
         }
+    }
+
+    if (mConcurrentCacheAccess && mCachedContentIsPartial && httpStatus != 206) {
+        LOG(("  only expecting 206 when doing partial request during "
+             "interrupted cache concurrent read"));
+        return NS_ERROR_CORRUPTED_CONTENT;
     }
 
     // handle unused username and password in url (see bug 232567)
@@ -2737,7 +2758,7 @@ nsHttpChannel::ProcessPartialContent()
         return CallOnStartRequest();
     }
 
-    if (mConcurentCacheAccess) {
+    if (mConcurrentCacheAccess) {
         // We started to read cached data sooner than its write has been done.
         // But the concurrent write has not finished completely, so we had to
         // do a range request.  Now let the content coming from the network
@@ -2778,9 +2799,13 @@ nsHttpChannel::ProcessPartialContent()
     // merged with any cached headers (http-on-examine-merged-response).
     gHttpHandler->OnExamineMergedResponse(this);
 
-    if (mConcurentCacheAccess) {
+    if (mConcurrentCacheAccess) {
         mCachedContentIsPartial = false;
-        mConcurentCacheAccess = 0;
+        // Leave the mConcurrentCacheAccess flag set, we want to use it
+        // to prevent duplicate OnStartRequest call on the target listener
+        // in case this channel is canceled before it gets its OnStartRequest
+        // from the http transaction.
+
         // Now we continue reading the network response.
     } else {
         // the cached content is valid, although incomplete.
@@ -3088,7 +3113,7 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
     AutoCacheWaitFlags waitFlags(this);
 
     // Drop this flag here
-    mConcurentCacheAccess = 0;
+    mConcurrentCacheAccess = 0;
 
     nsresult rv;
 
@@ -3492,7 +3517,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                 wantCompleteEntry = true;
             }
             else {
-                mConcurentCacheAccess = 1;
+                mConcurrentCacheAccess = 1;
             }
         }
         else if (contentLength != int64_t(-1) && contentLength != size) {
@@ -3740,7 +3765,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             !mCustomConditionalRequest && !weaklyFramed && !isImmutable &&
             (mCachedResponseHead->Status() < 400)) {
 
-            if (mConcurentCacheAccess) {
+            if (mConcurrentCacheAccess) {
                 // In case of concurrent read and also validation request we
                 // must wait for the current writer to close the output stream
                 // first.  Otherwise, when the writer's job would have been interrupted
@@ -3749,7 +3774,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                 // life-time.  nsHttpChannel is not designed to do that, so rather
                 // turn off concurrent read and wait for entry's completion.
                 // Then only re-validation or range-re-validation request will go out.
-                mConcurentCacheAccess = 0;
+                mConcurrentCacheAccess = 0;
                 // This will cause that OnCacheEntryCheck is called again with the same
                 // entry after the writer is done.
                 wantCompleteEntry = true;
@@ -4529,7 +4554,7 @@ nsHttpChannel::InitCacheEntry()
     mInitedCacheEntry = true;
 
     // Don't perform the check when writing (doesn't make sense)
-    mConcurentCacheAccess = 0;
+    mConcurrentCacheAccess = 0;
 
     return NS_OK;
 }
@@ -6243,7 +6268,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 // otherwise, fall through and fire OnStopRequest...
             }
             else if (request == mTransactionPump) {
-                MOZ_ASSERT(mConcurentCacheAccess);
+                MOZ_ASSERT(mConcurrentCacheAccess);
             }
             else
                 NS_NOTREACHED("unexpected request");
@@ -6346,7 +6371,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     // if needed, check cache entry has all data we expect
     if (mCacheEntry && mCachePump &&
-        mConcurentCacheAccess && contentComplete) {
+        mConcurrentCacheAccess && contentComplete) {
         int64_t size, contentLength;
         nsresult rv = CheckPartial(mCacheEntry, &size, &contentLength);
         if (NS_SUCCEEDED(rv)) {
