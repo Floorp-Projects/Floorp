@@ -133,6 +133,7 @@ EXPORTS.mozilla.widget += [
     'InProcessCompositorWidget.h',
     'PuppetBidiKeyboard.h',
     'WidgetMessageUtils.h',
+    'WindowSurface.h'
 ]
 
 UNIFIED_SOURCES += [
@@ -203,7 +204,8 @@ if CONFIG['MOZ_X11']:
         'GfxInfoX11.cpp'
     ]
     SOURCES += [
-        'nsShmImage.cpp'
+        'nsShmImage.cpp',
+        'WindowSurfaceX11SHM.cpp',
     ]
 
 if toolkit in ('cocoa', 'windows'):

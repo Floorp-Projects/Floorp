@@ -743,13 +743,11 @@ WriteDirectory(JSStructuredCloneWriter* aWriter,
          JS_WriteBytes(aWriter, path.get(), path.Length() * charSize);
 }
 
-JSObject*
-ReadDirectory(JSContext* aCx,
-              JSStructuredCloneReader* aReader,
-              uint32_t aPathLength,
-              StructuredCloneHolder* aHolder)
+already_AddRefed<Directory>
+ReadDirectoryInternal(JSStructuredCloneReader* aReader,
+                      uint32_t aPathLength,
+                      StructuredCloneHolder* aHolder)
 {
-  MOZ_ASSERT(aCx);
   MOZ_ASSERT(aReader);
   MOZ_ASSERT(aHolder);
 
@@ -768,6 +766,21 @@ ReadDirectory(JSContext* aCx,
     return nullptr;
   }
 
+  RefPtr<Directory> directory =
+    Directory::Create(aHolder->ParentDuringRead(), file);
+  return directory.forget();
+}
+
+JSObject*
+ReadDirectory(JSContext* aCx,
+              JSStructuredCloneReader* aReader,
+              uint32_t aPathLength,
+              StructuredCloneHolder* aHolder)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aReader);
+  MOZ_ASSERT(aHolder);
+
   // RefPtr<Directory> needs to go out of scope before toObject() is
   // called because the static analysis thinks dereferencing XPCOM objects
   // can GC (because in some cases it can!), and a return statement with a
@@ -776,7 +789,10 @@ ReadDirectory(JSContext* aCx,
   JS::Rooted<JS::Value> val(aCx);
   {
     RefPtr<Directory> directory =
-      Directory::Create(aHolder->ParentDuringRead(), file);
+      ReadDirectoryInternal(aReader, aPathLength, aHolder);
+    if (!directory) {
+      return nullptr;
+    }
 
     if (!ToJSValue(aCx, directory, &val)) {
       return nullptr;
@@ -926,6 +942,15 @@ ReadFormData(JSContext* aCx,
           return nullptr;
         }
 
+      } else if (tag == SCTAG_DOM_DIRECTORY) {
+        RefPtr<Directory> directory =
+          ReadDirectoryInternal(aReader, indexOrLengthOfString, aHolder);
+        if (!directory) {
+          return nullptr;
+        }
+
+        formData->Append(name, directory);
+
       } else {
         MOZ_ASSERT(tag == 0);
 
@@ -961,6 +986,9 @@ ReadFormData(JSContext* aCx,
 //   - if it's a blob:
 //     - pair of ints: SCTAG_DOM_BLOB, index of the BlobImpl in the array
 //       mBlobImplArray.
+//   - if it's a directory (See WriteDirectory):
+//     - pair of ints: SCTAG_DOM_DIRECTORY, path length
+//     - path as string
 //   - else:
 //     - pair of ints: 0, string length
 //     - value string
@@ -991,7 +1019,7 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
     { }
 
     static bool
-    Write(const nsString& aName, const OwningBlobOrUSVString& aValue,
+    Write(const nsString& aName, const OwningBlobOrDirectoryOrUSVString& aValue,
           void* aClosure)
     {
       Closure* closure = static_cast<Closure*>(aClosure);
@@ -1008,6 +1036,18 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
 
         closure->mHolder->BlobImpls().AppendElement(blobImpl);
         return true;
+      }
+
+      if (aValue.IsDirectory()) {
+        Directory* directory = aValue.GetAsDirectory();
+
+        if (closure->mHolder->SupportedContext() !=
+              StructuredCloneHolder::SameProcessSameThread &&
+            !directory->ClonableToDifferentThreadOrProcess()) {
+          return false;
+        }
+
+        return WriteDirectory(closure->mWriter, directory);
       }
 
       size_t charSize = sizeof(nsString::char_type);

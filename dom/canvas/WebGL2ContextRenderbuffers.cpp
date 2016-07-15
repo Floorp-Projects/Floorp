@@ -18,6 +18,8 @@ WebGL2Context::GetInternalformatParameter(JSContext* cx, GLenum target,
                                           ErrorResult& out_rv)
 {
     const char funcName[] = "getInternalfomratParameter";
+    retval.setObjectOrNull(nullptr);
+
     if (IsContextLost())
         return;
 
@@ -27,9 +29,32 @@ WebGL2Context::GetInternalformatParameter(JSContext* cx, GLenum target,
         return;
     }
 
-    // GL_INVALID_ENUM is generated if internalformat is not color-, depth-, or
-    // stencil-renderable.
-    // TODO: When format table queries lands.
+    // GLES 3.0.4 $4.4.4 p212:
+    // "An internal format is color-renderable if it is one of the formats from table 3.13
+    //  noted as color-renderable or if it is unsized format RGBA or RGB."
+
+    GLenum sizedFormat;
+    switch (internalformat) {
+    case LOCAL_GL_RGB:
+        sizedFormat = LOCAL_GL_RGB8;
+        break;
+    case LOCAL_GL_RGBA:
+        sizedFormat = LOCAL_GL_RGBA8;
+        break;
+    default:
+        sizedFormat = internalformat;
+        break;
+    }
+
+    // In RenderbufferStorage, we allow DEPTH_STENCIL. Therefore, it is accepted for
+    // internalformat as well. Please ignore the conformance test fail for DEPTH_STENCIL.
+
+    const auto usage = mFormatUsage->GetRBUsage(sizedFormat);
+    if (!usage) {
+        ErrorInvalidEnum("%s: `internalformat` must be color-, depth-, or stencil-renderable, was: 0x%04x.",
+                         funcName, internalformat);
+        return;
+    }
 
     if (pname != LOCAL_GL_SAMPLES) {
         ErrorInvalidEnumInfo("%s: `pname` must be SAMPLES, was 0x%04x.", funcName, pname);

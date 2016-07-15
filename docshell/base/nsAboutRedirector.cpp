@@ -65,7 +65,8 @@ static RedirEntry kRedirMap[] = {
 #endif
   {
     "license", "chrome://global/content/license.html",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+      nsIAboutModule::MAKE_LINKABLE
   },
   {
     "logo", "chrome://branding/content/about.png",

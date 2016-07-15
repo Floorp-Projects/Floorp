@@ -205,8 +205,13 @@
   flex-shrink: 0;
 }
 
-.tooltip-arrow:-moz-locale-dir(rtl) {
-  align-self: flex-end;
+/* In RTL locales, only use RTL on the tooltip content, keep LTR for positioning */
+.tooltip-container:-moz-locale-dir(rtl) {
+  direction: ltr;
+}
+
+.tooltip-panel:-moz-locale-dir(rtl) {
+  direction: rtl;
 }
 
 .tooltip-top .tooltip-arrow {

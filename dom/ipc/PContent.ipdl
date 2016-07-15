@@ -357,6 +357,22 @@ struct AndroidSystemInfo
     bool     isTablet;
 };
 
+struct GetFilesResponseSuccess
+{
+  PBlob[] blobs;
+};
+
+struct GetFilesResponseFailure
+{
+  nsresult errorCode;
+};
+
+union GetFilesResponseResult
+{
+  GetFilesResponseSuccess;
+  GetFilesResponseFailure;
+};
+
 prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -657,6 +673,9 @@ child:
     async SetAudioSessionData(nsID aID,
                               nsString aDisplayName,
                               nsString aIconPath);
+
+    async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
@@ -1165,6 +1184,9 @@ parent:
      * sent with a crash report from the content process.
      */
      async NotifyLowMemory();
+
+     async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
+     async DeleteGetFilesRequest(nsID aID);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,

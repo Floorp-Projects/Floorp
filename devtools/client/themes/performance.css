@@ -10,7 +10,6 @@
   --focus-cell-border-color: rgba(255,255,255,0.5);
   --row-alt-background-color: rgba(86, 117, 185, 0.15);
   --row-hover-background-color: rgba(86, 117, 185, 0.25);
-  --filter-image: url(chrome://devtools/skin/images/filter.svg);
 }
 
 .theme-light {
@@ -19,7 +18,6 @@
   --focus-cell-border-color: rgba(0,0,0,0.3);
   --row-alt-background-color: rgba(76,158,217,0.1);
   --row-hover-background-color: rgba(76,158,217,0.2);
-  --filter-image: url(chrome://devtools/skin/images/filter.svg);
 }
 
 .theme-firebug {
@@ -28,7 +26,6 @@
   --focus-cell-border-color: rgba(0,0,0,0.3);
   --row-alt-background-color: rgba(76,158,217,0.1);
   --row-hover-background-color: rgba(76,158,217,0.2);
-  --filter-image: url(chrome://devtools/skin/images/firebug/timeline-filter.svg);
 }
 
 /**
@@ -53,7 +50,7 @@
 }
 
 #filter-button {
-  list-style-image: var(--filter-image);
+  list-style-image: url(images/filter.svg);
 }
 
 #performance-filter-menupopup > menuitem .menu-iconic-left::after {

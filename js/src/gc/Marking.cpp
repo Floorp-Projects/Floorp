@@ -2478,7 +2478,6 @@ bool
 js::gc::IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured)
 {
     MOZ_ASSERT(!IsInsideNursery(&tenured));
-    MOZ_ASSERT(!tenured.runtimeFromAnyThread()->isHeapMinorCollecting());
     MOZ_ASSERT(tenured.zoneFromAnyThread()->isGCSweeping());
     if (tenured.arena()->allocatedDuringIncremental)
         return false;
@@ -2498,11 +2497,9 @@ IsAboutToBeFinalizedInternal(T** thingp)
         return false;
 
     Nursery& nursery = rt->gc.nursery;
-    MOZ_ASSERT_IF(!rt->isHeapMinorCollecting(), !IsInsideNursery(thing));
-    if (rt->isHeapMinorCollecting()) {
-        if (IsInsideNursery(thing))
-            return !nursery.getForwardedPointer(reinterpret_cast<JSObject**>(thingp));
-        return false;
+    if (IsInsideNursery(thing)) {
+        MOZ_ASSERT(rt->isHeapMinorCollecting());
+        return !nursery.getForwardedPointer(reinterpret_cast<JSObject**>(thingp));
     }
 
     Zone* zone = thing->asTenured().zoneFromAnyThread();

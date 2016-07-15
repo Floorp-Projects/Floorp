@@ -52,6 +52,22 @@ window.onload = Task.async(function* () {
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
+  function testUserNamed() {
+    // Test declaration: `function testName{ let innerVar = "foo" }`
+    const testName = "testUserNamed";
+
+    const defaultOutput = `testUserName()`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
   function testVarNamed() {
     // Test declaration: `let testVarName = function() { }`
     const testName = "testVarNamed";
@@ -111,6 +127,23 @@ window.onload = Task.async(function* () {
           "frozen": false,
           "sealed": false,
           "name": "testName",
+          "displayName": "testName",
+          "location": {
+            "url": "debugger eval code",
+            "line": 1
+          }
+        };
+
+      case "testUserNamed":
+        return {
+          "type": "object",
+          "class": "Function",
+          "actor": "server1.conn6.obj35",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "name": "testName",
+          "userDisplayName": "testUserName",
           "displayName": "testName",
           "location": {
             "url": "debugger eval code",

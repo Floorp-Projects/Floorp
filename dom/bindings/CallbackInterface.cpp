@@ -16,7 +16,7 @@ bool
 CallbackInterface::GetCallableProperty(JSContext* cx, JS::Handle<jsid> aPropId,
                                        JS::MutableHandle<JS::Value> aCallable)
 {
-  if (!JS_GetPropertyById(cx, CallbackPreserveColor(), aPropId, aCallable)) {
+  if (!JS_GetPropertyById(cx, CallbackKnownNotGray(), aPropId, aCallable)) {
     return false;
   }
   if (!aCallable.isObject() ||

@@ -129,6 +129,12 @@ FormData::Append(const nsAString& aName, Blob& aBlob,
 }
 
 void
+FormData::Append(const nsAString& aName, Directory* aDirectory)
+{
+  AddNameDirectoryPair(aName, aDirectory);
+}
+
+void
 FormData::Delete(const nsAString& aName)
 {
   // We have to use this slightly awkward for loop since uint32_t >= 0 is an
@@ -142,7 +148,7 @@ FormData::Delete(const nsAString& aName)
 
 void
 FormData::Get(const nsAString& aName,
-              Nullable<OwningBlobOrUSVString>& aOutValue)
+              Nullable<OwningBlobOrDirectoryOrUSVString>& aOutValue)
 {
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
@@ -156,11 +162,11 @@ FormData::Get(const nsAString& aName,
 
 void
 FormData::GetAll(const nsAString& aName,
-                 nsTArray<OwningBlobOrUSVString>& aValues)
+                 nsTArray<OwningBlobOrDirectoryOrUSVString>& aValues)
 {
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
-      OwningBlobOrUSVString* element = aValues.AppendElement();
+      OwningBlobOrDirectoryOrUSVString* element = aValues.AppendElement();
       *element = mFormData[i].value;
     }
   }
@@ -197,6 +203,16 @@ FormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
 
   FormDataTuple* data = mFormData.AppendElement();
   SetNameFilePair(data, aName, file);
+  return NS_OK;
+}
+
+nsresult
+FormData::AddNameDirectoryPair(const nsAString& aName, Directory* aDirectory)
+{
+  MOZ_ASSERT(aDirectory);
+
+  FormDataTuple* data = mFormData.AppendElement();
+  SetNameDirectoryPair(data, aName, aDirectory);
   return NS_OK;
 }
 
@@ -265,7 +281,7 @@ FormData::GetKeyAtIndex(uint32_t aIndex) const
   return mFormData[aIndex].name;
 }
 
-const OwningBlobOrUSVString&
+const OwningBlobOrDirectoryOrUSVString&
 FormData::GetValueAtIndex(uint32_t aIndex) const
 {
   MOZ_ASSERT(aIndex < mFormData.Length());
@@ -295,6 +311,19 @@ FormData::SetNameFilePair(FormDataTuple* aData,
   aData->name = aName;
   aData->wasNullBlob = false;
   aData->value.SetAsBlob() = aFile;
+}
+
+void
+FormData::SetNameDirectoryPair(FormDataTuple* aData,
+                               const nsAString& aName,
+                               Directory* aDirectory)
+{
+  MOZ_ASSERT(aData);
+  MOZ_ASSERT(aDirectory);
+
+  aData->name = aName;
+  aData->wasNullBlob = false;
+  aData->value.SetAsDirectory() = aDirectory;
 }
 
 // -------------------------------------------------------------------------
@@ -381,10 +410,13 @@ FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
     } else if (mFormData[i].value.IsUSVString()) {
       fs.AddNameValuePair(mFormData[i].name,
                           mFormData[i].value.GetAsUSVString());
-    } else {
-      MOZ_ASSERT(mFormData[i].value.IsBlob());
+    } else if (mFormData[i].value.IsBlob()) {
       fs.AddNameBlobOrNullPair(mFormData[i].name,
                                mFormData[i].value.GetAsBlob());
+    } else {
+      MOZ_ASSERT(mFormData[i].value.IsDirectory());
+      fs.AddNameDirectoryPair(mFormData[i].name,
+                              mFormData[i].value.GetAsDirectory());
     }
   }
 
