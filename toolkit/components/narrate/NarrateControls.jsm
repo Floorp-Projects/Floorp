@@ -43,7 +43,8 @@ function NarrateControls(mm, win) {
       @import url("chrome://global/skin/narrateControls.css");
     </style>
     <li>
-       <button class="dropdown-toggle button" id="narrate-toggle" title="${"narrate"}">
+       <button class="dropdown-toggle button" id="narrate-toggle"
+               title="${"narrate"}" hidden>
          <svg xmlns="http://www.w3.org/2000/svg"
               xmlns:xlink="http://www.w3.org/1999/xlink"
               width="24" height="24" viewBox="0 0 24 24">
@@ -111,8 +112,6 @@ function NarrateControls(mm, win) {
   let branch = Services.prefs.getBranch("narrate.");
   let selectLabel = gStrings.GetStringFromName("selectvoicelabel");
   this.voiceSelect = new VoiceSelect(win, selectLabel);
-  this.voiceSelect.addOptions(this._getVoiceOptions(),
-    branch.getCharPref("voice"));
   this.voiceSelect.element.addEventListener("change", this);
   this.voiceSelect.element.id = "voice-select";
   win.speechSynthesis.addEventListener("voiceschanged", this);
@@ -128,6 +127,11 @@ function NarrateControls(mm, win) {
 
   // The rate is stored as an integer.
   rateRange.value = branch.getIntPref("rate");
+
+  if (this._setupVoices(branch.getCharPref("voice"))) {
+    // We disable this entire feature if there are no synthesis voices.
+    dropdown.querySelector("#narrate-toggle").hidden = false;
+  }
 
   let tb = win.document.getElementById("reader-toolbar");
   tb.appendChild(dropdown);
@@ -152,14 +156,18 @@ NarrateControls.prototype = {
         this._onButtonClick(evt);
         break;
       case "voiceschanged":
-        this.voiceSelect.clear();
-        this.voiceSelect.addOptions(this._getVoiceOptions(),
-          Services.prefs.getCharPref("narrate.voice"));
+        // We disable this entire feature if there are no synthesis voices.
+        this._doc.getElementById("narrate-toggle").hidden =
+          !this._setupVoices(Services.prefs.getCharPref("narrate.voice"));
         break;
     }
   },
 
-  _getVoiceOptions: function() {
+  /**
+   * Returns true if synth voices are available.
+   */
+  _setupVoices: function(selectedVoice) {
+    this.voiceSelect.clear();
     let win = this._win;
     let comparer = win.Intl ?
       (new Intl.Collator()).compare : (a, b) => a.localeCompare(b);
@@ -169,12 +177,16 @@ NarrateControls.prototype = {
         value: v.voiceURI
       };
     }).sort((a, b) => comparer(a.label, b.label));
-    options.unshift({
-      label: gStrings.GetStringFromName("defaultvoice"),
-      value: "automatic"
-    });
 
-    return options;
+    if (options.length) {
+      options.unshift({
+        label: gStrings.GetStringFromName("defaultvoice"),
+        value: "automatic"
+      });
+      this.voiceSelect.addOptions(options, selectedVoice);
+    }
+
+    return !!options.length;
   },
 
   _onRateInput: function(evt) {
