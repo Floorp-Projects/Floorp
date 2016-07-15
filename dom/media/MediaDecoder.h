@@ -603,6 +603,9 @@ private:
 
   void FinishShutdown();
 
+  void ConnectMirrors(MediaDecoderStateMachine* aObject);
+  void DisconnectMirrors();
+
   MediaEventProducer<void> mDataArrivedEvent;
 
   // The state machine object for handling the decoding. It is safe to

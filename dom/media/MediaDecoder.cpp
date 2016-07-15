@@ -1581,28 +1581,42 @@ MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 }
 
 void
+MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aObject);
+  mStateMachineDuration.Connect(aObject->CanonicalDuration());
+  mBuffered.Connect(aObject->CanonicalBuffered());
+  mStateMachineIsShutdown.Connect(aObject->CanonicalIsShutdown());
+  mNextFrameStatus.Connect(aObject->CanonicalNextFrameStatus());
+  mCurrentPosition.Connect(aObject->CanonicalCurrentPosition());
+  mPlaybackPosition.Connect(aObject->CanonicalPlaybackOffset());
+  mIsAudioDataAudible.Connect(aObject->CanonicalIsAudioDataAudible());
+}
+
+void
+MediaDecoder::DisconnectMirrors()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mStateMachineDuration.DisconnectIfConnected();
+  mBuffered.DisconnectIfConnected();
+  mStateMachineIsShutdown.DisconnectIfConnected();
+  mNextFrameStatus.DisconnectIfConnected();
+  mCurrentPosition.DisconnectIfConnected();
+  mPlaybackPosition.DisconnectIfConnected();
+  mIsAudioDataAudible.DisconnectIfConnected();
+}
+
+void
 MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(aStateMachine, !mDecoderStateMachine);
   mDecoderStateMachine = aStateMachine;
-
-  if (mDecoderStateMachine) {
-    mStateMachineDuration.Connect(mDecoderStateMachine->CanonicalDuration());
-    mBuffered.Connect(mDecoderStateMachine->CanonicalBuffered());
-    mStateMachineIsShutdown.Connect(mDecoderStateMachine->CanonicalIsShutdown());
-    mNextFrameStatus.Connect(mDecoderStateMachine->CanonicalNextFrameStatus());
-    mCurrentPosition.Connect(mDecoderStateMachine->CanonicalCurrentPosition());
-    mPlaybackPosition.Connect(mDecoderStateMachine->CanonicalPlaybackOffset());
-    mIsAudioDataAudible.Connect(mDecoderStateMachine->CanonicalIsAudioDataAudible());
+  if (aStateMachine) {
+    ConnectMirrors(aStateMachine);
   } else {
-    mStateMachineDuration.DisconnectIfConnected();
-    mBuffered.DisconnectIfConnected();
-    mStateMachineIsShutdown.DisconnectIfConnected();
-    mNextFrameStatus.DisconnectIfConnected();
-    mCurrentPosition.DisconnectIfConnected();
-    mPlaybackPosition.DisconnectIfConnected();
-    mIsAudioDataAudible.DisconnectIfConnected();
+    DisconnectMirrors();
   }
 }
 
