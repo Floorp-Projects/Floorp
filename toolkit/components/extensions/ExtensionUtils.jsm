@@ -1200,6 +1200,8 @@ function Messenger(context, messageManagers, sender, filter, delegate) {
   this.sender = sender;
   this.filter = filter;
   this.delegate = delegate;
+
+  MessageChannel.setupMessageManagers(messageManagers);
 }
 
 Messenger.prototype = {
