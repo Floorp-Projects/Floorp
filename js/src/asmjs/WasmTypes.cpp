@@ -25,6 +25,7 @@
 
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmSerialize.h"
+#include "asmjs/WasmSignalHandlers.h"
 #include "jit/MacroAssembler.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
@@ -272,18 +273,18 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
     MOZ_CRASH("Bad SymbolicAddress");
 }
 
-SignalUsage::SignalUsage(ExclusiveContext* cx)
+SignalUsage::SignalUsage()
   :
 #ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
     // Signal-handling is only used to eliminate bounds checks when the OS page
     // size is an even divisor of the WebAssembly page size.
-    forOOB(cx->canUseSignalHandlers() &&
+    forOOB(HaveSignalHandlers() &&
            gc::SystemPageSize() <= PageSize &&
            PageSize % gc::SystemPageSize() == 0),
 #else
     forOOB(false),
 #endif
-    forInterrupt(cx->canUseSignalHandlers())
+    forInterrupt(HaveSignalHandlers())
 {}
 
 bool
@@ -330,10 +331,8 @@ GetCPUID(uint32_t* cpuId)
 }
 
 MOZ_MUST_USE bool
-Assumptions::init(SignalUsage usesSignal, JS::BuildIdOp buildIdOp)
+Assumptions::init(JS::BuildIdOp buildIdOp)
 {
-    this->usesSignal = usesSignal;
-
     if (!GetCPUID(&cpuId))
         return false;
 

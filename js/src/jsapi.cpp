@@ -6107,15 +6107,6 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
             JitSpew(js::jit::JitSpew_IonScripts, "Disable offthread compilation");
         }
         break;
-      case JSJITCOMPILER_SIGNALS_ENABLE:
-        if (value == 1) {
-            rt->setCanUseSignalHandlers(true);
-            JitSpew(js::jit::JitSpew_IonScripts, "Enable signals");
-        } else if (value == 0) {
-            rt->setCanUseSignalHandlers(false);
-            JitSpew(js::jit::JitSpew_IonScripts, "Disable signals");
-        }
-        break;
       case JSJITCOMPILER_JUMP_THRESHOLD:
         if (value == uint32_t(-1)) {
             jit::DefaultJitOptions defaultValues;
@@ -6151,8 +6142,6 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
         return JS::ContextOptionsRef(cx).baseline();
       case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         return rt->canUseOffthreadIonCompilation();
-      case JSJITCOMPILER_SIGNALS_ENABLE:
-        return rt->canUseSignalHandlers();
       case JSJITCOMPILER_WASM_TEST_MODE:
         return jit::JitOptions.wasmTestMode ? 1 : 0;
       default:

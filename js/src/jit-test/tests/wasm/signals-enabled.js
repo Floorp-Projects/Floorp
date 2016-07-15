@@ -8,31 +8,22 @@ const textToBinary = str => wasmTextToBinary(str, 'new-format');
 if (!wasmUsesSignalForOOB())
     quit();
 
-function enable() {
-    assertEq(getJitCompilerOptions()["signals.enable"], 0);
-    setJitCompilerOption("signals.enable", 1);
-}
-function disable() {
-    assertEq(getJitCompilerOptions()["signals.enable"], 1);
-    setJitCompilerOption("signals.enable", 0);
-}
-
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Memory = WebAssembly.Memory;
 const code = textToBinary('(module (import "x" "y" (memory 1 1)))');
 
-disable();
+suppressSignalHandlers(true);
 var mem = new Memory({initial:1});
-enable();
+suppressSignalHandlers(false);
 var m = new Module(code);
-disable();
+suppressSignalHandlers(true);
 assertErrorMessage(() => new Instance(m, {x:{y:mem}}), Error, /signals/);
 var m = new Module(code);
-enable();
+suppressSignalHandlers(false);
 assertEq(new Instance(m, {x:{y:mem}}) instanceof Instance, true);
 var mem = new Memory({initial:1});
-disable();
+suppressSignalHandlers(true);
 var m = new Module(code);
-enable();
+suppressSignalHandlers(false);
 assertEq(new Instance(m, {x:{y:mem}}) instanceof Instance, true);
