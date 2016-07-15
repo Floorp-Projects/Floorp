@@ -370,6 +370,12 @@ protected:
    */
   void CancelPendingTasks();
 
+  /**
+   * Performs the same steps as CancelPendingTasks and also rejects and
+   * recreates the ready promise if the animation was pending.
+   */
+  void ResetPendingTasks();
+
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
 
