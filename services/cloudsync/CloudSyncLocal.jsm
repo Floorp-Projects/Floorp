@@ -77,7 +77,7 @@ Local.prototype = {
       // fall back on ua info string
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    return this.name = Str.sync.get("client.name3", [user, appName, system]);
+    return this.name = Str.sync.get("client.name2", [user, appName, system]);
   },
 
   set name(value) {
