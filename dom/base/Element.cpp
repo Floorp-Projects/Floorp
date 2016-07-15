@@ -1531,9 +1531,9 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
-               // And the restyle bits
-               ELEMENT_ALL_RESTYLE_FLAGS);
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
+    // And the restyle bits
+    UnsetRestyleFlagsIfGecko();
   } else if (IsInShadowTree()) {
     // We're not in a document, but we did get inserted into a shadow tree.
     // Since we won't have any restyle data in the document's restyle trackers,
@@ -1542,8 +1542,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Also clear all the other flags that are cleared above when we do get
     // inserted into a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
-               ELEMENT_ALL_RESTYLE_FLAGS);
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
+    UnsetRestyleFlagsIfGecko();
   } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
