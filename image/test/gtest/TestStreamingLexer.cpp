@@ -156,7 +156,7 @@ TEST_F(ImageStreamingLexer, ZeroLengthData)
   EXPECT_EQ(Some(TerminalState::FAILURE), result);
 }
 
-TEST_F(ImageStreamingLexer, SingleChunkFromSourceBuffer)
+TEST_F(ImageStreamingLexer, SingleChunk)
 {
   // Test delivering all the data at once.
   mSourceBuffer->Append(mData, sizeof(mData));
@@ -168,7 +168,7 @@ TEST_F(ImageStreamingLexer, SingleChunkFromSourceBuffer)
   EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
-TEST_F(ImageStreamingLexer, SingleChunkWithUnbufferedFromSourceBuffer)
+TEST_F(ImageStreamingLexer, SingleChunkWithUnbuffered)
 {
   Vector<char> unbufferedVector;
 
@@ -186,7 +186,7 @@ TEST_F(ImageStreamingLexer, SingleChunkWithUnbufferedFromSourceBuffer)
   EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
-TEST_F(ImageStreamingLexer, ChunkPerStateFromSourceBuffer)
+TEST_F(ImageStreamingLexer, ChunkPerState)
 {
   // Test delivering in perfectly-sized chunks, one per state.
   for (unsigned i = 0; i < 3; ++i) {
@@ -205,7 +205,7 @@ TEST_F(ImageStreamingLexer, ChunkPerStateFromSourceBuffer)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbufferedFromSourceBuffer)
+TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbuffered)
 {
   Vector<char> unbufferedVector;
 
@@ -230,7 +230,7 @@ TEST_F(ImageStreamingLexer, ChunkPerStateWithUnbufferedFromSourceBuffer)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, OneByteChunksFromSourceBuffer)
+TEST_F(ImageStreamingLexer, OneByteChunks)
 {
   // Test delivering in one byte chunks.
   for (unsigned i = 0; i < 9; ++i) {
@@ -249,7 +249,7 @@ TEST_F(ImageStreamingLexer, OneByteChunksFromSourceBuffer)
   mSourceBuffer->Complete(NS_OK);
 }
 
-TEST_F(ImageStreamingLexer, OneByteChunksWithUnbufferedFromSourceBuffer)
+TEST_F(ImageStreamingLexer, OneByteChunksWithUnbuffered)
 {
   Vector<char> unbufferedVector;
 
@@ -308,7 +308,7 @@ TEST_F(ImageStreamingLexer, ZeroLengthStateWithUnbuffered)
   EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
-TEST_F(ImageStreamingLexer, TerminateSuccessFromSourceBuffer)
+TEST_F(ImageStreamingLexer, TerminateSuccess)
 {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
@@ -335,7 +335,7 @@ TEST_F(ImageStreamingLexer, TerminateSuccessFromSourceBuffer)
   EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
-TEST_F(ImageStreamingLexer, TerminateFailureFromSourceBuffer)
+TEST_F(ImageStreamingLexer, TerminateFailure)
 {
   mSourceBuffer->Append(mData, sizeof(mData));
   mSourceBuffer->Complete(NS_OK);
@@ -362,7 +362,7 @@ TEST_F(ImageStreamingLexer, TerminateFailureFromSourceBuffer)
   EXPECT_EQ(Some(TerminalState::FAILURE), result);
 }
 
-TEST_F(ImageStreamingLexer, TerminateUnbufferedFromSourceBuffer)
+TEST_F(ImageStreamingLexer, TerminateUnbuffered)
 {
   // Test that Terminate works during an unbuffered read.
   for (unsigned i = 0; i < 9; ++i) {
