@@ -1398,7 +1398,7 @@ CompileArgs::init(ExclusiveContext* cx)
 }
 
 SharedModule
-wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
+wasm::Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* error)
 {
     bool newFormat = args.assumptions.newFormat;
 
@@ -1456,9 +1456,5 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
 
     MOZ_ASSERT(!*error, "unreported error in decoding");
 
-    SharedBytes sharedBytes = js_new<ShareableBytes>(Move(bytecode));
-    if (!sharedBytes)
-        return nullptr;
-
-    return mg.finish(Move(imports), *sharedBytes);
+    return mg.finish(Move(imports), bytecode);
 }
