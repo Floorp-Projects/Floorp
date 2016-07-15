@@ -1,0 +1,10 @@
+{
+    "configure-args": "--disable-debug --enable-optimize --enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-thread-sanitizer",
+    "compiler": "clang",
+    "env": {
+        "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer",
+        "JITTEST_EXTRA_ARGS": "--jitflags=debug --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt",
+        "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt",
+        "TSAN_OPTIONS": "log_path={OUTDIR}/sanitize_log"
+    }
+}
