@@ -316,6 +316,7 @@ public:
                             AllocationHandle** aOutHandle,
                             const char** aOutBadConstraint)
   {
+    AssertIsOnOwningThread();
     MOZ_ASSERT(aOutHandle);
     RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin,
                                                            aPrefs, aDeviceId);

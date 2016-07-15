@@ -219,60 +219,28 @@ uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                                            const MediaEnginePrefs &aPrefs,
-                                            const nsString& aDeviceId,
-                                            const nsACString& aOrigin,
-                                            AllocationHandle** aOutHandle,
-                                            const char** aOutBadConstraint)
-{
-  AssertIsOnOwningThread();
-  if (mState == kReleased) {
-    if (sChannelsOpen == 0) {
-      if (!InitEngine()) {
-        LOG(("Audio engine is not initalized"));
-        return NS_ERROR_FAILURE;
-      }
-    }
-    if (!AllocChannel()) {
-      if (sChannelsOpen == 0) {
-        DeInitEngine();
-      }
-      LOG(("Audio device is not initalized"));
-      return NS_ERROR_FAILURE;
-    }
-    if (mAudioInput->SetRecordingDevice(mCapIndex)) {
-      FreeChannel();
-      if (sChannelsOpen == 0) {
-        DeInitEngine();
-      }
-      return NS_ERROR_FAILURE;
-    }
-    sChannelsOpen++;
-    mState = kAllocated;
-    LOG(("Audio device %d allocated", mCapIndex));
-  } else if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
-    MonitorAutoLock lock(mMonitor);
-    if (mSources.IsEmpty()) {
-      LOG(("Audio device %d reallocated", mCapIndex));
-    } else {
-      LOG(("Audio device %d allocated shared", mCapIndex));
-    }
-  }
-  ++mNrAllocations;
-  aOutHandle = nullptr;
-  return Restart(nullptr, aConstraints, aPrefs, aDeviceId, aOutBadConstraint);
-}
-
-nsresult
 MediaEngineWebRTCMicrophoneSource::Restart(AllocationHandle* aHandle,
                                            const dom::MediaTrackConstraints& aConstraints,
                                            const MediaEnginePrefs &aPrefs,
                                            const nsString& aDeviceId,
                                            const char** aOutBadConstraint)
 {
-  MOZ_ASSERT(!aHandle);
-  FlattenedConstraints c(aConstraints);
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aHandle);
+  NormalizedConstraints constraints(aConstraints);
+  return ReevaluateAllocation(aHandle, &constraints, aPrefs, aDeviceId,
+                              aOutBadConstraint);
+}
+
+nsresult
+MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
+    const AllocationHandle* aHandle,
+    const NormalizedConstraints& aNetConstraints,
+    const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId,
+    const char** aOutBadConstraint)
+{
+  FlattenedConstraints c(aNetConstraints);
 
   bool aec_on = c.mEchoCancellation.Get(aPrefs.mAecOn);
   bool agc_on = c.mMozAutoGainControl.Get(aPrefs.mAgcOn);
@@ -285,6 +253,51 @@ MediaEngineWebRTCMicrophoneSource::Restart(AllocationHandle* aHandle,
        aPrefs.mPlayoutDelay));
 
   mPlayoutDelay = aPrefs.mPlayoutDelay;
+
+  switch (mState) {
+    case kReleased:
+      MOZ_ASSERT(aHandle);
+      if (sChannelsOpen == 0) {
+        if (!InitEngine()) {
+          LOG(("Audio engine is not initalized"));
+          return NS_ERROR_FAILURE;
+        }
+      }
+      if (!AllocChannel()) {
+        if (sChannelsOpen == 0) {
+          DeInitEngine();
+        }
+        LOG(("Audio device is not initalized"));
+        return NS_ERROR_FAILURE;
+      }
+      if (mAudioInput->SetRecordingDevice(mCapIndex)) {
+        FreeChannel();
+        if (sChannelsOpen == 0) {
+          DeInitEngine();
+        }
+        return NS_ERROR_FAILURE;
+      }
+      sChannelsOpen++;
+      mState = kAllocated;
+      LOG(("Audio device %d allocated", mCapIndex));
+      break;
+
+    case kStarted:
+      if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
+        MonitorAutoLock lock(mMonitor);
+        if (mSources.IsEmpty()) {
+          LOG(("Audio device %d reallocated", mCapIndex));
+        } else {
+          LOG(("Audio device %d allocated shared", mCapIndex));
+        }
+      }
+      break;
+
+    default:
+      LOG(("Audio device %d %s in ignored state %d", mCapIndex,
+           (aHandle? aHandle->mOrigin.get() : ""), mState));
+      break;
+  }
 
   if (sChannelsOpen > 0) {
     int error;
@@ -310,7 +323,6 @@ MediaEngineWebRTCMicrophoneSource::Restart(AllocationHandle* aHandle,
   if (mSkipProcessing) {
     mSampleFrequency = MediaEngine::USE_GRAPH_RATE;
   }
-
   return NS_OK;
 }
 
@@ -318,10 +330,10 @@ nsresult
 MediaEngineWebRTCMicrophoneSource::Deallocate(AllocationHandle* aHandle)
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aHandle);
-  --mNrAllocations;
-  MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
-  if (mNrAllocations == 0) {
+
+  Super::Deallocate(aHandle);
+
+  if (!mRegisteredHandles.Length()) {
     // If empty, no callbacks to deliver data should be occuring
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
@@ -740,7 +752,7 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
     MOZ_ASSERT(mState == kStopped);
   }
 
-  while (mNrAllocations) {
+  while (mRegisteredHandles.Length()) {
     MOZ_ASSERT(mState == kAllocated || mState == kStopped);
     Deallocate(nullptr); // XXX Extend concurrent constraints code to mics.
   }
