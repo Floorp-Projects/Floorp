@@ -56,9 +56,7 @@ this.Telemetry = function () {
 
 module.exports = Telemetry;
 
-var {Cc, Ci, Cu} = require("chrome");
 var Services = require("Services");
-var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 Telemetry.prototype = {
   _histograms: {
@@ -357,7 +355,7 @@ Telemetry.prototype = {
    *         Histogram in which the data is to be stored.
    */
   logOncePerBrowserVersion: function (perUserHistogram, value) {
-    let currentVersion = appInfo.version;
+    let currentVersion = Services.appinfo.version;
     let latest = Services.prefs.getCharPref(TOOLS_OPENED_PREF);
     let latestObj = JSON.parse(latest);
 
@@ -378,7 +376,3 @@ Telemetry.prototype = {
     }
   }
 };
-
-XPCOMUtils.defineLazyGetter(this, "appInfo", function () {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-});

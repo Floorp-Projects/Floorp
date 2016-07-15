@@ -483,7 +483,23 @@ const Services = {
         }
       }
       return "Unknown";
-    }
+    },
+
+    // It's fine for this to be an approximation.
+    get name() {
+      return window.navigator.userAgent;
+    },
+
+    // It's fine for this to be an approximation.
+    get version() {
+      return window.navigator.appVersion;
+    },
+
+    // This is only used by telemetry, which is disabled for the
+    // content case.  So, being totally wrong is ok.
+    get is64Bit() {
+      return true;
+    },
   },
 };
 
