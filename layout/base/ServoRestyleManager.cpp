@@ -98,10 +98,6 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                                            nsStyleContext* aParentContext,
                                            ServoStyleSet* aStyleSet)
 {
-  if (!(aContent->IsDirtyForServo() || aContent->HasDirtyDescendantsForServo())) {
-    return;
-  }
-
   nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
 
   // TODO: AFAIK this can happen when we have, let's say, display: none. Here we
@@ -109,27 +105,35 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
   // guess), but we'd better do that once we have all the restyle hints thing
   // figured out.
   if (!primaryFrame) {
+    aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO | NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
     return;
   }
 
-  RefPtr<ServoComputedValues> computedValues =
-    dont_AddRef(Servo_GetComputedValues(aContent));
+  if (aContent->IsDirtyForServo()) {
+    RefPtr<ServoComputedValues> computedValues =
+      dont_AddRef(Servo_GetComputedValues(aContent));
 
-  // TODO: Figure out what pseudos does this content have, and do the proper
-  // thing with them.
-  RefPtr<nsStyleContext> context =
-    aStyleSet->GetContext(computedValues.forget(),
-                          aParentContext,
-                          nullptr,
-                          CSSPseudoElementType::NotPseudo);
+    // TODO: Figure out what pseudos does this content have, and do the proper
+    // thing with them.
+    RefPtr<nsStyleContext> context =
+      aStyleSet->GetContext(computedValues.forget(),
+                            aParentContext,
+                            nullptr,
+                            CSSPseudoElementType::NotPseudo);
 
-  // TODO: Compare old and new styles to generate restyle change hints, and
-  // process them.
-  primaryFrame->SetStyleContext(context.get());
+    // TODO: Compare old and new styles to generate restyle change hints, and
+    // process them.
+    primaryFrame->SetStyleContext(context.get());
 
-  FlattenedChildIterator it(aContent);
-  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-    RecreateStyleContexts(n, context.get(), aStyleSet);
+    aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO);
+  }
+
+  if (aContent->HasDirtyDescendantsForServo()) {
+    FlattenedChildIterator it(aContent);
+    for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+      RecreateStyleContexts(n, primaryFrame->StyleContext(), aStyleSet);
+    }
+    aContent->UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 }
 
