@@ -1920,6 +1920,9 @@
               this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
             }
 
+            var evt = new CustomEvent("TabBrowserCreated", { bubbles: true, detail: {} });
+            aTab.dispatchEvent(evt);
+
             return { usingPreloadedContent: usingPreloadedContent };
           ]]>
         </body>
