@@ -7,22 +7,40 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const { observe } = require("../event/chrome");
 const { open } = require("../event/dom");
 const { windows } = require("../window/utils");
 const { filter, merge, map, expand } = require("../event/utils");
 
+function documentMatches(weakWindow, event) {
+  let window = weakWindow.get();
+  return window && event.target === window.document;
+}
+
+function makeStrictDocumentFilter(window) {
+  // Note: Do not define a closure within this function.  Otherwise
+  //       you may leak the window argument.
+  let weak = Cu.getWeakReference(window);
+  return documentMatches.bind(null, weak);
+}
+
+function toEventWithDefaultViewTarget({type, target}) {
+  return { type: type, target: target.defaultView }
+}
+
 // Function registers single shot event listeners for relevant window events
 // that forward events to exported event stream.
 function eventsFor(window) {
+  // NOTE: Do no use pass a closure from this function into a stream
+  //       transform function.  You will capture the window in the
+  //       closure and leak the window until the event stream is
+  //       completely closed.
   let interactive = open(window, "DOMContentLoaded", { capture: true });
   let complete = open(window, "load", { capture: true });
   let states = merge([interactive, complete]);
-  let changes = filter(states, ({target}) => target === window.document);
-  return map(changes, function({type, target}) {
-    return { type: type, target: target.defaultView }
-  });
+  let changes = filter(states, makeStrictDocumentFilter(window));
+  return map(changes, toEventWithDefaultViewTarget);
 }
 
 // In addition to observing windows that are open we also observe windows
