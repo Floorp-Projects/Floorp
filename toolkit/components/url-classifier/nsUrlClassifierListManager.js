@@ -29,7 +29,7 @@ function Init() {
   modScope.G_Alarm = jslib.G_Alarm;
   modScope.BindToObject = jslib.BindToObject;
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
-  modScope.RequestBackoff = jslib.RequestBackoff;
+  modScope.RequestBackoffV4 = jslib.RequestBackoffV4;
 
   // We only need to call Init once.
   modScope.Init = function() {};

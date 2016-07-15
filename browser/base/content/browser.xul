@@ -725,6 +725,22 @@
                 <image id="identity-icon"
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"/>
+                <box id="blocked-permissions-container" align="center">
+                  <image data-permission-id="geo" class="notification-anchor-icon geo-icon blocked" role="button"
+                         aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
+                  <image data-permission-id="desktop-notification" class="notification-anchor-icon desktop-notification-icon blocked" role="button"
+                         aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
+                  <image data-permission-id="camera" class="notification-anchor-icon camera-icon blocked" role="button"
+                         aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
+                  <image data-permission-id="indexedDB" class="notification-anchor-icon indexedDB-icon blocked" role="button"
+                         aria-label="&urlbar.indexedDBNotificationAnchor.label;"/>
+                  <image data-permission-id="microphone" class="notification-anchor-icon microphone-icon blocked" role="button"
+                         aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
+                  <image data-permission-id="screen" class="notification-anchor-icon screen-icon blocked" role="button"
+                         aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
+                  <image data-permission-id="pointerLock" class="notification-anchor-icon pointerLock-icon blocked" role="button"
+                         aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
+                </box>
                 <box id="notification-popup-box"
                      hidden="true"
                      tooltiptext=""

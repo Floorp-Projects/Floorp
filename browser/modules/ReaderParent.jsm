@@ -45,7 +45,10 @@ var ReaderParent = {
           }
         }, e => {
           if (e && e.newURL) {
-            message.target.loadURI("about:reader?url=" + encodeURIComponent(e.newURL));
+            // Make sure the target browser is still alive before trying to send data back.
+            if (message.target.messageManager) {
+              message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { newURL: e.newURL });
+            }
           }
         });
         break;

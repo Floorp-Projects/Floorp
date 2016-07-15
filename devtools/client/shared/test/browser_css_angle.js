@@ -13,6 +13,7 @@ add_task(function* () {
 
   info("Starting the test");
   testAngleUtils();
+  testAngleValidity();
 
   host.destroy();
   gBrowser.removeCurrentTab();
@@ -35,6 +36,16 @@ function testAngleUtils() {
   }
 }
 
+function testAngleValidity() {
+  let data = getAngleValidityData();
+
+  for (let {angle, result} of data) {
+    let testAngle = new angleUtils.CssAngle(angle);
+
+    is(testAngle.valid, result, `Testing that "${angle}" is ${testAngle.valid ? " a valid" : "an invalid" } angle`);
+  }
+}
+
 function testToString(angle, deg, rad, grad, turn) {
   angle.angleUnit = angleUtils.CssAngle.ANGLEUNIT.deg;
   is(angle.toString(), deg, "toString() with deg type");
@@ -47,6 +58,43 @@ function testToString(angle, deg, rad, grad, turn) {
 
   angle.angleUnit = angleUtils.CssAngle.ANGLEUNIT.turn;
   is(angle.toString(), turn, "toString() with turn type");
+}
+
+function getAngleValidityData() {
+  return [{
+    angle: "0.2turn",
+    result: true
+  }, {
+    angle: "-0.2turn",
+    result: true
+  }, {
+    angle: "-.2turn",
+    result: true
+  }, {
+    angle: "1e02turn",
+    result: true
+  }, {
+    angle: "-2e2turn",
+    result: true
+  }, {
+    angle: ".2turn",
+    result: true
+  }, {
+    angle: "0.2aaturn",
+    result: false
+  }, {
+    angle: "2dega",
+    result: false
+  }, {
+    angle: "0.deg",
+    result: false
+  }, {
+    angle: ".deg",
+    result: false
+  }, {
+    angle: "..2turn",
+    result: false
+  }];
 }
 
 function getTestData() {
