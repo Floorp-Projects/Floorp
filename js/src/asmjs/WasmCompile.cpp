@@ -1386,15 +1386,11 @@ DecodeUnknownSections(Decoder& d)
 }
 
 bool
-CompileArgs::init(ExclusiveContext* cx)
+CompileArgs::initFromContext(ExclusiveContext* cx, UniqueChars f)
 {
     alwaysBaseline = cx->options().wasmAlwaysBaseline();
-    if (!assumptions.init(cx->buildIdOp())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return true;
+    filename = Move(f);
+    return assumptions.initBuildIdFromContext(cx);
 }
 
 SharedModule

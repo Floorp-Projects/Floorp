@@ -141,16 +141,19 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
     }
 
-    CompileArgs compileArgs;
-    if (!compileArgs.init(cx))
-        return false;
-
-    JS::AutoFilename af;
-    if (DescribeScriptedCaller(cx, &af)) {
-        compileArgs.filename = DuplicateString(cx, af.get());
-        if (!compileArgs.filename)
-            return false;
+    UniqueChars filename;
+    {
+        JS::AutoFilename af;
+        if (DescribeScriptedCaller(cx, &af)) {
+            filename = DuplicateString(cx, af.get());
+            if (!filename)
+                return false;
+        }
     }
+
+    CompileArgs compileArgs;
+    if (!compileArgs.initFromContext(cx, Move(filename)))
+        return false;
 
     UniqueChars error;
     SharedModule module = Compile(*bytecode, Move(compileArgs), &error);
@@ -331,18 +334,21 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    UniqueChars filename;
+    {
+        JS::AutoFilename af;
+        if (DescribeScriptedCaller(cx, &af)) {
+            filename = DuplicateString(cx, af.get());
+            if (!filename)
+                return false;
+        }
+    }
+
     CompileArgs compileArgs;
-    if (!compileArgs.init(cx))
-        return true;
+    if (!compileArgs.initFromContext(cx, Move(filename)))
+        return false;
 
     compileArgs.assumptions.newFormat = true;
-
-    JS::AutoFilename af;
-    if (DescribeScriptedCaller(cx, &af)) {
-        compileArgs.filename = DuplicateString(cx, af.get());
-        if (!compileArgs.filename)
-            return false;
-    }
 
     if (!CheckCompilerSupport(cx))
         return false;

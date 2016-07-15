@@ -817,8 +817,12 @@ struct Assumptions
     JS::BuildIdCharVector buildId;
     bool                  newFormat;
 
-    Assumptions() : usesSignal(), cpuId(0), newFormat(false) {}
-    MOZ_MUST_USE bool init(JS::BuildIdOp buildIdOp);
+    explicit Assumptions(JS::BuildIdCharVector&& buildId);
+
+    // If Assumptions is constructed without arguments, initBuildIdFromContext()
+    // must be called to complete initialization.
+    Assumptions();
+    bool initBuildIdFromContext(ExclusiveContext* cx);
 
     bool operator==(const Assumptions& rhs) const;
     bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }

@@ -34,8 +34,16 @@ struct CompileArgs
     UniqueChars filename;
     bool alwaysBaseline;
 
-    CompileArgs() : alwaysBaseline(false) {}
-    bool init(ExclusiveContext* cx);
+    CompileArgs(Assumptions&& assumptions, UniqueChars filename)
+      : assumptions(Move(assumptions)),
+        filename(Move(filename)),
+        alwaysBaseline(false)
+    {}
+
+    // If CompileArgs is constructed without arguments, initFromContext() must
+    // be called to complete initialization.
+    CompileArgs() = default;
+    bool initFromContext(ExclusiveContext* cx, UniqueChars filename);
 };
 
 SharedModule
