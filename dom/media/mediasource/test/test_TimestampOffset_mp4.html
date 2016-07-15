@@ -66,7 +66,8 @@ runWithMSE(function(ms, el) {
       isfuzzy(audiosb.buffered.start(0), 3, eps, "Audio starts at 3");
 
       // Trim the rest of the audio.
-      ms.duration = videosb.buffered.end(0);
+      audiosb.remove(videosb.buffered.end(0), Infinity);
+      videosb.remove(videosb.buffered.end(0), Infinity);
       return Promise.all([audiosb.updating ? once(audiosb, 'updateend') : Promise.resolve(),
                           videosb.updating ? once(videosb, 'updateend') : Promise.resolve()]);
     }).then(function() {
