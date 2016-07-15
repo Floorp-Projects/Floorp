@@ -247,7 +247,9 @@ amManager.prototype = {
           }
           AddonManager.addAddonListener(this.addonListener);
         } else {
-          AddonManager.removeAddonListener(this.addonListener);
+          if (this.addonListener) {
+            AddonManager.removeAddonListener(this.addonListener);
+          }
         }
       }
     }
