@@ -787,15 +787,13 @@ AndroidBridge::OpenGraphicsLibraries()
             ANativeWindow_fromSurface = (void* (*)(JNIEnv*, jobject))dlsym(handle, "ANativeWindow_fromSurface");
             ANativeWindow_release = (void (*)(void*))dlsym(handle, "ANativeWindow_release");
             ANativeWindow_setBuffersGeometry = (int (*)(void*, int, int, int)) dlsym(handle, "ANativeWindow_setBuffersGeometry");
-            ANativeWindow_lock = (int (*)(void*, void*, void*)) dlsym(handle, "ANativeWindow_lock");
-            ANativeWindow_unlockAndPost = (int (*)(void*))dlsym(handle, "ANativeWindow_unlockAndPost");
             ANativeWindow_getWidth = (int (*)(void*))dlsym(handle, "ANativeWindow_getWidth");
             ANativeWindow_getHeight = (int (*)(void*))dlsym(handle, "ANativeWindow_getHeight");
 
             // This is only available in Honeycomb and ICS. It was removed in Jelly Bean
             ANativeWindow_fromSurfaceTexture = (void* (*)(JNIEnv*, jobject))dlsym(handle, "ANativeWindow_fromSurfaceTexture");
 
-            mHasNativeWindowAccess = ANativeWindow_fromSurface && ANativeWindow_release && ANativeWindow_lock && ANativeWindow_unlockAndPost;
+            mHasNativeWindowAccess = ANativeWindow_fromSurface && ANativeWindow_release;
 
             ALOG_BRIDGE("Successfully opened libandroid.so, have native window access? %d", mHasNativeWindowAccess);
         }
@@ -1387,78 +1385,6 @@ AndroidBridge::ReleaseNativeWindowForSurfaceTexture(void *window)
     // FIXME: we don't ref the pointer we get, so nothing to do currently. We should ref it.
 }
 
-bool
-AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride)
-{
-    /* Copied from native_window.h in Android NDK (platform-9) */
-    typedef struct ANativeWindow_Buffer {
-        // The number of pixels that are show horizontally.
-        int32_t width;
-
-        // The number of pixels that are shown vertically.
-        int32_t height;
-
-        // The number of *pixels* that a line in the buffer takes in
-        // memory.  This may be >= width.
-        int32_t stride;
-
-        // The format of the buffer.  One of WINDOW_FORMAT_*
-        int32_t format;
-
-        // The actual bits.
-        void* bits;
-
-        // Do not touch.
-        uint32_t reserved[6];
-    } ANativeWindow_Buffer;
-
-    // Very similar to the above, but the 'usage' field is included. We use this
-    // in the fallback case when NDK support is not available
-    struct SurfaceInfo {
-        uint32_t    w;
-        uint32_t    h;
-        uint32_t    s;
-        uint32_t    usage;
-        uint32_t    format;
-        unsigned char* bits;
-        uint32_t    reserved[2];
-    };
-
-    int err;
-    *bits = nullptr;
-    *width = *height = *format = 0;
-
-    if (mHasNativeWindowAccess) {
-        ANativeWindow_Buffer buffer;
-
-        if ((err = ANativeWindow_lock(window, (void*)&buffer, nullptr)) != 0) {
-            ALOG_BRIDGE("ANativeWindow_lock failed! (error %d)", err);
-            return false;
-        }
-
-        *bits = (unsigned char*)buffer.bits;
-        *width = buffer.width;
-        *height = buffer.height;
-        *format = buffer.format;
-        *stride = buffer.stride;
-    } else if (mHasNativeWindowFallback) {
-        SurfaceInfo info;
-
-        if ((err = Surface_lock(window, &info, nullptr, true)) != 0) {
-            ALOG_BRIDGE("Surface_lock failed! (error %d)", err);
-            return false;
-        }
-
-        *bits = info.bits;
-        *width = info.w;
-        *height = info.h;
-        *format = info.format;
-        *stride = info.s;
-    } else return false;
-
-    return true;
-}
-
 jobject
 AndroidBridge::GetGlobalContextRef() {
     if (sGlobalContext) {
@@ -1493,25 +1419,6 @@ AndroidBridge::GetGlobalContextRef() {
     sGlobalContext = env->NewGlobalRef(appContext);
     MOZ_ASSERT(sGlobalContext);
     return sGlobalContext;
-}
-
-bool
-AndroidBridge::UnlockWindow(void* window)
-{
-    int err;
-
-    if (!HasNativeWindowAccess())
-        return false;
-
-    if (mHasNativeWindowAccess && (err = ANativeWindow_unlockAndPost(window)) != 0) {
-        ALOG_BRIDGE("ANativeWindow_unlockAndPost failed! (error %d)", err);
-        return false;
-    } else if (mHasNativeWindowFallback && (err = Surface_unlockAndPost(window)) != 0) {
-        ALOG_BRIDGE("Surface_unlockAndPost failed! (error %d)", err);
-        return false;
-    }
-
-    return true;
 }
 
 void
