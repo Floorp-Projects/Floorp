@@ -39,7 +39,7 @@ window.onload = Task.async(function* () {
 
     // Test rendering
     const renderedComponent = renderComponent(ObjectWithText.rep, { object: gripStub });
-    is(renderedComponent.textContent, ".Shadow", "ObjectWithText rep has expected text content");
+    is(renderedComponent.textContent, "\".Shadow\"", "ObjectWithText rep has expected text content");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {

@@ -23,6 +23,23 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 #include ./content/request-backoff.js
 #include ./content/xml-fetcher.js
 
+// Wrap a general-purpose |RequestBackoff| to a v4-specific one
+// since both listmanager and hashcompleter would use it.
+// Note that |maxRequests| and |requestPeriod| is still configurable
+// to throttle pending requests.
+function RequestBackoffV4(maxRequests, requestPeriod) {
+  let rand = Math.random();
+  let retryInterval = Math.floor(15 * 60 * 1000 * (rand + 1));   // 15 ~ 30 min.
+  let backoffInterval = Math.floor(30 * 60 * 1000 * (rand + 1)); // 30 ~ 60 min.
+
+  return new RequestBackoff(2 /* max errors */,
+                retryInterval /* retry interval, 15~30 min */,
+                  maxRequests /* num requests */,
+                requestPeriod /* request time, 60 min */,
+              backoffInterval /* backoff interval, 60 min */,
+          24 * 60 * 60 * 1000 /* max backoff, 24hr */);
+}
+
 // Expose this whole component.
 var lib = this;
 
