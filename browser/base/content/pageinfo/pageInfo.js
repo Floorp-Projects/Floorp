@@ -58,11 +58,8 @@ pageInfoTreeView.prototype = {
 
   addRows: function(rows)
   {
-    this.data = this.data.concat(rows);
-    this.rowCountChanged(this.rows, rows.length);
-    this.rows = this.data.length;
-    if (this.selection.count == 0 && this.rowCount && !gImageElement) {
-      this.selection.select(0);
+    for (let row of rows) {
+      this.addRow(row);
     }
   },
 
