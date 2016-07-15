@@ -1751,8 +1751,15 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!dummyFunction_)
             return false;
 
+        UniqueChars filename;
+        if (parser_.ss->filename()) {
+            filename = DuplicateString(parser_.ss->filename());
+            if (!filename)
+                return false;
+        }
+
         CompileArgs args;
-        if (!args.init(cx_))
+        if (!args.initFromContext(cx_, Move(filename)))
             return false;
 
         auto genData = MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal, ModuleKind::AsmJS);
@@ -1767,12 +1774,6 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 
         genData->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
-
-        if (parser_.ss->filename()) {
-            args.filename = DuplicateString(parser_.ss->filename());
-            if (!args.filename)
-                return false;
-        }
 
         if (!mg_.init(Move(genData), Move(args), asmJSMetadata_.get()))
             return false;
@@ -8388,8 +8389,8 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
         return true;
 
     Assumptions assumptions;
-    if (!assumptions.init(cx->buildIdOp()))
-        return true;
+    if (!assumptions.initBuildIdFromContext(cx))
+        return false;
 
     if (assumptions != (*module)->metadata().assumptions)
         return true;
