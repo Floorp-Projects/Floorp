@@ -1,0 +1,16 @@
+$inherits:
+  from: 'tasks/builds/sm_variant_base.yml'
+  variables:
+    build_name: 'sm-asan'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'asan'
+      TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/linux64/asan.manifest'
+  metadata:
+    name: '[TC] Spidermonkey Address Sanitizer'
+    description: 'Spidermonkey Address Sanitizer'
+  extra:
+    treeherder:
+      symbol: asan
