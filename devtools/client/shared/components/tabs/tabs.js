@@ -8,7 +8,8 @@
 
 define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
-  const DOM = React.DOM;
+  const { DOM } = React;
+  const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
   /**
    * Renders simple 'tab' widget.
@@ -25,9 +26,9 @@ define(function (require, exports, module) {
    *      <li class='tabs-menu-item'>Tab #2</li>
    *    </ul>
    *  </nav>
-   *  <article class='tab-panel'>
+   *  <div class='tab-panel'>
    *    The content of active panel here
-   *  </article>
+   *  </div>
    * <div>
    */
   let Tabs = React.createClass({
@@ -51,17 +52,30 @@ define(function (require, exports, module) {
 
     getDefaultProps: function () {
       return {
-        tabActive: 1
+        tabActive: 0
       };
     },
 
     getInitialState: function () {
       return {
-        tabActive: this.props.tabActive
+        tabActive: this.props.tabActive,
+
+        // This array is used to store an information whether a tab
+        // at specific index has already been created (e.g. selected
+        // at least once).
+        // If yes, it's rendered even if not currently selected.
+        // This is because in some cases we don't want to re-create
+        // tab content when it's being unselected/selected.
+        // E.g. in case of an iframe being used as a tab-content
+        // we want the iframe to stay in the DOM.
+        created: [],
       };
     },
 
     componentDidMount: function () {
+      let node = findDOMNode(this);
+      node.addEventListener("keydown", this.onKeyDown, false);
+
       let index = this.state.tabActive;
       if (this.props.onMount) {
         this.props.onMount(index);
@@ -70,11 +84,54 @@ define(function (require, exports, module) {
 
     componentWillReceiveProps: function (newProps) {
       if (newProps.tabActive) {
-        this.setState({tabActive: newProps.tabActive});
+        let created = [...this.state.created];
+        created[newProps.tabActive] = true;
+
+        this.setState(Object.assign({}, this.state, {
+          tabActive: newProps.tabActive,
+          created: created,
+        }));
       }
     },
 
-    setActive: function (index, e) {
+    componentWillUnmount: function () {
+      let node = findDOMNode(this);
+      node.removeEventListener("keydown", this.onKeyDown, false);
+    },
+
+    // DOM Events
+
+    onKeyDown: function (event) {
+      // Bail out if the focus isn't on a tab.
+      if (!event.target.closest(".tabs-menu-item")) {
+        return;
+      }
+
+      let tabActive = this.state.tabActive;
+      let tabCount = this.props.children.length;
+
+      switch (event.code) {
+        case "ArrowRight":
+          tabActive = Math.min(tabCount - 1, tabActive + 1);
+          break;
+        case "ArrowLeft":
+          tabActive = Math.max(0, tabActive - 1);
+          break;
+      }
+
+      if (this.state.tabActive != tabActive) {
+        this.setActive(tabActive);
+      }
+    },
+
+    onClickTab: function (index, event) {
+      this.setActive(index);
+      event.preventDefault();
+    },
+
+    // API
+
+    setActive: function (index) {
       let onAfterChange = this.props.onAfterChange;
       let onBeforeChange = this.props.onBeforeChange;
 
@@ -85,69 +142,125 @@ define(function (require, exports, module) {
         }
       }
 
-      let newState = {
-        tabActive: index
-      };
+      let created = [...this.state.created];
+      created[index] = true;
+
+      let newState = Object.assign({}, this.state, {
+        tabActive: index,
+        created: created
+      });
 
       this.setState(newState, () => {
+        // Properly set focus on selected tab.
+        let node = findDOMNode(this);
+        let selectedTab = node.querySelector(".is-active > a");
+        if (selectedTab) {
+          selectedTab.focus();
+        }
+
         if (onAfterChange) {
           onAfterChange(index);
         }
       });
-
-      e.preventDefault();
     },
 
-    getMenuItems: function () {
+    // Rendering
+
+    renderMenuItems: function () {
       if (!this.props.children) {
-        throw new Error("Tabs must contain at least one Panel");
+        throw new Error("There must be at least one Tab");
       }
 
       if (!Array.isArray(this.props.children)) {
         this.props.children = [this.props.children];
       }
 
-      let menuItems = this.props.children
-        .map(function (panel) {
-          return typeof panel === "function" ? panel() : panel;
-        }).filter(function (panel) {
-          return panel;
-        }).map(function (panel, index) {
-          let ref = ("tab-menu-" + (index + 1));
-          let title = panel.props.title;
-          let tabClassName = panel.props.className;
+      let tabs = this.props.children
+        .map(tab => {
+          return typeof tab === "function" ? tab() : tab;
+        }).filter(tab => {
+          return tab;
+        }).map((tab, index) => {
+          let ref = ("tab-menu-" + index);
+          let title = tab.props.title;
+          let tabClassName = tab.props.className;
 
           let classes = [
             "tabs-menu-item",
             tabClassName,
-            this.state.tabActive === (index + 1) && "is-active"
+            this.state.tabActive === index ? "is-active" : ""
           ].join(" ");
 
+          // Set tabindex to -1 (except the selected tab) so, it's focusable,
+          // but not reachable via sequential tab-key navigation.
+          // Changing selected tab (and so, moving focus) is done through
+          // left and right arrow keys.
+          // See also `onKeyDown()` event handler.
           return (
-            DOM.li({ref: ref, key: index, className: classes},
-              DOM.a({href: "#", onClick: this.setActive.bind(this, index + 1)},
+            DOM.li({
+              ref: ref,
+              key: index,
+              className: classes},
+              DOM.a({
+                href: "#",
+                tabIndex: this.state.tabActive === index ? 0 : -1,
+                onClick: this.onClickTab.bind(this, index)},
                 title
               )
             )
           );
-        }.bind(this));
+        });
 
       return (
         DOM.nav({className: "tabs-navigation"},
           DOM.ul({className: "tabs-menu"},
-            menuItems
+            tabs
           )
         )
       );
     },
 
-    getSelectedPanel: function () {
-      let index = this.state.tabActive - 1;
-      let panel = this.props.children[index];
+    renderPanels: function () {
+      if (!this.props.children) {
+        throw new Error("There must be at least one Tab");
+      }
+
+      if (!Array.isArray(this.props.children)) {
+        this.props.children = [this.props.children];
+      }
+
+      let selectedIndex = this.state.tabActive;
+
+      let panels = this.props.children
+        .map(tab => {
+          return typeof tab === "function" ? tab() : tab;
+        }).filter(tab => {
+          return tab;
+        }).map((tab, index) => {
+          let selected = selectedIndex == index;
+
+          // Use 'visibility:hidden' + 'width/height:0' for hiding
+          // content of non-selected tab. It's faster (not sure why)
+          // than display:none and visibility:collapse.
+          let style = {
+            visibility: selected ? "visible" : "hidden",
+            height: selected ? "100%" : "0",
+            width: selected ? "100%" : "0",
+          };
+
+          return (
+            DOM.div({
+              key: index,
+              style: style,
+              className: "tab-panel-box"},
+              (selected || this.state.created[index]) ? tab : null
+            )
+          );
+        });
 
       return (
-        DOM.article({ref: "tab-panel", className: "tab-panel"},
-          panel
+        DOM.div({className: "panels"},
+          panels
         )
       );
     },
@@ -157,8 +270,8 @@ define(function (require, exports, module) {
 
       return (
         DOM.div({className: classNames},
-          this.getMenuItems(),
-          this.getSelectedPanel()
+          this.renderMenuItems(),
+          this.renderPanels()
         )
       );
     },
@@ -179,7 +292,7 @@ define(function (require, exports, module) {
     },
 
     render: function () {
-      return DOM.div({},
+      return DOM.div({className: "tab-panel"},
         this.props.children
       );
     }
