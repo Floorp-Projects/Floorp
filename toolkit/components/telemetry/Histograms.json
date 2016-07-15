@@ -5612,7 +5612,7 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1207089],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 40,
@@ -5621,7 +5621,7 @@
   "POPUP_NOTIFICATION_MAIN_ACTION_MS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1207089],
-    "expires_in_version": "52",
+    "expires_in_version": "55",
     "kind": "exponential",
     "keyed": true,
     "low": 100,
@@ -5632,7 +5632,7 @@
   "POPUP_NOTIFICATION_DISMISSAL_MS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1207089],
-    "expires_in_version": "52",
+    "expires_in_version": "55",
     "kind": "exponential",
     "keyed": true,
     "low": 200,
