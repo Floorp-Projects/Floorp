@@ -24,7 +24,7 @@
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
 
-#include "nsShmImage.h"
+#include "mozilla/widget/WindowSurface.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
@@ -317,9 +317,6 @@ public:
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
 
-    already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget(const LayoutDeviceIntRegion& aRegion,
-                                                             mozilla::layers::BufferMode* aBufferMode);
-
 #if (MOZ_WIDGET_GTK == 2)
     static already_AddRefed<DrawTarget> GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
                                                                     const mozilla::gfx::IntSize& aSize);
@@ -458,21 +455,14 @@ private:
     nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch> mTouches;
 #endif
 
+    mozilla::UniquePtr<mozilla::widget::WindowSurface> mWindowSurface;
+
 #ifdef MOZ_X11
     Display*            mXDisplay;
     Window              mXWindow;
     Visual*             mXVisual;
     int                 mXDepth;
 #endif
-
-#ifdef MOZ_HAVE_SHMIMAGE
-    // If we're using xshm rendering
-    RefPtr<nsShmImage>  mFrontShmImage;
-    RefPtr<nsShmImage>  mBackShmImage;
-#endif
-
-    // A fallback image surface when a SHM surface is unavailable.
-    cairo_surface_t* mFallbackSurface;
 
     // Upper bound on pending ConfigureNotify events to be dispatched to the
     // window. See bug 1225044.
@@ -561,6 +551,8 @@ private:
     void CleanLayerManagerRecursive();
 
     virtual int32_t RoundsWidgetCoordinatesTo() override;
+
+    mozilla::UniquePtr<mozilla::widget::WindowSurface> CreateWindowSurface();
 
     /**
      * |mIMContext| takes all IME related stuff.

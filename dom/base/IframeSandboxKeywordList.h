@@ -23,3 +23,5 @@ SANDBOX_KEYWORD("allow-popups", allowpopups, SANDBOXED_AUXILIARY_NAVIGATION)
 SANDBOX_KEYWORD("allow-modals", allowmodals, SANDBOXED_MODALS)
 SANDBOX_KEYWORD("allow-popups-to-escape-sandbox", allowpopupstoescapesandbox,
                 SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS)
+SANDBOX_KEYWORD("allow-presentation", allowpresentation,
+                SANDBOXED_PRESENTATION)

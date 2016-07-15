@@ -6691,12 +6691,15 @@ DrawTextRun(gfxTextRun* aTextRun,
 
     if (NS_GET_A(aParams.textStrokeColor) != 0 &&
         aParams.textStrokeWidth != 0.0f) {
+      StrokeOptions strokeOpts;
       params.drawMode |= DrawMode::GLYPH_STROKE;
-      params.textStrokeWidth = aParams.textStrokeWidth;
       params.textStrokeColor = aParams.textStrokeColor;
+      strokeOpts.mLineWidth = aParams.textStrokeWidth;
+      params.strokeOpts = &strokeOpts;
+      aTextRun->Draw(aRange, aTextBaselinePt, params);
+    } else {
+      aTextRun->Draw(aRange, aTextBaselinePt, params);
     }
-
-    aTextRun->Draw(aRange, aTextBaselinePt, params);
   }
 }
 

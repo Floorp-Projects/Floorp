@@ -1,0 +1,96 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test allow-presentation sandboxing flag</title>
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+function is(a, b, msg) {
+  window.parent.postMessage((a === b ? "OK " : "KO ") + msg, "*");
+}
+
+function ok(a, msg) {
+  window.parent.postMessage((a ? "OK " : "KO ") + msg, "*");
+}
+
+function info(msg) {
+  window.parent.postMessage("INFO " + msg, "*");
+}
+
+function command(msg) {
+  window.parent.postMessage("COMMAND " + JSON.stringify(msg), "*");
+}
+
+function finish() {
+  window.parent.postMessage("DONE", "*");
+}
+
+function testGetAvailability() {
+  return new Promise(function(aResolve, aReject) {
+    ok(navigator.presentation, "navigator.presentation should be available.");
+    var request = new PresentationRequest("http://example.com");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        ok(false, "Unexpected success, should get a security error.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "SecurityError", "Should get a security error.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testStartRequest() {
+  return new Promise(function(aResolve, aReject) {
+    var request = new PresentationRequest("http://example.com");
+
+    request.start().then(
+      function(aAvailability) {
+        ok(false, "Unexpected success, should get a security error.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "SecurityError", "Should get a security error.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testDefaultRequest() {
+  return new Promise(function(aResolve, aReject) {
+    navigator.presentation.defaultRequest = new PresentationRequest("http://example.com");
+    is(navigator.presentation.defaultRequest, null, "DefaultRequest shoud be null.");
+    aResolve();
+  });
+}
+
+function runTest() {
+  testGetAvailability()
+  .then(testStartRequest)
+  .then(testDefaultRequest)
+  .then(finish);
+}
+
+window.addEventListener("message", function onMessage(evt) {
+  window.removeEventListener("message", onMessage);
+  if (evt.data === "start") {
+    runTest();
+  }
+}, false);
+
+window.setTimeout(function() {
+  command("ready-to-start");
+}, 3000);
+
+</script>
+</head>
+<body>
+</body>
+</html>

@@ -194,6 +194,11 @@ public:
     return mBlobImplArray;
   }
 
+  ContextSupport SupportedContext() const
+  {
+    return mSupportedContext;
+  }
+
   // The parent object is set internally just during the Read(). This method
   // can be used by read functions to retrieve it.
   nsISupports* ParentDuringRead() const
