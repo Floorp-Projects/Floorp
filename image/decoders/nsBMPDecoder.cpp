@@ -447,13 +447,11 @@ nsBMPDecoder::FinishRow()
 }
 
 Maybe<TerminalState>
-nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator)
+nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
-  MOZ_ASSERT(aIterator.Data());
-  MOZ_ASSERT(aIterator.Length() > 0);
 
-  return mLexer.Lex(aIterator.Data(), aIterator.Length(),
+  return mLexer.Lex(aIterator, aOnResume,
                     [=](State aState, const char* aData, size_t aLength) {
     switch (aState) {
       case State::FILE_HEADER:      return ReadFileHeader(aData, aLength);

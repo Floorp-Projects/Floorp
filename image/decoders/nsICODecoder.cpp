@@ -54,7 +54,6 @@ nsICODecoder::GetNumColors()
 nsICODecoder::nsICODecoder(RasterImage* aImage)
   : Decoder(aImage)
   , mLexer(Transition::To(ICOState::HEADER, ICOHEADERSIZE))
-  , mDoNotResume(WrapNotNull(new DoNotResume))
   , mBiggestResourceColorDepth(0)
   , mBestResourceDelta(INT_MIN)
   , mBestResourceColorDepth(0)
@@ -95,7 +94,7 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
   // Let the contained decoder finish up if necessary.
   if (!mContainedSourceBuffer->IsComplete()) {
     mContainedSourceBuffer->Complete(NS_OK);
-    mContainedDecoder->Decode(mDoNotResume);
+    mContainedDecoder->Decode();
   }
 
   // Make our state the same as the state of the contained decoder.
@@ -590,13 +589,11 @@ nsICODecoder::FinishResource()
 }
 
 Maybe<TerminalState>
-nsICODecoder::DoDecode(SourceBufferIterator& aIterator)
+nsICODecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
-  MOZ_ASSERT(aIterator.Data());
-  MOZ_ASSERT(aIterator.Length() > 0);
 
-  return mLexer.Lex(aIterator.Data(), aIterator.Length(),
+  return mLexer.Lex(aIterator, aOnResume,
                     [=](ICOState aState, const char* aData, size_t aLength) {
     switch (aState) {
       case ICOState::HEADER:
@@ -647,7 +644,7 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount)
   // get resumed when there's more data available, as usual, so we don't need
   // the contained decoder to get resumed too. To avoid that, we provide an
   // IResumable which just does nothing.
-  if (NS_FAILED(mContainedDecoder->Decode(mDoNotResume))) {
+  if (NS_FAILED(mContainedDecoder->Decode())) {
     succeeded = false;
   }
 
