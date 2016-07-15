@@ -25,6 +25,7 @@
 #include "nsIFileStreams.h"
 #include "nsIFile.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 #include "mozilla/Preferences.h"
 

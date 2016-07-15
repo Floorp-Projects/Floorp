@@ -16,7 +16,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
-    'CDMCallbackProxy.h',
     'CDMCaps.h',
     'CDMProxy.h',
     'DetailedPromise.h',
@@ -24,7 +23,6 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
-    'CDMCallbackProxy.cpp',
     'CDMCaps.cpp',
     'CDMProxy.cpp',
     'DetailedPromise.cpp',

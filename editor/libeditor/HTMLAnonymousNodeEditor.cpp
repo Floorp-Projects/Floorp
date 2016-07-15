@@ -29,7 +29,7 @@
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
-#include "nsIMutationObserver.h"
+#include "nsStubMutationObserver.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
 #include "nsISupportsImpl.h"
@@ -92,25 +92,54 @@ static int32_t GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
   return (int32_t) f;
 }
 
-class ElementDeletionObserver final : public nsIMutationObserver
+class ElementDeletionObserver final : public nsStubMutationObserver
 {
 public:
-  ElementDeletionObserver(nsINode* aNativeAnonNode, nsINode* aObservedNode)
+  ElementDeletionObserver(nsIContent* aNativeAnonNode,
+                          nsIContent* aObservedNode)
     : mNativeAnonNode(aNativeAnonNode)
     , mObservedNode(aObservedNode)
   {}
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIMUTATIONOBSERVER
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
 protected:
   ~ElementDeletionObserver() {}
-  nsINode* mNativeAnonNode;
-  nsINode* mObservedNode;
+  nsIContent* mNativeAnonNode;
+  nsIContent* mObservedNode;
 };
 
 NS_IMPL_ISUPPORTS(ElementDeletionObserver, nsIMutationObserver)
-NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(ElementDeletionObserver)
+
+void
+ElementDeletionObserver::ParentChainChanged(nsIContent* aContent)
+{
+  // If the native anonymous content has been unbound already in
+  // DeleteRefToAnonymousNode, mNativeAnonNode's parentNode is null.
+  if (aContent == mObservedNode && mNativeAnonNode &&
+      mNativeAnonNode->GetParentNode() == aContent) {
+    // If the observed node has been moved to another document, there isn't much
+    // we can do easily. But at least be safe and unbind the native anonymous
+    // content and stop observing changes.
+    if (mNativeAnonNode->OwnerDoc() != mObservedNode->OwnerDoc()) {
+      mObservedNode->RemoveMutationObserver(this);
+      mObservedNode = nullptr;
+      mNativeAnonNode->RemoveMutationObserver(this);
+      mNativeAnonNode->UnbindFromTree();
+      mNativeAnonNode = nullptr;
+      NS_RELEASE_THIS();
+      return;
+    }
+
+    // We're staying in the same document, just rebind the native anonymous
+    // node so that the subtree root points to the right object etc.
+    mNativeAnonNode->UnbindFromTree();
+    mNativeAnonNode->BindToTree(mObservedNode->GetUncomposedDoc(), mObservedNode,
+                                mObservedNode, true);
+  }
+}
 
 void
 ElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
@@ -119,9 +148,11 @@ ElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
                "Wrong aNode!");
   if (aNode == mNativeAnonNode) {
     mObservedNode->RemoveMutationObserver(this);
+    mObservedNode = nullptr;
   } else {
     mNativeAnonNode->RemoveMutationObserver(this);
-    static_cast<nsIContent*>(mNativeAnonNode)->UnbindFromTree();
+    mNativeAnonNode->UnbindFromTree();
+    mNativeAnonNode = nullptr;
   }
 
   NS_RELEASE_THIS();
@@ -242,7 +273,7 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
       // Need to check whether aShell has been destroyed (but not yet deleted).
       // In that case presContext->GetPresShell() returns nullptr.
       // See bug 338129.
-      if (aShell && aShell->GetPresContext() &&
+      if (content->IsInComposedDoc() && aShell && aShell->GetPresContext() &&
           aShell->GetPresContext()->GetPresShell() == aShell) {
         nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
         if (docObserver) {
@@ -255,7 +286,7 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
           // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
           // in RestyleManager::RestyleForRemove should be changed back
           // to an assertion.
-          docObserver->ContentRemoved(content->GetUncomposedDoc(),
+          docObserver->ContentRemoved(content->GetComposedDoc(),
                                       aParentContent, content, -1,
                                       content->GetPreviousSibling());
           if (document)

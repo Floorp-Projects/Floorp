@@ -6,20 +6,11 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
 const promise = require("promise");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-
-loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
-  return domUtils.getCSSPseudoElementNames();
-});
-
-XPCOMUtils.defineLazyGetter(this, "domUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 /**
  * ElementStyle is responsible for the following:
@@ -48,6 +39,7 @@ function ElementStyle(element, ruleView, store, pageStyle,
   this.pageStyle = pageStyle;
   this.showUserAgentStyles = showUserAgentStyles;
   this.rules = [];
+  this.cssProperties = getCssProperties(this.ruleView.inspector.toolbox);
 
   // We don't want to overwrite this.store.userProperties so we only create it
   // if it doesn't already exist.
@@ -208,7 +200,7 @@ ElementStyle.prototype = {
    */
   markOverriddenAll: function () {
     this.markOverridden();
-    for (let pseudo of PSEUDO_ELEMENTS) {
+    for (let pseudo of this.cssProperties.pseudoElements) {
       this.markOverridden(pseudo);
     }
   },

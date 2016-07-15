@@ -196,6 +196,87 @@ public abstract class GeckoApp
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
 
+    private static final class LastSessionParser extends SessionParser {
+        private JSONArray tabs;
+        private JSONObject windowObject;
+        private boolean isExternalURL;
+
+        private boolean selectNextTab;
+        private boolean tabsWereSkipped;
+        private boolean tabsWereProcessed;
+
+        public LastSessionParser(JSONArray tabs, JSONObject windowObject, boolean isExternalURL) {
+            this.tabs = tabs;
+            this.windowObject = windowObject;
+            this.isExternalURL = isExternalURL;
+        }
+
+        public boolean allTabsSkipped() {
+            return tabsWereSkipped && !tabsWereProcessed;
+        }
+
+        @Override
+        public void onTabRead(final SessionTab sessionTab) {
+            if (sessionTab.isAboutHomeWithoutHistory()) {
+                // This is a tab pointing to about:home with no history. We won't restore
+                // this tab. If we end up restoring no tabs then the browser will decide
+                // whether it needs to open about:home or a different 'homepage'. If we'd
+                // always restore about:home only tabs then we'd never open the homepage.
+                // See bug 1261008.
+
+                if (sessionTab.isSelected()) {
+                    // Unfortunately this tab is the selected tab. Let's just try to select
+                    // the first tab. If we haven't restored any tabs so far then remember
+                    // to select the next tab that gets restored.
+
+                    if (!Tabs.getInstance().selectLastTab()) {
+                        selectNextTab = true;
+                    }
+                }
+
+                // Do not restore this tab.
+                tabsWereSkipped = true;
+                return;
+            }
+
+            tabsWereProcessed = true;
+
+            JSONObject tabObject = sessionTab.getTabObject();
+
+            int flags = Tabs.LOADURL_NEW_TAB;
+            flags |= ((isExternalURL || !sessionTab.isSelected()) ? Tabs.LOADURL_DELAY_LOAD : 0);
+            flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
+            flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
+
+            final Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
+
+            if (selectNextTab) {
+                // We did not restore the selected tab previously. Now let's select this tab.
+                Tabs.getInstance().selectTab(tab.getId());
+                selectNextTab = false;
+            }
+
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    tab.updateTitle(sessionTab.getTitle());
+                }
+            });
+
+            try {
+                tabObject.put("tabId", tab.getId());
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "JSON error", e);
+            }
+            tabs.put(tabObject);
+        }
+
+        @Override
+        public void onClosedTabsRead(final JSONArray closedTabData) throws JSONException {
+            windowObject.put("closedTabs", closedTabData);
+        }
+    };
+
     protected boolean mInitialized;
     protected boolean mWindowFocusInitialized;
     private Telemetry.Timer mJavaUiStartupTimer;
@@ -1288,6 +1369,17 @@ public abstract class GeckoApp
                     } catch (SessionRestoreException e) {
                         // If restore failed, do a normal startup
                         Log.e(LOGTAG, "An error occurred during restore", e);
+                        // If mShouldRestore was already set to false in restoreSessionTabs(),
+                        // this means that we intentionally skipped all tabs read from the
+                        // session file, so we don't have to report this exception in telemetry
+                        // and can ignore the following bit.
+                        if (mShouldRestore && getProfile().sessionFileExistsAndNotEmptyWindow()) {
+                            // If we got a SessionRestoreException even though the file exists and its
+                            // length doesn't match the known length of an intentionally empty file,
+                            // it's very likely we've encountered a damaged/corrupt session store file.
+                            Log.d(LOGTAG, "Suspecting a damaged session store file.");
+                            Telemetry.addToHistogram("FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE", 1);
+                        }
                         mShouldRestore = false;
                     }
                 }
@@ -1680,67 +1772,8 @@ public abstract class GeckoApp
             if (mShouldRestore) {
                 final JSONArray tabs = new JSONArray();
                 final JSONObject windowObject = new JSONObject();
-                SessionParser parser = new SessionParser() {
-                    private boolean selectNextTab;
 
-                    @Override
-                    public void onTabRead(final SessionTab sessionTab) {
-                        if (sessionTab.isAboutHomeWithoutHistory()) {
-                            // This is a tab pointing to about:home with no history. We won't restore
-                            // this tab. If we end up restoring no tabs then the browser will decide
-                            // whether it needs to open about:home or a different 'homepage'. If we'd
-                            // always restore about:home only tabs then we'd never open the homepage.
-                            // See bug 1261008.
-
-                            if (sessionTab.isSelected()) {
-                                // Unfortunately this tab is the selected tab. Let's just try to select
-                                // the first tab. If we haven't restored any tabs so far then remember
-                                // to select the next tab that gets restored.
-
-                                if (!Tabs.getInstance().selectLastTab()) {
-                                    selectNextTab = true;
-                                }
-                            }
-
-                            // Do not restore this tab.
-                            return;
-                        }
-
-                        JSONObject tabObject = sessionTab.getTabObject();
-
-                        int flags = Tabs.LOADURL_NEW_TAB;
-                        flags |= ((isExternalURL || !sessionTab.isSelected()) ? Tabs.LOADURL_DELAY_LOAD : 0);
-                        flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
-                        flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
-
-                        final Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
-
-                        if (selectNextTab) {
-                            // We did not restore the selected tab previously. Now let's select this tab.
-                            Tabs.getInstance().selectTab(tab.getId());
-                            selectNextTab = false;
-                        }
-
-                        ThreadUtils.postToUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                tab.updateTitle(sessionTab.getTitle());
-                            }
-                        });
-
-                        try {
-                            tabObject.put("tabId", tab.getId());
-                        } catch (JSONException e) {
-                            Log.e(LOGTAG, "JSON error", e);
-                        }
-                        tabs.put(tabObject);
-                    }
-
-                    @Override
-                    public void onClosedTabsRead(final JSONArray closedTabData) throws JSONException {
-                        windowObject.put("closedTabs", closedTabData);
-                    }
-                };
+                LastSessionParser parser = new LastSessionParser(tabs, windowObject, isExternalURL);
 
                 if (mPrivateBrowsingSession == null) {
                     parser.parse(sessionString);
@@ -1752,6 +1785,12 @@ public abstract class GeckoApp
                     windowObject.put("tabs", tabs);
                     sessionString = new JSONObject().put("windows", new JSONArray().put(windowObject)).toString();
                 } else {
+                    if (parser.allTabsSkipped()) {
+                        // If we intentionally skipped all tabs we've read from the session file, we
+                        // set mShouldRestore back to false at this point already, so the calling code
+                        // can infer that the exception wasn't due to a damaged session store file.
+                        mShouldRestore = false;
+                    }
                     throw new SessionRestoreException("No tabs could be read from session file");
                 }
             }

@@ -13,50 +13,45 @@ add_task(function* testPermissionsListing() {
     "Correct list of all permissions");
 });
 
-add_task(function* testHasGrantedPermissions() {
-  // check that it returns false on an invalid URI
-  // like a file URI, which doesn't support site permissions
-  let wrongURI = Services.io.newURI("file:///example.js", null, null)
-  Assert.equal(SitePermissions.hasGrantedPermissions(wrongURI), false);
-
-  let uri = Services.io.newURI("https://example.com", null, null)
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
-
-  // check that ALLOW states return true
-  SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), true);
-
-  // removing the ALLOW state should revert to false
-  SitePermissions.remove(uri, "camera");
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
-
-  // check that SESSION states return true
-  SitePermissions.set(uri, "microphone", SitePermissions.SESSION);
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), true);
-
-  // removing the SESSION state should revert to false
-  SitePermissions.remove(uri, "microphone");
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
-
-  // check that a combination of ALLOW and BLOCK states returns true
-  SitePermissions.set(uri, "geo", SitePermissions.ALLOW);
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), true);
-
-  // check that a combination of SESSION and BLOCK states returns true
-  SitePermissions.set(uri, "geo", SitePermissions.SESSION);
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), true);
-
-  // check that only BLOCK states will not return true
-  SitePermissions.remove(uri, "geo");
-  Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
-
-});
-
-add_task(function* testGetPermissionsByURI() {
+add_task(function* testGetAllByURI() {
   // check that it returns an empty array on an invalid URI
   // like a file URI, which doesn't support site permissions
   let wrongURI = Services.io.newURI("file:///example.js", null, null)
-  Assert.deepEqual(SitePermissions.getPermissionsByURI(wrongURI), []);
+  Assert.deepEqual(SitePermissions.getAllByURI(wrongURI), []);
+
+  let uri = Services.io.newURI("https://example.com", null, null)
+  Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
+
+  SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
+  Assert.deepEqual(SitePermissions.getAllByURI(uri), [
+      { id: "camera", state: SitePermissions.ALLOW }
+  ]);
+
+  SitePermissions.set(uri, "microphone", SitePermissions.SESSION);
+  SitePermissions.set(uri, "desktop-notification", SitePermissions.BLOCK);
+
+  Assert.deepEqual(SitePermissions.getAllByURI(uri), [
+      { id: "camera", state: SitePermissions.ALLOW },
+      { id: "microphone", state: SitePermissions.SESSION },
+      { id: "desktop-notification", state: SitePermissions.BLOCK }
+  ]);
+
+  SitePermissions.remove(uri, "microphone");
+  Assert.deepEqual(SitePermissions.getAllByURI(uri), [
+      { id: "camera", state: SitePermissions.ALLOW },
+      { id: "desktop-notification", state: SitePermissions.BLOCK }
+  ]);
+
+  SitePermissions.remove(uri, "camera");
+  SitePermissions.remove(uri, "desktop-notification");
+  Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
+});
+
+add_task(function* testGetPermissionDetailsByURI() {
+  // check that it returns an empty array on an invalid URI
+  // like a file URI, which doesn't support site permissions
+  let wrongURI = Services.io.newURI("file:///example.js", null, null)
+  Assert.deepEqual(SitePermissions.getPermissionDetailsByURI(wrongURI), []);
 
   let uri = Services.io.newURI("https://example.com", null, null)
 
@@ -64,7 +59,7 @@ add_task(function* testGetPermissionsByURI() {
   SitePermissions.set(uri, "cookie", SitePermissions.SESSION);
   SitePermissions.set(uri, "popup", SitePermissions.BLOCK);
 
-  let permissions = SitePermissions.getPermissionsByURI(uri);
+  let permissions = SitePermissions.getPermissionDetailsByURI(uri);
 
   let camera = permissions.find(({id}) => id === "camera");
   Assert.deepEqual(camera, {
@@ -80,7 +75,7 @@ add_task(function* testGetPermissionsByURI() {
 
   // check that removed permissions (State.UNKNOWN) are skipped
   SitePermissions.remove(uri, "camera");
-  permissions = SitePermissions.getPermissionsByURI(uri);
+  permissions = SitePermissions.getPermissionDetailsByURI(uri);
 
   camera = permissions.find(({id}) => id === "camera");
   Assert.equal(camera, undefined);

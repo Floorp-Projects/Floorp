@@ -16,7 +16,7 @@
 #include "nsIConsoleService.h"
 #include "prenv.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/CDMCallbackProxy.h"
+#include "GMPCDMCallbackProxy.h"
 #include "MediaData.h"
 #include "nsPrintfCString.h"
 #include "GMPService.h"
@@ -119,7 +119,7 @@ CDMProxy::gmp_InitDone(GMPDecryptorProxy* aCDM, nsAutoPtr<InitData>&& aData)
   }
 
   mCDM = aCDM;
-  mCallback = new CDMCallbackProxy(this);
+  mCallback = new GMPCDMCallbackProxy(this);
   mCDM->Init(mCallback);
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<uint32_t>(this,

@@ -17,7 +17,7 @@ add_task(function* () {
 
   ok(el.querySelector(".time-header"),
      "The header element is in the DOM of the timeline");
-  ok(el.querySelectorAll(".time-header .time-tick").length,
+  ok(el.querySelectorAll(".time-header .header-item").length,
      "The header has some time graduations");
 
   ok(el.querySelector(".animations"),

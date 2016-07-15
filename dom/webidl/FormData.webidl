@@ -7,7 +7,7 @@
  * http://xhr.spec.whatwg.org
  */
 
-typedef (Blob or USVString) FormDataEntryValue;
+typedef (Blob or Directory or USVString) FormDataEntryValue;
 
 [Constructor(optional HTMLFormElement form),
  Exposed=(Window,Worker)]

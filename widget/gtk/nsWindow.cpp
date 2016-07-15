@@ -117,8 +117,11 @@ using namespace mozilla::widget;
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
-#endif
-  
+#include "WindowSurfaceX11Image.h"
+#include "WindowSurfaceX11SHM.h"
+#include "WindowSurfaceXRender.h"
+#endif // MOZ_X11
+
 #include "nsShmImage.h"
 
 #include "nsIDOMWheelEvent.h"
@@ -476,8 +479,6 @@ nsWindow::nsWindow()
 #if GTK_CHECK_VERSION(3,4,0)
     mLastScrollEventTime = GDK_CURRENT_TIME;
 #endif
-
-    mFallbackSurface = nullptr;
     mPendingConfigures = 0;
 }
 
@@ -799,11 +800,6 @@ nsWindow::Destroy(void)
          mRootAccessible = nullptr;
      }
 #endif
-
-    if (mFallbackSurface) {
-        cairo_surface_destroy(mFallbackSurface);
-        mFallbackSurface = nullptr;
-    }
 
     // Save until last because OnDestroy() may cause us to be deleted.
     OnDestroy();
@@ -6565,133 +6561,36 @@ nsWindow::GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
 #endif
 
 already_AddRefed<DrawTarget>
-nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion, BufferMode* aBufferMode)
-{
-  if (!mGdkWindow || aRegion.IsEmpty()) {
-    return nullptr;
-  }
-
-  RefPtr<DrawTarget> dt;
-
-#ifdef MOZ_X11
-  bool useXRender = false;
-#ifdef MOZ_WIDGET_GTK
-  useXRender = gfxPlatformGtk::GetPlatform()->UseXRender();
-#endif
-
-  if (useXRender) {
-    LayoutDeviceIntRect bounds = aRegion.GetBounds();
-    LayoutDeviceIntSize size(bounds.XMost(), bounds.YMost());
-    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size.ToUnknownSize());
-    if (!surf->CairoStatus()) {
-      dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
-      *aBufferMode = BufferMode::BUFFERED;
-    }
-  }
-
-#  ifdef MOZ_HAVE_SHMIMAGE
-  if (!dt && mIsX11Display && nsShmImage::UseShm()) {
-    mBackShmImage.swap(mFrontShmImage);
-    if (!mBackShmImage) {
-      mBackShmImage = new nsShmImage(mXDisplay, mXWindow, mXVisual, mXDepth);
-    }
-    dt = mBackShmImage->CreateDrawTarget(aRegion);
-    *aBufferMode = BufferMode::BUFFER_NONE;
-    if (!dt) {
-      mBackShmImage = nullptr;
-    }
-  }
-#  endif  // MOZ_HAVE_SHMIMAGE
-#endif // MOZ_X11
-
-  // If MIT-SHM and XRender are unavailable, buffer to an image surface.
-  if (!dt) {
-    IntRect bounds = aRegion.GetBounds().ToUnknownRect();
-    IntSize size(bounds.XMost(), bounds.YMost());
-
-    // Recreate the fallback surface if there is unsufficient space to render.
-    if (!mFallbackSurface ||
-        cairo_image_surface_get_width(mFallbackSurface) < size.width ||
-        cairo_image_surface_get_height(mFallbackSurface) < size.height)
-    {
-      if (mFallbackSurface)
-        cairo_surface_destroy(mFallbackSurface);
-
-      GdkScreen* screen = gdk_screen_get_default();
-      bool argb = gdk_window_get_visual(mGdkWindow) ==
-                  gdk_screen_get_rgba_visual(screen);
-      cairo_format_t cairo_format = argb ? CAIRO_FORMAT_ARGB32
-                                         : CAIRO_FORMAT_RGB24;
-      mFallbackSurface = cairo_image_surface_create(cairo_format,
-                                                    bounds.XMost(),
-                                                    bounds.YMost());
-
-      // Set the appropriate device scale so that our surface can be used
-      // as a source without transforming to the GDK window's scale.
-      static auto sCairoSurfaceSetDeviceScale =
-          (void (*)(cairo_surface_t*, double, double))
-          dlsym(RTLD_DEFAULT, "cairo_surface_set_device_scale");
-      if (sCairoSurfaceSetDeviceScale) {
-        gint scale = GdkScaleFactor();
-        sCairoSurfaceSetDeviceScale(mFallbackSurface, scale, scale);
-      }
-
-      cairo_surface_flush(mFallbackSurface);
-    }
-
-    SurfaceFormat format = CairoFormatToGfxFormat(
-            cairo_image_surface_get_format(mFallbackSurface));
-    dt = gfxPlatform::GetPlatform()->CreateDrawTargetForData(
-            cairo_image_surface_get_data(mFallbackSurface)
-            + bounds.x * BytesPerPixel(format)
-            + bounds.y * cairo_image_surface_get_stride(mFallbackSurface),
-            bounds.Size(),
-            cairo_image_surface_get_stride(mFallbackSurface),
-            format);
-    *aBufferMode = BufferMode::BUFFER_NONE;
-  }
-
-  return dt.forget();
-}
-
-already_AddRefed<DrawTarget>
 nsWindow::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode)
 {
-  return GetDrawTarget(aInvalidRegion, aBufferMode);
+  if (aInvalidRegion.IsEmpty())
+    return nullptr;
+
+  if (!mWindowSurface) {
+    mWindowSurface = CreateWindowSurface();
+    if (!mWindowSurface)
+      return nullptr;
+  }
+
+  *aBufferMode = BufferMode::BUFFER_NONE;
+  RefPtr<DrawTarget> dt = nullptr;
+  if (!(dt = mWindowSurface->Lock(aInvalidRegion))) {
+#ifdef MOZ_X11
+    if (mIsX11Display) {
+      gfxWarningOnce() << "Failed to lock WindowSurface, falling back to XPutImage backend.";
+      mWindowSurface = MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
+    }
+#endif // MOZ_X11
+  }
+  return dt.forget();
 }
 
 void
 nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
                                    LayoutDeviceIntRegion& aInvalidRegion)
 {
-#ifdef MOZ_X11
-#  ifdef MOZ_HAVE_SHMIMAGE
-  if (!mGdkWindow) {
-    return;
-  }
-
-  if (mBackShmImage) {
-    mBackShmImage->Put(aInvalidRegion);
-  }
-#  endif // MOZ_HAVE_SHMIMAGE
-#endif // MOZ_X11
-
-  if (mFallbackSurface) {
-    cairo_t* cr = gdk_cairo_create(mGdkWindow);
-    cairo_surface_mark_dirty(mFallbackSurface);
-    cairo_set_source_surface(cr, mFallbackSurface, 0, 0);
-
-    for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-      // Transform our path into the window's coordinate system.
-      const IntRectTyped<LayoutDevicePixel> & r = iter.Get();
-      cairo_rectangle(cr, DevicePixelsToGdkCoordRoundDown(r.x),
-                          DevicePixelsToGdkCoordRoundDown(r.y),
-                          DevicePixelsToGdkCoordRoundUp(r.width),
-                          DevicePixelsToGdkCoordRoundUp(r.height));
-    }
-    cairo_fill(cr);
-    cairo_destroy(cr);
-  }
+  if (mWindowSurface)
+    mWindowSurface->Commit(aInvalidRegion);
 }
 
 // Code shared begin BeginMoveDrag and BeginResizeDrag
@@ -7126,4 +7025,40 @@ int32_t
 nsWindow::RoundsWidgetCoordinatesTo()
 {
     return GdkScaleFactor();
+}
+
+UniquePtr<WindowSurface>
+nsWindow::CreateWindowSurface()
+{
+  if (!mGdkWindow)
+    return nullptr;
+
+  // TODO: Add path for Wayland. We can't use gdk_cairo_create as it's not
+  //       threadsafe.
+  if (!mIsX11Display)
+    return nullptr;
+
+#ifdef MOZ_X11
+  // Blit to the window with the following priority:
+  // 1. XRender (iff XRender is enabled)
+  // 2. MIT-SHM
+  // 3. XPutImage
+
+#ifdef MOZ_WIDGET_GTK
+  if (gfxPlatformGtk::GetPlatform()->UseXRender()) {
+    LOGDRAW(("Drawing to nsWindow %p using XRender\n", (void*)this));
+    return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual, mXDepth);
+  }
+#endif // MOZ_WIDGET_GTK
+
+#ifdef MOZ_HAVE_SHMIMAGE
+  if (nsShmImage::UseShm()) {
+    LOGDRAW(("Drawing to nsWindow %p using MIT-SHM\n", (void*)this));
+    return MakeUnique<WindowSurfaceX11SHM>(mXDisplay, mXWindow, mXVisual, mXDepth);
+  }
+#endif // MOZ_HAVE_SHMIMAGE
+
+  LOGDRAW(("Drawing to nsWindow %p using XPutImage\n", (void*)this));
+  return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
+#endif // MOZ_X11
 }

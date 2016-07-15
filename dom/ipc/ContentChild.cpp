@@ -29,6 +29,7 @@
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
+#include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/Promise.h"
@@ -3369,6 +3370,62 @@ ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScop
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
 #endif
+  return true;
+}
+
+void
+ContentChild::CreateGetFilesRequest(const nsAString& aDirectoryPath,
+                                    bool aRecursiveFlag,
+                                    nsID& aUUID,
+                                    GetFilesHelperChild* aChild)
+{
+  MOZ_ASSERT(aChild);
+  MOZ_ASSERT(!mGetFilesPendingRequests.GetWeak(aUUID));
+
+  Unused << SendGetFilesRequest(aUUID, nsString(aDirectoryPath),
+                                aRecursiveFlag);
+  mGetFilesPendingRequests.Put(aUUID, aChild);
+}
+
+void
+ContentChild::DeleteGetFilesRequest(nsID& aUUID, GetFilesHelperChild* aChild)
+{
+  MOZ_ASSERT(aChild);
+  MOZ_ASSERT(mGetFilesPendingRequests.GetWeak(aUUID));
+
+  Unused << SendDeleteGetFilesRequest(aUUID);
+  mGetFilesPendingRequests.Remove(aUUID);
+}
+
+bool
+ContentChild::RecvGetFilesResponse(const nsID& aUUID,
+                                   const GetFilesResponseResult& aResult)
+{
+  GetFilesHelperChild* child = mGetFilesPendingRequests.GetWeak(aUUID);
+  // This object can already been deleted in case DeleteGetFilesRequest has
+  // been called when the response was sending by the parent.
+  if (!child) {
+    return true;
+  }
+
+  if (aResult.type() == GetFilesResponseResult::TGetFilesResponseFailure) {
+    child->Finished(aResult.get_GetFilesResponseFailure().errorCode());
+  } else {
+    MOZ_ASSERT(aResult.type() == GetFilesResponseResult::TGetFilesResponseSuccess);
+
+    const nsTArray<PBlobChild*>& blobs =
+      aResult.get_GetFilesResponseSuccess().blobsChild();
+
+    bool succeeded = true;
+    for (uint32_t i = 0; succeeded && i < blobs.Length(); ++i) {
+      RefPtr<BlobImpl> impl = static_cast<BlobChild*>(blobs[i])->GetBlobImpl();
+      succeeded = child->AppendBlobImpl(impl);
+    }
+
+    child->Finished(succeeded ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  mGetFilesPendingRequests.Remove(aUUID);
   return true;
 }
 

@@ -22,6 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
+class Directory;
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
@@ -67,6 +68,15 @@ public:
    */
   virtual nsresult
   AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) = 0;
+
+  /**
+   * Submit a name/directory pair
+   *
+   * @param aName the name of the parameter
+   * @param aBlob the directory to submit.
+   */
+  virtual nsresult AddNameDirectoryPair(const nsAString& aName,
+                                        Directory* aDirectory) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -180,6 +190,9 @@ public:
   AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
 
   virtual nsresult
+  AddNameDirectoryPair(const nsAString& aName, Directory* aDirectory) override;
+
+  virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
   void GetContentType(nsACString& aContentType)
@@ -198,6 +211,11 @@ protected:
   nsresult AddPostDataStream();
 
 private:
+  void AddDataChunk(const nsACString& aName,
+                    const nsACString& aFilename,
+                    const nsACString& aContentType,
+                    nsIInputStream* aInputStream,
+                    uint64_t aInputStreamSize);
   /**
    * The post data stream as it is so far.  This is a collection of smaller
    * chunks--string streams and file streams interleaved to make one big POST

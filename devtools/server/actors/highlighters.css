@@ -171,8 +171,8 @@
   overflow: hidden;
   white-space: nowrap;
   direction: ltr;
-  text-align: center;
   padding-bottom: 1px;
+  display: flex;
 }
 
 :-moz-native-anonymous .box-model-nodeinfobar-tagname {
@@ -181,11 +181,15 @@
 
 :-moz-native-anonymous .box-model-nodeinfobar-id {
   color: hsl(103, 46%, 54%);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 :-moz-native-anonymous .box-model-nodeinfobar-classes,
 :-moz-native-anonymous .box-model-nodeinfobar-pseudo-classes {
   color: hsl(200, 74%, 57%);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 :-moz-native-anonymous .box-model-nodeinfobar-dimensions {
