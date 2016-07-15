@@ -1538,6 +1538,7 @@ nsresult HTMLMediaElement::LoadResource()
       decoder->Shutdown();
       return NS_ERROR_FAILURE;
     }
+    ChangeDelayLoadStatus(false);
     RefPtr<MediaResource> resource =
       MediaSourceDecoder::CreateResource(mMediaSource->GetPrincipal());
     return FinishDecoderSetup(decoder, resource, nullptr);
