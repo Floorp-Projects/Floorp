@@ -708,8 +708,6 @@ pref("gfx.bundled_fonts.force-enabled", false);
 // whether to try and do something about it (e.g. download additional fonts)?
 pref("gfx.missing_fonts.notify", false);
 
-pref("gfx.filter.nearest.force-enabled", false);
-
 // prefs controlling the font (name/cmap) loader that runs shortly after startup
 pref("gfx.font_loader.families_per_slice", 3); // read in info 3 families at a time
 #ifdef XP_WIN
