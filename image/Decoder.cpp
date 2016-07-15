@@ -107,7 +107,7 @@ Decoder::Init()
 }
 
 nsresult
-Decoder::Decode(NotNull<IResumable*> aOnResume)
+Decoder::Decode(IResumable* aOnResume /* = nullptr */)
 {
   MOZ_ASSERT(mInitialized, "Should be initialized here");
   MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
@@ -118,54 +118,21 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
   }
 
   Maybe<TerminalState> terminalState;
-
-  // We keep decoding chunks until the decode completes (i.e., we reach a
-  // terminal state) or there are no more chunks available.
   {
-    PROFILER_LABEL("ImageDecoder", "Decode",
-                   js::ProfileEntry::Category::GRAPHICS);
+    PROFILER_LABEL("ImageDecoder", "Decode", js::ProfileEntry::Category::GRAPHICS);
     AutoRecordDecoderTelemetry telemetry(this);
 
-    do {
-      if (GetDecodeDone()) {
-        MOZ_ASSERT_UNREACHABLE("Finished decode without reaching terminal state?");
-        terminalState = Some(TerminalState::SUCCESS);
-        break;
-      }
-
-      switch (mIterator->AdvanceOrScheduleResume(aOnResume.get())) {
-        case SourceBufferIterator::WAITING:
-          // We can't continue because the rest of the data hasn't arrived from
-          // the network yet. We don't have to do anything special; the
-          // SourceBufferIterator will ensure that Decode() gets called again on a
-          // DecodePool thread when more data is available.
-          return NS_OK;
-
-        case SourceBufferIterator::COMPLETE:
-          // Normally even if the data is truncated, we want decoding to
-          // succeed so we can display whatever we got. However, if the
-          // SourceBuffer was completed with a failing status, we want to fail.
-          // This happens only in exceptional situations like SourceBuffer
-          // itself encountering a failure due to OOM.
-          terminalState = NS_SUCCEEDED(mIterator->CompletionStatus())
-                        ? Some(TerminalState::SUCCESS)
-                        : Some(TerminalState::FAILURE);
-
-          break;
-
-        case SourceBufferIterator::READY:
-          // Pass the data along to the implementation.
-          terminalState = DoDecode(*mIterator);
-          break;
-
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
-          terminalState = Some(TerminalState::FAILURE);
-      }
-    } while (!terminalState);
+    terminalState = DoDecode(*mIterator, aOnResume);
   }
 
-  MOZ_ASSERT(terminalState);
+  if (!terminalState) {
+    // We need more data to continue. If @aOnResume was non-null, the
+    // SourceBufferIterator will automatically reschedule us. Otherwise, it's up
+    // to the caller.
+    return NS_OK;
+  }
+
+  // We reached a terminal state; we're now done decoding.
   mReachedTerminalState = true;
 
   // If decoding failed, record that fact.
@@ -173,7 +140,7 @@ Decoder::Decode(NotNull<IResumable*> aOnResume)
     PostError();
   }
 
-  // We're done decoding; perform final cleanup.
+  // Perform final cleanup.
   CompleteDecode();
 
   return HasError() ? NS_ERROR_FAILURE : NS_OK;

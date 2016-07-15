@@ -24,7 +24,8 @@ class nsGIFDecoder2 : public Decoder
 public:
   ~nsGIFDecoder2();
 
-  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
+                                IResumable* aOnResume) override;
   nsresult FinishInternal() override;
   virtual Telemetry::ID SpeedHistogram() override;
 

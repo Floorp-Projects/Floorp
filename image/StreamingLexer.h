@@ -263,8 +263,60 @@ public:
   { }
 
   template <typename Func>
+  Maybe<TerminalState> Lex(SourceBufferIterator& aIterator,
+                           IResumable* aOnResume,
+                           Func aFunc)
+  {
+    if (mTransition.NextStateIsTerminal()) {
+      // We've already reached a terminal state. We never deliver any more data
+      // in this case; just return the terminal state again immediately.
+      return Some(mTransition.NextStateAsTerminal());
+    }
+
+    do {
+      switch (aIterator.AdvanceOrScheduleResume(aOnResume)) {
+        case SourceBufferIterator::WAITING:
+          // We can't continue because the rest of the data hasn't arrived from
+          // the network yet. We don't have to do anything special; the
+          // SourceBufferIterator will ensure that |aOnResume| gets called when
+          // more data is available.
+          return Nothing();
+
+        case SourceBufferIterator::COMPLETE:
+          // Normally even if the data is truncated, we want decoding to
+          // succeed so we can display whatever we got. However, if the
+          // SourceBuffer was completed with a failing status, we want to fail.
+          // This happens only in exceptional situations like SourceBuffer
+          // itself encountering a failure due to OOM.
+          mTransition = NS_SUCCEEDED(aIterator.CompletionStatus())
+                      ? Transition::TerminateSuccess()
+                      : Transition::TerminateFailure();
+          break;
+
+        case SourceBufferIterator::READY:
+          // Process the new data that became available. This may result in us
+          // transitioning to a terminal state; we'll check if that happened at
+          // the bottom of the loop.
+          MOZ_ASSERT(aIterator.Data());
+          MOZ_ASSERT(aIterator.Length() > 0);
+          Lex(aIterator.Data(), aIterator.Length(), aFunc);
+          break;
+
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
+          mTransition = Transition::TerminateFailure();
+      }
+    } while (!mTransition.NextStateIsTerminal());
+
+    // We're done. Return the terminal state.
+    return Some(mTransition.NextStateAsTerminal());
+  }
+
+  template <typename Func>
   Maybe<TerminalState> Lex(const char* aInput, size_t aLength, Func aFunc)
   {
+    MOZ_ASSERT(aInput);
+
     if (mTransition.NextStateIsTerminal()) {
       // We've already reached a terminal state. We never deliver any more data
       // in this case; just return the terminal state again immediately.
