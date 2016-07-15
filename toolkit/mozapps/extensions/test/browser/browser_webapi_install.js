@@ -5,13 +5,6 @@ const ID = "webapi_install@tests.mozilla.org";
 // eh, would be good to just stat the real file instead of this...
 const XPI_LEN = 4782;
 
-Services.prefs.setBoolPref("extensions.webapi.testing", true);
-Services.prefs.setBoolPref("extensions.install.requireBuiltInCerts", false);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("extensions.webapi.testing");
-  Services.prefs.clearUserPref("extensions.install.requireBuiltInCerts");
-});
-
 function waitForClear() {
   const MSG = "WebAPICleanup";
   return new Promise(resolve => {
@@ -27,6 +20,14 @@ function waitForClear() {
     Services.ppmm.addMessageListener(MSG, listener);
   });
 }
+
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["extensions.webapi.testing", true],
+          ["extensions.install.requireBuiltInCerts", false]],
+  });
+  info("added preferences");
+});
 
 // Wrapper around a common task to run in the content process to test
 // the mozAddonManager API.  Takes a URL for the XPI to install and an
@@ -240,3 +241,30 @@ add_task(makeInstallTest(function* (browser) {
   ok(AddonManager.webAPI.installs.size > 0, "webAPI is tracking the AddonInstall");
 }));
 
+add_task(function* test_permissions() {
+  function testBadUrl(url, pattern, successMessage) {
+    return BrowserTestUtils.withNewTab(TESTPAGE, function* (browser) {
+      let result = yield ContentTask.spawn(browser, {url, pattern}, function (opts) {
+        return new Promise(resolve => {
+          content.navigator.mozAddonManager.createInstall({url: opts.url})
+            .then(() => {
+              resolve({success: false, message: "createInstall should not have succeeded"});
+            }, err => {
+              if (err.message.match(new RegExp(opts.pattern))) {
+                resolve({success: true});
+              }
+              resolve({success: false, message: `Wrong error message: ${err.message}`});
+            });
+        });
+      });
+      is(result.success, true, result.message || successMessage);
+    });
+  }
+
+  yield testBadUrl("i am not a url", "NS_ERROR_MALFORMED_URI",
+                   "Installing from an unparseable URL fails");
+
+  yield testBadUrl("https://addons.not-really-mozilla.org/impostor.xpi",
+                   "not permitted",
+                   "Installing from non-approved URL fails");
+});
