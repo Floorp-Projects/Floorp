@@ -118,6 +118,16 @@ protected:
                                  nsIDocShellTreeOwner** aResult);
 
 private:
+  nsresult CreateChromeWindow(const nsACString& aFeatures,
+                              nsIWebBrowserChrome* aParentChrome,
+                              uint32_t aChromeFlags,
+                              uint32_t aContextFlags,
+                              nsITabParent* aOpeningTabParent,
+                              nsIWebBrowserChrome** aResult);
+
+  void MaybeDisablePersistence(const nsACString& aFeatures,
+                               nsIDocShellTreeOwner* aTreeOwner);
+
   static uint32_t CalculateChromeFlagsHelper(uint32_t aInitialFlags,
                                              const nsACString& aFeatures,
                                              bool &presenceFlag,
