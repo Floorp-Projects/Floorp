@@ -47,10 +47,50 @@ SourceBufferIterator::operator=(SourceBufferIterator&& aOther)
 }
 
 SourceBufferIterator::State
-SourceBufferIterator::AdvanceOrScheduleResume(IResumable* aConsumer)
+SourceBufferIterator::AdvanceOrScheduleResume(size_t aRequestedBytes,
+                                              IResumable* aConsumer)
 {
   MOZ_ASSERT(mOwner);
-  return mOwner->AdvanceIteratorOrScheduleResume(*this, aConsumer);
+
+  if (MOZ_UNLIKELY(!HasMore())) {
+    MOZ_ASSERT_UNREACHABLE("Should not advance a completed iterator");
+    return COMPLETE;
+  }
+
+  // The range of data [mOffset, mOffset + mNextReadLength) has just been read
+  // by the caller (or at least they don't have any interest in it), so consume
+  // that data.
+  MOZ_ASSERT(mData.mIterating.mNextReadLength <= mData.mIterating.mAvailableLength);
+  mData.mIterating.mOffset += mData.mIterating.mNextReadLength;
+  mData.mIterating.mAvailableLength -= mData.mIterating.mNextReadLength;
+  mData.mIterating.mNextReadLength = 0;
+
+  if (MOZ_LIKELY(mState == READY)) {
+    // If the caller wants zero bytes of data, that's easy enough; we just
+    // configured ourselves for a zero-byte read above!  In theory we could do
+    // this even in the START state, but it's not important for performance and
+    // breaking the ability of callers to assert that the pointer returned by
+    // Data() is non-null doesn't seem worth it.
+    if (aRequestedBytes == 0) {
+      MOZ_ASSERT(mData.mIterating.mNextReadLength == 0);
+      return READY;
+    }
+
+    // Try to satisfy the request out of our local buffer. This is potentially
+    // much faster than requesting data from our owning SourceBuffer because we
+    // don't have to take the lock. Note that if we have anything at all in our
+    // local buffer, we use it to satisfy the request; @aRequestedBytes is just
+    // the *maximum* number of bytes we can return.
+    if (mData.mIterating.mAvailableLength > 0) {
+      return AdvanceFromLocalBuffer(aRequestedBytes);
+    }
+  }
+
+  // Our local buffer is empty, so we'll have to request data from our owning
+  // SourceBuffer.
+  return mOwner->AdvanceIteratorOrScheduleResume(*this,
+                                                 aRequestedBytes,
+                                                 aConsumer);
 }
 
 bool
@@ -522,7 +562,7 @@ SourceBuffer::RemainingBytesIsNoMoreThan(const SourceBufferIterator& aIterator,
 
   uint32_t iteratorChunk = aIterator.mData.mIterating.mChunk;
   size_t iteratorOffset = aIterator.mData.mIterating.mOffset;
-  size_t iteratorLength = aIterator.mData.mIterating.mLength;
+  size_t iteratorLength = aIterator.mData.mIterating.mAvailableLength;
 
   // Include the bytes the iterator is currently pointing to in the limit, so
   // that the current chunk doesn't have to be a special case.
@@ -544,14 +584,13 @@ SourceBuffer::RemainingBytesIsNoMoreThan(const SourceBufferIterator& aIterator,
 
 SourceBufferIterator::State
 SourceBuffer::AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
+                                              size_t aRequestedBytes,
                                               IResumable* aConsumer)
 {
   MutexAutoLock lock(mMutex);
 
-  if (MOZ_UNLIKELY(!aIterator.HasMore())) {
-    MOZ_ASSERT_UNREACHABLE("Should not advance a completed iterator");
-    return SourceBufferIterator::COMPLETE;
-  }
+  MOZ_ASSERT(aIterator.HasMore(), "Advancing a completed iterator and "
+                                  "AdvanceOrScheduleResume didn't catch it");
 
   if (MOZ_UNLIKELY(mStatus && NS_FAILED(*mStatus))) {
     // This SourceBuffer is complete due to an error; all reads fail.
@@ -569,14 +608,15 @@ SourceBuffer::AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
 
   const Chunk& currentChunk = mChunks[iteratorChunkIdx];
   size_t iteratorEnd = aIterator.mData.mIterating.mOffset +
-                       aIterator.mData.mIterating.mLength;
+                       aIterator.mData.mIterating.mAvailableLength;
   MOZ_ASSERT(iteratorEnd <= currentChunk.Length());
   MOZ_ASSERT(iteratorEnd <= currentChunk.Capacity());
 
   if (iteratorEnd < currentChunk.Length()) {
     // There's more data in the current chunk.
     return aIterator.SetReady(iteratorChunkIdx, currentChunk.Data(),
-                              iteratorEnd, currentChunk.Length() - iteratorEnd);
+                              iteratorEnd, currentChunk.Length() - iteratorEnd,
+                              aRequestedBytes);
   }
 
   if (iteratorEnd == currentChunk.Capacity() &&
@@ -584,7 +624,7 @@ SourceBuffer::AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
     // Advance to the next chunk.
     const Chunk& nextChunk = mChunks[iteratorChunkIdx + 1];
     return aIterator.SetReady(iteratorChunkIdx + 1, nextChunk.Data(), 0,
-                              nextChunk.Length());
+                              nextChunk.Length(), aRequestedBytes);
   }
 
   MOZ_ASSERT(IsLastChunk(iteratorChunkIdx), "Should've advanced");

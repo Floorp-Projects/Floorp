@@ -14,6 +14,7 @@
 #define mozilla_image_StreamingLexer_h
 
 #include <algorithm>
+#include <cstdint>
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
@@ -274,7 +275,7 @@ public:
     }
 
     do {
-      switch (aIterator.AdvanceOrScheduleResume(aOnResume)) {
+      switch (aIterator.AdvanceOrScheduleResume(SIZE_MAX, aOnResume)) {
         case SourceBufferIterator::WAITING:
           // We can't continue because the rest of the data hasn't arrived from
           // the network yet. We don't have to do anything special; the
