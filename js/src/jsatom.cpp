@@ -228,7 +228,7 @@ js::MarkPermanentAtoms(JSTracer* trc)
         for (FrozenAtomSet::Range r(rt->permanentAtoms->all()); !r.empty(); r.popFront()) {
             const AtomStateEntry& entry = r.front();
 
-            JSAtom* atom = entry.asPtr();
+            JSAtom* atom = entry.asPtrUnbarriered();
             TraceProcessGlobalRoot(trc, atom, "permanent_table");
         }
     }
@@ -272,7 +272,7 @@ JSRuntime::transformToPermanentAtoms(JSContext* cx)
 
     for (FrozenAtomSet::Range r(permanentAtoms->all()); !r.empty(); r.popFront()) {
         AtomStateEntry entry = r.front();
-        JSAtom* atom = entry.asPtr();
+        JSAtom* atom = entry.asPtr(cx);
         atom->morphIntoPermanentAtom();
     }
 
@@ -322,7 +322,7 @@ AtomizeAndCopyChars(ExclusiveContext* cx, const CharT* tbchars, size_t length, P
     if (cx->isPermanentAtomsInitialized()) {
         AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
         if (pp)
-            return pp->asPtr();
+            return pp->asPtr(cx);
     }
 
     AutoLockForExclusiveAccess lock(cx);
@@ -330,7 +330,7 @@ AtomizeAndCopyChars(ExclusiveContext* cx, const CharT* tbchars, size_t length, P
     AtomSet& atoms = cx->atoms(lock);
     AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
     if (p) {
-        JSAtom* atom = p->asPtr();
+        JSAtom* atom = p->asPtr(cx);
         p->setPinned(bool(pin));
         return atom;
     }
@@ -387,7 +387,7 @@ js::AtomizeString(ExclusiveContext* cx, JSString* str,
 
         p = cx->atoms(lock).lookup(lookup);
         MOZ_ASSERT(p); /* Non-static atom must exist in atom state set. */
-        MOZ_ASSERT(p->asPtr() == &atom);
+        MOZ_ASSERT(p->asPtrUnbarriered() == &atom);
         MOZ_ASSERT(pin == PinAtom);
         p->setPinned(bool(pin));
         return &atom;
