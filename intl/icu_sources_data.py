@@ -19,11 +19,13 @@ import subprocess
 import sys
 import tempfile
 
+from mozpack import path as mozpath
+
 
 def find_source_file(dir, filename):
     base = os.path.splitext(filename)[0]
     for ext in ('.cpp', '.c'):
-        f = os.path.join(dir, base + ext)
+        f = mozpath.join(dir, base + ext)
         if os.path.isfile(f):
             return f
     raise Exception("Couldn't find source file for: %s" % filename)
@@ -53,40 +55,40 @@ def write_sources(mozbuild, sources):
 
 def update_sources(topsrcdir):
     print('Updating ICU sources lists...')
-    sys.path.append(os.path.join(topsrcdir, 'build/pymake'))
+    sys.path.append(mozpath.join(topsrcdir, 'build/pymake'))
     for d in ['common', 'i18n']:
-        makefile = os.path.join(topsrcdir,
+        makefile = mozpath.join(topsrcdir,
                                 'intl/icu/source/%s/Makefile.in' % d)
-        mozbuild = os.path.join(topsrcdir,
+        mozbuild = mozpath.join(topsrcdir,
                                 'config/external/icu/%s/sources.mozbuild' % d)
-        sources = [os.path.relpath(s, topsrcdir)
+        sources = [mozpath.relpath(s, topsrcdir)
                    for s in get_sources_from_makefile(makefile)]
         write_sources(mozbuild, sources)
 
 
 def try_run(name, command, cwd=None, **kwargs):
-    with tempfile.NamedTemporaryFile(prefix=name, delete=False) as f:
-        if subprocess.call(command,
-                           stdout=f,
-                           stderr=subprocess.STDOUT,
-                           cwd=cwd,
-                           **kwargs) == 0:
-            os.unlink(f.name)
-            return True
-    print('''Error running "{}" in directory {}
-See output in {}'''.format(' '.join(command), cwd, f.name),
-          file=sys.stderr)
-    return False
+    try:
+        with tempfile.NamedTemporaryFile(prefix=name, delete=False) as f:
+            subprocess.check_call(command, cwd=cwd, stdout=f,
+                                stderr=subprocess.STDOUT, **kwargs)
+    except subprocess.CalledProcessError:
+        print('''Error running "{}" in directory {}
+    See output in {}'''.format(' '.join(command), cwd, f.name),
+            file=sys.stderr)
+        return False
+    else:
+        os.unlink(f.name)
+        return True
 
 
 def get_data_file(data_dir):
-    files = glob.glob(os.path.join(data_dir, 'icudt*.dat'))
+    files = glob.glob(mozpath.join(data_dir, 'icudt*.dat'))
     return files[0] if files else None
 
 
 def update_data_file(topsrcdir):
     objdir = tempfile.mkdtemp(prefix='icu-obj-')
-    configure = os.path.join(topsrcdir, 'intl/icu/source/configure')
+    configure = mozpath.join(topsrcdir, 'intl/icu/source/configure')
     env = dict(os.environ)
     # bug 1262101 - these should be shared with the moz.build files
     env.update({
@@ -100,7 +102,7 @@ def update_data_file(topsrcdir):
     print('Running ICU configure...')
     if not try_run(
             'icu-configure',
-            [configure,
+            ['sh', configure,
              '--with-data-packaging=archive',
              '--enable-static',
              '--disable-shared',
@@ -117,14 +119,14 @@ def update_data_file(topsrcdir):
     if not try_run('icu-make', ['make'], cwd=objdir):
         return False
     print('Copying ICU data file...')
-    tree_data_path = os.path.join(topsrcdir,
+    tree_data_path = mozpath.join(topsrcdir,
                                   'config/external/icu/data/')
     old_data_file = get_data_file(tree_data_path)
     if not old_data_file:
         print('Error: no ICU data file in %s' % tree_data_path,
               file=sys.stderr)
         return False
-    new_data_file = get_data_file(os.path.join(objdir, 'data/out'))
+    new_data_file = get_data_file(mozpath.join(objdir, 'data/out'))
     if not new_data_file:
         print('Error: no ICU data in ICU objdir', file=sys.stderr)
         return False
@@ -132,7 +134,10 @@ def update_data_file(topsrcdir):
         # Data file name has the major version number embedded.
         os.unlink(old_data_file)
     shutil.copy(new_data_file, tree_data_path)
-    shutil.rmtree(objdir)
+    try:
+        shutil.rmtree(objdir)
+    except:
+        print('Warning: failed to remove %s' % objdir, file=sys.stderr)
     return True
 
 
@@ -142,7 +147,7 @@ def main():
               file=sys.stderr)
         sys.exit(1)
 
-    topsrcdir = os.path.abspath(sys.argv[1])
+    topsrcdir = mozpath.abspath(sys.argv[1])
     update_sources(topsrcdir)
     if not update_data_file(topsrcdir):
         print('Error updating ICU data file', file=sys.stderr)
