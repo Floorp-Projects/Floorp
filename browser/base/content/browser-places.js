@@ -1166,7 +1166,7 @@ var PlacesToolbarHelper = {
   onWidgetUnderflow: function(aNode, aContainer) {
     // The view gets broken by being removed and reinserted by the overflowable
     // toolbar, so we have to force an uninit and reinit.
-    let win = aNode.ownerDocument.defaultView;
+    let win = aNode.ownerGlobal;
     if (aNode.id == "personal-bookmarks" && win == window) {
       this._resetView();
     }
@@ -1909,7 +1909,7 @@ var BookmarkingUI = {
       gNavigatorBundle.getString("starButtonOverflowedStarred.label");
   },
   onWidgetOverflow: function(aNode, aContainer) {
-    let win = aNode.ownerDocument.defaultView;
+    let win = aNode.ownerGlobal;
     if (aNode.id != this.BOOKMARK_BUTTON_ID || win != window)
       return;
 
@@ -1925,7 +1925,7 @@ var BookmarkingUI = {
   },
 
   onWidgetUnderflow: function(aNode, aContainer) {
-    let win = aNode.ownerDocument.defaultView;
+    let win = aNode.ownerGlobal;
     if (aNode.id != this.BOOKMARK_BUTTON_ID || win != window)
       return;
 

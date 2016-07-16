@@ -301,7 +301,7 @@ function isPanelUIOpen() {
 
 function subviewShown(aSubview) {
   let deferred = Promise.defer();
-  let win = aSubview.ownerDocument.defaultView;
+  let win = aSubview.ownerGlobal;
   let timeoutId = win.setTimeout(() => {
     deferred.reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
   }, 20000);
@@ -316,7 +316,7 @@ function subviewShown(aSubview) {
 
 function subviewHidden(aSubview) {
   let deferred = Promise.defer();
-  let win = aSubview.ownerDocument.defaultView;
+  let win = aSubview.ownerGlobal;
   let timeoutId = win.setTimeout(() => {
     deferred.reject("Subview (" + aSubview.id + ") did not hide within 20 seconds.");
   }, 20000);
@@ -476,7 +476,7 @@ function popupHidden(aPopup) {
  */
 function promisePopupEvent(aPopup, aEventSuffix) {
   let deferred = Promise.defer();
-  let win = aPopup.ownerDocument.defaultView;
+  let win = aPopup.ownerGlobal;
   let eventType = "popup" + aEventSuffix;
 
   function onPopupEvent(e) {

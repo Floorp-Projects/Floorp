@@ -79,7 +79,7 @@ this.TabCrashHandler = {
 
   receiveMessage: function(message) {
     let browser = message.target.browser;
-    let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+    let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
 
     switch(message.name) {
