@@ -11,6 +11,10 @@
 #include "ARIAMap.h"
 #include "nsCoreUtils.h"
 
+#ifdef A11Y_LOG
+#include "Logging.h"
+#endif
+
 namespace mozilla {
 namespace a11y {
 
@@ -74,6 +78,21 @@ Accessible::ScrollTo(uint32_t aHow) const
 {
   if (mContent)
     nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
+}
+
+inline bool
+Accessible::InsertAfter(Accessible* aNewChild, Accessible* aRefChild)
+{
+  MOZ_ASSERT(aNewChild, "No new child to insert");
+
+  if (aRefChild && aRefChild->Parent() != this) {
+    MOZ_ASSERT_UNREACHABLE("Broken accessible tree");
+    mDoc->UnbindFromDocument(aNewChild);
+    return false;
+  }
+
+  return InsertChildAt(aRefChild ? aRefChild->IndexInParent() + 1 : 0,
+                       aNewChild);
 }
 
 } // namespace a11y
