@@ -9,7 +9,7 @@ FINAL_LIBRARY = 'icu'
 
 DEFINES['U_I18N_IMPLEMENTATION'] = True
 
-LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
+LOCAL_INCLUDES += ['/intl/icu/source/common']
 
 include('../defs.mozbuild')
 include('sources.mozbuild')

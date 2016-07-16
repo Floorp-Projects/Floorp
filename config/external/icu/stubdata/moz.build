@@ -10,6 +10,4 @@
 
 Library('icustubdata')
 
-LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
-
 SOURCES += ['/intl/icu/source/stubdata/stubdata.c']

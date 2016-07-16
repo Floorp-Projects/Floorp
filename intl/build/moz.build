@@ -9,8 +9,6 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
-CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
 LOCAL_INCLUDES += [
     '../locale',
     '../lwbrk',
