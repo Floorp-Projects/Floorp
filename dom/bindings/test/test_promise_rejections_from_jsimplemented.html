@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
        "Should have the right message in test " + testNumber);
     is(exn.code, code, "Should have the right .code in test " + testNumber);
     if (message === "") {
-      is(exn.name, "NS_ERROR_UNEXPECTED",
+      is(exn.name, "InternalError",
          "Should have one of our synthetic exceptions in test " + testNumber);
     }
     is(exn.stack, stack, "Should have the right stack in test " + testNumber);
@@ -41,79 +41,88 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     var isE10S = !SpecialPowers.isMainProcess();
     var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = location.href;
-    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:121:3
+    var unwrapError = "Promise rejection value is a non-unwrappable cross-compartment wrapper.";
+    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:130:3
 ` : "";
 
     Promise.all([
       t.testPromiseWithThrowingChromePromiseInit().then(
           ensurePromiseFail.bind(null, 1),
-          checkExn.bind(null, 48, "NS_ERROR_UNEXPECTED", "", undefined,
-                        ourFile, 1,
-                        `doTest@${ourFile}:48:7
+          checkExn.bind(null, 49, "InternalError", unwrapError,
+                        undefined, ourFile, 1,
+                        `doTest@${ourFile}:49:7
 ` +
                         parentFrame)),
       t.testPromiseWithThrowingContentPromiseInit(function() {
           thereIsNoSuchContentFunction1();
         }).then(
           ensurePromiseFail.bind(null, 2),
-          checkExn.bind(null, 56, "ReferenceError",
+          checkExn.bind(null, 57, "ReferenceError",
                         "thereIsNoSuchContentFunction1 is not defined",
                         undefined, ourFile, 2,
-                        `doTest/<@${ourFile}:56:11
-doTest@${ourFile}:55:7
+                        `doTest/<@${ourFile}:57:11
+doTest@${ourFile}:56:7
 ` +
                         parentFrame)),
       t.testPromiseWithThrowingChromeThenFunction().then(
           ensurePromiseFail.bind(null, 3),
-          checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 3, "")),
+          checkExn.bind(null, 0, "InternalError", unwrapError, undefined, "", 3, asyncStack ? (`Async*doTest@${ourFile}:67:7
+` +
+                        parentFrame) : "")),
       t.testPromiseWithThrowingContentThenFunction(function() {
           thereIsNoSuchContentFunction2();
         }).then(
           ensurePromiseFail.bind(null, 4),
-          checkExn.bind(null, 70, "ReferenceError",
+          checkExn.bind(null, 73, "ReferenceError",
                         "thereIsNoSuchContentFunction2 is not defined",
                         undefined, ourFile, 4,
-                        `doTest/<@${ourFile}:70:11
+                        `doTest/<@${ourFile}:73:11
 ` +
-                        (asyncStack ? `Async*doTest@${ourFile}:69:7
+                        (asyncStack ? `Async*doTest@${ourFile}:72:7
 ` : "") +
                         parentFrame)),
       t.testPromiseWithThrowingChromeThenable().then(
           ensurePromiseFail.bind(null, 5),
-          checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 5, "")),
+          checkExn.bind(null, 0, "InternalError", unwrapError, undefined, "", 5, asyncStack ? (`Async*doTest@${ourFile}:84:7
+` +
+                        parentFrame) : "")),
       t.testPromiseWithThrowingContentThenable({
             then: function() { thereIsNoSuchContentFunction3(); }
         }).then(
           ensurePromiseFail.bind(null, 6),
-          checkExn.bind(null, 85, "ReferenceError",
+          checkExn.bind(null, 90, "ReferenceError",
                         "thereIsNoSuchContentFunction3 is not defined",
                         undefined, ourFile, 6,
-                        `doTest/<.then@${ourFile}:85:32
-`)),
+                        `doTest/<.then@${ourFile}:90:32
+` + (asyncStack ? `Async*doTest@${ourFile}:89:7\n` + parentFrame : ""))),
       t.testPromiseWithDOMExceptionThrowingPromiseInit().then(
           ensurePromiseFail.bind(null, 7),
-          checkExn.bind(null, 93, "NotFoundError",
+          checkExn.bind(null, 98, "NotFoundError",
                         "We are a second DOMException",
                         DOMException.NOT_FOUND_ERR, ourFile, 7,
-                        `doTest@${ourFile}:93:7
+                        `doTest@${ourFile}:98:7
 ` +
                         parentFrame)),
       t.testPromiseWithDOMExceptionThrowingThenFunction().then(
           ensurePromiseFail.bind(null, 8),
-          checkExn.bind(null, asyncStack ? 101 : 0, "NetworkError",
+          checkExn.bind(null, asyncStack ? 106 : 0, "NetworkError",
                          "We are a third DOMException",
                         DOMException.NETWORK_ERR, asyncStack ? ourFile : "", 8,
-                        (asyncStack ? `Async*doTest@${ourFile}:101:7
+                        (asyncStack ? `Async*doTest@${ourFile}:106:7
 ` +
                          parentFrame : ""))),
       t.testPromiseWithDOMExceptionThrowingThenable().then(
           ensurePromiseFail.bind(null, 9),
-          checkExn.bind(null, 0, "TypeMismatchError",
+          checkExn.bind(null, asyncStack ? 114 : 0, "TypeMismatchError",
                         "We are a fourth DOMException",
-                         DOMException.TYPE_MISMATCH_ERR, "", 9, "")),
+                        DOMException.TYPE_MISMATCH_ERR,
+                        asyncStack ? ourFile : "", 9,
+                        (asyncStack ? `Async*doTest@${ourFile}:114:7
+` +
+                         parentFrame : ""))),
     ]).then(SimpleTest.finish,
-            function() {
-              ok(false, "One of our catch statements totally failed");
+            function(err) {
+              ok(false, "One of our catch statements totally failed with err" + err + ', stack: ' + (err ? err.stack : ''));
               SimpleTest.finish();
             });
   }
