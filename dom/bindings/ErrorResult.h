@@ -151,6 +151,8 @@ public:
     AssignErrorCode(aRv);
   }
 
+  operator ErrorResult&();
+
   void Throw(nsresult rv) {
     MOZ_ASSERT(NS_FAILED(rv), "Please don't try throwing success");
     AssignErrorCode(rv);
@@ -496,6 +498,13 @@ private:
   ErrorResult(const ErrorResult&) = delete;
   void operator=(const ErrorResult&) = delete;
 };
+
+template<typename CleanupPolicy>
+binding_danger::TErrorResult<CleanupPolicy>::operator ErrorResult&()
+{
+  return *static_cast<ErrorResult*>(
+     reinterpret_cast<TErrorResult<JustAssertCleanupPolicy>*>(this));
+}
 
 // A class for use when an ErrorResult should just automatically be ignored.
 class IgnoredErrorResult : public ErrorResult
