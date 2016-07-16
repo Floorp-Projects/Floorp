@@ -24,6 +24,8 @@
         assert_equals(client.readyState, 4)
         client.abort()
         assert_equals(client.readyState, 0)
+console.log(result)
+console.log(expected)
         assert_array_equals(result, expected)
         test.done()
       })
