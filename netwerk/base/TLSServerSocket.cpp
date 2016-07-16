@@ -245,6 +245,23 @@ TLSServerSocket::SetCipherSuites(uint16_t* aCipherSuites, uint32_t aLength)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TLSServerSocket::SetVersionRange(uint16_t aMinVersion, uint16_t aMaxVersion)
+{
+  // If AsyncListen was already called (and set mListener), it's too late to set
+  // this.
+  if (NS_WARN_IF(mListener)) {
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  SSLVersionRange range = {aMinVersion, aMaxVersion};
+  if (SSL_VersionRangeSet(mFD, &range) != SECSuccess) {
+    return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
+  }
+
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // TLSServerConnectionInfo
 //-----------------------------------------------------------------------------
