@@ -7,10 +7,12 @@
 /* A template class for tagged unions. */
 
 #include <new>
+#include <stdint.h>
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
+#include "mozilla/TypeTraits.h"
 
 #ifndef mozilla_Variant_h
 #define mozilla_Variant_h
@@ -109,43 +111,64 @@ struct SelectVariantType
                                    Variants...>
 { };
 
-// TagHelper gets the given sentinel tag value for the given type T. This has to
-// be split out from VariantImplementation because you can't nest a partial template
-// specialization within a template class.
+// Compute a fast, compact type that can be used to hold integral values that
+// distinctly map to every type in Ts.
+template<typename... Ts>
+struct VariantTag
+{
+private:
+  static const size_t TypeCount = sizeof...(Ts);
 
-template<size_t N, typename T, typename U, typename Next, bool isMatch>
+public:
+  using Type =
+    typename Conditional<TypeCount < 3,
+                         bool,
+                         typename Conditional<TypeCount < (1 << 8),
+                                              uint_fast8_t,
+                                              size_t // stop caring past a certain point :-)
+                                              >::Type
+                         >::Type;
+};
+
+// TagHelper gets the given sentinel tag value for the given type T. This has to
+// be split out from VariantImplementation because you can't nest a partial
+// template specialization within a template class.
+
+template<typename Tag, size_t N, typename T, typename U, typename Next, bool isMatch>
 struct TagHelper;
 
 // In the case where T != U, we continue recursion.
-template<size_t N, typename T, typename U, typename Next>
-struct TagHelper<N, T, U, Next, false>
+template<typename Tag, size_t N, typename T, typename U, typename Next>
+struct TagHelper<Tag, N, T, U, Next, false>
 {
-  static size_t tag() { return Next::template tag<U>(); }
+  static Tag tag() { return Next::template tag<U>(); }
 };
 
 // In the case where T == U, return the tag number.
-template<size_t N, typename T, typename U, typename Next>
-struct TagHelper<N, T, U, Next, true>
+template<typename Tag, size_t N, typename T, typename U, typename Next>
+struct TagHelper<Tag, N, T, U, Next, true>
 {
-  static size_t tag() { return N; }
+  static Tag tag() { return Tag(N); }
 };
 
-// The VariantImplementation template provides the guts of mozilla::Variant. We create
-// an VariantImplementation for each T in Ts... which handles construction,
-// destruction, etc for when the Variant's type is T. If the Variant's type is
-// not T, it punts the request on to the next VariantImplementation.
+// The VariantImplementation template provides the guts of mozilla::Variant.  We
+// create a VariantImplementation for each T in Ts... which handles
+// construction, destruction, etc for when the Variant's type is T.  If the
+// Variant's type isn't T, it punts the request on to the next
+// VariantImplementation.
 
-template<size_t N, typename... Ts>
+template<typename Tag, size_t N, typename... Ts>
 struct VariantImplementation;
 
 // The singly typed Variant / recursion base case.
-template<size_t N, typename T>
-struct VariantImplementation<N, T> {
+template<typename Tag, size_t N, typename T>
+struct VariantImplementation<Tag, N, T>
+{
   template<typename U>
-  static size_t tag() {
+  static Tag tag() {
     static_assert(mozilla::IsSame<T, U>::value,
                   "mozilla::Variant: tag: bad type!");
-    return N;
+    return Tag(N);
   }
 
   template<typename Variant>
@@ -179,15 +202,15 @@ struct VariantImplementation<N, T> {
 };
 
 // VariantImplementation for some variant type T.
-template<size_t N, typename T, typename... Ts>
-struct VariantImplementation<N, T, Ts...>
+template<typename Tag, size_t N, typename T, typename... Ts>
+struct VariantImplementation<Tag, N, T, Ts...>
 {
   // The next recursive VariantImplementation.
-  using Next = VariantImplementation<N + 1, Ts...>;
+  using Next = VariantImplementation<Tag, N + 1, Ts...>;
 
   template<typename U>
-  static size_t tag() {
-    return TagHelper<N, T, U, Next, IsSame<T, U>::value>::tag();
+  static Tag tag() {
+    return TagHelper<Tag, N, T, U, Next, IsSame<T, U>::value>::tag();
   }
 
   template<typename Variant>
@@ -411,15 +434,16 @@ struct AsVariantTemporary
 template<typename... Ts>
 class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Variant
 {
-  using Impl = detail::VariantImplementation<0, Ts...>;
+  using Tag = typename detail::VariantTag<Ts...>::Type;
+  using Impl = detail::VariantImplementation<Tag, 0, Ts...>;
   using RawData = AlignedStorage<detail::MaxSizeOf<Ts...>::size>;
-
-  // Each type is given a unique size_t sentinel. This tag lets us keep track of
-  // the contained variant value's type.
-  size_t tag;
 
   // Raw storage for the contained variant value.
   RawData raw;
+
+  // Each type is given a unique tag value that lets us keep track of the
+  // contained variant value's type.
+  Tag tag;
 
   void* ptr() {
     return reinterpret_cast<void*>(&raw);
