@@ -588,7 +588,7 @@ nsICODecoder::FinishResource()
   return Transition::TerminateSuccess();
 }
 
-Maybe<TerminalState>
+LexerResult
 nsICODecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
