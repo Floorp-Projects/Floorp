@@ -18,7 +18,6 @@
 #include "nsTextEquivUtils.h"
 #include "DocAccessibleChild.h"
 #include "EventTree.h"
-#include "Logging.h"
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
