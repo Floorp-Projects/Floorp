@@ -159,7 +159,6 @@ struct ErrorResult::Message {
 nsTArray<nsString>&
 ErrorResult::CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType)
 {
-  AssertInOwningThread();
   mResult = errorType;
 
   mMessage = new Message();
@@ -171,7 +170,6 @@ void
 ErrorResult::SerializeMessage(IPC::Message* aMsg) const
 {
   using namespace IPC;
-  AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasMessage);
   MOZ_ASSERT(mMessage);
   WriteParam(aMsg, mMessage->mArgs);
@@ -182,7 +180,6 @@ bool
 ErrorResult::DeserializeMessage(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   using namespace IPC;
-  AssertInOwningThread();
   nsAutoPtr<Message> readMessage(new Message());
   if (!ReadParam(aMsg, aIter, &readMessage->mArgs) ||
       !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
@@ -203,7 +200,6 @@ ErrorResult::DeserializeMessage(const IPC::Message* aMsg, PickleIterator* aIter)
 void
 ErrorResult::SetPendingExceptionWithMessage(JSContext* aCx)
 {
-  AssertInOwningThread();
   MOZ_ASSERT(mMessage, "SetPendingExceptionWithMessage() can be called only once");
   MOZ_ASSERT(mUnionState == HasMessage);
 
@@ -227,7 +223,6 @@ ErrorResult::SetPendingExceptionWithMessage(JSContext* aCx)
 void
 ErrorResult::ClearMessage()
 {
-  AssertInOwningThread();
   MOZ_ASSERT(IsErrorWithMessage());
   delete mMessage;
   mMessage = nullptr;
@@ -239,7 +234,6 @@ ErrorResult::ClearMessage()
 void
 ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 {
-  AssertInOwningThread();
   MOZ_ASSERT(mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to throw a JS exception?");
 
@@ -265,7 +259,6 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 void
 ErrorResult::SetPendingJSException(JSContext* cx)
 {
-  AssertInOwningThread();
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to handle JS exceptions?");
   MOZ_ASSERT(mUnionState == HasJSException);
@@ -299,7 +292,6 @@ void
 ErrorResult::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
 {
   using namespace IPC;
-  AssertInOwningThread();
   MOZ_ASSERT(mDOMExceptionInfo);
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
   WriteParam(aMsg, mDOMExceptionInfo->mMessage);
@@ -310,7 +302,6 @@ bool
 ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   using namespace IPC;
-  AssertInOwningThread();
   nsCString message;
   nsresult rv;
   if (!ReadParam(aMsg, aIter, &message) ||
@@ -330,7 +321,6 @@ ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, PickleIterato
 void
 ErrorResult::ThrowDOMException(nsresult rv, const nsACString& message)
 {
-  AssertInOwningThread();
   ClearUnionData();
 
   mResult = NS_ERROR_DOM_DOMEXCEPTION;
@@ -343,7 +333,6 @@ ErrorResult::ThrowDOMException(nsresult rv, const nsACString& message)
 void
 ErrorResult::SetPendingDOMException(JSContext* cx)
 {
-  AssertInOwningThread();
   MOZ_ASSERT(mDOMExceptionInfo,
              "SetPendingDOMException() can be called only once");
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
@@ -357,7 +346,6 @@ ErrorResult::SetPendingDOMException(JSContext* cx)
 void
 ErrorResult::ClearDOMExceptionInfo()
 {
-  AssertInOwningThread();
   MOZ_ASSERT(IsDOMException());
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo || !mDOMExceptionInfo);
   delete mDOMExceptionInfo;
@@ -370,7 +358,6 @@ ErrorResult::ClearDOMExceptionInfo()
 void
 ErrorResult::ClearUnionData()
 {
-  AssertInOwningThread();
   if (IsJSException()) {
     JSContext* cx = nsContentUtils::RootingCx();
     MOZ_ASSERT(cx);
@@ -389,7 +376,6 @@ ErrorResult::ClearUnionData()
 void
 ErrorResult::SetPendingGenericErrorException(JSContext* cx)
 {
-  AssertInOwningThread();
   MOZ_ASSERT(!IsErrorWithMessage());
   MOZ_ASSERT(!IsJSException());
   MOZ_ASSERT(!IsDOMException());
@@ -400,8 +386,6 @@ ErrorResult::SetPendingGenericErrorException(JSContext* cx)
 ErrorResult&
 ErrorResult::operator=(ErrorResult&& aRHS)
 {
-  AssertInOwningThread();
-  aRHS.AssertInOwningThread();
   // Clear out any union members we may have right now, before we
   // start writing to it.
   ClearUnionData();
@@ -446,9 +430,6 @@ ErrorResult::operator=(ErrorResult&& aRHS)
 void
 ErrorResult::CloneTo(ErrorResult& aRv) const
 {
-  AssertInOwningThread();
-  aRv.AssertInOwningThread();
-
   aRv.ClearUnionData();
   aRv.mResult = mResult;
 #ifdef DEBUG
@@ -481,7 +462,6 @@ ErrorResult::CloneTo(ErrorResult& aRv) const
 void
 ErrorResult::SuppressException()
 {
-  AssertInOwningThread();
   WouldReportJSException();
   ClearUnionData();
   // We don't use AssignErrorCode, because we want to override existing error
@@ -492,7 +472,6 @@ ErrorResult::SuppressException()
 void
 ErrorResult::SetPendingException(JSContext* cx)
 {
-  AssertInOwningThread();
   if (IsUncatchableException()) {
     // Nuke any existing exception on cx, to make sure we're uncatchable.
     JS_ClearPendingException(cx);
@@ -525,7 +504,6 @@ ErrorResult::SetPendingException(JSContext* cx)
 void
 ErrorResult::StealExceptionFromJSContext(JSContext* cx)
 {
-  AssertInOwningThread();
   MOZ_ASSERT(mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to throw a JS exception?");
 
@@ -542,7 +520,6 @@ ErrorResult::StealExceptionFromJSContext(JSContext* cx)
 void
 ErrorResult::NoteJSContextException(JSContext* aCx)
 {
-  AssertInOwningThread();
   if (JS_IsExceptionPending(aCx)) {
     mResult = NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
   } else {
