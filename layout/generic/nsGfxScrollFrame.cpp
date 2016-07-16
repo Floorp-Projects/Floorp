@@ -5622,13 +5622,6 @@ ScrollFrameHelper::GetBorderRadii(const nsSize& aFrameSize,
   return true;
 }
 
-static nscoord
-SnapCoord(nscoord aCoord, double aRes, nscoord aAppUnitsPerPixel)
-{
-  double snappedToLayerPixels = NS_round((aRes*aCoord)/aAppUnitsPerPixel);
-  return NSToCoordRoundWithClamp(snappedToLayerPixels*aAppUnitsPerPixel/aRes);
-}
-
 nsRect
 ScrollFrameHelper::GetScrolledRect() const
 {
@@ -5642,82 +5635,30 @@ ScrollFrameHelper::GetScrolledRect() const
   if (result.height < mScrollPort.height) {
     NS_WARNING("Scrolled rect smaller than scrollport?");
   }
-
-  // Expand / contract the result by up to half a layer pixel so that scrolling
-  // to the right / bottom edge does not change the layer pixel alignment of
-  // the scrolled contents.
-  // For that, we first convert the scroll port and the scrolled rect to rects
-  // relative to the reference frame, since that's the space where painting does
-  // snapping.
-  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
-  nsIFrame* referenceFrame = nsLayoutUtils::GetReferenceFrame(mOuter);
-  nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(referenceFrame);
-  nsRect scrollPort(mScrollPort.TopLeft() + toReferenceFrame, scrollPortSize);
-  nsRect scrolledRect = result + scrollPort.TopLeft();
-
-  if (scrollPort.Overflows() || scrolledRect.Overflows()) {
-    return result;
-  }
-
-  // Now, snap the bottom right corner of both of these rects.
-  // We snap to layer pixels, so we need to respect the layer's scale.
-  nscoord appUnitsPerDevPixel = mScrolledFrame->PresContext()->AppUnitsPerDevPixel();
-  gfxSize scale = FrameLayerBuilder::GetPaintedLayerScaleForFrame(mScrolledFrame);
-  if (scale.IsEmpty()) {
-    scale = gfxSize(1.0f, 1.0f);
-  }
-
-  // Compute bounds for the scroll position, and computed the snapped scrolled
-  // rect from the scroll position bounds.
-  nscoord snappedScrolledAreaBottom = SnapCoord(scrolledRect.YMost(), scale.height, appUnitsPerDevPixel);
-  nscoord snappedScrollPortBottom = SnapCoord(scrollPort.YMost(), scale.height, appUnitsPerDevPixel);
-  nscoord maximumScrollOffsetY = snappedScrolledAreaBottom - snappedScrollPortBottom;
-  result.SetBottomEdge(scrollPort.height + maximumScrollOffsetY);
-
-  if (GetScrolledFrameDir() == NS_STYLE_DIRECTION_LTR) {
-    nscoord snappedScrolledAreaRight = SnapCoord(scrolledRect.XMost(), scale.width, appUnitsPerDevPixel);
-    nscoord snappedScrollPortRight = SnapCoord(scrollPort.XMost(), scale.width, appUnitsPerDevPixel);
-    nscoord maximumScrollOffsetX = snappedScrolledAreaRight - snappedScrollPortRight;
-    result.SetRightEdge(scrollPort.width + maximumScrollOffsetX);
-  } else {
-    // In RTL, the scrolled area's right edge is at scrollPort.XMost(),
-    // and the scrolled area's x position is zero or negative. We want
-    // the right edge to stay flush with the scroll port, so we snap the
-    // left edge.
-    nscoord snappedScrolledAreaLeft = SnapCoord(scrolledRect.x, scale.width, appUnitsPerDevPixel);
-    nscoord snappedScrollPortLeft = SnapCoord(scrollPort.x, scale.width, appUnitsPerDevPixel);
-    nscoord minimumScrollOffsetX = snappedScrolledAreaLeft - snappedScrollPortLeft;
-    result.SetLeftEdge(minimumScrollOffsetX);
-  }
-
   return result;
-}
-
-
-uint8_t
-ScrollFrameHelper::GetScrolledFrameDir() const
-{
-  // If the scrolled frame has unicode-bidi: plaintext, the paragraph
-  // direction set by the text content overrides the direction of the frame
-  if (mScrolledFrame->StyleTextReset()->mUnicodeBidi &
-      NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    nsIFrame* childFrame = mScrolledFrame->PrincipalChildList().FirstChild();
-    if (childFrame) {
-      return (nsBidiPresUtils::ParagraphDirection(childFrame) == NSBIDI_LTR)
-          ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
-    }
-  }
-
-  return IsLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
 }
 
 nsRect
 ScrollFrameHelper::GetScrolledRectInternal(const nsRect& aScrolledFrameOverflowArea,
                                                const nsSize& aScrollPortSize) const
 {
+  uint8_t frameDir = IsLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
+
+  // If the scrolled frame has unicode-bidi: plaintext, the paragraph
+  // direction set by the text content overrides the direction of the frame
+  if (mScrolledFrame->StyleTextReset()->mUnicodeBidi &
+      NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+    nsIFrame* childFrame = mScrolledFrame->PrincipalChildList().FirstChild();
+    if (childFrame) {
+      frameDir =
+        (nsBidiPresUtils::ParagraphDirection(childFrame) == NSBIDI_LTR)
+          ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
+    }
+  }
+
   return nsLayoutUtils::GetScrolledRect(mScrolledFrame,
                                         aScrolledFrameOverflowArea,
-                                        aScrollPortSize, GetScrolledFrameDir());
+                                        aScrollPortSize, frameDir);
 }
 
 nsMargin
