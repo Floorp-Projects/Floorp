@@ -136,15 +136,18 @@
               mediaSource.duration = 10;
 
               test.expectEvent(sourceBuffer, "updatestart");
-              test.expectEvent(sourceBuffer, "abort");
+              test.expectEvent(sourceBuffer, "update");
               test.expectEvent(sourceBuffer, "updateend");
               sourceBuffer.remove(1, 2);
 
               assert_true(sourceBuffer.updating, "updating");
 
-              sourceBuffer.abort();
+              assert_throws("InvalidStateError", function()
+              {
+                  sourceBuffer.abort();
+              }, "abort");
 
-              assert_false(sourceBuffer.updating, "updating");
+              assert_true(sourceBuffer.updating, "updating");
 
               test.waitForExpectedEvents(function()
               {
