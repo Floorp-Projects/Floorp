@@ -19,12 +19,15 @@ enum class TestState
 };
 
 void
-CheckLexedData(const char* aData, size_t aLength, size_t aExpectedLength)
+CheckLexedData(const char* aData,
+               size_t aLength,
+               size_t aOffset,
+               size_t aExpectedLength)
 {
   EXPECT_TRUE(aLength == aExpectedLength);
 
   for (size_t i = 0; i < aLength; ++i) {
-    EXPECT_EQ(aData[i], char((i % 3) + 1));
+    EXPECT_EQ(aData[i], char(aOffset + i + 1));
   }
 }
 
@@ -33,13 +36,13 @@ DoLex(TestState aState, const char* aData, size_t aLength)
 {
   switch (aState) {
     case TestState::ONE:
-      CheckLexedData(aData, aLength, 3);
+      CheckLexedData(aData, aLength, 0, 3);
       return Transition::To(TestState::TWO, 3);
     case TestState::TWO:
-      CheckLexedData(aData, aLength, 3);
+      CheckLexedData(aData, aLength, 3, 3);
       return Transition::To(TestState::THREE, 3);
     case TestState::THREE:
-      CheckLexedData(aData, aLength, 3);
+      CheckLexedData(aData, aLength, 6, 3);
       return Transition::TerminateSuccess();
     default:
       MOZ_CRASH("Unexpected or unhandled TestState");
@@ -52,17 +55,17 @@ DoLexWithUnbuffered(TestState aState, const char* aData, size_t aLength,
 {
   switch (aState) {
     case TestState::ONE:
-      CheckLexedData(aData, aLength, 3);
+      CheckLexedData(aData, aLength, 0, 3);
       return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED, 3);
     case TestState::UNBUFFERED:
       EXPECT_TRUE(aLength <= 3);
       EXPECT_TRUE(aUnbufferedVector.append(aData, aLength));
       return Transition::ContinueUnbuffered(TestState::UNBUFFERED);
     case TestState::TWO:
-      CheckLexedData(aUnbufferedVector.begin(), aUnbufferedVector.length(), 3);
+      CheckLexedData(aUnbufferedVector.begin(), aUnbufferedVector.length(), 3, 3);
       return Transition::To(TestState::THREE, 3);
     case TestState::THREE:
-      CheckLexedData(aData, aLength, 3);
+      CheckLexedData(aData, aLength, 6, 3);
       return Transition::TerminateSuccess();
     default:
       MOZ_CRASH("Unexpected or unhandled TestState");
@@ -74,7 +77,7 @@ DoLexWithUnbufferedTerminate(TestState aState, const char* aData, size_t aLength
 {
   switch (aState) {
     case TestState::ONE:
-      CheckLexedData(aData, aLength, 3);
+      CheckLexedData(aData, aLength, 0, 3);
       return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED, 3);
     case TestState::UNBUFFERED:
       return Transition::TerminateSuccess();
@@ -94,7 +97,7 @@ DoLexWithZeroLengthStates(TestState aState, const char* aData, size_t aLength)
       EXPECT_TRUE(aLength == 0);
       return Transition::To(TestState::THREE, 9);
     case TestState::THREE:
-      CheckLexedData(aData, aLength, 9);
+      CheckLexedData(aData, aLength, 0, 9);
       return Transition::TerminateSuccess();
     default:
       MOZ_CRASH("Unexpected or unhandled TestState");
@@ -114,7 +117,7 @@ DoLexWithZeroLengthStatesUnbuffered(TestState aState,
       EXPECT_TRUE(aLength == 0);
       return Transition::To(TestState::THREE, 9);
     case TestState::THREE:
-      CheckLexedData(aData, aLength, 9);
+      CheckLexedData(aData, aLength, 0, 9);
       return Transition::TerminateSuccess();
     case TestState::UNBUFFERED:
       ADD_FAILURE() << "Should not enter zero-length unbuffered state";
@@ -137,7 +140,7 @@ public:
 
 protected:
   AutoInitializeImageLib mInit;
-  const char mData[9] { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
+  const char mData[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
   StreamingLexer<TestState> mLexer;
   RefPtr<SourceBuffer> mSourceBuffer;
   SourceBufferIterator mIterator;
