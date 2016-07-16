@@ -4677,8 +4677,7 @@ JS::NewPromiseObject(JSContext* cx, HandleObject executor, HandleObject proto /*
 JS_PUBLIC_API(bool)
 JS::IsPromiseObject(JS::HandleObject obj)
 {
-    JSObject* object = CheckedUnwrap(obj);
-    return object && object->is<PromiseObject>();
+    return obj->is<PromiseObject>();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4698,9 +4697,8 @@ JS::GetPromisePrototype(JSContext* cx)
 }
 
 JS_PUBLIC_API(JS::PromiseState)
-JS::GetPromiseState(JS::HandleObject obj)
+JS::GetPromiseState(JS::HandleObject promise)
 {
-    JSObject* promise = CheckedUnwrap(obj);
     return promise->as<PromiseObject>().state();
 }
 
