@@ -16,10 +16,11 @@ MOZ_ARG_WITH_BOOL(system-icu,
 
 if test -n "$MOZ_SYSTEM_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
-    CFLAGS="$CFLAGS $MOZ_ICU_CFLAGS"
-    CXXFLAGS="$CXXFLAGS $MOZ_ICU_CFLAGS"
+else
+    MOZ_ICU_INCLUDES="/intl/icu/source/common /intl/icu/source/i18n"
 fi
 
+AC_SUBST_LIST(MOZ_ICU_INCLUDES)
 AC_SUBST(MOZ_SYSTEM_ICU)
 
 MOZ_ARG_WITH_STRING(intl-api,
