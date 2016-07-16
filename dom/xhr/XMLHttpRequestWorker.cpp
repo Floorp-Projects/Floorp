@@ -1488,9 +1488,10 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
     variant = wvariant;
   }
 
-  // Send() has been already called, reset the proxy.
+  // Send() has been already called.
   if (mProxy->mWorkerPrivate) {
-    mProxy->Reset();
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   mProxy->mWorkerPrivate = mWorkerPrivate;

@@ -762,11 +762,6 @@ protected:
   nsCString mNetworkInterfaceId;
 
   /**
-   * Close the XMLHttpRequest's channels.
-   */
-  void CloseRequest();
-
-  /**
    * Close the XMLHttpRequest's channels and dispatch appropriate progress
    * events.
    *
