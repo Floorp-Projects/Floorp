@@ -404,18 +404,17 @@ var gUpdates = {
           let state = p.state;
           let patchFailed = this.update.getProperty("patchingFailed");
           if (patchFailed) {
-            if (patchFailed == "partial" && this.update.patchCount == 2) {
+            if (patchFailed != "partial" || this.update.patchCount != 2) {
+              // If the complete patch failed, which is far less likely, show
+              // the error text held by the update object in the generic errors
+              // page, triggered by the |STATE_DOWNLOAD_FAILED| state. This also
+              // handles the case when an elevation was cancelled on Mac OS X.
+              state = STATE_DOWNLOAD_FAILED;
+            } else {
               // If the system failed to apply the partial patch, show the
               // screen which best describes this condition, which is triggered
               // by the |STATE_FAILED| state.
               state = STATE_FAILED;
-            }
-            else {
-              // Otherwise, if the complete patch failed, which is far less
-              // likely, show the error text held by the update object in the
-              // generic errors page, triggered by the |STATE_DOWNLOAD_FAILED|
-              // state.
-              state = STATE_DOWNLOAD_FAILED;
             }
           }
 

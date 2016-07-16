@@ -1284,10 +1284,8 @@ function handleUpdateFailure(update, errorCode) {
                         update.state = STATE_PENDING_ELEVATE);
       }
       update.statusText = gUpdateBundle.GetStringFromName("elevationFailure");
-      let oldType = update.selectedPatch ? update.selectedPatch.type
-                                         : "complete";
       update.QueryInterface(Ci.nsIWritablePropertyBag);
-      update.setProperty("patchingFailed", oldType);
+      update.setProperty("patchingFailed", "elevationFailure");
       let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                  createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateError(update);

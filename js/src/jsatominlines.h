@@ -18,11 +18,11 @@
 #include "vm/String.h"
 
 inline JSAtom*
-js::AtomStateEntry::asPtr() const
+js::AtomStateEntry::asPtr(js::ExclusiveContext* cx) const
 {
-    MOZ_ASSERT(bits != 0);
-    JSAtom* atom = reinterpret_cast<JSAtom*>(bits & NO_TAG_MASK);
-    JSString::readBarrier(atom);
+    JSAtom* atom = asPtrUnbarriered();
+    if (cx->isJSContext())
+        JSString::readBarrier(atom);
     return atom;
 }
 
@@ -168,7 +168,7 @@ AtomHasher::Lookup::Lookup(const JSAtom* atom)
 inline bool
 AtomHasher::match(const AtomStateEntry& entry, const Lookup& lookup)
 {
-    JSAtom* key = entry.asPtr();
+    JSAtom* key = entry.asPtrUnbarriered();
     if (lookup.atom)
         return lookup.atom == key;
     if (key->length() != lookup.length)

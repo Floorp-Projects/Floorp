@@ -1861,8 +1861,6 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
 {
     struct CharsMatcher
     {
-        using ReturnType = const char16_t*;
-
         JSContext* cx;
         ScriptSource& ss;
         UncompressedSourceCache::AutoHoldEntry& holder;
@@ -1874,11 +1872,11 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
           , holder(holder)
         { }
 
-        ReturnType match(Uncompressed& u) {
+        const char16_t* match(Uncompressed& u) {
             return u.string.chars();
         }
 
-        ReturnType match(Compressed& c) {
+        const char16_t* match(Compressed& c) {
             if (const char16_t* decompressed = cx->caches.uncompressedSourceCache.lookup(&ss, holder))
                 return decompressed;
 
@@ -1916,7 +1914,7 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
                 return ss.data.as<Uncompressed>().string.chars();
             }
 
-            ReturnType ret = decompressed.get();
+            const char16_t* ret = decompressed.get();
             if (!cx->caches.uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
                 JS_ReportOutOfMemory(cx);
                 return nullptr;
@@ -1924,7 +1922,7 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
             return ret;
         }
 
-        ReturnType match(Missing&) {
+        const char16_t* match(Missing&) {
             MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
             return nullptr;
         }
@@ -2147,17 +2145,15 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 {
     struct CompressedLengthMatcher
     {
-        using ReturnType = size_t;
-
-        ReturnType match(Uncompressed&) {
+        size_t match(Uncompressed&) {
             return 0;
         }
 
-        ReturnType match(Compressed& c) {
+        size_t match(Compressed& c) {
             return c.raw.length();
         }
 
-        ReturnType match(Missing&) {
+        size_t match(Missing&) {
             MOZ_CRASH("Missing source data in ScriptSource::performXDR");
             return 0;
         }
@@ -2165,17 +2161,15 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 
     struct RawDataMatcher
     {
-        using ReturnType = void*;
-
-        ReturnType match(Uncompressed& u) {
+        void* match(Uncompressed& u) {
             return (void*) u.string.chars();
         }
 
-        ReturnType match(Compressed& c) {
+        void* match(Compressed& c) {
             return (void*) c.raw.chars();
         }
 
-        ReturnType match(Missing&) {
+        void* match(Missing&) {
             MOZ_CRASH("Missing source data in ScriptSource::performXDR");
             return nullptr;
         }
