@@ -539,7 +539,6 @@ public:
   nsresult FireReadystatechangeEvent();
   void DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                              const ProgressEventType aType,
-                             bool aLengthComputable,
                              int64_t aLoaded, int64_t aTotal);
 
   // This is called by the factory constructor.
@@ -601,6 +600,7 @@ protected:
   bool IsSystemXHR() const;
   bool InUploadPhase() const;
 
+  void OnBodyParseEnd();
   void ChangeStateToDone();
 
   void StartProgressEventTimer();
@@ -718,7 +718,6 @@ protected:
   RefPtr<XMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
   int64_t mUploadTotal;
-  bool mUploadLengthComputable;
   bool mUploadComplete;
   bool mProgressSinceLastProgressEvent;
 
@@ -735,7 +734,6 @@ protected:
   bool mIsHtml;
   bool mWarnAboutMultipartHtml;
   bool mWarnAboutSyncHtml;
-  bool mLoadLengthComputable;
   int64_t mLoadTotal; // 0 if not known.
   // Amount of script-exposed (i.e. after undoing gzip compresion) data
   // received.
@@ -861,7 +859,7 @@ public:
   {
     nsCOMPtr<nsIXMLHttpRequest> xhr = do_QueryReferent(mXHR);
     if (xhr) {
-      static_cast<XMLHttpRequestMainThread*>(xhr.get())->ChangeStateToDone();
+      static_cast<XMLHttpRequestMainThread*>(xhr.get())->OnBodyParseEnd();
     }
     mXHR = nullptr;
     return NS_OK;

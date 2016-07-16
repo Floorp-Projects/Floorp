@@ -173,7 +173,7 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mProgressTimerIsActive(false),
     mIsHtml(false),
     mWarnAboutSyncHtml(false),
-    mLoadLengthComputable(false), mLoadTotal(0),
+    mLoadTotal(0),
     mIsSystem(false),
     mIsAnon(false),
     mFirstStartRequestSeen(false),
@@ -1012,7 +1012,6 @@ XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType)
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
   }
-  uint32_t responseLength = mResponseBody.Length();
   ResetResponse();
 
   // If we're in the destructor, don't risk dispatching an event.
@@ -1027,13 +1026,13 @@ XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType)
     ChangeState(State::done, true);
 
     if (!mFlagSyncLooping) {
-      DispatchProgressEvent(this, aType, mLoadLengthComputable, responseLength,
-                            mLoadTotal);
       if (mUpload && !mUploadComplete) {
         mUploadComplete = true;
-        DispatchProgressEvent(mUpload, aType, true, mUploadTransferred,
-                              mUploadTotal);
+        DispatchProgressEvent(mUpload, ProgressEventType::progress, 0, 0);
+        DispatchProgressEvent(mUpload, aType, 0, 0);
       }
+      DispatchProgressEvent(this, ProgressEventType::progress, 0, 0);
+      DispatchProgressEvent(this, aType, 0, 0);
     }
   }
 
@@ -1290,7 +1289,6 @@ XMLHttpRequestMainThread::FireReadystatechangeEvent()
 void
 XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                                                 const ProgressEventType aType,
-                                                bool aLengthComputable,
                                                 int64_t aLoaded, int64_t aTotal)
 {
   NS_ASSERTION(aTarget, "null target");
@@ -1300,6 +1298,17 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
     return;
   }
 
+  // If blocked by CORS, zero-out the stats on progress events
+  // and never fire "progress" or "load" events at all.
+  if (IsDeniedCrossSiteCORSRequest()) {
+    if (aType == ProgressEventType::progress ||
+        aType == ProgressEventType::load) {
+      return;
+    }
+    aLoaded = 0;
+    aTotal = 0;
+  }
+
   if (aType == ProgressEventType::progress) {
     mInLoadProgressEvent = true;
   }
@@ -1307,7 +1316,7 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   ProgressEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mLengthComputable = aLengthComputable;
+  init.mLengthComputable = aTotal != 0; // XHR spec step 6.1
   init.mLoaded = aLoaded;
   init.mTotal = (aTotal == -1) ? 0 : aTotal;
 
@@ -1335,8 +1344,7 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   // also dispatch the subsequent loadend event.
   if (aType == ProgressEventType::load || aType == ProgressEventType::error ||
       aType == ProgressEventType::timeout || aType == ProgressEventType::abort) {
-    DispatchProgressEvent(aTarget, ProgressEventType::loadend,
-                          aLengthComputable, aLoaded, aTotal);
+    DispatchProgressEvent(aTarget, ProgressEventType::loadend, aLoaded, aTotal);
   }
 }
 
@@ -1795,14 +1803,13 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     if (mProgressSinceLastProgressEvent) {
       DispatchProgressEvent(mUpload, ProgressEventType::progress,
-                            mUploadLengthComputable, mUploadTransferred,
-                            mUploadTotal);
+                            mUploadTransferred, mUploadTotal);
       mProgressSinceLastProgressEvent = false;
     }
 
     mUploadComplete = true;
     DispatchProgressEvent(mUpload, ProgressEventType::load,
-                          true, mUploadTotal, mUploadTotal);
+                          mUploadTotal, mUploadTotal);
   }
 
   mContext = ctxt;
@@ -2030,8 +2037,13 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   mContext = nullptr;
 
   if (NS_SUCCEEDED(status) &&
+      (mResponseType == XMLHttpRequestResponseType::_empty ||
+       mResponseType == XMLHttpRequestResponseType::Text)) {
+    mLoadTotal = mResponseBody.Length();
+  } else if (NS_SUCCEEDED(status) &&
       (mResponseType == XMLHttpRequestResponseType::Blob ||
        mResponseType == XMLHttpRequestResponseType::Moz_blob)) {
+    ErrorResult rv;
     if (!mDOMBlob) {
       CreateDOMBlob(request);
     }
@@ -2049,7 +2061,6 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
       nsAutoCString contentType;
       mChannel->GetContentType(contentType);
 
-      ErrorResult rv;
       mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType, rv);
       mBlobSet = nullptr;
 
@@ -2057,6 +2068,12 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
         return rv.StealNSResult();
       }
     }
+
+    mLoadTotal = mResponseBlob->GetSize(rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      status = rv.StealNSResult();
+    }
+
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
     NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
   } else if (NS_SUCCEEDED(status) &&
@@ -2065,7 +2082,8 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
               mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer)) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
-    if (!mArrayBufferBuilder.setCapacity(mArrayBufferBuilder.length())) {
+    mLoadTotal = mArrayBufferBuilder.length();
+    if (!mArrayBufferBuilder.setCapacity(mLoadTotal)) {
       // this should never happen!
       status = NS_ERROR_UNEXPECTED;
     }
@@ -2097,9 +2115,11 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   }
 
   if (!mResponseXML) {
+    mFlagParseBody = false;
     ChangeStateToDone();
     return NS_OK;
   }
+
   if (mIsHtml) {
     NS_ASSERTION(!mFlagSyncLooping,
       "We weren't supposed to support HTML parsing with XHR!");
@@ -2110,7 +2130,10 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
                                     kLiteralString_DOMContentLoaded,
                                     TrustedEventsAtSystemGroupBubble());
     return NS_OK;
+  } else {
+    mFlagParseBody = false;
   }
+
   // We might have been sent non-XML data. If that was the case,
   // we should null out the document member. The idea in this
   // check here is that if there is no document element it is not
@@ -2123,6 +2146,13 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
 }
 
 void
+XMLHttpRequestMainThread::OnBodyParseEnd()
+{
+  mFlagParseBody = false;
+  ChangeStateToDone();
+}
+
+void
 XMLHttpRequestMainThread::ChangeStateToDone()
 {
   StopProgressEventTimer();
@@ -2130,32 +2160,41 @@ XMLHttpRequestMainThread::ChangeStateToDone()
   MOZ_ASSERT(!mFlagParseBody,
              "ChangeStateToDone() called before async HTML parsing is done.");
 
-  // Fire the final progress event required by spec, if we haven't already.
-  if (mProgressSinceLastProgressEvent && !mErrorLoad && !mFlagSynchronous) {
-    mLoadTotal = mLoadTransferred;
-    DispatchProgressEvent(this, ProgressEventType::progress,
-                          mLoadLengthComputable, mLoadTransferred,
-                          mLoadTotal);
-    mProgressSinceLastProgressEvent = false;
-  }
-
-  ChangeState(State::done, true);
-
   mFlagSend = false;
 
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
   }
 
-  DispatchProgressEvent(this,
-                        mErrorLoad ? ProgressEventType::error : ProgressEventType::load,
-                        !mErrorLoad,
-                        mLoadTransferred,
-                        mErrorLoad ? 0 : mLoadTransferred);
-  if (mErrorLoad && mUpload && !mUploadComplete) {
-    DispatchProgressEvent(mUpload, ProgressEventType::error, true,
-                          mUploadTransferred, mUploadTotal);
+  mLoadTotal = mLoadTransferred;
+
+  // Per spec, fire the last download progress event, if any,
+  // before readystatechange=4/done. (Note that 0-sized responses
+  // will have not sent a progress event yet, so one must be sent here).
+  if (!mFlagSynchronous &&
+      (!mLoadTransferred || mProgressSinceLastProgressEvent)) {
+    DispatchProgressEvent(this, ProgressEventType::progress,
+                          mLoadTransferred, mLoadTotal);
+    mProgressSinceLastProgressEvent = false;
   }
+
+  // Per spec, fire readystatechange=4/done before final error events.
+  ChangeState(State::done, true);
+
+  // Per spec, if we failed in the upload phase, fire a final progress, error,
+  // and loadend event for the upload after readystatechange=4/done.
+  if (!mFlagSynchronous && mUpload && !mUploadComplete) {
+    DispatchProgressEvent(mUpload, ProgressEventType::progress, 0, 0);
+    DispatchProgressEvent(mUpload, ProgressEventType::error, 0, 0);
+  }
+
+  // Per spec, fire download's load/error and loadend events after
+  // readystatechange=4/done (and of course all upload events).
+  DispatchProgressEvent(this,
+                        mErrorLoad ? ProgressEventType::error :
+                                     ProgressEventType::load,
+                        mErrorLoad ? 0 : mLoadTransferred,
+                        mErrorLoad ? 0 : mLoadTotal);
 
   if (mErrorLoad) {
     // By nulling out channel here we make it so that Send() can test
@@ -2539,7 +2578,6 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
   // By default we don't have any upload, so mark upload complete.
   mUploadComplete = true;
   mErrorLoad = false;
-  mLoadLengthComputable = false;
   mLoadTotal = 0;
   if ((aVariant || !aBody.IsNull()) && httpChannel &&
       !method.LowerCaseEqualsLiteral("get") &&
@@ -2850,10 +2888,11 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
     if (mUpload && mUpload->HasListenersFor(nsGkAtoms::onprogress)) {
       StartProgressEventTimer();
     }
-    DispatchProgressEvent(this, ProgressEventType::loadstart, false,
-                          0, 0);
+
+    // Dispatch loadstart events
+    DispatchProgressEvent(this, ProgressEventType::loadstart, 0, 0);
     if (mUpload && !mUploadComplete) {
-      DispatchProgressEvent(mUpload, ProgressEventType::loadstart, true,
+      DispatchProgressEvent(mUpload, ProgressEventType::loadstart,
                             0, mUploadTotal);
     }
   }
@@ -3247,7 +3286,6 @@ XMLHttpRequestMainThread::OnProgress(nsIRequest *aRequest, nsISupports *aContext
       int64_t headerSize = aProgressMax - mUploadTotal;
       loaded -= headerSize;
     }
-    mUploadLengthComputable = lengthComputable;
     mUploadTransferred = loaded;
     mProgressSinceLastProgressEvent = true;
 
@@ -3255,7 +3293,6 @@ XMLHttpRequestMainThread::OnProgress(nsIRequest *aRequest, nsISupports *aContext
       StartProgressEventTimer();
     }
   } else {
-    mLoadLengthComputable = lengthComputable;
     mLoadTotal = lengthComputable ? aProgressMax : 0;
     mLoadTransferred = aProgress;
     // OnDataAvailable() handles mProgressSinceLastProgressEvent
@@ -3461,13 +3498,11 @@ XMLHttpRequestMainThread::HandleProgressTimerCallback()
   if (InUploadPhase()) {
     if (mUpload && !mUploadComplete) {
       DispatchProgressEvent(mUpload, ProgressEventType::progress,
-                            mUploadLengthComputable, mUploadTransferred,
-                            mUploadTotal);
+                            mUploadTransferred, mUploadTotal);
     }
   } else {
     DispatchProgressEvent(this, ProgressEventType::progress,
-                          mLoadLengthComputable, mLoadTransferred,
-                          mLoadTotal);
+                          mLoadTransferred, mLoadTotal);
   }
 
   mProgressSinceLastProgressEvent = false;
