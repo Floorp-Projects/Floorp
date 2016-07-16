@@ -93,6 +93,17 @@
  * value0. E.g., see JSObject::writeBarrierPre, which is used if obj->field is
  * a JSObject*. It takes value0 as a parameter.
  *
+ *                                READ-BARRIER
+ *
+ * Incremental GC requires that weak pointers have read barriers. The problem
+ * happens when, during an incremental GC, some code reads a weak pointer and
+ * writes it somewhere on the heap that has been marked black in a previous
+ * slice. Since the weak pointer will not otherwise be marked and will be swept
+ * and finalized in the last slice, this will leave the pointer just written
+ * dangling after the GC. To solve this, we immediately mark black all weak
+ * pointers that get read between slices so that it is safe to store them in an
+ * already marked part of the heap, e.g. in Rooted.
+ *
  *                                POST-BARRIER
  *
  * For generational GC, we want to be able to quickly collect the nursery in a
@@ -554,14 +565,8 @@ class ReadBarrieredBase : public BarrieredBase<T>
     void post(T prev, T next) { InternalBarrierMethods<T>::postBarrier(&this->value, prev, next); }
 };
 
-// Incremental GC requires that weak pointers have read barriers. This is mostly
-// an issue for empty shapes stored in JSCompartment. The problem happens when,
-// during an incremental GC, some JS code stores one of the compartment's empty
-// shapes into an object already marked black. Normally, this would not be a
-// problem, because the empty shape would have been part of the initial snapshot
-// when the GC started. However, since this is a weak pointer, it isn't. So we
-// may collect the empty shape even though a live object points to it. To fix
-// this, we mark these empty shapes black whenever they get read out.
+// Incremental GC requires that weak pointers have read barriers. See the block
+// comment at the top of Barrier.h for a complete discussion of why.
 //
 // Note that this class also has post-barriers, so is safe to use with nursery
 // pointers. However, when used as a hashtable key, care must still be taken to

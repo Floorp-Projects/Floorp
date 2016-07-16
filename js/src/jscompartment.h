@@ -106,9 +106,9 @@ struct CrossCompartmentKey
     template <typename T> const T& as() const { return wrapped.as<T>(); }
 
     template <typename F>
-    auto applyToWrapped(F f) -> typename F::ReturnType {
+    auto applyToWrapped(F f) -> decltype(f(static_cast<JSObject**>(nullptr))) {
+        using ReturnType = decltype(f(static_cast<JSObject**>(nullptr)));
         struct WrappedMatcher {
-            using ReturnType = typename F::ReturnType;
             F f_;
             explicit WrappedMatcher(F f) : f_(f) {}
             ReturnType match(JSObject*& obj) { return f_(&obj); }
@@ -120,9 +120,9 @@ struct CrossCompartmentKey
     }
 
     template <typename F>
-    auto applyToDebugger(F f) -> typename F::ReturnType {
+    auto applyToDebugger(F f) -> decltype(f(static_cast<NativeObject**>(nullptr))) {
+        using ReturnType = decltype(f(static_cast<NativeObject**>(nullptr)));
         struct DebuggerMatcher {
-            using ReturnType = typename F::ReturnType;
             F f_;
             explicit DebuggerMatcher(F f) : f_(f) {}
             ReturnType match(JSObject*& obj) { return ReturnType(); }
@@ -137,10 +137,9 @@ struct CrossCompartmentKey
     // JSString* key.
     JSCompartment* compartment() {
         struct GetCompartmentFunctor {
-            using ReturnType = JSCompartment*;
-            ReturnType operator()(JSObject** tp) const { return (*tp)->compartment(); }
-            ReturnType operator()(JSScript** tp) const { return (*tp)->compartment(); }
-            ReturnType operator()(JSString** tp) const {
+            JSCompartment* operator()(JSObject** tp) const { return (*tp)->compartment(); }
+            JSCompartment* operator()(JSScript** tp) const { return (*tp)->compartment(); }
+            JSCompartment* operator()(JSString** tp) const {
                 MOZ_CRASH("invalid ccw key"); return nullptr;
             }
         };
@@ -150,14 +149,13 @@ struct CrossCompartmentKey
     struct Hasher : public DefaultHasher<CrossCompartmentKey>
     {
         struct HashFunctor {
-            using ReturnType = HashNumber;
-            ReturnType match(JSObject* obj) { return DefaultHasher<JSObject*>::hash(obj); }
-            ReturnType match(JSString* str) { return DefaultHasher<JSString*>::hash(str); }
-            ReturnType match(const DebuggerAndScript& tpl) {
+            HashNumber match(JSObject* obj) { return DefaultHasher<JSObject*>::hash(obj); }
+            HashNumber match(JSString* str) { return DefaultHasher<JSString*>::hash(str); }
+            HashNumber match(const DebuggerAndScript& tpl) {
                 return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
                        DefaultHasher<JSScript*>::hash(mozilla::Get<1>(tpl));
             }
-            ReturnType match(const DebuggerAndObject& tpl) {
+            HashNumber match(const DebuggerAndObject& tpl) {
                 return DefaultHasher<NativeObject*>::hash(mozilla::Get<0>(tpl)) ^
                        DefaultHasher<JSObject*>::hash(mozilla::Get<1>(tpl)) ^
                        (mozilla::Get<2>(tpl) << 5);
