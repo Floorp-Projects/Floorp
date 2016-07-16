@@ -7531,13 +7531,6 @@
     "n_values": 64,
     "description": "TLS/SSL version intolerance was falsely detected, server rejected handshake (see tlsIntoleranceTelemetryBucket() in nsNSSIOLayer.cpp)."
   },
-  "SSL_FALLBACK_LIMIT_REACHED": {
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "default",
-    "kind": "enumerated",
-    "n_values": 16,
-    "description": "TLS/SSL version fallback reached the minimum version (1=TLS 1.0, 2=TLS 1.1, 3=TLS 1.2) or the fallback limit (4=TLS 1.0, 8=TLS 1.1, 12=TLS 1.2), stopped the fallback"
-  },
   "SSL_CIPHER_SUITE_FULL": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",
