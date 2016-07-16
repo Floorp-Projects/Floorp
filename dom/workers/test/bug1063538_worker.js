@@ -5,11 +5,18 @@
 
 var gJar = "jar:http://example.org/tests/dom/base/test/file_bug945152.jar!/data_big.txt";
 var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+var progressFired = false;
+
+xhr.onloadend = function(e) {
+  postMessage({type: 'finish', progressFired: progressFired });
+  self.close();
+};
 
 xhr.onprogress = function(e) {
+  if (e.loaded > 0) {
+    progressFired = true;
+  }
   xhr.abort();
-  postMessage({type: 'finish' });
-  self.close();
 };
 
 onmessage = function(e) {
