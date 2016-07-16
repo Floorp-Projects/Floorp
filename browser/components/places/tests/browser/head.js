@@ -136,7 +136,7 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
   var y = rect.y + rect.height / 2;
   // Simulate the click.
   EventUtils.synthesizeMouse(aTree.body, x, y, aOptions || {},
-                             aTree.ownerDocument.defaultView);
+                             aTree.ownerGlobal);
 }
 
 /**

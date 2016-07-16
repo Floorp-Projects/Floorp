@@ -25,7 +25,7 @@ registerCleanupFunction(function() {
 });
 
 function hidden(el) {
-  let win = el.ownerDocument.defaultView;
+  let win = el.ownerGlobal;
   let display = win.getComputedStyle(el).getPropertyValue("display", null);
   let opacity = win.getComputedStyle(el).getPropertyValue("opacity", null);
 

@@ -35,7 +35,7 @@ var RemotePrompt = {
   },
 
   openTabPrompt: function(args, browser) {
-    let window = browser.ownerDocument.defaultView;
+    let window = browser.ownerGlobal;
     let tabPrompt = window.gBrowser.getTabModalPromptBox(browser)
     let callbackInvoked = false;
     let newPrompt;
@@ -94,7 +94,7 @@ var RemotePrompt = {
   },
 
   openModalWindow: function(args, browser) {
-    let window = browser.ownerDocument.defaultView;
+    let window = browser.ownerGlobal;
     try {
       PromptUtils.fireDialogEvent(window, "DOMWillOpenModalDialog", browser);
       let bag = PromptUtils.objectToPropBag(args);
