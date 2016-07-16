@@ -1661,6 +1661,12 @@ public:
    */
   bool Next();
 
+  void Rejected()
+  {
+    mChild = nullptr;
+    mChildBefore = nullptr;
+  }
+
 private:
   Accessible* mChild;
   Accessible* mChildBefore;
@@ -1795,6 +1801,7 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
     }
 
     MOZ_ASSERT_UNREACHABLE("accessible was rejected");
+    iter.Rejected();
   } while (iter.Next());
 
   mt.Done();
@@ -1823,7 +1830,9 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
 
     if (child) {
       TreeMutation mt(aContainer);
-      aContainer->InsertAfter(child, walker.Prev());
+      if (!aContainer->InsertAfter(child, walker.Prev())) {
+        return;
+      }
       mt.AfterInsertion(child);
       mt.Done();
 
