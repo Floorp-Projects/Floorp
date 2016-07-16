@@ -2011,6 +2011,12 @@ private:
   };
 };
 
+class FastErrorResult :
+    public mozilla::binding_danger::TErrorResult<
+      mozilla::binding_danger::JustAssertCleanupPolicy>
+{
+};
+
 } // namespace binding_detail
 
 enum StringificationBehavior {
