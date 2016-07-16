@@ -276,6 +276,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static void trace(JSTracer* trc, JSObject* obj);
     static void objectMoved(JSObject* obj, const JSObject* old);
 
+    static BufferContents externalizeContents(JSContext* cx,
+                                              Handle<ArrayBufferObject*> buffer,
+                                              bool hasStealableContents);
     static BufferContents stealContents(JSContext* cx,
                                         Handle<ArrayBufferObject*> buffer,
                                         bool hasStealableContents);
@@ -297,8 +300,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     bool addView(JSContext* cx, JSObject* view);
 
-    void setNewOwnedData(FreeOp* fop, BufferContents newContents);
-    void changeContents(JSContext* cx, BufferContents newContents);
+    void setNewData(FreeOp* fop, BufferContents newContents, OwnsState ownsState);
+    void changeContents(JSContext* cx, BufferContents newContents, OwnsState ownsState);
 
     // Detach this buffer from its original memory.  (This necessarily makes
     // views of this buffer unusable for modifying that original memory.)
