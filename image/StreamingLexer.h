@@ -18,6 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Move.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
@@ -31,6 +32,13 @@ enum class BufferingStrategy
   UNBUFFERED  // Data will be processed as it arrives, in multiple chunks.
 };
 
+/// Control flow behaviors for StreamingLexer transitions.
+enum class ControlFlowStrategy
+{
+  CONTINUE,  // If there's enough data, proceed to the next state immediately.
+  YIELD      // Yield to the caller before proceeding to the next state.
+};
+
 /// Possible terminal states for the lexer.
 enum class TerminalState
 {
@@ -41,7 +49,8 @@ enum class TerminalState
 /// Possible yield reasons for the lexer.
 enum class Yield
 {
-  NEED_MORE_DATA  // The lexer cannot continue without more data.
+  NEED_MORE_DATA,   // The lexer cannot continue without more data.
+  OUTPUT_AVAILABLE  // There is output available for the caller to consume.
 };
 
 /// The result of a call to StreamingLexer::Lex().
@@ -95,15 +104,21 @@ public:
     return mNextState.template as<NonTerminalState>().mBufferingStrategy;
   }
 
+  ControlFlowStrategy ControlFlow() const
+  {
+    return mNextState.template as<NonTerminalState>().mControlFlowStrategy;
+  }
+
 private:
   friend struct Transition;
 
   LexerTransition(State aNextState,
                   const Maybe<State>& aUnbufferedState,
                   size_t aSize,
-                  BufferingStrategy aBufferingStrategy)
+                  BufferingStrategy aBufferingStrategy,
+                  ControlFlowStrategy aControlFlowStrategy)
     : mNextState(NonTerminalState(aNextState, aUnbufferedState, aSize,
-                                  aBufferingStrategy))
+                                  aBufferingStrategy, aControlFlowStrategy))
   {}
 
   struct NonTerminalState
@@ -112,15 +127,18 @@ private:
     Maybe<State> mUnbufferedState;
     size_t mSize;
     BufferingStrategy mBufferingStrategy;
+    ControlFlowStrategy mControlFlowStrategy;
 
     NonTerminalState(State aState,
                      const Maybe<State>& aUnbufferedState,
                      size_t aSize,
-                     BufferingStrategy aBufferingStrategy)
+                     BufferingStrategy aBufferingStrategy,
+                     ControlFlowStrategy aControlFlowStrategy)
       : mState(aState)
       , mUnbufferedState(aUnbufferedState)
       , mSize(aSize)
       , mBufferingStrategy(aBufferingStrategy)
+      , mControlFlowStrategy(aControlFlowStrategy)
     {
       MOZ_ASSERT_IF(mBufferingStrategy == BufferingStrategy::UNBUFFERED,
                     mUnbufferedState);
@@ -128,6 +146,7 @@ private:
                     mBufferingStrategy == BufferingStrategy::UNBUFFERED);
     }
   };
+
   Variant<NonTerminalState, TerminalState> mNextState;
 };
 
@@ -139,7 +158,20 @@ struct Transition
   To(const State& aNextState, size_t aSize)
   {
     return LexerTransition<State>(aNextState, Nothing(), aSize,
-                                  BufferingStrategy::BUFFERED);
+                                  BufferingStrategy::BUFFERED,
+                                  ControlFlowStrategy::CONTINUE);
+  }
+
+  /// Yield to the caller, transitioning to @aNextState when Lex() is next
+  /// invoked. The same data that was delivered for the current state will be
+  /// delivered again.
+  template <typename State>
+  static LexerTransition<State>
+  ToAfterYield(const State& aNextState)
+  {
+    return LexerTransition<State>(aNextState, Nothing(), 0,
+                                  BufferingStrategy::BUFFERED,
+                                  ControlFlowStrategy::YIELD);
   }
 
   /**
@@ -159,7 +191,8 @@ struct Transition
                size_t aSize)
   {
     return LexerTransition<State>(aNextState, Some(aUnbufferedState), aSize,
-                                  BufferingStrategy::UNBUFFERED);
+                                  BufferingStrategy::UNBUFFERED,
+                                  ControlFlowStrategy::CONTINUE);
   }
 
   /**
@@ -174,7 +207,26 @@ struct Transition
   ContinueUnbuffered(const State& aUnbufferedState)
   {
     return LexerTransition<State>(aUnbufferedState, Nothing(), 0,
-                                  BufferingStrategy::BUFFERED);
+                                  BufferingStrategy::BUFFERED,
+                                  ControlFlowStrategy::CONTINUE);
+  }
+
+  /**
+   * Continue receiving unbuffered data. @aUnbufferedState should be the same
+   * state as the @aUnbufferedState specified in the preceding call to
+   * ToUnbuffered(). @aSize indicates the amount of data that has already been
+   * consumed; the next state will receive the same data that was delivered to
+   * the current state, without the first @aSize bytes.
+   *
+   * This should be used during an unbuffered read initiated by ToUnbuffered().
+   */
+  template <typename State>
+  static LexerTransition<State>
+  ContinueUnbufferedAfterYield(const State& aUnbufferedState, size_t aSize)
+  {
+    return LexerTransition<State>(aUnbufferedState, Nothing(), aSize,
+                                  BufferingStrategy::BUFFERED,
+                                  ControlFlowStrategy::YIELD);
   }
 
   /**
@@ -243,21 +295,50 @@ private:
  * TerminalState::FAILURE, and you can check which one to determine if lexing
  * succeeded or failed and do any necessary cleanup.
  *
- * There's one more wrinkle: some lexers may want to *avoid* buffering in some
- * cases, and just process the data as it comes in. This is useful if, for
- * example, you just want to skip over a large section of data; there's no point
- * in buffering data you're just going to ignore.
+ * Some lexers may want to *avoid* buffering in some cases, and just process the
+ * data as it comes in. This is useful if, for example, you just want to skip
+ * over a large section of data; there's no point in buffering data you're just
+ * going to ignore.
  *
  * You can begin an unbuffered read with Transition::ToUnbuffered(). This works
  * a little differently than Transition::To() in that you specify *two* states.
  * The @aUnbufferedState argument specifies a state that will be called
  * repeatedly with unbuffered data, as soon as it arrives. The implementation
- * for that state should return either a transition to a terminal state, or
- * Transition::ContinueUnbuffered(). Once the amount of data requested in the
+ * for that state should return either a transition to a terminal state, or a
+ * Transition::ContinueUnbuffered() to the same @aUnbufferedState. (From a
+ * technical perspective, it's not necessary to specify the state again, but
+ * it's helpful to human readers.) Once the amount of data requested in the
  * original call to Transition::ToUnbuffered() has been delivered, Lex() will
  * transition to the @aNextState state specified via Transition::ToUnbuffered().
  * That state will be invoked with *no* data; it's just called to signal that
  * the unbuffered read is over.
+ *
+ * It's sometimes useful for a lexer to provide incremental results, rather
+ * than simply running to completion and presenting all its output at once. For
+ * example, when decoding animated images, it may be useful to produce each
+ * frame incrementally. StreamingLexer supports this by allowing a lexer to
+ * yield.
+ *
+ * To yield back to the caller, a state implementation can simply return
+ * Transition::ToAfterYield(). ToAfterYield()'s @aNextState argument specifies
+ * the next state that the lexer should transition to, just like when using
+ * Transition::To(), but there are two differences. One is that Lex() will
+ * return to the caller before processing any more data when it encounters a
+ * yield transition. This provides an opportunity for the caller to interact with the
+ * lexer's intermediate results. The second difference is that @aNextState
+ * will be called with *the same data as the state that you returned
+ * Transition::ToAfterYield() from*. This allows a lexer to partially consume
+ * the data, return intermediate results, and then finish consuming the data
+ * when @aNextState is called.
+ *
+ * It's also possible to yield during an unbuffered read. Just return a
+ * Transition::ContinueUnbufferedAfterYield(). Just like with
+ * Transition::ContinueUnbuffered(), the @aUnbufferedState must be the same as
+ * the one originally passed to Transition::ToUnbuffered(). The second argument,
+ * @aSize, specifies the amount of data that the lexer has already consumed.
+ * When @aUnbufferedState is next invoked, it will get the same data that it
+ * received previously, except that the first @aSize bytes will be excluded.
+ * This makes it easy to consume unbuffered data incrementally.
  *
  * XXX(seth): We should be able to get of the |State| stuff totally once bug
  * 1198451 lands, since we can then just return a function representing the next
@@ -270,6 +351,19 @@ public:
   explicit StreamingLexer(LexerTransition<State> aStartState)
     : mTransition(TerminalState::FAILURE)
   {
+    if (!aStartState.NextStateIsTerminal() &&
+        aStartState.ControlFlow() == ControlFlowStrategy::YIELD) {
+      // Allowing a StreamingLexer to start in a yield state doesn't make sense
+      // semantically (since yield states are supposed to deliver the same data
+      // as previous states, and there's no previous state here), but more
+      // importantly, it's necessary to advance a SourceBufferIterator at least
+      // once before you can read from it, and adding the necessary checks to
+      // Lex() to avoid that issue has the potential to mask real bugs. So
+      // instead, it's better to forbid starting in a yield state.
+      MOZ_ASSERT_UNREACHABLE("Starting in a yield state");
+      return;
+    }
+
     SetTransition(aStartState);
   }
 
@@ -285,7 +379,20 @@ public:
     }
 
     Maybe<LexerResult> result;
-    do {
+
+    // If the lexer requested a yield last time, we deliver the same data again
+    // before we read anything else from |aIterator|. Note that although to the
+    // callers of Lex(), Yield::NEED_MORE_DATA is just another type of yield,
+    // internally they're different in that we don't redeliver the same data in
+    // the Yield::NEED_MORE_DATA case, and |mYieldingToState| is not set. This
+    // means that for Yield::NEED_MORE_DATA, we go directly to the loop below.
+    if (mYieldingToState) {
+      result = mTransition.Buffering() == BufferingStrategy::UNBUFFERED
+             ? UnbufferedReadAfterYield(aIterator, aFunc)
+             : BufferedReadAfterYield(aIterator, aFunc);
+    }
+
+    while (!result) {
       MOZ_ASSERT_IF(mTransition.Buffering() == BufferingStrategy::UNBUFFERED,
                     mUnbufferedState);
 
@@ -328,7 +435,7 @@ public:
           MOZ_ASSERT_UNREACHABLE("Unknown SourceBufferIterator state");
           result = SetTransition(Transition::TerminateFailure());
       }
-    } while (!result);
+    };
 
     return *result;
   }
@@ -339,44 +446,117 @@ private:
   {
     MOZ_ASSERT(mTransition.Buffering() == BufferingStrategy::UNBUFFERED);
     MOZ_ASSERT(mUnbufferedState);
+    MOZ_ASSERT(!mYieldingToState);
     MOZ_ASSERT(mBuffer.empty(),
                "Buffered read at the same time as unbuffered read?");
     MOZ_ASSERT(aIterator.Length() <= mUnbufferedState->mBytesRemaining,
                "Read too much data during unbuffered read?");
+    MOZ_ASSERT(mUnbufferedState->mBytesConsumedInCurrentChunk == 0,
+               "Already consumed data in the current chunk, but not yielding?");
 
-    if (mUnbufferedState->mBytesRemaining > 0) {
-      // Call aFunc with the unbuffered state to indicate that we're in the
-      // middle of an unbuffered read. We enforce that any state transition
-      // passed back to us is either a terminal state or takes us back to the
-      // unbuffered state.
-      LexerTransition<State> unbufferedTransition =
-        aFunc(mTransition.UnbufferedState(), aIterator.Data(), aIterator.Length());
-
-      // If we reached a terminal state, we're done.
-      if (unbufferedTransition.NextStateIsTerminal()) {
-        return SetTransition(unbufferedTransition);
-      }
-
-      // We're continuing the read. Update our position.
-      MOZ_ASSERT(mTransition.UnbufferedState() ==
-                   unbufferedTransition.NextState());
-      mUnbufferedState->mBytesRemaining -=
-        std::min(mUnbufferedState->mBytesRemaining, aIterator.Length());
-
-      // If we haven't read everything yet, try to read more data.
-      if (mUnbufferedState->mBytesRemaining != 0) {
-        return Nothing();  // Keep processing.
-      }
+    if (mUnbufferedState->mBytesRemaining == 0) {
+      // We're done with the unbuffered read, so transition to the next state.
+      return SetTransition(aFunc(mTransition.NextState(), nullptr, 0));
     }
 
-    // We're done with the unbuffered read, so transition to the next state.
-    return SetTransition(aFunc(mTransition.NextState(), nullptr, 0));
+    return ContinueUnbufferedRead(aIterator.Data(), aIterator.Length(),
+                                  aIterator.Length(), aFunc);
+  }
+
+  template <typename Func>
+  Maybe<LexerResult> UnbufferedReadAfterYield(SourceBufferIterator& aIterator, Func aFunc)
+  {
+    MOZ_ASSERT(mTransition.Buffering() == BufferingStrategy::UNBUFFERED);
+    MOZ_ASSERT(mUnbufferedState);
+    MOZ_ASSERT(mYieldingToState);
+    MOZ_ASSERT(mBuffer.empty(),
+               "Buffered read at the same time as unbuffered read?");
+    MOZ_ASSERT(aIterator.Length() <= mUnbufferedState->mBytesRemaining,
+               "Read too much data during unbuffered read?");
+    MOZ_ASSERT(mUnbufferedState->mBytesConsumedInCurrentChunk <= aIterator.Length(),
+               "Consumed more data than the current chunk holds?");
+    MOZ_ASSERT(mTransition.UnbufferedState() == *mYieldingToState);
+
+    mYieldingToState = Nothing();
+
+    if (mUnbufferedState->mBytesRemaining == 0) {
+      // We're done with the unbuffered read, so transition to the next state.
+      return SetTransition(aFunc(mTransition.NextState(), nullptr, 0));
+    }
+
+    // Since we've yielded, we may have already consumed some data in this
+    // chunk. Make the necessary adjustments. (Note that the std::min call is
+    // just belt-and-suspenders to keep this code memory safe even if there's
+    // a bug somewhere.)
+    const size_t toSkip =
+      std::min(mUnbufferedState->mBytesConsumedInCurrentChunk, aIterator.Length());
+    const char* data = aIterator.Data() + toSkip;
+    const size_t length = aIterator.Length() - toSkip;
+
+    // If |length| is zero, we've hit the end of the current chunk. This only
+    // happens if we yield right at the end of a chunk. Rather than call |aFunc|
+    // with a |length| of zero bytes (which seems potentially surprising to
+    // decoder authors), we go ahead and read more data.
+    if (length == 0) {
+      return FinishCurrentChunkOfUnbufferedRead(aIterator.Length());
+    }
+
+    return ContinueUnbufferedRead(data, length, aIterator.Length(), aFunc);
+  }
+
+  template <typename Func>
+  Maybe<LexerResult> ContinueUnbufferedRead(const char* aData,
+                                            size_t aLength,
+                                            size_t aChunkLength,
+                                            Func aFunc)
+  {
+    // Call aFunc with the unbuffered state to indicate that we're in the
+    // middle of an unbuffered read. We enforce that any state transition
+    // passed back to us is either a terminal state or takes us back to the
+    // unbuffered state.
+    LexerTransition<State> unbufferedTransition =
+      aFunc(mTransition.UnbufferedState(), aData, aLength);
+
+    // If we reached a terminal state, we're done.
+    if (unbufferedTransition.NextStateIsTerminal()) {
+      return SetTransition(unbufferedTransition);
+    }
+
+    MOZ_ASSERT(mTransition.UnbufferedState() ==
+                 unbufferedTransition.NextState());
+
+    // Perform bookkeeping.
+    if (unbufferedTransition.ControlFlow() == ControlFlowStrategy::YIELD) {
+      mUnbufferedState->mBytesConsumedInCurrentChunk += unbufferedTransition.Size();
+      return SetTransition(unbufferedTransition);
+    }
+
+    MOZ_ASSERT(unbufferedTransition.Size() == 0);
+    return FinishCurrentChunkOfUnbufferedRead(aChunkLength);
+  }
+
+  Maybe<LexerResult> FinishCurrentChunkOfUnbufferedRead(size_t aChunkLength)
+  {
+    // We've finished an unbuffered read of a chunk of length |aChunkLength|, so
+    // update |myBytesRemaining| to reflect that we're |aChunkLength| closer to
+    // the end of the unbuffered read. (The std::min call is just
+    // belt-and-suspenders to keep this code memory safe even if there's a bug
+    // somewhere.)
+    mUnbufferedState->mBytesRemaining -=
+      std::min(mUnbufferedState->mBytesRemaining, aChunkLength);
+
+    // Since we're moving on to a new chunk, we can forget about the count of
+    // bytes consumed by yielding in the current chunk.
+    mUnbufferedState->mBytesConsumedInCurrentChunk = 0;
+
+    return Nothing();  // Keep processing.
   }
 
   template <typename Func>
   Maybe<LexerResult> BufferedRead(SourceBufferIterator& aIterator, Func aFunc)
   {
     MOZ_ASSERT(mTransition.Buffering() == BufferingStrategy::BUFFERED);
+    MOZ_ASSERT(!mYieldingToState);
     MOZ_ASSERT(!mUnbufferedState,
                "Buffered read at the same time as unbuffered read?");
     MOZ_ASSERT(mBuffer.length() < mTransition.Size() ||
@@ -412,12 +592,75 @@ private:
                                mBuffer.length()));
   }
 
+  template <typename Func>
+  Maybe<LexerResult> BufferedReadAfterYield(SourceBufferIterator& aIterator,
+                                            Func aFunc)
+  {
+    MOZ_ASSERT(mTransition.Buffering() == BufferingStrategy::BUFFERED);
+    MOZ_ASSERT(mYieldingToState);
+    MOZ_ASSERT(!mUnbufferedState,
+               "Buffered read at the same time as unbuffered read?");
+    MOZ_ASSERT(mBuffer.length() <= mTransition.Size(),
+               "Buffered more than we needed?");
+
+    State nextState = Move(*mYieldingToState);
+
+    // After a yield, we need to take the same data that we delivered to the
+    // last state, and deliver it again to the new state. We know that this is
+    // happening right at a state transition, and that the last state was a
+    // buffered read, so there are two cases:
+
+    // 1. We got the data from the SourceBufferIterator directly.
+    if (mBuffer.empty() && aIterator.Length() == mTransition.Size()) {
+      return SetTransition(aFunc(nextState,
+                                 aIterator.Data(),
+                                 aIterator.Length()));
+    }
+
+    // 2. We got the data from the buffer.
+    if (mBuffer.length() == mTransition.Size()) {
+      return SetTransition(aFunc(nextState,
+                                 mBuffer.begin(),
+                                 mBuffer.length()));
+    }
+
+    // Anything else indicates a bug.
+    MOZ_ASSERT_UNREACHABLE("Unexpected state encountered during yield");
+    return SetTransition(Transition::TerminateFailure());
+  }
+
   Maybe<LexerResult> SetTransition(const LexerTransition<State>& aTransition)
   {
+    // There should be no transitions while we're buffering for a buffered read
+    // unless they're to terminal states. (The terminal state transitions would
+    // generally be triggered by error handling code.)
+    MOZ_ASSERT_IF(!mBuffer.empty(),
+                  aTransition.NextStateIsTerminal() ||
+                  mBuffer.length() == mTransition.Size());
+
+    // Similarly, the only transitions allowed in the middle of an unbuffered
+    // read are to a terminal state, or a yield to the same state. Otherwise, we
+    // should remain in the same state until the unbuffered read completes.
+    MOZ_ASSERT_IF(mUnbufferedState,
+                  aTransition.NextStateIsTerminal() ||
+                  (aTransition.ControlFlow() == ControlFlowStrategy::YIELD &&
+                   aTransition.NextState() == mTransition.UnbufferedState()) ||
+                  mUnbufferedState->mBytesRemaining == 0);
+
+    // If this transition is a yield, save the next state and return. We'll
+    // handle the rest when Lex() gets called again.
+    if (!aTransition.NextStateIsTerminal() &&
+        aTransition.ControlFlow() == ControlFlowStrategy::YIELD) {
+      mYieldingToState = Some(aTransition.NextState());
+      return Some(LexerResult(Yield::OUTPUT_AVAILABLE));
+    }
+
+    // Update our transition.
     mTransition = aTransition;
 
     // Get rid of anything left over from the previous state.
     mBuffer.clear();
+    mYieldingToState = Nothing();
     mUnbufferedState = Nothing();
 
     // If we reached a terminal state, let the caller know.
@@ -438,13 +681,16 @@ private:
   {
     explicit UnbufferedState(size_t aBytesRemaining)
       : mBytesRemaining(aBytesRemaining)
+      , mBytesConsumedInCurrentChunk(0)
     { }
 
     size_t mBytesRemaining;
+    size_t mBytesConsumedInCurrentChunk;
   };
 
   Vector<char, InlineBufferSize> mBuffer;
   LexerTransition<State> mTransition;
+  Maybe<State> mYieldingToState;
   Maybe<UnbufferedState> mUnbufferedState;
 };
 
