@@ -524,7 +524,6 @@ class MochitestBase(object):
     TEST_PATH = "tests"
     NESTED_OOP_TEST_PATH = "nested_oop"
     CHROME_PATH = "redirect.html"
-    urlOpts = []
     log = None
 
     def __init__(self, logger_options):
@@ -540,6 +539,7 @@ class MochitestBase(object):
         self.start_script = None
         self.mozLogs = None
         self.start_script_args = []
+        self.urlOpts = []
 
         if self.log is None:
             commandline.log_formatters["tbpl"] = (

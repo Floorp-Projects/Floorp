@@ -133,9 +133,8 @@ struct TraceIncomingFunctor {
     TraceIncomingFunctor(JSTracer* trc, const JS::CompartmentSet& compartments)
       : trc_(trc), compartments_(compartments)
     {}
-    using ReturnType = void;
     template <typename T>
-    ReturnType operator()(T tp) {
+    void operator()(T tp) {
         if (!compartments_.has((*tp)->compartment()))
             return;
         TraceManuallyBarrieredEdge(trc_, tp, "cross-compartment wrapper");
@@ -143,7 +142,7 @@ struct TraceIncomingFunctor {
     // StringWrappers are just used to avoid copying strings
     // across zones multiple times, and don't hold a strong
     // reference.
-    ReturnType operator()(JSString** tp) {}
+    void operator()(JSString** tp) {}
 };
 } // namespace (anonymous)
 

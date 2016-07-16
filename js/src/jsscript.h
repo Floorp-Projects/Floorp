@@ -739,17 +739,15 @@ class ScriptSource
     size_t length() const {
         struct LengthMatcher
         {
-            using ReturnType = size_t;
-
-            ReturnType match(const Uncompressed& u) {
+            size_t match(const Uncompressed& u) {
                 return u.string.length();
             }
 
-            ReturnType match(const Compressed& c) {
+            size_t match(const Compressed& c) {
                 return c.uncompressedLength;
             }
 
-            ReturnType match(const Missing& m) {
+            size_t match(const Missing& m) {
                 MOZ_CRASH("ScriptSource::length on a missing source");
                 return 0;
             }

@@ -65,7 +65,7 @@ class AtomStateEntry
         const_cast<AtomStateEntry*>(this)->bits |= uintptr_t(pinned);
     }
 
-    JSAtom* asPtr() const;
+    JSAtom* asPtr(ExclusiveContext* cx) const;
     JSAtom* asPtrUnbarriered() const;
 
     bool needsSweep() {
