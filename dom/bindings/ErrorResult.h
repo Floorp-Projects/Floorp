@@ -31,6 +31,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
 #include "nsTArray.h"
+#include "nsISupportsImpl.h"
 
 namespace IPC {
 class Message;
@@ -105,6 +106,7 @@ public:
     MOZ_ASSERT(!Failed());
     MOZ_ASSERT(!mMightHaveUnreportedJSException);
     MOZ_ASSERT(mUnionState == HasNothing);
+    NS_ASSERT_OWNINGTHREAD(ErrorResult);
   }
 #endif // DEBUG
 
@@ -336,6 +338,10 @@ private:
 #endif // DEBUG
   }
 
+  void AssertInOwningThread() const {
+    NS_ASSERT_OWNINGTHREAD(ErrorResult);
+  }
+
   void AssignErrorCode(nsresult aRv) {
     MOZ_ASSERT(aRv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");
     MOZ_ASSERT(aRv != NS_ERROR_RANGE_ERR, "Use ThrowRangeError()");
@@ -404,6 +410,9 @@ private:
   // we should have something, if we have already cleaned up the
   // something.
   UnionState mUnionState;
+
+  // The thread that created this ErrorResult
+  NS_DECL_OWNINGTHREAD;
 #endif
 
   // Not to be implemented, to make sure people always pass this by
