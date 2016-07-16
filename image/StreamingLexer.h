@@ -38,8 +38,14 @@ enum class TerminalState
   FAILURE
 };
 
+/// Possible yield reasons for the lexer.
+enum class Yield
+{
+  NEED_MORE_DATA  // The lexer cannot continue without more data.
+};
+
 /// The result of a call to StreamingLexer::Lex().
-typedef Variant<TerminalState> LexerResult;
+typedef Variant<TerminalState, Yield> LexerResult;
 
 /**
  * LexerTransition is a type used to give commands to the lexing framework.
@@ -229,13 +235,13 @@ private:
  *    terminated in either success or failure. (There are also additional
  *    transitions for unbuffered reads; see below.)
  *
- * That's all there is to it. The StreamingLexer will track your position in the
- * input and buffer enough data so that your lexing methods can process
- * everything in one pass. Lex() returns Nothing() if more data is needed, in
+ * That's the basics. The StreamingLexer will track your position in the input
+ * and buffer enough data so that your lexing methods can process everything in
+ * one pass. Lex() returns Yield::NEED_MORE_DATA if more data is needed, in
  * which case you should just return from DoDecode(). If lexing reaches a
- * terminal state, Lex() returns Some(State::SUCCESS) or Some(State::FAILURE),
- * and you can check which one to determine if lexing succeeded or failed and do
- * any necessary cleanup.
+ * terminal state, Lex() returns TerminalState::SUCCESS or
+ * TerminalState::FAILURE, and you can check which one to determine if lexing
+ * succeeded or failed and do any necessary cleanup.
  *
  * There's one more wrinkle: some lexers may want to *avoid* buffering in some
  * cases, and just process the data as it comes in. This is useful if, for
@@ -269,14 +275,14 @@ public:
   }
 
   template <typename Func>
-  Maybe<TerminalState> Lex(SourceBufferIterator& aIterator,
-                           IResumable* aOnResume,
-                           Func aFunc)
+  LexerResult Lex(SourceBufferIterator& aIterator,
+                  IResumable* aOnResume,
+                  Func aFunc)
   {
     if (mTransition.NextStateIsTerminal()) {
       // We've already reached a terminal state. We never deliver any more data
       // in this case; just return the terminal state again immediately.
-      return Some(mTransition.NextStateAsTerminal());
+      return LexerResult(mTransition.NextStateAsTerminal());
     }
 
     Maybe<LexerResult> result;
@@ -293,7 +299,8 @@ public:
           // the network yet. We don't have to do anything special; the
           // SourceBufferIterator will ensure that |aOnResume| gets called when
           // more data is available.
-          return Nothing();
+          result = Some(LexerResult(Yield::NEED_MORE_DATA));
+          break;
 
         case SourceBufferIterator::COMPLETE:
           // Normally even if the data is truncated, we want decoding to
@@ -321,9 +328,7 @@ public:
       }
     } while (!result);
 
-    // Map |LexerResult| onto the old |Maybe<TerminalState>| API.
-    return result->is<TerminalState>() ? Some(result->as<TerminalState>())
-                                       : Nothing();
+    return *result;
   }
 
 private:

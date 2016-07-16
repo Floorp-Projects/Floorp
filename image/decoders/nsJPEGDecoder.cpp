@@ -182,7 +182,7 @@ nsJPEGDecoder::FinishInternal()
   return NS_OK;
 }
 
-Maybe<TerminalState>
+LexerResult
 nsJPEGDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
