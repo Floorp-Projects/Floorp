@@ -143,12 +143,9 @@ ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId)
 
 } // namespace dom
 
-namespace binding_danger {
-
-template<typename CleanupPolicy>
-struct TErrorResult<CleanupPolicy>::Message {
-  Message() { MOZ_COUNT_CTOR(TErrorResult::Message); }
-  ~Message() { MOZ_COUNT_DTOR(TErrorResult::Message); }
+struct ErrorResult::Message {
+  Message() { MOZ_COUNT_CTOR(ErrorResult::Message); }
+  ~Message() { MOZ_COUNT_DTOR(ErrorResult::Message); }
 
   nsTArray<nsString> mArgs;
   dom::ErrNum mErrorNumber;
@@ -159,10 +156,8 @@ struct TErrorResult<CleanupPolicy>::Message {
   }
 };
 
-template<typename CleanupPolicy>
 nsTArray<nsString>&
-TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(const dom::ErrNum errorNumber,
-                                                      nsresult errorType)
+ErrorResult::CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType)
 {
   AssertInOwningThread();
   mResult = errorType;
@@ -172,9 +167,8 @@ TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(const dom::ErrNum errorNum
   return mMessage->mArgs;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SerializeMessage(IPC::Message* aMsg) const
+ErrorResult::SerializeMessage(IPC::Message* aMsg) const
 {
   using namespace IPC;
   AssertInOwningThread();
@@ -184,10 +178,8 @@ TErrorResult<CleanupPolicy>::SerializeMessage(IPC::Message* aMsg) const
   WriteParam(aMsg, mMessage->mErrorNumber);
 }
 
-template<typename CleanupPolicy>
 bool
-TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
-                                                PickleIterator* aIter)
+ErrorResult::DeserializeMessage(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   using namespace IPC;
   AssertInOwningThread();
@@ -208,9 +200,8 @@ TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
   return true;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(JSContext* aCx)
+ErrorResult::SetPendingExceptionWithMessage(JSContext* aCx)
 {
   AssertInOwningThread();
   MOZ_ASSERT(mMessage, "SetPendingExceptionWithMessage() can be called only once");
@@ -233,9 +224,8 @@ TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(JSContext* aCx)
   mResult = NS_OK;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::ClearMessage()
+ErrorResult::ClearMessage()
 {
   AssertInOwningThread();
   MOZ_ASSERT(IsErrorWithMessage());
@@ -246,9 +236,8 @@ TErrorResult<CleanupPolicy>::ClearMessage()
 #endif // DEBUG
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
+ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 {
   AssertInOwningThread();
   MOZ_ASSERT(mMightHaveUnreportedJSException,
@@ -260,7 +249,7 @@ TErrorResult<CleanupPolicy>::ThrowJSException(JSContext* cx, JS::Handle<JS::Valu
   // don't set it to exn yet, because we don't want to do that until after we
   // root.
   mJSException.setUndefined();
-  if (!js::AddRawValueRoot(cx, &mJSException, "TErrorResult::mJSException")) {
+  if (!js::AddRawValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
     // Don't use NS_ERROR_DOM_JS_EXCEPTION, because that indicates we have
     // in fact rooted mJSException.
     mResult = NS_ERROR_OUT_OF_MEMORY;
@@ -273,9 +262,8 @@ TErrorResult<CleanupPolicy>::ThrowJSException(JSContext* cx, JS::Handle<JS::Valu
   }
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SetPendingJSException(JSContext* cx)
+ErrorResult::SetPendingJSException(JSContext* cx)
 {
   AssertInOwningThread();
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
@@ -297,8 +285,7 @@ TErrorResult<CleanupPolicy>::SetPendingJSException(JSContext* cx)
 #endif // DEBUG
 }
 
-template<typename CleanupPolicy>
-struct TErrorResult<CleanupPolicy>::DOMExceptionInfo {
+struct ErrorResult::DOMExceptionInfo {
   DOMExceptionInfo(nsresult rv, const nsACString& message)
     : mMessage(message)
     , mRv(rv)
@@ -308,9 +295,8 @@ struct TErrorResult<CleanupPolicy>::DOMExceptionInfo {
   nsresult mRv;
 };
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
+ErrorResult::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
 {
   using namespace IPC;
   AssertInOwningThread();
@@ -320,10 +306,8 @@ TErrorResult<CleanupPolicy>::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
   WriteParam(aMsg, mDOMExceptionInfo->mRv);
 }
 
-template<typename CleanupPolicy>
 bool
-TErrorResult<CleanupPolicy>::DeserializeDOMExceptionInfo(const IPC::Message* aMsg,
-                                                         PickleIterator* aIter)
+ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   using namespace IPC;
   AssertInOwningThread();
@@ -343,10 +327,8 @@ TErrorResult<CleanupPolicy>::DeserializeDOMExceptionInfo(const IPC::Message* aMs
   return true;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::ThrowDOMException(nsresult rv,
-                                               const nsACString& message)
+ErrorResult::ThrowDOMException(nsresult rv, const nsACString& message)
 {
   AssertInOwningThread();
   ClearUnionData();
@@ -358,9 +340,8 @@ TErrorResult<CleanupPolicy>::ThrowDOMException(nsresult rv,
 #endif
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SetPendingDOMException(JSContext* cx)
+ErrorResult::SetPendingDOMException(JSContext* cx)
 {
   AssertInOwningThread();
   MOZ_ASSERT(mDOMExceptionInfo,
@@ -373,9 +354,8 @@ TErrorResult<CleanupPolicy>::SetPendingDOMException(JSContext* cx)
   mResult = NS_OK;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::ClearDOMExceptionInfo()
+ErrorResult::ClearDOMExceptionInfo()
 {
   AssertInOwningThread();
   MOZ_ASSERT(IsDOMException());
@@ -387,9 +367,8 @@ TErrorResult<CleanupPolicy>::ClearDOMExceptionInfo()
 #endif // DEBUG
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::ClearUnionData()
+ErrorResult::ClearUnionData()
 {
   AssertInOwningThread();
   if (IsJSException()) {
@@ -407,9 +386,8 @@ TErrorResult<CleanupPolicy>::ClearUnionData()
   }
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SetPendingGenericErrorException(JSContext* cx)
+ErrorResult::SetPendingGenericErrorException(JSContext* cx)
 {
   AssertInOwningThread();
   MOZ_ASSERT(!IsErrorWithMessage());
@@ -419,9 +397,8 @@ TErrorResult<CleanupPolicy>::SetPendingGenericErrorException(JSContext* cx)
   mResult = NS_OK;
 }
 
-template<typename CleanupPolicy>
-TErrorResult<CleanupPolicy>&
-TErrorResult<CleanupPolicy>::operator=(TErrorResult<CleanupPolicy>&& aRHS)
+ErrorResult&
+ErrorResult::operator=(ErrorResult&& aRHS)
 {
   AssertInOwningThread();
   aRHS.AssertInOwningThread();
@@ -440,7 +417,7 @@ TErrorResult<CleanupPolicy>::operator=(TErrorResult<CleanupPolicy>&& aRHS)
     JSContext* cx = nsContentUtils::RootingCx();
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
-    if (!js::AddRawValueRoot(cx, &mJSException, "TErrorResult::mJSException")) {
+    if (!js::AddRawValueRoot(cx, &mJSException, "ErrorResult::mJSException")) {
       MOZ_CRASH("Could not root mJSException, we're about to OOM");
     }
     mJSException = aRHS.mJSException;
@@ -466,9 +443,8 @@ TErrorResult<CleanupPolicy>::operator=(TErrorResult<CleanupPolicy>&& aRHS)
   return *this;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::CloneTo(TErrorResult& aRv) const
+ErrorResult::CloneTo(ErrorResult& aRv) const
 {
   AssertInOwningThread();
   aRv.AssertInOwningThread();
@@ -502,9 +478,8 @@ TErrorResult<CleanupPolicy>::CloneTo(TErrorResult& aRv) const
   }
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SuppressException()
+ErrorResult::SuppressException()
 {
   AssertInOwningThread();
   WouldReportJSException();
@@ -514,9 +489,8 @@ TErrorResult<CleanupPolicy>::SuppressException()
   mResult = NS_OK;
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::SetPendingException(JSContext* cx)
+ErrorResult::SetPendingException(JSContext* cx)
 {
   AssertInOwningThread();
   if (IsUncatchableException()) {
@@ -548,9 +522,8 @@ TErrorResult<CleanupPolicy>::SetPendingException(JSContext* cx)
   SetPendingGenericErrorException(cx);
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::StealExceptionFromJSContext(JSContext* cx)
+ErrorResult::StealExceptionFromJSContext(JSContext* cx)
 {
   AssertInOwningThread();
   MOZ_ASSERT(mMightHaveUnreportedJSException,
@@ -566,9 +539,8 @@ TErrorResult<CleanupPolicy>::StealExceptionFromJSContext(JSContext* cx)
   JS_ClearPendingException(cx);
 }
 
-template<typename CleanupPolicy>
 void
-TErrorResult<CleanupPolicy>::NoteJSContextException(JSContext* aCx)
+ErrorResult::NoteJSContextException(JSContext* aCx)
 {
   AssertInOwningThread();
   if (JS_IsExceptionPending(aCx)) {
@@ -577,10 +549,6 @@ TErrorResult<CleanupPolicy>::NoteJSContextException(JSContext* aCx)
     mResult = NS_ERROR_UNCATCHABLE_EXCEPTION;
   }
 }
-
-template class TErrorResult<JustAssertCleanupPolicy>;
-
-} // namespace binding_danger
 
 namespace dom {
 
