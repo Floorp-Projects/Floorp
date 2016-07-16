@@ -119,7 +119,7 @@ public:
   }
 
   ~TErrorResult() {
-    NS_ASSERT_OWNINGTHREAD(TErrorResult);
+    AssertInOwningThread();
 
     if (CleanupPolicy::assertHandled) {
       // Consumers should have called one of MaybeSetPendingException
@@ -366,8 +366,10 @@ private:
 #endif // DEBUG
   }
 
-  void AssertInOwningThread() const {
+  MOZ_ALWAYS_INLINE void AssertInOwningThread() const {
+#ifdef DEBUG
     NS_ASSERT_OWNINGTHREAD(TErrorResult);
+#endif
   }
 
   void AssignErrorCode(nsresult aRv) {
