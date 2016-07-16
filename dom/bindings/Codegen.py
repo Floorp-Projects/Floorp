@@ -5261,7 +5261,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
             templateBody = fill(
                 """
-                { // Scope for our GlobalObject, ErrorResult, JSAutoCompartment,
+                { // Scope for our GlobalObject, FastErrorResult, JSAutoCompartment,
                   // etc.
 
                   JS::Rooted<JSObject*> globalObj(cx, JS::CurrentGlobalOrNull(cx));
@@ -5276,7 +5276,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   if (!JS_WrapValue(cx, &valueToResolve)) {
                     $*{exceptionCode}
                   }
-                  ErrorResult promiseRv;
+                  binding_detail::FastErrorResult promiseRv;
                 #ifdef SPIDERMONKEY_PROMISE
                   nsCOMPtr<nsIGlobalObject> global =
                     do_QueryInterface(promiseGlobal.GetAsSupports());
@@ -6971,7 +6971,7 @@ class CGCallGenerator(CGThing):
         self.cgRoot.append(call)
 
         if isFallible:
-            self.cgRoot.prepend(CGGeneric("ErrorResult rv;\n"))
+            self.cgRoot.prepend(CGGeneric("binding_detail::FastErrorResult rv;\n"))
             self.cgRoot.append(CGGeneric(dedent(
                 """
                 if (MOZ_UNLIKELY(rv.MaybeSetPendingException(cx))) {
@@ -8486,7 +8486,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
     def generate_code(self):
         return CGGeneric(dedent("""
             AutoTArray<nsString, 8> names;
-            ErrorResult rv;
+            binding_detail::FastErrorResult rv;
             self->GetOwnPropertyNames(cx, names, rv);
             if (rv.MaybeSetPendingException(cx)) {
               return false;
@@ -10579,7 +10579,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
     def generate_code(self):
         return CGGeneric(dedent("""
             AutoTArray<nsString, 8> names;
-            ErrorResult rv;
+            binding_detail::FastErrorResult rv;
             self->GetOwnPropertyNames(cx, names, rv);
             if (rv.MaybeSetPendingException(cx)) {
               return false;
