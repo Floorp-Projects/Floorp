@@ -262,6 +262,18 @@ function testBound(fun)
 testBound(strict);
 testBound(nonstrict);
 
+assertEq((function unbound(){"body"}).bind().toString(), `function bound unbound() {
+    [native code]
+}`);
+
+assertEq((function unbound(){"body"}).bind().toSource(), `function bound unbound() {
+    [native code]
+}`);
+
+assertEq(uneval((function unbound(){"body"}).bind()), `function bound unbound() {
+    [native code]
+}`);
+
 
 /* 22. Return F. */
 var passim = function p(){}.bind(1);
