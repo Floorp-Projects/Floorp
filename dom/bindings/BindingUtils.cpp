@@ -579,6 +579,8 @@ TErrorResult<CleanupPolicy>::NoteJSContextException(JSContext* aCx)
 }
 
 template class TErrorResult<JustAssertCleanupPolicy>;
+template class TErrorResult<AssertAndSuppressCleanupPolicy>;
+template class TErrorResult<JustSuppressCleanupPolicy>;
 
 } // namespace binding_danger
 
