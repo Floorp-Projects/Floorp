@@ -236,6 +236,32 @@
                   });
               });
           }, 'Test setting same duration multiple times does not fire duplicate durationchange');
+
+          mediasource_testafterdataloaded(function(test, mediaElement, mediaSource, segmentInfo, sourceBuffer, mediaData)
+          {
+              assert_greater_than(segmentInfo.duration, 2, 'Sufficient test media duration');
+
+              var fullDuration = segmentInfo.duration;
+              var newDuration = fullDuration / 2;
+
+              // Append all the segments
+              test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
+              test.expectEvent(mediaElement, 'loadedmetadata', 'mediaElement');
+              sourceBuffer.appendBuffer(mediaData);
+
+              test.waitForExpectedEvents(function()
+              {
+                  assert_false(sourceBuffer.updating, "updating");
+
+                  assert_throws("InvalidStateError", function()
+                  {
+                      mediaSource.duration = newDuration;
+                  }, "duration");
+
+                  test.done();
+              });
+          }, 'Test setting the duration to less than the highest starting presentation timestamp will throw');
+
         </script>
     </body>
 </html>
