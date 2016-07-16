@@ -1146,16 +1146,20 @@ Port.prototype = {
 
   receiveMessage(msg) {
     if (msg.name == this.disconnectName) {
-      if (this.disconnected) {
-        return;
-      }
-
-      for (let listener of this.disconnectListeners) {
-        listener();
-      }
-
-      this.handleDisconnection();
+      this.disconnectByOtherEnd();
     }
+  },
+
+  disconnectByOtherEnd() {
+    if (this.disconnected) {
+      return;
+    }
+
+    for (let listener of this.disconnectListeners) {
+      listener();
+    }
+
+    this.handleDisconnection();
   },
 
   disconnect() {
@@ -1282,8 +1286,8 @@ Messenger.prototype = {
     let portId = `${gNextPortId++}-${Services.appinfo.processType}`;
     let port = new Port(this.context, messageManager, name, portId, null);
     let msg = {name, portId};
-    // TODO: Disconnect the port if no response?
-    this._sendMessage(messageManager, "Extension:Connect", msg, recipient);
+    this._sendMessage(messageManager, "Extension:Connect", msg, recipient)
+      .catch(e => port.disconnectByOtherEnd());
     return port.api();
   },
 
