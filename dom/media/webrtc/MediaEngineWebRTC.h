@@ -424,27 +424,7 @@ public:
                                     mozilla::AudioInput* aAudioInput,
                                     int aIndex,
                                     const char* name,
-                                    const char* uuid)
-    : MediaEngineAudioSource(kReleased)
-    , mVoiceEngine(aVoiceEnginePtr)
-    , mAudioInput(aAudioInput)
-    , mMonitor("WebRTCMic.Monitor")
-    , mThread(aThread)
-    , mCapIndex(aIndex)
-    , mChannel(-1)
-    , mStarted(false)
-    , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
-    , mPlayoutDelay(0)
-    , mNullTransport(nullptr)
-    , mSkipProcessing(false)
-  {
-    MOZ_ASSERT(aVoiceEnginePtr);
-    MOZ_ASSERT(aAudioInput);
-    mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
-    mDeviceUUID.Assign(uuid);
-    mListener = new mozilla::WebRTCAudioDataListener(this);
-    // We'll init lazily as needed
-  }
+                                    const char* uuid);
 
   void GetName(nsAString& aName) const override;
   void GetUUID(nsACString& aUUID) const override;
@@ -514,6 +494,8 @@ private:
                      const nsString& aDeviceId,
                      const char** aOutBadConstraint) override;
 
+  void SetLastPrefs(const MediaEnginePrefs& aPrefs);
+
   // These allocate/configure and release the channel
   bool AllocChannel();
   void FreeChannel();
@@ -580,6 +562,9 @@ private:
   // because of prefs or constraints. This allows simply copying the audio into
   // the MSG, skipping resampling and the whole webrtc.org code.
   bool mSkipProcessing;
+
+  // To only update microphone when needed, we keep track of previous settings.
+  MediaEnginePrefs mLastPrefs;
 };
 
 class MediaEngineWebRTC : public MediaEngine
