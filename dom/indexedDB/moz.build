@@ -109,7 +109,3 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
     '/xpcom/threads',
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-    LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
