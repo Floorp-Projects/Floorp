@@ -460,24 +460,13 @@ struct JustAssertCleanupPolicy {
   static const bool suppress = false;
 };
 
-struct AssertAndSuppressCleanupPolicy {
-  static const bool assertHandled = true;
-  static const bool suppress = true;
-};
-
-struct JustSuppressCleanupPolicy {
-  static const bool assertHandled = false;
-  static const bool suppress = true;
-};
-
 } // namespace binding_danger
 
 // A class people should normally use on the stack when they plan to actually
 // do something with the exception.
-class ErrorResult :
-    public binding_danger::TErrorResult<binding_danger::AssertAndSuppressCleanupPolicy>
+class ErrorResult : public binding_danger::TErrorResult<binding_danger::JustAssertCleanupPolicy>
 {
-  typedef binding_danger::TErrorResult<binding_danger::AssertAndSuppressCleanupPolicy> BaseErrorResult;
+  typedef binding_danger::TErrorResult<binding_danger::JustAssertCleanupPolicy> BaseErrorResult;
 
 public:
   ErrorResult()
@@ -514,15 +503,17 @@ template<typename CleanupPolicy>
 binding_danger::TErrorResult<CleanupPolicy>::operator ErrorResult&()
 {
   return *static_cast<ErrorResult*>(
-     reinterpret_cast<TErrorResult<AssertAndSuppressCleanupPolicy>*>(this));
+     reinterpret_cast<TErrorResult<JustAssertCleanupPolicy>*>(this));
 }
 
 // A class for use when an ErrorResult should just automatically be ignored.
-// This doesn't inherit from ErrorResult so we don't make two separate calls to
-// SuppressException.
-class IgnoredErrorResult :
-    public binding_danger::TErrorResult<binding_danger::JustSuppressCleanupPolicy>
+class IgnoredErrorResult : public ErrorResult
 {
+public:
+  ~IgnoredErrorResult()
+  {
+    SuppressException();
+  }
 };
 
 /******************************************************************************
