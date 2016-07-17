@@ -373,6 +373,13 @@ union GetFilesResponseResult
   GetFilesResponseFailure;
 };
 
+struct BlobURLRegistrationData
+{
+    nsCString url;
+    PBlob blob;
+    Principal principal;
+};
+
 prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -547,6 +554,11 @@ child:
      */
     async InitServiceWorkers(ServiceWorkerConfiguration aConfig);
 
+    /**
+     * Send BlobURLRegistrationData to child process.
+     */
+    async InitBlobURLs(BlobURLRegistrationData[] registrations);
+
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
 
@@ -675,6 +687,11 @@ child:
                               nsString aIconPath);
 
     async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
+
+    async BlobURLRegistration(nsCString aURI, PBlob aBlob,
+                              Principal aPrincipal);
+
+    async BlobURLUnregistration(nsCString aURI);
 
 parent:
     /**
@@ -1187,6 +1204,11 @@ parent:
 
      async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
      async DeleteGetFilesRequest(nsID aID);
+
+     async StoreAndBroadcastBlobURLRegistration(nsCString url, PBlob blob,
+                                                Principal principal);
+
+     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
