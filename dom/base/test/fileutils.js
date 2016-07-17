@@ -100,7 +100,7 @@ function getXHRLoadHandler(expectedResult, expectedLength, testName) {
        "[XHR] Length of result in test " + testName);
     ok(convertedData == expectedResult,
        "[XHR] Content of result in test " + testName);
-    is(event.lengthComputable, event.total != 0,
+    is(event.lengthComputable, true,
        "[XHR] lengthComputable in test " + testName);
     is(event.loaded, expectedLength,
        "[XHR] Loaded length in test " + testName);
