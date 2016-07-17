@@ -2060,6 +2060,13 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   if (mDriverCrashGuard) {
     mDriverCrashGuard->NotifyCrashed();
   }
+
+  // Unregister all the BlobURLs registered by the ContentChild.
+  for (uint32_t i = 0; i < mBlobURLs.Length(); ++i) {
+    nsHostObjectProtocolHandler::RemoveDataEntry(mBlobURLs[i]);
+  }
+
+  mBlobURLs.Clear();
 }
 
 void
@@ -5749,7 +5756,15 @@ ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
     return false;
   }
 
-  nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl, aPrincipal);
+  if (NS_SUCCEEDED(nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl,
+                                                             aPrincipal))) {
+    BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
+
+    // We want to store this blobURL, so we can unregister it if the child
+    // crashes.
+    mBlobURLs.AppendElement(aURI);
+  }
+
   BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
   return true;
 }
@@ -5760,6 +5775,8 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
   nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
                                                false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, this);
+  mBlobURLs.RemoveElement(aURI);
+
   return true;
 }
 
