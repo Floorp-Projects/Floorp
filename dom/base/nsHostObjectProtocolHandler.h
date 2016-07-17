@@ -12,6 +12,7 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
+#include "nsTArray.h"
 
 #define BLOBURI_SCHEME "blob"
 #define MEDIASTREAMURI_SCHEME "mediastream"
@@ -25,6 +26,8 @@ namespace mozilla {
 class DOMMediaStream;
 namespace dom {
 class BlobImpl;
+class BlobURLRegistrationData;
+class ContentParent;
 class MediaSource;
 } // namespace dom
 } // namespace mozilla
@@ -55,9 +58,18 @@ public:
                                nsISupports* aObject,
                                nsIPrincipal* aPrincipal,
                                nsACString& aUri);
-  static void RemoveDataEntry(const nsACString& aUri);
+  static void RemoveDataEntry(const nsACString& aUri,
+                              bool aBroadcastToOTherProcesses = true);
   static nsIPrincipal* GetDataEntryPrincipal(const nsACString& aUri);
   static void Traverse(const nsACString& aUri, nsCycleCollectionTraversalCallback& aCallback);
+
+  // IPC or internal use only
+  static nsresult AddDataEntry(const nsACString& aURI,
+                               nsISupports* aObject,
+                               nsIPrincipal* aPrincipal);
+  static bool
+  GetAllBlobURLEntries(nsTArray<mozilla::dom::BlobURLRegistrationData>& aRegistrations,
+                       mozilla::dom::ContentParent* aCP);
 
 protected:
   virtual ~nsHostObjectProtocolHandler() {}
