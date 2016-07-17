@@ -1031,7 +1031,9 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
                                         fun->isGetter() || fun->isSetter();
 
     // If we're not in pretty mode, put parentheses around lambda functions and methods.
-    if (fun->isInterpreted() && !lambdaParen && funIsMethodOrNonArrowLambda) {
+    if (fun->isInterpreted() && !lambdaParen && funIsMethodOrNonArrowLambda &&
+        !fun->isSelfHostedBuiltin())
+    {
         if (!out.append("("))
             return nullptr;
     }

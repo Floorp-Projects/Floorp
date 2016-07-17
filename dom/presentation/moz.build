@@ -52,6 +52,7 @@ UNIFIED_SOURCES += [
     'PresentationSessionInfo.cpp',
     'PresentationSessionRequest.cpp',
     'PresentationTCPSessionTransport.cpp',
+    'PresentationTerminateRequest.cpp',
 ]
 
 EXTRA_COMPONENTS += [

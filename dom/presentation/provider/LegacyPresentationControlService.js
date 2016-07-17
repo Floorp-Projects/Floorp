@@ -231,6 +231,12 @@ LegacyTCPControlChannel.prototype = {
     this._sendInit();
   },
 
+  terminate: function() {
+    // Legacy protocol doesn't support extra terminate protocol.
+    // Trigger error handling for browser to shutdown all the resource locally.
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
   sendOffer: function(aOffer) {
     let msg = {
       type: "requestSession:Offer",

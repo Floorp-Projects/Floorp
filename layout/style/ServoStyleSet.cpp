@@ -6,6 +6,7 @@
 
 #include "mozilla/ServoStyleSet.h"
 
+#include "mozilla/ServoRestyleManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIDocumentInlines.h"
@@ -366,7 +367,8 @@ nsRestyleHint
 ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
                                       EventStates aStateMask)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: HasStateDependentStyle not implemented");
+  return nsRestyleHint(0);
 }
 
 nsRestyleHint
@@ -375,11 +377,17 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
                                      dom::Element* aPseudoElement,
                                      EventStates aStateMask)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: HasStateDependentStyle not implemented");
+  return nsRestyleHint(0);
 }
 
 void
-ServoStyleSet::RestyleSubtree(nsINode* aNode)
+ServoStyleSet::RestyleSubtree(nsINode* aNode, bool aForce)
 {
+  if (aForce) {
+    MOZ_ASSERT(aNode->IsContent());
+    ServoRestyleManager::DirtyTree(aNode->AsContent());
+  }
+
   Servo_RestyleSubtree(aNode, mRawSet.get());
 }

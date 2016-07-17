@@ -660,6 +660,11 @@ public:
     return aCost <= mMaxCost;
   }
 
+  size_t MaximumCapacity() const
+  {
+    return size_t(mMaxCost);
+  }
+
   void LockImage(const ImageKey aImageKey)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
@@ -1124,6 +1129,17 @@ SurfaceCache::CollectSizeOfSurfaces(const ImageKey                  aImageKey,
 
   MutexAutoLock lock(sInstance->GetMutex());
   return sInstance->CollectSizeOfSurfaces(aImageKey, aCounters, aMallocSizeOf);
+}
+
+/* static */ size_t
+SurfaceCache::MaximumCapacity()
+{
+  if (!sInstance) {
+    return 0;
+  }
+
+  MutexAutoLock lock(sInstance->GetMutex());
+  return sInstance->MaximumCapacity();
 }
 
 } // namespace image
