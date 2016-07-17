@@ -8,6 +8,7 @@ module.metadata = {
 };
 
 var { emit, on, once, off, EVENT_TYPE_PATTERN } = require("./core");
+const { Cu } = require("chrome");
 
 // This module provides set of high order function for working with event
 // streams (streams in a NodeJS style that dispatch data, end and error
@@ -26,7 +27,7 @@ var refs = (function() {
 })();
 
 function transform(input, f) {
-  let output = {};
+  let output = new Output();
 
   // Since event listeners don't prevent `input` to be GC-ed we wanna presrve
   // it until `output` can be GC-ed. There for we add implicit reference which
@@ -64,7 +65,7 @@ exports.map = map;
 // into single event stream. Like flatten but time based rather than order
 // based.
 function merge(inputs) {
-  let output = {};
+  let output = new Output();
   let open = 1;
   let state = [];
   output.state = state;
@@ -107,13 +108,18 @@ exports.pipe = pipe;
 
 
 // Shim signal APIs so other modules can be used as is.
-
 const receive = (input, message) => {
   if (input[receive])
     input[receive](input, message);
   else
     emit(input, "data", message);
 
+  // Ideally our input will extend Input and already provide a weak value
+  // getter.  If not, opportunistically shim the weak value getter on
+  // other types passed as the input.
+  if (!("value" in input)) {
+    Object.defineProperty(input, "value", WeakValueGetterSetter);
+  }
   input.value = message;
 };
 receive.toString = () => "@@receive";
@@ -151,7 +157,7 @@ const lift = (step, ...inputs) => {
   let args = null;
   let opened = inputs.length;
   let started = false;
-  const output = {};
+  const output = new Output();
   const init = () => {
     args = [...inputs.map(input => input.value)];
     output.value = step(...args);
@@ -182,7 +188,8 @@ exports.lift = lift;
 
 const merges = inputs => {
   let opened = inputs.length;
-  let output = { value: inputs[0].value };
+  let output = new Output();
+  output.value = inputs[0].value;
   inputs.forEach((input, index) => {
     on(input, "data", data => receive(output, data));
     on(input, "end", () => {
@@ -225,11 +232,45 @@ Input.end = input => {
 };
 Input.prototype[end] = Input.end;
 
+// The event channel system caches the last event seen as input.value.
+// Unfortunately, if the last event is a DOM object this is a great way
+// leak windows.  Mitigate this by storing input.value using a weak
+// reference.  This allows the system to work for normal event processing
+// while also allowing the objects to be reclaimed.  It means, however,
+// input.value cannot be accessed long after the event was dispatched.
+const WeakValueGetterSetter = {
+  get: function() {
+    return this._weakValue ? this._weakValue.get() : this._simpleValue
+  },
+  set: function(v) {
+    if (v && typeof v === "object") {
+      this._weakValue = Cu.getWeakReference(v)
+      this._simpleValue = undefined;
+      return;
+    }
+    this._simpleValue = v;
+    this._weakValue = undefined;
+  },
+}
+Object.defineProperty(Input.prototype, "value", WeakValueGetterSetter);
+
 exports.Input = Input;
+
+// Define an Output type with a weak value getter for the transformation
+// functions that produce new channels.
+function Output() { }
+Object.defineProperty(Output.prototype, "value", WeakValueGetterSetter);
+exports.Output = Output;
 
 const $source = "@@source";
 const $outputs = "@@outputs";
 exports.outputs = $outputs;
+
+// NOTE: Passing DOM objects through a Reactor can cause them to leak
+// when they get cached in this.value.  We cannot use a weak reference
+// in this case because the Reactor design expects to always have both the
+// past and present value.  If we allow past values to be collected the
+// system breaks.
 
 function Reactor(options={}) {
   const {onStep, onStart, onEnd} = options;

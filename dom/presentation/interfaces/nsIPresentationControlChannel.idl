@@ -111,6 +111,13 @@ interface nsIPresentationControlChannel: nsISupports
   void launch(in DOMString presentationId, in DOMString url);
 
   /*
+   * Terminate a presentation on remote endpoint.
+   * @param presentationId The Id for representing this session.
+   * @throws NS_ERROR_FAILURE on failure
+   */
+  void terminate(in DOMString presentationId);
+
+  /*
    * Disconnect the control channel.
    * @param reason The reason of disconnecting channel; NS_OK represents normal.
    */

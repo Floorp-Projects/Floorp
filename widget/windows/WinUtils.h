@@ -174,6 +174,12 @@ public:
     DPI_AWARENESS_CONTEXT mPrevContext;
   };
 
+  // Wrapper for DefWindowProc that will enable non-client dpi scaling on the
+  // window during creation.
+  static LRESULT WINAPI
+  NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
+                                    WPARAM wParam, LPARAM lParam);
+
   /**
    * Get the system's default logical-to-physical DPI scaling factor,
    * which is based on the primary display. Note however that unlike

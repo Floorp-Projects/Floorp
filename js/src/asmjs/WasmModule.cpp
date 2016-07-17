@@ -265,7 +265,7 @@ Module::serialize(uint8_t* cursor) const
 }
 
 /* static */ const uint8_t*
-Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* maybeMetadata)
+Module::deserialize(const uint8_t* cursor, SharedModule* module, Metadata* maybeMetadata)
 {
     Bytes code;
     cursor = DeserializePodVector(cursor, &code);
@@ -317,14 +317,14 @@ Module::deserialize(const uint8_t* cursor, UniquePtr<Module>* module, Metadata* 
     if (!cursor)
         return nullptr;
 
-    *module = js::MakeUnique<Module>(Move(code),
-                                     Move(linkData),
-                                     Move(imports),
-                                     Move(exports),
-                                     Move(dataSegments),
-                                     Move(elemSegments),
-                                     *metadata,
-                                     *bytecode);
+    *module = js_new<Module>(Move(code),
+                             Move(linkData),
+                             Move(imports),
+                             Move(exports),
+                             Move(dataSegments),
+                             Move(elemSegments),
+                             *metadata,
+                             *bytecode);
     if (!*module)
         return nullptr;
 

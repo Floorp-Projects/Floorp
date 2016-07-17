@@ -563,18 +563,10 @@ nsGeolocationRequest::SetTimeoutTimer()
 {
   StopTimeoutTimer();
 
-  int32_t timeout;
-  if (mOptions && (timeout = mOptions->mTimeout) != 0) {
-
-    if (timeout < 0) {
-      timeout = 0;
-    } else if (timeout < 10) {
-      timeout = 10;
-    }
-
+  if (mOptions && mOptions->mTimeout != 0 && mOptions->mTimeout != 0x7fffffff) {
     mTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1");
     RefPtr<TimerCallbackHolder> holder = new TimerCallbackHolder(this);
-    mTimeoutTimer->InitWithCallback(holder, timeout, nsITimer::TYPE_ONE_SHOT);
+    mTimeoutTimer->InitWithCallback(holder, mOptions->mTimeout, nsITimer::TYPE_ONE_SHOT);
   }
 }
 

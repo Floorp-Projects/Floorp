@@ -98,7 +98,7 @@ function* runTests(options) {
     } else {
       ok(image, "image exists");
 
-      is(image.src, details.icon, "icon URL is correct");
+      is(getListStyleImage(image), details.icon, "icon URL is correct");
 
       let title = details.title || options.manifest.name;
       is(image.getAttribute("tooltiptext"), title, "image title is correct");
@@ -177,6 +177,10 @@ add_task(function* testTabSwitchContext() {
           "description": "Title",
         },
       },
+
+      "default.png": imageBuffer,
+      "1.png": imageBuffer,
+      "2.png": imageBuffer,
     },
 
     getTests(tabs) {
@@ -307,6 +311,10 @@ add_task(function* testDefaultTitle() {
       },
 
       "permissions": ["tabs"],
+    },
+
+    files: {
+      "icon.png": imageBuffer,
     },
 
     getTests(tabs) {

@@ -209,8 +209,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #endif
     allowRelazificationForTesting(false),
     data(nullptr),
-    signalHandlersInstalled_(false),
-    canUseSignalHandlers_(false),
     defaultFreeOp_(thisFromCtor()),
     debuggerMutations(0),
     securityCallbacks(&NullSecurityCallbacks),
@@ -267,14 +265,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     PodArrayZero(nativeStackQuota);
     PodZero(&asmJSCacheOps);
     lcovOutput.init();
-}
-
-static bool
-SignalBasedTriggersDisabled()
-{
-  // Don't bother trying to cache the getenv lookup; this should be called
-  // infrequently.
-  return !!getenv("JS_DISABLE_SLOW_SCRIPT_SIGNALS") || !!getenv("JS_NO_SIGNALS");
 }
 
 bool
@@ -354,8 +344,8 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();
     jitSupportsSimd = js::jit::JitSupportsSimd();
 
-    signalHandlersInstalled_ = wasm::EnsureSignalHandlersInstalled(this);
-    canUseSignalHandlers_ = signalHandlersInstalled_ && !SignalBasedTriggersDisabled();
+    if (!wasm::EnsureSignalHandlers(this))
+        return false;
 
     if (!spsProfiler.init())
         return false;

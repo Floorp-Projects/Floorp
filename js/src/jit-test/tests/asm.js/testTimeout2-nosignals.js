@@ -2,7 +2,7 @@
 
 load(libdir + "asm.js");
 
-setJitCompilerOption("signals.enable", 0);
+suppressSignalHandlers(true);
 var g = asmLink(asmCompile(USE_ASM + "function g() { while(1) {} } return g"));
 timeout(1);
 g();

@@ -78,6 +78,45 @@ function launch() {
   };
 }
 
+function terminateByController() {
+  Assert.equal(controllerState.state, State.CONNECTED, 'controller in connected state');
+  Assert.equal(receiverState.state, State.CONNECTED, 'receiver in connected state');
+
+  controllerState.terminate(testPresentationId);
+  mockReceiverChannel.notifyTerminate = function(presentationId) {
+    Assert.equal(receiverState.state, State.CONNECTED, 'receiver in connected state');
+    Assert.equal(presentationId, testPresentationId, 'expected presentationId received');
+
+    mockControllerChannel.notifyTerminate = function(presentationId) {
+      Assert.equal(controllerState.state, State.CONNECTED, 'controller in connected state');
+      Assert.equal(presentationId, testPresentationId, 'expected presentationId received from ack');
+
+      run_next_test();
+    };
+
+    receiverState.terminateAck(presentationId);
+  };
+}
+
+function terminateByReceiver() {
+  Assert.equal(controllerState.state, State.CONNECTED, 'controller in connected state');
+  Assert.equal(receiverState.state, State.CONNECTED, 'receiver in connected state');
+
+  receiverState.terminate(testPresentationId);
+  mockControllerChannel.notifyTerminate = function(presentationId) {
+    Assert.equal(controllerState.state, State.CONNECTED, 'controller in connected state');
+    Assert.equal(presentationId, testPresentationId, 'expected presentationId received');
+
+    mockReceiverChannel.notifyTerminate = function(presentationId) {
+      Assert.equal(receiverState.state, State.CONNECTED, 'receiver in connected state');
+      Assert.equal(presentationId, testPresentationId, 'expected presentationId received from ack');
+      run_next_test();
+    };
+
+    controllerState.terminateAck(presentationId);
+  };
+}
+
 function exchangeSDP() {
   Assert.equal(controllerState.state, State.CONNECTED, 'controller in connected state');
   Assert.equal(receiverState.state, State.CONNECTED, 'receiver in connected state');
@@ -185,6 +224,8 @@ function abnormalDisconnect() {
 
 add_test(connect);
 add_test(launch);
+add_test(terminateByController);
+add_test(terminateByReceiver);
 add_test(exchangeSDP);
 add_test(disconnect);
 add_test(receiverDisconnect);

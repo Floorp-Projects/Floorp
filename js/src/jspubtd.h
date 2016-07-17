@@ -436,4 +436,11 @@ struct PerThreadDataFriendFields
 
 } /* namespace js */
 
+MOZ_BEGIN_EXTERN_C
+
+// Defined in NSPR prio.h.
+typedef struct PRFileDesc PRFileDesc;
+
+MOZ_END_EXTERN_C
+
 #endif /* jspubtd_h */

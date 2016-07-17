@@ -31,12 +31,12 @@ namespace mozilla {
  */
 class ServoRestyleManager : public RestyleManagerBase
 {
+  friend class ServoStyleSet;
 public:
   NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
 
   explicit ServoRestyleManager(nsPresContext* aPresContext);
 
-  void Disconnect();
   void PostRestyleEvent(dom::Element* aElement,
                         nsRestyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
@@ -72,6 +72,24 @@ protected:
   ~ServoRestyleManager() {}
 
 private:
+  /**
+   * Traverses a tree of content that Servo has just restyled, recreating style
+   * contexts for their frames with the new style data.
+   *
+   * This is just static so ServoStyleSet can mark this class as friend, so we
+   * can access to the GetContext method without making it available to everyone
+   * else.
+   */
+  static void RecreateStyleContexts(nsIContent* aContent,
+                                    nsStyleContext* aParentContext,
+                                    ServoStyleSet* aStyleSet);
+
+  /**
+   * Propagates the IS_DIRTY flag down to the tree, setting
+   * HAS_DIRTY_DESCENDANTS appropriately.
+   */
+  static void DirtyTree(nsIContent* aContent);
+
   inline ServoStyleSet* StyleSet() const {
     MOZ_ASSERT(PresContext()->StyleSet()->IsServo(),
                "ServoRestyleManager should only be used with a Servo-flavored "

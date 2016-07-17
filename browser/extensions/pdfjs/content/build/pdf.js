@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.322';
-var pdfjsBuild = 'b6826a4';
+var pdfjsVersion = '1.5.337';
+var pdfjsBuild = '11381cd';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -1222,10 +1222,7 @@ var createBlob = function createBlob(data, contentType) {
   if (typeof Blob !== 'undefined') {
     return new Blob([data], { type: contentType });
   }
-  // Blob builder is deprecated in FF14 and removed in FF18.
-  var bb = new MozBlobBuilder();
-  bb.append(data);
-  return bb.getBlob(contentType);
+  warn('The "Blob" constructor is not supported.');
 };
 
 var createObjectURL = (function createObjectURLClosure() {

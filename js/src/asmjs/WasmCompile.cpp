@@ -1386,19 +1386,15 @@ DecodeUnknownSections(Decoder& d)
 }
 
 bool
-CompileArgs::init(ExclusiveContext* cx)
+CompileArgs::initFromContext(ExclusiveContext* cx, UniqueChars f)
 {
     alwaysBaseline = cx->options().wasmAlwaysBaseline();
-    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return true;
+    filename = Move(f);
+    return assumptions.initBuildIdFromContext(cx);
 }
 
-UniqueModule
-wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
+SharedModule
+wasm::Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* error)
 {
     bool newFormat = args.assumptions.newFormat;
 
@@ -1456,9 +1452,5 @@ wasm::Compile(Bytes&& bytecode, CompileArgs&& args, UniqueChars* error)
 
     MOZ_ASSERT(!*error, "unreported error in decoding");
 
-    SharedBytes sharedBytes = js_new<ShareableBytes>(Move(bytecode));
-    if (!sharedBytes)
-        return nullptr;
-
-    return mg.finish(Move(imports), *sharedBytes);
+    return mg.finish(Move(imports), bytecode);
 }
