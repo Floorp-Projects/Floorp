@@ -19,7 +19,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, runTest);
 function runTest() {
   is('TCPSocket' in this, false, "TCPSocket should not be accessible if dom.mozTCPSocket.enabled is true");
-  is('mozTCPSocket' in navigator, false, "mozTCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
+  is('TCPServerSocket' in this, false, "TCPServerSocket should not be accessible if dom.mozTCPSocket.enabled is true");
+  is('mozTCPSocket' in navigator, false, "mozTCPSocket should not be accessible if dom.mozTCPSocket.enabled is true");
 
   SimpleTest.finish();
 }

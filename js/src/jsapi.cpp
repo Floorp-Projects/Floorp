@@ -432,6 +432,19 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun)
     return fun->isBuiltinFunctionConstructor();
 }
 
+JS_PUBLIC_API(bool)
+JS_IsFunctionBound(JSFunction* fun)
+{
+    return fun->isBoundFunction();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS_GetBoundFunctionTarget(JSFunction* fun)
+{
+    return fun->isBoundFunction() ?
+               fun->getBoundFunctionTarget() : nullptr;
+}
+
 /************************************************************************/
 
 #ifdef DEBUG
@@ -4677,8 +4690,7 @@ JS::NewPromiseObject(JSContext* cx, HandleObject executor, HandleObject proto /*
 JS_PUBLIC_API(bool)
 JS::IsPromiseObject(JS::HandleObject obj)
 {
-    JSObject* object = CheckedUnwrap(obj);
-    return object && object->is<PromiseObject>();
+    return obj->is<PromiseObject>();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4698,9 +4710,8 @@ JS::GetPromisePrototype(JSContext* cx)
 }
 
 JS_PUBLIC_API(JS::PromiseState)
-JS::GetPromiseState(JS::HandleObject obj)
+JS::GetPromiseState(JS::HandleObject promise)
 {
-    JSObject* promise = CheckedUnwrap(obj);
     return promise->as<PromiseObject>().state();
 }
 
@@ -6107,15 +6118,6 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
             JitSpew(js::jit::JitSpew_IonScripts, "Disable offthread compilation");
         }
         break;
-      case JSJITCOMPILER_SIGNALS_ENABLE:
-        if (value == 1) {
-            rt->setCanUseSignalHandlers(true);
-            JitSpew(js::jit::JitSpew_IonScripts, "Enable signals");
-        } else if (value == 0) {
-            rt->setCanUseSignalHandlers(false);
-            JitSpew(js::jit::JitSpew_IonScripts, "Disable signals");
-        }
-        break;
       case JSJITCOMPILER_JUMP_THRESHOLD:
         if (value == uint32_t(-1)) {
             jit::DefaultJitOptions defaultValues;
@@ -6151,8 +6153,6 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
         return JS::ContextOptionsRef(cx).baseline();
       case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         return rt->canUseOffthreadIonCompilation();
-      case JSJITCOMPILER_SIGNALS_ENABLE:
-        return rt->canUseSignalHandlers();
       case JSJITCOMPILER_WASM_TEST_MODE:
         return jit::JitOptions.wasmTestMode ? 1 : 0;
       default:

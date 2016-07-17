@@ -87,6 +87,13 @@ public:
   void AbortBufferAppend();
 
   void Remove(double aStart, double aEnd, ErrorResult& aRv);
+
+  IMPL_EVENT_HANDLER(updatestart);
+  IMPL_EVENT_HANDLER(update);
+  IMPL_EVENT_HANDLER(updateend);
+  IMPL_EVENT_HANDLER(error);
+  IMPL_EVENT_HANDLER(abort);
+
   /** End WebIDL Methods. */
 
   NS_DECL_ISUPPORTS_INHERITED

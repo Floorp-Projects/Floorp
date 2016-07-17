@@ -106,7 +106,7 @@ IsNonProxyDOMClass(const JSClass* clasp)
   return IsNonProxyDOMClass(js::Valueify(clasp));
 }
 
-// Returns true if the JSClass is used for DOM interface and interface 
+// Returns true if the JSClass is used for DOM interface and interface
 // prototype objects.
 inline bool
 IsDOMIfaceAndProtoClass(const JSClass* clasp)
@@ -2011,6 +2011,12 @@ private:
   };
 };
 
+class FastErrorResult :
+    public mozilla::binding_danger::TErrorResult<
+      mozilla::binding_danger::JustAssertCleanupPolicy>
+{
+};
+
 } // namespace binding_detail
 
 enum StringificationBehavior {
@@ -2991,20 +2997,6 @@ public:
     return nullptr;
   }
 };
-
-/*
- * Helper function for testing whether the given object comes from a
- * privileged app.
- */
-bool
-IsInPrivilegedApp(JSContext* aCx, JSObject* aObj);
-
-/*
- * Helper function for testing whether the given object comes from a
- * certified app.
- */
-bool
-IsInCertifiedApp(JSContext* aCx, JSObject* aObj);
 
 void
 FinalizeGlobal(JSFreeOp* aFop, JSObject* aObj);

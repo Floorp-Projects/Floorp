@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[CheckAnyPermissions="bluetooth",
+[ChromeOnly,
  Constructor(DOMString type,
              optional BluetoothAttributeEventInit eventInitDict)]
 interface BluetoothAttributeEvent : Event

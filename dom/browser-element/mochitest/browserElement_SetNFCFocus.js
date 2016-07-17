@@ -6,7 +6,6 @@
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 function hasSetNFCFocus() {
   return new Promise((resolve, reject) => {
@@ -22,9 +21,7 @@ function hasSetNFCFocus() {
 }
 
 function runTest() {
-  SpecialPowers.pushPermissions(
-    [{ 'type': 'nfc-manager', 'allow': 1, 'context': document }],
-    () => hasSetNFCFocus().then(SimpleTest.finish));
+  hasSetNFCFocus().then(SimpleTest.finish);
 }
 
 addEventListener('testready', runTest);

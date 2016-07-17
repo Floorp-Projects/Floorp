@@ -20,7 +20,6 @@
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 function runTest() {
   // We're going to open a remote frame if OOP off by default.  If OOP is on by

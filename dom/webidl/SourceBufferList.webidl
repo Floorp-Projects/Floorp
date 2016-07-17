@@ -13,5 +13,7 @@
 [Func="mozilla::dom::MediaSource::Enabled"]
 interface SourceBufferList : EventTarget {
   readonly attribute unsigned long length;
+  attribute EventHandler onaddsourcebuffer;
+  attribute EventHandler onremovesourcebuffer;
   getter SourceBuffer (unsigned long index);
 };

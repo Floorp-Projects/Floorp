@@ -6,7 +6,7 @@
  * Reference https://wiki.mozilla.org/Input_Port_API#Basic_Port_Interface
  */
 
-[Pref="dom.inputport.enabled", CheckAnyPermissions="inputport", AvailableIn=CertifiedApps]
+[Pref="dom.inputport.enabled", ChromeOnly]
 interface InputPort : EventTarget {
   readonly attribute DOMString id;
   readonly attribute MediaStream stream;

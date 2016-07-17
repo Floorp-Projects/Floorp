@@ -2454,3 +2454,13 @@ GK_ATOM(nsuri_mathml, "http://www.w3.org/1998/Math/MathML")
 GK_ATOM(nsuri_rdf, "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 GK_ATOM(nsuri_xul, "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")
 GK_ATOM(nsuri_svg, "http://www.w3.org/2000/svg")
+
+// MSE
+GK_ATOM(onsourceopen, "onsourceopen")
+GK_ATOM(onsourceended, "onsourceended")
+GK_ATOM(onsourceclosed, "onsourceclosed")
+GK_ATOM(onupdatestart, "onupdatestart")
+GK_ATOM(onupdate, "onupdate")
+GK_ATOM(onupdateend, "onupdateend")
+GK_ATOM(onaddsourcebuffer, "onaddsourcebuffer")
+GK_ATOM(onremovesourcebuffer, "onremovesourcebuffer")

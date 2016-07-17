@@ -8,8 +8,8 @@
 
 [NavigatorProperty="mozAlarms",
  JSImplementation="@mozilla.org/alarmsManager;1",
- CheckAnyPermissions="alarms",
- Pref="dom.mozAlarms.enabled"]
+ Pref="dom.mozAlarms.enabled",
+ ChromeOnly]
 interface AlarmsManager {
   DOMRequest getAll();
   [UnsafeInPrerendering]

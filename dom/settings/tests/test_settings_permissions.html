@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 <head>
   <title>Test for Bug {678695} Settings API</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -23,20 +23,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 
 var url = SimpleTest.getTestFileURL("file_loadserver.js");
 var script = SpecialPowers.loadChromeScript(url);
-SpecialPowers.removePermission("settings-read", document);
-SpecialPowers.removePermission("settings-write", document);
-SpecialPowers.addPermission("settings-api-read", true, document);
-SpecialPowers.addPermission("settings-api-write", true, document);
-SpecialPowers.addPermission("settings:wallpaper.image-read", true, document);
-SpecialPowers.addPermission("settings:wallpaper.image-write", true, document);
-SpecialPowers.addPermission("settings-clear", true, document);
 
 function onUnwantedSuccess() {
   ok(false, "onUnwantedSuccess: shouldn't get here");
 }
 
+// No more permissions, so failure cannot happen
 function onFailure() {
-  ok(false, "in on Failure!");
+  ok(true, "in on Failure!");
+  next();
 }
 
 const wifi  = {"wifi.enabled": false}

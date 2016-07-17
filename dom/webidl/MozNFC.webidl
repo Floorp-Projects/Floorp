@@ -35,45 +35,44 @@ interface MozNFCManager {
    * Returns success if given manifestUrl is registered for 'onpeerready',
    * otherwise error
    */
-  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [ChromeOnly]
   Promise<boolean> checkP2PRegistration(DOMString manifestUrl);
 
   /**
    * Notify that user has accepted to share nfc message on P2P UI
    */
-  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [ChromeOnly]
   void notifyUserAcceptedP2P(DOMString manifestUrl);
 
   /**
    * Notify the status of sendFile operation
    */
-  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [ChromeOnly]
   void notifySendFileStatus(octet status, DOMString requestId);
 
   /**
    * Power on the NFC hardware and start polling for NFC tags or devices.
    */
-  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [ChromeOnly]
   Promise<void> startPoll();
 
   /**
    * Stop polling for NFC tags or devices. i.e. enter low power mode.
    */
-  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [ChromeOnly]
   Promise<void> stopPoll();
 
   /**
    * Power off the NFC hardware.
    */
-  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [ChromeOnly]
   Promise<void> powerOff();
 };
 
 [JSImplementation="@mozilla.org/nfc/manager;1",
  NavigatorProperty="mozNfc",
  Func="Navigator::HasNFCSupport",
- CheckAnyPermissions="nfc nfc-share",
- AvailableIn="PrivilegedApps",
+ ChromeOnly,
  UnsafeInPrerendering]
 interface MozNFC : EventTarget {
   /**
@@ -86,7 +85,6 @@ interface MozNFC : EventTarget {
    * to share data to the NFCPeer object by calling mozNFC.notifyUserAcceptedP2P.
    * The event will be type of NFCPeerEvent.
    */
-  [CheckAnyPermissions="nfc-share", AvailableIn=CertifiedApps]
   attribute EventHandler onpeerready;
 
   /**

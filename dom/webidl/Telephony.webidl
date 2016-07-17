@@ -51,8 +51,7 @@ interface Telephony : EventTarget {
 
   // Calling this method, the app will be treated as owner of the telephony
   // calls from the AudioChannel policy.
-  [Throws,
-   CheckAllPermissions="audio-channel-telephony"]
+  [Throws]
   void ownAudioChannel();
 
   [Throws]

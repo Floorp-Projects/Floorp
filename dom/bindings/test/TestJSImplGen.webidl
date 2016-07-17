@@ -733,14 +733,6 @@ interface TestJSImplInterface {
   void prefable19();
   [Pref="abc.def", Func="TestFuncControlledMember", ChromeOnly]
   void prefable20();
-  [Func="TestFuncControlledMember", AvailableIn=CertifiedApps]
-  void prefable21();
-  [Func="TestFuncControlledMember", AvailableIn=CertifiedApps]
-  void prefable22();
-  [Pref="abc.def", Func="TestFuncControlledMember", AvailableIn=CertifiedApps]
-  void prefable23();
-  [Pref="abc.def", Func="TestFuncControlledMember", AvailableIn=PrivilegedApps]
-  void prefable24();
 
   // Conditionally exposed methods/attributes involving [SecureContext]
   [SecureContext]

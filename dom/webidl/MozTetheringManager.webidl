@@ -32,7 +32,7 @@ dictionary TetheringConfiguration {
 
 [JSImplementation="@mozilla.org/tetheringmanager;1",
  NavigatorProperty="mozTetheringManager",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozTetheringManager {
   /**
    * Enable/Disable tethering.

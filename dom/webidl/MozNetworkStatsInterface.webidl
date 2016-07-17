@@ -12,7 +12,7 @@ dictionary NetworkInterface {
  */
 [Constructor(optional NetworkInterface networkinterface),
  JSImplementation="@mozilla.org/networkstatsinterface;1",
- CheckAnyPermissions="networkstats-manage",
+ ChromeOnly, 
  Pref="dom.mozNetworkStats.enabled"]
 interface MozNetworkStatsInterface {
   readonly attribute long type;

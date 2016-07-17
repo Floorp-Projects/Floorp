@@ -508,63 +508,10 @@ class Descriptor(DescriptorProvider):
         self._binaryNames.setdefault('__stringifier', 'Stringify')
 
         if not self.interface.isExternal():
-            self.anypermissions = dict()
-            self.allpermissions = dict()
-
-            # Adds a permission list to this descriptor and returns the index to use.
-            def addPermissions(ifaceOrMember, attribute):
-                if attribute == "CheckAllPermissions":
-                    permissions = self.allpermissions
-                else:
-                    permissions = self.anypermissions
-
-                checkPermissions = ifaceOrMember.getExtendedAttribute(attribute)
-                if checkPermissions is None:
-                    return None
-
-                # It's a list of whitespace-separated strings
-                assert(len(checkPermissions) is 1)
-                assert(checkPermissions[0] is not None)
-                checkPermissions = checkPermissions[0]
-                permissionsList = checkPermissions.split()
-                if len(permissionsList) == 0:
-                    raise TypeError("Need at least one permission name for %s" % attribute)
-
-                permissionsList = tuple(sorted(set(permissionsList)))
-                return permissions.setdefault(permissionsList, len(permissions))
-
-            self.checkAnyPermissionsIndex = addPermissions(self.interface, "CheckAnyPermissions")
-            self.checkAnyPermissionsIndicesForMembers = dict()
-            self.checkAllPermissionsIndex = addPermissions(self.interface, "CheckAllPermissions")
-            self.checkAllPermissionsIndicesForMembers = dict()
-            for m in self.interface.members:
-                permissionsIndex = addPermissions(m, "CheckAnyPermissions")
-                if permissionsIndex is not None:
-                    self.checkAnyPermissionsIndicesForMembers[m.identifier.name] = permissionsIndex
-                allpermissionsIndex = addPermissions(m, "CheckAllPermissions")
-                if allpermissionsIndex is not None:
-                    self.checkAllPermissionsIndicesForMembers[m.identifier.name] = allpermissionsIndex
-
             def isTestInterface(iface):
                 return (iface.identifier.name in ["TestInterface",
                                                   "TestJSImplInterface",
                                                   "TestRenamedInterface"])
-
-            self.featureDetectibleThings = set()
-            if not isTestInterface(self.interface):
-                if (self.interface.getExtendedAttribute("CheckAnyPermissions") or
-                    self.interface.getExtendedAttribute("CheckAllPermissions") or
-                    self.interface.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
-                    iface = self.interface.identifier.name
-                    self.featureDetectibleThings.add(iface)
-                    for m in self.interface.members:
-                        self.featureDetectibleThings.add("%s.%s" % (iface, m.identifier.name))
-
-                for m in self.interface.members:
-                    if (m.getExtendedAttribute("CheckAnyPermissions") or
-                        m.getExtendedAttribute("CheckAllPermissions") or
-                        m.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
-                        self.featureDetectibleThings.add("%s.%s" % (self.interface.identifier.name, m.identifier.name))
 
             for member in self.interface.members:
                 if not member.isAttr() and not member.isMethod():

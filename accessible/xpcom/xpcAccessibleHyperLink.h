@@ -39,7 +39,7 @@ private:
   xpcAccessibleHyperLink(const xpcAccessibleHyperLink&) = delete;
   xpcAccessibleHyperLink& operator =(const xpcAccessibleHyperLink&) = delete;
 
-  Accessible* Intl();
+  AccessibleOrProxy Intl();
 };
 
 } // namespace a11y

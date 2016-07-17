@@ -6,7 +6,7 @@
 
 [NavigatorProperty="mozNetworkStats",
  JSImplementation="@mozilla.org/networkStatsManager;1",
- CheckAnyPermissions="networkstats-manage",
+ ChromeOnly,
  Pref="dom.mozNetworkStats.enabled"]
 interface MozNetworkStatsManager {
   /**

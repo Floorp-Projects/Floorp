@@ -488,6 +488,17 @@ WinUtils::Initialize()
 }
 
 // static
+LRESULT WINAPI
+WinUtils::NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
+                                            WPARAM wParam, LPARAM lParam)
+{
+  if (msg == WM_NCCREATE && sEnableNonClientDpiScaling) {
+    sEnableNonClientDpiScaling(hWnd);
+  }
+  return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+// static
 void
 WinUtils::LogW(const wchar_t *fmt, ...)
 {

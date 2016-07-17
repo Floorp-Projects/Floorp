@@ -620,7 +620,7 @@ class MozbuildObject(ProcessExecutionMixin):
             return False, False
 
         xcode_lisense_error = False
-        possible_makes = ['gmake', 'make', 'mozmake', 'gnumake']
+        possible_makes = ['gmake', 'make', 'mozmake', 'gnumake', 'mingw32-make']
 
         if 'MAKE' in os.environ:
             make = os.environ['MAKE']

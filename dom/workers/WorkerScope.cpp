@@ -470,8 +470,7 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   // Note that xpc::ShouldDiscardSystemSource() and
   // xpc::ExtraWarningsForSystemJS() read prefs that are cached on the main
   // thread. This is benignly racey.
-  const bool discardSource = (usesSystemPrincipal ||
-                              mWorkerPrivate->IsInPrivilegedApp()) &&
+  const bool discardSource = usesSystemPrincipal &&
                              xpc::ShouldDiscardSystemSource();
   const bool extraWarnings = usesSystemPrincipal &&
                              xpc::ExtraWarningsForSystemJS();
@@ -480,12 +479,10 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   behaviors.setDiscardSource(discardSource)
            .extraWarningsOverride().set(extraWarnings);
 
-  const bool inCertifiedApp = mWorkerPrivate->IsInCertifiedApp();
   const bool sharedMemoryEnabled = xpc::SharedMemoryEnabled();
 
   JS::CompartmentCreationOptions& creationOptions = options.creationOptions();
-  creationOptions.setSharedMemoryAndAtomicsEnabled(sharedMemoryEnabled)
-                 .setExperimentalDateTimeFormatFormatToPartsEnabled(inCertifiedApp);
+  creationOptions.setSharedMemoryAndAtomicsEnabled(sharedMemoryEnabled);
 
   return DedicatedWorkerGlobalScopeBinding::Wrap(aCx, this, this,
                                                  options,

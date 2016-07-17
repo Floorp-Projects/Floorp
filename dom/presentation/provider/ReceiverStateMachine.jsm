@@ -58,6 +58,12 @@ var handlers = [
           presentationId: command.presentationId
         });
         break;
+      case CommandType.TERMINATE:
+        stateMachine._notifyTerminate(command.presentationId);
+        break;
+      case CommandType.TERMINATE_ACK:
+        stateMachine._notifyTerminate(command.presentationId);
+        break;
       case CommandType.OFFER:
       case CommandType.ICE_CANDIDATE:
         stateMachine._notifyChannelDescriptor(command);
@@ -87,6 +93,24 @@ ReceiverStateMachine.prototype = {
   launch: function _launch() {
     // presentation session can only be launched by controlling UA.
     debug("receiver shouldn't trigger launch");
+  },
+
+  terminate: function _terminate(presentationId) {
+    if (this.state === State.CONNECTED) {
+      this._sendCommand({
+        type: CommandType.TERMINATE,
+        presentationId: presentationId,
+      });
+    }
+  },
+
+  terminateAck: function _terminateAck(presentationId) {
+    if (this.state === State.CONNECTED) {
+      this._sendCommand({
+        type: CommandType.TERMINATE_ACK,
+        presentationId: presentationId,
+      });
+    }
   },
 
   sendOffer: function _sendOffer() {
@@ -169,6 +193,10 @@ ReceiverStateMachine.prototype = {
 
   _notifyLaunch: function _notifyLaunch(presentationId, url) {
     this._channel.notifyLaunch(presentationId, url);
+  },
+
+  _notifyTerminate: function _notifyTerminate(presentationId) {
+    this._channel.notifyTerminate(presentationId);
   },
 
   _notifyChannelDescriptor: function _notifyChannelDescriptor(command) {

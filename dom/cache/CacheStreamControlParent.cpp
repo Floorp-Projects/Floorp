@@ -20,9 +20,9 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::dom::OptionalFileDescriptorSet;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::FileDescriptorSetParent;
-using mozilla::ipc::OptionalFileDescriptorSet;
 using mozilla::ipc::PFileDescriptorSetParent;
 
 // declared in ActorUtils.h

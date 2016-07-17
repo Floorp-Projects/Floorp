@@ -7,7 +7,6 @@
 "use strict";
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 var iframe;
 function addOneShotIframeEventListener(event, fn) {
@@ -22,6 +21,8 @@ function addOneShotIframeEventListener(event, fn) {
 function runTest() {
   iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');
+  // FIXME: Bug 1270790
+  iframe.setAttribute('remote', 'true');
 
   addOneShotIframeEventListener('mozbrowserloadend', function() {
     SimpleTest.executeSoon(test2);

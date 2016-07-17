@@ -28,27 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
   addLoadEvent(function() {
     var iframe = document.getElementById("t");
 
-    Services.perms.addFromPrincipal(iframe.contentDocument.nodePrincipal,
-                                    "contacts-read",
-                                    Services.perms.ALLOW_ACTION);
-    Services.perms.addFromPrincipal(iframe.contentDocument.nodePrincipal,
-                                    "contacts-write",
-                                    Services.perms.ALLOW_ACTION);
-    Services.perms.addFromPrincipal(iframe.contentDocument.nodePrincipal,
-                                    "contacts-create",
-                                    Services.perms.ALLOW_ACTION);
-
     var dir = "chrome://mochitests/content/chrome/dom/base/test/";
     iframe.src = dir + "file_navigator_resolve_identity_xrays.xul";
     iframe.onload = function() { finish(); };
 
     function finish() {
-      Services.perms.removeFromPrincipal(document.nodePrincipal,
-                                         "contacts-read");
-      Services.perms.removeFromPrincipal(document.nodePrincipal,
-                                         "contacts-write");
-      Services.perms.removeFromPrincipal(document.nodePrincipal,
-                                         "contacts-create");
       SimpleTest.finish();
     }
   });

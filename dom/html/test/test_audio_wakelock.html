@@ -6,9 +6,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868943
 <head>
   <title>Test for Bug 868943</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=868943">Mozilla Bug 868943</a>
@@ -115,11 +115,7 @@ function runTests() {
   test();
 };
 
-SpecialPowers.pushPermissions(
-  [{'type': 'power', 'allow': true, 'context': document}],
-  function() {
-    SpecialPowers.pushPrefEnv({"set": [["media.wakelock_timeout", 500]]}, runTests);
-  });
+SpecialPowers.pushPrefEnv({"set": [["media.wakelock_timeout", 500]]}, runTests);
 
 SimpleTest.waitForExplicitFinish();
 

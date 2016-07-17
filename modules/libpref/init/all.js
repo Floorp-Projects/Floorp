@@ -708,8 +708,6 @@ pref("gfx.bundled_fonts.force-enabled", false);
 // whether to try and do something about it (e.g. download additional fonts)?
 pref("gfx.missing_fonts.notify", false);
 
-pref("gfx.filter.nearest.force-enabled", false);
-
 // prefs controlling the font (name/cmap) loader that runs shortly after startup
 pref("gfx.font_loader.families_per_slice", 3); // read in info 3 families at a time
 #ifdef XP_WIN
@@ -1497,7 +1495,7 @@ pref("network.http.bypass-cachelock-threshold", 250);
 
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
-pref("network.http.spdy.enabled.v3-1", true);
+pref("network.http.spdy.enabled.v3-1", false);
 pref("network.http.spdy.enabled.http2", true);
 pref("network.http.spdy.enabled.deps", true);
 pref("network.http.spdy.enforce-tls-profile", true);

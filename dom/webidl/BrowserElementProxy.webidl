@@ -8,7 +8,7 @@
  JSImplementation="@mozilla.org/dom/browser-element-proxy;1",
  NavigatorProperty="mozBrowserElementProxy",
  Pref="dom.mozBrowserFramesEnabled",
- CheckAnyPermissions="browser:embedded-system-app"]
+ ChromeOnly]
 interface BrowserElementProxy : EventTarget {
 };
 BrowserElementProxy implements BrowserElementCommon;

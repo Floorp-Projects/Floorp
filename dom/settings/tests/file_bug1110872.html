@@ -5,11 +5,6 @@
     </head>
     <body>
         <script type="application/javascript;version=1.7">
-         SpecialPowers.addPermission("settings-read", true, document);
-         SpecialPowers.addPermission("settings-write", true, document);
-         SpecialPowers.addPermission("settings-api-read", true, document);
-         SpecialPowers.addPermission("settings-api-write", true, document);
-         SpecialPowers.addPermission("settings-clear", true, document);
 
          var createLock = function (msg) {
              var lock = navigator.mozSettings.createLock();

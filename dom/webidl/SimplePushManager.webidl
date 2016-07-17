@@ -6,7 +6,7 @@
 
 [NavigatorProperty="push",
  JSImplementation="@mozilla.org/push/PushManager;1",
- CheckAnyPermissions="push",
+ ChromeOnly,
  Pref="services.push.enabled"]
 interface SimplePushManager {
     DOMRequest register();

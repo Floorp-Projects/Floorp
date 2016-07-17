@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Test to ensure TCPSocket permission enabled and open works with tcp-socket perm</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <p id="display"></p>
@@ -17,9 +17,7 @@
   the tcp-socket permission has been granted.
 **/
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, function() {
-  SpecialPowers.pushPermissions([{type: "tcp-socket", allow: true, context: document}], runTest);
-});
+SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, runTest);
 
 function runTest() {
   ok('TCPSocket' in this, "TCPSocket should be accessible if dom.mozTCPSocket.enabled is true");

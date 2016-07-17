@@ -82,6 +82,21 @@ MediaSourceDecoder::GetSeekable()
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
     media::TimeIntervals buffered = GetBuffered();
+
+    // 1. If live seekable range is not empty:
+    if (mMediaSource->HasLiveSeekableRange()) {
+      // 1. Let union ranges be the union of live seekable range and the
+      // HTMLMediaElement.buffered attribute.
+      media::TimeIntervals unionRanges =
+        buffered + mMediaSource->LiveSeekableRange();
+      // 2. Return a single range with a start time equal to the earliest start
+      // time in union ranges and an end time equal to the highest end time in
+      // union ranges and abort these steps.
+      seekable +=
+        media::TimeInterval(unionRanges.GetStart(), unionRanges.GetEnd());
+      return seekable;
+    }
+
     if (buffered.Length()) {
       seekable +=
         media::TimeInterval(media::TimeUnit::FromSeconds(0), buffered.GetEnd());
