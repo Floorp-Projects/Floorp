@@ -675,7 +675,7 @@ public:
    */
   void SetLastFwdTransactionId(uint64_t aTransactionId)
   {
-    MOZ_ASSERT(mFwdTransactionId < aTransactionId);
+    MOZ_ASSERT(mFwdTransactionId <= aTransactionId);
     mFwdTransactionId = aTransactionId;
   }
 
