@@ -3412,7 +3412,8 @@ HTMLInputElement::IsNodeApzAwareInternal() const
 {
   // Tell APZC we may handle mouse wheel event and do preventDefault when input
   // type is number.
-  return (mType == NS_FORM_INPUT_NUMBER) || nsINode::IsNodeApzAwareInternal();
+  return (mType == NS_FORM_INPUT_NUMBER) || (mType == NS_FORM_INPUT_RANGE) ||
+         nsINode::IsNodeApzAwareInternal();
 }
 #endif
 
@@ -4507,17 +4508,30 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 #if defined(XP_WIN) || defined(XP_LINUX)
         case eWheel: {
           // Handle wheel events as increasing / decreasing the input element's
-          // value when it's focused and it's type is number.
+          // value when it's focused and it's type is number or range.
           WidgetWheelEvent* wheelEvent = aVisitor.mEvent->AsWheelEvent();
           if (!aVisitor.mEvent->DefaultPrevented() &&
               aVisitor.mEvent->IsTrusted() && IsMutable() && wheelEvent &&
               wheelEvent->mDeltaY != 0 &&
-              wheelEvent->mDeltaMode != nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
-              mType == NS_FORM_INPUT_NUMBER) {
-            nsNumberControlFrame* numberControlFrame =
-              do_QueryFrame(GetPrimaryFrame());
-            if (numberControlFrame && numberControlFrame->IsFocused()) {
-              StepNumberControlForUserEvent(wheelEvent->mDeltaY > 0 ? -1 : 1);
+              wheelEvent->mDeltaMode != nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+            if (mType == NS_FORM_INPUT_NUMBER) {
+              nsNumberControlFrame* numberControlFrame =
+                do_QueryFrame(GetPrimaryFrame());
+              if (numberControlFrame && numberControlFrame->IsFocused()) {
+                StepNumberControlForUserEvent(wheelEvent->mDeltaY > 0 ? -1 : 1);
+                aVisitor.mEvent->PreventDefault();
+              }
+            } else if (mType == NS_FORM_INPUT_RANGE &&
+                       nsContentUtils::IsFocusedContent(this) &&
+                       GetMinimum() < GetMaximum()) {
+              Decimal value = GetValueAsDecimal();
+              Decimal step = GetStep();
+              if (step == kStepAny) {
+                step = GetDefaultStep();
+              }
+              MOZ_ASSERT(value.isFinite() && step.isFinite());
+              SetValueOfRangeForUserEvent(wheelEvent->mDeltaY < 0 ?
+                                          value + step : value - step);
               aVisitor.mEvent->PreventDefault();
             }
           }
@@ -6014,7 +6028,7 @@ void
 HTMLInputElement::UpdateApzAwareFlag()
 {
 #if defined(XP_WIN) || defined(XP_LINUX)
-  if (mType == NS_FORM_INPUT_NUMBER) {
+  if ((mType == NS_FORM_INPUT_NUMBER) || (mType == NS_FORM_INPUT_RANGE)) {
     SetMayBeApzAware();
   }
 #endif

@@ -69,7 +69,6 @@ class CompileRuntime
     // Compilation does not occur off thread when the SPS profiler is enabled.
     SPSProfiler& spsProfiler();
 
-    bool canUseSignalHandlers();
     bool jitSupportsFloatingPoint();
     bool hadOutOfMemory();
     bool profilingScripts();

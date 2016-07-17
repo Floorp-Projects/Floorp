@@ -22,8 +22,9 @@ class nsPNGDecoder : public Decoder
 public:
   virtual ~nsPNGDecoder();
 
-  virtual void InitInternal() override;
-  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
+  nsresult InitInternal() override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
+                                IResumable* aOnResume) override;
   virtual Telemetry::ID SpeedHistogram() override;
 
   /// @return true if this PNG is a valid ICO resource.

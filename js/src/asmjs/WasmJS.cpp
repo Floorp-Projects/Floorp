@@ -132,25 +132,31 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!CheckCompilerSupport(cx))
         return false;
 
-    Bytes bytecode;
-    if (!bytecode.append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
+    MutableBytes bytecode = cx->new_<ShareableBytes>();
+    if (!bytecode)
+        return false;
+
+    if (!bytecode->append((uint8_t*)code->viewDataEither().unwrap(), code->byteLength())) {
         ReportOutOfMemory(cx);
         return false;
     }
 
-    CompileArgs compileArgs;
-    if (!compileArgs.init(cx))
-        return false;
-
-    JS::AutoFilename af;
-    if (DescribeScriptedCaller(cx, &af)) {
-        compileArgs.filename = DuplicateString(cx, af.get());
-        if (!compileArgs.filename)
-            return false;
+    UniqueChars filename;
+    {
+        JS::AutoFilename af;
+        if (DescribeScriptedCaller(cx, &af)) {
+            filename = DuplicateString(cx, af.get());
+            if (!filename)
+                return false;
+        }
     }
 
+    CompileArgs compileArgs;
+    if (!compileArgs.initFromContext(cx, Move(filename)))
+        return false;
+
     UniqueChars error;
-    UniqueModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    SharedModule module = Compile(*bytecode, Move(compileArgs), &error);
     if (!module) {
         if (error)
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
@@ -279,18 +285,19 @@ const JSPropertySpec WasmModuleObject::properties[] =
 /* static */ void
 WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    fop->delete_(&obj->as<WasmModuleObject>().module());
+    obj->as<WasmModuleObject>().module().Release();
 }
 
 /* static */ WasmModuleObject*
-WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module, HandleObject proto)
+WasmModuleObject::create(ExclusiveContext* cx, Module& module, HandleObject proto)
 {
     AutoSetNewObjectMetadata metadata(cx);
     auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, proto);
     if (!obj)
         return nullptr;
 
-    obj->initReservedSlot(MODULE_SLOT, PrivateValue((void*)module.release()));
+    obj->initReservedSlot(MODULE_SLOT, PrivateValue((void*)&module));
+    module.AddRef();
     return obj;
 }
 
@@ -310,38 +317,44 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    Bytes bytecode;
+    MutableBytes bytecode = cx->new_<ShareableBytes>();
+    if (!bytecode)
+        return false;
+
     if (callArgs[0].toObject().is<TypedArrayObject>()) {
         TypedArrayObject& view = callArgs[0].toObject().as<TypedArrayObject>();
-        if (!bytecode.append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
+        if (!bytecode->append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
             return false;
     } else if (callArgs[0].toObject().is<ArrayBufferObject>()) {
         ArrayBufferObject& buffer = callArgs[0].toObject().as<ArrayBufferObject>();
-        if (!bytecode.append(buffer.dataPointer(), buffer.byteLength()))
+        if (!bytecode->append(buffer.dataPointer(), buffer.byteLength()))
             return false;
     } else {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
 
+    UniqueChars filename;
+    {
+        JS::AutoFilename af;
+        if (DescribeScriptedCaller(cx, &af)) {
+            filename = DuplicateString(cx, af.get());
+            if (!filename)
+                return false;
+        }
+    }
+
     CompileArgs compileArgs;
-    if (!compileArgs.init(cx))
-        return true;
+    if (!compileArgs.initFromContext(cx, Move(filename)))
+        return false;
 
     compileArgs.assumptions.newFormat = true;
-
-    JS::AutoFilename af;
-    if (DescribeScriptedCaller(cx, &af)) {
-        compileArgs.filename = DuplicateString(cx, af.get());
-        if (!compileArgs.filename)
-            return false;
-    }
 
     if (!CheckCompilerSupport(cx))
         return false;
 
     UniqueChars error;
-    UniqueModule module = Compile(Move(bytecode), Move(compileArgs), &error);
+    SharedModule module = Compile(*bytecode, Move(compileArgs), &error);
     if (!module) {
         if (error)
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, error.get());
@@ -351,7 +364,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
-    RootedObject moduleObj(cx, WasmModuleObject::create(cx, Move(module), proto));
+    RootedObject moduleObj(cx, WasmModuleObject::create(cx, *module, proto));
     if (!moduleObj)
         return false;
 
@@ -560,7 +573,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     uint32_t bytes = uint32_t(initialDbl) * PageSize;
-    bool signalsForOOB = SignalUsage(cx).forOOB;
+    bool signalsForOOB = SignalUsage().forOOB;
     RootedArrayBufferObject buffer(cx, ArrayBufferObject::createForWasm(cx, bytes, signalsForOOB));
     if (!buffer)
         return false;

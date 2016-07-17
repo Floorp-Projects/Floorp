@@ -35,7 +35,6 @@ class Module;
 class Instance;
 class Table;
 
-typedef UniquePtr<Module> UniqueModule;
 typedef UniquePtr<Instance> UniqueInstance;
 
 // Return whether WebAssembly can be compiled on this platform.
@@ -86,7 +85,7 @@ class WasmModuleObject : public NativeObject
     static bool construct(JSContext*, unsigned, Value*);
 
     static WasmModuleObject* create(ExclusiveContext* cx,
-                                    wasm::UniqueModule module,
+                                    wasm::Module& module,
                                     HandleObject proto = nullptr);
     wasm::Module& module() const;
 };

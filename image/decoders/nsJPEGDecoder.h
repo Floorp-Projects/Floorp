@@ -57,9 +57,10 @@ public:
     mSampleSize = aSampleSize;
   }
 
-  virtual void InitInternal() override;
-  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) override;
-  virtual void FinishInternal() override;
+  nsresult InitInternal() override;
+  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
+                                IResumable* aOnResume) override;
+  nsresult FinishInternal() override;
 
   virtual Telemetry::ID SpeedHistogram() override;
   void NotifyDone();

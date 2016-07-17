@@ -15,6 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "Decoder.h"
 #include "gfxColor.h"
+#include "imgITools.h"
 #include "nsCOMPtr.h"
 #include "SurfacePipe.h"
 #include "SurfacePipeFactory.h"
@@ -99,6 +100,23 @@ struct BGRAColor
 // General Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * A RAII class that ensure that ImageLib services are available. Any tests that
+ * require ImageLib to be initialized (for example, any test that uses the
+ * SurfaceCache; see image::EnsureModuleInitialized() for the full list) can
+ * use this class to ensure that ImageLib services are available. Failure to do
+ * so can result in strange, non-deterministic failures.
+ */
+struct AutoInitializeImageLib
+{
+  AutoInitializeImageLib()
+  {
+    // Ensure that ImageLib services are initialized.
+    nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+    EXPECT_TRUE(imgTools != nullptr);
+  }
+};
+
 /// Loads a file from the current directory. @return an nsIInputStream for it.
 already_AddRefed<nsIInputStream> LoadFile(const char* aRelativePath);
 
@@ -169,6 +187,37 @@ bool PalettedRectIsSolidColor(Decoder* aDecoder,
 bool RowHasPixels(gfx::SourceSurface* aSurface,
                   int32_t aRow,
                   const std::vector<BGRAColor>& aPixels);
+
+// ExpectNoResume is an IResumable implementation for use by tests that expect
+// Resume() to never get called.
+class ExpectNoResume final : public IResumable
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ExpectNoResume, override)
+
+  void Resume() override { FAIL() << "Resume() should not get called"; }
+
+private:
+  ~ExpectNoResume() override { }
+};
+
+// CountResumes is an IResumable implementation for use by tests that expect
+// Resume() to get called a certain number of times.
+class CountResumes : public IResumable
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CountResumes, override)
+
+  CountResumes() : mCount(0) { }
+
+  void Resume() override { mCount++; }
+  uint32_t Count() const { return mCount; }
+
+private:
+  ~CountResumes() override { }
+
+  uint32_t mCount;
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -340,6 +389,7 @@ ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase();
 
 ImageTestCase CorruptTestCase();
+ImageTestCase CorruptBMPWithTruncatedHeader();
 ImageTestCase CorruptICOWithBadBMPWidthTestCase();
 ImageTestCase CorruptICOWithBadBMPHeightTestCase();
 
