@@ -1447,7 +1447,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if (tabChild && tabChild->IsDestroyed()) {
+  if (tabChild && !tabChild->IPCOpen()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1969,7 +1969,7 @@ HttpChannelChild::ContinueAsyncOpen()
   mChannelId.ToProvidedString(chid);
   openArgs.channelId().AssignASCII(chid);
 
-  if (tabChild && tabChild->IsDestroyed()) {
+  if (tabChild && !tabChild->IPCOpen()) {
     return NS_ERROR_FAILURE;
   }
 

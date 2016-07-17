@@ -10,7 +10,8 @@
 #ifdef JS_POSIX_NSPR
 
 #include <pthread.h>
-#include <stdint.h>
+
+#include "jspubtd.h"
 
 namespace nspr {
 class Thread;
@@ -137,6 +138,58 @@ PR_TicksPerSecond();
 
 PRStatus
 PR_WaitCondVar(PRCondVar* cvar, PRIntervalTime timeout);
+
+int32_t
+PR_FileDesc2NativeHandle(PRFileDesc* fd);
+
+enum PRFileType
+{
+    PR_FILE_FILE = 1,
+    PR_FILE_DIRECTORY = 2,
+    PR_FILE_OTHER = 3
+};
+
+struct PRFileInfo
+{
+    PRFileType type;
+    int32_t size;
+    int64_t creationTime;
+    int64_t modifyTime;
+};
+
+PRStatus
+PR_GetOpenFileInfo(PRFileDesc *fd, PRFileInfo *info);
+
+enum PRSeekWhence
+{
+    PR_SEEK_SET = 0,
+    PR_SEEK_CUR = 1,
+    PR_SEEK_END = 2
+};
+
+int32_t
+PR_Seek(PRFileDesc *fd, int32_t offset, PRSeekWhence whence);
+
+enum PRFileMapProtect
+{
+    PR_PROT_READONLY,
+    PR_PROT_READWRITE,
+    PR_PROT_WRITECOPY
+};
+
+struct PRFileMap;
+
+PRFileMap*
+PR_CreateFileMap(PRFileDesc *fd, int64_t size, PRFileMapProtect prot);
+
+void*
+PR_MemMap(PRFileMap *fmap, int64_t offset, uint32_t len);
+
+PRStatus
+PR_MemUnmap(void *addr, uint32_t len);
+
+PRStatus
+PR_CloseFileMap(PRFileMap *fmap);
 
 #endif /* JS_POSIX_NSPR */
 

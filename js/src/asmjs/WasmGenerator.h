@@ -207,7 +207,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Finish compilation, provided the list of imports and source bytecode.
     // Both these Vectors may be empty (viz., b/c asm.js does different things
     // for imports and source).
-    UniqueModule finish(ImportVector&& imports, const ShareableBytes& bytecode);
+    SharedModule finish(ImportVector&& imports, const ShareableBytes& bytecode);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.

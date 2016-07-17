@@ -2287,12 +2287,6 @@ public:
                                                   const nsSize& aDisplaySize);
 
   /**
-   * Checks if we should forcibly use nearest pixel filtering for the
-   * background.
-   */
-  static bool UseBackgroundNearestFiltering();
-
-  /**
    * Checks whether we want to use the GPU to scale images when
    * possible.
    */

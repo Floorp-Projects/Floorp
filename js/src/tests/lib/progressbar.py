@@ -82,6 +82,10 @@ class ProgressBar(object):
         self.update(*self.prior)
 
     def finish(self, complete=True):
+        if not self.prior:
+            sys.stdout.write('No test run... You can try adding'
+                            ' --run-slow-tests or --run-skipped to run more tests\n')
+            return
         final_count = self.limit if complete else self.prior[0]
         self.update(final_count, self.prior[1])
         sys.stdout.write('\n')

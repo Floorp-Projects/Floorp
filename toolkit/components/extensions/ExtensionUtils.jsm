@@ -334,10 +334,8 @@ class BaseContext {
    *     belonging to the target scope. Otherwise, undefined.
    */
   wrapPromise(promise, callback = null) {
-    // Note: `promise instanceof this.cloneScope.Promise` returns true
-    // here even for promises that do not belong to the content scope.
     let runSafe = this.runSafe.bind(this);
-    if (promise.constructor === this.cloneScope.Promise) {
+    if (promise instanceof this.cloneScope.Promise) {
       runSafe = this.runSafeWithoutClone.bind(this);
     }
 
@@ -474,10 +472,8 @@ let IconDetails = {
 
   // Returns the appropriate icon URL for the given icons object and the
   // screen resolution of the given window.
-  getURL(icons, window, extension, size = 16) {
+  getPreferredIcon(icons, extension = null, size = 16) {
     const DEFAULT = "chrome://browser/content/extension.svg";
-
-    size *= window.devicePixelRatio;
 
     let bestSize = null;
     if (icons[size]) {

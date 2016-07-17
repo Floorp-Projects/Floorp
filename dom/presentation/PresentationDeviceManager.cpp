@@ -14,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "PresentationSessionRequest.h"
+#include "PresentationTerminateRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -234,6 +235,28 @@ PresentationDeviceManager::OnSessionRequest(nsIPresentationDevice* aDevice,
     new PresentationSessionRequest(aDevice, aUrl, aPresentationId, aControlChannel);
   obs->NotifyObservers(request,
                        PRESENTATION_SESSION_REQUEST_TOPIC,
+                       nullptr);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationDeviceManager::OnTerminateRequest(nsIPresentationDevice* aDevice,
+                                              const nsAString& aPresentationId,
+                                              nsIPresentationControlChannel* aControlChannel,
+                                              bool aIsFromReceiver)
+{
+  NS_ENSURE_ARG(aDevice);
+  NS_ENSURE_ARG(aControlChannel);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
+
+  RefPtr<PresentationTerminateRequest> request =
+    new PresentationTerminateRequest(aDevice, aPresentationId,
+                                     aControlChannel, aIsFromReceiver);
+  obs->NotifyObservers(request,
+                       PRESENTATION_TERMINATE_REQUEST_TOPIC,
                        nullptr);
 
   return NS_OK;

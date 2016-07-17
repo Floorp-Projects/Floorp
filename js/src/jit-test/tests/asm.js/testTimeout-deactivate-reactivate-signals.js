@@ -5,12 +5,12 @@ load(libdir + "asm.js");
 setCachingEnabled(true);
 
 var jco = getJitCompilerOptions();
-if (jco["signals.enable"] === 0 || !isCachingEnabled() || !isAsmJSCompilationAvailable())
+if (!isCachingEnabled() || !isAsmJSCompilationAvailable())
     quit(6);
 
 // Modules compiled without signal handlers should still work even if signal
 // handlers have been reactivated.
-setJitCompilerOption("signals.enable", 0);
+suppressSignalHandlers(true);
 
 var code = USE_ASM + "function f() {} function g() { while(1) { f() } } return g";
 
@@ -18,7 +18,7 @@ var m = asmCompile(code);
 assertEq(isAsmJSModule(m), true);
 assertEq(isAsmJSModuleLoadedFromCache(m), false);
 
-setJitCompilerOption("signals.enable", 1);
+suppressSignalHandlers(false);
 
 var m = asmCompile(code);
 assertEq(isAsmJSModule(m), true);

@@ -64,7 +64,8 @@ PageAction.prototype = {
 
     this.shouldShow = true;
 
-    let {icon} = IconDetails.getURL(this.icons, context.contentWindow, this.extension, 18);
+    let {icon} = IconDetails.getPreferredIcon(this.icons, this.extension,
+                                              18 * context.contentWindow.devicePixelRatio);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
     return IconDetails.convertImageURLToDataURL(icon, context, browserWindow).then(dataURI => {

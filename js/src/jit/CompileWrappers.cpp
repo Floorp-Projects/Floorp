@@ -113,12 +113,6 @@ CompileRuntime::spsProfiler()
 }
 
 bool
-CompileRuntime::canUseSignalHandlers()
-{
-    return runtime()->canUseSignalHandlers();
-}
-
-bool
 CompileRuntime::jitSupportsFloatingPoint()
 {
     return runtime()->jitSupportsFloatingPoint;

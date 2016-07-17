@@ -399,6 +399,12 @@ struct SurfaceCache
                                     nsTArray<SurfaceMemoryCounter>& aCounters,
                                     MallocSizeOf      aMallocSizeOf);
 
+  /**
+   * @return maximum capacity of the SurfaceCache in bytes. This is only exposed
+   * for use by tests; normal code should use CanHold() instead.
+   */
+  static size_t MaximumCapacity();
+
 private:
   virtual ~SurfaceCache() = 0;  // Forbid instantiation.
 };

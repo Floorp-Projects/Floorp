@@ -23,6 +23,7 @@
 #include "asmjs/WasmBinaryToExperimentalText.h"
 #include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmJS.h"
+#include "asmjs/WasmSignalHandlers.h"
 #include "asmjs/WasmTextToBinary.h"
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
@@ -515,7 +516,21 @@ static bool
 WasmUsesSignalForOOB(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(wasm::SignalUsage(cx).forOOB);
+    args.rval().setBoolean(wasm::SignalUsage().forOOB);
+    return true;
+}
+
+static bool
+SuppressSignalHandlers(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.requireAtLeast(cx, "suppressSignalHandlers", 1))
+        return false;
+
+    wasm::SuppressSignalHandlersForTesting(ToBoolean(args[0]));
+
+    args.rval().setUndefined();
     return true;
 }
 
@@ -3785,6 +3800,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmUsesSignalForOOB", WasmUsesSignalForOOB, 0, 0,
 "wasmUsesSignalForOOB()",
 "  Return whether wasm and asm.js use a signal handler for detecting out-of-bounds."),
+
+    JS_FN_HELP("suppressSignalHandlers", SuppressSignalHandlers, 1, 0,
+"suppressSignalHandlers(suppress)",
+"  This function allows artificially suppressing signal handler support, even if the underlying "
+"  platform supports it."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",

@@ -2094,7 +2094,7 @@ intrinsic_IsWrappedPromiseObject(JSContext* cx, unsigned argc, Value* vp)
     RootedObject obj(cx, &args[0].toObject());
     MOZ_ASSERT(!obj->is<PromiseObject>(),
                "Unwrapped promises should be filtered out in inlineable code");
-    args.rval().setBoolean(JS::IsPromiseObject(obj));
+    args.rval().setBoolean(CheckedUnwrap(obj)->is<PromiseObject>());
     return true;
 }
 

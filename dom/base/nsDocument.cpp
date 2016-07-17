@@ -1459,9 +1459,6 @@ nsIDocument::nsIDocument()
     mUserHasInteracted(false)
 {
   SetIsDocument();
-  if (IsStyledByServo()) {
-    SetFlags(NODE_IS_DIRTY_FOR_SERVO | NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
-  }
 
   PR_INIT_CLIST(&mDOMMediaQueryLists);
 }

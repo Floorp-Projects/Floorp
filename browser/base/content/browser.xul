@@ -104,6 +104,12 @@
                 hidden="true"
                 oncommand="gBrowser.openNonRemoteWindow(TabContextMenu.contextTab);"/>
 #endif
+      <menuseparator id="context_sendTabToDevice_separator" hidden="true"/>
+      <menu id="context_sendTabToDevice" label="&sendTabToDevice.label;"
+            accesskey="&sendTabToDevice.accesskey;" hidden="true">
+        <menupopup id="context_sendTabToDevicePopupMenu"
+                   onpopupshowing="gFxAccounts.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle);"/>
+      </menu>
       <menuseparator/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
                 tbattr="tabbrowser-multiple-visible"
