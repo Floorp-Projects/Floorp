@@ -242,11 +242,12 @@ HTMLVideoElement::GetVideoPlaybackQuality()
     }
 
     if (mDecoder) {
-      FrameStatistics& stats = mDecoder->GetFrameStatistics();
-      static_assert(sizeof(uint32_t) >= sizeof (stats.GetParsedFrames()),
+      FrameStatisticsData stats =
+        mDecoder->GetFrameStatistics().GetFrameStatisticsData();
+      static_assert(sizeof(totalFrames) >= sizeof(stats.mParsedFrames),
                     "possible truncation from FrameStatistics to VideoPlaybackQuality");
-      totalFrames = stats.GetParsedFrames();
-      droppedFrames = stats.GetDroppedFrames();
+      totalFrames = stats.mParsedFrames;
+      droppedFrames = stats.mDroppedFrames;
       corruptedFrames = 0;
     }
   }
