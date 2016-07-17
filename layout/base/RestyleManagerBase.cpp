@@ -37,7 +37,7 @@ RestyleManagerBase::ContentStateChangedInternal(Element* aElement,
   StyleSetHandle styleSet = PresContext()->StyleSet();
   NS_ASSERTION(styleSet, "couldn't get style set");
 
-  *aOutChangeHint = NS_STYLE_HINT_NONE;
+  *aOutChangeHint = nsChangeHint(0);
   // Any change to a content state that affects which frames we construct
   // must lead to a frame reconstruct here if we already have a frame.
   // Note that we never decide through non-CSS means to not create frames
