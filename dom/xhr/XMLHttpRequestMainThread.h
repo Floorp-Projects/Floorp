@@ -542,6 +542,11 @@ public:
                              bool aLengthComputable,
                              int64_t aLoaded, int64_t aTotal);
 
+  // Dispatch the "progress" event on the XHR or XHR.upload object if we've
+  // received data since the last "progress" event. Also dispatches
+  // "uploadprogress" as needed.
+  void MaybeDispatchProgressEvents(bool aFinalProgress);
+
   // This is called by the factory constructor.
   nsresult Init();
 
@@ -599,12 +604,10 @@ protected:
   already_AddRefed<nsIJARChannel> GetCurrentJARChannel();
 
   bool IsSystemXHR() const;
-  bool InUploadPhase() const;
 
   void ChangeStateToDone();
 
   void StartProgressEventTimer();
-  void StopProgressEventTimer();
 
   nsresult OnRedirectVerifyCallback(nsresult result);
 
