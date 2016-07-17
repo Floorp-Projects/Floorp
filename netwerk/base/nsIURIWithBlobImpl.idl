@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * nsIURIWithBlobImpl is implemented by URIs which are associated with a
+ * specific BlobImpl.
+ */
+[builtinclass, uuid(331b41d3-3506-4ab5-bef9-aab41e3202a3)]
+interface nsIURIWithBlobImpl : nsISupports
+{
+    /**
+     * The BlobImpl associated with the resource returned when loading this uri.
+     */
+    readonly attribute nsISupports blobImpl;
+};

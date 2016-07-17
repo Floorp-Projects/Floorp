@@ -509,8 +509,13 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 
   DataInfo* info = GetDataInfo(aSpec);
 
-  RefPtr<nsHostObjectURI> uri =
-    new nsHostObjectURI(info ? info->mPrincipal.get() : nullptr);
+  RefPtr<nsHostObjectURI> uri;
+  if (info) {
+    nsCOMPtr<BlobImpl> blob = do_QueryInterface(info->mObject);
+    uri = new nsHostObjectURI(info->mPrincipal, blob);
+  } else {
+    uri = new nsHostObjectURI(nullptr, nullptr);
+  }
 
   rv = uri->SetSpec(aSpec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -528,22 +533,26 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 {
   *result = nullptr;
 
+  nsCOMPtr<nsIURIWithBlobImpl> uriBlobImpl = do_QueryInterface(uri);
+  if (!uriBlobImpl) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  nsCOMPtr<nsISupports> tmp;
+  MOZ_ALWAYS_SUCCEEDS(uriBlobImpl->GetBlobImpl(getter_AddRefs(tmp)));
+  nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(tmp);
+  if (!blobImpl) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+#ifdef DEBUG
   nsCString spec;
   uri->GetSpec(spec);
 
   DataInfo* info = GetDataInfo(spec);
 
-  if (!info) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  nsCOMPtr<BlobImpl> blob = do_QueryInterface(info->mObject);
-  if (!blob) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-#ifdef DEBUG
-  {
+  // Info can be null, in case this blob URL has been revoked already.
+  if (info) {
     nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
     nsCOMPtr<nsIPrincipal> principal;
     uriPrinc->GetPrincipal(getter_AddRefs(principal));
@@ -553,13 +562,13 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 
   ErrorResult rv;
   nsCOMPtr<nsIInputStream> stream;
-  blob->GetInternalStream(getter_AddRefs(stream), rv);
+  blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
   nsAutoString contentType;
-  blob->GetType(contentType);
+  blobImpl->GetType(contentType);
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
@@ -572,13 +581,13 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return rv.StealNSResult();
   }
 
-  if (blob->IsFile()) {
+  if (blobImpl->IsFile()) {
     nsString filename;
-    blob->GetName(filename);
+    blobImpl->GetName(filename);
     channel->SetContentDispositionFilename(filename);
   }
 
-  uint64_t size = blob->GetSize(rv);
+  uint64_t size = blobImpl->GetSize(rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
