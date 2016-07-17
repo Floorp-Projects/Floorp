@@ -108,7 +108,7 @@ WGLLibrary::EnsureInitialized()
     }
 
     if (!mOGLLibrary) {
-        mOGLLibrary = PR_LoadLibrary(&libGLFilename[0]);
+        mOGLLibrary = PR_LoadLibrary(libGLFilename.c_str());
         if (!mOGLLibrary) {
             NS_WARNING("Couldn't load OpenGL library.");
             return false;
