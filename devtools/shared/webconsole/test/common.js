@@ -97,6 +97,9 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
           if (aAttachToWorker) {
             let workerName = "console-test-worker.js#" + new Date().getTime();
             var worker = new Worker(workerName);
+            // Keep a strong reference to the Worker to avoid it being
+            // GCd during the test (bug 1237492).
+            aState._worker_ref = worker;
             worker.addEventListener("message", function listener() {
               worker.removeEventListener("message", listener);
               tabClient.listWorkers(function (response) {
