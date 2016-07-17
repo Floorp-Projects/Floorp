@@ -1250,6 +1250,7 @@ class DebuggerObject : public NativeObject
     bool isBoundFunction() const;
     bool isArrowFunction() const;
     bool isGlobal() const;
+    bool isPromise() const;
     JSAtom* name() const;
     JSAtom* displayName() const;
 
@@ -1298,6 +1299,16 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool globalGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool errorMessageNameGetter(JSContext* cx, unsigned argc, Value* vp);
+#ifdef SPIDERMONKEY_PROMISE
+    static MOZ_MUST_USE bool isPromiseGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseStateGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseLifetimeGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseTimeToResolutionGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseAllocationSiteGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseResolutionSiteGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseIDGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool promiseDependentPromisesGetter(JSContext* cx, unsigned argc, Value* vp);
+#endif // SPIDERMONKEY_PROMISE
 
     // JSNative methods
     static MOZ_MUST_USE bool isExtensibleMethod(JSContext* cx, unsigned argc, Value* vp);

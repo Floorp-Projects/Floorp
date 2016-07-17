@@ -155,7 +155,7 @@ public:
    */
   bool AddStyleFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!mStyleFlushObservers.Contains(aShell),
-		 "Double-adding style flush observer");
+                 "Double-adding style flush observer");
     // We only get the cause for the first observer each frame because capturing
     // a stack is expensive. This is still useful if (1) you're trying to remove
     // all flushes for a particial frame or (2) the costly flush is triggered
@@ -173,7 +173,7 @@ public:
   }
   bool AddLayoutFlushObserver(nsIPresShell* aShell) {
     NS_ASSERTION(!IsLayoutFlushObserver(aShell),
-		 "Double-adding layout flush observer");
+                 "Double-adding layout flush observer");
     // We only get the cause for the first observer each frame because capturing
     // a stack is expensive. This is still useful if (1) you're trying to remove
     // all flushes for a particial frame or (2) the costly flush is triggered
@@ -193,7 +193,7 @@ public:
   }
   bool AddPresShellToInvalidateIfHidden(nsIPresShell* aShell) {
     NS_ASSERTION(!mPresShellsToInvalidateIfHidden.Contains(aShell),
-		 "Double-adding style flush observer");
+                 "Double-adding style flush observer");
     bool appended = mPresShellsToInvalidateIfHidden.AppendElement(aShell) != nullptr;
     EnsureTimerStarted();
     return appended;
@@ -288,7 +288,7 @@ public:
    * Check whether the given observer is an observer for the given flush type
    */
   bool IsRefreshObserver(nsARefreshObserver *aObserver,
-			   mozFlushType aFlushType);
+                         mozFlushType aFlushType);
 #endif
 
   /**

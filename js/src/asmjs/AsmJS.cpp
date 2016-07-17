@@ -1751,8 +1751,15 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!dummyFunction_)
             return false;
 
+        UniqueChars filename;
+        if (parser_.ss->filename()) {
+            filename = DuplicateString(parser_.ss->filename());
+            if (!filename)
+                return false;
+        }
+
         CompileArgs args;
-        if (!args.init(cx_))
+        if (!args.initFromContext(cx_, Move(filename)))
             return false;
 
         auto genData = MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal, ModuleKind::AsmJS);
@@ -1767,12 +1774,6 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 
         genData->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
-
-        if (parser_.ss->filename()) {
-            args.filename = DuplicateString(parser_.ss->filename());
-            if (!args.filename)
-                return false;
-        }
 
         if (!mg_.init(Move(genData), Move(args), asmJSMetadata_.get()))
             return false;
@@ -2268,7 +2269,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool finishFunctionBodies() {
         return mg_.finishFuncDefs();
     }
-    UniqueModule finish() {
+    SharedModule finish() {
         if (!arrayViews_.empty())
             mg_.initMemoryUsage(atomicsPresent_ ? MemoryUsage::Shared : MemoryUsage::Unshared);
 
@@ -7228,7 +7229,7 @@ CheckModuleEnd(ModuleValidator &m)
     return true;
 }
 
-static UniqueModule
+static SharedModule
 CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, unsigned* time)
 {
     int64_t before = PRMJ_Now();
@@ -7273,7 +7274,7 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, unsi
     if (!CheckModuleEnd(m))
         return nullptr;
 
-    UniqueModule module = m.finish();
+    SharedModule module = m.finish();
     if (!module)
         return nullptr;
 
@@ -8342,7 +8343,7 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
 
 static bool
 LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loadedFromCache,
-                         UniqueModule* module, UniqueChars* compilationTimeReport)
+                         SharedModule* module, UniqueChars* compilationTimeReport)
 {
     int64_t before = PRMJ_Now();
 
@@ -8388,8 +8389,8 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
         return true;
 
     Assumptions assumptions;
-    if (!assumptions.init(SignalUsage(cx), cx->buildIdOp()))
-        return true;
+    if (!assumptions.initBuildIdFromContext(cx))
+        return false;
 
     if (assumptions != (*module)->metadata().assumptions)
         return true;
@@ -8512,7 +8513,7 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     // Before spending any time parsing the module, try to look it up in the
     // embedding's cache using the chars about to be parsed as the key.
     bool loadedFromCache;
-    UniqueModule module;
+    SharedModule module;
     UniqueChars message;
     if (!LookupAsmJSModuleInCache(cx, parser, &loadedFromCache, &module, &message))
         return false;
@@ -8541,7 +8542,7 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
 
     // Hand over ownership to a GC object wrapper which can then be referenced
     // from the module function.
-    Rooted<WasmModuleObject*> moduleObj(cx, WasmModuleObject::create(cx, Move(module)));
+    Rooted<WasmModuleObject*> moduleObj(cx, WasmModuleObject::create(cx, *module));
     if (!moduleObj)
         return false;
 

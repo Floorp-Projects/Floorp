@@ -106,7 +106,7 @@ IsNonProxyDOMClass(const JSClass* clasp)
   return IsNonProxyDOMClass(js::Valueify(clasp));
 }
 
-// Returns true if the JSClass is used for DOM interface and interface 
+// Returns true if the JSClass is used for DOM interface and interface
 // prototype objects.
 inline bool
 IsDOMIfaceAndProtoClass(const JSClass* clasp)
@@ -2009,6 +2009,12 @@ private:
                     "Offset of mFlags should match");
     }
   };
+};
+
+class FastErrorResult :
+    public mozilla::binding_danger::TErrorResult<
+      mozilla::binding_danger::JustAssertCleanupPolicy>
+{
 };
 
 } // namespace binding_detail

@@ -1,6 +1,7 @@
 'use strict';
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
 
 function debug(str) {
   // info(str);
@@ -144,7 +145,11 @@ function testConnectionWentaway() {
     connection.onclose = function() {
       connection.onclose = null;
       is(connection.state, "closed", "Sender: Connection should be closed.");
-      aResolve();
+      receiverIframe.addEventListener('mozbrowserclose', function closeHandler() {
+        ok(false, 'wentaway should not trigger receiver close');
+        aResolve();
+      });
+      setTimeout(aResolve, 3000);
     };
     gScript.addMessageListener('ready-to-remove-receiverFrame', function onReadyToRemove() {
       gScript.removeMessageListener('ready-to-remove-receiverFrame', onReadyToRemove);

@@ -37,18 +37,20 @@ public:
 
   /**
    * Initialize an image decoder. Decoders may not be re-initialized.
+   *
+   * @return NS_OK if the decoder could be initialized successfully.
    */
-  void Init();
+  nsresult Init();
 
   /**
    * Decodes, reading all data currently available in the SourceBuffer.
    *
-   * If more data is needed, Decode() will schedule @aOnResume to be called when
-   * more data is available.
+   * If more data is needed and @aOnResume is non-null, Decode() will schedule
+   * @aOnResume to be called when more data is available.
    *
    * Any errors are reported by setting the appropriate state on the decoder.
    */
-  nsresult Decode(NotNull<IResumable*> aOnResume);
+  nsresult Decode(IResumable* aOnResume = nullptr);
 
   /**
    * Given a maximum number of bytes we're willing to decode, @aByteLimit,
@@ -162,13 +164,21 @@ public:
     return bool(mDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY);
   }
 
-  size_t BytesDecoded() const { return mBytesDecoded; }
+  size_t BytesDecoded() const
+  {
+    MOZ_ASSERT(mIterator);
+    return mIterator->ByteCount();
+  }
 
   // The amount of time we've spent inside DoDecode() so far for this decoder.
   TimeDuration DecodeTime() const { return mDecodeTime; }
 
   // The number of chunks this decoder's input was divided into.
-  uint32_t ChunkCount() const { return mChunkCount; }
+  uint32_t ChunkCount() const
+  {
+    MOZ_ASSERT(mIterator);
+    return mIterator->ChunkCount();
+  }
 
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
@@ -184,17 +194,14 @@ public:
   bool HasAnimation() const { return mImageMetadata.HasAnimation(); }
 
   // Error tracking
-  bool HasError() const { return HasDataError() || HasDecoderError(); }
-  bool HasDataError() const { return mDataError; }
-  bool HasDecoderError() const { return NS_FAILED(mFailCode); }
+  bool HasError() const { return mError; }
   bool ShouldReportError() const { return mShouldReportError; }
-  nsresult GetDecoderError() const { return mFailCode; }
 
   /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
   {
-    return mDecodeDone || (mMetadataDecode && HasSize()) ||
-           HasError() || mDataDone;
+    return mReachedTerminalState || mDecodeDone ||
+           (mMetadataDecode && HasSize()) || HasError();
   }
 
   /// Are we in the middle of a frame right now? Used for assertions only.
@@ -287,13 +294,14 @@ protected:
    *
    * BeforeFinishInternal() can be used to detect if decoding is in an
    * incomplete state, e.g. due to file truncation, in which case it should
-   * call PostDataError().
+   * return a failing nsresult.
    */
-  virtual void InitInternal();
-  virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator) = 0;
-  virtual void BeforeFinishInternal();
-  virtual void FinishInternal();
-  virtual void FinishWithErrorInternal();
+  virtual nsresult InitInternal();
+  virtual Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
+                                        IResumable* aOnResume) = 0;
+  virtual nsresult BeforeFinishInternal();
+  virtual nsresult FinishInternal();
+  virtual nsresult FinishWithErrorInternal();
 
   /*
    * Progress notifications.
@@ -358,17 +366,6 @@ protected:
   // means a single iteration, stopping on the last frame.
   void PostDecodeDone(int32_t aLoopCount = 0);
 
-  // Data errors are the fault of the source data, decoder errors are our fault
-  void PostDataError();
-  void PostDecoderError(nsresult aFailCode);
-
-  /**
-   * CompleteDecode() finishes up the decoding process after Decode() determines
-   * that we're finished. It records final progress and does all the cleanup
-   * that's possible off-main-thread.
-   */
-  void CompleteDecode();
-
   /**
    * Allocates a new frame, making it our current frame if successful.
    *
@@ -389,6 +386,17 @@ protected:
     return AllocateFrame(0, size, nsIntRect(nsIntPoint(), size),
                          gfx::SurfaceFormat::B8G8R8A8);
   }
+
+private:
+  /// Report that an error was encountered while decoding.
+  void PostError();
+
+  /**
+   * CompleteDecode() finishes up the decoding process after Decode() determines
+   * that we're finished. It records final progress and does all the cleanup
+   * that's possible off-main-thread.
+   */
+  void CompleteDecode();
 
   RawAccessFrameRef AllocateFrameInternal(uint32_t aFrameNum,
                                           const nsIntSize& aTargetSize,
@@ -415,22 +423,18 @@ private:
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
 
-  nsresult mFailCode;
-
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;
-  uint32_t mChunkCount;
 
   DecoderFlags mDecoderFlags;
   SurfaceFlags mSurfaceFlags;
-  size_t mBytesDecoded;
 
   bool mInitialized : 1;
   bool mMetadataDecode : 1;
   bool mInFrame : 1;
-  bool mDataDone : 1;
+  bool mReachedTerminalState : 1;
   bool mDecodeDone : 1;
-  bool mDataError : 1;
+  bool mError : 1;
   bool mDecodeAborted : 1;
   bool mShouldReportError : 1;
 };
