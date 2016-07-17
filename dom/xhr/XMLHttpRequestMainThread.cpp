@@ -1300,10 +1300,6 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
     return;
   }
 
-  if (aType == ProgressEventType::progress) {
-    mInLoadProgressEvent = true;
-  }
-
   ProgressEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -1317,19 +1313,6 @@ XMLHttpRequestMainThread::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   event->SetTrusted(true);
 
   aTarget->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-
-  if (aType == ProgressEventType::progress) {
-    mInLoadProgressEvent = false;
-
-    // clear chunked responses after every progress event
-    if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_text ||
-        mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
-      mResponseBody.Truncate();
-      mResponseText.Truncate();
-      mResultArrayBuffer = nullptr;
-      mArrayBufferBuilder.reset();
-    }
-  }
 
   // If we're sending a load, error, timeout or abort event, then
   // also dispatch the subsequent loadend event.
@@ -1358,13 +1341,6 @@ bool
 XMLHttpRequestMainThread::IsSystemXHR() const
 {
   return mIsSystem || nsContentUtils::IsSystemPrincipal(mPrincipal);
-}
-
-bool
-XMLHttpRequestMainThread::InUploadPhase() const
-{
-  // We're in the upload phase while our state is State::opened.
-  return mState == State::opened;
 }
 
 NS_IMETHODIMP
@@ -1737,9 +1713,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
 
   ChangeState(State::loading);
 
-  if (!mFlagSynchronous && !mProgressTimerIsActive) {
-    StartProgressEventTimer();
-  }
+  MaybeDispatchProgressEvents(false);
 
   return NS_OK;
 }
@@ -1786,20 +1760,17 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   request->GetStatus(&status);
   mErrorLoad = mErrorLoad || NS_FAILED(status);
 
-  // Upload phase is now over. If we were uploading anything,
-  // stop the timer and fire any final progress events.
   if (mUpload && !mUploadComplete && !mErrorLoad && !mFlagSynchronous) {
-    StopProgressEventTimer();
-
-    mUploadTransferred = mUploadTotal;
-
-    if (mProgressSinceLastProgressEvent) {
-      DispatchProgressEvent(mUpload, ProgressEventType::progress,
-                            mUploadLengthComputable, mUploadTransferred,
-                            mUploadTotal);
-      mProgressSinceLastProgressEvent = false;
+    if (mProgressTimerIsActive) {
+      mProgressTimerIsActive = false;
+      mProgressNotifier->Cancel();
     }
-
+    if (mUploadTransferred < mUploadTotal) {
+      mUploadTransferred = mUploadTotal;
+      mProgressSinceLastProgressEvent = true;
+      mUploadLengthComputable = true;
+      MaybeDispatchProgressEvents(true);
+    }
     mUploadComplete = true;
     DispatchProgressEvent(mUpload, ProgressEventType::load,
                           true, mUploadTotal, mUploadTotal);
@@ -1985,8 +1956,10 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Download phase beginning; start the progress event timer if necessary.
-  if (NS_SUCCEEDED(rv) && HasListenersFor(nsGkAtoms::onprogress)) {
+  // We won't get any progress events anyway if we didn't have progress
+  // events when starting the request - so maybe no need to start timer here.
+  if (NS_SUCCEEDED(rv) && !mFlagSynchronous &&
+      HasListenersFor(nsGkAtoms::onprogress)) {
     StartProgressEventTimer();
   }
 
@@ -2028,6 +2001,13 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
 
   mXMLParserStreamListener = nullptr;
   mContext = nullptr;
+
+  // If we're received data since the last progress event, make sure to fire
+  // an event for it, except in the HTML case, defer the last progress event
+  // until the parser is done.
+  if (!mIsHtml) {
+    MaybeDispatchProgressEvents(true);
+  }
 
   if (NS_SUCCEEDED(status) &&
       (mResponseType == XMLHttpRequestResponseType::Blob ||
@@ -2125,18 +2105,10 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
 void
 XMLHttpRequestMainThread::ChangeStateToDone()
 {
-  StopProgressEventTimer();
-
-  MOZ_ASSERT(!mFlagParseBody,
-             "ChangeStateToDone() called before async HTML parsing is done.");
-
-  // Fire the final progress event required by spec, if we haven't already.
-  if (mProgressSinceLastProgressEvent && !mErrorLoad && !mFlagSynchronous) {
-    mLoadTotal = mLoadTransferred;
-    DispatchProgressEvent(this, ProgressEventType::progress,
-                          mLoadLengthComputable, mLoadTransferred,
-                          mLoadTotal);
-    mProgressSinceLastProgressEvent = false;
+  if (mIsHtml) {
+    // In the HTML case, this has to be deferred, because the parser doesn't
+    // do it's job synchronously.
+    MaybeDispatchProgressEvents(true);
   }
 
   ChangeState(State::done, true);
@@ -2818,7 +2790,10 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
       }
     }
 
-    StopProgressEventTimer();
+    if (mProgressNotifier) {
+      mProgressTimerIsActive = false;
+      mProgressNotifier->Cancel();
+    }
 
     {
       nsAutoSyncOperation sync(suspendedDoc);
@@ -2844,9 +2819,11 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
     // that this needs to come after the AsyncOpen() and rv check, because this
     // can run script that would try to restart this request, and that could end
     // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
-    StopProgressEventTimer();
+    if (mProgressNotifier) {
+      mProgressTimerIsActive = false;
+      mProgressNotifier->Cancel();
+    }
 
-    // Upload phase beginning; start the progress event timer if necessary.
     if (mUpload && mUpload->HasListenersFor(nsGkAtoms::onprogress)) {
       StartProgressEventTimer();
     }
@@ -3151,8 +3128,10 @@ XMLHttpRequestMainThread::ChangeState(State aState, bool aBroadcast)
   mState = aState;
   nsresult rv = NS_OK;
 
-  if (aState != State::headers_received && aState != State::loading) {
-    StopProgressEventTimer();
+  if (mProgressNotifier &&
+      aState != State::headers_received && aState != State::loading) {
+    mProgressTimerIsActive = false;
+    mProgressNotifier->Cancel();
   }
 
 
@@ -3235,13 +3214,62 @@ XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result)
 // nsIProgressEventSink methods:
 //
 
+void
+XMLHttpRequestMainThread::MaybeDispatchProgressEvents(bool aFinalProgress)
+{
+  if (aFinalProgress && mProgressTimerIsActive) {
+    mProgressTimerIsActive = false;
+    mProgressNotifier->Cancel();
+  }
+
+  if (mProgressTimerIsActive ||
+      !mProgressSinceLastProgressEvent ||
+      mErrorLoad ||
+      mFlagSynchronous) {
+    return;
+  }
+
+  if (!aFinalProgress) {
+    StartProgressEventTimer();
+  }
+
+  // We're in the upload phase while our state is State::opened.
+  if (mState == State::opened) {
+    if (mUpload && !mUploadComplete) {
+      DispatchProgressEvent(mUpload, ProgressEventType::progress,
+                            mUploadLengthComputable, mUploadTransferred,
+                            mUploadTotal);
+    }
+  } else {
+    if (aFinalProgress) {
+      mLoadTotal = mLoadTransferred;
+    }
+    mInLoadProgressEvent = true;
+    DispatchProgressEvent(this, ProgressEventType::progress,
+                          mLoadLengthComputable, mLoadTransferred,
+                          mLoadTotal);
+    mInLoadProgressEvent = false;
+    if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_text ||
+        mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
+      mResponseBody.Truncate();
+      mResponseText.Truncate();
+      mResultArrayBuffer = nullptr;
+      mArrayBufferBuilder.reset();
+    }
+  }
+
+  mProgressSinceLastProgressEvent = false;
+}
+
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnProgress(nsIRequest *aRequest, nsISupports *aContext, int64_t aProgress, int64_t aProgressMax)
 {
+  // We're in the upload phase while our state is State::opened.
+  bool upload = mState == State::opened;
   // When uploading, OnProgress reports also headers in aProgress and aProgressMax.
   // So, try to remove the headers, if possible.
   bool lengthComputable = (aProgressMax != -1);
-  if (InUploadPhase()) {
+  if (upload) {
     int64_t loaded = aProgress;
     if (lengthComputable) {
       int64_t headerSize = aProgressMax - mUploadTotal;
@@ -3251,15 +3279,13 @@ XMLHttpRequestMainThread::OnProgress(nsIRequest *aRequest, nsISupports *aContext
     mUploadTransferred = loaded;
     mProgressSinceLastProgressEvent = true;
 
-    if (!mFlagSynchronous && !mProgressTimerIsActive) {
-      StartProgressEventTimer();
-    }
+    MaybeDispatchProgressEvents((mUploadTransferred == mUploadTotal));
   } else {
     mLoadLengthComputable = lengthComputable;
     mLoadTotal = lengthComputable ? aProgressMax : 0;
     mLoadTransferred = aProgress;
-    // OnDataAvailable() handles mProgressSinceLastProgressEvent
-    // for the download phase.
+    // Don't dispatch progress events here. OnDataAvailable will take care
+    // of that.
   }
 
   if (mProgressEventSink) {
@@ -3453,35 +3479,7 @@ void
 XMLHttpRequestMainThread::HandleProgressTimerCallback()
 {
   mProgressTimerIsActive = false;
-
-  if (!mProgressSinceLastProgressEvent || mErrorLoad) {
-    return;
-  }
-
-  if (InUploadPhase()) {
-    if (mUpload && !mUploadComplete) {
-      DispatchProgressEvent(mUpload, ProgressEventType::progress,
-                            mUploadLengthComputable, mUploadTransferred,
-                            mUploadTotal);
-    }
-  } else {
-    DispatchProgressEvent(this, ProgressEventType::progress,
-                          mLoadLengthComputable, mLoadTransferred,
-                          mLoadTotal);
-  }
-
-  mProgressSinceLastProgressEvent = false;
-
-  StartProgressEventTimer();
-}
-
-void
-XMLHttpRequestMainThread::StopProgressEventTimer()
-{
-  if (mProgressNotifier) {
-    mProgressTimerIsActive = false;
-    mProgressNotifier->Cancel();
-  }
+  MaybeDispatchProgressEvents(false);
 }
 
 void
