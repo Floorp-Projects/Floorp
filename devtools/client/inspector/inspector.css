@@ -3,14 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#inspector-sidebar {
-  min-width: 250px;
+/* Set the minimum width for the side bar so, all tabs are
+  properly visible. The value can be decreased when bug 1281789
+  is fixed and the all-tabs-menu is available again. */
+#inspector-sidebar-container {
+  overflow: hidden;
+  min-width: 450px;
+  position: relative;
 }
 
+#inspector-sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css */
 .inspector-tabpanel > * {
-  /*
-   * Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css
-   */
   -moz-user-focus: normal;
 }
 

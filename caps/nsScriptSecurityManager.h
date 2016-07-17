@@ -120,6 +120,10 @@ private:
                                        nsIPrincipal** aPrincipal,
                                        bool aIgnoreSandboxing);
 
+    nsresult
+    CheckLoadURIFlags(nsIURI* aSourceURI, nsIURI* aTargetURI, nsIURI* aSourceBaseURI,
+                      nsIURI* aTargetBaseURI, uint32_t aFlags);
+
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;

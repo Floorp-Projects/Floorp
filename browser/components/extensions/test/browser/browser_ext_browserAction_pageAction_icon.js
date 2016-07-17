@@ -52,6 +52,12 @@ add_task(function* testDetailsObjects() {
           "1": browser.runtime.getURL("data/a.png"),
           "2": browser.runtime.getURL("data/a-x2.png")}},
 
+      // Test that CSS strings are escaped properly.
+      {details: {"path": 'a.png#" \\'},
+        resolutions: {
+          "1": browser.runtime.getURL("data/a.png#%22%20%5C"),
+          "2": browser.runtime.getURL("data/a.png#%22%20%5C")}},
+
       // Only ImageData objects.
       {details: {"imageData": imageData.red.imageData},
         resolutions: {
@@ -136,16 +142,23 @@ add_task(function* testDetailsObjects() {
         legacy: true,
         resolutions: {
           "1": browser.runtime.getURL("data/18.png"),
-          "2": browser.runtime.getURL("data/36.png")}},
+          "2": browser.runtime.getURL("data/36.png")},
+        menuResolutions: {
+          "1": browser.runtime.getURL("data/36.png"),
+          "2": browser.runtime.getURL("data/128.png")}},
       {details: {"path": {
         "16": "16.png",
         "18": "18.png",
         "32": "32.png",
         "48": "48.png",
+        "64": "64.png",
         "128": "128.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/16.png"),
-          "2": browser.runtime.getURL("data/32.png")}},
+          "2": browser.runtime.getURL("data/32.png")},
+        menuResolutions: {
+          "1": browser.runtime.getURL("data/32.png"),
+          "2": browser.runtime.getURL("data/64.png")}},
       {details: {"path": {
         "18": "18.png",
         "32": "32.png",
@@ -167,15 +180,14 @@ add_task(function* testDetailsObjects() {
       }
 
       let details = iconDetails[test.index];
-      let expectedURL = details.resolutions[test.resolution];
 
       let detailString = JSON.stringify(details);
-      browser.test.log(`Setting browerAction/pageAction to ${detailString} expecting URL ${expectedURL}`);
+      browser.test.log(`Setting browerAction/pageAction to ${detailString} expecting URLs ${JSON.stringify(details.resolutions)}`);
 
       browser.browserAction.setIcon(Object.assign({tabId}, details.details));
       browser.pageAction.setIcon(Object.assign({tabId}, details.details));
 
-      browser.test.sendMessage("imageURL", [expectedURL, !!details.legacy]);
+      browser.test.sendMessage("iconSet");
     });
 
     // Generate a list of tests and resolutions to send back to the test
@@ -190,9 +202,12 @@ add_task(function* testDetailsObjects() {
     // correctly.
     let tests = [];
     for (let [idx, icon] of iconDetails.entries()) {
-      for (let res of Object.keys(icon.resolutions)) {
-        tests.push({index: idx, resolution: Number(res)});
-      }
+      tests.push({
+        index: idx,
+        legacy: !!icon.legacy,
+        menuResolutions: icon.menuResolutions,
+        resolutions: icon.resolutions,
+      });
     }
 
     // Sort by resolution, so we don't needlessly switch back and forth
@@ -219,35 +234,86 @@ add_task(function* testDetailsObjects() {
     files: {
       "data/background.html": `<script src="background.js"></script>`,
       "data/background.js": background,
+
+      "data/16.svg": imageBuffer,
+      "data/18.svg": imageBuffer,
+
+      "data/16.png": imageBuffer,
+      "data/18.png": imageBuffer,
+      "data/32.png": imageBuffer,
+      "data/36.png": imageBuffer,
+      "data/48.png": imageBuffer,
+      "data/64.png": imageBuffer,
+      "data/128.png": imageBuffer,
+
+      "a.png": imageBuffer,
+      "data/2.png": imageBuffer,
+      "data/100.png": imageBuffer,
+      "data/a.png": imageBuffer,
+      "data/a-x2.png": imageBuffer,
     },
   });
 
   const RESOLUTION_PREF = "layout.css.devPixelsPerPx";
-  registerCleanupFunction(() => {
-    SpecialPowers.clearUserPref(RESOLUTION_PREF);
-  });
 
-  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
   let pageActionId = makeWidgetId(extension.id) + "-page-action";
+  let browserActionWidget = getBrowserActionWidget(extension);
 
-  let [, tests] = yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+
+  yield extension.startup();
+  let tests = yield extension.awaitMessage("ready");
 
   for (let test of tests) {
-    SpecialPowers.setCharPref(RESOLUTION_PREF, String(test.resolution));
-    is(window.devicePixelRatio, test.resolution, "window has the required resolution");
-
     extension.sendMessage("setIcon", test);
+    yield extension.awaitMessage("iconSet");
 
-    let [imageURL, legacy] = yield extension.awaitMessage("imageURL");
-
-    let browserActionButton = document.getElementById(browserActionId);
-    is(browserActionButton.getAttribute("image"), imageURL, "browser action has the correct image");
-
-    let isLegacy = browserActionButton.classList.contains("toolbarbutton-legacy-addon");
-    is(isLegacy, legacy, "Legacy class should be present?");
-
+    let browserActionButton = browserActionWidget.forWindow(window).node;
     let pageActionImage = document.getElementById(pageActionId);
-    is(pageActionImage.src, imageURL, "page action has the correct image");
+
+
+    // Test icon sizes in the toolbar/urlbar.
+    for (let resolution of Object.keys(test.resolutions)) {
+      yield SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
+
+      is(window.devicePixelRatio, +resolution, "window has the required resolution");
+
+      let imageURL = test.resolutions[resolution];
+      is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct image at ${resolution}x resolution`);
+      is(getListStyleImage(pageActionImage), imageURL, `page action has the correct image at ${resolution}x resolution`);
+
+      let isLegacy = browserActionButton.classList.contains("toolbarbutton-legacy-addon");
+      is(isLegacy, test.legacy, "Legacy class should be present?");
+
+      yield SpecialPowers.popPrefEnv();
+    }
+
+    if (!test.menuResolutions) {
+      continue;
+    }
+
+
+    // Test icon sizes in the menu panel.
+    CustomizableUI.addWidgetToArea(browserActionWidget.id,
+                                   CustomizableUI.AREA_PANEL);
+
+    yield showBrowserAction(extension);
+    browserActionButton = browserActionWidget.forWindow(window).node;
+
+    for (let resolution of Object.keys(test.menuResolutions)) {
+      yield SpecialPowers.pushPrefEnv({set: [[RESOLUTION_PREF, resolution]]});
+
+      is(window.devicePixelRatio, +resolution, "window has the required resolution");
+
+      let imageURL = test.menuResolutions[resolution];
+      is(getListStyleImage(browserActionButton), imageURL, `browser action has the correct menu image at ${resolution}x resolution`);
+
+      yield SpecialPowers.popPrefEnv();
+    }
+
+    yield closeBrowserAction(extension);
+
+    CustomizableUI.addWidgetToArea(browserActionWidget.id,
+                                   CustomizableUI.AREA_NAVBAR);
   }
 
   yield extension.unload();
@@ -341,7 +407,12 @@ add_task(function* testDefaultDetails() {
             browser.test.sendMessage("ready");
           });
         });
-      }
+      },
+
+      files: {
+        "foo/bar.png": imageBuffer,
+        "baz/quux.png": imageBuffer,
+      },
     });
 
     yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
@@ -350,12 +421,12 @@ add_task(function* testDefaultDetails() {
     let pageActionId = makeWidgetId(extension.id) + "-page-action";
 
     let browserActionButton = document.getElementById(browserActionId);
-    let image = browserActionButton.getAttribute("image");
+    let image = getListStyleImage(browserActionButton);
 
     ok(expectedURL.test(image), `browser action image ${image} matches ${expectedURL}`);
 
     let pageActionImage = document.getElementById(pageActionId);
-    image = pageActionImage.src;
+    image = getListStyleImage(pageActionImage);
 
     ok(expectedURL.test(image), `page action image ${image} matches ${expectedURL}`);
 

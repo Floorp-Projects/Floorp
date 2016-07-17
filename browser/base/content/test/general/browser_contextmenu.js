@@ -852,6 +852,80 @@ add_task(function* test_input_spell_false() {
   );
 });
 
+const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
+
+add_task(function* test_plaintext_sendpagetodevice() {
+  if (!gFxAccounts.sendTabToDeviceEnabled) {
+    return;
+  }
+  const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
+
+  let plainTextItems = ["context-navigation",   null,
+                        ["context-back",         false,
+                         "context-forward",      false,
+                         "context-reload",       true,
+                         "context-bookmarkpage", true], null,
+                    "---",                  null,
+                    "context-savepage",     true,
+                    ...(hasPocket ? ["context-pocket", true] : []),
+                    "---",                  null,
+                    "context-sendpagetodevice", true,
+                      ["*Foo", true,
+                       "*Bar", true,
+                       "---", null,
+                       "*All Devices", true], null,
+                    "---",                  null,
+                    "context-viewbgimage",  false,
+                    "context-selectall",    true,
+                    "---",                  null,
+                    "context-viewsource",   true,
+                    "context-viewinfo",     true
+                   ];
+  yield test_contextmenu("#test-text", plainTextItems, {
+      onContextMenuShown() {
+        yield openMenuItemSubmenu("context-sendpagetodevice");
+      }
+    });
+
+  restoreRemoteClients(oldGetter);
+});
+
+add_task(function* test_link_sendlinktodevice() {
+  if (!gFxAccounts.sendTabToDeviceEnabled) {
+    return;
+  }
+  const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
+
+  yield test_contextmenu("#test-link",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true,
+     "---",                  null,
+     "context-sendlinktodevice", true,
+      ["*Foo", true,
+       "*Bar", true,
+       "---", null,
+       "*All Devices", true], null,
+    ],
+    {
+      onContextMenuShown() {
+        yield openMenuItemSubmenu("context-sendlinktodevice");
+      }
+    });
+
+  restoreRemoteClients(oldGetter);
+});
+
 add_task(function* test_cleanup() {
   gBrowser.removeCurrentTab();
 });

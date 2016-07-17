@@ -105,6 +105,11 @@ body {
 
 /* The main animations container */
 
+#sidebar-panel-animationinspector {
+  height: 100%;
+  width: 100%;
+}
+
 #players {
   height: calc(100% - var(--toolbar-height));
   overflow-x: hidden;

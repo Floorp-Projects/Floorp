@@ -188,7 +188,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this.searchField.addEventListener("contextmenu",
                                     this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
-  this.includeBrowserStylesCheckbox.addEventListener("command",
+  this.includeBrowserStylesCheckbox.addEventListener("input",
     this._onIncludeBrowserStyles);
 
   this.searchClearButton.hidden = true;
@@ -773,8 +773,8 @@ CssComputedView.prototype = {
     this.searchField.removeEventListener("contextmenu",
                                          this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
-    this.includeBrowserStylesCheckbox.removeEventListener("command",
-      this.includeBrowserStylesChanged);
+    this.includeBrowserStylesCheckbox.removeEventListener("input",
+      this._onIncludeBrowserStyles);
 
     // Nodes used in templating
     this.root = null;
