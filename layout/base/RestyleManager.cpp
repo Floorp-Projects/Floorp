@@ -5151,7 +5151,7 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     result.AppendPrintf("0x%0x", rest);
   } else {
     if (!any) {
-      result.AppendLiteral("NS_STYLE_HINT_NONE");
+      result.AppendLiteral("nsChangeHint(0)");
     }
   }
   return result;
