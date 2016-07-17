@@ -12,8 +12,8 @@
 
 dictionary PositionOptions {
   boolean enableHighAccuracy = false;
-  long timeout = 0x7fffffff;
-  long maximumAge = 0;
+  [Clamp] unsigned long timeout = 0x7fffffff;
+  [Clamp] unsigned long maximumAge = 0;
 };
 
 [NoInterfaceObject]

@@ -6,32 +6,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 985827</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
   /** Test for Bug 985827 **/
 
-  function test() {
-    var is = parent.is;
-
-    // Test WebIDL NavigatorProperty objects
-    var x = navigator.mozContacts;
-    is(typeof x, "object", "Should have a mozContacts object");
-    delete navigator.mozContacts;
-    var y = navigator.mozContacts;
-    is(x, y, "Should have gotten the same mozContacts object again");
-  }
-
   SimpleTest.waitForExplicitFinish();
 
-  SpecialPowers.pushPermissions([
-    {type: "contacts-read", allow: true, context: document},
-    {type: "contacts-write", allow: true, context: document},
-    {type: "contacts-create", allow: true, context: document},
-  ], function() {
+  addEventListener('load', function() {
     var iframe = document.createElement("iframe");
-    iframe.src = "data:text/html,<script>(" + escape(test.toString()) + ")();</scr" + "ipt>";
+    var dir = "chrome://mochitests/content/chrome/dom/base/test/";
+    iframe.src = dir + "file_navigator_resolve_identity.html";
     document.body.appendChild(iframe);
     iframe.onload = function() { SimpleTest.finish(); };
   });

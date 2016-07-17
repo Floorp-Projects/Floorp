@@ -33,7 +33,7 @@ dictionary TVStartScanningOptions {
   boolean isRescanned;
 };
 
-[Pref="dom.tv.enabled", CheckAnyPermissions="tv", AvailableIn=CertifiedApps]
+[Pref="dom.tv.enabled", ChromeOnly]
 interface TVSource : EventTarget {
   [Throws]
   Promise<sequence<TVChannel>> getChannels();

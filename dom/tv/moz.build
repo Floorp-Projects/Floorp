@@ -42,7 +42,9 @@ EXTRA_COMPONENTS += [
 
 XPIDL_MODULE = 'dom_tv'
 
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS  += ['test/mochitest/mochitest.ini']
+
+MOCHITEST_CHROME_MANIFESTS  += ['test/mochitest/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 

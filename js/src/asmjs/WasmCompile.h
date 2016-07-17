@@ -19,9 +19,8 @@
 #ifndef wasm_compile_h
 #define wasm_compile_h
 
-#include "asmjs/WasmBinary.h"
 #include "asmjs/WasmJS.h"
-#include "asmjs/WasmTypes.h"
+#include "asmjs/WasmModule.h"
 
 namespace js {
 namespace wasm {
@@ -35,12 +34,20 @@ struct CompileArgs
     UniqueChars filename;
     bool alwaysBaseline;
 
-    CompileArgs() : alwaysBaseline(false) {}
-    bool init(ExclusiveContext* cx);
+    CompileArgs(Assumptions&& assumptions, UniqueChars filename)
+      : assumptions(Move(assumptions)),
+        filename(Move(filename)),
+        alwaysBaseline(false)
+    {}
+
+    // If CompileArgs is constructed without arguments, initFromContext() must
+    // be called to complete initialization.
+    CompileArgs() = default;
+    bool initFromContext(ExclusiveContext* cx, UniqueChars filename);
 };
 
-UniqueModule
-Compile(Bytes&& code, CompileArgs&& args, UniqueChars* error);
+SharedModule
+Compile(const ShareableBytes& bytecode, CompileArgs&& args, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

@@ -5,8 +5,7 @@
  /* Copyright © 2014 Deutsche Telekom, Inc. */
 
 [Pref="dom.secureelement.enabled",
- CheckAnyPermissions="secureelement-manage",
- AvailableIn="CertifiedApps",
+ ChromeOnly,
  JSImplementation="@mozilla.org/secureelement/manager;1",
  NavigatorProperty="seManager",
  NoInterfaceObject]

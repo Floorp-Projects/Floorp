@@ -16,7 +16,7 @@ dictionary SystemUpdatePackageInfo {
 };
 
 [JSImplementation="@mozilla.org/system-update-provider;1",
- CheckAnyPermissions="system-update",
+ ChromeOnly,
  Pref="dom.system_update.enabled"]
 interface SystemUpdateProvider : EventTarget {
   readonly attribute DOMString name;
@@ -37,7 +37,7 @@ interface SystemUpdateProvider : EventTarget {
 
 [NavigatorProperty="updateManager",
  JSImplementation="@mozilla.org/system-update-manager;1",
- CheckAnyPermissions="system-update",
+ ChromeOnly,
  Pref="dom.system_update.enabled"]
 interface SystemUpdateManager {
   Promise<sequence<SystemUpdateProviderInfo>> getProviders();

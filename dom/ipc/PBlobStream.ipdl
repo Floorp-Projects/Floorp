@@ -4,6 +4,7 @@
 
 include protocol PBlob;
 include protocol PFileDescriptorSet;
+include BlobTypes;
 include InputStreamParams;
 
 namespace mozilla {

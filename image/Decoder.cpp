@@ -25,18 +25,13 @@ namespace image {
 class MOZ_STACK_CLASS AutoRecordDecoderTelemetry final
 {
 public:
-  AutoRecordDecoderTelemetry(Decoder* aDecoder, uint32_t aByteCount)
+  explicit AutoRecordDecoderTelemetry(Decoder* aDecoder)
     : mDecoder(aDecoder)
   {
     MOZ_ASSERT(mDecoder);
 
     // Begin recording telemetry data.
     mStartTime = TimeStamp::Now();
-    mDecoder->mChunkCount++;
-
-    // Keep track of the total number of bytes written.
-    mDecoder->mBytesDecoded += aByteCount;
-
   }
 
   ~AutoRecordDecoderTelemetry()
@@ -58,17 +53,14 @@ Decoder::Decoder(RasterImage* aImage)
   , mImage(aImage)
   , mProgress(NoProgress)
   , mFrameCount(0)
-  , mFailCode(NS_OK)
-  , mChunkCount(0)
   , mDecoderFlags(DefaultDecoderFlags())
   , mSurfaceFlags(DefaultSurfaceFlags())
-  , mBytesDecoded(0)
   , mInitialized(false)
   , mMetadataDecode(false)
   , mInFrame(false)
-  , mDataDone(false)
+  , mReachedTerminalState(false)
   , mDecodeDone(false)
-  , mDataError(false)
+  , mError(false)
   , mDecodeAborted(false)
   , mShouldReportError(false)
 { }
@@ -92,7 +84,7 @@ Decoder::~Decoder()
  * Common implementation of the decoder interface.
  */
 
-void
+nsresult
 Decoder::Init()
 {
   // No re-initializing
@@ -106,61 +98,51 @@ Decoder::Init()
   // will be retrievable.
   MOZ_ASSERT(ShouldUseSurfaceCache() || IsFirstFrameDecode());
 
-  // Implementation-specific initialization
-  InitInternal();
+  // Implementation-specific initialization.
+  nsresult rv = InitInternal();
 
   mInitialized = true;
+
+  return rv;
 }
 
 nsresult
-Decoder::Decode(NotNull<IResumable*> aOnResume)
+Decoder::Decode(IResumable* aOnResume /* = nullptr */)
 {
   MOZ_ASSERT(mInitialized, "Should be initialized here");
   MOZ_ASSERT(mIterator, "Should have a SourceBufferIterator");
 
-  // We keep decoding chunks until the decode completes or there are no more
-  // chunks available.
-  while (!GetDecodeDone() && !HasError()) {
-    auto newState = mIterator->AdvanceOrScheduleResume(aOnResume.get());
-
-    if (newState == SourceBufferIterator::WAITING) {
-      // We can't continue because the rest of the data hasn't arrived from the
-      // network yet. We don't have to do anything special; the
-      // SourceBufferIterator will ensure that Decode() gets called again on a
-      // DecodePool thread when more data is available.
-      return NS_OK;
-    }
-
-    if (newState == SourceBufferIterator::COMPLETE) {
-      mDataDone = true;
-
-      nsresult finalStatus = mIterator->CompletionStatus();
-      if (NS_FAILED(finalStatus)) {
-        PostDataError();
-      }
-
-      CompleteDecode();
-      return finalStatus;
-    }
-
-    MOZ_ASSERT(newState == SourceBufferIterator::READY);
-
-    {
-      PROFILER_LABEL("ImageDecoder", "Write",
-        js::ProfileEntry::Category::GRAPHICS);
-
-      AutoRecordDecoderTelemetry telemetry(this, mIterator->Length());
-
-      // Pass the data along to the implementation.
-      Maybe<TerminalState> terminalState = DoDecode(*mIterator);
-
-      if (terminalState == Some(TerminalState::FAILURE)) {
-        PostDataError();
-      }
-    }
+  // If we're already done, don't attempt to keep decoding.
+  if (GetDecodeDone()) {
+    return HasError() ? NS_ERROR_FAILURE : NS_OK;
   }
 
+  Maybe<TerminalState> terminalState;
+  {
+    PROFILER_LABEL("ImageDecoder", "Decode", js::ProfileEntry::Category::GRAPHICS);
+    AutoRecordDecoderTelemetry telemetry(this);
+
+    terminalState = DoDecode(*mIterator, aOnResume);
+  }
+
+  if (!terminalState) {
+    // We need more data to continue. If @aOnResume was non-null, the
+    // SourceBufferIterator will automatically reschedule us. Otherwise, it's up
+    // to the caller.
+    return NS_OK;
+  }
+
+  // We reached a terminal state; we're now done decoding.
+  mReachedTerminalState = true;
+
+  // If decoding failed, record that fact.
+  if (terminalState == Some(TerminalState::FAILURE)) {
+    PostError();
+  }
+
+  // Perform final cleanup.
   CompleteDecode();
+
   return HasError() ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -176,12 +158,21 @@ Decoder::ShouldSyncDecode(size_t aByteLimit)
 void
 Decoder::CompleteDecode()
 {
-  // Implementation-specific finalization
-  BeforeFinishInternal();
-  if (!HasError()) {
-    FinishInternal();
-  } else {
-    FinishWithErrorInternal();
+  // Implementation-specific finalization.
+  nsresult rv = BeforeFinishInternal();
+  if (NS_FAILED(rv)) {
+    PostError();
+  }
+
+  rv = HasError() ? FinishWithErrorInternal()
+                  : FinishInternal();
+  if (NS_FAILED(rv)) {
+    PostError();
+  }
+
+  // If this was a metadata decode and we never got a size, the decode failed.
+  if (IsMetadataDecode() && !HasSize()) {
+    PostError();
   }
 
   // If the implementation left us mid-frame, finish that up.
@@ -196,9 +187,9 @@ Decoder::CompleteDecode()
   if (!IsMetadataDecode() && !mDecodeDone && !WasAborted()) {
     mShouldReportError = true;
 
-    // If we only have a data error, we're usable if we have at least one
-    // complete frame.
-    if (!HasDecoderError() && GetCompleteFrameCount() > 0) {
+    // Even if we encountered an error, we're still usable if we have at least
+    // one complete frame.
+    if (GetCompleteFrameCount() > 0) {
       // We're usable, so do exactly what we should have when the decoder
       // completed.
 
@@ -276,8 +267,6 @@ Decoder::AllocateFrame(uint32_t aFrameNum,
       MOZ_ASSERT(!mInFrame, "Starting new frame but not done with old one!");
       mInFrame = true;
     }
-  } else {
-    PostDataError();
   }
 
   return mCurrentFrame ? NS_OK : NS_ERROR_FAILURE;
@@ -291,7 +280,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
                                uint8_t aPaletteDepth,
                                imgFrame* aPreviousFrame)
 {
-  if (mDataError || NS_FAILED(mFailCode)) {
+  if (HasError()) {
     return RawAccessFrameRef();
   }
 
@@ -388,10 +377,10 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
  * Hook stubs. Override these as necessary in decoder implementations.
  */
 
-void Decoder::InitInternal() { }
-void Decoder::BeforeFinishInternal() { }
-void Decoder::FinishInternal() { }
-void Decoder::FinishWithErrorInternal() { }
+nsresult Decoder::InitInternal() { return NS_OK; }
+nsresult Decoder::BeforeFinishInternal() { return NS_OK; }
+nsresult Decoder::FinishInternal() { return NS_OK; }
+nsresult Decoder::FinishWithErrorInternal() { return NS_OK; }
 
 /*
  * Progress Notifications
@@ -494,25 +483,9 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
 }
 
 void
-Decoder::PostDataError()
+Decoder::PostError()
 {
-  mDataError = true;
-
-  if (mInFrame && mCurrentFrame) {
-    mCurrentFrame->Abort();
-  }
-}
-
-void
-Decoder::PostDecoderError(nsresult aFailureCode)
-{
-  MOZ_ASSERT(NS_FAILED(aFailureCode), "Not a failure code!");
-
-  mFailCode = aFailureCode;
-
-  // XXXbholley - we should report the image URI here, but imgContainer
-  // needs to know its URI first
-  NS_WARNING("Image decoding error - This is probably a bug!");
+  mError = true;
 
   if (mInFrame && mCurrentFrame) {
     mCurrentFrame->Abort();

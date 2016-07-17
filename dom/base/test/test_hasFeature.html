@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1009645
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 1009645</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1009645">Mozilla Bug 1009645</a>
@@ -27,9 +27,9 @@ function testAPIs() {
   var APIEndPoints = [
     { name: "MozMobileNetworkInfo", enabled: pref("dom.mobileconnection.enabled") },
     // { name: "Navigator.mozBluetooth", enabled: b2gOnly }, // conditional on MOZ_B2G_BT, tricky to test
-    { name: "Navigator.mozContacts", enabled: pref("dom.mozContacts.enabled") },
+    // Bug 1266035 { name: "Navigator.mozContacts", enabled: pref("dom.mozContacts.enabled") },
     { name: "Navigator.getDeviceStorage", enabled: pref("device.storage.enabled") },
-    { name: "Navigator.addIdleObserver", enabled: true },
+    // Bug 1266035 { name: "Navigator.addIdleObserver", enabled: true },
     { name: "Navigator.mozNetworkStats", enabled: pref("dom.mozNetworkStats.enabled") },
     { name: "Navigator.push", enabled: pref("services.push.enabled") },
     // { name: "Navigator.mozTime", enabled: b2gOnly }, // conditional on MOZ_TIME_MANAGER, tricky to test

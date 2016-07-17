@@ -43,6 +43,17 @@ class TestSetWindowSize(MarionetteTestCase):
         self.assertEqual(size['height'], height,
                          "Window height is %s but should be %s" % (size['height'], height))
 
+    def test_that_we_can_get_new_size_when_set_window_size(self):
+        actual = self.marionette.window_size
+        width = actual['width'] - 50
+        height = actual['height'] - 50
+        size = self.marionette.set_window_size(width, height)
+        self.assertIsNotNone(size, "Response is None")
+        self.assertEqual(size['width'], width,
+                         "New width is %s but should be %s" % (size['width'], width))
+        self.assertEqual(size['height'], height,
+                         "New height is %s but should be %s" % (size['height'], height))
+
     def test_possible_to_request_window_larger_than_screen(self):
         self.marionette.set_window_size(100000, 100000)
         size = self.marionette.window_size

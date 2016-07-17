@@ -112,8 +112,7 @@ dictionary SmscAddress {
 };
 
 [Pref="dom.sms.enabled",
- CheckAnyPermissions="sms",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozMobileMessageManager : EventTarget
 {
   [Throws]

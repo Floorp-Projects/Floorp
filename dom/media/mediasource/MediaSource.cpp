@@ -89,7 +89,7 @@ static nsresult
 IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (aType.IsEmpty()) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    return NS_ERROR_DOM_TYPE_ERR;
   }
   nsContentTypeParser parser(aType);
   nsAutoString mimeType;
@@ -201,7 +201,7 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SetDuration(aDuration=%f, ErrorResult)", aDuration);
   if (aDuration < 0 || IsNaN(aDuration)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
   if (mReadyState != MediaSourceReadyState::Open ||
@@ -340,7 +340,7 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
     mDecoder->DecodeError();
     break;
   default:
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
   }
 }
 
@@ -364,6 +364,50 @@ MediaSource::IsTypeSupported(const GlobalObject& aOwner, const nsAString& aType)
 MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
 {
   return Preferences::GetBool("media.mediasource.enabled");
+}
+
+void
+MediaSource::SetLiveSeekableRange(double aStart, double aEnd, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // 1. If the readyState attribute is not "open" then throw an InvalidStateError
+  // exception and abort these steps.
+  if (mReadyState != MediaSourceReadyState::Open) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // 2. If start is negative or greater than end, then throw a TypeError
+  // exception and abort these steps.
+  if (aStart < 0 || aStart > aEnd) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    return;
+  }
+
+  // 3. Set live seekable range to be a new normalized TimeRanges object
+  // containing a single range whose start position is start and end position is
+  // end.
+  mLiveSeekableRange =
+    Some(media::TimeInterval(media::TimeUnit::FromSeconds(aStart),
+                             media::TimeUnit::FromSeconds(aEnd)));
+}
+
+void
+MediaSource::ClearLiveSeekableRange(ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // 1. If the readyState attribute is not "open" then throw an InvalidStateError
+  // exception and abort these steps.
+  if (mReadyState != MediaSourceReadyState::Open) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // 2. If live seekable range contains a range, then set live seekable range to
+  // be a new empty TimeRanges object.
+  mLiveSeekableRange.reset();
 }
 
 bool

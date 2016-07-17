@@ -174,3 +174,69 @@ function friendlyPrefCategoryNameToInternalName(aName) {
 function internalPrefCategoryNameToFriendlyName(aName) {
   return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });
 }
+
+// Put up a confirm dialog with "ok to restart", "revert without restarting"
+// and "restart later" buttons and returns the index of the button chosen.
+// We can choose not to display the "restart later", or "revert" buttons,
+// altough the later still lets us revert by using the escape key.
+//
+// The constants are useful to interpret the return value of the function.
+const CONFIRM_RESTART_PROMPT_RESTART_NOW = 0;
+const CONFIRM_RESTART_PROMPT_CANCEL = 1;
+const CONFIRM_RESTART_PROMPT_RESTART_LATER = 2;
+function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
+                              aWantRevertAsCancelButton,
+			      aWantRestartLaterButton) {
+  let brandName = document.getElementById("bundleBrand").getString("brandShortName");
+  let bundle = document.getElementById("bundlePreferences");
+  let msg = bundle.getFormattedString(aRestartToEnable ?
+                                      "featureEnableRequiresRestart" :
+                                      "featureDisableRequiresRestart",
+                                      [brandName]);
+  let title = bundle.getFormattedString("shouldRestartTitle", [brandName]);
+  let prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+
+  // Set up the first (index 0) button:
+  let button0Text = bundle.getFormattedString("okToRestartButton", [brandName]);
+  let buttonFlags = (Services.prompt.BUTTON_POS_0 *
+                     Services.prompt.BUTTON_TITLE_IS_STRING);
+
+
+  // Set up the second (index 1) button:
+  let button1Text = null;
+  if (aWantRevertAsCancelButton) {
+    button1Text = bundle.getString("revertNoRestartButton");
+    buttonFlags += (Services.prompt.BUTTON_POS_1 *
+                    Services.prompt.BUTTON_TITLE_IS_STRING);
+  } else {
+    buttonFlags += (Services.prompt.BUTTON_POS_1 *
+                    Services.prompt.BUTTON_TITLE_CANCEL);
+  }
+
+  // Set up the third (index 2) button:
+  let button2Text = null;
+  if (aWantRestartLaterButton) {
+    button2Text = bundle.getString("restartLater");
+    buttonFlags += (Services.prompt.BUTTON_POS_2 *
+                    Services.prompt.BUTTON_TITLE_IS_STRING);
+  }
+
+  switch(aDefaultButtonIndex) {
+    case 0:
+      buttonFlags += Services.prompt.BUTTON_POS_0_DEFAULT;
+      break;
+    case 1:
+      buttonFlags += Services.prompt.BUTTON_POS_1_DEFAULT;
+      break;
+    case 2:
+      buttonFlags += Services.prompt.BUTTON_POS_2_DEFAULT;
+      break;
+    default:
+      break;
+  }
+
+  let buttonIndex = prompts.confirmEx(window, title, msg, buttonFlags,
+                                      button0Text, button1Text, button2Text,
+                                      null, {});
+  return buttonIndex;
+}

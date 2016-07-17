@@ -17,8 +17,8 @@
 #include "nsIWidget.h"
 #include "Units.h"
 
-#include <X11/Xlib.h>
-#include <X11/extensions/XShm.h>
+#include <X11/Xlib-xcb.h>
+#include <xcb/shm.h>
 
 class nsShmImage {
   // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
@@ -48,22 +48,21 @@ private:
   bool CreateImage(const mozilla::gfx::IntSize& aSize);
   void DestroyImage();
 
-  static Bool FindEvent(Display* aDisplay, XEvent* aEvent, XPointer aArg);
-  bool RequestWasProcessed();
-  void WaitForRequest();
-  void SendEvent();
-
-  XImage*                      mImage;
-  Display*                     mDisplay;
+  xcb_connection_t*            mConnection;
   Window                       mWindow;
   Visual*                      mVisual;
   unsigned int                 mDepth;
-  XShmSegmentInfo              mInfo;
+
   mozilla::gfx::SurfaceFormat  mFormat;
-  Pixmap                       mPixmap;
-  GC                           mGC;
-  unsigned long                mRequest;
-  unsigned long                mPreviousRequestProcessed;
+  mozilla::gfx::IntSize        mSize;
+
+  xcb_pixmap_t                 mPixmap;
+  xcb_gcontext_t               mGC;
+  xcb_void_cookie_t            mLastRequest;
+
+  xcb_shm_seg_t                mShmSeg;
+  int                          mShmId;
+  uint8_t*                     mShmAddr;
 };
 
 #endif // MOZ_HAVE_SHMIMAGE

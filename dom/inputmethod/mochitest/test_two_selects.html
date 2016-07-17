@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079728
 -->
 <head>
   <title>Test switching between two inputs</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1079728">Mozilla Bug 1079728</a>
@@ -164,7 +164,7 @@ function runTest() {
   SpecialPowers.wrap(im).setActive(true);
 
   let iframe = document.createElement('iframe');
-  iframe.src = 'data:text/html,<html><body><select><option>First</option></select><select><option>Second</option></select></html>';
+  iframe.src = 'file_test_two_selects.html';
   iframe.setAttribute('mozbrowser', true);
   document.body.appendChild(iframe);
 

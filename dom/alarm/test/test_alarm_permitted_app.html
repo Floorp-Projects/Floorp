@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Test Permitted Application for Alarm API</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -16,8 +16,6 @@
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
-  SpecialPowers.addPermission("alarms", true, document);
-
   // mozAlarms is installed on all platforms except Android for the moment.
   if (navigator.appVersion.indexOf("Android") != -1) {
     try {

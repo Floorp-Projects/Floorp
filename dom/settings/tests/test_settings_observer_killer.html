@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1193469
 <head>
   <title>Test for Bug 1193469 Settings API</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -24,43 +24,35 @@ var script = SpecialPowers.loadChromeScript(url);
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPermissions([
-  {type: "settings-api-read", allow: 1, context: document},
-  {type: "settings-api-write", allow: 1, context: document},
-  {type: "settings-read", allow: 1, context: document},
-  {type: "settings-write", allow: 1, context: document},
-  {type: "settings-clear", allow: 1, context: document}
-], function() {
-  SpecialPowers.pushPrefEnv({
-    set: [["dom.mozSettings.enabled", true]]
-  },
-    function () {
-      ok(true, "abusing observers");
+SpecialPowers.pushPrefEnv({
+  set: [["dom.mozSettings.enabled", true]]
+},
+  function () {
+    ok(true, "abusing observers");
 
-      var obs;
-      for (obs = 0; obs < 9; obs++) {
-        navigator.mozSettings.addObserver("fake.setting.key", function(v) {
-          // nothing to do for real ...
-          ok(false, "should not be called");
-        });
-        ok(true, "first: added observer #" + obs);
-      }
-      ok(true, "adding first observers, should not have thrown");
+    var obs;
+    for (obs = 0; obs < 9; obs++) {
+      navigator.mozSettings.addObserver("fake.setting.key", function(v) {
+        // nothing to do for real ...
+        ok(false, "should not be called");
+      });
+      ok(true, "first: added observer #" + obs);
+    }
+    ok(true, "adding first observers, should not have thrown");
 
-      try {
-        ok(true, "second: adding new observer");
-        navigator.mozSettings.addObserver("fake.setting.key", function(v) {
-          // nothing to do for real ...
-          ok(false, "should not be called");
-        });
-        ok(false, "adding too many observers should have thrown");
-      } catch (ex) {
-        ok(true, "got exception when trying to add too many observers");
-      }
+    try {
+      ok(true, "second: adding new observer");
+      navigator.mozSettings.addObserver("fake.setting.key", function(v) {
+        // nothing to do for real ...
+        ok(false, "should not be called");
+      });
+      ok(false, "adding too many observers should have thrown");
+    } catch (ex) {
+      ok(true, "got exception when trying to add too many observers");
+    }
 
-      SimpleTest.finish();
-    });
-});
+    SimpleTest.finish();
+  });
 
 </script>
 </pre>

@@ -66,7 +66,7 @@ dictionary BluetoothAdvertisingData
   sequence<DOMString> serviceUuids = [];
 };
 
-[CheckAnyPermissions="bluetooth"]
+[ChromeOnly]
 interface BluetoothGattServer : EventTarget
 {
   [Cached, Pure]

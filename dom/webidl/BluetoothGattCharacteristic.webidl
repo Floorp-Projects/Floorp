@@ -33,7 +33,7 @@ dictionary GattPermissions
  * provided by a local GATT server, or in the client role as a characteristic
  * provided by a remote GATT server.
  */
-[CheckAnyPermissions="bluetooth"]
+[ChromeOnly]
 interface BluetoothGattCharacteristic
 {
   readonly attribute BluetoothGattService                   service;

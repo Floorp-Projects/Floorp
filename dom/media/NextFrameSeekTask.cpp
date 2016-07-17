@@ -22,13 +22,13 @@ namespace media {
 NextFrameSeekTask::NextFrameSeekTask(const void* aDecoderID,
                                      AbstractThread* aThread,
                                      MediaDecoderReaderWrapper* aReader,
-                                     SeekJob&& aSeekJob,
+                                     const SeekTarget& aTarget,
                                      const MediaInfo& aInfo,
                                      const media::TimeUnit& aDuration,
                                      int64_t aCurrentTime,
                                      MediaQueue<MediaData>& aAudioQueue,
                                      MediaQueue<MediaData>& aVideoQueue)
-  : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
+  : SeekTask(aDecoderID, aThread, aReader, aTarget)
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
   , mCurrentTime(aCurrentTime)
@@ -51,9 +51,6 @@ void
 NextFrameSeekTask::Discard()
 {
   AssertOwnerThread();
-
-  // Disconnect MediaDecoder.
-  mSeekJob.RejectIfExists(__func__);
 
   // Disconnect MDSM.
   RejectIfExist(__func__);
@@ -156,7 +153,7 @@ NextFrameSeekTask::MaybeFinishSeek()
   if (IsAudioSeekComplete() && IsVideoSeekComplete()) {
     UpdateSeekTargetTime();
 
-    auto time = mSeekJob.mTarget.GetTime().ToMicroseconds();
+    auto time = mTarget.GetTime().ToMicroseconds();
     DiscardFrames(mAudioQueue, [time] (int64_t aSampleTime) {
       return aSampleTime < time;
     });
@@ -333,11 +330,11 @@ NextFrameSeekTask::UpdateSeekTargetTime()
 
   RefPtr<MediaData> data = mVideoQueue.PeekFront();
   if (data) {
-    mSeekJob.mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
+    mTarget.SetTime(TimeUnit::FromMicroseconds(data->mTime));
   } else if (mSeekedVideoData) {
-    mSeekJob.mTarget.SetTime(TimeUnit::FromMicroseconds(mSeekedVideoData->mTime));
+    mTarget.SetTime(TimeUnit::FromMicroseconds(mSeekedVideoData->mTime));
   } else if (mIsVideoQueueFinished || mVideoQueue.AtEndOfStream()) {
-    mSeekJob.mTarget.SetTime(mDuration);
+    mTarget.SetTime(mDuration);
   } else {
     MOZ_ASSERT(false, "No data!");
   }

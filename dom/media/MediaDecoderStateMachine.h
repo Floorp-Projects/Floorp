@@ -686,6 +686,7 @@ private:
 
   // Queued seek - moves to mCurrentSeek when DecodeFirstFrame completes.
   SeekJob mQueuedSeek;
+  SeekJob mCurrentSeek;
 
   // mSeekTask is responsible for executing the current seek request.
   RefPtr<SeekTask> mSeekTask;

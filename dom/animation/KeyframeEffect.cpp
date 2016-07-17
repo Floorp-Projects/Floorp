@@ -456,19 +456,13 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
                                      JS::Handle<JSObject*> aKeyframes,
                                      ErrorResult& aRv)
 {
-  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aContext);
-  if (!doc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
   nsTArray<Keyframe> keyframes =
-    KeyframeUtils::GetKeyframesFromObject(aContext, aKeyframes, aRv);
+    KeyframeUtils::GetKeyframesFromObject(aContext, mDocument, aKeyframes, aRv);
   if (aRv.Failed()) {
     return;
   }
 
-  RefPtr<nsStyleContext> styleContext = GetTargetStyleContext(doc);
+  RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
   SetKeyframes(Move(keyframes), styleContext);
 }
 
@@ -944,25 +938,21 @@ KeyframeEffectReadOnly::RequestRestyle(
 }
 
 already_AddRefed<nsStyleContext>
-KeyframeEffectReadOnly::GetTargetStyleContext(nsIDocument* aDoc)
+KeyframeEffectReadOnly::GetTargetStyleContext()
 {
-  if (!mTarget) {
+  nsIPresShell* shell = GetPresShell();
+  if (!shell) {
     return nullptr;
   }
 
-  if (!aDoc) {
-    aDoc = mTarget->mElement->OwnerDoc();
-    if (!aDoc) {
-      return nullptr;
-    }
-  }
+  MOZ_ASSERT(mTarget,
+             "Should only have a presshell when we have a target element");
 
   nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
   return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
-                                                       pseudo,
-                                                       aDoc->GetShell());
+                                                       pseudo, shell);
 }
 
 #ifdef DEBUG

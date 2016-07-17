@@ -23,9 +23,9 @@ class AnimationEffectTimingReadOnly : public nsWrapperCache
 {
 public:
   AnimationEffectTimingReadOnly() = default;
-  AnimationEffectTimingReadOnly(nsISupports* aParent,
+  AnimationEffectTimingReadOnly(nsIDocument* aDocument,
                                 const TimingParams& aTiming)
-    : mParent(aParent)
+    : mDocument(aDocument)
     , mTiming(aTiming) { }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationEffectTimingReadOnly)
@@ -35,7 +35,7 @@ protected:
   virtual ~AnimationEffectTimingReadOnly() = default;
 
 public:
-  nsISupports* GetParentObject() const { return mParent; }
+  nsISupports* GetParentObject() const { return mDocument; }
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   double Delay() const { return mTiming.mDelay.ToMilliseconds(); }
@@ -53,7 +53,7 @@ public:
   virtual void Unlink() { }
 
 protected:
-  nsCOMPtr<nsISupports> mParent;
+  RefPtr<nsIDocument> mDocument;
   TimingParams mTiming;
 };
 

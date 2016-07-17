@@ -2,39 +2,23 @@
 <html>
 <head>
   <title>Test for Power API</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 <script type="application/javascript">
 
 /** Test for Power API **/
 
-/** Test permission **/
-// In b2g, addPermission 'power' is only working after a document reload
-// See bug 802312
-
 SimpleTest.waitForExplicitFinish();
 
 function startTest() {
-  SpecialPowers.pushPermissions([
-    {type: "power", allow: true, context: window.frames[0].document}
-  ], doTest1);
+  doTest1();
 }
 
 function doTest1() {
-  window.frames[0].frameElement.setAttribute('onload', 'doTest2()');
+  window.frames[0].frameElement.setAttribute('onload', 'doTest3()');
   power = window.frames[0].navigator.mozPower;
   ok(power, "Should be able to access power manager with permission.");
 
-  SpecialPowers.removePermission("power", window.frames[0].document);
-  window.frames[0].location.reload();
-}
-
-function doTest2() {
-  window.frames[0].frameElement.setAttribute('onload', 'doTest3()');
-  power = window.frames[0].navigator.mozPower;
-  ok(!power, "Shouldn't be able to access power manager with permission.");
-
-  SpecialPowers.addPermission("power",true, window.frames[0].document);
   window.frames[0].location.reload();
 }
 

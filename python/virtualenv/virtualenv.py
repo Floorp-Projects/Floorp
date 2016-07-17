@@ -53,8 +53,9 @@ py_version = 'python%s.%s' % (sys.version_info[0], sys.version_info[1])
 
 is_jython = sys.platform.startswith('java')
 is_pypy = hasattr(sys, 'pypy_version_info')
-is_win = (sys.platform == 'win32')
+is_win = (sys.platform == 'win32' and os.sep == '\\')
 is_cygwin = (sys.platform == 'cygwin')
+is_msys2 = (sys.platform == 'win32' and os.sep == '/')
 is_darwin = (sys.platform == 'darwin')
 abiflags = getattr(sys, 'abiflags', '')
 
@@ -130,6 +131,8 @@ if majver == 2:
         REQUIRED_MODULES.extend(['warnings', 'linecache', '_abcoll', 'abc'])
     if minver >= 7:
         REQUIRED_MODULES.extend(['_weakrefset'])
+    if is_msys2:
+        REQUIRED_MODULES.extend(['functools'])
 elif majver == 3:
     # Some extra modules are needed for Python 3, but different ones
     # for different versions.
@@ -705,7 +708,7 @@ def main():
                        no_setuptools=options.no_setuptools,
                        no_pip=options.no_pip,
                        no_wheel=options.no_wheel,
-                       symlink=options.symlink)
+                       symlink=options.symlink and hasattr(os, 'symlink')) # MOZ: Make sure we don't use symlink when we don't have it
     if 'after_install' in globals():
         after_install(options, home_dir)
 
@@ -1127,7 +1130,13 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
         site_filename = site_filename.replace('$py.class', '.py')
     site_filename_dst = change_prefix(site_filename, home_dir)
     site_dir = os.path.dirname(site_filename_dst)
-    writefile(site_filename_dst, SITE_PY)
+    # MOZ: Copies a site.py if it exists instead of using the one hex encoded in
+    # this file. Necessary for some site.py fixes for MinGW64 version of python
+    site_py_src_path = os.path.join(os.path.dirname(__file__), 'site.py')
+    if os.path.isfile(site_py_src_path):
+        shutil.copy(site_py_src_path, site_filename_dst)
+    else:
+        writefile(site_filename_dst, SITE_PY)
     writefile(join(site_dir, 'orig-prefix.txt'), prefix)
     site_packages_filename = join(site_dir, 'no-global-site-packages.txt')
     if not site_packages:

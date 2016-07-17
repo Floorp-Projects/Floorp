@@ -193,4 +193,17 @@ nsStyleUserInterface::GetEffectivePointerEvents(nsIFrame* aFrame) const
   return mPointerEvents;
 }
 
+bool
+nsStyleBackground::HasLocalBackground() const
+{
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
+    const nsStyleImageLayers::Layer& layer = mImage.mLayers[i];
+    if (!layer.mImage.IsEmpty() &&
+        layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL) {
+      return true;
+    }
+  }
+  return false;
+}
+
 #endif /* !defined(nsStyleStructInlines_h_) */

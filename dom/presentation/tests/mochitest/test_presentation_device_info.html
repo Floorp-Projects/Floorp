@@ -5,8 +5,8 @@
 <head>
   <meta charset="utf-8">
   <title>Test for B2G Presentation Device Info API</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1080474">Test for B2G Presentation Device Info API</a>
@@ -131,15 +131,11 @@ function runTests() {
 }
 
 window.addEventListener('load', function() {
-  SpecialPowers.pushPermissions([
-    {type: 'presentation-device-manage', allow: true, context: document},
-  ], function() {
-    SpecialPowers.pushPrefEnv({
-      'set': [
-        ['dom.presentation.enabled', true],
-      ]
-    }, runTests);
-  });
+  SpecialPowers.pushPrefEnv({
+    'set': [
+      ['dom.presentation.enabled', true],
+    ]
+  }, runTests);
 });
 
 </script>

@@ -566,7 +566,7 @@ class InputStreamParent final
   : public PBlobStreamParent
 {
   typedef mozilla::ipc::InputStreamParams InputStreamParams;
-  typedef mozilla::ipc::OptionalFileDescriptorSet OptionalFileDescriptorSet;
+  typedef mozilla::dom::OptionalFileDescriptorSet OptionalFileDescriptorSet;
 
   bool* mSyncLoopGuard;
   InputStreamParams* mParams;

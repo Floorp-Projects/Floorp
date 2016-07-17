@@ -21,7 +21,7 @@ enum DownloadState {
  NavigatorProperty="mozDownloadManager",
  JSImplementation="@mozilla.org/downloads/manager;1",
  Pref="dom.mozDownloads.enabled",
- CheckAnyPermissions="downloads"]
+ ChromeOnly]
 interface DOMDownloadManager : EventTarget {
   // This promise returns an array of downloads with all the current
   // download objects.
@@ -56,7 +56,6 @@ interface DOMDownloadManager : EventTarget {
   // be marked as such because it is not followed by a required argument.  The
   // promise will be rejected if the dictionary is omitted or the specified
   // file does not exist on disk.
-  [AvailableIn=CertifiedApps]
   Promise<DOMDownload> adoptDownload(optional AdoptDownloadDict download);
 
   // Fires when a new download starts.
@@ -65,7 +64,7 @@ interface DOMDownloadManager : EventTarget {
 
 [JSImplementation="@mozilla.org/downloads/download;1",
  Pref="dom.mozDownloads.enabled",
- CheckAnyPermissions="downloads"]
+ ChromeOnly]
 interface DOMDownload : EventTarget {
   // The full size of the resource.
   readonly attribute long long totalBytes;

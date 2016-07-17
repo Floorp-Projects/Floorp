@@ -19,6 +19,7 @@
 #include "nsID.h"
 #include "nsISupports.h"
 #include "nscore.h"
+#include "TimeUnits.h"
 
 struct JSContext;
 class JSObject;
@@ -64,9 +65,18 @@ public:
   void RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv);
 
   void EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv);
+
+  void SetLiveSeekableRange(double aStart, double aEnd, ErrorResult& aRv);
+  void ClearLiveSeekableRange(ErrorResult& aRv);
+
   static bool IsTypeSupported(const GlobalObject&, const nsAString& aType);
 
   static bool Enabled(JSContext* cx, JSObject* aGlobal);
+
+  IMPL_EVENT_HANDLER(sourceopen);
+  IMPL_EVENT_HANDLER(sourceended);
+  IMPL_EVENT_HANDLER(sourceclosed);
+
   /** End WebIDL Methods. */
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -98,6 +108,12 @@ public:
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
   void GetMozDebugReaderData(nsAString& aString);
+
+  bool HasLiveSeekableRange() const { return mLiveSeekableRange.isSome(); }
+  media::TimeInterval LiveSeekableRange() const
+  {
+    return mLiveSeekableRange.value();
+  }
 
 private:
   // MediaSourceDecoder uses DurationChange to set the duration
@@ -133,6 +149,8 @@ private:
   RefPtr<nsIPrincipal> mPrincipal;
 
   MediaSourceReadyState mReadyState;
+
+  Maybe<media::TimeInterval> mLiveSeekableRange;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource, MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)

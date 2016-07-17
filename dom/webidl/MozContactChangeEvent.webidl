@@ -5,7 +5,7 @@
  */
 
 [Constructor(DOMString type, optional MozContactChangeEventInit eventInitDict),
- CheckAnyPermissions="contacts-read contacts-write contacts-create"]
+ ChromeOnly]
 interface MozContactChangeEvent : Event
 {
   readonly attribute DOMString? contactID;

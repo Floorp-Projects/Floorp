@@ -7,7 +7,7 @@
  * http://seanyhlin.github.io/TV-Manager-API/
  */
 
-[Pref="dom.tv.enabled", CheckAnyPermissions="tv", AvailableIn=CertifiedApps]
+[Pref="dom.tv.enabled", ChromeOnly]
 interface TVTuner : EventTarget {
   [Throws]
   sequence<TVSourceType> getSupportedSourceTypes();

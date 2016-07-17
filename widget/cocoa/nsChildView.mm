@@ -2729,12 +2729,41 @@ nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect)
   [(ChildView*)mView postRender:mGLPresenter->GetNSOpenGLContext()];
 }
 
+@interface NonDraggableView : NSView
+@end
+
+@implementation NonDraggableView
+- (BOOL)mouseDownCanMoveWindow { return NO; }
+- (NSView*)hitTest:(NSPoint)aPoint { return nil; }
+@end
+
 void
 nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion)
 {
-  if (mDraggableRegion != aRegion) {
-    mDraggableRegion = aRegion;
-    [(ChildView*)mView updateWindowDraggableState];
+  // mView returns YES from mouseDownCanMoveWindow, so we need to put NSViews
+  // that return NO from mouseDownCanMoveWindow in the places that shouldn't
+  // be draggable. We can't do it the other way round because returning
+  // YES from mouseDownCanMoveWindow doesn't have any effect if there's a
+  // superview that returns NO.
+  LayoutDeviceIntRegion nonDraggable;
+  nonDraggable.Sub(LayoutDeviceIntRect(0, 0, mBounds.width, mBounds.height), aRegion);
+
+  __block bool changed = false;
+
+  // Suppress calls to setNeedsDisplay during NSView geometry changes.
+  ManipulateViewWithoutNeedingDisplay(mView, ^() {
+    changed = mNonDraggableRegion.UpdateRegion(nonDraggable, *this, mView, ^() {
+      return [[NonDraggableView alloc] initWithFrame:NSZeroRect];
+    });
+  });
+
+  if (changed) {
+    // Trigger an update to the window server. This will call
+    // mouseDownCanMoveWindow.
+    // Doing this manually is only necessary because we're suppressing
+    // setNeedsDisplay calls above.
+    [[mView window] setMovableByWindowBackground:NO];
+    [[mView window] setMovableByWindowBackground:YES];
   }
 }
 
@@ -3502,8 +3531,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (BOOL)mouseDownCanMoveWindow
 {
-  // Return YES so that _regionForOpaqueDescendants gets called, where the
-  // actual draggable region will be assembled.
+  // Return YES so that parts of this view can be draggable. The non-draggable
+  // parts will be covered by NSViews that return NO from
+  // mouseDownCanMoveWindow and thus override draggability from the inside.
+  // These views are assembled in nsChildView::UpdateWindowDraggingRegion.
   return YES;
 }
 
@@ -4446,7 +4477,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGFloat locationInTitlebar = [[self window] frame].size.height - [theEvent locationInWindow].y;
   LayoutDeviceIntPoint pos = geckoEvent.mRefPoint;
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
-      mGeckoChild->GetDraggableRegion().Contains(pos.x, pos.y) &&
+      !mGeckoChild->GetNonDraggableRegion().Contains(pos.x, pos.y) &&
       [[self window] isKindOfClass:[ToolbarWindow class]] &&
       (locationInTitlebar < [(ToolbarWindow*)[self window] titlebarHeight] ||
        locationInTitlebar < [(ToolbarWindow*)[self window] unifiedToolbarHeight])) {
@@ -4479,75 +4510,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsEventStatus status; // ignored
   mGeckoChild->DispatchEvent(&event, status);
-}
-
-- (void)updateWindowDraggableState
-{
-  // Trigger update to the window server.
-  [[self window] setMovableByWindowBackground:NO];
-  [[self window] setMovableByWindowBackground:YES];
-}
-
-// aRect is in view coordinates relative to this NSView.
-- (CGRect)convertToFlippedWindowCoordinates:(NSRect)aRect
-{
-  // First, convert the rect to regular window coordinates...
-  NSRect inWindowCoords = [self convertRect:aRect toView:nil];
-  // ... and then flip it again because window coordinates have their origin
-  // in the bottom left corner, and we need it to be in the top left corner.
-  inWindowCoords.origin.y = [[self window] frame].size.height - NSMaxY(inWindowCoords);
-  return NSRectToCGRect(inWindowCoords);
-}
-
-static CGSRegionObj
-NewCGSRegionFromRegion(const LayoutDeviceIntRegion& aRegion,
-                       CGRect (^aRectConverter)(const LayoutDeviceIntRect&))
-{
-  nsTArray<CGRect> rects;
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    rects.AppendElement(aRectConverter(iter.Get()));
-  }
-
-  CGSRegionObj region;
-  CGSNewRegionWithRectList(rects.Elements(), rects.Length(), &region);
-  return region;
-}
-
-// This function is called with forMove:YES to calculate the draggable region
-// of the window which will be submitted to the window server. Window dragging
-// is handled on the window server without calling back into our process, so it
-// also works while our app is unresponsive.
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove
-{
-  if (!aForMove || !mGeckoChild) {
-    return [super _regionForOpaqueDescendants:aRect forMove:aForMove];
-  }
-
-  LayoutDeviceIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
-
-  LayoutDeviceIntRegion opaqueRegion;
-  opaqueRegion.Sub(boundingRect, mGeckoChild->GetDraggableRegion());
-
-  return NewCGSRegionFromRegion(opaqueRegion, ^(const LayoutDeviceIntRect& r) {
-    return [self convertToFlippedWindowCoordinates:mGeckoChild->DevPixelsToCocoaPoints(r)];
-  });
-}
-
-// Starting with 10.10, in addition to the traditional
-// -[NSView _regionForOpaqueDescendants:forMove:] method, there's a new form with
-// an additional forUnderTitlebar argument, which is sometimes called instead of
-// the old form. We need to override the new variant as well.
-- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect
-                                    forMove:(BOOL)aForMove
-                           forUnderTitlebar:(BOOL)aForUnderTitlebar
-{
-  if (!aForMove || !mGeckoChild) {
-    return [super _regionForOpaqueDescendants:aRect
-                                      forMove:aForMove
-                             forUnderTitlebar:aForUnderTitlebar];
-  }
-
-  return [self _regionForOpaqueDescendants:aRect forMove:aForMove];
 }
 
 - (void)handleMouseMoved:(NSEvent*)theEvent

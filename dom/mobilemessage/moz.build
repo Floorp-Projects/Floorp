@@ -6,7 +6,7 @@
 
 DIRS += ['interfaces']
 
-MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXPORTS.mozilla.dom.mobilemessage += [

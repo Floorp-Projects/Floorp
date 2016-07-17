@@ -45,6 +45,18 @@ interface nsIPresentationControlServerListener: nsISupports
                         in DOMString aUrl,
                         in DOMString aPresentationId,
                         in nsIPresentationControlChannel aControlChannel);
+
+  /**
+   * Callback while the remote host is requesting to terminate a presentation session.
+   * @param aDeviceInfo The device information related to the remote host.
+   * @param aPresentationId The Id for representing this session.
+   * @param aControlChannel The control channel for this session.
+   * @param aIsFromReceiver true if termination is initiated by receiver.
+   */
+  void onTerminateRequest(in nsITCPDeviceInfo aDeviceInfo,
+                          in DOMString aPresentationId,
+                          in nsIPresentationControlChannel aControlChannel,
+                          in boolean aIsFromReceiver);
 };
 
 /**

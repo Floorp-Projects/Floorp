@@ -4,7 +4,6 @@
 
 [JSImplementation="@mozilla.org/networkStatsdata;1",
  ChromeOnly,
- CheckAnyPermissions="networkstats-manage",
  Pref="dom.mozNetworkStats.enabled"]
 interface MozNetworkStatsData {
   readonly attribute unsigned long   rxBytes;   // Received bytes.

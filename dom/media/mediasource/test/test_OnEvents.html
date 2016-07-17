@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: live seekable range</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  function initEvent(e) {
+    v['got' + e] = false;
+  }
+  function receiveEvent(e) {
+    v['got' + e] = true;
+  }
+  var msevents = ["onsourceopen", "onsourceended"];
+  msevents.forEach(function(e) {
+    initEvent(e);
+    ms[e] = function() { receiveEvent(e); };
+  });
+
+  var sblistevents = ["onaddsourcebuffer", "onremovesourcebuffer"];
+  sblistevents.forEach(function(e) {
+    initEvent(e);
+    ms.sourceBuffers[e] = function() { receiveEvent(e); };
+  });
+
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    var sbevents = ["onupdatestart", "onupdate", "onupdateend", "onabort"];
+    sbevents.forEach(function(e) {
+      initEvent(e);
+      sb[e] = function() { receiveEvent(e); };
+    });
+
+    fetchAndLoad(sb, 'seek', [''], '.webm')
+    .then(function() {
+      fetchWithXHR('seek.webm')
+      .then(function(arrayBuffer) {
+        sb.appendBuffer(arrayBuffer);
+        ms.removeSourceBuffer(sb); // will fire abort and removesourcebuffer
+        ms.endOfStream(); // will fire sourceended
+        once(ms, "sourceended").then(function() {
+          var events = ["onsourceopen", "onsourceended", "onupdatestart", "onupdate", "onupdateend", "onabort", "onaddsourcebuffer", "onremovesourcebuffer"];
+          events.forEach(function(e) {
+            ok(v['got' + e], "got " + e);
+          });
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

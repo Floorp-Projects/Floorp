@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Test for WebSMS</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <p id="display"></p>
@@ -73,27 +73,21 @@ function test() {
   checkWebidlInterfaceNotInWindow();
 
   // If sms is disabled and permission is removed, sms is disabled.
-  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, function() {
-    SpecialPowers.pushPermissions([{'type': 'sms', 'remove': true, 'context': document}], test2);
-  });
+  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, test2);
 }
 
 function test2() {
   checkSmsDisabled();
 
   // If sms is enabled and permission is removed, sms is disabled.
-  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, function() {
-    SpecialPowers.pushPermissions([{'type': 'sms', 'remove': true, 'context': document}], test3);
-  });
+  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, test3);
 }
 
 function test3() {
   checkSmsDisabled();
 
   // If sms is disabled and permission is granted, sms is disabled.
-  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, function() {
-    SpecialPowers.pushPermissions([{'type': 'sms', 'allow': true, 'context': document}], test4);
-  });
+  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, test4);
 }
 
 function test4() {
@@ -101,9 +95,7 @@ function test4() {
 
   // Even if sms is enabled and permission is granted, sms is still disabled due
   // to the webidl check "AvailableIn=CertifiedApps."
-  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, function() {
-    SpecialPowers.pushPermissions([{'type': 'sms', 'allow': true, 'context': document}], test5);
-  });
+  SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", true]]}, test5);
 }
 
 function test5() {
