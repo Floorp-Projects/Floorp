@@ -2584,11 +2584,6 @@ public:
     return !!GetFullscreenElement();
   }
   void ExitFullscreen();
-  bool FullscreenEnabledInternal() const { return mFullscreenEnabled; }
-  void SetFullscreenEnabled(bool aEnabled)
-  {
-    mFullscreenEnabled = aEnabled;
-  }
   Element* GetMozPointerLockElement();
   void MozExitPointerLock()
   {
@@ -3049,10 +3044,6 @@ protected:
 
   // Do we currently have an event posted to call FlushUserFontSet?
   bool mPostedFlushUserFontSet : 1;
-
-  // Whether fullscreen is enabled for this document. This corresponds
-  // to the "fullscreen enabled flag" in the HTML spec.
-  bool mFullscreenEnabled : 1;
 
   enum Type {
     eUnknown, // should never be used
