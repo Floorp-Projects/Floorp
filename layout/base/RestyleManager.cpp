@@ -1208,7 +1208,7 @@ RestyleManager::AttributeWillChange(Element* aElement,
                                            false,
                                            aNewValue,
                                            rsdata);
-  PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE, &rsdata);
+  PostRestyleEvent(aElement, rshint, nsChangeHint(0), &rsdata);
 }
 
 // Forwarded nsIMutationObserver method, to handle restyling (and
@@ -1322,7 +1322,7 @@ RestyleManager::RestyleForEmptyChange(Element* aContainer)
       (grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
     hint = nsRestyleHint(hint | eRestyle_LaterSiblings);
   }
-  PostRestyleEvent(aContainer, hint, NS_STYLE_HINT_NONE);
+  PostRestyleEvent(aContainer, hint, nsChangeHint(0));
 }
 
 void
@@ -1366,7 +1366,7 @@ RestyleManager::RestyleForAppend(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -1377,7 +1377,7 @@ RestyleManager::RestyleForAppend(Element* aContainer,
          cur;
          cur = cur->GetPreviousSibling()) {
       if (cur->IsElement()) {
-        PostRestyleEvent(cur->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
+        PostRestyleEvent(cur->AsElement(), eRestyle_Subtree, nsChangeHint(0));
         break;
       }
     }
@@ -1397,7 +1397,7 @@ RestyleSiblingsStartingWith(RestyleManager* aRestyleManager,
       aRestyleManager->
         PostRestyleEvent(sibling->AsElement(),
                          nsRestyleHint(eRestyle_Subtree | eRestyle_LaterSiblings),
-                         NS_STYLE_HINT_NONE);
+                         nsChangeHint(0));
       break;
     }
   }
@@ -1444,7 +1444,7 @@ RestyleManager::RestyleForInsertOrChange(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -1467,7 +1467,7 @@ RestyleManager::RestyleForInsertOrChange(Element* aContainer,
       if (content->IsElement()) {
         if (passedChild) {
           PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
-                           NS_STYLE_HINT_NONE);
+                           nsChangeHint(0));
         }
         break;
       }
@@ -1484,7 +1484,7 @@ RestyleManager::RestyleForInsertOrChange(Element* aContainer,
       if (content->IsElement()) {
         if (passedChild) {
           PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
-                           NS_STYLE_HINT_NONE);
+                           nsChangeHint(0));
         }
         break;
       }
@@ -1531,7 +1531,7 @@ RestyleManager::RestyleForRemove(Element* aContainer,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(aContainer, eRestyle_Subtree, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContainer, eRestyle_Subtree, nsChangeHint(0));
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -1554,7 +1554,7 @@ RestyleManager::RestyleForRemove(Element* aContainer,
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
           PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
-                           NS_STYLE_HINT_NONE);
+                           nsChangeHint(0));
         }
         break;
       }
@@ -1566,7 +1566,7 @@ RestyleManager::RestyleForRemove(Element* aContainer,
          content = content->GetPreviousSibling()) {
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
+          PostRestyleEvent(content->AsElement(), eRestyle_Subtree, nsChangeHint(0));
         }
         break;
       }
@@ -3845,7 +3845,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
   // that would change our RestyleResult.
   ComputeRestyleResultFromFrame(aSelf, result, canStopWithStyleChange);
 
-  nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
+  nsChangeHint assumeDifferenceHint = nsChangeHint(0);
   RefPtr<nsStyleContext> oldContext = aSelf->StyleContext();
   nsStyleSet* styleSet = StyleSet();
 

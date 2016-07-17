@@ -909,7 +909,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
 
   *aEqualStructs = 0;
 
-  nsChangeHint hint = NS_STYLE_HINT_NONE;
+  nsChangeHint hint = nsChangeHint(0);
   NS_ENSURE_TRUE(aNewContext, hint);
   // We must always ensure that we populate the structs on the new style
   // context that are filled in on the old context, so that if we get

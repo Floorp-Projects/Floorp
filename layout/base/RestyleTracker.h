@@ -299,7 +299,7 @@ public:
   struct RestyleData : Hints {
     RestyleData() {
       mRestyleHint = nsRestyleHint(0);
-      mChangeHint = NS_STYLE_HINT_NONE;
+      mChangeHint = nsChangeHint(0);
     }
 
     RestyleData(nsRestyleHint aRestyleHint, nsChangeHint aChangeHint,

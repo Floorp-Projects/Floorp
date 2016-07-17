@@ -156,7 +156,7 @@ enum nsChangeHint {
 
   /**
    * A hint reflecting that style data changed with no change handling
-   * behavior.  We need to return this, rather than NS_STYLE_HINT_NONE,
+   * behavior.  We need to return this, rather than nsChangeHint(0),
    * so that certain optimizations that manipulate the style context tree are
    * correct.
    *
