@@ -115,7 +115,7 @@ WGLLibrary::EnsureInitialized()
         }
     }
 
-    GLLibraryLoader::SymLoadStruct earlySymbols[] = {
+    const GLLibraryLoader::SymLoadStruct earlySymbols[] = {
         { (PRFuncPtr*) &fCreateContext, { "wglCreateContext", nullptr } },
         { (PRFuncPtr*) &fMakeCurrent, { "wglMakeCurrent", nullptr } },
         { (PRFuncPtr*) &fGetProcAddress, { "wglGetProcAddress", nullptr } },
@@ -140,20 +140,19 @@ WGLLibrary::EnsureInitialized()
     mWindowGLContext = fCreateContext(mWindowDC);
     NS_ENSURE_TRUE(mWindowGLContext, false);
 
-    HGLRC curCtx = fGetCurrentContext();
-    HDC curDC = fGetCurrentDC();
-
-    if (!fMakeCurrent((HDC)mWindowDC, (HGLRC)mWindowGLContext)) {
+    if (!fMakeCurrent(mWindowDC, mWindowGLContext)) {
         NS_WARNING("wglMakeCurrent failed");
         return false;
     }
 
-    const GLLibraryLoader::PlatformLookupFunction lookupFunc =
-      (GLLibraryLoader::PlatformLookupFunction) fGetProcAddress;
+    const auto curCtx = fGetCurrentContext();
+    const auto curDC = fGetCurrentDC();
+
+    const auto lookupFunc = (GLLibraryLoader::PlatformLookupFunction)fGetProcAddress;
 
     // Now we can grab all the other symbols that we couldn't without having
     // a context current.
-    GLLibraryLoader::SymLoadStruct pbufferSymbols[] = {
+    const GLLibraryLoader::SymLoadStruct pbufferSymbols[] = {
         { (PRFuncPtr*) &fCreatePbuffer, { "wglCreatePbufferARB", "wglCreatePbufferEXT", nullptr } },
         { (PRFuncPtr*) &fDestroyPbuffer, { "wglDestroyPbufferARB", "wglDestroyPbufferEXT", nullptr } },
         { (PRFuncPtr*) &fGetPbufferDC, { "wglGetPbufferDCARB", "wglGetPbufferDCEXT", nullptr } },
@@ -162,7 +161,7 @@ WGLLibrary::EnsureInitialized()
         { nullptr, { nullptr } }
     };
 
-    GLLibraryLoader::SymLoadStruct pixFmtSymbols[] = {
+    const GLLibraryLoader::SymLoadStruct pixFmtSymbols[] = {
         { (PRFuncPtr*) &fChoosePixelFormat, { "wglChoosePixelFormatARB", "wglChoosePixelFormatEXT", nullptr } },
         { (PRFuncPtr*) &fGetPixelFormatAttribiv, { "wglGetPixelFormatAttribivARB", "wglGetPixelFormatAttribivEXT", nullptr } },
         { nullptr, { nullptr } }
@@ -178,17 +177,17 @@ WGLLibrary::EnsureInitialized()
         fChoosePixelFormat = nullptr;
     }
 
-    GLLibraryLoader::SymLoadStruct extensionsSymbols[] = {
+    const GLLibraryLoader::SymLoadStruct extensionsSymbols[] = {
         { (PRFuncPtr*) &fGetExtensionsString, { "wglGetExtensionsStringARB", nullptr} },
         { nullptr, { nullptr } }
     };
 
-    GLLibraryLoader::SymLoadStruct robustnessSymbols[] = {
+    const GLLibraryLoader::SymLoadStruct robustnessSymbols[] = {
         { (PRFuncPtr*) &fCreateContextAttribs, { "wglCreateContextAttribsARB", nullptr} },
         { nullptr, { nullptr } }
     };
 
-    GLLibraryLoader::SymLoadStruct dxInteropSymbols[] = {
+    const GLLibraryLoader::SymLoadStruct dxInteropSymbols[] = {
         { (PRFuncPtr*)&fDXSetResourceShareHandle,{ "wglDXSetResourceShareHandleNV", nullptr } },
         { (PRFuncPtr*)&fDXOpenDevice,            { "wglDXOpenDeviceNV",             nullptr } },
         { (PRFuncPtr*)&fDXCloseDevice,           { "wglDXCloseDeviceNV",            nullptr } },
@@ -200,8 +199,7 @@ WGLLibrary::EnsureInitialized()
         { nullptr, { nullptr } }
     };
 
-    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0], lookupFunc))
-    {
+    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0], lookupFunc)) {
         const char* extString = fGetExtensionsString(mWindowDC);
         MOZ_ASSERT(extString);
         MOZ_ASSERT(HasExtension(extString, "WGL_ARB_extensions_string"));
@@ -241,7 +239,7 @@ WGLLibrary::EnsureInitialized()
     if (mHasRobustness) {
         fDeleteContext(mWindowGLContext);
 
-        int attribs[] = {
+        const int attribs[] = {
             LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
             0
@@ -505,36 +503,25 @@ CreatePBufferOffscreenContext(CreateContextFlags flags, const IntSize& aSize,
 {
     WGLLibrary& wgl = sWGLLib;
 
-#define A1(_a,_x)  do { _a.AppendElement(_x); } while(0)
-#define A2(_a,_x,_y)  do { _a.AppendElement(_x); _a.AppendElement(_y); } while(0)
+    const int pfAttribs[] = {
+        LOCAL_WGL_SUPPORT_OPENGL_ARB, LOCAL_GL_TRUE,
+        LOCAL_WGL_ACCELERATION_ARB, LOCAL_WGL_FULL_ACCELERATION_ARB,
 
-    nsTArray<int> attrs;
+        LOCAL_WGL_DRAW_TO_PBUFFER_ARB, LOCAL_GL_TRUE,
+        LOCAL_WGL_DOUBLE_BUFFER_ARB, LOCAL_GL_FALSE,
+        LOCAL_WGL_STEREO_ARB, LOCAL_GL_FALSE,
 
-    A2(attrs, LOCAL_WGL_SUPPORT_OPENGL_ARB, LOCAL_GL_TRUE);
-    A2(attrs, LOCAL_WGL_DRAW_TO_PBUFFER_ARB, LOCAL_GL_TRUE);
-    A2(attrs, LOCAL_WGL_DOUBLE_BUFFER_ARB, LOCAL_GL_FALSE);
-
-    A2(attrs, LOCAL_WGL_ACCELERATION_ARB, LOCAL_WGL_FULL_ACCELERATION_ARB);
-
-    A2(attrs, LOCAL_WGL_DOUBLE_BUFFER_ARB, LOCAL_GL_FALSE);
-    A2(attrs, LOCAL_WGL_STEREO_ARB, LOCAL_GL_FALSE);
-
-    A1(attrs, 0);
-
-    nsTArray<int> pbattrs;
-    A1(pbattrs, 0);
-
-#undef A1
-#undef A2
+        0
+    };
 
     // We only need one!
-    UINT numFormats = 1;
-    int formats[1];
+    static const uint32_t kMaxFormats = 1024;
+    int formats[kMaxFormats];
+    uint32_t foundFormats;
     HDC windowDC = wgl.GetWindowDC();
-    if (!wgl.fChoosePixelFormat(windowDC,
-                                attrs.Elements(), nullptr,
-                                numFormats, formats, &numFormats)
-        || numFormats == 0)
+    if (!wgl.fChoosePixelFormat(windowDC, pfAttribs, nullptr, kMaxFormats, formats,
+                                &foundFormats)
+        || foundFormats == 0)
     {
         return nullptr;
     }
@@ -544,9 +531,9 @@ CreatePBufferOffscreenContext(CreateContextFlags flags, const IntSize& aSize,
     if (!IsValidSizeForFormat(windowDC, chosenFormat, aSize))
         return nullptr;
 
-    HANDLE pbuffer = wgl.fCreatePbuffer(windowDC, chosenFormat,
-                                        aSize.width, aSize.height,
-                                        pbattrs.Elements());
+    const int pbAttribs[] = { 0 };
+    HANDLE pbuffer = wgl.fCreatePbuffer(windowDC, chosenFormat, aSize.width, aSize.height,
+                                        pbAttribs);
     if (!pbuffer) {
         return nullptr;
     }
