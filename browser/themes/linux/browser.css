@@ -350,6 +350,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 #placesContext_openContainer\:tabs,
 #menu_newNavigatorTab,
 #context-openlinkintab,
+#context-openlinkincontainertab,
 #context-openframeintab {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 64px 16px 48px);
