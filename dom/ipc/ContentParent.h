@@ -575,6 +575,24 @@ public:
 
   static bool AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId);
 
+  static void
+  BroadcastBlobURLRegistration(const nsACString& aURI,
+                               BlobImpl* aBlobImpl,
+                               nsIPrincipal* aPrincipal,
+                               ContentParent* aIgnoreThisCP = nullptr);
+
+  static void
+  BroadcastBlobURLUnregistration(const nsACString& aURI,
+                                 ContentParent* aIgnoreThisCP = nullptr);
+
+  virtual bool
+  RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
+                                           PBlobParent* aBlobParent,
+                                           const Principal& aPrincipal) override;
+
+  virtual bool
+  RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI) override;
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 

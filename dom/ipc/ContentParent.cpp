@@ -191,6 +191,7 @@
 #include "nsIBlocklistService.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetHandleInlines.h"
+#include "nsHostObjectProtocolHandler.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -2513,13 +2514,22 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   }
 #endif
 
-  RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
-  MOZ_ASSERT(swr);
+  {
+    RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+    MOZ_ASSERT(swr);
 
-  nsTArray<ServiceWorkerRegistrationData> registrations;
-  swr->GetRegistrations(registrations);
+    nsTArray<ServiceWorkerRegistrationData> registrations;
+    swr->GetRegistrations(registrations);
+    Unused << SendInitServiceWorkers(ServiceWorkerConfiguration(registrations));
+  }
 
-  Unused << SendInitServiceWorkers(ServiceWorkerConfiguration(registrations));
+  {
+    nsTArray<BlobURLRegistrationData> registrations;
+    if (nsHostObjectProtocolHandler::GetAllBlobURLEntries(registrations,
+                                                          this)) {
+      Unused << SendInitBlobURLs(registrations);
+    }
+  }
 }
 
 bool
@@ -5693,6 +5703,63 @@ ContentParent::RecvNotifyLowMemory()
 #ifdef MOZ_CRASHREPORTER
   nsThread::SaveMemoryReportNearOOM(nsThread::ShouldSaveMemoryReport::kForceReport);
 #endif
+  return true;
+}
+
+/* static */ void
+ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
+                                            BlobImpl* aBlobImpl,
+                                            nsIPrincipal* aPrincipal,
+                                            ContentParent* aIgnoreThisCP)
+{
+  nsCString uri(aURI);
+  IPC::Principal principal(aPrincipal);
+
+  for (auto* cp : AllProcesses(eLive)) {
+    if (cp != aIgnoreThisCP) {
+      PBlobParent* blobParent = cp->GetOrCreateActorForBlobImpl(aBlobImpl);
+      if (blobParent) {
+        Unused << cp->SendBlobURLRegistration(uri, blobParent, principal);
+      }
+    }
+  }
+}
+
+/* static */ void
+ContentParent::BroadcastBlobURLUnregistration(const nsACString& aURI,
+                                              ContentParent* aIgnoreThisCP)
+{
+  nsCString uri(aURI);
+
+  for (auto* cp : AllProcesses(eLive)) {
+    if (cp != aIgnoreThisCP) {
+      Unused << cp->SendBlobURLUnregistration(uri);
+    }
+  }
+}
+
+bool
+ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
+                                                        PBlobParent* aBlobParent,
+                                                        const Principal& aPrincipal)
+{
+  RefPtr<BlobImpl> blobImpl =
+    static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
+  if (NS_WARN_IF(!blobImpl)) {
+    return false;
+  }
+
+  nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl, aPrincipal);
+  BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
+  return true;
+}
+
+bool
+ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI)
+{
+  nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
+                                               false /* Don't broadcast */);
+  BroadcastBlobURLUnregistration(aURI, this);
   return true;
 }
 
