@@ -383,7 +383,6 @@ XULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     mStillWalking = true;
     mMayStartLayout = false;
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
-    mFullscreenEnabled = true;
 
     mChannel = aChannel;
 
