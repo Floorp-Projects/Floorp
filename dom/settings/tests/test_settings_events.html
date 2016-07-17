@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678695
 -->
 <head>
   <title>Test for Bug 678695</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678695">Mozilla Bug 678695</a>
@@ -16,10 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678695
 </div>
 <pre id="test">
 <script type="application/javascript">
-SpecialPowers.addPermission("settings-api-read", true, document);
-SpecialPowers.addPermission("settings-api-write", true, document);
-SpecialPowers.addPermission("settings-read", true, document);
-SpecialPowers.addPermission("settings-write", true, document);
 
 /** Test for Bug 678695 **/
 

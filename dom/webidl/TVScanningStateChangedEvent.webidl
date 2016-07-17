@@ -20,8 +20,7 @@ dictionary TVScanningStateChangedEventInit : EventInit {
 };
 
 [Pref="dom.tv.enabled",
- CheckAnyPermissions="tv",
- AvailableIn=CertifiedApps,
+ ChromeOnly, 
  Constructor(DOMString type, optional TVScanningStateChangedEventInit eventInitDict)]
 interface TVScanningStateChangedEvent : Event {
   readonly attribute TVScanningState state;

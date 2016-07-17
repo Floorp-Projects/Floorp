@@ -178,7 +178,7 @@ typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 // time it is instantiated. In the future, Module will store a shareable,
 // immutable CodeSegment that can be shared by all its instances.
 
-class Module
+class Module : public RefCounted<Module>
 {
     const Bytes             code_;
     const LinkData          linkData_;
@@ -225,7 +225,7 @@ class Module
 
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor) const;
-    static const uint8_t* deserialize(const uint8_t* cursor, UniquePtr<Module>* module,
+    static const uint8_t* deserialize(const uint8_t* cursor, RefPtr<Module>* module,
                                       Metadata* maybeMetadata = nullptr);
 
     // about:memory reporting:
@@ -236,7 +236,7 @@ class Module
                        size_t* code, size_t* data) const;
 };
 
-typedef UniquePtr<Module> UniqueModule;
+typedef RefPtr<Module> SharedModule;
 
 // These accessors are used to implemented the special asm.js semantics of
 // exported wasm functions:

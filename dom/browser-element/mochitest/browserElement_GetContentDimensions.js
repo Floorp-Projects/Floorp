@@ -6,7 +6,6 @@
 "use strict";
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 var resizeContent = function() {
   var innerBox = content.document.getElementById('abox');

@@ -8,6 +8,7 @@ include protocol PContent;
 include protocol PContentBridge;
 include protocol PFileDescriptorSet;
 
+include BlobTypes;
 include DOMTypes;
 include InputStreamParams;
 

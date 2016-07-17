@@ -6,7 +6,7 @@
  * Reference https://wiki.mozilla.org/Input_Port_API#InputPortManager
  */
 
-[Pref="dom.inputport.enabled", CheckAnyPermissions="inputport", AvailableIn=CertifiedApps]
+[Pref="dom.inputport.enabled", ChromeOnly]
  interface InputPortManager {
    [Throws]
    Promise<sequence<InputPort>> getInputPorts();

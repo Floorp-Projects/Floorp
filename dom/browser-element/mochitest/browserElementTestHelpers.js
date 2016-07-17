@@ -109,6 +109,7 @@ const browserElementTestHelpers = {
 
   // Some basically-empty pages from different domains you can load.
   'emptyPage1': 'http://example.com' + _getPath() + '/file_empty.html',
+  'fileEmptyPage1': 'file_empty.html',
   'emptyPage2': 'http://example.org' + _getPath() + '/file_empty.html',
   'emptyPage3': 'http://test1.example.org' + _getPath() + '/file_empty.html',
   'focusPage': 'http://example.org' + _getPath() + '/file_focus.html',

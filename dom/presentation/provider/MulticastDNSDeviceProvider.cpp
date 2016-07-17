@@ -917,6 +917,50 @@ MulticastDNSDeviceProvider::OnSessionRequest(nsITCPDeviceInfo* aDeviceInfo,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MulticastDNSDeviceProvider::OnTerminateRequest(nsITCPDeviceInfo* aDeviceInfo,
+                                               const nsAString& aPresentationId,
+                                               nsIPresentationControlChannel* aControlChannel,
+                                               bool aIsFromReceiver)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString address;
+  Unused << aDeviceInfo->GetAddress(address);
+
+  LOG_I("OnTerminateRequest: %s", address.get());
+
+  RefPtr<Device> device;
+  uint32_t index;
+  if (FindDeviceByAddress(address, index)) {
+    device = mDevices[index];
+  } else {
+    // Create a one-time device object for non-discoverable controller.
+    // This device will not be in the list of available devices and cannot
+    // be used for requesting session.
+    nsAutoCString id;
+    Unused << aDeviceInfo->GetId(id);
+    uint16_t port;
+    Unused << aDeviceInfo->GetPort(&port);
+
+    device = new Device(id,
+                        /* aName = */ id,
+                        /* aType = */ EmptyCString(),
+                        address,
+                        port,
+                        DeviceState::eActive,
+                        /* aProvider = */ nullptr);
+  }
+
+  nsCOMPtr<nsIPresentationDeviceListener> listener;
+  if (NS_SUCCEEDED(GetListener(getter_AddRefs(listener))) && listener) {
+    Unused << listener->OnTerminateRequest(device, aPresentationId,
+                                           aControlChannel, aIsFromReceiver);
+  }
+
+  return NS_OK;
+}
+
 // nsIObserver
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::Observe(nsISupports* aSubject,

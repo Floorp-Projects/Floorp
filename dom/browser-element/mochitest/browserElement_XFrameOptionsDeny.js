@@ -36,34 +36,18 @@ function runTest() {
   // frames.
   iframe.height = '1000px';
 
+  var step1, stepfinish;
   iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
     switch (e.detail.message) {
     case 'step 1':
-      // Make the page wait for us to unblock it (which we do after we finish
-      // taking the screenshot).
-      e.preventDefault();
-
-      iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
-        var fr = new FileReader();
-        fr.onloadend = function() {
-          initialScreenshotArrayBuffer = fr.result;
-          e.detail.unblock();
-        }
-        fr.readAsArrayBuffer(sshot.target.result);
-      };
+      step1 = SpecialPowers.snapshotWindow(iframe.contentWindow);
       break;
     case 'step 2':
       // The page has now attempted to load the X-Frame-Options page; take
       // another screenshot.
-      iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
-        var fr = new FileReader();
-        fr.onloadend = function() {
-          ok(arrayBuffersEqual(fr.result, initialScreenshotArrayBuffer),
-             "Screenshots should be identical");
-          SimpleTest.finish();
-        }
-        fr.readAsArrayBuffer(sshot.target.result);
-      };
+      stepfinish = SpecialPowers.snapshotWindow(iframe.contentWindow);
+      ok(step1.toDataURL() == stepfinish.toDataURL(), "Screenshots should be identical");
+      SimpleTest.finish();
       break;
     }
   });

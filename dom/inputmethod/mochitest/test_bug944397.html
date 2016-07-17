@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944397
 -->
 <head>
   <title>Basic test for InputMethod API.</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=944397">Mozilla Bug 944397</a>
@@ -73,33 +73,22 @@ function runTest() {
     // STEP 2b: Grant input privileges to the keyboard iframe
     let imeUrl = basePath + '/file_inputmethod.html#data';
 
-    SpecialPowers.pushPermissions([{
-      type: 'input',
-      allow: true,
-      context: {
-        url: imeUrl,
-        originAttributes: {
-          inIsolatedMozBrowser: true
-        }
-      }
-    }], function() {
-      // STEP 2c: Tell Gecko to use this iframe as its keyboard app
-      let req = keyboard.setInputMethodActive(true);
+    // STEP 2c: Tell Gecko to use this iframe as its keyboard app
+    let req = keyboard.setInputMethodActive(true);
 
-      req.onsuccess = function() {
-        ok(true, 'setInputMethodActive succeeded.');
-      };
+    req.onsuccess = function() {
+      ok(true, 'setInputMethodActive succeeded.');
+    };
 
-      req.onerror = function() {
-        ok(false, 'setInputMethodActive failed: ' + this.error.name);
-        inputmethod_cleanup();
-      };
+    req.onerror = function() {
+      ok(false, 'setInputMethodActive failed: ' + this.error.name);
+      inputmethod_cleanup();
+    };
 
-      // STEP 3: Loads the input method app to the browser frame after a delay.
-      setTimeout(function() {
-        keyboard.src = imeUrl;
-      }, 100);
-    });
+    // STEP 3: Loads the input method app to the browser frame after a delay.
+    setTimeout(function() {
+      keyboard.src = imeUrl;
+    }, 100);
   }
 
   function step4(val) {

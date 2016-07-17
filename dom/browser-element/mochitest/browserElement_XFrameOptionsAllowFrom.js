@@ -33,23 +33,12 @@ function runTest() {
   iframe.setAttribute('mozbrowser', 'true');
   iframe.height = '1000px';
 
+  var step1, stepfinish;
   // The innermost page we load will fire an alert when it successfully loads.
   iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
     switch (e.detail.message) {
     case 'step 1':
-      // Make the page wait for us to unblock it (which we do after we finish
-      // taking the screenshot).
-      e.preventDefault();
-
-      iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
-        var fr = new FileReader();
-        fr.onloadend = function() {
-          if (initialScreenshotArrayBuffer == null)
-            initialScreenshotArrayBuffer = fr.result;
-          e.detail.unblock();
-        };
-        fr.readAsArrayBuffer(sshot.target.result);
-      };
+      step1 = SpecialPowers.snapshotWindow(iframe.contentWindow);
       break;
     case 'step 2':
       ok(false, 'cross origin page loaded');
@@ -57,16 +46,9 @@ function runTest() {
     case 'finish':
       // The page has now attempted to load the X-Frame-Options page; take
       // another screenshot.
-      iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
-        var fr = new FileReader();
-        fr.onloadend = function() {
-          ok(arrayBuffersEqual(fr.result, initialScreenshotArrayBuffer),
-             "Screenshots should be identical");
-          SimpleTest.finish();
-        };
-        fr.readAsArrayBuffer(sshot.target.result);
-      };
-      break;
+      stepfinish = SpecialPowers.snapshotWindow(iframe.contentWindow);
+      ok(step1.toDataURL() == stepfinish.toDataURL(), "Screenshots should be identical");
+      SimpleTest.finish();
     }
   });
 

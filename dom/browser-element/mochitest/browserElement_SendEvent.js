@@ -6,7 +6,6 @@
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 function runTest() {
   var iframe = document.createElement("iframe");
@@ -79,21 +78,7 @@ function runTest() {
     }
   });
 
-  iframe.src = "data:text/html,<html><body>" +
-               "<button>send[Mouse|Touch]Event</button>" +
-               "</body><script>" +
-               "function changeHash(e) {" +
-               "  document.location.hash = e.type;" +
-               "};" +
-               "window.addEventListener('mousedown', changeHash);" +
-               "window.addEventListener('mousemove', changeHash);" +
-               "window.addEventListener('mouseup', changeHash);" +
-               "window.addEventListener('click', changeHash, true);" +
-               "window.addEventListener('touchstart', changeHash);" +
-               "window.addEventListener('touchmove', changeHash);" +
-               "window.addEventListener('touchend', changeHash);" +
-               "window.addEventListener('touchcancel', changeHash);" +
-               "</script></html>";
+  iframe.src = "file_browserElement_SendEvent.html";
 
 }
 

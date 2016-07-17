@@ -1210,6 +1210,8 @@ wx/log.h
 wx/toolbar.h
 wx/wx.h
 wx/xrc/xmlres.h
+xcb/xcb.h
+xcb/shm.h
 X11/cursorfont.h
 X11/extensions/Print.h
 X11/extensions/shape.h
@@ -1231,6 +1233,7 @@ X11/X.h
 X11/XKBlib.h
 X11/Xlib.h
 X11/Xlibint.h
+X11/Xlib-xcb.h
 X11/Xlocale.h
 X11/Xos.h
 X11/Xutil.h

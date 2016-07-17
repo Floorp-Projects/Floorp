@@ -110,13 +110,22 @@ const WONTDIE_BODY = String.raw`
 import signal
 import struct
 import sys
+import time
 
 signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+def spin():
+    while True:
+        try:
+            signal.pause()
+        except AttributeError:
+            time.sleep(5)
 
 while True:
     rawlen = sys.stdin.read(4)
     if len(rawlen) == 0:
-        signal.pause()
+        spin()
+
     msglen = struct.unpack('@I', rawlen)[0]
     msg = sys.stdin.read(msglen)
 

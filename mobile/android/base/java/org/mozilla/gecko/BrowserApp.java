@@ -343,6 +343,14 @@ public class BrowserApp extends GeckoApp
             if (msg != Tabs.TabEvents.RESTORED) {
                 throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");
             }
+
+            final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+            if (selectedTab != null) {
+                // After restoring the tabs we want to update the home pager immediately. Otherwise we
+                // might wait for an event coming from Gecko and this can take several seconds. (Bug 1283627)
+                updateHomePagerForTab(selectedTab);
+            }
+
             return;
         }
 

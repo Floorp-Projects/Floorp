@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1043828
 -->
 <head>
   <title>Basic test for Switching Keyboards.</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1043828">Mozilla Bug 1043828</a>
@@ -86,45 +86,34 @@ function runTest() {
     // simulate two different keyboard apps
     let imeUrl = basePath + '/file_blank.html';
 
-    SpecialPowers.pushPermissions([{
-      type: 'input',
-      allow: true,
-      context: {
-        url: imeUrl,
-        originAttributes: {
-          inIsolatedMozBrowser: true
-        }
+    keyboardA.src = imeUrl;
+    keyboardB.src = imeUrl;
+
+    var handler = {
+      handleEvent: function(){
+        keyboardB.removeEventListener('mozbrowserloadend', this);
+
+        mmKeyboardB = SpecialPowers.getBrowserFrameMessageManager(keyboardB);
+
+        mmKeyboardB.loadFrameScript('data:,(' + kbFrameScript.toString() + ')();', false);
+
+        mmKeyboardB.addMessageListener('test:InputMethod:getText:Resolve', function() {
+          info('getText() was resolved');
+          inputmethod_cleanup();
+        });
+
+        mmKeyboardB.addMessageListener('test:InputMethod:getText:Reject', function() {
+          ok(false, 'getText() was rejected');
+          inputmethod_cleanup();
+        });
+
+        setTimeout(function(){
+          step2();
+        }, WAIT_TIME);
       }
-    }], function() {
-      keyboardA.src = imeUrl;
-      keyboardB.src = imeUrl;
+    };
 
-      var handler = {
-        handleEvent: function(){
-          keyboardB.removeEventListener('mozbrowserloadend', this);
-
-          mmKeyboardB = SpecialPowers.getBrowserFrameMessageManager(keyboardB);
-
-          mmKeyboardB.loadFrameScript('data:,(' + kbFrameScript.toString() + ')();', false);
-
-          mmKeyboardB.addMessageListener('test:InputMethod:getText:Resolve', function() {
-            info('getText() was resolved');
-            inputmethod_cleanup();
-          });
-
-          mmKeyboardB.addMessageListener('test:InputMethod:getText:Reject', function() {
-            ok(false, 'getText() was rejected');
-            inputmethod_cleanup();
-          });
-
-          setTimeout(function(){
-            step2();
-          }, WAIT_TIME);
-        }
-      };
-
-      keyboardB.addEventListener('mozbrowserloadend', handler);
-    });
+    keyboardB.addEventListener('mozbrowserloadend', handler);
   }
 
   // STEP 2: Set keyboard A active

@@ -6,12 +6,14 @@
 
 #include "ServiceWorkerRegistration.h"
 
+#include "ipc/ErrorIPCUtils.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -387,7 +389,7 @@ public:
 class UpdateResultRunnable final : public WorkerRunnable
 {
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  ErrorResult mStatus;
+  IPC::Message mSerializedErrorResult;
 
   ~UpdateResultRunnable()
   {}
@@ -396,29 +398,31 @@ public:
   UpdateResultRunnable(PromiseWorkerProxy* aPromiseProxy, ErrorResult& aStatus)
     : WorkerRunnable(aPromiseProxy->GetWorkerPrivate())
     , mPromiseProxy(aPromiseProxy)
-    , mStatus(Move(aStatus))
-  { }
+  {
+    // ErrorResult is not thread safe.  Serialize it for transfer across
+    // threads.
+    IPC::WriteParam(&mSerializedErrorResult, aStatus);
+    aStatus.SuppressException();
+  }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
+    // Deserialize the ErrorResult now that we are back in the worker
+    // thread.
+    ErrorResult status;
+    PickleIterator iter = PickleIterator(mSerializedErrorResult);
+    Unused << IPC::ReadParam(&mSerializedErrorResult, &iter, &status);
+
     Promise* promise = mPromiseProxy->WorkerPromise();
-    if (mStatus.Failed()) {
-      promise->MaybeReject(mStatus);
+    if (status.Failed()) {
+      promise->MaybeReject(status);
     } else {
       promise->MaybeResolve(JS::UndefinedHandleValue);
     }
-    mStatus.SuppressException();
+    status.SuppressException();
     mPromiseProxy->CleanUp();
     return true;
-  }
-
-  void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aSuccess) override
-  {
-    if (!aSuccess) {
-      mStatus.SuppressException();
-    }
   }
 };
 

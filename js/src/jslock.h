@@ -17,8 +17,10 @@
 
 # include "prcvar.h"
 # include "prinit.h"
+# include "prio.h"
 # include "prlock.h"
 # include "prthread.h"
+# include "private/pprio.h"
 
 #endif
 

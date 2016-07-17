@@ -56,15 +56,13 @@ public:
 
   virtual bool NeedToResetMDSM() const = 0;
 
-  SeekJob& GetSeekJob();
-
-  bool Exists() const;
+  const SeekTarget& GetSeekTarget();
 
 protected:
   SeekTask(const void* aDecoderID,
            AbstractThread* aThread,
            MediaDecoderReaderWrapper* aReader,
-           SeekJob&& aSeekJob);
+           const SeekTarget& aTarget);
 
   virtual ~SeekTask();
 
@@ -86,7 +84,7 @@ protected:
   /*
    * Internal state.
    */
-  SeekJob mSeekJob;
+  SeekTarget mTarget;
   MozPromiseHolder<SeekTaskPromise> mSeekTaskPromise;
   bool mIsDiscarded;
 

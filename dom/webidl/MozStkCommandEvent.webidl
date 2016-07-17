@@ -55,8 +55,7 @@ dictionary MozStkIconContainer
 };
 
 [Pref="dom.icc.enabled",
- CheckAnyPermissions="mobileconnection",
- AvailableIn="CertifiedApps",
+ ChromeOnly,
  Constructor(DOMString type, optional MozStkCommandEventInit eventInitDict)]
 interface MozStkCommandEvent : Event
 {

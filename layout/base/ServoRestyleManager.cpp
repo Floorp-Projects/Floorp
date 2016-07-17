@@ -16,10 +16,26 @@ ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
 {
 }
 
-void
-ServoRestyleManager::Disconnect()
+/* static */ void
+ServoRestyleManager::DirtyTree(nsIContent* aContent)
 {
-  NS_ERROR("stylo: ServoRestyleManager::Disconnect not implemented");
+  if (aContent->IsDirtyForServo()) {
+    return;
+  }
+
+  aContent->SetIsDirtyForServo();
+
+  FlattenedChildIterator it(aContent);
+
+  nsIContent* n = it.GetNextChild();
+  bool hadChildren = bool(n);
+  for ( ; n; n = it.GetNextChild()) {
+    DirtyTree(n);
+  }
+
+  if (hadChildren) {
+    aContent->SetHasDirtyDescendantsForServo();
+  }
 }
 
 void
@@ -32,13 +48,21 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
+  if (aRestyleHint == 0 && !aMinChangeHint) {
+    // Nothing to do here
+    return;
+  }
+
   nsIPresShell* presShell = PresContext()->PresShell();
   if (!ObservingRefreshDriver()) {
     SetObservingRefreshDriver(PresContext()->RefreshDriver()->
         AddStyleFlushObserver(presShell));
   }
 
-  aElement->SetIsDirtyForServo();
+  // Propagate the IS_DIRTY flag down the tree.
+  DirtyTree(aElement);
+
+  // Propagate the HAS_DIRTY_DESCENDANTS flag to the root.
   nsINode* cur = aElement;
   while ((cur = cur->GetParentNode())) {
     if (cur->HasDirtyDescendantsForServo())
@@ -69,10 +93,63 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   MOZ_CRASH("stylo: ServoRestyleManager::PostRebuildAllStyleDataEvent not implemented");
 }
 
+/* static */ void
+ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
+                                           nsStyleContext* aParentContext,
+                                           ServoStyleSet* aStyleSet)
+{
+  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+
+  // TODO: AFAIK this can happen when we have, let's say, display: none. Here we
+  // should trigger frame construction if the element is actually dirty (I
+  // guess), but we'd better do that once we have all the restyle hints thing
+  // figured out.
+  if (!primaryFrame) {
+    aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO | NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+    return;
+  }
+
+  if (aContent->IsDirtyForServo()) {
+    RefPtr<ServoComputedValues> computedValues =
+      dont_AddRef(Servo_GetComputedValues(aContent));
+
+    // TODO: Figure out what pseudos does this content have, and do the proper
+    // thing with them.
+    RefPtr<nsStyleContext> context =
+      aStyleSet->GetContext(computedValues.forget(),
+                            aParentContext,
+                            nullptr,
+                            CSSPseudoElementType::NotPseudo);
+
+    // TODO: Compare old and new styles to generate restyle change hints, and
+    // process them.
+    primaryFrame->SetStyleContext(context.get());
+
+    aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO);
+  }
+
+  if (aContent->HasDirtyDescendantsForServo()) {
+    FlattenedChildIterator it(aContent);
+    for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+      RecreateStyleContexts(n, primaryFrame->StyleContext(), aStyleSet);
+    }
+    aContent->UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+}
+
 void
 ServoRestyleManager::ProcessPendingRestyles()
 {
-  // XXXheycam Do nothing for now.
+  ServoStyleSet* styleSet = StyleSet();
+
+  nsIDocument* doc = PresContext()->Document();
+  Element* root = doc->GetRootElement();
+
+  if (root) {
+    styleSet->RestyleSubtree(root, /* aForce = */ false);
+    RecreateStyleContexts(root, nullptr, styleSet);
+  }
+
   IncrementRestyleGeneration();
 }
 

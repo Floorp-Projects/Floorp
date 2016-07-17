@@ -1,13 +1,5 @@
 "use strict";
 
-function setupPrefsAndPermissions(callback) {
-  setupPrefs(function() {
-      SpecialPowers.pushPermissions([
-        {"type":"tv", "allow":1, "context":document}
-      ], callback);
-  });
-}
-
 function setupPrefs(callback) {
   let xhr = new XMLHttpRequest;
   let data;
@@ -31,14 +23,12 @@ function setupPrefs(callback) {
   });
 }
 
-function removePrefsAndPermissions(callback) {
-  SpecialPowers.popPrefEnv(function() {
-    SpecialPowers.popPermissions(callback);
-  });
+function removePrefs(callback) {
+  SpecialPowers.popPrefEnv(callback);
 }
 
 function prepareTest(callback) {
-  removePrefsAndPermissions(function() {
-    setupPrefsAndPermissions(callback);
+  removePrefs(function() {
+    setupPrefs(callback);
   });
 }

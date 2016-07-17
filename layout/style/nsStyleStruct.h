@@ -795,6 +795,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   // FIXME: Should be in nsStyleStructInlines.h.
   bool HasFixedBackground(nsIFrame* aFrame) const;
 
+  // Checks to see if this has a non-empty image with "local" attachment.
+  // This is defined in nsStyleStructInlines.h.
+  inline bool HasLocalBackground() const;
+
   const nsStyleImageLayers::Layer& BottomLayer() const { return mImage.BottomLayer(); }
 
   nsStyleImageLayers mImage;

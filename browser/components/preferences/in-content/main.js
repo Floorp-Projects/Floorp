@@ -141,34 +141,15 @@ var gMainPane = {
       }
     }
 
-    const Cc = Components.classes, Ci = Components.interfaces;
-    let brandName = document.getElementById("bundleBrand").getString("brandShortName");
-    let bundle = document.getElementById("bundlePreferences");
-    let msg = bundle.getFormattedString(e10sCheckbox.checked ?
-                                        "featureEnableRequiresRestart" : "featureDisableRequiresRestart",
-                                        [brandName]);
-    let restartText = bundle.getFormattedString("okToRestartButton", [brandName]);
-    let revertText = bundle.getString("revertNoRestartButton");
-
-    let title = bundle.getFormattedString("shouldRestartTitle", [brandName]);
-    let prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
-    let buttonFlags = (Services.prompt.BUTTON_POS_0 *
-                       Services.prompt.BUTTON_TITLE_IS_STRING) +
-                      (Services.prompt.BUTTON_POS_1 *
-                       Services.prompt.BUTTON_TITLE_IS_STRING) +
-                      Services.prompt.BUTTON_POS_0_DEFAULT;
-    let shouldProceed = prompts.confirmEx(window, title, msg,
-                                          buttonFlags, revertText, restartText,
-                                          null, null, {});
-
-    if (shouldProceed) {
+    let buttonIndex = confirmRestartPrompt(e10sCheckbox.checked, 0,
+                                           true, false);
+    if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+      const Cc = Components.classes, Ci = Components.interfaces;
       let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
                          .createInstance(Ci.nsISupportsPRBool);
       Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
                                    "restart");
-      shouldProceed = !cancelQuit.data;
-
-      if (shouldProceed) {
+      if (!cancelQuit.data) {
         for (let prefToChange of prefsToChange) {
           prefToChange.value = e10sCheckbox.checked;
         }
@@ -205,40 +186,20 @@ var gMainPane = {
       }
     }
 
-    const Cc = Components.classes, Ci = Components.interfaces;
     let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
-    let brandName = document.getElementById("bundleBrand").getString("brandShortName");
-    let bundle = document.getElementById("bundlePreferences");
-    let msg = bundle.getFormattedString(separateProfileModeCheckbox.checked ?
-                                        "featureEnableRequiresRestart" : "featureDisableRequiresRestart",
-                                        [brandName]);
-    let title = bundle.getFormattedString("shouldRestartTitle", [brandName]);
-    let check = {value: false};
-    let prompts = Services.prompt;
-    let flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_IS_STRING +
-                  prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL  +
-                  prompts.BUTTON_POS_2 * prompts.BUTTON_TITLE_IS_STRING;
-    let button0Title = bundle.getString("restartNowButton");
-    let button2Title = bundle.getString("restartLaterButton");
-    let button_index = prompts.confirmEx(window, title, msg, flags,
-                         button0Title, null, button2Title, null, check)
-    let RESTART_NOW_BUTTON_INDEX = 0;
-    let CANCEL_BUTTON_INDEX = 1;
-    let RESTART_LATER_BUTTON_INDEX = 2;
-
+    let button_index = confirmRestartPrompt(separateProfileModeCheckbox.checked,
+                                            0, false, true);
     switch (button_index) {
-      case CANCEL_BUTTON_INDEX:
+      case CONFIRM_RESTART_PROMPT_CANCEL:
         revertCheckbox();
         return;
-      case RESTART_NOW_BUTTON_INDEX:
-        let shouldProceed = false;
+      case CONFIRM_RESTART_PROMPT_RESTART_NOW:
+        const Cc = Components.classes, Ci = Components.interfaces;
         let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
                            .createInstance(Ci.nsISupportsPRBool);
         Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
                                       "restart");
-        shouldProceed = !cancelQuit.data;
-
-        if (shouldProceed) {
+        if (!cancelQuit.data) {
           createOrRemoveSpecialDevEditionFile(quitApp);
           return;
         }
@@ -246,7 +207,7 @@ var gMainPane = {
         // Revert the checkbox in case we didn't quit
         revertCheckbox();
         return;
-      case RESTART_LATER_BUTTON_INDEX:
+      case CONFIRM_RESTART_PROMPT_RESTART_LATER:
         createOrRemoveSpecialDevEditionFile();
         return;
     }

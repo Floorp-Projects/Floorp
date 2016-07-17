@@ -113,14 +113,9 @@ public:
   bool AddFloat(nsLineLayout*       aLineLayout,
                 nsIFrame*           aFloat,
                 nscoord             aAvailableISize);
-private:
-  bool CanPlaceFloat(nscoord aFloatISize,
-                     const nsFlowAreaRect& aFloatAvailableSpace);
-public:
+
   bool FlowAndPlaceFloat(nsIFrame* aFloat);
-private:
-  void PushFloatPastBreak(nsIFrame* aFloat);
-public:
+
   void PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats,
                                    nsLineBox* aLine);
 
@@ -190,10 +185,6 @@ public:
                               bool aBlockAvoidsFloats,
                               mozilla::LogicalRect& aResult);
 
-protected:
-  void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
-
-public:
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
   void AdvanceToNextLine() {
@@ -353,7 +344,7 @@ public:
   int32_t mLineNumber;
 
   int16_t mFlags;
- 
+
   uint8_t mFloatBreakType;
 
   // The amount of computed block-direction size "consumed" by previous-in-flows.
@@ -375,6 +366,14 @@ public:
     NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
     return !!(mFlags & aFlag);
   }
+
+private:
+  bool CanPlaceFloat(nscoord aFloatISize,
+                     const nsFlowAreaRect& aFloatAvailableSpace);
+
+  void PushFloatPastBreak(nsIFrame* aFloat);
+
+  void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 };
 
 #endif // nsBlockReflowState_h__

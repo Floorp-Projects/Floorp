@@ -22,15 +22,11 @@ function runTests() {
 }
 
 window.addEventListener('load', function() {
-  SpecialPowers.pushPermissions([
-    {type: 'presentation-device-manage', allow: false, context: document},
-  ], function() {
-    SpecialPowers.pushPrefEnv({
-      'set': [
-        ['dom.presentation.enabled', true],
-      ]
-    }, runTests);
-  });
+  SpecialPowers.pushPrefEnv({
+    'set': [
+      ['dom.presentation.enabled', true],
+    ]
+  }, runTests);
 });
 
 </script>

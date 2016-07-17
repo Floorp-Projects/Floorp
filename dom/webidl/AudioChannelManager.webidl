@@ -32,6 +32,6 @@ interface AudioChannelManager : EventTarget {
 
   [Pure, Cached, Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="system-app-only-audio-channels-in-app"]
+   ChromeOnly]
   readonly attribute sequence<BrowserElementAudioChannel> allowedAudioChannels;
 };

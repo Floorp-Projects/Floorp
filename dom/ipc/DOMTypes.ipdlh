@@ -5,15 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
+include ProtocolTypes;
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 
 using struct mozilla::SerializedStructuredCloneBuffer
   from "ipc/IPCMessageUtils.h";
-
-using struct nsID
-  from "nsID.h";
 
 namespace mozilla {
 namespace dom {

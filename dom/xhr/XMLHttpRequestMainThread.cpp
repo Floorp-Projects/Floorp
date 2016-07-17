@@ -1138,6 +1138,10 @@ XMLHttpRequestMainThread::GetAllResponseHeaders(nsACString& aResponseHeaders,
     return;
   }
 
+  if (mErrorLoad) {
+    return;
+  }
+
   if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
     RefPtr<nsHeaderVisitor> visitor =
       new nsHeaderVisitor(*this, WrapNotNull(httpChannel));

@@ -6,8 +6,7 @@
 
 [Constructor(DOMString type, optional MozCellBroadcastEventInit eventInitDict),
  Pref="dom.cellbroadcast.enabled",
- CheckAnyPermissions="cellbroadcast",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozCellBroadcastEvent : Event
 {
   readonly attribute MozCellBroadcastMessage? message;

@@ -28,6 +28,7 @@ include DOMTypes;
 include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
+include ProtocolTypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
 

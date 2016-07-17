@@ -1896,8 +1896,10 @@ BrowserGlue.prototype = {
 
   _showSyncStartedDoorhanger: function () {
     let bundle = Services.strings.createBundle("chrome://browser/locale/accounts.properties");
+    let productName = gBrandBundle.GetStringFromName("brandShortName");
     let title = bundle.GetStringFromName("syncStartNotification.title");
-    let body = bundle.GetStringFromName("syncStartNotification.body");
+    let body = bundle.formatStringFromName("syncStartNotification.body2",
+                                            [productName], 1);
 
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback")

@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [Pref="dom.voicemail.enabled",
- CheckAnyPermissions="voicemail",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozVoicemail : EventTarget
 {
   /**

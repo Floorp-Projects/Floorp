@@ -105,6 +105,8 @@ public:
   nsresult Close(nsresult aReason,
                  uint32_t aState);
 
+  nsresult OnTerminate(nsIPresentationControlChannel* aControlChannel);
+
   nsresult ReplyError(nsresult aReason);
 
   virtual bool IsAccessible(base::ProcessId aProcessId);
@@ -142,6 +144,8 @@ protected:
     }
   }
 
+  void ContinueTermination();
+
   // Should be nsIPresentationChannelDescription::TYPE_TCP/TYPE_DATACHANNEL
   uint8_t mTransportType = 0;
 
@@ -154,6 +158,7 @@ protected:
   uint8_t mRole;
   bool mIsResponderReady;
   bool mIsTransportReady;
+  bool mIsOnTerminating = false;
   uint32_t mState; // CONNECTED, CLOSED, TERMINATED
   nsresult mReason;
   nsCOMPtr<nsIPresentationSessionListener> mListener;
@@ -192,6 +197,8 @@ private:
   nsresult GetAddress();
 
   nsresult OnGetAddress(const nsACString& aAddress);
+
+  nsresult BuildTransport();
 
   nsCOMPtr<nsIServerSocket> mServerSocket;
 };

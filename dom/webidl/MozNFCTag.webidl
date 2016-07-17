@@ -38,7 +38,7 @@ enum NFCTagType {
 
 typedef (MozIsoDepTech or MozNfcATech) MozTagTech;
 
-[JSImplementation="@mozilla.org/nfc/tag;1", AvailableIn="PrivilegedApps"]
+[JSImplementation="@mozilla.org/nfc/tag;1", ChromeOnly]
 interface MozNFCTag {
   /**
    * The supported technologies of this tag, null if unknown.

@@ -1,4 +1,6 @@
 // Test drainAllocationsLog() and [[Class]] names.
+if (!('Promise' in this))
+    quit(0);
 
 const root = newGlobal();
 const dbg = new Debugger();
@@ -12,7 +14,7 @@ root.eval(
     { expected: "Date",      test: () => new Date      },
     { expected: "RegExp",    test: () => /problems/    },
     { expected: "Int8Array", test: () => new Int8Array },
-    { expected: "Promise",   test: makeFakePromise     },
+    { expected: "Promise",   test: () => new Promise(function (){})},
   ];
   `
 );

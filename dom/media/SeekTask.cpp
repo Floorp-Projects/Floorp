@@ -13,11 +13,11 @@ namespace mozilla {
 SeekTask::SeekTask(const void* aDecoderID,
                    AbstractThread* aThread,
                    MediaDecoderReaderWrapper* aReader,
-                   SeekJob&& aSeekJob)
+                   const SeekTarget& aTarget)
   : mDecoderID(aDecoderID)
   , mOwnerThread(aThread)
   , mReader(aReader)
-  , mSeekJob(Move(aSeekJob))
+  , mTarget(aTarget)
   , mIsDiscarded(false)
   , mIsAudioQueueFinished(false)
   , mIsVideoQueueFinished(false)
@@ -76,22 +76,11 @@ SeekTask::OwnerThread() const
   return mOwnerThread;
 }
 
-SeekJob&
-SeekTask::GetSeekJob()
+const SeekTarget&
+SeekTask::GetSeekTarget()
 {
   AssertOwnerThread();
-  return mSeekJob;
-}
-
-bool
-SeekTask::Exists() const
-{
-  AssertOwnerThread();
-
-  // mSeekTaskPromise communicates SeekTask and MDSM;
-  // mSeekJob communicates MDSM and MediaDecoder;
-  // Either one exists means the current seek task has yet finished.
-  return !mSeekTaskPromise.IsEmpty() || mSeekJob.Exists();
+  return mTarget;
 }
 
 } // namespace mozilla
