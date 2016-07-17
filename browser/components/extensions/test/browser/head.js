@@ -10,6 +10,7 @@
  *          promisePopupShown promisePopupHidden
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
+ *          imageBuffer getListStyleImage
  */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -46,6 +47,17 @@ var focusWindow = Task.async(function* focusWindow(win) {
   win.focus();
   yield promise;
 });
+
+let img = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
+var imageBuffer = Uint8Array.from(atob(img), byte => byte.charCodeAt(0)).buffer;
+
+function getListStyleImage(button) {
+  let style = button.ownerDocument.defaultView.getComputedStyle(button);
+
+  let match = /^url\("(.*)"\)$/.exec(style.listStyleImage);
+
+  return match && match[1];
+}
 
 function promisePopupShown(popup) {
   return new Promise(resolve => {
@@ -84,7 +96,7 @@ function getBrowserActionPopup(extension, win = window) {
   return win.PanelUI.panel;
 }
 
-var clickBrowserAction = Task.async(function* (extension, win = window) {
+var showBrowserAction = Task.async(function* (extension, win = window) {
   let group = getBrowserActionWidget(extension);
   let widget = group.forWindow(win);
 
@@ -93,6 +105,12 @@ var clickBrowserAction = Task.async(function* (extension, win = window) {
   } else if (group.areaType == CustomizableUI.TYPE_MENU_PANEL) {
     yield win.PanelUI.show();
   }
+});
+
+var clickBrowserAction = Task.async(function* (extension, win = window) {
+  yield showBrowserAction(extension, win);
+
+  let widget = getBrowserActionWidget(extension).forWindow(win);
 
   EventUtils.synthesizeMouseAtCenter(widget.node, {}, win);
 });

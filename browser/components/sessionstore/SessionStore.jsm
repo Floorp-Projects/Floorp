@@ -125,7 +125,7 @@ const CLOSED_MESSAGES = new Set([
 
 // These are tab events that we listen to.
 const TAB_EVENTS = [
-  "TabOpen", "TabClose", "TabSelect", "TabShow", "TabHide", "TabPinned",
+  "TabOpen", "TabBrowserCreated", "TabClose", "TabSelect", "TabShow", "TabHide", "TabPinned",
   "TabUnpinned"
 ];
 
@@ -894,7 +894,10 @@ var SessionStoreInternal = {
     let target = aEvent.originalTarget;
     switch (aEvent.type) {
       case "TabOpen":
-        this.onTabAdd(win, target);
+        this.onTabAdd(win);
+        break;
+      case "TabBrowserCreated":
+        this.onTabBrowserCreated(win, target);
         break;
       case "TabClose":
         // `adoptedBy` will be set if the tab was closed because it is being
@@ -986,7 +989,7 @@ var SessionStoreInternal = {
 
     // add tab change listeners to all already existing tabs
     for (let i = 0; i < tabbrowser.tabs.length; i++) {
-      this.onTabAdd(aWindow, tabbrowser.tabs[i], true);
+      this.onTabBrowserCreated(aWindow, tabbrowser.tabs[i]);
     }
     // notification of tab add/remove/selection/show/hide
     TAB_EVENTS.forEach(function(aEvent) {
@@ -1680,25 +1683,28 @@ var SessionStoreInternal = {
   },
 
   /**
+   * save state when new tab is added
+   * @param aWindow
+   *        Window reference
+   */
+  onTabAdd: function ssi_onTabAdd(aWindow) {
+    this.saveStateDelayed(aWindow);
+  },
+
+  /**
    * set up listeners for a new tab
    * @param aWindow
    *        Window reference
    * @param aTab
    *        Tab reference
-   * @param aNoNotification
-   *        bool Do not save state if we're updating an existing tab
    */
-  onTabAdd: function ssi_onTabAdd(aWindow, aTab, aNoNotification) {
+  onTabBrowserCreated: function ssi_onTabBrowserCreated(aWindow, aTab) {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("SwapDocShells", this);
     browser.addEventListener("oop-browser-crashed", this);
 
     if (browser.frameLoader) {
       this._lastKnownFrameLoader.set(browser.permanentKey, browser.frameLoader);
-    }
-
-    if (!aNoNotification) {
-      this.saveStateDelayed(aWindow);
     }
   },
 

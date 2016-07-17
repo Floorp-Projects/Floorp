@@ -327,6 +327,36 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
   display: -moz-box;
 }
 
+@media not all and (min-resolution: 1.1dppx) {
+  .webextension-browser-action {
+    list-style-image: var(--webextension-toolbar-image);
+  }
+
+  .webextension-browser-action[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > .webextension-browser-action {
+    list-style-image: var(--webextension-menupanel-image);
+  }
+
+  .webextension-page-action {
+    list-style-image: var(--webextension-urlbar-image);
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  .webextension-browser-action {
+    list-style-image: var(--webextension-toolbar-image-2x);
+  }
+
+  .webextension-browser-action[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > .webextension-browser-action {
+    list-style-image: var(--webextension-menupanel-image-2x);
+  }
+
+  .webextension-page-action {
+    list-style-image: var(--webextension-urlbar-image-2x);
+  }
+}
+
 toolbarpaletteitem[removable="false"] {
   opacity: 0.5;
   cursor: default;
