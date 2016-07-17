@@ -25,6 +25,8 @@ const CommandType = Object.freeze({
   // presentation session life cycle
   LAUNCH: "launch", // { presentationId: <string>, url: <string> }
   LAUNCH_ACK: "launch-ack", // { presentationId: <string> }
+  TERMINATE: "terminate", // { presentationId: <string> }
+  TERMINATE_ACK: "terminate-ack", // { presentationId: <string> }
   // session transport establishment
   OFFER: "offer", // { offer: <json> }
   ANSWER: "answer", // { answer: <json> }

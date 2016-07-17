@@ -222,15 +222,17 @@ nsBMPDecoder::GetCompressedImageSize() const
        : mH.mImageSize;
 }
 
-void
+nsresult
 nsBMPDecoder::BeforeFinishInternal()
 {
   if (!IsMetadataDecode() && !mImageData) {
-    PostDataError();
+    return NS_ERROR_FAILURE;  // No image; something went wrong.
   }
+
+  return NS_OK;
 }
 
-void
+nsresult
 nsBMPDecoder::FinishInternal()
 {
   // We shouldn't be called in error cases.
@@ -260,14 +262,23 @@ nsBMPDecoder::FinishInternal()
     nsIntRect r(0, 0, mH.mWidth, AbsoluteHeight());
     PostInvalidation(r);
 
-    if (mDoesHaveTransparency) {
-      MOZ_ASSERT(mMayHaveTransparency);
-      PostFrameStop(Opacity::SOME_TRANSPARENCY);
-    } else {
-      PostFrameStop(Opacity::FULLY_OPAQUE);
-    }
+    MOZ_ASSERT_IF(mDoesHaveTransparency, mMayHaveTransparency);
+
+    // We have transparency if we either detected some in the image itself
+    // (i.e., |mDoesHaveTransparency| is true) or we're in an ICO, which could
+    // mean we have an AND mask that provides transparency (i.e., |mIsWithinICO|
+    // is true).
+    // XXX(seth): We can tell when we create the decoder if the AND mask is
+    // present, so we could be more precise about this.
+    const Opacity opacity = mDoesHaveTransparency || mIsWithinICO
+                          ? Opacity::SOME_TRANSPARENCY
+                          : Opacity::FULLY_OPAQUE;
+
+    PostFrameStop(opacity);
     PostDecodeDone();
   }
+
+  return NS_OK;
 }
 
 // ----------------------------------------
@@ -436,13 +447,11 @@ nsBMPDecoder::FinishRow()
 }
 
 Maybe<TerminalState>
-nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator)
+nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");
-  MOZ_ASSERT(aIterator.Data());
-  MOZ_ASSERT(aIterator.Length() > 0);
 
-  return mLexer.Lex(aIterator.Data(), aIterator.Length(),
+  return mLexer.Lex(aIterator, aOnResume,
                     [=](State aState, const char* aData, size_t aLength) {
     switch (aState) {
       case State::FILE_HEADER:      return ReadFileHeader(aData, aLength);
@@ -469,7 +478,6 @@ nsBMPDecoder::ReadFileHeader(const char* aData, size_t aLength)
 
   bool signatureOk = aData[0] == 'B' && aData[1] == 'M';
   if (!signatureOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 
@@ -496,7 +504,6 @@ nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
                    (mH.mBIHSize >= InfoHeaderLength::OS2_V2_MIN &&
                     mH.mBIHSize <= InfoHeaderLength::OS2_V2_MAX);
   if (!bihSizeOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
   // ICO BMPs must have a WinBMPv3 header. nsICODecoder should have already
@@ -551,7 +558,6 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   bool sizeOk = 0 <= mH.mWidth && mH.mWidth <= k64KWidth &&
                 mH.mHeight != INT_MIN;
   if (!sizeOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 
@@ -570,14 +576,11 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
        mH.mBIHSize == InfoHeaderLength::WIN_V5) &&
       (mH.mBpp == 16 || mH.mBpp == 32));
   if (!bppCompressionOk) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 
-  // Post our size to the superclass.
-  uint32_t absHeight = AbsoluteHeight();
-  PostSize(mH.mWidth, absHeight);
-  mCurrentRow = absHeight;
+  // Initialize our current row to the top of the image.
+  mCurrentRow = AbsoluteHeight();
 
   // Round it up to the nearest byte count, then pad to 4-byte boundary.
   // Compute this even for a metadate decode because GetCompressedImageSize()
@@ -644,6 +647,9 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   if (mMayHaveTransparency) {
     PostHasTransparency();
   }
+
+  // Post our size to the superclass.
+  PostSize(mH.mWidth, AbsoluteHeight());
 
   // We've now read all the headers. If we're doing a metadata decode, we're
   // done.
@@ -715,7 +721,6 @@ nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
   // points into the middle of the color palette instead of past the end) and
   // we give up.
   if (mPreGapLength > mH.mDataOffset) {
-    PostDataError();
     return Transition::TerminateFailure();
   }
 

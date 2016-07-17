@@ -80,29 +80,28 @@ public:
   explicit SourceBufferIterator(SourceBuffer* aOwner)
     : mOwner(aOwner)
     , mState(START)
+    , mChunkCount(0)
+    , mByteCount(0)
   {
     MOZ_ASSERT(aOwner);
     mData.mIterating.mChunk = 0;
     mData.mIterating.mData = nullptr;
     mData.mIterating.mOffset = 0;
-    mData.mIterating.mLength = 0;
+    mData.mIterating.mAvailableLength = 0;
+    mData.mIterating.mNextReadLength = 0;
   }
 
   SourceBufferIterator(SourceBufferIterator&& aOther)
     : mOwner(Move(aOther.mOwner))
     , mState(aOther.mState)
     , mData(aOther.mData)
+    , mChunkCount(aOther.mChunkCount)
+    , mByteCount(aOther.mByteCount)
   { }
 
   ~SourceBufferIterator();
 
-  SourceBufferIterator& operator=(SourceBufferIterator&& aOther)
-  {
-    mOwner = Move(aOther.mOwner);
-    mState = aOther.mState;
-    mData = aOther.mData;
-    return *this;
-  }
+  SourceBufferIterator& operator=(SourceBufferIterator&& aOther);
 
   /**
    * Returns true if there are no more than @aBytes remaining in the
@@ -111,11 +110,45 @@ public:
   bool RemainingBytesIsNoMoreThan(size_t aBytes) const;
 
   /**
-   * Advances the iterator through the SourceBuffer if possible. If not,
+   * Advances the iterator through the SourceBuffer if possible. Advances no
+   * more than @aRequestedBytes bytes. (Use SIZE_MAX to advance as much as
+   * possible.)
+   *
+   * This is a wrapper around AdvanceOrScheduleResume() that makes it clearer at
+   * the callsite when the no resuming is intended.
+   *
+   * @return State::READY if the iterator was successfully advanced.
+   *         State::WAITING if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer, but the SourceBuffer
+   *           may still receive additional data.
+   *         State::COMPLETE if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer and the SourceBuffer is
+   *           marked complete (i.e., it will never receive any additional
+   *           data).
+   */
+  State Advance(size_t aRequestedBytes)
+  {
+    return AdvanceOrScheduleResume(aRequestedBytes, nullptr);
+  }
+
+  /**
+   * Advances the iterator through the SourceBuffer if possible. Advances no
+   * more than @aRequestedBytes bytes. (Use SIZE_MAX to advance as much as
+   * possible.) If advancing is not possible and @aConsumer is not null,
    * arranges to call the @aConsumer's Resume() method when more data is
    * available.
+   *
+   * @return State::READY if the iterator was successfully advanced.
+   *         State::WAITING if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer, but the SourceBuffer
+   *           may still receive additional data. @aConsumer's Resume() method
+   *           will be called when additional data is available.
+   *         State::COMPLETE if the iterator could not be advanced because it's
+   *           at the end of the underlying SourceBuffer and the SourceBuffer is
+   *           marked complete (i.e., it will never receive any additional
+   *           data).
    */
-  State AdvanceOrScheduleResume(IResumable* aConsumer);
+  State AdvanceOrScheduleResume(size_t aRequestedBytes, IResumable* aConsumer);
 
   /// If at the end, returns the status passed to SourceBuffer::Complete().
   nsresult CompletionStatus() const
@@ -137,8 +170,14 @@ public:
   size_t Length() const
   {
     MOZ_ASSERT(mState == READY, "Calling Length() in the wrong state");
-    return mState == READY ? mData.mIterating.mLength : 0;
+    return mState == READY ? mData.mIterating.mNextReadLength : 0;
   }
+
+  /// @return a count of the chunks we've advanced through.
+  uint32_t ChunkCount() const { return mChunkCount; }
+
+  /// @return a count of the bytes in all chunks we've advanced through.
+  size_t ByteCount() const { return mByteCount; }
 
 private:
   friend class SourceBuffer;
@@ -148,15 +187,39 @@ private:
 
   bool HasMore() const { return mState != COMPLETE; }
 
+  State AdvanceFromLocalBuffer(size_t aRequestedBytes)
+  {
+    MOZ_ASSERT(mState == READY, "Advancing in the wrong state");
+    MOZ_ASSERT(mData.mIterating.mAvailableLength > 0,
+               "The local buffer shouldn't be empty");
+    MOZ_ASSERT(mData.mIterating.mNextReadLength == 0,
+               "Advancing without consuming previous data");
+
+    mData.mIterating.mNextReadLength =
+      std::min(mData.mIterating.mAvailableLength, aRequestedBytes);
+
+    return READY;
+  }
+
   State SetReady(uint32_t aChunk, const char* aData,
-                size_t aOffset, size_t aLength)
+                 size_t aOffset, size_t aAvailableLength,
+                 size_t aRequestedBytes)
   {
     MOZ_ASSERT(mState != COMPLETE);
+    mState = READY;
+
+    // Update state.
     mData.mIterating.mChunk = aChunk;
     mData.mIterating.mData = aData;
     mData.mIterating.mOffset = aOffset;
-    mData.mIterating.mLength = aLength;
-    return mState = READY;
+    mData.mIterating.mAvailableLength = aAvailableLength;
+
+    // Update metrics.
+    mChunkCount++;
+    mByteCount += aAvailableLength;
+
+    // Attempt to advance by the requested number of bytes.
+    return AdvanceFromLocalBuffer(aRequestedBytes);
   }
 
   State SetWaiting()
@@ -186,12 +249,16 @@ private:
       uint32_t mChunk;
       const char* mData;
       size_t mOffset;
-      size_t mLength;
+      size_t mAvailableLength;
+      size_t mNextReadLength;
     } mIterating;
     struct {
       nsresult mStatus;
     } mAtEnd;
   } mData;
+
+  uint32_t mChunkCount;  // Count of chunks we've advanced through.
+  size_t mByteCount;     // Count of bytes in all chunks we've advanced through.
 };
 
 /**
@@ -255,6 +322,18 @@ public:
   /// Returns an iterator to this SourceBuffer.
   SourceBufferIterator Iterator();
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Consumer methods.
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * The minimum chunk capacity we'll allocate, if we don't know the correct
+   * capacity (which would happen because ExpectLength() wasn't called or gave
+   * us the wrong value). This is only exposed for use by tests; if normal code
+   * is using this, it's doing something wrong.
+   */
+  static const size_t MIN_CHUNK_CAPACITY = 4096;
 
 private:
   friend class SourceBufferIterator;
@@ -337,6 +416,7 @@ private:
   typedef SourceBufferIterator::State State;
 
   State AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
+                                        size_t aRequestedBytes,
                                         IResumable* aConsumer);
   bool RemainingBytesIsNoMoreThan(const SourceBufferIterator& aIterator,
                                   size_t aBytes) const;
@@ -355,8 +435,6 @@ private:
   //////////////////////////////////////////////////////////////////////////////
   // Member variables.
   //////////////////////////////////////////////////////////////////////////////
-
-  static const size_t MIN_CHUNK_CAPACITY = 4096;
 
   /// All private members are protected by mMutex.
   mutable Mutex mMutex;

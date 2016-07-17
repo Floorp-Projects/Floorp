@@ -25,6 +25,7 @@
 
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmSerialize.h"
+#include "asmjs/WasmSignalHandlers.h"
 #include "jit/MacroAssembler.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
@@ -272,18 +273,18 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
     MOZ_CRASH("Bad SymbolicAddress");
 }
 
-SignalUsage::SignalUsage(ExclusiveContext* cx)
+SignalUsage::SignalUsage()
   :
 #ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
     // Signal-handling is only used to eliminate bounds checks when the OS page
     // size is an even divisor of the WebAssembly page size.
-    forOOB(cx->canUseSignalHandlers() &&
+    forOOB(HaveSignalHandlers() &&
            gc::SystemPageSize() <= PageSize &&
            PageSize % gc::SystemPageSize() == 0),
 #else
     forOOB(false),
 #endif
-    forInterrupt(cx->canUseSignalHandlers())
+    forInterrupt(HaveSignalHandlers())
 {}
 
 bool
@@ -292,8 +293,8 @@ SignalUsage::operator==(SignalUsage rhs) const
     return forOOB == rhs.forOOB && forInterrupt == rhs.forInterrupt;
 }
 
-static inline MOZ_MUST_USE bool
-GetCPUID(uint32_t* cpuId)
+static uint32_t
+GetCPUID()
 {
     enum Arch {
         X86 = 0x1,
@@ -306,40 +307,49 @@ GetCPUID(uint32_t* cpuId)
 
 #if defined(JS_CODEGEN_X86)
     MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
-    return true;
+    return X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
 #elif defined(JS_CODEGEN_X64)
     MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
-    return true;
+    return X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
 #elif defined(JS_CODEGEN_ARM)
     MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = ARM | (jit::GetARMFlags() << ARCH_BITS);
-    return true;
+    return ARM | (jit::GetARMFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_ARM64)
+    MOZ_CRASH("not enabled");
 #elif defined(JS_CODEGEN_MIPS32)
     MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = MIPS | (jit::GetMIPSFlags() << ARCH_BITS);
-    return true;
+    return MIPS | (jit::GetMIPSFlags() << ARCH_BITS);
 #elif defined(JS_CODEGEN_MIPS64)
     MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = MIPS64 | (jit::GetMIPSFlags() << ARCH_BITS);
-    return true;
+    return MIPS64 | (jit::GetMIPSFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_NONE)
+    return 0;
 #else
-    return false;
+# error "unknown architecture"
 #endif
 }
 
-MOZ_MUST_USE bool
-Assumptions::init(SignalUsage usesSignal, JS::BuildIdOp buildIdOp)
+Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
+  : usesSignal(),
+    cpuId(GetCPUID()),
+    buildId(Move(buildId)),
+    newFormat(false)
+{}
+
+Assumptions::Assumptions()
+  : usesSignal(),
+    cpuId(GetCPUID()),
+    buildId(),
+    newFormat(false)
+{}
+
+bool
+Assumptions::initBuildIdFromContext(ExclusiveContext* cx)
 {
-    this->usesSignal = usesSignal;
-
-    if (!GetCPUID(&cpuId))
+    if (!cx->buildIdOp() || !cx->buildIdOp()(&buildId)) {
+        ReportOutOfMemory(cx);
         return false;
-
-    if (!buildIdOp || !buildIdOp(&buildId))
-        return false;
-
+    }
     return true;
 }
 

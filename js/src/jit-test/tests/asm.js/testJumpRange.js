@@ -8,7 +8,7 @@ fatFunc += "function f100() { return 42 }\n";
 fatFunc += "return f0";
 
 for (var signals = 0; signals <= 1; signals++) {
-    setJitCompilerOption("signals.enable", signals);
+    suppressSignalHandlers(Boolean(signals));
 
     for (let threshold of [0, 50, 100, 5000, -1]) {
         setJitCompilerOption("jump-threshold", threshold);

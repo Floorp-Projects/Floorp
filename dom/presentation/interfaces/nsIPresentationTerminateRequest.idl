@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationDevice;
+interface nsIPresentationControlChannel;
+
+%{C++
+#define PRESENTATION_TERMINATE_REQUEST_TOPIC "presentation-terminate-request"
+%}
+
+/*
+ * The event of a device requesting for terminating a presentation session. User can
+ * monitor the terminate request on every device by observing "presentation-terminate-request".
+ */
+[scriptable, uuid(3ddbf3a4-53ee-4b70-9bbc-58ac90dce6b5)]
+interface nsIPresentationTerminateRequest: nsISupports
+{
+  // The device which requesting to terminate presentation session.
+  readonly attribute nsIPresentationDevice device;
+
+  // The Id for representing this session.
+  readonly attribute DOMString presentationId;
+
+  // The control channel for this session.
+  // Should only use this channel to complete session termination.
+  readonly attribute nsIPresentationControlChannel controlChannel;
+
+  // True if termination is initiated by receiver.
+  readonly attribute boolean isFromReceiver;
+};

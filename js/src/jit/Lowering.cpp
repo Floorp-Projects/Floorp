@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "asmjs/WasmSignalHandlers.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
@@ -93,7 +94,7 @@ static void
 TryToUseImplicitInterruptCheck(MIRGraph& graph, MBasicBlock* backedge)
 {
     // Implicit interrupt checks require asm.js signal handlers to be installed.
-    if (!GetJitContext()->runtime->canUseSignalHandlers())
+    if (!wasm::HaveSignalHandlers())
         return;
 
     // To avoid triggering expensive interrupts (backedge patching) in

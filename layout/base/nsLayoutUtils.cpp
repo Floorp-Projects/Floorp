@@ -639,21 +639,6 @@ nsLayoutUtils::IsAnimationLoggingEnabled()
 }
 
 bool
-nsLayoutUtils::UseBackgroundNearestFiltering()
-{
-  static bool sUseBackgroundNearestFilteringEnabled;
-  static bool sUseBackgroundNearestFilteringPrefInitialised = false;
-
-  if (!sUseBackgroundNearestFilteringPrefInitialised) {
-    sUseBackgroundNearestFilteringPrefInitialised = true;
-    sUseBackgroundNearestFilteringEnabled =
-      Preferences::GetBool("gfx.filter.nearest.force-enabled", false);
-  }
-
-  return sUseBackgroundNearestFilteringEnabled;
-}
-
-bool
 nsLayoutUtils::GPUImageScalingEnabled()
 {
   static bool sGPUImageScalingEnabled;
@@ -6950,10 +6935,6 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
 {
   PROFILER_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage",
                  js::ProfileEntry::Category::GRAPHICS);
-
-  if (UseBackgroundNearestFiltering()) {
-    aSamplingFilter = SamplingFilter::POINT;
-  }
 
   SVGImageContext svgContext(aImageSize, Nothing());
 

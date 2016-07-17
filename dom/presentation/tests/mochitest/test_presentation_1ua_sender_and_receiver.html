@@ -70,7 +70,6 @@ function setup() {
       } else if (/^DONE$/.exec(message)) {
         receiverIframe.removeEventListener("mozbrowsershowmodalprompt",
                                             receiverListener);
-        teardown();
       }
     }, false);
 
@@ -178,18 +177,55 @@ function testIncomingMessage() {
 }
 
 function testCloseConnection() {
-  return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testCloseConnection ---');
-    connection.onclose = function() {
-      connection.onclose = null;
-      is(connection.state, "closed", "Sender: Connection should be closed.");
-      aResolve();
-    };
-    gScript.addMessageListener('ready-to-close', function onReadyToClose() {
-      gScript.removeMessageListener('ready-to-close', onReadyToClose);
-      connection.close();
+  info('Sender: --- testCloseConnection ---');
+  gScript.addMessageListener('ready-to-close', function onReadyToClose() {
+    gScript.removeMessageListener('ready-to-close', onReadyToClose);
+    connection.close();
+
+    // Test terminate immediate after close.
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener('control-channel-established',
+                                    controlChannelEstablishedHandler);
+      ok(false, "terminate after close should do nothing");
     });
+    connection.terminate();
   });
+
+  return Promise.all([
+    new Promise(function(aResolve, aReject) {
+      connection.onclose = function() {
+        connection.onclose = null;
+        is(connection.state, 'closed', 'Sender: Connection should be closed.');
+        aResolve();
+      };
+    }),
+    new Promise(function(aResolve, aReject) {
+      gScript.addMessageListener('receiver-closed', function onReceiverClosed() {
+        gScript.removeMessageListener('receiver-closed', onReceiverClosed);
+        aResolve();
+      });
+    }),
+  ]);
+}
+
+function testTerminateAfterClose() {
+  info('Sender: --- testTerminateAfterClose ---');
+  return Promise.race([
+      new Promise(function(aResolve, aReject) {
+        connection.onterminate = function() {
+          connection.onterminate = null;
+          ok(false, 'terminate after close should do nothing');
+          aResolve();
+        };
+        connection.terminate();
+      }),
+      new Promise(function(aResolve, aReject) {
+        setTimeout(function() {
+          is(connection.state, 'closed', 'Sender: Connection should be closed.');
+          aResolve();
+        }, 3000);
+      }),
+  ]);
 }
 
 function teardown() {
@@ -208,10 +244,13 @@ function runTests() {
          .then(testStartConnection)
          .then(testSendMessage)
          .then(testIncomingMessage)
-         .then(testCloseConnection);
+         .then(testCloseConnection)
+         .then(testTerminateAfterClose)
+         .then(teardown);
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
