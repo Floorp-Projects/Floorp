@@ -8106,30 +8106,21 @@ class MDefLexical
 };
 
 class MDefFun
-  : public MUnaryInstruction,
-    public NoTypePolicy::Data
+  : public MBinaryInstruction,
+    public ObjectPolicy<0>::Data
 {
-    CompilerFunction fun_;
-
   private:
-    MDefFun(JSFunction* fun, MDefinition* envChain)
-      : MUnaryInstruction(envChain),
-        fun_(fun)
+    MDefFun(MDefinition* fun, MDefinition* envChain)
+      : MBinaryInstruction(fun, envChain)
     {}
 
   public:
     INSTRUCTION_HEADER(DefFun)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, environmentChain))
+    NAMED_OPERANDS((0, fun), (1, environmentChain))
 
-    JSFunction* fun() const {
-        return fun_;
-    }
     bool possiblyCalls() const override {
         return true;
-    }
-    bool appendRoots(MRootList& roots) const override {
-        return roots.append(fun_);
     }
 };
 

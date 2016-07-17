@@ -4694,7 +4694,8 @@ CodeGenerator::visitDefFun(LDefFun* lir)
 {
     Register envChain = ToRegister(lir->environmentChain());
 
-    pushArg(ImmGCPtr(lir->mir()->fun()));
+    Register fun = ToRegister(lir->fun());
+    pushArg(fun);
     pushArg(envChain);
     pushArg(ImmGCPtr(current->mir()->info().script()));
 
