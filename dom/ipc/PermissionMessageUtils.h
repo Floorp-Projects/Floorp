@@ -28,9 +28,13 @@ public:
 
   operator nsIPrincipal*() const { return mPrincipal.get(); }
 
+  Principal& operator=(const Principal& aOther)
+  {
+    mPrincipal = aOther.mPrincipal;
+    return *this;
+  }
+
 private:
-  // Unimplemented
-  Principal& operator=(Principal&);
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
