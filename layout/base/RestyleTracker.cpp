@@ -191,7 +191,7 @@ RestyleTracker::DoProcessRestyles()
                           FrameTagToString(sibling->AsElement()).get(),
                           FrameTagToString(element->AsElement()).get());
               if (AddPendingRestyle(sibling->AsElement(), eRestyle_Subtree,
-                                    NS_STYLE_HINT_NONE)) {
+                                    nsChangeHint(0))) {
                   // Nothing else to do here; we'll handle the following
                   // siblings when we get to |sibling| in laterSiblingArr.
                 break;
