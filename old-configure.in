@@ -1690,6 +1690,7 @@ if test -n "$MOZ_X11"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
     XLIBS="-lX11-xcb -lX11 -lxcb-shm -lxcb $XLIBS"
     _SAVE_LDFLAGS="$LDFLAGS"
+    _SAVE_LIBS="$LIBS"
     LDFLAGS="$XLDFLAGS $LDFLAGS"
     AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
         [MISSING_X="$MISSING_X -lX11"], $XLIBS)
@@ -1720,6 +1721,7 @@ if test -n "$MOZ_X11"; then
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
     LDFLAGS="$_SAVE_LDFLAGS"
+    LIBS="$_SAVE_LIBS"
 fi # $MOZ_X11
 
 AC_SUBST_LIST(XCFLAGS)
