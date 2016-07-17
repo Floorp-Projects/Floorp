@@ -9,6 +9,25 @@
 
 namespace mozilla {
 
+struct FrameStatisticsData
+{
+  // Number of frames parsed and demuxed from media.
+  // Access protected by mReentrantMonitor.
+  uint32_t mParsedFrames = 0;
+
+  // Number of parsed frames which were actually decoded.
+  // Access protected by mReentrantMonitor.
+  uint32_t mDecodedFrames = 0;
+
+  // Number of decoded frames which were actually sent down the rendering
+  // pipeline to be painted ("presented"). Access protected by mReentrantMonitor.
+  uint32_t mPresentedFrames = 0;
+
+  // Number of frames that have been skipped because they have missed their
+  // composition deadline.
+  uint32_t mDroppedFrames = 0;
+};
+
 // Frame decoding/painting related performance counters.
 // Threadsafe.
 class FrameStatistics
@@ -18,18 +37,22 @@ public:
 
   FrameStatistics()
     : mReentrantMonitor("FrameStats")
-    , mParsedFrames(0)
-    , mDecodedFrames(0)
-    , mPresentedFrames(0)
-    , mDroppedFrames(0)
   {}
+
+  // Returns a copy of all frame statistics data.
+  // Can be called on any thread.
+  FrameStatisticsData GetFrameStatisticsData() const
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    return mFrameStatisticsData;
+  }
 
   // Returns number of frames which have been parsed from the media.
   // Can be called on any thread.
   uint32_t GetParsedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mParsedFrames;
+    return mFrameStatisticsData.mParsedFrames;
   }
 
   // Returns the number of parsed frames which have been decoded.
@@ -37,7 +60,7 @@ public:
   uint32_t GetDecodedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mDecodedFrames;
+    return mFrameStatisticsData.mDecodedFrames;
   }
 
   // Returns the number of decoded frames which have been sent to the rendering
@@ -46,7 +69,7 @@ public:
   uint32_t GetPresentedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mPresentedFrames;
+    return mFrameStatisticsData.mPresentedFrames;
   }
 
   // Returns the number of frames that have been skipped because they have
@@ -54,7 +77,7 @@ public:
   uint32_t GetDroppedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mDroppedFrames;
+    return mFrameStatisticsData.mDroppedFrames;
   }
 
   // Increments the parsed and decoded frame counters by the passed in counts.
@@ -66,9 +89,9 @@ public:
       return;
     }
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mParsedFrames += aParsed;
-    mDecodedFrames += aDecoded;
-    mDroppedFrames += aDropped;
+    mFrameStatisticsData.mParsedFrames += aParsed;
+    mFrameStatisticsData.mDecodedFrames += aDecoded;
+    mFrameStatisticsData.mDroppedFrames += aDropped;
   }
 
   // Increments the presented frame counters.
@@ -76,7 +99,7 @@ public:
   void NotifyPresentedFrame()
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    ++mPresentedFrames;
+    ++mFrameStatisticsData.mPresentedFrames;
   }
 
 private:
@@ -85,21 +108,7 @@ private:
   // ReentrantMonitor to protect access of playback statistics.
   mutable ReentrantMonitor mReentrantMonitor;
 
-  // Number of frames parsed and demuxed from media.
-  // Access protected by mReentrantMonitor.
-  uint32_t mParsedFrames;
-
-  // Number of parsed frames which were actually decoded.
-  // Access protected by mReentrantMonitor.
-  uint32_t mDecodedFrames;
-
-  // Number of decoded frames which were actually sent down the rendering
-  // pipeline to be painted ("presented"). Access protected by mReentrantMonitor.
-  uint32_t mPresentedFrames;
-
-  // Number of frames that have been skipped because they have missed their
-  // composition deadline.
-  uint32_t mDroppedFrames;
+  FrameStatisticsData mFrameStatisticsData;
 };
 
 } // namespace mozilla
