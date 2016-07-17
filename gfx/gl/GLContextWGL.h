@@ -20,7 +20,6 @@ public:
     // From Window: (possibly for offscreen!)
     GLContextWGL(CreateContextFlags flags,
                  const SurfaceCaps& caps,
-                 GLContext* sharedContext,
                  bool isOffscreen,
                  HDC aDC,
                  HGLRC aContext,
@@ -29,7 +28,6 @@ public:
     // From PBuffer
     GLContextWGL(CreateContextFlags flags,
                  const SurfaceCaps& caps,
-                 GLContext* sharedContext,
                  bool isOffscreen,
                  HANDLE aPbuffer,
                  HDC aDC,
