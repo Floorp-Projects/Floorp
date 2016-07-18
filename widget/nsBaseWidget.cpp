@@ -219,8 +219,8 @@ WidgetShutdownObserver::Observe(nsISupports *aSubject,
                                 const char16_t *aData)
 {
   if (mWidget && !strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(mWidget);
-    mWidget->Shutdown();
+    RefPtr<nsBaseWidget> widget(mWidget);
+    widget->Shutdown();
   }
   return NS_OK;
 }
