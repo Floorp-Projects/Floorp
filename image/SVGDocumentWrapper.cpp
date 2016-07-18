@@ -368,8 +368,7 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
 
   // XML-only, because this is for SVG content
-  nsIContentSink* sink = parser->GetContentSink();
-  nsCOMPtr<nsIXMLContentSink> xmlSink = do_QueryInterface(sink);
+  nsCOMPtr<nsIContentSink> sink = parser->GetContentSink();
   NS_ENSURE_TRUE(sink, NS_ERROR_UNEXPECTED);
 
   listener.swap(mListener);
