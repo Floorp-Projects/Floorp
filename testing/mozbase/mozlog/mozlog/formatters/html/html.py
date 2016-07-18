@@ -130,10 +130,7 @@ class HTMLFormatter(base.BaseFormatter):
                     additional_html.append(html.div(
                         html.a(html.img(src=screenshot), href="#"),
                         html.br(),
-                        html.a(
-                            description,
-                            href=screenshot,
-                            target='_blank'),
+                        html.a(description),
                         class_='screenshot'))
 
             if debug.get('screenshot'):
