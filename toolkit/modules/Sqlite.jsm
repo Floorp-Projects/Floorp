@@ -868,6 +868,15 @@ ConnectionData.prototype = Object.freeze({
  *       *not* a timer on the idle service and this could fire while the
  *       application is active.
  *
+ *   readOnly -- (bool) Whether to open the database with SQLITE_OPEN_READONLY
+ *       set. If used, writing to the database will fail. Defaults to false.
+ *
+ *   ignoreLockingMode -- (bool) Whether to ignore locks on the database held
+ *       by other connections. If used, implies readOnly. Defaults to false.
+ *       USE WITH EXTREME CAUTION. This mode WILL produce incorrect results or
+ *       return "false positive" corruption errors if other connections write
+ *       to the DB at the same time.
+ *
  * FUTURE options to control:
  *
  *   special named databases
@@ -915,12 +924,21 @@ function openConnection(options) {
   log.info("Opening database: " + path + " (" + identifier + ")");
 
   return new Promise((resolve, reject) => {
-    let dbOptions = null;
+    let dbOptions = Cc["@mozilla.org/hash-property-bag;1"].
+                    createInstance(Ci.nsIWritablePropertyBag);
     if (!sharedMemoryCache) {
-      dbOptions = Cc["@mozilla.org/hash-property-bag;1"].
-        createInstance(Ci.nsIWritablePropertyBag);
       dbOptions.setProperty("shared", false);
     }
+    if (options.readOnly) {
+      dbOptions.setProperty("readOnly", true);
+    }
+    if (options.ignoreLockingMode) {
+      dbOptions.setProperty("ignoreLockingMode", true);
+      dbOptions.setProperty("readOnly", true);
+    }
+
+    dbOptions = dbOptions.enumerator.hasMoreElements() ? dbOptions : null;
+
     Services.storage.openAsyncDatabase(file, dbOptions, (status, connection) => {
       if (!connection) {
         log.warn(`Could not open connection to ${path}: ${status}`);
