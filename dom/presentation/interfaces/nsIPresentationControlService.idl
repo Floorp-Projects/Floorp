@@ -20,6 +20,9 @@ interface nsITCPDeviceInfo: nsISupports
   readonly attribute AUTF8String id;
   readonly attribute AUTF8String address;
   readonly attribute uint16_t port;
+  // SHA-256 fingerprint of server certificate. Empty string represents
+  // server doesn't support TLS or not available.
+  readonly attribute AUTF8String certFingerprint;
 };
 
 [scriptable, uuid(09bddfaf-fcc2-4dc9-b33e-a509a1c2fb6d)]

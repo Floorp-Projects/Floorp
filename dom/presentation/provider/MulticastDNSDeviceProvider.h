@@ -66,6 +66,7 @@ private:
                     const nsACString& aType,
                     const nsACString& aAddress,
                     const uint16_t aPort,
+                    const nsACString& aCertFingerprint,
                     DeviceState aState,
                     MulticastDNSDeviceProvider* aProvider)
       : mId(aId)
@@ -73,6 +74,7 @@ private:
       , mType(aType)
       , mAddress(aAddress)
       , mPort(aPort)
+      , mCertFingerprint(aCertFingerprint)
       , mState(aState)
       , mProvider(aProvider)
     {
@@ -93,6 +95,11 @@ private:
       return mPort;
     }
 
+    const nsCString& CertFingerprint() const
+    {
+      return mCertFingerprint;
+    }
+
     DeviceState State() const
     {
       return mState;
@@ -106,12 +113,14 @@ private:
     void Update(const nsACString& aName,
                 const nsACString& aType,
                 const nsACString& aAddress,
-                const uint16_t aPort)
+                const uint16_t aPort,
+                const nsACString& aCertFingerprint)
     {
       mName = aName;
       mType = aType;
       mAddress = aAddress;
       mPort = aPort;
+      mCertFingerprint = aCertFingerprint;
     }
 
   private:
@@ -122,6 +131,7 @@ private:
     nsCString mType;
     nsCString mAddress;
     uint16_t mPort;
+    nsCString mCertFingerprint;
     DeviceState mState;
     MulticastDNSDeviceProvider* mProvider;
   };
@@ -151,12 +161,14 @@ private:
                      const nsACString& aServiceName,
                      const nsACString& aServiceType,
                      const nsACString& aAddress,
-                     const uint16_t aPort);
+                     const uint16_t aPort,
+                     const nsACString& aCertFingerprint);
   nsresult UpdateDevice(const uint32_t aIndex,
                         const nsACString& aServiceName,
                         const nsACString& aServiceType,
                         const nsACString& aAddress,
-                        const uint16_t aPort);
+                        const uint16_t aPort,
+                        const nsACString& aCertFingerprint);
   nsresult RemoveDevice(const uint32_t aIndex);
   bool FindDeviceById(const nsACString& aId,
                       uint32_t& aIndex);
