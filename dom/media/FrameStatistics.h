@@ -13,19 +13,19 @@ struct FrameStatisticsData
 {
   // Number of frames parsed and demuxed from media.
   // Access protected by mReentrantMonitor.
-  uint32_t mParsedFrames = 0;
+  uint64_t mParsedFrames = 0;
 
   // Number of parsed frames which were actually decoded.
   // Access protected by mReentrantMonitor.
-  uint32_t mDecodedFrames = 0;
+  uint64_t mDecodedFrames = 0;
 
   // Number of decoded frames which were actually sent down the rendering
   // pipeline to be painted ("presented"). Access protected by mReentrantMonitor.
-  uint32_t mPresentedFrames = 0;
+  uint64_t mPresentedFrames = 0;
 
   // Number of frames that have been skipped because they have missed their
   // composition deadline.
-  uint32_t mDroppedFrames = 0;
+  uint64_t mDroppedFrames = 0;
 };
 
 // Frame decoding/painting related performance counters.
@@ -49,7 +49,7 @@ public:
 
   // Returns number of frames which have been parsed from the media.
   // Can be called on any thread.
-  uint32_t GetParsedFrames() const
+  uint64_t GetParsedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mFrameStatisticsData.mParsedFrames;
@@ -57,7 +57,7 @@ public:
 
   // Returns the number of parsed frames which have been decoded.
   // Can be called on any thread.
-  uint32_t GetDecodedFrames() const
+  uint64_t GetDecodedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mFrameStatisticsData.mDecodedFrames;
@@ -66,7 +66,7 @@ public:
   // Returns the number of decoded frames which have been sent to the rendering
   // pipeline for painting ("presented").
   // Can be called on any thread.
-  uint32_t GetPresentedFrames() const
+  uint64_t GetPresentedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mFrameStatisticsData.mPresentedFrames;
@@ -74,7 +74,7 @@ public:
 
   // Returns the number of frames that have been skipped because they have
   // missed their composition deadline.
-  uint32_t GetDroppedFrames() const
+  uint64_t GetDroppedFrames() const
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mFrameStatisticsData.mDroppedFrames;
@@ -82,8 +82,8 @@ public:
 
   // Increments the parsed and decoded frame counters by the passed in counts.
   // Can be called on any thread.
-  void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
-                           uint32_t aDropped)
+  void NotifyDecodedFrames(uint64_t aParsed, uint64_t aDecoded,
+                           uint64_t aDropped)
   {
     if (aParsed == 0 && aDecoded == 0 && aDropped == 0) {
       return;
