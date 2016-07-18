@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
+    'EnsureMTA.h',
     'MainThreadRuntime.h',
     'Utils.h',
 ]
@@ -15,6 +16,7 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'EnsureMTA.cpp',
     'MainThreadRuntime.cpp',
 ]
 
