@@ -1370,6 +1370,7 @@ ${EndIf}
   ; returns after the first check.
   Push "end"
   Push "AccessibleMarshal.dll"
+  Push "IA2Marshal.dll"
   Push "freebl3.dll"
   Push "nssckbi.dll"
   Push "nspr4.dll"
