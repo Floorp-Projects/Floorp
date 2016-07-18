@@ -108,8 +108,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(Accessible, LastRelease())
 Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc),
   mParent(nullptr), mIndexInParent(-1),
-  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0),
-  mRoleMapEntry(nullptr)
+  mRoleMapEntryIndex(aria::NO_ROLE_MAP_ENTRY_INDEX),
+  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0)
 {
   mBits.groupInfo = nullptr;
   mInt.mIndexOfEmbeddedChild = -1;
