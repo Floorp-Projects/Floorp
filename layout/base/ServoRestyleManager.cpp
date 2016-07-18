@@ -140,15 +140,26 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
 void
 ServoRestyleManager::ProcessPendingRestyles()
 {
+  if (!HasPendingRestyles()) {
+    return;
+  }
   ServoStyleSet* styleSet = StyleSet();
 
   nsIDocument* doc = PresContext()->Document();
-  Element* root = doc->GetRootElement();
 
+  Element* root = doc->GetRootElement();
   if (root) {
     styleSet->RestyleSubtree(root, /* aForce = */ false);
     RecreateStyleContexts(root, nullptr, styleSet);
   }
+
+  // NB: we restyle from the root element, but the document also gets the
+  // HAS_DIRTY_DESCENDANTS flag as part of the loop on PostRestyleEvent, and we
+  // use that to check we have pending restyles.
+  //
+  // Thus, they need to get cleared here.
+  MOZ_ASSERT(!doc->IsDirtyForServo());
+  doc->UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
 
   IncrementRestyleGeneration();
 }
@@ -217,13 +228,6 @@ nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   MOZ_CRASH("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
-}
-
-bool
-ServoRestyleManager::HasPendingRestyles()
-{
-  NS_ERROR("stylo: ServoRestyleManager::HasPendingRestyles not implemented");
-  return false;
 }
 
 } // namespace mozilla
