@@ -212,11 +212,14 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
   friend class gfx::GPUProcessManager;
 
 public:
-  explicit CompositorBridgeParent(widget::CompositorWidget* aWidget,
-                                  CSSToLayoutDeviceScale aScale,
-                                  bool aUseAPZ,
+  explicit CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                   bool aUseExternalSurfaceSize,
                                   const gfx::IntSize& aSurfaceSize);
+
+  // Must only be called by CompositorBridgeChild. After invoking this, the
+  // IPC channel is active and RecvWillStop/ActorDestroy must be called to
+  // free the compositor.
+  void InitSameProcess(widget::CompositorWidget* aWidget, bool aUseAPZ);
 
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual bool RecvRequestOverfill() override;
@@ -476,6 +479,9 @@ public:
   }
 
 private:
+
+  void Initialize();
+
   /**
    * Called during destruction in order to release resources as early as possible.
    */
@@ -561,7 +567,7 @@ protected:
   /**
    * Creates the global compositor map.
    */
-  static void Initialize();
+  static void Setup();
 
   /**
    * Destroys the compositor thread and global compositor map.
@@ -591,6 +597,7 @@ protected:
   RefPtr<AsyncCompositionManager> mCompositionManager;
   widget::CompositorWidget* mWidget;
   TimeStamp mTestTime;
+  CSSToLayoutDeviceScale mScale;
   bool mIsTesting;
 
   uint64_t mPendingTransaction;

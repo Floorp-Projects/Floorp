@@ -17,13 +17,9 @@ using namespace widget;
 class InProcessCompositorSession final : public CompositorSession
 {
 public:
-  InProcessCompositorSession(
-    nsIWidget* aWidget,
-    ClientLayerManager* aLayerManager,
-    CSSToLayoutDeviceScale aScale,
-    bool aUseAPZ,
-    bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize);
+  InProcessCompositorSession(widget::CompositorWidget* aWidget,
+                             CompositorBridgeChild* aChild,
+                             CompositorBridgeParent* aParent);
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
@@ -36,7 +32,7 @@ private:
   RefPtr<CompositorWidget> mCompositorWidget;
 };
 
-already_AddRefed<CompositorSession>
+RefPtr<CompositorSession>
 CompositorSession::CreateInProcess(nsIWidget* aWidget,
                                    ClientLayerManager* aLayerManager,
                                    CSSToLayoutDeviceScale aScale,
@@ -44,18 +40,21 @@ CompositorSession::CreateInProcess(nsIWidget* aWidget,
                                    bool aUseExternalSurfaceSize,
                                    const gfx::IntSize& aSurfaceSize)
 {
-  RefPtr<InProcessCompositorSession> session = new InProcessCompositorSession(
-    aWidget,
-    aLayerManager,
-    aScale,
-    aUseAPZ,
-    aUseExternalSurfaceSize,
-    aSurfaceSize);
-  return session.forget();
+  CompositorWidgetInitData initData;
+  aWidget->GetCompositorWidgetInitData(&initData);
+
+  RefPtr<CompositorWidget> widget = CompositorWidget::CreateLocal(initData, aWidget);
+  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
+  RefPtr<CompositorBridgeParent> parent =
+    child->InitSameProcess(widget, aScale, aUseAPZ, aUseExternalSurfaceSize, aSurfaceSize);
+
+  return new InProcessCompositorSession(widget, child, parent);
 }
 
-CompositorSession::CompositorSession()
- : mCompositorWidgetDelegate(nullptr)
+CompositorSession::CompositorSession(CompositorWidgetDelegate* aDelegate,
+                                     CompositorBridgeChild* aChild)
+ : mCompositorWidgetDelegate(nullptr),
+   mCompositorBridgeChild(aChild)
 {
 }
 
@@ -69,27 +68,13 @@ CompositorSession::GetCompositorBridgeChild()
   return mCompositorBridgeChild;
 }
 
-InProcessCompositorSession::InProcessCompositorSession(nsIWidget* aWidget,
-                                                       ClientLayerManager* aLayerManager,
-                                                       CSSToLayoutDeviceScale aScale,
-                                                       bool aUseAPZ,
-                                                       bool aUseExternalSurfaceSize,
-                                                       const gfx::IntSize& aSurfaceSize)
+InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidget* aWidget,
+                                                       CompositorBridgeChild* aChild,
+                                                       CompositorBridgeParent* aParent)
+ : CompositorSession(aWidget->AsDelegate(), aChild),
+   mCompositorBridgeParent(aParent),
+   mCompositorWidget(aWidget)
 {
-  CompositorWidgetInitData initData;
-  aWidget->GetCompositorWidgetInitData(&initData);
-  mCompositorWidget = CompositorWidget::CreateLocal(initData, aWidget);
-  mCompositorWidgetDelegate = mCompositorWidget->AsDelegate();
-
-  mCompositorBridgeParent = new CompositorBridgeParent(
-    mCompositorWidget,
-    aScale,
-    aUseAPZ,
-    aUseExternalSurfaceSize,
-    aSurfaceSize);
-  mCompositorBridgeChild = new CompositorBridgeChild(aLayerManager);
-  mCompositorBridgeChild->OpenSameProcess(mCompositorBridgeParent);
-  mCompositorBridgeParent->SetOtherProcessId(base::GetCurrentProcId());
 }
 
 CompositorBridgeParent*

@@ -189,16 +189,23 @@ CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
   return sCompositorBridge;
 }
 
-bool
-CompositorBridgeChild::OpenSameProcess(CompositorBridgeParent* aParent)
+CompositorBridgeParent*
+CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
+                                       CSSToLayoutDeviceScale aScale,
+                                       bool aUseAPZ,
+                                       bool aUseExternalSurface,
+                                       const gfx::IntSize& aSurfaceSize)
 {
-  MOZ_ASSERT(aParent);
+  mCompositorBridgeParent =
+    new CompositorBridgeParent(aScale, aUseExternalSurface, aSurfaceSize);
 
-  mCompositorBridgeParent = aParent;
   mCanSend = Open(mCompositorBridgeParent->GetIPCChannel(),
                   CompositorThreadHolder::Loop(),
                   ipc::ChildSide);
-  return mCanSend;
+  MOZ_RELEASE_ASSERT(mCanSend);
+
+  mCompositorBridgeParent->InitSameProcess(aWidget, aUseAPZ);
+  return mCompositorBridgeParent;
 }
 
 /*static*/ CompositorBridgeChild*

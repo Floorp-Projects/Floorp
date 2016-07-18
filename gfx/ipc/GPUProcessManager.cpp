@@ -149,7 +149,7 @@ GPUProcessManager::DestroyProcess()
   mGPUChild = nullptr;
 }
 
-already_AddRefed<CompositorSession>
+RefPtr<CompositorSession>
 GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
                                             ClientLayerManager* aLayerManager,
                                             CSSToLayoutDeviceScale aScale,
