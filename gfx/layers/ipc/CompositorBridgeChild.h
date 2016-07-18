@@ -23,8 +23,12 @@
 namespace mozilla {
 
 namespace dom {
-  class TabChild;
+class TabChild;
 } // namespace dom
+
+namespace widget {
+class CompositorWidget;
+} // namespace widget
 
 namespace layers {
 
@@ -63,10 +67,15 @@ public:
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   /**
-   * Initialize the CompositorBridgeChild and open the connection in the non-multi-process
-   * case.
+   * Initialize the CompositorBridgeChild, create CompositorBridgeParent, and
+   * open a same-process connection.
    */
-  bool OpenSameProcess(CompositorBridgeParent* aParent);
+  CompositorBridgeParent* InitSameProcess(
+    widget::CompositorWidget* aWidget,
+    CSSToLayoutDeviceScale aScale,
+    bool aUseAPZ,
+    bool aUseExternalSurface,
+    const gfx::IntSize& aSurfaceSize);
 
   static CompositorBridgeChild* Get();
 

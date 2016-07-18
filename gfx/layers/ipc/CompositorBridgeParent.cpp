@@ -158,7 +158,7 @@ typedef map<uint64_t,CompositorBridgeParent*> CompositorMap;
 static StaticAutoPtr<CompositorMap> sCompositorMap;
 
 void
-CompositorBridgeParent::Initialize()
+CompositorBridgeParent::Setup()
 {
   EnsureLayerTreeMapReady();
 
@@ -587,13 +587,12 @@ CompositorLoop()
   return CompositorThreadHolder::Loop();
 }
 
-CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidget* aWidget,
-                                               CSSToLayoutDeviceScale aScale,
-                                               bool aUseAPZ,
+CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                                bool aUseExternalSurfaceSize,
                                                const gfx::IntSize& aSurfaceSize)
   : CompositorBridgeParentIPCAllocator("CompositorBridgeParent")
-  , mWidget(aWidget)
+  , mWidget(nullptr)
+  , mScale(aScale)
   , mIsTesting(false)
   , mPendingTransaction(0)
   , mPaused(false)
@@ -612,6 +611,26 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidget* aWidget
   , mDeferPluginWindows(false)
   , mPluginWindowsHidden(false)
 #endif
+{
+}
+
+void
+CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget, bool aUseAPZ)
+{
+  mWidget = aWidget;
+  if (aUseAPZ) {
+    mApzcTreeManager = new APZCTreeManager();
+  }
+
+  // IPDL initialization. mSelfRef is cleared in DeferredDestroy.
+  SetOtherProcessId(base::GetCurrentProcId());
+  mSelfRef = this;
+
+  Initialize();
+}
+
+void
+CompositorBridgeParent::Initialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CompositorThread(),
@@ -636,15 +655,8 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidget* aWidget
     sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
   }
 
-  if (aUseAPZ) {
-    mApzcTreeManager = new APZCTreeManager();
-  }
-
-  mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget);
-  LayerScope::SetPixelScale(aScale.scale);
-
-  // mSelfRef is cleared in DeferredDestroy.
-  mSelfRef = this;
+  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+  LayerScope::SetPixelScale(mScale.scale);
 }
 
 uint64_t
