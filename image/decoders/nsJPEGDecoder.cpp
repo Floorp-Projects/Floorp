@@ -74,7 +74,8 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
  : Decoder(aImage)
  , mLexer(Transition::ToUnbuffered(State::FINISHED_JPEG_DATA,
                                    State::JPEG_DATA,
-                                   SIZE_MAX))
+                                   SIZE_MAX),
+          Transition::TerminateSuccess())
  , mDecodeStyle(aDecodeStyle)
  , mSampleSize(0)
 {

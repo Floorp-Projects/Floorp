@@ -98,7 +98,8 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
  : Decoder(aImage)
  , mLexer(Transition::ToUnbuffered(State::FINISHED_PNG_DATA,
                                    State::PNG_DATA,
-                                   SIZE_MAX))
+                                   SIZE_MAX),
+          Transition::TerminateSuccess())
  , mPNG(nullptr)
  , mInfo(nullptr)
  , mCMSLine(nullptr)
