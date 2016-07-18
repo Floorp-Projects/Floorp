@@ -283,8 +283,12 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
   ipc::Endpoint<PCompositorBridgeParent> parentPipe;
   ipc::Endpoint<PCompositorBridgeChild> childPipe;
 
+  base::ProcessId gpuPid = mGPUChild
+                           ? mGPUChild->OtherPid()
+                           : base::GetCurrentProcId();
+
   nsresult rv = PCompositorBridge::CreateEndpoints(
-    base::GetCurrentProcId(),
+    gpuPid,
     aOtherProcess,
     &parentPipe,
     &childPipe);
@@ -293,8 +297,12 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
-    return false;
+  if (mGPUChild) {
+    mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
+  } else {
+    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
+      return false;
+  }
 
   *aOutEndpoint = Move(childPipe);
   return true;
