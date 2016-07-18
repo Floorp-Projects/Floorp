@@ -191,6 +191,7 @@ CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
 
 CompositorBridgeParent*
 CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
+                                       const uint64_t& aLayerTreeId,
                                        CSSToLayoutDeviceScale aScale,
                                        bool aUseAPZ,
                                        bool aUseExternalSurface,
@@ -204,7 +205,7 @@ CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
                   ipc::ChildSide);
   MOZ_RELEASE_ASSERT(mCanSend);
 
-  mCompositorBridgeParent->InitSameProcess(aWidget, aUseAPZ);
+  mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId, aUseAPZ);
   return mCompositorBridgeParent;
 }
 

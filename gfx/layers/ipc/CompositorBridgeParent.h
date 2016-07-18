@@ -219,7 +219,9 @@ public:
   // Must only be called by CompositorBridgeChild. After invoking this, the
   // IPC channel is active and RecvWillStop/ActorDestroy must be called to
   // free the compositor.
-  void InitSameProcess(widget::CompositorWidget* aWidget, bool aUseAPZ);
+  void InitSameProcess(widget::CompositorWidget* aWidget,
+                       const uint64_t& aLayerTreeId,
+                       bool aUseAPZ);
 
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual bool RecvRequestOverfill() override;
@@ -494,13 +496,6 @@ private:
   static already_AddRefed<APZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
 
   /**
-   * Allocate an ID that can be used to refer to a layer tree and
-   * associated resources that live only on the compositor thread.
-   *
-   * Must run on the content main thread.
-   */
-  static uint64_t AllocateLayerTreeId();
-  /**
    * Release compositor-thread resources referred to by |aID|.
    *
    * Must run on the content main thread.
@@ -612,7 +607,7 @@ protected:
   mozilla::Monitor mResetCompositorMonitor;
 
   uint64_t mCompositorID;
-  const uint64_t mRootLayerTreeID;
+  uint64_t mRootLayerTreeID;
 
   bool mOverrideComposeReadiness;
   RefPtr<CancelableRunnable> mForceCompositionTask;

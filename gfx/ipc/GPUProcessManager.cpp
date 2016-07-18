@@ -36,7 +36,8 @@ GPUProcessManager::Shutdown()
 }
 
 GPUProcessManager::GPUProcessManager()
- : mProcess(nullptr),
+ : mNextLayerTreeId(0),
+   mProcess(nullptr),
    mGPUChild(nullptr)
 {
   mObserver = new Observer(this);
@@ -157,9 +158,12 @@ GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
                                             bool aUseExternalSurfaceSize,
                                             const gfx::IntSize& aSurfaceSize)
 {
+  uint64_t layerTreeId = AllocateLayerTreeId();
+
   return InProcessCompositorSession::Create(
     aWidget,
     aLayerManager,
+    layerTreeId,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
@@ -182,7 +186,8 @@ GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
 uint64_t
 GPUProcessManager::AllocateLayerTreeId()
 {
-  return CompositorBridgeParent::AllocateLayerTreeId();
+  MOZ_ASSERT(NS_IsMainThread());
+  return ++mNextLayerTreeId;
 }
 
 void
