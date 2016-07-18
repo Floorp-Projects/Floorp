@@ -115,8 +115,9 @@ OuterDocAccessible::Shutdown()
 bool
 OuterDocAccessible::InsertChildAt(uint32_t aIdx, Accessible* aAccessible)
 {
-  NS_ASSERTION(aAccessible->IsDoc(),
-               "OuterDocAccessible should only have document child!");
+  MOZ_RELEASE_ASSERT(aAccessible->IsDoc(),
+                     "OuterDocAccessible can have a document child only!");
+
   // We keep showing the old document for a bit after creating the new one,
   // and while building the new DOM and frame tree. That's done on purpose
   // to avoid weird flashes of default background color.
@@ -162,6 +163,14 @@ OuterDocAccessible::RemoveChild(Accessible* aAccessible)
                "This child document of outerdoc accessible wasn't removed!");
 
   return wasRemoved;
+}
+
+bool
+OuterDocAccessible::IsAcceptableChild(nsIContent* aEl) const
+{
+  // outer document accessible doesn't not participate in ordinal tree
+  // mutations.
+  return false;
 }
 
 ProxyAccessible*

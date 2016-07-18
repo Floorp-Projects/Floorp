@@ -38,6 +38,7 @@ public:
 
   virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) override;
   virtual bool RemoveChild(Accessible* aAccessible) override;
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
 protected:
   virtual ~OuterDocAccessible() override;
