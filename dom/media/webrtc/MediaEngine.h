@@ -119,16 +119,8 @@ public:
   /* Populate the UUID of this device in the nsACString */
   virtual void GetUUID(nsACString&) = 0;
 
-  class BaseAllocationHandle
-  {
-  public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BaseAllocationHandle);
-  protected:
-    virtual ~BaseAllocationHandle() {}
-  };
-
   /* Release the device back to the system. */
-  virtual nsresult Deallocate(BaseAllocationHandle* aHandle) = 0;
+  virtual nsresult Deallocate() = 0;
 
   /* Start the device and add the track to the provided SourceMediaStream, with
    * the provided TrackID. You may start appending data to the track
@@ -187,8 +179,7 @@ public:
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs,
                             const nsString& aDeviceId,
-                            const nsACString& aOrigin,
-                            BaseAllocationHandle** aOutHandle) = 0;
+                            const nsACString& aOrigin) = 0;
 
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
