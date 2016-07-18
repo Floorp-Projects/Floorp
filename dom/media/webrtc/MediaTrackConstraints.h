@@ -36,43 +36,17 @@ static Enum StringToEnum(const EnumValuesStrings& aStrings,
 // Helper classes for orthogonal constraints without interdependencies.
 // Instead of constraining values, constrain the constraints themselves.
 
-class NormalizedConstraintSet
+struct NormalizedConstraintSet
 {
-protected:
-  class BaseRange
-  {
-  protected:
-    typedef BaseRange NormalizedConstraintSet::* MemberPtrType;
-
-    BaseRange(MemberPtrType aMemberPtr, const char* aName,
-              nsTArray<MemberPtrType>* aList) : mName(aName) {
-      if (aList) {
-        aList->AppendElement(aMemberPtr);
-      }
-    }
-    virtual ~BaseRange() {}
-  public:
-    virtual bool Merge(const BaseRange& aOther) = 0;
-    virtual void FinalizeMerge() = 0;
-
-    const char* mName;
-  };
-
-  typedef BaseRange NormalizedConstraintSet::* MemberPtrType;
-
-public:
   template<class ValueType>
-  class Range : public BaseRange
+  class Range
   {
   public:
     ValueType mMin, mMax;
     Maybe<ValueType> mIdeal;
 
-    Range(MemberPtrType aMemberPtr, const char* aName, ValueType aMin,
-          ValueType aMax, nsTArray<MemberPtrType>* aList)
-      : BaseRange(aMemberPtr, aName, aList)
-      , mMin(aMin), mMax(aMax), mMergeDenominator(0) {}
-    virtual ~Range() {};
+    Range(ValueType aMin, ValueType aMax)
+      : mMin(aMin), mMax(aMax), mMergeDenominator(0) {}
 
     template<class ConstrainRange>
     void SetFrom(const ConstrainRange& aOther);
@@ -105,7 +79,7 @@ public:
       }
       return true;
     }
-    void FinalizeMerge() override
+    void FinalizeMerge()
     {
       if (mMergeDenominator) {
         *mIdeal /= mMergeDenominator;
@@ -113,77 +87,34 @@ public:
       }
     }
   private:
-    bool Merge(const BaseRange& aOther) override {
-      return Merge(static_cast<const Range&>(aOther));
-    }
-
     uint32_t mMergeDenominator;
   };
 
   struct LongRange : public Range<int32_t>
   {
-    typedef LongRange NormalizedConstraintSet::* LongPtrType;
-
-    LongRange(LongPtrType aMemberPtr, const char* aName,
-              const dom::OwningLongOrConstrainLongRange& aOther, bool advanced,
-              nsTArray<MemberPtrType>* aList);
-  };
-
-  struct LongLongRange : public Range<int64_t>
-  {
-    typedef LongLongRange NormalizedConstraintSet::* LongLongPtrType;
-
-    LongLongRange(LongLongPtrType aMemberPtr, const char* aName,
-                  const long long& aOther,
-                  nsTArray<MemberPtrType>* aList);
+    LongRange(const dom::OwningLongOrConstrainLongRange& aOther, bool advanced);
   };
 
   struct DoubleRange : public Range<double>
   {
-    typedef DoubleRange NormalizedConstraintSet::* DoublePtrType;
-
-    DoubleRange(DoublePtrType aMemberPtr,
-                const char* aName,
-                const dom::OwningDoubleOrConstrainDoubleRange& aOther,
-                bool advanced,
-                nsTArray<MemberPtrType>* aList);
+    DoubleRange(const dom::OwningDoubleOrConstrainDoubleRange& aOther,
+                bool advanced);
   };
 
   struct BooleanRange : public Range<bool>
   {
-    typedef BooleanRange NormalizedConstraintSet::* BooleanPtrType;
-
-    BooleanRange(BooleanPtrType aMemberPtr, const char* aName,
-                 const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
-                 bool advanced,
-                 nsTArray<MemberPtrType>* aList);
-
-    BooleanRange(BooleanPtrType aMemberPtr, const char* aName, const bool& aOther,
-                 nsTArray<MemberPtrType>* aList)
-      : Range<bool>((MemberPtrType)aMemberPtr, aName, false, true, aList) {
-      mIdeal.emplace(aOther);
-    }
+    BooleanRange(const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
+                 bool advanced);
   };
 
-  struct StringRange : public BaseRange
+  struct StringRange
   {
     typedef std::set<nsString> ValueType;
     ValueType mExact, mIdeal;
 
-    typedef StringRange NormalizedConstraintSet::* StringPtrType;
-
-    StringRange(StringPtrType aMemberPtr,  const char* aName,
+    StringRange(
         const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
-        bool advanced,
-        nsTArray<MemberPtrType>* aList);
-
-    StringRange(StringPtrType aMemberPtr, const char* aName,
-                const nsString& aOther, nsTArray<MemberPtrType>* aList)
-      : BaseRange((MemberPtrType)aMemberPtr, aName, aList) {
-      mIdeal.insert(aOther);
-    }
-
-    ~StringRange() {}
+        bool advanced);
 
     void SetFrom(const dom::ConstrainDOMStringParameters& aOther);
     ValueType Clamp(const ValueType& n) const;
@@ -193,56 +124,39 @@ public:
     bool Intersects(const StringRange& aOther) const;
     void Intersect(const StringRange& aOther);
     bool Merge(const StringRange& aOther);
-    void FinalizeMerge() override {}
-  private:
-    bool Merge(const BaseRange& aOther) override {
-      return Merge(static_cast<const StringRange&>(aOther));
-    }
+    void FinalizeMerge() {}
   };
 
   // All new constraints should be added here whether they use flattening or not
   LongRange mWidth, mHeight;
   DoubleRange mFrameRate;
   StringRange mFacingMode;
-  StringRange mMediaSource;
-  LongLongRange mBrowserWindow;
-  BooleanRange mScrollWithPage;
+  nsString mMediaSource;
+  long long mBrowserWindow;
+  bool mScrollWithPage;
   StringRange mDeviceId;
   LongRange mViewportOffsetX, mViewportOffsetY, mViewportWidth, mViewportHeight;
   BooleanRange mEchoCancellation, mMozNoiseSuppression, mMozAutoGainControl;
-private:
-  typedef NormalizedConstraintSet T;
-public:
+
   NormalizedConstraintSet(const dom::MediaTrackConstraintSet& aOther,
-                          bool advanced,
-                          nsTArray<MemberPtrType>* aList = nullptr)
-  : mWidth(&T::mWidth, "width", aOther.mWidth, advanced, aList)
-  , mHeight(&T::mHeight, "height", aOther.mHeight, advanced, aList)
-  , mFrameRate(&T::mFrameRate, "frameRate", aOther.mFrameRate, advanced, aList)
-  , mFacingMode(&T::mFacingMode, "facingMode", aOther.mFacingMode, advanced, aList)
-  , mMediaSource(&T::mMediaSource, "mediaSource", aOther.mMediaSource, aList)
-  , mBrowserWindow(&T::mBrowserWindow, "browserWindow",
-                   aOther.mBrowserWindow.WasPassed() ?
-                   aOther.mBrowserWindow.Value() : 0, aList)
-  , mScrollWithPage(&T::mScrollWithPage, "scrollWithPage",
-                    aOther.mScrollWithPage.WasPassed() ?
-                    aOther.mScrollWithPage.Value() : false, aList)
-  , mDeviceId(&T::mDeviceId, "deviceId", aOther.mDeviceId, advanced, aList)
-  , mViewportOffsetX(&T::mViewportOffsetX, "viewportOffsetX",
-                     aOther.mViewportOffsetX, advanced, aList)
-  , mViewportOffsetY(&T::mViewportOffsetY, "viewportOffsetY",
-                     aOther.mViewportOffsetY, advanced, aList)
-  , mViewportWidth(&T::mViewportWidth, "viewportWidth",
-                   aOther.mViewportWidth, advanced, aList)
-  , mViewportHeight(&T::mViewportHeight, "viewportHeight",
-                    aOther.mViewportHeight, advanced, aList)
-  , mEchoCancellation(&T::mEchoCancellation, "echoCancellation",
-                      aOther.mEchoCancellation, advanced, aList)
-  , mMozNoiseSuppression(&T::mMozNoiseSuppression, "mozNoiseSuppression",
-                         aOther.mMozNoiseSuppression,
-                         advanced, aList)
-  , mMozAutoGainControl(&T::mMozAutoGainControl, "mozAutoGainControl",
-                        aOther.mMozAutoGainControl, advanced, aList) {}
+                          bool advanced)
+  : mWidth(aOther.mWidth, advanced)
+  , mHeight(aOther.mHeight, advanced)
+  , mFrameRate(aOther.mFrameRate, advanced)
+  , mFacingMode(aOther.mFacingMode, advanced)
+  , mMediaSource(aOther.mMediaSource)
+  , mBrowserWindow(aOther.mBrowserWindow.WasPassed() ?
+                   aOther.mBrowserWindow.Value() : 0)
+  , mScrollWithPage(aOther.mScrollWithPage.WasPassed() ?
+                    aOther.mScrollWithPage.Value() : false)
+  , mDeviceId(aOther.mDeviceId, advanced)
+  , mViewportOffsetX(aOther.mViewportOffsetX, advanced)
+  , mViewportOffsetY(aOther.mViewportOffsetY, advanced)
+  , mViewportWidth(aOther.mViewportWidth, advanced)
+  , mViewportHeight(aOther.mViewportHeight, advanced)
+  , mEchoCancellation(aOther.mEchoCancellation, advanced)
+  , mMozNoiseSuppression(aOther.mMozNoiseSuppression, advanced)
+  , mMozAutoGainControl(aOther.mMozAutoGainControl, advanced) {}
 };
 
 template<> bool NormalizedConstraintSet::Range<bool>::Merge(const Range& aOther);
@@ -251,10 +165,7 @@ template<> void NormalizedConstraintSet::Range<bool>::FinalizeMerge();
 // Used instead of MediaTrackConstraints in lower-level code.
 struct NormalizedConstraints : public NormalizedConstraintSet
 {
-  explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther,
-                                 nsTArray<MemberPtrType>* aList = nullptr);
-
-  // Merge constructor
+  explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther);
   explicit NormalizedConstraints(
       const nsTArray<const NormalizedConstraints*>& aOthers);
 
