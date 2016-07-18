@@ -125,6 +125,39 @@ CreateExpanderWidget()
 }
 
 static GtkWidget*
+CreateFrameWidget()
+{
+  GtkWidget* widget = gtk_frame_new(nullptr);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateGripperWidget()
+{
+  GtkWidget* widget = gtk_handle_box_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateToolbarWidget()
+{
+  GtkWidget* widget = gtk_toolbar_new();
+  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_GRIPPER)), widget);
+  gtk_widget_realize(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateToolbarSeparatorWidget()
+{
+  GtkWidget* widget = GTK_WIDGET(gtk_separator_tool_item_new());
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -154,6 +187,14 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
     case MOZ_GTK_EXPANDER:
       return CreateExpanderWidget();
+    case MOZ_GTK_FRAME:
+      return CreateFrameWidget();
+    case MOZ_GTK_GRIPPER:
+      return CreateGripperWidget();
+    case MOZ_GTK_TOOLBAR:
+      return CreateToolbarWidget();
+    case MOZ_GTK_TOOLBAR_SEPARATOR:
+      return CreateToolbarSeparatorWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -224,6 +265,17 @@ CreateChildCSSNode(const char* aName, WidgetNodeType aParentNodeType)
   return CreateCSSNode(aName, GetCssNodeStyleInternal(aParentNodeType));
 }
 
+static GtkStyleContext*
+GetWidgetStyleWithClass(WidgetNodeType aWidgetType, const gchar* aStyleClass)
+{
+  GtkStyleContext* style = gtk_widget_get_style_context(GetWidget(aWidgetType));
+  gtk_style_context_save(style);
+  MOZ_ASSERT(!sStyleContextNeedsRestore);
+  sStyleContextNeedsRestore = true;
+  gtk_style_context_add_class(style, aStyleClass);
+  return style;
+}
+
 /* GetCssNodeStyleInternal is used by Gtk >= 3.20 */
 static GtkStyleContext*
 GetCssNodeStyleInternal(WidgetNodeType aNodeType)
@@ -279,6 +331,10 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateCSSNode("tooltip", nullptr, GTK_TYPE_TOOLTIP);
       gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
       break; 
+    case MOZ_GTK_GRIPPER:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_GRIPPER,
+                                     GTK_STYLE_CLASS_GRIP);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -287,17 +343,6 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
 
   MOZ_ASSERT(style, "missing style context for node type");
   sStyleStorage[aNodeType] = style;
-  return style;
-}
-
-static GtkStyleContext*
-GetWidgetStyleWithClass(WidgetNodeType aWidgetType, const gchar* aStyleClass)
-{
-  GtkStyleContext* style = gtk_widget_get_style_context(GetWidget(aWidgetType));
-  gtk_style_context_save(style);
-  MOZ_ASSERT(!sStyleContextNeedsRestore);
-  sStyleContextNeedsRestore = true;
-  gtk_style_context_add_class(style, aStyleClass);
   return style;
 }
 
@@ -341,6 +386,9 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
       sStyleStorage[aNodeType] = style;
       return style;
     }
+    case MOZ_GTK_GRIPPER:
+      return GetWidgetStyleWithClass(MOZ_GTK_GRIPPER,
+                                     GTK_STYLE_CLASS_GRIP);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);
