@@ -23,8 +23,12 @@
 namespace mozilla {
 
 namespace dom {
-  class TabChild;
+class TabChild;
 } // namespace dom
+
+namespace widget {
+class CompositorWidget;
+} // namespace widget
 
 namespace layers {
 
@@ -55,18 +59,26 @@ public:
   bool LookupCompositorFrameMetrics(const FrameMetrics::ViewID aId, FrameMetrics&);
 
   /**
-   * We're asked to create a new Compositor in response to an Opens()
-   * or Bridge() request from our parent process.  The Transport is to
-   * the compositor's context.
+   * Initialize the singleton compositor bridge for a content process.
    */
-  static PCompositorBridgeChild*
-  Create(Transport* aTransport, ProcessId aOtherProcess);
+  static bool InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint);
+
+  static RefPtr<CompositorBridgeChild> CreateRemote(
+    const uint64_t& aProcessToken,
+    ClientLayerManager* aLayerManager,
+    Endpoint<PCompositorBridgeChild>&& aEndpoint);
 
   /**
-   * Initialize the CompositorBridgeChild and open the connection in the non-multi-process
-   * case.
+   * Initialize the CompositorBridgeChild, create CompositorBridgeParent, and
+   * open a same-process connection.
    */
-  bool OpenSameProcess(CompositorBridgeParent* aParent);
+  CompositorBridgeParent* InitSameProcess(
+    widget::CompositorWidget* aWidget,
+    const uint64_t& aLayerTreeId,
+    CSSToLayoutDeviceScale aScale,
+    bool aUseAPZ,
+    bool aUseExternalSurface,
+    const gfx::IntSize& aSurfaceSize);
 
   static CompositorBridgeChild* Get();
 
@@ -96,6 +108,9 @@ public:
   RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint& aContentOffset,
                                  const LayoutDeviceIntRegion& aVisibleRegion,
                                  nsTArray<PluginWindowData>&& aPlugins) override;
+
+  virtual bool
+  RecvCaptureAllPlugins(const uintptr_t& aParentWidget) override;
 
   virtual bool
   RecvHideAllPlugins(const uintptr_t& aParentWidget) override;
@@ -287,6 +302,8 @@ private:
   MessageLoop* mMessageLoop;
 
   AutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
+
+  uint64_t mProcessToken;
 };
 
 } // namespace layers

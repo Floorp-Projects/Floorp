@@ -1,12 +1,18 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUProcessManager.h"
 #include "GPUProcessHost.h"
-#include "mozilla/layers/CompositorSession.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/InProcessCompositorSession.h"
+#include "mozilla/layers/RemoteCompositorSession.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
+#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+# include "mozilla/widget/CompositorWidgetChild.h"
+#endif
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -36,7 +42,9 @@ GPUProcessManager::Shutdown()
 }
 
 GPUProcessManager::GPUProcessManager()
- : mProcess(nullptr),
+ : mTaskFactory(this),
+   mNextLayerTreeId(0),
+   mProcess(nullptr),
    mGPUChild(nullptr)
 {
   mObserver = new Observer(this);
@@ -127,6 +135,7 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   }
 
   mGPUChild = mProcess->GetActor();
+  mProcessToken = mProcess->GetProcessToken();
 }
 
 void
@@ -138,6 +147,28 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
 }
 
 void
+GPUProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
+{
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = mTaskFactory.NewRunnableMethod(
+      &GPUProcessManager::NotifyRemoteActorDestroyed, aProcessToken);
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+
+  if (mProcessToken != aProcessToken) {
+    // This token is for an older process; we can safely ignore it.
+    return;
+  }
+
+  // One of the bridged top-level actors for the GPU process has been
+  // prematurely terminated, and we're receiving a notification. This
+  // can happen if the ActorDestroy for a bridged protocol fires
+  // before the ActorDestroy for PGPUChild.
+  DestroyProcess();
+}
+
+void
 GPUProcessManager::DestroyProcess()
 {
   if (!mProcess) {
@@ -145,11 +176,12 @@ GPUProcessManager::DestroyProcess()
   }
 
   mProcess->Shutdown();
+  mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
 }
 
-already_AddRefed<CompositorSession>
+RefPtr<CompositorSession>
 GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
                                             ClientLayerManager* aLayerManager,
                                             CSSToLayoutDeviceScale aScale,
@@ -157,20 +189,123 @@ GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
                                             bool aUseExternalSurfaceSize,
                                             const gfx::IntSize& aSurfaceSize)
 {
-  return CompositorSession::CreateInProcess(
+  uint64_t layerTreeId = AllocateLayerTreeId();
+
+  if (mGPUChild) {
+    RefPtr<CompositorSession> session = CreateRemoteSession(
+      aWidget,
+      aLayerManager,
+      layerTreeId,
+      aScale,
+      aUseAPZ,
+      aUseExternalSurfaceSize,
+      aSurfaceSize);
+    if (session) {
+      return session;
+    }
+
+    // We couldn't create a remote compositor, so abort the process.
+    DisableGPUProcess("Failed to create remote compositor");
+  }
+
+  return InProcessCompositorSession::Create(
     aWidget,
     aLayerManager,
+    layerTreeId,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
     aSurfaceSize);
 }
 
-PCompositorBridgeParent*
-GPUProcessManager::CreateTabCompositorBridge(ipc::Transport* aTransport,
-                                             base::ProcessId aOtherProcess)
+RefPtr<CompositorSession>
+GPUProcessManager::CreateRemoteSession(nsIWidget* aWidget,
+                                       ClientLayerManager* aLayerManager,
+                                       const uint64_t& aRootLayerTreeId,
+                                       CSSToLayoutDeviceScale aScale,
+                                       bool aUseAPZ,
+                                       bool aUseExternalSurfaceSize,
+                                       const gfx::IntSize& aSurfaceSize)
 {
-  return CompositorBridgeParent::Create(aTransport, aOtherProcess);
+#ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
+  ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+  ipc::Endpoint<PCompositorBridgeChild> childPipe;
+
+  nsresult rv = PCompositorBridge::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Failed to create PCompositorBridge endpoints: " << hexa(int(rv));
+    return nullptr;
+  }
+
+  RefPtr<CompositorBridgeChild> child = CompositorBridgeChild::CreateRemote(
+    mProcessToken,
+    aLayerManager,
+    Move(childPipe));
+  if (!child) {
+    gfxCriticalNote << "Failed to create CompositorBridgeChild";
+    return nullptr;
+  }
+
+  CompositorWidgetInitData initData;
+  aWidget->GetCompositorWidgetInitData(&initData);
+
+  bool ok = mGPUChild->SendNewWidgetCompositor(
+    Move(parentPipe),
+    aScale,
+    aUseExternalSurfaceSize,
+    aSurfaceSize);
+  if (!ok)
+    return nullptr;
+
+  CompositorWidgetChild* widget = new CompositorWidgetChild(aWidget);
+  if (!child->SendPCompositorWidgetConstructor(widget, initData))
+    return nullptr;
+  if (!child->SendInitialize(aRootLayerTreeId))
+    return nullptr;
+
+  RefPtr<RemoteCompositorSession> session =
+    new RemoteCompositorSession(child, widget, aRootLayerTreeId);
+  return session.forget();
+#else
+  gfxCriticalNote << "Platform does not support out-of-process compositing";
+  return nullptr;
+#endif
+}
+
+bool
+GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                                 ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint)
+{
+  ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+  ipc::Endpoint<PCompositorBridgeChild> childPipe;
+
+  base::ProcessId gpuPid = mGPUChild
+                           ? mGPUChild->OtherPid()
+                           : base::GetCurrentProcId();
+
+  nsresult rv = PCompositorBridge::CreateEndpoints(
+    gpuPid,
+    aOtherProcess,
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Could not create content compositor bridge: " << hexa(int(rv));
+    return false;
+  }
+
+  if (mGPUChild) {
+    mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
+  } else {
+    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
+      return false;
+  }
+
+  *aOutEndpoint = Move(childPipe);
+  return true;
 }
 
 already_AddRefed<APZCTreeManager>
@@ -182,7 +317,8 @@ GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
 uint64_t
 GPUProcessManager::AllocateLayerTreeId()
 {
-  return CompositorBridgeParent::AllocateLayerTreeId();
+  MOZ_ASSERT(NS_IsMainThread());
+  return ++mNextLayerTreeId;
 }
 
 void

@@ -127,7 +127,6 @@ public:
     virtual void SetHasLocalInstance() override { }
 #if defined(XP_WIN)
     virtual nsresult GetScrollCaptureContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
-    virtual nsresult UpdateScrollState(NPP aInstance, bool aIsScrolling) override;
 #endif
     virtual nsresult HandledWindowedPluginKeyEvent(
                        NPP aInstance,

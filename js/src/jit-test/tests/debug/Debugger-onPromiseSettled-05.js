@@ -1,11 +1,8 @@
 // Settling a promise within an onPromiseSettled handler causes a recursive
 // handler invocation.
-if (!('Promise' in this))
-    quit(0);
 
 var g = newGlobal();
-var dbg = new Debugger();
-var gw = dbg.addDebuggee(g);
+var dbg = new Debugger(g);
 var log;
 var depth;
 
@@ -15,13 +12,13 @@ dbg.onPromiseSettled = function (promise) {
   assertEq(promise.seen, undefined);
   promise.seen = true;
 
-  if (depth < 3) {
-    gw.executeInGlobal(`settlePromiseNow(new Promise(_=>{}));`);
-  }
+  if (depth < 3)
+    g.settleFakePromise(g.makeFakePromise());
+
   log += ')'; depth--;
 };
 
 log = '';
 depth = 0;
-g.settlePromiseNow(new g.Promise(_=>{}));
+g.settleFakePromise(g.makeFakePromise());
 assertEq(log, '((()))');

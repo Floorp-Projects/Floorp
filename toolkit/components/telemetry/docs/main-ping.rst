@@ -15,6 +15,8 @@ This ping is triggered by different scenarios, which is documented by the ``reas
 
 Most reasons lead to a session split, initiating a new *subsession*. We reset important measurements for those subsessions.
 
+After a new subsession split, the ``internal-telemetry-after-subsession-split`` topic is notified to all the observers. *This is an internal topic and is only meant for internal Telemetry usage.*
+
 *Note:* ``saved-session`` is sent with a different ping type (``saved-session``, not ``main``), but otherwise has the same format as discussed here.
 
 Structure::
