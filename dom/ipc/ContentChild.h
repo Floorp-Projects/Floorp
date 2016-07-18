@@ -462,9 +462,6 @@ public:
   virtual bool
   RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig) override;
 
-  virtual bool
-  RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistations) override;
-
   virtual bool RecvLastPrivateDocShellDestroyed() override;
 
   virtual bool RecvVolumes(InfallibleTArray<VolumeInfo>&& aVolumes) override;
@@ -645,13 +642,6 @@ public:
   virtual bool
   RecvGetFilesResponse(const nsID& aUUID,
                        const GetFilesResponseResult& aResult) override;
-
-  virtual bool
-  RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
-                          const IPC::Principal& aPrincipal) override;
-
-  virtual bool
-  RecvBlobURLUnregistration(const nsCString& aURI) override;
 
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
