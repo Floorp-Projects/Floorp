@@ -54,16 +54,17 @@ class DebianBootstrapper(BaseBootstrapper):
         'libdbus-1-dev',
         'libdbus-glib-1-dev',
         'libgconf2-dev',
-        'libgtk2.0-dev',
         'libgtk-3-dev',
+        'libgtk2.0-dev',
         'libiw-dev',
         'libnotify-dev',
         'libpulse-dev',
+        'libx11-xcb-dev',
         'libxt-dev',
         'mesa-common-dev',
         'python-dbus',
-        'yasm',
         'xvfb',
+        'yasm',
     ]
 
     # Subclasses can add packages to this variable to have them installed.
