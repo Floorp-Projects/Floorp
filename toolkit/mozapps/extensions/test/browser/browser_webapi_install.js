@@ -240,22 +240,3 @@ add_task(makeInstallTest(function* (browser) {
   ok(AddonManager.webAPI.installs.size > 0, "webAPI is tracking the AddonInstall");
 }));
 
-add_task(function test_badhost() {
-  return BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
-    let result = yield ContentTask.spawn(browser, null, function () {
-      return new Promise(resolve => {
-        const url = "https://addons.not-really-mozilla.org/impostor.xpi";
-        content.navigator.mozAddonManager.createInstall({url})
-          .then(() => {
-            resolve({success: false, message: "createInstall should not have succeeded"});
-          }, err => {
-            if (!err.message.match(/not permitted/)) {
-              resolve({success: false, message: "Wrong error message for invalid download url"});
-            }
-            resolve({success: true});
-          });
-      });
-    });
-    is(result.success, true, result.message || "Trying to download an invalid URL resulted in an error");
-  });
-});
