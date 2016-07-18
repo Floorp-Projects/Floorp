@@ -92,6 +92,7 @@ public:
 
   void DispatchTimeMarchesOn();
   void TimeMarchesOn();
+  void DispatchUpdateCueDisplay();
 
   void NotifyShutdown()
   {
@@ -128,6 +129,7 @@ private:
   double mLastTimeMarchesOnCalled;
 
   bool mTimeMarchesOnDispatched;
+  bool mUpdateCueDisplayDispatched;
 
   static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 

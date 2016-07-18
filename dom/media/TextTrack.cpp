@@ -93,7 +93,6 @@ TextTrack::SetMode(TextTrackMode aValue)
   if (mMode != aValue) {
     mMode = aValue;
     if (aValue == TextTrackMode::Disabled) {
-      SetCuesInactive();
       // Remove all the cues in MediaElement.
       if (mTextTrackList) {
         HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
@@ -103,6 +102,7 @@ TextTrack::SetMode(TextTrackMode aValue)
           }
         }
       }
+      SetCuesInactive();
     } else {
       // Add all the cues into MediaElement.
       if (mTextTrackList) {
