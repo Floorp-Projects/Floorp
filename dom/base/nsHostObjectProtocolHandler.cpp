@@ -498,6 +498,20 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
   }
 }
 
+void
+nsHostObjectProtocolHandler::RemoveDataEntries()
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  if (!gDataTable) {
+    return;
+  }
+
+  gDataTable->Clear();
+  delete gDataTable;
+  gDataTable = nullptr;
+}
+
 nsresult
 nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
                                                nsIPrincipal* aPrincipal,

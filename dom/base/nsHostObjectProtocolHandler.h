@@ -60,6 +60,10 @@ public:
                                nsACString& aUri);
   static void RemoveDataEntry(const nsACString& aUri,
                               bool aBroadcastToOTherProcesses = true);
+
+  // This is for IPC only.
+  static void RemoveDataEntries();
+
   static nsIPrincipal* GetDataEntryPrincipal(const nsACString& aUri);
   static void Traverse(const nsACString& aUri, nsCycleCollectionTraversalCallback& aCallback);
 
