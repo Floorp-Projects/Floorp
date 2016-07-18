@@ -2422,8 +2422,13 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // on demand.)
     bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
     if (useOffMainThreadCompositing) {
-      DebugOnly<bool> opened = PCompositorBridge::Open(this);
+      GPUProcessManager* gpm = GPUProcessManager::Get();
+
+      Endpoint<PCompositorBridgeChild> endpoint;
+      DebugOnly<bool> opened =
+        gpm->CreateContentCompositorBridge(OtherPid(), &endpoint);
       MOZ_ASSERT(opened);
+      Unused << SendInitCompositor(Move(endpoint));
 
       opened = PImageBridge::Open(this);
       MOZ_ASSERT(opened);
@@ -3208,14 +3213,6 @@ bool
 ContentParent::DeallocPAPZParent(PAPZParent* aActor)
 {
   return true;
-}
-
-PCompositorBridgeParent*
-ContentParent::AllocPCompositorBridgeParent(mozilla::ipc::Transport* aTransport,
-                                            base::ProcessId aOtherProcess)
-{
-  return GPUProcessManager::Get()->CreateTabCompositorBridge(
-    aTransport, aOtherProcess);
 }
 
 gfx::PVRManagerParent*
