@@ -330,6 +330,7 @@ private:
     RefPtr<ID3D11Device> mD3D11Device;
     RefPtr<ID3D11Device> mD3D11ContentDevice;
     RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
+    RefPtr<ID3D11Device> mD3D11DecoderDevice;
     RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     mozilla::Atomic<bool> mIsWARP;
     bool mHasDeviceReset;
