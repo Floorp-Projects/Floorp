@@ -1759,8 +1759,6 @@ nsOfflineCacheUpdate::Begin()
     }
 
     // Start checking the manifest.
-    nsCOMPtr<nsIURI> uri;
-
     mManifestItem = new nsOfflineManifestItem(mManifestURI,
                                               mDocumentURI,
                                               mLoadingPrincipal,
