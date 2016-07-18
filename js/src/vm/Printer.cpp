@@ -529,7 +529,11 @@ LSprinter::put(const char* s, size_t len)
         return origLen;
 
     size_t allocLength = AlignBytes(sizeof(Chunk) + len, js::detail::LIFO_ALLOC_ALIGN);
-    Chunk* last = reinterpret_cast<Chunk*>(alloc_->alloc(allocLength));
+    Chunk* last = nullptr;
+    {
+        LifoAlloc::AutoFallibleScope fallibleAllocator(alloc_);
+        last = reinterpret_cast<Chunk*>(alloc_->alloc(allocLength));
+    }
     if (!last) {
         reportOutOfMemory();
         return origLen - len;
