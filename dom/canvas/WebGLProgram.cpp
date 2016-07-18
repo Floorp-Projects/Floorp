@@ -1194,17 +1194,6 @@ WebGLProgram::LinkAndUpdate()
 }
 
 bool
-WebGLProgram::FindActiveOutputMappedNameByUserName(const nsACString& userName,
-                                                   nsCString* const out_mappedName) const
-{
-    if (mFragShader->FindActiveOutputMappedNameByUserName(userName, out_mappedName)) {
-        return true;
-    }
-
-    return false;
-}
-
-bool
 WebGLProgram::FindAttribUserNameByMappedName(const nsACString& mappedName,
                                              nsDependentCString* const out_userName) const
 {

@@ -400,21 +400,6 @@ ShaderValidator::FindAttribUserNameByMappedName(const std::string& mappedName,
 }
 
 bool
-ShaderValidator::FindActiveOutputMappedNameByUserName(const std::string& userName,
-                                                      const std::string** const out_mappedName) const
-{
-    const std::vector<sh::OutputVariable>& varibles = *ShGetOutputVariables(mHandle);
-    for (auto itr = varibles.begin(); itr != varibles.end(); ++itr) {
-        if (itr->name == userName) {
-            *out_mappedName = &(itr->mappedName);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool
 ShaderValidator::FindAttribMappedNameByUserName(const std::string& userName,
                                                 const std::string** const out_mappedName) const
 {
