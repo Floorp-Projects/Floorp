@@ -2930,6 +2930,29 @@ private:
   PromiseWorkerProxy::RunCallbackFunc mFunc;
 };
 
+class PromiseWorkerHolder final : public WorkerHolder
+{
+  // RawPointer because this proxy keeps alive the holder.
+  PromiseWorkerProxy* mProxy;
+
+public:
+  explicit PromiseWorkerHolder(PromiseWorkerProxy* aProxy)
+    : mProxy(aProxy)
+  {
+    MOZ_ASSERT(aProxy);
+  }
+
+  bool
+  Notify(Status aStatus) override
+  {
+    if (aStatus >= Canceling) {
+      mProxy->CleanUp();
+    }
+
+    return true;
+  }
+};
+
 /* static */
 already_AddRefed<PromiseWorkerProxy>
 PromiseWorkerProxy::Create(WorkerPrivate* aWorkerPrivate,
@@ -2966,16 +2989,13 @@ PromiseWorkerProxy::PromiseWorkerProxy(WorkerPrivate* aWorkerPrivate,
   , mCleanedUp(false)
   , mCallbacks(aCallbacks)
   , mCleanUpLock("cleanUpLock")
-#ifdef DEBUG
-  , mWorkerHolderAdded(false)
-#endif
 {
 }
 
 PromiseWorkerProxy::~PromiseWorkerProxy()
 {
   MOZ_ASSERT(mCleanedUp);
-  MOZ_ASSERT(!mWorkerHolderAdded);
+  MOZ_ASSERT(!mWorkerHolder);
   MOZ_ASSERT(!mWorkerPromise);
   MOZ_ASSERT(!mWorkerPrivate);
 }
@@ -3003,14 +3023,14 @@ PromiseWorkerProxy::AddRefObject()
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mWorkerHolderAdded);
-  if (NS_WARN_IF(!HoldWorker(mWorkerPrivate))) {
+
+  MOZ_ASSERT(!mWorkerHolder);
+  mWorkerHolder.reset(new PromiseWorkerHolder(this));
+  if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate))) {
+    mWorkerHolder = nullptr;
     return false;
   }
 
-#ifdef DEBUG
-  mWorkerHolderAdded = true;
-#endif
   // Maintain a reference so that we have a valid object to clean up when
   // removing the feature.
   AddRef();
@@ -3028,7 +3048,7 @@ PromiseWorkerProxy::GetWorkerPrivate() const
   // Safe to check this without a lock since we assert lock ownership on the
   // main thread above.
   MOZ_ASSERT(!mCleanedUp);
-  MOZ_ASSERT(mWorkerHolderAdded);
+  MOZ_ASSERT(mWorkerHolder);
 
   return mWorkerPrivate;
 }
@@ -3094,16 +3114,6 @@ PromiseWorkerProxy::RejectedCallback(JSContext* aCx,
   RunCallback(aCx, aValue, &Promise::MaybeReject);
 }
 
-bool
-PromiseWorkerProxy::Notify(Status aStatus)
-{
-  if (aStatus >= Canceling) {
-    CleanUp();
-  }
-
-  return true;
-}
-
 void
 PromiseWorkerProxy::CleanUp()
 {
@@ -3121,14 +3131,12 @@ PromiseWorkerProxy::CleanUp()
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
 
-    // Release the Promise and remove the PromiseWorkerProxy from the features of
+    // Release the Promise and remove the PromiseWorkerProxy from the holders of
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
-    MOZ_ASSERT(mWorkerHolderAdded);
-    ReleaseWorker();
-#ifdef DEBUG
-    mWorkerHolderAdded = false;
-#endif
+    MOZ_ASSERT(mWorkerHolder);
+    mWorkerHolder = nullptr;
+
     CleanProperties();
   }
   Release();
