@@ -89,12 +89,7 @@ public:
       return;
     }
 
-    Maybe<RectT> newBounds = mBounds.SafeUnion(aRect);
-    if (!newBounds) {
-      return;
-    }
-    mBounds = newBounds.value();
-    MOZ_ASSERT(!mBounds.Overflows());
+    mBounds = mBounds.Union(aRect);
 
     if (mCoversBounds) {
       return;
@@ -107,12 +102,7 @@ public:
 
   void Add(const RegionT& aRegion)
   {
-    Maybe<RectT> newBounds = mBounds.SafeUnion(aRegion.GetBounds());
-    if (!newBounds) {
-      return;
-    }
-    mBounds = newBounds.value();
-    MOZ_ASSERT(!mBounds.Overflows());
+    mBounds = mBounds.Union(aRegion.GetBounds());
 
     if (mCoversBounds) {
       return;
@@ -120,12 +110,7 @@ public:
 
     for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
       RectT r = iter.Get();
-      if (r.IsEmpty() || r.Overflows()) {
-        // This can happen if e.g. a negative-width rect was wrapped into a
-        // region. Treat it the same as we would if such a rect was passed to
-        // the Add(const RectT&) function.
-        continue;
-      }
+      MOZ_ASSERT(!r.IsEmpty());
       if (!mImpl.AddRect(RectToBox(r))) {
         FallBackToBounds();
         return;
@@ -147,10 +132,7 @@ public:
 
   bool Intersects(const RectT& aRect) const
   {
-    if (aRect.IsEmpty()) {
-      return true;
-    }
-    if (aRect.Overflows() || !mBounds.Intersects(aRect)) {
+    if (!mBounds.Intersects(aRect)) {
       return false;
     }
     if (mCoversBounds) {
@@ -162,10 +144,7 @@ public:
 
   bool Contains(const RectT& aRect) const
   {
-    if (aRect.IsEmpty()) {
-      return true;
-    }
-    if (aRect.Overflows() || !mBounds.Contains(aRect)) {
+    if (!mBounds.Contains(aRect)) {
       return false;
     }
     if (mCoversBounds) {
@@ -184,8 +163,6 @@ private:
 
   static pixman_box32_t RectToBox(const RectT& aRect)
   {
-    MOZ_ASSERT(!aRect.IsEmpty());
-    MOZ_ASSERT(!aRect.Overflows());
     return { aRect.x, aRect.y, aRect.XMost(), aRect.YMost() };
   }
 
