@@ -454,7 +454,7 @@ window.requestAnimFrame = (function()
       
       isComplete: function isComplete()
       {
-         return this.sceneCompletedTime && (Date.now() - this.sceneCompletedTime > 2000);
+         return this.sceneCompletedTime && (Date.now() > this.sceneCompletedTime);
       },
       
       intervalRenderer: function intervalRenderer(interval, ctx)
