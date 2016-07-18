@@ -10,6 +10,7 @@ import mozilla.prettyprinters
 # modules registers their printers with mozilla.prettyprinters.
 import mozilla.GCCellPtr
 import mozilla.Interpreter
+import mozilla.IonGraph
 import mozilla.JSObject
 import mozilla.JSString
 import mozilla.JSSymbol
