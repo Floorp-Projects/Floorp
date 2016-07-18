@@ -69,8 +69,8 @@ public:
   /// @return The offset from the beginning of the ICO to the first resource.
   size_t FirstResourceOffset() const;
 
-  Maybe<TerminalState> DoDecode(SourceBufferIterator& aIterator,
-                                IResumable* aOnResume) override;
+  LexerResult DoDecode(SourceBufferIterator& aIterator,
+                       IResumable* aOnResume) override;
   nsresult FinishInternal() override;
   nsresult FinishWithErrorInternal() override;
 

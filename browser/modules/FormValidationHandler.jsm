@@ -48,7 +48,7 @@ var FormValidationHandler =
    */
 
   receiveMessage: function (aMessage) {
-    let window = aMessage.target.ownerDocument.defaultView;
+    let window = aMessage.target.ownerGlobal;
     let json = aMessage.json;
     let tabBrowser = window.gBrowser;
     switch (aMessage.name) {

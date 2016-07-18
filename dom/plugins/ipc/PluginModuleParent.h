@@ -263,7 +263,6 @@ protected:
 
 #if defined(XP_WIN)
     virtual nsresult GetScrollCaptureContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
-    virtual nsresult UpdateScrollState(NPP aInstance, bool aIsScrolling);
 #endif
 
     virtual nsresult HandledWindowedPluginKeyEvent(

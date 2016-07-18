@@ -569,7 +569,11 @@ ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst)
             size_t alignment = 8;
             if (dstStride % 4 == 0)
                 alignment = 4;
-            ScopedPackAlignment autoAlign(gl, alignment);
+
+            ScopedPackState scopedPackState(gl);
+            if (alignment != 4) {
+                gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, alignment);
+            }
 
             gl->raw_fReadPixels(0, 0, width, height, readGLFormat, readType,
                                 dstBytes);
@@ -601,7 +605,7 @@ ReadPixel(SharedSurface* src)
 
     ScopedReadbackFB a(src);
     {
-        ScopedPackAlignment autoAlign(gl, 4);
+        ScopedPackState scopedPackState(gl);
 
         UniquePtr<uint8_t[]> bytes(new uint8_t[4]);
         gl->raw_fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,

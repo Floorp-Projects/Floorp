@@ -79,7 +79,7 @@ var CastingApps = {
     if (!app)
       return;
 
-    video.title = videoElement.ownerDocument.defaultView.top.document.title;
+    video.title = videoElement.ownerGlobal.top.document.title;
     if (video.element) {
       // If the video is currently playing on the device, pause it
       if (!video.element.paused) {

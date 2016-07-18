@@ -86,9 +86,6 @@ ScopedBindFramebuffer::ScopedBindFramebuffer(GLContext* aGL, GLuint aNewFB)
 void
 ScopedBindFramebuffer::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
     if (mOldReadFB == mOldDrawFB) {
         mGL->BindFB(mOldDrawFB);
     } else {
@@ -110,9 +107,6 @@ ScopedBindTextureUnit::ScopedBindTextureUnit(GLContext* aGL, GLenum aTexUnit)
 
 void
 ScopedBindTextureUnit::UnwrapImpl() {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
     mGL->fActiveTexture(mOldTexUnit);
 }
 
@@ -122,35 +116,26 @@ ScopedBindTextureUnit::UnwrapImpl() {
 ScopedTexture::ScopedTexture(GLContext* aGL)
     : ScopedGLWrapper<ScopedTexture>(aGL)
 {
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenTextures(1, &mTexture);
 }
 
 void
 ScopedTexture::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after
-    // the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fDeleteTextures(1, &mTexture);
 }
-
 
 /* ScopedFramebuffer **************************************************************/
 
 ScopedFramebuffer::ScopedFramebuffer(GLContext* aGL)
     : ScopedGLWrapper<ScopedFramebuffer>(aGL)
 {
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenFramebuffers(1, &mFB);
 }
 
 void
 ScopedFramebuffer::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after
-    // the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fDeleteFramebuffers(1, &mFB);
 }
 
@@ -160,16 +145,12 @@ ScopedFramebuffer::UnwrapImpl()
 ScopedRenderbuffer::ScopedRenderbuffer(GLContext* aGL)
     : ScopedGLWrapper<ScopedRenderbuffer>(aGL)
 {
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenRenderbuffers(1, &mRB);
 }
 
 void
 ScopedRenderbuffer::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after
-    // the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fDeleteRenderbuffers(1, &mRB);
 }
 
@@ -251,10 +232,8 @@ ScopedBindRenderbuffer::ScopedBindRenderbuffer(GLContext* aGL, GLuint aNewRB)
 }
 
 void
-ScopedBindRenderbuffer::UnwrapImpl() {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
+ScopedBindRenderbuffer::UnwrapImpl()
+{
     mGL->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOldRB);
 }
 
@@ -455,15 +434,13 @@ ScopedGLDrawState::ScopedGLDrawState(GLContext* aGL)
     , scissor     (aGL, LOCAL_GL_SCISSOR_TEST,    false)
     , stencil     (aGL, LOCAL_GL_STENCIL_TEST,    false)
     , mGL(aGL)
-    , packAlign(4)
 {
-    mGL->GetUIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &packAlign);
     mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &boundProgram);
     mGL->GetUIntegerv(LOCAL_GL_ARRAY_BUFFER_BINDING, &boundBuffer);
     mGL->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &maxAttrib);
     attrib_enabled = MakeUnique<GLint[]>(maxAttrib);
 
-    for (unsigned int i = 0; i < maxAttrib; i++) {
+    for (GLuint i = 0; i < maxAttrib; i++) {
         mGL->fGetVertexAttribiv(i, LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED, &attrib_enabled[i]);
         mGL->fDisableVertexAttribArray(i);
     }
@@ -494,8 +471,6 @@ ScopedGLDrawState::~ScopedGLDrawState()
                     colorMask[2],
                     colorMask[3]);
 
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, packAlign);
-
     for (unsigned int i = 0; i < maxAttrib; i++) {
         if (attrib_enabled[i])
             mGL->fEnableVertexAttribArray(i);
@@ -518,60 +493,47 @@ ScopedGLDrawState::~ScopedGLDrawState()
 }
 
 ////////////////////////////////////////////////////////////////////////
-// ScopedPackAlignment
+// ScopedPackState
 
-ScopedPackAlignment::ScopedPackAlignment(GLContext* gl, GLint scopedVal)
-    : ScopedGLWrapper<ScopedPackAlignment>(gl)
+static bool
+HasPBOState(const GLContext* gl)
 {
-    MOZ_ASSERT(scopedVal == 1 ||
-               scopedVal == 2 ||
-               scopedVal == 4 ||
-               scopedVal == 8);
+    return (!gl->IsGLES() || gl->Version() >= 300);
+}
 
-    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mOldVal);
+ScopedPackState::ScopedPackState(GLContext* gl)
+    : ScopedGLWrapper<ScopedPackState>(gl)
+{
+    mGL->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mAlignment);
 
-    if (scopedVal != mOldVal) {
-        gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, scopedVal);
-    } else {
-      // Don't try to re-set it during unwrap.
-        mOldVal = 0;
-    }
+    if (mAlignment != 4) mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+
+    if (!HasPBOState(mGL))
+        return;
+
+    mGL->fGetIntegerv(LOCAL_GL_PIXEL_PACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
+    mGL->fGetIntegerv(LOCAL_GL_PACK_ROW_LENGTH, &mRowLength);
+    mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_PIXELS, &mSkipPixels);
+    mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_ROWS, &mSkipRows);
+
+    if (mPixelBuffer != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, 0);
+    if (mRowLength != 0)   mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
+    if (mSkipPixels != 0)  mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
+    if (mSkipRows != 0)    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
 }
 
 void
-ScopedPackAlignment::UnwrapImpl() {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
-    if (mOldVal) {
-        mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mOldVal);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-// ScopedUnpackAlignment
-
-ScopedUnpackAlignment::ScopedUnpackAlignment(GLContext* gl, GLint scopedVal)
-    : ScopedGLWrapper<ScopedUnpackAlignment>(gl)
+ScopedPackState::UnwrapImpl()
 {
-    MOZ_ASSERT(scopedVal == 1 ||
-               scopedVal == 2 ||
-               scopedVal == 4 ||
-               scopedVal == 8);
+    mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mAlignment);
 
-    gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &mOldVal);
+    if (!HasPBOState(mGL))
+        return;
 
-    if (scopedVal != mOldVal) {
-        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, scopedVal);
-    }
-}
-
-void
-ScopedUnpackAlignment::UnwrapImpl() {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mOldVal);
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, mPixelBuffer);
+    mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mRowLength);
+    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mSkipPixels);
+    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mSkipRows);
 }
 
 } /* namespace gl */

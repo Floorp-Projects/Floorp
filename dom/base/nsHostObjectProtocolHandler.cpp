@@ -7,8 +7,11 @@
 #include "nsHostObjectProtocolHandler.h"
 
 #include "DOMMediaStream.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ModuleUtils.h"
@@ -38,8 +41,78 @@ struct DataInfo
 
 static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
 
+static DataInfo*
+GetDataInfo(const nsACString& aUri)
+{
+  if (!gDataTable) {
+    return nullptr;
+  }
+
+  DataInfo* res;
+
+  // Let's remove any fragment and query from this URI.
+  int32_t hasFragmentPos = aUri.FindChar('#');
+  int32_t hasQueryPos = aUri.FindChar('?');
+
+  int32_t pos = -1;
+  if (hasFragmentPos >= 0 && hasQueryPos >= 0) {
+    pos = std::min(hasFragmentPos, hasQueryPos);
+  } else if (hasFragmentPos >= 0) {
+    pos = hasFragmentPos;
+  } else {
+    pos = hasQueryPos;
+  }
+
+  if (pos < 0) {
+    gDataTable->Get(aUri, &res);
+  } else {
+    gDataTable->Get(StringHead(aUri, pos), &res);
+  }
+
+  return res;
+}
+
 // Memory reporting for the hash table.
 namespace mozilla {
+
+void
+BroadcastBlobURLRegistration(const nsACString& aURI,
+                             BlobImpl* aBlobImpl,
+                             nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aBlobImpl);
+
+  if (XRE_IsParentProcess()) {
+    ContentParent::BroadcastBlobURLRegistration(aURI, aBlobImpl,
+                                                aPrincipal);
+    return;
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  BlobChild* actor = cc->GetOrCreateActorForBlobImpl(aBlobImpl);
+  if (NS_WARN_IF(!actor)) {
+    return;
+  }
+
+  NS_WARN_IF(!cc->SendStoreAndBroadcastBlobURLRegistration(nsCString(aURI), actor,
+                                                           IPC::Principal(aPrincipal)));
+}
+
+void
+BroadcastBlobURLUnregistration(const nsACString& aURI, DataInfo* aInfo)
+{
+  MOZ_ASSERT(aInfo);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (XRE_IsParentProcess()) {
+    ContentParent::BroadcastBlobURLUnregistration(aURI);
+    return;
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(nsCString(aURI)));
+}
 
 class HostObjectURLsReporter final : public nsIMemoryReporter
 {
@@ -321,12 +394,14 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
                                           nsACString& aUri)
 {
 #ifdef DEBUG
-  nsCOMPtr<BlobImpl> blobImpl(do_QueryInterface(aObject));
-  nsCOMPtr<MediaSource> mediaSource(do_QueryInterface(aObject));
-  nsCOMPtr<DOMMediaStream> mediaStream(do_QueryInterface(aObject));
+  {
+    nsCOMPtr<BlobImpl> blobImpl(do_QueryInterface(aObject));
+    nsCOMPtr<MediaSource> mediaSource(do_QueryInterface(aObject));
+    nsCOMPtr<DOMMediaStream> mediaStream(do_QueryInterface(aObject));
 
-  // We support only these types.
-  MOZ_ASSERT(blobImpl || mediaSource || mediaStream);
+    // We support only these types.
+    MOZ_ASSERT(blobImpl || mediaSource || mediaStream);
+  }
 #endif
 
   Init();
@@ -334,6 +409,22 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
   nsresult rv = GenerateURIString(aScheme, aPrincipal, aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = AddDataEntry(aUri, aObject, aPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(aObject);
+  if (blobImpl) {
+    BroadcastBlobURLRegistration(aUri, blobImpl, aPrincipal);
+  }
+
+  return NS_OK;
+}
+
+/* static */ nsresult
+nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aURI,
+                                          nsISupports* aObject,
+                                          nsIPrincipal* aPrincipal)
+{
   if (!gDataTable) {
     gDataTable = new nsClassHashtable<nsCStringHashKey, DataInfo>;
   }
@@ -344,15 +435,60 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
   info->mPrincipal = aPrincipal;
   mozilla::BlobURLsReporter::GetJSStackForBlob(info);
 
-  gDataTable->Put(aUri, info);
+  gDataTable->Put(aURI, info);
   return NS_OK;
 }
 
+/* static */ bool
+nsHostObjectProtocolHandler::GetAllBlobURLEntries(nsTArray<BlobURLRegistrationData>& aRegistrations,
+                                                  ContentParent* aCP)
+{
+  MOZ_ASSERT(aCP);
+
+  if (!gDataTable) {
+    return true;
+  }
+
+  for (auto iter = gDataTable->ConstIter(); !iter.Done(); iter.Next()) {
+    DataInfo* info = iter.UserData();
+    MOZ_ASSERT(info);
+
+    nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(info->mObject);
+    if (!blobImpl) {
+      continue;
+    }
+
+    PBlobParent* blobParent = aCP->GetOrCreateActorForBlobImpl(blobImpl);
+    if (!blobParent) {
+      return false;
+    }
+
+    aRegistrations.AppendElement(
+      BlobURLRegistrationData(nsCString(iter.Key()), blobParent, nullptr,
+                              IPC::Principal(info->mPrincipal)));
+  }
+
+  return true;
+}
+
 void
-nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
+nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri,
+                                             bool aBroadcastToOtherProcesses)
 {
   if (!gDataTable) {
     return;
+  }
+
+  DataInfo* info = GetDataInfo(aUri);
+  if (!info) {
+    return;
+  }
+
+  if (aBroadcastToOtherProcesses) {
+    nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(info->mObject);
+    if (blobImpl) {
+      BroadcastBlobURLUnregistration(aUri, info);
+    }
   }
 
   gDataTable->Remove(aUri);
@@ -360,6 +496,20 @@ nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
     delete gDataTable;
     gDataTable = nullptr;
   }
+}
+
+void
+nsHostObjectProtocolHandler::RemoveDataEntries()
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  if (!gDataTable) {
+    return;
+  }
+
+  gDataTable->Clear();
+  delete gDataTable;
+  gDataTable = nullptr;
 }
 
 nsresult
@@ -396,37 +546,6 @@ nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
   aUri += Substring(chars + 1, chars + NSID_LENGTH - 2);
 
   return NS_OK;
-}
-
-static DataInfo*
-GetDataInfo(const nsACString& aUri)
-{
-  if (!gDataTable) {
-    return nullptr;
-  }
-
-  DataInfo* res;
-
-  // Let's remove any fragment and query from this URI.
-  int32_t hasFragmentPos = aUri.FindChar('#');
-  int32_t hasQueryPos = aUri.FindChar('?');
-
-  int32_t pos = -1;
-  if (hasFragmentPos >= 0 && hasQueryPos >= 0) {
-    pos = std::min(hasFragmentPos, hasQueryPos);
-  } else if (hasFragmentPos >= 0) {
-    pos = hasFragmentPos;
-  } else {
-    pos = hasQueryPos;
-  }
-
-  if (pos < 0) {
-    gDataTable->Get(aUri, &res);
-  } else {
-    gDataTable->Get(StringHead(aUri, pos), &res);
-  }
-
-  return res;
 }
 
 nsIPrincipal*
@@ -509,8 +628,13 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 
   DataInfo* info = GetDataInfo(aSpec);
 
-  RefPtr<nsHostObjectURI> uri =
-    new nsHostObjectURI(info ? info->mPrincipal.get() : nullptr);
+  RefPtr<nsHostObjectURI> uri;
+  if (info) {
+    nsCOMPtr<BlobImpl> blob = do_QueryInterface(info->mObject);
+    uri = new nsHostObjectURI(info->mPrincipal, blob);
+  } else {
+    uri = new nsHostObjectURI(nullptr, nullptr);
+  }
 
   rv = uri->SetSpec(aSpec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -528,22 +652,26 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 {
   *result = nullptr;
 
+  nsCOMPtr<nsIURIWithBlobImpl> uriBlobImpl = do_QueryInterface(uri);
+  if (!uriBlobImpl) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  nsCOMPtr<nsISupports> tmp;
+  MOZ_ALWAYS_SUCCEEDS(uriBlobImpl->GetBlobImpl(getter_AddRefs(tmp)));
+  nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(tmp);
+  if (!blobImpl) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+#ifdef DEBUG
   nsCString spec;
   uri->GetSpec(spec);
 
   DataInfo* info = GetDataInfo(spec);
 
-  if (!info) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  nsCOMPtr<BlobImpl> blob = do_QueryInterface(info->mObject);
-  if (!blob) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-#ifdef DEBUG
-  {
+  // Info can be null, in case this blob URL has been revoked already.
+  if (info) {
     nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(uri);
     nsCOMPtr<nsIPrincipal> principal;
     uriPrinc->GetPrincipal(getter_AddRefs(principal));
@@ -553,13 +681,13 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 
   ErrorResult rv;
   nsCOMPtr<nsIInputStream> stream;
-  blob->GetInternalStream(getter_AddRefs(stream), rv);
+  blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
   nsAutoString contentType;
-  blob->GetType(contentType);
+  blobImpl->GetType(contentType);
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
@@ -572,13 +700,13 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return rv.StealNSResult();
   }
 
-  if (blob->IsFile()) {
+  if (blobImpl->IsFile()) {
     nsString filename;
-    blob->GetName(filename);
+    blobImpl->GetName(filename);
     channel->SetContentDispositionFilename(filename);
   }
 
-  uint64_t size = blob->GetSize(rv);
+  uint64_t size = blobImpl->GetSize(rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
@@ -795,3 +923,4 @@ static const mozilla::Module kHostObjectProtocolHandlerModule = {
 };
 
 NSMODULE_DEFN(HostObjectProtocolHandler) = &kHostObjectProtocolHandlerModule;
+

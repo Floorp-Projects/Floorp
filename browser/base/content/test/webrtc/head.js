@@ -165,7 +165,7 @@ function promisePopupEvent(popup, eventSuffix) {
 }
 
 function promiseNotificationShown(notification) {
-  let win = notification.browser.ownerDocument.defaultView;
+  let win = notification.browser.ownerGlobal;
   if (win.PopupNotifications.panel.state == "open") {
     return Promise.resolve();
   }

@@ -37,10 +37,6 @@ class PFileDescriptorSetChild;
 class URIParams;
 }// namespace ipc
 
-namespace layers {
-class PCompositorBridgeChild;
-} // namespace layers
-
 namespace dom {
 
 class AlertObserver;
@@ -152,9 +148,8 @@ public:
   bool
   DeallocPAPZChild(PAPZChild* aActor) override;
 
-  PCompositorBridgeChild*
-  AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
-                              base::ProcessId aOtherProcess) override;
+  bool
+  RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
@@ -462,6 +457,9 @@ public:
   virtual bool
   RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig) override;
 
+  virtual bool
+  RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistations) override;
+
   virtual bool RecvLastPrivateDocShellDestroyed() override;
 
   virtual bool RecvVolumes(InfallibleTArray<VolumeInfo>&& aVolumes) override;
@@ -642,6 +640,13 @@ public:
   virtual bool
   RecvGetFilesResponse(const nsID& aUUID,
                        const GetFilesResponseResult& aResult) override;
+
+  virtual bool
+  RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
+                          const IPC::Principal& aPrincipal) override;
+
+  virtual bool
+  RecvBlobURLUnregistration(const nsCString& aURI) override;
 
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);

@@ -363,7 +363,7 @@ var FullScreen = {
         if (event.target == gBrowser) {
           browser = event.originalTarget;
         } else {
-          let topWin = event.target.ownerDocument.defaultView.top;
+          let topWin = event.target.ownerGlobal.top;
           browser = gBrowser.getBrowserForContentWindow(topWin);
         }
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");

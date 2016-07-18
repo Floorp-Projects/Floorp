@@ -68,15 +68,13 @@
   padding: 2px;
 }
 
-.devtools-autocomplete-listbox > scrollbox {
-  padding: 2px;
-}
-
 .devtools-autocomplete-listbox .autocomplete-item {
   width: 100%;
   background-color: transparent;
   border-radius: 4px;
   padding: 1px 0;
+  /* Force text-align even in RTL locales to ensure a correct display of the popup */
+  text-align: left;
 }
 
 .devtools-autocomplete-listbox .autocomplete-selected {

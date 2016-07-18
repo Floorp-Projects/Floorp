@@ -110,7 +110,6 @@ class WorkerPrivate;
 // references to it are dropped.
 
 class PromiseWorkerProxy : public PromiseNativeHandler
-                         , public workers::WorkerHolder
                          , public StructuredCloneHolderBase
 {
   friend class PromiseWorkerProxyRunnable;
@@ -185,8 +184,6 @@ protected:
   virtual void RejectedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override;
 
-  virtual bool Notify(workers::Status aStatus) override;
-
 private:
   PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
                      Promise* aWorkerPromise,
@@ -227,10 +224,7 @@ private:
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
 
-#ifdef DEBUG
-  // Maybe get rid of this entirely and rely on mCleanedUp
-  bool mWorkerHolderAdded;
-#endif
+  UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
 } // namespace dom
 } // namespace mozilla

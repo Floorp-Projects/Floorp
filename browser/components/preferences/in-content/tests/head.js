@@ -6,7 +6,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 const kDefaultWait = 2000;
 
 function is_hidden(aElement) {
-  var style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, "");
+  var style = aElement.ownerGlobal.getComputedStyle(aElement);
   if (style.display == "none")
     return true;
   if (style.visibility != "visible")
