@@ -12,6 +12,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/ipc/Transport.h"
 #include "nsIObserverService.h"
 
@@ -106,6 +107,10 @@ public:
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
 
+  // Notify the GPUProcessManager that a top-level PGPU protocol has been
+  // terminated. This may be called from any thread.
+  void NotifyRemoteActorDestroyed(const uint64_t& aProcessToken);
+
   // Returns access to the PGPU protocol if a GPU process is present.
   GPUChild* GetGPUChild() {
     return mGPUChild;
@@ -141,8 +146,11 @@ private:
 
 private:
   RefPtr<Observer> mObserver;
+  ipc::TaskFactory<GPUProcessManager> mTaskFactory;
   uint64_t mNextLayerTreeId;
+
   GPUProcessHost* mProcess;
+  uint64_t mProcessToken;
   GPUChild* mGPUChild;
 };
 
