@@ -243,18 +243,11 @@ HTMLIFrameElement::GetSandboxFlags()
 
   //  Start off by setting all the restriction flags.
   uint32_t out = SANDBOX_ALL_FLAGS;
-
-// Macro for updating the flag according to the keywords
+  // Macro for updating the flag according to the keywords
 #define SANDBOX_KEYWORD(string, atom, flags)                             \
   if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
 #include "IframeSandboxKeywordList.h"
 #undef SANDBOX_KEYWORD
-
-  if (GetParsedAttr(nsGkAtoms::allowfullscreen) ||
-      GetParsedAttr(nsGkAtoms::mozallowfullscreen)) {
-    out &= ~SANDBOXED_FULLSCREEN;
-  }
-
   return out;
 }
 
