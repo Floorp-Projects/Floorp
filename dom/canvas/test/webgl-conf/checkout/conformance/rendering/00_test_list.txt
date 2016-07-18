@@ -1,6 +1,8 @@
 --min-version 1.0.2 culling.html
+--min-version 1.0.4 default-texture-draw-bug.html
 draw-arrays-out-of-bounds.html
 draw-elements-out-of-bounds.html
+--min-version 1.0.4 draw-with-changing-start-vertex-bug.html
 --min-version 1.0.3 framebuffer-switch.html
 --min-version 1.0.3 framebuffer-texture-switch.html
 gl-clear.html
@@ -16,6 +18,7 @@ multisample-corruption.html
 --min-version 1.0.3 negative-one-index.html
 --min-version 1.0.3 point-no-attributes.html
 point-size.html
+--min-version 1.0.4 point-specific-shader-variables.html
 --min-version 1.0.3 point-with-gl-pointcoord-in-fragment-shader.html
 --min-version 1.0.3 polygon-offset.html
 --min-version 1.0.2 simple.html

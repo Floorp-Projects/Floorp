@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 
 /*
 ** Copyright (c) 2013 The Khronos Group Inc.
@@ -30,8 +30,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 <title>WebGL WEBGL_compressed_texture_atc Conformance Tests</title>
 <style>
 img {
@@ -114,6 +114,7 @@ var img_8x8_rgba_atc_interpolated = new Uint8Array([
 ]);
 
 var wtu = WebGLTestUtils;
+var contextVersion = wtu.getDefault3DContextVersion();
 var canvas = document.getElementById("canvas");
 var gl = wtu.create3DContext(canvas, {antialias: false});
 var program = wtu.setupTexturedQuad(gl);
@@ -169,7 +170,12 @@ function runSupportedTest(extensionEnabled) {
 function runTestDisabled() {
     debug("Testing binding enum with extension disabled");
 
-    shouldBe('gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS)', '[]');
+    supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
+    if (contextVersion < 2) {
+        shouldBe("supportedFormats", "[]");
+    } else {
+        shouldBe("supportedFormats.length", "10");
+    }
 }
 
 function formatExists(format, supportedFormats) {
@@ -202,8 +208,12 @@ function runTestExtension() {
     }
 
     supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-    // There should be exactly 3 formats
-    shouldBe("supportedFormats.length", "3");
+    // There should be exactly 3 formats for WebGL 1.0 and 13 formats for WebGL 2.0.
+    if (contextVersion < 2) {
+        shouldBe("supportedFormats.length", "3");
+    } else {
+        shouldBe("supportedFormats.length", "13");
+    }
 
     // check that all 3 formats exist
     for (var name in validFormats.length) {
@@ -306,7 +316,12 @@ function testACTTexture(test) {
     gl.generateMipmap(gl.TEXTURE_2D);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "trying to generate mipmaps from compressed texture");
     wtu.clearAndDrawUnitQuad(gl);
-    compareRect(width, height, test.channels, width, height, uncompressedData, data, format);
+    compareRect(width, height, test.channels, width, height, uncompressedData, data, format, undefined, "NEAREST");
+    // Test again with linear filtering.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    wtu.clearAndDrawUnitQuad(gl);
+    compareRect(width, height, test.channels, width, height, uncompressedData, data, format, undefined, "LINEAR");
 
     gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width + 4, height, 0, data);
     wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
@@ -365,7 +380,7 @@ function makeImage(imageWidth, imageHeight, dataWidth, data, alpha) {
 function compareRect(
         actualWidth, actualHeight, actualChannels,
         dataWidth, dataHeight, expectedData,
-        testData, testFormat, tolerance) {
+        testData, testFormat, tolerance, filteringMode) {
     if(typeof(tolerance) == 'undefined') { tolerance = 5; }
     var actual = new Uint8Array(actualWidth * actualHeight * 4);
     gl.readPixels(
@@ -407,14 +422,14 @@ function compareRect(
         }
     }
     if (!failed) {
-        testPassed("texture rendered correctly");
+        testPassed("texture rendered correctly with " + filteringMode + " filtering");
     }
 }
 
 debug("");
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 
 </body>
 </html>
