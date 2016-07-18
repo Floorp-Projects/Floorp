@@ -494,15 +494,15 @@ JS_GetCurrentEmbedderTime()
 }
 
 JS_PUBLIC_API(void*)
-JS_GetRuntimePrivate(JSRuntime* rt)
+JS_GetContextPrivate(JSContext* cx)
 {
-    return rt->data;
+    return cx->data;
 }
 
 JS_PUBLIC_API(void)
-JS_SetRuntimePrivate(JSRuntime* rt, void* data)
+JS_SetContextPrivate(JSContext* cx, void* data)
 {
-    rt->data = data;
+    cx->data = data;
 }
 
 JS_PUBLIC_API(void)

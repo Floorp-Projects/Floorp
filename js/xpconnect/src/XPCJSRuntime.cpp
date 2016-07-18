@@ -1665,9 +1665,9 @@ XPCJSRuntime::~XPCJSRuntime()
     if (mCallContext)
         mCallContext->SystemIsBeingShutDown();
 
-    auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetRuntimePrivate(Runtime()));
+    auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetContextPrivate(Context()));
     delete rtPrivate;
-    JS_SetRuntimePrivate(Runtime(), nullptr);
+    JS_SetContextPrivate(Context(), nullptr);
 
     // clean up and destroy maps...
     mWrappedJSMap->ShutdownMarker();
@@ -3459,9 +3459,9 @@ XPCJSRuntime::Initialize()
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
 
-    auto rtPrivate = new PerThreadAtomCache();
-    memset(rtPrivate, 0, sizeof(PerThreadAtomCache));
-    JS_SetRuntimePrivate(runtime, rtPrivate);
+    auto cxPrivate = new PerThreadAtomCache();
+    memset(cxPrivate, 0, sizeof(PerThreadAtomCache));
+    JS_SetContextPrivate(cx, cxPrivate);
 
     // Unconstrain the runtime's threshold on nominal heap size, to avoid
     // triggering GC too often if operating continuously near an arbitrary

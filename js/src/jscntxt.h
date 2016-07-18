@@ -382,6 +382,9 @@ struct JSContext : public js::ExclusiveContext,
     /* State for object and array toSource conversion. */
     js::AutoCycleDetector::Set cycleDetectorSet;
 
+    /* Client opaque pointer. */
+    void* data;
+
   public:
 
     /*
