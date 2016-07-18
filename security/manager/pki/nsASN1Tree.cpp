@@ -87,7 +87,6 @@ nsNSSASN1Tree::InitChildsRecursively(myNode* n)
 
   myNode *walk = nullptr;
   myNode *prev = nullptr;
-  nsCOMPtr<nsISupports> isupports;
   for (uint32_t i = 0; i < numObjects; i++) {
     if (0 == i) {
       n->child = walk = new myNode;
