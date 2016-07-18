@@ -1295,7 +1295,9 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
 
         # Conditional exposure makes no sense for interfaces with no
         # interface object, unless they're navigator properties.
-        if (self.isExposedConditionally() and
+        # And SecureContext makes sense for interfaces with no interface object,
+        # since it is also propagated to interface members.
+        if (self.isExposedConditionally(exclusions=["SecureContext"]) and
             not self.hasInterfaceObject() and
             not self.isNavigatorProperty()):
             raise WebIDLError("Interface with no interface object is "
@@ -1533,8 +1535,8 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                                     "SecureContext",
                                     "CheckAnyPermissions",
                                     "CheckAllPermissions" ]
-    def isExposedConditionally(self):
-        return any(self.getExtendedAttribute(a) for a in self.conditionExtendedAttributes)
+    def isExposedConditionally(self, exclusions=[]):
+        return any(((not a in exclusions) and self.getExtendedAttribute(a)) for a in self.conditionExtendedAttributes)
 
 class IDLInterface(IDLInterfaceOrNamespace):
     def __init__(self, location, parentScope, name, parent, members,

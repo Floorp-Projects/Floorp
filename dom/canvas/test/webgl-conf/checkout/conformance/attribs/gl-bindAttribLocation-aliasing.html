@@ -27,8 +27,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 <title>bindAttribLocation with aliasing</title>
 </head>
 <body>
@@ -49,7 +49,7 @@ description("This test verifies combinations of valid, active attribute types ca
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("canvas");
 var gl = wtu.create3DContext(canvas, {antialias: false});
-var glFragmentShader = wtu.setupSimpleColorFragmentShader(gl);
+var glFragmentShader = wtu.loadShader(gl, wtu.simpleColorFragmentShader, gl.FRAGMENT_SHADER);
 var typeInfo = [
     { type: 'float',    asVec4: 'vec4(0.0, $(var), 0.0, 1.0)' },
     { type: 'vec2',     asVec4: 'vec4($(var), 0.0, 1.0)' },
@@ -85,6 +85,6 @@ typeInfo.forEach(function(typeInfo1) {
 });
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>
