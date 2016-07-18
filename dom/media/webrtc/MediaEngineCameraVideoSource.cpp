@@ -53,23 +53,26 @@ MediaEngineCameraVideoSource::GetCapability(size_t aIndex,
 }
 
 uint32_t
-MediaEngineCameraVideoSource::GetFitnessDistance(
-    const webrtc::CaptureCapability& aCandidate,
-    const NormalizedConstraintSet &aConstraints,
-    const nsString& aDeviceId)
+MediaEngineCameraVideoSource::GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
+                                                 const MediaTrackConstraintSet &aConstraints,
+                                                 bool aAdvanced,
+                                                 const nsString& aDeviceId)
 {
   // Treat width|height|frameRate == 0 on capability as "can do any".
   // This allows for orthogonal capabilities that are not in discrete steps.
 
   uint64_t distance =
-    uint64_t(FitnessDistance(aDeviceId, aConstraints.mDeviceId)) +
-    uint64_t(FitnessDistance(mFacingMode, aConstraints.mFacingMode)) +
+    uint64_t(FitnessDistance(aDeviceId, aConstraints.mDeviceId, aAdvanced)) +
+    uint64_t(FitnessDistance(mFacingMode, aConstraints.mFacingMode, aAdvanced)) +
     uint64_t(aCandidate.width? FitnessDistance(int32_t(aCandidate.width),
-                                               aConstraints.mWidth) : 0) +
+                                               aConstraints.mWidth,
+                                               aAdvanced) : 0) +
     uint64_t(aCandidate.height? FitnessDistance(int32_t(aCandidate.height),
-                                                aConstraints.mHeight) : 0) +
+                                                aConstraints.mHeight,
+                                                aAdvanced) : 0) +
     uint64_t(aCandidate.maxFPS? FitnessDistance(double(aCandidate.maxFPS),
-                                                aConstraints.mFrameRate) : 0);
+                                                aConstraints.mFrameRate,
+                                                aAdvanced) : 0);
   return uint32_t(std::min(distance, uint64_t(UINT32_MAX)));
 }
 
@@ -115,12 +118,11 @@ MediaEngineCameraVideoSource::GetBestFitnessDistance(
 
   bool first = true;
   for (const MediaTrackConstraintSet* cs : aConstraintSets) {
-    NormalizedConstraintSet ns(*cs, !first);
     for (size_t i = 0; i < candidateSet.Length();  ) {
       auto& candidate = candidateSet[i];
       webrtc::CaptureCapability cap;
       GetCapability(candidate.mIndex, cap);
-      uint32_t distance = GetFitnessDistance(cap, ns, aDeviceId);
+      uint32_t distance = GetFitnessDistance(cap, *cs, !first, aDeviceId);
       if (distance == UINT32_MAX) {
         candidateSet.RemoveElementAt(i);
       } else {
@@ -141,9 +143,9 @@ MediaEngineCameraVideoSource::GetBestFitnessDistance(
 
 void
 MediaEngineCameraVideoSource::LogConstraints(
-    const NormalizedConstraintSet& aConstraints)
+    const MediaTrackConstraintSet& aConstraints, bool aAdvanced)
 {
-  auto& c = aConstraints;
+  NormalizedConstraintSet c(aConstraints, aAdvanced);
   LOG(((c.mWidth.mIdeal.isSome()?
         "Constraints: width: { min: %d, max: %d, ideal: %d }" :
         "Constraints: width: { min: %d, max: %d }"),
@@ -206,7 +208,7 @@ MediaEngineCameraVideoSource::LogCapability(const char* aHeader,
 
 bool
 MediaEngineCameraVideoSource::ChooseCapability(
-    const NormalizedConstraints &aConstraints,
+    const MediaTrackConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId)
 {
@@ -214,11 +216,11 @@ MediaEngineCameraVideoSource::ChooseCapability(
     LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
          aPrefs.GetWidth(), aPrefs.GetHeight(),
          aPrefs.mFPS, aPrefs.mMinFPS));
-    LogConstraints(aConstraints);
-    if (aConstraints.mAdvanced.Length()) {
-      LOG(("Advanced array[%u]:", aConstraints.mAdvanced.Length()));
-      for (auto& advanced : aConstraints.mAdvanced) {
-        LogConstraints(advanced);
+    LogConstraints(aConstraints, false);
+    if (aConstraints.mAdvanced.WasPassed()) {
+      LOG(("Advanced array[%u]:", aConstraints.mAdvanced.Value().Length()));
+      for (auto& advanced : aConstraints.mAdvanced.Value()) {
+        LogConstraints(advanced, true);
       }
     }
   }
@@ -236,7 +238,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
     auto& candidate = candidateSet[i];
     webrtc::CaptureCapability cap;
     GetCapability(candidate.mIndex, cap);
-    candidate.mDistance = GetFitnessDistance(cap, aConstraints, aDeviceId);
+    candidate.mDistance = GetFitnessDistance(cap, aConstraints, false, aDeviceId);
     LogCapability("Capability", cap, candidate.mDistance);
     if (candidate.mDistance == UINT32_MAX) {
       candidateSet.RemoveElementAt(i);
@@ -247,21 +249,23 @@ MediaEngineCameraVideoSource::ChooseCapability(
 
   // Filter further with all advanced constraints (that don't overconstrain).
 
-  for (const auto &cs : aConstraints.mAdvanced) {
-    CapabilitySet rejects;
-    for (size_t i = 0; i < candidateSet.Length();) {
-      auto& candidate = candidateSet[i];
-      webrtc::CaptureCapability cap;
-      GetCapability(candidate.mIndex, cap);
-      if (GetFitnessDistance(cap, cs, aDeviceId) == UINT32_MAX) {
-        rejects.AppendElement(candidate);
-        candidateSet.RemoveElementAt(i);
-      } else {
-        ++i;
+  if (aConstraints.mAdvanced.WasPassed()) {
+    for (const MediaTrackConstraintSet &cs : aConstraints.mAdvanced.Value()) {
+      CapabilitySet rejects;
+      for (size_t i = 0; i < candidateSet.Length();) {
+        auto& candidate = candidateSet[i];
+        webrtc::CaptureCapability cap;
+        GetCapability(candidate.mIndex, cap);
+        if (GetFitnessDistance(cap, cs, true, aDeviceId) == UINT32_MAX) {
+          rejects.AppendElement(candidate);
+          candidateSet.RemoveElementAt(i);
+        } else {
+          ++i;
+        }
       }
-    }
-    if (!candidateSet.Length()) {
-      candidateSet.AppendElements(Move(rejects));
+      if (!candidateSet.Length()) {
+        candidateSet.AppendElements(Move(rejects));
+      }
     }
   }
   if (!candidateSet.Length()) {
@@ -281,12 +285,11 @@ MediaEngineCameraVideoSource::ChooseCapability(
     prefs.mWidth.SetAsLong() = aPrefs.GetWidth();
     prefs.mHeight.SetAsLong() = aPrefs.GetHeight();
     prefs.mFrameRate.SetAsDouble() = aPrefs.mFPS;
-    NormalizedConstraintSet normPrefs(prefs, false);
 
     for (auto& candidate : candidateSet) {
       webrtc::CaptureCapability cap;
       GetCapability(candidate.mIndex, cap);
-      candidate.mDistance = GetFitnessDistance(cap, normPrefs, aDeviceId);
+      candidate.mDistance = GetFitnessDistance(cap, prefs, false, aDeviceId);
     }
     TrimLessFitCandidates(candidateSet);
   }
