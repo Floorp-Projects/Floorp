@@ -21,6 +21,7 @@ class nsIRunnable;
 
 BEGIN_QUOTA_NAMESPACE
 
+class QuotaManager;
 class UsageInfo;
 
 // An abstract interface for quota manager clients.
@@ -126,6 +127,15 @@ public:
 
   virtual void
   ShutdownWorkThreads() = 0;
+
+  // Methods which are called on the main thread.
+  virtual void
+  DidInitialize(QuotaManager* aQuotaManager)
+  { }
+
+  virtual void
+  WillShutdown()
+  { }
 
 protected:
   virtual ~Client()
