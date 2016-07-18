@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for getRepeatId()</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for render perf</p>
+<div id="output"></div>
+
+<script type="text/javascript;version=1.8">
+const testPackets = [];
+const numMessages = 1000;
+for (let id = 0; id < numMessages; id++) {
+  testPackets.push({
+    "from": "server1.conn4.child1/consoleActor2",
+    "type": "consoleAPICall",
+    "message": {
+      "arguments": [
+        "foobar",
+        "test",
+        id
+      ],
+      "columnNumber": 1,
+      "counter": null,
+      "filename": "file:///test.html",
+      "functionName": "",
+      "groupName": "",
+      "level": "log",
+      "lineNumber": 1,
+      "private": false,
+      "styles": [],
+      "timeStamp": 1455064271115 + id,
+      "timer": null,
+      "workerType": "none",
+      "category": "webdev"
+    }
+  });
+}
+window.onload = Task.async(function* () {
+  const NewConsoleOutputWrapper = browserRequire("devtools/client/webconsole/new-console-output/new-console-output-wrapper");
+  const wrapper = new NewConsoleOutputWrapper(document.querySelector("#output"), {});
+  let start = performance.now();
+  testPackets.forEach((message) => {
+    wrapper.dispatchMessageAdd(message);
+  });
+  let elapsed = performance.now() - start;
+  info("took " + elapsed / 1000 + " seconds");
+  ok(true, "Yay, it didn't time out!");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
