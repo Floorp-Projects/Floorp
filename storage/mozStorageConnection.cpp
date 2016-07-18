@@ -472,7 +472,8 @@ private:
 
 Connection::Connection(Service *aService,
                        int aFlags,
-                       bool aAsyncOnly)
+                       bool aAsyncOnly,
+                       bool aIgnoreLockingMode)
 : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
 , sharedDBMutex("Connection::sharedDBMutex")
 , threadOpenedOn(do_GetCurrentThread())
@@ -485,9 +486,12 @@ Connection::Connection(Service *aService,
 , mTransactionInProgress(false)
 , mProgressHandler(nullptr)
 , mFlags(aFlags)
+, mIgnoreLockingMode(aIgnoreLockingMode)
 , mStorageService(aService)
 , mAsyncOnly(aAsyncOnly)
 {
+  MOZ_ASSERT(!mIgnoreLockingMode || mFlags & SQLITE_OPEN_READONLY,
+             "Can't ignore locking for a non-readonly connection!");
   mStorageService->registerConnection(this);
 }
 
@@ -577,6 +581,7 @@ nsresult
 Connection::initialize()
 {
   NS_ASSERTION (!mDBConn, "Initialize called on already opened database!");
+  MOZ_ASSERT(!mIgnoreLockingMode, "Can't ignore locking on an in-memory db.");
   PROFILER_LABEL("mozStorageConnection", "initialize",
     js::ProfileEntry::Category::STORAGE);
 
@@ -610,8 +615,15 @@ Connection::initialize(nsIFile *aDatabaseFile)
   nsresult rv = aDatabaseFile->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef XP_WIN
+  static const char* sIgnoreLockingVFS = "win32-none";
+#else
+  static const char* sIgnoreLockingVFS = "unix-none";
+#endif
+  const char* vfs = mIgnoreLockingMode ? sIgnoreLockingVFS : nullptr;
+
   int srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, nullptr);
+                              mFlags, vfs);
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     return convertResultCode(srv);
