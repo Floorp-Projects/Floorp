@@ -920,5 +920,3 @@ pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward 
 
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);
-
-pref("media.openUnsupportedTypeWithExternalApp", true);
