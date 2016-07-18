@@ -12083,17 +12083,21 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mClip->mValue.SetIntValue(NS_STYLE_IMAGELAYER_CLIP_BORDER,
                                    eCSSUnit_Enumerated);
 
-  aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
-                                      eCSSUnit_Enumerated);
-  aState.mRepeat->mYValue.Reset();
+
+
 
   if (eCSSProperty_mask == aTable[nsStyleImageLayers::shorthand]) {
     aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_BORDER,
                                        eCSSUnit_Enumerated);
+    aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT,
+                                        eCSSUnit_Enumerated);
   } else {
     aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_PADDING,
                                        eCSSUnit_Enumerated);
+    aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
+                                        eCSSUnit_Enumerated);
   }
+  aState.mRepeat->mYValue.Reset();
 
   RefPtr<nsCSSValue::Array> positionXArr = nsCSSValue::Array::Create(2);
   RefPtr<nsCSSValue::Array> positionYArr = nsCSSValue::Array::Create(2);
