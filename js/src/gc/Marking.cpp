@@ -2099,33 +2099,46 @@ js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
     }
 }
 
-void
-js::gc::StoreBuffer::traceWholeCell(TenuringTracer& mover, JS::TraceKind kind, Cell* edge)
+static inline void
+TraceWholeCell(TenuringTracer& mover, JSObject* object)
 {
-    MOZ_ASSERT(edge->isTenured());
-    if (kind == JS::TraceKind::Object) {
-        JSObject *object = static_cast<JSObject*>(edge);
-        mover.traceObject(object);
+    mover.traceObject(object);
 
-        // Additionally trace the expando object attached to any unboxed plain
-        // objects. Baseline and Ion can write properties to the expando while
-        // only adding a post barrier to the owning unboxed object. Note that
-        // it isn't possible for a nursery unboxed object to have a tenured
-        // expando, so that adding a post barrier on the original object will
-        // capture any tenured->nursery edges in the expando as well.
-        if (object->is<UnboxedPlainObject>()) {
-            if (UnboxedExpandoObject* expando = object->as<UnboxedPlainObject>().maybeExpando())
-                expando->traceChildren(&mover);
-        }
+    // Additionally trace the expando object attached to any unboxed plain
+    // objects. Baseline and Ion can write properties to the expando while
+    // only adding a post barrier to the owning unboxed object. Note that
+    // it isn't possible for a nursery unboxed object to have a tenured
+    // expando, so that adding a post barrier on the original object will
+    // capture any tenured->nursery edges in the expando as well.
 
-        return;
+    if (object->is<UnboxedPlainObject>()) {
+        if (UnboxedExpandoObject* expando = object->as<UnboxedPlainObject>().maybeExpando())
+            expando->traceChildren(&mover);
     }
-    if (kind == JS::TraceKind::Script)
-        static_cast<JSScript*>(edge)->traceChildren(&mover);
-    else if (kind == JS::TraceKind::JitCode)
-        static_cast<jit::JitCode*>(edge)->traceChildren(&mover);
-    else
-        MOZ_CRASH();
+}
+
+static inline void
+TraceWholeCell(TenuringTracer& mover, JSScript* script)
+{
+    script->traceChildren(&mover);
+}
+
+static inline void
+TraceWholeCell(TenuringTracer& mover, jit::JitCode* jitcode)
+{
+    jitcode->traceChildren(&mover);
+}
+
+template <typename T>
+static void
+TraceBufferedCells(TenuringTracer& mover, Arena* arena, ArenaCellSet* cells)
+{
+    for (size_t i = 0; i < ArenaCellCount; i++) {
+        if (cells->hasCell(i)) {
+            auto cell = reinterpret_cast<T*>(uintptr_t(arena) + CellSize * i);
+            TraceWholeCell(mover, cell);
+        }
+    }
 }
 
 void
@@ -2138,11 +2151,18 @@ js::gc::StoreBuffer::traceWholeCells(TenuringTracer& mover)
         arena->bufferedCells = &ArenaCellSet::Empty;
 
         JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
-        for (size_t i = 0; i < ArenaCellCount; i++) {
-            if (cells->hasCell(i)) {
-                auto cell = reinterpret_cast<Cell*>(uintptr_t(arena) + CellSize * i);
-                traceWholeCell(mover, kind, cell);
-            }
+        switch (kind) {
+          case JS::TraceKind::Object:
+            TraceBufferedCells<JSObject>(mover, arena, cells);
+            break;
+          case JS::TraceKind::Script:
+            TraceBufferedCells<JSScript>(mover, arena, cells);
+            break;
+          case JS::TraceKind::JitCode:
+            TraceBufferedCells<jit::JitCode>(mover, arena, cells);
+            break;
+          default:
+            MOZ_CRASH("Unexpected trace kind");
         }
     }
 
