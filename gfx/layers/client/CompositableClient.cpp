@@ -160,6 +160,9 @@ CompositableClient::Destroy()
     return;
   }
 
+  if (mTextureClientRecycler) {
+    mTextureClientRecycler->Destroy();
+  }
   mCompositableChild->mCompositableClient = nullptr;
   mCompositableChild->Destroy(mForwarder);
   mCompositableChild = nullptr;

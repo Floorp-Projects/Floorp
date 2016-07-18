@@ -114,6 +114,7 @@ TextureClientRecycleAllocator::TextureClientRecycleAllocator(CompositableForward
   : mSurfaceAllocator(aAllocator)
   , mMaxPooledSize(kMaxPooledSized)
   , mLock("TextureClientRecycleAllocatorImp.mLock")
+  , mIsDestroyed(false)
 {
 }
 
@@ -164,6 +165,9 @@ TextureClientRecycleAllocator::CreateOrRecycle(ITextureClientAllocationHelper& a
 
   {
     MutexAutoLock lock(mLock);
+    if (mIsDestroyed) {
+      return nullptr;
+    }
     if (!mPooledClients.empty()) {
       textureHolder = mPooledClients.top();
       mPooledClients.pop();
@@ -224,6 +228,16 @@ TextureClientRecycleAllocator::ShrinkToMinimumSize()
 }
 
 void
+TextureClientRecycleAllocator::Destroy()
+{
+  MutexAutoLock lock(mLock);
+  while (!mPooledClients.empty()) {
+    mPooledClients.pop();
+  }
+  mIsDestroyed = true;
+}
+
+void
 TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
 {
   // Clearing the recycle allocator drops a reference, so make sure we stay alive
@@ -236,7 +250,7 @@ TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
     MutexAutoLock lock(mLock);
     if (mInUseClients.find(aClient) != mInUseClients.end()) {
       textureHolder = mInUseClients[aClient]; // Keep reference count of TextureClientHolder within lock.
-      if (mPooledClients.size() < mMaxPooledSize) {
+      if (!mIsDestroyed && mPooledClients.size() < mMaxPooledSize) {
         mPooledClients.push(textureHolder);
       }
       mInUseClients.erase(aClient);
