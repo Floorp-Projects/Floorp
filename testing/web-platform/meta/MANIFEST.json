@@ -36403,6 +36403,18 @@
             "url": "/fetch/api/basic/request-referrer.html"
           }
         ],
+        "fetch/api/policies/referrer-origin-when-cross-origin-worker.html": [
+          {
+            "path": "fetch/api/policies/referrer-origin-when-cross-origin-worker.html",
+            "url": "/fetch/api/policies/referrer-origin-when-cross-origin-worker.html"
+          }
+        ],
+        "fetch/api/policies/referrer-origin-when-cross-origin.html": [
+          {
+            "path": "fetch/api/policies/referrer-origin-when-cross-origin.html",
+            "url": "/fetch/api/policies/referrer-origin-when-cross-origin.html"
+          }
+        ],
         "service-workers/service-worker/client-navigate.https.html": [
           {
             "path": "service-workers/service-worker/client-navigate.https.html",
