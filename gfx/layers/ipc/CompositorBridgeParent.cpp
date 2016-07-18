@@ -1904,6 +1904,13 @@ public:
     SetMessageLoopToPostDestructionTo(MessageLoop::current());
   }
 
+  void Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint) {
+    if (!aEndpoint.Bind(this, nullptr)) {
+      return;
+    }
+    mSelfRef = this;
+  }
+
   // IToplevelProtocol::CloneToplevel()
   virtual IToplevelProtocol*
   CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
@@ -2233,29 +2240,22 @@ CompositorBridgeParent::ResetCompositorImpl(const nsTArray<LayersBackend>& aBack
 }
 
 static void
-OpenCompositor(CrossProcessCompositorBridgeParent* aCompositor,
-               Transport* aTransport, ProcessId aOtherPid,
-               MessageLoop* aIOLoop)
+OpenCompositor(RefPtr<CrossProcessCompositorBridgeParent> aCompositor,
+               Endpoint<PCompositorBridgeParent>&& aEndpoint)
 {
-  DebugOnly<bool> ok = aCompositor->Open(aTransport, aOtherPid, aIOLoop);
-  MOZ_ASSERT(ok);
+  aCompositor->Bind(Move(aEndpoint));
 }
 
-/*static*/ PCompositorBridgeParent*
-CompositorBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid)
+/* static */ bool
+CompositorBridgeParent::CreateForContent(Endpoint<PCompositorBridgeParent>&& aEndpoint)
 {
   gfxPlatform::InitLayersIPC();
 
   RefPtr<CrossProcessCompositorBridgeParent> cpcp =
     new CrossProcessCompositorBridgeParent();
 
-  cpcp->mSelfRef = cpcp;
-  CompositorLoop()->PostTask(
-    NewRunnableFunction(OpenCompositor, cpcp.get(),
-                        aTransport, aOtherPid, XRE_GetIOMessageLoop()));
-  // The return value is just compared to null for success checking,
-  // we're not sharing a ref.
-  return cpcp.get();
+  CompositorLoop()->PostTask(NewRunnableFunction(OpenCompositor, cpcp, Move(aEndpoint)));
+  return true;
 }
 
 static void
@@ -2826,20 +2826,7 @@ CrossProcessCompositorBridgeParent::CloneToplevel(
   base::ProcessHandle aPeerProcess,
   mozilla::ipc::ProtocolCloneContext* aCtx)
 {
-  for (unsigned int i = 0; i < aFds.Length(); i++) {
-    if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
-      UniquePtr<Transport> transport =
-        OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
-      PCompositorBridgeParent* compositor =
-        CompositorBridgeParent::Create(transport.get(), base::GetProcId(aPeerProcess));
-      compositor->CloneManagees(this, aCtx);
-      compositor->IToplevelProtocol::SetTransport(Move(transport));
-      // The reference to the compositor thread is held in OnChannelConnected().
-      // We need to do this for cloned actors, too.
-      compositor->OnChannelConnected(base::GetProcId(aPeerProcess));
-      return compositor;
-    }
-  }
+  MOZ_ASSERT_UNREACHABLE("Not supported");
   return nullptr;
 }
 

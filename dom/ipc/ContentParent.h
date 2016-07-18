@@ -66,7 +66,6 @@ class PJavaScriptParent;
 } // namespace jsipc
 
 namespace layers {
-class PCompositorBridgeParent;
 class PSharedBufferManagerParent;
 struct TextureFactoryIdentifier;
 } // namespace layers
@@ -727,10 +726,6 @@ private:
   AllocPAPZParent(const TabId& aTabId) override;
   bool
   DeallocPAPZParent(PAPZParent* aActor) override;
-
-  PCompositorBridgeParent*
-  AllocPCompositorBridgeParent(mozilla::ipc::Transport* aTransport,
-                               base::ProcessId aOtherProcess) override;
 
   PImageBridgeParent*
   AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,

@@ -167,16 +167,16 @@ CompositorBridgeChild::LookupCompositorFrameMetrics(const FrameMetrics::ViewID a
   return false;
 }
 
-/*static*/ PCompositorBridgeChild*
-CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
+/* static */ bool
+CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint)
 {
   // There's only one compositor per child process.
   MOZ_ASSERT(!sCompositorBridge);
 
   RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr));
-  if (!child->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(), ipc::ChildSide)) {
+  if (!aEndpoint.Bind(child, nullptr)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return nullptr;
+    return false;
   }
 
   child->mCanSend = true;
@@ -188,8 +188,7 @@ CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
   int32_t height;
   sCompositorBridge->SendGetTileSize(&width, &height);
   gfxPlatform::GetPlatform()->SetTileSize(width, height);
-
-  return sCompositorBridge;
+  return true;
 }
 
 CompositorBridgeParent*

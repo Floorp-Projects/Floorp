@@ -37,10 +37,6 @@ class PFileDescriptorSetChild;
 class URIParams;
 }// namespace ipc
 
-namespace layers {
-class PCompositorBridgeChild;
-} // namespace layers
-
 namespace dom {
 
 class AlertObserver;
@@ -152,9 +148,8 @@ public:
   bool
   DeallocPAPZChild(PAPZChild* aActor) override;
 
-  PCompositorBridgeChild*
-  AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
-                              base::ProcessId aOtherProcess) override;
+  bool
+  RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,

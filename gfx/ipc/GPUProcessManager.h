@@ -12,9 +12,11 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/ipc/Transport.h"
 #include "nsIObserverService.h"
+
 
 namespace mozilla {
 namespace layers {
@@ -22,6 +24,7 @@ class APZCTreeManager;
 class CompositorSession;
 class ClientLayerManager;
 class CompositorUpdateObserver;
+class PCompositorBridgeChild;
 class PCompositorBridgeParent;
 } // namespace layers
 namespace widget {
@@ -47,6 +50,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener
   typedef layers::ClientLayerManager ClientLayerManager;
   typedef layers::CompositorSession CompositorSession;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
+  typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
 
 public:
   static void Initialize();
@@ -71,9 +75,8 @@ public:
     bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize);
 
-  layers::PCompositorBridgeParent* CreateTabCompositorBridge(
-    ipc::Transport* aTransport,
-    base::ProcessId aOtherProcess);
+  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.

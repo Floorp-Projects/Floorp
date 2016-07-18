@@ -6,6 +6,7 @@
 #include "GPUProcessManager.h"
 #include "GPUProcessHost.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -275,11 +276,28 @@ GPUProcessManager::CreateRemoteSession(nsIWidget* aWidget,
 #endif
 }
 
-PCompositorBridgeParent*
-GPUProcessManager::CreateTabCompositorBridge(ipc::Transport* aTransport,
-                                             base::ProcessId aOtherProcess)
+bool
+GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                                 ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint)
 {
-  return CompositorBridgeParent::Create(aTransport, aOtherProcess);
+  ipc::Endpoint<PCompositorBridgeParent> parentPipe;
+  ipc::Endpoint<PCompositorBridgeChild> childPipe;
+
+  nsresult rv = PCompositorBridge::CreateEndpoints(
+    base::GetCurrentProcId(),
+    aOtherProcess,
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Could not create content compositor bridge: " << hexa(int(rv));
+    return false;
+  }
+
+  if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
+    return false;
+
+  *aOutEndpoint = Move(childPipe);
+  return true;
 }
 
 already_AddRefed<APZCTreeManager>
