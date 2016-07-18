@@ -19,14 +19,27 @@ if CONFIG['MOZ_ALSA']:
     ]
     DEFINES['USE_ALSA'] = True
 
+if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['MOZ_JACK']:
+    SOURCES += [
+        'cubeb_resampler.cpp',
+    ]
+
 if CONFIG['MOZ_PULSEAUDIO']:
     SOURCES += [
         'cubeb_pulse.c',
-        'cubeb_resampler.cpp' # for tests
     ]
     DEFINES['USE_PULSE'] = True
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         DEFINES['DISABLE_LIBPULSE_DLOPEN'] = True
+
+if CONFIG['MOZ_JACK']:
+    SOURCES += [
+        'cubeb_jack.cpp',
+    ]
+    USE_LIBS += [
+        'speex',
+    ]
+    DEFINES['USE_JACK'] = True
 
 if CONFIG['OS_ARCH'] == 'OpenBSD':
     SOURCES += [
