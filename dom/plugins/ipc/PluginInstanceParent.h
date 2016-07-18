@@ -333,7 +333,6 @@ public:
 #if defined(XP_WIN)
     nsresult SetScrollCaptureId(uint64_t aScrollCaptureId);
     nsresult GetScrollCaptureContainer(mozilla::layers::ImageContainer** aContainer);
-    nsresult UpdateScrollState(bool aIsScrolling);
 #endif
     void DidComposite();
 
