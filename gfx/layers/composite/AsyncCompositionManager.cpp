@@ -1106,6 +1106,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
 
   const FrameMetrics& metrics = aContent.Metrics();
   AsyncPanZoomController* apzc = aContent.GetApzc();
+  MOZ_RELEASE_ASSERT(apzc);
 
   AsyncTransformComponentMatrix asyncTransform =
     apzc->GetCurrentAsyncTransform(AsyncPanZoomController::RESPECT_FORCE_DISABLE);

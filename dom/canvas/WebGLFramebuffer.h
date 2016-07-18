@@ -38,7 +38,7 @@ private:
     WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
     TexImageTarget mTexImageTarget;
     GLint mTexImageLayer;
-    GLint mTexImageLevel;
+    uint32_t mTexImageLevel;
 
     // PlacementArray needs a default constructor.
     template<typename T>
@@ -89,7 +89,7 @@ public:
     GLint Layer() const {
         return mTexImageLayer;
     }
-    GLint MipLevel() const {
+    uint32_t MipLevel() const {
         return mTexImageLevel;
     }
     void AttachmentName(nsCString* out) const;
@@ -258,6 +258,8 @@ public:
     }
 
     GLenum ReadBufferMode() const { return mReadBufferMode; }
+
+    void GatherAttachments(std::vector<const WebGLFBAttachPoint*>* const out) const;
 
 protected:
     WebGLFBAttachPoint* GetAttachPoint(GLenum attachment); // Fallible

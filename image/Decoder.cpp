@@ -117,26 +117,28 @@ Decoder::Decode(IResumable* aOnResume /* = nullptr */)
     return HasError() ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  Maybe<TerminalState> terminalState;
+  LexerResult lexerResult(TerminalState::FAILURE);
   {
     PROFILER_LABEL("ImageDecoder", "Decode", js::ProfileEntry::Category::GRAPHICS);
     AutoRecordDecoderTelemetry telemetry(this);
 
-    terminalState = DoDecode(*mIterator, aOnResume);
-  }
+    lexerResult =  DoDecode(*mIterator, aOnResume);
+  };
 
-  if (!terminalState) {
+  if (lexerResult.is<Yield>()) {
     // We need more data to continue. If @aOnResume was non-null, the
     // SourceBufferIterator will automatically reschedule us. Otherwise, it's up
     // to the caller.
+    MOZ_ASSERT(lexerResult.as<Yield>() == Yield::NEED_MORE_DATA);
     return NS_OK;
   }
 
   // We reached a terminal state; we're now done decoding.
+  MOZ_ASSERT(lexerResult.is<TerminalState>());
   mReachedTerminalState = true;
 
   // If decoding failed, record that fact.
-  if (terminalState == Some(TerminalState::FAILURE)) {
+  if (lexerResult.as<TerminalState>() == TerminalState::FAILURE) {
     PostError();
   }
 

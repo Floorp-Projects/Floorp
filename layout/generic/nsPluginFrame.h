@@ -214,11 +214,6 @@ public:
   void SetInstanceOwner(nsPluginInstanceOwner* aOwner);
 
   /**
-   * Helper for hiding windowed plugins during async scroll operations.
-   */
-  void SetScrollVisibility(bool aState);
-
-  /**
    * HandleWheelEventAsDefaultAction() handles eWheel event as default action.
    * This should be called only when WantsToHandleWheelEventAsDefaultAction()
    * returns true.
@@ -337,10 +332,6 @@ private:
   RefPtr<nsRootPresContext> mRootPresContextRegisteredWith;
 
   mozilla::UniquePtr<PluginFrameDidCompositeObserver> mDidCompositeObserver;
-
-  // Tracks windowed plugin visibility during scroll operations. See
-  // SetScrollVisibility.
-  bool mIsHiddenDueToScroll;
 };
 
 class nsDisplayPlugin : public nsDisplayItem {
