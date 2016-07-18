@@ -222,6 +222,14 @@ xpcAccessibleDocument::GetXPCAccessible(ProxyAccessible* aProxy)
     interfaces |= eHyperLink;
   }
 
+  if (aProxy->mIsHyperText) {
+    interfaces |= eText;
+    acc = new xpcAccessibleHyperText(aProxy, interfaces);
+    mCache.Put(aProxy, acc);
+
+    return acc;
+  }
+
   acc = new xpcAccessibleGeneric(aProxy, interfaces);
   mCache.Put(aProxy, acc);
 
