@@ -411,7 +411,6 @@ void
 nsPrefetchService::ProcessNextURI(nsPrefetchNode *aFinished)
 {
     nsresult rv;
-    nsCOMPtr<nsIURI> uri, referrer;
 
     if (aFinished) {
         mCurrentNodes.RemoveElement(aFinished);
