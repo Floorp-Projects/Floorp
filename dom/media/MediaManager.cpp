@@ -1347,11 +1347,11 @@ MediaManager::SelectSettings(
 
     if (needVideo && videos.Length()) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
-          GetInvariant(aConstraints.mVideo), videos);
+          NormalizedConstraints(GetInvariant(aConstraints.mVideo)), videos);
     }
     if (!badConstraint && needAudio && audios.Length()) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
-          GetInvariant(aConstraints.mAudio), audios);
+          NormalizedConstraints(GetInvariant(aConstraints.mAudio)), audios);
     }
     if (!badConstraint &&
         !needVideo == !videos.Length() &&
@@ -1451,8 +1451,8 @@ public:
         if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
           nsTArray<RefPtr<AudioDevice>> audios;
           audios.AppendElement(mAudioDevice);
-          badConstraint = MediaConstraintsHelper::SelectSettings(constraints,
-                                                                 audios);
+          badConstraint = MediaConstraintsHelper::SelectSettings(
+              NormalizedConstraints(constraints), audios);
         }
       }
     }
@@ -1464,8 +1464,8 @@ public:
         if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
           nsTArray<RefPtr<VideoDevice>> videos;
           videos.AppendElement(mVideoDevice);
-          badConstraint = MediaConstraintsHelper::SelectSettings(constraints,
-                                                                 videos);
+          badConstraint = MediaConstraintsHelper::SelectSettings(
+              NormalizedConstraints(constraints), videos);
         }
         if (mAudioDevice) {
           mAudioDevice->Deallocate();
@@ -3456,16 +3456,16 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
       if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
         nsTArray<RefPtr<AudioDevice>> audios;
         audios.AppendElement(audioDevice);
-        badConstraint = MediaConstraintsHelper::SelectSettings(aConstraints,
-                                                               audios);
+        badConstraint = MediaConstraintsHelper::SelectSettings(
+            NormalizedConstraints(aConstraints), audios);
       }
     } else {
       rv = videoDevice->Restart(aConstraints, mgr->mPrefs, &badConstraint);
       if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
         nsTArray<RefPtr<VideoDevice>> videos;
         videos.AppendElement(videoDevice);
-        badConstraint = MediaConstraintsHelper::SelectSettings(aConstraints,
-                                                               videos);
+        badConstraint = MediaConstraintsHelper::SelectSettings(
+            NormalizedConstraints(aConstraints), videos);
       }
     }
     NS_DispatchToMainThread(NewRunnableFrom([id, windowId, rv,

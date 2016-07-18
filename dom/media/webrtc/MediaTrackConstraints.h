@@ -266,7 +266,7 @@ template<> void NormalizedConstraintSet::Range<bool>::FinalizeMerge();
 // Used instead of MediaTrackConstraints in lower-level code.
 struct NormalizedConstraints : public NormalizedConstraintSet
 {
-  NormalizedConstraints(const dom::MediaTrackConstraints& aOther,
+  explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther,
                         nsTArray<MemberPtrType>* aList = nullptr);
 
   // Merge constructor
