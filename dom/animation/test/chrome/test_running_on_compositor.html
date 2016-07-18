@@ -516,6 +516,31 @@ promise_test(function(t) {
    'cannot be run on the compositor, is running on the compositor');
 
 promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ color: ['red', 'black'] }, 100 * MS_PER_SEC);
+  var effect = new KeyframeEffect(div,
+                                  [{ opacity: 1, offset: 0 },
+                                   { opacity: 1, offset: 0.99 },
+                                   { opacity: 0, offset: 1 }],
+                                  100 * MS_PER_SEC);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Color animation reports that it is not running on the ' +
+                  'compositor');
+
+    animation.effect = effect;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  '100% opacity animation set up by changing effects reports ' +
+                  'that it is running on the compositor');
+  });
+}, '100% opacity animation set up by changing the effects on an existing ' +
+   'animation which cannot be run on the compositor, is running on the ' +
+   'compositor');
+
+promise_test(function(t) {
   var div = addDiv(t, { style: "opacity: 1 ! important" });
 
   var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
