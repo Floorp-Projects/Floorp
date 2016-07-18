@@ -181,6 +181,9 @@ https://tracking.example.com:443
 https://not-tracking.example.com:443
 https://tracking.example.org:443
 
+# Bug 1281083
+http://bug1281083.example.com:80
+
 # Bug 483437, 484111
 https://www.bank1.com:443           privileged,cert=escapeattack1
 
