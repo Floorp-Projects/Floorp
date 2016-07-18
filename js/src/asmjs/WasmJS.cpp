@@ -165,16 +165,12 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
     }
 
-    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    RootedWasmMemoryObject memoryImport(cx);
-    if (!GetImports(cx, importObj, module->imports(), &funcImports, &memoryImport))
+    Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+    RootedWasmMemoryObject memory(cx);
+    if (!GetImports(cx, importObj, module->imports(), &funcs, &memory))
         return false;
 
-    instanceObj.set(WasmInstanceObject::create(cx));
-    if (!instanceObj)
-        return false;
-
-    return module->instantiate(cx, funcImports, memoryImport, instanceObj);
+    return module->instantiate(cx, funcs, memory, nullptr, instanceObj);
 }
 
 static bool
@@ -450,12 +446,6 @@ WasmInstanceObject::init(UniqueInstance instance)
     MOZ_ASSERT(!isNewborn());
 }
 
-void
-WasmInstanceObject::initExportsObject(HandleObject exportObj)
-{
-    initReservedSlot(EXPORTS_SLOT, ObjectValue(*exportObj));
-}
-
 /* static */ bool
 WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -483,17 +473,14 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
         importObj = &args[1].toObject();
     }
 
-    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
-    RootedWasmMemoryObject memoryImport(cx);
-    if (!GetImports(cx, importObj, module.imports(), &funcImports, &memoryImport))
+    Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+    RootedWasmMemoryObject memory(cx);
+    if (!GetImports(cx, importObj, module.imports(), &funcs, &memory))
         return false;
 
-    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
-    RootedWasmInstanceObject instanceObj(cx, WasmInstanceObject::create(cx, proto));
-    if (!instanceObj)
-        return false;
-
-    if (!module.instantiate(cx, funcImports, memoryImport, instanceObj))
+    RootedObject instanceProto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
+    RootedWasmInstanceObject instanceObj(cx);
+    if (!module.instantiate(cx, funcs, memory, instanceProto, &instanceObj))
         return false;
 
     args.rval().setObject(*instanceObj);
@@ -505,13 +492,6 @@ WasmInstanceObject::instance() const
 {
     MOZ_ASSERT(!isNewborn());
     return *(Instance*)getReservedSlot(INSTANCE_SLOT).toPrivate();
-}
-
-JSObject&
-WasmInstanceObject::exportsObject() const
-{
-    MOZ_ASSERT(!isNewborn());
-    return getReservedSlot(EXPORTS_SLOT).toObject();
 }
 
 // ============================================================================

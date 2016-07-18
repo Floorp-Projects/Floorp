@@ -51,6 +51,10 @@ MOZ_MUST_USE bool
 Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
      MutableHandle<WasmInstanceObject*> instanceObj);
 
+// The field name of the export object on the instance object.
+
+extern const char InstanceExportField[];
+
 } // namespace wasm
 
 // 'Wasm' and its one function 'instantiateModule' are transitional APIs and
@@ -100,23 +104,19 @@ typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
 class WasmInstanceObject : public NativeObject
 {
     static const unsigned INSTANCE_SLOT = 0;
-    static const unsigned EXPORTS_SLOT = 1;
     static const ClassOps classOps_;
     bool isNewborn() const;
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
   public:
-    static const unsigned RESERVED_SLOTS = 2;
+    static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmInstanceObject* create(ExclusiveContext* cx,
-                                      HandleObject proto = nullptr);
-    void init(wasm::UniqueInstance module);
-    void initExportsObject(HandleObject exportObj);
+    static WasmInstanceObject* create(ExclusiveContext* cx, HandleObject proto);
+    void init(wasm::UniqueInstance instance);
     wasm::Instance& instance() const;
-    JSObject& exportsObject() const;
 };
 
 typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;

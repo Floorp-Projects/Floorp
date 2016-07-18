@@ -18,8 +18,6 @@
 
 #include "asmjs/WasmModule.h"
 
-#include "mozilla/Atomics.h"
-
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmJS.h"
 #include "asmjs/WasmSerialize.h"
@@ -29,6 +27,8 @@
 
 using namespace js;
 using namespace js::wasm;
+
+const char wasm::InstanceExportField[] = "exports";
 
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 // On MIPS, CodeLabels are instruction immediates so InternalLinks only
@@ -522,13 +522,12 @@ CreateExportObject(JSContext* cx,
     return true;
 }
 
-static const char ExportField[] = "exports";
-
 bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
                     HandleWasmMemoryObject memImport,
-                    HandleWasmInstanceObject instanceObj) const
+                    HandleObject instanceProto,
+                    MutableHandleWasmInstanceObject instanceObj) const
 {
     MOZ_ASSERT(funcImports.length() == metadata_->funcImports.length());
 
@@ -560,6 +559,10 @@ Module::instantiate(JSContext* cx,
     // memory.
 
     {
+        instanceObj.set(WasmInstanceObject::create(cx, instanceProto));
+        if (!instanceObj)
+            return false;
+
         auto instance = cx->make_unique<Instance>(Move(cs),
                                                   *metadata_,
                                                   maybeBytecode,
@@ -578,9 +581,7 @@ Module::instantiate(JSContext* cx,
     if (!CreateExportObject(cx, instanceObj, memory, exports_, &exportObj))
         return false;
 
-    instanceObj->initExportsObject(exportObj);
-
-    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
+    JSAtom* atom = Atomize(cx, InstanceExportField, strlen(InstanceExportField));
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
