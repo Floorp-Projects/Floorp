@@ -19,6 +19,7 @@
 #include "asmjs/WasmCode.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedRange.h"
 
 #include "jsprf.h"
@@ -40,6 +41,7 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::Atomic;
+using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using JS::GenericNaN;
 
@@ -511,6 +513,25 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf) +
            assumptions.sizeOfExcludingThis(mallocSizeOf);
+}
+
+struct ProjectFuncIndex
+{
+    const FuncExportVector& funcExports;
+    explicit ProjectFuncIndex(const FuncExportVector& funcExports) : funcExports(funcExports) {}
+    uint32_t operator[](size_t index) const {
+        return funcExports[index].funcIndex();
+    }
+};
+
+const FuncExport&
+Metadata::lookupFuncExport(uint32_t funcIndex) const
+{
+    size_t match;
+    if (!BinarySearch(ProjectFuncIndex(funcExports), 0, funcExports.length(), funcIndex, &match))
+        MOZ_CRASH("missing function export");
+
+    return funcExports[match];
 }
 
 bool

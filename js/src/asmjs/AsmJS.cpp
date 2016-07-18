@@ -234,16 +234,22 @@ typedef Vector<AsmJSImport, 0, SystemAllocPolicy> AsmJSImportVector;
 // case the function is toString()ed.
 class AsmJSExport
 {
+    uint32_t funcIndex_;
+
     // All fields are treated as cacheable POD:
     uint32_t startOffsetInModule_;  // Store module-start-relative offsets
     uint32_t endOffsetInModule_;    // so preserved by serialization.
 
   public:
     AsmJSExport() { PodZero(this); }
-    AsmJSExport(uint32_t startOffsetInModule, uint32_t endOffsetInModule)
-      : startOffsetInModule_(startOffsetInModule),
+    AsmJSExport(uint32_t funcIndex, uint32_t startOffsetInModule, uint32_t endOffsetInModule)
+      : funcIndex_(funcIndex),
+        startOffsetInModule_(startOffsetInModule),
         endOffsetInModule_(endOffsetInModule)
     {}
+    uint32_t funcIndex() const {
+        return funcIndex_;
+    }
     uint32_t startOffsetInModule() const {
         return startOffsetInModule_;
     }
@@ -315,6 +321,17 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
         strict(false)
     {}
     ~AsmJSMetadata() override {}
+
+    const AsmJSExport& lookupAsmJSExport(uint32_t funcIndex) const {
+        // The AsmJSExportVector isn't stored in sorted order so do a linear
+        // search. This is for the super-cold and already-expensive toString()
+        // path and the number of exports is generally small.
+        for (const AsmJSExport& exp : asmJSExports) {
+            if (exp.funcIndex() == funcIndex)
+                return exp;
+        }
+        MOZ_CRASH("missing asm.js func export");
+    }
 
     bool mutedErrors() const override {
         return scriptSource.get()->mutedErrors();
@@ -2058,15 +2075,13 @@ class MOZ_STACK_CLASS ModuleValidator
 
         // Declare which function is exported which gives us an index into the
         // module FuncExportVector.
-        uint32_t funcExportIndex;
-        if (!mg_.addFuncExport(Move(fieldChars), func.index(), &funcExportIndex))
+        if (!mg_.addFuncExport(Move(fieldChars), func.index()))
             return false;
 
         // The exported function might have already been exported in which case
         // the index will refer into the range of AsmJSExports.
-        MOZ_ASSERT(funcExportIndex <= asmJSMetadata_->asmJSExports.length());
-        return funcExportIndex < asmJSMetadata_->asmJSExports.length() ||
-               asmJSMetadata_->asmJSExports.emplaceBack(func.srcBegin() - asmJSMetadata_->srcStart,
+        return asmJSMetadata_->asmJSExports.emplaceBack(func.index(),
+                                                        func.srcBegin() - asmJSMetadata_->srcStart,
                                                         func.srcEnd() - asmJSMetadata_->srcStart);
     }
     bool addFunction(PropertyName* name, uint32_t firstUse, Sig&& sig, Func** func) {
@@ -8769,7 +8784,8 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(IsAsmJSFunction(fun));
 
     const AsmJSMetadata& metadata = ExportedFunctionToInstance(fun).metadata().asAsmJS();
-    const AsmJSExport& f = metadata.asmJSExports[ExportedFunctionToExportIndex(fun)];
+    const AsmJSExport& f = metadata.lookupAsmJSExport(ExportedFunctionToIndex(fun));
+
     uint32_t begin = metadata.srcStart + f.startOffsetInModule();
     uint32_t end = metadata.srcStart + f.endOffsetInModule();
 

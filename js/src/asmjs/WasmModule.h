@@ -113,18 +113,18 @@ class Export
     CacheableChars fieldName_;
     struct CacheablePod {
         DefinitionKind kind_;
-        uint32_t funcExportIndex_;
+        uint32_t funcIndex_;
     } pod;
 
   public:
     Export() = default;
-    explicit Export(UniqueChars fieldName, uint32_t funcExportIndex);
+    explicit Export(UniqueChars fieldName, uint32_t funcIndex);
     explicit Export(UniqueChars fieldName, DefinitionKind kind);
 
     const char* fieldName() const { return fieldName_.get(); }
 
     DefinitionKind kind() const { return pod.kind_; }
-    uint32_t funcExportIndex() const;
+    uint32_t funcIndex() const;
 
     WASM_DECLARE_SERIALIZABLE(Export)
 };

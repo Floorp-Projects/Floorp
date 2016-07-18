@@ -66,7 +66,7 @@ extern Instance&
 ExportedFunctionToInstance(JSFunction* fun);
 
 extern uint32_t
-ExportedFunctionToExportIndex(JSFunction* fun);
+ExportedFunctionToIndex(JSFunction* fun);
 
 } // namespace wasm
 
@@ -145,7 +145,7 @@ class WasmInstanceObject : public NativeObject
 
     static bool getExportedFunction(JSContext* cx,
                                     Handle<WasmInstanceObject*> instanceObj,
-                                    uint32_t funcExportIndex,
+                                    uint32_t funcIndex,
                                     MutableHandleFunction fun);
 };
 

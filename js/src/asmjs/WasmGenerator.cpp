@@ -21,6 +21,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EnumeratedRange.h"
 
+#include <algorithm>
+
 #include "asmjs/WasmBaselineCompile.h"
 #include "asmjs/WasmIonCompile.h"
 #include "asmjs/WasmStubs.h"
@@ -99,7 +101,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, CompileArgs&& args,
 {
     alwaysBaseline_ = args.alwaysBaseline;
 
-    if (!funcIndexToFuncExportIndex_.init())
+    if (!exportedFuncs_.init())
         return false;
 
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));;
@@ -334,9 +336,43 @@ typedef Vector<Offsets, 0, SystemAllocPolicy> OffsetVector;
 typedef Vector<ProfilingOffsets, 0, SystemAllocPolicy> ProfilingOffsetVector;
 
 bool
+ModuleGenerator::finishFuncExports()
+{
+    // ModuleGenerator::exportedFuncs_ is an unordered HashSet. The
+    // FuncExportVector stored in Metadata needs to be stored sorted by
+    // function index to allow O(log(n)) lookup at runtime.
+
+    Uint32Vector funcIndices;
+    if (!funcIndices.reserve(exportedFuncs_.count()))
+        return false;
+
+    for (Uint32Set::Range r = exportedFuncs_.all(); !r.empty(); r.popFront())
+        funcIndices.infallibleAppend(r.front());
+
+    std::sort(funcIndices.begin(), funcIndices.end());
+
+    MOZ_ASSERT(metadata_->funcExports.empty());
+    if (!metadata_->funcExports.reserve(exportedFuncs_.count()))
+        return false;
+
+    for (uint32_t funcIndex : funcIndices) {
+        Sig sig;
+        if (!sig.clone(funcSig(funcIndex)))
+            return false;
+
+        metadata_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex);
+    }
+
+    return true;
+}
+
+bool
 ModuleGenerator::finishCodegen()
 {
     uint32_t offsetInWhole = masm_.size();
+
+    uint32_t numFuncExports = metadata_->funcExports.length();
+    MOZ_ASSERT(numFuncExports == exportedFuncs_.count());
 
     // Generate stubs in a separate MacroAssembler since, otherwise, for modules
     // larger than the JumpImmediateRange, even local uses of Label will fail
@@ -352,9 +388,9 @@ ModuleGenerator::finishCodegen()
         TempAllocator alloc(&lifo_);
         MacroAssembler masm(MacroAssembler::AsmJSToken(), alloc);
 
-        if (!entries.resize(numExports()))
+        if (!entries.resize(numFuncExports))
             return false;
-        for (uint32_t i = 0; i < numExports(); i++)
+        for (uint32_t i = 0; i < numFuncExports; i++)
             entries[i] = GenerateEntry(masm, metadata_->funcExports[i], usesMemory());
 
         if (!interpExits.resize(numFuncImports()))
@@ -378,7 +414,7 @@ ModuleGenerator::finishCodegen()
     // Adjust each of the resulting Offsets (to account for being merged into
     // masm_) and then create code ranges for all the stubs.
 
-    for (uint32_t i = 0; i < numExports(); i++) {
+    for (uint32_t i = 0; i < numFuncExports; i++) {
         entries[i].offsetBy(offsetInWhole);
         metadata_->funcExports[i].initStubOffset(entries[i].begin);
         if (!metadata_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
@@ -647,37 +683,10 @@ ModuleGenerator::funcImport(uint32_t funcImportIndex) const
 }
 
 bool
-ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex,
-                               uint32_t* funcExportIndex /* = nullptr */)
+ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex)
 {
-    MOZ_ASSERT(!metadata_->hasStartFunction());
-
-    FuncIndexMap::AddPtr p = funcIndexToFuncExportIndex_.lookupForAdd(funcIndex);
-    if (p) {
-        if (funcExportIndex)
-            *funcExportIndex = p->value();
-        return exports_.emplaceBack(Move(fieldName), p->value());
-    }
-
-    uint32_t newFuncExportIndex = metadata_->funcExports.length();
-    MOZ_ASSERT(newFuncExportIndex < MaxExports);
-
-    if (funcExportIndex)
-        *funcExportIndex = newFuncExportIndex;
-
-    Sig copy;
-    if (!copy.clone(funcSig(funcIndex)))
-        return false;
-
-    return metadata_->funcExports.emplaceBack(Move(copy), funcIndex) &&
-           exports_.emplaceBack(Move(fieldName), newFuncExportIndex) &&
-           funcIndexToFuncExportIndex_.add(p, funcIndex, newFuncExportIndex);
-}
-
-uint32_t
-ModuleGenerator::numExports() const
-{
-    return metadata_->funcExports.length();
+    return exports_.emplaceBack(Move(fieldName), funcIndex) &&
+           exportedFuncs_.put(funcIndex);
 }
 
 bool
@@ -695,20 +704,8 @@ ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 bool
 ModuleGenerator::setStartFunction(uint32_t funcIndex)
 {
-    MOZ_ASSERT(!metadata_->hasStartFunction());
-
-    FuncIndexMap::AddPtr p = funcIndexToFuncExportIndex_.lookupForAdd(funcIndex);
-    if (p) {
-        metadata_->initStartFuncExportIndex(p->value());
-        return true;
-    }
-
-    Sig copy;
-    if (!copy.clone(funcSig(funcIndex)))
-        return false;
-
-    metadata_->initStartFuncExportIndex(metadata_->funcExports.length());
-    return metadata_->funcExports.emplaceBack(Move(copy), funcIndex);
+    metadata_->initStartFuncIndex(funcIndex);
+    return exportedFuncs_.put(funcIndex);
 }
 
 bool
@@ -891,6 +888,9 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
     // Now that all asm.js tables have been created and the compiler threads are
     // done, shrink the (no longer shared) tables vector down to size.
     if (isAsmJS() && !shared_->tables.resize(numTables_))
+        return nullptr;
+
+    if (!finishFuncExports())
         return nullptr;
 
     if (!finishCodegen())
