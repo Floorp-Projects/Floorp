@@ -803,6 +803,11 @@ AST_MATCHER(CallExpr, isAssertAssignmentTestFunc) {
       && method->getDeclName().isIdentifier()
       && method->getName() == assertName;
 }
+
+AST_MATCHER(CXXRecordDecl, isLambdaDecl) {
+  return Node.isLambda();
+}
+
 }
 }
 
@@ -1051,12 +1056,21 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
           .bind("node"),
       &noAddRefReleaseOnReturnChecker);
 
-  // Match declrefs with type "pointer to object of ref-counted type" inside a
-  // lambda, where the declaration they reference is not inside the lambda.
-  // This excludes arguments and local variables, leaving only captured
-  // variables.
-  astMatcher.addMatcher(lambdaExpr().bind("lambda"),
-                        &refCountedInsideLambdaChecker);
+  // We want to reject any code which captures a pointer to an object of a
+  // refcounted type, and then lets that value escape. As a primitive analysis,
+  // we reject any occurances of the lambda as a template parameter to a class
+  // (which could allow it to escape), as well as any presence of such a lambda
+  // in a return value (either from lambdas, or in c++14, auto functions).
+  //
+  // We check these lambdas' capture lists for raw pointers to refcounted types.
+  astMatcher.addMatcher(
+      functionDecl(returns(recordType(hasDeclaration(cxxRecordDecl(isLambdaDecl()).bind("decl"))))),
+      &refCountedInsideLambdaChecker);
+  astMatcher.addMatcher(lambdaExpr().bind("lambdaExpr"), &refCountedInsideLambdaChecker);
+  astMatcher.addMatcher(
+      classTemplateSpecializationDecl(hasAnyTemplateArgument(refersToType(
+        recordType(hasDeclaration(cxxRecordDecl(isLambdaDecl()).bind("decl")))))),
+      &refCountedInsideLambdaChecker);
 
   // Older clang versions such as the ones used on the infra recognize these
   // conversions as 'operator _Bool', but newer clang versions recognize these
@@ -1358,13 +1372,34 @@ void DiagnosticsMatcher::NoAddRefReleaseOnReturnChecker::run(
 
 void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
     const MatchFinder::MatchResult &Result) {
+  static DenseSet<const CXXRecordDecl*> CheckedDecls;
+
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
   unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
       DiagnosticIDs::Error,
       "Refcounted variable %0 of type %1 cannot be captured by a lambda");
   unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
       DiagnosticIDs::Note, "Please consider using a smart pointer");
-  const LambdaExpr *Lambda = Result.Nodes.getNodeAs<LambdaExpr>("lambda");
+
+  const CXXRecordDecl *Lambda = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
+
+  if (const LambdaExpr *OuterLambda = Result.Nodes.getNodeAs<LambdaExpr>("lambdaExpr")) {
+    const CXXMethodDecl *OpCall = OuterLambda->getCallOperator();
+    QualType ReturnTy = OpCall->getReturnType();
+    if (const CXXRecordDecl *Record = ReturnTy->getAsCXXRecordDecl()) {
+      Lambda = Record;
+    }
+  }
+
+  if (!Lambda || !Lambda->isLambda()) {
+    return;
+  }
+
+  // Don't report errors on the same declarations more than once.
+  if (CheckedDecls.count(Lambda)) {
+    return;
+  }
+  CheckedDecls.insert(Lambda);
 
   for (const LambdaCapture Capture : Lambda->captures()) {
     if (Capture.capturesVariable() && Capture.getCaptureKind() != LCK_ByRef) {
@@ -1374,6 +1409,7 @@ void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
         Diag.Report(Capture.getLocation(), errorID) << Capture.getCapturedVar()
                                                     << Pointee;
         Diag.Report(Capture.getLocation(), noteID);
+        return;
       }
     }
   }
