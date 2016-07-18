@@ -196,6 +196,36 @@ assertEq(String(Object.keys(e)), "");
 assertEq(e[""] instanceof Table, true);
 +assertEq(e[""].length, 0);
 
+// Table export function identity
+
+var code = textToBinary(`(module
+    (func $f (result i32) (i32.const 1))
+    (func $g (result i32) (i32.const 2))
+    (func $h (result i32) (i32.const 3))
+    (table (resizable 4))
+    (elem 0 $f)
+    (elem 2 $g)
+    (export "f1" $f)
+    (export "tbl1" table)
+    (export "f2" $f)
+    (export "tbl2" table)
+    (export "f3" $h)
+)`);
+var e = new Instance(new Module(code)).exports;
+assertEq(String(Object.keys(e)), "f1,tbl1,f2,tbl2,f3");
+assertEq(e.f1, e.f2);
+assertEq(e.f1(), 1);
+assertEq(e.f3(), 3);
+assertEq(e.tbl1, e.tbl2);
+assertEq(e.tbl1.get(0), e.f1);
+assertEq(e.tbl1.get(0), e.tbl1.get(0));
+assertEq(e.tbl1.get(0)(), 1);
+assertEq(e.tbl1.get(1), null);
+assertEq(e.tbl1.get(2), e.tbl1.get(2));
+assertEq(e.tbl1.get(2)(), 2);
+assertEq(e.tbl1.get(3), null);
+assertErrorMessage(() => e.tbl1.get(4), RangeError, /out-of-range index/);
+
 // Re-exports:
 
 var code = textToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" memory) (export "bar" memory))');

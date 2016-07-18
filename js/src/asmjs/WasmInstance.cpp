@@ -386,6 +386,11 @@ Instance::Instance(UniqueCodeSegment codeSegment,
 
     for (size_t i = 0; i < tables_.length(); i++)
         *addressOfTableBase(i) = tables_[i]->array();
+
+    for (SharedTable& table : tables_) {
+        for (size_t i = 0; i < table->length(); i++)
+            table->array()[i] = codeSegment_->badIndirectCallCode();
+    }
 }
 
 Instance::~Instance()
