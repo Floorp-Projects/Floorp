@@ -28,6 +28,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/DebugOnly.h"
 #if defined(XP_WIN)
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "WinUtils.h"
 #endif
 #include "mozilla/widget/CompositorWidget.h"
@@ -425,6 +426,35 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
 }
 
+#if defined(XP_WIN)
+static void
+ScheduleSendAllPluginsCaptured(CompositorBridgeChild* aThis, MessageLoop* aLoop)
+{
+  aLoop->PostTask(NewNonOwningRunnableMethod(
+    aThis, &CompositorBridgeChild::SendAllPluginsCaptured));
+}
+#endif
+
+bool
+CompositorBridgeChild::RecvCaptureAllPlugins(const uintptr_t& aParentWidget)
+{
+#if defined(XP_WIN)
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIWidget::CaptureRegisteredPlugins(aParentWidget);
+
+  // Bounce the call to SendAllPluginsCaptured off the ImageBridgeChild loop,
+  // to make sure that the image updates on that thread have been processed.
+  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
+    NewRunnableFunction(&ScheduleSendAllPluginsCaptured, this,
+                        MessageLoop::current()));
+  return true;
+#else
+  MOZ_ASSERT_UNREACHABLE(
+    "CompositorBridgeChild::RecvCaptureAllPlugins calls unexpected.");
+  return false;
+#endif
+}
+
 bool
 CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
 {
@@ -436,9 +466,7 @@ CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<uintptr_t> list;
   nsIWidget::UpdateRegisteredPluginWindowVisibility(aParentWidget, list);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   SendRemotePluginsReady();
-#endif
   return true;
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
 }

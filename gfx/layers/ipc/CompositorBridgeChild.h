@@ -110,6 +110,9 @@ public:
                                  nsTArray<PluginWindowData>&& aPlugins) override;
 
   virtual bool
+  RecvCaptureAllPlugins(const uintptr_t& aParentWidget) override;
+
+  virtual bool
   RecvHideAllPlugins(const uintptr_t& aParentWidget) override;
 
   virtual PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,

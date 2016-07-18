@@ -1373,22 +1373,27 @@ PluginInstanceParent::UpdateScrollCapture(bool& aRequestNewCapture)
 }
 
 nsresult
+PluginInstanceParent::SetScrollCaptureId(uint64_t aScrollCaptureId)
+{
+  if (aScrollCaptureId == ImageContainer::sInvalidAsyncContainerId) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mImageContainer = new ImageContainer(aScrollCaptureId);
+  return NS_OK;
+}
+
+nsresult
 PluginInstanceParent::GetScrollCaptureContainer(ImageContainer** aContainer)
 {
-    if (!aContainer || !::IsWindow(mPluginHWND)) {
-        return NS_ERROR_FAILURE;
-    }
+  if (!aContainer || !mImageContainer) {
+    return NS_ERROR_FAILURE;
+  }
 
-    if (!mImageContainer) {
-        ScheduleScrollCapture(kInitScrollCaptureDelayMs);
-        return NS_ERROR_FAILURE;
-    }
+  RefPtr<ImageContainer> container = GetImageContainer();
+  container.forget(aContainer);
 
-    ImageContainer *container = GetImageContainer();
-    NS_IF_ADDREF(container);
-    *aContainer = container;
-
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult
