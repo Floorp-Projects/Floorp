@@ -48,9 +48,6 @@ public:
   // Set the GeckoContentController for the root of the layer tree.
   virtual void SetContentController(GeckoContentController* aController) = 0;
 
-  // Return the id of the root layer tree.
-  virtual uint64_t RootLayerTreeId() const = 0;
-
   // Return the Async Pan/Zoom Tree Manager for this compositor.
   virtual already_AddRefed<APZCTreeManager> GetAPZCTreeManager() const = 0;
 
@@ -62,14 +59,21 @@ public:
     return mCompositorWidgetDelegate;
   }
 
+  // Return the id of the root layer tree.
+  uint64_t RootLayerTreeId() const {
+    return mRootLayerTreeId;
+  }
+
 protected:
   CompositorSession(CompositorWidgetDelegate* aDelegate,
-                    CompositorBridgeChild* aChild);
+                    CompositorBridgeChild* aChild,
+                    const uint64_t& aRootLayerTreeId);
   virtual ~CompositorSession();
 
 protected:
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
+  uint64_t mRootLayerTreeId;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);

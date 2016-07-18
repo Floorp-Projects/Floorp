@@ -72,6 +72,7 @@ public:
    */
   CompositorBridgeParent* InitSameProcess(
     widget::CompositorWidget* aWidget,
+    const uint64_t& aLayerTreeId,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
     bool aUseExternalSurface,

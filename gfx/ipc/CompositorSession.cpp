@@ -14,10 +14,13 @@ namespace layers {
 
 using namespace widget;
 
+
 CompositorSession::CompositorSession(CompositorWidgetDelegate* aDelegate,
-                                     CompositorBridgeChild* aChild)
+                                     CompositorBridgeChild* aChild,
+                                     const uint64_t& aRootLayerTreeId)
  : mCompositorWidgetDelegate(aDelegate),
-   mCompositorBridgeChild(aChild)
+   mCompositorBridgeChild(aChild),
+   mRootLayerTreeId(aRootLayerTreeId)
 {
 }
 
