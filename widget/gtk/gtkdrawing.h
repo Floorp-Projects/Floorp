@@ -136,6 +136,8 @@ typedef enum {
   MOZ_GTK_GRIPPER,
   /* Paints a GtkEntry. */
   MOZ_GTK_ENTRY,
+  /* Paints a GtkExpander. */
+  MOZ_GTK_EXPANDER,
   /* Paints a GtkTextView. */
   MOZ_GTK_TEXT_VIEW,
   /* Paints a GtkOptionMenu. */
