@@ -406,7 +406,7 @@ VideoSink::UpdateRenderedVideoFrames()
       }
       ++framesRemoved;
       if (!currentFrame->As<VideoData>()->mSentToCompositor) {
-        mFrameStats.NotifyDecodedFrames(0, 0, 1);
+        mFrameStats.NotifyDecodedFrames({ 0, 0, 1 });
         VSINK_LOG_V("discarding video frame mTime=%lld clock_time=%lld",
                     currentFrame->mTime, clockTime);
       }
