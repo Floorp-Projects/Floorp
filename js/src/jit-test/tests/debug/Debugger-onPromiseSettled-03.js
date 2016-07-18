@@ -1,6 +1,4 @@
 // onPromiseSettled handlers on different Debugger instances are independent.
-if (!('Promise' in this))
-    quit(0);
 
 var g = newGlobal();
 var dbg1 = new Debugger(g);
@@ -20,24 +18,24 @@ function h2(promise) {
 }
 
 log1 = log2 = '';
-g.settlePromiseNow(new g.Promise(function (){}));
+g.settleFakePromise(g.makeFakePromise());
 assertEq(log1, '');
 assertEq(log2, '');
 
 log1 = log2 = '';
 dbg1.onPromiseSettled = h1;
-g.settlePromiseNow(new g.Promise(function (){}));
+g.settleFakePromise(g.makeFakePromise());
 assertEq(log1, 's');
 assertEq(log2, '');
 
 log1 = log2 = '';
 dbg2.onPromiseSettled = h2;
-g.settlePromiseNow(new g.Promise(function (){}));
+g.settleFakePromise(g.makeFakePromise());
 assertEq(log1, 's');
 assertEq(log2, 's');
 
 log1 = log2 = '';
 dbg1.onPromiseSettled = undefined;
-g.settlePromiseNow(new g.Promise(function (){}));
+g.settleFakePromise(g.makeFakePromise());
 assertEq(log1, '');
 assertEq(log2, 's');

@@ -183,7 +183,7 @@ SocialUI = {
       return;
 
     // Check to see whether this link traversal was in a social panel
-    let win = linkNode.ownerDocument.defaultView;
+    let win = linkNode.ownerGlobal;
     let container = win.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIWebNavigation)
                                   .QueryInterface(Ci.nsIDocShell)

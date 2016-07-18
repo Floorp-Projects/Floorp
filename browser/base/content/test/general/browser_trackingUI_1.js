@@ -113,7 +113,7 @@ function* testTrackingProtectionForTab(tab) {
 
   info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
-  testTrackingPage(tab.ownerDocument.defaultView);
+  testTrackingPage(tab.ownerGlobal);
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
@@ -125,7 +125,7 @@ function* testTrackingProtectionForTab(tab) {
   tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-block");
   yield tabReloadPromise;
-  testTrackingPage(tab.ownerDocument.defaultView);
+  testTrackingPage(tab.ownerGlobal);
 }
 
 add_task(function* testNormalBrowsing() {

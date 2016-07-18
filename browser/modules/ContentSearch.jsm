@@ -230,17 +230,12 @@ this.ContentSearch = {
     let engine = Services.search.getEngineByName(data.engineName);
     let submission = engine.getSubmission(data.searchString, "", data.searchPurpose);
     let browser = msg.target;
-    let win;
-    try {
-      win = browser.ownerDocument.defaultView;
-    }
-    catch (err) {
+    let win = browser.ownerGlobal;
+    if (!win) {
       // The browser may have been closed between the time its content sent the
-      // message and the time we handle it.  In that case, trying to call any
-      // method on it will throw.
+      // message and the time we handle it.
       return;
     }
-
     let where = win.whereToOpenLink(data.originalEvent);
 
     // There is a chance that by the time we receive the search message, the user
@@ -424,7 +419,7 @@ this.ContentSearch = {
   },
 
   _onMessageManageEngines: function (msg, data) {
-    let browserWin = msg.target.ownerDocument.defaultView;
+    let browserWin = msg.target.ownerGlobal;
     browserWin.openPreferences("paneSearch");
   },
 

@@ -30,15 +30,15 @@
 <meta charset="utf-8">
 <title>WebGL toDataURL test</title>
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"> </script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"> </script>
 </head>
 <body>
 <canvas width="20" height="20" style="border: 1px solid black; width: 16px; height: 16px" id="c3d"></canvas>
 <canvas width="20" height="20" style="border: 1px solid black; width: 16px; height: 16px" id="c2d"></canvas>
 <div id="description"></div>
 <div id="console"></div>
-<script type="text/javascript">
+<script type="application/javascript">
 var wtu = WebGLTestUtils;
 var numTests = 10;
 var gl;
@@ -81,6 +81,7 @@ var main = function() {
     var img = wtu.makeImageFromCanvas(gl.canvas, function() {
       ctx.canvas.width = width;
       ctx.canvas.height = height;
+      ctx.imageSmoothingEnabled = false;
       ctx.drawImage(img, 0, 0);
       wtu.checkCanvasRect(ctx, 0, 0, width - 1, topHeight, topColor);
       wtu.checkCanvasRect(ctx, 0, topHeight, width - 1, halfHeight, bottomColor);

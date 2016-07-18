@@ -31,10 +31,10 @@
 <meta charset="utf-8">
 <title>WebGL GLSL Conformance Tests</title>
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
-<link rel="stylesheet" href="../../resources/glsl-feature-tests.css"/>
-<script src="../../../resources/js-test-pre.js"></script>
-<script src="../../resources/webgl-test-utils.js"></script>
-<script src="../../resources/glsl-conformance-test.js"></script>
+<link rel="stylesheet" href="../../../resources/glsl-feature-tests.css"/>
+<script src="../../../js/js-test-pre.js"></script>
+<script src="../../../js/webgl-test-utils.js"></script>
+<script src="../../../js/glsl-conformance-test.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -168,99 +168,85 @@ void main()
 <script>
 "use strict";
 GLSLConformanceTester.runTests([
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderVoid',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for void should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderBool',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for bool should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderVec2',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for vec2 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderVec3',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for vec3 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderVec4',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for vec4 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderBvec2',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for bvec2 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderBvec3',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for bvec3 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderBvec4',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for bvec4 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderIvec2',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for ivec2 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderIvec3',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for ivec3 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderIvec4',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for ivec4 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderMat2',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for mat2 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderMat3',
       fShaderSuccess: false,
       linkSuccess: false,
       passMsg: 'shader with default precision for mat3 should fail'
     },
-    { vShaderId: undefined,
-      vShaderSuccess: true,
+    {
       fShaderId: 'fragmentShaderMat4',
       fShaderSuccess: false,
       linkSuccess: false,

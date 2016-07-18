@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = ["DragPositionManager"];
 
 function AreaPositionManager(aContainer) {
   // Caching the direction and bounds of the container for quick access later:
-  let window = aContainer.ownerDocument.defaultView;
+  let window = aContainer.ownerGlobal;
   this._dir = window.getComputedStyle(aContainer).direction;
   let containerRect = aContainer.getBoundingClientRect();
   this._containerInfo = {
@@ -34,7 +34,7 @@ AreaPositionManager.prototype = {
   _wideCache: null,
 
   update: function(aContainer) {
-    let window = aContainer.ownerDocument.defaultView;
+    let window = aContainer.ownerGlobal;
     this._nodePositionStore = new WeakMap();
     this._wideCache = new Set();
     let last = null;

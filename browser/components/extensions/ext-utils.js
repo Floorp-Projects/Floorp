@@ -73,7 +73,7 @@ class BasePopup {
     this.popupURI = popupURI;
     this.viewNode = viewNode;
     this.browserStyle = browserStyle;
-    this.window = viewNode.ownerDocument.defaultView;
+    this.window = viewNode.ownerGlobal;
 
     this.contentReady = new Promise(resolve => {
       this._resolveContentReady = resolve;
@@ -328,7 +328,7 @@ TabContext.prototype = {
   },
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
-    let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+    let gBrowser = browser.ownerGlobal.gBrowser;
     if (browser === gBrowser.selectedBrowser) {
       let tab = gBrowser.getTabForBrowser(browser);
       this.emit("location-change", tab, true);
@@ -384,7 +384,7 @@ ExtensionTabManager.prototype = {
   },
 
   convert(tab) {
-    let window = tab.ownerDocument.defaultView;
+    let window = tab.ownerGlobal;
     let browser = tab.linkedBrowser;
 
     let mutedInfo = {muted: tab.muted};
@@ -495,7 +495,7 @@ global.TabManager = {
   },
 
   getBrowserId(browser) {
-    let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+    let gBrowser = browser.ownerGlobal.gBrowser;
     // Some non-browser windows have gBrowser but not
     // getTabForBrowser!
     if (gBrowser && gBrowser.getTabForBrowser) {

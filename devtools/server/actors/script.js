@@ -19,6 +19,7 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn, update, fetch } = DevToolsUtils;
 const promise = require("promise");
+const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");

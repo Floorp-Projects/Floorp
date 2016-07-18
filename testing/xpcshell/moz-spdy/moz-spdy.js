@@ -188,7 +188,7 @@ function listenok() {
   console.log('SPDY server listening on port ' + webServer.address().port);
 }
 
-var webServer = spdy.createServer(options, handleRequest).listen(-1, "0.0.0.0", 200, listenok);
+var webServer = spdy.createServer(options, handleRequest).listen(0, "0.0.0.0", 200, listenok);
 
 // Set up to exit when the user finishes our stdin
 process.stdin.resume();

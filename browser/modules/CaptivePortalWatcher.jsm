@@ -165,7 +165,7 @@ this.CaptivePortalWatcher = {
       return;
     }
 
-    let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
+    let tabbrowser = tab.ownerGlobal.gBrowser;
 
     // If after the login, the captive portal has redirected to some other page,
     // leave it open if the tab has focus.
