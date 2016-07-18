@@ -45,7 +45,6 @@ static GtkWidget* gTreeViewWidget;
 static GtkTreeViewColumn* gMiddleTreeViewColumn;
 static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
-static GtkWidget* gExpanderWidget;
 static GtkWidget* gToolbarSeparatorWidget;
 static GtkWidget* gMenuSeparatorWidget;
 static GtkWidget* gHPanedWidget;
@@ -542,16 +541,6 @@ ensure_tree_header_cell_widget()
         gTreeHeaderCellWidget = gtk_tree_view_column_get_button(gMiddleTreeViewColumn);
         /* TODO, but it can't be NULL */
         gTreeHeaderSortArrowWidget = gtk_button_new();
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_expander_widget()
-{
-    if (!gExpanderWidget) {
-        gExpanderWidget = gtk_expander_new("M");
-        setup_widget_prototype(gExpanderWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -2905,11 +2894,11 @@ moz_gtk_get_toolbar_separator_width(gint* size)
 gint
 moz_gtk_get_expander_size(gint* size)
 {
-    ensure_expander_widget();
-    gtk_style_context_get_style(gtk_widget_get_style_context(gExpanderWidget),
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_EXPANDER);
+    gtk_style_context_get_style(style,
                                 "expander-size", size,
                                 NULL);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -3332,7 +3321,6 @@ moz_gtk_shutdown()
     gMiddleTreeViewColumn = NULL;
     gTreeHeaderCellWidget = NULL;
     gTreeHeaderSortArrowWidget = NULL;
-    gExpanderWidget = NULL;
     gToolbarSeparatorWidget = NULL;
     gMenuSeparatorWidget = NULL;
     gHPanedWidget = NULL;
