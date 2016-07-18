@@ -74,6 +74,10 @@ public:
     return mGPUChild.get();
   }
 
+  // Return a unique id for this process, guaranteed not to be shared with any
+  // past or future instance of GPUProcessHost.
+  uint64_t GetProcessToken() const;
+
   bool IsConnected() const {
     return !!mGPUChild;
   }
@@ -114,9 +118,10 @@ private:
   LaunchPhase mLaunchPhase;
 
   UniquePtr<GPUChild> mGPUChild;
-  Listener* listener_;
+  uint64_t mProcessToken;
 
   bool mShutdownRequested;
+  bool mChannelClosed;
 };
 
 } // namespace gfx

@@ -19,10 +19,6 @@
 #include <string.h>
 #endif
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 #ifdef GetClassName
 #undef GetClassName
 #endif
@@ -42,7 +38,6 @@
 #include "nsISupportsImpl.h"
 #include "plstr.h"
 #include "GLContextTypes.h"
-//#include "GLTextureImage.h"
 #include "SurfaceTypes.h"
 #include "GLContextSymbols.h"
 #include "base/platform_thread.h"       // for PlatformThreadId
@@ -1226,6 +1221,14 @@ public:
 
     void GetUIntegerv(GLenum pname, GLuint* params) {
         fGetIntegerv(pname, reinterpret_cast<GLint*>(params));
+    }
+
+    template<typename T>
+    T GetIntAs(GLenum pname) {
+        static_assert(sizeof(T) == sizeof(GLint), "Invalid T.");
+        T ret = 0;
+        fGetIntegerv(pname, (GLint*)&ret);
+        return ret;
     }
 
     void fGetFloatv(GLenum pname, GLfloat* params) {

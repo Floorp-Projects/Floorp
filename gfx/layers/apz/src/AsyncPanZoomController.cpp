@@ -3657,7 +3657,7 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
       // Let the compositor know about scroll state changes so it can manage
       // windowed plugins.
-      if (mCompositorBridgeParent) {
+      if (gfxPrefs::HidePluginsForScroll() && mCompositorBridgeParent) {
         mCompositorBridgeParent->ScheduleHideAllPluginWindows();
       }
 #endif
@@ -3665,7 +3665,7 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::eTransformEnd);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      if (mCompositorBridgeParent) {
+      if (gfxPrefs::HidePluginsForScroll() && mCompositorBridgeParent) {
         mCompositorBridgeParent->ScheduleShowAllPluginWindows();
       }
 #endif

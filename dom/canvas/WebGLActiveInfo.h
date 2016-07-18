@@ -30,11 +30,10 @@ public:
         return mWebGL;
     }
 
-
     WebGLContext* const mWebGL;
 
     // ActiveInfo state:
-    const GLint mElemCount; // `size`
+    const uint32_t mElemCount; // `size`
     const GLenum mElemType; // `type`
     const nsCString mBaseUserName; // `name`, but ASCII, and without any final "[0]".
 
@@ -42,6 +41,8 @@ public:
     const bool mIsArray;
     const uint8_t mElemSize;
     const nsCString mBaseMappedName; // Without any final "[0]".
+
+    bool IsSampler() const;
 
     WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
                     const nsACString& baseUserName, const nsACString& baseMappedName);
@@ -90,7 +91,7 @@ private:
 
 //////////
 
-uint8_t ElemSizeFromType(GLenum elemType);
+bool IsElemTypeSampler(GLenum elemType);
 
 } // namespace mozilla
 

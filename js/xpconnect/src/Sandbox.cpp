@@ -1786,7 +1786,9 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
 
         // If the sandbox threw an exception, grab it off the context.
         if (aes.HasException()) {
-            aes.StealException(&exn);
+            if (!aes.StealException(&exn)) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
         }
     }
 

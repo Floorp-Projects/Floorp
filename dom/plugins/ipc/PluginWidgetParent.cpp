@@ -143,6 +143,11 @@ PluginWidgetParent::RecvCreate(nsresult* aResult)
                mozilla::dom::kPluginWidgetContentParentProperty,
                GetTabParent()->Manager()->AsContentParent());
   NS_ASSERTION(winres, "SetPropW call failure");
+
+  uint64_t scrollCaptureId = mWidget->CreateScrollCaptureContainer();
+  uintptr_t pluginId =
+    reinterpret_cast<uintptr_t>(mWidget->GetNativeData(NS_NATIVE_PLUGIN_ID));
+  Unused << SendSetScrollCaptureId(scrollCaptureId, pluginId);
 #endif
 
   // This is a special call we make to nsBaseWidget to register this
