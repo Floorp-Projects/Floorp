@@ -101,7 +101,8 @@ public:
     bool HasImage() const;
     bool IsComplete(WebGLContext* webgl, nsCString* const out_info) const;
 
-    void FinalizeAttachment(gl::GLContext* gl, GLenum attachmentLoc) const;
+    void FinalizeAttachment(gl::GLContext* gl, FBTarget target,
+                            GLenum attachmentLoc) const;
 
     JS::Value GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
                            GLenum target, GLenum attachment, GLenum pname,
@@ -229,7 +230,7 @@ public:
     bool AllImageRectsMatch() const;
     bool AllImageSamplesMatch() const;
     FBStatus PrecheckFramebufferStatus(nsCString* const out_info) const;
-    FBStatus CheckFramebufferStatus(nsCString* const out_info) const;
+    FBStatus CheckFramebufferStatus(FBTarget target, nsCString* const out_info) const;
 
     const webgl::FormatUsageInfo*
     GetFormatForAttachment(const WebGLFBAttachPoint& attachment) const;
@@ -272,7 +273,7 @@ public:
         return mContext;
     }
 
-    void FinalizeAttachments() const;
+    void FinalizeAttachments(FBTarget target) const;
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 

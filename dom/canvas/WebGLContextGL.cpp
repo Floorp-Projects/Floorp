@@ -277,7 +277,7 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 
     nsCString fbErrorInfo;
-    return fb->CheckFramebufferStatus(&fbErrorInfo).get();
+    return fb->CheckFramebufferStatus(target, &fbErrorInfo).get();
 }
 
 already_AddRefed<WebGLProgram>
