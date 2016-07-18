@@ -186,7 +186,9 @@ class Module : public RefCounted<Module>
     const SharedBytes       bytecode_;
 
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector* tables) const;
+    bool instantiateTable(JSContext* cx, const CodeSegment& codeSegment,
+                          HandleWasmTableObject tableImport, SharedTableVector* tables) const;
+    void initElems(HandleWasmInstanceObject instanceObj, HandleWasmTableObject tableObj) const;
 
   public:
     Module(Bytes&& code,
@@ -214,6 +216,7 @@ class Module : public RefCounted<Module>
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
+                     HandleWasmTableObject tableImport,
                      HandleWasmMemoryObject memoryImport,
                      HandleObject instanceProto,
                      MutableHandleWasmInstanceObject instanceObj) const;

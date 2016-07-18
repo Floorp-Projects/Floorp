@@ -51,6 +51,7 @@ ModuleGenerator::ModuleGenerator()
     masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
     lastPatchedCallsite_(0),
     startOfUnpatchedBranches_(0),
+    tableExported_(false),
     parallel_(false),
     outstanding_(0),
     activeFunc_(nullptr),
@@ -692,6 +693,8 @@ ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex)
 bool
 ModuleGenerator::addTableExport(UniqueChars fieldName)
 {
+    MOZ_ASSERT(elemSegments_.empty());
+    tableExported_ = true;
     return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
 }
 
@@ -840,6 +843,14 @@ bool
 ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
     MOZ_ASSERT(seg.offset + seg.elems.length() <= shared_->tables[seg.tableIndex].length);
+
+    if (tableExported_) {
+        for (uint32_t funcIndex : seg.elems) {
+            if (!exportedFuncs_.put(funcIndex))
+                return false;
+        }
+    }
+
     return elemSegments_.append(Move(seg));
 }
 
