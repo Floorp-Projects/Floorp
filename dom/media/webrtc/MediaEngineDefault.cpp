@@ -217,11 +217,9 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Restart(
-    BaseAllocationHandle* aHandle,
-    const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs &aPrefs,
-    const nsString& aDeviceId)
+MediaEngineDefaultVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                       const MediaEnginePrefs &aPrefs,
+                                       const nsString& aDeviceId)
 {
   return NS_OK;
 }
@@ -527,8 +525,7 @@ MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Restart(BaseAllocationHandle* aHandle,
-                                       const dom::MediaTrackConstraints& aConstraints,
+MediaEngineDefaultAudioSource::Restart(const dom::MediaTrackConstraints& aConstraints,
                                        const MediaEnginePrefs &aPrefs,
                                        const nsString& aDeviceId)
 {
