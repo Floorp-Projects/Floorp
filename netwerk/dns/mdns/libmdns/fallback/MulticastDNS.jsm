@@ -100,6 +100,7 @@ class PublishedService {
 class MulticastDNS {
   constructor() {
     this._listeners       = new Map();
+    this._querySocket     = undefined;
     this._broadcastSocket = undefined;
     this._broadcastTimer  = undefined;
     this._sockets         = new Map();
@@ -220,6 +221,22 @@ class MulticastDNS {
     aListener.onServiceUnregistered(aServiceInfo);
   }
 
+  _respondToQuery(serviceKey, message) {
+    let address = message.fromAddr.address;
+    let port = message.fromAddr.port;
+    DEBUG && debug('_respondToQuery(): key=' + serviceKey + ', fromAddr='
+                        + address + ":" + port);
+
+    let publishedService = this._services.get(serviceKey);
+    if (!publishedService) {
+      debug("_respondToQuery Could not find service (key=" + serviceKey + ")");
+      return;
+    }
+
+    DEBUG && debug('_respondToQuery(): key=' + serviceKey + ': SENDING RESPONSE');
+    this._advertiseServiceHelper(publishedService, {address,port});
+  }
+
   _advertiseService(serviceKey, firstAdv) {
     DEBUG && debug('_advertiseService(): key=' + serviceKey);
     let publishedService = this._services.get(serviceKey);
@@ -230,31 +247,7 @@ class MulticastDNS {
 
     publishedService.advertiseTimer = undefined;
 
-    this._getSockets().then((sockets) => {
-      if (publishedService.address == "0.0.0.0") {
-        let addressList = [];
-
-        sockets.forEach((socket, address) => {
-          if (address != "127.0.0.1") {
-            addressList.push(address);
-          }
-        });
-
-        this._getBroadcastSocket().then(socket => {
-          let packet = this._makeServicePacket(publishedService, addressList);
-          let data = packet.serialize();
-          socket.send(MDNS_MULTICAST_GROUP, MDNS_PORT, data, data.length);
-        });
-      } else {
-        sockets.forEach((socket, address) => {
-          if (address == publishedService.address) {
-            let packet = this._makeServicePacket(publishedService, [address]);
-            let data = packet.serialize();
-            socket.send(MDNS_MULTICAST_GROUP, MDNS_PORT, data, data.length);
-          }
-        });
-      }
-
+    this._advertiseServiceHelper(publishedService, null).then(() => {
       // If first advertisement, re-advertise in 1 second.
       // Otherwise, set the lastAdvertised time.
       if (firstAdv) {
@@ -265,6 +258,28 @@ class MulticastDNS {
         publishedService.lastAdvertised = Date.now();
         this._checkStartBroadcastTimer();
       }
+    });
+  }
+
+  _advertiseServiceHelper(svc, target) {
+    if (!target) {
+      target = {address:MDNS_MULTICAST_GROUP, port:MDNS_PORT};
+    }
+
+    return this._getSockets().then((sockets) => {
+      sockets.forEach((socket, address) => {
+        if (svc.address == "0.0.0.0" || address == svc.address)
+        {
+          let packet = this._makeServicePacket(svc, [address]);
+          let data = packet.serialize();
+          try {
+            socket.send(target.address, target.port, data, data.length);
+          } catch (err) {
+            DEBUG && debug("Failed to send packet to "
+                            + target.address + ":" + target.port);
+          }
+        }
+      });
     });
   }
 
@@ -323,6 +338,7 @@ class MulticastDNS {
   }
 
   _query(name) {
+    DEBUG && debug('query("' + name + '")');
     let packet = new DNSPacket();
     packet.setFlag('QR', DNS_QUERY_RESPONSE_CODES.QUERY);
 
@@ -336,15 +352,15 @@ class MulticastDNS {
 
     let data = packet.serialize();
 
-    this._getSockets().then((sockets) => {
-      sockets.forEach((socket) => {
-        socket.send(MDNS_MULTICAST_GROUP, MDNS_PORT, data, data.length);
-      });
+    this._getQuerySocket().then(querySocket => {
+      DEBUG && debug('sending query on query socket ("' + name + '")');
+      querySocket.send(MDNS_MULTICAST_GROUP, MDNS_PORT, data, data.length);
     });
 
     // Automatically announce previously-discovered
     // services that match and haven't expired yet.
     setTimeout(() => {
+      DEBUG && debug('announcing previously discovered services ("' + name + '")');
       let { serviceType } = _parseServiceDomainName(name);
 
       this._clearExpiredDiscoveries();
@@ -386,8 +402,9 @@ class MulticastDNS {
       }
 
       for (let [serviceKey, publishedService] of this._services) {
+        DEBUG && debug("_handleQueryPacket: " + packet.toJSON());
         if (publishedService.ptrMatch(record.name)) {
-          this._advertiseService(serviceKey);
+          this._respondToQuery(serviceKey, message);
         }
       }
     });
@@ -542,6 +559,18 @@ class MulticastDNS {
     DEBUG && debug('_onServiceFound()' + serviceInfo.serviceName);
   }
 
+  _getQuerySocket() {
+    return new Promise((resolve, reject) => {
+      if (!this._querySocket) {
+        this._querySocket = _openSocket(0, {
+          onPacketReceived: this._onResponsePacketReceived.bind(this),
+          onStopListening: this._onResponseStopListening.bind(this)
+        }, /* joinMulticast = */ false);
+      }
+      resolve(this._querySocket);
+    });
+  }
+
   _getSockets() {
     return new Promise((resolve) => {
       if (this._sockets.size > 0) {
@@ -551,17 +580,10 @@ class MulticastDNS {
 
       Promise.all([getAddresses(), getHostname()]).then(() => {
         _addresses.forEach((address) => {
-          let socket = Cc['@mozilla.org/network/udp-socket;1']
-                        .createInstance(Ci.nsIUDPSocket);
-
-          socket.init(MDNS_PORT, false,
-                      Services.scriptSecurityManager.getSystemPrincipal());
-          socket.asyncListen({
+          let socket = _openSocket(MDNS_PORT, {
             onPacketReceived: this._onPacketReceived.bind(this),
             onStopListening: this._onStopListening.bind(this)
-          });
-          socket.joinMulticast(MDNS_MULTICAST_GROUP, address);
-
+          }, /* joinMulticast = */ address);
           this._sockets.set(address, socket);
         });
 
@@ -572,17 +594,10 @@ class MulticastDNS {
 
   _getBroadcastSocket() {
     return new Promise((resolve) => {
-      if (this._broadcastSocket !== undefined) {
-        resolve(this._broadcastSocket);
-        return;
+      if (!this._broadcastSocket) {
+        this._broadcastSocket = _openSocket(MDNS_PORT, null,
+                                            /* joinMulticast = */ false);
       }
-
-      let socket = Cc['@mozilla.org/network/udp-socket;1']
-                    .createInstance(Ci.nsIUDPSocket);
-
-      socket.init(MDNS_PORT, false,
-                  Services.scriptSecurityManager.getSystemPrincipal());
-      this._broadcastSocket = socket;
       resolve(this._broadcastSocket);
     });
   }
@@ -609,6 +624,11 @@ class MulticastDNS {
     this._sockets.clear();
   }
 
+  _onResponsePacketReceived(socket, message) {
+    DEBUG && debug('_onResponsePacketReceived');
+    this._onPacketReceived(socket, message);
+  }
+
   _onPacketReceived(socket, message) {
     let packet = DNSPacket.parse(message.rawData);
 
@@ -627,6 +647,11 @@ class MulticastDNS {
   _onStopListening(socket, status) {
     DEBUG && debug('_onStopListening() ' + status);
   }
+
+  _onResponseStopListening(socket, status) {
+    DEBUG && debug('_onResponseStopListening() ' + status);
+  }
+
 
   _addServiceListener(serviceType, listener) {
     let listeners = this._listeners.get(serviceType);
@@ -761,4 +786,27 @@ function _propertyBagToObject(propBag) {
     }
   }
   return result;
+}
+
+/**
+ * @private
+ */
+function _openSocket(port, handler, joinMulticast) {
+  let socket = Cc['@mozilla.org/network/udp-socket;1']
+                    .createInstance(Ci.nsIUDPSocket);
+
+  if (arguments.length <= 2)
+    joinMulticast = true;
+
+  socket.init(port, false,
+              Services.scriptSecurityManager.getSystemPrincipal());
+  if (handler) {
+    socket.asyncListen({
+      onPacketReceived: handler.onPacketReceived,
+      onStopListening: handler.onStopListening
+    });
+  }
+  if (joinMulticast !== false)
+    socket.joinMulticast(MDNS_MULTICAST_GROUP, joinMulticast);
+  return socket;
 }
