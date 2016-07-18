@@ -135,12 +135,7 @@ var pktUI = (function() {
             openTabWithUrl('https://' + site + '/firefox_learnmore?src=ff_ext&s=ffi&t=buttonclick', true);
 
             // force the panel closed before it opens
-            // wrapped in setTimeout to avoid race condition after logging out
-            // if this test goes to 100%, we should move this logic up before
-            // the panel is actually opened
-            setTimeout(function() {
-                getPanel().hidePopup();
-            }, 0);
+            getPanel().hidePopup();
 
             return;
         }
@@ -332,7 +327,9 @@ var pktUI = (function() {
      * Called when the signup and saved panel was hidden
      */
     function panelDidHide() {
-
+        // clear the onShow and onHide values
+        _currentPanelDidShow = null;
+        _currentPanelDidHide = null;
     }
 
     /**
