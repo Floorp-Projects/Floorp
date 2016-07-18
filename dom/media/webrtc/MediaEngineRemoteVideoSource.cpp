@@ -103,8 +103,7 @@ MediaEngineRemoteVideoSource::Allocate(
     const MediaEnginePrefs& aPrefs,
     const nsString& aDeviceId,
     const nsACString& aOrigin,
-    BaseAllocationHandle** aOutHandle,
-    const char** aOutBadConstraint)
+    BaseAllocationHandle** aOutHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
@@ -122,8 +121,7 @@ MediaEngineRemoteVideoSource::Allocate(
   allConstraints.AppendElement(&handle->mConstraints);
 
   NormalizedConstraints netConstraints(allConstraints);
-  if (netConstraints.mBadConstraint) {
-    *aOutBadConstraint = netConstraints.mBadConstraint;
+  if (netConstraints.mOverconstrained) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -285,8 +283,7 @@ nsresult
 MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
                                       const dom::MediaTrackConstraints& aConstraints,
                                       const MediaEnginePrefs& aPrefs,
-                                      const nsString& aDeviceId,
-                                      const char** aOutBadConstraint)
+                                      const nsString& aDeviceId)
 {
   AssertIsOnOwningThread();
   if (!mInitDone) {
@@ -308,8 +305,7 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
   allConstraints.AppendElement(&temp->mConstraints);
 
   NormalizedConstraints netConstraints(allConstraints);
-  if (netConstraints.mBadConstraint) {
-    *aOutBadConstraint = netConstraints.mBadConstraint;
+  if (netConstraints.mOverconstrained) {
     return NS_ERROR_FAILURE;
   }
 

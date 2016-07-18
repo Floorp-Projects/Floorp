@@ -6,8 +6,6 @@
 #include "MediaTrackConstraints.h"
 
 #include <limits>
-#include <algorithm>
-#include <iterator>
 
 namespace mozilla {
 
@@ -202,12 +200,12 @@ NormalizedConstraintSet::StringRange::Intersects(const StringRange& aOther) cons
   if (!mExact.size() || !aOther.mExact.size()) {
     return true;
   }
-
-  ValueType intersection;
-  set_intersection(mExact.begin(), mExact.end(),
-                   aOther.mExact.begin(), aOther.mExact.end(),
-                   std::inserter(intersection, intersection.begin()));
-  return !!intersection.size();
+  for (auto& entry : aOther.mExact) {
+    if (mExact.find(entry) != mExact.end()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void
@@ -216,32 +214,15 @@ NormalizedConstraintSet::StringRange::Intersect(const StringRange& aOther)
   if (!aOther.mExact.size()) {
     return;
   }
-
-  ValueType intersection;
-  set_intersection(mExact.begin(), mExact.end(),
-                   aOther.mExact.begin(), aOther.mExact.end(),
-                   std::inserter(intersection, intersection.begin()));
-  mExact = intersection;
-}
-
-bool
-NormalizedConstraintSet::StringRange::Merge(const StringRange& aOther)
-{
-  if (!Intersects(aOther)) {
-    return false;
+  for (auto& entry : mExact) {
+    if (aOther.mExact.find(entry) == aOther.mExact.end()) {
+      mExact.erase(entry);
+    }
   }
-  Intersect(aOther);
-
-  ValueType unioned;
-  set_union(mIdeal.begin(), mIdeal.end(),
-            aOther.mIdeal.begin(), aOther.mIdeal.end(),
-            std::inserter(unioned, unioned.begin()));
-  mIdeal = unioned;
-  return true;
 }
 
 NormalizedConstraints::NormalizedConstraints(const dom::MediaTrackConstraints& aOther)
-: NormalizedConstraintSet(aOther, false), mBadConstraint(nullptr)
+: NormalizedConstraintSet(aOther, false), mOverconstrained(false)
 {
   if (aOther.mAdvanced.WasPassed()) {
     for (auto& entry : aOther.mAdvanced.Value()) {
@@ -255,63 +236,27 @@ NormalizedConstraints::NormalizedConstraints(const dom::MediaTrackConstraints& a
 NormalizedConstraints::NormalizedConstraints(
     const nsTArray<const NormalizedConstraints*>& aOthers)
   : NormalizedConstraintSet(*aOthers[0])
-  , mBadConstraint(nullptr)
+  , mOverconstrained(false)
 {
   // Do intersection of all required constraints, and average of ideals.
 
   for (uint32_t i = 1; i < aOthers.Length(); i++) {
     auto& set = *aOthers[i];
 
-    if (!mWidth.Merge(set.mWidth)) {
-      mBadConstraint = "width";
-      return;
-    }
-    if (!mHeight.Merge(set.mHeight)) {
-      mBadConstraint = "height";
-      return;
-    }
-    if (!mFrameRate.Merge(set.mFrameRate)) {
-      mBadConstraint = "frameRate";
-      return;
-    }
-    if (!mFacingMode.Merge(set.mFacingMode)) {
-      mBadConstraint = "facingMode";
-      return;
-    }
-    if (mMediaSource != set.mMediaSource) {
-      mBadConstraint = "mediaSource";
-      return;
-    }
-    if (mBrowserWindow != set.mBrowserWindow) {
-      mBadConstraint = "browserWindow";
-      return;
-    }
-    if (!mViewportOffsetX.Merge(set.mViewportOffsetX)) {
-      mBadConstraint = "viewportOffsetX";
-      return;
-    }
-    if (!mViewportOffsetY.Merge(set.mViewportOffsetY)) {
-      mBadConstraint = "viewportOffsetY";
-      return;
-    }
-    if (!mViewportWidth.Merge(set.mViewportWidth)) {
-      mBadConstraint = "viewportWidth";
-      return;
-    }
-    if (!mViewportHeight.Merge(set.mViewportHeight)) {
-      mBadConstraint = "viewportHeight";
-      return;
-    }
-    if (!mEchoCancellation.Merge(set.mEchoCancellation)) {
-      mBadConstraint = "echoCancellation";
-      return;
-    }
-    if (!mMozNoiseSuppression.Merge(set.mMozNoiseSuppression)) {
-      mBadConstraint = "mozNoiseSuppression";
-      return;
-    }
-    if (!mMozAutoGainControl.Merge(set.mMozAutoGainControl)) {
-      mBadConstraint = "mozAutoGainControl";
+    if (!mWidth.Merge(set.mWidth) ||
+        !mHeight.Merge(set.mHeight) ||
+        !mFrameRate.Merge(set.mFrameRate) ||
+        !mFacingMode.Merge(set.mFacingMode) ||
+        mMediaSource != set.mMediaSource ||
+        mBrowserWindow != set.mBrowserWindow ||
+        !mViewportOffsetX.Merge(set.mViewportOffsetX) ||
+        !mViewportOffsetY.Merge(set.mViewportOffsetY) ||
+        !mViewportWidth.Merge(set.mViewportWidth) ||
+        !mViewportHeight.Merge(set.mViewportHeight) ||
+        !mEchoCancellation.Merge(set.mEchoCancellation) ||
+        !mMozNoiseSuppression.Merge(set.mMozNoiseSuppression) ||
+        !mMozAutoGainControl.Merge(set.mMozAutoGainControl)) {
+      mOverconstrained = true;
       return;
     }
 

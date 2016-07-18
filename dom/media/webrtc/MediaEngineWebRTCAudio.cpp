@@ -223,8 +223,7 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
                                             const MediaEnginePrefs &aPrefs,
                                             const nsString& aDeviceId,
                                             const nsACString& aOrigin,
-                                            BaseAllocationHandle** aOutHandle,
-                                            const char** aOutBadConstraint)
+                                            BaseAllocationHandle** aOutHandle)
 {
   AssertIsOnOwningThread();
   if (mState == kReleased) {
@@ -261,15 +260,14 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   }
   ++mNrAllocations;
   aOutHandle = nullptr;
-  return Restart(nullptr, aConstraints, aPrefs, aDeviceId, aOutBadConstraint);
+  return Restart(nullptr, aConstraints, aPrefs, aDeviceId);
 }
 
 nsresult
 MediaEngineWebRTCMicrophoneSource::Restart(BaseAllocationHandle* aHandle,
                                            const dom::MediaTrackConstraints& aConstraints,
                                            const MediaEnginePrefs &aPrefs,
-                                           const nsString& aDeviceId,
-                                           const char** aOutBadConstraint)
+                                           const nsString& aDeviceId)
 {
   MOZ_ASSERT(!aHandle);
   FlattenedConstraints c(aConstraints);
@@ -850,8 +848,7 @@ MediaEngineWebRTCAudioCaptureSource::Restart(
     BaseAllocationHandle* aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs &aPrefs,
-    const nsString& aDeviceId,
-    const char** aOutBadConstraint)
+    const nsString& aDeviceId)
 {
   MOZ_ASSERT(!aHandle);
   return NS_OK;
