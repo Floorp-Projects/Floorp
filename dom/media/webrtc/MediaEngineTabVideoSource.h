@@ -32,8 +32,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     void SetDirectListeners(bool aHasDirectListeners) override {};
     void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime, const mozilla::PrincipalHandle& aPrincipalHandle) override;
     nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
-    nsresult Restart(BaseAllocationHandle* aHandle,
-                     const dom::MediaTrackConstraints& aConstraints,
+    nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
                      const mozilla::MediaEnginePrefs& aPrefs,
                      const nsString& aDeviceId) override;
     bool IsFake() override;

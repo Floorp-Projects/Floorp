@@ -260,16 +260,14 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   }
   ++mNrAllocations;
   aOutHandle = nullptr;
-  return Restart(nullptr, aConstraints, aPrefs, aDeviceId);
+  return Restart(aConstraints, aPrefs, aDeviceId);
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Restart(BaseAllocationHandle* aHandle,
-                                           const dom::MediaTrackConstraints& aConstraints,
+MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aConstraints,
                                            const MediaEnginePrefs &aPrefs,
                                            const nsString& aDeviceId)
 {
-  MOZ_ASSERT(!aHandle);
   FlattenedConstraints c(aConstraints);
 
   bool aec_on = c.mEchoCancellation.Get(aPrefs.mAecOn);
@@ -845,12 +843,10 @@ MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
 
 nsresult
 MediaEngineWebRTCAudioCaptureSource::Restart(
-    BaseAllocationHandle* aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId)
 {
-  MOZ_ASSERT(!aHandle);
   return NS_OK;
 }
 

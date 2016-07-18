@@ -87,11 +87,10 @@ public:
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
                     BaseAllocationHandle** aOutHandle) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+  nsresult Deallocate(BaseAllocationHandle* aHandle) override;;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(BaseAllocationHandle* aHandle,
-                   const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void NotifyPull(MediaStreamGraph* aGraph,
@@ -103,7 +102,7 @@ public:
     return mMediaSource;
   }
 
-  bool ChooseCapability(const NormalizedConstraints &aConstraints,
+  bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
                         const MediaEnginePrefs &aPrefs,
                         const nsString& aDeviceId) override;
 
