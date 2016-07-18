@@ -13,7 +13,7 @@
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "mozilla/CDMProxy.h"
+#include "GMPCDMProxy.h"
 #include "mozilla/EMEUtils.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -313,7 +313,7 @@ MediaKeys::Init(ErrorResult& aRv)
     return nullptr;
   }
 
-  mProxy = new CDMProxy(this, mKeySystem);
+  mProxy = new GMPCDMProxy(this, mKeySystem, new MediaKeysGMPCrashHelper(this));
 
   // Determine principal (at creation time) of the MediaKeys object.
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetParentObject());
@@ -387,8 +387,7 @@ MediaKeys::Init(ErrorResult& aRv)
                origin,
                topLevelOrigin,
                KeySystemToGMPName(mKeySystem),
-               inPrivateBrowsing,
-               new MediaKeysGMPCrashHelper(this));
+               inPrivateBrowsing);
 
   return promise.forget();
 }
