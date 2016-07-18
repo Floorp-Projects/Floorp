@@ -39,14 +39,14 @@ bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
 // Sub-classes (B2G or desktop) should overload one of both of these two methods
 // to provide capabilities
 size_t
-MediaEngineCameraVideoSource::NumCapabilities() const
+MediaEngineCameraVideoSource::NumCapabilities()
 {
   return mHardcodedCapabilities.Length();
 }
 
 void
 MediaEngineCameraVideoSource::GetCapability(size_t aIndex,
-                                            webrtc::CaptureCapability& aOut) const
+                                            webrtc::CaptureCapability& aOut)
 {
   MOZ_ASSERT(aIndex < mHardcodedCapabilities.Length());
   aOut = mHardcodedCapabilities[aIndex];
@@ -56,7 +56,7 @@ uint32_t
 MediaEngineCameraVideoSource::GetFitnessDistance(
     const webrtc::CaptureCapability& aCandidate,
     const NormalizedConstraintSet &aConstraints,
-    const nsString& aDeviceId) const
+    const nsString& aDeviceId)
 {
   // Treat width|height|frameRate == 0 on capability as "can do any".
   // This allows for orthogonal capabilities that are not in discrete steps.
@@ -104,7 +104,7 @@ MediaEngineCameraVideoSource::TrimLessFitCandidates(CapabilitySet& set) {
 uint32_t
 MediaEngineCameraVideoSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const
+    const nsString& aDeviceId)
 {
   size_t num = NumCapabilities();
 
@@ -364,7 +364,7 @@ MediaEngineCameraVideoSource::SetName(nsString aName)
 }
 
 void
-MediaEngineCameraVideoSource::GetName(nsAString& aName) const
+MediaEngineCameraVideoSource::GetName(nsAString& aName)
 {
   aName = mDeviceName;
 }
@@ -376,13 +376,13 @@ MediaEngineCameraVideoSource::SetUUID(const char* aUUID)
 }
 
 void
-MediaEngineCameraVideoSource::GetUUID(nsACString& aUUID) const
+MediaEngineCameraVideoSource::GetUUID(nsACString& aUUID)
 {
   aUUID = mUniqueId;
 }
 
 const nsCString&
-MediaEngineCameraVideoSource::GetUUID() const
+MediaEngineCameraVideoSource::GetUUID()
 {
   return mUniqueId;
 }
