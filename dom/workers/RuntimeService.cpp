@@ -2628,7 +2628,37 @@ WorkerThreadPrimaryRunnable::Run()
     return rv;
   }
 
-  mWorkerPrivate->SetThread(mThread);
+  class MOZ_STACK_CLASS SetThreadHelper final
+  {
+    // Raw pointer: this class is on the stack.
+    WorkerPrivate* mWorkerPrivate;
+
+  public:
+    SetThreadHelper(WorkerPrivate* aWorkerPrivate, WorkerThread* aThread)
+      : mWorkerPrivate(aWorkerPrivate)
+    {
+      MOZ_ASSERT(aWorkerPrivate);
+      MOZ_ASSERT(aThread);
+
+      mWorkerPrivate->SetThread(aThread);
+    }
+
+    ~SetThreadHelper()
+    {
+      if (mWorkerPrivate) {
+        mWorkerPrivate->SetThread(nullptr);
+      }
+    }
+
+    void Nullify()
+    {
+      MOZ_ASSERT(mWorkerPrivate);
+      mWorkerPrivate->SetThread(nullptr);
+      mWorkerPrivate = nullptr;
+    }
+  };
+
+  SetThreadHelper threadHelper(mWorkerPrivate, mThread);
 
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2698,7 +2728,7 @@ WorkerThreadPrimaryRunnable::Run()
     // any remaining C++ objects.
   }
 
-  mWorkerPrivate->SetThread(nullptr);
+  threadHelper.Nullify();
 
   mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
 
