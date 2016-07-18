@@ -208,7 +208,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     runningOOMTest(false),
 #endif
     allowRelazificationForTesting(false),
-    data(nullptr),
     defaultFreeOp_(thisFromCtor()),
     debuggerMutations(0),
     securityCallbacks(&NullSecurityCallbacks),

@@ -338,7 +338,8 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
 static ShellRuntime*
 GetShellRuntime(JSRuntime *rt)
 {
-    ShellRuntime* sr = static_cast<ShellRuntime*>(JS_GetRuntimePrivate(rt));
+    JSContext* cx = JS_GetContext(rt);
+    ShellRuntime* sr = static_cast<ShellRuntime*>(JS_GetContextPrivate(cx));
     MOZ_ASSERT(sr);
     return sr;
 }
@@ -2957,7 +2958,7 @@ WorkerMain(void* arg)
     JSContext* cx = JS_GetContext(rt);
 
     sr->isWorker = true;
-    JS_SetRuntimePrivate(rt, sr.get());
+    JS_SetContextPrivate(cx, sr.get());
     JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(cx, WarningReporter);
     js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
@@ -7463,7 +7464,7 @@ main(int argc, char** argv, char** envp)
 
     JSContext* cx = JS_GetContext(rt);
 
-    JS_SetRuntimePrivate(rt, sr.get());
+    JS_SetContextPrivate(cx, sr.get());
     // Waiting is allowed on the shell's main thread, for now.
     JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(cx, WarningReporter);
