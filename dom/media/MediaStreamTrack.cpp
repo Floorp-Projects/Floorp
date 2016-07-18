@@ -10,9 +10,6 @@
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "MediaStreamListener.h"
-#include "systemservices/MediaUtils.h"
-
-#include "mozilla/dom/Promise.h"
 
 #ifdef LOG
 #undef LOG
@@ -41,16 +38,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaStreamTrackSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-auto
-MediaStreamTrackSource::ApplyConstraints(
-    nsPIDOMWindowInner* aWindow,
-    const dom::MediaTrackConstraints& aConstraints) -> already_AddRefed<PledgeVoid>
+already_AddRefed<Promise>
+MediaStreamTrackSource::ApplyConstraints(nsPIDOMWindowInner* aWindow,
+                                         const dom::MediaTrackConstraints& aConstraints,
+                                         ErrorResult &aRv)
 {
-  RefPtr<PledgeVoid> p = new PledgeVoid();
-  p->Reject(new MediaStreamError(aWindow,
-                                 NS_LITERAL_STRING("OverconstrainedError"),
-                                 NS_LITERAL_STRING("")));
-  return p.forget();
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(aWindow);
+  RefPtr<Promise> promise = Promise::Create(go, aRv);
+  MOZ_RELEASE_ASSERT(!aRv.Failed());
+
+  promise->MaybeReject(new MediaStreamError(
+    aWindow,
+    NS_LITERAL_STRING("OverconstrainedError"),
+    NS_LITERAL_STRING(""),
+    NS_LITERAL_STRING("")));
+  return promise.forget();
 }
 
 /**
@@ -270,28 +272,8 @@ MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
                          "constraints %s", this, NS_ConvertUTF16toUTF8(str).get()));
   }
 
-  typedef media::Pledge<bool, MediaStreamError*> PledgeVoid;
-
   nsPIDOMWindowInner* window = mOwningStream->GetParentObject();
-
-  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
-  RefPtr<Promise> promise = Promise::Create(go, aRv);
-
-  // Forward constraints to the source.
-  //
-  // After GetSource().ApplyConstraints succeeds (after it's been to media-thread
-  // and back), and no sooner, do we set mConstraints to the newly applied values.
-
-  // Keep a reference to this, to make sure it's still here when we get back.
-  RefPtr<MediaStreamTrack> that = this;
-  RefPtr<PledgeVoid> p = GetSource().ApplyConstraints(window, aConstraints);
-  p->Then([this, that, promise, aConstraints](bool& aDummy) mutable {
-    mConstraints = aConstraints;
-    promise->MaybeResolve(false);
-  }, [promise](MediaStreamError*& reason) mutable {
-    promise->MaybeReject(reason);
-  });
-  return promise.forget();
+  return GetSource().ApplyConstraints(window, aConstraints, aRv);
 }
 
 MediaStreamGraph*

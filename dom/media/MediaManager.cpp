@@ -1110,18 +1110,32 @@ public:
           return mPeerIdentity;
         }
 
-        already_AddRefed<PledgeVoid>
+        already_AddRefed<Promise>
         ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                         const MediaTrackConstraints& aConstraints) override
+                         const MediaTrackConstraints& aConstraints,
+                         ErrorResult &aRv) override
         {
+          nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(aWindow);
+          RefPtr<Promise> promise = Promise::Create(go, aRv);
+
           if (sInShutdown) {
-            RefPtr<PledgeVoid> p = new PledgeVoid();
-            p->Reject(new MediaStreamError(aWindow,
-                                           NS_LITERAL_STRING("AbortError"),
-                                           NS_LITERAL_STRING("In shutdown")));
-            return p.forget();
+            RefPtr<MediaStreamError> error = new MediaStreamError(aWindow,
+                NS_LITERAL_STRING("AbortError"),
+                NS_LITERAL_STRING("In shutdown"));
+            promise->MaybeReject(error);
+            return promise.forget();
           }
-          return mListener->ApplyConstraintsToTrack(aWindow, mTrackID, aConstraints);
+
+          typedef media::Pledge<bool, MediaStreamError*> PledgeVoid;
+
+          RefPtr<PledgeVoid> p =
+            mListener->ApplyConstraintsToTrack(aWindow, mTrackID, aConstraints);
+          p->Then([promise](bool& aDummy) mutable {
+            promise->MaybeResolve(false);
+          }, [promise](MediaStreamError*& reason) mutable {
+            promise->MaybeReject(reason);
+          });
+          return promise.forget();
         }
 
 
@@ -3369,14 +3383,14 @@ GetUserMediaCallbackMediaStreamListener::StopSharing()
 
 // ApplyConstraints for track
 
-auto
+already_AddRefed<media::Pledge<bool, dom::MediaStreamError*>>
 GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
     nsPIDOMWindowInner* aWindow,
     TrackID aTrackID,
-    const MediaTrackConstraints& aConstraints) -> already_AddRefed<PledgeVoid>
+    const MediaTrackConstraints& aConstraints)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<PledgeVoid> p = new PledgeVoid();
+  RefPtr<media::Pledge<bool, dom::MediaStreamError*>> p = new media::Pledge<bool, dom::MediaStreamError*>();
 
   // XXX to support multiple tracks of a type in a stream, this should key off
   // the TrackID and not just the type
@@ -3429,7 +3443,7 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
       if (!mgr) {
         return NS_OK;
       }
-      RefPtr<PledgeVoid> p = mgr->mOutstandingVoidPledges.Remove(id);
+      RefPtr<media::Pledge<bool, dom::MediaStreamError*>> p = mgr->mOutstandingVoidPledges.Remove(id);
       if (p) {
         if (NS_SUCCEEDED(rv)) {
           p->Resolve(false);
