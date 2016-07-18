@@ -356,13 +356,6 @@ public:
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
   }
 
-  void GetSettings(dom::MediaTrackSettings& aOutSettings)
-  {
-    if (mVideoDevice) {
-      mVideoDevice->GetSource()->GetSettings(aOutSettings);
-    }
-  }
-
   // implement in .cpp to avoid circular dependency with MediaOperationTask
   // Can be invoked from EITHER MainThread or MSG thread
   void Stop();
@@ -1142,11 +1135,6 @@ public:
           return mListener->ApplyConstraintsToTrack(aWindow, mTrackID, aConstraints);
         }
 
-        void
-        GetSettings(dom::MediaTrackSettings& aOutSettings) override
-        {
-          mListener->GetSettings(aOutSettings);
-        }
 
         void Stop() override
         {
