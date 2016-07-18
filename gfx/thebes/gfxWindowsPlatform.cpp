@@ -2073,7 +2073,7 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreationHelper(
         aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
         // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
         // to prevent bug 1092260. IE 11 also uses this flag.
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS | D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
         D3D11_SDK_VERSION, getter_AddRefs(aOutDevice), nullptr, nullptr);
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
@@ -2612,10 +2612,12 @@ gfxWindowsPlatform::CreateD3D11DecoderDeviceHelper(
   IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
 {
   MOZ_SEH_TRY{
+    // Disable threading optimizations on this device to match what we use for
+    // the compositor device. This may not be necessary.
     aResOut =
       sD3D11CreateDeviceFn(
         aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-        D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+        D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS | D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
         D3D11_SDK_VERSION, getter_AddRefs(aDevice), nullptr, nullptr);
 
@@ -2628,6 +2630,24 @@ gfxWindowsPlatform::CreateD3D11DecoderDeviceHelper(
 already_AddRefed<ID3D11Device>
 gfxWindowsPlatform::CreateD3D11DecoderDevice()
 {
+  if (mD3D11Device && !mD3D11DecoderDevice) {
+    mD3D11DecoderDevice = mD3D11Device;
+
+    // The WMF documentation on MSDN suggests that we need to enable multithreading
+    // on devices used for video, and we get errors if we don't. I'm not entirely sure
+    // what actually this does since d3d11 devices are meant to be threadsafe already.
+    RefPtr<ID3D10Multithread> multi;
+    mD3D11DecoderDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+    if (multi) {
+      multi->SetMultithreadProtected(TRUE);
+    }
+  }
+
+  if (mD3D11DecoderDevice) {
+    RefPtr<ID3D11Device> dev = mD3D11DecoderDevice;
+    return dev.forget();
+  }
+
    if (!sD3D11CreateDeviceFn) {
     // We should just be on Windows Vista or XP in this case.
     return nullptr;
@@ -2654,6 +2674,8 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
   device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
 
   multi->SetMultithreadProtected(TRUE);
+
+  mD3D11DecoderDevice = device;
 
   return device.forget();
 }
