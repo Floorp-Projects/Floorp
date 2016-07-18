@@ -501,9 +501,14 @@ private:
   void WriteLog(const std::string &aString) {
     if (MOZ_UNLIKELY(LogIt())) {
       Logger::OutputMessage(aString, L, NoNewline());
+      // Assert if required.  We don't have a three parameter MOZ_ASSERT
+      // so use the underlying functions instead (see bug 1281702):
+#ifdef DEBUG
       if (mOptions & int(LogOptions::AssertOnCall)) {
-        MOZ_ASSERT(false, "An assert from the graphics logger");
+        MOZ_ReportAssertionFailure(aString.c_str(), __FILE__, __LINE__);
+        MOZ_CRASH("GFX: An assert from the graphics logger");
       }
+#endif
       if ((mOptions & int(LogOptions::CrashAction)) && ValidReason()) {
         Logger::CrashAction(mReason);
       }
