@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUProcessManager.h"
 #include "GPUProcessHost.h"
-#include "mozilla/layers/CompositorSession.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/layers/InProcessCompositorSession.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -157,7 +157,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
                                             bool aUseExternalSurfaceSize,
                                             const gfx::IntSize& aSurfaceSize)
 {
-  return CompositorSession::CreateInProcess(
+  return InProcessCompositorSession::Create(
     aWidget,
     aLayerManager,
     aScale,
