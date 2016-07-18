@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body onload="tests.next();">
+<script type="text/javascript;version=1.7">
+const SJS = "referrer_test_server.sjs?";
+const BASE_URL = "https://example.com/tests/dom/workers/test/" + SJS;
+const GET_RESULT = BASE_URL + 'ACTION=get-test-results';
+const RESET_STATE = BASE_URL + 'ACTION=resetState';
+
+function ok(val, message) {
+  val = val ? "true" : "false";
+  window.parent.postMessage("SimpleTest.ok(" + val + ", '" + message + "');", "*");
+}
+
+function info(val) {
+  window.parent.postMessage("SimpleTest.info(" + val + ");", "*");
+}
+
+function is(a, b, message) {
+  ok(a == b, message);
+}
+
+function finish() {
+  // Let window.onerror have a chance to fire
+  setTimeout(function() {
+    setTimeout(function() {
+      tests.close();
+      window.parent.postMessage("SimpleTest.finish();", "*");
+    }, 0);
+  }, 0);
+}
+
+var testCases = {
+  'same-origin':  { 'Referrer-Policy' : { 'default' : 'full',
+                                          'origin' : 'origin',
+                                          'origin-when-cross-origin' : 'full',
+                                          'unsafe-url' : 'full',
+                                          'no-referrer' : 'none',
+                                          'unsafe-url, no-referrer' : 'none',
+                                          'invalid' : 'full' }},
+
+  'cross-origin':  { 'Referrer-Policy' : { 'default' : 'full',
+                                           'origin' : 'origin',
+                                           'origin-when-cross-origin' : 'origin',
+                                           'unsafe-url' : 'full',
+                                           'no-referrer' : 'none',
+                                           'unsafe-url, no-referrer' : 'none',
+                                           'invalid' : 'full' }},
+
+  // Downgrading in worker is blocked entirely without unblock option
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1198078#c17
+  // Skip the downgrading test
+  /* 'downgrade':  { 'Referrer-Policy' : { 'default' : 'full',
+                                          'origin'  : 'full',
+                                          'origin-when-cross-origin"'  : 'full',
+                                          'unsafe-url'  : 'full',
+                                          'no-referrer'  : 'full',
+                                          'unsafe-url, no-referrer' : 'none',
+                                          'invalid'  : 'full' }}, */
+
+
+};
+
+var advance = function() { tests.next(); };
+
+/**
+ * helper to perform an XHR
+ * to do checkIndividualResults and resetState
+ */
+function doXHR(aUrl, onSuccess, onFail) {
+  var xhr = new XMLHttpRequest({mozSystem: true});
+  xhr.responseType = "json";
+  xhr.onload = function () {
+    onSuccess(xhr);
+  };
+  xhr.onerror = function () {
+    onFail(xhr);
+  };
+  xhr.open('GET', aUrl, true);
+  xhr.send(null);
+}
+
+
+function resetState() {
+  doXHR(RESET_STATE,
+    advance,
+    function(xhr) {
+      ok(false, "error in reset state");
+      finish();
+    });
+}
+
+function checkIndividualResults(aType, aPolicy, aExpected) {
+  var onload = xhr => {
+    var results = xhr.response;
+    dump(JSON.stringify(xhr.response));
+    // test id equals type + "-" + policy
+    // Ex: same-origin-default
+    var id = aType + "-" + aPolicy;
+    ok(id in results, id + " tests have to be performed.");
+    is(results[id].policy, aExpected, id + ' --- ' + results[id].policy + ' (' + results[id].referrer + ')');
+    advance();
+  };
+  var onerror = xhr => {
+    ok(false, "Can't get results from the counter server.");
+    finish();
+  };
+  doXHR(GET_RESULT, onload, onerror);
+}
+
+var tests = (function() {
+
+  for (var type in testCases) {
+    for (var policy in testCases[type]['Referrer-Policy']) {
+      yield resetState();
+      var searchParams = new URLSearchParams();
+      searchParams.append("TYPE", type);
+      searchParams.append("ACTION", "test");
+      searchParams.append("Referrer-Policy", policy);
+      var worker = new Worker(BASE_URL + searchParams.toString());
+      worker.onmessage = function () {
+        advance();
+      };
+      yield worker.postMessage(42);
+      yield checkIndividualResults(type, policy, escape(testCases[type]['Referrer-Policy'][policy]));
+    }
+  }
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield finish();
+})();
+</script>
+</body>
+</html>
