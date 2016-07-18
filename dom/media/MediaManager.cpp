@@ -888,18 +888,14 @@ AudioDevice::GetSource()
 
 nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                const MediaEnginePrefs &aPrefs,
-                               const nsACString& aOrigin,
-                               const char** aOutBadConstraint) {
+                               const nsACString& aOrigin) {
   return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin,
-                               getter_AddRefs(mAllocationHandle),
-                               aOutBadConstraint);
+                               getter_AddRefs(mAllocationHandle));
 }
 
 nsresult MediaDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
-                              const MediaEnginePrefs &aPrefs,
-                              const char** aOutBadConstraint) {
-  return GetSource()->Restart(mAllocationHandle, aConstraints, aPrefs, mID,
-                              aOutBadConstraint);
+                              const MediaEnginePrefs &aPrefs) {
+  return GetSource()->Restart(mAllocationHandle, aConstraints, aPrefs, mID);
 }
 
 nsresult MediaDevice::Deallocate() {
@@ -1432,10 +1428,10 @@ public:
 
     if (mAudioDevice) {
       auto& constraints = GetInvariant(mConstraints.mAudio);
-      rv = mAudioDevice->Allocate(constraints, mPrefs, mOrigin, &badConstraint);
+      rv = mAudioDevice->Allocate(constraints, mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
         errorMsg = "Failed to allocate audiosource";
-        if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
+        if (rv == NS_ERROR_NOT_AVAILABLE) {
           nsTArray<RefPtr<AudioDevice>> audios;
           audios.AppendElement(mAudioDevice);
           badConstraint = MediaConstraintsHelper::SelectSettings(constraints,
@@ -1445,10 +1441,10 @@ public:
     }
     if (!errorMsg && mVideoDevice) {
       auto& constraints = GetInvariant(mConstraints.mVideo);
-      rv = mVideoDevice->Allocate(constraints, mPrefs, mOrigin, &badConstraint);
+      rv = mVideoDevice->Allocate(constraints, mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
         errorMsg = "Failed to allocate videosource";
-        if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
+        if (rv == NS_ERROR_NOT_AVAILABLE) {
           nsTArray<RefPtr<VideoDevice>> videos;
           videos.AppendElement(mVideoDevice);
           badConstraint = MediaConstraintsHelper::SelectSettings(constraints,
@@ -3439,16 +3435,16 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
     nsresult rv = NS_OK;
 
     if (audioDevice) {
-      rv = audioDevice->Restart(aConstraints, mgr->mPrefs, &badConstraint);
-      if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
+      rv = audioDevice->Restart(aConstraints, mgr->mPrefs);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
         nsTArray<RefPtr<AudioDevice>> audios;
         audios.AppendElement(audioDevice);
         badConstraint = MediaConstraintsHelper::SelectSettings(aConstraints,
                                                                audios);
       }
     } else {
-      rv = videoDevice->Restart(aConstraints, mgr->mPrefs, &badConstraint);
-      if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
+      rv = videoDevice->Restart(aConstraints, mgr->mPrefs);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
         nsTArray<RefPtr<VideoDevice>> videos;
         videos.AppendElement(videoDevice);
         badConstraint = MediaConstraintsHelper::SelectSettings(aConstraints,
