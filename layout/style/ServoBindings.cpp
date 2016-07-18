@@ -719,6 +719,14 @@ Servo_ClearDeclarationBlockCachePointer(ServoDeclarationBlock* declarations)
             "non-MOZ_STYLO build");
 }
 
+bool
+Servo_CSSSupports(const uint8_t* name, uint32_t name_length,
+                  const uint8_t* value, uint32_t value_length)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_CSSSupports in a "
+            "non-MOZ_STYLO build");
+}
+
 ServoComputedValues*
 Servo_GetComputedValues(RawGeckoNode* node)
 {

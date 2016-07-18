@@ -225,6 +225,10 @@ nsHTMLCSSStyleSheet* Servo_GetDeclarationBlockCache(
 void Servo_SetDeclarationBlockImmutable(ServoDeclarationBlock* declarations);
 void Servo_ClearDeclarationBlockCachePointer(ServoDeclarationBlock* declarations);
 
+// CSS supports().
+bool Servo_CSSSupports(const uint8_t* name, uint32_t name_length,
+                       const uint8_t* value, uint32_t value_length);
+
 // Computed style data.
 ServoComputedValues* Servo_GetComputedValues(RawGeckoNode* node);
 ServoComputedValues* Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
