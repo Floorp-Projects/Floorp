@@ -471,7 +471,7 @@ GMPCDMProxy::gmp_Shutdown()
   // Abort any pending decrypt jobs, to awaken any clients waiting on a job.
   for (size_t i = 0; i < mDecryptionJobs.Length(); i++) {
     DecryptJob* job = mDecryptionJobs[i];
-    job->PostResult(GMPAbortedErr);
+    job->PostResult(AbortedErr);
   }
   mDecryptionJobs.Clear();
 
@@ -602,7 +602,7 @@ GMPCDMProxy::OnSessionClosed(const nsAString& aSessionId)
 
 void
 GMPCDMProxy::OnDecrypted(uint32_t aId,
-                         GMPErr aResult,
+                         DecryptStatus aResult,
                          const nsTArray<uint8_t>& aDecryptedData)
 {
   MOZ_ASSERT(IsOnOwnerThread());
@@ -677,7 +677,7 @@ GMPCDMProxy::gmp_Decrypt(RefPtr<DecryptJob> aJob)
   MOZ_ASSERT(IsOnOwnerThread());
 
   if (!mCDM) {
-    aJob->PostResult(GMPAbortedErr);
+    aJob->PostResult(AbortedErr);
     return;
   }
 
@@ -690,7 +690,7 @@ GMPCDMProxy::gmp_Decrypt(RefPtr<DecryptJob> aJob)
 
 void
 GMPCDMProxy::gmp_Decrypted(uint32_t aId,
-                           GMPErr aResult,
+                           DecryptStatus aResult,
                            const nsTArray<uint8_t>& aDecryptedData)
 {
   MOZ_ASSERT(IsOnOwnerThread());
@@ -715,30 +715,30 @@ GMPCDMProxy::gmp_Decrypted(uint32_t aId,
 }
 
 void
-GMPCDMProxy::DecryptJob::PostResult(GMPErr aResult)
+GMPCDMProxy::DecryptJob::PostResult(DecryptStatus aResult)
 {
   nsTArray<uint8_t> empty;
   PostResult(aResult, empty);
 }
 
 void
-GMPCDMProxy::DecryptJob::PostResult(GMPErr aResult,
+GMPCDMProxy::DecryptJob::PostResult(DecryptStatus aResult,
                                     const nsTArray<uint8_t>& aDecryptedData)
 {
   if (aDecryptedData.Length() != mSample->Size()) {
     NS_WARNING("CDM returned incorrect number of decrypted bytes");
   }
-  if (GMP_SUCCEEDED(aResult)) {
+  if (aResult == Ok) {
     nsAutoPtr<MediaRawDataWriter> writer(mSample->CreateWriter());
     PodCopy(writer->Data(),
             aDecryptedData.Elements(),
             std::min<size_t>(aDecryptedData.Length(), mSample->Size()));
-  } else if (aResult == GMPNoKeyErr) {
-    NS_WARNING("CDM returned GMPNoKeyErr");
+  } else if (aResult == NoKeyErr) {
+    NS_WARNING("CDM returned NoKeyErr");
     // We still have the encrypted sample, so we can re-enqueue it to be
     // decrypted again once the key is usable again.
   } else {
-    nsAutoCString str("CDM returned decode failure GMPErr=");
+    nsAutoCString str("CDM returned decode failure DecryptStatus=");
     str.AppendInt(aResult);
     NS_WARNING(str.get());
   }
