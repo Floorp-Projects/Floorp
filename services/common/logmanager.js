@@ -132,13 +132,12 @@ FlushableStorageAppender.prototype = {
 
 // The public LogManager object.
 function LogManager(prefRoot, logNames, logFilePrefix) {
+  this._prefObservers = [];
   this.init(prefRoot, logNames, logFilePrefix);
 }
 
 LogManager.prototype = {
   _cleaningUpFileLogs: false,
-
-  _prefObservers: [],
 
   init(prefRoot, logNames, logFilePrefix) {
     if (prefRoot instanceof Preferences) {
@@ -301,8 +300,11 @@ LogManager.prototype = {
 
     this._log.debug("Log cleanup threshold time: " + threshold);
     yield iterator.forEach(Task.async(function* (entry) {
-      if (!entry.name.startsWith("error-" + this.logFilePrefix + "-") &&
-          !entry.name.startsWith("success-" + this.logFilePrefix + "-")) {
+      // Note that we don't check this.logFilePrefix is in the name - we cleanup
+      // all files in this directory regardless of that prefix so old logfiles
+      // for prefixes no longer in use are still cleaned up. See bug 1279145.
+      if (!entry.name.startsWith("error-") &&
+          !entry.name.startsWith("success-")) {
         return;
       }
       try {
