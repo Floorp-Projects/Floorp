@@ -30,9 +30,9 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../../resources/desktop-gl-constants.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/desktop-gl-constants.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -58,20 +58,6 @@ wtu.shouldGenerateGLError(context, context.INVALID_VALUE, "context.clear(desktop
 wtu.shouldGenerateGLError(context, context.INVALID_VALUE, "context.clear(desktopGL['ACCUM_BUFFER_BIT'] | context.COLOR_BUFFER_BIT)");
 wtu.shouldGenerateGLError(context, context.INVALID_VALUE, "context.clear(desktopGL['ACCUM_BUFFER_BIT'] | context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT | context.STENCIL_BUFFER_BIT)");
 wtu.shouldGenerateGLError(context, context.NO_ERROR, "context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT | context.STENCIL_BUFFER_BIT)");
-
-debug("");
-debug("Test bufferData()");
-var buffer = context.createBuffer();
-wtu.shouldGenerateGLError(context, context.NO_ERROR, "context.bindBuffer(context.ARRAY_BUFFER, buffer)");
-wtu.shouldGenerateGLError(context, context.NO_ERROR, "context.bufferData(context.ARRAY_BUFFER, 16, context.STREAM_DRAW)");
-wtu.shouldGenerateGLError(context, context.NO_ERROR, "context.bufferData(context.ARRAY_BUFFER, 16, context.STATIC_DRAW)");
-wtu.shouldGenerateGLError(context, context.NO_ERROR, "context.bufferData(context.ARRAY_BUFFER, 16, context.DYNAMIC_DRAW)");
-wtu.shouldGenerateGLError(context, context.INVALID_ENUM, "context.bufferData(context.ARRAY_BUFFER, 16, desktopGL['STREAM_READ'])");
-wtu.shouldGenerateGLError(context, context.INVALID_ENUM, "context.bufferData(context.ARRAY_BUFFER, 16, desktopGL['STREAM_COPY'])");
-wtu.shouldGenerateGLError(context, context.INVALID_ENUM, "context.bufferData(context.ARRAY_BUFFER, 16, desktopGL['STATIC_READ'])");
-wtu.shouldGenerateGLError(context, context.INVALID_ENUM, "context.bufferData(context.ARRAY_BUFFER, 16, desktopGL['STATIC_COPY'])");
-wtu.shouldGenerateGLError(context, context.INVALID_ENUM, "context.bufferData(context.ARRAY_BUFFER, 16, desktopGL['DYNAMIC_READ'])");
-wtu.shouldGenerateGLError(context, context.INVALID_ENUM, "context.bufferData(context.ARRAY_BUFFER, 16, desktopGL['DYNAMIC_COPY'])");
 
 debug("");
 debug("Test {copy}Tex{Sub}Image2D with negative offset/width/height");
@@ -193,6 +179,6 @@ debug("")
 var successfullyParsed = true;
 </script>
 
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

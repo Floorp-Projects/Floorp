@@ -30,8 +30,8 @@
 <meta charset="utf-8">
 <title>WebGL Constants and Properties Test</title>
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -544,7 +544,7 @@ for (var i in gl) {
   } else if (otherProperties[i] !== undefined &&
              (otherProperties[i] == "implementation-dependent" || typeof gl[i] == otherProperties[i])) {
     // OK; known property of known type
-  } else if (typeof gl[i] != "function") {
+  } else if (typeof gl[i] != "function" && removedConstants[i] === undefined) {
     if (!extended) {
       extended = true;
       testFailed("Also found the following extra properties:");
@@ -560,7 +560,7 @@ if (!extended) {
 debug("");
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 
 </body>
 </html>

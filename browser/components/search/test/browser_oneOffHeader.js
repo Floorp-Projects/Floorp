@@ -49,7 +49,7 @@ const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
 const scale = utils.screenPixelsPerCSSPixel;
 function* synthesizeNativeMouseMove(aElement) {
   let rect = aElement.getBoundingClientRect();
-  let win = aElement.ownerDocument.defaultView;
+  let win = aElement.ownerGlobal;
   let x = win.mozInnerScreenX + (rect.left + rect.right) / 2;
   let y = win.mozInnerScreenY + (rect.top + rect.bottom) / 2;
 

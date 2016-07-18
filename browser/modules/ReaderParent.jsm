@@ -81,7 +81,7 @@ var ReaderParent = {
   },
 
   updateReaderButton: function(browser) {
-    let win = browser.ownerDocument.defaultView;
+    let win = browser.ownerGlobal;
     if (browser != win.gBrowser.selectedBrowser) {
       return;
     }
@@ -134,7 +134,7 @@ var ReaderParent = {
   },
 
   toggleReaderMode: function(event) {
-    let win = event.target.ownerDocument.defaultView;
+    let win = event.target.ownerGlobal;
     let browser = win.gBrowser.selectedBrowser;
     browser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
   },
@@ -145,7 +145,7 @@ var ReaderParent = {
    * @param browser The <browser> that the tour should be started for.
    */
   showReaderModeInfoPanel(browser) {
-    let win = browser.ownerDocument.defaultView;
+    let win = browser.ownerGlobal;
     let targetPromise = UITour.getTarget(win, "readerMode-urlBar");
     targetPromise.then(target => {
       let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");

@@ -85,7 +85,7 @@ add_task(function* testExceptionAddition() {
   info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
 
-  testTrackingPage(tab.ownerDocument.defaultView);
+  testTrackingPage(tab.ownerGlobal);
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
@@ -117,7 +117,7 @@ add_task(function* testExceptionPersistence() {
   info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
 
-  testTrackingPage(tab.ownerDocument.defaultView);
+  testTrackingPage(tab.ownerGlobal);
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);

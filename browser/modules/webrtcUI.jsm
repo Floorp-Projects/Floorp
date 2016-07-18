@@ -114,7 +114,7 @@ this.webrtcUI = {
       let types = {camera: state.camera, microphone: state.microphone,
                    screen: state.screen};
       let browser = aStream.browser;
-      let browserWindow = browser.ownerDocument.defaultView;
+      let browserWindow = browser.ownerGlobal;
       let tab = browserWindow.gBrowser &&
                 browserWindow.gBrowser.getTabForBrowser(browser);
       return {uri: state.documentURI, tab: tab, browser: browser, types: types};
@@ -129,7 +129,7 @@ this.webrtcUI = {
   },
 
   showSharingDoorhanger: function(aActiveStream, aType) {
-    let browserWindow = aActiveStream.browser.ownerDocument.defaultView;
+    let browserWindow = aActiveStream.browser.ownerGlobal;
     if (aActiveStream.tab) {
       browserWindow.gBrowser.selectedTab = aActiveStream.tab;
     } else {
@@ -593,7 +593,7 @@ function prompt(aBrowser, aRequest) {
 }
 
 function removePrompt(aBrowser, aCallId) {
-  let chromeWin = aBrowser.ownerDocument.defaultView;
+  let chromeWin = aBrowser.ownerGlobal;
   let notification =
     chromeWin.PopupNotifications.getNotification("webRTC-shareDevices", aBrowser);
   if (notification && notification.callID == aCallId)
@@ -875,7 +875,7 @@ function updateIndicators(data, target) {
 }
 
 function updateBrowserSpecificIndicator(aBrowser, aState) {
-  let chromeWin = aBrowser.ownerDocument.defaultView;
+  let chromeWin = aBrowser.ownerGlobal;
   let tabbrowser = chromeWin.gBrowser;
   if (tabbrowser) {
     let sharing;
@@ -1009,7 +1009,7 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
 }
 
 function removeBrowserNotification(aBrowser, aNotificationId) {
-  let win = aBrowser.ownerDocument.defaultView;
+  let win = aBrowser.ownerGlobal;
   let notification =
     win.PopupNotifications.getNotification(aNotificationId, aBrowser);
   if (notification)

@@ -96,10 +96,10 @@ window.onload = Task.async(function* () {
   }
 
   function testMoreThanMaxProps() {
-    // Test array = `["test string"...] //301 items`
+    // Test array = `["test string"…] //301 items`
     const testName = "testMoreThanMaxProps";
 
-    const defaultOutput = `[${Array(3).fill("\"test string\"").join(", ")}, more...]`;
+    const defaultOutput = `[${Array(3).fill("\"test string\"").join(", ")}, more…]`;
 
     const modeTests = [
       {
@@ -116,7 +116,7 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "long",
-        expectedOutput: `[${Array(300).fill("\"test string\"").join(", ")}, more...]`,
+        expectedOutput: `[${Array(300).fill("\"test string\"").join(", ")}, more…]`,
       }
     ];
 

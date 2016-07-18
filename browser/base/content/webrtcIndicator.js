@@ -126,7 +126,7 @@ function onPopupMenuCommand(event) {
 function onFirefoxButtonClick(event) {
   event.target.blur();
   let activeStreams = webrtcUI.getActiveStreams(true, true, true);
-  activeStreams[0].browser.ownerDocument.defaultView.focus();
+  activeStreams[0].browser.ownerGlobal.focus();
 }
 
 var PositionHandler = {

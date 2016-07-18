@@ -677,7 +677,7 @@ var SessionStoreInternal = {
     // If we got here, that means we're dealing with a frame message
     // manager message, so the target will be a <xul:browser>.
     var browser = aMessage.target;
-    let win = browser.ownerDocument.defaultView;
+    let win = browser.ownerGlobal;
     let tab = win ? win.gBrowser.getTabForBrowser(browser) : null;
 
     // Ensure we receive only specific messages from <xul:browser>s that
@@ -890,7 +890,7 @@ var SessionStoreInternal = {
    * Implement nsIDOMEventListener for handling various window and tab events
    */
   handleEvent: function ssi_handleEvent(aEvent) {
-    let win = aEvent.currentTarget.ownerDocument.defaultView;
+    let win = aEvent.currentTarget.ownerGlobal;
     let target = aEvent.originalTarget;
     switch (aEvent.type) {
       case "TabOpen":
@@ -2051,7 +2051,7 @@ var SessionStoreInternal = {
   },
 
   getTabState: function ssi_getTabState(aTab) {
-    if (!aTab.ownerDocument.defaultView.__SSi) {
+    if (!aTab.ownerGlobal.__SSi) {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
@@ -2076,7 +2076,7 @@ var SessionStoreInternal = {
       throw Components.Exception("Invalid state object: no entries", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    let window = aTab.ownerDocument.defaultView;
+    let window = aTab.ownerGlobal;
     if (!("__SSi" in window)) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
@@ -2089,7 +2089,7 @@ var SessionStoreInternal = {
   },
 
   duplicateTab: function ssi_duplicateTab(aWindow, aTab, aDelta = 0) {
-    if (!aTab.ownerDocument.defaultView.__SSi) {
+    if (!aTab.ownerGlobal.__SSi) {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
     if (!aWindow.gBrowser) {
@@ -2118,7 +2118,7 @@ var SessionStoreInternal = {
         return;
       }
 
-      let window = newTab.ownerDocument && newTab.ownerDocument.defaultView;
+      let window = newTab.ownerGlobal;
 
       // The tab or its window might be gone.
       if (!window || !window.__SSi) {
@@ -2305,13 +2305,13 @@ var SessionStoreInternal = {
     }
 
     aTab.__SS_extdata[aKey] = aStringValue;
-    this.saveStateDelayed(aTab.ownerDocument.defaultView);
+    this.saveStateDelayed(aTab.ownerGlobal);
   },
 
   deleteTabValue: function ssi_deleteTabValue(aTab, aKey) {
     if (aTab.__SS_extdata && aKey in aTab.__SS_extdata) {
       delete aTab.__SS_extdata[aKey];
-      this.saveStateDelayed(aTab.ownerDocument.defaultView);
+      this.saveStateDelayed(aTab.ownerGlobal);
     }
   },
 
@@ -2509,7 +2509,7 @@ var SessionStoreInternal = {
    * flush has finished.
    */
   navigateAndRestore(tab, loadArguments, historyIndex) {
-    let window = tab.ownerDocument.defaultView;
+    let window = tab.ownerGlobal;
     NS_ASSERT(window.__SSi, "tab's window must be tracked");
     let browser = tab.linkedBrowser;
 
@@ -2547,7 +2547,7 @@ var SessionStoreInternal = {
         return;
       }
 
-      let window = tab.ownerDocument && tab.ownerDocument.defaultView;
+      let window = tab.ownerGlobal;
 
       // The tab or its window might be gone.
       if (!window || !window.__SSi || window.closed) {
@@ -3210,7 +3210,7 @@ var SessionStoreInternal = {
     let restoreImmediately = options.restoreImmediately;
     let loadArguments = options.loadArguments;
     let browser = tab.linkedBrowser;
-    let window = tab.ownerDocument.defaultView;
+    let window = tab.ownerGlobal;
     let tabbrowser = window.gBrowser;
     let forceOnDemand = options.forceOnDemand;
 
@@ -3350,7 +3350,7 @@ var SessionStoreInternal = {
     }
 
     let browser = aTab.linkedBrowser;
-    let window = aTab.ownerDocument.defaultView;
+    let window = aTab.ownerGlobal;
     let tabbrowser = window.gBrowser;
     let tabData = TabState.clone(aTab);
     let activeIndex = tabData.index - 1;
@@ -4145,7 +4145,7 @@ var SessionStoreInternal = {
     NS_ASSERT(aTab.linkedBrowser.__SS_restoreState,
               "given tab is not restoring");
 
-    let window = aTab.ownerDocument.defaultView;
+    let window = aTab.ownerGlobal;
     let browser = aTab.linkedBrowser;
 
     // Keep the tab's previous state for later in this method

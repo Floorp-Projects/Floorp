@@ -32,16 +32,14 @@ function testDebuggerHooksNX(dbg, g, testHook) {
   testDebuggerHook("onNewGlobalObject",
                    () => { newGlobal(); });
 
-  if ('Promise' in g) {
-      testDebuggerHook("onNewPromise",
-                       () => { new g.Promise(()=>{}); });
+  testDebuggerHook("onNewPromise",
+                   () => { g.makeFakePromise(); });
 
-      testDebuggerHook("onPromiseSettled",
-                       () => {
-                         var p = new g.Promise(()=>{});
-                         g.settlePromiseNow(p);
-                       });
-  }
+  testDebuggerHook("onPromiseSettled",
+                   () => {
+                     var p = g.makeFakePromise();
+                     g.settleFakePromise(p);
+                   });
 
   // Hooks on frames.
   var onStepHit = false;
