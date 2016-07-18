@@ -86,7 +86,7 @@ public:
   RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample) override;
 
   void OnDecrypted(uint32_t aId,
-                   GMPErr aResult,
+                   DecryptStatus aResult,
                    const nsTArray<uint8_t>& aDecryptedData) override;
 
   void RejectPromise(PromiseId aId, nsresult aExceptionCode,
@@ -181,8 +181,9 @@ private:
     {
     }
 
-    void PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecryptedData);
-    void PostResult(GMPErr aResult);
+    void PostResult(DecryptStatus aResult,
+                    const nsTArray<uint8_t>& aDecryptedData);
+    void PostResult(DecryptStatus aResult);
 
     RefPtr<DecryptPromise> Ensure() {
       return mPromise.Ensure(__func__);
@@ -199,7 +200,7 @@ private:
 
   // GMP thread only.
   void gmp_Decrypted(uint32_t aId,
-                     GMPErr aResult,
+                     DecryptStatus aResult,
                      const nsTArray<uint8_t>& aDecryptedData);
 
   class RejectPromiseTask : public Runnable {

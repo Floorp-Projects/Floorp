@@ -18,12 +18,19 @@
 namespace mozilla {
 class MediaRawData;
 
+enum DecryptStatus {
+  Ok = 0,
+  GenericErr = 1,
+  NoKeyErr = 2,
+  AbortedErr = 3,
+};
+
 struct DecryptResult {
-  DecryptResult(GMPErr aStatus, MediaRawData* aSample)
+  DecryptResult(DecryptStatus aStatus, MediaRawData* aSample)
     : mStatus(aStatus)
     , mSample(aSample)
   {}
-  GMPErr mStatus;
+  DecryptStatus mStatus;
   RefPtr<MediaRawData> mSample;
 };
 
@@ -149,7 +156,7 @@ public:
 
   // Owner thread only.
   virtual void OnDecrypted(uint32_t aId,
-                           GMPErr aResult,
+                           DecryptStatus aResult,
                            const nsTArray<uint8_t>& aDecryptedData) = 0;
 
   // Reject promise with DOMException corresponding to aExceptionCode.
