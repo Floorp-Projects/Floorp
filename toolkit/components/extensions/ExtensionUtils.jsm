@@ -334,8 +334,10 @@ class BaseContext {
    *     belonging to the target scope. Otherwise, undefined.
    */
   wrapPromise(promise, callback = null) {
+    // Note: `promise instanceof this.cloneScope.Promise` returns true
+    // here even for promises that do not belong to the content scope.
     let runSafe = this.runSafe.bind(this);
-    if (promise instanceof this.cloneScope.Promise) {
+    if (promise.constructor === this.cloneScope.Promise) {
       runSafe = this.runSafeWithoutClone.bind(this);
     }
 
