@@ -32,8 +32,7 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   dom::MediaSourceEnum aMediaSource, const char* aMonitorName)
   : MediaEngineCameraVideoSource(aIndex, aMonitorName),
     mMediaSource(aMediaSource),
-    mCapEngine(aCapEngine),
-    mInShutdown(false)
+    mCapEngine(aCapEngine)
 {
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other);
   Init();
@@ -69,7 +68,6 @@ MediaEngineRemoteVideoSource::Shutdown()
   if (!mInitDone) {
     return;
   }
-  mInShutdown = true;
   if (mState == kStarted) {
     SourceMediaStream *source;
     bool empty;
@@ -116,8 +114,7 @@ MediaEngineRemoteVideoSource::Allocate(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin,
-                                                         aPrefs, aDeviceId);
+  RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin);
 
   nsresult rv = UpdateNew(handle, aPrefs, aDeviceId, aOutBadConstraint);
   if (NS_FAILED(rv)) {
@@ -161,7 +158,6 @@ MediaEngineRemoteVideoSource::Deallocate(BaseAllocationHandle* aHandle)
   MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
 
   if (mNrAllocations == 0) {
-    MOZ_ASSERT(!mRegisteredHandles.Length());
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }
@@ -172,13 +168,6 @@ MediaEngineRemoteVideoSource::Deallocate(BaseAllocationHandle* aHandle)
     LOG(("Video device %d deallocated", mCaptureIndex));
   } else {
     LOG(("Video device %d deallocated but still in use", mCaptureIndex));
-    MOZ_ASSERT(mRegisteredHandles.Length());
-    if (!mInShutdown) {
-      // Whenever constraints are removed, other parties may get closer to ideal.
-      auto& first = mRegisteredHandles[0];
-      const char* badConstraint = nullptr;
-      return UpdateRemove(first->mPrefs, first->mDeviceId, &badConstraint);
-    }
   }
   return NS_OK;
 }
@@ -346,10 +335,10 @@ MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
       }
       break;
 
-    default:
-      LOG(("Video device %d %s in ignored state %d", mCaptureIndex,
+      default:
+        LOG(("Video device %d %s in ignored state %d", mCaptureIndex,
              (aHandle? aHandle->mOrigin.get() : ""), mState));
-      break;
+        break;
   }
   if (aHandle && aNewConstraints) {
     aHandle->mConstraints = *aNewConstraints;
