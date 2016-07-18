@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1286754 - Update the version of rust used on Windows
+Bug 911216 - followup from the backout to fix bustage
