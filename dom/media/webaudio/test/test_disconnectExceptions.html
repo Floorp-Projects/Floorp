@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test whether we can disconnect an AudioNode</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="webaudio.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <pre id="test">
+      <script class="testbody" type="text/javascript">
+      var ctx = new AudioContext();
+      var sourceBuffer = ctx.createBuffer(2, 256, ctx.sampleRate);
+      for (var i = 1; i <= 2; i++) {
+        var data = sourceBuffer.getChannelData(i-1);
+        for (var j = 0; j < data.length; j++) {
+            data[j] = i;
+        }
+      }
+
+      var source = ctx.createBufferSource();
+      source.buffer = sourceBuffer;
+
+      var gain1 = ctx.createGain();
+      var splitter = ctx.createChannelSplitter(2);
+      var merger = ctx.createChannelMerger(2);
+      var gain2 = ctx.createGain();
+      var gain3 = ctx.createGain();
+
+      gain1.connect(splitter);
+      splitter.connect(gain2, 0);
+      splitter.connect(gain3, 1);
+      splitter.connect(merger, 0, 0);
+      splitter.connect(merger, 1, 1);
+      gain2.connect(gain3);
+      gain3.connect(ctx.destination);
+      merger.connect(ctx.destination);
+
+      expectException(function() {
+          splitter.disconnect(2);
+      }, DOMException.INDEX_SIZE_ERR);
+
+      expectNoException(function() {
+        splitter.disconnect(1);
+        splitter.disconnect(1);
+      });
+
+      expectException(function() {
+        gain1.disconnect(gain2);
+      }, DOMException.INVALID_ACCESS_ERR);
+
+      expectException(function() {
+        gain1.disconnect(gain3);
+        ok(false, 'Should get InvalidAccessError exception');
+      }, DOMException.INVALID_ACCESS_ERR);
+
+      expectException(function() {
+        splitter.disconnect(gain2, 2);
+      }, DOMException.INDEX_SIZE_ERR);
+
+      expectException(function() {
+        splitter.disconnect(gain1, 0);
+      }, DOMException.INVALID_ACCESS_ERR);
+
+      expectException(function() {
+        splitter.disconnect(gain3, 0, 0);
+      }, DOMException.INVALID_ACCESS_ERR);
+
+      expectException(function() {
+        splitter.disconnect(merger, 3, 0);
+      }, DOMException.INDEX_SIZE_ERR);
+      </script>
+    </pre>
+  </body>
+</html>
