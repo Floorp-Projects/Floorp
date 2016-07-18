@@ -18,6 +18,7 @@ import os
 import re
 
 from mercurial.i18n import _
+from mercurial.node import hex
 from mercurial import (
     commands,
     error,
@@ -259,6 +260,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
                               hint='must be the first 12+ characters of a '
                                    'SHA-1 fragment')
 
+        checkoutrevision = ctx.hex()
         havewantedrev = True
 
     if not havewantedrev:
@@ -267,9 +269,18 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
         try:
             remote = hg.peer(repo, {}, url)
             pullrevs = [remote.lookup(revision or branch)]
-            pullop = exchange.pull(repo, remote, heads=pullrevs)
-            if not pullop.rheads:
-                raise error.Abort('unable to pull requested revision')
+            checkoutrevision = hex(pullrevs[0])
+            if branch:
+                ui.warn('(remote resolved %s to %s; '
+                        'result is not deterministic)\n' %
+                        (branch, checkoutrevision))
+
+            if checkoutrevision in repo:
+                ui.warn('(revision already present locally; not pulling)\n')
+            else:
+                pullop = exchange.pull(repo, remote, heads=pullrevs)
+                if not pullop.rheads:
+                    raise error.Abort('unable to pull requested revision')
         except error.Abort as e:
             if e.message == _('repository is unrelated'):
                 ui.warn('(repository is unrelated; deleting)\n')
@@ -303,11 +314,10 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
             raise error.Abort('error purging')
 
     # Update the working directory.
-    if commands.update(ui, repo, rev=revision or branch, clean=True):
+    if commands.update(ui, repo, rev=checkoutrevision, clean=True):
         raise error.Abort('error updating')
 
-    ctx = repo[revision or branch]
-    ui.write('updated to %s\n' % ctx.hex())
+    ui.write('updated to %s\n' % checkoutrevision)
     return None
 
 
