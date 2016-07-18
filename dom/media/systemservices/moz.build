@@ -71,7 +71,6 @@ EXPORTS.mozilla.media += ['MediaChild.h',
                           'MediaSystemResourceMessageUtils.h',
                           'MediaSystemResourceService.h',
                           'MediaSystemResourceTypes.h',
-                          'MediaTaskUtils.h',
                           'MediaUtils.h',
 ]
 UNIFIED_SOURCES += [
