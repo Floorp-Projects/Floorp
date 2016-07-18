@@ -9,7 +9,7 @@ GL/atan/input.run.txt
 GL/biConstants/input.run.txt
 GL/biuDepthRange/input.run.txt
 GL/build/input.run.txt
-GL/biv_array_oob/input.run.txt
+GL/built_in_varying_array_out_of_bounds/input.run.txt
 GL/ceil/input.run.txt
 GL/clamp/input.run.txt
 GL/control_flow/input.run.txt

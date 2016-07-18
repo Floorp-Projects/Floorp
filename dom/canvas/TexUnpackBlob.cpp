@@ -191,7 +191,6 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     const bool isDstPremult = webgl->mPixelStore_PremultiplyAlpha;
 
     const auto pi = dstDUI->ToPacking();
-    const auto dstFormat = FormatForPackingInfo(pi);
 
     const auto dstBPP = webgl::BytesPerPixel(pi);
     const auto dstWidthBytes = CheckedUint32(dstBPP) * mWidth;
@@ -203,8 +202,9 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     //////
 
     const auto dstTotalRows = CheckedUint32(mDepth - 1) * mImageHeight + mHeight;
+    const auto dstUsedSizeExceptLastRow = (dstTotalRows - 1) * dstStride;
 
-    const auto dstSize = skipBytes + (dstTotalRows - 1) * dstStride + dstWidthBytes;
+    const auto dstSize = skipBytes + dstUsedSizeExceptLastRow + dstWidthBytes;
     if (!dstSize.isValid()) {
         webgl->ErrorOutOfMemory("%s: Invalid dstSize calculation during conversion.",
                                 funcName);
@@ -213,32 +213,71 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
 
     //////
 
-    bool needsConvert = (srcOrigin != dstOrigin ||
-                         srcFormat != dstFormat ||
-                         srcStride != dstStride.value());
+    const auto dstFormat = FormatForPackingInfo(pi);
 
-    if (UnpackFormatHasAlpha(dstDUI->unpackFormat)) {
-        needsConvert |= (mIsSrcPremult != isDstPremult);
+    bool premultMatches = (mIsSrcPremult == isDstPremult);
+    if (!UnpackFormatHasAlpha(dstDUI->unpackFormat)) {
+        premultMatches = true;
     }
 
-    if (!needsConvert)
+    const bool needsPixelConversion = (srcFormat != dstFormat || !premultMatches);
+    const bool originsMatch = (srcOrigin == dstOrigin);
+
+    MOZ_ASSERT_IF(!needsPixelConversion, srcBPP == dstBPP);
+
+    if (!needsPixelConversion &&
+        originsMatch &&
+        srcStride == dstStride.value())
+    {
+        // No conversion needed!
         return true;
-
-    ////////////
-    // Ugh, ok, fine!
-
-    webgl->GenerateWarning("%s: Incurred CPU data conversion, which is slow.",
-                           funcName);
+    }
 
     //////
+    // We need some sort of conversion, so create the dest buffer.
 
     *out_anchoredBuffer = calloc(1, dstSize.value());
-    if (!out_anchoredBuffer->get()) {
+    *out_bytes = out_anchoredBuffer->get();
+    if (!*out_bytes) {
         webgl->ErrorOutOfMemory("%s: Unable to allocate buffer during conversion.",
                                 funcName);
         return false;
     }
-    const auto dstBegin = (uint8_t*)out_anchoredBuffer->get() + skipBytes;
+    const auto dstBegin = (uint8_t*)(*out_bytes) + skipBytes;
+
+    //////
+    // Row conversion
+
+    if (!needsPixelConversion) {
+        webgl->GenerateWarning("%s: Incurred CPU row conversion, which is slow.",
+                               funcName);
+
+        const uint8_t* srcRow = srcBegin;
+        uint8_t* dstRow = dstBegin;
+        const auto widthBytes = dstWidthBytes.value();
+        ptrdiff_t dstCopyStride = dstStride.value();
+
+        if (!originsMatch) {
+            dstRow += dstUsedSizeExceptLastRow.value();
+            dstCopyStride = -dstCopyStride;
+        }
+
+        for (uint32_t i = 0; i < dstTotalRows.value(); i++) {
+            memcpy(dstRow, srcRow, widthBytes);
+            srcRow += srcStride;
+            dstRow += dstCopyStride;
+        }
+        return true;
+    }
+
+    ////////////
+    // Pixel conversion.
+
+    MOZ_ASSERT(srcFormat != WebGLTexelFormat::FormatNotSupportingAnyConversion);
+    MOZ_ASSERT(dstFormat != WebGLTexelFormat::FormatNotSupportingAnyConversion);
+
+    webgl->GenerateWarning("%s: Incurred CPU pixel conversion, which is very slow.",
+                           funcName);
 
     //////
 
@@ -259,7 +298,6 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
                                funcName, dstDUI->unpackFormat, dstDUI->unpackType);
     }
 
-    *out_bytes = out_anchoredBuffer->get();
     return true;
 }
 
@@ -297,7 +335,6 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
     WebGLContext* webgl = tex->mContext;
 
     const auto pi = dui->ToPacking();
-    const auto format = FormatForPackingInfo(pi);
 
     const auto bytesPerPixel = webgl::BytesPerPixel(pi);
     const auto bytesPerRow = CheckedUint32(mRowLength) * bytesPerPixel;
@@ -305,6 +342,8 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
     if (!rowStride.isValid()) {
         MOZ_CRASH("Should be checked earlier.");
     }
+
+    const auto format = FormatForPackingInfo(pi);
 
     const void* uploadBytes;
     UniqueBuffer tempBuffer;

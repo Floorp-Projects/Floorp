@@ -7,9 +7,7 @@
 #define _include_mozilla_gfx_ipc_CompositorSession_h_
 
 #include "base/basictypes.h"
-#include "Units.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/gfx/Point.h"
 
 class nsIWidget;
 
@@ -19,6 +17,7 @@ class CompositorWidget;
 class CompositorWidgetDelegate;
 } // namespace widget
 namespace gfx {
+class GPUProcessHost;
 class GPUProcessManager;
 } // namespace gfx
 namespace layers {
@@ -36,6 +35,7 @@ class CompositorSession
   friend class gfx::GPUProcessManager;
 
 protected:
+  typedef gfx::GPUProcessHost GPUProcessHost;
   typedef widget::CompositorWidget CompositorWidget;
   typedef widget::CompositorWidgetDelegate CompositorWidgetDelegate;
 
@@ -50,9 +50,6 @@ public:
   // Set the GeckoContentController for the root of the layer tree.
   virtual void SetContentController(GeckoContentController* aController) = 0;
 
-  // Return the id of the root layer tree.
-  virtual uint64_t RootLayerTreeId() const = 0;
-
   // Return the Async Pan/Zoom Tree Manager for this compositor.
   virtual already_AddRefed<APZCTreeManager> GetAPZCTreeManager() const = 0;
 
@@ -64,21 +61,21 @@ public:
     return mCompositorWidgetDelegate;
   }
 
+  // Return the id of the root layer tree.
+  uint64_t RootLayerTreeId() const {
+    return mRootLayerTreeId;
+  }
+
 protected:
-  CompositorSession();
+  CompositorSession(CompositorWidgetDelegate* aDelegate,
+                    CompositorBridgeChild* aChild,
+                    const uint64_t& aRootLayerTreeId);
   virtual ~CompositorSession();
 
-  static already_AddRefed<CompositorSession> CreateInProcess(
-    nsIWidget* aWidget,
-    ClientLayerManager* aLayerManager,
-    CSSToLayoutDeviceScale aScale,
-    bool aUseAPZ,
-    bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize);
-
 protected:
-  RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
+  RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
+  uint64_t mRootLayerTreeId;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);

@@ -765,7 +765,7 @@ function listenok() {
   serverPort = server._server.address().port;
   console.log('HTTP2 server listening on port ' + serverPort);
 }
-var portSelection = -1;
+var portSelection = 0;
 var envport = process.env.MOZHTTP2_PORT;
 if (envport !== undefined) {
   try {

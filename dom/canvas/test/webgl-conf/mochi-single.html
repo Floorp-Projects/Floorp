@@ -53,6 +53,7 @@ if (parent) {
   }
 }
 
+SpecialPowers.pushPrefEnv({"set": [['webgl.force-enabled', true]]});
 ////////////////////////////////////////////////////////////////////////
 
 var testPath = location.search.substr(1);

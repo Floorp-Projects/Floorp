@@ -39,24 +39,25 @@ public:
         return mContext;
     }
 
+    //////
+
     const WeakPtr<const webgl::LinkedProgramInfo> mLinkInfo;
+    webgl::UniformInfo* const mInfo;
     const GLuint mLoc;
     const size_t mArrayIndex;
-    const WebGLActiveInfo* const mActiveInfo;
+
+    //////
 
     WebGLUniformLocation(WebGLContext* webgl, const webgl::LinkedProgramInfo* linkInfo,
-                         GLuint loc, size_t arrayIndex, const WebGLActiveInfo* activeInfo);
+                         webgl::UniformInfo* info, GLuint loc, size_t arrayIndex);
 
-    bool ValidateForProgram(WebGLProgram* prog, WebGLContext* webgl,
-                            const char* funcName) const;
-    bool ValidateSamplerSetter(GLint value, WebGLContext* webgl,
-                               const char* funcName) const;
+    bool ValidateForProgram(WebGLProgram* prog, const char* funcName) const;
     bool ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType,
-                             WebGLContext* webgl, const char* funcName) const;
+                             const char* funcName) const;
     bool ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize,
-                             WebGLContext* webgl, const char* funcName) const;
+                             const char* funcName) const;
 
-    JS::Value GetUniform(JSContext* js, WebGLContext* webgl) const;
+    JS::Value GetUniform(JSContext* js) const;
 
     // Needed for certain helper functions like ValidateObject.
     // `WebGLUniformLocation`s can't be 'Deleted' in the WebGL sense.

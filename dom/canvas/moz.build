@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += [
-    'compiledtest', 
+    'compiledtest',
     'gtest'
 ]
 
 # Change the following line(s) to avoid bug 1081323 (clobber after changing a manifest):
-# * Add a regression test for triangle-then-point rendering.
+# * Implement ReadPixel with PBOs.
 
 MOCHITEST_MANIFESTS += [
     'test/crash/mochitest.ini',

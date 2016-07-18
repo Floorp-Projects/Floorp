@@ -80,7 +80,7 @@ public:
     if (!sInstance) {
       sInstance = new ReaderQueue;
       sInstance->MaxNumActive(MediaPrefs::MediaDecoderLimit());
-      ClearOnShutdown(&sInstance);
+      ClearOnShutdown(&sInstance, ShutdownPhase::Shutdown);
     }
     MOZ_ASSERT(sInstance);
     return *sInstance;

@@ -16,34 +16,32 @@ namespace mozilla {
 
 WebGLUniformLocation::WebGLUniformLocation(WebGLContext* webgl,
                                            const webgl::LinkedProgramInfo* linkInfo,
-                                           GLuint loc,
-                                           size_t arrayIndex,
-                                           const WebGLActiveInfo* activeInfo)
+                                           webgl::UniformInfo* info, GLuint loc,
+                                           size_t arrayIndex)
     : WebGLContextBoundObject(webgl)
     , mLinkInfo(linkInfo)
+    , mInfo(info)
     , mLoc(loc)
     , mArrayIndex(arrayIndex)
-    , mActiveInfo(activeInfo)
 { }
 
 WebGLUniformLocation::~WebGLUniformLocation()
 { }
 
 bool
-WebGLUniformLocation::ValidateForProgram(WebGLProgram* prog, WebGLContext* webgl,
-                                         const char* funcName) const
+WebGLUniformLocation::ValidateForProgram(WebGLProgram* prog, const char* funcName) const
 {
     // Check the weak-pointer.
     if (!mLinkInfo) {
-        webgl->ErrorInvalidOperation("%s: This uniform location is obsolete because its"
-                                     " program has been successfully relinked.",
-                                     funcName);
+        mContext->ErrorInvalidOperation("%s: This uniform location is obsolete because"
+                                        " its program has been successfully relinked.",
+                                        funcName);
         return false;
     }
 
     if (mLinkInfo->prog != prog) {
-        webgl->ErrorInvalidOperation("%s: This uniform location corresponds to a"
-                                     " different program.", funcName);
+        mContext->ErrorInvalidOperation("%s: This uniform location corresponds to a"
+                                        " different program.", funcName);
         return false;
     }
 
@@ -121,19 +119,22 @@ IsUniformSetterTypeValid(GLenum setterType, GLenum uniformType)
 
 bool
 WebGLUniformLocation::ValidateSizeAndType(uint8_t setterElemSize, GLenum setterType,
-                                          WebGLContext* webgl, const char* funcName) const
+                                          const char* funcName) const
 {
     MOZ_ASSERT(mLinkInfo);
 
-    if (setterElemSize != mActiveInfo->mElemSize) {
-        webgl->ErrorInvalidOperation("%s: Bad uniform size: %i", funcName,
-                                     mActiveInfo->mElemSize);
+    const auto& uniformElemSize = mInfo->mActiveInfo->mElemSize;
+    if (setterElemSize != uniformElemSize) {
+        mContext->ErrorInvalidOperation("%s: Function used differs from uniform size: %i",
+                                        funcName, uniformElemSize);
         return false;
     }
 
-    if (!IsUniformSetterTypeValid(setterType, mActiveInfo->mElemType)) {
-        webgl->ErrorInvalidOperation("%s: Bad uniform type: %i", funcName,
-                                     mActiveInfo->mElemSize);
+    const auto& uniformElemType = mInfo->mActiveInfo->mElemType;
+    if (!IsUniformSetterTypeValid(setterType, uniformElemType)) {
+        mContext->ErrorInvalidOperation("%s: Function used is incompatible with uniform"
+                                        " type: %i",
+                                        funcName, uniformElemType);
         return false;
     }
 
@@ -142,16 +143,16 @@ WebGLUniformLocation::ValidateSizeAndType(uint8_t setterElemSize, GLenum setterT
 
 bool
 WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize, size_t setterArraySize,
-                                          WebGLContext* webgl, const char* funcName) const
+                                          const char* funcName) const
 {
     MOZ_ASSERT(mLinkInfo);
 
     if (setterArraySize == 0 ||
         setterArraySize % setterElemSize)
     {
-        webgl->ErrorInvalidValue("%s: expected an array of length a multiple of"
-                                 " %d, got an array of length %d.",
-                                 funcName, setterElemSize, setterArraySize);
+        mContext->ErrorInvalidValue("%s: Expected an array of length a multiple of %d,"
+                                    " got an array of length %d.",
+                                    funcName, setterElemSize, setterArraySize);
         return false;
     }
 
@@ -162,55 +163,34 @@ WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize, size_t setterA
      *   highest array element index used, as reported by `GetActiveUniform`, will be
      *   ignored by GL.
      */
-    if (!mActiveInfo->mIsArray &&
+    if (!mInfo->mActiveInfo->mIsArray &&
         setterArraySize != setterElemSize)
     {
-        webgl->ErrorInvalidOperation("%s: expected an array of length exactly %d"
-                                     " (since this uniform is not an array"
-                                     " uniform), got an array of length %d.",
-                                     funcName, setterElemSize, setterArraySize);
+        mContext->ErrorInvalidOperation("%s: Expected an array of length exactly %d"
+                                        " (since this uniform is not an array uniform),"
+                                        " got an array of length %d.",
+                                        funcName, setterElemSize, setterArraySize);
         return false;
     }
 
     return true;
 }
 
-bool
-WebGLUniformLocation::ValidateSamplerSetter(GLint value, WebGLContext* webgl,
-                                            const char* funcName) const
-{
-    MOZ_ASSERT(mLinkInfo);
-
-    if (mActiveInfo->mElemType != LOCAL_GL_SAMPLER_2D &&
-        mActiveInfo->mElemType != LOCAL_GL_SAMPLER_CUBE)
-    {
-        return true;
-    }
-
-    if (value >= 0 && value < (GLint)webgl->GLMaxTextureUnits())
-        return true;
-
-    webgl->ErrorInvalidValue("%s: This uniform location is a sampler, but %d is not a"
-                             " valid texture unit.",
-                             funcName, value);
-    return false;
-}
-
 JS::Value
-WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
+WebGLUniformLocation::GetUniform(JSContext* js) const
 {
     MOZ_ASSERT(mLinkInfo);
 
-    uint8_t elemSize = mActiveInfo->mElemSize;
+    const uint8_t elemSize = mInfo->mActiveInfo->mElemSize;
     static const uint8_t kMaxElemSize = 16;
     MOZ_ASSERT(elemSize <= kMaxElemSize);
 
     GLuint prog = mLinkInfo->prog->mGLName;
 
-    gl::GLContext* gl = webgl->GL();
+    gl::GLContext* gl = mContext->GL();
     gl->MakeCurrent();
 
-    switch (mActiveInfo->mElemType) {
+    switch (mInfo->mActiveInfo->mElemType) {
     case LOCAL_GL_INT:
     case LOCAL_GL_INT_VEC2:
     case LOCAL_GL_INT_VEC3:
@@ -237,9 +217,9 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
             if (elemSize == 1)
                 return JS::Int32Value(buffer[0]);
 
-            JSObject* obj = dom::Int32Array::Create(js, webgl, elemSize, buffer);
+            JSObject* obj = dom::Int32Array::Create(js, mContext, elemSize, buffer);
             if (!obj) {
-                webgl->ErrorOutOfMemory("getUniform: out of memory");
+                mContext->ErrorOutOfMemory("getUniform: Out of memory.");
                 return JS::NullValue();
             }
             return JS::ObjectOrNullValue(obj);
@@ -263,7 +243,7 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
             JS::RootedValue val(js);
             // Be careful: we don't want to convert all of |uv|!
             if (!dom::ToJSValue(js, boolBuffer, elemSize, &val)) {
-                webgl->ErrorOutOfMemory("getUniform: out of memory");
+                mContext->ErrorOutOfMemory("getUniform: Out of memory.");
                 return JS::NullValue();
             }
             return val;
@@ -289,9 +269,9 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
             if (elemSize == 1)
                 return JS::DoubleValue(buffer[0]);
 
-            JSObject* obj = dom::Float32Array::Create(js, webgl, elemSize, buffer);
+            JSObject* obj = dom::Float32Array::Create(js, mContext, elemSize, buffer);
             if (!obj) {
-                webgl->ErrorOutOfMemory("getUniform: out of memory");
+                mContext->ErrorOutOfMemory("getUniform: Out of memory.");
                 return JS::NullValue();
             }
             return JS::ObjectOrNullValue(obj);
@@ -308,9 +288,9 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
             if (elemSize == 1)
                 return JS::DoubleValue(buffer[0]); // This is Double because only Int32 is special cased.
 
-            JSObject* obj = dom::Uint32Array::Create(js, webgl, elemSize, buffer);
+            JSObject* obj = dom::Uint32Array::Create(js, mContext, elemSize, buffer);
             if (!obj) {
-                webgl->ErrorOutOfMemory("getUniform: out of memory");
+                mContext->ErrorOutOfMemory("getUniform: Out of memory.");
                 return JS::NullValue();
             }
             return JS::ObjectOrNullValue(obj);

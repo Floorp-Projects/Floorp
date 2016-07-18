@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>Driver bug - Comparing loop index against uniform in a fragment shader should work</title>
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
-<script src="../../../resources/js-test-pre.js"></script>
-<script src="../../resources/webgl-test-utils.js"></script>
+<script src="../../../js/js-test-pre.js"></script>
+<script src="../../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="256" height="256"> </canvas>
@@ -59,7 +59,7 @@ void main() {
     gl_FragColor = vec4(1.0 - a, a, 0.0, 1.0);
 }
 </script>
-<script type="text/javascript">
+<script type="application/javascript">
 "use strict";
 description("Comparing loop index to an uniform in a fragment shader should work.");
 debug("");
@@ -75,7 +75,7 @@ function test() {
   var uniformLoc = gl.getUniformLocation(program, 'uCount');
   gl.uniform1i(uniformLoc, 5);
   wtu.drawUnitQuad(gl);
-  wtu.checkCanvasRect(gl, 0, 0, 256, 256, [0, 255, 0, 255]);
+  wtu.checkCanvas(gl, [0, 255, 0, 255]);
 };
 
 test();
