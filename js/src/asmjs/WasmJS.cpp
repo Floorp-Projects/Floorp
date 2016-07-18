@@ -319,12 +319,16 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     if (callArgs[0].toObject().is<TypedArrayObject>()) {
         TypedArrayObject& view = callArgs[0].toObject().as<TypedArrayObject>();
-        if (!bytecode->append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
+        if (!bytecode->append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength())) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     } else if (callArgs[0].toObject().is<ArrayBufferObject>()) {
         ArrayBufferObject& buffer = callArgs[0].toObject().as<ArrayBufferObject>();
-        if (!bytecode->append(buffer.dataPointer(), buffer.byteLength()))
+        if (!bytecode->append(buffer.dataPointer(), buffer.byteLength())) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     } else {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
@@ -515,35 +519,34 @@ WasmCall(JSContext* cx, unsigned argc, Value* vp)
     RootedFunction callee(cx, &args.callee().as<JSFunction>());
 
     Instance& instance = ExportedFunctionToInstance(callee);
-    uint32_t funcExportIndex = ExportedFunctionToExportIndex(callee);
-    return instance.callExport(cx, funcExportIndex, args);
+    uint32_t funcIndex = ExportedFunctionToIndex(callee);
+    return instance.callExport(cx, funcIndex, args);
 }
 
 /* static */ bool
 WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                                        uint32_t funcExportIndex, MutableHandleFunction fun)
+                                        uint32_t funcIndex, MutableHandleFunction fun)
 {
-    if (ExportMap::Ptr p = instanceObj->exports().lookup(funcExportIndex)) {
+    if (ExportMap::Ptr p = instanceObj->exports().lookup(funcIndex)) {
         fun.set(p->value());
         return true;
     }
 
     const Instance& instance = instanceObj->instance();
-    const FuncExport& funcExport = instance.metadata().funcExports[funcExportIndex];
-    RootedAtom name(cx, instance.getFuncAtom(cx, funcExport.funcIndex()));
+    RootedAtom name(cx, instance.getFuncAtom(cx, funcIndex));
     if (!name)
         return false;
 
-    unsigned numArgs = funcExport.sig().args().length();
+    unsigned numArgs = instance.metadata().lookupFuncExport(funcIndex).sig().args().length();
     fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
                                  GenericObject, JSFunction::ASMJS_CTOR));
     if (!fun)
         return false;
 
     fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
-    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(funcExportIndex));
+    fun->setExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT, Int32Value(funcIndex));
 
-    if (!instanceObj->exports().putNew(funcExportIndex, fun)) {
+    if (!instanceObj->exports().putNew(funcIndex, fun)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -566,10 +569,10 @@ wasm::ExportedFunctionToInstance(JSFunction* fun)
 }
 
 uint32_t
-wasm::ExportedFunctionToExportIndex(JSFunction* fun)
+wasm::ExportedFunctionToIndex(JSFunction* fun)
 {
     MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_FUNC_INDEX_SLOT);
     return v.toInt32();
 }
 

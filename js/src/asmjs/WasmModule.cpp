@@ -158,25 +158,25 @@ Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            func.sizeOfExcludingThis(mallocSizeOf);
 }
 
-Export::Export(UniqueChars fieldName, uint32_t funcExportIndex)
+Export::Export(UniqueChars fieldName, uint32_t funcIndex)
   : fieldName_(Move(fieldName))
 {
     pod.kind_ = DefinitionKind::Function;
-    pod.funcExportIndex_ = funcExportIndex;
+    pod.funcIndex_ = funcIndex;
 }
 
 Export::Export(UniqueChars fieldName, DefinitionKind kind)
   : fieldName_(Move(fieldName))
 {
     pod.kind_ = kind;
-    pod.funcExportIndex_ = 0;
+    pod.funcIndex_ = 0;
 }
 
 uint32_t
-Export::funcExportIndex() const
+Export::funcIndex() const
 {
     MOZ_ASSERT(pod.kind_ == DefinitionKind::Function);
-    return pod.funcExportIndex_;
+    return pod.funcIndex_;
 }
 
 size_t
@@ -437,7 +437,7 @@ CreateExportObject(JSContext* cx,
 
     if (metadata.isAsmJS() && exports.length() == 1 && strlen(exports[0].fieldName()) == 0) {
         RootedFunction fun(cx);
-        if (!instanceObj->getExportedFunction(cx, instanceObj, exports[0].funcExportIndex(), &fun))
+        if (!instanceObj->getExportedFunction(cx, instanceObj, exports[0].funcIndex(), &fun))
             return false;
         exportObj.set(fun);
         return true;
@@ -458,7 +458,7 @@ CreateExportObject(JSContext* cx,
         switch (exp.kind()) {
           case DefinitionKind::Function: {
             RootedFunction fun(cx);
-            if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcExportIndex(), &fun))
+            if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcIndex(), &fun))
                 return false;
             val = ObjectValue(*fun);
             break;
@@ -567,7 +567,7 @@ Module::instantiate(JSContext* cx,
 
     if (metadata_->hasStartFunction()) {
         FixedInvokeArgs<0> args(cx);
-        if (!instanceObj->instance().callExport(cx, metadata_->startFuncExportIndex(), args))
+        if (!instanceObj->instance().callExport(cx, metadata_->startFuncIndex(), args))
             return false;
     }
 
