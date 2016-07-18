@@ -991,16 +991,16 @@ JS_PUBLIC_API(double)
 JS_GetCurrentEmbedderTime();
 
 JS_PUBLIC_API(void*)
-JS_GetRuntimePrivate(JSRuntime* rt);
+JS_GetContextPrivate(JSContext* cx);
+
+JS_PUBLIC_API(void)
+JS_SetContextPrivate(JSContext* cx, void* data);
 
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetParentRuntime(JSRuntime* rt);
-
-JS_PUBLIC_API(void)
-JS_SetRuntimePrivate(JSRuntime* rt, void* data);
 
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext* cx);
