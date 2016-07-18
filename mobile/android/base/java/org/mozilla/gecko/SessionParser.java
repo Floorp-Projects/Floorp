@@ -48,6 +48,14 @@ public abstract class SessionParser {
         public JSONObject getTabObject() {
             return mTabObject;
         }
+
+        /**
+         * Is this tab pointing to about:home and does not contain any other history?
+         */
+        public boolean isAboutHomeWithoutHistory() {
+            JSONArray entries = mTabObject.optJSONArray("entries");
+            return entries != null && entries.length() == 1 && AboutPages.isAboutHome(mUrl);
+        }
     };
 
     abstract public void onTabRead(SessionTab tab);
