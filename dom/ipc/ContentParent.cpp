@@ -191,6 +191,7 @@
 #include "nsIBlocklistService.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetHandleInlines.h"
+#include "nsHostObjectProtocolHandler.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -2059,6 +2060,13 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   if (mDriverCrashGuard) {
     mDriverCrashGuard->NotifyCrashed();
   }
+
+  // Unregister all the BlobURLs registered by the ContentChild.
+  for (uint32_t i = 0; i < mBlobURLs.Length(); ++i) {
+    nsHostObjectProtocolHandler::RemoveDataEntry(mBlobURLs[i]);
+  }
+
+  mBlobURLs.Clear();
 }
 
 void
@@ -2422,8 +2430,13 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // on demand.)
     bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
     if (useOffMainThreadCompositing) {
-      DebugOnly<bool> opened = PCompositorBridge::Open(this);
+      GPUProcessManager* gpm = GPUProcessManager::Get();
+
+      Endpoint<PCompositorBridgeChild> endpoint;
+      DebugOnly<bool> opened =
+        gpm->CreateContentCompositorBridge(OtherPid(), &endpoint);
       MOZ_ASSERT(opened);
+      Unused << SendInitCompositor(Move(endpoint));
 
       opened = PImageBridge::Open(this);
       MOZ_ASSERT(opened);
@@ -2513,13 +2526,22 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   }
 #endif
 
-  RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
-  MOZ_ASSERT(swr);
+  {
+    RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+    MOZ_ASSERT(swr);
 
-  nsTArray<ServiceWorkerRegistrationData> registrations;
-  swr->GetRegistrations(registrations);
+    nsTArray<ServiceWorkerRegistrationData> registrations;
+    swr->GetRegistrations(registrations);
+    Unused << SendInitServiceWorkers(ServiceWorkerConfiguration(registrations));
+  }
 
-  Unused << SendInitServiceWorkers(ServiceWorkerConfiguration(registrations));
+  {
+    nsTArray<BlobURLRegistrationData> registrations;
+    if (nsHostObjectProtocolHandler::GetAllBlobURLEntries(registrations,
+                                                          this)) {
+      Unused << SendInitBlobURLs(registrations);
+    }
+  }
 }
 
 bool
@@ -3208,14 +3230,6 @@ bool
 ContentParent::DeallocPAPZParent(PAPZParent* aActor)
 {
   return true;
-}
-
-PCompositorBridgeParent*
-ContentParent::AllocPCompositorBridgeParent(mozilla::ipc::Transport* aTransport,
-                                            base::ProcessId aOtherProcess)
-{
-  return GPUProcessManager::Get()->CreateTabCompositorBridge(
-    aTransport, aOtherProcess);
 }
 
 gfx::PVRManagerParent*
@@ -5693,6 +5707,73 @@ ContentParent::RecvNotifyLowMemory()
 #ifdef MOZ_CRASHREPORTER
   nsThread::SaveMemoryReportNearOOM(nsThread::ShouldSaveMemoryReport::kForceReport);
 #endif
+  return true;
+}
+
+/* static */ void
+ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
+                                            BlobImpl* aBlobImpl,
+                                            nsIPrincipal* aPrincipal,
+                                            ContentParent* aIgnoreThisCP)
+{
+  nsCString uri(aURI);
+  IPC::Principal principal(aPrincipal);
+
+  for (auto* cp : AllProcesses(eLive)) {
+    if (cp != aIgnoreThisCP) {
+      PBlobParent* blobParent = cp->GetOrCreateActorForBlobImpl(aBlobImpl);
+      if (blobParent) {
+        Unused << cp->SendBlobURLRegistration(uri, blobParent, principal);
+      }
+    }
+  }
+}
+
+/* static */ void
+ContentParent::BroadcastBlobURLUnregistration(const nsACString& aURI,
+                                              ContentParent* aIgnoreThisCP)
+{
+  nsCString uri(aURI);
+
+  for (auto* cp : AllProcesses(eLive)) {
+    if (cp != aIgnoreThisCP) {
+      Unused << cp->SendBlobURLUnregistration(uri);
+    }
+  }
+}
+
+bool
+ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
+                                                        PBlobParent* aBlobParent,
+                                                        const Principal& aPrincipal)
+{
+  RefPtr<BlobImpl> blobImpl =
+    static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
+  if (NS_WARN_IF(!blobImpl)) {
+    return false;
+  }
+
+  if (NS_SUCCEEDED(nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl,
+                                                             aPrincipal))) {
+    BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
+
+    // We want to store this blobURL, so we can unregister it if the child
+    // crashes.
+    mBlobURLs.AppendElement(aURI);
+  }
+
+  BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
+  return true;
+}
+
+bool
+ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI)
+{
+  nsHostObjectProtocolHandler::RemoveDataEntry(aURI,
+                                               false /* Don't broadcast */);
+  BroadcastBlobURLUnregistration(aURI, this);
+  mBlobURLs.RemoveElement(aURI);
+
   return true;
 }
 

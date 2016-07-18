@@ -31,10 +31,10 @@
 <meta charset="utf-8">
 <title>WebGL GLSL Conformance Tests</title>
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
-<link rel="stylesheet" href="../../resources/glsl-feature-tests.css"/>
-<script src="../../../resources/js-test-pre.js"></script>
-<script src="../../resources/webgl-test-utils.js"></script>
-<script src="../../resources/glsl-conformance-test.js"></script>
+<link rel="stylesheet" href="../../../resources/glsl-feature-tests.css"/>
+<script src="../../../js/js-test-pre.js"></script>
+<script src="../../../js/webgl-test-utils.js"></script>
+<script src="../../../js/glsl-conformance-test.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -170,99 +170,71 @@ void main()
 GLSLConformanceTester.runTests([
     { vShaderId: 'vertexShaderVoid',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for void should fail'
     },
     { vShaderId: 'vertexShaderBool',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for bool should fail'
     },
     { vShaderId: 'vertexShaderVec2',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for vec2 should fail'
     },
     { vShaderId: 'vertexShaderVec3',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for vec3 should fail'
     },
     { vShaderId: 'vertexShaderVec4',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for vec4 should fail'
     },
     { vShaderId: 'vertexShaderBvec2',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for bvec2 should fail'
     },
     { vShaderId: 'vertexShaderBvec3',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for bvec3 should fail'
     },
     { vShaderId: 'vertexShaderBvec4',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for bvec4 should fail'
     },
     { vShaderId: 'vertexShaderIvec2',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for ivec2 should fail'
     },
     { vShaderId: 'vertexShaderIvec3',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for ivec3 should fail'
     },
     { vShaderId: 'vertexShaderIvec4',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for ivec4 should fail'
     },
     { vShaderId: 'vertexShaderMat2',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for mat2 should fail'
     },
     { vShaderId: 'vertexShaderMat3',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for mat3 should fail'
     },
     { vShaderId: 'vertexShaderMat4',
       vShaderSuccess: false,
-      fShaderId: undefined,
-      fShaderSuccess: true,
       linkSuccess: false,
       passMsg: 'shader with default precision for mat4 should fail'
     }

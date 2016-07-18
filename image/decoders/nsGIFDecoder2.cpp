@@ -456,7 +456,7 @@ ConvertColormap(uint32_t* aColormap, uint32_t aColors)
   }
 }
 
-Maybe<TerminalState>
+LexerResult
 nsGIFDecoder2::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");

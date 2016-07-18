@@ -359,7 +359,7 @@ function test_login_manager_logins_cleared_with_subdomain()
   check_login_exists(TEST_HOST, false);
 }
 
-function tets_login_manager_logins_not_cleared_with_uri_contains_domain()
+function test_login_manager_logins_not_cleared_with_uri_contains_domain()
 {
   const TEST_HOST = "http://ilovemozilla.org";
   add_login(TEST_HOST);
@@ -619,7 +619,7 @@ var tests = [
   test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain,
   test_login_manager_logins_cleared_with_direct_match,
   test_login_manager_logins_cleared_with_subdomain,
-  tets_login_manager_logins_not_cleared_with_uri_contains_domain,
+  test_login_manager_logins_not_cleared_with_uri_contains_domain,
 
   // Permission Manager
   test_permission_manager_cleared_with_direct_match,

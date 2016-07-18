@@ -43,7 +43,8 @@ WrapperAnswer::fail(AutoJSAPI& jsapi, ReturnStatus* rs)
     if (!jsapi.HasException())
         return true;
 
-    jsapi.StealException(&exn);
+    if (!jsapi.StealException(&exn))
+        return true;
 
     if (JS_IsStopIteration(exn)) {
         *rs = ReturnStatus(ReturnStopIteration());

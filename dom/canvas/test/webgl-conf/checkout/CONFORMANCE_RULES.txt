@@ -63,10 +63,8 @@ OSs on which the WebGL implementation is intended to be supported.
 3. Conformance as the web browser is upgraded
 
 WebGL conformance results submitted for an earlier version of the
-browser carry forward to later versions of the browser, unless the
-WebGL implementation changes substantially enough that it is expected
-that conformance may have been affected. In that case, the browser
-implementer should submit new conformance results.
+browser carry forward to later versions of the browser that do not
+cause any previously passing test to fail.
 
 4. Conformance as the operating system is upgraded
 
@@ -88,15 +86,12 @@ built-in web browser. In this case the following rules apply:
 1. Conformance results must be submitted for each GPU and operating
 system combination to be certified. It is not required to submit
 results for different devices containing the same GPU and running the
-same operating system.
+same operating system that do not cause any previously passing test to
+fail.
 
-2. Conformance results may be submitted up to three months in advance
-of the product reaching initial shipment.
-
-3. Conformance results carry forward for a given GPU as the operating
-system and graphics driver are upgraded, unless there is an
-expectation that conformance may have been affected. In that case, the
-GPU vendor should submit new conformance results.
+2. Conformance results carry forward for a given GPU as the operating
+system and graphics driver are upgraded but do not cause any previously
+passing test to fail.
 
 Discussion
 ==========

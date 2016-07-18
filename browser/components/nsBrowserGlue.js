@@ -102,6 +102,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "SelfSupportBackend",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUsageTelemetry",
+                                  "resource:///modules/BrowserUsageTelemetry.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
 
@@ -781,6 +784,7 @@ BrowserGlue.prototype = {
     NewTabMessages.init();
 
     SessionStore.init();
+    BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
     ContentSearch.init();
     FormValidationHandler.init();
@@ -1174,6 +1178,7 @@ BrowserGlue.prototype = {
       Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
     }
 
+    BrowserUsageTelemetry.uninit();
     SelfSupportBackend.uninit();
     NewTabMessages.uninit();
 
