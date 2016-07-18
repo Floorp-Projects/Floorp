@@ -57,7 +57,10 @@ PrintTranslator::TranslateRecording(std::istream& aRecording)
       return false;
     }
 
-    recordedEvent->PlayEvent(this);
+    if (!recordedEvent->PlayEvent(this)) {
+      return false;
+    }
+
     ReadElement(aRecording, eventType);
   }
 
