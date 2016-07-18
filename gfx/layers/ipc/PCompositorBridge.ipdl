@@ -92,6 +92,13 @@ child:
                                    PluginWindowData[] aPlugins);
 
   /**
+   * Captures an image for all visible child plugins of a given widget for use
+   * during scrolling.
+   * @param aParentWidget parent of widgets to be captured
+   */
+  async CaptureAllPlugins(uintptr_t aParentWidget);
+
+  /**
    * Hides all registered plugin widgets associated with a particular chrome
    * widget.
    */
@@ -202,6 +209,11 @@ parent:
   async UpdateVisibleRegion(VisibilityCounter counter,
                             ScrollableLayerGuid guid,
                             CSSIntRegion region);
+
+  /**
+   * Sent when the child has finished CaptureAllPlugins.
+   */
+  async AllPluginsCaptured();
 
   async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id, uint64_t aSerial);
 

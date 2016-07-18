@@ -1973,6 +1973,8 @@ public:
     return true;
   }
 
+  virtual bool RecvAllPluginsCaptured() override { return true; }
+
   virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) override
   {
     *aWidth = gfxPlatform::GetPlatform()->GetTileWidth();
@@ -2638,11 +2640,30 @@ CompositorBridgeParent::HideAllPluginWindows()
 
   mDeferPluginWindows = true;
   mPluginWindowsHidden = true;
+
+#if defined(XP_WIN)
+  // We will get an async reply that this has happened and then send hide.
+  Unused << SendCaptureAllPlugins(parentWidget);
+#else
   Unused << SendHideAllPlugins(parentWidget);
   ScheduleComposition();
+#endif
 }
 #endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 
+bool
+CompositorBridgeParent::RecvAllPluginsCaptured()
+{
+#if defined(XP_WIN)
+  ForceComposeToTarget(nullptr);
+  Unused << SendHideAllPlugins(GetWidget()->GetWidgetKey());
+  return true;
+#else
+  MOZ_ASSERT_UNREACHABLE(
+    "CompositorBridgeParent::RecvAllPluginsCaptured calls unexpected.");
+  return false;
+#endif
+}
 void
 CrossProcessCompositorBridgeParent::DidComposite(
   uint64_t aId,

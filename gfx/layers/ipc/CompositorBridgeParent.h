@@ -269,6 +269,8 @@ public:
                            const ScrollableLayerGuid& aGuid,
                            const CSSIntRegion& aRegion);
 
+  virtual bool RecvAllPluginsCaptured() override;
+
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
