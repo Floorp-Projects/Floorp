@@ -74,14 +74,12 @@ public:
   class AllocationHandle : public BaseAllocationHandle
   {
   public:
-    AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
-                     const nsACString& aOrigin)
-      : mConstraints(aConstraints), mOrigin(aOrigin) {}
+    AllocationHandle(const dom::MediaTrackConstraints& aConstraints)
+      : mConstraints(aConstraints) {}
   private:
     ~AllocationHandle() override {}
   public:
     NormalizedConstraints mConstraints;
-    nsCString mOrigin;
   };
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
