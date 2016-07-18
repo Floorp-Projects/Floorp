@@ -5964,7 +5964,7 @@ HTMLMediaElement::OpenUnsupportedMediaWithExtenalAppIfNeeded()
   LOG(LogLevel::Debug, ("Open unsupported type \'%s\' with external apps.",
       mMimeType.get()));
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(), static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("OpenMediaWithExternalApp"),
+                                       NS_LITERAL_STRING("OpenMediaWithExtenalApp"),
                                        true,
                                        true);
 }
