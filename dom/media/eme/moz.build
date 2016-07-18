@@ -24,7 +24,6 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'CDMCaps.cpp',
-    'CDMProxy.cpp',
     'DetailedPromise.cpp',
     'EMEUtils.cpp',
     'MediaEncryptedEvent.cpp',
