@@ -927,7 +927,9 @@ FlameGraph.prototype = {
   _onKeyDown: function (e) {
     ViewHelpers.preventScrolling(e);
 
-    if (!this._keysPressed[e.keyCode]) {
+    const hasModifier = e.ctrlKey || e.shiftKey || e.altKey || e.metaKey;
+
+    if (!hasModifier && !this._keysPressed[e.keyCode]) {
       this._keysPressed[e.keyCode] = true;
       this._userInputStack++;
       this._shouldRedraw = true;
