@@ -29,6 +29,12 @@ Accessible::Role()
 }
 
 inline bool
+Accessible::HasARIARole() const
+{
+  return mRoleMapEntryIndex != aria::NO_ROLE_MAP_ENTRY_INDEX;
+}
+
+inline bool
 Accessible::IsARIARole(nsIAtom* aARIARole) const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
@@ -42,6 +48,12 @@ Accessible::HasStrongARIARole() const
   return roleMapEntry && roleMapEntry->roleRule == kUseMapRole;
 }
 
+inline const nsRoleMapEntry*
+Accessible::ARIARoleMap() const
+{
+  return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
+}
+
 inline mozilla::a11y::role
 Accessible::ARIARole()
 {
@@ -50,6 +62,12 @@ Accessible::ARIARole()
     return mozilla::a11y::roles::NOTHING;
 
   return ARIATransformRole(roleMapEntry->role);
+}
+
+inline void
+Accessible::SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry)
+{
+  mRoleMapEntryIndex = aria::GetIndexFromRoleMap(aRoleMapEntry);
 }
 
 inline bool
