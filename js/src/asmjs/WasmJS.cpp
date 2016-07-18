@@ -415,6 +415,7 @@ WasmInstanceObject::isNewborn() const
 /* static */ void
 WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj)
 {
+    fop->delete_(&obj->as<WasmInstanceObject>().exports());
     if (!obj->as<WasmInstanceObject>().isNewborn())
         fop->delete_(&obj->as<WasmInstanceObject>().instance());
 }
@@ -427,13 +428,20 @@ WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmInstanceObject*
-WasmInstanceObject::create(ExclusiveContext* cx, HandleObject proto)
+WasmInstanceObject::create(JSContext* cx, HandleObject proto)
 {
+    UniquePtr<WeakExportMap> exports = js::MakeUnique<WeakExportMap>(cx->zone(), ExportMap());
+    if (!exports || !exports->init()) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     AutoSetNewObjectMetadata metadata(cx);
     auto* obj = NewObjectWithGivenProto<WasmInstanceObject>(cx, proto);
     if (!obj)
         return nullptr;
 
+    obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
     MOZ_ASSERT(obj->isNewborn());
     return obj;
 }
@@ -492,6 +500,77 @@ WasmInstanceObject::instance() const
 {
     MOZ_ASSERT(!isNewborn());
     return *(Instance*)getReservedSlot(INSTANCE_SLOT).toPrivate();
+}
+
+WasmInstanceObject::WeakExportMap&
+WasmInstanceObject::exports() const
+{
+    return *(WeakExportMap*)getReservedSlot(EXPORTS_SLOT).toPrivate();
+}
+
+static bool
+WasmCall(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedFunction callee(cx, &args.callee().as<JSFunction>());
+
+    Instance& instance = ExportedFunctionToInstance(callee);
+    uint32_t funcExportIndex = ExportedFunctionToExportIndex(callee);
+    return instance.callExport(cx, funcExportIndex, args);
+}
+
+/* static */ bool
+WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject instanceObj,
+                                        uint32_t funcExportIndex, MutableHandleFunction fun)
+{
+    if (ExportMap::Ptr p = instanceObj->exports().lookup(funcExportIndex)) {
+        fun.set(p->value());
+        return true;
+    }
+
+    const Instance& instance = instanceObj->instance();
+    const FuncExport& funcExport = instance.metadata().funcExports[funcExportIndex];
+    RootedAtom name(cx, instance.getFuncAtom(cx, funcExport.funcIndex()));
+    if (!name)
+        return false;
+
+    unsigned numArgs = funcExport.sig().args().length();
+    fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
+                                 GenericObject, JSFunction::ASMJS_CTOR));
+    if (!fun)
+        return false;
+
+    fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
+    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(funcExportIndex));
+
+    if (!instanceObj->exports().putNew(funcExportIndex, fun)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+wasm::IsExportedFunction(JSFunction* fun)
+{
+    return fun->maybeNative() == WasmCall;
+}
+
+Instance&
+wasm::ExportedFunctionToInstance(JSFunction* fun)
+{
+    MOZ_ASSERT(IsExportedFunction(fun));
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
+    return v.toObject().as<WasmInstanceObject>().instance();
+}
+
+uint32_t
+wasm::ExportedFunctionToExportIndex(JSFunction* fun)
+{
+    MOZ_ASSERT(IsExportedFunction(fun));
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
+    return v.toInt32();
 }
 
 // ============================================================================

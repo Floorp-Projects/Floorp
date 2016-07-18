@@ -19,6 +19,7 @@
 #ifndef wasm_js_h
 #define wasm_js_h
 
+#include "gc/Policy.h"
 #include "js/UniquePtr.h"
 #include "vm/NativeObject.h"
 
@@ -54,6 +55,18 @@ Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
 // The field name of the export object on the instance object.
 
 extern const char InstanceExportField[];
+
+// These accessors are used to implemented the special asm.js semantics of
+// exported wasm functions:
+
+extern bool
+IsExportedFunction(JSFunction* fun);
+
+extern Instance&
+ExportedFunctionToInstance(JSFunction* fun);
+
+extern uint32_t
+ExportedFunctionToExportIndex(JSFunction* fun);
 
 } // namespace wasm
 
@@ -104,19 +117,36 @@ typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModuleObject;
 class WasmInstanceObject : public NativeObject
 {
     static const unsigned INSTANCE_SLOT = 0;
+    static const unsigned EXPORTS_SLOT = 1;
     static const ClassOps classOps_;
     bool isNewborn() const;
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
+
+    // ExportMap maps from function index to exported function object. This map
+    // is weak to avoid holding objects alive; the point is just to ensure a
+    // unique object identity for any given function object.
+    using ExportMap = GCHashMap<uint32_t,
+                                ReadBarrieredFunction,
+                                DefaultHasher<uint32_t>,
+                                SystemAllocPolicy>;
+    using WeakExportMap = JS::WeakCache<ExportMap>;
+    WeakExportMap& exports() const;
+
   public:
-    static const unsigned RESERVED_SLOTS = 1;
+    static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
     static const JSPropertySpec properties[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmInstanceObject* create(ExclusiveContext* cx, HandleObject proto);
+    static WasmInstanceObject* create(JSContext* cx, HandleObject proto);
     void init(wasm::UniqueInstance instance);
     wasm::Instance& instance() const;
+
+    static bool getExportedFunction(JSContext* cx,
+                                    Handle<WasmInstanceObject*> instanceObj,
+                                    uint32_t funcExportIndex,
+                                    MutableHandleFunction fun);
 };
 
 typedef GCVector<WasmInstanceObject*> WasmInstanceObjectVector;
