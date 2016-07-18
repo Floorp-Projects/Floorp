@@ -76,14 +76,8 @@ NormalizedConstraintSet::Range<bool>::FinalizeMerge()
 }
 
 NormalizedConstraintSet::LongRange::LongRange(
-    LongPtrType aMemberPtr,
-    const char* aName,
-    const dom::OwningLongOrConstrainLongRange& aOther,
-    bool advanced,
-    nsTArray<MemberPtrType>* aList)
-: Range<int32_t>((MemberPtrType)aMemberPtr, aName,
-                 1 + INT32_MIN, INT32_MAX, // +1 avoids Windows compiler bug
-                 aList)
+    const dom::OwningLongOrConstrainLongRange& aOther, bool advanced)
+: Range<int32_t>(1 + INT32_MIN, INT32_MAX) // +1 avoids Windows compiler bug
 {
   if (aOther.IsLong()) {
     if (advanced) {
@@ -96,26 +90,10 @@ NormalizedConstraintSet::LongRange::LongRange(
   }
 }
 
-NormalizedConstraintSet::LongLongRange::LongLongRange(
-    LongLongPtrType aMemberPtr,
-    const char* aName,
-    const long long& aOther,
-    nsTArray<MemberPtrType>* aList)
-: Range<int64_t>((MemberPtrType)aMemberPtr, aName,
-                 1 + INT64_MIN, INT64_MAX, // +1 avoids Windows compiler bug
-                 aList)
-{
-  mIdeal.emplace(aOther);
-}
-
 NormalizedConstraintSet::DoubleRange::DoubleRange(
-    DoublePtrType aMemberPtr,
-    const char* aName,
-    const dom::OwningDoubleOrConstrainDoubleRange& aOther, bool advanced,
-    nsTArray<MemberPtrType>* aList)
-: Range<double>((MemberPtrType)aMemberPtr, aName,
-                -std::numeric_limits<double>::infinity(),
-                std::numeric_limits<double>::infinity(), aList)
+    const dom::OwningDoubleOrConstrainDoubleRange& aOther, bool advanced)
+: Range<double>(-std::numeric_limits<double>::infinity(),
+                std::numeric_limits<double>::infinity())
 {
   if (aOther.IsDouble()) {
     if (advanced) {
@@ -129,12 +107,8 @@ NormalizedConstraintSet::DoubleRange::DoubleRange(
 }
 
 NormalizedConstraintSet::BooleanRange::BooleanRange(
-    BooleanPtrType aMemberPtr,
-    const char* aName,
-    const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
-    bool advanced,
-    nsTArray<MemberPtrType>* aList)
-: Range<bool>((MemberPtrType)aMemberPtr, aName, false, true, aList)
+    const dom::OwningBooleanOrConstrainBooleanParameters& aOther, bool advanced)
+: Range<bool>(false, true)
 {
   if (aOther.IsBoolean()) {
     if (advanced) {
@@ -155,12 +129,8 @@ NormalizedConstraintSet::BooleanRange::BooleanRange(
 }
 
 NormalizedConstraintSet::StringRange::StringRange(
-    StringPtrType aMemberPtr,
-    const char* aName,
     const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
-    bool advanced,
-    nsTArray<MemberPtrType>* aList)
-  : BaseRange((MemberPtrType)aMemberPtr, aName, aList)
+    bool advanced)
 {
   if (aOther.IsString()) {
     if (advanced) {
@@ -270,11 +240,8 @@ NormalizedConstraintSet::StringRange::Merge(const StringRange& aOther)
   return true;
 }
 
-NormalizedConstraints::NormalizedConstraints(
-    const dom::MediaTrackConstraints& aOther,
-    nsTArray<MemberPtrType>* aList)
-  : NormalizedConstraintSet(aOther, false, aList)
-  , mBadConstraint(nullptr)
+NormalizedConstraints::NormalizedConstraints(const dom::MediaTrackConstraints& aOther)
+: NormalizedConstraintSet(aOther, false), mBadConstraint(nullptr)
 {
   if (aOther.mAdvanced.WasPassed()) {
     for (auto& entry : aOther.mAdvanced.Value()) {
@@ -290,32 +257,79 @@ NormalizedConstraints::NormalizedConstraints(
   : NormalizedConstraintSet(*aOthers[0])
   , mBadConstraint(nullptr)
 {
-  // Create a list of member pointers.
-  nsTArray<MemberPtrType> list;
-  NormalizedConstraints dummy(MediaTrackConstraints(), &list);
-
   // Do intersection of all required constraints, and average of ideals.
 
   for (uint32_t i = 1; i < aOthers.Length(); i++) {
-    auto& other = *aOthers[i];
+    auto& set = *aOthers[i];
 
-    for (auto& memberPtr : list) {
-      auto& member = this->*memberPtr;
-      auto& otherMember = other.*memberPtr;
-
-      if (!member.Merge(otherMember)) {
-        mBadConstraint = member.mName;
-        return;
-      }
+    if (!mWidth.Merge(set.mWidth)) {
+      mBadConstraint = "width";
+      return;
+    }
+    if (!mHeight.Merge(set.mHeight)) {
+      mBadConstraint = "height";
+      return;
+    }
+    if (!mFrameRate.Merge(set.mFrameRate)) {
+      mBadConstraint = "frameRate";
+      return;
+    }
+    if (!mFacingMode.Merge(set.mFacingMode)) {
+      mBadConstraint = "facingMode";
+      return;
+    }
+    if (mMediaSource != set.mMediaSource) {
+      mBadConstraint = "mediaSource";
+      return;
+    }
+    if (mBrowserWindow != set.mBrowserWindow) {
+      mBadConstraint = "browserWindow";
+      return;
+    }
+    if (!mViewportOffsetX.Merge(set.mViewportOffsetX)) {
+      mBadConstraint = "viewportOffsetX";
+      return;
+    }
+    if (!mViewportOffsetY.Merge(set.mViewportOffsetY)) {
+      mBadConstraint = "viewportOffsetY";
+      return;
+    }
+    if (!mViewportWidth.Merge(set.mViewportWidth)) {
+      mBadConstraint = "viewportWidth";
+      return;
+    }
+    if (!mViewportHeight.Merge(set.mViewportHeight)) {
+      mBadConstraint = "viewportHeight";
+      return;
+    }
+    if (!mEchoCancellation.Merge(set.mEchoCancellation)) {
+      mBadConstraint = "echoCancellation";
+      return;
+    }
+    if (!mMozNoiseSuppression.Merge(set.mMozNoiseSuppression)) {
+      mBadConstraint = "mozNoiseSuppression";
+      return;
+    }
+    if (!mMozAutoGainControl.Merge(set.mMozAutoGainControl)) {
+      mBadConstraint = "mozAutoGainControl";
+      return;
     }
 
-    for (auto& entry : other.mAdvanced) {
+    for (auto& entry : set.mAdvanced) {
       mAdvanced.AppendElement(entry);
     }
   }
-  for (auto& memberPtr : list) {
-    (this->*memberPtr).FinalizeMerge();
-  }
+  mWidth.FinalizeMerge();
+  mHeight.FinalizeMerge();
+  mFrameRate.FinalizeMerge();
+  mFacingMode.FinalizeMerge();
+  mViewportOffsetX.FinalizeMerge();
+  mViewportOffsetY.FinalizeMerge();
+  mViewportWidth.FinalizeMerge();
+  mViewportHeight.FinalizeMerge();
+  mEchoCancellation.FinalizeMerge();
+  mMozNoiseSuppression.FinalizeMerge();
+  mMozAutoGainControl.FinalizeMerge();
 }
 
 FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
