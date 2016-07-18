@@ -1243,7 +1243,7 @@ CustomizeMode.prototype = {
   },
 
   onWidgetBeforeDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
-    if (aContainer.ownerDocument.defaultView != this.window || this.resetting) {
+    if (aContainer.ownerGlobal != this.window || this.resetting) {
       return;
     }
     if (aContainer.id == CustomizableUI.AREA_PANEL) {
@@ -1260,7 +1260,7 @@ CustomizeMode.prototype = {
   },
 
   onWidgetAfterDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
-    if (aContainer.ownerDocument.defaultView != this.window || this.resetting) {
+    if (aContainer.ownerGlobal != this.window || this.resetting) {
       return;
     }
     // If the node is still attached to the container, wrap it again:
@@ -1697,7 +1697,7 @@ CustomizeMode.prototype = {
           dragValue = "before";
         } else {
           // Check if the aDraggedItem is hovered past the first half of dragOverItem
-          let window = dragOverItem.ownerDocument.defaultView;
+          let window = dragOverItem.ownerGlobal;
           let direction = window.getComputedStyle(dragOverItem, null).direction;
           let itemRect = dragOverItem.getBoundingClientRect();
           let dropTargetCenter = itemRect.left + (itemRect.width / 2);
@@ -1986,7 +1986,7 @@ CustomizeMode.prototype = {
     // mozSourceNode is null in the dragStart event handler or if
     // the drag event originated in an external application.
     return !mozSourceNode ||
-           mozSourceNode.ownerDocument.defaultView != this.window;
+           mozSourceNode.ownerGlobal != this.window;
   },
 
   _setDragActive: function(aItem, aValue, aDraggedItemId, aInToolbar) {
@@ -1997,7 +1997,7 @@ CustomizeMode.prototype = {
     if (aItem.getAttribute("dragover") != aValue) {
       aItem.setAttribute("dragover", aValue);
 
-      let window = aItem.ownerDocument.defaultView;
+      let window = aItem.ownerGlobal;
       let draggedItem = window.document.getElementById(aDraggedItemId);
       if (!aInToolbar) {
         this._setGridDragActive(aItem, draggedItem, aValue);
@@ -2038,7 +2038,7 @@ CustomizeMode.prototype = {
     }
   },
   _cancelDragActive: function(aItem, aNextItem, aNoTransition) {
-    this._updateToolbarCustomizationOutline(aItem.ownerDocument.defaultView);
+    this._updateToolbarCustomizationOutline(aItem.ownerGlobal);
     let currentArea = this._getCustomizableParent(aItem);
     if (!currentArea) {
       return;

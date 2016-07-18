@@ -51,7 +51,7 @@ var gMenuBuilder = {
 
       // Display the extension icon on the root element.
       if (root.extension.manifest.icons) {
-        let parentWindow = contextData.menu.ownerDocument.defaultView;
+        let parentWindow = contextData.menu.ownerGlobal;
         let extension = root.extension;
 
         let {icon} = IconDetails.getPreferredIcon(extension.manifest.icons, extension,
