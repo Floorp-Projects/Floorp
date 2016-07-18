@@ -129,6 +129,7 @@
 #include "mozilla/dom/PCycleCollectWithLogsChild.h"
 
 #include "nsIScriptSecurityManager.h"
+#include "nsHostObjectProtocolHandler.h"
 
 #ifdef MOZ_WEBRTC
 #include "signaling/src/peerconnection/WebrtcGlobalChild.h"
@@ -1241,11 +1242,10 @@ ContentChild::DeallocPAPZChild(PAPZChild* aActor)
   return true;
 }
 
-PCompositorBridgeChild*
-ContentChild::AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
-                                          base::ProcessId aOtherProcess)
+bool
+ContentChild::RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint)
 {
-  return CompositorBridgeChild::Create(aTransport, aOtherProcess);
+  return CompositorBridgeChild::InitForContent(Move(aEndpoint));
 }
 
 PSharedBufferManagerChild*
@@ -2243,6 +2243,8 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     sFirstIdleTask->Cancel();
   }
 
+  nsHostObjectProtocolHandler::RemoveDataEntries();
+
   mAlertObservers.Clear();
 
   mIdleObservers.Clear();
@@ -2632,6 +2634,22 @@ ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
   swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
+  return true;
+}
+
+bool
+ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistrations)
+{
+  for (uint32_t i = 0; i < aRegistrations.Length(); ++i) {
+    BlobURLRegistrationData& registration = aRegistrations[i];
+    RefPtr<BlobImpl> blobImpl =
+      static_cast<BlobChild*>(registration.blobChild())->GetBlobImpl();
+    MOZ_ASSERT(blobImpl);
+
+    nsHostObjectProtocolHandler::AddDataEntry(registration.url(), blobImpl,
+                                              registration.principal());
+  }
+
   return true;
 }
 
@@ -3372,6 +3390,25 @@ ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScop
 #endif
   return true;
 }
+
+bool
+ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
+                                      const IPC::Principal& aPrincipal)
+{
+  RefPtr<BlobImpl> blobImpl = static_cast<BlobChild*>(aBlobChild)->GetBlobImpl();
+  MOZ_ASSERT(blobImpl);
+
+  nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl, aPrincipal);
+  return true;
+}
+
+bool
+ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
+{
+  nsHostObjectProtocolHandler::RemoveDataEntry(aURI);
+  return true;
+}
+
 
 void
 ContentChild::CreateGetFilesRequest(const nsAString& aDirectoryPath,

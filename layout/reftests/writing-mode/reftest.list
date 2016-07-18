@@ -72,7 +72,7 @@ skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet
 skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
-== ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html

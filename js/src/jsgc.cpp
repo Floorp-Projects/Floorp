@@ -1090,8 +1090,8 @@ void
 GCRuntime::finish()
 {
     /* Wait for the nursery sweeping to end. */
-    if (rt->gc.nursery.isEnabled())
-        rt->gc.nursery.waitBackgroundFreeEnd();
+    if (nursery.isEnabled())
+        nursery.waitBackgroundFreeEnd();
 
     /*
      * Wait until the background finalization and allocation stops and the
@@ -1123,6 +1123,8 @@ GCRuntime::finish()
     FreeChunkPool(rt, emptyChunks_);
 
     FinishTrace();
+
+    nursery.printTotalProfileTimes();
 }
 
 void

@@ -1351,6 +1351,10 @@ var Impl = {
         // Persist session data to disk (don't wait until it completes).
         let sessionData = this._getSessionDataObject();
         TelemetryStorage.saveSessionData(sessionData);
+
+        // Notify that there was a subsession split in the parent process. This is an
+        // internal topic and is only meant for internal Telemetry usage.
+        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split", null);
       }
     }
 

@@ -7,10 +7,6 @@
 
 #include <stdio.h>
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 #include "GLDefs.h"
 #include "nscore.h"
 #include "prlink.h"

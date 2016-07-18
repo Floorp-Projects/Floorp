@@ -487,6 +487,25 @@ protected:
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
 
+  already_AddRefed<SourceSurface> CreateScrollSnapshot() override;
+
+  struct ScrollSnapshot
+  {
+    RefPtr<gfxWindowsSurface> surface;
+    bool surfaceHasSnapshot = false;
+    RECT clip;
+  };
+
+  ScrollSnapshot* EnsureSnapshotSurface(ScrollSnapshot& aSnapshotData,
+                                        const mozilla::gfx::IntSize& aSize);
+
+  ScrollSnapshot mFullSnapshot;
+  ScrollSnapshot mPartialSnapshot;
+  ScrollSnapshot* mCurrentSnapshot = nullptr;
+
+  already_AddRefed<SourceSurface>
+    GetFallbackScrollSnapshot(const RECT& aRequiredClip);
+
 protected:
   nsCOMPtr<nsIWidget>   mParent;
   nsIntSize             mLastSize;
