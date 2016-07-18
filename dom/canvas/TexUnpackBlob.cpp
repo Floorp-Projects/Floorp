@@ -20,12 +20,12 @@ namespace mozilla {
 namespace webgl {
 
 static bool
-UnpackFormatHasAlpha(GLenum unpackFormat)
+UnpackFormatHasColorAndAlpha(GLenum unpackFormat)
 {
     switch (unpackFormat) {
-    case LOCAL_GL_ALPHA:
     case LOCAL_GL_LUMINANCE_ALPHA:
     case LOCAL_GL_RGBA:
+    case LOCAL_GL_SRGB_ALPHA:
         return true;
 
     default:
@@ -216,7 +216,7 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     const auto dstFormat = FormatForPackingInfo(pi);
 
     bool premultMatches = (mIsSrcPremult == isDstPremult);
-    if (!UnpackFormatHasAlpha(dstDUI->unpackFormat)) {
+    if (!UnpackFormatHasColorAndAlpha(dstDUI->unpackFormat)) {
         premultMatches = true;
     }
 
