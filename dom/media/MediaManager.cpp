@@ -786,9 +786,11 @@ MediaDevice::FitnessDistance(nsString aN,
   }
 }
 
+// Reminder: add handling for new constraints both here and in GetSources below!
+
 uint32_t
 MediaDevice::GetBestFitnessDistance(
-    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets)
+    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
 {
   nsString mediaSource;
   GetMediaSource(mediaSource);
@@ -798,8 +800,7 @@ MediaDevice::GetBestFitnessDistance(
   // webidl, we ignore it for audio here.
   if (!mediaSource.EqualsASCII("microphone")) {
     for (const auto& constraint : aConstraintSets) {
-      if (constraint->mMediaSource.mIdeal.find(mediaSource) ==
-          constraint->mMediaSource.mIdeal.end()) {
+      if (mediaSource != constraint->mMediaSource) {
         return UINT32_MAX;
       }
     }
