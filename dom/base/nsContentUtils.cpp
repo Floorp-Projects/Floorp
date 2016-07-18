@@ -9220,3 +9220,43 @@ nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentat
 
   topFrameElement->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
 }
+
+/* static */ nsIDocShell*
+nsContentUtils::GetDocShellForEventTarget(EventTarget* aTarget)
+{
+  nsCOMPtr<nsINode> node(do_QueryInterface(aTarget));
+  nsIDocument* doc = nullptr;
+  nsIDocShell* docShell = nullptr;
+
+  if (node) {
+    doc = node->OwnerDoc();
+    if (!doc->GetDocShell()) {
+      bool ignore;
+      nsCOMPtr<nsPIDOMWindowInner> window =
+        do_QueryInterface(doc->GetScriptHandlingObject(ignore));
+      if (window) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  } else {
+    nsCOMPtr<nsPIDOMWindowInner> window(do_QueryInterface(aTarget));
+    if (window) {
+      doc = window->GetExtantDoc();
+    }
+  }
+
+  if (!doc) {
+    nsCOMPtr<DOMEventTargetHelper> helper(do_QueryInterface(aTarget));
+    if (helper) {
+      if (nsPIDOMWindowInner* window = helper->GetOwner()) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  }
+
+  if (doc) {
+    docShell = doc->GetDocShell();
+  }
+
+  return docShell;
+}

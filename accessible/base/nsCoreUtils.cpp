@@ -154,8 +154,13 @@ nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX, int32_t aY,
                                 nsIContent* aContent, nsIFrame* aFrame,
                                 nsIPresShell* aPresShell, nsIWidget* aRootWidget)
 {
-  if (!dom::TouchEvent::PrefEnabled())
+  nsIDocShell* docShell = nullptr;
+  if (aPresShell->GetDocument()) {
+    docShell = aPresShell->GetDocument()->GetDocShell();
+  }
+  if (!dom::TouchEvent::PrefEnabled(docShell)) {
     return;
+  }
 
   WidgetTouchEvent event(true, aMessage, aRootWidget);
 

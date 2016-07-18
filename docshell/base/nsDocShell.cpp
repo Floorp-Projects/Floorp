@@ -815,6 +815,7 @@ nsDocShell::nsDocShell()
   , mPrivateBrowsingId(0)
   , mParentCharsetSource(0)
   , mJSRunToCompletionDepth(0)
+  , mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE)
 {
   AssertOriginAttributesMatchPrivateBrowsing();
   mHistoryID = ++gDocshellIDCounter;
@@ -3180,6 +3181,36 @@ nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetTouchEventsOverride(uint32_t* aTouchEventsOverride)
+{
+  NS_ENSURE_ARG_POINTER(aTouchEventsOverride);
+
+  *aTouchEventsOverride = mTouchEventsOverride;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetTouchEventsOverride(uint32_t aTouchEventsOverride)
+{
+  if (!(aTouchEventsOverride == nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE ||
+        aTouchEventsOverride == nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED ||
+        aTouchEventsOverride == nsIDocShell::TOUCHEVENTS_OVERRIDE_DISABLED)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mTouchEventsOverride = aTouchEventsOverride;
+
+  uint32_t childCount = mChildList.Length();
+  for (uint32_t i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(ChildAt(i));
+    if (childShell) {
+      childShell->SetTouchEventsOverride(aTouchEventsOverride);
+    }
+  }
+  return NS_OK;
+}
+
 /* virtual */ int32_t
 nsDocShell::ItemType()
 {
@@ -3351,6 +3382,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
     uint32_t flags;
     if (NS_SUCCEEDED(parentAsDocShell->GetDefaultLoadFlags(&flags))) {
       SetDefaultLoadFlags(flags);
+    }
+    uint32_t touchEventsOverride;
+    if (NS_SUCCEEDED(parentAsDocShell->GetTouchEventsOverride(&touchEventsOverride))) {
+      SetTouchEventsOverride(touchEventsOverride);
     }
   }
 
