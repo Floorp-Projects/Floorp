@@ -78,7 +78,6 @@ class WasmModuleObject : public NativeObject
     static const ClassOps classOps_;
     static void finalize(FreeOp* fop, JSObject* obj);
   public:
-    static const JSProtoKey KEY = JSProto_WasmModule;
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];
@@ -107,7 +106,6 @@ class WasmInstanceObject : public NativeObject
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
   public:
-    static const JSProtoKey KEY = JSProto_WasmInstance;
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
     static const JSPropertySpec properties[];
@@ -134,7 +132,6 @@ class WasmMemoryObject : public NativeObject
     static const unsigned BUFFER_SLOT = 0;
     static const ClassOps classOps_;
   public:
-    static const JSProtoKey KEY = JSProto_WasmMemory;
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];
@@ -159,7 +156,6 @@ class WasmTableObject : public NativeObject
 {
     static const unsigned TABLE_SLOT = 0;
   public:
-    static const JSProtoKey KEY = JSProto_WasmTable;
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
     static const JSPropertySpec properties[];

@@ -771,9 +771,9 @@ const Class js::WebAssemblyClass =
 
 template <class Class>
 static bool
-InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const char* name)
+InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandleObject proto)
 {
-    RootedObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
+    proto.set(NewBuiltinClassInstance<PlainObject>(cx, SingletonObject));
     if (!proto)
         return false;
 
@@ -793,20 +793,18 @@ InitConstructor(JSContext* cx, HandleObject global, HandleObject wasm, const cha
 
     RootedId id(cx, AtomToId(className));
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0))
-        return false;
-
-    MOZ_ASSERT(global->as<GlobalObject>().getPrototype(Class::KEY).isUndefined());
-    global->as<GlobalObject>().setPrototype(Class::KEY, ObjectValue(*proto));
-    return true;
+    return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
 }
 
 JSObject*
-js::InitWebAssemblyClass(JSContext* cx, HandleObject global)
+js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(cx->options().wasm());
 
-    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    MOZ_ASSERT(!global->isStandardClassResolved(JSProto_WebAssembly));
+
+    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
     if (!proto)
         return nullptr;
 
@@ -814,26 +812,38 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject global)
     if (!wasm)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, global, js_WebAssembly_str, wasm, JSPROP_RESOLVING))
-        return nullptr;
-
     // This property will be removed before the initial WebAssembly release.
     if (!JS_DefineProperty(cx, wasm, "experimentalVersion", EncodingVersion, JSPROP_RESOLVING))
-        return nullptr;
-
-    if (!InitConstructor<WasmModuleObject>(cx, global, wasm, "Module"))
-        return nullptr;
-    if (!InitConstructor<WasmInstanceObject>(cx, global, wasm, "Instance"))
-        return nullptr;
-    if (!InitConstructor<WasmMemoryObject>(cx, global, wasm, "Memory"))
-        return nullptr;
-    if (!InitConstructor<WasmTableObject>(cx, global, wasm, "Table"))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, wasm, WebAssembly_static_methods))
         return nullptr;
 
-    global->as<GlobalObject>().setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));
+    RootedObject moduleProto(cx), instanceProto(cx), memoryProto(cx), tableProto(cx);
+    if (!InitConstructor<WasmModuleObject>(cx, wasm, "Module", &moduleProto))
+        return nullptr;
+    if (!InitConstructor<WasmInstanceObject>(cx, wasm, "Instance", &instanceProto))
+        return nullptr;
+    if (!InitConstructor<WasmMemoryObject>(cx, wasm, "Memory", &memoryProto))
+        return nullptr;
+    if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
+        return nullptr;
+
+    // Perform the final fallible write of the WebAssembly object to a global
+    // object property at the end. Only after that succeeds write all the
+    // constructor and prototypes to the JSProto slots. This ensures that
+    // initialization is atomic since a failed initialization can be retried.
+
+    if (!JS_DefineProperty(cx, global, js_WebAssembly_str, wasm, JSPROP_RESOLVING))
+        return nullptr;
+
+    global->setPrototype(JSProto_WasmModule, ObjectValue(*moduleProto));
+    global->setPrototype(JSProto_WasmInstance, ObjectValue(*instanceProto));
+    global->setPrototype(JSProto_WasmMemory, ObjectValue(*memoryProto));
+    global->setPrototype(JSProto_WasmTable, ObjectValue(*tableProto));
+    global->setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));
+
+    MOZ_ASSERT(global->isStandardClassResolved(JSProto_WebAssembly));
     return wasm;
 }
 
