@@ -2627,27 +2627,27 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
 bool
 nsStyleImageLayers::Repeat::IsInitialValue(LayerType aType) const
 {
-  if (aType == LayerType::Background ||
-      aType == LayerType::Mask) {
-    // bug 1258623 - mask-repeat initial value should be no-repeat
+  if (aType == LayerType::Background) {
     return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
            mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+  } else {
+    MOZ_ASSERT(aType == LayerType::Mask);
+    return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT &&
+           mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
   }
-
-  MOZ_ASSERT_UNREACHABLE("unsupported layer type.");
-  return false;
 }
 
 void
 nsStyleImageLayers::Repeat::SetInitialValues(LayerType aType)
 {
-  if (aType == LayerType::Background ||
-      aType == LayerType::Mask) {
-    // bug 1258623 - mask-repeat initial value should be no-repeat
+  if (aType == LayerType::Background) {
     mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
     mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
   } else {
-    MOZ_ASSERT_UNREACHABLE("unsupported layer type.");
+    MOZ_ASSERT(aType == LayerType::Mask);
+
+    mXRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
+    mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT;
   }
 }
 
