@@ -117,6 +117,14 @@ CreateTooltipWidget()
 }
 
 static GtkWidget*
+CreateExpanderWidget()
+{
+  GtkWidget* widget = gtk_expander_new("M");
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -144,6 +152,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateMenuItemWidget(MOZ_GTK_MENUBAR);
     case MOZ_GTK_MENUITEM:
       return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
+    case MOZ_GTK_EXPANDER:
+      return CreateExpanderWidget();
     default:
       /* Not implemented */
       return nullptr;
