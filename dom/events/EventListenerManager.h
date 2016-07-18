@@ -467,8 +467,6 @@ protected:
    */
   EventMessage GetLegacyEventMessage(EventMessage aEventMessage) const;
 
-  nsIDocShell* GetDocShellForTarget();
-
   void ProcessApzAwareEventListenerAdd();
 
   /**
