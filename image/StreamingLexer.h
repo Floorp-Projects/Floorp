@@ -271,7 +271,8 @@ private:
  *    read.
  *
  *  - Add an instance of StreamingLexer<State> to your decoder class. Initialize
- *    it with a Transition::To() the state that you want to start lexing in.
+ *    it with a Transition::To() the state that you want to start lexing in, and
+ *    a Transition::To() the state you'd like to use to handle truncated data.
  *
  *  - In your decoder's DoDecode() method, call Lex(), passing in the input
  *    data and length that are passed to DoDecode(). You also need to pass
@@ -294,6 +295,17 @@ private:
  * terminal state, Lex() returns TerminalState::SUCCESS or
  * TerminalState::FAILURE, and you can check which one to determine if lexing
  * succeeded or failed and do any necessary cleanup.
+ *
+ * Sometimes, the input data is truncated. StreamingLexer will notify you when
+ * this happens by invoking the truncated data state you passed to the
+ * constructor. At this point you can attempt to recover and return
+ * TerminalState::SUCCESS or TerminalState::FAILURE, depending on whether you
+ * were successful. Note that you can't return anything other than a terminal
+ * state in this situation, since there's no more data to read. For the same
+ * reason, your truncated data state shouldn't require any data. (That is, the
+ * @aSize argument you pass to Transition::To() must be zero.) Violating these
+ * requirements will trigger assertions and an immediate transition to
+ * TerminalState::FAILURE.
  *
  * Some lexers may want to *avoid* buffering in some cases, and just process the
  * data as it comes in. This is useful if, for example, you just want to skip
@@ -348,8 +360,10 @@ template <typename State, size_t InlineBufferSize = 16>
 class StreamingLexer
 {
 public:
-  explicit StreamingLexer(LexerTransition<State> aStartState)
+  StreamingLexer(LexerTransition<State> aStartState,
+                 LexerTransition<State> aTruncatedState)
     : mTransition(TerminalState::FAILURE)
+    , mTruncatedTransition(aTruncatedState)
   {
     if (!aStartState.NextStateIsTerminal() &&
         aStartState.ControlFlow() == ControlFlowStrategy::YIELD) {
@@ -361,6 +375,18 @@ public:
       // Lex() to avoid that issue has the potential to mask real bugs. So
       // instead, it's better to forbid starting in a yield state.
       MOZ_ASSERT_UNREACHABLE("Starting in a yield state");
+      return;
+    }
+
+    if (!aTruncatedState.NextStateIsTerminal() &&
+          (aTruncatedState.ControlFlow() == ControlFlowStrategy::YIELD ||
+           aTruncatedState.Buffering() == BufferingStrategy::UNBUFFERED ||
+           aTruncatedState.Size() != 0)) {
+      // The truncated state can't receive any data because, by definition,
+      // there is no more data to receive. That means that yielding or an
+      // unbuffered read would not make sense, and that the state must require
+      // zero bytes.
+      MOZ_ASSERT_UNREACHABLE("Truncated state makes no sense");
       return;
     }
 
@@ -412,14 +438,11 @@ public:
           break;
 
         case SourceBufferIterator::COMPLETE:
-          // Normally even if the data is truncated, we want decoding to
-          // succeed so we can display whatever we got. However, if the
-          // SourceBuffer was completed with a failing status, we want to fail.
-          // This happens only in exceptional situations like SourceBuffer
-          // itself encountering a failure due to OOM.
-          result = SetTransition(NS_SUCCEEDED(aIterator.CompletionStatus())
-                 ? Transition::TerminateSuccess()
-                 : Transition::TerminateFailure());
+          // The data is truncated; if not, the lexer would've reached a
+          // terminal state by now. We only get to
+          // SourceBufferIterator::COMPLETE after every byte of data has been
+          // delivered to the lexer.
+          result = Truncated(aIterator, aFunc);
           break;
 
         case SourceBufferIterator::READY:
@@ -629,6 +652,32 @@ private:
     return SetTransition(Transition::TerminateFailure());
   }
 
+  template <typename Func>
+  Maybe<LexerResult> Truncated(SourceBufferIterator& aIterator,
+                               Func aFunc)
+  {
+    // The data is truncated. Let the lexer clean up and decide which terminal
+    // state we should end up in.
+    LexerTransition<State> transition
+      = mTruncatedTransition.NextStateIsTerminal()
+      ? mTruncatedTransition
+      : aFunc(mTruncatedTransition.NextState(), nullptr, 0);
+
+    if (!transition.NextStateIsTerminal()) {
+      MOZ_ASSERT_UNREACHABLE("Truncated state didn't lead to terminal state?");
+      return SetTransition(Transition::TerminateFailure());
+    }
+
+    // If the SourceBuffer was completed with a failing state, we end in
+    // TerminalState::FAILURE no matter what. This only happens in exceptional
+    // situations like SourceBuffer itself encountering a failure due to OOM.
+    if (NS_FAILED(aIterator.CompletionStatus())) {
+      return SetTransition(Transition::TerminateFailure());
+    }
+
+    return SetTransition(transition);
+  }
+
   Maybe<LexerResult> SetTransition(const LexerTransition<State>& aTransition)
   {
     // There should be no transitions while we're buffering for a buffered read
@@ -690,6 +739,7 @@ private:
 
   Vector<char, InlineBufferSize> mBuffer;
   LexerTransition<State> mTransition;
+  const LexerTransition<State> mTruncatedTransition;
   Maybe<State> mYieldingToState;
   Maybe<UnbufferedState> mUnbufferedState;
 };
