@@ -72,8 +72,8 @@ public:
     : MediaEngineAudioSource(kReleased)
   {
   }
-  void GetName(nsAString& aName) const override;
-  void GetUUID(nsACString& aUUID) const override;
+  void GetName(nsAString& aName) override;
+  void GetUUID(nsACString& aUUID) override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
@@ -136,7 +136,7 @@ public:
   }
   uint32_t GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const override;
+    const nsString& aDeviceId) override;
 
 protected:
   virtual ~MediaEngineWebRTCAudioCaptureSource() { Shutdown(); }
@@ -451,8 +451,8 @@ public:
     // We'll init lazily as needed
   }
 
-  void GetName(nsAString& aName) const override;
-  void GetUUID(nsACString& aUUID) const override;
+  void GetName(nsAString& aName) override;
+  void GetUUID(nsACString& aUUID) override;
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
@@ -503,7 +503,7 @@ public:
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId) override;
 
   // VoEMediaProcess.
   void Process(int channel, webrtc::ProcessingTypes type,

@@ -128,7 +128,6 @@ MediaEngineRemoteVideoSource::Allocate(
   }
 
   if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
-    *aOutBadConstraint = FindBadConstraint(netConstraints, *this, aDeviceId);
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -315,7 +314,6 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
   }
 
   if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
-    *aOutBadConstraint = FindBadConstraint(netConstraints, *this, aDeviceId);
     return NS_ERROR_FAILURE;
   }
   if (mState != kStarted) {
@@ -428,7 +426,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
 }
 
 size_t
-MediaEngineRemoteVideoSource::NumCapabilities() const
+MediaEngineRemoteVideoSource::NumCapabilities()
 {
   int num = mozilla::camera::GetChildAndCall(
       &mozilla::camera::CamerasChild::NumberOfCapabilities,
@@ -511,7 +509,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(
 
 void
 MediaEngineRemoteVideoSource::GetCapability(size_t aIndex,
-                                            webrtc::CaptureCapability& aOut) const
+                                            webrtc::CaptureCapability& aOut)
 {
   if (!mHardcodedCapabilities.IsEmpty()) {
     MediaEngineCameraVideoSource::GetCapability(aIndex, aOut);
