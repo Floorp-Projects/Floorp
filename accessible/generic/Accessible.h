@@ -230,14 +230,14 @@ public:
   /**
    * Return true if ARIA role is specified on the element.
    */
-  bool HasARIARole() const { return mRoleMapEntry; }
+  bool HasARIARole() const;
   bool IsARIARole(nsIAtom* aARIARole) const;
   bool HasStrongARIARole() const;
 
   /**
    * Retrun ARIA role map if any.
    */
-  const nsRoleMapEntry* ARIARoleMap() const { return mRoleMapEntry; }
+  const nsRoleMapEntry* ARIARoleMap() const;
 
   /**
    * Return accessible role specified by ARIA (see constants in
@@ -383,8 +383,7 @@ public:
   /**
    * Set the ARIA role map entry for a new accessible.
    */
-  void SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry)
-    { mRoleMapEntry = aRoleMapEntry; }
+  void SetRoleMapEntry(const nsRoleMapEntry* aRoleMapEntry);
 
   /**
    * Append/insert/remove a child. Return true if operation was successful.
@@ -1120,6 +1119,12 @@ protected:
   static const uint8_t kGenericTypesBits = 16;
 
   /**
+   * Non-NO_ROLE_MAP_ENTRY_INDEX indicates author-supplied role;
+   * possibly state & value as well
+   */
+  uint8_t mRoleMapEntryIndex;
+
+  /**
    * Keep in sync with StateFlags, ContextFlags, and AccTypes.
    */
   uint32_t mStateFlags : kStateFlagsBits;
@@ -1153,11 +1158,6 @@ protected:
     ProxyAccessible* proxy;
   } mBits;
   friend class AccGroupInfo;
-
-  /**
-   * Non-null indicates author-supplied role; possibly state & value as well
-   */
-  const nsRoleMapEntry* mRoleMapEntry;
 
 private:
   Accessible() = delete;
