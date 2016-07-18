@@ -2757,6 +2757,15 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
       if (!apzDisabled && !HasPluginFrames()) {
         if (LastScrollOrigin() == nsGkAtoms::apz) {
           schedulePaint = false;
+
+          // If we have any windowed plugins at all then schedule an empty
+          // transaction because the parent will be waiting for an update.
+          if (!gfxPrefs::HidePluginsForScroll()) {
+            nsRootPresContext* root = presContext->GetRootPresContext();
+            if (root && root->NeedToComputePluginGeometryUpdates()) {
+              mOuter->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
+            }
+          }          
           PAINT_SKIP_LOG("Skipping due to APZ scroll\n");
         } else if (mScrollableByAPZ) {
           nsIWidget* widget = presContext->GetNearestWidget();
