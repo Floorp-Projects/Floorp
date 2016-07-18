@@ -123,14 +123,22 @@ class BlocklistClient {
       const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
                          .createInstance(Ci.nsIContentSignatureVerifier);
 
-      let records;
-      if (!ignoreLocal) {
-        const localRecords = (yield collection.list()).data;
-        records = mergeChanges(localRecords, payload.changes);
+      let toSerialize;
+      if (ignoreLocal) {
+        toSerialize = {
+          last_modified: `${payload.last_modified}`,
+          data: payload.data
+        };
       } else {
-        records = payload.data;
+        const localRecords = (yield collection.list()).data;
+        const records = mergeChanges(localRecords, payload.changes);
+        toSerialize = {
+          last_modified: `${payload.lastModified}`,
+          data: records
+        };
       }
-      const serialized = CanonicalJSON.stringify(records);
+
+      const serialized = CanonicalJSON.stringify(toSerialize);
 
       if (verifier.verifyContentSignature(serialized, "p384ecdsa=" + signature,
                                           certChain,
@@ -191,10 +199,13 @@ class BlocklistClient {
             // remote collection.
             let payload = yield fetchRemoteCollection(collection);
             yield this.validateCollectionSignature(payload, collection, true);
-            // if the signature is good (we haven't thrown), replace the
+            // if the signature is good (we haven't thrown), and the remote
+            // last_modified is newer than the local last_modified, replace the
             // local data
-            yield collection.clear();
-            yield collection.loadDump(payload.data);
+            if (payload.last_modified >= collection.lastModified) {
+              yield collection.clear();
+              yield collection.loadDump(payload.data);
+            }
           } else {
             throw e;
           }
