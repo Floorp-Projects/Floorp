@@ -7,9 +7,7 @@
 #define _include_mozilla_gfx_ipc_CompositorSession_h_
 
 #include "base/basictypes.h"
-#include "Units.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/gfx/Point.h"
 
 class nsIWidget;
 
@@ -68,14 +66,6 @@ protected:
   CompositorSession(CompositorWidgetDelegate* aDelegate,
                     CompositorBridgeChild* aChild);
   virtual ~CompositorSession();
-
-  static RefPtr<CompositorSession> CreateInProcess(
-    nsIWidget* aWidget,
-    ClientLayerManager* aLayerManager,
-    CSSToLayoutDeviceScale aScale,
-    bool aUseAPZ,
-    bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize);
 
 protected:
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
