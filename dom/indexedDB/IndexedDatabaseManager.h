@@ -28,6 +28,12 @@ namespace dom {
 
 class IDBFactory;
 
+namespace quota {
+
+class QuotaManager;
+
+} // namespace quota
+
 namespace indexedDB {
 
 class BackgroundUtilsChild;
@@ -41,6 +47,7 @@ class IndexedDatabaseManager final
   , public nsITimerCallback
 {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
+  typedef mozilla::dom::quota::QuotaManager QuotaManager;
   typedef mozilla::dom::indexedDB::FileManager FileManager;
   typedef mozilla::dom::indexedDB::FileManagerInfo FileManagerInfo;
 
@@ -128,7 +135,10 @@ public:
   ClearBackgroundActor();
 
   void
-  NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
+  NoteLiveQuotaManager(QuotaManager* aQuotaManager);
+
+  void
+  NoteShuttingDownQuotaManager();
 
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
