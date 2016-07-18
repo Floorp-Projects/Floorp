@@ -321,6 +321,14 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void getBufferSubData(GLenum target, GLintptr offset, ArrayBuffer? returnedData);
     void getBufferSubData(GLenum target, GLintptr offset, SharedArrayBuffer returnedData);
 
+    [Throws] /* Throws on readback in a write-only context. */
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                    GLenum type, GLintptr offset);
+    /* Include our WebGL 1 function override(s) */
+    [Throws]
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                    GLenum type, ArrayBufferView? pixels);
+
     /* Framebuffer objects */
     void blitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0,
                          GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);

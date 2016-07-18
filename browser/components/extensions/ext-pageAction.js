@@ -64,7 +64,7 @@ PageAction.prototype = {
     }
 
     if (tab.selected) {
-      this.updateButton(tab.ownerDocument.defaultView);
+      this.updateButton(tab.ownerGlobal);
     }
   },
 
@@ -183,7 +183,7 @@ PageAction.prototype = {
     if (fromBrowse) {
       this.tabContext.clear(tab);
     }
-    this.updateButton(tab.ownerDocument.defaultView);
+    this.updateButton(tab.ownerGlobal);
   },
 
   shutdown() {

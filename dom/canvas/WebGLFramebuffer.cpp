@@ -1281,6 +1281,34 @@ WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
                                      out_error);
 }
 
+
+void
+WebGLFramebuffer::GatherAttachments(std::vector<const WebGLFBAttachPoint*>* const out) const
+{
+    auto itr = mDrawBuffers.cbegin();
+    if (itr != mDrawBuffers.cend() &&
+        *itr != LOCAL_GL_NONE)
+    {
+        out->push_back(&mColorAttachment0);
+        ++itr;
+    }
+
+    size_t i = 0;
+    for (; itr != mDrawBuffers.cend(); ++itr) {
+        if (i >= mMoreColorAttachments.Size())
+            break;
+
+        if (*itr != LOCAL_GL_NONE) {
+            out->push_back(&mMoreColorAttachments[i]);
+        }
+        ++i;
+    }
+
+    out->push_back(&mDepthAttachment);
+    out->push_back(&mStencilAttachment);
+    out->push_back(&mDepthStencilAttachment);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Goop.
 

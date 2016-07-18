@@ -90,7 +90,7 @@ public:
 protected:
   static void FlushUncaughtRejectionsInternal();
   friend class FlushRejections;
-  friend class WorkerPrivate;
+  friend class mozilla::dom::workers::WorkerPrivate;
 private:
   // Identity of the process.
   // This property is:

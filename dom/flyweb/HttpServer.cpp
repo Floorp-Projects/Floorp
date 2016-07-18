@@ -51,9 +51,6 @@ HttpServer::Init(int32_t aPort, bool aHttps, HttpServerListener* aListener)
   mHttps = aHttps;
   mListener = aListener;
 
-  nsCOMPtr<nsIPrefBranch> prefService;
-  prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
   if (mHttps) {
     nsCOMPtr<nsILocalCertService> lcs =
       do_CreateInstance("@mozilla.org/security/local-cert-service;1");

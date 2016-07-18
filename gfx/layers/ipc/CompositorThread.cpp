@@ -107,7 +107,7 @@ CompositorThreadHolder::CreateCompositorThread()
     return nullptr;
   }
 
-  CompositorBridgeParent::Initialize();
+  CompositorBridgeParent::Setup();
 
   return compositorThread;
 }

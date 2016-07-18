@@ -347,7 +347,7 @@ nsPNGDecoder::InitInternal()
   return NS_OK;
 }
 
-Maybe<TerminalState>
+LexerResult
 nsPNGDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");

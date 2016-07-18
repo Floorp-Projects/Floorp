@@ -15,6 +15,7 @@
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/TextureClient.h"// for TextureClient
 #include "mozilla/layers/TextureClientPool.h"// for TextureClientPool
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -27,6 +28,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/DebugOnly.h"
 #if defined(XP_WIN)
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "WinUtils.h"
 #endif
 #include "mozilla/widget/CompositorWidget.h"
@@ -126,6 +128,8 @@ CompositorBridgeChild::Destroy()
   SendWillClose();
   mCanSend = false;
 
+  // We no longer care about unexpected shutdowns, in the remote process case.
+  mProcessToken = 0;
 
   // The call just made to SendWillClose can result in IPC from the
   // CompositorBridgeParent to the CompositorBridgeChild (e.g. caused by the destruction
@@ -164,16 +168,16 @@ CompositorBridgeChild::LookupCompositorFrameMetrics(const FrameMetrics::ViewID a
   return false;
 }
 
-/*static*/ PCompositorBridgeChild*
-CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
+/* static */ bool
+CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint)
 {
   // There's only one compositor per child process.
   MOZ_ASSERT(!sCompositorBridge);
 
   RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr));
-  if (!child->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(), ipc::ChildSide)) {
+  if (!aEndpoint.Bind(child, nullptr)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return nullptr;
+    return false;
   }
 
   child->mCanSend = true;
@@ -185,20 +189,42 @@ CompositorBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
   int32_t height;
   sCompositorBridge->SendGetTileSize(&width, &height);
   gfxPlatform::GetPlatform()->SetTileSize(width, height);
-
-  return sCompositorBridge;
+  return true;
 }
 
-bool
-CompositorBridgeChild::OpenSameProcess(CompositorBridgeParent* aParent)
+CompositorBridgeParent*
+CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
+                                       const uint64_t& aLayerTreeId,
+                                       CSSToLayoutDeviceScale aScale,
+                                       bool aUseAPZ,
+                                       bool aUseExternalSurface,
+                                       const gfx::IntSize& aSurfaceSize)
 {
-  MOZ_ASSERT(aParent);
+  mCompositorBridgeParent =
+    new CompositorBridgeParent(aScale, aUseExternalSurface, aSurfaceSize);
 
-  mCompositorBridgeParent = aParent;
   mCanSend = Open(mCompositorBridgeParent->GetIPCChannel(),
                   CompositorThreadHolder::Loop(),
                   ipc::ChildSide);
-  return mCanSend;
+  MOZ_RELEASE_ASSERT(mCanSend);
+
+  mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId, aUseAPZ);
+  return mCompositorBridgeParent;
+}
+
+/* static */ RefPtr<CompositorBridgeChild>
+CompositorBridgeChild::CreateRemote(const uint64_t& aProcessToken,
+                                    ClientLayerManager* aLayerManager,
+                                    Endpoint<PCompositorBridgeChild>&& aEndpoint)
+{
+  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
+  if (!aEndpoint.Bind(child, nullptr)) {
+    return nullptr;
+  }
+
+  child->mCanSend = true;
+  child->mProcessToken = aProcessToken;
+  return child;
 }
 
 /*static*/ CompositorBridgeChild*
@@ -393,11 +419,38 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
   // Any plugins we didn't update need to be hidden, as they are
   // not associated with visible content.
   nsIWidget::UpdateRegisteredPluginWindowVisibility((uintptr_t)parent, visiblePluginIds);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   SendRemotePluginsReady();
-#endif
   return true;
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
+}
+
+#if defined(XP_WIN)
+static void
+ScheduleSendAllPluginsCaptured(CompositorBridgeChild* aThis, MessageLoop* aLoop)
+{
+  aLoop->PostTask(NewNonOwningRunnableMethod(
+    aThis, &CompositorBridgeChild::SendAllPluginsCaptured));
+}
+#endif
+
+bool
+CompositorBridgeChild::RecvCaptureAllPlugins(const uintptr_t& aParentWidget)
+{
+#if defined(XP_WIN)
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIWidget::CaptureRegisteredPlugins(aParentWidget);
+
+  // Bounce the call to SendAllPluginsCaptured off the ImageBridgeChild loop,
+  // to make sure that the image updates on that thread have been processed.
+  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
+    NewRunnableFunction(&ScheduleSendAllPluginsCaptured, this,
+                        MessageLoop::current()));
+  return true;
+#else
+  MOZ_ASSERT_UNREACHABLE(
+    "CompositorBridgeChild::RecvCaptureAllPlugins calls unexpected.");
+  return false;
+#endif
 }
 
 bool
@@ -411,9 +464,7 @@ CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<uintptr_t> list;
   nsIWidget::UpdateRegisteredPluginWindowVisibility(aParentWidget, list);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   SendRemotePluginsReady();
-#endif
   return true;
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
 }
@@ -484,6 +535,10 @@ CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
     // There is nothing we can do in the child side, here sets mCanSend as false.
     mCanSend = false;
     gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
+  }
+
+  if (mProcessToken && XRE_IsParentProcess()) {
+    GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
   }
 }
 
@@ -975,7 +1030,7 @@ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aAc
 void
 CompositorBridgeChild::ProcessingError(Result aCode, const char* aReason)
 {
-  MOZ_CRASH("Processing error in CompositorBridgeChild");
+  MOZ_RELEASE_ASSERT(aCode == MsgDropped, "Processing error in CompositorBridgeChild");
 }
 
 } // namespace layers

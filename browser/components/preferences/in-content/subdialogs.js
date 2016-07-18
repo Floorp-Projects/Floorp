@@ -336,7 +336,7 @@ var gSubDialog = {
         (isLastFocusableElement(aEvent.originalTarget) && forward)) {
       aEvent.preventDefault();
       aEvent.stopImmediatePropagation();
-      let parentWin = this._getBrowser().ownerDocument.defaultView;
+      let parentWin = this._getBrowser().ownerGlobal;
       if (forward) {
         fm.moveFocus(parentWin, null, fm.MOVEFOCUS_FIRST, fm.FLAG_BYKEY);
       } else {

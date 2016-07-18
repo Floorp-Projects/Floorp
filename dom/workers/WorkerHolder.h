@@ -72,6 +72,8 @@ enum Status
 class WorkerHolder
 {
 public:
+  NS_DECL_OWNINGTHREAD
+
   WorkerHolder();
   virtual ~WorkerHolder();
 
@@ -84,6 +86,9 @@ protected:
   void ReleaseWorkerInternal();
 
   WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
+
+private:
+  void AssertIsOwningThread() const;
 };
 
 END_WORKERS_NAMESPACE

@@ -327,11 +327,6 @@ PluginPRLibrary::GetScrollCaptureContainer(NPP aInstance, ImageContainer** aCont
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-nsresult
-PluginPRLibrary::UpdateScrollState(NPP aInstance, bool aIsScrolling)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 #endif
 
 nsresult

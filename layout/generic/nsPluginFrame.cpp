@@ -153,7 +153,6 @@ nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
   : nsFrame(aContext)
   , mInstanceOwner(nullptr)
   , mReflowCallbackPosted(false)
-  , mIsHiddenDueToScroll(false)
 {
   MOZ_LOG(sPluginFrameLog, LogLevel::Debug,
          ("Created new nsPluginFrame %p\n", this));
@@ -418,7 +417,7 @@ nsPluginFrame::GetWidgetConfiguration(nsTArray<nsIWidget::Configuration>* aConfi
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   if (XRE_IsContentProcess()) {
     configuration->mWindowID = (uintptr_t)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-    configuration->mVisible = !mIsHiddenDueToScroll && mWidget->IsVisible();
+    configuration->mVisible = mWidget->IsVisible();
 
   }
 #endif // defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -772,24 +771,6 @@ nsPluginFrame::IsHidden(bool aCheckVisibilityStyle) const
   return false;
 }
 
-// Clips windowed plugin frames during remote content scroll operations managed
-// by nsGfxScrollFrame.
-void
-nsPluginFrame::SetScrollVisibility(bool aState)
-{
-  // Limit this setting to windowed plugins by checking if we have a widget
-  if (mWidget) {
-    bool changed = mIsHiddenDueToScroll != aState;
-    mIsHiddenDueToScroll = aState;
-    // Force a paint so plugin window visibility gets flushed via
-    // the compositor.
-    if (changed && mInstanceOwner) {
-      mInstanceOwner->UpdateScrollState(mIsHiddenDueToScroll);
-      SchedulePaint();
-    }
-  }
-}
-
 mozilla::LayoutDeviceIntPoint
 nsPluginFrame::GetRemoteTabChromeOffset()
 {
@@ -1138,13 +1119,6 @@ nsPluginFrame::DidSetWidgetGeometry()
 bool
 nsPluginFrame::IsOpaque() const
 {
-#if defined(MOZ_WIDGET_GTK)
-  // Insure underlying content gets painted when we clip windowed plugins
-  // during remote content scroll operations managed by nsGfxScrollFrame.
-  if (mIsHiddenDueToScroll) {
-    return false;
-  }
-#endif
 #if defined(XP_MACOSX)
   return false;
 #elif defined(MOZ_WIDGET_ANDROID)
@@ -1194,14 +1168,6 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
-#if defined(MOZ_WIDGET_GTK)
-  // Clip windowed plugin frames from the list during remote content scroll
-  // operations managed by nsGfxScrollFrame.
-  if (mIsHiddenDueToScroll) {
-    return;
-  }
-#endif
-
   // XXX why are we painting collapsed object frames?
   if (!IsVisibleOrCollapsedForPainting(aBuilder))
     return;

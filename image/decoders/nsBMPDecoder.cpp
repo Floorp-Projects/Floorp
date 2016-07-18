@@ -446,7 +446,7 @@ nsBMPDecoder::FinishRow()
   mCurrentRow--;
 }
 
-Maybe<TerminalState>
+LexerResult
 nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");

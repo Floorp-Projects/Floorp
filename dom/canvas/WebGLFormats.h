@@ -254,6 +254,7 @@ struct DriverUnpackInfo
 
 const FormatInfo* GetFormat(EffectiveFormat format);
 uint8_t BytesPerPixel(const PackingInfo& packing);
+bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes);
 /*
 GLint ComponentSize(const FormatInfo* format, GLenum component);
 GLenum ComponentType(const FormatInfo* format);

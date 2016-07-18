@@ -364,7 +364,7 @@ this.UITour = {
 
   onPageEvent: function(aMessage, aEvent) {
     let browser = aMessage.target;
-    let window = browser.ownerDocument.defaultView;
+    let window = browser.ownerGlobal;
 
     // Does the window have tabs? We need to make sure since windowless browsers do
     // not have tabs.
@@ -721,7 +721,7 @@ this.UITour = {
         // was generated originally. If the browser where the UI tour is loaded
         // is windowless, just ignore the request to close the tab. The request
         // is also ignored if this is the only tab in the window.
-        let tabBrowser = browser.ownerDocument.defaultView.gBrowser;
+        let tabBrowser = browser.ownerGlobal.gBrowser;
         if (tabBrowser && tabBrowser.browsers.length > 1) {
           tabBrowser.removeTab(tabBrowser.getTabForBrowser(browser));
         }
@@ -755,7 +755,7 @@ this.UITour = {
     log.debug("handleEvent: type =", aEvent.type, "event =", aEvent);
     switch (aEvent.type) {
       case "TabSelect": {
-        let window = aEvent.target.ownerDocument.defaultView;
+        let window = aEvent.target.ownerGlobal;
 
         // Teardown the browser of the tab we just switched away from.
         if (aEvent.detail && aEvent.detail.previousTab) {
@@ -972,7 +972,7 @@ this.UITour = {
   },
 
   isElementVisible: function(aElement) {
-    let targetStyle = aElement.ownerDocument.defaultView.getComputedStyle(aElement);
+    let targetStyle = aElement.ownerGlobal.getComputedStyle(aElement);
     return !aElement.ownerDocument.hidden &&
              targetStyle.display != "none" &&
              targetStyle.visibility == "visible";
@@ -1825,7 +1825,7 @@ this.UITour = {
   },
 
   hideAnnotationsForPanel: function(aEvent, aTargetPositionCallback) {
-    let win = aEvent.target.ownerDocument.defaultView;
+    let win = aEvent.target.ownerGlobal;
     let annotationElements = new Map([
       // [annotationElement (panel), method to hide the annotation]
       [win.document.getElementById("UITourHighlightContainer"), UITour.hideHighlight.bind(UITour)],
@@ -2063,7 +2063,7 @@ this.UITour = {
       if (observer) {
         return;
       }
-      let win = aPanelEl.ownerDocument.defaultView;
+      let win = aPanelEl.ownerGlobal;
       observer = new win.MutationObserver(this._annotationMutationCallback);
       this._annotationPanelMutationObservers.set(aPanelEl, observer);
       let observerOptions = {
