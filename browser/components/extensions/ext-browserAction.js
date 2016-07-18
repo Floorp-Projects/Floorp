@@ -114,7 +114,7 @@ BrowserAction.prototype = {
     });
 
     this.tabContext.on("tab-select", // eslint-disable-line mozilla/balanced-listeners
-                       (evt, tab) => { this.updateWindow(tab.ownerDocument.defaultView); });
+                       (evt, tab) => { this.updateWindow(tab.ownerGlobal); });
 
     this.widget = widget;
   },
@@ -196,7 +196,7 @@ BrowserAction.prototype = {
   updateOnChange(tab) {
     if (tab) {
       if (tab.selected) {
-        this.updateWindow(tab.ownerDocument.defaultView);
+        this.updateWindow(tab.ownerGlobal);
       }
     } else {
       for (let window of WindowListManager.browserWindows()) {

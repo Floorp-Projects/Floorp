@@ -169,9 +169,12 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
                 nsContentUtils::IsCallerChrome());
 
   AutoJSAPI jsapi;
-  jsapi.Init(aGlobal);
-  JSContext* cx = jsapi.cx();
+  if (!jsapi.Init(aGlobal)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
 
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> jsGlobal(cx, aGlobal->GetGlobalJSObject());
   GlobalObject global(cx, jsGlobal);
 
@@ -1095,9 +1098,12 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   MOZ_ASSERT(aResult);
 
   AutoJSAPI jsapi;
-  jsapi.Init(DerivedClass()->GetParentObject());
-  JSContext* cx = jsapi.cx();
+  if (!jsapi.Init(DerivedClass()->GetParentObject())) {
+    localPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+    return;
+  }
 
+  JSContext* cx = jsapi.cx();
   ErrorResult error;
 
   switch (mConsumeType) {

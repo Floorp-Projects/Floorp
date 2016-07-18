@@ -229,8 +229,6 @@ public:
   // Returns true if this is windowed plugin that can return static captures
   // for scroll operations.
   bool NeedsScrollImageLayer();
-  // Notification we receive from nsPluginFrame about scroll state.
-  bool UpdateScrollState(bool aIsScrolling);
 
   void DidComposite();
 
@@ -411,9 +409,6 @@ private:
 #endif
 
   bool mWaitingForPaint;
-#if defined(XP_WIN)
-  bool mScrollState;
-#endif
 };
 
 #endif // nsPluginInstanceOwner_h_

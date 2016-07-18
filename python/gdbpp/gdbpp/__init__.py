@@ -22,5 +22,6 @@ import gdbpp.owningthread
 import gdbpp.smartptr
 import gdbpp.string
 import gdbpp.tarray
+import gdbpp.thashtable
 
 gdb.printing.register_pretty_printer(None, GeckoPrettyPrinter.pp)

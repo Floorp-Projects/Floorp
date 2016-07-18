@@ -47,6 +47,16 @@ parent:
    * on the chrome side. This is only currently used on Windows.
    */
   sync SetNativeChildWindow(uintptr_t childWindow);
+
+child:
+  /**
+   * Used to set the ID of a scroll capture container from the parent process,
+   * so that we can create a proxy container in the layer tree.
+   * @param aScrollCaptureId async container ID of the parent container
+   * @param aPluginInstanceId plugin ID on which to set the scroll capture ID
+   */
+  async SetScrollCaptureId(uint64_t aScrollCaptureId,
+                           uintptr_t aPluginInstanceId);
 };
 
 }

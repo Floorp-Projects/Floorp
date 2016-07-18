@@ -18,7 +18,9 @@ GPUProcessHost::GPUProcessHost(Listener* aListener)
    mListener(aListener),
    mTaskFactory(this),
    mLaunchPhase(LaunchPhase::Unlaunched),
-   mShutdownRequested(false)
+   mProcessToken(0),
+   mShutdownRequested(false),
+   mChannelClosed(false)
 {
   MOZ_COUNT_CTOR(GPUProcessHost);
 }
@@ -109,6 +111,8 @@ GPUProcessHost::OnChannelErrorTask()
   }
 }
 
+static uint64_t sProcessTokenCounter = 0;
+
 void
 GPUProcessHost::InitAfterConnect(bool aSucceeded)
 {
@@ -118,6 +122,7 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
   mLaunchPhase = LaunchPhase::Complete;
 
   if (aSucceeded) {
+    mProcessToken = ++sProcessTokenCounter;
     mGPUChild = MakeUnique<GPUChild>(this);
     DebugOnly<bool> rv =
       mGPUChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
@@ -144,14 +149,22 @@ GPUProcessHost::Shutdown()
     mShutdownRequested = true;
 
 #ifdef NS_FREE_PERMANENT_DATA
-    mGPUChild->Close();
+    // The channel might already be closed if we got here unexpectedly.
+    if (!mChannelClosed) {
+      mGPUChild->Close();
+    }
 #else
     // No need to communicate shutdown, the GPU process doesn't need to
     // communicate anything back.
     KillHard("NormalShutdown");
 #endif
 
-    // Wait for ActorDestroy.
+    // If we're shutting down unexpectedly, we're in the middle of handling an
+    // ActorDestroy for PGPUChild, which is still on the stack. We'll return
+    // back to OnChannelClosed.
+    //
+    // Otherwise, we'll wait for OnChannelClose to be called whenever PGPUChild
+    // acknowledges shutdown.
     return;
   }
 
@@ -163,6 +176,7 @@ GPUProcessHost::OnChannelClosed()
 {
   if (!mShutdownRequested) {
     // This is an unclean shutdown. Notify our listener that we're going away.
+    mChannelClosed = true;
     if (mListener) {
       mListener->OnProcessUnexpectedShutdown(this);
     }
@@ -192,6 +206,12 @@ GPUProcessHost::KillHard(const char* aReason)
   SetAlreadyDead();
   XRE_GetIOMessageLoop()->PostTask(
     NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated, handle, /*force=*/true));
+}
+
+uint64_t
+GPUProcessHost::GetProcessToken() const
+{
+  return mProcessToken;
 }
 
 static void

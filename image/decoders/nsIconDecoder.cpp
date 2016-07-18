@@ -26,7 +26,7 @@ nsIconDecoder::nsIconDecoder(RasterImage* aImage)
 nsIconDecoder::~nsIconDecoder()
 { }
 
-Maybe<TerminalState>
+LexerResult
 nsIconDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call DoDecode after error!");

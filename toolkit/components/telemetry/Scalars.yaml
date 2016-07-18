@@ -70,3 +70,54 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
+
+# The following section contains the browser engagement scalars.
+browser.engagement:
+  max_concurrent_tab_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of maximum number of tabs open during a subsession,
+      across all windows, including tabs in private windows and restored
+      at startup.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  tab_open_event_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of tab open events per subsession, across all windows, after the
+      session has been restored. This includes tab open events from private windows.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  max_concurrent_window_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of maximum number of browser windows open during a subsession. This
+      includes private windows and the ones opened when starting the browser.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  window_open_event_count:
+    bug_numbers:
+      - 1271304
+    description: >
+      The count of browser window open events per subsession, after the session
+      has been restored. The count includes the private windows.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out

@@ -32,10 +32,10 @@ add_task(function* testNormalBrowsing() {
   info("Load a test page that's whitelisted");
   Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "example.com,www.ItIsaTrap.org,example.net");
   yield promiseTabLoadEvent(tab, TEST_PAGE, "load");
-  testWhitelistedPage(tab.ownerDocument.defaultView);
+  testWhitelistedPage(tab.ownerGlobal);
 
   info("Load a test page that's no longer whitelisted");
   Services.prefs.setCharPref(PREF_WHITELISTED_HOSTNAMES, "");
   yield promiseTabLoadEvent(tab, TEST_PAGE, "AboutBlockedLoaded");
-  testBlockedPage(tab.ownerDocument.defaultView);
+  testBlockedPage(tab.ownerGlobal);
 });

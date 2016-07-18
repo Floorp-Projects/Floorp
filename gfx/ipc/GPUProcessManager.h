@@ -12,8 +12,11 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/ipc/Transport.h"
 #include "nsIObserverService.h"
+
 
 namespace mozilla {
 namespace layers {
@@ -21,6 +24,7 @@ class APZCTreeManager;
 class CompositorSession;
 class ClientLayerManager;
 class CompositorUpdateObserver;
+class PCompositorBridgeChild;
 class PCompositorBridgeParent;
 } // namespace layers
 namespace widget {
@@ -43,7 +47,10 @@ class GPUChild;
 class GPUProcessManager final : public GPUProcessHost::Listener
 {
   typedef layers::APZCTreeManager APZCTreeManager;
+  typedef layers::ClientLayerManager ClientLayerManager;
+  typedef layers::CompositorSession CompositorSession;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
+  typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
 
 public:
   static void Initialize();
@@ -60,17 +67,16 @@ public:
   // Otherwise it blocks until the GPU process has finished launching.
   void EnsureGPUReady();
 
-  already_AddRefed<layers::CompositorSession> CreateTopLevelCompositor(
+  RefPtr<CompositorSession> CreateTopLevelCompositor(
     nsIWidget* aWidget,
-    layers::ClientLayerManager* aLayerManager,
+    ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
     bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize);
 
-  layers::PCompositorBridgeParent* CreateTabCompositorBridge(
-    ipc::Transport* aTransport,
-    base::ProcessId aOtherProcess);
+  bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
+                                     ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -106,6 +112,10 @@ public:
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
 
+  // Notify the GPUProcessManager that a top-level PGPU protocol has been
+  // terminated. This may be called from any thread.
+  void NotifyRemoteActorDestroyed(const uint64_t& aProcessToken);
+
   // Returns access to the PGPU protocol if a GPU process is present.
   GPUChild* GetGPUChild() {
     return mGPUChild;
@@ -124,6 +134,15 @@ private:
   // Shutdown the GPU process.
   void DestroyProcess();
 
+  RefPtr<CompositorSession> CreateRemoteSession(
+    nsIWidget* aWidget,
+    ClientLayerManager* aLayerManager,
+    const uint64_t& aRootLayerTreeId,
+    CSSToLayoutDeviceScale aScale,
+    bool aUseAPZ,
+    bool aUseExternalSurfaceSize,
+    const gfx::IntSize& aSurfaceSize);
+
   DISALLOW_COPY_AND_ASSIGN(GPUProcessManager);
 
   class Observer final : public nsIObserver {
@@ -141,7 +160,11 @@ private:
 
 private:
   RefPtr<Observer> mObserver;
+  ipc::TaskFactory<GPUProcessManager> mTaskFactory;
+  uint64_t mNextLayerTreeId;
+
   GPUProcessHost* mProcess;
+  uint64_t mProcessToken;
   GPUChild* mGPUChild;
 };
 

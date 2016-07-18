@@ -2033,12 +2033,6 @@ PluginModuleParent::GetScrollCaptureContainer(NPP aInstance,
     PluginInstanceParent* inst = PluginInstanceParent::Cast(aInstance);
     return !inst ? NS_ERROR_FAILURE : inst->GetScrollCaptureContainer(aContainer);
 }
-nsresult
-PluginModuleParent::UpdateScrollState(NPP aInstance, bool aIsScrolling)
-{
-    PluginInstanceParent* inst = PluginInstanceParent::Cast(aInstance);
-    return !inst ? NS_ERROR_FAILURE : inst->UpdateScrollState(aIsScrolling);
-}
 #endif
 
 nsresult

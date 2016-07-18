@@ -766,14 +766,14 @@ add_test(function test_receive_display_uri() {
 
   // Received 'displayURI' command should result in the topic defined below
   // being called.
-  let ev = "weave:engine:clients:display-uri";
+  let ev = "weave:engine:clients:display-uris";
 
   let handler = function(subject, data) {
     Svc.Obs.remove(ev, handler);
 
-    do_check_eq(subject.uri, uri);
-    do_check_eq(subject.client, remoteId);
-    do_check_eq(subject.title, title);
+    do_check_eq(subject[0].uri, uri);
+    do_check_eq(subject[0].clientId, remoteId);
+    do_check_eq(subject[0].title, title);
     do_check_eq(data, null);
 
     run_next_test();

@@ -18,7 +18,7 @@ add_task(function* () {
       aTextField.value = aValue;
 
       let event = aTextField.ownerDocument.createEvent("UIEvents");
-      event.initUIEvent("input", true, true, aTextField.ownerDocument.defaultView, 0);
+      event.initUIEvent("input", true, true, aTextField.ownerGlobal, 0);
       aTextField.dispatchEvent(event);
     }
 
