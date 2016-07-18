@@ -21,6 +21,7 @@ public:
   static RefPtr<InProcessCompositorSession> Create(
     nsIWidget* aWidget,
     ClientLayerManager* aLayerManager,
+    const uint64_t& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
     bool aUseExternalSurfaceSize,
@@ -28,7 +29,6 @@ public:
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
-  uint64_t RootLayerTreeId() const override;
   already_AddRefed<APZCTreeManager> GetAPZCTreeManager() const override;
   void Shutdown() override;
 

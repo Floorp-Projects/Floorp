@@ -12,7 +12,7 @@ namespace layers {
 InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidget* aWidget,
                                                        CompositorBridgeChild* aChild,
                                                        CompositorBridgeParent* aParent)
- : CompositorSession(aWidget->AsDelegate(), aChild),
+ : CompositorSession(aWidget->AsDelegate(), aChild, aParent->RootLayerTreeId()),
    mCompositorBridgeParent(aParent),
    mCompositorWidget(aWidget)
 {
@@ -21,6 +21,7 @@ InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidget*
 /* static */ RefPtr<InProcessCompositorSession>
 InProcessCompositorSession::Create(nsIWidget* aWidget,
                                    ClientLayerManager* aLayerManager,
+                                   const uint64_t& aRootLayerTreeId,
                                    CSSToLayoutDeviceScale aScale,
                                    bool aUseAPZ,
                                    bool aUseExternalSurfaceSize,
@@ -32,7 +33,7 @@ InProcessCompositorSession::Create(nsIWidget* aWidget,
   RefPtr<CompositorWidget> widget = CompositorWidget::CreateLocal(initData, aWidget);
   RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
   RefPtr<CompositorBridgeParent> parent =
-    child->InitSameProcess(widget, aScale, aUseAPZ, aUseExternalSurfaceSize, aSurfaceSize);
+    child->InitSameProcess(widget, aRootLayerTreeId, aScale, aUseAPZ, aUseExternalSurfaceSize, aSurfaceSize);
 
   return new InProcessCompositorSession(widget, child, parent);
 }
@@ -46,19 +47,13 @@ InProcessCompositorSession::GetInProcessBridge() const
 void
 InProcessCompositorSession::SetContentController(GeckoContentController* aController)
 {
-  mCompositorBridgeParent->SetControllerForLayerTree(RootLayerTreeId(), aController);
-}
-
-uint64_t
-InProcessCompositorSession::RootLayerTreeId() const
-{
-  return mCompositorBridgeParent->RootLayerTreeId();
+  mCompositorBridgeParent->SetControllerForLayerTree(mRootLayerTreeId, aController);
 }
 
 already_AddRefed<APZCTreeManager>
 InProcessCompositorSession::GetAPZCTreeManager() const
 {
-  return mCompositorBridgeParent->GetAPZCTreeManager(RootLayerTreeId());
+  return mCompositorBridgeParent->GetAPZCTreeManager(mRootLayerTreeId);
 }
 
 void

@@ -601,7 +601,7 @@ CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
   , mResetCompositorMonitor("ResetCompositorMonitor")
-  , mRootLayerTreeID(AllocateLayerTreeId())
+  , mRootLayerTreeID(0)
   , mOverrideComposeReadiness(false)
   , mForceCompositionTask(nullptr)
   , mCompositorThreadHolder(CompositorThreadHolder::GetSingleton())
@@ -615,9 +615,12 @@ CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
 }
 
 void
-CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget, bool aUseAPZ)
+CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
+                                        const uint64_t& aLayerTreeId,
+                                        bool aUseAPZ)
 {
   mWidget = aWidget;
+  mRootLayerTreeID = aLayerTreeId;
   if (aUseAPZ) {
     mApzcTreeManager = new APZCTreeManager();
   }
@@ -662,6 +665,7 @@ CompositorBridgeParent::Initialize()
 uint64_t
 CompositorBridgeParent::RootLayerTreeId()
 {
+  MOZ_ASSERT(mRootLayerTreeID);
   return mRootLayerTreeID;
 }
 
@@ -1678,15 +1682,6 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     controller->ChildAdopted();
   }
   return true;
-}
-
-/*static*/ uint64_t
-CompositorBridgeParent::AllocateLayerTreeId()
-{
-  MOZ_ASSERT(CompositorLoop());
-  MOZ_ASSERT(NS_IsMainThread());
-  static uint64_t ids = 0;
-  return ++ids;
 }
 
 static void
