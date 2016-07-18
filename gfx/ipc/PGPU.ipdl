@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
+include protocol PCompositorBridge;
+
+using mozilla::CSSToLayoutDeviceScale from "Units.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 
 namespace mozilla {
 namespace gfx {
@@ -28,6 +31,12 @@ parent:
 
   // Called to update a gfx preference.
   async UpdatePref(GfxPrefSetting pref);
+
+  // Create a new top-level compositor.
+  async NewWidgetCompositor(Endpoint<PCompositorBridgeParent> endpoint,
+                            CSSToLayoutDeviceScale scale,
+                            bool useExternalSurface,
+                            IntSize surfaceSize);
 };
 
 } // namespace gfx

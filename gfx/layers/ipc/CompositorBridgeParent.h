@@ -223,6 +223,12 @@ public:
                        const uint64_t& aLayerTreeId,
                        bool aUseAPZ);
 
+  // Must only be called by GPUParent. After invoking this, the IPC channel
+  // is active and RecvWillStop/ActorDestroy must be called to free the
+  // compositor.
+  bool Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint);
+
+  virtual bool RecvInitialize(const uint64_t& aRootLayerTreeId) override;
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual bool RecvRequestOverfill() override;
   virtual bool RecvWillClose() override;
