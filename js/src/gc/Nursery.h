@@ -8,6 +8,8 @@
 #ifndef gc_Nursery_h
 #define gc_Nursery_h
 
+#include "mozilla/EnumeratedArray.h"
+
 #include "jsalloc.h"
 #include "jspubtd.h"
 
@@ -21,6 +23,29 @@
 #include "js/Value.h"
 #include "js/Vector.h"
 #include "vm/SharedMem.h"
+
+#define FOR_EACH_NURSERY_PROFILE_TIME(_)                                      \
+   /* Key                       Header text */                                \
+    _(Total,                    "total")                                      \
+    _(CancelIonCompilations,    "canIon")                                     \
+    _(TraceValues,              "mkVals")                                     \
+    _(TraceCells,               "mkClls")                                     \
+    _(TraceSlots,               "mkSlts")                                     \
+    _(TraceWholeCells,          "mcWCll")                                     \
+    _(TraceGenericEntries,      "mkGnrc")                                     \
+    _(CheckHashTables,          "ckTbls")                                     \
+    _(MarkRuntime,              "mkRntm")                                     \
+    _(MarkDebugger,             "mkDbgr")                                     \
+    _(ClearNewObjectCache,      "clrNOC")                                     \
+    _(CollectToFP,              "collct")                                     \
+    _(ObjectsTenuredCallback,   "tenCB")                                      \
+    _(SweepArrayBufferViewList, "swpABO")                                     \
+    _(UpdateJitActivations,     "updtIn")                                     \
+    _(FreeMallocedBuffers,      "frSlts")                                     \
+    _(ClearStoreBuffer,         "clrSB")                                      \
+    _(Sweep,                    "sweep")                                      \
+    _(Resize,                   "resize")                                     \
+    _(Pretenure,                "pretnr")
 
 namespace JS {
 struct Zone;
@@ -107,6 +132,7 @@ class Nursery
         previousPromotionRate_(0),
         profileThreshold_(0),
         enableProfiling_(false),
+        minorGcCount_(0),
         freeMallocedBuffersTask(nullptr)
     {}
     ~Nursery();
@@ -229,6 +255,9 @@ class Nursery
     void leaveZealMode();
 #endif
 
+    /* Print total profile times on shutdown. */
+    void printTotalProfileTimes();
+
   private:
     /*
      * The start and end pointers are stored under the runtime so that we can
@@ -265,6 +294,24 @@ class Nursery
     /* Report minor collections taking more than this many us, if enabled. */
     int64_t profileThreshold_;
     bool enableProfiling_;
+
+    /* Profiling data. */
+
+    enum class ProfileKey
+    {
+#define DEFINE_TIME_KEY(name, text)                                           \
+        name,
+        FOR_EACH_NURSERY_PROFILE_TIME(DEFINE_TIME_KEY)
+#undef DEFINE_TIME_KEY
+        KeyCount
+    };
+
+    using ProfileTimes = mozilla::EnumeratedArray<ProfileKey, ProfileKey::KeyCount, int64_t>;
+
+    ProfileTimes startTimes_;
+    ProfileTimes profileTimes_;
+    ProfileTimes totalTimes_;
+    uint64_t minorGcCount_;
 
     /*
      * The set of externally malloced buffers potentially kept live by objects
@@ -390,6 +437,14 @@ class Nursery
     /* Change the allocable space provided by the nursery. */
     void growAllocableSpace();
     void shrinkAllocableSpace();
+
+    /* Profile recording and printing. */
+    void startProfile(ProfileKey key);
+    void endProfile(ProfileKey key);
+    void maybeStartProfile(ProfileKey key);
+    void maybeEndProfile(ProfileKey key);
+    static void printProfileHeader();
+    static void printProfileTimes(const ProfileTimes& times);
 
     friend class TenuringTracer;
     friend class gc::MinorCollectionTracer;
