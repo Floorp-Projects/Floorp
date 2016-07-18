@@ -413,6 +413,17 @@ WebGLShader::FindUniformBlockByMappedName(const nsACString& mappedName,
 }
 
 void
+WebGLShader::EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const
+{
+    out_FragOutputs.clear();
+
+    if (!mValidator) {
+        return;
+    }
+    mValidator->EnumerateFragOutputs(out_FragOutputs);
+}
+
+void
 WebGLShader::ApplyTransformFeedbackVaryings(GLuint prog,
                                             const std::vector<nsCString>& varyings,
                                             GLenum bufferMode,

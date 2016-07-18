@@ -538,5 +538,18 @@ ShaderValidator::FindUniformBlockByMappedName(const std::string& mappedName,
     return false;
 }
 
+void
+ShaderValidator::EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const
+{
+    const auto* fragOutputs = ShGetOutputVariables(mHandle);
+
+    if (fragOutputs) {
+        for (const auto& fragOutput : *fragOutputs) {
+            out_FragOutputs.insert({nsCString(fragOutput.name.c_str()),
+                                    nsCString(fragOutput.mappedName.c_str())});
+        }
+    }
+}
+
 } // namespace webgl
 } // namespace mozilla
