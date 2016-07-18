@@ -14,8 +14,6 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/CORSMode.h"
 #include "PrincipalChangeObserver.h"
-#include "mozilla/dom/MediaStreamTrackBinding.h"
-#include "mozilla/dom/MediaTrackSettingsBinding.h"
 
 namespace mozilla {
 
@@ -265,9 +263,6 @@ public:
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
   void Stop();
-  void GetConstraints(dom::MediaTrackConstraints& aResult);
-  void GetSettings(dom::MediaTrackSettings& aResult);
-
   already_AddRefed<Promise>
   ApplyConstraints(const dom::MediaTrackConstraints& aConstraints, ErrorResult &aRv);
   already_AddRefed<MediaStreamTrack> Clone();
@@ -431,8 +426,6 @@ protected:
   MediaStreamTrackState mReadyState;
   bool mEnabled;
   const bool mRemote;
-  dom::MediaTrackConstraints mConstraints;
-  dom::MediaTrackSettings mSettings;
 };
 
 } // namespace dom
