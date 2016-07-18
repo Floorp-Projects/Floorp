@@ -10,9 +10,12 @@ EXPORTS.mozilla.mscom += [
     'Utils.h',
 ]
 
+SOURCES += [
+    'Utils.cpp',
+]
+
 UNIFIED_SOURCES += [
     'MainThreadRuntime.cpp',
-    'Utils.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
