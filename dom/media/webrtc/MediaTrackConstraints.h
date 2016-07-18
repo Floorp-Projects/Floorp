@@ -288,14 +288,14 @@ protected:
   template<class DeviceType>
   static bool
   SomeSettingsFit(const NormalizedConstraints &aConstraints,
-                  nsTArray<RefPtr<DeviceType>>& aDevices)
+                  nsTArray<RefPtr<DeviceType>>& aSources)
   {
     nsTArray<const NormalizedConstraintSet*> sets;
     sets.AppendElement(&aConstraints);
 
-    MOZ_ASSERT(aDevices.Length());
-    for (auto& device : aDevices) {
-      if (device->GetBestFitnessDistance(sets) != UINT32_MAX) {
+    MOZ_ASSERT(aSources.Length());
+    for (auto& source : aSources) {
+      if (source->GetBestFitnessDistance(sets) != UINT32_MAX) {
         return true;
       }
     }
@@ -303,12 +303,12 @@ protected:
   }
 
 public:
-  // Apply constrains to a supplied list of devices (removes items from the list)
+  // Apply constrains to a supplied list of sources (removes items from the list)
 
   template<class DeviceType>
   static const char*
   SelectSettings(const NormalizedConstraints &aConstraints,
-                 nsTArray<RefPtr<DeviceType>>& aDevices)
+                 nsTArray<RefPtr<DeviceType>>& aSources)
   {
     auto& c = aConstraints;
 
@@ -323,25 +323,25 @@ public:
 
     std::multimap<uint32_t, RefPtr<DeviceType>> ordered;
 
-    for (uint32_t i = 0; i < aDevices.Length();) {
-      uint32_t distance = aDevices[i]->GetBestFitnessDistance(aggregateConstraints);
+    for (uint32_t i = 0; i < aSources.Length();) {
+      uint32_t distance = aSources[i]->GetBestFitnessDistance(aggregateConstraints);
       if (distance == UINT32_MAX) {
-        unsatisfactory.AppendElement(aDevices[i]);
-        aDevices.RemoveElementAt(i);
+        unsatisfactory.AppendElement(aSources[i]);
+        aSources.RemoveElementAt(i);
       } else {
         ordered.insert(std::pair<uint32_t, RefPtr<DeviceType>>(distance,
-                                                               aDevices[i]));
+                                                                 aSources[i]));
         ++i;
       }
     }
-    if (!aDevices.Length()) {
+    if (!aSources.Length()) {
       return FindBadConstraint(c, unsatisfactory);
     }
 
     // Order devices by shortest distance
     for (auto& ordinal : ordered) {
-      aDevices.RemoveElement(ordinal.second);
-      aDevices.AppendElement(ordinal.second);
+      aSources.RemoveElement(ordinal.second);
+      aSources.AppendElement(ordinal.second);
     }
 
     // Then apply advanced constraints.
@@ -349,16 +349,16 @@ public:
     for (int i = 0; i < int(c.mAdvanced.Length()); i++) {
       aggregateConstraints.AppendElement(&c.mAdvanced[i]);
       nsTArray<RefPtr<DeviceType>> rejects;
-      for (uint32_t j = 0; j < aDevices.Length();) {
-        if (aDevices[j]->GetBestFitnessDistance(aggregateConstraints) == UINT32_MAX) {
-          rejects.AppendElement(aDevices[j]);
-          aDevices.RemoveElementAt(j);
+      for (uint32_t j = 0; j < aSources.Length();) {
+        if (aSources[j]->GetBestFitnessDistance(aggregateConstraints) == UINT32_MAX) {
+          rejects.AppendElement(aSources[j]);
+          aSources.RemoveElementAt(j);
         } else {
           ++j;
         }
       }
-      if (!aDevices.Length()) {
-        aDevices.AppendElements(Move(rejects));
+      if (!aSources.Length()) {
+        aSources.AppendElements(Move(rejects));
         aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
       }
     }
@@ -368,7 +368,7 @@ public:
   template<class DeviceType>
   static const char*
   FindBadConstraint(const NormalizedConstraints& aConstraints,
-                    nsTArray<RefPtr<DeviceType>>& aDevices)
+                    nsTArray<RefPtr<DeviceType>>& aSources)
   {
     // The spec says to report a constraint that satisfies NONE
     // of the sources. Unfortunately, this is a bit laborious to find out, and
@@ -376,53 +376,47 @@ public:
     auto& c = aConstraints;
     dom::MediaTrackConstraints empty;
 
-    if (!aDevices.Length() ||
-        !SomeSettingsFit(NormalizedConstraints(empty), aDevices)) {
+    if (!aSources.Length() ||
+        !SomeSettingsFit(NormalizedConstraints(empty), aSources)) {
       return "";
     }
     {
       NormalizedConstraints fresh(empty);
       fresh.mDeviceId = c.mDeviceId;
-      if (!SomeSettingsFit(fresh, aDevices)) {
+      if (!SomeSettingsFit(fresh, aSources)) {
         return "deviceId";
       }
     }
     {
       NormalizedConstraints fresh(empty);
       fresh.mWidth = c.mWidth;
-      if (!SomeSettingsFit(fresh, aDevices)) {
+      if (!SomeSettingsFit(fresh, aSources)) {
         return "width";
       }
     }
     {
       NormalizedConstraints fresh(empty);
       fresh.mHeight = c.mHeight;
-      if (!SomeSettingsFit(fresh, aDevices)) {
+      if (!SomeSettingsFit(fresh, aSources)) {
         return "height";
       }
     }
     {
       NormalizedConstraints fresh(empty);
       fresh.mFrameRate = c.mFrameRate;
-      if (!SomeSettingsFit(fresh, aDevices)) {
+      if (!SomeSettingsFit(fresh, aSources)) {
         return "frameRate";
       }
     }
     {
       NormalizedConstraints fresh(empty);
       fresh.mFacingMode = c.mFacingMode;
-      if (!SomeSettingsFit(fresh, aDevices)) {
+      if (!SomeSettingsFit(fresh, aSources)) {
         return "facingMode";
       }
     }
     return "";
   }
-
-  template<class MediaEngineSourceType>
-  static const char*
-  FindBadConstraint(const NormalizedConstraints& aConstraints,
-                    const MediaEngineSourceType& aMediaEngineSource,
-                    const nsString& aDeviceId);
 };
 
 } // namespace mozilla

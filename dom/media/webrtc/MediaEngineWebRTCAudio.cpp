@@ -184,14 +184,14 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
 }
 
 void
-MediaEngineWebRTCMicrophoneSource::GetName(nsAString& aName) const
+MediaEngineWebRTCMicrophoneSource::GetName(nsAString& aName)
 {
   aName.Assign(mDeviceName);
   return;
 }
 
 void
-MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID) const
+MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID)
 {
   aUUID.Assign(mDeviceUUID);
   return;
@@ -207,7 +207,7 @@ MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID) const
 
 uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const
+    const nsString& aDeviceId)
 {
   uint32_t distance = 0;
 
@@ -799,13 +799,13 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
 }
 
 void
-MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName) const
+MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName)
 {
   aName.AssignLiteral("AudioCapture");
 }
 
 void
-MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID) const
+MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID)
 {
   nsID uuid;
   char uuidBuffer[NSID_LENGTH];
@@ -860,7 +860,7 @@ MediaEngineWebRTCAudioCaptureSource::Restart(
 uint32_t
 MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const
+    const nsString& aDeviceId)
 {
   // There is only one way of capturing audio for now, and it's always adequate.
   return 0;

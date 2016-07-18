@@ -41,8 +41,8 @@ public:
 
   void Shutdown() override {};
 
-  void GetName(nsAString&) const override;
-  void GetUUID(nsACString&) const override;
+  void GetName(nsAString&) override;
+  void GetUUID(nsACString&) override;
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
@@ -66,7 +66,7 @@ public:
                   const PrincipalHandle& aPrincipalHandle) override;
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId) override;
 
   bool IsFake() override {
     return true;
@@ -116,8 +116,8 @@ public:
 
   void Shutdown() override {};
 
-  void GetName(nsAString&) const override;
-  void GetUUID(nsACString&) const override;
+  void GetName(nsAString&) override;
+  void GetUUID(nsACString&) override;
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
@@ -175,7 +175,7 @@ public:
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId) override;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
