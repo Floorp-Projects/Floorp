@@ -262,7 +262,10 @@ function Test() {
   TestPackState('PACK_ROW_LENGTH', 0, 16);
   TestPackState('PACK_SKIP_PIXELS', 0, 3);
   TestPackState('PACK_SKIP_ROWS', 0, 3);
+}
 
+function RunTest() {
+  Test();
   SimpleTest.finish();
 }
 
@@ -274,10 +277,10 @@ try {
     ['webgl.disable-angle', true],
   ];
   var prefEnv = {'set': prefArrArr};
-  SpecialPowers.pushPrefEnv(prefEnv, Test);
+  SpecialPowers.pushPrefEnv(prefEnv, RunTest);
 } catch (e) {
   todo(false, 'No SpecialPowers, but trying anyway...');
-  Test();
+  RunTest();
 }
 
     </script>
