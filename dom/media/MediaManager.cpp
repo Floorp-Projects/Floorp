@@ -1132,11 +1132,11 @@ public:
         ApplyConstraints(nsPIDOMWindowInner* aWindow,
                          const MediaTrackConstraints& aConstraints) override
         {
-          if (sInShutdown || !mListener) {
-            // Track has been stopped, or we are in shutdown. In either case
-            // there's no observable outcome, so pretend we succeeded.
+          if (sInShutdown) {
             RefPtr<PledgeVoid> p = new PledgeVoid();
-            p->Resolve(false);
+            p->Reject(new MediaStreamError(aWindow,
+                                           NS_LITERAL_STRING("AbortError"),
+                                           NS_LITERAL_STRING("In shutdown")));
             return p.forget();
           }
           return mListener->ApplyConstraintsToTrack(aWindow, mTrackID, aConstraints);
@@ -1145,9 +1145,7 @@ public:
         void
         GetSettings(dom::MediaTrackSettings& aOutSettings) override
         {
-          if (mListener) {
-            mListener->GetSettings(aOutSettings);
-          }
+          mListener->GetSettings(aOutSettings);
         }
 
         void Stop() override
