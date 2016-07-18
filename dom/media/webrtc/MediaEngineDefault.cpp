@@ -89,8 +89,7 @@ nsresult
 MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
-                                        const nsACString& aOrigin,
-                                        BaseAllocationHandle** aOutHandle)
+                                        const nsACString& aOrigin)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -106,14 +105,12 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
   mOpts.mWidth = mOpts.mWidth ? mOpts.mWidth : MediaEngine::DEFAULT_43_VIDEO_WIDTH;
   mOpts.mHeight = mOpts.mHeight ? mOpts.mHeight : MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
   mState = kAllocated;
-  aOutHandle = nullptr;
   return NS_OK;
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineDefaultVideoSource::Deallocate()
 {
-  MOZ_ASSERT(!aHandle);
   if (mState != kStopped && mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }
@@ -413,8 +410,7 @@ nsresult
 MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
-                                        const nsACString& aOrigin,
-                                        BaseAllocationHandle** aOutHandle)
+                                        const nsACString& aOrigin)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -430,14 +426,12 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
   // generate sine wave (default 1KHz)
   mSineGenerator = new SineWaveGenerator(AUDIO_RATE,
                                          static_cast<uint32_t>(aPrefs.mFreq ? aPrefs.mFreq : 1000));
-  aOutHandle = nullptr;
   return NS_OK;
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Deallocate(BaseAllocationHandle* aHandle)
+MediaEngineDefaultAudioSource::Deallocate()
 {
-  MOZ_ASSERT(!aHandle);
   if (mState != kStopped && mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }

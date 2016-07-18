@@ -71,23 +71,11 @@ public:
                                dom::MediaSourceEnum aMediaSource,
                                const char* aMonitorName = "RemoteVideo.Monitor");
 
-  class AllocationHandle : public BaseAllocationHandle
-  {
-  public:
-    AllocationHandle(const dom::MediaTrackConstraints& aConstraints)
-      : mConstraints(aConstraints) {}
-  private:
-    ~AllocationHandle() override {}
-  public:
-    dom::MediaTrackConstraints mConstraints;
-  };
-
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;;
+                    const nsACString& aOrigin) override;
+  nsresult Deallocate() override;;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
   nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
@@ -121,8 +109,6 @@ private:
 
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
   mozilla::camera::CaptureEngine mCapEngine;
-
-  nsTArray<RefPtr<AllocationHandle>> mRegisteredHandles;
 };
 
 }
