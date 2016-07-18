@@ -48,7 +48,7 @@ const ConsoleOutput = createClass({
       );
     });
     return (
-      dom.div({}, messageNodes)
+      dom.div({className: "webconsole-output"}, messageNodes)
     );
   }
 });
