@@ -65,10 +65,11 @@ public:
   }
 
 protected:
-  CompositorSession();
+  CompositorSession(CompositorWidgetDelegate* aDelegate,
+                    CompositorBridgeChild* aChild);
   virtual ~CompositorSession();
 
-  static already_AddRefed<CompositorSession> CreateInProcess(
+  static RefPtr<CompositorSession> CreateInProcess(
     nsIWidget* aWidget,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
@@ -77,8 +78,8 @@ protected:
     const gfx::IntSize& aSurfaceSize);
 
 protected:
-  RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
+  RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);

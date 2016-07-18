@@ -60,7 +60,7 @@ public:
   // Otherwise it blocks until the GPU process has finished launching.
   void EnsureGPUReady();
 
-  already_AddRefed<layers::CompositorSession> CreateTopLevelCompositor(
+  RefPtr<layers::CompositorSession> CreateTopLevelCompositor(
     nsIWidget* aWidget,
     layers::ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
