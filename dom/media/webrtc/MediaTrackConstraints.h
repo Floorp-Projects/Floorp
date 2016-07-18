@@ -123,7 +123,20 @@ struct NormalizedConstraintSet
     }
     bool Intersects(const StringRange& aOther) const;
     void Intersect(const StringRange& aOther);
-    bool Merge(const StringRange& aOther);
+    bool Merge(const StringRange& aOther)
+    {
+      if (!Intersects(aOther)) {
+        return false;
+      }
+      Intersect(aOther);
+
+      for (auto& entry : aOther.mIdeal) {
+        if (mIdeal.find(entry) == mIdeal.end()) {
+          mIdeal.insert(entry);
+        }
+      }
+      return true;
+    }
     void FinalizeMerge() {}
   };
 
@@ -170,7 +183,7 @@ struct NormalizedConstraints : public NormalizedConstraintSet
       const nsTArray<const NormalizedConstraints*>& aOthers);
 
   nsTArray<NormalizedConstraintSet> mAdvanced;
-  const char* mBadConstraint;
+  bool mOverconstrained;
 };
 
 // Flattened version is used in low-level code with orthogonal constraints only.

@@ -152,8 +152,7 @@ public:
   virtual nsresult Restart(BaseAllocationHandle* aHandle,
                            const dom::MediaTrackConstraints& aConstraints,
                            const MediaEnginePrefs &aPrefs,
-                           const nsString& aDeviceId,
-                           const char** aOutBadConstraint) = 0;
+                           const nsString& aDeviceId) = 0;
 
   /* Returns true if a source represents a fake capture device and
    * false otherwise
@@ -190,8 +189,7 @@ public:
                             const MediaEnginePrefs &aPrefs,
                             const nsString& aDeviceId,
                             const nsACString& aOrigin,
-                            BaseAllocationHandle** aOutHandle,
-                            const char** aOutBadConstraint) = 0;
+                            BaseAllocationHandle** aOutHandle) = 0;
 
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,

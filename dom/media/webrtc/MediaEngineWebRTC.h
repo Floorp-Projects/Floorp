@@ -78,8 +78,7 @@ public:
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
-                    const char** aOutBadConstraint) override
+                    BaseAllocationHandle** aOutHandle) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
     aOutHandle = nullptr;
@@ -102,8 +101,7 @@ public:
   nsresult Restart(BaseAllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId,
-                   const char** aOutBadConstraint) override;
+                   const nsString& aDeviceId) override;
   void SetDirectListeners(bool aDirect) override
   {}
   void NotifyOutputData(MediaStreamGraph* aGraph,
@@ -458,8 +456,7 @@ public:
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle,
-                    const char** aOutBadConstraint) override;
+                    BaseAllocationHandle** aOutHandle) override;
   nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream* aStream,
                  TrackID aID,
@@ -468,8 +465,7 @@ public:
   nsresult Restart(BaseAllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId,
-                   const char** aOutBadConstraint) override;
+                   const nsString& aDeviceId) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
 
   void NotifyPull(MediaStreamGraph* aGraph,
