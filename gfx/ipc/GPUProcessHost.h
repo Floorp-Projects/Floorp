@@ -121,6 +121,7 @@ private:
   uint64_t mProcessToken;
 
   bool mShutdownRequested;
+  bool mChannelClosed;
 };
 
 } // namespace gfx
