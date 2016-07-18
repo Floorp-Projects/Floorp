@@ -77,17 +77,14 @@ public:
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle) override
+                    const nsACString& aOrigin) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
-    aOutHandle = nullptr;
     return NS_OK;
   }
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override
+  nsresult Deallocate() override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
-    MOZ_ASSERT(!aHandle);
     return NS_OK;
   }
   void Shutdown() override
@@ -454,9 +451,8 @@ public:
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle) override;
-  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
+                    const nsACString& aOrigin) override;
+  nsresult Deallocate() override;
   nsresult Start(SourceMediaStream* aStream,
                  TrackID aID,
                  const PrincipalHandle& aPrincipalHandle) override;

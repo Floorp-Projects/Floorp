@@ -586,11 +586,11 @@ public:
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
           if (mAudioDevice) {
             mAudioDevice->GetSource()->Stop(source, kAudioTrack);
-            mAudioDevice->Deallocate();
+            mAudioDevice->GetSource()->Deallocate();
           }
           if (mVideoDevice) {
             mVideoDevice->GetSource()->Stop(source, kVideoTrack);
-            mVideoDevice->Deallocate();
+            mVideoDevice->GetSource()->Deallocate();
           }
           if (mType == MEDIA_STOP) {
             source->EndAllTrackAndFinish();
@@ -886,20 +886,26 @@ AudioDevice::GetSource()
   return static_cast<Source*>(&*mSource);
 }
 
-nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
+nsresult VideoDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                const MediaEnginePrefs &aPrefs,
                                const nsACString& aOrigin) {
-  return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin,
-                               getter_AddRefs(mAllocationHandle));
+  return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin);
 }
 
-nsresult MediaDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
+nsresult AudioDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
+                               const MediaEnginePrefs &aPrefs,
+                               const nsACString& aOrigin) {
+  return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin);
+}
+
+nsresult VideoDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
                               const MediaEnginePrefs &aPrefs) {
   return GetSource()->Restart(aConstraints, aPrefs, mID);
 }
 
-nsresult MediaDevice::Deallocate() {
-  return GetSource()->Deallocate(mAllocationHandle);
+nsresult AudioDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
+                              const MediaEnginePrefs &aPrefs) {
+  return GetSource()->Restart(aConstraints, aPrefs, mID);
 }
 
 void
@@ -1438,7 +1444,7 @@ public:
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate videosource %d\n",rv));
         if (mAudioDevice) {
-          mAudioDevice->Deallocate();
+          mAudioDevice->GetSource()->Deallocate();
         }
         Fail(NS_LITERAL_STRING("NotReadableError"),
              NS_LITERAL_STRING("Failed to allocate videosource"));
