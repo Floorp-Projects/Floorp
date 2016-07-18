@@ -343,7 +343,8 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
 }
 
 void
-WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) const
+WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, FBTarget target,
+                                       GLenum attachment) const
 {
     if (!HasImage()) {
         switch (attachment) {
@@ -353,7 +354,7 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) con
             break;
 
         default:
-            gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachment,
+            gl->fFramebufferRenderbuffer(target, attachment,
                                          LOCAL_GL_RENDERBUFFER, 0);
             break;
         }
@@ -379,13 +380,13 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) con
         case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
+                gl->fFramebufferTexture2D(target, LOCAL_GL_DEPTH_ATTACHMENT,
                                           imageTarget, glName, mipLevel);
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                gl->fFramebufferTexture2D(target,
                                           LOCAL_GL_STENCIL_ATTACHMENT, imageTarget,
                                           glName, mipLevel);
             } else {
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachment, imageTarget,
+                gl->fFramebufferTexture2D(target, attachment, imageTarget,
                                           glName, mipLevel);
             }
             break;
@@ -393,14 +394,14 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) con
         case LOCAL_GL_TEXTURE_2D_ARRAY:
         case LOCAL_GL_TEXTURE_3D:
             if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
+                gl->fFramebufferTextureLayer(target,
                                              LOCAL_GL_DEPTH_ATTACHMENT, glName, mipLevel,
                                              layer);
-                gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
+                gl->fFramebufferTextureLayer(target,
                                              LOCAL_GL_STENCIL_ATTACHMENT, glName,
                                              mipLevel, layer);
             } else {
-                gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, attachment, glName,
+                gl->fFramebufferTextureLayer(target, attachment, glName,
                                              mipLevel, layer);
             }
             break;
@@ -409,7 +410,7 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) con
     }
 
     if (Renderbuffer()) {
-        Renderbuffer()->DoFramebufferRenderbuffer(attachment);
+        Renderbuffer()->DoFramebufferRenderbuffer(target, attachment);
         return;
     }
 
@@ -1007,7 +1008,7 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
 }
 
 FBStatus
-WebGLFramebuffer::CheckFramebufferStatus(nsCString* const out_info) const
+WebGLFramebuffer::CheckFramebufferStatus(FBTarget target, nsCString* const out_info) const
 {
     if (mIsKnownFBComplete)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
@@ -1022,8 +1023,7 @@ WebGLFramebuffer::CheckFramebufferStatus(nsCString* const out_info) const
     // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
     FinalizeAttachments();
 
-    // TODO: This should not be unconditionally GL_FRAMEBUFFER.
-    ret = mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    ret = mContext->gl->fCheckFramebufferStatus(target);
 
     if (ret == LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         mIsKnownFBComplete = true;
@@ -1203,29 +1203,37 @@ FinalizeDrawAndReadBuffers(gl::GLContext* gl, bool isColorBufferDefined)
 }
 
 void
-WebGLFramebuffer::FinalizeAttachments() const
+WebGLFramebuffer::FinalizeAttachments(FBTarget target) const
 {
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT_IF(target == LOCAL_GL_READ_FRAMEBUFFER,
+                  mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT_IF(target != LOCAL_GL_READ_FRAMEBUFFER,
+                  mContext->mBoundDrawFramebuffer == this);
 
     gl::GLContext* gl = mContext->gl;
 
-    // Nuke the depth and stencil attachment points.
-    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER, 0);
-    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER, 0);
+    ////
 
-    // Call finalize.
-    mColorAttachment0.FinalizeAttachment(gl, LOCAL_GL_COLOR_ATTACHMENT0);
-    mDepthAttachment.FinalizeAttachment(gl, LOCAL_GL_DEPTH_ATTACHMENT);
-    mStencilAttachment.FinalizeAttachment(gl, LOCAL_GL_STENCIL_ATTACHMENT);
-    mDepthStencilAttachment.FinalizeAttachment(gl, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
+    mColorAttachment0.FinalizeAttachment(gl, target, LOCAL_GL_COLOR_ATTACHMENT0);
 
     for (size_t i = 0; i < mMoreColorAttachments.Size(); i++) {
         GLenum attachPoint = LOCAL_GL_COLOR_ATTACHMENT1 + i;
-        mMoreColorAttachments[i].FinalizeAttachment(gl, attachPoint);
+        mMoreColorAttachments[i].FinalizeAttachment(gl, target, attachPoint);
     }
+
+    ////
+
+    // Nuke the depth and stencil attachment points.
+    gl->fFramebufferRenderbuffer(target, LOCAL_GL_DEPTH_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, 0);
+    gl->fFramebufferRenderbuffer(target, LOCAL_GL_STENCIL_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, 0);
+
+    mDepthAttachment.FinalizeAttachment(gl, target, LOCAL_GL_DEPTH_ATTACHMENT);
+    mStencilAttachment.FinalizeAttachment(gl, target, LOCAL_GL_STENCIL_ATTACHMENT);
+    mDepthStencilAttachment.FinalizeAttachment(gl, target, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
+
+    ////
 
     FinalizeDrawAndReadBuffers(gl, mColorAttachment0.IsDefined());
 }
@@ -1305,8 +1313,6 @@ WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
 
         attachPoint = GetAttachPoint(LOCAL_GL_DEPTH_ATTACHMENT);
     }
-
-    FinalizeAttachments();
 
     return attachPoint->GetParameter(funcName, mContext, cx, target, attachment, pname,
                                      out_error);

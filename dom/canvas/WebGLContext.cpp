@@ -1637,8 +1637,11 @@ WebGLContext::DummyReadFramebufferOperation(const char* funcName)
     if (!mBoundReadFramebuffer)
         return; // Infallible.
 
+    const auto target = (IsWebGL2() ? LOCAL_GL_READ_FRAMEBUFFER
+                                    : LOCAL_GL_FRAMEBUFFER);
     nsCString fbStatusInfo;
-    const auto status = mBoundReadFramebuffer->CheckFramebufferStatus(&fbStatusInfo);
+    const auto status = mBoundReadFramebuffer->CheckFramebufferStatus(target,
+                                                                      &fbStatusInfo);
 
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         nsCString errorText("Incomplete framebuffer");
@@ -1951,8 +1954,18 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
     {
         ScopedBindFramebuffer autoFB(gl, 0);
         ClearBackbufferIfNeeded();
-        // TODO: Save, override, then restore glReadBuffer if present.
+
+        // Save, override, then restore glReadBuffer.
+        const GLenum readBufferMode = gl->Screen()->GetReadBufferMode();
+
+        if (readBufferMode != LOCAL_GL_BACK) {
+            gl->fReadBuffer(LOCAL_GL_BACK);
+        }
         ReadPixelsIntoDataSurface(gl, surf);
+
+        if (readBufferMode != LOCAL_GL_BACK) {
+            gl->fReadBuffer(readBufferMode);
+        }
     }
 
     if (out_premultAlpha) {
