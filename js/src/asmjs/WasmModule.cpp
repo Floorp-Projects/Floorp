@@ -425,41 +425,6 @@ Module::instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector
 }
 
 static bool
-WasmCall(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction callee(cx, &args.callee().as<JSFunction>());
-
-    Instance& instance = ExportedFunctionToInstance(callee);
-    uint32_t funcExportIndex = ExportedFunctionToExportIndex(callee);
-
-    return instance.callExport(cx, funcExportIndex, args);
-}
-
-static JSFunction*
-NewExportedFunction(JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcExportIndex)
-{
-    Instance& instance = instanceObj->instance();
-    const Metadata& metadata = instance.metadata();
-    const FuncExport& fe = metadata.funcExports[funcExportIndex];
-    unsigned numArgs = fe.sig().args().length();
-
-    RootedAtom name(cx, instance.getFuncAtom(cx, fe.funcIndex()));
-    if (!name)
-        return nullptr;
-
-    JSFunction* fun = NewNativeConstructor(cx, WasmCall, numArgs, name,
-                                           gc::AllocKind::FUNCTION_EXTENDED, GenericObject,
-                                           JSFunction::ASMJS_CTOR);
-    if (!fun)
-        return nullptr;
-
-    fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
-    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(funcExportIndex));
-    return fun;
-}
-
-static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
                    HandleWasmMemoryObject memoryObj,
@@ -471,20 +436,16 @@ CreateExportObject(JSContext* cx,
     const SharedTableVector& tables = instance.tables();
 
     if (metadata.isAsmJS() && exports.length() == 1 && strlen(exports[0].fieldName()) == 0) {
-        exportObj.set(NewExportedFunction(cx, instanceObj, 0));
-        return !!exportObj;
+        RootedFunction fun(cx);
+        if (!instanceObj->getExportedFunction(cx, instanceObj, exports[0].funcExportIndex(), &fun))
+            return false;
+        exportObj.set(fun);
+        return true;
     }
 
     exportObj.set(JS_NewPlainObject(cx));
     if (!exportObj)
         return false;
-
-    Rooted<ValueVector> vals(cx, ValueVector(cx));
-    for (size_t i = 0; i < metadata.funcExports.length(); i++) {
-        JSFunction* fun = NewExportedFunction(cx, instanceObj, i);
-        if (!fun || !vals.append(ObjectValue(*fun)))
-            return false;
-    }
 
     RootedWasmTableObject tableObj(cx);
     for (const Export& exp : exports) {
@@ -495,10 +456,14 @@ CreateExportObject(JSContext* cx,
         RootedId id(cx, AtomToId(atom));
         RootedValue val(cx);
         switch (exp.kind()) {
-          case DefinitionKind::Function:
-            val = vals[exp.funcExportIndex()];
+          case DefinitionKind::Function: {
+            RootedFunction fun(cx);
+            if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcExportIndex(), &fun))
+                return false;
+            val = ObjectValue(*fun);
             break;
-          case DefinitionKind::Table:
+          }
+          case DefinitionKind::Table: {
             MOZ_ASSERT(tables.length() == 1);
             if (!tableObj) {
                 tableObj = WasmTableObject::create(cx, *tables[0]);
@@ -507,12 +472,14 @@ CreateExportObject(JSContext* cx,
             }
             val = ObjectValue(*tableObj);
             break;
-          case DefinitionKind::Memory:
+          }
+          case DefinitionKind::Memory: {
             if (metadata.assumptions.newFormat)
                 val = ObjectValue(*memoryObj);
             else
                 val = ObjectValue(memoryObj->buffer());
             break;
+          }
         }
 
         if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
@@ -605,26 +572,4 @@ Module::instantiate(JSContext* cx,
     }
 
     return true;
-}
-
-bool
-wasm::IsExportedFunction(JSFunction* fun)
-{
-    return fun->maybeNative() == WasmCall;
-}
-
-Instance&
-wasm::ExportedFunctionToInstance(JSFunction* fun)
-{
-    MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
-    return v.toObject().as<WasmInstanceObject>().instance();
-}
-
-uint32_t
-wasm::ExportedFunctionToExportIndex(JSFunction* fun)
-{
-    MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
-    return v.toInt32();
 }
