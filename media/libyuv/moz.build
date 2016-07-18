@@ -11,8 +11,6 @@ GYP_DIRS += ['.']
 libyuv_non_unified_sources = [
     'source/convert.cc',
     'source/convert_from.cc',
-    'source/mjpeg_decoder.cc',
-    'source/rotate_argb.cc',
     'source/row_common.cc',
     'source/scale.cc',
     'source/scale_common.cc',
