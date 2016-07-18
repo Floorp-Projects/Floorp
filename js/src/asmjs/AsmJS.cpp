@@ -7893,7 +7893,8 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
             return false;
     }
 
-    if (!module.instantiate(cx, funcs, memory, nullptr, instanceObj))
+    RootedWasmTableObject table(cx);
+    if (!module.instantiate(cx, funcs, table, memory, nullptr, instanceObj))
         return false;
 
     RootedValue exportObjVal(cx);

@@ -116,6 +116,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedBranches_;
     JumpSiteArray                   jumpThunks_;
+    bool                            tableExported_;
 
     // Parallel compilation
     bool                            parallel_;

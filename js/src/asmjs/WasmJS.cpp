@@ -81,8 +81,12 @@ GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleVal
 }
 
 static bool
-GetImports(JSContext* cx, HandleObject importObj, const ImportVector& imports,
-           MutableHandle<FunctionVector> funcImports, MutableHandleWasmMemoryObject memoryImport)
+GetImports(JSContext* cx,
+           HandleObject importObj,
+           const ImportVector& imports,
+           MutableHandle<FunctionVector> funcImports,
+           MutableHandleWasmTableObject tableImport,
+           MutableHandleWasmMemoryObject memoryImport)
 {
     if (!imports.empty() && !importObj)
         return Throw(cx, "no import object given");
@@ -166,11 +170,12 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+    RootedWasmTableObject table(cx);
     RootedWasmMemoryObject memory(cx);
-    if (!GetImports(cx, importObj, module->imports(), &funcs, &memory))
+    if (!GetImports(cx, importObj, module->imports(), &funcs, &table, &memory))
         return false;
 
-    return module->instantiate(cx, funcs, memory, nullptr, instanceObj);
+    return module->instantiate(cx, funcs, table, memory, nullptr, instanceObj);
 }
 
 static bool
@@ -278,6 +283,9 @@ const Class WasmModuleObject::class_ =
 const JSPropertySpec WasmModuleObject::properties[] =
 { JS_PS_END };
 
+const JSFunctionSpec WasmModuleObject::methods[] =
+{ JS_FS_END };
+
 /* static */ void
 WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 {
@@ -292,7 +300,7 @@ WasmModuleObject::create(ExclusiveContext* cx, Module& module, HandleObject prot
     if (!obj)
         return nullptr;
 
-    obj->initReservedSlot(MODULE_SLOT, PrivateValue((void*)&module));
+    obj->initReservedSlot(MODULE_SLOT, PrivateValue(&module));
     module.AddRef();
     return obj;
 }
@@ -409,6 +417,9 @@ const Class WasmInstanceObject::class_ =
 const JSPropertySpec WasmInstanceObject::properties[] =
 { JS_PS_END };
 
+const JSFunctionSpec WasmInstanceObject::methods[] =
+{ JS_FS_END };
+
 bool
 WasmInstanceObject::isNewborn() const
 {
@@ -486,13 +497,14 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
+    RootedWasmTableObject table(cx);
     RootedWasmMemoryObject memory(cx);
-    if (!GetImports(cx, importObj, module.imports(), &funcs, &memory))
+    if (!GetImports(cx, importObj, module.imports(), &funcs, &table, &memory))
         return false;
 
     RootedObject instanceProto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
     RootedWasmInstanceObject instanceObj(cx);
-    if (!module.instantiate(cx, funcs, memory, instanceProto, &instanceObj))
+    if (!module.instantiate(cx, funcs, table, memory, instanceProto, &instanceObj))
         return false;
 
     args.rval().setObject(*instanceObj);
@@ -675,6 +687,9 @@ const JSPropertySpec WasmMemoryObject::properties[] =
     JS_PS_END
 };
 
+const JSFunctionSpec WasmMemoryObject::methods[] =
+{ JS_FS_END };
+
 ArrayBufferObjectMaybeShared&
 WasmMemoryObject::buffer() const
 {
@@ -684,13 +699,7 @@ WasmMemoryObject::buffer() const
 // ============================================================================
 // WebAssembly.Table class and methods
 
-static void
-WasmTableObject_finalize(FreeOp* fop, JSObject* obj)
-{
-    obj->as<WasmTableObject>().table().Release();
-}
-
-static const ClassOps WasmTableObject_classOps =
+const ClassOps WasmTableObject::classOps_ =
 {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
@@ -699,7 +708,11 @@ static const ClassOps WasmTableObject_classOps =
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    WasmTableObject_finalize
+    WasmTableObject::finalize,
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    WasmTableObject::trace
 };
 
 const Class WasmTableObject::class_ =
@@ -707,8 +720,25 @@ const Class WasmTableObject::class_ =
     "WebAssembly.Table",
     JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS),
-    &WasmTableObject_classOps
+    &WasmTableObject::classOps_
 };
+
+/* static */ void
+WasmTableObject::finalize(FreeOp* fop, JSObject* obj)
+{
+    WasmTableObject& tableObj = obj->as<WasmTableObject>();
+    tableObj.table().Release();
+    if (tableObj.initialized())
+        fop->delete_(&tableObj.instanceVector());
+}
+
+/* static */ void
+WasmTableObject::trace(JSTracer* trc, JSObject* obj)
+{
+    WasmTableObject& tableObj = obj->as<WasmTableObject>();
+    if (tableObj.initialized())
+        tableObj.instanceVector().trace(trc);
+}
 
 /* static */ WasmTableObject*
 WasmTableObject::create(JSContext* cx, Table& table)
@@ -720,9 +750,34 @@ WasmTableObject::create(JSContext* cx, Table& table)
     if (!obj)
         return nullptr;
 
-    obj->initReservedSlot(TABLE_SLOT, PrivateValue((void*)&table));
     table.AddRef();
+    obj->initReservedSlot(TABLE_SLOT, PrivateValue(&table));
+
+    MOZ_ASSERT(!obj->initialized());
     return obj;
+}
+
+bool
+WasmTableObject::initialized() const
+{
+    return !getReservedSlot(INSTANCE_VECTOR_SLOT).isUndefined();
+}
+
+bool
+WasmTableObject::init(JSContext* cx, HandleWasmInstanceObject instanceObj)
+{
+    MOZ_ASSERT(!initialized());
+
+    auto instanceVector = MakeUnique<InstanceVector>();
+    if (!instanceVector || !instanceVector->appendN(instanceObj.get(), table().length())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    initReservedSlot(INSTANCE_VECTOR_SLOT, PrivateValue(instanceVector.release()));
+
+    MOZ_ASSERT(initialized());
+    return true;
 }
 
 /* static */ bool
@@ -760,7 +815,10 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    SharedTable table = Table::create(cx, TableKind::AnyFunction, uint32_t(initialDbl));
+    uint32_t initial = uint32_t(initialDbl);
+    MOZ_ASSERT(double(initial) == initialDbl);
+
+    SharedTable table = Table::create(cx, TableKind::AnyFunction, initial);
     if (!table)
         return false;
 
@@ -778,30 +836,101 @@ IsTable(HandleValue v)
     return v.isObject() && v.toObject().is<WasmTableObject>();
 }
 
-static bool
-TableLengthGetterImpl(JSContext* cx, const CallArgs& args)
+/* static */ bool
+WasmTableObject::lengthGetterImpl(JSContext* cx, const CallArgs& args)
 {
     args.rval().setNumber(args.thisv().toObject().as<WasmTableObject>().table().length());
     return true;
 }
 
-static bool
-TableLengthGetter(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WasmTableObject::lengthGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsTable, TableLengthGetterImpl>(cx, args);
+    return CallNonGenericMethod<IsTable, lengthGetterImpl>(cx, args);
 }
 
 const JSPropertySpec WasmTableObject::properties[] =
 {
-    JS_PSG("length", TableLengthGetter, 0),
+    JS_PSG("length", WasmTableObject::lengthGetter, 0),
     JS_PS_END
+};
+
+/* static */ bool
+WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
+{
+    RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
+    const Table& table = tableObj->table();
+
+    double indexDbl;
+    if (!ToInteger(cx, args.get(0), &indexDbl))
+        return false;
+
+    if (indexDbl < 0 || indexDbl >= table.length()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+        return false;
+    }
+
+    uint32_t index = uint32_t(indexDbl);
+    MOZ_ASSERT(double(index) == indexDbl);
+
+    if (!tableObj->initialized()) {
+        args.rval().setNull();
+        return true;
+    }
+
+    const InstanceVector& instanceVector = tableObj->instanceVector();
+    MOZ_ASSERT(instanceVector.length() == table.length());
+
+    RootedWasmInstanceObject instanceObj(cx, instanceVector[index]);
+    const CodeRange* codeRange = instanceObj->instance().lookupCodeRange(table.array()[index]);
+
+    // A non-function code range means the bad-indirect-call stub, so a null element.
+    if (!codeRange || !codeRange->isFunction()) {
+        args.rval().setNull();
+        return true;
+    }
+
+    RootedFunction fun(cx);
+    if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange->funcIndex(), &fun))
+        return false;
+
+    args.rval().setObject(*fun);
+    return true;
+}
+
+/* static */ bool
+WasmTableObject::get(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsTable, getImpl>(cx, args);
+}
+
+const JSFunctionSpec WasmTableObject::methods[] =
+{
+    JS_FN("get", WasmTableObject::get, 1, 0),
+    JS_FS_END
 };
 
 Table&
 WasmTableObject::table() const
 {
     return *(Table*)getReservedSlot(TABLE_SLOT).toPrivate();
+}
+
+WasmTableObject::InstanceVector&
+WasmTableObject::instanceVector() const
+{
+    MOZ_ASSERT(initialized());
+    return *(InstanceVector*)getReservedSlot(INSTANCE_VECTOR_SLOT).toPrivate();
+}
+
+void
+WasmTableObject::setInstance(uint32_t index, HandleWasmInstanceObject instanceObj)
+{
+    MOZ_ASSERT(initialized());
+    MOZ_ASSERT(instanceObj->instance().codeSegment().containsCodePC(table().array()[index]));
+    instanceVector()[index] = instanceObj;
 }
 
 // ============================================================================
@@ -839,7 +968,7 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
     if (!proto)
         return false;
 
-    if (!JS_DefineProperties(cx, proto, Class::properties))
+    if (!DefinePropertiesAndFunctions(cx, proto, Class::properties, Class::methods))
         return false;
 
     RootedAtom className(cx, Atomize(cx, name, strlen(name)));
