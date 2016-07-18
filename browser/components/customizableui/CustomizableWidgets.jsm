@@ -504,11 +504,9 @@ const CustomizableWidgets = [
     shortcutId: "key_privatebrowsing",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(e) {
-      if (e.target && e.target.ownerDocument && e.target.ownerDocument.defaultView) {
-        let win = e.target.ownerDocument.defaultView;
-        if (typeof win.OpenBrowserWindow == "function") {
-          win.OpenBrowserWindow({private: true});
-        }
+      let win = e.target && e.target.ownerGlobal;
+      if (win && typeof win.OpenBrowserWindow == "function") {
+        win.OpenBrowserWindow({private: true});
       }
     }
   }, {
@@ -518,8 +516,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
+                aEvent.target.ownerGlobal;
       if (win && typeof win.saveBrowser == "function") {
         win.saveBrowser(win.gBrowser.selectedBrowser);
       }
@@ -531,8 +528,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
+                aEvent.target.ownerGlobal;
       if (win && win.gFindBar) {
         win.gFindBar.onFindCommand();
       }
@@ -544,8 +540,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target
-                && aEvent.target.ownerDocument
-                && aEvent.target.ownerDocument.defaultView;
+                && aEvent.target.ownerGlobal;
       if (win && typeof win.BrowserOpenFileWindow == "function") {
         win.BrowserOpenFileWindow();
       }
@@ -623,8 +618,7 @@ const CustomizableWidgets = [
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
+                aEvent.target.ownerGlobal;
       if (win && typeof win.BrowserOpenAddonsMgr == "function") {
         win.BrowserOpenAddonsMgr();
       }
@@ -900,7 +894,7 @@ const CustomizableWidgets = [
     tooltiptext: "feed-button.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
     onClick: function(aEvent) {
-      let win = aEvent.target.ownerDocument.defaultView;
+      let win = aEvent.target.ownerGlobal;
       let feeds = win.gBrowser.selectedBrowser.feeds;
 
       // Here, we only care about the case where we have exactly 1 feed and the
@@ -926,7 +920,7 @@ const CustomizableWidgets = [
       }
     },
     onCreated: function(node) {
-      let win = node.ownerDocument.defaultView;
+      let win = node.ownerGlobal;
       let selectedBrowser = win.gBrowser.selectedBrowser;
       let feeds = selectedBrowser && selectedBrowser.feeds;
       if (!feeds || !feeds.length) {
@@ -1027,7 +1021,7 @@ const CustomizableWidgets = [
         return;
       }
 
-      let window = node.ownerDocument.defaultView;
+      let window = node.ownerGlobal;
       let section = node.section;
       let value = node.value;
 
@@ -1161,8 +1155,7 @@ let preferencesButton = {
   defaultArea: CustomizableUI.AREA_PANEL,
   onCommand: function(aEvent) {
     let win = aEvent.target &&
-              aEvent.target.ownerDocument &&
-              aEvent.target.ownerDocument.defaultView;
+              aEvent.target.ownerGlobal;
     if (win && typeof win.openPreferences == "function") {
       win.openPreferences();
     }

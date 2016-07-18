@@ -107,7 +107,7 @@ FormSubmitObserver.prototype =
     // Insure that this is the FormSubmitObserver associated with the
     // element / window this notification is about.
     let element = aInvalidElements.queryElementAt(0, Ci.nsISupports);
-    if (this._content != element.ownerDocument.defaultView.top.document.defaultView) {
+    if (this._content != element.ownerGlobal.top.document.defaultView) {
       return;
     }
 
@@ -201,7 +201,7 @@ FormSubmitObserver.prototype =
         (aElement.type == 'radio' || aElement.type == 'checkbox')) {
       panelData.position = "bottomcenter topleft";
     } else {
-      let win = aElement.ownerDocument.defaultView;
+      let win = aElement.ownerGlobal;
       let style = win.getComputedStyle(aElement, null);
       if (style.direction == 'rtl') {
         offset = parseInt(style.paddingRight) + parseInt(style.borderRightWidth);

@@ -95,7 +95,7 @@ window.onload = Task.async(function* () {
 
   function testMoreThanMaxProps() {
     const stub = Array(302).fill("foo");
-    const defaultOutput = `["foo", "foo", "foo", more...]`;
+    const defaultOutput = `["foo", "foo", "foo", more…]`;
 
     const modeTests = [
       {
@@ -112,7 +112,7 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "long",
-        expectedOutput: `[${Array(300).fill("\"foo\"").join(", ")}, more...]`,
+        expectedOutput: `[${Array(300).fill("\"foo\"").join(", ")}, more…]`,
       }
     ];
 
@@ -122,7 +122,7 @@ window.onload = Task.async(function* () {
   function testRecursiveArray() {
     let stub = [1];
     stub.push(stub);
-    const defaultOutput = `[1, [...]]`;
+    const defaultOutput = `[1, […]]`;
 
     const modeTests = [
       {
@@ -155,7 +155,7 @@ window.onload = Task.async(function* () {
         p4: "s4"
       }
     ];
-    const defaultOutput = `[Object{p1: "s1", p3: "s3", p4: "s4", more...}]`;
+    const defaultOutput = `[Object{p1: "s1", p3: "s3", p4: "s4", more…}]`;
 
     const modeTests = [
       {

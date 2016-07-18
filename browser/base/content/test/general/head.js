@@ -698,7 +698,7 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   let identityBox = gIdentityHandler._identityBox;
   let classList = identityBox.classList;
   let connectionIcon = doc.getElementById("connection-icon");
-  let connectionIconImage = tabbrowser.ownerGlobal.getComputedStyle(connectionIcon, "").
+  let connectionIconImage = tabbrowser.ownerGlobal.getComputedStyle(connectionIcon).
                          getPropertyValue("list-style-image");
 
   let stateSecure = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
@@ -775,9 +775,9 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   // Make sure the correct icon is visible in the Control Center.
   // This logic is controlled with CSS, so this helps prevent regressions there.
   let securityView = doc.getElementById("identity-popup-securityView");
-  let securityViewBG = tabbrowser.ownerGlobal.getComputedStyle(securityView, "").
+  let securityViewBG = tabbrowser.ownerGlobal.getComputedStyle(securityView).
                        getPropertyValue("background-image");
-  let securityContentBG = tabbrowser.ownerGlobal.getComputedStyle(securityView, "").
+  let securityContentBG = tabbrowser.ownerGlobal.getComputedStyle(securityView).
                           getPropertyValue("background-image");
 
   if (stateInsecure) {
@@ -831,7 +831,7 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
 }
 
 function is_hidden(element) {
-  var style = element.ownerDocument.defaultView.getComputedStyle(element, "");
+  var style = element.ownerGlobal.getComputedStyle(element);
   if (style.display == "none")
     return true;
   if (style.visibility != "visible")
@@ -847,7 +847,7 @@ function is_hidden(element) {
 }
 
 function is_visible(element) {
-  var style = element.ownerDocument.defaultView.getComputedStyle(element, "");
+  var style = element.ownerGlobal.getComputedStyle(element);
   if (style.display == "none")
     return false;
   if (style.visibility != "visible")
@@ -897,7 +897,7 @@ function promisePopupHidden(popup) {
 }
 
 function promiseNotificationShown(notification) {
-  let win = notification.browser.ownerDocument.defaultView;
+  let win = notification.browser.ownerGlobal;
   if (win.PopupNotifications.panel.state == "open") {
     return Promise.resolve();
   }

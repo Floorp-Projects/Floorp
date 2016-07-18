@@ -1,6 +1,4 @@
 // Test that the onPromiseSettled hook gets called when a promise settles.
-if (!('Promise' in this))
-    quit(0);
 
 var g = newGlobal();
 var dbg = new Debugger();
@@ -13,15 +11,15 @@ dbg.onPromiseSettled = pw_ => {
   log += "s";
 };
 
-let p = new g.Promise(function (){});
-g.settlePromiseNow(p);
+let p = g.makeFakePromise();
+g.settleFakePromise(p);
 
 assertEq(log, "s");
 assertEq(pw, gw.makeDebuggeeValue(p));
 
 log = "";
 dbg.enabled = false;
-p = new g.Promise(function (){});
-g.settlePromiseNow(p);
+p = g.makeFakePromise();
+g.settleFakePromise(p);
 
 assertEq(log, "");

@@ -118,7 +118,7 @@ var TabStateInternal = {
 
     // Store the tab icon.
     if (!("image" in tabData)) {
-      let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
+      let tabbrowser = tab.ownerGlobal.gBrowser;
       tabData.image = tabbrowser.getIcon(tab);
     }
 

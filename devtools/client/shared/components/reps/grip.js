@@ -74,7 +74,7 @@ define(function (require, exports, module) {
 
       if (props.length <= max) {
         // There are not enough props yet (or at least, not enough props to
-        // be able to know whether we should print "more..." or not).
+        // be able to know whether we should print "more…" or not).
         // Let's display also empty members and functions.
         props = props.concat(this.getProps(object, max, (t, value) => {
           return !isInterestingProp(t, value);
@@ -83,7 +83,7 @@ define(function (require, exports, module) {
 
       // getProps() can return max+1 properties (it can't return more)
       // to indicate that there is more props than allowed. Remove the last
-      // one and append 'more...' postfix in such case.
+      // one and append 'more…' postfix in such case.
       if (props.length > max) {
         props.pop();
 
@@ -93,7 +93,7 @@ define(function (require, exports, module) {
           key: "more",
           object: objectLink({
             object: object
-          }, "more...")
+          }, "more…")
         }));
       } else if (props.length > 0) {
         // Remove the last comma.

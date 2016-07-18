@@ -1,6 +1,7 @@
 --max-version 1.9.9 constants-and-properties.html
 --min-version 1.0.2 context-attribute-preserve-drawing-buffer.html
 context-attributes-alpha-depth-stencil-antialias.html
+--min-version 1.0.4 context-size-change.html
 --min-version 1.0.2 --slow context-creation-and-destruction.html
 --min-version 1.0.3 --slow context-creation.html
 --min-version 1.0.3 --slow context-eviction-with-garbage-collection.html
@@ -14,4 +15,4 @@ incorrect-context-object-behaviour.html
 --max-version 1.9.9 methods.html
 premultiplyalpha-test.html
 resource-sharing-test.html
-
+--min-version 1.0.4 user-defined-properties-on-context.html

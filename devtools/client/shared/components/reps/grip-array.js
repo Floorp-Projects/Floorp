@@ -94,7 +94,7 @@ define(function (require, exports, module) {
           key: "more",
           object: objectLink({
             object: this.props.object
-          }, "more...")
+          }, "more…")
         }));
       }
 
@@ -174,7 +174,7 @@ define(function (require, exports, module) {
     render: function () {
       return (
         span({title: "Circular reference"},
-          "[...]"
+          "[…]"
         )
       );
     }

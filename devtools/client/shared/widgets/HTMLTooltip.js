@@ -114,17 +114,24 @@ function (anchorRect, viewportRect, height, pos, offset) {
  *        space should not be used by tooltips (for instance OS toolbars, taskbars etc.).
  * @param {Number} width
  *        Preferred width for the tooltip.
+ * @param {String} type
+ *        The tooltip type (e.g. "arrow").
+ * @param {Number} offset
+ *        Horizontal offset in pixels.
+ * @param {Boolean} isRtl
+ *        If the anchor is in RTL, the tooltip should be aligned to the right.
  * @return {Object}
  *         - {Number} left: the left offset for the tooltip.
  *         - {Number} width: the width to use for the tooltip container.
  *         - {Number} arrowLeft: the left offset to use for the arrow element.
  */
 const calculateHorizontalPosition =
-function (anchorRect, viewportRect, width, type, offset) {
-  let {left: anchorLeft, width: anchorWidth} = anchorRect;
+function (anchorRect, viewportRect, width, type, offset, isRtl) {
+  let anchorWidth = anchorRect.width;
+  let anchorStart = isRtl ? anchorRect.right : anchorRect.left;
 
   // Translate to the available viewport space before calculating dimensions and position.
-  anchorLeft -= viewportRect.left;
+  anchorStart -= viewportRect.left;
 
   // Calculate WIDTH.
   width = Math.min(width, viewportRect.width);
@@ -132,14 +139,16 @@ function (anchorRect, viewportRect, width, type, offset) {
   // Calculate LEFT.
   // By default the tooltip is aligned with the anchor left edge. Unless this
   // makes it overflow the viewport, in which case is shifts to the left.
-  let left = Math.min(anchorLeft + offset, viewportRect.width - width);
+  let left = anchorStart + offset - (isRtl ? width : 0);
+  left = Math.min(left, viewportRect.width - width);
+  left = Math.max(0, left);
 
   // Calculate ARROW LEFT (tooltip's LEFT might be updated)
   let arrowLeft;
   // Arrow style tooltips may need to be shifted to the left
   if (type === TYPE.ARROW) {
     let arrowCenter = left + ARROW_OFFSET + ARROW_WIDTH / 2;
-    let anchorCenter = anchorLeft + anchorWidth / 2;
+    let anchorCenter = anchorStart + anchorWidth / 2;
     // If the anchor is too narrow, align the arrow and the anchor center.
     if (arrowCenter > anchorCenter) {
       left = Math.max(0, left - (arrowCenter - anchorCenter));
@@ -147,7 +156,7 @@ function (anchorRect, viewportRect, width, type, offset) {
     // Arrow's left offset relative to the anchor.
     arrowLeft = Math.min(ARROW_OFFSET, (anchorWidth - ARROW_WIDTH) / 2) | 0;
     // Translate the coordinate to tooltip container
-    arrowLeft += anchorLeft - left;
+    arrowLeft += anchorStart - left;
     // Make sure the arrow remains in the tooltip container.
     arrowLeft = Math.min(arrowLeft, width - ARROW_WIDTH);
     arrowLeft = Math.max(arrowLeft, 0);
@@ -347,8 +356,10 @@ HTMLTooltip.prototype = {
       preferredWidth = this.preferredWidth + themeWidth;
     }
 
-    let {left, width, arrowLeft} =
-      calculateHorizontalPosition(anchorRect, viewportRect, preferredWidth, this.type, x);
+    let anchorWin = anchor.ownerDocument.defaultView;
+    let isRtl = anchorWin.getComputedStyle(anchor).direction === "rtl";
+    let {left, width, arrowLeft} = calculateHorizontalPosition(
+      anchorRect, viewportRect, preferredWidth, this.type, x, isRtl);
 
     this.container.style.width = width + "px";
 
@@ -491,7 +502,8 @@ HTMLTooltip.prototype = {
     }
 
     this.hide();
-    if (this.consumeOutsideClicks) {
+    if (this.consumeOutsideClicks && e.button === 0) {
+      // Consume only left click events (button === 0).
       e.preventDefault();
       e.stopPropagation();
     }

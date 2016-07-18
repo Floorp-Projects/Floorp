@@ -587,7 +587,7 @@ nsContextMenu.prototype = {
 
   inspectNode: function() {
     let {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    let gBrowser = this.browser.ownerDocument.defaultView.gBrowser;
+    let gBrowser = this.browser.ownerGlobal.gBrowser;
     let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
 
     return gDevTools.showToolbox(target, "inspector").then(toolbox => {

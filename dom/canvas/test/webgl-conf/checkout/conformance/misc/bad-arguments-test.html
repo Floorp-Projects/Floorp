@@ -30,8 +30,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -42,16 +42,6 @@
 var wtu = WebGLTestUtils;
 description("Tests calling WebGL APIs with wrong argument types");
 
-var context = wtu.create3DContext();
-var program = wtu.loadStandardProgram(context);
-var shader = wtu.loadStandardVertexShader(context);
-var shouldGenerateGLError = wtu.shouldGenerateGLError;
-
-assertMsg(program != null, "Program Compiled");
-assertMsg(shader != null, "Shader Compiled");
-
-var loc = context.getUniformLocation(program, "u_modelViewProjMatrix");
-assertMsg(loc != null, "getUniformLocation succeeded");
 
 var testArguments = [
   { value: "foo",
@@ -66,53 +56,66 @@ var testArguments = [
 
 var argument;
 
-function shouldBeEmptyString(command) {
-  shouldBe(command, "''");
-}
+var context = wtu.create3DContext();
+var program;
+var shader;
+var loc;
+wtu.loadStandardProgramAsync(context, function(success, prog) {
+  program = prog;
+  wtu.loadStandardVertexShaderAsync(context, function(success, s) {
+    shader = s;
 
-for (var i = 0; i < testArguments.length; ++i) {
-  var func, func2;
-  if (testArguments[i].throws) {
-    func = shouldThrow;
-    func2 = shouldThrow;
-  } else {
-    func = shouldBeUndefined;
-    func2 = shouldBeNull;
-  }
-  argument = testArguments[i].value;
-  func("context.compileShader(argument)");
-  func("context.linkProgram(argument)");
-  func("context.attachShader(program, argument)");
-  func("context.attachShader(argument, shader)");
-  func("context.detachShader(program, argument)");
-  func("context.detachShader(argument, shader)");
-  func("context.useProgram(argument)");
-  func("context.shaderSource(argument, 'foo')");
-  func("context.bindAttribLocation(argument, 0, 'foo')");
-  func("context.bindBuffer(context.ARRAY_BUFFER, argument)");
-  func("context.bindFramebuffer(context.FRAMEBUFFER, argument)");
-  func("context.bindRenderbuffer(context.RENDERBUFFER, argument)");
-  func("context.bindTexture(context.TEXTURE_2D, argument)");
-  func("context.framebufferRenderbuffer(context.FRAMEBUFFER, context.DEPTH_ATTACHMENT, context.RENDERBUFFER, argument)");
-  func("context.framebufferTexture2D(context.FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_2D, argument, 0)");
-  func("context.uniform2fv(argument, new Float32Array([0.0, 0.0]))");
-  func("context.uniform2iv(argument, new Int32Array([0, 0]))");
-  func("context.uniformMatrix2fv(argument, false, new Float32Array([0.0, 0.0, 0.0, 0.0]))");
+    assertMsg(program != null, "Program Compiled");
+    assertMsg(shader != null, "Shader Compiled");
 
-  func2("context.getProgramInfoLog(argument)");
-  func2("context.getProgramParameter(argument, 0)");
-  func2("context.getShaderInfoLog(argument)");
-  func2("context.getShaderParameter(argument, 0)");
-  func2("context.getShaderSource(argument)");
-  func2("context.getUniform(argument, loc)");
-  func2("context.getUniform(program, argument)");
-  func2("context.getUniformLocation(argument, 'u_modelViewProjMatrix')");
+    loc = context.getUniformLocation(program, "u_modelViewProjMatrix");
+    assertMsg(loc != null, "getUniformLocation succeeded");
 
-}
+    for (var i = 0; i < testArguments.length; ++i) {
+      var func, func2;
+      if (testArguments[i].throws) {
+        func = shouldThrow;
+        func2 = shouldThrow;
+      } else {
+        func = shouldBeUndefined;
+        func2 = shouldBeNull;
+      }
+      argument = testArguments[i].value;
+      func("context.compileShader(argument)");
+      func("context.linkProgram(argument)");
+      func("context.attachShader(program, argument)");
+      func("context.attachShader(argument, shader)");
+      func("context.detachShader(program, argument)");
+      func("context.detachShader(argument, shader)");
+      func("context.useProgram(argument)");
+      func("context.shaderSource(argument, 'foo')");
+      func("context.bindAttribLocation(argument, 0, 'foo')");
+      func("context.bindBuffer(context.ARRAY_BUFFER, argument)");
+      func("context.bindFramebuffer(context.FRAMEBUFFER, argument)");
+      func("context.bindRenderbuffer(context.RENDERBUFFER, argument)");
+      func("context.bindTexture(context.TEXTURE_2D, argument)");
+      func("context.framebufferRenderbuffer(context.FRAMEBUFFER, context.DEPTH_ATTACHMENT, context.RENDERBUFFER, argument)");
+      func("context.framebufferTexture2D(context.FRAMEBUFFER, context.COLOR_ATTACHMENT0, context.TEXTURE_2D, argument, 0)");
+      func("context.uniform2fv(argument, new Float32Array([0.0, 0.0]))");
+      func("context.uniform2iv(argument, new Int32Array([0, 0]))");
+      func("context.uniformMatrix2fv(argument, false, new Float32Array([0.0, 0.0, 0.0, 0.0]))");
+
+      func2("context.getProgramInfoLog(argument)");
+      func2("context.getProgramParameter(argument, 0)");
+      func2("context.getShaderInfoLog(argument)");
+      func2("context.getShaderParameter(argument, 0)");
+      func2("context.getShaderSource(argument)");
+      func2("context.getUniform(argument, loc)");
+      func2("context.getUniform(program, argument)");
+      func2("context.getUniformLocation(argument, 'u_modelViewProjMatrix')");
+
+    }
+  });
+});
 
 var successfullyParsed = true;
 </script>
 
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>
