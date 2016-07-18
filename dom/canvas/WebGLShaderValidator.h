@@ -48,9 +48,6 @@ public:
     bool FindAttribUserNameByMappedName(const std::string& mappedName,
                                         const std::string** const out_userName) const;
 
-    bool FindActiveOutputMappedNameByUserName(const std::string& userName,
-                                              const std::string** const out_mappedName) const;
-
     bool FindAttribMappedNameByUserName(const std::string& userName,
                                         const std::string** const out_mappedName) const;
 
