@@ -1161,15 +1161,6 @@ nsNPAPIPluginInstance::GetScrollCaptureContainer(ImageContainer**aContainer)
   AutoPluginLibraryCall library(this);
   return !library ? NS_ERROR_FAILURE : library->GetScrollCaptureContainer(&mNPP, aContainer);
 }
-nsresult
-nsNPAPIPluginInstance::UpdateScrollState(bool aIsScrolling)
-{
-  if (RUNNING != mRunning)
-    return NS_OK;
-
-  AutoPluginLibraryCall library(this);
-  return !library ? NS_ERROR_FAILURE : library->UpdateScrollState(&mNPP, aIsScrolling);
-}
 #endif
 
 nsresult
