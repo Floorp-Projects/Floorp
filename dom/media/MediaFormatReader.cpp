@@ -1015,7 +1015,7 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
     decoder.mNumSamplesInput++;
     decoder.mSizeOfQueue++;
     if (aTrack == TrackInfo::kVideoTrack) {
-      aA.mParsed++;
+      aA.mStats.mParsedFrames++;
     }
 
     if (mDemuxOnly) {
@@ -1192,7 +1192,7 @@ MediaFormatReader::Update(TrackType aTrack)
       if (aTrack == TrackType::kVideoTrack) {
         uint64_t delta =
           decoder.mNumSamplesOutputTotal - mLastReportedNumDecodedFrames;
-        a.mDecoded = static_cast<uint32_t>(delta);
+        a.mStats.mDecodedFrames = static_cast<uint32_t>(delta);
         mLastReportedNumDecodedFrames = decoder.mNumSamplesOutputTotal;
         nsCString error;
         mVideo.mIsHardwareAccelerated =
@@ -1491,7 +1491,7 @@ MediaFormatReader::DropDecodedSamples(TrackType aTrack)
   decoder.mOutput.Clear();
   decoder.mSizeOfQueue -= lengthDecodedQueue;
   if (aTrack == TrackInfo::kVideoTrack && mDecoder) {
-    mDecoder->NotifyDecodedFrames(0, 0, lengthDecodedQueue);
+    mDecoder->NotifyDecodedFrames({ 0, 0, lengthDecodedQueue });
   }
 }
 
@@ -1527,7 +1527,7 @@ MediaFormatReader::VideoSkipReset(uint32_t aSkipped)
   DropDecodedSamples(TrackInfo::kVideoTrack);
   // Report the pending frames as dropped.
   if (mDecoder) {
-    mDecoder->NotifyDecodedFrames(0, 0, SizeOfVideoQueueInFrames());
+    mDecoder->NotifyDecodedFrames({ 0, 0, SizeOfVideoQueueInFrames() });
   }
 
   // Cancel any pending demux request and pending demuxed samples.
@@ -1535,7 +1535,7 @@ MediaFormatReader::VideoSkipReset(uint32_t aSkipped)
   Reset(TrackType::kVideoTrack);
 
   if (mDecoder) {
-    mDecoder->NotifyDecodedFrames(aSkipped, 0, aSkipped);
+    mDecoder->NotifyDecodedFrames({ aSkipped, 0, aSkipped });
   }
 
   mVideo.mNumSamplesSkippedTotal += aSkipped;
