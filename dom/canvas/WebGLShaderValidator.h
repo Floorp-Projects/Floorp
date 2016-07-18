@@ -66,6 +66,7 @@ public:
     bool FindUniformBlockByMappedName(const std::string& mappedName,
                                       std::string* const out_userName) const;
 
+    void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 };
 
 } // namespace webgl

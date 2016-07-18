@@ -66,6 +66,8 @@ public:
                                       nsCString* const out_userName,
                                       bool* const out_isArray) const;
 
+    void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
+
     bool IsCompiled() const {
         return mTranslationSuccessful && mCompilationSuccessful;
     }
