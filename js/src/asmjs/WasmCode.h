@@ -115,7 +115,10 @@ typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A FuncExport represents a single function inside a wasm Module that has been
-// exported one or more times.
+// exported one or more times. A FuncExport represents an internal entry point
+// that can be called via function-index by Instance::callExport(). To allow
+// O(log(n)) lookup of a FuncExport by function-index, the FuncExportVector
+// is stored sorted by function index.
 
 class FuncExport
 {
@@ -418,7 +421,7 @@ class MetadataCacheablePod
     static const uint32_t NO_START_FUNCTION = UINT32_MAX;
     static_assert(NO_START_FUNCTION > MaxFuncs, "sentinel value");
 
-    uint32_t              startFuncExportIndex_;
+    uint32_t              startFuncIndex_;
 
   public:
     ModuleKind            kind;
@@ -428,20 +431,20 @@ class MetadataCacheablePod
 
     MetadataCacheablePod() {
         mozilla::PodZero(this);
-        startFuncExportIndex_ = NO_START_FUNCTION;
+        startFuncIndex_ = NO_START_FUNCTION;
     }
 
     bool hasStartFunction() const {
-        return startFuncExportIndex_ != NO_START_FUNCTION;
+        return startFuncIndex_ != NO_START_FUNCTION;
     }
-    void initStartFuncExportIndex(uint32_t i) {
+    void initStartFuncIndex(uint32_t i) {
         MOZ_ASSERT(!hasStartFunction());
-        startFuncExportIndex_ = i;
+        startFuncIndex_ = i;
         MOZ_ASSERT(hasStartFunction());
     }
-    uint32_t startFuncExportIndex() const {
+    uint32_t startFuncIndex() const {
         MOZ_ASSERT(hasStartFunction());
-        return startFuncExportIndex_;
+        return startFuncIndex_;
     }
 };
 
@@ -466,6 +469,8 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
+
+    const FuncExport& lookupFuncExport(uint32_t funcIndex) const;
 
     // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
     // encapsulated within AsmJS.cpp, but the additional virtual functions allow

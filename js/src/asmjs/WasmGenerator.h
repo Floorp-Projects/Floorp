@@ -89,7 +89,7 @@ typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
 
 class MOZ_STACK_CLASS ModuleGenerator
 {
-    typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> FuncIndexMap;
+    typedef HashSet<uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> Uint32Set;
     typedef Vector<IonCompileTask, 0, SystemAllocPolicy> IonCompileTaskVector;
     typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskPtrVector;
 
@@ -112,7 +112,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::TempAllocator              masmAlloc_;
     jit::MacroAssembler             masm_;
     Uint32Vector                    funcIndexToCodeRange_;
-    FuncIndexMap                    funcIndexToFuncExportIndex_;
+    Uint32Set                       exportedFuncs_;
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedBranches_;
     JumpSiteArray                   jumpThunks_;
@@ -133,6 +133,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     const CodeRange& funcCodeRange(uint32_t funcIndex) const;
     MOZ_MUST_USE bool convertOutOfRangeBranchesToThunks();
     MOZ_MUST_USE bool finishTask(IonCompileTask* task);
+    MOZ_MUST_USE bool finishFuncExports();
     MOZ_MUST_USE bool finishCodegen();
     MOZ_MUST_USE bool finishLinkData(Bytes& code);
     MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
@@ -173,11 +174,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     const FuncImportGenDesc& funcImport(uint32_t funcImportIndex) const;
 
     // Exports:
-    MOZ_MUST_USE bool addFuncExport(UniqueChars fieldName, uint32_t funcIndex,
-                                    uint32_t* funcExportIndex = nullptr);
+    MOZ_MUST_USE bool addFuncExport(UniqueChars fieldName, uint32_t funcIndex);
     MOZ_MUST_USE bool addTableExport(UniqueChars fieldName);
     MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
-    uint32_t numExports() const;
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
