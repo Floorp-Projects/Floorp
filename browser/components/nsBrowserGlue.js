@@ -125,14 +125,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
 
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashHandler",
                                   "resource:///modules/ContentCrashHandlers.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
                                     "resource:///modules/ContentCrashHandlers.jsm");
   XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
                                     "resource://gre/modules/CrashSubmit.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                    "resource://gre/modules/PluralForm.jsm");
-
 }
 
 XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
@@ -2482,8 +2481,12 @@ BrowserGlue.prototype = {
       } else {
         title = bundle.GetStringFromName("tabsArrivingNotification.title");
         const tabArrivingBody = URIs.every(URI => URI.clientId == URIs[0].clientId) ?
-                                "tabsArrivingNotification.body" : "tabsArrivingNotificationMultiple.body";
-        body = bundle.formatStringFromName(tabArrivingBody, [URIs.length, deviceName], 2);
+                                "unnamedTabsArrivingNotification.body" :
+                                "unnamedTabsArrivingNotificationMultiple.body";
+        body = bundle.GetStringFromName(tabArrivingBody);
+        body = PluralForm.get(URIs.length, body);
+        body = body.replace("#1", URIs.length);
+        body = body.replace("#2", deviceName);
       }
 
       const clickCallback = (subject, topic, data) => {
