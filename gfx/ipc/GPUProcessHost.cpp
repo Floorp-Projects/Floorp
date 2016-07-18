@@ -19,7 +19,8 @@ GPUProcessHost::GPUProcessHost(Listener* aListener)
    mTaskFactory(this),
    mLaunchPhase(LaunchPhase::Unlaunched),
    mProcessToken(0),
-   mShutdownRequested(false)
+   mShutdownRequested(false),
+   mChannelClosed(false)
 {
   MOZ_COUNT_CTOR(GPUProcessHost);
 }
@@ -148,14 +149,22 @@ GPUProcessHost::Shutdown()
     mShutdownRequested = true;
 
 #ifdef NS_FREE_PERMANENT_DATA
-    mGPUChild->Close();
+    // The channel might already be closed if we got here unexpectedly.
+    if (!mChannelClosed) {
+      mGPUChild->Close();
+    }
 #else
     // No need to communicate shutdown, the GPU process doesn't need to
     // communicate anything back.
     KillHard("NormalShutdown");
 #endif
 
-    // Wait for ActorDestroy.
+    // If we're shutting down unexpectedly, we're in the middle of handling an
+    // ActorDestroy for PGPUChild, which is still on the stack. We'll return
+    // back to OnChannelClosed.
+    //
+    // Otherwise, we'll wait for OnChannelClose to be called whenever PGPUChild
+    // acknowledges shutdown.
     return;
   }
 
@@ -167,6 +176,7 @@ GPUProcessHost::OnChannelClosed()
 {
   if (!mShutdownRequested) {
     // This is an unclean shutdown. Notify our listener that we're going away.
+    mChannelClosed = true;
     if (mListener) {
       mListener->OnProcessUnexpectedShutdown(this);
     }
