@@ -684,7 +684,7 @@ Servo_DropStyleSet(RawServoStyleSet* set)
 }
 
 ServoDeclarationBlock*
-Servo_ParseStyleAttribute(const uint8_t* bytes, uint8_t length,
+Servo_ParseStyleAttribute(const uint8_t* bytes, uint32_t length,
                           nsHTMLCSSStyleSheet* cache)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_ParseStyleAttribute in a "

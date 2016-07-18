@@ -217,7 +217,7 @@ void Servo_DropStyleSet(RawServoStyleSet* set);
 
 // Style attributes.
 ServoDeclarationBlock* Servo_ParseStyleAttribute(const uint8_t* bytes,
-                                                 uint8_t length,
+                                                 uint32_t length,
                                                  nsHTMLCSSStyleSheet* cache);
 void Servo_DropDeclarationBlock(ServoDeclarationBlock* declarations);
 nsHTMLCSSStyleSheet* Servo_GetDeclarationBlockCache(
