@@ -18,6 +18,7 @@ GPUProcessHost::GPUProcessHost(Listener* aListener)
    mListener(aListener),
    mTaskFactory(this),
    mLaunchPhase(LaunchPhase::Unlaunched),
+   mProcessToken(0),
    mShutdownRequested(false)
 {
   MOZ_COUNT_CTOR(GPUProcessHost);
@@ -109,6 +110,8 @@ GPUProcessHost::OnChannelErrorTask()
   }
 }
 
+static uint64_t sProcessTokenCounter = 0;
+
 void
 GPUProcessHost::InitAfterConnect(bool aSucceeded)
 {
@@ -118,6 +121,7 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
   mLaunchPhase = LaunchPhase::Complete;
 
   if (aSucceeded) {
+    mProcessToken = ++sProcessTokenCounter;
     mGPUChild = MakeUnique<GPUChild>(this);
     DebugOnly<bool> rv =
       mGPUChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
@@ -192,6 +196,12 @@ GPUProcessHost::KillHard(const char* aReason)
   SetAlreadyDead();
   XRE_GetIOMessageLoop()->PostTask(
     NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated, handle, /*force=*/true));
+}
+
+uint64_t
+GPUProcessHost::GetProcessToken() const
+{
+  return mProcessToken;
 }
 
 static void

@@ -1,12 +1,12 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUProcessManager.h"
 #include "GPUProcessHost.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/layers/InProcessCompositorSession.h"
+#include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -36,7 +36,8 @@ GPUProcessManager::Shutdown()
 }
 
 GPUProcessManager::GPUProcessManager()
- : mNextLayerTreeId(0),
+ : mTaskFactory(this),
+   mNextLayerTreeId(0),
    mProcess(nullptr),
    mGPUChild(nullptr)
 {
@@ -128,6 +129,7 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   }
 
   mGPUChild = mProcess->GetActor();
+  mProcessToken = mProcess->GetProcessToken();
 }
 
 void
@@ -139,6 +141,29 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
 }
 
 void
+GPUProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
+{
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = mTaskFactory.NewRunnableMethod(
+      &GPUProcessManager::NotifyRemoteActorDestroyed, aProcessToken);
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+
+  if (mProcessToken != aProcessToken) {
+    // This token is for an older process; we can safely ignore it.
+    return;
+  }
+
+  // One of the bridged top-level actors for the GPU process has been
+  // prematurely terminated, and we're receiving a notification. This
+  // can happen if the ActorDestroy for a bridged protocol fires
+  // before the ActorDestroy for PGPUChild.
+  MOZ_ASSERT(mProcess);
+  DestroyProcess();
+}
+
+void
 GPUProcessManager::DestroyProcess()
 {
   if (!mProcess) {
@@ -146,6 +171,7 @@ GPUProcessManager::DestroyProcess()
   }
 
   mProcess->Shutdown();
+  mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
 }
