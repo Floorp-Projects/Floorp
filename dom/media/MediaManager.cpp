@@ -1393,10 +1393,8 @@ public:
   }
 
   void
-  Fail(const nsAString& aName,
-       const nsAString& aMessage = EmptyString(),
-       const nsAString& aConstraint = EmptyString()) {
-    RefPtr<MediaMgrError> error = new MediaMgrError(aName, aMessage, aConstraint);
+  Fail(const nsAString& aName, const nsAString& aMessage = EmptyString()) {
+    RefPtr<MediaMgrError> error = new MediaMgrError(aName, aMessage);
     RefPtr<ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>> runnable =
       new ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>(mOnSuccess,
                                                                    mOnFailure,
@@ -1423,54 +1421,29 @@ public:
     // a GetUserMediaStreamRunnable.
 
     nsresult rv;
-    const char* errorMsg = nullptr;
-    const char* badConstraint = nullptr;
 
     if (mAudioDevice) {
-      auto& constraints = GetInvariant(mConstraints.mAudio);
-      rv = mAudioDevice->Allocate(constraints, mPrefs, mOrigin);
+      rv = mAudioDevice->Allocate(GetInvariant(mConstraints.mAudio),
+                                  mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
-        errorMsg = "Failed to allocate audiosource";
-        if (rv == NS_ERROR_NOT_AVAILABLE) {
-          nsTArray<RefPtr<AudioDevice>> audios;
-          audios.AppendElement(mAudioDevice);
-          badConstraint = MediaConstraintsHelper::SelectSettings(constraints,
-                                                                 audios);
-        }
+        LOG(("Failed to allocate audiosource %d",rv));
+        Fail(NS_LITERAL_STRING("NotReadableError"),
+             NS_LITERAL_STRING("Failed to allocate audiosource"));
+        return NS_OK;
       }
     }
-    if (!errorMsg && mVideoDevice) {
-      auto& constraints = GetInvariant(mConstraints.mVideo);
-      rv = mVideoDevice->Allocate(constraints, mPrefs, mOrigin);
+    if (mVideoDevice) {
+      rv = mVideoDevice->Allocate(GetInvariant(mConstraints.mVideo),
+                                  mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
-        errorMsg = "Failed to allocate videosource";
-        if (rv == NS_ERROR_NOT_AVAILABLE) {
-          nsTArray<RefPtr<VideoDevice>> videos;
-          videos.AppendElement(mVideoDevice);
-          badConstraint = MediaConstraintsHelper::SelectSettings(constraints,
-                                                                 videos);
-        }
+        LOG(("Failed to allocate videosource %d\n",rv));
         if (mAudioDevice) {
           mAudioDevice->Deallocate();
         }
+        Fail(NS_LITERAL_STRING("NotReadableError"),
+             NS_LITERAL_STRING("Failed to allocate videosource"));
+        return NS_OK;
       }
-    }
-    if (errorMsg) {
-      LOG(("%s %d", errorMsg, rv));
-      switch (rv) {
-        case NS_ERROR_NOT_AVAILABLE: {
-          MOZ_ASSERT(badConstraint);
-          Fail(NS_LITERAL_STRING("OverconstrainedError"),
-               NS_LITERAL_STRING(""),
-               NS_ConvertUTF8toUTF16(badConstraint));
-          break;
-        }
-        default:
-          Fail(NS_LITERAL_STRING("NotReadableError"),
-               NS_ConvertUTF8toUTF16(errorMsg));
-          break;
-      }
-      return NS_OK;
     }
     PeerIdentity* peerIdentity = nullptr;
     if (!mConstraints.mPeerIdentity.IsEmpty()) {
