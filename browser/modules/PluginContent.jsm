@@ -247,7 +247,7 @@ PluginContent.prototype = {
       return false;
     }
 
-    let contentWindow = plugin.ownerDocument.defaultView;
+    let contentWindow = plugin.ownerGlobal;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -526,7 +526,7 @@ PluginContent.prototype = {
 
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-    let principal = objLoadingContent.ownerDocument.defaultView.top.document.nodePrincipal;
+    let principal = objLoadingContent.ownerGlobal.top.document.nodePrincipal;
     let pluginPermission = Services.perms.testPermissionFromPrincipal(principal, permissionString);
 
     let isFallbackTypeValid =
@@ -612,7 +612,7 @@ PluginContent.prototype = {
   onOverlayClick: function (event) {
     let document = event.target.ownerDocument;
     let plugin = document.getBindingParent(event.target);
-    let contentWindow = plugin.ownerDocument.defaultView.top;
+    let contentWindow = plugin.ownerGlobal.top;
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let overlay = this.getPluginUI(plugin, "main");
     // Have to check that the target is not the link to update the plugin

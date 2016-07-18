@@ -347,7 +347,7 @@ var ProcessHangMonitor = {
   },
 
   handleEvent: function(event) {
-    let win = event.target.ownerDocument.defaultView;
+    let win = event.target.ownerGlobal;
 
     // If a new tab is selected or if a tab changes remoteness, then
     // we may need to show or hide a hang notification.

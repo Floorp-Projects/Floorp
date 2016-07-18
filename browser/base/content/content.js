@@ -204,7 +204,7 @@ var showContentContextMenu = function (event) {
     // commands on the context menu.
     docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
             .setCommandNode(event.target);
-    event.target.ownerDocument.defaultView.updateCommands("contentcontextmenu");
+    event.target.ownerGlobal.updateCommands("contentcontextmenu");
 
     let customMenuItems = PageMenuChild.build(event.target);
     let principal = doc.nodePrincipal;
@@ -219,7 +219,7 @@ var showContentContextMenu = function (event) {
   else {
     // Break out to the parent window and pass the add-on info along
     let browser = docShell.chromeEventHandler;
-    let mainWin = browser.ownerDocument.defaultView;
+    let mainWin = browser.ownerGlobal;
     mainWin.gContextMenuContentData = {
       isRemote: false,
       event: event,
@@ -915,7 +915,7 @@ var LightWeightThemeWebInstallListener = {
           baseURI: event.target.baseURI,
           themeData: event.target.getAttribute("data-browsertheme"),
         });
-        this._previewWindow = event.target.ownerDocument.defaultView;
+        this._previewWindow = event.target.ownerGlobal;
         this._previewWindow.addEventListener("pagehide", this, true);
         break;
       }
@@ -1170,7 +1170,7 @@ var PageInfoListener = {
   getMediaItems: function(document, strings, elem)
   {
     // Check for images defined in CSS (e.g. background, borders)
-    let computedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
+    let computedStyle = elem.ownerGlobal.getComputedStyle(elem);
     // A node can have multiple media items associated with it - for example,
     // multiple background images.
     let mediaItems = [];
