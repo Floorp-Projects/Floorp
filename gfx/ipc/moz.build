@@ -21,6 +21,7 @@ EXPORTS.mozilla.gfx += [
 EXPORTS.mozilla.layers += [
     'CompositorSession.h',
     'InProcessCompositorSession.h',
+    'RemoteCompositorSession.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -42,6 +43,7 @@ UNIFIED_SOURCES += [
     'GPUProcessImpl.cpp',
     'GPUProcessManager.cpp',
     'InProcessCompositorSession.cpp',
+    'RemoteCompositorSession.cpp',
     'SharedDIB.cpp',
 ]
 

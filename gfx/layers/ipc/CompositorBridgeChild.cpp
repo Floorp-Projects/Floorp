@@ -15,6 +15,7 @@
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/TextureClient.h"// for TextureClient
 #include "mozilla/layers/TextureClientPool.h"// for TextureClientPool
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -126,6 +127,8 @@ CompositorBridgeChild::Destroy()
   SendWillClose();
   mCanSend = false;
 
+  // We no longer care about unexpected shutdowns, in the remote process case.
+  mProcessToken = 0;
 
   // The call just made to SendWillClose can result in IPC from the
   // CompositorBridgeParent to the CompositorBridgeChild (e.g. caused by the destruction
@@ -207,6 +210,21 @@ CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
 
   mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId, aUseAPZ);
   return mCompositorBridgeParent;
+}
+
+/* static */ RefPtr<CompositorBridgeChild>
+CompositorBridgeChild::CreateRemote(const uint64_t& aProcessToken,
+                                    ClientLayerManager* aLayerManager,
+                                    Endpoint<PCompositorBridgeChild>&& aEndpoint)
+{
+  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
+  if (!aEndpoint.Bind(child, nullptr)) {
+    return nullptr;
+  }
+
+  child->mCanSend = true;
+  child->mProcessToken = aProcessToken;
+  return child;
 }
 
 /*static*/ CompositorBridgeChild*
@@ -492,6 +510,10 @@ CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
     // There is nothing we can do in the child side, here sets mCanSend as false.
     mCanSend = false;
     gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
+  }
+
+  if (mProcessToken && XRE_IsParentProcess()) {
+    GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
   }
 }
 
@@ -983,7 +1005,7 @@ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aAc
 void
 CompositorBridgeChild::ProcessingError(Result aCode, const char* aReason)
 {
-  MOZ_CRASH("Processing error in CompositorBridgeChild");
+  MOZ_RELEASE_ASSERT(aCode == MsgDropped, "Processing error in CompositorBridgeChild");
 }
 
 } // namespace layers

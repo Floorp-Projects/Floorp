@@ -23,6 +23,11 @@ public:
 
   bool RecvInit(nsTArray<GfxPrefSetting>&& prefs) override;
   bool RecvUpdatePref(const GfxPrefSetting& pref) override;
+  bool RecvNewWidgetCompositor(
+    Endpoint<PCompositorBridgeParent>&& aEndpoint,
+    const CSSToLayoutDeviceScale& aScale,
+    const bool& aUseExternalSurface,
+    const IntSize& aSurfaceSize) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };
