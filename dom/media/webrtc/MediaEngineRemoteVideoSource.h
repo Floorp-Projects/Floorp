@@ -79,7 +79,7 @@ public:
   private:
     ~AllocationHandle() override {}
   public:
-    NormalizedConstraints mConstraints;
+    dom::MediaTrackConstraints mConstraints;
   };
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
