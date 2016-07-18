@@ -612,6 +612,9 @@ CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
   , mPluginWindowsHidden(false)
 #endif
 {
+  // Always run destructor on the main thread
+  MOZ_ASSERT(NS_IsMainThread());
+  SetMessageLoopToPostDestructionTo(MessageLoop::current());
 }
 
 void
@@ -624,6 +627,7 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
   if (aUseAPZ) {
     mApzcTreeManager = new APZCTreeManager();
   }
+  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 
   // IPDL initialization. mSelfRef is cleared in DeferredDestroy.
   SetOtherProcessId(base::GetCurrentProcId());
@@ -632,15 +636,30 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
   Initialize();
 }
 
+bool
+CompositorBridgeParent::Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint)
+{
+  if (!aEndpoint.Bind(this, nullptr)) {
+    return false;
+  }
+  mSelfRef = this;
+  return true;
+}
+
+bool
+CompositorBridgeParent::RecvInitialize(const uint64_t& aRootLayerTreeId)
+{
+  mRootLayerTreeID = aRootLayerTreeId;
+
+  Initialize();
+  return true;
+}
+
 void
 CompositorBridgeParent::Initialize()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CompositorThread(),
              "The compositor thread must be Initialized before instanciating a CompositorBridgeParent.");
-
-  // Always run destructor on the main thread
-  SetMessageLoopToPostDestructionTo(MessageLoop::current());
 
   mCompositorID = 0;
   // FIXME: This holds on the the fact that right now the only thing that
@@ -658,7 +677,6 @@ CompositorBridgeParent::Initialize()
     sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
   }
 
-  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   LayerScope::SetPixelScale(mScale.scale);
 }
 
@@ -1895,6 +1913,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // FIXME/bug 774388: work out what shutdown protocol we need.
+  virtual bool RecvInitialize(const uint64_t& aRootLayerTreeId) override { return false; }
   virtual bool RecvRequestOverfill() override { return true; }
   virtual bool RecvWillClose() override { return true; }
   virtual bool RecvPause() override { return true; }

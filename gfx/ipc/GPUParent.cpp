@@ -9,11 +9,14 @@
 #include "GPUProcessHost.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 
 namespace mozilla {
 namespace gfx {
 
 using namespace ipc;
+using namespace layers;
 
 GPUParent::GPUParent()
 {
@@ -34,7 +37,7 @@ GPUParent::Init(base::ProcessId aParentPid,
 
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
-
+  CompositorThreadHolder::Start();
   return true;
 }
 
@@ -57,6 +60,29 @@ GPUParent::RecvUpdatePref(const GfxPrefSetting& setting)
   return true;
 }
 
+static void
+OpenParent(RefPtr<CompositorBridgeParent> aParent,
+           Endpoint<PCompositorBridgeParent>&& aEndpoint)
+{
+  if (!aParent->Bind(Move(aEndpoint))) {
+    MOZ_CRASH("Failed to bind compositor");
+  }
+}
+
+bool
+GPUParent::RecvNewWidgetCompositor(Endpoint<layers::PCompositorBridgeParent>&& aEndpoint,
+                                   const CSSToLayoutDeviceScale& aScale,
+                                   const bool& aUseExternalSurfaceSize,
+                                   const IntSize& aSurfaceSize)
+{
+  RefPtr<CompositorBridgeParent> cbp =
+    new CompositorBridgeParent(aScale, aUseExternalSurfaceSize, aSurfaceSize);
+
+  MessageLoop* loop = CompositorThreadHolder::Loop();
+  loop->PostTask(NewRunnableFunction(OpenParent, cbp, Move(aEndpoint)));
+  return true;
+}
+
 void
 GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -70,9 +96,10 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   // state. Currently we quick-exit in RecvBeginShutdown so this should be
   // unreachable.
   ProcessChild::QuickExit();
-#else
-  XRE_ShutdownChildProcess();
 #endif
+
+  CompositorThreadHolder::Shutdown();
+  XRE_ShutdownChildProcess();
 }
 
 } // namespace gfx

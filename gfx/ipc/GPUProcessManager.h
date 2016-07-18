@@ -44,6 +44,8 @@ class GPUChild;
 class GPUProcessManager final : public GPUProcessHost::Listener
 {
   typedef layers::APZCTreeManager APZCTreeManager;
+  typedef layers::ClientLayerManager ClientLayerManager;
+  typedef layers::CompositorSession CompositorSession;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
 
 public:
@@ -61,9 +63,9 @@ public:
   // Otherwise it blocks until the GPU process has finished launching.
   void EnsureGPUReady();
 
-  RefPtr<layers::CompositorSession> CreateTopLevelCompositor(
+  RefPtr<CompositorSession> CreateTopLevelCompositor(
     nsIWidget* aWidget,
-    layers::ClientLayerManager* aLayerManager,
+    ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
     bool aUseExternalSurfaceSize,
@@ -128,6 +130,15 @@ private:
 
   // Shutdown the GPU process.
   void DestroyProcess();
+
+  RefPtr<CompositorSession> CreateRemoteSession(
+    nsIWidget* aWidget,
+    ClientLayerManager* aLayerManager,
+    const uint64_t& aRootLayerTreeId,
+    CSSToLayoutDeviceScale aScale,
+    bool aUseAPZ,
+    bool aUseExternalSurfaceSize,
+    const gfx::IntSize& aSurfaceSize);
 
   DISALLOW_COPY_AND_ASSIGN(GPUProcessManager);
 
