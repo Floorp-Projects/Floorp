@@ -77,6 +77,9 @@
 #include "ProfilerMarkers.h"
 #endif
 #include "mozilla/VsyncDispatcher.h"
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#include "VsyncSource.h"
+#endif
 #include "mozilla/widget/CompositorWidget.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 # include "mozilla/widget/CompositorWidgetParent.h"
@@ -156,6 +159,15 @@ CompositorBridgeParent::ForEachIndirectLayerTree(const Lambda& aCallback)
   */
 typedef map<uint64_t,CompositorBridgeParent*> CompositorMap;
 static StaticAutoPtr<CompositorMap> sCompositorMap;
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+static TimeDuration
+GetGlobalVsyncRate()
+{
+  return gfxPlatform::GetPlatform()->GetHardwareVsync()->
+           GetGlobalDisplay().GetVsyncRate();
+}
+#endif
 
 void
 CompositorBridgeParent::Setup()
@@ -1081,13 +1093,24 @@ CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstP
     bool aScheduleComposite, uint32_t aPaintSequenceNumber,
     bool aIsRepeatTransaction, bool aHitTestUpdate)
 {
-  if (mApzcTreeManager &&
-      !aIsRepeatTransaction &&
+  if (!aIsRepeatTransaction &&
       mLayerManager &&
       mLayerManager->GetRoot()) {
-    AutoResolveRefLayers resolve(mCompositionManager);
+    // Process plugin data here to give time for them to update before the next
+    // composition.
+    bool pluginsUpdatedFlag = true;
+    AutoResolveRefLayers resolve(mCompositionManager, this, nullptr,
+                                 &pluginsUpdatedFlag);
 
-    if (aHitTestUpdate) {
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+    // If plugins haven't been updated, stop waiting.
+    if (!pluginsUpdatedFlag) {
+      mWaitForPluginsUntil = TimeStamp();
+      mHaveBlockedForPlugins = false;
+    }
+#endif
+
+    if (mApzcTreeManager && aHitTestUpdate) {
       mApzcTreeManager->UpdateHitTestingTree(this, mLayerManager->GetRoot(),
           aIsFirstPaint, aId, aPaintSequenceNumber);
     }
@@ -1164,6 +1187,15 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     return;
   }
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  if (!mWaitForPluginsUntil.IsNull() &&
+      mWaitForPluginsUntil > start) {
+    mHaveBlockedForPlugins = true;
+    ScheduleComposition();
+    return;
+  }
+#endif
+
   /*
    * AutoResolveRefLayers handles two tasks related to Windows and Linux
    * plugin window management:
@@ -1216,6 +1248,14 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   bool requestNextFrame = mCompositionManager->TransformShadowTree(time);
   if (requestNextFrame) {
     ScheduleComposition();
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+    // If we have visible windowed plugins then we need to wait for content (and
+    // then the plugins) to have been updated by the active animation.
+    if (!mPluginWindowsHidden && mCachedPluginData.Length()) {
+      mWaitForPluginsUntil = mCompositorScheduler->GetLastComposeTime()
+                             + (GetGlobalVsyncRate() * 2);
+    }
+#endif
   }
 
   RenderTraceLayers(mLayerManager->GetRoot(), "0000");
@@ -1273,7 +1313,13 @@ bool
 CompositorBridgeParent::RecvRemotePluginsReady()
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  ScheduleComposition();
+  mWaitForPluginsUntil = TimeStamp();
+  if (mHaveBlockedForPlugins) {
+    mHaveBlockedForPlugins = false;
+    ForceComposeToTarget(nullptr);
+  } else {
+    ScheduleComposition();
+  }
   return true;
 #else
   NS_NOTREACHED("CompositorBridgeParent::RecvRemotePluginsReady calls "
@@ -2643,6 +2689,7 @@ CompositorBridgeParent::HideAllPluginWindows()
 
 #if defined(XP_WIN)
   // We will get an async reply that this has happened and then send hide.
+  mWaitForPluginsUntil = TimeStamp::Now() + GetGlobalVsyncRate();
   Unused << SendCaptureAllPlugins(parentWidget);
 #else
   Unused << SendHideAllPlugins(parentWidget);
@@ -2655,6 +2702,8 @@ bool
 CompositorBridgeParent::RecvAllPluginsCaptured()
 {
 #if defined(XP_WIN)
+  mWaitForPluginsUntil = TimeStamp();
+  mHaveBlockedForPlugins = false;
   ForceComposeToTarget(nullptr);
   Unused << SendHideAllPlugins(GetWidget()->GetWidgetKey());
   return true;

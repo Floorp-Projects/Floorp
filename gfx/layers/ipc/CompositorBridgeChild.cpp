@@ -419,9 +419,7 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
   // Any plugins we didn't update need to be hidden, as they are
   // not associated with visible content.
   nsIWidget::UpdateRegisteredPluginWindowVisibility((uintptr_t)parent, visiblePluginIds);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   SendRemotePluginsReady();
-#endif
   return true;
 #endif // !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
 }

@@ -635,6 +635,10 @@ protected:
   nsIntPoint mPluginsLayerOffset;
   nsIntRegion mPluginsLayerVisibleRegion;
   nsTArray<PluginWindowData> mCachedPluginData;
+  // Time until which we will block composition to wait for plugin updates.
+  TimeStamp mWaitForPluginsUntil;
+  // Indicates that we have actually blocked a composition waiting for plugins.
+  bool mHaveBlockedForPlugins = false;
   // indicates if plugin window visibility and metric updates are currently
   // being defered due to a scroll operation.
   bool mDeferPluginWindows;
