@@ -10,100 +10,78 @@
   'includes': [
     'libyuv.gypi',
   ],
-  # Make sure that if we are being compiled to an xcodeproj, nothing tries to
-  # include a .pch.
-  'xcode_settings': {
-    'GCC_PREFIX_HEADER': '',
-    'GCC_PRECOMPILE_PREFIX_HEADER': 'NO',
-  },
   'variables': {
     'use_system_libjpeg%': 0,
-    'libyuv_disable_jpeg%': 0,
-    # 'chromium_code' treats libyuv as internal and increases warning level.
-    'chromium_code': 1,
-    # clang compiler default variable usable by other apps that include libyuv.
-    'clang%': 0,
-    # Link-Time Optimizations.
-    'use_lto%': 0,
     'yuv_disable_asm%': 0,
     'yuv_disable_avx2%': 0,
     'build_neon': 0,
     'conditions': [
-       ['(target_arch == "armv7" or target_arch == "armv7s" or \
-       (target_arch == "arm" and arm_version >= 7) or target_arch == "arm64")\
-       and (arm_neon == 1 or arm_neon_optional == 1)',
-       {
+       ['target_arch == "arm" and arm_version >= 7 and (arm_neon == 1 or arm_neon_optional == 1)', {
          'build_neon': 1,
        }],
     ],
   },
-
-  'targets': [
-    {
-      'target_name': 'libyuv',
-      # Change type to 'shared_library' to build .so or .dll files.
-      'type': 'static_library',
-      'variables': {
-        'optimize': 'max',  # enable O2 and ltcg.
-      },
-      # Allows libyuv.a redistributable library without external dependencies.
-      # 'standalone_static_library': 1,
-      'conditions': [
-       # Disable -Wunused-parameter
-        ['clang == 1', {
-          'cflags': [
-            '-Wno-unused-parameter',
-         ],
-        }],
-        ['build_neon != 0', {
+  'conditions': [
+    [ 'build_neon != 0', {
+      'targets': [
+        # The NEON-specific components.
+        {
+          'target_name': 'libyuv_neon',
+          'type': 'static_library',
+          'standalone_static_library': 1,
           'defines': [
             'LIBYUV_NEON',
           ],
+          # TODO(noahric): This should remove whatever mfpu is set, not
+          # just vfpv3-d16.
           'cflags!': [
             '-mfpu=vfp',
             '-mfpu=vfpv3',
             '-mfpu=vfpv3-d16',
-            # '-mthumb',  # arm32 not thumb
           ],
+          # XXX Doesn't work currently
           'cflags_mozilla!': [
             '-mfpu=vfp',
             '-mfpu=vfpv3',
             '-mfpu=vfpv3-d16',
           ],
-          'conditions': [
-            # Disable LTO in libyuv_neon target due to gcc 4.9 compiler bug.
-            ['clang == 0 and use_lto == 1', {
-              'cflags!': [
-                '-flto',
-                '-ffat-lto-objects',
-              ],
-            }],
-            # arm64 does not need -mfpu=neon option as neon is not optional
-            ['target_arch != "arm64"', {
-              'cflags': [
-                '-mfpu=neon',
-                # '-marm',  # arm32 not thumb
-              ],
-              'cflags_mozilla': [
-                '-mfpu=neon',
-              ],
-            }],
+          'cflags': [
+            '-mfpu=neon',
           ],
-        }],
-        [ 'yuv_disable_asm != 0', {
-          'defines': [
-            # Enable the following 3 macros to turn off assembly for specified CPU.
-            'LIBYUV_DISABLE_X86',
-            'LIBYUV_DISABLE_NEON',
-            'LIBYUV_DISABLE_MIPS',
+          'cflags_mozilla': [
+            '-mfpu=neon',
           ],
-        }],
-        [ 'yuv_disable_avx2 == 1', {
-          'defines': [
-            'LIBYUV_DISABLE_AVX2',
-          ]
-        }],
-        ['build_with_mozilla == 1', {
+          'include_dirs': [
+            'include',
+            '.',
+          ],
+          'direct_dependent_settings': {
+            'include_dirs': [
+              'include',
+              '.',
+            ],
+          },
+          'sources': [
+            # sources.
+            'source/compare_neon.cc',
+            'source/rotate_neon.cc',
+            'source/row_neon.cc',
+            'source/scale_neon.cc',
+          ],
+        },
+      ],
+    }],
+  ],
+  'targets': [
+    {
+      'target_name': 'libyuv',
+      # Change type to 'shared_library' to build .so or .dll files.
+      'type': 'static_library',
+      # Allows libyuv.a redistributable library without external dependencies.
+      # 'standalone_static_library': 1,
+      'conditions': [
+        # TODO(fbarchard): Use gyp define to enable jpeg.
+        [ 'build_with_mozilla==1', {
           'defines': [
             'HAVE_JPEG'
           ],
@@ -111,13 +89,13 @@
             '$(MOZ_JPEG_CFLAGS)',
           ],
         }],
-        ['OS != "ios" and libyuv_disable_jpeg != 1 and build_with_mozilla != 1', {
+        [ 'OS != "ios" and build_with_mozilla!=1', {
           'defines': [
             'HAVE_JPEG'
           ],
           'conditions': [
-            # Caveat system jpeg support may not support motion jpeg
-            [ 'use_system_libjpeg == 1', {
+            # Android uses libjpeg for system jpeg support.
+            [ 'OS == "android" and use_system_libjpeg == 1', {
               'dependencies': [
                  '<(DEPTH)/third_party/libjpeg/libjpeg.gyp:libjpeg',
               ],
@@ -135,7 +113,28 @@
             }],
           ],
         }],
-      ], #conditions
+        [ 'build_neon != 0', {
+          'dependencies': [
+            'libyuv_neon',
+          ],
+          'defines': [
+            'LIBYUV_NEON',
+          ]
+        }],
+        [ 'yuv_disable_asm!=0', {
+          'defines': [
+            # Enable the following 3 macros to turn off assembly for specified CPU.
+            'LIBYUV_DISABLE_X86',
+            'LIBYUV_DISABLE_NEON',
+            'LIBYUV_DISABLE_MIPS',
+          ],
+        }],
+        [ 'yuv_disable_avx2==1', {
+          'defines': [
+            'LIBYUV_DISABLE_AVX2',
+          ]
+        }],
+      ],
       'defines': [
         # Enable the following 3 macros to turn off assembly for specified CPU.
         # 'LIBYUV_DISABLE_X86',
@@ -145,7 +144,6 @@
         # 'LIBYUV_DISABLE_AVX2',
         # Enable the following macro to build libyuv as a shared library (dll).
         # 'LIBYUV_USING_SHARED_LIBRARY',
-        # TODO(fbarchard): Make these into gyp defines.
       ],
       'include_dirs': [
         'include',
@@ -156,18 +154,6 @@
           'include',
           '.',
         ],
-        'conditions': [
-          ['OS == "android" and target_arch == "arm64"', {
-            'ldflags': [
-              '-Wl,--dynamic-linker,/system/bin/linker64',
-            ],
-          }],
-          ['OS == "android" and target_arch != "arm64"', {
-            'ldflags': [
-              '-Wl,--dynamic-linker,/system/bin/linker',
-            ],
-          }],
-        ], #conditions
       },
       'sources': [
         '<@(libyuv_sources)',
