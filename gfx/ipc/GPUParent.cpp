@@ -83,6 +83,12 @@ GPUParent::RecvNewWidgetCompositor(Endpoint<layers::PCompositorBridgeParent>&& a
   return true;
 }
 
+bool
+GPUParent::RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint)
+{
+  return CompositorBridgeParent::CreateForContent(Move(aEndpoint));
+}
+
 void
 GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {

@@ -28,6 +28,7 @@ public:
     const CSSToLayoutDeviceScale& aScale,
     const bool& aUseExternalSurface,
     const IntSize& aSurfaceSize) override;
+  bool RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };

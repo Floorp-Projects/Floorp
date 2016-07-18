@@ -37,6 +37,9 @@ parent:
                             CSSToLayoutDeviceScale scale,
                             bool useExternalSurface,
                             IntSize surfaceSize);
+
+  // Create a new content-process compositor bridge.
+  async NewContentCompositorBridge(Endpoint<PCompositorBridgeParent> endpoint);
 };
 
 } // namespace gfx
