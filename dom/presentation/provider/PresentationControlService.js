@@ -28,10 +28,11 @@ function log(aMsg) {
   dump("-*- PresentationControlService.js: " + aMsg + "\n");
 }
 
-function TCPDeviceInfo(aAddress, aPort, aId) {
+function TCPDeviceInfo(aAddress, aPort, aId, aCertFingerprint) {
   this.address = aAddress;
   this.port = aPort;
   this.id = aId;
+  this.certFingerprint = aCertFingerprint || "";
 }
 
 function PresentationControlService() {
@@ -127,25 +128,48 @@ PresentationControlService.prototype = {
     }
     DEBUG && log("PresentationControlService - connect to " + aDeviceInfo.id); // jshint ignore:line
 
+    let socketTransport = this._attemptConnect(aDeviceInfo);
+    return new TCPControlChannel(this,
+                                 socketTransport,
+                                 aDeviceInfo,
+                                 "sender");
+  },
+
+  _attemptConnect: function(aDeviceInfo) {
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
                 .getService(Ci.nsISocketTransportService);
 
     let socketTransport;
     try {
-      socketTransport = sts.createTransport(null,
-                                            0,
-                                            aDeviceInfo.address,
-                                            aDeviceInfo.port,
-                                            null);
+      if (aDeviceInfo.certFingerprint) {
+        let overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+        overrideService.rememberTemporaryValidityOverrideUsingFingerprint(
+            aDeviceInfo.address,
+            aDeviceInfo.port,
+            aDeviceInfo.certFingerprint,
+            Ci.nsICertOverrideService.ERROR_UNTRUSTED | Ci.nsICertOverrideService.ERROR_MISMATCH);
+
+        socketTransport = sts.createTransport(["ssl"],
+                                              1,
+                                              aDeviceInfo.address,
+                                              aDeviceInfo.port,
+                                              null);
+      } else {
+        socketTransport = sts.createTransport(null,
+                                              0,
+                                              aDeviceInfo.address,
+                                              aDeviceInfo.port,
+                                              null);
+      }
+      // Shorten the connection failure procedure.
+      socketTransport.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 2);
     } catch (e) {
       DEBUG && log("PresentationControlService - createTransport throws: " + e);  // jshint ignore:line
       // Pop the exception to |TCPDevice.establishControlChannel|
       throw Cr.NS_ERROR_FAILURE;
     }
-    return new TCPControlChannel(this,
-                                 socketTransport,
-                                 aDeviceInfo,
-                                 "sender");
+    return socketTransport;
   },
 
   responseSession: function(aDeviceInfo, aSocketTransport) {

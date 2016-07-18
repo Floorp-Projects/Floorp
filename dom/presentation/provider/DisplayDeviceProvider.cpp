@@ -506,7 +506,8 @@ DisplayDeviceProvider::Connect(HDMIDisplayDevice* aDevice,
 
   nsCOMPtr<nsITCPDeviceInfo> deviceInfo = new TCPDeviceInfo(aDevice->Id(),
                                                             aDevice->Address(),
-                                                            mPort);
+                                                            mPort,
+                                                            EmptyCString());
 
   return mPresentationService->Connect(deviceInfo, aControlChannel);
 }
