@@ -95,18 +95,12 @@ public:
       Intersect(aOther);
 
       if (aOther.mIdeal.isSome()) {
-        // Ideal values, as stored, may be outside their min max range, so use
-        // clamped values in averaging, to avoid extreme outliers skewing results.
         if (mIdeal.isNothing()) {
-          mIdeal.emplace(aOther.Get(0));
+          mIdeal.emplace(aOther.mIdeal.value());
           mMergeDenominator = 1;
         } else {
-          if (!mMergeDenominator) {
-            *mIdeal = Get(0);
-            mMergeDenominator = 1;
-          }
-          *mIdeal += aOther.Get(0);
-          mMergeDenominator++;
+          *mIdeal += aOther.mIdeal.value();
+          mMergeDenominator = std::max(2U, mMergeDenominator + 1);
         }
       }
       return true;

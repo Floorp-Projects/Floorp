@@ -47,16 +47,15 @@ NormalizedConstraintSet::Range<bool>::Merge(const Range& aOther) {
 
   if (aOther.mIdeal.isSome()) {
     if (mIdeal.isNothing()) {
-      mIdeal.emplace(aOther.Get(false));
-      counter = aOther.Get(false);
+      mIdeal.emplace(aOther.mIdeal.value());
+      counter = aOther.mIdeal.value();
       denominator = 1;
     } else {
       if (!denominator) {
-        counter = Get(false);
-        denominator = 1;
+        counter = mIdeal.value();
       }
-      counter += aOther.Get(false);
-      denominator++;
+      counter += aOther.mIdeal.value();
+      denominator = std::max(2U, denominator + 1);
     }
   }
   mMergeDenominator = ((counter & 0xffff) << 16) + (denominator & 0xffff);
