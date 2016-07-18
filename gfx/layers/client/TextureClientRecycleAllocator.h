@@ -105,6 +105,8 @@ public:
 
   void ShrinkToMinimumSize();
 
+  void Destroy();
+
 protected:
   virtual already_AddRefed<TextureClient>
   Allocate(gfx::SurfaceFormat aFormat,
@@ -129,6 +131,7 @@ protected:
   // stack is good from Graphics cache usage point of view.
   std::stack<RefPtr<TextureClientHolder> > mPooledClients;
   Mutex mLock;
+  bool mIsDestroyed;
 };
 
 } // namespace layers
