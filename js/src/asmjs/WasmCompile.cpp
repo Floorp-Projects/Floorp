@@ -953,7 +953,7 @@ DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet
         if (!fieldName)
             return false;
 
-        return mg.declareFuncExport(Move(fieldName), funcIndex);
+        return mg.addFuncExport(Move(fieldName), funcIndex);
     }
 
     UniqueChars fieldName = DecodeExportName(d, dupSet);
@@ -976,7 +976,7 @@ DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet
         if (!CheckTypeForJS(d, mg.funcSig(funcIndex)))
             return false;
 
-        return mg.declareFuncExport(Move(fieldName), funcIndex);
+        return mg.addFuncExport(Move(fieldName), funcIndex);
       }
       case DefinitionKind::Table: {
         uint32_t tableIndex;

@@ -2059,7 +2059,7 @@ class MOZ_STACK_CLASS ModuleValidator
         // Declare which function is exported which gives us an index into the
         // module FuncExportVector.
         uint32_t funcExportIndex;
-        if (!mg_.declareFuncExport(Move(fieldChars), func.index(), &funcExportIndex))
+        if (!mg_.addFuncExport(Move(fieldChars), func.index(), &funcExportIndex))
             return false;
 
         // The exported function might have already been exported in which case
@@ -7806,20 +7806,20 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
 
 static bool
 TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata& metadata,
-               MutableHandleWasmInstanceObject instanceObj)
+               MutableHandleWasmInstanceObject instanceObj, MutableHandleObject exportObj)
 {
     HandleValue globalVal = args.get(0);
     HandleValue importVal = args.get(1);
     HandleValue bufferVal = args.get(2);
 
     RootedArrayBufferObjectMaybeShared buffer(cx);
-    RootedWasmMemoryObject memoryObj(cx);
+    RootedWasmMemoryObject memory(cx);
     if (module.metadata().usesMemory()) {
         if (!CheckBuffer(cx, metadata, bufferVal, &buffer))
             return false;
 
-        memoryObj = WasmMemoryObject::create(cx, buffer, nullptr);
-        if (!memoryObj)
+        memory = WasmMemoryObject::create(cx, buffer, nullptr);
+        if (!memory)
             return false;
     }
 
@@ -7872,18 +7872,21 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
         }
     }
 
-    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
+    Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
     for (const AsmJSImport& import : metadata.asmJSImports) {
-        if (!funcImports.append(ffis[import.ffiIndex()]))
+        if (!funcs.append(ffis[import.ffiIndex()]))
             return false;
     }
 
-    instanceObj.set(WasmInstanceObject::create(cx));
-    if (!instanceObj)
+    if (!module.instantiate(cx, funcs, memory, nullptr, instanceObj))
         return false;
 
-    if (!module.instantiate(cx, funcImports, memoryObj, instanceObj))
+    RootedValue exportObjVal(cx);
+    if (!JS_GetProperty(cx, instanceObj, InstanceExportField, &exportObjVal))
         return false;
+
+    MOZ_RELEASE_ASSERT(exportObjVal.isObject());
+    exportObj.set(&exportObjVal.toObject());
 
     // Now write the imported values into global data.
     uint8_t* globalData = instanceObj->instance().codeSegment().globalData();
@@ -7998,14 +8001,15 @@ InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
     const AsmJSMetadata& metadata = module.metadata().asAsmJS();
 
     RootedWasmInstanceObject instanceObj(cx);
-    if (!TryInstantiate(cx, args, module, metadata, &instanceObj)) {
+    RootedObject exportObj(cx);
+    if (!TryInstantiate(cx, args, module, metadata, &instanceObj, &exportObj)) {
         // Link-time validation checks failed, so reparse the entire asm.js
         // module from scratch to get normal interpreted bytecode which we can
         // simply Invoke. Very slow.
         return HandleInstantiationFailure(cx, args, metadata);
     }
 
-    args.rval().set(ObjectValue(instanceObj->exportsObject()));
+    args.rval().set(ObjectValue(*exportObj));
     return true;
 }
 
