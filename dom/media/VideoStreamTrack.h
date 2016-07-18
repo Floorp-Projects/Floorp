@@ -16,9 +16,8 @@ class VideoStreamTrack : public MediaStreamTrack {
 public:
   VideoStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
                    TrackID aInputTrackID,
-                   MediaStreamTrackSource* aSource,
-                   const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
-    : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource, aConstraints) {}
+                   MediaStreamTrackSource* aSource)
+    : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource) {}
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -36,8 +35,7 @@ protected:
     return do_AddRef(new VideoStreamTrack(aOwningStream,
                                           aTrackID,
                                           mInputTrackID,
-                                          mSource,
-                                          mConstraints));
+                                          mSource));
   }
 };
 

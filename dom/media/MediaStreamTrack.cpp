@@ -110,14 +110,12 @@ protected:
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
                                    TrackID aInputTrackID,
-                                   MediaStreamTrackSource* aSource,
-                                   const MediaTrackConstraints& aConstraints)
+                                   MediaStreamTrackSource* aSource)
   : mOwningStream(aStream), mTrackID(aTrackID),
     mInputTrackID(aInputTrackID), mSource(aSource),
     mPrincipal(aSource->GetPrincipal()),
     mReadyState(MediaStreamTrackState::Live),
-    mEnabled(true), mRemote(aSource->IsRemote()),
-    mConstraints(aConstraints)
+    mEnabled(true), mRemote(aSource->IsRemote())
 {
 
   if (!gMediaStreamTrackLog) {
