@@ -2243,6 +2243,8 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
     sFirstIdleTask->Cancel();
   }
 
+  nsHostObjectProtocolHandler::RemoveDataEntries();
+
   mAlertObservers.Clear();
 
   mIdleObservers.Clear();
