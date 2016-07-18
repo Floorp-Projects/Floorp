@@ -377,7 +377,6 @@ prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
 
-    parent opens PCompositorBridge;
     parent opens PProcessHangMonitor;
     parent opens PSharedBufferManager;
     parent opens PImageBridge;
@@ -464,6 +463,9 @@ both:
                                      uint64_t aOuterWindowID);
 
 child:
+    // Give the content process its endpoint to the compositor.
+    async InitCompositor(Endpoint<PCompositorBridgeChild> compositor);
+
     /**
      * Enable system-level sandboxing features, if available.  Can
      * usually only be performed zero or one times.  The child may

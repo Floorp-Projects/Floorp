@@ -59,12 +59,9 @@ public:
   bool LookupCompositorFrameMetrics(const FrameMetrics::ViewID aId, FrameMetrics&);
 
   /**
-   * We're asked to create a new Compositor in response to an Opens()
-   * or Bridge() request from our parent process.  The Transport is to
-   * the compositor's context.
+   * Initialize the singleton compositor bridge for a content process.
    */
-  static PCompositorBridgeChild*
-  Create(Transport* aTransport, ProcessId aOtherProcess);
+  static bool InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint);
 
   static RefPtr<CompositorBridgeChild> CreateRemote(
     const uint64_t& aProcessToken,

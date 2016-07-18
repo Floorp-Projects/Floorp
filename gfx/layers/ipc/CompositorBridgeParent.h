@@ -412,8 +412,8 @@ public:
    * A new child process has been configured to push transactions
    * directly to us.  Transport is to its thread context.
    */
-  static PCompositorBridgeParent*
-  Create(Transport* aTransport, ProcessId aOtherProcess);
+  static bool
+  CreateForContent(Endpoint<PCompositorBridgeParent>&& aEndpoint);
 
   struct LayerTreeState {
     LayerTreeState();
