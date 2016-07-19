@@ -1023,49 +1023,114 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 /* ::::: fullscreen window controls ::::: */
 
-#window-controls {
-  margin-inline-start: 4px;
-}
-
 #minimize-button,
 #restore-button,
 #close-button {
-  list-style-image: url("chrome://global/skin/icons/windowControls.png");
-  padding: 0;
+  -moz-appearance: none;
+  border: none;
+  margin: 0 !important;
+  padding: 6px 12px;
 }
 
 #minimize-button {
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-#minimize-button:hover {
-  -moz-image-region: rect(16px, 16px, 32px, 0);
-}
-#minimize-button:hover:active {
-  -moz-image-region: rect(32px, 16px, 48px, 0);
-}
-#restore-button {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-#restore-button:hover {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
-#restore-button:hover:active {
-  -moz-image-region: rect(32px, 32px, 48px, 16px);
-}
-#close-button {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-  -moz-appearance: none;
-  border-style: none;
-  margin: 2px;
-}
-#close-button:hover {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
-}
-#close-button:hover:active {
-  -moz-image-region: rect(32px, 48px, 48px, 32px);
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
 }
 
-@media not all and (-moz-os-version: windows-xp) {
+#restore-button {
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
+}
+
+#minimize-button:hover,
+#restore-button:hover {
+  background-color: hsla(0, 0%, 0%, .12);
+}
+
+#minimize-button:hover:active,
+#restore-button:hover:active {
+  background-color: hsla(0, 0%, 0%, .22);
+}
+
+#close-button {
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
+}
+
+#close-button:hover {
+  background-color: hsl(355, 86%, 49%);
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+}
+
+#close-button:hover:active {
+  background-color: hsl(355, 82%, 69%);
+}
+
+toolbar[brighttext] #minimize-button {
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-white);
+}
+
+toolbar[brighttext] #restore-button {
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-white);
+}
+
+toolbar[brighttext] #close-button {
+  list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+}
+
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  #window-controls {
+    margin-inline-start: 4px;
+  }
+
+  #minimize-button,
+  #restore-button,
+  #close-button {
+    list-style-image: url("chrome://global/skin/icons/windowControls.png");
+    padding: 0;
+  }
+
+  #minimize-button {
+    -moz-image-region: rect(0, 16px, 16px, 0);
+  }
+
+  #minimize-button:hover {
+    -moz-image-region: rect(16px, 16px, 32px, 0);
+  }
+
+  #minimize-button:hover:active {
+    -moz-image-region: rect(32px, 16px, 48px, 0);
+  }
+
+  #restore-button {
+    -moz-image-region: rect(0, 32px, 16px, 16px);
+  }
+
+  #restore-button:hover {
+    -moz-image-region: rect(16px, 32px, 32px, 16px);
+  }
+
+  #restore-button:hover:active {
+    -moz-image-region: rect(32px, 32px, 48px, 16px);
+  }
+
+  #close-button {
+    -moz-image-region: rect(0, 48px, 16px, 32px);
+    -moz-appearance: none;
+    border-style: none;
+    margin: 2px;
+  }
+
+  #close-button:hover {
+    -moz-image-region: rect(16px, 48px, 32px, 32px);
+  }
+
+  #close-button:hover:active {
+    -moz-image-region: rect(32px, 48px, 48px, 32px);
+  }
+}
+
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
   #window-controls {
     -moz-box-align: start;
   }
@@ -1077,12 +1142,15 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
     border-style: none;
     margin: 0;
   }
+
   #close-button {
     -moz-image-region: rect(0, 49px, 16px, 32px);
   }
+
   #close-button:hover {
     -moz-image-region: rect(16px, 49px, 32px, 32px);
   }
+
   #close-button:hover:active {
     -moz-image-region: rect(32px, 49px, 48px, 32px);
   }
