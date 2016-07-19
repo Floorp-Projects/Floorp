@@ -11,6 +11,7 @@ EXPORTS.mozilla.mscom += [
     'InterceptorLog.h',
     'MainThreadRuntime.h',
     'ProxyStream.h',
+    'Ptr.h',
     'Registration.h',
     'Utils.h',
 ]
