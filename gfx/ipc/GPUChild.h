@@ -6,8 +6,9 @@
 #ifndef _include_mozilla_gfx_ipc_GPUChild_h_
 #define _include_mozilla_gfx_ipc_GPUChild_h_
 
-#include "mozilla/gfx/PGPUChild.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/PGPUChild.h"
 
 namespace mozilla {
 namespace gfx {

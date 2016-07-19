@@ -14,6 +14,8 @@
 # include "mozilla/widget/CompositorWidgetChild.h"
 #endif
 #include "nsContentUtils.h"
+#include "VsyncBridgeChild.h"
+#include "VsyncIOThreadHolder.h"
 
 namespace mozilla {
 namespace gfx {
@@ -84,7 +86,7 @@ GPUProcessManager::OnXPCOMShutdown()
     mObserver = nullptr;
   }
 
-  DestroyProcess();
+  CleanShutdown();
 }
 
 void
@@ -93,6 +95,9 @@ GPUProcessManager::EnableGPUProcess()
   if (mProcess) {
     return;
   }
+
+  // Start the Vsync I/O thread so can use it as soon as the process launches.
+  EnsureVsyncIOThread();
 
   // The subprocess is launched asynchronously, so we wait for a callback to
   // acquire the IPDL actor.
@@ -109,6 +114,7 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
   gfxCriticalNote << aMessage;
 
   DestroyProcess();
+  ShutdownVsyncIOThread();
 }
 
 void
@@ -136,6 +142,21 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 
   mGPUChild = mProcess->GetActor();
   mProcessToken = mProcess->GetProcessToken();
+
+  Endpoint<PVsyncBridgeParent> vsyncParent;
+  Endpoint<PVsyncBridgeChild> vsyncChild;
+  nsresult rv = PVsyncBridge::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &vsyncParent,
+    &vsyncChild);
+  if (NS_FAILED(rv)) {
+    DisableGPUProcess("Failed to create PVsyncBridge endpoints");
+    return;
+  }
+
+  mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
+  mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
 }
 
 void
@@ -169,6 +190,19 @@ GPUProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
 }
 
 void
+GPUProcessManager::CleanShutdown()
+{
+  if (!mProcess) {
+    return;
+  }
+
+#ifdef NS_FREE_PERMANENT_DATA
+  mVsyncBridge->Close();
+#endif
+  DestroyProcess();
+}
+
+void
 GPUProcessManager::DestroyProcess()
 {
   if (!mProcess) {
@@ -179,6 +213,7 @@ GPUProcessManager::DestroyProcess()
   mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
+  mVsyncBridge = nullptr;
 }
 
 RefPtr<CompositorSession>
@@ -356,6 +391,23 @@ GPUProcessManager::UpdateRemoteContentController(uint64_t aLayersId,
     aContentParent,
     aTabId,
     aBrowserParent);
+}
+
+void
+GPUProcessManager::EnsureVsyncIOThread()
+{
+  if (mVsyncIOThread) {
+    return;
+  }
+
+  mVsyncIOThread = new VsyncIOThreadHolder();
+  MOZ_RELEASE_ASSERT(mVsyncIOThread->Start());
+}
+
+void
+GPUProcessManager::ShutdownVsyncIOThread()
+{
+  mVsyncIOThread = nullptr;
 }
 
 } // namespace gfx
