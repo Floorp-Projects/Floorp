@@ -53,6 +53,13 @@ assertEq(call(5), 2);
 assertErrorMessage(() => call(6), Error, /bad wasm indirect call/);
 assertErrorMessage(() => call(10), Error, /out-of-range/);
 
+var tbl = new Table({initial:3});
+var call = evalText(`(module (import "a" "b" (table 2)) (export "tbl" table) (elem 0 $f0 $f1) ${callee(0)} ${callee(1)} ${caller})`, {a:{b:tbl}}).exports.call;
+assertEq(call(0), 0);
+assertEq(call(1), 1);
+assertEq(tbl.get(0)(), 0);
+assertEq(tbl.get(1)(), 1);
+
 // A table should not hold exported functions alive and exported functions
 // should not hold their originating table alive. Live exported functions should
 // hold instances alive. Nothing should hold the export object alive.

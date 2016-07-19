@@ -100,6 +100,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     LinkData                        linkData_;
     MutableMetadata                 metadata_;
     ExportVector                    exports_;
+    ImportVector                    imports_;
     DataSegmentVector               dataSegments_;
     ElemSegmentVector               elemSegments_;
 
@@ -116,7 +117,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedBranches_;
     JumpSiteArray                   jumpThunks_;
-    bool                            tableExported_;
+    bool                            externalTable_;
 
     // Parallel compilation
     bool                            parallel_;
@@ -141,7 +142,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
 
   public:
-    explicit ModuleGenerator();
+    explicit ModuleGenerator(ImportVector&& imports);
     ~ModuleGenerator();
 
     MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared, CompileArgs&& args,
@@ -207,7 +208,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Finish compilation, provided the list of imports and source bytecode.
     // Both these Vectors may be empty (viz., b/c asm.js does different things
     // for imports and source).
-    SharedModule finish(ImportVector&& imports, const ShareableBytes& bytecode);
+    SharedModule finish(const ShareableBytes& bytecode);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.

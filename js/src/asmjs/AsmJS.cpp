@@ -1677,6 +1677,7 @@ class MOZ_STACK_CLASS ModuleValidator
         importMap_(cx),
         arrayViews_(cx),
         atomicsPresent_(false),
+        mg_(ImportVector()),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false)
@@ -2303,17 +2304,13 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t endAfterCurly = pos.end;
         asmJSMetadata_->srcLengthWithRightBrace = endAfterCurly - asmJSMetadata_->srcStart;
 
-        // asm.js has its own, different, version of imports through
-        // AsmJSGlobal.
-        ImportVector imports;
-
         // asm.js does not have any wasm bytecode to save; view-source is
         // provided through the ScriptSource.
         SharedBytes bytes = js_new<ShareableBytes>();
         if (!bytes)
             return nullptr;
 
-        return mg_.finish(Move(imports), *bytes);
+        return mg_.finish(*bytes);
     }
 };
 
