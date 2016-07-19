@@ -47,6 +47,106 @@ enum class Opacity : uint8_t {
 };
 
 /**
+ * FrameTimeout wraps a frame timeout value (measured in milliseconds) after
+ * first normalizing it. This normalization is necessary because some tools
+ * generate incorrect frame timeout values which we nevertheless have to
+ * support. For this reason, code that deals with frame timeouts should always
+ * use a FrameTimeout value rather than the raw value from the image header.
+ */
+struct FrameTimeout
+{
+  /**
+   * @return a FrameTimeout of zero. This should be used only for math
+   * involving FrameTimeout values. You can't obtain a zero FrameTimeout from
+   * FromRawMilliseconds().
+   */
+  static FrameTimeout Zero() { return FrameTimeout(0); }
+
+  /// @return an infinite FrameTimeout.
+  static FrameTimeout Forever() { return FrameTimeout(-1); }
+
+  /// @return a FrameTimeout obtained by normalizing a raw timeout value.
+  static FrameTimeout FromRawMilliseconds(int32_t aRawMilliseconds)
+  {
+    // Normalize all infinite timeouts to the same value.
+    if (aRawMilliseconds < 0) {
+      return FrameTimeout::Forever();
+    }
+
+    // Very small timeout values are problematic for two reasons: we don't want
+    // to burn energy redrawing animated images extremely fast, and broken tools
+    // generate these values when they actually want a "default" value, so such
+    // images won't play back right without normalization. For some context,
+    // see bug 890743, bug 125137, bug 139677, and bug 207059. The historical
+    // behavior of IE and Opera was:
+    //   IE 6/Win:
+    //     10 - 50ms is normalized to 100ms.
+    //     >50ms is used unnormalized.
+    //   Opera 7 final/Win:
+    //     10ms is normalized to 100ms.
+    //     >10ms is used unnormalized.
+    if (aRawMilliseconds >= 0 && aRawMilliseconds <= 10 ) {
+      return FrameTimeout(100);
+    }
+
+    // The provided timeout value is OK as-is.
+    return FrameTimeout(aRawMilliseconds);
+  }
+
+  bool operator==(const FrameTimeout& aOther) const
+  {
+    return mTimeout == aOther.mTimeout;
+  }
+
+  bool operator!=(const FrameTimeout& aOther) const { return !(*this == aOther); }
+
+  FrameTimeout operator+(const FrameTimeout& aOther)
+  {
+    if (*this == Forever() || aOther == Forever()) {
+      return Forever();
+    }
+
+    return FrameTimeout(mTimeout + aOther.mTimeout);
+  }
+
+  FrameTimeout& operator+=(const FrameTimeout& aOther)
+  {
+    *this = *this + aOther;
+    return *this;
+  }
+
+  /**
+   * @return this FrameTimeout's value in milliseconds. Illegal to call on a
+   * an infinite FrameTimeout value.
+   */
+  uint32_t AsMilliseconds() const
+  {
+    if (*this == Forever()) {
+      MOZ_ASSERT_UNREACHABLE("Calling AsMilliseconds() on an infinite FrameTimeout");
+      return 100;  // Fail to something sane.
+    }
+
+    return uint32_t(mTimeout);
+  }
+
+  /**
+   * @return this FrameTimeout value encoded so that non-negative values
+   * represent a timeout in milliseconds, and -1 represents an infinite
+   * timeout.
+   *
+   * XXX(seth): This is a backwards compatibility hack that should be removed.
+   */
+  int32_t AsEncodedValueDeprecated() const { return mTimeout; }
+
+private:
+  explicit FrameTimeout(int32_t aTimeout)
+    : mTimeout(aTimeout)
+  { }
+
+  int32_t mTimeout;
+};
+
+/**
  * AnimationData contains all of the information necessary for using an imgFrame
  * as part of an animation.
  *
@@ -57,12 +157,12 @@ enum class Opacity : uint8_t {
 struct AnimationData
 {
   AnimationData(uint8_t* aRawData, uint32_t aPaletteDataLength,
-                int32_t aRawTimeout, const nsIntRect& aRect,
+                FrameTimeout aTimeout, const nsIntRect& aRect,
                 BlendMethod aBlendMethod, const Maybe<gfx::IntRect>& aBlendRect,
                 DisposalMethod aDisposalMethod, bool aHasAlpha)
     : mRawData(aRawData)
     , mPaletteDataLength(aPaletteDataLength)
-    , mRawTimeout(aRawTimeout)
+    , mTimeout(aTimeout)
     , mRect(aRect)
     , mBlendMethod(aBlendMethod)
     , mBlendRect(aBlendRect)
@@ -72,7 +172,7 @@ struct AnimationData
 
   uint8_t* mRawData;
   uint32_t mPaletteDataLength;
-  int32_t mRawTimeout;
+  FrameTimeout mTimeout;
   nsIntRect mRect;
   BlendMethod mBlendMethod;
   Maybe<gfx::IntRect> mBlendRect;
@@ -167,10 +267,8 @@ public:
    * @param aDisposalMethod  For animation frames, how this imgFrame is cleared
    *                         from the compositing frame before the next frame is
    *                         displayed.
-   * @param aRawTimeout      For animation frames, the timeout in milliseconds
-   *                         before the next frame is displayed. This timeout is
-   *                         not necessarily the timeout that will actually be
-   *                         used; see FrameAnimator::GetTimeoutForFrame.
+   * @param aTimeout         For animation frames, the timeout before the next
+   *                         frame is displayed.
    * @param aBlendMethod     For animation frames, a blending method to be used
    *                         when compositing this frame.
    * @param aBlendRect       For animation frames, if present, the subrect in
@@ -179,7 +277,7 @@ public:
    */
   void Finish(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
               DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
-              int32_t aRawTimeout = 0,
+              FrameTimeout aTimeout = FrameTimeout::FromRawMilliseconds(0),
               BlendMethod aBlendMethod = BlendMethod::OVER,
               const Maybe<IntRect>& aBlendRect = Nothing());
 
@@ -312,8 +410,8 @@ private: // data
   //! Number of RawAccessFrameRefs currently alive for this imgFrame.
   int32_t mLockCount;
 
-  //! Raw timeout for this frame. (See FrameAnimator::GetTimeoutForFrame.)
-  int32_t mTimeout; // -1 means display forever.
+  //! The timeout for this frame.
+  FrameTimeout mTimeout;
 
   DisposalMethod mDisposalMethod;
   BlendMethod    mBlendMethod;

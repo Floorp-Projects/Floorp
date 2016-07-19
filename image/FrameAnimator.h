@@ -29,7 +29,7 @@ public:
     : mCurrentAnimationFrameIndex(0)
     , mLoopRemainingCount(-1)
     , mLoopCount(-1)
-    , mFirstFrameTimeout(0)
+    , mFirstFrameTimeout(FrameTimeout::FromRawMilliseconds(0))
     , mAnimationMode(aAnimationMode)
     , mDoneDecoding(false)
   { }
@@ -91,7 +91,7 @@ public:
    * Set the timeout for the first frame. This is used to allow animation
    * scheduling even before a full decode runs for this image.
    */
-  void SetFirstFrameTimeout(int32_t aTimeout) { mFirstFrameTimeout = aTimeout; }
+  void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
 
 private:
   friend class FrameAnimator;
@@ -112,7 +112,7 @@ private:
   int32_t mLoopCount;
 
   //! The timeout for the first frame of this image.
-  int32_t mFirstFrameTimeout;
+  FrameTimeout mFirstFrameTimeout;
 
   //! The animation mode of this image. Constants defined in imgIContainer.
   uint16_t mAnimationMode;
@@ -181,13 +181,8 @@ public:
    */
   LookupResult GetCompositedFrame(uint32_t aFrameNum);
 
-  /*
-   * Returns the frame's adjusted timeout. If the animation loops and the
-   * timeout falls in between a certain range then the timeout is adjusted so
-   * that it's never 0. If the animation does not loop then no adjustments are
-   * made.
-   */
-  int32_t GetTimeoutForFrame(AnimationState& aState, uint32_t aFrameNum) const;
+  /// @return the given frame's timeout.
+  FrameTimeout GetTimeoutForFrame(AnimationState& aState, uint32_t aFrameNum) const;
 
   /**
    * Collect an accounting of the memory occupied by the compositing surfaces we
