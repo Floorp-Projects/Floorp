@@ -479,20 +479,20 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         """
         c = self.config
 
-        target_unzip_dirs = None
+        extract_dirs = None
         if c['specific_tests_zip_dirs']:
-            target_unzip_dirs = list(c['minimum_tests_zip_dirs'])
+            extract_dirs = list(c['minimum_tests_zip_dirs'])
             for category in c['specific_tests_zip_dirs'].keys():
                 if c['run_all_suites'] or self._query_specified_suites(category) \
                         or 'run-tests' not in self.actions:
-                    target_unzip_dirs.extend(c['specific_tests_zip_dirs'][category])
+                    extract_dirs.extend(c['specific_tests_zip_dirs'][category])
 
         if c.get('run_all_suites'):
             target_categories = SUITE_CATEGORIES
         else:
             target_categories = [cat for cat in SUITE_CATEGORIES
                                  if self._query_specified_suites(cat) is not None]
-        super(DesktopUnittest, self).download_and_extract(target_unzip_dirs=target_unzip_dirs,
+        super(DesktopUnittest, self).download_and_extract(extract_dirs=extract_dirs,
                                                           suite_categories=target_categories)
 
     def stage_files(self):
