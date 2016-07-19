@@ -638,18 +638,18 @@ class ResourceMonitoringMixin(object):
                 'suites': suites,
             }
 
-            try:
-                schema_path = os.path.join(external_tools_path,
-                                           'performance-artifact-schema.json')
-                with open(schema_path, 'rb') as fh:
-                    schema = json.load(fh)
+            schema_path = os.path.join(external_tools_path,
+                                       'performance-artifact-schema.json')
+            with open(schema_path, 'rb') as fh:
+                schema = json.load(fh)
 
-                self.info('Validating Perfherder data against %s' % schema_path)
-                jsonschema.validate(data, schema)
-            except Exception:
-                self.exception('error while validating Perfherder data; ignoring')
-            else:
-                self.info('PERFHERDER_DATA: %s' % json.dumps(data))
+            # this will throw an exception that causes the job to fail if the
+            # perfherder data is not valid -- please don't change this
+            # behaviour, otherwise people will inadvertently break this
+            # functionality
+            self.info('Validating Perfherder data against %s' % schema_path)
+            jsonschema.validate(data, schema)
+            self.info('PERFHERDER_DATA: %s' % json.dumps(data))
 
         log_usage('Total resource usage', duration, cpu_percent, cpu_times, io)
 
