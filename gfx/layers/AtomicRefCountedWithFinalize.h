@@ -36,7 +36,6 @@ protected:
     explicit AtomicRefCountedWithFinalize(const char* aName)
       : mRecycleCallback(nullptr)
       , mRefCount(0)
-      , mMessageLoopToPostDestructionTo(nullptr)
 #ifdef DEBUG
       , mSpew(false)
       , mManualAddRefs(0)
@@ -49,16 +48,6 @@ protected:
       if (mRefCount >= 0) {
         gfxCriticalError() << "Deleting referenced object? " << mRefCount;
       }
-    }
-
-    void SetMessageLoopToPostDestructionTo(MessageLoop* l) {
-      MOZ_ASSERT(NS_IsMainThread());
-      mMessageLoopToPostDestructionTo = l;
-    }
-
-    static void DestroyToBeCalledOnMainThread(T* ptr) {
-      MOZ_ASSERT(NS_IsMainThread());
-      delete ptr;
     }
 
 public:
@@ -144,16 +133,7 @@ private:
 
         T* derived = static_cast<T*>(this);
         derived->Finalize();
-        if (MOZ_LIKELY(!mMessageLoopToPostDestructionTo)) {
-          delete derived;
-        } else {
-          if (MOZ_LIKELY(NS_IsMainThread())) {
-            delete derived;
-          } else {
-            mMessageLoopToPostDestructionTo->PostTask(
-              NewRunnableFunction(&DestroyToBeCalledOnMainThread, derived));
-          }
-        }
+        delete derived;
       } else if (1 == currCount && recycleCallback) {
         // There is nothing enforcing this in the code, except how the callers
         // are being careful to never let the reference count go down if there
@@ -197,7 +177,6 @@ private:
     RecycleCallback mRecycleCallback;
     void *mClosure;
     Atomic<int> mRefCount;
-    MessageLoop *mMessageLoopToPostDestructionTo;
 #ifdef DEBUG
 public:
     bool mSpew;

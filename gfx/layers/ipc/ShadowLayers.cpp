@@ -211,8 +211,7 @@ CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIden
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder(ClientLayerManager* aClientLayerManager)
- : CompositableForwarder("ShadowLayerForwarder")
- , mClientLayerManager(aClientLayerManager)
+ : mClientLayerManager(aClientLayerManager)
  , mMessageLoop(MessageLoop::current())
  , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
  , mIsFirstPaint(false)
