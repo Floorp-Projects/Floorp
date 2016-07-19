@@ -361,7 +361,8 @@ ModuleGenerator::finishFuncExports()
         if (!sig.clone(funcSig(funcIndex)))
             return false;
 
-        metadata_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex);
+        uint32_t tableEntry = funcCodeRange(funcIndex).funcTableEntry();
+        metadata_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex, tableEntry);
     }
 
     return true;
@@ -417,7 +418,7 @@ ModuleGenerator::finishCodegen()
 
     for (uint32_t i = 0; i < numFuncExports; i++) {
         entries[i].offsetBy(offsetInWhole);
-        metadata_->funcExports[i].initStubOffset(entries[i].begin);
+        metadata_->funcExports[i].initEntryOffset(entries[i].begin);
         if (!metadata_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
             return false;
     }
