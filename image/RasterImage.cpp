@@ -924,10 +924,10 @@ RasterImage::StartAnimation()
   MOZ_ASSERT(mFrameAnimator,
              "Should have a FrameAnimator if we have AnimationState");
 
-  // A timeout of -1 means we should display this frame forever.
-  if (mFrameAnimator->GetTimeoutForFrame(*mAnimationState,
-                                         GetCurrentFrameIndex())
-        < 0) {
+  // If the first frame has a timeout of -1, it means we should display it
+  // forever. Don't bother starting to animate in this case.
+  if (GetCurrentFrameIndex() == 0 &&
+      mFrameAnimator->GetTimeoutForFrame(*mAnimationState, 0) < 0) {
     mAnimationFinished = true;
     return NS_ERROR_ABORT;
   }
