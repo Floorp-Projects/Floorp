@@ -13,6 +13,7 @@
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 # include "mozilla/widget/CompositorWidgetChild.h"
 #endif
+#include "nsBaseWidget.h"
 #include "nsContentUtils.h"
 #include "VsyncBridgeChild.h"
 #include "VsyncIOThreadHolder.h"
@@ -217,7 +218,7 @@ GPUProcessManager::DestroyProcess()
 }
 
 RefPtr<CompositorSession>
-GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
+GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
                                             ClientLayerManager* aLayerManager,
                                             CSSToLayoutDeviceScale aScale,
                                             bool aUseAPZ,
@@ -254,7 +255,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
 }
 
 RefPtr<CompositorSession>
-GPUProcessManager::CreateRemoteSession(nsIWidget* aWidget,
+GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
                                        ClientLayerManager* aLayerManager,
                                        const uint64_t& aRootLayerTreeId,
                                        CSSToLayoutDeviceScale aScale,
@@ -296,7 +297,11 @@ GPUProcessManager::CreateRemoteSession(nsIWidget* aWidget,
   if (!ok)
     return nullptr;
 
-  CompositorWidgetChild* widget = new CompositorWidgetChild(aWidget);
+  RefPtr<CompositorVsyncDispatcher> dispatcher = aWidget->GetCompositorVsyncDispatcher();
+  RefPtr<CompositorWidgetVsyncObserver> observer =
+    new CompositorWidgetVsyncObserver(mVsyncBridge, aRootLayerTreeId);
+
+  CompositorWidgetChild* widget = new CompositorWidgetChild(dispatcher, observer);
   if (!child->SendPCompositorWidgetConstructor(widget, initData))
     return nullptr;
   if (!child->SendInitialize(aRootLayerTreeId))

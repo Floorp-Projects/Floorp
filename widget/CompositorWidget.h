@@ -223,9 +223,14 @@ public:
   virtual already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing();
 
   /**
-   * Observer or unobserve vsync.
+   * Observe or unobserve vsync.
    */
   virtual void ObserveVsync(VsyncObserver* aObserver) = 0;
+
+  /**
+   * This is only used by out-of-process compositors.
+   */
+  virtual RefPtr<VsyncObserver> GetVsyncObserver() const;
 
   virtual WinCompositorWidget* AsWindows() {
     return nullptr;

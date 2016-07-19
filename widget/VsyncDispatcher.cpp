@@ -9,6 +9,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
 #include "GeckoProfiler.h"
@@ -16,14 +17,6 @@
 #endif
 
 namespace mozilla {
-static bool sThreadAssertionsEnabled = true;
-
-void CompositorVsyncDispatcher::SetThreadAssertionsEnabled(bool aEnable)
-{
-  // Should only be used in test environments
-  MOZ_ASSERT(NS_IsMainThread());
-  sThreadAssertionsEnabled = aEnable;
-}
 
 CompositorVsyncDispatcher::CompositorVsyncDispatcher()
   : mCompositorObserverLock("CompositorObserverLock")
@@ -54,16 +47,6 @@ CompositorVsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 }
 
 void
-CompositorVsyncDispatcher::AssertOnCompositorThread()
-{
-  if (!sThreadAssertionsEnabled) {
-    return;
-  }
-
-  Compositor::AssertOnCompositorThread();
-}
-
-void
 CompositorVsyncDispatcher::ObserveVsync(bool aEnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -82,7 +65,11 @@ CompositorVsyncDispatcher::ObserveVsync(bool aEnable)
 void
 CompositorVsyncDispatcher::SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver)
 {
-  AssertOnCompositorThread();
+  // When remote compositing or running gtests, vsync observation is
+  // initiated on the main thread. Otherwise, it is initiated from the compositor
+  // thread.
+  MOZ_ASSERT(NS_IsMainThread() || CompositorThreadHolder::IsInCompositorThread());
+
   { // scope lock
     MutexAutoLock lock(mCompositorObserverLock);
     mCompositorVsyncObserver = aVsyncObserver;

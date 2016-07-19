@@ -402,6 +402,11 @@ public:
   static CompositorBridgeParent* GetCompositorBridgeParent(uint64_t id);
 
   /**
+   * Notify the compositor for the given layer tree that vsync has occurred.
+   */
+  static void NotifyVsync(const TimeStamp& aTimeStamp, const uint64_t& aLayersId);
+
+  /**
    * Set aController as the pan/zoom callback for the subtree referred
    * to by aLayersId.
    *

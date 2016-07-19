@@ -51,10 +51,60 @@ VsyncBridgeChild::Open(Endpoint<PVsyncBridgeChild>&& aEndpoint)
   AddRef();
 }
 
+class NotifyVsyncTask : public Runnable
+{
+public:
+  NotifyVsyncTask(RefPtr<VsyncBridgeChild> aVsyncBridge,
+                  TimeStamp aTimeStamp,
+                  const uint64_t& aLayersId)
+   : mVsyncBridge(aVsyncBridge),
+     mTimeStamp(aTimeStamp),
+     mLayersId(aLayersId)
+  {}
+
+  NS_IMETHOD Run() override {
+    mVsyncBridge->NotifyVsyncImpl(mTimeStamp, mLayersId);
+    return NS_OK;
+  }
+
+private:
+  RefPtr<VsyncBridgeChild> mVsyncBridge;
+  TimeStamp mTimeStamp;
+  uint64_t mLayersId;
+};
+
+bool
+VsyncBridgeChild::IsOnVsyncIOThread() const
+{
+  return MessageLoop::current() == mLoop;
+}
+
+void
+VsyncBridgeChild::NotifyVsync(TimeStamp aTimeStamp, const uint64_t& aLayersId)
+{
+  // This should be on the Vsync thread (not the Vsync I/O thread).
+  MOZ_ASSERT(!IsOnVsyncIOThread());
+
+  RefPtr<NotifyVsyncTask> task = new NotifyVsyncTask(this, aTimeStamp, aLayersId);
+  mLoop->PostTask(task.forget());
+}
+
+void
+VsyncBridgeChild::NotifyVsyncImpl(TimeStamp aTimeStamp, const uint64_t& aLayersId)
+{
+  // This should be on the Vsync I/O thread.
+  MOZ_ASSERT(IsOnVsyncIOThread());
+
+  if (!mProcessToken) {
+    return;
+  }
+  SendNotifyVsync(aTimeStamp, aLayersId);
+}
+
 void
 VsyncBridgeChild::Close()
 {
-  if (MessageLoop::current() != mLoop) {
+  if (!IsOnVsyncIOThread()) {
     mLoop->PostTask(NewRunnableMethod(this, &VsyncBridgeChild::Close));
     return;
   }
