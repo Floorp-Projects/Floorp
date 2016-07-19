@@ -173,7 +173,10 @@ class FuncImport
     } pod;
 
   public:
-    FuncImport() = default;
+    FuncImport() {
+      memset(&pod, 0, sizeof(CacheablePod));
+    }
+
     FuncImport(Sig&& sig, uint32_t exitGlobalDataOffset)
       : sig_(Move(sig))
     {
