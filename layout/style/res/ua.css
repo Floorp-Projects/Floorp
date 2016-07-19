@@ -292,7 +292,7 @@
   min-height: 0 !important;
   max-height: none !important;
   box-sizing: border-box !important;
-  object-fit: contain !important;
+  object-fit: contain;
   transform: none !important;
 }
 
