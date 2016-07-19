@@ -10,6 +10,9 @@
 #include "DOMMediaStream.h"
 
 namespace mozilla {
+
+class MediaStreamVideoSink;
+
 namespace dom {
 
 class VideoStreamTrack : public MediaStreamTrack {
@@ -25,6 +28,9 @@ public:
   VideoStreamTrack* AsVideoStreamTrack() override { return this; }
 
   const VideoStreamTrack* AsVideoStreamTrack() const override { return this; }
+
+  void AddVideoOutput(MediaStreamVideoSink* aSink);
+  void RemoveVideoOutput(MediaStreamVideoSink* aSink);
 
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
