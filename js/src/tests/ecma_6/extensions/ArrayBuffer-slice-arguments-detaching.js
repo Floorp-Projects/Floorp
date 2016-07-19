@@ -17,7 +17,7 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-function testStart(dataType)
+function testStart()
 {
   var ab = new ArrayBuffer(0x1000);
 
@@ -25,7 +25,7 @@ function testStart(dataType)
     {
       valueOf: function()
       {
-        detachArrayBuffer(ab, dataType);
+        detachArrayBuffer(ab);
         gc();
         return 0x800;
       }
@@ -43,10 +43,9 @@ function testStart(dataType)
   assertEq(ok, true, "start weirdness should have thrown");
   assertEq(ab.byteLength, 0, "detaching should work for start weirdness");
 }
-testStart("change-data");
-testStart("same-data");
+testStart();
 
-function testEnd(dataType)
+function testEnd()
 {
   var ab = new ArrayBuffer(0x1000);
 
@@ -54,7 +53,7 @@ function testEnd(dataType)
     {
       valueOf: function()
       {
-        detachArrayBuffer(ab, dataType);
+        detachArrayBuffer(ab);
         gc();
         return 0x1000;
       }
@@ -72,8 +71,7 @@ function testEnd(dataType)
   assertEq(ok, true, "byteLength weirdness should have thrown");
   assertEq(ab.byteLength, 0, "detaching should work for byteLength weirdness");
 }
-testEnd("change-data");
-testEnd("same-data");
+testEnd();
 
 /******************************************************************************/
 

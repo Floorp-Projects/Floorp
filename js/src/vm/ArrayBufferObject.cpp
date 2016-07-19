@@ -1178,8 +1178,7 @@ JS_GetArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCa
 }
 
 JS_FRIEND_API(bool)
-JS_DetachArrayBuffer(JSContext* cx, HandleObject obj,
-                     DetachDataDisposition changeData)
+JS_DetachArrayBuffer(JSContext* cx, HandleObject obj)
 {
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportError(cx, "ArrayBuffer object required");
