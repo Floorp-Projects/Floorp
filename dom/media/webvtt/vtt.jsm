@@ -177,7 +177,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
                               "Malformed timestamp: " + oInput);
       }
       // Remove time stamp from input.
-      input = input.replace(/^[^\s\uFFFDa-zA-Z-]+/, "");
+      input = input.replace(/^[^\sa-zA-Z-]+/, "");
       return ts;
     }
 
@@ -1266,8 +1266,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           ++pos;
         }
         self.buffer = buffer.substr(pos);
-        // Spec defined replacement.
-        return line.replace(/[\u0000]/g, "\uFFFD");
+        return line;
       }
 
       function createCueIfNeeded() {
