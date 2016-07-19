@@ -9,10 +9,10 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 
 #include "CompositorBridgeParent.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace layers {
@@ -39,7 +39,7 @@ CompositorLRU::GetSingleton()
 
 CompositorLRU::CompositorLRU()
 {
-  mLRUSize = Preferences::GetUint("layers.compositor-lru-size", uint32_t(0));
+  mLRUSize = gfxPrefs::LayersCompositorLRUSize();
 }
 
 CompositorLRU::~CompositorLRU()
