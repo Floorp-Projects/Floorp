@@ -182,9 +182,6 @@ public:
    */
   LookupResult GetCompositedFrame(uint32_t aFrameNum);
 
-  /// @return the given frame's timeout.
-  FrameTimeout GetTimeoutForFrame(AnimationState& aState, uint32_t aFrameNum) const;
-
   /**
    * Collect an accounting of the memory occupied by the compositing surfaces we
    * use during animation playback. All of the actual animation frames are
@@ -221,6 +218,9 @@ private: // methods
    * image that has a 0ms delay between its frames and does not loop.
    */
   int32_t GetSingleLoopTime(AnimationState& aState) const;
+
+  /// @return the given frame's timeout.
+  FrameTimeout GetTimeoutForFrame(uint32_t aFrameNum) const;
 
   /**
    * Get the time the frame we're currently displaying is supposed to end.
