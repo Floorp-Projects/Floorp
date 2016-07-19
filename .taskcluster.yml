@@ -66,11 +66,13 @@ tasks:
         env:
           # checkout-gecko uses these to check out the source; the inputs
           # to `mach taskgraph decision` are all on the command line.
-          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
+          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
           GECKO_HEAD_REPOSITORY: '{{{url}}}'
           GECKO_HEAD_REF: '{{revision}}'
           GECKO_HEAD_REV: '{{revision}}'
           # Arguments passed into `mach taskgraph decision`
+          # TODO use mozilla-unified for the base repository once the tc-vcs
+          # tar.gz archives are created or tc-vcs isn't being used.
           DECISION_ARGS: >
             --pushlog-id='{{pushlog_id}}'
             --project='{{project}}'
