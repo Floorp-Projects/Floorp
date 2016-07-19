@@ -59,7 +59,7 @@
 
   function gc() {
    return new Promise(function(resolve) {
-     SpecialPowers.exactGC(window, resolve);
+     SpecialPowers.exactGC(resolve);
    });
   }
 

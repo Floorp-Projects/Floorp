@@ -324,7 +324,7 @@ function setupEnvironment() {
 
   // We don't care about waiting for this to complete, we just want to ensure
   // that we don't build up a huge backlog of GC work.
-  SpecialPowers.exactGC(window);
+  SpecialPowers.exactGC();
 }
 
 // This is called by steeplechase; which provides the test configuration options
