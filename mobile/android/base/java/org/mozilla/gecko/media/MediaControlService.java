@@ -77,7 +77,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         handleIntent(intent);
-        return super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -267,6 +267,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         final Notification.MediaStyle style = new Notification.MediaStyle();
         style.setShowActionsInCompactView(0);
 
+        final boolean isMediaPlaying = action.equals(ACTION_PAUSE);
         final Notification notification = new Notification.Builder(this)
             .setSmallIcon(R.drawable.flat_icon)
             .setLargeIcon(generateCoverArt(tab))
@@ -276,13 +277,18 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             .setDeleteIntent(createDeleteIntent())
             .setStyle(style)
             .addAction(createNotificationAction(action))
-            .setOngoing(action.equals(ACTION_PAUSE))
+            .setOngoing(isMediaPlaying)
             .setShowWhen(false)
             .setWhen(0)
             .build();
 
-        NotificationManagerCompat.from(this)
+        if (isMediaPlaying) {
+            startForeground(MEDIA_CONTROL_ID, notification);
+        } else {
+            stopForeground(false);
+            NotificationManagerCompat.from(this)
                 .notify(MEDIA_CONTROL_ID, notification);
+        }
     }
 
     private Notification.Action createNotificationAction(String action) {
