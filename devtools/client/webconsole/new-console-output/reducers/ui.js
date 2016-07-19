@@ -6,7 +6,12 @@
 "use strict";
 
 const constants = require("devtools/client/webconsole/new-console-output/constants");
-const {Ui} = require("devtools/client/webconsole/new-console-output/store");
+const Immutable = require("devtools/client/shared/vendor/immutable");
+
+const Ui = Immutable.Record({
+  configFilterBarVisible: false,
+  filteredMessageVisible: false
+});
 
 function ui(state = new Ui(), action) {
   switch (action.type) {

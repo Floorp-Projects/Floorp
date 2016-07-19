@@ -5,16 +5,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Immutable = require("devtools/client/shared/vendor/immutable");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
-const {Filters} = require("devtools/client/webconsole/new-console-output/store");
 
-function filters(state = new Filters(), action) {
+const FilterState = Immutable.Record({
+  error: true,
+  warn: true,
+  info: true,
+  log: true,
+  searchText: ""
+});
+
+function filters(state = new FilterState(), action) {
   switch (action.type) {
     case constants.SEVERITY_FILTER:
       let {filter, toggled} = action;
       return state.set(filter, toggled);
     case constants.FILTERS_CLEAR:
-      return new Filters();
+      return new FilterState();
     case constants.MESSAGES_SEARCH:
       let {searchText} = action;
       return state.set("searchText", searchText);
@@ -23,4 +31,5 @@ function filters(state = new Filters(), action) {
   return state;
 }
 
+exports.FilterState = FilterState;
 exports.filters = filters;
