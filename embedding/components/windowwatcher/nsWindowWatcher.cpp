@@ -2254,13 +2254,17 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
       screenMgr->ScreenForRect(left, top, 1, 1, getter_AddRefs(screen));
     }
     if (screen) {
-      screen->GetDefaultCSSScaleFactor(&scale);
+      double cssToDevPixScale, desktopToDevPixScale;
+      screen->GetDefaultCSSScaleFactor(&cssToDevPixScale);
+      screen->GetContentsScaleFactor(&desktopToDevPixScale);
+      double cssToDesktopScale = cssToDevPixScale / desktopToDevPixScale;
       int32_t screenLeft, screenTop, screenWd, screenHt;
       screen->GetRectDisplayPix(&screenLeft, &screenTop, &screenWd, &screenHt);
-      // Adjust by desktop-pixel origin of the target screen to convert from
-      // per-screen CSS-px coordinates.
-      treeOwnerAsWin->SetPosition((left - screenLeft) * scale + screenLeft,
-                                  (top - screenTop) * scale + screenTop);
+      // Adjust by desktop-pixel origin of the target screen when scaling
+      // to convert from per-screen CSS-px coords to global desktop coords.
+      treeOwnerAsWin->SetPositionDesktopPix(
+        (left - screenLeft) * cssToDesktopScale + screenLeft,
+        (top - screenTop) * cssToDesktopScale + screenTop);
     } else {
       // Couldn't find screen? This shouldn't happen.
       treeOwnerAsWin->SetPosition(left * scale, top * scale);
