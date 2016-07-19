@@ -43,10 +43,13 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
     /* GLenum */
     case LOCAL_GL_READ_BUFFER: {
-      if (mBoundReadFramebuffer)
-        return JS::Int32Value(mBoundReadFramebuffer->ReadBufferMode());
+      if (!mBoundReadFramebuffer)
+        return JS::Int32Value(gl->Screen()->GetReadBufferMode());
 
-      return JS::Int32Value(LOCAL_GL_BACK);
+      if (!mBoundReadFramebuffer->ColorReadBuffer())
+        return JS::Int32Value(LOCAL_GL_NONE);
+
+      return JS::Int32Value(mBoundReadFramebuffer->ColorReadBuffer()->mAttachmentPoint);
     }
 
     case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
