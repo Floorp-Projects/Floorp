@@ -2578,6 +2578,15 @@ public:
                                                 nsIHttpChannel* aChannel,
                                                 mozilla::net::ReferrerPolicy aReferrerPolicy);
 
+    /*
+   * Parse a referrer policy from a Referrer-Policy header
+   * https://www.w3.org/TR/referrer-policy/#parse-referrer-policy-from-header
+   *
+   * @param aHeader the response's Referrer-Policy header to parse
+   * @return referrer policy from the response header.
+   */
+  static mozilla::net::ReferrerPolicy GetReferrerPolicyFromHeader(const nsAString& aHeader);
+
   static bool PushEnabled(JSContext* aCx, JSObject* aObj);
 
   static bool IsNonSubresourceRequest(nsIChannel* aChannel);

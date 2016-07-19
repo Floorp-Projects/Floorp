@@ -8347,6 +8347,25 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
 }
 
 // static
+net::ReferrerPolicy
+nsContentUtils::GetReferrerPolicyFromHeader(const nsAString& aHeader)
+{
+  // Multiple headers could be concatenated into one comma-separated
+  // list of policies. Need to tokenize the multiple headers.
+  nsCharSeparatedTokenizer tokenizer(aHeader, ',');
+  nsAutoString token;
+  net::ReferrerPolicy referrerPolicy = mozilla::net::RP_Unset;
+  while (tokenizer.hasMoreTokens()) {
+    token = tokenizer.nextToken();
+    net::ReferrerPolicy policy = net::ReferrerPolicyFromString(token);
+    if (policy != net::RP_Unset) {
+      referrerPolicy = policy;
+    }
+  }
+  return referrerPolicy;
+}
+
+// static
 bool
 nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
 {

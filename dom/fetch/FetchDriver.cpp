@@ -675,6 +675,13 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     SetRequestHeaders(httpChannel);
   }
 
+  nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);
+  nsAutoCString tRPHeaderCValue;
+  if (oldHttpChannel) {
+    oldHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("referrer-policy"),
+                                      tRPHeaderCValue);
+  }
+
   // "HTTP-redirect fetch": step 14 "Append locationURL to request's URL list."
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_SUCCEEDS(aNewChannel->GetURI(getter_AddRefs(uri)));
@@ -692,6 +699,39 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   }
 
   mRequest->AddURL(spec);
+
+  NS_ConvertUTF8toUTF16 tRPHeaderValue(tRPHeaderCValue);
+  // updates request’s associated referrer policy according to the
+  // Referrer-Policy header (if any).
+  if (!tRPHeaderValue.IsEmpty()) {
+    net::ReferrerPolicy net_referrerPolicy =
+      nsContentUtils::GetReferrerPolicyFromHeader(tRPHeaderValue);
+    if (net_referrerPolicy != net::RP_Unset) {
+      ReferrerPolicy referrerPolicy = mRequest->ReferrerPolicy_();
+      switch (net_referrerPolicy) {
+        case net::RP_No_Referrer:
+          referrerPolicy = ReferrerPolicy::No_referrer;
+          break;
+        case net::RP_No_Referrer_When_Downgrade:
+          referrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
+          break;
+        case net::RP_Origin:
+          referrerPolicy = ReferrerPolicy::Origin;
+          break;
+        case net::RP_Origin_When_Crossorigin:
+          referrerPolicy = ReferrerPolicy::Origin_when_cross_origin;
+          break;
+        case net::RP_Unsafe_URL:
+          referrerPolicy = ReferrerPolicy::Unsafe_url;
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy value");
+          break;
+      }
+
+      mRequest->SetReferrerPolicy(referrerPolicy);
+    }
+  }
 
   aCallback->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
