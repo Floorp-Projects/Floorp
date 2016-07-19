@@ -259,18 +259,6 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     consumeCueSettings(input, cue);
   }
 
-  function onlyContainsWhiteSpaces(input) {
-    return /^[ \f\n\r\t]+$/.test(input);
-  }
-
-  function containsTimeDirectionSymbol(input) {
-    return input.indexOf("-->") !== -1;
-  }
-
-  function maybeIsTimeStampFormat(input) {
-    return /^\s*(\d+:)?(\d{2}):(\d{2})\.(\d+)\s*-->\s*(\d+:)?(\d{2}):(\d{2})\.(\d+)\s*/.test(input);
-  }
-
   var ESCAPE = {
     "&amp;": "&",
     "&lt;": "<",
@@ -1373,50 +1361,16 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
       }
 
-      // Parsing the region and style information.
-      // See spec, https://w3c.github.io/webvtt/#collect-a-webvtt-block
-      //
-      // There are sereval things would appear in header,
-      //   1. Region or Style setting
-      //   2. Garbage (meaningless string)
-      //   3. Empty line
-      //   4. Cue's timestamp
-      // The case 4 happens when there is no line interval between the header
-      // and the cue blocks. In this case, we should preserve the line and
-      // return it for the next phase parsing.
-      function parseHeader() {
-        let line = null;
-        while (self.buffer && self.state === "HEADER") {
-          line = collectNextLine();
-
-          if (/^REGION|^STYLE/i.test(line)) {
-            parseOptions(line, function (k, v) {
-              switch (k.toUpperCase()) {
-              case "REGION":
-                parseRegion(v);
-                break;
-              case "STYLE":
-                // TODO : not supported yet.
-                break;
-              }
-            }, ":");
-          } else if (maybeIsTimeStampFormat(line)) {
-            self.state = "CUE";
-            break;
-          } else if (!line ||
-                     onlyContainsWhiteSpaces(line) ||
-                     containsTimeDirectionSymbol(line)) {
-            // empty line, whitespaces or string contains "-->"
+      // 3.2 WebVTT metadata header syntax
+      function parseHeader(input) {
+        parseOptions(input, function (k, v) {
+          switch (k) {
+          case "Region":
+            // 3.3 WebVTT region metadata header syntax
+            parseRegion(v);
             break;
           }
-        }
-
-        // End parsing header part and doesn't see the timestamp.
-        if (self.state === "HEADER") {
-          self.state = "ID";
-          line = null
-        }
-        return line;
+        }, /:/);
       }
 
       // 5.1 WebVTT file parsing.
