@@ -3264,7 +3264,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   // its descendants, yet RestyleSelf might return different RestyleResult
   // values for the different same-style continuations.  |result| is our
   // overall decision.
-  RestyleResult result = RestyleResult(0);
+  RestyleResult result = eRestyleResult_None;
   uint32_t swappedStructs = 0;
 
   nsRestyleHint thisRestyleHint = aRestyleHint;
@@ -5194,7 +5194,8 @@ ElementRestyler::RestyleResultToString(RestyleResult aRestyleResult)
       result.AssignLiteral("eRestyleResult_ContinueAndForceDescendants");
       break;
     default:
-      result.AppendPrintf("RestyleResult(%d)", aRestyleResult);
+      MOZ_ASSERT(aRestyleResult == eRestyleResult_None,
+                 "Unexpected RestyleResult");
   }
   return result;
 }

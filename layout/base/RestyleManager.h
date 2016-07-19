@@ -671,9 +671,11 @@ private:
   // These values must be ordered so that later values imply that all
   // the work of the earlier values is also done.
   enum RestyleResult {
+    // default initial value
+    eRestyleResult_None,
 
     // we left the old style context on the frame; do not restyle children
-    eRestyleResult_Stop = 1,
+    eRestyleResult_Stop,
 
     // we got a new style context on this frame, but we know that children
     // do not depend on the changed values; do not restyle children
