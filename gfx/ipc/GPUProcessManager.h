@@ -9,6 +9,7 @@
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "Units.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/gfx/Point.h"
@@ -40,6 +41,8 @@ class GeckoChildProcessHost;
 namespace gfx {
 
 class GPUChild;
+class VsyncBridgeChild;
+class VsyncIOThreadHolder;
 
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
 // objects that may live in another process. Currently, it provides access
@@ -132,7 +135,11 @@ private:
   void DisableGPUProcess(const char* aMessage);
 
   // Shutdown the GPU process.
+  void CleanShutdown();
   void DestroyProcess();
+
+  void EnsureVsyncIOThread();
+  void ShutdownVsyncIOThread();
 
   RefPtr<CompositorSession> CreateRemoteSession(
     nsIWidget* aWidget,
@@ -161,11 +168,14 @@ private:
 private:
   RefPtr<Observer> mObserver;
   ipc::TaskFactory<GPUProcessManager> mTaskFactory;
+  RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
   uint64_t mNextLayerTreeId;
 
+  // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;
   uint64_t mProcessToken;
   GPUChild* mGPUChild;
+  RefPtr<VsyncBridgeChild> mVsyncBridge;
 };
 
 } // namespace gfx
