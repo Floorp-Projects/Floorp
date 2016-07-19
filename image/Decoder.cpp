@@ -411,7 +411,7 @@ Decoder::PostHasTransparency()
 }
 
 void
-Decoder::PostIsAnimated(int32_t aFirstFrameTimeout)
+Decoder::PostIsAnimated(FrameTimeout aFirstFrameTimeout)
 {
   mProgress |= FLAG_IS_ANIMATED;
   mImageMetadata.SetHasAnimation();
@@ -423,7 +423,8 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
                          /* = Opacity::SOME_TRANSPARENCY */,
                        DisposalMethod aDisposalMethod
                          /* = DisposalMethod::KEEP */,
-                       int32_t aTimeout         /* = 0 */,
+                       FrameTimeout aTimeout
+                         /* = FrameTimeout::FromRawMilliseconds(0) */,
                        BlendMethod aBlendMethod /* = BlendMethod::OVER */,
                        const Maybe<nsIntRect>& aBlendRect /* = Nothing() */)
 {

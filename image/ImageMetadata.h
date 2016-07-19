@@ -23,7 +23,7 @@ class ImageMetadata
 public:
   ImageMetadata()
     : mLoopCount(-1)
-    , mFirstFrameTimeout(0)
+    , mFirstFrameTimeout(FrameTimeout::Forever())
     , mHasAnimation(false)
   { }
 
@@ -40,8 +40,8 @@ public:
   }
   int32_t GetLoopCount() const { return mLoopCount; }
 
-  void SetFirstFrameTimeout(int32_t aTimeout) { mFirstFrameTimeout = aTimeout; }
-  int32_t GetFirstFrameTimeout() const { return mFirstFrameTimeout; }
+  void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
+  FrameTimeout GetFirstFrameTimeout() const { return mFirstFrameTimeout; }
 
   void SetSize(int32_t width, int32_t height, Orientation orientation)
   {
@@ -66,7 +66,7 @@ private:
   int32_t mLoopCount;
 
   /// The timeout of an animated image's first frame.
-  int32_t mFirstFrameTimeout;
+  FrameTimeout mFirstFrameTimeout;
 
   Maybe<nsIntSize> mSize;
   Maybe<Orientation> mOrientation;
