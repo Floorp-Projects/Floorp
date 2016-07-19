@@ -40,6 +40,11 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                     to the underlying OS).
       @param chromeFlags Chrome features from nsIWebBrowserChrome
       @param contextFlags Flags about the context of the window being created.
+      @param uri The URL for which this window is intended. It can be null
+                 or zero-length. The implementation of this interface
+                 may use the URL to help determine what sort of window
+                 to open or whether to cancel window creation. It will not
+                 load the URL.
       @param aOpeningTab The TabParent that is trying to open this new chrome
                          window. Can be nullptr.
       @param cancel Return |true| to reject window creation. If true the
@@ -51,6 +56,7 @@ interface nsIWindowCreator2 : nsIWindowCreator {
   nsIWebBrowserChrome createChromeWindow2(in nsIWebBrowserChrome parent,
                                           in uint32_t chromeFlags,
                                           in uint32_t contextFlags,
+                                          in nsIURI uri,
                                           in nsITabParent aOpeningTab,
                                           out boolean cancel);
 
