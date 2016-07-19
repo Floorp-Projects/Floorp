@@ -10,9 +10,8 @@
 namespace mozilla {
 namespace layers {
 
-TextureForwarder::TextureForwarder(const char* aName)
-  : ClientIPCAllocator(aName)
-  , mSectionAllocator(nullptr)
+TextureForwarder::TextureForwarder()
+  : mSectionAllocator(nullptr)
 {
 }
 

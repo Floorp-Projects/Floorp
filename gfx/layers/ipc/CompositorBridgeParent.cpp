@@ -604,8 +604,7 @@ CompositorLoop()
 CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                                bool aUseExternalSurfaceSize,
                                                const gfx::IntSize& aSurfaceSize)
-  : CompositorBridgeParentIPCAllocator("CompositorBridgeParent")
-  , mWidget(nullptr)
+  : mWidget(nullptr)
   , mScale(aScale)
   , mIsTesting(false)
   , mPendingTransaction(0)
@@ -628,7 +627,6 @@ CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
 {
   // Always run destructor on the main thread
   MOZ_ASSERT(NS_IsMainThread());
-  SetMessageLoopToPostDestructionTo(MessageLoop::current());
 }
 
 void
@@ -704,8 +702,6 @@ CompositorBridgeParent::RootLayerTreeId()
 
 CompositorBridgeParent::~CompositorBridgeParent()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   InfallibleTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
   // We expect all textures to be destroyed by now.
@@ -1969,13 +1965,10 @@ class CrossProcessCompositorBridgeParent final : public PCompositorBridgeParent,
 
 public:
   explicit CrossProcessCompositorBridgeParent()
-    : CompositorBridgeParentIPCAllocator("CrossProcessCompositorBridgeParent")
-    , mNotifyAfterRemotePaint(false)
+    : mNotifyAfterRemotePaint(false)
     , mDestroyCalled(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    // Always run destructor on the main thread
-    SetMessageLoopToPostDestructionTo(MessageLoop::current());
   }
 
   void Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint) {
@@ -2913,7 +2906,6 @@ CrossProcessCompositorBridgeParent::DeferredDestroy()
 
 CrossProcessCompositorBridgeParent::~CrossProcessCompositorBridgeParent()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_GetIOMessageLoop());
   MOZ_ASSERT(IToplevelProtocol::GetTransport());
 }

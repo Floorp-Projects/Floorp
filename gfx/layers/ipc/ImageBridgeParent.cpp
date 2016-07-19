@@ -51,16 +51,12 @@ CompositorThreadHolder* GetCompositorThreadHolder();
 
 ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
                                      ProcessId aChildProcessId)
-  : CompositableParentManager("ImageBridgeParent")
-  , mMessageLoop(aLoop)
+  : mMessageLoop(aLoop)
   , mSetChildThreadPriority(false)
   , mClosed(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   sMainLoop = MessageLoop::current();
-
-  // top-level actors must be destroyed on the main thread.
-  SetMessageLoopToPostDestructionTo(sMainLoop);
 
   // creates the map only if it has not been created already, so it is safe
   // with several bridges
@@ -73,8 +69,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
 
 ImageBridgeParent::~ImageBridgeParent()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsTArray<PImageContainerParent*> parents;
   ManagedPImageContainerParent(parents);
   for (PImageContainerParent* p : parents) {
