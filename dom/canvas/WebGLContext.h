@@ -1138,6 +1138,8 @@ public:
         return LOCAL_GL_COLOR_ATTACHMENT0 + mImplMaxColorAttachments - 1;
     }
 
+    const decltype(mOptions)& Options() const { return mOptions; }
+
 protected:
 
     // Texture sizes are often not actually the GL values. Let's be explicit that these

@@ -101,10 +101,10 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
         return;
     }
 
-    std::vector<const WebGLFBAttachPoint*> fbAttachments;
-    if (mWebGL->mBoundDrawFramebuffer) {
-        const auto& fb = mWebGL->mBoundDrawFramebuffer;
-        fb->GatherAttachments(&fbAttachments);
+    const std::vector<const WebGLFBAttachPoint*>* attachList = nullptr;
+    const auto& fb = mWebGL->mBoundDrawFramebuffer;
+    if (fb) {
+        attachList = &(fb->ResolvedCompleteData()->texDrawBuffers);
     }
 
     MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
@@ -120,7 +120,9 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
             if (!tex)
                 continue;
 
-            if (tex->IsFeedback(mWebGL, funcName, texUnit, fbAttachments)) {
+            if (attachList &&
+                tex->IsFeedback(mWebGL, funcName, texUnit, *attachList))
+            {
                 *out_error = true;
                 return;
             }
@@ -587,7 +589,8 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     Draw_cleanup(funcName);
 }
 
-void WebGLContext::Draw_cleanup(const char* funcName)
+void
+WebGLContext::Draw_cleanup(const char* funcName)
 {
     UndoFakeVertexAttrib0();
 
@@ -614,9 +617,12 @@ void WebGLContext::Draw_cleanup(const char* funcName)
     uint32_t destHeight = mViewportHeight;
 
     if (mBoundDrawFramebuffer) {
-        const auto& fba = mBoundDrawFramebuffer->ColorAttachment(0);
-        if (fba.IsDefined()) {
-            fba.Size(&destWidth, &destHeight);
+        const auto& drawBuffers = mBoundDrawFramebuffer->ColorDrawBuffers();
+        for (const auto& cur : drawBuffers) {
+            if (!cur->IsDefined())
+                continue;
+            cur->Size(&destWidth, &destHeight);
+            break;
         }
     } else {
         destWidth = mWidth;
