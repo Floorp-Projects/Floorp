@@ -628,6 +628,8 @@ const char experimentalWarning[] =
     "`---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
     "text support (Work In Progress):\n\n";
 
+const size_t experimentalWarningLinesCount = 12;
+
 const char enabledMessage[] =
     "Restart with developer tools open to view WebAssembly source";
 
@@ -639,13 +641,71 @@ Instance::createText(JSContext* cx)
         const Bytes& bytes = maybeBytecode_->bytes;
         if (!buffer.append(experimentalWarning))
             return nullptr;
-        if (!BinaryToExperimentalText(cx, bytes.begin(), bytes.length(), buffer))
+        maybeSourceMap_.reset(cx->runtime()->new_<GeneratedSourceMap>(cx));
+        if (!maybeSourceMap_)
             return nullptr;
+        if (!BinaryToExperimentalText(cx, bytes.begin(), bytes.length(), buffer,
+                                      ExperimentalTextFormatting(), maybeSourceMap_.get()))
+            return nullptr;
+#if DEBUG
+        // Checking source map invariant: expression and function locations must be sorted
+        // by line number.
+        uint32_t lastLineno = 0;
+        for (size_t i = 0; i < maybeSourceMap_->exprlocs().length(); i++) {
+            MOZ_ASSERT(lastLineno <= maybeSourceMap_->exprlocs()[i].lineno);
+            lastLineno = maybeSourceMap_->exprlocs()[i].lineno;
+        }
+        lastLineno = 0;
+        for (size_t i = 0; i < maybeSourceMap_->functionlocs().length(); i++) {
+            MOZ_ASSERT(lastLineno <= maybeSourceMap_->functionlocs()[i].startLineno &&
+                maybeSourceMap_->functionlocs()[i].startLineno <=
+                  maybeSourceMap_->functionlocs()[i].endLineno);
+            lastLineno = maybeSourceMap_->functionlocs()[i].endLineno + 1;
+        }
+#endif
     } else {
         if (!buffer.append(enabledMessage))
             return nullptr;
     }
     return buffer.finishString();
+}
+
+struct GeneratedSourceMapLinenoComparator
+{
+    int operator()(const ExprLoc& loc) const {
+        return lineno == loc.lineno ? 0 : lineno < loc.lineno ? -1 : 1;
+    }
+    explicit GeneratedSourceMapLinenoComparator(uint32_t lineno_) : lineno(lineno_) {}
+    const uint32_t lineno;
+};
+
+bool
+Instance::getLineOffsets(size_t lineno, Vector<uint32_t>& offsets)
+{
+    // TODO Ensure text was generated?
+    if (!maybeSourceMap_)
+        return false;
+
+    if (lineno < experimentalWarningLinesCount)
+        return true;
+    lineno -= experimentalWarningLinesCount;
+
+    ExprLocVector& exprlocs = maybeSourceMap_->exprlocs();
+
+    // Binary search for the expression with the specified line number and
+    // rewind to the first expression, if more than one expression on the same line.
+    size_t match;
+    if (!BinarySearchIf(exprlocs, 0, exprlocs.length(),
+                        GeneratedSourceMapLinenoComparator(lineno), &match))
+        return true;
+    while (match > 0 && exprlocs[match - 1].lineno == lineno)
+        match--;
+    // Returning all expression offsets that were printed on the specified line.
+    for (size_t i = match; i < exprlocs.length() && exprlocs[i].lineno == lineno; i++) {
+        if (!offsets.append(exprlocs[i].offset))
+            return false;
+    }
+    return true;
 }
 
 bool

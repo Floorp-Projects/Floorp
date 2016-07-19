@@ -705,6 +705,7 @@ AstDecodeReturn(AstDecodeContext& c)
 static bool
 AstDecodeExpr(AstDecodeContext& c)
 {
+    uint32_t exprOffset = c.iter().currentOffset();
     Expr expr;
     if (!c.iter().readExpr(&expr))
         return false;
@@ -718,13 +719,19 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
-        return true;
+        break;
       case Expr::Call:
-        return AstDecodeCall(c);
+        if (!AstDecodeCall(c))
+            return false;
+        break;
       case Expr::CallIndirect:
-        return AstDecodeCallIndirect(c);
+        if (!AstDecodeCallIndirect(c))
+            return false;
+        break;
       case Expr::CallImport:
-        return AstDecodeCallImport(c);
+        if (!AstDecodeCallImport(c))
+            return false;
+        break;
       case Expr::I32Const:
         int32_t i32;
         if (!c.iter().readI32Const(&i32))
@@ -733,7 +740,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
-        return true;
+        break;
       case Expr::I64Const:
         int64_t i64;
         if (!c.iter().readI64Const(&i64))
@@ -742,7 +749,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
-        return true;
+        break;
       case Expr::F32Const:
         float f32;
         if (!c.iter().readF32Const(&f32))
@@ -751,7 +758,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
-        return true;
+        break;
       case Expr::F64Const:
         double f64;
         if (!c.iter().readF64Const(&f64))
@@ -760,30 +767,48 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
-        return true;
+        break;
       case Expr::GetLocal:
-        return AstDecodeGetLocal(c);
+        if (!AstDecodeGetLocal(c))
+            return false;
+        break;
       case Expr::SetLocal:
-        return AstDecodeSetLocal(c);
+        if (!AstDecodeSetLocal(c))
+            return false;
+        break;
       case Expr::Select:
-        return AstDecodeSelect(c);
+        if (!AstDecodeSelect(c))
+            return false;
+        break;
       case Expr::Block:
       case Expr::Loop:
-        return AstDecodeBlock(c, expr);
+        if (!AstDecodeBlock(c, expr))
+            return false;
+        break;
       case Expr::If:
-        return AstDecodeIf(c);
+        if (!AstDecodeIf(c))
+            return false;
+        break;
       case Expr::Else:
-        return AstDecodeElse(c);
+        if (!AstDecodeElse(c))
+            return false;
+        break;
       case Expr::End:
-        return AstDecodeEnd(c);
+        if (!AstDecodeEnd(c))
+            return false;
+        break;
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
-        return AstDecodeUnary(c, ValType::I32, expr);
+        if (!AstDecodeUnary(c, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-        return AstDecodeUnary(c, ValType::I64, expr);
+        if (!AstDecodeUnary(c, ValType::I64, expr))
+            return false;
+        break;
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
@@ -791,7 +816,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::F32Sqrt:
       case Expr::F32Trunc:
       case Expr::F32Nearest:
-        return AstDecodeUnary(c, ValType::F32, expr);
+        if (!AstDecodeUnary(c, ValType::F32, expr))
+            return false;
+        break;
       case Expr::F64Abs:
       case Expr::F64Neg:
       case Expr::F64Ceil:
@@ -799,7 +826,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::F64Sqrt:
       case Expr::F64Trunc:
       case Expr::F64Nearest:
-        return AstDecodeUnary(c, ValType::F64, expr);
+        if (!AstDecodeUnary(c, ValType::F64, expr))
+            return false;
+        break;
       case Expr::I32Add:
       case Expr::I32Sub:
       case Expr::I32Mul:
@@ -815,7 +844,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::I32ShrU:
       case Expr::I32Rotl:
       case Expr::I32Rotr:
-        return AstDecodeBinary(c, ValType::I32, expr);
+        if (!AstDecodeBinary(c, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I64Add:
       case Expr::I64Sub:
       case Expr::I64Mul:
@@ -831,7 +862,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::I64ShrU:
       case Expr::I64Rotl:
       case Expr::I64Rotr:
-        return AstDecodeBinary(c, ValType::I64, expr);
+        if (!AstDecodeBinary(c, ValType::I64, expr))
+            return false;
+        break;
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:
@@ -839,7 +872,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::F32Min:
       case Expr::F32Max:
       case Expr::F32CopySign:
-        return AstDecodeBinary(c, ValType::F32, expr);
+        if (!AstDecodeBinary(c, ValType::F32, expr))
+            return false;
+        break;
       case Expr::F64Add:
       case Expr::F64Sub:
       case Expr::F64Mul:
@@ -847,7 +882,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::F64Min:
       case Expr::F64Max:
       case Expr::F64CopySign:
-        return AstDecodeBinary(c, ValType::F64, expr);
+        if (!AstDecodeBinary(c, ValType::F64, expr))
+            return false;
+        break;
       case Expr::I32Eq:
       case Expr::I32Ne:
       case Expr::I32LtS:
@@ -858,7 +895,9 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::I32GtU:
       case Expr::I32GeS:
       case Expr::I32GeU:
-        return AstDecodeComparison(c, ValType::I32, expr);
+        if (!AstDecodeComparison(c, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I64Eq:
       case Expr::I64Ne:
       case Expr::I64LtS:
@@ -869,108 +908,182 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::I64GtU:
       case Expr::I64GeS:
       case Expr::I64GeU:
-        return AstDecodeComparison(c, ValType::I64, expr);
+        if (!AstDecodeComparison(c, ValType::I64, expr))
+            return false;
+        break;
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
       case Expr::F32Le:
       case Expr::F32Gt:
       case Expr::F32Ge:
-        return AstDecodeComparison(c, ValType::F32, expr);
+        if (!AstDecodeComparison(c, ValType::F32, expr))
+            return false;
+        break;
       case Expr::F64Eq:
       case Expr::F64Ne:
       case Expr::F64Lt:
       case Expr::F64Le:
       case Expr::F64Gt:
       case Expr::F64Ge:
-        return AstDecodeComparison(c, ValType::F64, expr);
+        if (!AstDecodeComparison(c, ValType::F64, expr))
+            return false;
+        break;
       case Expr::I32Eqz:
-        return AstDecodeConversion(c, ValType::I32, ValType::I32, expr);
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I64Eqz:
-        return AstDecodeConversion(c, ValType::I64, ValType::I32, expr);
+        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
       case Expr::I32ReinterpretF32:
-        return AstDecodeConversion(c, ValType::F32, ValType::I32, expr);
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
-        return AstDecodeConversion(c, ValType::F64, ValType::I32, expr);
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, expr))
+            return false;
+        break;
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
-        return AstDecodeConversion(c, ValType::I32, ValType::I64, expr);
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, expr))
+            return false;
+        break;
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return AstDecodeConversion(c, ValType::F32, ValType::I64, expr);
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, expr))
+            return false;
+        break;
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
       case Expr::I64ReinterpretF64:
-        return AstDecodeConversion(c, ValType::F64, ValType::I64, expr);
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, expr))
+            return false;
+        break;
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
       case Expr::F32ReinterpretI32:
-        return AstDecodeConversion(c, ValType::I32, ValType::F32, expr);
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, expr))
+            return false;
+        break;
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return AstDecodeConversion(c, ValType::I64, ValType::F32, expr);
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, expr))
+            return false;
+        break;
       case Expr::F32DemoteF64:
-        return AstDecodeConversion(c, ValType::F64, ValType::F32, expr);
+        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, expr))
+            return false;
+        break;
       case Expr::F64ConvertSI32:
       case Expr::F64ConvertUI32:
-        return AstDecodeConversion(c, ValType::I32, ValType::F64, expr);
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, expr))
+            return false;
+        break;
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
       case Expr::F64ReinterpretI64:
-        return AstDecodeConversion(c, ValType::I64, ValType::F64, expr);
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, expr))
+            return false;
+        break;
       case Expr::F64PromoteF32:
-        return AstDecodeConversion(c, ValType::F32, ValType::F64, expr);
+        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, expr))
+            return false;
+        break;
       case Expr::I32Load8S:
       case Expr::I32Load8U:
-        return AstDecodeLoad(c, ValType::I32, 1, expr);
+        if (!AstDecodeLoad(c, ValType::I32, 1, expr))
+            return false;
+        break;
       case Expr::I32Load16S:
       case Expr::I32Load16U:
-        return AstDecodeLoad(c, ValType::I32, 2, expr);
+        if (!AstDecodeLoad(c, ValType::I32, 2, expr))
+            return false;
+        break;
       case Expr::I32Load:
-        return AstDecodeLoad(c, ValType::I32, 4, expr);
+        if (!AstDecodeLoad(c, ValType::I32, 4, expr))
+            return false;
+        break;
       case Expr::I64Load8S:
       case Expr::I64Load8U:
-        return AstDecodeLoad(c, ValType::I64, 1, expr);
+        if (!AstDecodeLoad(c, ValType::I64, 1, expr))
+            return false;
+        break;
       case Expr::I64Load16S:
       case Expr::I64Load16U:
-        return AstDecodeLoad(c, ValType::I64, 2, expr);
+        if (!AstDecodeLoad(c, ValType::I64, 2, expr))
+            return false;
+        break;
       case Expr::I64Load32S:
       case Expr::I64Load32U:
-        return AstDecodeLoad(c, ValType::I64, 4, expr);
+        if (!AstDecodeLoad(c, ValType::I64, 4, expr))
+            return false;
+        break;
       case Expr::I64Load:
-        return AstDecodeLoad(c, ValType::I64, 8, expr);
+        if (!AstDecodeLoad(c, ValType::I64, 8, expr))
+            return false;
+        break;
       case Expr::F32Load:
-        return AstDecodeLoad(c, ValType::F32, 4, expr);
+        if (!AstDecodeLoad(c, ValType::F32, 4, expr))
+            return false;
+        break;
       case Expr::F64Load:
-        return AstDecodeLoad(c, ValType::F64, 8, expr);
+        if (!AstDecodeLoad(c, ValType::F64, 8, expr))
+            return false;
+        break;
       case Expr::I32Store8:
-        return AstDecodeStore(c, ValType::I32, 1, expr);
+        if (!AstDecodeStore(c, ValType::I32, 1, expr))
+            return false;
+        break;
       case Expr::I32Store16:
-        return AstDecodeStore(c, ValType::I32, 2, expr);
+        if (!AstDecodeStore(c, ValType::I32, 2, expr))
+            return false;
+        break;
       case Expr::I32Store:
-        return AstDecodeStore(c, ValType::I32, 4, expr);
+        if (!AstDecodeStore(c, ValType::I32, 4, expr))
+            return false;
+        break;
       case Expr::I64Store8:
-        return AstDecodeStore(c, ValType::I64, 1, expr);
+        if (!AstDecodeStore(c, ValType::I64, 1, expr))
+            return false;
+        break;
       case Expr::I64Store16:
-        return AstDecodeStore(c, ValType::I64, 2, expr);
+        if (!AstDecodeStore(c, ValType::I64, 2, expr))
+            return false;
+        break;
       case Expr::I64Store32:
-        return AstDecodeStore(c, ValType::I64, 4, expr);
+        if (!AstDecodeStore(c, ValType::I64, 4, expr))
+            return false;
+        break;
       case Expr::I64Store:
-        return AstDecodeStore(c, ValType::I64, 8, expr);
+        if (!AstDecodeStore(c, ValType::I64, 8, expr))
+            return false;
+        break;
       case Expr::F32Store:
-        return AstDecodeStore(c, ValType::F32, 4, expr);
+        if (!AstDecodeStore(c, ValType::F32, 4, expr))
+            return false;
+        break;
       case Expr::F64Store:
-        return AstDecodeStore(c, ValType::F64, 8, expr);
+        if (!AstDecodeStore(c, ValType::F64, 8, expr))
+            return false;
+        break;
       case Expr::Br:
       case Expr::BrIf:
-        return AstDecodeBranch(c, expr);
+        if (!AstDecodeBranch(c, expr))
+            return false;
+        break;
       case Expr::BrTable:
-        return AstDecodeBrTable(c);
+        if (!AstDecodeBrTable(c))
+            return false;
+        break;
       case Expr::Return:
-        return AstDecodeReturn(c);
+        if (!AstDecodeReturn(c))
+            return false;
+        break;
       case Expr::Unreachable:
         if (!c.iter().readUnreachable())
             return false;
@@ -978,14 +1091,17 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp)
             return false;
         c.iter().setResult(AstDecodeStackItem(tmp));
-        return true;
+        break;
       default:
         // Note: it's important not to remove this default since readExpr()
         // can return Expr values for which there is no enumerator.
-        break;
+        return c.iter().unrecognizedOpcode(expr);
     }
 
-    return c.iter().unrecognizedOpcode(expr);
+    AstExpr* lastExpr = c.iter().getResult().expr;
+    if (lastExpr)
+        lastExpr->setOffset(exprOffset);
+    return true;
 }
 
 /*****************************************************************************/
@@ -1329,6 +1445,7 @@ AstDecodeExportSection(AstDecodeContext& c)
 static bool
 AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 {
+    uint32_t offset = c.d.currentOffset();
     uint32_t bodySize;
     if (!c.d.readVarU32(&bodySize))
         return AstDecodeFail(c, "expected number of function body bytes");
@@ -1403,6 +1520,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     *func = new(c.lifo) AstFunc(funcName, sigRef, Move(vars), Move(localsNames), Move(body));
     if (!*func)
         return false;
+    (*func)->setOffset(offset);
 
     return true;
 }

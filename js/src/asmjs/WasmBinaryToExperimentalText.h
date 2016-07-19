@@ -19,6 +19,8 @@
 #ifndef wasm_binary_to_experimental_text_h
 #define wasm_binary_to_experimental_text_h
 
+#include "mozilla/Vector.h"
+
 #include "NamespaceImports.h"
 
 #include "gc/Rooting.h"
@@ -43,12 +45,64 @@ struct ExperimentalTextFormatting
     {}
 };
 
+// The generated source location for the AST node/expression. The offset field refers
+// an offset in an binary format file.
+struct ExprLoc
+{
+    uint32_t lineno;
+    uint32_t column;
+    uint32_t offset;
+    ExprLoc() : lineno(0), column(0), offset(0) {}
+    ExprLoc(uint32_t lineno_, uint32_t column_, uint32_t offset_) : lineno(lineno_), column(column_), offset(offset_) {}
+};
+
+typedef mozilla::Vector<ExprLoc, 0, TempAllocPolicy> ExprLocVector;
+
+// The generated source WebAssembly function lines and expressions ranges.
+struct FunctionLoc
+{
+    size_t startExprsIndex;
+    size_t endExprsIndex;
+    uint32_t startLineno;
+    uint32_t endLineno;
+    FunctionLoc(size_t startExprsIndex_, size_t endExprsIndex_, uint32_t startLineno_, uint32_t endLineno_)
+      : startExprsIndex(startExprsIndex_),
+        endExprsIndex(endExprsIndex_),
+        startLineno(startLineno_),
+        endLineno(endLineno_)
+    {}
+};
+
+typedef mozilla::Vector<FunctionLoc, 0, TempAllocPolicy> FunctionLocVector;
+
+// The generated source map for WebAssembly binary file. This map is generated during
+// building the text buffer (see BinaryToExperimentalText).
+class GeneratedSourceMap
+{
+    ExprLocVector exprlocs_;
+    FunctionLocVector functionlocs_;
+    uint32_t totalLines_;
+
+  public:
+    explicit GeneratedSourceMap(JSContext* cx)
+     : exprlocs_(cx),
+       functionlocs_(cx),
+       totalLines_(0)
+    {}
+    ExprLocVector& exprlocs() { return exprlocs_; }
+    FunctionLocVector& functionlocs() { return functionlocs_; }
+
+    uint32_t totalLines() { return totalLines_; }
+    void setTotalLines(uint32_t val) { totalLines_ = val; }
+};
+
 // Translate the given binary representation of a wasm module into the module's textual
 // representation.
 
 MOZ_MUST_USE bool
 BinaryToExperimentalText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
-                         const ExperimentalTextFormatting& formatting = ExperimentalTextFormatting());
+                         const ExperimentalTextFormatting& formatting = ExperimentalTextFormatting(),
+                         GeneratedSourceMap* sourceMap = nullptr);
 
 }  // namespace wasm
 
