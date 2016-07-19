@@ -75,7 +75,7 @@ window.onload = Task.async(function* () {
     // Test object: `{a: "a", b: "b", c: "c"}`;
     const testName = "testMaxProps";
 
-    const defaultOutput = `Object {a: "a", b: "b", c: "c"}`;
+    const defaultOutput = `Object { a: "a", b: "b", c: "c" }`;
 
     const modeTests = [
       {
@@ -103,7 +103,7 @@ window.onload = Task.async(function* () {
     // Test object = `{p0: "0", p1: "1", p2: "2", …, p100: "100"}`
     const testName = "testMoreThanMaxProps";
 
-    const defaultOutput = `Object {p0: "0", p1: "1", p2: "2", 98 more…}`;
+    const defaultOutput = `Object { p0: "0", p1: "1", p2: "2", 98 more… }`;
 
     // Generate string with 100 properties, which is the max limit
     // for 'long' mode.
@@ -112,7 +112,7 @@ window.onload = Task.async(function* () {
       props += "p" + i + ": \"" + i + "\", ";
     }
 
-    const longOutput = `Object {${props}1 more…}`;
+    const longOutput = `Object { ${props}1 more… }`;
 
     const modeTests = [
       {
@@ -140,14 +140,14 @@ window.onload = Task.async(function* () {
     // Test object: `{a: undefined, b: undefined, c: "c", d: 1}`
     // @TODO This is not how we actually want the preview to be output.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1276376
-    const expectedOutput = `Object {a: undefined, b: undefined, c: "c", 1 more…}`;
+    const expectedOutput = `Object { a: undefined, b: undefined, c: "c", 1 more… }`;
   }
 
   function testNestedObject() {
     // Test object: `{objProp: {id: 1}, strProp: "test string"}`
     const testName = "testNestedObject";
 
-    const defaultOutput = `Object {objProp: Object, strProp: "test string"}`;
+    const defaultOutput = `Object { objProp: Object, strProp: "test string" }`;
 
     const modeTests = [
       {
@@ -175,7 +175,7 @@ window.onload = Task.async(function* () {
     // Test object: `{arrProp: ["foo", "bar", "baz"]}`
     const testName = "testNestedArray";
 
-    const defaultOutput = `Object {arrProp: [3]}`;
+    const defaultOutput = `Object { arrProp: [3] }`;
 
     const modeTests = [
       {
