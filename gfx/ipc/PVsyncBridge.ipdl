@@ -15,7 +15,7 @@ namespace gfx {
 sync protocol PVsyncBridge
 {
 parent:
-  async NotifyVsync(TimeStamp vsyncTimeStamp);
+  async NotifyVsync(TimeStamp vsyncTimeStamp, uint64_t layersId);
 };
 
 } // namespace gfx

@@ -17,6 +17,8 @@
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/ipc/Transport.h"
 #include "nsIObserverService.h"
+#include "nsThreadUtils.h"
+class nsBaseWidget;
 
 
 namespace mozilla {
@@ -71,7 +73,7 @@ public:
   void EnsureGPUReady();
 
   RefPtr<CompositorSession> CreateTopLevelCompositor(
-    nsIWidget* aWidget,
+    nsBaseWidget* aWidget,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
@@ -142,7 +144,7 @@ private:
   void ShutdownVsyncIOThread();
 
   RefPtr<CompositorSession> CreateRemoteSession(
-    nsIWidget* aWidget,
+    nsBaseWidget* aWidget,
     ClientLayerManager* aLayerManager,
     const uint64_t& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
