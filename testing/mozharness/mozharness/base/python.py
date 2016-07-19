@@ -614,13 +614,17 @@ class ResourceMonitoringMixin(object):
                     {
                         'name': 'time',
                         'value': phase_duration,
-                    },
-                    {
+                    }
+                ]
+                cpu_percent = rm.aggregate_cpu_percent(phase=phase,
+                                                       per_cpu=False)
+                if cpu_percent is not None:
+                    subtests.append({
                         'name': 'cpu_percent',
                         'value': rm.aggregate_cpu_percent(phase=phase,
                                                           per_cpu=False),
-                    }
-                ]
+                    })
+
                 # We don't report I/O during each step because measured I/O
                 # is system I/O and that I/O can be delayed (e.g. writes will
                 # buffer before being flushed and recorded in our metrics).
