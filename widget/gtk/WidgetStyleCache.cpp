@@ -67,7 +67,7 @@ CreateCheckboxWidget()
 static GtkWidget*
 CreateRadiobuttonWidget()
 {
-  GtkWidget* widget = gtk_radio_button_new_with_label(NULL, "M");
+  GtkWidget* widget = gtk_radio_button_new_with_label(nullptr, "M");
   AddToWindowContainer(widget);
   return widget;
 }
@@ -166,6 +166,48 @@ CreateInfoBarWidget()
 }
 
 static GtkWidget*
+CreateButtonWidget()
+{
+  GtkWidget* widget = gtk_button_new_with_label("M");
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateToggleButtonWidget()
+{
+  GtkWidget* widget = gtk_toggle_button_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateButtonArrowWidget()
+{
+  GtkWidget* widget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
+  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_TOGGLE_BUTTON)), widget);
+  gtk_widget_realize(widget);
+  gtk_widget_show(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateSpinWidget()
+{
+  GtkWidget* widget = gtk_spin_button_new(nullptr, 1, 0);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateEntryWidget()
+{
+  GtkWidget* widget = gtk_entry_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -205,6 +247,16 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateToolbarSeparatorWidget();
     case MOZ_GTK_INFO_BAR:
       return CreateInfoBarWidget();
+    case MOZ_GTK_SPINBUTTON:
+      return CreateSpinWidget();
+    case MOZ_GTK_BUTTON:
+      return CreateButtonWidget();
+    case MOZ_GTK_TOGGLE_BUTTON:
+      return CreateToggleButtonWidget();
+    case MOZ_GTK_BUTTON_ARROW:
+      return CreateButtonArrowWidget();
+    case MOZ_GTK_ENTRY:
+      return CreateEntryWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -349,6 +401,10 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_INFO_BAR,
                                      GTK_STYLE_CLASS_INFO);
+    case MOZ_GTK_SPINBUTTON_ENTRY:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_SPINBUTTON,
+                                     GTK_STYLE_CLASS_ENTRY);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -406,6 +462,9 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_INFO_BAR:
       return GetWidgetStyleWithClass(MOZ_GTK_INFO_BAR,
                                      GTK_STYLE_CLASS_INFO);
+    case MOZ_GTK_SPINBUTTON_ENTRY:
+      return GetWidgetStyleWithClass(MOZ_GTK_SPINBUTTON,
+                                     GTK_STYLE_CLASS_ENTRY);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);

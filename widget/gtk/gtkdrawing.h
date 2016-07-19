@@ -87,6 +87,10 @@ typedef enum {
   MOZ_GTK_BUTTON,
   /* Paints a button with image and no text */
   MOZ_GTK_TOOLBAR_BUTTON,
+  /* Paints a toggle button */
+  MOZ_GTK_TOGGLE_BUTTON,
+  /* Paints a button arrow */
+  MOZ_GTK_BUTTON_ARROW,
 
   /* Paints the container part of a GtkCheckButton. */
   MOZ_GTK_CHECKBUTTON_CONTAINER,

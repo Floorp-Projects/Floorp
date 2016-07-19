@@ -19,13 +19,8 @@
 #include <math.h>
 
 static GtkWidget* gProtoLayout;
-static GtkWidget* gButtonWidget;
-static GtkWidget* gToggleButtonWidget;
-static GtkWidget* gButtonArrowWidget;
-static GtkWidget* gSpinWidget;
 static GtkWidget* gHScaleWidget;
 static GtkWidget* gVScaleWidget;
-static GtkWidget* gEntryWidget;
 static GtkWidget* gComboBoxWidget;
 static GtkWidget* gComboBoxButtonWidget;
 static GtkWidget* gComboBoxArrowWidget;
@@ -99,16 +94,6 @@ setup_widget_prototype(GtkWidget* widget)
 }
 
 static gint
-ensure_button_widget()
-{
-    if (!gButtonWidget) {
-        gButtonWidget = gtk_button_new_with_label("M");
-        setup_widget_prototype(gButtonWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
 ensure_hpaned_widget()
 {
     if (!gHPanedWidget) {
@@ -129,40 +114,6 @@ ensure_vpaned_widget()
 }
 
 static gint
-ensure_toggle_button_widget()
-{
-    if (!gToggleButtonWidget) {
-        gToggleButtonWidget = gtk_toggle_button_new();
-        setup_widget_prototype(gToggleButtonWidget);
-  }
-  return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_button_arrow_widget()
-{
-    if (!gButtonArrowWidget) {
-        ensure_toggle_button_widget();
-
-        gButtonArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
-        gtk_container_add(GTK_CONTAINER(gToggleButtonWidget), gButtonArrowWidget);
-        gtk_widget_realize(gButtonArrowWidget);
-        gtk_widget_show(gButtonArrowWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_spin_widget()
-{
-  if (!gSpinWidget) {
-    gSpinWidget = gtk_spin_button_new(NULL, 1, 0);
-    setup_widget_prototype(gSpinWidget);
-  }
-  return MOZ_GTK_SUCCESS;
-}
-
-static gint
 ensure_scale_widget()
 {
   if (!gHScaleWidget) {
@@ -174,16 +125,6 @@ ensure_scale_widget()
     setup_widget_prototype(gVScaleWidget);
   }
   return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_entry_widget()
-{
-    if (!gEntryWidget) {
-        gEntryWidget = gtk_entry_new();
-        setup_widget_prototype(gEntryWidget);
-    }
-    return MOZ_GTK_SUCCESS;
 }
 
 /* We need to have pointers to the inner widgets (button, separator, arrow)
@@ -266,16 +207,14 @@ ensure_combo_box_widgets()
         /* Shouldn't be reached with current internal gtk implementation; we
          * use a generic toggle button as last resort fallback to avoid
          * crashing. */
-        ensure_toggle_button_widget();
-        gComboBoxButtonWidget = gToggleButtonWidget;
+        gComboBoxButtonWidget = GetWidget(MOZ_GTK_TOGGLE_BUTTON);
     }
 
     if (!gComboBoxArrowWidget) {
         /* Shouldn't be reached with current internal gtk implementation;
          * we gButtonArrowWidget as last resort fallback to avoid
          * crashing. */
-        ensure_button_arrow_widget();
-        gComboBoxArrowWidget = gButtonArrowWidget;
+        gComboBoxArrowWidget = GetWidget(MOZ_GTK_BUTTON_ARROW);
     }
 
     /* We don't test the validity of gComboBoxSeparatorWidget since there
@@ -345,8 +284,7 @@ ensure_combo_box_entry_widgets()
                          NULL);
 
     if (!gComboBoxEntryTextareaWidget) {
-        ensure_entry_widget();
-        gComboBoxEntryTextareaWidget = gEntryWidget;
+        gComboBoxEntryTextareaWidget = GetWidget(MOZ_GTK_ENTRY);
     }
 
     if (gComboBoxEntryButtonWidget) {
@@ -372,16 +310,14 @@ ensure_combo_box_entry_widgets()
         /* Shouldn't be reached with current internal gtk implementation;
          * we use a generic toggle button as last resort fallback to avoid
          * crashing. */
-        ensure_toggle_button_widget();
-        gComboBoxEntryButtonWidget = gToggleButtonWidget;
+        gComboBoxEntryButtonWidget = GetWidget(MOZ_GTK_TOGGLE_BUTTON);
     }
 
     if (!gComboBoxEntryArrowWidget) {
         /* Shouldn't be reached with current internal gtk implementation;
          * we gButtonArrowWidget as last resort fallback to avoid
          * crashing. */
-        ensure_button_arrow_widget();
-        gComboBoxEntryArrowWidget = gButtonArrowWidget;
+        gComboBoxEntryArrowWidget = GetWidget(MOZ_GTK_BUTTON_ARROW);
     }
 
     return MOZ_GTK_SUCCESS;
@@ -560,15 +496,12 @@ moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
 {
     GtkBorder border;
     GtkBorder padding;
-    GtkStyleContext *style;
-
-    ensure_entry_widget();
-    style = gtk_widget_get_style_context(gEntryWidget);
-
+    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_ENTRY);
     gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
     gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
     *focus_h_width = border.left + padding.left;
     *focus_v_width = border.top + padding.top;
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -600,10 +533,11 @@ moz_gtk_button_get_default_overflow(gint* border_top, gint* border_left,
 {
     GtkBorder* default_outside_border;
 
-    ensure_button_widget();
-    gtk_style_context_get_style(gtk_widget_get_style_context(gButtonWidget),
+    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_BUTTON);
+    gtk_style_context_get_style(style,
                                 "default-outside-border", &default_outside_border,
                                 NULL);
+    ReleaseStyleContext(style);
 
     if (default_outside_border) {
         *border_top = default_outside_border->top;
@@ -623,10 +557,11 @@ moz_gtk_button_get_default_border(gint* border_top, gint* border_left,
 {
     GtkBorder* default_border;
 
-    ensure_button_widget();
-    gtk_style_context_get_style(gtk_widget_get_style_context(gButtonWidget),
+    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_BUTTON);
+    gtk_style_context_get_style(style,
                                 "default-border", &default_border,
                                 NULL);
+    ReleaseStyleContext(style);
 
     if (default_border) {
         *border_top = default_border->top;
@@ -1045,17 +980,10 @@ static gint
 moz_gtk_spin_paint(cairo_t *cr, GdkRectangle* rect,
                    GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-
-    ensure_spin_widget();
-    gtk_widget_set_direction(gSpinWidget, direction);
-    style = gtk_widget_get_style_context(gSpinWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SPINBUTTON);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_SPINBUTTON, direction);
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1064,21 +992,14 @@ moz_gtk_spin_updown_paint(cairo_t *cr, GdkRectangle* rect,
                           gboolean isDown, GtkWidgetState* state,
                           GtkTextDirection direction)
 {
-    GdkRectangle arrow_rect;
-    GtkStyleContext* style;
-
-    ensure_spin_widget();
-    style = gtk_widget_get_style_context(gSpinWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SPINBUTTON);
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
-    gtk_widget_set_direction(gSpinWidget, direction);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_SPINBUTTON, direction,
+                                 GetStateFlagsFromGtkWidgetState(state));
 
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
 
-
     /* hard code these values */
+    GdkRectangle arrow_rect;
     arrow_rect.width = 6;
     arrow_rect.height = 6;
     arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
@@ -1089,7 +1010,8 @@ moz_gtk_spin_updown_paint(cairo_t *cr, GdkRectangle* rect,
                     isDown ? ARROW_DOWN : ARROW_UP,
                     arrow_rect.x, arrow_rect.y,
                     arrow_rect.width);
-    gtk_style_context_restore(style);
+
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1548,19 +1470,8 @@ moz_gtk_arrow_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkWidgetState* state,
                     GtkArrowType arrow_type, GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GdkRectangle arrow_rect;
     gdouble arrow_angle;
-
-    ensure_button_arrow_widget();
-    style = gtk_widget_get_style_context(gButtonArrowWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_set_state(style, state_flags);
-    gtk_widget_set_direction(gButtonArrowWidget, direction);
-
-    calculate_arrow_rect(gButtonArrowWidget, rect, &arrow_rect,
-                         direction);
 
     if (direction == GTK_TEXT_DIR_RTL) {
         arrow_type = (arrow_type == GTK_ARROW_LEFT) ?
@@ -1580,10 +1491,17 @@ moz_gtk_arrow_paint(cairo_t *cr, GdkRectangle* rect,
         arrow_angle = ARROW_UP;
         break;
     }
-    if (arrow_type != GTK_ARROW_NONE)
-        gtk_render_arrow(style, cr, arrow_angle,
-                         arrow_rect.x, arrow_rect.y, arrow_rect.width);                    
-    gtk_style_context_restore(style);
+    if (arrow_type == GTK_ARROW_NONE)
+        return MOZ_GTK_SUCCESS;
+
+    calculate_arrow_rect(GetWidget(MOZ_GTK_BUTTON_ARROW), rect, &arrow_rect,
+                         direction);
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_BUTTON_ARROW,
+                                               direction, state_flags);
+    gtk_render_arrow(style, cr, arrow_angle,
+                     arrow_rect.x, arrow_rect.y, arrow_rect.width);
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -2458,18 +2376,18 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_BUTTON:
     case MOZ_GTK_TOOLBAR_BUTTON:
         {
-            ensure_button_widget();
-            style = gtk_widget_get_style_context(gButtonWidget);
+            style = ClaimStyleContext(MOZ_GTK_BUTTON);
 
-            *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(gButtonWidget));
+            *left = *top = *right = *bottom =
+                gtk_container_get_border_width(GTK_CONTAINER(GetWidget(MOZ_GTK_BUTTON)));
 
             if (widget == MOZ_GTK_TOOLBAR_BUTTON) {
                 gtk_style_context_save(style);
                 gtk_style_context_add_class(style, "image-button");
             }
-              
+
             moz_gtk_add_style_padding(style, left, top, right, bottom);
-                
+
             if (widget == MOZ_GTK_TOOLBAR_BUTTON)
                 gtk_style_context_restore(style);
 
@@ -2477,12 +2395,13 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             // -moz-focus-inner border (Bug 1228281).
             *left -= 1; *top -= 1; *right -= 1; *bottom -= 1;
             moz_gtk_add_style_border(style, left, top, right, bottom);
+
+            ReleaseStyleContext(style);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_ENTRY:
         {
-            ensure_entry_widget();
-            style = gtk_widget_get_style_context(gEntryWidget);
+            style = ClaimStyleContext(MOZ_GTK_ENTRY);
 
             // XXX: Subtract 1 pixel from the padding to account for the default
             // padding in forms.css. See bug 1187385.
@@ -2490,6 +2409,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             moz_gtk_add_style_padding(style, left, top, right, bottom);
             moz_gtk_add_style_border(style, left, top, right, bottom);
 
+            ReleaseStyleContext(style);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_TEXT_VIEW:
@@ -2585,8 +2505,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_SPINBUTTON_ENTRY:
     case MOZ_GTK_SPINBUTTON_UP:
     case MOZ_GTK_SPINBUTTON_DOWN:
-        ensure_spin_widget();
-        w = gSpinWidget;
+        w = GetWidget(MOZ_GTK_SPINBUTTON);
         break;
     case MOZ_GTK_SCALE_HORIZONTAL:
         ensure_scale_widget();
@@ -2764,8 +2683,7 @@ moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width, gint* height)
             widget = gComboBoxArrowWidget;
             break;
         default:
-            ensure_button_arrow_widget();
-            widget = gButtonArrowWidget;
+            widget = GetWidget(MOZ_GTK_BUTTON_ARROW);
             break;
     }
 
@@ -2853,8 +2771,7 @@ moz_gtk_get_menu_separator_height(gint *size)
 void
 moz_gtk_get_entry_min_height(gint* height)
 {
-    ensure_entry_widget();
-    GtkStyleContext* style = gtk_widget_get_style_context(gEntryWidget);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_ENTRY);
     if (!gtk_check_version(3, 20, 0)) {
         gtk_style_context_get(style, gtk_style_context_get_state(style),
                               "min-height", height,
@@ -2869,6 +2786,7 @@ moz_gtk_get_entry_min_height(gint* height)
     gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     *height += (border.top + border.bottom + padding.top + padding.bottom);
+    ReleaseStyleContext(style);
 }
 
 void
@@ -2949,8 +2867,7 @@ moz_gtk_images_in_buttons()
     gboolean result;
     GtkSettings* settings;
 
-    ensure_button_widget();
-    settings = gtk_widget_get_settings(gButtonWidget);
+    settings = gtk_widget_get_settings(GetWidget(MOZ_GTK_BUTTON));
 
     g_object_get(settings, "gtk-button-images", &result, NULL);
     return result;
@@ -2971,14 +2888,14 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
     case MOZ_GTK_BUTTON:
     case MOZ_GTK_TOOLBAR_BUTTON:
         if (state->depressed) {
-            ensure_toggle_button_widget();
             return moz_gtk_button_paint(cr, rect, state,
                                         (GtkReliefStyle) flags,
-                                        gToggleButtonWidget, direction);
+                                        GetWidget(MOZ_GTK_TOGGLE_BUTTON),
+                                        direction);
         }
-        ensure_button_widget();
         return moz_gtk_button_paint(cr, rect, state,
-                                    (GtkReliefStyle) flags, gButtonWidget,
+                                    (GtkReliefStyle) flags,
+                                    GetWidget(MOZ_GTK_BUTTON),
                                     direction);
         break;
     case MOZ_GTK_CHECKBUTTON:
@@ -3026,9 +2943,9 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
                                          state, direction);
         break;
     case MOZ_GTK_SPINBUTTON_ENTRY:
-        ensure_spin_widget();
+        // TODO - use MOZ_GTK_SPINBUTTON_ENTRY style directly
         return moz_gtk_entry_paint(cr, rect, state,
-                                   gSpinWidget, direction);
+                                   GetWidget(MOZ_GTK_SPINBUTTON), direction);
         break;
     case MOZ_GTK_GRIPPER:
         return moz_gtk_gripper_paint(cr, rect, state,
@@ -3053,9 +2970,8 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
                                                (GtkExpanderStyle) flags, direction);
         break;
     case MOZ_GTK_ENTRY:
-        ensure_entry_widget();
-        return moz_gtk_entry_paint(cr, rect, state,
-                                   gEntryWidget, direction);
+        return moz_gtk_entry_paint(cr, rect, state, GetWidget(MOZ_GTK_ENTRY),
+                                   direction);
         break;
     case MOZ_GTK_TEXT_VIEW:
         return moz_gtk_text_view_paint(cr, rect, state, direction);
@@ -3199,13 +3115,8 @@ moz_gtk_shutdown()
         gtk_widget_destroy(gTreeHeaderSortArrowWidget);
 
     gProtoLayout = NULL;
-    gButtonWidget = NULL;
-    gToggleButtonWidget = NULL;
-    gButtonArrowWidget = NULL;
-    gSpinWidget = NULL;
     gHScaleWidget = NULL;
     gVScaleWidget = NULL;
-    gEntryWidget = NULL;
     gComboBoxWidget = NULL;
     gComboBoxButtonWidget = NULL;
     gComboBoxSeparatorWidget = NULL;
