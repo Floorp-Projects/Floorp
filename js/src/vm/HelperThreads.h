@@ -101,6 +101,8 @@ class GlobalHelperThreadState
     // GC tasks needing to be done in parallel.
     GCParallelTaskVector gcParallelWorklist_;
 
+    ParseTask* removeFinishedParseTask(ParseTaskKind kind, void* token);
+
   public:
     size_t maxIonCompilationThreads() const;
     size_t maxUnpausedIonCompilationThreads() const;
@@ -225,7 +227,9 @@ class GlobalHelperThreadState
         return bool(numWasmFailedJobs);
     }
 
-    JSScript* finishParseTask(JSContext* maybecx, JSRuntime* rt, ParseTaskKind kind, void* token);
+    JSScript* finishParseTask(JSContext* cx, ParseTaskKind kind, void* token);
+    void cancelParseTask(JSContext* cx, ParseTaskKind kind, void* token);
+
     void mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
                                    Handle<GlobalObject*> global,
                                    JSCompartment* dest);
@@ -238,8 +242,8 @@ class GlobalHelperThreadState
     uint32_t numWasmFailedJobs;
 
   public:
-    JSScript* finishScriptParseTask(JSContext* maybecx, JSRuntime* rt, void* token);
-    JSObject* finishModuleParseTask(JSContext* maybecx, JSRuntime* rt, void* token);
+    JSScript* finishScriptParseTask(JSContext* cx, void* token);
+    JSObject* finishModuleParseTask(JSContext* cx, void* token);
     bool compressionInProgress(SourceCompressionTask* task);
     SourceCompressionTask* compressionTaskForSource(ScriptSource* ss);
 
