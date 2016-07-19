@@ -4802,8 +4802,16 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   nsTextFrame::PaintTextParams params(aCtx->ThebesContext());
   params.framePt = gfxPoint(framePt.x, framePt.y);
   params.dirtyRect = extraVisible;
-  params.generateTextMask = aBuilder->IsForGenerateGlyphMask();
-  params.paintSelectionBackground = aBuilder->IsForPaintingSelectionBG();
+
+  if (aBuilder->IsForGenerateGlyphMask()) {
+    MOZ_ASSERT(!aBuilder->IsForPaintingSelectionBG());
+    params.state = nsTextFrame::PaintTextParams::GenerateTextMask;
+  } else if (aBuilder->IsForPaintingSelectionBG()) {
+    params.state = nsTextFrame::PaintTextParams::PaintTextBGColor;
+  } else {
+    params.state = nsTextFrame::PaintTextParams::PaintText;
+  }
+
   f->PaintText(params, *this, mOpacity);
 }
 
@@ -6003,8 +6011,7 @@ nsTextFrame::PaintTextWithSelectionColors(
   Range range; // in transformed string
   TextRangeStyle rangeStyle;
   // Draw background colors
-  if (anyBackgrounds && (!aParams.generateTextMask ||
-                         aParams.paintSelectionBackground)) {
+  if (anyBackgrounds && !aParams.IsGenerateTextMask()) {
     int32_t appUnitsPerDevPixel =
       aParams.textPaintStyle->PresContext()->AppUnitsPerDevPixel();
     SelectionIterator iterator(prevailingSelections, contentRange,
@@ -6037,7 +6044,7 @@ nsTextFrame::PaintTextWithSelectionColors(
     }
   }
 
-  if (aParams.paintSelectionBackground) {
+  if (aParams.IsPaintBGColor()) {
     return true;
   }
 
@@ -6063,7 +6070,7 @@ nsTextFrame::PaintTextWithSelectionColors(
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
                                  &selectionType, &rangeStyle)) {
     nscolor foreground, background;
-    if (aParams.generateTextMask) {
+    if (aParams.IsGenerateTextMask()) {
       foreground = NS_RGBA(0, 0, 0, 255);
     } else {
       GetSelectionTextColors(selectionType, *aParams.textPaintStyle,
@@ -6596,8 +6603,7 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
 
   // Fork off to the (slower) paint-with-selection path if necessary.
   if (aItem.mIsFrameSelected.value() &&
-      (aParams.paintSelectionBackground ||
-       ShouldDrawSelection(this->GetParent()))) {
+      (aParams.IsPaintBGColor() || ShouldDrawSelection(this->GetParent()))) {
     MOZ_ASSERT(aOpacity == 1.0f, "We don't support opacity with selections!");
     gfxSkipCharsIterator tmp(provider.GetStart());
     Range contentRange(
@@ -6613,11 +6619,11 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
     }
   }
 
-  if (aParams.paintSelectionBackground) {
+  if (aParams.IsPaintBGColor()) {
     return;
   }
 
-  nscolor foregroundColor = aParams.generateTextMask
+  nscolor foregroundColor = aParams.IsGenerateTextMask()
                             ? NS_RGBA(0, 0, 0, 255)
                             : textPaintStyle.GetTextColor();
   if (aOpacity != 1.0f) {
@@ -6626,7 +6632,7 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
     foregroundColor = gfxColor.ToABGR();
   }
 
-  nscolor textStrokeColor = aParams.generateTextMask
+  nscolor textStrokeColor = aParams.IsGenerateTextMask()
                             ? NS_RGBA(0, 0, 0, 255)
                             : textPaintStyle.GetWebkitTextStrokeColor();
   if (aOpacity != 1.0f) {
@@ -6636,7 +6642,7 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
   }
 
   range = Range(startOffset, startOffset + maxLength);
-  if (!aParams.callbacks && !aParams.generateTextMask) {
+  if (!aParams.callbacks && aParams.IsPaintText()) {
     const nsStyleText* textStyle = StyleText();
     PaintShadowParams shadowParams(aParams);
     shadowParams.range = range;
