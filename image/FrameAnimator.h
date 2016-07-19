@@ -152,21 +152,15 @@ public:
     // Whether the animation has finished playing.
     bool animationFinished : 1;
 
-    // Whether an error has occurred when trying to advance a frame. Note that
-    // errors do not, on their own, end the animation.
-    bool error : 1;
-
     RefreshResult()
       : frameAdvanced(false)
       , animationFinished(false)
-      , error(false)
     { }
 
     void Accumulate(const RefreshResult& other)
     {
       frameAdvanced = frameAdvanced || other.frameAdvanced;
       animationFinished = animationFinished || other.animationFinished;
-      error = error || other.error;
       dirtyRect = dirtyRect.Union(other.dirtyRect);
     }
   };
