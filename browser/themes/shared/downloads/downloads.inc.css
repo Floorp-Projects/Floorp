@@ -32,9 +32,21 @@
 }
 
 #downloadsSummary {
-  padding: 8px 38px 8px 12px;
+  --summary-padding-end: 38px;
+  --summary-padding-start: 12px;
+  padding: 8px var(--summary-padding-end) 8px var(--summary-padding-start);
   cursor: pointer;
   -moz-user-focus: normal;
+}
+
+#downloadsSummary:-moz-locale-dir(rtl) {
+  padding-right: var(--summary-padding-start);
+  padding-left: var(--summary-padding-end);
+}
+
+#downloadsSummaryChildBox {
+  -moz-margin-start: var(--summary-padding-start);
+  -moz-margin-end: var(--summary-padding-end);
 }
 
 #downloadsSummary > .downloadTypeIcon {
@@ -87,7 +99,7 @@ richlistitem[type="download"]:last-child {
   border-bottom: 1px solid transparent;
 }
 
-.downloadStackIcon {
+.downloadTypeIcon {
   --inline-offset: 8px;
   --block-offset: 4px;
   --icon-size: 32px;
