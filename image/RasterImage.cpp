@@ -285,7 +285,7 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
     MOZ_ASSERT(mFrameAnimator);
     MOZ_ASSERT(ToSurfaceFlags(aFlags) == DefaultSurfaceFlags(),
                "Can't composite frames with non-default surface flags");
-    return mFrameAnimator->GetCompositedFrame(*mAnimationState, aFrameNum);
+    return mFrameAnimator->GetCompositedFrame(aFrameNum);
   }
 
   SurfaceFlags surfaceFlags = ToSurfaceFlags(aFlags);
