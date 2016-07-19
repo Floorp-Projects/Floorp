@@ -167,7 +167,12 @@ cubeb* GetCubebContextUnlocked()
     return sCubebContext;
   }
 
-  NS_WARN_IF_FALSE(sBrandName, "Could not get brandName?");
+  if (!sBrandName && NS_IsMainThread()) {
+    InitBrandName();
+  } else {
+    NS_WARN_IF_FALSE(sBrandName,
+        "Did not initialize sbrandName, and not on the main thread?");
+  }
 
   DebugOnly<int> rv = cubeb_init(&sCubebContext, sBrandName);
   NS_WARN_IF_FALSE(rv == CUBEB_OK, "Could not get a cubeb context.");
