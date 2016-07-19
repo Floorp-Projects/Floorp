@@ -295,7 +295,8 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
                                          nsIAtom* aAttribute, int32_t aModType,
                                          const nsAttrValue* aNewValue)
 {
-  NS_ERROR("stylo: ServoRestyleManager::AttributeWillChange not implemented");
+  ServoElementSnapshot* snapshot = SnapshotForElement(aElement);
+  snapshot->AddAttrs(aElement);
 }
 
 void
