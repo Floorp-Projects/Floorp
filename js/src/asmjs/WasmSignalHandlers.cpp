@@ -147,6 +147,9 @@ class AutoSetHandlingSegFault
 # else
 #  define R15_sig(p) ((p)->uc_mcontext.gregs[REG_R15])
 # endif
+# if defined(__linux__) && defined(__aarch64__)
+#  define EPC_sig(p) ((p)->uc_mcontext.pc)
+# endif
 # if defined(__linux__) && defined(__mips__)
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
 #  define RSP_sig(p) ((p)->uc_mcontext.gregs[29])
@@ -348,6 +351,8 @@ struct macos_arm_context {
 # define PC_sig(p) EIP_sig(p)
 #elif defined(JS_CPU_ARM)
 # define PC_sig(p) R15_sig(p)
+#elif defined(__aarch64__)
+# define PC_sig(p) EPC_sig(p)
 #elif defined(JS_CPU_MIPS)
 # define PC_sig(p) EPC_sig(p)
 #endif
