@@ -19,8 +19,8 @@ namespace image {
 // Helpers for sending notifications to the image associated with a decoder.
 ///////////////////////////////////////////////////////////////////////////////
 
-/* static */ void
-IDecodingTask::NotifyProgress(NotNull<Decoder*> aDecoder)
+static void
+NotifyProgress(NotNull<Decoder*> aDecoder)
 {
   MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
 
