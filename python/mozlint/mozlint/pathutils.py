@@ -72,12 +72,18 @@ def filterpaths(paths, linter, **lintargs):
     include = linter.get('include', [])
     exclude = lintargs.get('exclude', [])
     exclude.extend(linter.get('exclude', []))
+    root = lintargs['root']
 
     if not lintargs.get('use_filters', True) or (not include and not exclude):
         return paths
 
-    include = map(FilterPath, include or [])
-    exclude = map(FilterPath, exclude or [])
+    def normalize(path):
+        if not os.path.isabs(path):
+            path = os.path.join(root, path)
+        return FilterPath(path)
+
+    include = map(normalize, include)
+    exclude = map(normalize, exclude)
 
     # Paths with and without globs will be handled separately,
     # pull them apart now.
