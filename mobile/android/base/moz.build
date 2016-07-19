@@ -16,6 +16,7 @@ thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 constants_jar = add_java_jar('constants')
 constants_jar.sources = ['java/org/mozilla/gecko/' + x for x in [
     'adjust/AdjustHelperInterface.java',
+    'adjust/AttributionHelperListener.java',
     'annotation/JNITarget.java',
     'annotation/ReflectionTarget.java',
     'annotation/RobocopTarget.java',
@@ -606,6 +607,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'tabs/TabsPanel.java',
     'tabs/TabsPanelThumbnailView.java',
     'Telemetry.java',
+    'telemetry/measurements/CampaignIdMeasurements.java',
     'telemetry/measurements/SearchCountMeasurements.java',
     'telemetry/measurements/SessionMeasurements.java',
     'telemetry/pingbuilders/TelemetryCorePingBuilder.java',

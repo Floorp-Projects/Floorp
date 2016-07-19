@@ -13,7 +13,7 @@ public interface AdjustHelperInterface {
      * Register the Application with the Adjust SDK.
      * @param appToken the (secret!) Adjust SDK per-application token to register with; may be null.
      */
-    void onCreate(final Context context, final String appToken);
+    void onCreate(final Context context, final String appToken, final AttributionHelperListener listener);
     void onPause();
     void onResume();
 
