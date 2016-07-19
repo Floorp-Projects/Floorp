@@ -41,6 +41,7 @@ cd /build
 
 # For future reference things like this don't need to be uploaded to tooltool, as long
 # as we verify the hash, we can download it from the external net.
+cd /setup
 tooltool_fetch <<'EOF'
 [
 {
@@ -55,25 +56,11 @@ tar -C /usr/local --strip-components 1 -xJ < node-*.tar.xz
 node -v  # verify
 npm -v
 
-# install taskcluster-vcs@2.3.12
-tooltool_fetch <<'EOF'
-[
-{
-"size": 6282161,
-"visibility": "public",
-"digest": "a781a96e596f6403eca6ec2300adb9c1a396659393e16993c66f98a658050e557bc681d521f70b50c1162aa4b435274e0098ffcbd37cbe969c0e4f69be19a1e0",
-"algorithm": "sha512",
-"filename": "taskcluster-vcs-v2.3.12.tar.gz"
-}
-]
-EOF
-npm install -g taskcluster-vcs-v2.3.12.tar.gz
-
-
 ###
 # Flake8 Setup
 ###
 
+cd /setup
 cat >requirements.txt <<'EOF'
 flake8==2.5.4 \
   --hash=sha256:fb5a67af4024622287a76abf6b7fe4fb3cfacf765a790976ce64f52c44c88e4a
@@ -89,3 +76,4 @@ pip install --require-hashes -r requirements.txt
 
 cd /
 rm -rf /setup
+
