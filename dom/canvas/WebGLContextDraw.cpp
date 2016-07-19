@@ -101,10 +101,17 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
         return;
     }
 
-    std::vector<const WebGLFBAttachPoint*> fbAttachments;
-    if (mWebGL->mBoundDrawFramebuffer) {
-        const auto& fb = mWebGL->mBoundDrawFramebuffer;
-        fb->GatherAttachments(&fbAttachments);
+    const std::vector<const WebGLFBAttachPoint*>* attachList = nullptr;
+    const auto& fb = mWebGL->mBoundDrawFramebuffer;
+    if (fb) {
+        if (!fb->ValidateAndInitAttachments(funcName)) {
+            *out_error = true;
+            return;
+        }
+
+        attachList = &(fb->ResolvedCompleteData()->texDrawBuffers);
+    } else {
+        webgl->ClearBackbufferIfNeeded();
     }
 
     MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
@@ -120,7 +127,9 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
             if (!tex)
                 continue;
 
-            if (tex->IsFeedback(mWebGL, funcName, texUnit, fbAttachments)) {
+            if (attachList &&
+                tex->IsFeedback(mWebGL, funcName, texUnit, *attachList))
+            {
                 *out_error = true;
                 return;
             }
@@ -292,15 +301,6 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
     if (uint32_t(primcount) > mMaxFetchedInstances) {
         ErrorInvalidOperation("%s: bound instance attribute buffers do not have sufficient size for given primcount", info);
         return false;
-    }
-
-    MOZ_ASSERT(gl->IsCurrent());
-
-    if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
-            return false;
-    } else {
-        ClearBackbufferIfNeeded();
     }
 
     if (!DoFakeVertexAttrib0(checked_firstPlusCount.value())) {
@@ -495,18 +495,8 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
                         WebGLContext::EnumName(type));
     }
 
-    MOZ_ASSERT(gl->IsCurrent());
-
-    if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
-            return false;
-    } else {
-        ClearBackbufferIfNeeded();
-    }
-
-    if (!DoFakeVertexAttrib0(mMaxFetchedVertices)) {
+    if (!DoFakeVertexAttrib0(mMaxFetchedVertices))
         return false;
-    }
 
     return true;
 }
@@ -587,7 +577,8 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     Draw_cleanup(funcName);
 }
 
-void WebGLContext::Draw_cleanup(const char* funcName)
+void
+WebGLContext::Draw_cleanup(const char* funcName)
 {
     UndoFakeVertexAttrib0();
 
@@ -614,9 +605,12 @@ void WebGLContext::Draw_cleanup(const char* funcName)
     uint32_t destHeight = mViewportHeight;
 
     if (mBoundDrawFramebuffer) {
-        const auto& fba = mBoundDrawFramebuffer->ColorAttachment(0);
-        if (fba.IsDefined()) {
-            fba.Size(&destWidth, &destHeight);
+        const auto& drawBuffers = mBoundDrawFramebuffer->ColorDrawBuffers();
+        for (const auto& cur : drawBuffers) {
+            if (!cur->IsDefined())
+                continue;
+            cur->Size(&destWidth, &destHeight);
+            break;
         }
     } else {
         destWidth = mWidth;
