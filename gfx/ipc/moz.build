@@ -16,6 +16,9 @@ EXPORTS.mozilla.gfx += [
     'GPUProcessImpl.h',
     'GPUProcessManager.h',
     'SharedDIB.h',
+    'VsyncBridgeChild.h',
+    'VsyncBridgeParent.h',
+    'VsyncIOThreadHolder.h',
 ]
 
 EXPORTS.mozilla.layers += [
@@ -45,11 +48,15 @@ UNIFIED_SOURCES += [
     'InProcessCompositorSession.cpp',
     'RemoteCompositorSession.cpp',
     'SharedDIB.cpp',
+    'VsyncBridgeChild.cpp',
+    'VsyncBridgeParent.cpp',
+    'VsyncIOThreadHolder.cpp',
 ]
 
 IPDL_SOURCES = [
     'GraphicsMessages.ipdlh',
     'PGPU.ipdl',
+    'PVsyncBridge.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
