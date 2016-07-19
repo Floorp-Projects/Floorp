@@ -15,7 +15,7 @@ class nsIWidget;
 class nsBaseWidget;
 
 namespace mozilla {
-class CompositorVsyncDispatcher;
+class VsyncObserver;
 namespace layers {
 class Compositor;
 class LayerManagerComposite;
@@ -223,9 +223,9 @@ public:
   virtual already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing();
 
   /**
-   * Return a compositor vsync dispatcher for this widget.
+   * Observer or unobserve vsync.
    */
-  virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() = 0;
+  virtual void ObserveVsync(VsyncObserver* aObserver) = 0;
 
   virtual WinCompositorWidget* AsWindows() {
     return nullptr;
