@@ -1489,13 +1489,12 @@ SpecialPowersAPI.prototype = {
   // needs to run several times and when no other JS is running.
   // The current number of iterations has been determined according to massive
   // cross platform testing.
-  exactGC: function(win, callback) {
-    var self = this;
+  exactGC: function(callback) {
     let count = 0;
 
     function genGCCallback(cb) {
       return function() {
-        self.getDOMWindowUtils(win).cycleCollect();
+        Cu.forceCC();
         if (++count < 2) {
           Cu.schedulePreciseGC(genGCCallback(cb));
         } else if (cb) {
