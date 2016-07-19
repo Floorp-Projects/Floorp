@@ -15,11 +15,13 @@ EXPORTS.mozilla.mscom += [
     'Ptr.h',
     'Registration.h',
     'Utils.h',
+    'WeakRef.h',
 ]
 
 SOURCES += [
     'Registration.cpp',
     'Utils.cpp',
+    'WeakRef.cpp',
 ]
 
 UNIFIED_SOURCES += [
