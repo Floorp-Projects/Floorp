@@ -16,7 +16,7 @@ namespace mozilla {
 namespace mscom {
 
 template<COINIT T>
-class MOZ_NON_TEMPORARY_CLASS COMApartmentRegion
+class MOZ_RAII COMApartmentRegion
 {
 public:
   COMApartmentRegion()
