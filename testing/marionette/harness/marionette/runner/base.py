@@ -346,6 +346,7 @@ class BaseMarionetteArguments(ArgumentParser):
                         help='Enable python post-mortem debugger when a test fails.'
                              ' Pass in the debugger you want to use, eg pdb or ipdb.')
         self.add_argument('--socket-timeout',
+                        type=float,
                         default=self.socket_timeout_default,
                         help='Set the global timeout for marionette socket operations.')
         self.add_argument('--disable-e10s',
