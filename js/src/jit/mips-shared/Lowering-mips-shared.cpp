@@ -449,12 +449,6 @@ LIRGeneratorMIPSShared::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 }
 
 void
-LIRGeneratorMIPSShared::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
-{
-    define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index())), ins);
-}
-
-void
 LIRGeneratorMIPSShared::visitSubstr(MSubstr* ins)
 {
     LSubstr* lir = new (alloc()) LSubstr(useRegister(ins->string()),

@@ -90,7 +90,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins);
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
-    void visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
