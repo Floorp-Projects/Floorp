@@ -312,14 +312,6 @@ sctp_is_vmware_interface(struct ifnet *ifn)
 #endif
 
 #if defined(__Userspace_os_Windows)
-#ifdef MALLOC
-#undef MALLOC
-#define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
-#endif
-#ifdef FREE
-#undef FREE
-#define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
-#endif
 static void
 sctp_init_ifns_for_vrf(int vrfid)
 {
@@ -381,7 +373,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 		}
 	}
 	if (pAdapterAddrs)
-		FREE(pAdapterAddrs);
+		GlobalFree(pAdapterAddrs);
 #endif
 #ifdef INET6
 	AdapterAddrsSize = 0;
@@ -428,7 +420,7 @@ sctp_init_ifns_for_vrf(int vrfid)
 		}
 	}
 	if (pAdapterAddrs)
-		FREE(pAdapterAddrs);
+		GlobalFree(pAdapterAddrs);
 #endif
 }
 #elif defined(__Userspace__)
