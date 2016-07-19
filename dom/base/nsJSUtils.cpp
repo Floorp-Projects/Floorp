@@ -195,7 +195,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
 
     if (ok && aOffThreadToken) {
       JS::Rooted<JSScript*>
-        script(aCx, JS::FinishOffThreadScript(aCx, JS_GetRuntime(aCx), *aOffThreadToken));
+        script(aCx, JS::FinishOffThreadScript(aCx, *aOffThreadToken));
       *aOffThreadToken = nullptr; // Mark the token as having been finished.
       if (script) {
         ok = JS_ExecuteScript(aCx, scopeChain, script);
