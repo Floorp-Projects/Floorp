@@ -55,6 +55,7 @@ void
 Compositor::EndFrame()
 {
   ReadUnlockTextures();
+  mLastCompositionEndTime = TimeStamp::Now();
 }
 
 void
@@ -78,6 +79,18 @@ Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
   MOZ_ASSERT(!mIsDestroyed);
 
   mNotifyNotUsedAfterComposition.AppendElement(aTextureHost);
+
+  // If Compositor holds many TextureHosts without compositing,
+  // the TextureHosts should be flushed to reduce memory consumption.
+  const int thresholdCount = 5;
+  const double thresholdSec = 2.0f;
+  if (mNotifyNotUsedAfterComposition.Length() > thresholdCount) {
+    TimeDuration duration = TimeStamp::Now() - mLastCompositionEndTime;
+    // Check if we could flush
+    if (duration.ToSeconds() > thresholdSec) {
+      FlushPendingNotifyNotUsed();
+    }
+  }
 }
 
 void
