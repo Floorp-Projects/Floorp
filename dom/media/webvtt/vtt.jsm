@@ -1365,11 +1365,14 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
       }
 
-      // WebVTT parser algorithm step1 - step9.
-      function parseSignature(input) {
+      // Parsing the WebVTT signature, it contains parsing algo step1 to step9.
+      // See spec, https://w3c.github.io/webvtt/#file-parsing
+      function parseSignatureMayThrow(input) {
         let signature = collectNextLine();
         if (!/^WEBVTT([ \t].*)?$/.test(signature)) {
           throw new ParsingError(ParsingError.Errors.BadSignature);
+        } else {
+          self.state = "HEADER";
         }
       }
 
@@ -1422,8 +1425,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
       // 5.1 WebVTT file parsing.
       try {
         if (self.state === "INITIAL") {
-          parseSignature();
-          self.state = "HEADER";
+          parseSignatureMayThrow();
         }
 
         var line;
