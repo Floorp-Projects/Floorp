@@ -106,7 +106,7 @@ class VCFiles(object):
         return subprocess.check_output(cmd).split()
 
 
-def find_linters(self, linters=None):
+def find_linters(linters=None):
     lints = []
     for search_path in SEARCH_PATHS:
         if not os.path.isdir(search_path):
