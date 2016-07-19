@@ -140,3 +140,51 @@ assertEq(finalizeCount(), 1);
 t = null;
 gc();
 assertEq(finalizeCount(), 3);
+
+// Before initialization, a table is not bound to any instance.
+resetFinalizeCount();
+var i = evalText(`(module (func $f0 (result i32) (i32.const 0)) (export "f0" $f0))`);
+var t = new Table({initial:4});
+i.edge = makeFinalizeObserver();
+t.edge = makeFinalizeObserver();
+gc();
+assertEq(finalizeCount(), 0);
+i = null;
+gc();
+assertEq(finalizeCount(), 1);
+t = null;
+gc();
+assertEq(finalizeCount(), 2);
+
+// When a Table is created (uninitialized) and then first assigned, it keeps the
+// first element's Instance alive (as above).
+resetFinalizeCount();
+var i = evalText(`(module (func $f (result i32) (i32.const 42)) (export "f" $f))`);
+var f = i.exports.f;
+var t = new Table({initial:1});
+i.edge = makeFinalizeObserver();
+f.edge = makeFinalizeObserver();
+t.edge = makeFinalizeObserver();
+t.set(0, f);
+assertEq(t.get(0), f);
+assertEq(t.get(0)(), 42);
+gc();
+assertEq(finalizeCount(), 0);
+f = null;
+i.exports = null;
+gc();
+assertEq(finalizeCount(), 1);
+assertEq(t.get(0)(), 42);
+t.get(0).edge = makeFinalizeObserver();
+gc();
+assertEq(finalizeCount(), 2);
+i = null;
+gc();
+assertEq(finalizeCount(), 2);
+t.set(0, null);
+assertEq(t.get(0), null);
+gc();
+assertEq(finalizeCount(), 2);
+t = null;
+gc();
+assertEq(finalizeCount(), 4);

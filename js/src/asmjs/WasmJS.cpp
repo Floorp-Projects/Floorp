@@ -572,12 +572,32 @@ wasm::IsExportedFunction(JSFunction* fun)
     return fun->maybeNative() == WasmCall;
 }
 
+bool
+wasm::IsExportedFunction(const Value& v, MutableHandleFunction f)
+{
+    if (!v.isObject())
+        return false;
+
+    JSObject& obj = v.toObject();
+    if (!obj.is<JSFunction>() || !IsExportedFunction(&obj.as<JSFunction>()))
+        return false;
+
+    f.set(&obj.as<JSFunction>());
+    return true;
+}
+
 Instance&
 wasm::ExportedFunctionToInstance(JSFunction* fun)
 {
+    return ExportedFunctionToInstanceObject(fun)->instance();
+}
+
+WasmInstanceObject*
+wasm::ExportedFunctionToInstanceObject(JSFunction* fun)
+{
     MOZ_ASSERT(IsExportedFunction(fun));
     const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
-    return v.toObject().as<WasmInstanceObject>().instance();
+    return &v.toObject().as<WasmInstanceObject>();
 }
 
 uint32_t
@@ -906,9 +926,84 @@ WasmTableObject::get(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsTable, getImpl>(cx, args);
 }
 
+/* static */ bool
+WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
+{
+    RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
+    const Table& table = tableObj->table();
+
+    if (!args.requireAtLeast(cx, "set", 2))
+        return false;
+
+    double indexDbl;
+    if (!ToInteger(cx, args[0], &indexDbl))
+        return false;
+
+    if (indexDbl < 0 || indexDbl >= table.length()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+        return false;
+    }
+
+    uint32_t index = uint32_t(indexDbl);
+    MOZ_ASSERT(double(index) == indexDbl);
+
+    RootedFunction value(cx);
+    if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SET_VALUE);
+        return false;
+    }
+
+    if (!tableObj->initialized()) {
+        if (!value) {
+            args.rval().setUndefined();
+            return true;
+        }
+
+        RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
+        if (!tableObj->init(cx, instanceObj))
+            return false;
+    }
+
+    const InstanceVector& instanceVector = tableObj->instanceVector();
+    MOZ_ASSERT(instanceVector.length() == table.length());
+
+    if (value) {
+        RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
+        uint32_t funcIndex = ExportedFunctionToIndex(value);
+
+#ifdef DEBUG
+        RootedFunction f(cx);
+        MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
+        MOZ_ASSERT(value == f);
+#endif
+
+        if (instanceVector[index] != instanceObj) {
+            JS_ReportError(cx, "cross-module Table.prototype.set NYI");
+            return false;
+        }
+
+        Instance& instance = instanceObj->instance();
+        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
+        table.array()[index] = instance.codeSegment().code() + funcExport.tableEntryOffset();
+    } else {
+        table.array()[index] = instanceVector[index]->instance().codeSegment().badIndirectCallCode();
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+/* static */ bool
+WasmTableObject::set(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsTable, setImpl>(cx, args);
+}
+
 const JSFunctionSpec WasmTableObject::methods[] =
 {
     JS_FN("get", WasmTableObject::get, 1, 0),
+    JS_FN("set", WasmTableObject::set, 2, 0),
     JS_FS_END
 };
 
