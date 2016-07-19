@@ -11,7 +11,6 @@ cd /setup
 
 apt_packages=()
 apt_packages+=('curl')
-apt_packages+=('mercurial')
 apt_packages+=('python')
 apt_packages+=('python-pip')
 apt_packages+=('sudo')
@@ -31,6 +30,8 @@ tooltool_fetch() {
     rm manifest.tt
 }
 
+cd /build
+. install-mercurial.sh
 
 ###
 # ESLint Setup
