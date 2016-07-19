@@ -2,9 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import time
+import urllib
+
 from marionette import MarionetteTestCase
 from marionette_driver.errors import MarionetteException, TimeoutException
 from marionette_driver.by import By
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
 
 
 class TestNavigate(MarionetteTestCase):
@@ -60,7 +67,7 @@ class TestNavigate(MarionetteTestCase):
         self.marionette.navigate("about:blank")
         self.assertEqual("about:blank", self.location_href)
         self.marionette.go_back()
-        self.assertNotEqual("about:blank", self.location_href)
+        self.assertEqual(self.test_doc, self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
         self.marionette.go_forward()
         self.assertEqual("about:blank", self.location_href)
@@ -74,6 +81,8 @@ class TestNavigate(MarionetteTestCase):
         self.assertFalse(self.marionette.execute_script(
             "return window.document.getElementById('someDiv') == undefined"))
         self.marionette.refresh()
+        # TODO(ato): Bug 1291320
+        time.sleep(0.2)
         self.assertEqual("Marionette Test", self.marionette.title)
         self.assertTrue(self.marionette.execute_script(
             "return window.document.getElementById('someDiv') == undefined"))
@@ -95,7 +104,7 @@ class TestNavigate(MarionetteTestCase):
         except TimeoutException:
             self.fail("The socket shouldn't have timed out when navigating to a non-existent URL")
         except MarionetteException as e:
-            self.assertIn("Error loading page", str(e))
+            self.assertIn("Reached error page", str(e))
         except Exception as e:
             import traceback
             print traceback.format_exc()
@@ -131,6 +140,13 @@ class TestNavigate(MarionetteTestCase):
         self.marionette.navigate(self.iframe_doc)
         self.assertTrue('test_iframe.html' in self.marionette.get_url())
         self.assertTrue(self.marionette.find_element(By.ID, "test_iframe"))
+
+    def test_fragment(self):
+        doc = inline("<p id=foo>")
+        self.marionette.navigate(doc)
+        self.marionette.execute_script("window.visited = true", sandbox=None)
+        self.marionette.navigate("%s#foo" % doc)
+        self.assertTrue(self.marionette.execute_script("return window.visited", sandbox=None))
 
     @property
     def location_href(self):
