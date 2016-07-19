@@ -286,6 +286,13 @@ CheckEdgeTracer::onChild(const JS::GCCellPtr& thing)
     }
 }
 
+void
+js::gc::AssertSafeToSkipBarrier(TenuredCell* thing)
+{
+    Zone* zone = thing->zoneFromAnyThread();
+    MOZ_ASSERT(!zone->needsIncrementalBarrier() || zone->isAtomsZone());
+}
+
 static void
 AssertMarkedOrAllocated(const EdgeValue& edge)
 {
