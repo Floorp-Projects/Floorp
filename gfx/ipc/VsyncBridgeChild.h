@@ -16,6 +16,8 @@ class VsyncIOThreadHolder;
 
 class VsyncBridgeChild final : public PVsyncBridgeChild
 {
+  friend class NotifyVsyncTask;
+
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncBridgeChild)
 
@@ -29,11 +31,17 @@ public:
   void DeallocPVsyncBridgeChild() override;
   void ProcessingError(Result aCode, const char* aReason) override;
 
+  void NotifyVsync(TimeStamp aTimeStamp, const uint64_t& aLayersId);
+
 private:
   VsyncBridgeChild(RefPtr<VsyncIOThreadHolder>, const uint64_t& aProcessToken);
   ~VsyncBridgeChild();
 
   void Open(Endpoint<PVsyncBridgeChild>&& aEndpoint);
+
+  void NotifyVsyncImpl(TimeStamp aTimeStamp, const uint64_t& aLayersId);
+
+  bool IsOnVsyncIOThread() const;
 
 private:
   RefPtr<VsyncIOThreadHolder> mThread;

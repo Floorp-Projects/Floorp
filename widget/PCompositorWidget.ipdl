@@ -18,6 +18,10 @@ sync protocol PCompositorWidget
 
 parent:
   async __delete__();
+
+child:
+  async ObserveVsync();
+  async UnobserveVsync();
 };
 
 } // namespace widget

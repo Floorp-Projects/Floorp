@@ -269,7 +269,7 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aComp
 #endif
 #endif
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread() || XRE_GetProcessType() == GeckoProcessType_GPU);
   mVsyncObserver = new Observer(this);
 #ifdef MOZ_WIDGET_GONK
   GeckoTouchDispatcher::GetInstance()->SetCompositorVsyncScheduler(this);
@@ -451,8 +451,10 @@ CompositorVsyncScheduler::SetNeedsComposite()
 bool
 CompositorVsyncScheduler::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
-  // Called from the vsync dispatch thread
-  MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
+  // Called from the vsync dispatch thread. When in the GPU Process, that's
+  // the same as the compositor thread.
+  MOZ_ASSERT_IF(XRE_IsParentProcess(), !CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT_IF(XRE_GetProcessType() == GeckoProcessType_GPU, CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(!NS_IsMainThread());
   PostCompositeTask(aVsyncTimestamp);
   return true;
@@ -639,7 +641,6 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
   if (aUseAPZ) {
     mApzcTreeManager = new APZCTreeManager();
   }
-  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 
   // IPDL initialization. mSelfRef is cleared in DeferredDestroy.
   SetOtherProcessId(base::GetCurrentProcId());
@@ -690,6 +691,8 @@ CompositorBridgeParent::Initialize()
   }
 
   LayerScope::SetPixelScale(mScale.scale);
+
+  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 }
 
 uint64_t
@@ -1685,6 +1688,28 @@ CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id)
   CompositorBridgeParent *retval = it->second;
   sCompositorMap->erase(it);
   return retval;
+}
+
+void
+CompositorBridgeParent::NotifyVsync(const TimeStamp& aTimeStamp, const uint64_t& aLayersId)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  auto it = sIndirectLayerTrees.find(aLayersId);
+  if (it == sIndirectLayerTrees.end())
+    return;
+
+  CompositorBridgeParent* cbp = it->second.mParent;
+  if (!cbp || !cbp->mWidget)
+    return;
+
+  RefPtr<VsyncObserver> obs = cbp->mWidget->GetVsyncObserver();
+  if (!obs)
+    return;
+
+  obs->NotifyVsync(aTimeStamp);
 }
 
 bool

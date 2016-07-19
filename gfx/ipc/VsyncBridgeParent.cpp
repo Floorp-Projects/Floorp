@@ -44,8 +44,9 @@ VsyncBridgeParent::Open(Endpoint<PVsyncBridgeParent>&& aEndpoint)
 }
 
 bool
-VsyncBridgeParent::RecvNotifyVsync(const TimeStamp& vsyncTimeStamp)
+VsyncBridgeParent::RecvNotifyVsync(const TimeStamp& aTimeStamp, const uint64_t& aLayersId)
 {
+  CompositorBridgeParent::NotifyVsync(aTimeStamp, aLayersId);
   return true;
 }
 
