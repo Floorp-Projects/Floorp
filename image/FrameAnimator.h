@@ -22,21 +22,115 @@ namespace image {
 
 class RasterImage;
 
-class FrameAnimator
+class AnimationState
 {
 public:
-  FrameAnimator(RasterImage* aImage,
-                gfx::IntSize aSize,
-                uint16_t aAnimationMode)
-    : mImage(aImage)
-    , mSize(aSize)
-    , mCurrentAnimationFrameIndex(0)
-    , mLoopRemainingCount(-1)
+  explicit AnimationState(uint16_t aAnimationMode)
+    : mCurrentAnimationFrameIndex(0)
     , mLastCompositedFrameIndex(-1)
+    , mLoopRemainingCount(-1)
     , mLoopCount(-1)
     , mFirstFrameTimeout(0)
     , mAnimationMode(aAnimationMode)
     , mDoneDecoding(false)
+  { }
+
+  /**
+   * Call when this image is finished decoding so we know that there aren't any
+   * more frames coming.
+   */
+  void SetDoneDecoding(bool aDone);
+
+  /**
+   * Call when you need to re-start animating. Ensures we start from the first
+   * frame.
+   */
+  void ResetAnimation();
+
+  /**
+   * The animation mode of the image.
+   *
+   * Constants defined in imgIContainer.idl.
+   */
+  void SetAnimationMode(uint16_t aAnimationMode);
+
+  /**
+   * Union the area to refresh when we loop around to the first frame with this
+   * rect.
+   */
+  void UnionFirstFrameRefreshArea(const nsIntRect& aRect);
+
+  /**
+   * If the animation frame time has not yet been set, set it to
+   * TimeStamp::Now().
+   */
+  void InitAnimationFrameTimeIfNecessary();
+
+  /**
+   * Set the animation frame time to @aTime.
+   */
+  void SetAnimationFrameTime(const TimeStamp& aTime);
+
+  /**
+   * The current frame we're on, from 0 to (numFrames - 1).
+   */
+  uint32_t GetCurrentAnimationFrameIndex() const;
+
+  /**
+   * Get the area we refresh when we loop around to the first frame.
+   */
+  nsIntRect GetFirstFrameRefreshArea() const;
+
+  /*
+   * Set number of times to loop the image.
+   * @note -1 means loop forever.
+   */
+  void SetLoopCount(int32_t aLoopCount) { mLoopCount = aLoopCount; }
+  int32_t LoopCount() const { return mLoopCount; }
+
+  /*
+   * Set the timeout for the first frame. This is used to allow animation
+   * scheduling even before a full decode runs for this image.
+   */
+  void SetFirstFrameTimeout(int32_t aTimeout) { mFirstFrameTimeout = aTimeout; }
+
+private:
+  friend class FrameAnimator;
+
+  //! Area of the first frame that needs to be redrawn on subsequent loops.
+  nsIntRect mFirstFrameRefreshArea;
+
+  //! the time that the animation advanced to the current frame
+  TimeStamp mCurrentAnimationFrameTime;
+
+  //! The current frame index we're on. 0 to (numFrames - 1).
+  uint32_t mCurrentAnimationFrameIndex;
+
+  //! Track the last composited frame for Optimizations (See DoComposite code)
+  int32_t mLastCompositedFrameIndex;
+
+  //! number of loops remaining before animation stops (-1 no stop)
+  int32_t mLoopRemainingCount;
+
+  //! The total number of loops for the image.
+  int32_t mLoopCount;
+
+  //! The timeout for the first frame of this image.
+  int32_t mFirstFrameTimeout;
+
+  //! The animation mode of this image. Constants defined in imgIContainer.
+  uint16_t mAnimationMode;
+
+  //! Whether this image is done being decoded.
+  bool mDoneDecoding;
+};
+
+class FrameAnimator
+{
+public:
+  FrameAnimator(RasterImage* aImage, gfx::IntSize aSize)
+    : mImage(aImage)
+    , mSize(aSize)
   {
      MOZ_COUNT_CTOR(FrameAnimator);
   }
@@ -87,60 +181,14 @@ public:
    * Returns the result of that blending, including whether the current frame
    * changed and what the resulting dirty rectangle is.
    */
-  RefreshResult RequestRefresh(const TimeStamp& aTime);
-
-  /**
-   * Call when this image is finished decoding so we know that there aren't any
-   * more frames coming.
-   */
-  void SetDoneDecoding(bool aDone);
-
-  /**
-   * Call when you need to re-start animating. Ensures we start from the first
-   * frame.
-   */
-  void ResetAnimation();
-
-  /**
-   * The animation mode of the image.
-   *
-   * Constants defined in imgIContainer.idl.
-   */
-  void SetAnimationMode(uint16_t aAnimationMode);
-
-  /**
-   * Union the area to refresh when we loop around to the first frame with this
-   * rect.
-   */
-  void UnionFirstFrameRefreshArea(const nsIntRect& aRect);
-
-  /**
-   * If the animation frame time has not yet been set, set it to
-   * TimeStamp::Now().
-   */
-  void InitAnimationFrameTimeIfNecessary();
-
-  /**
-   * Set the animation frame time to @aTime.
-   */
-  void SetAnimationFrameTime(const TimeStamp& aTime);
-
-  /**
-   * The current frame we're on, from 0 to (numFrames - 1).
-   */
-  uint32_t GetCurrentAnimationFrameIndex() const;
-
-  /**
-   * Get the area we refresh when we loop around to the first frame.
-   */
-  nsIntRect GetFirstFrameRefreshArea() const;
+  RefreshResult RequestRefresh(AnimationState& aState, const TimeStamp& aTime);
 
   /**
    * If we have a composited frame for @aFrameNum, returns it. Otherwise,
    * returns an empty LookupResult. It is an error to call this method with
    * aFrameNum == 0, because the first frame is never composited.
    */
-  LookupResult GetCompositedFrame(uint32_t aFrameNum);
+  LookupResult GetCompositedFrame(AnimationState& aState, uint32_t aFrameNum);
 
   /*
    * Returns the frame's adjusted timeout. If the animation loops and the
@@ -148,20 +196,7 @@ public:
    * that it's never 0. If the animation does not loop then no adjustments are
    * made.
    */
-  int32_t GetTimeoutForFrame(uint32_t aFrameNum) const;
-
-  /*
-   * Set number of times to loop the image.
-   * @note -1 means loop forever.
-   */
-  void SetLoopCount(int32_t aLoopCount) { mLoopCount = aLoopCount; }
-  int32_t LoopCount() const { return mLoopCount; }
-
-  /*
-   * Set the timeout for the first frame. This is used to allow animation
-   * scheduling even before a full decode runs for this image.
-   */
-  void SetFirstFrameTimeout(int32_t aTimeout) { mFirstFrameTimeout = aTimeout; }
+  int32_t GetTimeoutForFrame(AnimationState& aState, uint32_t aFrameNum) const;
 
   /**
    * Collect an accounting of the memory occupied by the compositing surfaces we
@@ -172,15 +207,6 @@ public:
                                         MallocSizeOf aMallocSizeOf) const;
 
 private: // methods
-  /**
-   * Gets the length of a single loop of this image, in milliseconds.
-   *
-   * If this image is not finished decoding, is not animated, or it is animated
-   * but does not loop, returns -1. Can return 0 in the case of an animated
-   * image that has a 0ms delay between its frames and does not loop.
-   */
-  int32_t GetSingleLoopTime() const;
-
   /**
    * Advances the animation. Typically, this will advance a single frame, but it
    * may advance multiple frames. This may happen if we have infrequently
@@ -193,22 +219,33 @@ private: // methods
    * @returns a RefreshResult that shows whether the frame was successfully
    *          advanced, and its resulting dirty rect.
    */
-  RefreshResult AdvanceFrame(TimeStamp aTime);
+  RefreshResult AdvanceFrame(AnimationState& aState, TimeStamp aTime);
+
+  /**
+   * Get the @aIndex-th frame in the frame index, ignoring results of blending.
+   */
+  RawAccessFrameRef GetRawFrame(uint32_t aFrameNum) const;
+
+  /**
+   * Gets the length of a single loop of this image, in milliseconds.
+   *
+   * If this image is not finished decoding, is not animated, or it is animated
+   * but does not loop, returns -1. Can return 0 in the case of an animated
+   * image that has a 0ms delay between its frames and does not loop.
+   */
+  int32_t GetSingleLoopTime(AnimationState& aState) const;
 
   /**
    * Get the time the frame we're currently displaying is supposed to end.
    *
    * In the error case, returns an "infinity" timestamp.
    */
-  TimeStamp GetCurrentImgFrameEndTime() const;
+  TimeStamp GetCurrentImgFrameEndTime(AnimationState& aState) const;
 
-  bool DoBlend(nsIntRect* aDirtyRect, uint32_t aPrevFrameIndex,
+  bool DoBlend(AnimationState& aState,
+               nsIntRect* aDirtyRect,
+               uint32_t aPrevFrameIndex,
                uint32_t aNextFrameIndex);
-
-  /**
-   * Get the @aIndex-th frame in the frame index, ignoring results of blending.
-   */
-  RawAccessFrameRef GetRawFrame(uint32_t aFrameNum) const;
 
   /** Clears an area of <aFrame> with transparent black.
    *
@@ -274,33 +311,6 @@ private: // data
    * when it's done with the current frame.
    */
   RawAccessFrameRef mCompositingPrevFrame;
-
-  //! Area of the first frame that needs to be redrawn on subsequent loops.
-  nsIntRect mFirstFrameRefreshArea;
-
-  //! the time that the animation advanced to the current frame
-  TimeStamp mCurrentAnimationFrameTime;
-
-  //! The current frame index we're on. 0 to (numFrames - 1).
-  uint32_t mCurrentAnimationFrameIndex;
-
-  //! number of loops remaining before animation stops (-1 no stop)
-  int32_t mLoopRemainingCount;
-
-  //! Track the last composited frame for Optimizations (See DoComposite code)
-  int32_t mLastCompositedFrameIndex;
-
-  //! The total number of loops for the image.
-  int32_t mLoopCount;
-
-  //! The timeout for the first frame of this image.
-  int32_t mFirstFrameTimeout;
-
-  //! The animation mode of this image. Constants defined in imgIContainer.
-  uint16_t mAnimationMode;
-
-  //! Whether this image is done being decoded.
-  bool mDoneDecoding;
 };
 
 } // namespace image
