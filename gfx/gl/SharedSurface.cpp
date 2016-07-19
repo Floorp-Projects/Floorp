@@ -214,6 +214,7 @@ SharedSurface::SharedSurface(SharedSurfaceType type,
     , mCanRecycle(canRecycle)
     , mIsLocked(false)
     , mIsProducerAcquired(false)
+    , mIsConsumerAcquired(false)
 #ifdef DEBUG
     , mOwningThread(NS_GetCurrentThread())
 #endif
