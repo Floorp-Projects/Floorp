@@ -1,5 +1,4 @@
-/* Copyright (c) 2010 Xiph.Org Foundation
- * Copyright (c) 2013 Parrot */
+/* Copyright (C) 2015 Vidyo */
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
@@ -25,53 +24,12 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#if !defined(ARMCPU_H)
-# define ARMCPU_H
+#ifndef FIXED_ARM64_H
+#define FIXED_ARM64_H
 
-# if defined(OPUS_ARM_MAY_HAVE_EDSP)
-#  define MAY_HAVE_EDSP(name) name ## _edsp
-# else
-#  define MAY_HAVE_EDSP(name) name ## _c
-# endif
+#include <arm_neon.h>
 
-# if defined(OPUS_ARM_MAY_HAVE_MEDIA)
-#  define MAY_HAVE_MEDIA(name) name ## _media
-# else
-#  define MAY_HAVE_MEDIA(name) MAY_HAVE_EDSP(name)
-# endif
-
-# if defined(OPUS_ARM_MAY_HAVE_NEON)
-#  define MAY_HAVE_NEON(name) name ## _neon
-# else
-#  define MAY_HAVE_NEON(name) MAY_HAVE_MEDIA(name)
-# endif
-
-# if defined(OPUS_ARM_PRESUME_EDSP)
-#  define PRESUME_EDSP(name) name ## _edsp
-# else
-#  define PRESUME_EDSP(name) name ## _c
-# endif
-
-# if defined(OPUS_ARM_PRESUME_MEDIA)
-#  define PRESUME_MEDIA(name) name ## _media
-# else
-#  define PRESUME_MEDIA(name) PRESUME_EDSP(name)
-# endif
-
-# if defined(OPUS_ARM_PRESUME_NEON)
-#  define PRESUME_NEON(name) name ## _neon
-# else
-#  define PRESUME_NEON(name) PRESUME_MEDIA(name)
-# endif
-
-# if defined(OPUS_HAVE_RTCD)
-int opus_select_arch(void);
-
-#define OPUS_ARCH_ARM_V4    (0)
-#define OPUS_ARCH_ARM_EDSP  (1)
-#define OPUS_ARCH_ARM_MEDIA (2)
-#define OPUS_ARCH_ARM_NEON  (3)
-
-# endif
+#undef SIG2WORD16
+#define SIG2WORD16(x) (vqmovns_s32(PSHR32((x), SIG_SHIFT)))
 
 #endif
