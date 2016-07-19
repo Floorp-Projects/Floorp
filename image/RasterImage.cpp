@@ -479,9 +479,7 @@ RasterImage::GetFirstFrameDelay()
   }
 
   MOZ_ASSERT(mAnimationState, "Animated images should have an AnimationState");
-  MOZ_ASSERT(mFrameAnimator, "Animated images should have a FrameAnimator");
-  return mFrameAnimator->
-    GetTimeoutForFrame(*mAnimationState, 0).AsEncodedValueDeprecated();
+  return mAnimationState->FirstFrameTimeout().AsEncodedValueDeprecated();
 }
 
 already_AddRefed<SourceSurface>
@@ -922,13 +920,9 @@ RasterImage::StartAnimation()
     return NS_OK;
   }
 
-  MOZ_ASSERT(mFrameAnimator,
-             "Should have a FrameAnimator if we have AnimationState");
-
   // Don't bother to animate if we're displaying the first frame forever.
   if (GetCurrentFrameIndex() == 0 &&
-      mFrameAnimator->GetTimeoutForFrame(*mAnimationState, 0)
-        == FrameTimeout::Forever()) {
+      mAnimationState->FirstFrameTimeout() == FrameTimeout::Forever()) {
     mAnimationFinished = true;
     return NS_ERROR_ABORT;
   }

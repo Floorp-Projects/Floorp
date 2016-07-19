@@ -88,10 +88,11 @@ public:
   int32_t LoopCount() const { return mLoopCount; }
 
   /*
-   * Set the timeout for the first frame. This is used to allow animation
+   * Get or set the timeout for the first frame. This is used to allow animation
    * scheduling even before a full decode runs for this image.
    */
   void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
+  FrameTimeout FirstFrameTimeout() const { return mFirstFrameTimeout; }
 
 private:
   friend class FrameAnimator;
