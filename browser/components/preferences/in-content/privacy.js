@@ -385,19 +385,17 @@ var gPrivacyPane = {
 			 Services.prompt.BUTTON_TITLE_IS_STRING) +
                         (Services.prompt.BUTTON_POS_1 *
 			 Services.prompt.BUTTON_TITLE_IS_STRING) +
-                        Services.prompt.BUTTON_POS_0_DEFAULT;
+                        Services.prompt.BUTTON_POS_1_DEFAULT;
 
-      let shouldProceed = prompts.confirmEx(window, title, msg,
-					    buttonFlags, revertText, restartText,
-					    null, null, {});
-      if (shouldProceed) {
+      let buttonIndex = prompts.confirmEx(window, title, msg,
+             buttonFlags, restartText, revertText,
+             null, null, {});
+      if (buttonIndex == 0) {
         let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
                            .createInstance(Ci.nsISupportsPRBool);
         Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
                                      "restart");
-        shouldProceed = !cancelQuit.data;
-
-        if (shouldProceed) {
+        if (!cancelQuit.data) {
           pref.value = autoStart.hasAttribute('checked');
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
                              .getService(Ci.nsIAppStartup);
