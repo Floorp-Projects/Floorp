@@ -27,6 +27,20 @@ EOF
 
 dpkg -i mercurial-common_3.8.4_all.deb mercurial_3.8.4_amd64.deb
 
+mkdir -p /usr/local/mercurial
+cd /usr/local/mercurial
+tooltool_fetch <<'EOF'
+[
+{
+    "size": 11849,
+    "digest": "c88d9b8afd6649bd28bbacfa654ebefec8087a01d1662004aae088d485edeb03a92df1193d1310c0369d7721f475b974fcd4a911428ec65936f7e40cf1609c49",
+    "algorithm": "sha512",
+    "filename": "robustcheckout.py"
+}
+]
+EOF
+chmod 644 /usr/local/mercurial/robustcheckout.py
+
 mkdir -p /etc/mercurial
 cat >/etc/mercurial/hgrc <<EOF
 # By default the progress bar starts after 3s and updates every 0.1s. We
@@ -37,6 +51,9 @@ refresh = 1.0
 
 [web]
 cacerts = /etc/ssl/certs/ca-certificates.crt
+
+[extensions]
+robustcheckout = /usr/local/mercurial/robustcheckout.py
 EOF
 
 chmod 644 /etc/mercurial/hgrc
