@@ -3785,6 +3785,15 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       mReferrerPolicySet = true;
     }
   }
+
+  if (aHeaderField == nsGkAtoms::headerReferrerPolicy && !aData.IsEmpty()) {
+     ReferrerPolicy policy = nsContentUtils::GetReferrerPolicyFromHeader(aData);
+    if (policy != mozilla::net::RP_Unset) {
+      mReferrerPolicy = policy;
+      mReferrerPolicySet = true;
+    }
+  }
+
 }
 void
 nsDocument::TryChannelCharset(nsIChannel *aChannel,
@@ -8726,6 +8735,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       "refresh",
       "x-dns-prefetch-control",
       "x-frame-options",
+      "referrer-policy",
       // add more http headers if you need
       // XXXbz don't add content-location support without reading bug
       // 238654 and its dependencies/dups first.
