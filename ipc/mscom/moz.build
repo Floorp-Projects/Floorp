@@ -9,6 +9,7 @@ EXPORTS.mozilla.mscom += [
     'COMPtrHolder.h',
     'EnsureMTA.h',
     'InterceptorLog.h',
+    'MainThreadInvoker.h',
     'MainThreadRuntime.h',
     'ProxyStream.h',
     'Ptr.h',
@@ -24,6 +25,7 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'EnsureMTA.cpp',
     'InterceptorLog.cpp',
+    'MainThreadInvoker.cpp',
     'MainThreadRuntime.cpp',
     'ProxyStream.cpp',
 ]
