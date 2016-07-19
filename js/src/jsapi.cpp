@@ -4081,10 +4081,19 @@ JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSScript*)
-JS::FinishOffThreadScript(JSContext* maybecx, JSRuntime* rt, void* token)
+JS::FinishOffThreadScript(JSContext* cx, void* token)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return HelperThreadState().finishScriptParseTask(maybecx, rt, token);
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    return HelperThreadState().finishScriptParseTask(cx, token);
+}
+
+JS_PUBLIC_API(void)
+JS::CancelOffThreadScript(JSContext* cx, void* token)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    HelperThreadState().cancelParseTask(cx, ParseTaskKind::Script, token);
 }
 
 JS_PUBLIC_API(bool)
@@ -4097,10 +4106,19 @@ JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSObject*)
-JS::FinishOffThreadModule(JSContext* maybecx, JSRuntime* rt, void* token)
+JS::FinishOffThreadModule(JSContext* cx, void* token)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return HelperThreadState().finishModuleParseTask(maybecx, rt, token);
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    return HelperThreadState().finishModuleParseTask(cx, token);
+}
+
+JS_PUBLIC_API(void)
+JS::CancelOffThreadModule(JSContext* cx, void* token)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    HelperThreadState().cancelParseTask(cx, ParseTaskKind::Module, token);
 }
 
 JS_PUBLIC_API(bool)

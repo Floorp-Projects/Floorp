@@ -3928,8 +3928,7 @@ runOffThreadScript(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSRuntime* rt = cx->runtime();
-    if (OffThreadParsingMustWaitForGC(rt))
+    if (OffThreadParsingMustWaitForGC(cx))
         gc::FinishGC(cx);
 
     void* token = offThreadState.waitUntilDone(cx, ScriptKind::Script);
@@ -3938,7 +3937,7 @@ runOffThreadScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedScript script(cx, JS::FinishOffThreadScript(cx, rt, token));
+    RootedScript script(cx, JS::FinishOffThreadScript(cx, token));
     if (!script)
         return false;
 
@@ -4014,8 +4013,7 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSRuntime* rt = cx->runtime();
-    if (OffThreadParsingMustWaitForGC(rt))
+    if (OffThreadParsingMustWaitForGC(cx))
         gc::FinishGC(cx);
 
     void* token = offThreadState.waitUntilDone(cx, ScriptKind::Module);
@@ -4024,7 +4022,7 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedObject module(cx, JS::FinishOffThreadModule(cx, rt, token));
+    RootedObject module(cx, JS::FinishOffThreadModule(cx, token));
     if (!module)
         return false;
 

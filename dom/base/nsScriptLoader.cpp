@@ -708,8 +708,7 @@ nsScriptLoader::CreateModuleScript(nsModuleLoadRequest* aRequest)
     JS::Rooted<JSObject*> module(cx);
 
     if (aRequest->mWasCompiledOMT) {
-      module = JS::FinishOffThreadModule(cx, xpc::GetJSRuntime(),
-                                         aRequest->mOffThreadToken);
+      module = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
       aRequest->mOffThreadToken = nullptr;
       rv = module ? NS_OK : NS_ERROR_FAILURE;
     } else {
@@ -1829,7 +1828,8 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
     // (disappearing window, some other error, ...). Finish the
     // request to avoid leaks in the JS engine.
     MOZ_ASSERT(!aRequest->IsModuleRequest());
-    JS::FinishOffThreadScript(nullptr, xpc::GetJSRuntime(), aRequest->mOffThreadToken);
+    JSContext* cx = JS_GetContext(xpc::GetJSRuntime());
+    JS::CancelOffThreadScript(cx, aRequest->mOffThreadToken);
     aRequest->mOffThreadToken = nullptr;
   }
 
