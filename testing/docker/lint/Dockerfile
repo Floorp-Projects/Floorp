@@ -8,9 +8,10 @@ RUN mkdir /build
 # %include testing/docker/decision/tooltool.py
 ADD topsrcdir/testing/docker/decision/tooltool.py /build/tooltool.py
 
-# Install lint packages
-ADD           system-setup.sh   /tmp/system-setup.sh
-RUN           bash /tmp/system-setup.sh
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
+ADD system-setup.sh /tmp/system-setup.sh
+RUN bash /tmp/system-setup.sh
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
