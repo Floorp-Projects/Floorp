@@ -188,6 +188,7 @@ class WebGLContext
     , public WebGLRectangleObject
     , public nsWrapperCache
 {
+    friend class ScopedFBRebinder;
     friend class WebGL2Context;
     friend class WebGLContextUserData;
     friend class WebGLExtensionCompressedTextureATC;
@@ -1125,6 +1126,8 @@ public:
         return LOCAL_GL_COLOR_ATTACHMENT0 + mImplMaxColorAttachments - 1;
     }
 
+    const decltype(mOptions)& Options() const { return mOptions; }
+
 protected:
 
     // Texture sizes are often not actually the GL values. Let's be explicit that these
@@ -1305,6 +1308,11 @@ protected:
     bool ValidateCurFBForRead(const char* funcName,
                               const webgl::FormatUsageInfo** const out_format,
                               uint32_t* const out_width, uint32_t* const out_height);
+
+    bool HasDrawBuffers() const {
+        return IsWebGL2() ||
+               IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers);
+    }
 
     void Invalidate();
     void DestroyResourcesAndContext();
@@ -1765,18 +1773,36 @@ public:
     void operator =(const UniqueBuffer& other) = delete; // assign using Move()!
 };
 
-class ScopedUnpackReset
+class ScopedUnpackReset final
     : public gl::ScopedGLWrapper<ScopedUnpackReset>
 {
     friend struct gl::ScopedGLWrapper<ScopedUnpackReset>;
 
-protected:
+private:
     WebGLContext* const mWebGL;
 
 public:
     explicit ScopedUnpackReset(WebGLContext* webgl);
 
-protected:
+private:
+    void UnwrapImpl();
+};
+
+class ScopedFBRebinder final
+    : public gl::ScopedGLWrapper<ScopedFBRebinder>
+{
+    friend struct gl::ScopedGLWrapper<ScopedFBRebinder>;
+
+private:
+    WebGLContext* const mWebGL;
+
+public:
+    explicit ScopedFBRebinder(WebGLContext* webgl)
+        : ScopedGLWrapper<ScopedFBRebinder>(webgl->gl)
+        , mWebGL(webgl)
+    { }
+
+private:
     void UnwrapImpl();
 };
 
