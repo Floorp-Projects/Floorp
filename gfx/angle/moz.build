@@ -163,7 +163,8 @@ DEFINES['ANGLE_ENABLE_GLSL'] = "1"
 DEFINES['ANGLE_ENABLE_ESSL'] = "1"
 DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 
-EXPORTS.angle += [ 'include/GLSLANG/ShaderLang.h', 'include/GLSLANG/ShaderVars.h' ]
+EXPORTS.angle += [ 'include/GLSLANG/ShaderLang.h', 'include/GLSLANG/ShaderVars.h', 'include/platform/Platform.h' ]
+
 EXPORTS.angle.KHR += [ 'include/KHR/khrplatform.h' ]
 
 LOCAL_INCLUDES += [ 'include', 'src', 'src/common/third_party/numerics' ]
