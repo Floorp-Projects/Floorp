@@ -23,6 +23,9 @@ add_task(function* () {
     // Prepare message is tested independently.
     message: prepareMessage(packet)
   };
+  // Remove ID for deepEqual comparison.
+  action.message = action.message.remove('id');
+  expected.message = expected.message.remove('id');
   deepEqual(action, expected,
     "messageAdd action creator returns expected action object");
 });
