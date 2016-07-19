@@ -10,10 +10,6 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/plugins/PluginModuleChild.h"
 
-#if defined(XP_WIN)
-#include "mozilla/mscom/MainThreadRuntime.h"
-#endif
-
 namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
@@ -39,11 +35,6 @@ protected:
     }
 
 private:
-#if defined(XP_WIN)
-    /* Drag-and-drop and Silverlight depend on the host initializing COM.
-     * This object initializes and configures COM. */
-    mozilla::mscom::MainThreadRuntime mCOMRuntime;
-#endif
     PluginModuleChild mPlugin;
 
     DISALLOW_EVIL_CONSTRUCTORS(PluginProcessChild);
