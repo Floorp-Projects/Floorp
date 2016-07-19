@@ -270,6 +270,9 @@ install libuuid-devel
 install openssl-static
 install cmake
 install subversion
+
+# required for building binutils
+install bison
 run
 EOF
 
