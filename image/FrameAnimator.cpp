@@ -213,7 +213,6 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   // Bad data
   if (GetTimeoutForFrame(aState, nextFrameIndex) < 0) {
     ret.animationFinished = true;
-    ret.error = true;
   }
 
   if (nextFrameIndex == 0) {
@@ -229,7 +228,6 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
       aState.mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime(aState);
       aState.mCurrentAnimationFrameIndex = nextFrameIndex;
 
-      ret.error = true;
       return ret;
     }
 
