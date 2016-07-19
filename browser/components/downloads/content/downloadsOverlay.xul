@@ -134,7 +134,7 @@
                   onkeydown="DownloadsSummary.onKeyDown(event);"
                   onclick="DownloadsSummary.onClick(event);">
               <image class="downloadTypeIcon" />
-              <vbox>
+              <vbox id="downloadsSummaryChildBox">
                 <description id="downloadsSummaryDescription"
                              style="min-width: &downloadsSummary.minWidth2;"/>
                 <progressmeter id="downloadsSummaryProgress"
