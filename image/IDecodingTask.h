@@ -50,11 +50,6 @@ public:
   /// @return a non-null weak pointer to the Decoder associated with this task.
   virtual NotNull<Decoder*> GetDecoder() const = 0;
 
-  // Notify the Image associated with a Decoder of its progress, sending a
-  // runnable to the main thread if necessary.
-  // XXX(seth): This is a hack that will be removed soon.
-  static void NotifyProgress(NotNull<Decoder*> aDecoder);
-
 protected:
   virtual ~IDecodingTask() { }
 };
