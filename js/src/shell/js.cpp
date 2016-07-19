@@ -692,6 +692,8 @@ ForwardingPromiseRejectionTrackerCallback(JSContext* cx, JS::HandleObject promis
         return;
     }
 
+    AutoCompartment ac(cx, &callback.toObject());
+
     FixedInvokeArgs<2> args(cx);
     args[0].setObject(*promise);
     args[1].setInt32(static_cast<int32_t>(state));
