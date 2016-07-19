@@ -3910,13 +3910,6 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 {
   nsresult rv;
 
-  // spec isn't clear on what should happen if aMaxWidth <= 0, so
-  // treat it as an invalid argument
-  // technically, 0 should be an invalid value as well, but 0 is the default
-  // arg, and there is no way to tell if the default was used
-  if (aMaxWidth.WasPassed() && aMaxWidth.Value() < 0)
-    return NS_ERROR_INVALID_ARG;
-
   if (!mCanvasElement && !mDocShell) {
     NS_WARNING("Canvas element must be non-null or a docshell must be provided");
     return NS_ERROR_FAILURE;
@@ -3931,6 +3924,12 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   // replace all the whitespace characters with U+0020 SPACE
   nsAutoString textToDraw(aRawText);
   TextReplaceWhitespaceCharacters(textToDraw);
+
+  // According to spec, the API should return an empty array if maxWidth was provided
+  // but is less than or equal to zero or equal to NaN.
+  if (aMaxWidth.WasPassed() && (aMaxWidth.Value() <= 0 || IsNaN(aMaxWidth.Value()))) {
+    textToDraw.Truncate();
+  }
 
   // for now, default to ltr if not in doc
   bool isRTL = false;
