@@ -232,10 +232,11 @@ struct TableDesc
 {
     TableKind kind;
     uint32_t globalDataOffset;
-    uint32_t length;
+    uint32_t initial;
+    uint32_t maximum;
 
-    TableDesc() : kind(TableKind::AnyFunction), globalDataOffset(0), length(0) {}
-    explicit TableDesc(TableKind kind) : kind(kind) {}
+    TableDesc() { PodZero(this); }
+    explicit TableDesc(TableKind kind) : kind(kind), globalDataOffset(0), initial(0), maximum(0) {}
 };
 
 WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)

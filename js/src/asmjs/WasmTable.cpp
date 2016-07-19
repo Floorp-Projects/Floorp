@@ -24,17 +24,31 @@ using namespace js::wasm;
 /* static */ SharedTable
 Table::create(JSContext* cx, TableKind kind, uint32_t length)
 {
-    SharedTable table = js_new<Table>();
+    SharedTable table = cx->new_<Table>();
     if (!table)
         return nullptr;
 
-    table->array_.reset(js_pod_calloc<void*>(length));
+    table->array_.reset(cx->pod_calloc<void*>(length));
     if (!table->array_)
         return nullptr;
 
     table->kind_ = kind;
     table->length_ = length;
+    table->initialized_ = false;
     return table;
+}
+
+void
+Table::init(const CodeSegment& codeSegment)
+{
+    MOZ_ASSERT(!initialized());
+
+    for (uint32_t i = 0; i < length_; i++) {
+        MOZ_ASSERT(!array_.get()[i]);
+        array_.get()[i] = codeSegment.badIndirectCallCode();
+    }
+
+    initialized_ = true;
 }
 
 size_t

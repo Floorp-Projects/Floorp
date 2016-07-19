@@ -349,26 +349,43 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
 }
 
-void
-Module::initElems(HandleWasmInstanceObject instanceObj, HandleWasmTableObject tableObj) const
+bool
+Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
+                  HandleWasmTableObject tableObj) const
 {
     Instance& instance = instanceObj->instance();
     const CodeSegment& codeSegment = instance.codeSegment();
     const SharedTableVector& tables = instance.tables();
 
+    // Initialize tables that have a WasmTableObject first, so that this
+    // initialization can be done atomically.
+    if (tableObj && !tableObj->initialized() && !tableObj->init(cx, instanceObj))
+        return false;
+
+    // Initialize all remaining Tables that do not have objects.
+    for (const SharedTable& table : tables) {
+        if (!table->initialized())
+            table->init(codeSegment);
+    }
+
+    // Now that all tables have been initialized, write elements.
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
         MOZ_ASSERT(seg.offset + seg.elems.length() <= table.length());
 
-        for (uint32_t i = 0; i < seg.elems.length(); i++)
-            table.array()[seg.offset + i] = codeSegment.code() + seg.elems[i];
-
         if (tableObj) {
             MOZ_ASSERT(seg.tableIndex == 0);
-            for (uint32_t i = 0; i < seg.elems.length(); i++)
-                tableObj->setInstance(seg.offset + i, instanceObj);
+            for (uint32_t i = 0; i < seg.elems.length(); i++) {
+                if (!tableObj->setInstance(cx, seg.offset + i, instanceObj))
+                    return false;
+            }
         }
+
+        for (uint32_t i = 0; i < seg.elems.length(); i++)
+            table.array()[seg.offset + i] = codeSegment.code() + seg.elems[i];
     }
+
+    return true;
 }
 
 // asm.js module instantiation supplies its own buffer, but for wasm, create and
@@ -388,7 +405,7 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
         buffer = &memory->buffer();
         uint32_t length = buffer->byteLength();
         if (length < metadata_->minMemoryLength || length > metadata_->maxMemoryLength) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MEM_IMP_SIZE);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Memory");
             return false;
         }
 
@@ -431,12 +448,17 @@ Module::instantiateTable(JSContext* cx, const CodeSegment& codeSegment,
     for (const TableDesc& tableDesc : metadata_->tables) {
         SharedTable table;
         if (tableImport) {
-            MOZ_CRASH("NYI: table imports");
+            table = &tableImport->table();
+            if (table->length() < tableDesc.initial || table->length() > tableDesc.maximum) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMP_SIZE, "Table");
+                return false;
+            }
         } else {
-            table = Table::create(cx, tableDesc.kind, tableDesc.length);
+            table = Table::create(cx, tableDesc.kind, tableDesc.initial);
             if (!table)
                 return false;
         }
+
         if (!tables->emplaceBack(table)) {
             ReportOutOfMemory(cx);
             return false;
@@ -488,7 +510,7 @@ CreateExportObject(JSContext* cx,
             if (!tableObj) {
                 MOZ_ASSERT(instance.tables().length() == 1);
                 tableObj.set(WasmTableObject::create(cx, *instance.tables()[0]));
-                if (!tableObj || !tableObj->init(cx, instanceObj))
+                if (!tableObj)
                     return false;
             }
             val = ObjectValue(*tableObj);
@@ -581,9 +603,12 @@ Module::instantiate(JSContext* cx,
         return false;
 
     // Initialize table elements only after the instance is fully initialized
-    // since the Table object needs to point to a valid instance object.
+    // since the Table object needs to point to a valid instance object. Perform
+    // initialization as the final step after the instance is fully live since
+    // it is observable (in the case of an imported Table object).
 
-    initElems(instanceObj, table);
+    if (!initElems(cx, instanceObj, table))
+        return false;
 
     // Done! Notify the Debugger of the new Instance.
 

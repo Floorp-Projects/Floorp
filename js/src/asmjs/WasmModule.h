@@ -188,7 +188,8 @@ class Module : public RefCounted<Module>
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
     bool instantiateTable(JSContext* cx, const CodeSegment& codeSegment,
                           HandleWasmTableObject tableImport, SharedTableVector* tables) const;
-    void initElems(HandleWasmInstanceObject instanceObj, HandleWasmTableObject tableObj) const;
+    bool initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
+                   HandleWasmTableObject tableObj) const;
 
   public:
     Module(Bytes&& code,
