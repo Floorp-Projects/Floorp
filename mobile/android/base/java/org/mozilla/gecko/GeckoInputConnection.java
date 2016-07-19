@@ -16,6 +16,7 @@ import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.media.AudioManager;
@@ -468,6 +469,10 @@ class GeckoInputConnection
     }
 
     // Android N: @Override // InputConnection
+    // We need to suppress lint complaining about the lack override here in the meantime: it wants us to build
+    // against sdk 24, even though we're using 23, and therefore complains about the lack of override.
+    // Once we update to 24, we can use the actual override annotation and remove the lint suppression.
+    @SuppressLint("Override")
     public Handler getHandler() {
         if (isPhysicalKeyboardPresent()) {
             return ThreadUtils.getUiHandler();
