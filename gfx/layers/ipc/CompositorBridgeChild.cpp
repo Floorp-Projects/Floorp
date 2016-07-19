@@ -954,8 +954,8 @@ CompositorBridgeChild::GetTexturePool(LayersBackend aBackend,
                             IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
                                     gfxPlatform::GetPlatform()->GetTileHeight()),
                             aFlags,
-                            gfxPrefs::LayersTileInitialPoolSize(),
-                            gfxPrefs::LayersTilePoolIncrementSize(),
+                            gfxPrefs::LayersTileMaxPoolSize(),
+                            gfxPrefs::LayersTileShrinkPoolTimeout(),
                             this));
 
   return mTexturePools.LastElement();
@@ -965,7 +965,7 @@ void
 CompositorBridgeChild::HandleMemoryPressure()
 {
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->Clear();
+    mTexturePools[i]->ShrinkToMinimumSize();
   }
 }
 
