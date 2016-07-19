@@ -1257,42 +1257,6 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         return line;
       }
 
-      function createCueIfNeeded() {
-        if (!self.cue) {
-          self.cue = new self.window.VTTCue(0, 0, "");
-        }
-      }
-
-      // Parsing cue identifier and the identifier should be unique.
-      // Return true if the input is a cue identifier.
-      function parseCueIdentifier(input) {
-        if (maybeIsTimeStampFormat(line)) {
-          self.state = "CUE";
-          return false;
-        }
-
-        createCueIfNeeded();
-        // TODO : ensure the cue identifier is unique among all cue identifiers.
-        self.cue.id = containsTimeDirectionSymbol(input) ? "" : input;
-        self.state = "CUE";
-        return true;
-      }
-
-      // Parsing the timestamp and cue settings.
-      // See spec, https://w3c.github.io/webvtt/#collect-webvtt-cue-timings-and-settings
-      function parseCueMayThrow(input) {
-        try {
-          createCueIfNeeded();
-          parseCue(input, self.cue, self.regionList);
-          self.state = "CUETEXT";
-        } catch (e) {
-          self.reportOrThrowError(e);
-          // In case of an error ignore rest of the cue.
-          self.cue = null;
-          self.state = "BADCUE";
-        }
-      }
-
       // 3.4 WebVTT region and WebVTT region settings syntax
       function parseRegion(input) {
         var settings = new Settings();
@@ -1381,55 +1345,92 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         }
 
         var line;
-        if (self.state === "HEADER") {
-          line = parseHeader();
-        }
-
+        var alreadyCollectedLine = false;
         while (self.buffer) {
-          if (!line) {
+          // We can't parse a line until we have the full line.
+          if (!/\r\n|\n/.test(self.buffer)) {
+            return this;
+          }
+
+          if (!alreadyCollectedLine) {
             line = collectNextLine();
+          } else {
+            alreadyCollectedLine = false;
           }
 
           switch (self.state) {
+          case "HEADER":
+            // 13-18 - Allow a header (metadata) under the WEBVTT line.
+            if (/:/.test(line)) {
+              parseHeader(line);
+            } else if (!line) {
+              // An empty line terminates the header and starts the body (cues).
+              self.state = "ID";
+            }
+            continue;
+          case "NOTE":
+            // Ignore NOTE blocks.
+            if (!line) {
+              self.state = "ID";
+            }
+            continue;
           case "ID":
-            // Ignore NOTE and line terminator
-            if (/^NOTE($|[ \t])/.test(line) || !line) {
+            // Check for the start of NOTE blocks.
+            if (/^NOTE($|[ \t])/.test(line)) {
+              self.state = "NOTE";
               break;
             }
-            // If there is no cue identifier, keep the line and reuse this line
-            // in next iteration.
-            if (!parseCueIdentifier(line)) {
+            // 19-29 - Allow any number of line terminators, then initialize new cue values.
+            if (!line) {
               continue;
             }
-            break;
+            self.cue = new self.window.VTTCue(0, 0, "");
+            self.state = "CUE";
+            // 30-39 - Check if self line contains an optional identifier or timing data.
+            if (line.indexOf("-->") === -1) {
+              self.cue.id = line;
+              continue;
+            }
+            // Process line as start of a cue.
+            /*falls through*/
           case "CUE":
-            parseCueMayThrow(line);
-            break;
+            // 40 - Collect cue timings and settings.
+            try {
+              parseCue(line, self.cue, self.regionList);
+            } catch (e) {
+              self.reportOrThrowError(e);
+              // In case of an error ignore rest of the cue.
+              self.cue = null;
+              self.state = "BADCUE";
+              continue;
+            }
+            self.state = "CUETEXT";
+            continue;
           case "CUETEXT":
-            // Report the cue when (1) get an empty line (2) get the "-->""
-            if (!line || containsTimeDirectionSymbol(line)) {
+            var hasSubstring = line.indexOf("-->") !== -1;
+            // 34 - If we have an empty line then report the cue.
+            // 35 - If we have the special substring '-->' then report the cue,
+            // but do not collect the line as we need to process the current
+            // one as a new cue.
+            if (!line || hasSubstring && (alreadyCollectedLine = true)) {
               // We are done parsing self cue.
               self.oncue && self.oncue(self.cue);
               self.cue = null;
               self.state = "ID";
-              // Keep the line and reuse this line in next iteration.
               continue;
             }
             if (self.cue.text) {
               self.cue.text += "\n";
             }
             self.cue.text += line;
-            break;
+            continue;
           case "BADCUE": // BADCUE
             // 54-62 - Collect and discard the remaining cue.
             if (!line) {
               self.state = "ID";
             }
-            break;
+            continue;
           }
-          // The line was already parsed, empty it to ensure we can get the
-          // new line in next iteration.
-          line = null;
         }
       } catch (e) {
         self.reportOrThrowError(e);
