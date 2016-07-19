@@ -61,10 +61,6 @@ var gPrivacyPane = {
       return;
     }
 
-    let link = document.getElementById("browserContainersLearnMore");
-    // TODO: this link doesn't exist yet!
-    link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "containers";
-
     document.getElementById("browserContainersbox").hidden = false;
   },
 
