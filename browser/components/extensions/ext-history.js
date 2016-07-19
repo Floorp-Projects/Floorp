@@ -99,17 +99,15 @@ function getObserver() {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
       },
       onVisit: function(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed) {
-        PlacesUtils.promisePlaceInfo(guid).then(placeInfo => {
-          let data = {
-            id: guid,
-            url: uri.spec,
-            title: placeInfo.title,
-            lastVisitTime: time / 1000,  // time from Places is microseconds,
-            visitCount,
-            typedCount: typed,
-          };
-          this.emit("visited", data);
-        });
+        let data = {
+          id: guid,
+          url: uri.spec,
+          title: "",
+          lastVisitTime: time / 1000,  // time from Places is microseconds,
+          visitCount,
+          typedCount: typed,
+        };
+        this.emit("visited", data);
       },
       onBeginUpdateBatch: function() {},
       onEndUpdateBatch: function() {},
