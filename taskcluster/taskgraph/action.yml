@@ -27,7 +27,7 @@ routes:
 
 payload:
   env:
-    GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
+    GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
     GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
     GECKO_HEAD_REF: '{{head_ref}}'
     GECKO_HEAD_REV: '{{head_rev}}'
