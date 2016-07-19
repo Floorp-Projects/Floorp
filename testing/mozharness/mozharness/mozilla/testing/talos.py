@@ -287,13 +287,13 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         if self.query_pagesets_url():
             self.info("Downloading pageset...")
             src_talos_pageset = os.path.join(src_talos_webdir, 'tests')
-            self.download_unzip(self.pagesets_url, src_talos_pageset)
+            self.download_unpack(self.pagesets_url, src_talos_pageset)
 
     # Action methods. {{{1
     # clobber defined in BaseScript
     # read_buildbot_config defined in BuildbotMixin
 
-    def download_and_extract(self, target_unzip_dirs=None, suite_categories=None):
+    def download_and_extract(self, extract_dirs=None, suite_categories=None):
         return super(Talos, self).download_and_extract(
             suite_categories=['common', 'talos']
         )
