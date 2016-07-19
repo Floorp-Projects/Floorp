@@ -94,15 +94,15 @@ FrameAnimator::GetSingleLoopTime(AnimationState& aState) const
 
   int32_t looptime = 0;
   for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
-    int32_t timeout = GetTimeoutForFrame(aState, i);
-    if (timeout >= 0) {
-      looptime += static_cast<uint32_t>(timeout);
-    } else {
+    FrameTimeout timeout = GetTimeoutForFrame(aState, i);
+    if (timeout == FrameTimeout::Forever()) {
       // If we have a frame that never times out, we're probably in an error
       // case, but let's handle it more gracefully.
-      NS_WARNING("Negative frame timeout - how did this happen?");
+      NS_WARNING("Infinite frame timeout - how did this happen?");
       return -1;
     }
+
+    looptime += timeout.AsMilliseconds();
   }
 
   return looptime;
@@ -112,22 +112,22 @@ TimeStamp
 FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState) const
 {
   TimeStamp currentFrameTime = aState.mCurrentAnimationFrameTime;
-  int32_t timeout =
+  FrameTimeout timeout =
     GetTimeoutForFrame(aState, aState.mCurrentAnimationFrameIndex);
 
-  if (timeout < 0) {
+  if (timeout == FrameTimeout::Forever()) {
     // We need to return a sentinel value in this case, because our logic
-    // doesn't work correctly if we have a negative timeout value. We use
-    // one year in the future as the sentinel because it works with the loop
-    // in RequestRefresh() below.
+    // doesn't work correctly if we have an infinitely long timeout. We use one
+    // year in the future as the sentinel because it works with the loop in
+    // RequestRefresh() below.
     // XXX(seth): It'd be preferable to make our logic work correctly with
-    // negative timeouts.
+    // infinitely long timeouts.
     return TimeStamp::NowLoRes() +
            TimeDuration::FromMilliseconds(31536000.0);
   }
 
   TimeDuration durationOfTimeout =
-    TimeDuration::FromMilliseconds(static_cast<double>(timeout));
+    TimeDuration::FromMilliseconds(double(timeout.AsMilliseconds()));
   TimeStamp currentFrameEndTime = currentFrameTime + durationOfTimeout;
 
   return currentFrameEndTime;
@@ -210,8 +210,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
     return ret;
   }
 
-  // Bad data
-  if (GetTimeoutForFrame(aState, nextFrameIndex) < 0) {
+  if (GetTimeoutForFrame(aState, nextFrameIndex) == FrameTimeout::Forever()) {
     ret.animationFinished = true;
   }
 
@@ -317,40 +316,21 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
   return result;
 }
 
-int32_t
+FrameTimeout
 FrameAnimator::GetTimeoutForFrame(AnimationState& aState, uint32_t aFrameNum) const
 {
-  int32_t rawTimeout = 0;
-
   RawAccessFrameRef frame = GetRawFrame(aFrameNum);
   if (frame) {
     AnimationData data = frame->GetAnimationData();
-    rawTimeout = data.mRawTimeout;
-  } else if (aFrameNum == 0) {
-    rawTimeout = aState.mFirstFrameTimeout;
-  } else {
-    NS_WARNING("No frame; called GetTimeoutForFrame too early?");
-    return 100;
+    return data.mTimeout;
   }
 
-  // Ensure a minimal time between updates so we don't throttle the UI thread.
-  // consider 0 == unspecified and make it fast but not too fast.  Unless we
-  // have a single loop GIF. See bug 890743, bug 125137, bug 139677, and bug
-  // 207059. The behavior of recent IE and Opera versions seems to be:
-  // IE 6/Win:
-  //   10 - 50ms go 100ms
-  //   >50ms go correct speed
-  // Opera 7 final/Win:
-  //   10ms goes 100ms
-  //   >10ms go correct speed
-  // It seems that there are broken tools out there that set a 0ms or 10ms
-  // timeout when they really want a "default" one.  So munge values in that
-  // range.
-  if (rawTimeout >= 0 && rawTimeout <= 10) {
-    return 100;
+  if (aFrameNum == 0) {
+    return aState.mFirstFrameTimeout;
   }
 
-  return rawTimeout;
+  NS_WARNING("No frame; called GetTimeoutForFrame too early?");
+  return FrameTimeout::FromRawMilliseconds(100);
 }
 
 static void
