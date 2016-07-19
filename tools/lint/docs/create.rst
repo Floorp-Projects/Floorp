@@ -53,6 +53,7 @@ linter. Here are the supported keys:
 * payload - The actual linting logic, depends on the type (required)
 * include - A list of glob patterns that must be matched (optional)
 * exclude - A list of glob patterns that must not be matched (optional)
+* extensions - A list of file extensions to be considered (optional)
 * setup - A function that sets up external dependencies (optional)
 
 In addition to the above, some ``.lint`` files correspond to a single lint rule. For these, the
