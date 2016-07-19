@@ -234,14 +234,14 @@ WebGLRenderbuffer::DoFramebufferRenderbuffer(FBTarget target, GLenum attachment)
 
     if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
         const GLuint stencilRB = (mSecondaryRB ? mSecondaryRB : mPrimaryRB);
-        gl->fFramebufferRenderbuffer(target, LOCAL_GL_DEPTH_ATTACHMENT,
+        gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_DEPTH_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER, mPrimaryRB);
-        gl->fFramebufferRenderbuffer(target, LOCAL_GL_STENCIL_ATTACHMENT,
+        gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_STENCIL_ATTACHMENT,
                                      LOCAL_GL_RENDERBUFFER, stencilRB);
         return;
     }
 
-    gl->fFramebufferRenderbuffer(target, attachment,
+    gl->fFramebufferRenderbuffer(target.get(), attachment,
                                  LOCAL_GL_RENDERBUFFER, mPrimaryRB);
 }
 
