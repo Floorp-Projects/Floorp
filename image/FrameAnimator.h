@@ -27,7 +27,6 @@ class AnimationState
 public:
   explicit AnimationState(uint16_t aAnimationMode)
     : mCurrentAnimationFrameIndex(0)
-    , mLastCompositedFrameIndex(-1)
     , mLoopRemainingCount(-1)
     , mLoopCount(-1)
     , mFirstFrameTimeout(0)
@@ -106,9 +105,6 @@ private:
   //! The current frame index we're on. 0 to (numFrames - 1).
   uint32_t mCurrentAnimationFrameIndex;
 
-  //! Track the last composited frame for Optimizations (See DoComposite code)
-  int32_t mLastCompositedFrameIndex;
-
   //! number of loops remaining before animation stops (-1 no stop)
   int32_t mLoopRemainingCount;
 
@@ -131,6 +127,7 @@ public:
   FrameAnimator(RasterImage* aImage, gfx::IntSize aSize)
     : mImage(aImage)
     , mSize(aSize)
+    , mLastCompositedFrameIndex(-1)
   {
      MOZ_COUNT_CTOR(FrameAnimator);
   }
@@ -188,7 +185,7 @@ public:
    * returns an empty LookupResult. It is an error to call this method with
    * aFrameNum == 0, because the first frame is never composited.
    */
-  LookupResult GetCompositedFrame(AnimationState& aState, uint32_t aFrameNum);
+  LookupResult GetCompositedFrame(uint32_t aFrameNum);
 
   /*
    * Returns the frame's adjusted timeout. If the animation loops and the
@@ -242,8 +239,7 @@ private: // methods
    */
   TimeStamp GetCurrentImgFrameEndTime(AnimationState& aState) const;
 
-  bool DoBlend(AnimationState& aState,
-               nsIntRect* aDirtyRect,
+  bool DoBlend(nsIntRect* aDirtyRect,
                uint32_t aPrevFrameIndex,
                uint32_t aNextFrameIndex);
 
@@ -311,6 +307,9 @@ private: // data
    * when it's done with the current frame.
    */
   RawAccessFrameRef mCompositingPrevFrame;
+
+  //! Track the last composited frame for Optimizations (See DoComposite code)
+  int32_t mLastCompositedFrameIndex;
 };
 
 } // namespace image

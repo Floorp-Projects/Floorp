@@ -34,7 +34,6 @@ void
 AnimationState::ResetAnimation()
 {
   mCurrentAnimationFrameIndex = 0;
-  mLastCompositedFrameIndex = -1;
 }
 
 void
@@ -223,7 +222,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
 
     // Change frame
-    if (!DoBlend(aState, &ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
+    if (!DoBlend(&ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
@@ -299,12 +298,12 @@ FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 }
 
 LookupResult
-FrameAnimator::GetCompositedFrame(AnimationState& aState, uint32_t aFrameNum)
+FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 {
   MOZ_ASSERT(aFrameNum != 0, "First frame is never composited");
 
   // If we have a composited version of this frame, return that.
-  if (aState.mLastCompositedFrameIndex == int32_t(aFrameNum)) {
+  if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
     return LookupResult(mCompositingFrame->DrawableRef(), MatchType::EXACT);
   }
 
@@ -416,8 +415,7 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
 // DoBlend gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
 bool
-FrameAnimator::DoBlend(AnimationState& aState,
-                       nsIntRect* aDirtyRect,
+FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
                        uint32_t aPrevFrameIndex,
                        uint32_t aNextFrameIndex)
 {
@@ -504,7 +502,7 @@ FrameAnimator::DoBlend(AnimationState& aState,
   //    Only Frame 3 of a 10 frame image required us to build a composite frame
   //    On the second loop, we do not need to rebuild the frame
   //    since it's still sitting in compositingFrame)
-  if (aState.mLastCompositedFrameIndex == int32_t(aNextFrameIndex)) {
+  if (mLastCompositedFrameIndex == int32_t(aNextFrameIndex)) {
     return true;
   }
 
@@ -521,7 +519,7 @@ FrameAnimator::DoBlend(AnimationState& aState,
     }
     mCompositingFrame = newFrame->RawAccessRef();
     needToBlankComposite = true;
-  } else if (int32_t(aNextFrameIndex) != aState.mLastCompositedFrameIndex+1) {
+  } else if (int32_t(aNextFrameIndex) != mLastCompositedFrameIndex+1) {
 
     // If we are not drawing on top of last composited frame,
     // then we are building a new composite frame, so let's clear it first.
@@ -615,7 +613,7 @@ FrameAnimator::DoBlend(AnimationState& aState,
         // erased itself)
         // Note: Frame 1 never gets into DoBlend(), so (aNextFrameIndex - 1)
         // will always be a valid frame number.
-        if (aState.mLastCompositedFrameIndex != int32_t(aNextFrameIndex - 1)) {
+        if (mLastCompositedFrameIndex != int32_t(aNextFrameIndex - 1)) {
           if (isFullPrevFrame && !prevFrame->GetIsPaletted()) {
             // Just copy the bits
             CopyFrameImage(prevFrameData.mRawData,
@@ -690,7 +688,7 @@ FrameAnimator::DoBlend(AnimationState& aState,
   // Tell the image that it is fully 'downloaded'.
   mCompositingFrame->Finish();
 
-  aState.mLastCompositedFrameIndex = int32_t(aNextFrameIndex);
+  mLastCompositedFrameIndex = int32_t(aNextFrameIndex);
 
   return true;
 }
