@@ -109,6 +109,7 @@ class LintRoller(object):
         if workdir:
             paths.extend(self.vcs.by_workdir())
         paths = paths or ['.']
+        paths = map(os.path.abspath, paths)
 
         # Set up multiprocessing
         m = Manager()
