@@ -592,8 +592,8 @@ protected:
 
         explicit Arr(const arrT& arr) {
             arr.ComputeLengthAndData();
-            dataCount = arr.Length();
-            data = arr.Data();
+            dataCount = arr.LengthAllowShared();
+            data = arr.DataAllowShared();
         }
 
         explicit Arr(const dom::Sequence<elemT>& arr) {
@@ -950,7 +950,7 @@ public:
 
     void VertexAttrib1fv(GLuint idx, const dom::Float32Array& arr) {
         arr.ComputeLengthAndData();
-        VertexAttrib1fv_base(idx, arr.Length(), arr.Data());
+        VertexAttrib1fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
     }
     void VertexAttrib1fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
         VertexAttrib1fv_base(idx, arr.Length(), arr.Elements());
@@ -958,7 +958,7 @@ public:
 
     void VertexAttrib2fv(GLuint idx, const dom::Float32Array& arr) {
         arr.ComputeLengthAndData();
-        VertexAttrib2fv_base(idx, arr.Length(), arr.Data());
+        VertexAttrib2fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
     }
     void VertexAttrib2fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
         VertexAttrib2fv_base(idx, arr.Length(), arr.Elements());
@@ -966,7 +966,7 @@ public:
 
     void VertexAttrib3fv(GLuint idx, const dom::Float32Array& arr) {
         arr.ComputeLengthAndData();
-        VertexAttrib3fv_base(idx, arr.Length(), arr.Data());
+        VertexAttrib3fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
     }
     void VertexAttrib3fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
         VertexAttrib3fv_base(idx, arr.Length(), arr.Elements());
@@ -974,7 +974,7 @@ public:
 
     void VertexAttrib4fv(GLuint idx, const dom::Float32Array& arr) {
         arr.ComputeLengthAndData();
-        VertexAttrib4fv_base(idx, arr.Length(), arr.Data());
+        VertexAttrib4fv_base(idx, arr.LengthAllowShared(), arr.DataAllowShared());
     }
     void VertexAttrib4fv(GLuint idx, const dom::Sequence<GLfloat>& arr) {
         VertexAttrib4fv_base(idx, arr.Length(), arr.Elements());
