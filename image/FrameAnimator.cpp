@@ -94,7 +94,7 @@ FrameAnimator::GetSingleLoopTime(AnimationState& aState) const
 
   int32_t looptime = 0;
   for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
-    FrameTimeout timeout = GetTimeoutForFrame(aState, i);
+    FrameTimeout timeout = GetTimeoutForFrame(i);
     if (timeout == FrameTimeout::Forever()) {
       // If we have a frame that never times out, we're probably in an error
       // case, but let's handle it more gracefully.
@@ -112,8 +112,7 @@ TimeStamp
 FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState) const
 {
   TimeStamp currentFrameTime = aState.mCurrentAnimationFrameTime;
-  FrameTimeout timeout =
-    GetTimeoutForFrame(aState, aState.mCurrentAnimationFrameIndex);
+  FrameTimeout timeout = GetTimeoutForFrame(aState.mCurrentAnimationFrameIndex);
 
   if (timeout == FrameTimeout::Forever()) {
     // We need to return a sentinel value in this case, because our logic
@@ -210,7 +209,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
     return ret;
   }
 
-  if (GetTimeoutForFrame(aState, nextFrameIndex) == FrameTimeout::Forever()) {
+  if (GetTimeoutForFrame(nextFrameIndex) == FrameTimeout::Forever()) {
     ret.animationFinished = true;
   }
 
@@ -317,16 +316,12 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 }
 
 FrameTimeout
-FrameAnimator::GetTimeoutForFrame(AnimationState& aState, uint32_t aFrameNum) const
+FrameAnimator::GetTimeoutForFrame(uint32_t aFrameNum) const
 {
   RawAccessFrameRef frame = GetRawFrame(aFrameNum);
   if (frame) {
     AnimationData data = frame->GetAnimationData();
     return data.mTimeout;
-  }
-
-  if (aFrameNum == 0) {
-    return aState.mFirstFrameTimeout;
   }
 
   NS_WARNING("No frame; called GetTimeoutForFrame too early?");
