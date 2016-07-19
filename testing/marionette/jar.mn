@@ -25,6 +25,7 @@ marionette.jar:
   content/atom.js (atom.js)
   content/evaluate.js (evaluate.js)
   content/logging.js (logging.js)
+  content/navigate.js (navigate.js)
 #ifdef ENABLE_TESTS
   content/test.xul  (harness/marionette/chrome/test.xul)
   content/test2.xul  (harness/marionette/chrome/test2.xul)
