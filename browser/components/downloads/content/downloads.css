@@ -177,6 +177,15 @@ richlistitem.download button {
   display: none;
 }
 
+/* Make the panel wide enough to show the download list items without improperly
+   truncating them. */
+#downloadsPanel-multiView > .panel-viewcontainer,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack > .panel-mainview {
+  overflow: visible;
+  max-width: unset;
+}
+
 /* Show the "show blocked info" button. */
 #downloadsPanel-mainView .download-state[state="8"] .downloadShowBlockedInfo {
   display: inline;
@@ -186,12 +195,12 @@ richlistitem.download button {
 
 /* The subview should be off to the right and not visible at all. */
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=main] > .panel-subviews {
-  transform: translateX(100%);
+  transform: translateX(101%);
   transition: transform var(--panelui-subview-transition-duration);
 }
 
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=main] > .panel-subviews:-moz-locale-dir(rtl) {
-  transform: translateX(-100%);
+  transform: translateX(-101%);
 }
 
 /** When the subview is showing... **/
