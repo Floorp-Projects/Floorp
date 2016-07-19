@@ -862,7 +862,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     if (!SendCreateWindow(aTabOpener, newChild, renderFrame,
                           aChromeFlags, aCalledFromJS, aPositionSpecified,
                           aSizeSpecified,
-                          features,
+                          name, features,
                           baseURIString,
                           openerDocShell
                             ? openerDocShell->GetOriginAttributes()
