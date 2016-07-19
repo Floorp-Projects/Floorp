@@ -58,7 +58,7 @@ public:
                                                             const LayoutDeviceIntRect& aRect,
                                                             const LayoutDeviceIntRect& aClearRect) override;
   already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
-  already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
+  void ObserveVsync(VsyncObserver* aObserver) override;
   uintptr_t GetWidgetKey() override;
   nsIWidget* RealWidget() override;
   WinCompositorWidget* AsWindows() override {
