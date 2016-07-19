@@ -13,15 +13,13 @@ const constructors = [
 ];
 
 for (var constructor of constructors) {
-    for (var detachType of ["change-data", "same-data"]) {
-        var buf = new constructor();
-        detachArrayBuffer(buf.buffer, detachType);
-        assertThrowsInstanceOf(() => new constructor(buf), TypeError);
+    var buf = new constructor();
+    detachArrayBuffer(buf.buffer);
+    assertThrowsInstanceOf(() => new constructor(buf), TypeError);
 
-        var buffer = new ArrayBuffer();
-        detachArrayBuffer(buffer, detachType);
-        assertThrowsInstanceOf(() => new constructor(buffer), TypeError);
-    }
+    var buffer = new ArrayBuffer();
+    detachArrayBuffer(buffer);
+    assertThrowsInstanceOf(() => new constructor(buffer), TypeError);
 }
 
 
