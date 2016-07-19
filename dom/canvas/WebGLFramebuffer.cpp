@@ -5,7 +5,12 @@
 
 #include "WebGLFramebuffer.h"
 
+// You know it's going to be fun when these two show up:
+#include <algorithm>
+#include <iterator>
+
 #include "GLContext.h"
+#include "GLScreenBuffer.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "nsPrintfCString.h"
 #include "WebGLContext.h"
@@ -15,6 +20,14 @@
 #include "WebGLTexture.h"
 
 namespace mozilla {
+
+WebGLFBAttachPoint::WebGLFBAttachPoint()
+    : mFB(nullptr)
+    , mAttachmentPoint(0)
+    , mTexImageTarget(LOCAL_GL_NONE)
+    , mTexImageLayer(0)
+    , mTexImageLevel(0)
+{ }
 
 WebGLFBAttachPoint::WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint)
     : mFB(fb)
@@ -26,6 +39,7 @@ WebGLFBAttachPoint::WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPo
 
 WebGLFBAttachPoint::~WebGLFBAttachPoint()
 {
+    MOZ_ASSERT(mFB, "Should have been Init'd.");
     MOZ_ASSERT(!mRenderbufferPtr);
     MOZ_ASSERT(!mTexturePtr);
 }
@@ -86,15 +100,6 @@ WebGLFBAttachPoint::HasAlpha() const
     return Format()->format->a;
 }
 
-const webgl::FormatUsageInfo*
-WebGLFramebuffer::GetFormatForAttachment(const WebGLFBAttachPoint& attachment) const
-{
-    MOZ_ASSERT(attachment.IsDefined());
-    MOZ_ASSERT(attachment.Texture() || attachment.Renderbuffer());
-
-    return attachment.Format();
-}
-
 bool
 WebGLFBAttachPoint::IsReadableFloat() const
 {
@@ -125,14 +130,8 @@ WebGLFBAttachPoint::Clear()
 }
 
 void
-WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level)
-{
-    SetTexImageLayer(tex, target, level, 0);
-}
-
-void
-WebGLFBAttachPoint::SetTexImageLayer(WebGLTexture* tex, TexImageTarget target,
-                                     GLint level, GLint layer)
+WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level,
+                                GLint layer)
 {
     Clear();
 
@@ -176,7 +175,7 @@ WebGLFBAttachPoint::HasUninitializedImageData() const
 }
 
 void
-WebGLFBAttachPoint::SetImageDataStatus(WebGLImageDataStatus newStatus)
+WebGLFBAttachPoint::SetImageDataStatus(WebGLImageDataStatus newStatus) const
 {
     if (!HasImage())
         return;
@@ -343,84 +342,60 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
 }
 
 void
-WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, FBTarget target,
-                                       GLenum attachment) const
+WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
 {
     if (!HasImage()) {
-        switch (attachment) {
+        switch (mAttachmentPoint) {
         case LOCAL_GL_DEPTH_ATTACHMENT:
         case LOCAL_GL_STENCIL_ATTACHMENT:
         case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
             break;
 
         default:
-            gl->fFramebufferRenderbuffer(target, attachment,
+            gl->fFramebufferRenderbuffer(target.get(), mAttachmentPoint,
                                          LOCAL_GL_RENDERBUFFER, 0);
             break;
         }
 
         return;
     }
-    MOZ_ASSERT(HasImage());
-
-    if (Texture()) {
-        MOZ_ASSERT(gl == Texture()->mContext->GL());
-
-        const GLenum imageTarget = ImageTarget().get();
-        const GLint mipLevel = MipLevel();
-        const GLint layer = Layer();
-        const GLuint glName = Texture()->mGLName;
-
-        switch (imageTarget) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-            if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                gl->fFramebufferTexture2D(target, LOCAL_GL_DEPTH_ATTACHMENT,
-                                          imageTarget, glName, mipLevel);
-                gl->fFramebufferTexture2D(target,
-                                          LOCAL_GL_STENCIL_ATTACHMENT, imageTarget,
-                                          glName, mipLevel);
-            } else {
-                gl->fFramebufferTexture2D(target, attachment, imageTarget,
-                                          glName, mipLevel);
-            }
-            break;
-
-        case LOCAL_GL_TEXTURE_2D_ARRAY:
-        case LOCAL_GL_TEXTURE_3D:
-            if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                gl->fFramebufferTextureLayer(target,
-                                             LOCAL_GL_DEPTH_ATTACHMENT, glName, mipLevel,
-                                             layer);
-                gl->fFramebufferTextureLayer(target,
-                                             LOCAL_GL_STENCIL_ATTACHMENT, glName,
-                                             mipLevel, layer);
-            } else {
-                gl->fFramebufferTextureLayer(target, attachment, glName,
-                                             mipLevel, layer);
-            }
-            break;
-        }
-        return;
-    }
 
     if (Renderbuffer()) {
-        Renderbuffer()->DoFramebufferRenderbuffer(target, attachment);
+        Renderbuffer()->DoFramebufferRenderbuffer(target, mAttachmentPoint);
         return;
     }
+    MOZ_ASSERT(Texture());
 
-    MOZ_CRASH("GFX: invalid render buffer");
+    MOZ_ASSERT(gl == Texture()->mContext->GL());
+
+    const auto& texName = Texture()->mGLName;
+
+    switch (mTexImageTarget.get()) {
+    case LOCAL_GL_TEXTURE_2D:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        gl->fFramebufferTexture2D(target.get(), mAttachmentPoint, mTexImageTarget.get(),
+                                  texName, mTexImageLevel);
+        break;
+
+    case LOCAL_GL_TEXTURE_2D_ARRAY:
+    case LOCAL_GL_TEXTURE_3D:
+        // If we have fFramebufferTextureLayer, we can rely on having
+        // DEPTH_STENCIL_ATTACHMENT.
+        gl->fFramebufferTextureLayer(target.get(), mAttachmentPoint,
+                                     texName, mTexImageLevel, mTexImageLayer);
+        break;
+    }
 }
 
 JS::Value
 WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
                                  GLenum target, GLenum attachment, GLenum pname,
-                                 ErrorResult* const out_error)
+                                 ErrorResult* const out_error) const
 {
     const bool hasAttachment = (mTexturePtr || mRenderbufferPtr);
     if (!hasAttachment) {
@@ -625,35 +600,41 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // WebGLFramebuffer
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
     : WebGLContextBoundObject(webgl)
     , mGLName(fbo)
-    , mIsKnownFBComplete(false)
-    , mReadBufferMode(LOCAL_GL_COLOR_ATTACHMENT0)
-    , mColorAttachment0(this, LOCAL_GL_COLOR_ATTACHMENT0)
-    , mDepthAttachment(this, LOCAL_GL_DEPTH_ATTACHMENT)
-    , mStencilAttachment(this, LOCAL_GL_STENCIL_ATTACHMENT)
-    , mDepthStencilAttachment(this, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
-    , mMoreColorAttachments(webgl->mGLMaxColorAttachments)
-    , mDrawBuffers(1, LOCAL_GL_COLOR_ATTACHMENT0)
 #ifdef ANDROID
     , mIsFB(false)
 #endif
+    , mDepthAttachment(this, LOCAL_GL_DEPTH_ATTACHMENT)
+    , mStencilAttachment(this, LOCAL_GL_STENCIL_ATTACHMENT)
+    , mDepthStencilAttachment(this, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
 {
     mContext->mFramebuffers.insertBack(this);
+
+    size_t i = 0;
+    for (auto& cur : mColorAttachments) {
+        new (&cur) WebGLFBAttachPoint(this, LOCAL_GL_COLOR_ATTACHMENT0 + i);
+        i++;
+    }
+
+    mColorDrawBuffers.push_back(&mColorAttachments[0]);
+    mColorReadBuffer = &mColorAttachments[0];
 }
 
 void
 WebGLFramebuffer::Delete()
 {
-    mColorAttachment0.Clear();
+    InvalidateFramebufferStatus();
+
     mDepthAttachment.Clear();
     mStencilAttachment.Clear();
     mDepthStencilAttachment.Clear();
 
-    for (auto& cur : mMoreColorAttachments) {
+    for (auto& cur : mColorAttachments) {
         cur.Clear();
     }
 
@@ -667,226 +648,104 @@ WebGLFramebuffer::Delete()
 #endif
 }
 
-void
-WebGLFramebuffer::FramebufferRenderbuffer(GLenum attachment, RBTarget rbtarget,
-                                          WebGLRenderbuffer* rb)
+////
+
+Maybe<WebGLFBAttachPoint*>
+WebGLFramebuffer::GetColorAttachPoint(GLenum attachPoint)
 {
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
+    if (attachPoint == LOCAL_GL_NONE)
+        return Some<WebGLFBAttachPoint*>(nullptr);
 
-    if (!mContext->ValidateObjectAllowNull("framebufferRenderbuffer: renderbuffer", rb))
-        return;
+    if (attachPoint < LOCAL_GL_COLOR_ATTACHMENT0)
+        return Nothing();
 
-    // `attachPointEnum` is validated by ValidateFramebufferAttachment().
+    const size_t colorId = attachPoint - LOCAL_GL_COLOR_ATTACHMENT0;
 
-    RefPtr<WebGLRenderbuffer> rb_ = rb; // Bug 1201275
-    const auto fnAttach = [this, &rb_](GLenum attachment) {
-        const auto attachPoint = this->GetAttachPoint(attachment);
-        MOZ_ASSERT(attachPoint);
+    MOZ_ASSERT(mContext->mImplMaxColorAttachments <= kMaxColorAttachments);
+    if (colorId >= mContext->mImplMaxColorAttachments)
+        return Nothing();
 
-        attachPoint->SetRenderbuffer(rb_);
-    };
-
-    if (mContext->IsWebGL2() && attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        fnAttach(LOCAL_GL_DEPTH_ATTACHMENT);
-        fnAttach(LOCAL_GL_STENCIL_ATTACHMENT);
-    } else {
-        fnAttach(attachment);
-    }
-
-    InvalidateFramebufferStatus();
+    return Some(&mColorAttachments[colorId]);
 }
 
-void
-WebGLFramebuffer::FramebufferTexture2D(GLenum attachment, TexImageTarget texImageTarget,
-                                       WebGLTexture* tex, GLint level)
-{
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
-
-    if (!mContext->ValidateObjectAllowNull("framebufferTexture2D: texture", tex))
-        return;
-
-    if (tex) {
-        if (!tex->HasEverBeenBound()) {
-            mContext->ErrorInvalidOperation("framebufferTexture2D: the texture"
-                                            " is not the name of a texture.");
-            return;
-        }
-
-        const TexTarget destTexTarget = TexImageTargetToTexTarget(texImageTarget);
-        if (tex->Target() != destTexTarget) {
-            mContext->ErrorInvalidOperation("framebufferTexture2D: Mismatched"
-                                            " texture and texture target.");
-            return;
-        }
-    }
-
-    RefPtr<WebGLTexture> tex_ = tex; // Bug 1201275
-    const auto fnAttach = [this, &tex_, texImageTarget, level](GLenum attachment) {
-        const auto attachPoint = this->GetAttachPoint(attachment);
-        MOZ_ASSERT(attachPoint);
-
-        attachPoint->SetTexImage(tex_, texImageTarget, level);
-    };
-
-    if (mContext->IsWebGL2() && attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        fnAttach(LOCAL_GL_DEPTH_ATTACHMENT);
-        fnAttach(LOCAL_GL_STENCIL_ATTACHMENT);
-    } else {
-        fnAttach(attachment);
-    }
-
-    InvalidateFramebufferStatus();
-}
-
-void
-WebGLFramebuffer::FramebufferTextureLayer(GLenum attachment, WebGLTexture* tex,
-                                          GLint level, GLint layer)
-{
-    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-               mContext->mBoundReadFramebuffer == this);
-
-    const TexImageTarget texImageTarget = (tex ? tex->Target().get()
-                                               : LOCAL_GL_TEXTURE_2D);
-
-    RefPtr<WebGLTexture> tex_ = tex; // Bug 1201275
-    const auto fnAttach = [this, &tex_, texImageTarget, level, layer](GLenum attachment) {
-        const auto attachPoint = this->GetAttachPoint(attachment);
-        MOZ_ASSERT(attachPoint);
-
-        attachPoint->SetTexImageLayer(tex_, texImageTarget, level, layer);
-    };
-
-    if (mContext->IsWebGL2() && attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        fnAttach(LOCAL_GL_DEPTH_ATTACHMENT);
-        fnAttach(LOCAL_GL_STENCIL_ATTACHMENT);
-    } else {
-        fnAttach(attachment);
-    }
-
-    InvalidateFramebufferStatus();
-}
-
-WebGLFBAttachPoint*
+Maybe<WebGLFBAttachPoint*>
 WebGLFramebuffer::GetAttachPoint(GLenum attachPoint)
 {
     switch (attachPoint) {
-    case LOCAL_GL_COLOR_ATTACHMENT0:
-        return &mColorAttachment0;
-
     case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-        return &mDepthStencilAttachment;
+        return Some(&mDepthStencilAttachment);
 
     case LOCAL_GL_DEPTH_ATTACHMENT:
-        return &mDepthAttachment;
+        return Some(&mDepthAttachment);
 
     case LOCAL_GL_STENCIL_ATTACHMENT:
-        return &mStencilAttachment;
+        return Some(&mStencilAttachment);
 
     default:
-        break;
+        return GetColorAttachPoint(attachPoint);
     }
-
-    const auto lastCAEnum = mContext->LastColorAttachmentEnum();
-    if (attachPoint < LOCAL_GL_COLOR_ATTACHMENT1 ||
-        attachPoint > lastCAEnum)
-    {
-        return nullptr;
-    }
-
-    if (!mMoreColorAttachments.Size()) {
-        for (GLenum cur = LOCAL_GL_COLOR_ATTACHMENT1; cur <= lastCAEnum; cur++) {
-            mMoreColorAttachments.AppendNew(this, cur);
-        }
-    }
-    MOZ_ASSERT(LOCAL_GL_COLOR_ATTACHMENT0 + mMoreColorAttachments.Size() == lastCAEnum);
-
-    const size_t offset = attachPoint - LOCAL_GL_COLOR_ATTACHMENT1;
-    MOZ_ASSERT(offset <= mMoreColorAttachments.Size());
-    return &mMoreColorAttachments[offset];
 }
+
+#define FOR_EACH_ATTACHMENT(X)            \
+    X(mDepthAttachment);                  \
+    X(mStencilAttachment);                \
+    X(mDepthStencilAttachment);           \
+                                          \
+    for (auto& cur : mColorAttachments) { \
+        X(cur);                           \
+    }
 
 void
 WebGLFramebuffer::DetachTexture(const WebGLTexture* tex)
 {
-    if (mColorAttachment0.Texture() == tex)
-        mColorAttachment0.Clear();
+    const auto fnDetach = [&](WebGLFBAttachPoint& attach) {
+        if (attach.Texture() == tex) {
+            attach.Clear();
+        }
+    };
 
-    if (mDepthAttachment.Texture() == tex)
-        mDepthAttachment.Clear();
-
-    if (mStencilAttachment.Texture() == tex)
-        mStencilAttachment.Clear();
-
-    if (mDepthStencilAttachment.Texture() == tex)
-        mDepthStencilAttachment.Clear();
-
-    for (auto& cur : mMoreColorAttachments) {
-        if (cur.Texture() == tex)
-            cur.Clear();
-    }
+    FOR_EACH_ATTACHMENT(fnDetach)
 }
 
 void
 WebGLFramebuffer::DetachRenderbuffer(const WebGLRenderbuffer* rb)
 {
-    if (mColorAttachment0.Renderbuffer() == rb)
-        mColorAttachment0.Clear();
+    const auto fnDetach = [&](WebGLFBAttachPoint& attach) {
+        if (attach.Renderbuffer() == rb) {
+            attach.Clear();
+        }
+    };
 
-    if (mDepthAttachment.Renderbuffer() == rb)
-        mDepthAttachment.Clear();
-
-    if (mStencilAttachment.Renderbuffer() == rb)
-        mStencilAttachment.Clear();
-
-    if (mDepthStencilAttachment.Renderbuffer() == rb)
-        mDepthStencilAttachment.Clear();
-
-    for (auto& cur : mMoreColorAttachments) {
-        if (cur.Renderbuffer() == rb)
-            cur.Clear();
-    }
+    FOR_EACH_ATTACHMENT(fnDetach)
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Completeness
 
 bool
 WebGLFramebuffer::HasDefinedAttachments() const
 {
     bool hasAttachments = false;
+    const auto func = [&](const WebGLFBAttachPoint& attach) {
+        hasAttachments |= attach.IsDefined();
+    };
 
-    hasAttachments |= mColorAttachment0.IsDefined();
-    hasAttachments |= mDepthAttachment.IsDefined();
-    hasAttachments |= mStencilAttachment.IsDefined();
-    hasAttachments |= mDepthStencilAttachment.IsDefined();
-
-    for (const auto& cur : mMoreColorAttachments) {
-        hasAttachments |= cur.IsDefined();
-    }
-
+    FOR_EACH_ATTACHMENT(func)
     return hasAttachments;
 }
 
 bool
 WebGLFramebuffer::HasIncompleteAttachments(nsCString* const out_info) const
 {
-    const auto fnIsIncomplete = [this, out_info](const WebGLFBAttachPoint& cur) {
+    bool hasIncomplete = false;
+    const auto func = [&](const WebGLFBAttachPoint& cur) {
         if (!cur.IsDefined())
-            return false; // Not defined, so can't count as incomplete.
+            return; // Not defined, so can't count as incomplete.
 
-        return !cur.IsComplete(this->mContext, out_info);
+        hasIncomplete |= !cur.IsComplete(mContext, out_info);
     };
 
-    bool hasIncomplete = false;
-
-    hasIncomplete |= fnIsIncomplete(mColorAttachment0);
-    hasIncomplete |= fnIsIncomplete(mDepthAttachment);
-    hasIncomplete |= fnIsIncomplete(mStencilAttachment);
-    hasIncomplete |= fnIsIncomplete(mDepthStencilAttachment);
-
-    for (const auto& cur : mMoreColorAttachments) {
-        hasIncomplete |= fnIsIncomplete(cur);
-    }
-
+    FOR_EACH_ATTACHMENT(func)
     return hasIncomplete;
 }
 
@@ -901,11 +760,10 @@ WebGLFramebuffer::AllImageRectsMatch() const
     uint32_t width = 0;
     uint32_t height = 0;
 
-    const auto fnInitializeOrMatch = [&needsInit, &width,
-                                      &height](const WebGLFBAttachPoint& attach)
-    {
+    bool hasMismatch = false;
+    const auto func = [&](const WebGLFBAttachPoint& attach) {
         if (!attach.HasImage())
-            return true;
+            return;
 
         uint32_t curWidth;
         uint32_t curHeight;
@@ -915,25 +773,15 @@ WebGLFramebuffer::AllImageRectsMatch() const
             needsInit = false;
             width = curWidth;
             height = curHeight;
-            return true;
+            return;
         }
 
-        return (curWidth == width &&
-                curHeight == height);
+        hasMismatch |= (curWidth != width ||
+                        curHeight != height);
     };
 
-    bool matches = true;
-
-    matches &= fnInitializeOrMatch(mColorAttachment0      );
-    matches &= fnInitializeOrMatch(mDepthAttachment       );
-    matches &= fnInitializeOrMatch(mStencilAttachment     );
-    matches &= fnInitializeOrMatch(mDepthStencilAttachment);
-
-    for (const auto& cur : mMoreColorAttachments) {
-        matches &= fnInitializeOrMatch(cur);
-    }
-
-    return matches;
+    FOR_EACH_ATTACHMENT(func)
+    return !hasMismatch;
 }
 
 bool
@@ -946,36 +794,27 @@ WebGLFramebuffer::AllImageSamplesMatch() const
     bool needsInit = true;
     uint32_t samples = 0;
 
-    const auto fnInitializeOrMatch = [&needsInit,
-                                      &samples](const WebGLFBAttachPoint& attach)
-    {
+    bool hasMismatch = false;
+    const auto func = [&](const WebGLFBAttachPoint& attach) {
         if (!attach.HasImage())
-          return true;
+          return;
 
         const uint32_t curSamples = attach.Samples();
 
         if (needsInit) {
             needsInit = false;
             samples = curSamples;
-            return true;
+            return;
         }
 
-        return (curSamples == samples);
+        hasMismatch |= (curSamples != samples);
     };
 
-    bool matches = true;
-
-    matches &= fnInitializeOrMatch(mColorAttachment0      );
-    matches &= fnInitializeOrMatch(mDepthAttachment       );
-    matches &= fnInitializeOrMatch(mStencilAttachment     );
-    matches &= fnInitializeOrMatch(mDepthStencilAttachment);
-
-    for (const auto& cur : mMoreColorAttachments) {
-        matches &= fnInitializeOrMatch(cur);
-    }
-
-    return matches;
+    FOR_EACH_ATTACHMENT(func)
+    return !hasMismatch;
 }
+
+#undef FOR_EACH_ATTACHMENT
 
 FBStatus
 WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
@@ -995,8 +834,9 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
     if (!AllImageSamplesMatch())
         return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE; // Inconsistent samples
 
-    if (!mContext->IsWebGL2()) {
-        // INCOMPLETE_DIMENSIONS doesn't exist in GLES3.
+    if (mContext->IsWebGL2()) {
+        MOZ_ASSERT(!mDepthStencilAttachment.IsDefined());
+    } else {
         const auto depthOrStencilCount = int(mDepthAttachment.IsDefined()) +
                                          int(mStencilAttachment.IsDefined()) +
                                          int(mDepthStencilAttachment.IsDefined());
@@ -1007,32 +847,8 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
     return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 }
 
-FBStatus
-WebGLFramebuffer::CheckFramebufferStatus(FBTarget target, nsCString* const out_info) const
-{
-    if (mIsKnownFBComplete)
-        return LOCAL_GL_FRAMEBUFFER_COMPLETE;
-
-    FBStatus ret = PrecheckFramebufferStatus(out_info);
-    if (ret != LOCAL_GL_FRAMEBUFFER_COMPLETE)
-        return ret;
-
-    // Looks good on our end. Let's ask the driver.
-    mContext->MakeContextCurrent();
-
-    // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
-    FinalizeAttachments();
-
-    ret = mContext->gl->fCheckFramebufferStatus(target);
-
-    if (ret == LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        mIsKnownFBComplete = true;
-    } else {
-        out_info->AssignLiteral("Bad status according to the driver");
-    }
-
-    return ret;
-}
+////////////////////////////////////////
+// Validation
 
 bool
 WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
@@ -1040,202 +856,14 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
     MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
                mContext->mBoundReadFramebuffer == this);
 
-    nsCString fbStatusInfo;
-    const auto fbStatus = CheckFramebufferStatus(&fbStatusInfo);
-    if (fbStatus != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        nsCString errorText = nsPrintfCString("Incomplete framebuffer: Status 0x%04x",
-                                              fbStatus.get());
-        if (fbStatusInfo.Length()) {
-            errorText += ": ";
-            errorText += fbStatusInfo;
-        }
-
-        mContext->ErrorInvalidFramebufferOperation("%s: %s.", funcName,
-                                                   errorText.BeginReading());
-        return false;
-    }
-
-    // Cool! We've checked out ok. Just need to initialize.
-
-    //////
-    // Check if we need to initialize anything
-
-    std::vector<WebGLFBAttachPoint*> tex3DToClear;
-
-    const auto fnGatherIf3D = [&](WebGLFBAttachPoint& attach) {
-        if (!attach.Texture())
-            return false;
-
-        const auto& info = attach.Texture()->ImageInfoAt(attach.ImageTarget(),
-                                                         attach.MipLevel());
-        if (info.mDepth == 1)
-            return false;
-
-        tex3DToClear.push_back(&attach);
+    const auto fbStatus = CheckFramebufferStatus(funcName);
+    if (fbStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return true;
-    };
 
-    //////
-
-    uint32_t clearBits = 0;
-    std::vector<GLenum> drawBuffersForClear(1 + mMoreColorAttachments.Size(),
-                                            LOCAL_GL_NONE);
-
-    std::vector<WebGLFBAttachPoint*> attachmentsToClear;
-    attachmentsToClear.reserve(1 + mMoreColorAttachments.Size() + 3);
-
-    const auto fnGatherColor = [&](WebGLFBAttachPoint& attach, uint32_t colorAttachNum) {
-        if (!IsDrawBuffer(colorAttachNum) || !attach.HasUninitializedImageData())
-            return;
-
-        if (fnGatherIf3D(attach))
-            return;
-
-        attachmentsToClear.push_back(&attach);
-
-        clearBits |= LOCAL_GL_COLOR_BUFFER_BIT;
-        drawBuffersForClear[colorAttachNum] = LOCAL_GL_COLOR_ATTACHMENT0 + colorAttachNum;
-    };
-
-    const auto fnGatherOther = [&](WebGLFBAttachPoint& attach, GLenum attachClearBits) {
-        if (!attach.HasUninitializedImageData())
-            return;
-
-        if (fnGatherIf3D(attach))
-            return;
-
-        attachmentsToClear.push_back(&attach);
-
-        clearBits |= attachClearBits;
-    };
-
-    //////
-
-    fnGatherColor(mColorAttachment0, 0);
-
-    size_t colorAttachNum = 1;
-    for (auto& cur : mMoreColorAttachments) {
-        fnGatherColor(cur, colorAttachNum);
-        ++colorAttachNum;
-    }
-
-    fnGatherOther(mDepthAttachment, LOCAL_GL_DEPTH_BUFFER_BIT);
-    fnGatherOther(mStencilAttachment, LOCAL_GL_STENCIL_BUFFER_BIT);
-    fnGatherOther(mDepthStencilAttachment,
-                  LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
-
-    //////
-
-    mContext->MakeContextCurrent();
-
-    if (clearBits) {
-        const auto fnDrawBuffers = [this](const std::vector<GLenum>& list) {
-            this->mContext->gl->fDrawBuffers(list.size(), list.data());
-        };
-
-        const auto drawBufferExt = WebGLExtensionID::WEBGL_draw_buffers;
-        const bool hasDrawBuffers = (mContext->IsWebGL2() ||
-                                     mContext->IsExtensionEnabled(drawBufferExt));
-
-        if (hasDrawBuffers) {
-            fnDrawBuffers(drawBuffersForClear);
-        }
-
-        ////////////
-
-        // Clear!
-        {
-            gl::ScopedBindFramebuffer autoBind(mContext->gl, mGLName);
-
-            mContext->ForceClearFramebufferWithDefaultValues(clearBits, false);
-        }
-
-        if (hasDrawBuffers) {
-            fnDrawBuffers(mDrawBuffers);
-        }
-
-        for (auto* cur : attachmentsToClear) {
-            cur->SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
-        }
-    }
-
-    //////
-
-    for (auto* attach : tex3DToClear) {
-        auto* tex = attach->Texture();
-        if (!tex->InitializeImageData(funcName, attach->ImageTarget(),
-                                      attach->MipLevel()))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-static void
-FinalizeDrawAndReadBuffers(gl::GLContext* gl, bool isColorBufferDefined)
-{
-    MOZ_ASSERT(gl, "Expected a valid GLContext ptr.");
-    // GLES don't support DrawBuffer()/ReadBuffer.
-    // According to http://www.opengl.org/wiki/Framebuffer_Object
-    //
-    // Each draw buffers must either specify color attachment points that have images
-    // attached or must be GL_NONE​. (GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER​ when false).
-    //
-    // If the read buffer is set, then it must specify an attachment point that has an
-    // image attached. (GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER​ when false).
-    //
-    // Note that this test is not performed if OpenGL 4.2 or ARB_ES2_compatibility is
-    // available.
-    if (gl->IsGLES() ||
-        gl->IsSupported(gl::GLFeature::ES2_compatibility) ||
-        gl->IsAtLeast(gl::ContextProfile::OpenGL, 420))
-    {
-        return;
-    }
-
-    // TODO(djg): Assert that fDrawBuffer/fReadBuffer is not NULL.
-    GLenum colorBufferSource = isColorBufferDefined ? LOCAL_GL_COLOR_ATTACHMENT0
-                                                    : LOCAL_GL_NONE;
-    gl->fDrawBuffer(colorBufferSource);
-    gl->fReadBuffer(colorBufferSource);
-}
-
-void
-WebGLFramebuffer::FinalizeAttachments(FBTarget target) const
-{
-    MOZ_ASSERT_IF(target == LOCAL_GL_READ_FRAMEBUFFER,
-                  mContext->mBoundReadFramebuffer == this);
-    MOZ_ASSERT_IF(target != LOCAL_GL_READ_FRAMEBUFFER,
-                  mContext->mBoundDrawFramebuffer == this);
-
-    gl::GLContext* gl = mContext->gl;
-
-    ////
-
-    mColorAttachment0.FinalizeAttachment(gl, target, LOCAL_GL_COLOR_ATTACHMENT0);
-
-    for (size_t i = 0; i < mMoreColorAttachments.Size(); i++) {
-        GLenum attachPoint = LOCAL_GL_COLOR_ATTACHMENT1 + i;
-        mMoreColorAttachments[i].FinalizeAttachment(gl, target, attachPoint);
-    }
-
-    ////
-
-    // Nuke the depth and stencil attachment points.
-    gl->fFramebufferRenderbuffer(target, LOCAL_GL_DEPTH_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER, 0);
-    gl->fFramebufferRenderbuffer(target, LOCAL_GL_STENCIL_ATTACHMENT,
-                                 LOCAL_GL_RENDERBUFFER, 0);
-
-    mDepthAttachment.FinalizeAttachment(gl, target, LOCAL_GL_DEPTH_ATTACHMENT);
-    mStencilAttachment.FinalizeAttachment(gl, target, LOCAL_GL_STENCIL_ATTACHMENT);
-    mDepthStencilAttachment.FinalizeAttachment(gl, target, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
-
-    ////
-
-    FinalizeDrawAndReadBuffers(gl, mColorAttachment0.IsDefined());
+    mContext->ErrorInvalidFramebufferOperation("%s: Framebuffer must be"
+                                               " complete.",
+                                               funcName);
+    return false;
 }
 
 bool
@@ -1246,53 +874,594 @@ WebGLFramebuffer::ValidateForRead(const char* funcName,
     if (!ValidateAndInitAttachments(funcName))
         return false;
 
-    if (mReadBufferMode == LOCAL_GL_NONE) {
-        mContext->ErrorInvalidOperation("%s: Read buffer mode must not be NONE.",
+    if (!mColorReadBuffer) {
+        mContext->ErrorInvalidOperation("%s: READ_BUFFER must not be NONE.", funcName);
+        return false;
+    }
+
+    if (!mColorReadBuffer->IsDefined()) {
+        mContext->ErrorInvalidOperation("%s: The READ_BUFFER attachment is not defined.",
                                         funcName);
         return false;
     }
 
-    const auto attachPoint = GetAttachPoint(mReadBufferMode);
-    if (!attachPoint || !attachPoint->IsDefined()) {
-        mContext->ErrorInvalidOperation("%s: The attachment specified for reading is"
-                                        " null.", funcName);
-        return false;
-    }
-
-    *out_format = attachPoint->Format();
-    attachPoint->Size(out_width, out_height);
+    *out_format = mColorReadBuffer->Format();
+    mColorReadBuffer->Size(out_width, out_height);
     return true;
 }
 
-static bool
-AttachmentsDontMatch(const WebGLFBAttachPoint& a, const WebGLFBAttachPoint& b)
+////////////////////////////////////////////////////////////////////////////////
+// Resolution and caching
+
+void
+WebGLFramebuffer::ResolveAttachments(FBTarget target) const
 {
-    if (a.Texture()) {
-        return (a.Texture() != b.Texture());
+    const auto& gl = mContext->gl;
+
+    ////
+
+    for (const auto& attach : mColorAttachments) {
+        attach.Resolve(gl, target);
     }
 
-    if (a.Renderbuffer()) {
-        return (a.Renderbuffer() != b.Renderbuffer());
+    ////
+
+    // Nuke the depth and stencil attachment points.
+    gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_DEPTH_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, 0);
+    gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_STENCIL_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, 0);
+
+    mDepthAttachment.Resolve(gl, target);
+    mStencilAttachment.Resolve(gl, target);
+    mDepthStencilAttachment.Resolve(gl, target);
+}
+
+bool
+WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
+{
+    //////
+    // Check if we need to initialize anything
+
+    const auto fnIs3D = [&](const WebGLFBAttachPoint& attach) {
+        const auto& tex = attach.Texture();
+        if (!tex)
+            return false;
+
+        const auto& info = tex->ImageInfoAt(attach.ImageTarget(), attach.MipLevel());
+        if (info.mDepth == 1)
+            return false;
+
+        return true;
+    };
+
+    uint32_t clearBits = 0;
+    std::vector<const WebGLFBAttachPoint*> attachmentsToClear;
+    std::vector<const WebGLFBAttachPoint*> colorAttachmentsToClear;
+    std::vector<const WebGLFBAttachPoint*> tex3DAttachmentsToInit;
+
+    const auto fnGather = [&](const WebGLFBAttachPoint& attach, GLenum attachClearBits) {
+        if (!attach.HasUninitializedImageData())
+            return false;
+
+        if (fnIs3D(attach)) {
+            tex3DAttachmentsToInit.push_back(&attach);
+            return false;
+        }
+
+        clearBits |= attachClearBits;
+        attachmentsToClear.push_back(&attach);
+        return true;
+    };
+
+    //////
+
+    for (auto& cur : mColorDrawBuffers) {
+        if (fnGather(*cur, LOCAL_GL_COLOR_BUFFER_BIT)) {
+            colorAttachmentsToClear.push_back(cur);
+        }
     }
 
-    return false;
+    fnGather(mDepthAttachment, LOCAL_GL_DEPTH_BUFFER_BIT);
+    fnGather(mStencilAttachment, LOCAL_GL_STENCIL_BUFFER_BIT);
+    fnGather(mDepthStencilAttachment, LOCAL_GL_DEPTH_BUFFER_BIT |
+                                      LOCAL_GL_STENCIL_BUFFER_BIT);
+
+    //////
+
+    for (const auto& attach : tex3DAttachmentsToInit) {
+        const auto& tex = attach->Texture();
+        if (!tex->InitializeImageData(funcName, attach->ImageTarget(),
+                                      attach->MipLevel()))
+        {
+            return false;
+        }
+    }
+
+    if (clearBits) {
+        const auto drawBufferExt = WebGLExtensionID::WEBGL_draw_buffers;
+        const bool hasDrawBuffers = (mContext->IsWebGL2() ||
+                                     mContext->IsExtensionEnabled(drawBufferExt));
+
+        const auto fnDrawBuffers = [&](const std::vector<const WebGLFBAttachPoint*>& src)
+        {
+            if (!hasDrawBuffers)
+                return;
+
+            std::vector<GLenum> enumList;
+
+            for (const auto& cur : src) {
+                const auto& attachEnum = cur->mAttachmentPoint;
+                const GLenum attachId = attachEnum - LOCAL_GL_COLOR_ATTACHMENT0;
+
+                while (enumList.size() < attachId) {
+                    enumList.push_back(LOCAL_GL_NONE);
+                }
+                enumList.push_back(attachEnum);
+            }
+
+            mContext->gl->fDrawBuffers(enumList.size(), enumList.data());
+        };
+
+        ////
+        // Clear
+
+        mContext->MakeContextCurrent();
+
+        fnDrawBuffers(colorAttachmentsToClear);
+
+        {
+            gl::ScopedBindFramebuffer autoBind(mContext->gl, mGLName);
+
+            mContext->ForceClearFramebufferWithDefaultValues(clearBits, false);
+        }
+
+        fnDrawBuffers(mColorDrawBuffers);
+
+        // Mark initialized.
+        for (const auto& cur : attachmentsToClear) {
+            cur->SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
+        }
+    }
+
+    return true;
+}
+
+WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
+    : hasSampleBuffers(false)
+    , depthBuffer(nullptr)
+    , stencilBuffer(nullptr)
+{
+    if (parent.mDepthAttachment.IsDefined()) {
+        depthBuffer = &parent.mDepthAttachment;
+    }
+    if (parent.mStencilAttachment.IsDefined()) {
+        stencilBuffer = &parent.mStencilAttachment;
+    }
+    if (parent.mDepthStencilAttachment.IsDefined()) {
+        depthBuffer = &parent.mDepthStencilAttachment;
+        stencilBuffer = &parent.mDepthStencilAttachment;
+    }
+
+    ////
+
+    texDrawBuffers.reserve(parent.mColorDrawBuffers.size() + 2); // +2 for depth+stencil.
+
+    const auto fnCommon = [&](const WebGLFBAttachPoint& attach) {
+        if (!attach.IsDefined())
+            return false;
+
+        hasSampleBuffers |= bool(attach.Samples());
+
+        if (attach.Texture()) {
+            texDrawBuffers.push_back(&attach);
+        }
+        return true;
+    };
+
+    ////
+
+    const auto fnColor = [&](const WebGLFBAttachPoint& attach,
+                             decltype(drawSet)* const out_destSet)
+    {
+        if (!fnCommon(attach))
+            return;
+
+        out_destSet->insert(attach);
+    };
+
+    const auto fnDepthStencil = [&](const WebGLFBAttachPoint& attach) {
+        if (!fnCommon(attach))
+            return;
+
+        drawSet.insert(attach);
+        readSet.insert(attach);
+    };
+
+    ////
+
+    fnDepthStencil(parent.mDepthAttachment);
+    fnDepthStencil(parent.mStencilAttachment);
+    fnDepthStencil(parent.mDepthStencilAttachment);
+
+    for (const auto& attach : parent.mColorDrawBuffers) {
+        fnColor(*attach, &drawSet);
+    }
+
+    if (parent.mColorReadBuffer) {
+        fnColor(*(parent.mColorReadBuffer), &readSet);
+    }
+}
+
+void
+WebGLFramebuffer::RecacheResolvedData()
+{
+    if (mResolvedCompleteData) {
+        mResolvedCompleteData.reset(new ResolvedData(*this));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Entrypoints
+
+FBStatus
+WebGLFramebuffer::CheckFramebufferStatus(const char* funcName)
+{
+    if (IsResolvedComplete())
+        return LOCAL_GL_FRAMEBUFFER_COMPLETE;
+
+    // Ok, let's try to resolve it!
+
+    nsCString statusInfo;
+    FBStatus ret = PrecheckFramebufferStatus(&statusInfo);
+    do {
+        if (ret != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+            break;
+
+        // Looks good on our end. Let's ask the driver.
+        gl::GLContext* const gl = mContext->gl;
+        gl->MakeCurrent();
+
+        ////
+
+        const FBTarget fbTarget = (mContext->IsWebGL2() ? LOCAL_GL_DRAW_FRAMEBUFFER
+                                                        : LOCAL_GL_FRAMEBUFFER);
+        const bool needsFBRebind = (mContext->mBoundDrawFramebuffer != this);
+        if (needsFBRebind) {
+            gl->fBindFramebuffer(fbTarget.get(), mGLName);
+        }
+
+        ResolveAttachments(fbTarget); // OK, attach everything properly!
+        ret = gl->fCheckFramebufferStatus(fbTarget.get());
+
+        if (needsFBRebind) {
+            gl->fBindFramebuffer(fbTarget.get(),
+                                 mContext->mBoundDrawFramebuffer->mGLName);
+        }
+
+        ////
+
+        if (ret != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+            statusInfo.AssignLiteral("Bad status according to the driver:");
+            break;
+        }
+
+        if (!ResolveAttachmentData(funcName)) {
+            ret = LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
+            statusInfo.AssignLiteral("Failed to lazily-initialize attachment data.");
+            break;
+        }
+
+        mResolvedCompleteData.reset(new ResolvedData(*this));
+        return LOCAL_GL_FRAMEBUFFER_COMPLETE;
+    } while (false);
+
+    MOZ_ASSERT(ret != LOCAL_GL_FRAMEBUFFER_COMPLETE);
+    mContext->GenerateWarning("%s: Framebuffer not complete. (status: 0x%04x) %s",
+                              funcName, ret.get(), statusInfo.BeginReading());
+    return ret;
+}
+
+////
+
+void
+WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>& buffers)
+{
+    if (buffers.Length() > mContext->mImplMaxDrawBuffers) {
+        // "An INVALID_VALUE error is generated if `n` is greater than MAX_DRAW_BUFFERS."
+        mContext->ErrorInvalidValue("%s: `buffers` must have a length <="
+                                    " MAX_DRAW_BUFFERS.", funcName);
+        return;
+    }
+
+    for (size_t i = 0; i < buffers.Length(); i++) {
+        // "If the GL is bound to a draw framebuffer object, the `i`th buffer listed in
+        //  bufs must be COLOR_ATTACHMENTi or NONE. Specifying a buffer out of order,
+        //  BACK, or COLOR_ATTACHMENTm where `m` is greater than or equal to the value of
+        // MAX_COLOR_ATTACHMENTS, will generate the error INVALID_OPERATION.
+
+        // WEBGL_draw_buffers:
+        // "The value of the MAX_COLOR_ATTACHMENTS_WEBGL parameter must be greater than or
+        //  equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
+        // This means that if buffers.Length() isn't larger than MaxDrawBuffers, it won't
+        // be larger than MaxColorAttachments.
+        if (buffers[i] != LOCAL_GL_NONE &&
+            buffers[i] != LOCAL_GL_COLOR_ATTACHMENT0 + i)
+        {
+            mContext->ErrorInvalidOperation("%s: `buffers[i]` must be NONE or"
+                                            " COLOR_ATTACHMENTi.",
+                                            funcName);
+            return;
+        }
+    }
+
+    ////
+    // Record it.
+
+    mColorDrawBuffers.clear();
+    for (size_t i = 0; i < buffers.Length(); i++) {
+        const auto& attachEnum = buffers[i];
+        if (attachEnum == LOCAL_GL_NONE)
+            continue;
+
+        const auto& attach = mColorAttachments[i];
+        MOZ_ASSERT(attach.mAttachmentPoint == attachEnum);
+
+        mColorDrawBuffers.push_back(&attach);
+    }
+    RecacheResolvedData();
+
+    ////
+
+    mContext->MakeContextCurrent();
+    mContext->gl->fDrawBuffers(buffers.Length(), buffers.Elements());
+}
+
+void
+WebGLFramebuffer::ReadBuffer(const char* funcName, GLenum attachPoint)
+{
+    const auto& maybeAttach = GetColorAttachPoint(attachPoint);
+    if (!maybeAttach) {
+        mContext->ErrorInvalidValue("%s: `mode` must be a COLOR_ATTACHMENTi, for "
+                                    " 0 <= i < MAX_DRAW_BUFFERS.", funcName);
+        return;
+    }
+    const auto& attach = maybeAttach.value();
+
+    // Record it.
+    mColorReadBuffer = attach;
+    RecacheResolvedData();
+
+    mContext->MakeContextCurrent();
+    mContext->gl->fReadBuffer(attachPoint);
+}
+
+////
+
+void
+WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnum,
+                                          GLenum rbtarget, WebGLRenderbuffer* rb)
+{
+    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
+               mContext->mBoundReadFramebuffer == this);
+
+    // `attachment`
+    const auto maybeAttach = GetAttachPoint(attachEnum);
+    if (!maybeAttach) {
+        mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
+        return;
+    }
+    const auto& attach = maybeAttach.value();
+
+    // `rbTarget`
+    if (rbtarget != LOCAL_GL_RENDERBUFFER) {
+        mContext->ErrorInvalidEnumInfo("framebufferRenderbuffer: rbtarget:", rbtarget);
+        return;
+    }
+
+    // `rb`
+    if (!mContext->ValidateObjectAllowNull("framebufferRenderbuffer: rb", rb))
+        return;
+
+    // End of validation.
+
+    if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+        mDepthAttachment.SetRenderbuffer(rb);
+        mStencilAttachment.SetRenderbuffer(rb);
+    } else {
+        attach->SetRenderbuffer(rb);
+    }
+
+    InvalidateFramebufferStatus();
+}
+
+void
+WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
+                                       GLenum texImageTarget, WebGLTexture* tex,
+                                       GLint level)
+{
+    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
+               mContext->mBoundReadFramebuffer == this);
+
+    // `attachment`
+    const auto maybeAttach = GetAttachPoint(attachEnum);
+    if (!maybeAttach) {
+        mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
+        return;
+    }
+    const auto& attach = maybeAttach.value();
+
+    // `texImageTarget`
+    if (texImageTarget != LOCAL_GL_TEXTURE_2D &&
+        (texImageTarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+         texImageTarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
+    {
+        mContext->ErrorInvalidEnumInfo("framebufferTexture2D: texImageTarget:",
+                                       texImageTarget);
+        return;
+    }
+
+    // `texture`
+    if (!mContext->ValidateObjectAllowNull("framebufferTexture2D: texture", tex))
+        return;
+
+    if (tex) {
+        if (!tex->HasEverBeenBound()) {
+            mContext->ErrorInvalidOperation("%s: `texture` has never been bound.",
+                                            funcName);
+            return;
+        }
+
+        const TexTarget destTexTarget = TexImageTargetToTexTarget(texImageTarget);
+        if (tex->Target() != destTexTarget) {
+            mContext->ErrorInvalidOperation("%s: Mismatched texture and texture target.",
+                                            funcName);
+            return;
+        }
+    }
+
+    // `level`
+    if (level < 0)
+        return mContext->ErrorInvalidValue("%s: `level` must not be negative.", funcName);
+
+    if (mContext->IsWebGL2()) {
+        /* GLES 3.0.4 p208:
+         *   If textarget is one of TEXTURE_CUBE_MAP_POSITIVE_X,
+         *   TEXTURE_CUBE_MAP_POSITIVE_Y, TEXTURE_CUBE_MAP_POSITIVE_Z,
+         *   TEXTURE_CUBE_MAP_NEGATIVE_X, TEXTURE_CUBE_MAP_NEGATIVE_Y,
+         *   or TEXTURE_CUBE_MAP_NEGATIVE_Z, then level must be greater
+         *   than or equal to zero and less than or equal to log2 of the
+         *   value of MAX_CUBE_MAP_TEXTURE_SIZE. If textarget is TEXTURE_2D,
+         *   level must be greater than or equal to zero and no larger than
+         *   log2 of the value of MAX_TEXTURE_SIZE. Otherwise, an
+         *   INVALID_VALUE error is generated.
+         */
+
+        if (texImageTarget == LOCAL_GL_TEXTURE_2D) {
+            if (uint32_t(level) > FloorLog2(mContext->mImplMaxTextureSize))
+                return mContext->ErrorInvalidValue("%s: `level` is too large.", funcName);
+        } else {
+            MOZ_ASSERT(texImageTarget >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+                       texImageTarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+
+            if (uint32_t(level) > FloorLog2(mContext->mImplMaxCubeMapTextureSize))
+                return mContext->ErrorInvalidValue("%s: `level` is too large.", funcName);
+        }
+    } else if (level != 0) {
+        return mContext->ErrorInvalidValue("%s: `level` must be 0.", funcName);
+    }
+
+    // End of validation.
+
+    if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+        mDepthAttachment.SetTexImage(tex, texImageTarget, level);
+        mStencilAttachment.SetTexImage(tex, texImageTarget, level);
+    } else {
+        attach->SetTexImage(tex, texImageTarget, level);
+    }
+
+    InvalidateFramebufferStatus();
+}
+
+void
+WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnum,
+                                          WebGLTexture* tex, GLint level, GLint layer)
+{
+    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
+               mContext->mBoundReadFramebuffer == this);
+
+    // `attachment`
+    const auto maybeAttach = GetAttachPoint(attachEnum);
+    if (!maybeAttach) {
+        mContext->ErrorInvalidEnum("%s: Bad `attachment`: 0x%x.", funcName, attachEnum);
+        return;
+    }
+    const auto& attach = maybeAttach.value();
+
+    // `texture`
+    if (!mContext->ValidateObjectAllowNull("framebufferTextureLayer: texture", tex))
+        return;
+
+    if (tex && !tex->HasEverBeenBound()) {
+        mContext->ErrorInvalidOperation("%s: `texture` has never been bound.", funcName);
+        return;
+    }
+
+    // `level`, `layer`
+    if (layer < 0)
+        return mContext->ErrorInvalidValue("%s: `layer` must be >= 0.", funcName);
+
+    if (level < 0)
+        return mContext->ErrorInvalidValue("%s: `level` must be >= 0.", funcName);
+
+    TexImageTarget texImageTarget = LOCAL_GL_TEXTURE_3D;
+    if (tex) {
+        texImageTarget = tex->Target().get();
+        switch (texImageTarget.get()) {
+        case LOCAL_GL_TEXTURE_3D:
+            if (uint32_t(layer) >= mContext->mImplMax3DTextureSize) {
+                mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,
+                                            "MAX_3D_TEXTURE_SIZE");
+                return;
+            }
+
+            if (uint32_t(level) > FloorLog2(mContext->mImplMax3DTextureSize)) {
+                mContext->ErrorInvalidValue("%s: `level` must be <= log2(%s).", funcName,
+                                            "MAX_3D_TEXTURE_SIZE");
+                return;
+            }
+            break;
+
+        case LOCAL_GL_TEXTURE_2D_ARRAY:
+            if (uint32_t(layer) >= mContext->mImplMaxArrayTextureLayers) {
+                mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,
+                                            "MAX_ARRAY_TEXTURE_LAYERS");
+                return;
+            }
+
+            if (uint32_t(level) > FloorLog2(mContext->mImplMaxTextureSize)) {
+                mContext->ErrorInvalidValue("%s: `level` must be <= log2(%s).", funcName,
+                                            "MAX_TEXTURE_SIZE");
+                return;
+            }
+            break;
+
+        default:
+            mContext->ErrorInvalidOperation("%s: `texture` must be a TEXTURE_3D or"
+                                            " TEXTURE_2D_ARRAY.",
+                                            funcName);
+            return;
+        }
+    }
+
+    // End of validation.
+
+    if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+        mDepthAttachment.SetTexImage(tex, texImageTarget, level, layer);
+        mStencilAttachment.SetTexImage(tex, texImageTarget, level, layer);
+    } else {
+        attach->SetTexImage(tex, texImageTarget, level, layer);
+    }
+
+    InvalidateFramebufferStatus();
 }
 
 JS::Value
 WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
-                                         GLenum target, GLenum attachment,
-                                         GLenum pname, ErrorResult* const out_error)
+                                         GLenum target, GLenum attachEnum, GLenum pname,
+                                         ErrorResult* const out_error)
 {
-    auto attachPoint = GetAttachPoint(attachment);
-    if (!attachPoint) {
+    const auto maybeAttach = GetAttachPoint(attachEnum);
+    if (!maybeAttach) {
         mContext->ErrorInvalidEnum("%s: Can only query COLOR_ATTACHMENTi,"
                                    " DEPTH_ATTACHMENT, DEPTH_STENCIL_ATTACHMENT, or"
                                    " STENCIL_ATTACHMENT for a framebuffer.",
                                    funcName);
         return JS::NullValue();
     }
+    auto attach = maybeAttach.value();
 
-    if (mContext->IsWebGL2() && attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+    if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
         // There are a couple special rules for this one.
 
         if (pname == LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) {
@@ -1304,46 +1473,299 @@ WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
             return JS::NullValue();
         }
 
-        if (AttachmentsDontMatch(DepthAttachment(), StencilAttachment())) {
+        if (mDepthAttachment.Renderbuffer() != mStencilAttachment.Renderbuffer() ||
+            mDepthAttachment.Texture() != mStencilAttachment.Texture())
+        {
             mContext->ErrorInvalidOperation("%s: DEPTH_ATTACHMENT and STENCIL_ATTACHMENT"
                                             " have different objects bound.",
                                             funcName);
             return JS::NullValue();
         }
 
-        attachPoint = GetAttachPoint(LOCAL_GL_DEPTH_ATTACHMENT);
+        attach = &mDepthAttachment;
     }
 
-    return attachPoint->GetParameter(funcName, mContext, cx, target, attachment, pname,
-                                     out_error);
+    return attach->GetParameter(funcName, mContext, cx, target, attachEnum, pname,
+                                out_error);
 }
 
+////////////////////
 
-void
-WebGLFramebuffer::GatherAttachments(std::vector<const WebGLFBAttachPoint*>* const out) const
+static void
+GetBackbufferFormats(const WebGLContext* webgl,
+                     const webgl::FormatInfo** const out_color,
+                     const webgl::FormatInfo** const out_depth,
+                     const webgl::FormatInfo** const out_stencil)
 {
-    auto itr = mDrawBuffers.cbegin();
-    if (itr != mDrawBuffers.cend() &&
-        *itr != LOCAL_GL_NONE)
-    {
-        out->push_back(&mColorAttachment0);
-        ++itr;
-    }
+    const auto& options = webgl->Options();
 
-    size_t i = 0;
-    for (; itr != mDrawBuffers.cend(); ++itr) {
-        if (i >= mMoreColorAttachments.Size())
-            break;
+    const auto effFormat = (options.alpha ? webgl::EffectiveFormat::RGBA8
+                                          : webgl::EffectiveFormat::RGB8);
+    *out_color = webgl::GetFormat(effFormat);
 
-        if (*itr != LOCAL_GL_NONE) {
-            out->push_back(&mMoreColorAttachments[i]);
+    *out_depth = nullptr;
+    *out_stencil = nullptr;
+    if (options.depth && options.stencil) {
+        *out_depth = webgl::GetFormat(webgl::EffectiveFormat::DEPTH24_STENCIL8);
+        *out_stencil = *out_depth;
+    } else {
+        if (options.depth) {
+            *out_depth = webgl::GetFormat(webgl::EffectiveFormat::DEPTH_COMPONENT16);
         }
-        ++i;
+        if (options.stencil) {
+            *out_stencil = webgl::GetFormat(webgl::EffectiveFormat::STENCIL_INDEX8);
+        }
+    }
+}
+
+/*static*/ void
+WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
+                                  const WebGLFramebuffer* srcFB, GLint srcX0, GLint srcY0,
+                                  GLint srcX1, GLint srcY1,
+                                  const WebGLFramebuffer* dstFB, GLint dstX0, GLint dstY0,
+                                  GLint dstX1, GLint dstY1,
+                                  GLbitfield mask, GLenum filter)
+{
+    const char funcName[] = "blitFramebuffer";
+    auto& gl = webgl->gl;
+
+
+    ////
+    // Collect data
+
+    const auto fnGetFormat = [](const WebGLFBAttachPoint* cur) -> const webgl::FormatInfo*
+    {
+        if (!cur)
+            return nullptr;
+
+        MOZ_ASSERT(cur->IsDefined());
+        return cur->Format()->format;
+    };
+
+    bool srcSampleBuffers;
+    const webgl::FormatInfo* srcColorFormat;
+    const webgl::FormatInfo* srcDepthFormat;
+    const webgl::FormatInfo* srcStencilFormat;
+
+    if (srcFB) {
+        srcSampleBuffers = srcFB->mResolvedCompleteData->hasSampleBuffers;
+
+        srcColorFormat = fnGetFormat(srcFB->mColorReadBuffer);
+        srcDepthFormat = fnGetFormat(srcFB->mResolvedCompleteData->depthBuffer);
+        srcStencilFormat = fnGetFormat(srcFB->mResolvedCompleteData->stencilBuffer);
+    } else {
+        srcSampleBuffers = false; // Always false.
+
+        GetBackbufferFormats(webgl, &srcColorFormat, &srcDepthFormat, &srcStencilFormat);
     }
 
-    out->push_back(&mDepthAttachment);
-    out->push_back(&mStencilAttachment);
-    out->push_back(&mDepthStencilAttachment);
+    ////
+
+    bool dstSampleBuffers;
+    const webgl::FormatInfo* dstDepthFormat;
+    const webgl::FormatInfo* dstStencilFormat;
+    bool dstHasColor = false;
+    bool colorFormatsMatch = true;
+    bool colorTypesMatch = true;
+
+    const auto fnCheckColorFormat = [&](const webgl::FormatInfo* dstFormat) {
+        dstHasColor = true;
+        colorFormatsMatch &= (dstFormat == srcColorFormat);
+        colorTypesMatch &= (dstFormat->componentType == srcColorFormat->componentType);
+    };
+
+    if (dstFB) {
+        dstSampleBuffers = dstFB->mResolvedCompleteData->hasSampleBuffers;
+
+        dstDepthFormat = fnGetFormat(dstFB->mResolvedCompleteData->depthBuffer);
+        dstStencilFormat = fnGetFormat(dstFB->mResolvedCompleteData->stencilBuffer);
+
+        for (const auto& drawBuffer : dstFB->mColorDrawBuffers) {
+            fnCheckColorFormat(drawBuffer->Format()->format);
+        }
+    } else {
+        dstSampleBuffers = bool(gl->Screen()->Samples());
+
+        const webgl::FormatInfo* dstColorFormat;
+        GetBackbufferFormats(webgl, &dstColorFormat, &dstDepthFormat, &dstStencilFormat);
+
+        fnCheckColorFormat(dstColorFormat);
+    }
+
+    ////
+    // Clear unused buffer bits
+
+    if (mask & LOCAL_GL_COLOR_BUFFER_BIT &&
+        !srcColorFormat && !dstHasColor)
+    {
+
+        mask ^= LOCAL_GL_COLOR_BUFFER_BIT;
+    }
+
+    if (mask & LOCAL_GL_DEPTH_BUFFER_BIT &&
+        !srcDepthFormat && !dstDepthFormat)
+    {
+        mask ^= LOCAL_GL_DEPTH_BUFFER_BIT;
+    }
+
+    if (mask & LOCAL_GL_STENCIL_BUFFER_BIT &&
+        !srcStencilFormat && !dstStencilFormat)
+    {
+        mask ^= LOCAL_GL_STENCIL_BUFFER_BIT;
+    }
+
+    ////
+    // Validation
+
+    if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
+        if (srcColorFormat && filter == LOCAL_GL_LINEAR) {
+            const auto& type = srcColorFormat->componentType;
+            if (type == webgl::ComponentType::Int ||
+                type == webgl::ComponentType::UInt)
+            {
+                webgl->ErrorInvalidOperation("%s: `filter` is LINEAR and READ_BUFFER"
+                                             " contains integer data.",
+                                             funcName);
+                return;
+            }
+        }
+
+        if (!colorTypesMatch) {
+            webgl->ErrorInvalidOperation("%s: Color component types (fixed/float/uint/"
+                                         "int) must match.",
+                                         funcName);
+            return;
+        }
+    }
+
+    const GLbitfield depthAndStencilBits = LOCAL_GL_DEPTH_BUFFER_BIT |
+                                           LOCAL_GL_STENCIL_BUFFER_BIT;
+    if (bool(mask & depthAndStencilBits) &&
+        filter != LOCAL_GL_NEAREST)
+    {
+        webgl->ErrorInvalidOperation("%s: DEPTH_BUFFER_BIT and STENCIL_BUFFER_BIT can"
+                                     " only be used with NEAREST filtering.",
+                                     funcName);
+        return;
+    }
+
+    /* GLES 3.0.4, p199:
+     *   Calling BlitFramebuffer will result in an INVALID_OPERATION error if
+     *   mask includes DEPTH_BUFFER_BIT or STENCIL_BUFFER_BIT, and the source
+     *   and destination depth and stencil buffer formats do not match.
+     *
+     * jgilbert: The wording is such that if only DEPTH_BUFFER_BIT is specified,
+     * the stencil formats must match. This seems wrong. It could be a spec bug,
+     * or I could be missing an interaction in one of the earlier paragraphs.
+     */
+    if (mask & LOCAL_GL_DEPTH_BUFFER_BIT &&
+        dstDepthFormat != srcDepthFormat)
+    {
+        webgl->ErrorInvalidOperation("%s: Depth buffer formats must match if selected.",
+                                     funcName);
+        return;
+    }
+
+    if (mask & LOCAL_GL_STENCIL_BUFFER_BIT &&
+        dstStencilFormat != srcStencilFormat)
+    {
+        webgl->ErrorInvalidOperation("%s: Stencil buffer formats must match if selected.",
+                                     funcName);
+        return;
+    }
+
+    ////
+
+    if (dstSampleBuffers) {
+        webgl->ErrorInvalidOperation("%s: DRAW_FRAMEBUFFER may not have multiple"
+                                     " samples.",
+                                     funcName);
+        return;
+    }
+
+    if (srcSampleBuffers) {
+        if (mask & LOCAL_GL_COLOR_BUFFER_BIT &&
+            !colorFormatsMatch)
+        {
+            webgl->ErrorInvalidOperation("%s: Color buffer formats must match if"
+                                         " selected, when reading from a multisampled"
+                                         " source.",
+                                         funcName);
+            return;
+        }
+
+        if (dstX0 != srcX0 ||
+            dstX1 != srcX1 ||
+            dstY0 != srcY0 ||
+            dstY1 != srcY1)
+        {
+            webgl->ErrorInvalidOperation("%s: If the source is multisampled, then the"
+                                         " source and dest regions must match exactly.",
+                                         funcName);
+            return;
+        }
+    }
+
+    ////
+    // Check for feedback
+
+    if (srcFB && dstFB) {
+        const auto fnValidateBuffers = [&](GLenum bufferBit, const char* bufferBitName,
+                                           bool srcHas, bool dstHas)
+        {
+            if (mask & bufferBit &&
+                srcHas != dstHas)
+            {
+                webgl->ErrorInvalidOperation("%s: With %s, must have a corresponding draw"
+                                             " buffer iff there's a relevent read"
+                                             " buffer.",
+                                             funcName, bufferBitName);
+                return false;
+            }
+            return true;
+        };
+
+        if (!fnValidateBuffers( LOCAL_GL_COLOR_BUFFER_BIT, "COLOR_BUFFER_BIT",
+                                bool(srcFB->mColorReadBuffer),
+                                bool(dstFB->mColorDrawBuffers.size()) ) ||
+            !fnValidateBuffers( LOCAL_GL_DEPTH_BUFFER_BIT, "DEPTH_BUFFER_BIT",
+                                bool(srcFB->mResolvedCompleteData->depthBuffer),
+                                bool(dstFB->mResolvedCompleteData->depthBuffer) ) ||
+            !fnValidateBuffers( LOCAL_GL_STENCIL_BUFFER_BIT, "STENCIL_BUFFER_BIT",
+                                bool(srcFB->mResolvedCompleteData->stencilBuffer),
+                                bool(dstFB->mResolvedCompleteData->stencilBuffer) ))
+        {
+            return;
+        }
+
+        const auto& readSet = srcFB->mResolvedCompleteData->readSet;
+        const auto& drawSet = dstFB->mResolvedCompleteData->drawSet;
+
+        std::vector<WebGLFBAttachPoint::Ordered> intersection;
+        std::set_intersection(drawSet.begin(), drawSet.end(),
+                              readSet.begin(), readSet.end(),
+                              std::back_inserter(intersection));
+
+        if (intersection.size()) {
+            // set_intersection pulls from the first range, so it records conflicts on the
+            // DRAW_FRAMEBUFFER.
+            const auto& example = intersection.cbegin()->mRef;
+            webgl->ErrorInvalidOperation("%s: Feedback detected into DRAW_FRAMEBUFFER's"
+                                         " 0x%04x attachment.",
+                                         funcName, example.mAttachmentPoint);
+            return;
+        }
+    } else if (!srcFB && !dstFB) {
+        webgl->ErrorInvalidOperation("%s: Feedback with default framebuffer.", funcName);
+        return;
+    }
+
+    ////
+
+    gl->MakeCurrent();
+    gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1,
+                         dstX0, dstY0, dstX1, dstY1,
+                         mask, filter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1393,11 +1815,10 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLFramebuffer,
-                                      mColorAttachment0,
                                       mDepthAttachment,
                                       mStencilAttachment,
                                       mDepthStencilAttachment,
-                                      mMoreColorAttachments)
+                                      mColorAttachments)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLFramebuffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLFramebuffer, Release)
