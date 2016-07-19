@@ -177,7 +177,7 @@ GetAndInitDisplay(GLLibraryEGL& egl, void* displayType)
 
 class AngleErrorReporting: public angle::Platform {
 public:
-    AngleErrorReporting(nsACString *aFailureId)
+    explicit AngleErrorReporting(nsACString *aFailureId)
         : mFailureId(aFailureId)
     {}
 
