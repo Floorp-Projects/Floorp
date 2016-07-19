@@ -173,11 +173,11 @@ WinCompositorWidget::EndBackBufferDrawing()
   return CompositorWidget::EndBackBufferDrawing();
 }
 
-already_AddRefed<CompositorVsyncDispatcher>
-WinCompositorWidget::GetCompositorVsyncDispatcher()
+void
+WinCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
 {
   RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher();
-  return cvd.forget();
+  cvd->SetCompositorVsyncObserver(aObserver);
 }
 
 uintptr_t
