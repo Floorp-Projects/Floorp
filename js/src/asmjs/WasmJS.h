@@ -56,14 +56,20 @@ Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
 
 extern const char InstanceExportField[];
 
-// These accessors are used to implemented the special asm.js semantics of
-// exported wasm functions:
+// These accessors can be used to probe JS values for being an exported wasm
+// function.
 
 extern bool
 IsExportedFunction(JSFunction* fun);
 
+extern bool
+IsExportedFunction(const Value& v, MutableHandleFunction f);
+
 extern Instance&
 ExportedFunctionToInstance(JSFunction* fun);
+
+extern WasmInstanceObject*
+ExportedFunctionToInstanceObject(JSFunction* fun);
 
 extern uint32_t
 ExportedFunctionToIndex(JSFunction* fun);
@@ -196,6 +202,8 @@ class WasmTableObject : public NativeObject
     static bool lengthGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool getImpl(JSContext* cx, const CallArgs& args);
     static bool get(JSContext* cx, unsigned argc, Value* vp);
+    static bool setImpl(JSContext* cx, const CallArgs& args);
+    static bool set(JSContext* cx, unsigned argc, Value* vp);
 
     // InstanceVector has the same length as the Table and assigns, to each
     // element, the instance of the exported function stored in that element.

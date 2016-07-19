@@ -225,6 +225,13 @@ assertEq(e.tbl1.get(2), e.tbl1.get(2));
 assertEq(e.tbl1.get(2)(), 2);
 assertEq(e.tbl1.get(3), null);
 assertErrorMessage(() => e.tbl1.get(4), RangeError, /out-of-range index/);
+assertEq(e.tbl1.get(1), null);
+e.tbl1.set(1, e.f3);
+assertEq(e.tbl1.get(1), e.f3);
+e.tbl1.set(1, null);
+assertEq(e.tbl1.get(1), null);
+e.tbl1.set(3, e.f1);
+assertEq(e.tbl1.get(0), e.tbl1.get(3));
 
 // Re-exports:
 
