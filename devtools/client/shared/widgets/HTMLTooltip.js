@@ -570,7 +570,7 @@ HTMLTooltip.prototype = {
     // Use type="arrow" to prevent side effects (see Bug 1285206)
     panel.setAttribute("type", "arrow");
 
-    panel.setAttribute("level", "float");
+    panel.setAttribute("level", "top");
     panel.setAttribute("class", "tooltip-xul-wrapper");
 
     return panel;

@@ -1031,7 +1031,6 @@ void HTMLMediaElement::NoSupportedMediaSourceError()
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
-  OpenUnsupportedMediaWithExtenalAppIfNeeded();
 }
 
 typedef void (HTMLMediaElement::*SyncSectionFn)();
@@ -2698,10 +2697,6 @@ HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
   UpdateSrcMediaStreamPlaying();
   UpdateAudioChannelPlayingState();
 
-  // The check here is to handle the case that the media element starts playing
-  // after it loaded fail. eg. preload the data before playing.
-  OpenUnsupportedMediaWithExtenalAppIfNeeded();
-
   return NS_OK;
 }
 
@@ -3202,26 +3197,28 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
   NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
 
-  aChannel->GetContentType(mMimeType);
-  NS_ASSERTION(!mMimeType.IsEmpty(), "We should have the Content-Type.");
+  nsAutoCString mimeType;
+
+  aChannel->GetContentType(mimeType);
+  NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
 
   DecoderDoctorDiagnostics diagnostics;
   RefPtr<MediaDecoder> decoder =
-    DecoderTraits::CreateDecoder(mMimeType, this, &diagnostics);
+    DecoderTraits::CreateDecoder(mimeType, this, &diagnostics);
   diagnostics.StoreFormatDiagnostics(OwnerDoc(),
-                                     NS_ConvertASCIItoUTF16(mMimeType),
+                                     NS_ConvertASCIItoUTF16(mimeType),
                                      decoder != nullptr,
                                      __func__);
   if (!decoder) {
     nsAutoString src;
     GetCurrentSrc(src);
-    NS_ConvertUTF8toUTF16 mimeUTF16(mMimeType);
+    NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
     const char16_t* params[] = { mimeUTF16.get(), src.get() };
     ReportLoadError("MediaLoadUnsupportedMimeType", params, ArrayLength(params));
     return NS_ERROR_FAILURE;
   }
 
-  LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mMimeType.get()));
+  LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
   RefPtr<MediaResource> resource =
     MediaResource::Create(decoder->GetResourceCallback(), aChannel);
@@ -3237,7 +3234,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   // We postpone the |FinishDecoderSetup| function call until we get
   // |OnConnected| signal from MediaStreamController which is held by
   // RtspMediaResource.
-  if (DecoderTraits::DecoderWaitsForOnConnected(mMimeType)) {
+  if (DecoderTraits::DecoderWaitsForOnConnected(mimeType)) {
     decoder->SetResource(resource);
     SetDecoder(decoder);
     if (aListener) {
@@ -5933,43 +5930,6 @@ HTMLMediaElement::IsAudible() const
   }
 
   return true;
-}
-
-bool
-HTMLMediaElement::HaveFailedWithSourceNotSupportedError() const
-{
-  if (!mError) {
-    return false;
-  }
-
-  uint16_t errorCode;
-  mError->GetCode(&errorCode);
-  return (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE &&
-          errorCode == nsIDOMMediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
-}
-
-void
-HTMLMediaElement::OpenUnsupportedMediaWithExtenalAppIfNeeded()
-{
-  if (!Preferences::GetBool("media.openUnsupportedTypeWithExternalApp")) {
-    return;
-  }
-
-  if (!HaveFailedWithSourceNotSupportedError()) {
-    return;
-  }
-
-  // If media doesn't start playing, we don't need to open it.
-  if (mPaused) {
-    return;
-  }
-
-  LOG(LogLevel::Debug, ("Open unsupported type \'%s\' with external apps.",
-      mMimeType.get()));
-  nsContentUtils::DispatchTrustedEvent(OwnerDoc(), static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("OpenMediaWithExternalApp"),
-                                       true,
-                                       true);
 }
 
 static const char* VisibilityString(Visibility aVisibility) {
