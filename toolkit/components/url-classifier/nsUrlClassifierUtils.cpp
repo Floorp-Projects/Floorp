@@ -11,6 +11,7 @@
 #include "plbase64.h"
 #include "prprf.h"
 #include "nsPrintfCString.h"
+#include "safebrowsing.pb.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
 
@@ -72,6 +73,76 @@ IsOctal(const nsACString & num)
   return true;
 }
 
+/////////////////////////////////////////////////////////////////
+// SafeBrowsing V4 related utits.
+
+namespace mozilla {
+namespace safebrowsing {
+
+static PlatformType
+GetPlatformType()
+{
+#if defined(ANDROID)
+  return ANDROID_PLATFORM;
+#elif defined(XP_MACOSX)
+  return OSX_PLATFORM;
+#elif defined(XP_LINUX)
+  return LINUX_PLATFORM;
+#elif defined(XP_WIN)
+  return WINDOWS_PLATFORM;
+#else
+  #error Unrecognized platform type.
+#endif
+}
+
+typedef FetchThreatListUpdatesRequest_ListUpdateRequest ListUpdateRequest;
+typedef FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints Constraints;
+
+static void
+InitListUpdateRequest(ThreatType aThreatType,
+                      const char* aState,
+                      ListUpdateRequest* aListUpdateRequest)
+{
+  aListUpdateRequest->set_threat_type(aThreatType);
+  aListUpdateRequest->set_platform_type(GetPlatformType());
+  aListUpdateRequest->set_threat_entry_type(URL);
+
+  // Only RAW data is supported for now.
+  // TODO: Bug 1285848 Supports Rice-Golomb encoding.
+  Constraints* contraints = new Constraints();
+  contraints->add_supported_compressions(RAW);
+  aListUpdateRequest->set_allocated_constraints(contraints);
+
+  // Only set non-empty state.
+  if (aState[0] != '\0') {
+    aListUpdateRequest->set_state(aState);
+  }
+}
+
+static ClientInfo*
+CreateClientInfo()
+{
+  ClientInfo* c = new ClientInfo();
+
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  nsXPIDLCString clientId;
+  nsresult rv = prefBranch->GetCharPref("browser.safebrowsing.id",
+                                        getter_Copies(clientId));
+
+  if (NS_FAILED(rv)) {
+    clientId = "Firefox"; // Use "Firefox" as fallback.
+  }
+
+  c->set_client_id(clientId.get());
+
+  return c;
+}
+
+} // end of namespace safebrowsing.
+} // end of namespace mozilla.
+
 nsUrlClassifierUtils::nsUrlClassifierUtils() : mEscapeCharmap(nullptr)
 {
 }
@@ -127,6 +198,45 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
   return NS_OK;
 }
 
+// We use "goog-*-proto" as the list name for v4, where "proto" indicates
+// it's updated (as well as hash completion) via protobuf.
+static const struct {
+  const char* mListName;
+  uint32_t mThreatType;
+} THREAT_TYPE_CONV_TABLE[] = {
+  { "goog-malware-proto",  MALWARE_THREAT},            // 1
+  { "goog-phish-proto",    SOCIAL_ENGINEERING_PUBLIC}, // 2
+  { "goog-unwanted-proto", UNWANTED_SOFTWARE},         // 3
+};
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::ConvertThreatTypeToListName(uint32_t aThreatType,
+                                                  nsACString& aListName)
+{
+  for (uint32_t i = 0; i < ArrayLength(THREAT_TYPE_CONV_TABLE); i++) {
+    if (aThreatType == THREAT_TYPE_CONV_TABLE[i].mThreatType) {
+      aListName = THREAT_TYPE_CONV_TABLE[i].mListName;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::ConvertListNameToThreatType(const nsACString& aListName,
+                                                  uint32_t* aThreatType)
+{
+  for (uint32_t i = 0; i < ArrayLength(THREAT_TYPE_CONV_TABLE); i++) {
+    if (aListName.EqualsASCII(THREAT_TYPE_CONV_TABLE[i].mListName)) {
+      *aThreatType = THREAT_TYPE_CONV_TABLE[i].mThreatType;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
                                          nsACString& aVersion)
@@ -142,6 +252,40 @@ nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
   } else {
       aVersion = DEFAULT_PROTOCOL_VERSION;
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
+                                          const char** aStates,
+                                          uint32_t aCount,
+                                          nsACString &aRequest)
+{
+  using namespace mozilla::safebrowsing;
+
+  FetchThreatListUpdatesRequest r;
+  r.set_allocated_client(CreateClientInfo());
+
+  for (uint32_t i = 0; i < aCount; i++) {
+    nsCString listName(aListNames[i]);
+    uint32_t threatType;
+    nsresult rv = ConvertListNameToThreatType(listName, &threatType);
+    if (NS_FAILED(rv)) {
+      continue; // Unknown list name.
+    }
+    auto lur = r.mutable_list_update_requests()->Add();
+    InitListUpdateRequest(static_cast<ThreatType>(threatType), aStates[i], lur);
+  }
+
+  // Then serialize.
+  std::string s;
+  r.SerializeToString(&s);
+
+  nsCString out;
+  out.Assign(s.c_str(), s.size());
+
+  aRequest = out;
 
   return NS_OK;
 }
