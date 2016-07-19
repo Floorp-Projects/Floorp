@@ -1261,6 +1261,13 @@ MacroAssembler::Pop(Register reg)
 }
 
 void
+MacroAssembler::Pop(FloatRegister f)
+{
+    ma_pop(f);
+    adjustFrame(-sizeof(double));
+}
+
+void
 MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
