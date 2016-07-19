@@ -211,13 +211,11 @@ private: // methods
   RawAccessFrameRef GetRawFrame(uint32_t aFrameNum) const;
 
   /**
-   * Gets the length of a single loop of this image, in milliseconds.
-   *
-   * If this image is not finished decoding, is not animated, or it is animated
-   * but does not loop, returns -1. Can return 0 in the case of an animated
-   * image that has a 0ms delay between its frames and does not loop.
+   * @return the length of a single loop of this image, as a FrameTimeout value
+   * in milliseconds. If this image is not finished decoding, is not animated,
+   * or it is animated but does not loop, returns FrameTimeout::Forever().
    */
-  int32_t GetSingleLoopTime(AnimationState& aState) const;
+  FrameTimeout GetSingleLoopTime(AnimationState& aState) const;
 
   /// @return the given frame's timeout.
   FrameTimeout GetTimeoutForFrame(uint32_t aFrameNum) const;
