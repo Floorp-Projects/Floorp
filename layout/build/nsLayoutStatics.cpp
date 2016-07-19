@@ -310,6 +310,8 @@ nsLayoutStatics::Initialize()
 
   PromiseDebugging::Init();
 
+  layers::CompositorLRU::Init();
+
   mozilla::dom::devicestorage::DeviceStorageStatics::Initialize();
 
   mozilla::dom::WebCryptoThreadPool::Initialize();
