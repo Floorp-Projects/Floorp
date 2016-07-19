@@ -46,14 +46,15 @@ function getLists(prefName) {
     .map(function(value) { return value.trim(); });
 }
 
-// These may be a comma-separated lists of tables.
-const phishingLists = getLists("urlclassifier.phishTable");
-const malwareLists = getLists("urlclassifier.malwareTable");
-const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
-const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
-const trackingProtectionLists = getLists("urlclassifier.trackingTable");
-const trackingProtectionWhitelists = getLists("urlclassifier.trackingWhitelistTable");
-const blockedLists = getLists("urlclassifier.blockedTable");
+const tablePreferences = [
+  "urlclassifier.phishTable",
+  "urlclassifier.malwareTable",
+  "urlclassifier.downloadBlockTable",
+  "urlclassifier.downloadAllowTable",
+  "urlclassifier.trackingTable",
+  "urlclassifier.trackingWhitelistTable",
+  "urlclassifier.blockedTable"
+];
 
 this.SafeBrowsing = {
 
@@ -65,6 +66,8 @@ this.SafeBrowsing = {
 
     Services.prefs.addObserver("browser.safebrowsing", this.readPrefs.bind(this), false);
     Services.prefs.addObserver("privacy.trackingprotection", this.readPrefs.bind(this), false);
+    Services.prefs.addObserver("urlclassifier", this.readPrefs.bind(this), false);
+
     this.readPrefs();
     this.addMozEntries();
 
@@ -91,26 +94,26 @@ this.SafeBrowsing = {
   },
 
   registerTables: function() {
-    for (let i = 0; i < phishingLists.length; ++i) {
-      this.registerTableWithURLs(phishingLists[i]);
+    for (let i = 0; i < this.phishingLists.length; ++i) {
+      this.registerTableWithURLs(this.phishingLists[i]);
     }
-    for (let i = 0; i < malwareLists.length; ++i) {
-      this.registerTableWithURLs(malwareLists[i]);
+    for (let i = 0; i < this.malwareLists.length; ++i) {
+      this.registerTableWithURLs(this.malwareLists[i]);
     }
-    for (let i = 0; i < downloadBlockLists.length; ++i) {
-      this.registerTableWithURLs(downloadBlockLists[i]);
+    for (let i = 0; i < this.downloadBlockLists.length; ++i) {
+      this.registerTableWithURLs(this.downloadBlockLists[i]);
     }
-    for (let i = 0; i < downloadAllowLists.length; ++i) {
-      this.registerTableWithURLs(downloadAllowLists[i]);
+    for (let i = 0; i < this.downloadAllowLists.length; ++i) {
+      this.registerTableWithURLs(this.downloadAllowLists[i]);
     }
-    for (let i = 0; i < trackingProtectionLists.length; ++i) {
-      this.registerTableWithURLs(trackingProtectionLists[i]);
+    for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
+      this.registerTableWithURLs(this.trackingProtectionLists[i]);
     }
-    for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
-      this.registerTableWithURLs(trackingProtectionWhitelists[i]);
+    for (let i = 0; i < this.trackingProtectionWhitelists.length; ++i) {
+      this.registerTableWithURLs(this.trackingProtectionWhitelists[i]);
     }
-    for (let i = 0; i < blockedLists.length; ++i) {
-      this.registerTableWithURLs(blockedLists[i]);
+    for (let i = 0; i < this.blockedLists.length; ++i) {
+      this.registerTableWithURLs(this.blockedLists[i]);
     }
   },
 
@@ -120,6 +123,14 @@ this.SafeBrowsing = {
   malwareEnabled:   false,
   trackingEnabled:  false,
   blockedEnabled:   false,
+
+  phishingLists:                [],
+  malwareLists:                 [],
+  downloadBlockLists:           [],
+  downloadAllowLists:           [],
+  trackingProtectionLists:      [],
+  trackingProtectionWhitelists: [],
+  blockedLists:                 [],
 
   updateURL:             null,
   gethashURL:            null,
@@ -166,6 +177,15 @@ this.SafeBrowsing = {
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
+
+    [this.phishingLists,
+     this.malwareLists,
+     this.downloadBlockLists,
+     this.downloadAllowLists,
+     this.trackingProtectionLists,
+     this.trackingProtectionWhitelists,
+     this.blockedLists] = tablePreferences.map(getLists);
+
     this.updateProviderURLs();
     this.registerTables();
 
@@ -247,53 +267,53 @@ this.SafeBrowsing = {
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
 
-    for (let i = 0; i < phishingLists.length; ++i) {
+    for (let i = 0; i < this.phishingLists.length; ++i) {
       if (this.phishingEnabled) {
-        listManager.enableUpdate(phishingLists[i]);
+        listManager.enableUpdate(this.phishingLists[i]);
       } else {
-        listManager.disableUpdate(phishingLists[i]);
+        listManager.disableUpdate(this.phishingLists[i]);
       }
     }
-    for (let i = 0; i < malwareLists.length; ++i) {
+    for (let i = 0; i < this.malwareLists.length; ++i) {
       if (this.malwareEnabled) {
-        listManager.enableUpdate(malwareLists[i]);
+        listManager.enableUpdate(this.malwareLists[i]);
       } else {
-        listManager.disableUpdate(malwareLists[i]);
+        listManager.disableUpdate(this.malwareLists[i]);
       }
     }
-    for (let i = 0; i < downloadBlockLists.length; ++i) {
+    for (let i = 0; i < this.downloadBlockLists.length; ++i) {
       if (this.malwareEnabled) {
-        listManager.enableUpdate(downloadBlockLists[i]);
+        listManager.enableUpdate(this.downloadBlockLists[i]);
       } else {
-        listManager.disableUpdate(downloadBlockLists[i]);
+        listManager.disableUpdate(this.downloadBlockLists[i]);
       }
     }
-    for (let i = 0; i < downloadAllowLists.length; ++i) {
+    for (let i = 0; i < this.downloadAllowLists.length; ++i) {
       if (this.malwareEnabled) {
-        listManager.enableUpdate(downloadAllowLists[i]);
+        listManager.enableUpdate(this.downloadAllowLists[i]);
       } else {
-        listManager.disableUpdate(downloadAllowLists[i]);
+        listManager.disableUpdate(this.downloadAllowLists[i]);
       }
     }
-    for (let i = 0; i < trackingProtectionLists.length; ++i) {
+    for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
       if (this.trackingEnabled) {
-        listManager.enableUpdate(trackingProtectionLists[i]);
+        listManager.enableUpdate(this.trackingProtectionLists[i]);
       } else {
-        listManager.disableUpdate(trackingProtectionLists[i]);
+        listManager.disableUpdate(this.trackingProtectionLists[i]);
       }
     }
-    for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
+    for (let i = 0; i < this.trackingProtectionWhitelists.length; ++i) {
       if (this.trackingEnabled) {
-        listManager.enableUpdate(trackingProtectionWhitelists[i]);
+        listManager.enableUpdate(this.trackingProtectionWhitelists[i]);
       } else {
-        listManager.disableUpdate(trackingProtectionWhitelists[i]);
+        listManager.disableUpdate(this.trackingProtectionWhitelists[i]);
       }
     }
-    for (let i = 0; i < blockedLists.length; ++i) {
+    for (let i = 0; i < this.blockedLists.length; ++i) {
       if (this.blockedEnabled) {
-        listManager.enableUpdate(blockedLists[i]);
+        listManager.enableUpdate(this.blockedLists[i]);
       } else {
-        listManager.disableUpdate(blockedLists[i]);
+        listManager.disableUpdate(this.blockedLists[i]);
       }
     }
     listManager.maybeToggleUpdateChecking();
