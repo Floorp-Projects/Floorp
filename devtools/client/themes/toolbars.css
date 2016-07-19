@@ -390,6 +390,7 @@
 .devtools-searchbox {
   display: flex;
   flex: 1;
+  height: 23px;
   position: relative;
   padding: 0 3px;
 }
