@@ -171,8 +171,18 @@ class AstSig : public AstBase
     }
 };
 
+const uint32_t AstNodeUnknownOffset = 0;
+
 class AstNode : public AstBase
-{};
+{
+    uint32_t offset_; // if applicable, offset in the binary format file
+
+  public:
+    AstNode() : offset_(AstNodeUnknownOffset) {}
+
+    uint32_t offset() const { return offset_; }
+    void setOffset(uint32_t offset) { offset_ = offset; }
+};
 
 enum class AstExprKind
 {
