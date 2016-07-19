@@ -227,7 +227,7 @@ class WasmTableObject : public NativeObject
     // vector.
 
     wasm::Table& table() const;
-    void setInstance(uint32_t index, HandleWasmInstanceObject instanceObj);
+    bool setInstance(JSContext* cx, uint32_t index, HandleWasmInstanceObject instanceObj);
 };
 
 typedef Rooted<WasmTableObject*> RootedWasmTableObject;

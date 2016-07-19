@@ -42,8 +42,9 @@ using mozilla::MakeEnumeratedRange;
 static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 
-ModuleGenerator::ModuleGenerator()
+ModuleGenerator::ModuleGenerator(ImportVector&& imports)
   : alwaysBaseline_(false),
+    imports_(Move(imports)),
     numSigs_(0),
     numTables_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
@@ -51,7 +52,7 @@ ModuleGenerator::ModuleGenerator()
     masm_(MacroAssembler::AsmJSToken(), masmAlloc_),
     lastPatchedCallsite_(0),
     startOfUnpatchedBranches_(0),
-    tableExported_(false),
+    externalTable_(false),
     parallel_(false),
     outstanding_(0),
     activeFunc_(nullptr),
@@ -59,6 +60,13 @@ ModuleGenerator::ModuleGenerator()
     finishedFuncDefs_(false)
 {
     MOZ_ASSERT(IsCompilingAsmJS());
+
+    for (const Import& import : imports_) {
+        if (import.kind == DefinitionKind::Table) {
+            externalTable_ = true;
+            break;
+        }
+    }
 }
 
 ModuleGenerator::~ModuleGenerator()
@@ -695,7 +703,7 @@ bool
 ModuleGenerator::addTableExport(UniqueChars fieldName)
 {
     MOZ_ASSERT(elemSegments_.empty());
-    tableExported_ = true;
+    externalTable_ = true;
     return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
 }
 
@@ -843,9 +851,9 @@ ModuleGenerator::finishFuncDefs()
 bool
 ModuleGenerator::addElemSegment(ElemSegment&& seg)
 {
-    MOZ_ASSERT(seg.offset + seg.elems.length() <= shared_->tables[seg.tableIndex].length);
+    MOZ_ASSERT(seg.offset + seg.elems.length() <= shared_->tables[seg.tableIndex].initial);
 
-    if (tableExported_) {
+    if (externalTable_) {
         for (uint32_t funcIndex : seg.elems) {
             if (!exportedFuncs_.put(funcIndex))
                 return false;
@@ -874,9 +882,10 @@ ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t length)
 
     TableDesc& table = shared_->tables[numTables_++];
     MOZ_ASSERT(table.globalDataOffset == 0);
-    MOZ_ASSERT(table.length == 0);
+    MOZ_ASSERT(table.initial == 0);
     table.kind = TableKind::TypedFunction;
-    table.length = length;
+    table.initial = length;
+    table.maximum = UINT32_MAX;
     return allocateGlobalBytes(sizeof(void*), sizeof(void*), &table.globalDataOffset);
 }
 
@@ -886,13 +895,13 @@ ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncInd
     MOZ_ASSERT(isAsmJS());
 
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
-    MOZ_ASSERT(shared_->tables[tableIndex].length == elemFuncIndices.length());
+    MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncIndices.length());
 
     return elemSegments_.emplaceBack(tableIndex, 0, Move(elemFuncIndices));
 }
 
 SharedModule
-ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
+ModuleGenerator::finish(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(finishedFuncDefs_);
@@ -976,7 +985,7 @@ ModuleGenerator::finish(ImportVector&& imports, const ShareableBytes& bytecode)
 
     return SharedModule(js_new<Module>(Move(code),
                                        Move(linkData_),
-                                       Move(imports),
+                                       Move(imports_),
                                        Move(exports_),
                                        Move(dataSegments_),
                                        Move(elemSegments_),
