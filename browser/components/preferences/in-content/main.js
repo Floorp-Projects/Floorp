@@ -206,8 +206,8 @@ var gMainPane = {
     let flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_IS_STRING +
                   prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL  +
                   prompts.BUTTON_POS_2 * prompts.BUTTON_TITLE_IS_STRING;
-    let button0Title = bundle.getString("restartNowButton");
-    let button2Title = bundle.getString("restartLaterButton");
+    let button0Title = bundle.getString("restartNow");
+    let button2Title = bundle.getString("restartLater");
     let button_index = prompts.confirmEx(window, title, msg, flags,
                          button0Title, null, button2Title, null, check)
     let RESTART_NOW_BUTTON_INDEX = 0;
