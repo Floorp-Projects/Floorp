@@ -153,7 +153,7 @@ void MouseCursorMonitorX11::Capture() {
     unsigned int mask;
 
     XErrorTrap error_trap(display());
-    Bool result = XQueryPointer(display(), inner_window, &root_window, &child_window,
+    Bool result = XQueryPointer(display(), inner_window_, &root_window, &child_window,
                                 &root_x, &root_y, &win_x, &win_y, &mask);
     CursorState state;
     if (!result || error_trap.GetLastErrorAndDisable() != 0) {
