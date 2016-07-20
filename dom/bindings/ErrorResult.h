@@ -67,8 +67,18 @@ uint16_t constexpr ErrorFormatNumArgs[] = {
 uint16_t
 GetErrorArgCount(const ErrNum aErrorNumber);
 
-bool
-ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
+namespace binding_detail {
+void ThrowErrorMessage(JSContext* aCx, const unsigned aErrorNumber, ...);
+} // namespace binding_detail
+
+template<typename... Ts>
+inline bool
+ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, Ts&&... aArgs)
+{
+  binding_detail::ThrowErrorMessage(aCx, static_cast<const unsigned>(aErrorNumber),
+                                    mozilla::Forward<Ts>(aArgs)...);
+  return false;
+}
 
 struct StringArrayAppender
 {
