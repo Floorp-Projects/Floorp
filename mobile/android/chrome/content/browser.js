@@ -94,6 +94,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "Profiler",
 XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
                                   "resource://gre/modules/SimpleServiceDiscovery.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
                                   "resource://gre/modules/CharsetMenu.jsm");
 
@@ -385,6 +388,12 @@ var BrowserApp = {
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
     Services.obs.addObserver(this, "Fonts:Reload", false);
     Services.obs.addObserver(this, "Vibration:Request", false);
+
+    // Register extension source files.
+    ExtensionManagement.registerScript("chrome://browser/content/ext-pageAction.js");
+
+    // Register extension schemas.
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/page_action.json");
 
     Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
@@ -6771,7 +6780,7 @@ var SearchEngines = {
       }
     };
 
-    // Return valid, pre-sorted queryParams.
+    // Return valid, pre-sorted queryParams. 
     return formData.filter(a => a.name && a.value).sort((a, b) => {
       // nsIBrowserSearchService.hasEngineWithURL() ensures sort, but this helps.
       if (a.name > b.name) {
