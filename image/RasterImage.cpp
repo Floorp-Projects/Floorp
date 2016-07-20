@@ -397,17 +397,6 @@ RasterImage::GetRequestedFrameIndex(uint32_t aWhichFrame) const
   return aWhichFrame == FRAME_FIRST ? 0 : GetCurrentFrameIndex();
 }
 
-IntRect
-RasterImage::GetFirstFrameRect()
-{
-  if (mAnimationState && mHasBeenDecoded) {
-    return mAnimationState->GetFirstFrameRefreshArea();
-  }
-
-  // Fall back to our size. This is implicitly zero-size if !mHasSize.
-  return IntRect(IntPoint(0,0), mSize);
-}
-
 NS_IMETHODIMP_(bool)
 RasterImage::IsOpaque()
 {
@@ -762,35 +751,30 @@ RasterImage::CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
 class OnAddedFrameRunnable : public Runnable
 {
 public:
-  OnAddedFrameRunnable(RasterImage* aImage,
-                       uint32_t aNewFrameCount,
-                       const IntRect& aNewRefreshArea)
+  OnAddedFrameRunnable(RasterImage* aImage, uint32_t aNewFrameCount)
     : mImage(aImage)
     , mNewFrameCount(aNewFrameCount)
-    , mNewRefreshArea(aNewRefreshArea)
   {
     MOZ_ASSERT(aImage);
   }
 
   NS_IMETHOD Run()
   {
-    mImage->OnAddedFrame(mNewFrameCount, mNewRefreshArea);
+    mImage->OnAddedFrame(mNewFrameCount);
     return NS_OK;
   }
 
 private:
   RefPtr<RasterImage> mImage;
   uint32_t mNewFrameCount;
-  IntRect mNewRefreshArea;
 };
 
 void
-RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
-                          const IntRect& aNewRefreshArea)
+RasterImage::OnAddedFrame(uint32_t aNewFrameCount)
 {
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> runnable =
-      new OnAddedFrameRunnable(this, aNewFrameCount, aNewRefreshArea);
+      new OnAddedFrameRunnable(this, aNewFrameCount);
     NS_DispatchToMainThread(runnable);
     return;
   }
@@ -811,9 +795,6 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
       if (mPendingAnimation && ShouldAnimate()) {
         StartAnimation();
       }
-    }
-    if (aNewFrameCount > 1) {
-      mAnimationState->UnionFirstFrameRefreshArea(aNewRefreshArea);
     }
   }
 }
@@ -877,6 +858,10 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
 
     if (aMetadata.HasLoopLength()) {
       mAnimationState->SetLoopLength(aMetadata.GetLoopLength());
+    }
+    if (aMetadata.HasFirstFrameRefreshArea()) {
+      mAnimationState
+        ->SetFirstFrameRefreshArea(aMetadata.GetFirstFrameRefreshArea());
     }
   }
 
@@ -979,7 +964,7 @@ RasterImage::ResetAnimation()
   MOZ_ASSERT(mAnimationState, "Should have AnimationState");
   mAnimationState->ResetAnimation();
 
-  NotifyProgress(NoProgress, mAnimationState->GetFirstFrameRefreshArea());
+  NotifyProgress(NoProgress, mAnimationState->FirstFrameRefreshArea());
 
   // Start the animation again. It may not have been running before, if
   // mAnimationFinished was true before entering this function.
