@@ -139,6 +139,12 @@ public class GeckoApplication extends Application
     }
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        AppConstants.maybeInstallMultiDex(base);
+    }
+
+    @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.uptimeMillis() + " - Fennec application start");
 
