@@ -1153,8 +1153,7 @@ class DebuggerFrame : public NativeObject
                                                bool& result);
     static MOZ_MUST_USE bool getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
                                             MutableHandle<DebuggerEnvironment*> result);
-
-    bool isGenerator() const;
+    static bool getIsGenerator(Handle<DebuggerFrame*> frame);
 
   private:
     static const ClassOps classOps_;
@@ -1162,6 +1161,7 @@ class DebuggerFrame : public NativeObject
     static const JSPropertySpec properties_[];
     static const JSFunctionSpec methods_[];
 
+    static AbstractFramePtr getReferent(Handle<DebuggerFrame*> frame);
     static MOZ_MUST_USE bool getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
                                                 mozilla::Maybe<ScriptFrameIter>& result);
 
@@ -1172,7 +1172,6 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    AbstractFramePtr referent() const;
     Debugger* owner() const;
 };
 
