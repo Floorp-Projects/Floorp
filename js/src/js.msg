@@ -161,7 +161,6 @@ MSG_DEF(JSMSG_USER_DEFINED_ERROR,      0, JSEXN_ERR, "JS_ReportError was called"
 
 // Internal errors
 MSG_DEF(JSMSG_ALLOC_OVERFLOW,          0, JSEXN_INTERNALERR, "allocation size overflow")
-MSG_DEF(JSMSG_BAD_BUILD_ID,            0, JSEXN_INTERNALERR, "bad build ID for XDR script")
 MSG_DEF(JSMSG_BAD_BYTECODE,            1, JSEXN_INTERNALERR, "unimplemented JavaScript bytecode {0}")
 MSG_DEF(JSMSG_BUFFER_TOO_SMALL,        0, JSEXN_INTERNALERR, "buffer too small")
 MSG_DEF(JSMSG_BUILD_ID_NOT_AVAILABLE,  0, JSEXN_INTERNALERR, "build ID is not available")
