@@ -119,7 +119,7 @@ public:
    * We may want to use a specifi thread in the future. In this case, use
    * CreateWithThread instead.
    */
-  static void StartUp();
+  static void InitSameProcess();
 
   static PImageBridgeChild*
   StartUpInChildProcess(Transport* aTransport, ProcessId aOtherProcess);
@@ -132,11 +132,6 @@ public:
    * instead.
    */
   static void ShutDown();
-
-  /**
-   * Creates the ImageBridgeChild manager protocol.
-   */
-  static bool StartUpOnThread(base::Thread* aThread);
 
   /**
    * Returns true if the singleton has been created.

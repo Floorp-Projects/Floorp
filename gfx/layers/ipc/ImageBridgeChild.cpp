@@ -504,6 +504,7 @@ ImageBridgeChild::ImageBridgeChild()
 
   mTxn = new CompositableTransaction();
 }
+
 ImageBridgeChild::~ImageBridgeChild()
 {
   delete mTxn;
@@ -566,12 +567,6 @@ ImageBridgeChild* ImageBridgeChild::GetSingleton()
 bool ImageBridgeChild::IsCreated()
 {
   return GetSingleton() != nullptr;
-}
-
-void ImageBridgeChild::StartUp()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-  ImageBridgeChild::StartUpOnThread(new ImageBridgeThread());
 }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -984,25 +979,26 @@ void ImageBridgeChild::ShutDown()
   }
 }
 
-bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
+void
+ImageBridgeChild::InitSameProcess()
 {
-  MOZ_ASSERT(aThread, "ImageBridge needs a thread.");
-  if (sImageBridgeChildSingleton == nullptr) {
-    sImageBridgeChildThread = aThread;
-    if (!aThread->IsRunning()) {
-      aThread->Start();
-    }
-    sImageBridgeChildSingleton = new ImageBridgeChild();
-    sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorThreadHolder::Loop(), base::GetCurrentProcId());
-    sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
-    sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-      NewRunnableFunction(CallSendImageBridgeThreadId,
-                          sImageBridgeChildSingleton.get()));
-    return true;
-  } else {
-    return false;
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
+
+  MOZ_ASSERT(!sImageBridgeChildSingleton);
+  MOZ_ASSERT(!sImageBridgeChildThread);
+
+  sImageBridgeChildThread = new ImageBridgeThread();
+  if (!sImageBridgeChildThread->IsRunning()) {
+    sImageBridgeChildThread->Start();
   }
+
+  sImageBridgeChildSingleton = new ImageBridgeChild();
+  sImageBridgeParentSingleton = new ImageBridgeParent(
+    CompositorThreadHolder::Loop(), base::GetCurrentProcId());
+  sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    NewRunnableFunction(CallSendImageBridgeThreadId,
+                        sImageBridgeChildSingleton.get()));
 }
 
 bool InImageBridgeChildThread()
