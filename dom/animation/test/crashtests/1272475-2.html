@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Bug 1272475 - rotate function with an extreme large value</title>
+  <script>
+    function test() {
+      var div = document.createElement("div");
+      div.setAttribute("style", "width: 100px; height: 100px; " +
+                                "background: red;");
+      document.body.appendChild(div);
+      div.animate([ { "transform": "rotate(8rad)" },
+                    { "transform": "rotate(9.5e+307rad)" },
+                    { "transform": "rotate(32rad)" } ],
+                  { "duration": 1000, "fill": "both" });
+    }
+  </script>
+  </head>
+  <body onload="test()">
+  </body>
+</html>
