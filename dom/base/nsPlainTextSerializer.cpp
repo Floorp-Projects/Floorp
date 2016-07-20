@@ -445,7 +445,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
   if (ShouldReplaceContainerWithPlaceholder(mElement->NodeInfo()->NameAtom())) {
     if (mIgnoredChildNodeLevel == 0) {
       // Serialize current node as placeholder character
-      Write(NS_LITERAL_STRING("\xFFFC"));
+      Write(NS_LITERAL_STRING(u"\xFFFC"));
     }
     // Ignore child nodes.
     mIgnoredChildNodeLevel++;
@@ -1118,7 +1118,7 @@ nsPlainTextSerializer::DoAddLeaf(nsIAtom* aTag)
     EnsureVerticalSpace(0);
   }
   else if (mFlags & nsIDocumentEncoder::OutputNonTextContentAsPlaceholder) {
-    Write(NS_LITERAL_STRING("\xFFFC"));
+    Write(NS_LITERAL_STRING(u"\xFFFC"));
   }
   else if (aTag == nsGkAtoms::img) {
     /* Output (in decreasing order of preference)
@@ -2031,4 +2031,3 @@ int32_t GetUnicharStringWidth(const char16_t* pwcs, int32_t n)
 
   return width;
 }
-
