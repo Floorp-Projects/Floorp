@@ -66,7 +66,7 @@ nsResProtocolHandler::GetSubstitutionInternal(const nsACString& root, nsIURI **r
 {
     nsAutoCString uri;
 
-    if (!ResolveSpecialCases(root, NS_LITERAL_CSTRING("/"), NS_LITERAL_CSTRING("/"), uri)) {
+    if (!ResolveSpecialCases(root, NS_LITERAL_CSTRING("/"), uri)) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -76,7 +76,6 @@ nsResProtocolHandler::GetSubstitutionInternal(const nsACString& root, nsIURI **r
 bool
 nsResProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
                                           const nsACString& aPath,
-                                          const nsACString& aPathname,
                                           nsACString& aResult)
 {
     if (aHost.Equals("") || aHost.Equals(kAPP)) {
