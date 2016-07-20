@@ -2531,7 +2531,7 @@ WebConsoleFrame.prototype = {
 
     let fullURL = url.split(" -> ").pop();
     // Make the location clickable.
-    let onClick = () => {
+    let onClick = ({ url, line }) => {
       let category = locationNode.closest(".message").category;
       let target = null;
 
@@ -2541,9 +2541,13 @@ WebConsoleFrame.prototype = {
         target = "styleeditor";
       } else if (category === CATEGORY_JS || category === CATEGORY_WEBDEV) {
         target = "jsdebugger";
-      } else if (/\.js$/.test(fullURL)) {
+      } else if (/\.js$/.test(url)) {
         // If it ends in .js, let's attempt to open in debugger
         // anyway, as this falls back to normal view-source.
+        target = "jsdebugger";
+      } else {
+        // Point everything else to debugger, if source not available,
+        // it will fall back to view-source.
         target = "jsdebugger";
       }
 
@@ -2552,16 +2556,17 @@ WebConsoleFrame.prototype = {
           this.owner.viewSourceInScratchpad(url, line);
           return;
         case "jsdebugger":
-          this.owner.viewSourceInDebugger(fullURL, line);
+          this.owner.viewSourceInDebugger(url, line);
           return;
         case "styleeditor":
-          this.owner.viewSourceInStyleEditor(fullURL, line);
+          this.owner.viewSourceInStyleEditor(url, line);
           return;
       }
       // No matching tool found; use old school view-source
-      this.owner.viewSource(fullURL, line);
+      this.owner.viewSource(url, line);
     };
 
+    const toolbox = gDevTools.getToolbox(this.owner.target);
     this.ReactDOM.render(this.FrameView({
       frame: {
         source: fullURL,
@@ -2570,6 +2575,7 @@ WebConsoleFrame.prototype = {
       },
       showEmptyPathAsHost: true,
       onClick,
+      sourceMapService: toolbox ? toolbox._sourceMapService : null,
     }), locationNode);
 
     return locationNode;
