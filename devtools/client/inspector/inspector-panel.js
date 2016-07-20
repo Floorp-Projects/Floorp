@@ -102,13 +102,6 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
 
-  let doc = this.panelDoc;
-
-  // Handle 'Add Node' toolbar button.
-  this.addNode = this.addNode.bind(this);
-  this.addNodeButton = doc.getElementById("inspector-element-add-button");
-  this.addNodeButton.addEventListener("click", this.addNode);
-
   this._target.on("will-navigate", this._onBeforeNavigate);
   this._detectingActorFeatures = this._detectActorFeatures();
 
@@ -255,6 +248,7 @@ InspectorPanel.prototype = {
 
     this.setupSearchBox();
     this.setupSidebar();
+    this.setupToolbar();
 
     return deferred.promise;
   },
@@ -462,7 +456,6 @@ InspectorPanel.prototype = {
       this.sidebar.toggleTab(true, "fontinspector");
     }
 
-    this.setupSidebarToggle();
     this.setupSidebarSize();
 
     this.sidebar.show(defaultTab);
@@ -513,10 +506,8 @@ InspectorPanel.prototype = {
     });
   },
 
-  /**
-   * Add the expand/collapse behavior for the sidebar panel.
-   */
-  setupSidebarToggle: function () {
+  setupToolbar: function () {
+    // Setup the sidebar toggle button.
     let SidebarToggle = this.React.createFactory(this.browserRequire(
       "devtools/client/shared/components/sidebar-toggle"));
 
@@ -529,6 +520,36 @@ InspectorPanel.prototype = {
 
     let parentBox = this.panelDoc.getElementById("inspector-sidebar-toggle-box");
     this._sidebarToggle = this.ReactDOM.render(sidebarToggle, parentBox);
+
+    // Setup the add-node button.
+    this.addNode = this.addNode.bind(this);
+    this.addNodeButton = this.panelDoc.getElementById("inspector-element-add-button");
+    this.addNodeButton.addEventListener("click", this.addNode);
+
+    // Setup the eye-dropper icon.
+    this.toolbox.target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
+      if (!value) {
+        return;
+      }
+
+      this.onEyeDropperDone = this.onEyeDropperDone.bind(this);
+      this.onEyeDropperButtonClicked = this.onEyeDropperButtonClicked.bind(this);
+      this.eyeDropperButton = this.panelDoc.getElementById("inspector-eyedropper-toggle");
+      this.eyeDropperButton.style.display = "initial";
+      this.eyeDropperButton.addEventListener("click", this.onEyeDropperButtonClicked);
+    }, e => console.error(e));
+  },
+
+  teardownToolbar: function () {
+    if (this.addNodeButton) {
+      this.addNodeButton.removeEventListener("click", this.addNode);
+      this.addNodeButton = null;
+    }
+
+    if (this.eyeDropperButton) {
+      this.eyeDropperButton.removeEventListener("click", this.onEyeDropperButtonClicked);
+      this.eyeDropperButton = null;
+    }
   },
 
   /**
@@ -768,7 +789,7 @@ InspectorPanel.prototype = {
     let sidebarDestroyer = this.sidebar.destroy();
     this.sidebar = null;
 
-    this.addNodeButton.removeEventListener("click", this.addNode);
+    this.teardownToolbar();
     this.breadcrumbs.destroy();
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
@@ -1249,6 +1270,41 @@ InspectorPanel.prototype = {
       delayed: true,
       callback: onAnimationDone
     }, sidePaneContainer);
+  },
+
+  onEyeDropperButtonClicked: function () {
+    this.eyeDropperButton.hasAttribute("checked")
+      ? this.hideEyeDropper()
+      : this.showEyeDropper();
+  },
+
+  startEyeDropperListeners: function () {
+    this.inspector.once("color-pick-canceled", this.onEyeDropperDone);
+    this.inspector.once("color-picked", this.onEyeDropperDone);
+    this.walker.once("new-root", this.onEyeDropperDone);
+  },
+
+  stopEyeDropperListeners: function () {
+    this.inspector.off("color-pick-canceled", this.onEyeDropperDone);
+    this.inspector.off("color-picked", this.onEyeDropperDone);
+    this.walker.off("new-root", this.onEyeDropperDone);
+  },
+
+  onEyeDropperDone: function () {
+    this.eyeDropperButton.removeAttribute("checked");
+    this.stopEyeDropperListeners();
+  },
+
+  showEyeDropper: function () {
+    this.eyeDropperButton.setAttribute("checked", "true");
+    this.inspector.pickColorFromPage({copyOnSelect: true}).catch(e => console.error(e));
+    this.startEyeDropperListeners();
+  },
+
+  hideEyeDropper: function () {
+    this.eyeDropperButton.removeAttribute("checked");
+    this.inspector.cancelPickColorFromPage().catch(e => console.error(e));
+    this.stopEyeDropperListeners();
   },
 
   /**

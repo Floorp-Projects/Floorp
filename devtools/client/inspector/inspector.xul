@@ -45,8 +45,11 @@
           timeout="50"
           class="devtools-searchinput"
           placeholder="&inspectorSearchHTML.label3;"/>
+        <html:button id="inspector-eyedropper-toggle"
+          title="&inspectorEyeDropper.label;"
+          class="devtools-button command-button-invertable" />
         <div xmlns="http://www.w3.org/1999/xhtml"
-             id="inspector-sidebar-toggle-box" />
+          id="inspector-sidebar-toggle-box" />
       </html:div>
       <vbox flex="1" id="markup-box">
       </vbox>
