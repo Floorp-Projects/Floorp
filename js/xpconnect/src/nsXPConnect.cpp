@@ -1100,24 +1100,17 @@ WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,
 
 
     uint32_t size;
-    void* data = nullptr;
-    TranscodeResult code;
+    void* data;
     {
         if (functionObj)
-            code = JS_EncodeInterpretedFunction(cx, functionObj, &size, &data);
+            data = JS_EncodeInterpretedFunction(cx, functionObj, &size);
         else
-            code = JS_EncodeScript(cx, script, &size, &data);
+            data = JS_EncodeScript(cx, script, &size);
     }
 
-    if (code != TranscodeResult_Ok) {
-        if ((code & TranscodeResult_Failure) != 0)
-            return NS_ERROR_FAILURE;
-        MOZ_ASSERT((code & TranscodeResult_Throw) != 0);
-        JS_ClearPendingException(cx);
+    if (!data)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    MOZ_ASSERT(size && data);
+    MOZ_ASSERT(size);
     rv = stream->Write32(size);
     if (NS_SUCCEEDED(rv))
         rv = stream->WriteBytes(static_cast<char*>(data), size);
@@ -1155,25 +1148,18 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
         return rv;
 
     {
-        TranscodeResult code;
         if (scriptp) {
-            Rooted<JSScript*> script(cx);
-            code = JS_DecodeScript(cx, data, size, &script);
-            if (code == TranscodeResult_Ok)
-                *scriptp = script.get();
+            JSScript* script = JS_DecodeScript(cx, data, size);
+            if (!script)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else
+                *scriptp = script;
         } else {
-            Rooted<JSFunction*> funobj(cx);
-            code = JS_DecodeInterpretedFunction(cx, data, size, &funobj);
-            if (code == TranscodeResult_Ok)
-                *functionObjp = JS_GetFunctionObject(funobj.get());
-        }
-
-        if (code != TranscodeResult_Ok) {
-            if ((code & TranscodeResult_Failure) != 0)
-                return NS_ERROR_FAILURE;
-            MOZ_ASSERT((code & TranscodeResult_Throw) != 0);
-            JS_ClearPendingException(cx);
-            return NS_ERROR_OUT_OF_MEMORY;
+            JSObject* funobj = JS_DecodeInterpretedFunction(cx, data, size);
+            if (!funobj)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else
+                *functionObjp = funobj;
         }
     }
 
