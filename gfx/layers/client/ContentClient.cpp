@@ -127,6 +127,9 @@ ContentClientBasic::CreateBuffer(ContentType aType,
                                  RefPtr<gfx::DrawTarget>* aWhiteDT)
 {
   MOZ_ASSERT(!(aFlags & BUFFER_COMPONENT_ALPHA));
+  if (aFlags & BUFFER_COMPONENT_ALPHA) {
+    gfxDevCrash(LogReason::AlphaWithBasicClient) << "Asking basic content client for component alpha";
+  }
 
   *aBlackDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
     IntSize(aRect.width, aRect.height),
