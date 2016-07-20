@@ -131,6 +131,8 @@ SUPPORTED_APPS = ['firefox', 'b2g', 'android', 'mulet']
 SUPPORTED_FLAVORS = list(chain.from_iterable([f['aliases'] for f in ALL_FLAVORS.values()]))
 CANONICAL_FLAVORS = sorted([f['aliases'][0] for f in ALL_FLAVORS.values()])
 
+parser = None
+
 
 class MochitestRunner(MozbuildObject):
 
@@ -197,7 +199,7 @@ class MochitestRunner(MozbuildObject):
             manifest.tests.extend(tests)
             options.manifestFile = manifest
 
-        return mochitest.run_test_harness(options)
+        return mochitest.run_test_harness(parser, options)
 
     def run_desktop_test(self, context, tests=None, suite=None, **kwargs):
         """Runs a mochitest.
@@ -242,7 +244,7 @@ class MochitestRunner(MozbuildObject):
 
         # We need this to enable colorization of output.
         self.log_manager.enable_unstructured()
-        result = mochitest.run_test_harness(options)
+        result = mochitest.run_test_harness(parser, options)
         self.log_manager.disable_unstructured()
         return result
 
@@ -266,7 +268,7 @@ class MochitestRunner(MozbuildObject):
             manifest.tests.extend(tests)
             options.manifestFile = manifest
 
-        return runtestsremote.run_test_harness(options)
+        return runtestsremote.run_test_harness(parser, options)
 
     def run_robocop_test(self, context, tests, suite=None, **kwargs):
         host_ret = verify_host_bin()
@@ -288,7 +290,7 @@ class MochitestRunner(MozbuildObject):
             manifest.tests.extend(tests)
             options.manifestFile = manifest
 
-        return runrobocop.run_test_harness(options)
+        return runrobocop.run_test_harness(parser, options)
 
 # parser
 
@@ -321,7 +323,9 @@ def setup_argument_parser():
         from mozrunner.devices.android_device import verify_android_device
         verify_android_device(build_obj, install=True, xre=True)
 
-    return MochitestArgumentParser()
+    global parser
+    parser = MochitestArgumentParser()
+    return parser
 
 
 # condition filters
