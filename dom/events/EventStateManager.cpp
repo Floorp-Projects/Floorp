@@ -4346,9 +4346,6 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     aWidget->SynthesizeNativeMouseMove(
       sLastRefPoint + aWidget->WidgetToScreenOffset(), nullptr);
 
-    // Retarget all events to this element via capture.
-    nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
-
     // Suppress DnD
     if (dragService) {
       dragService->Suppress();
@@ -4366,9 +4363,6 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
       aWidget->SynthesizeNativeMouseMove(
         mPreLockPoint + aWidget->WidgetToScreenOffset(), nullptr);
     }
-
-    // Don't retarget events to this element any more.
-    nsIPresShell::SetCapturingContent(nullptr, CAPTURE_POINTERLOCK);
 
     // Unsuppress DnD
     if (dragService) {
