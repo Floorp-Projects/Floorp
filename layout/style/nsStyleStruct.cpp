@@ -1007,14 +1007,14 @@ nsStyleBasicShape::GetShapeTypeName() const
 nsStyleClipPath::nsStyleClipPath()
   : mType(NS_STYLE_CLIP_PATH_NONE)
   , mURL(nullptr)
-  , mSizingBox(NS_STYLE_CLIP_SHAPE_SIZING_NOBOX)
+  , mSizingBox(mozilla::StyleClipShapeSizing::NoBox)
 {
 }
 
 nsStyleClipPath::nsStyleClipPath(const nsStyleClipPath& aSource)
   : mType(NS_STYLE_CLIP_PATH_NONE)
   , mURL(nullptr)
-  , mSizingBox(NS_STYLE_CLIP_SHAPE_SIZING_NOBOX)
+  , mSizingBox(mozilla::StyleClipShapeSizing::NoBox)
 {
   if (aSource.mType == NS_STYLE_CLIP_PATH_URL) {
     SetURL(aSource.mURL);
@@ -1045,7 +1045,7 @@ nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
     SetSizingBox(aOther.mSizingBox);
   } else {
     ReleaseRef();
-    mSizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
+    mSizingBox = mozilla::StyleClipShapeSizing::NoBox;
     mType = NS_STYLE_CLIP_PATH_NONE;
   }
   return *this;
@@ -1096,7 +1096,8 @@ nsStyleClipPath::SetURL(nsIURI* aURL)
 }
 
 void
-nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape, uint8_t aSizingBox)
+nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape,
+                               mozilla::StyleClipShapeSizing aSizingBox)
 {
   NS_ASSERTION(aBasicShape, "expected pointer");
   ReleaseRef();
@@ -1107,7 +1108,7 @@ nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape, uint8_t aSizingBo
 }
 
 void
-nsStyleClipPath::SetSizingBox(uint8_t aSizingBox)
+nsStyleClipPath::SetSizingBox(mozilla::StyleClipShapeSizing aSizingBox)
 {
   ReleaseRef();
   mSizingBox = aSizingBox;
@@ -2654,11 +2655,35 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
 {
   nsChangeHint hint = nsChangeHint(0);
   if (!EqualURIs(mSourceURI, aNewLayer.mSourceURI)) {
-    hint |= nsChangeHint_UpdateEffects |
-            nsChangeHint_RepaintFrame;
-    // Mask changes require that we update the PreEffectsBBoxProperty,
-    // which is done during overflow computation.
-    hint |= nsChangeHint_UpdateOverflow;
+    hint |= nsChangeHint_RepaintFrame;
+
+    // If Layer::mSourceURI links to a SVG mask, it has a fragment. Not vice
+    // versa. Here are examples of URI contains a fragment, two of them link
+    // to a SVG mask:
+    //   mask:url(a.svg#maskID); // The fragment of this URI is an ID of a mask
+    //                           // element in a.svg.
+    //   mask:url(#localMaskID); // The fragment of this URI is an ID of a mask
+    //                           // element in local document.
+    //   mask:url(b.svg#viewBoxID); // The fragment of this URI is an ID of a
+    //                              // viewbox defined in b.svg.
+    // That is, if mSourceURI has a fragment, it may link to a SVG mask; If
+    // not, it "must" not link to a SVG mask.
+    bool maybeSVGMask = false;
+    if (mSourceURI) {
+      mSourceURI->GetHasRef(&maybeSVGMask);
+    }
+    if (!maybeSVGMask && aNewLayer.mSourceURI) {
+      aNewLayer.mSourceURI->GetHasRef(&maybeSVGMask);
+    }
+
+    // Return nsChangeHint_UpdateEffects and nsChangeHint_UpdateOverflow if
+    // either URI might link to an SVG mask.
+    if (maybeSVGMask) {
+      hint |= nsChangeHint_UpdateEffects;
+      // Mask changes require that we update the PreEffectsBBoxProperty,
+      // which is done during overflow computation.
+      hint |= nsChangeHint_UpdateOverflow;
+    }
   } else if (mAttachment != aNewLayer.mAttachment ||
              mClip != aNewLayer.mClip ||
              mOrigin != aNewLayer.mOrigin ||
