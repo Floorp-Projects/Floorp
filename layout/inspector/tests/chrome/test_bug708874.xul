@@ -243,7 +243,7 @@ function testMultiple() {
 
 function testInvalid() {
   var div = document.getElementById("test-div");
-  var pseudos = ["not a valid pseudo-class", ":moz-any-link", ":first-child"];
+  var pseudos = ["not a valid pseudo-class", ":ny-link", ":first-child"];
 
   for (var i = 0; i < pseudos.length; i++) {
     var pseudo = pseudos[i];
