@@ -27,12 +27,12 @@ var manifests = [
 
 var chatId = 0;
 function openChat(provider) {
-  let deferred = Promise.defer();
-  SocialSidebar.provider = provider;
-  let chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
-  let url = chatUrl + "?id=" + (chatId++);
-  makeChat("normal", "chat " + chatId, (cb) => { deferred.resolve(cb); });
-  return deferred.promise;
+  return new Promise(resolve => {
+    SocialSidebar.provider = provider;
+    let chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
+    let url = chatUrl + "?id=" + (chatId++);
+    makeChat("normal", "chat " + chatId, (cb) => { resolve(cb); });
+  });
 }
 
 function windowHasChats(win) {
@@ -74,23 +74,19 @@ function test() {
 var tests = {
   testOpenCloseChat: function(next) {
     openChat(SocialSidebar.provider).then((cb) => {
-      waitForCondition(function() {
-        return cb.minimized;
-      }, function() {
+      BrowserTestUtils.waitForCondition(() => { return cb.minimized; },
+                                        "chatbox is minimized").then(() => {
         ok(cb.minimized, "chat is minimized after toggle");
-        waitForCondition(function() {
-          return !cb.minimized;
-        }, function() {
+        BrowserTestUtils.waitForCondition(() => { return !cb.minimized; },
+                                          "chatbox is not minimized").then(() => {
           ok(!cb.minimized, "chat is not minimized after toggle");
           promiseNodeRemoved(cb).then(next);
           let mm = cb.content.messageManager;
           mm.sendAsyncMessage("socialTest-CloseSelf", {});
           info("close chat window requested");
-        },
-        "chatbox is not minimized");
+        });
         cb.toggle();
-      },
-      "chatbox is minimized");
+      });
 
       ok(!cb.minimized, "chat is not minimized on open");
       // toggle to minimize chat
