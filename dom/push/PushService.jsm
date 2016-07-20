@@ -871,17 +871,16 @@ this.PushService = {
   },
 
   /**
-   * Decrypts an incoming message and notifies the associated service worker.
+   * Decrypts a message. Will resolve with null if cryptoParams is falsy.
    *
    * @param {PushRecord} record The receiving registration.
-   * @param {String} messageID The message ID.
    * @param {ArrayBuffer|Uint8Array} data The encrypted message data.
    * @param {Object} cryptoParams The message encryption settings.
-   * @returns {Promise} Resolves with an ack status code.
+   * @returns {Promise} Resolves with the decrypted message.
    */
-  _decryptAndNotifyApp(record, messageID, data, cryptoParams) {
+  _decryptMessage(data, record, cryptoParams) {
     if (!cryptoParams) {
-      return this._notifyApp(record, messageID, null);
+      return Promise.resolve(null);
     }
     return PushCrypto.decodeMsg(
       data,
@@ -892,13 +891,29 @@ this.PushService = {
       cryptoParams.rs,
       record.authenticationSecret,
       cryptoParams.padSize
-    ).then(message => this._notifyApp(record, messageID, message), error => {
-      let message = gDOMBundle.formatStringFromName(
-        "PushMessageDecryptionFailure", [record.scope, String(error)], 2);
-      gPushNotifier.notifyError(record.scope, record.principal, message,
-                                Ci.nsIScriptError.errorFlag);
-      return Ci.nsIPushErrorReporter.ACK_DECRYPTION_ERROR;
-    });
+    );
+  },
+
+  /**
+   * Decrypts an incoming message and notifies the associated service worker.
+   *
+   * @param {PushRecord} record The receiving registration.
+   * @param {String} messageID The message ID.
+   * @param {ArrayBuffer|Uint8Array} data The encrypted message data.
+   * @param {Object} cryptoParams The message encryption settings.
+   * @returns {Promise} Resolves with an ack status code.
+   */
+  _decryptAndNotifyApp(record, messageID, data, cryptoParams) {
+    return this._decryptMessage(data, record, cryptoParams)
+      .then(
+        message => this._notifyApp(record, messageID, message),
+        error => {
+          let message = gDOMBundle.formatStringFromName(
+            "PushMessageDecryptionFailure", [record.scope, String(error)], 2);
+          gPushNotifier.notifyError(record.scope, record.principal, message,
+                                    Ci.nsIScriptError.errorFlag);
+          return Ci.nsIPushErrorReporter.ACK_DECRYPTION_ERROR;
+        });
   },
 
   _updateQuota: function(keyID) {

@@ -19,6 +19,7 @@ interface nsIPushSubscription : nsISupports
   readonly attribute long long lastPush;
   readonly attribute long quota;
   readonly attribute bool isSystemSubscription;
+  readonly attribute jsval p256dhPrivateKey;
 
   bool quotaApplies();
   bool isExpired();

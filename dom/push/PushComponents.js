@@ -498,6 +498,11 @@ PushSubscription.prototype = {
     return !!this._props.systemRecord;
   },
 
+  /** The private key used to decrypt incoming push messages, in JWK format */
+  get p256dhPrivateKey() {
+    return this._props.p256dhPrivateKey;
+  },
+
   /**
    * Indicates whether this subscription is subject to the background message
    * quota.
