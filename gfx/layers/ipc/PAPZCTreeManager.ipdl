@@ -1,0 +1,107 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+include "ipc/nsGUIEventIPC.h";
+
+using CSSRect from "Units.h";
+using LayoutDeviceIntPoint from "Units.h";
+using ScreenPoint from "Units.h";
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
+using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
+using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
+using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
+
+using nsEventStatus from "mozilla/EventForwards.h";
+using EventMessage from "mozilla/EventForwards.h";
+using class mozilla::WidgetInputEvent from "mozilla/BasicEvents.h";
+using class mozilla::WidgetMouseEventBase from "mozilla/MouseEvents.h";
+using mozilla::WidgetMouseEvent::Reason from "mozilla/MouseEvents.h";
+using class mozilla::WidgetTouchEvent from "mozilla/TouchEvents.h";
+using class mozilla::WidgetWheelEvent from "mozilla/MouseEvents.h";
+using class mozilla::InputData from "InputData.h";
+using class mozilla::MultiTouchInput from "InputData.h";
+using class mozilla::MouseInput from "InputData.h";
+using class mozilla::PanGestureInput from "InputData.h";
+using class mozilla::PinchGestureInput from "InputData.h";
+using class mozilla::TapGestureInput from "InputData.h";
+using class mozilla::ScrollWheelInput from "InputData.h";
+
+namespace mozilla {
+namespace layers {
+
+sync protocol PAPZCTreeManager
+{
+parent:
+
+  sync ReceiveMultiTouchInputEvent(MultiTouchInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             MultiTouchInput     aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  sync ReceiveMouseInputEvent(MouseInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             MouseInput          aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  sync ReceivePanGestureInputEvent(PanGestureInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             PanGestureInput     aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  sync ReceivePinchGestureInputEvent(PinchGestureInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             PinchGestureInput   aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  sync ReceiveTapGestureInputEvent(TapGestureInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             TapGestureInput     aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  sync ReceiveScrollWheelInputEvent(ScrollWheelInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             ScrollWheelInput    aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  async ZoomToRect(ScrollableLayerGuid aGuid, CSSRect aRect, uint32_t Flags);
+
+  async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
+
+  async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] Targets);
+
+  async UpdateZoomConstraints(ScrollableLayerGuid aGuid, MaybeZoomConstraints aConstraints);
+
+  async CancelAnimation(ScrollableLayerGuid aGuid);
+
+  async AdjustScrollForSurfaceShift(ScreenPoint aShift);
+
+  async SetDPI(float aDpiValue);
+
+  async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aValues);
+
+  async StartScrollbarDrag(ScrollableLayerGuid aGuid, AsyncDragMetrics aDragMetrics);
+
+  async SetLongTapEnabled(bool aTapGestureEnabled);
+
+  async ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY);
+
+  async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage);
+
+  sync TransformEventRefPoint(LayoutDeviceIntPoint aRefPoint)
+    returns (LayoutDeviceIntPoint   aOutRefPoint,
+             ScrollableLayerGuid    aOutTargetGuid);
+
+  async __delete__();
+};
+
+} // namespace gfx
+} // namespace mozilla
