@@ -2284,6 +2284,10 @@ CreateRunnable::RegisterObserver()
 
   qms->NoteLiveManager(mManager);
 
+  for (RefPtr<Client>& client : mManager->mClients) {
+    client->DidInitialize(mManager);
+  }
+
   return NS_OK;
 }
 
@@ -2387,11 +2391,6 @@ QuotaManager::
 ShutdownRunnable::Run()
 {
   if (NS_IsMainThread()) {
-    QuotaManagerService* qms = QuotaManagerService::Get();
-    MOZ_ASSERT(qms);
-
-    qms->NoteFinishedManager();
-
     mDone = true;
 
     return NS_OK;
@@ -2421,6 +2420,16 @@ ShutdownObserver::Observe(nsISupports* aSubject,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!strcmp(aTopic, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID));
+  MOZ_ASSERT(gInstance);
+
+  QuotaManagerService* qms = QuotaManagerService::Get();
+  MOZ_ASSERT(qms);
+
+  qms->NoteShuttingDownManager();
+
+  for (RefPtr<Client>& client : gInstance->mClients) {
+    client->WillShutdown();
+  }
 
   bool done = false;
 
@@ -2751,8 +2760,6 @@ QuotaManager::GetOrCreate(nsIRunnable* aCallback)
 QuotaManager*
 QuotaManager::Get()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-
   // Does not return an owning reference.
   return gInstance;
 }

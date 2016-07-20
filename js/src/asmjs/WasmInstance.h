@@ -87,7 +87,7 @@ class Instance
     // Execute the given export given the JS call arguments, storing the return
     // value in args.rval.
 
-    MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t funcExportIndex, CallArgs args);
+    MOZ_MUST_USE bool callExport(JSContext* cx, uint32_t funcIndex, CallArgs args);
 
     // An instance has a profiling mode that is updated to match the runtime's
     // profiling mode when calling an instance's exports when there are no other

@@ -48,9 +48,6 @@ public:
     bool FindAttribUserNameByMappedName(const std::string& mappedName,
                                         const std::string** const out_userName) const;
 
-    bool FindActiveOutputMappedNameByUserName(const std::string& userName,
-                                              const std::string** const out_mappedName) const;
-
     bool FindAttribMappedNameByUserName(const std::string& userName,
                                         const std::string** const out_mappedName) const;
 
@@ -66,6 +63,7 @@ public:
     bool FindUniformBlockByMappedName(const std::string& mappedName,
                                       std::string* const out_userName) const;
 
+    void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 };
 
 } // namespace webgl

@@ -557,6 +557,10 @@ IOKit/IOMessage.h
 IOKit/pwr_mgt/IOPMLib.h
 iomanip
 iostream.h
+#if MOZ_JACK==1
+jack/jack.h
+jack/statistics.h
+#endif
 JavaControl.h
 JavaEmbedding/JavaControl.h
 JavaVM/jni.h

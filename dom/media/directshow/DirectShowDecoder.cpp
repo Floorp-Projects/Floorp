@@ -6,6 +6,7 @@
 
 #include "DirectShowDecoder.h"
 #include "DirectShowReader.h"
+#include "DirectShowUtils.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/WindowsVersion.h"

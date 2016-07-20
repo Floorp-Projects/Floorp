@@ -172,7 +172,7 @@ private:
   bool mIsObservingVsync;
   uint32_t mNeedsComposite;
   int32_t mVsyncNotificationsSkipped;
-  RefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
+  widget::CompositorWidget* mWidget;
   RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
@@ -234,8 +234,6 @@ public:
   virtual bool RecvWillClose() override;
   virtual bool RecvPause() override;
   virtual bool RecvResume() override;
-  virtual bool RecvNotifyHidden(const uint64_t& id) override { return true; }
-  virtual bool RecvNotifyVisible(const uint64_t& id) override { return true; }
   virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
   virtual bool RecvAdoptChild(const uint64_t& child) override;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
@@ -400,6 +398,11 @@ public:
    * Returns a pointer to the CompositorBridgeParent corresponding to the given ID.
    */
   static CompositorBridgeParent* GetCompositorBridgeParent(uint64_t id);
+
+  /**
+   * Notify the compositor for the given layer tree that vsync has occurred.
+   */
+  static void NotifyVsync(const TimeStamp& aTimeStamp, const uint64_t& aLayersId);
 
   /**
    * Set aController as the pan/zoom callback for the subtree referred

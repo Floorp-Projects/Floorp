@@ -117,6 +117,7 @@ public:
 
   double GetBufferedStart();
   double GetBufferedEnd();
+  double HighestStartTime();
 
   // Runs the range removal algorithm as defined by the MSE spec.
   void RangeRemoval(double aStart, double aEnd);
@@ -174,6 +175,7 @@ private:
   mozilla::Atomic<bool> mActive;
 
   MozPromiseRequestHolder<SourceBufferTask::AppendPromise> mPendingAppend;
+  MozPromiseRequestHolder<SourceBufferTask::RangeRemovalPromise> mPendingRemoval;
   const nsCString mType;
 
   RefPtr<TimeRanges> mBuffered;

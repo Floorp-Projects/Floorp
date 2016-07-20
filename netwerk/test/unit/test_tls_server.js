@@ -20,6 +20,9 @@ const socketTransportService =
   Cc["@mozilla.org/network/socket-transport-service;1"]
   .getService(Ci.nsISocketTransportService);
 
+const prefs = Cc["@mozilla.org/preferences-service;1"]
+              .getService(Ci.nsIPrefBranch);
+
 function run_test() {
   run_next_test();
 }
@@ -38,7 +41,8 @@ function getCert() {
   return deferred.promise;
 }
 
-function startServer(cert, expectingPeerCert, clientCertificateConfig) {
+function startServer(cert, expectingPeerCert, clientCertificateConfig,
+                     expectedVersion, expectedVersionStr) {
   let tlsServer = Cc["@mozilla.org/network/tls-server-socket;1"]
                   .createInstance(Ci.nsITLSServerSocket);
   tlsServer.init(-1, true, -1);
@@ -64,8 +68,8 @@ function startServer(cert, expectingPeerCert, clientCertificateConfig) {
         ok(!status.peerCert, "No peer cert (as expected)");
       }
 
-      equal(status.tlsVersionUsed, Ci.nsITLSClientStatus.TLS_VERSION_1_2,
-            "Using TLS 1.2");
+      equal(status.tlsVersionUsed, expectedVersion,
+            "Using " + expectedVersionStr);
       equal(status.cipherName, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
             "Using expected cipher");
       equal(status.keyLength, 128, "Using 128-bit key");
@@ -121,6 +125,7 @@ function startClient(port, cert, expectingBadCertAlert) {
         equal(data, "HELLO", "Echoed data received");
         input.close();
         output.close();
+        ok(!expectingBadCertAlert, "No bad cert alert expected");
         inputDeferred.resolve();
       } catch (e) {
         let errorCode = -1 * (e.result & 0xFFFF);
@@ -166,50 +171,61 @@ function startClient(port, cert, expectingBadCertAlert) {
 // Replace the UI dialog that prompts the user to pick a client certificate.
 do_load_manifest("client_cert_chooser.manifest");
 
-add_task(function*() {
-  let cert = yield getCert();
-  ok(!!cert, "Got self-signed cert");
-  let port = startServer(cert, true, Ci.nsITLSServerSocket.REQUIRE_ALWAYS);
-  storeCertOverride(port, cert);
-  yield startClient(port, cert, false);
-});
+const tests = [{
+  expectingPeerCert: true,
+  clientCertificateConfig: Ci.nsITLSServerSocket.REQUIRE_ALWAYS,
+  sendClientCert: true,
+  expectingBadCertAlert: false
+}, {
+  expectingPeerCert: true,
+  clientCertificateConfig: Ci.nsITLSServerSocket.REQUIRE_ALWAYS,
+  sendClientCert: false,
+  expectingBadCertAlert: true
+}, {
+  expectingPeerCert: true,
+  clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_ALWAYS,
+  sendClientCert: true,
+  expectingBadCertAlert: false
+}, {
+  expectingPeerCert: false,
+  clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_ALWAYS,
+  sendClientCert: false,
+  expectingBadCertAlert: false
+}, {
+  expectingPeerCert: false,
+  clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_NEVER,
+  sendClientCert: true,
+  expectingBadCertAlert: false
+}, {
+  expectingPeerCert: false,
+  clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_NEVER,
+  sendClientCert: false,
+  expectingBadCertAlert: false
+}];
+
+const versions = [{
+  prefValue: 3, version: Ci.nsITLSClientStatus.TLS_VERSION_1_2, versionStr: "TLS 1.2"
+}, {
+  prefValue: 4, version: Ci.nsITLSClientStatus.TLS_VERSION_1_3, versionStr: "TLS 1.3"
+}];
 
 add_task(function*() {
   let cert = yield getCert();
   ok(!!cert, "Got self-signed cert");
-  let port = startServer(cert, true, Ci.nsITLSServerSocket.REQUIRE_ALWAYS);
-  storeCertOverride(port, cert);
-  yield startClient(port, null, true);
+  for (let v of versions) {
+    prefs.setIntPref("security.tls.version.max", v.prefValue);
+    for (let t of tests) {
+      let port = startServer(cert,
+                             t.expectingPeerCert,
+                             t.clientCertificateConfig,
+                             v.version,
+                             v.versionStr);
+      storeCertOverride(port, cert);
+      yield startClient(port, t.sendClientCert ? cert : null, t.expectingBadCertAlert);
+    }
+  }
 });
 
-add_task(function*() {
-  let cert = yield getCert();
-  ok(!!cert, "Got self-signed cert");
-  let port = startServer(cert, true, Ci.nsITLSServerSocket.REQUEST_ALWAYS);
-  storeCertOverride(port, cert);
-  yield startClient(port, cert, false);
-});
-
-add_task(function*() {
-  let cert = yield getCert();
-  ok(!!cert, "Got self-signed cert");
-  let port = startServer(cert, false, Ci.nsITLSServerSocket.REQUEST_ALWAYS);
-  storeCertOverride(port, cert);
-  yield startClient(port, null, false);
-});
-
-add_task(function*() {
-  let cert = yield getCert();
-  ok(!!cert, "Got self-signed cert");
-  let port = startServer(cert, false, Ci.nsITLSServerSocket.REQUEST_NEVER);
-  storeCertOverride(port, cert);
-  yield startClient(port, cert, false);
-});
-
-add_task(function*() {
-  let cert = yield getCert();
-  ok(!!cert, "Got self-signed cert");
-  let port = startServer(cert, false, Ci.nsITLSServerSocket.REQUEST_NEVER);
-  storeCertOverride(port, cert);
-  yield startClient(port, null, false);
+do_register_cleanup(function() {
+  prefs.clearUserPref("security.tls.version.max");
 });

@@ -931,7 +931,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     return PopStateEvent::Constructor(aOwner, EmptyString(), init);
   }
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
-      TouchEvent::PrefEnabled())
+      TouchEvent::PrefEnabled(nsContentUtils::GetDocShellForEventTarget(aOwner)))
     return NS_NewDOMTouchEvent(aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("hashchangeevent")) {
     HashChangeEventInit init;

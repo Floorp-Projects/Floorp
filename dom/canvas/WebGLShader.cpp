@@ -330,22 +330,6 @@ WebGLShader::BindAttribLocation(GLuint prog, const nsCString& userName,
 }
 
 bool
-WebGLShader::FindActiveOutputMappedNameByUserName(const nsACString& userName,
-                                                  nsCString* const out_mappedName) const
-{
-    if (!mValidator)
-        return false;
-
-    const std::string userNameStr(userName.BeginReading());
-    const std::string* mappedNameStr;
-    if (!mValidator->FindActiveOutputMappedNameByUserName(userNameStr, &mappedNameStr))
-        return false;
-
-    *out_mappedName = mappedNameStr->c_str();
-    return true;
-}
-
-bool
 WebGLShader::FindAttribUserNameByMappedName(const nsACString& mappedName,
                                             nsDependentCString* const out_userName) const
 {
@@ -410,6 +394,17 @@ WebGLShader::FindUniformBlockByMappedName(const nsACString& mappedName,
 
     *out_userName = userNameStr.c_str();
     return true;
+}
+
+void
+WebGLShader::EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const
+{
+    out_FragOutputs.clear();
+
+    if (!mValidator) {
+        return;
+    }
+    mValidator->EnumerateFragOutputs(out_FragOutputs);
 }
 
 void

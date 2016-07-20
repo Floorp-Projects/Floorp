@@ -28,7 +28,7 @@ typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 class CompositableParentManager : public HostIPCAllocator
 {
 public:
-  CompositableParentManager(const char* aName) : HostIPCAllocator(aName) {}
+  CompositableParentManager() {}
 
   void DestroyActor(const OpDestroy& aOp);
 

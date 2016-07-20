@@ -233,7 +233,6 @@ XMLHttpRequestMainThread::Init()
  */
 NS_IMETHODIMP
 XMLHttpRequestMainThread::Init(nsIPrincipal* aPrincipal,
-                               nsIScriptContext* aScriptContext,
                                nsIGlobalObject* aGlobalObject,
                                nsIURI* aBaseURI,
                                nsILoadGroup* aLoadGroup)
@@ -1004,7 +1003,7 @@ XMLHttpRequestMainThread::GetStatusText(nsACString& aStatusText,
 }
 
 void
-XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType)
+XMLHttpRequestMainThread::CloseRequest()
 {
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
@@ -1012,6 +1011,13 @@ XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType)
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
   }
+}
+
+void
+XMLHttpRequestMainThread::CloseRequestWithError(const ProgressEventType aType)
+{
+  CloseRequest();
+
   uint32_t responseLength = mResponseBody.Length();
   ResetResponse();
 
@@ -1404,17 +1410,8 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
 
   nsCOMPtr<nsIURI> uri;
 
-  if (mState == State::opened || mState == State::headers_received ||
-      mState == State::loading) {
-    // IE aborts as well
-    Abort();
-
-    // XXX We should probably send a warning to the JS console
-    //     that load was aborted and event listeners were cleared
-    //     since this looks like a situation that could happen
-    //     by accident and you could spend a lot of time wondering
-    //     why things didn't work.
-  }
+  CloseRequest(); // spec step 10
+  ResetResponse(); // (part of) spec step 11
 
   mFlagSend = false;
 
@@ -1428,8 +1425,7 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
   if (!doc) {
     // This could be because we're no longer current or because we're in some
     // non-window context...
-    nsresult rv = CheckInnerWindowCorrectness();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
   }
@@ -1450,8 +1446,10 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
     }
     return rv;
   }
-  rv = CheckInnerWindowCorrectness();
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
   // XXXbz this is wrong: we should only be looking at whether
   // user/password were passed, not at the values!  See bug 759624.
@@ -1542,7 +1540,9 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
     }
   }
 
-  ChangeState(State::opened);
+  if (mState != State::opened) {
+    ChangeState(State::opened);
+  }
 
   return NS_OK;
 }
@@ -1900,8 +1900,9 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     } else {
       // If we're no longer current, just kill the load, though it really should
       // have been killed already.
-      nsresult rv = CheckInnerWindowCorrectness();
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
+      }
     }
 
     // Create an empty document from it.
@@ -2446,7 +2447,9 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
   PopulateNetworkInterfaceId();
 
   nsresult rv = CheckInnerWindowCorrectness();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
   if (mState != State::opened || // Step 1
       mFlagSend || // Step 2

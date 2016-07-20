@@ -236,9 +236,6 @@ public:
     void *AcquireNativeWindowFromSurfaceTexture(JNIEnv* aEnv, jobject aSurface);
     void ReleaseNativeWindowForSurfaceTexture(void *window);
 
-    bool LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride);
-    bool UnlockWindow(void *window);
-
     void HandleGeckoMessage(JSContext* cx, JS::HandleObject message);
 
     bool InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps);
@@ -411,8 +408,6 @@ protected:
     void (*ANativeWindow_release)(void *window);
     int (*ANativeWindow_setBuffersGeometry)(void *window, int width, int height, int format);
 
-    int (* ANativeWindow_lock)(void *window, void *outBuffer, void *inOutDirtyBounds);
-    int (* ANativeWindow_unlockAndPost)(void *window);
     int (* ANativeWindow_getWidth)(void * window);
     int (* ANativeWindow_getHeight)(void * window);
 

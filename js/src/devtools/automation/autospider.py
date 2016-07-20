@@ -11,19 +11,21 @@ import shutil
 import subprocess
 import sys
 
-from collections import namedtuple
+from collections import Counter, namedtuple
 from os import environ as env
 from subprocess import Popen
 from threading import Timer
 
-Dirs = namedtuple('Dirs', ['scripts', 'js_src', 'source'])
+Dirs = namedtuple('Dirs', ['scripts', 'js_src', 'source', 'tooltool'])
 
 
 def directories(pathmodule, cwd, fixup=lambda s: s):
     scripts = pathmodule.join(fixup(cwd), fixup(pathmodule.dirname(__file__)))
     js_src = pathmodule.abspath(pathmodule.join(scripts, "..", ".."))
     source = pathmodule.abspath(pathmodule.join(js_src, "..", ".."))
-    return Dirs(scripts, js_src, source)
+    tooltool = pathmodule.abspath(env.get('TOOLTOOL_CHECKOUT',
+                                          pathmodule.join(source, "..")))
+    return Dirs(scripts, js_src, source, tooltool)
 
 # Some scripts will be called with sh, which cannot use backslashed
 # paths. So for direct subprocess.* invocation, use normal paths from
@@ -44,12 +46,17 @@ parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
 parser.add_argument('--objdir', type=str, metavar='DIR',
                     default=env.get('OBJDIR', 'obj-spider'),
                     help='object directory')
-parser.add_argument('--skip-tests', '--skip', type=str, metavar='TESTSUITE',
-                    default='',
-                    help="comma-separated set of test suites to remove from the variant's default set")
 parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     default='',
                     help="comma-separated set of test suites to add to the variant's default set")
+parser.add_argument('--skip-tests', '--skip', type=str, metavar='TESTSUITE',
+                    default='',
+                    help="comma-separated set of test suites to remove from the variant's default set")
+parser.add_argument('--build-only', '--build',
+                    dest='skip_tests', action='store_const', const='all',
+                    help="only do a build, do not run any tests")
+parser.add_argument('--nobuild', action='store_true',
+                    help='Do not do a build. Rerun tests on existing build.')
 parser.add_argument('variant', type=str,
                     help='type of job requested, see variants/ subdir')
 args = parser.parse_args()
@@ -98,7 +105,6 @@ def set_vars_from_script(script, vars):
         for var in vars:
             if var in originals and len(originals[var]) > 0:
                 env[var] = "%s;%s" % (env[var], originals[var])
-                print("orig appended, %s = %s" % (var, env[var]))
 
 
 def call_alternates(binaries, command_args, *args, **kwargs):
@@ -132,18 +138,25 @@ if args.variant == 'nonunified':
             subprocess.check_call(['sed', '-i', 's/UNIFIED_SOURCES/SOURCES/',
                                    os.path.join(dirpath, 'moz.build')])
 
-autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
-if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
-    logging.error('autoconf failed')
-    sys.exit(1)
+if not args.nobuild:
+    autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
+    if call_alternates(autoconfs, [], cwd=DIR.js_src) != 0:
+        logging.error('autoconf failed')
+        sys.exit(1)
 
 OBJDIR = os.path.join(DIR.source, args.objdir)
+OUTDIR = os.path.join(OBJDIR, "out")
 POBJDIR = posixpath.join(PDIR.source, args.objdir)
 AUTOMATION = env.get('AUTOMATION', False)
 MAKE = env.get('MAKE', 'make')
-MAKEFLAGS = '-j6'
+MAKEFLAGS = env.get('MAKEFLAGS', '-j6')
 CONFIGURE_ARGS = variant['configure-args']
 UNAME_M = subprocess.check_output(['uname', '-m']).strip()
+
+# Any jobs that wish to produce additional output can save them into the upload
+# directory if there is such a thing, falling back to OBJDIR.
+env.setdefault('MOZ_UPLOAD_DIR', OBJDIR)
+ensure_dir_exists(env['MOZ_UPLOAD_DIR'], clobber=False)
 
 # Some of the variants request a particular word size (eg ARM simulators).
 word_bits = variant.get('bits')
@@ -161,17 +174,30 @@ if word_bits is None and args.platform:
 if word_bits is None:
     word_bits = 64 if UNAME_M == 'x86_64' else 32
 
+if 'compiler' in variant:
+    compiler = variant['compiler']
+elif platform.system() == 'Darwin':
+    compiler = 'clang'
+elif platform.system() == 'Windows':
+    compiler = 'cl'
+else:
+    compiler = 'gcc'
+
+cxx = {'clang': 'clang++', 'gcc': 'g++', 'cl': 'cl'}.get(compiler)
+
+compiler_dir = env.get('GCCDIR', os.path.join(DIR.tooltool, compiler))
+if os.path.exists(os.path.join(compiler_dir, 'bin', compiler)):
+    env.setdefault('CC', os.path.join(compiler_dir, 'bin', compiler))
+    env.setdefault('CXX', os.path.join(compiler_dir, 'bin', cxx))
+    platlib = 'lib64' if word_bits == 64 else 'lib'
+    env.setdefault('LD_LIBRARY_PATH', os.path.join(compiler_dir, platlib))
+else:
+    env.setdefault('CC', compiler)
+    env.setdefault('CXX', cxx)
+
 if platform.system() == 'Darwin':
     set_vars_from_script(os.path.join(DIR.scripts, 'macbuildenv.sh'),
                          ['CC', 'CXX'])
-elif platform.system() == 'Linux':
-    if AUTOMATION:
-        GCCDIR = env.get('GCCDIR', os.path.join(DIR.source, '..', 'gcc'))
-        CONFIGURE_ARGS += ' --with-ccache'
-        env.setdefault('CC', os.path.join(GCCDIR, 'bin', 'gcc'))
-        env.setdefault('CXX', os.path.join(GCCDIR, 'bin', 'g++'))
-        platlib = 'lib64' if word_bits == 64 else 'lib'
-        env.setdefault('LD_LIBRARY_PATH', os.path.join(GCCDIR, platlib))
 elif platform.system() == 'Windows':
     MAKE = env.get('MAKE', 'mozmake')
     os.environ['SOURCE'] = DIR.source
@@ -180,25 +206,26 @@ elif platform.system() == 'Windows':
     set_vars_from_script(posixpath.join(PDIR.scripts, 'winbuildenv.sh'),
                          ['PATH', 'INCLUDE', 'LIB', 'LIBPATH', 'CC', 'CXX'])
 
-if word_bits == 64:
-    if platform.system() == 'Windows':
-        CONFIGURE_ARGS += ' --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32'
-else:
-    if platform.system() == 'Darwin':
+# Compiler flags, based on word length
+if word_bits == 32:
+    if compiler == 'clang':
         env['CC'] = '{CC} -arch i386'.format(**env)
         env['CXX'] = '{CXX} -arch i386'.format(**env)
-    elif platform.system() == 'Windows':
-        CONFIGURE_ARGS += ' --target=i686-pc-mingw32 --host=i686-pc-mingw32'
-    else:
-        env.setdefault('CC', 'gcc')
-        env.setdefault('CXX', 'g++')
+    elif compiler == 'gcc':
         env['CC'] = '{CC} -m32'.format(**env)
         env['CXX'] = '{CXX} -m32'.format(**env)
         env['AR'] = 'ar'
 
-    if platform.system() == 'Linux':
-        if AUTOMATION and UNAME_M != 'arm':
+# Configure flags, based on word length and cross-compilation
+if word_bits == 32:
+    if platform.system() == 'Windows':
+        CONFIGURE_ARGS += ' --target=i686-pc-mingw32 --host=i686-pc-mingw32'
+    elif platform.system() == 'Linux':
+        if UNAME_M != 'arm':
             CONFIGURE_ARGS += ' --target=i686-pc-linux --host=i686-pc-linux'
+else:
+    if platform.system() == 'Windows':
+        CONFIGURE_ARGS += ' --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32'
 
 # Timeouts.
 ACTIVE_PROCESSES = set()
@@ -213,7 +240,8 @@ timer = Timer(args.timeout, killall)
 timer.daemon = True
 timer.start()
 
-ensure_dir_exists(OBJDIR, clobber=not args.dep)
+ensure_dir_exists(OBJDIR, clobber=not args.dep and not args.nobuild)
+ensure_dir_exists(OUTDIR)
 
 
 def run_command(command, check=False, **kwargs):
@@ -229,11 +257,22 @@ def run_command(command, check=False, **kwargs):
         raise subprocess.CalledProcessError(status, command, output=stderr)
     return stdout, stderr, status
 
-CONFIGURE_ARGS += ' --enable-nspr-build'
-CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
-run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
+# Add in environment variable settings for this variant. Normally used to
+# modify the flags passed to the shell or to set the GC zeal mode.
+for k, v in variant.get('env', {}).items():
+    env[k] = v.format(
+        DIR=DIR.scripts,
+        TOOLTOOL_CHECKOUT=DIR.tooltool,
+        MOZ_UPLOAD_DIR=env['MOZ_UPLOAD_DIR'],
+        OUTDIR=OUTDIR,
+    )
 
-run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
+if not args.nobuild:
+    CONFIGURE_ARGS += ' --enable-nspr-build'
+    CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
+    run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
+
+    run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
 
 COMMAND_PREFIX = []
 # On Linux, disable ASLR to make shell builds a bit more reproducible.
@@ -247,10 +286,11 @@ def run_test_command(command, **kwargs):
 
 test_suites = set(['jstests', 'jittest', 'jsapitests', 'checks'])
 
-# Add in environment variable settings for this variant. Normally used to
-# modify the flags passed to the shell or to set the GC zeal mode.
-for k, v in variant.get('env', {}).items():
-    env[k] = v.format(DIR=DIR.scripts)
+
+def normalize_tests(tests):
+    if 'all' in tests:
+        return test_suites
+    return tests
 
 # Need a platform name to use as a key in variant files.
 if args.platform:
@@ -264,17 +304,17 @@ elif platform.system() == 'Darwin':
 else:
     variant_platform = 'other'
 
-# Skip any tests that are not run on this platform.
-test_suites -= set(variant.get('skip-tests', {}).get(variant_platform, []))
-test_suites -= set(variant.get('skip-tests', {}).get('all', []))
+# Skip any tests that are not run on this platform (or the 'all' platform).
+test_suites -= set(normalize_tests(variant.get('skip-tests', {}).get(variant_platform, [])))
+test_suites -= set(normalize_tests(variant.get('skip-tests', {}).get('all', [])))
 
-# Add in additional tests for this platform.
-test_suites |= set(variant.get('extra-tests', {}).get(variant_platform, []))
-test_suites |= set(variant.get('extra-tests', {}).get('all', []))
+# Add in additional tests for this platform (or the 'all' platform).
+test_suites |= set(normalize_tests(variant.get('extra-tests', {}).get(variant_platform, [])))
+test_suites |= set(normalize_tests(variant.get('extra-tests', {}).get('all', [])))
 
 # Now adjust the variant's default test list with command-line arguments.
-test_suites |= set(args.run_tests.split(","))
-test_suites -= set(args.skip_tests.split(","))
+test_suites |= set(normalize_tests(args.run_tests.split(",")))
+test_suites -= set(normalize_tests(args.skip_tests.split(",")))
 
 # Always run all enabled tests, even if earlier ones failed. But return the
 # first failed status.
@@ -293,6 +333,36 @@ if 'jsapitests' in test_suites:
     results.append(run_test_command([jsapi_test_binary]))
 if 'jstests' in test_suites:
     results.append(run_test_command([MAKE, 'check-jstests']))
+
+if args.variant in ('tsan', 'msan'):
+    files = filter(lambda f: f.startswith("sanitize_log."), os.listdir(OUTDIR))
+    fullfiles = [os.path.join(OUTDIR, f) for f in files]
+
+    # Summarize results
+    sites = Counter()
+    for filename in fullfiles:
+        with open(os.path.join(OUTDIR, filename), 'rb') as fh:
+            for line in fh:
+                m = re.match(r'^SUMMARY: \w+Sanitizer: (?:data race|use-of-uninitialized-value) (.*)',
+                             line.strip())
+                if m:
+                    sites[m.group(1)] += 1
+
+    # Write a summary file and display it to stdout.
+    summary_filename = os.path.join(env['MOZ_UPLOAD_DIR'], "%s_summary.txt" % args.variant)
+    with open(summary_filename, 'wb') as outfh:
+        for location, count in sites.most_common():
+            print >> outfh, "%d %s" % (count, location)
+    print(open(summary_filename, 'rb').read())
+
+    # Gather individual results into a tarball. Note that these are
+    # distinguished only by pid of the JS process running within each test, so
+    # given the 16-bit limitation of pids, it's totally possible that some of
+    # these files will be lost due to being overwritten.
+    command = ['tar', '-C', OUTDIR, '-zcf',
+               os.path.join(env['MOZ_UPLOAD_DIR'], '%s.tar.gz' % args.variant)]
+    command += files
+    subprocess.call(command)
 
 for st in results:
     if st != 0:

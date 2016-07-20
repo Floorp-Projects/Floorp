@@ -258,8 +258,6 @@ public class GeckoAppShell
 
     public static native float computeRenderIntegrity();
 
-    public static native SurfaceBits getSurfaceBits(Surface surface);
-
     public static native void addPresentationSurface(Surface surface);
     public static native void removePresentationSurface(Surface surface);
 

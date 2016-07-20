@@ -69,6 +69,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mPriority(PRIORITY_NORMAL)
   , mRedirectionLimit(gHttpHandler->RedirectionLimit())
   , mApplyConversion(true)
+  , mHaveListenerForTraceableChannel(false)
   , mCanceled(false)
   , mIsPending(false)
   , mWasOpened(false)
@@ -2648,6 +2649,7 @@ HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener 
 
   wrapper.forget(_retval);
   mListener = aListener;
+  mHaveListenerForTraceableChannel = true;
   return NS_OK;
 }
 

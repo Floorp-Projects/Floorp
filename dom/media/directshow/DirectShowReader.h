@@ -60,6 +60,8 @@ public:
   RefPtr<SeekPromise>
   Seek(SeekTarget aTarget, int64_t aEndTime) override;
 
+  static const GUID CLSID_MPEG_LAYER_3_DECODER_FILTER;
+
 private:
   // Notifies the filter graph that playback is complete. aStatus is
   // the code to send to the filter graph. Always returns false, so

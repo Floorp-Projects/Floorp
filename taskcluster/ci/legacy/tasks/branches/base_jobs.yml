@@ -129,6 +129,10 @@ builds:
       file_patterns:
        - js/public/**
        - js/src/**
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-nonunified:
     platforms:
       - Linux64

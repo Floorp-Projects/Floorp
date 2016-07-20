@@ -174,6 +174,11 @@ public:
     static void ShutdownLayersIPC();
 
     /**
+     * Initialize ScrollMetadata statics. Does not depend on gfxPlatform.
+     */
+    static void InitNullMetadata();
+
+    /**
      * Create an offscreen surface of the given dimensions
      * and image format.
      */

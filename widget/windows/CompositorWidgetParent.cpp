@@ -11,6 +11,7 @@ namespace widget {
 CompositorWidgetParent::CompositorWidgetParent(const CompositorWidgetInitData& aInitData)
  : WinCompositorWidget(aInitData)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 }
 
 CompositorWidgetParent::~CompositorWidgetParent()
@@ -50,6 +51,30 @@ CompositorWidgetParent::RecvResizeTransparentWindow(const IntSize& aSize)
 {
   ResizeTransparentWindow(aSize);
   return true;
+}
+
+nsIWidget*
+CompositorWidgetParent::RealWidget()
+{
+  return nullptr;
+}
+
+void
+CompositorWidgetParent::ObserveVsync(VsyncObserver* aObserver)
+{
+  if (aObserver) {
+    SendObserveVsync();
+  } else {
+    SendUnobserveVsync();
+  }
+  mVsyncObserver = aObserver;
+}
+
+RefPtr<VsyncObserver>
+CompositorWidgetParent::GetVsyncObserver() const
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
+  return mVsyncObserver;
 }
 
 void

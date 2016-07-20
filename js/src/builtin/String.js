@@ -295,12 +295,13 @@ function String_split(separator, limit) {
     // Step 3.
     var S = ToString(this);
 
-    // Step 9 (reordered).
-    var R = ToString(separator);
-
     // Step 6.
+    var R;
     if (limit !== undefined) {
         var lim = limit >>> 0;
+
+        // Step 9.
+        R = ToString(separator);
 
         // Step 10.
         if (lim === 0)
@@ -313,6 +314,9 @@ function String_split(separator, limit) {
         // Steps 4, 8, 12-18.
         return StringSplitStringLimit(S, R, lim);
     }
+
+    // Step 9.
+    R = ToString(separator);
 
     // Step 11.
     if (separator === undefined)

@@ -9,7 +9,6 @@
  */
 
 #include "libyuv/convert.h"
-#include "libyuv/convert_argb.h"
 
 #ifdef HAVE_JPEG
 #include "libyuv/mjpeg_decoder.h"
@@ -219,7 +218,7 @@ int MJPGToI420(const uint8* sample,
       return 1;
     }
   }
-  return ret ? 0 : 1;
+  return ret ? 0 : -1;
 }
 
 #ifdef HAVE_JPEG
@@ -381,7 +380,7 @@ int MJPGToARGB(const uint8* sample,
       return 1;
     }
   }
-  return ret ? 0 : 1;
+  return ret ? 0 : -1;
 }
 #endif
 

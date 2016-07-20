@@ -52,8 +52,6 @@ public:
     size_t CalcNumSamplerUniforms() const;
     size_t NumAttributes() const;
     void BindAttribLocation(GLuint prog, const nsCString& userName, GLuint index) const;
-    bool FindActiveOutputMappedNameByUserName(const nsACString& userName,
-                                              nsCString* const out_mappedName) const;
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
                                         nsDependentCString* const out_userName) const;
     bool FindVaryingByMappedName(const nsACString& mappedName,
@@ -65,6 +63,8 @@ public:
     bool FindUniformBlockByMappedName(const nsACString& mappedName,
                                       nsCString* const out_userName,
                                       bool* const out_isArray) const;
+
+    void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 
     bool IsCompiled() const {
         return mTranslationSuccessful && mCompilationSuccessful;

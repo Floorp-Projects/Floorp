@@ -1034,7 +1034,6 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
 
   if (!uploadTarget) {
     if (type.EqualsASCII(sEventStrings[STRING_loadstart])) {
-      NS_ASSERTION(!mMainThreadSeenLoadStart, "Huh?!");
       mMainThreadSeenLoadStart = true;
     }
     else if (mMainThreadSeenLoadStart &&
@@ -1488,10 +1487,9 @@ SendRunnable::RunOnMainThread(ErrorResult& aRv)
     variant = wvariant;
   }
 
-  // Send() has been already called.
+  // Send() has been already called, reset the proxy.
   if (mProxy->mWorkerPrivate) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
+    mProxy->Reset();
   }
 
   mProxy->mWorkerPrivate = mWorkerPrivate;
