@@ -30,7 +30,7 @@ RemoteCompositorSession::SetContentController(GeckoContentController* aControlle
   MOZ_CRASH("NYI");
 }
 
-already_AddRefed<APZCTreeManager>
+already_AddRefed<IAPZCTreeManager>
 RemoteCompositorSession::GetAPZCTreeManager() const
 {
   return nullptr;
