@@ -1242,6 +1242,8 @@ class DebuggerObject : public NativeObject
                                                MutableHandleObject result);
     static MOZ_MUST_USE bool unwrap(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandle<DebuggerObject*> result);
+    static MOZ_MUST_USE bool isPromise(JSContext* cx, Handle<DebuggerObject*> object,
+                                       bool& result);
 
     // Infallible properties
     bool isCallable() const;
@@ -1250,7 +1252,6 @@ class DebuggerObject : public NativeObject
     bool isBoundFunction() const;
     bool isArrowFunction() const;
     bool isGlobal() const;
-    bool isPromise() const;
     JSAtom* name() const;
     JSAtom* displayName() const;
 
