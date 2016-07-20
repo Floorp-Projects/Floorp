@@ -451,21 +451,21 @@ InspectorPanel.prototype = {
     }
 
     this.setupSidebarToggle();
-    this.setupSidebarSize();
+    this.setupSidebarWidth();
 
     this.sidebar.show(defaultTab);
   },
 
   /**
-   * Sidebar size is currently driven by vbox.inspector-sidebar-container
-   * element, which is located at the left/bottom side of the side bar splitter.
-   * Its size is changed by the splitter and stored into preferences.
+   * Sidebar width is currently driven by vbox.inspector-sidebar-container
+   * element, which is located at the left side of the side bar splitter.
+   * It's width is changed by the splitter and stored into preferences.
    * As soon as bug 1260552 is fixed and new HTML based splitter in place
-   * the size can be driven by div.inspector-sidebar element. This element
-   * represents the ToolSidebar and so, the entire logic related to size
+   * the width can be driven by div.inspector-sidebar element. This element
+   * represents the ToolSidebar and so, the entire logic related to width
    * persistence can be done inside the ToolSidebar.
    */
-  setupSidebarSize: function () {
+  setupSidebarWidth: function () {
     let sidePaneContainer = this.panelDoc.querySelector(
       "#inspector-sidebar-container");
 
@@ -473,31 +473,21 @@ InspectorPanel.prototype = {
       try {
         sidePaneContainer.width = Services.prefs.getIntPref(
           "devtools.toolsidebar-width.inspector");
-        sidePaneContainer.height = Services.prefs.getIntPref(
-          "devtools.toolsidebar-height.inspector");
       } catch (e) {
         // The default width is the min-width set in CSS
         // for #inspector-sidebar-container
-        // Set width and height of the sidebar container. Only one
-        // value is really useful at a time depending on the current
-        // toolbox orientation and having both doesn't break anything.
         sidePaneContainer.width = 450;
-        sidePaneContainer.height = 450;
       }
     });
 
     this.sidebar.on("hide", () => {
       Services.prefs.setIntPref("devtools.toolsidebar-width.inspector",
         sidePaneContainer.width);
-      Services.prefs.setIntPref("devtools.toolsidebar-height.inspector",
-        sidePaneContainer.height);
     });
 
     this.sidebar.on("destroy", () => {
       Services.prefs.setIntPref("devtools.toolsidebar-width.inspector",
-        sidePaneContainer.height);
-      Services.prefs.setIntPref("devtools.toolsidebar-height.inspector",
-        sidePaneContainer.height);
+        sidePaneContainer.width);
     });
   },
 
