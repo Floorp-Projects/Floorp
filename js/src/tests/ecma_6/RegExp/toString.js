@@ -27,11 +27,16 @@ var a = [];
 var p = new Proxy({}, {
   get(that, name) {
     a.push(name);
-    return name;
+    return {
+      toString() {
+        a.push(name + "-tostring");
+        return name;
+      }
+    };
   }
 });
 assertEq(RegExp.prototype.toString.call(p), "/source/flags");
-assertEq(a.join(","), "source,flags");
+assertEq(a.join(","), "source,source-tostring,flags,flags-tostring");
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
