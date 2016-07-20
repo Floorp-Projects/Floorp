@@ -339,6 +339,11 @@ case "$target" in
             CFLAGS="$CFLAGS -wd4091"
             CXXFLAGS="$CXXFLAGS -wd4091"
 
+            # This is intended as a temporary hack to support building with VS2015.
+            # 'noexcept' used with no exception handling mode specified;
+            # termination on exception is not guaranteed. Specify /EHsc
+            CXXFLAGS="$CXXFLAGS -wd4577"
+
             if test -n "$WIN_UCRT_REDIST_DIR"; then
               if test ! -d "$WIN_UCRT_REDIST_DIR"; then
                 AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
