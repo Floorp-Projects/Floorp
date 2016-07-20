@@ -199,25 +199,17 @@ public:
   virtual uint16_t ReadyState() const override;
 
   // request
+  nsresult InitChannel();
+
   virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl,
-       ErrorResult& aRv) override
-  {
-    Open(aMethod, aUrl, true,
-         Optional<nsAString>(),
-         Optional<nsAString>(),
-         aRv);
-  }
+       ErrorResult& aRv) override;
 
   virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
        const Optional<nsAString>& aUser,
        const Optional<nsAString>& aPassword,
-       ErrorResult& aRv) override
-  {
-    aRv = Open(aMethod, NS_ConvertUTF16toUTF8(aUrl),
-               aAsync, aUser, aPassword);
-  }
+       ErrorResult& aRv) override;
 
   virtual void
   SetRequestHeader(const nsACString& aName, const nsACString& aValue,
@@ -610,15 +602,19 @@ protected:
 
   nsresult OnRedirectVerifyCallback(nsresult result);
 
-  nsresult Open(const nsACString& method, const nsACString& url, bool async,
-                const Optional<nsAString>& user,
-                const Optional<nsAString>& password);
+  nsresult OpenInternal(const nsACString& aMethod,
+                        const nsACString& aUrl,
+                        const Optional<bool>& aAsync,
+                        const Optional<nsAString>& aUsername,
+                        const Optional<nsAString>& aPassword);
 
   already_AddRefed<nsXMLHttpRequestXPCOMifier> EnsureXPCOMifier();
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
+  nsCString mRequestMethod;
+  nsCOMPtr<nsIURI> mRequestURL;
   nsCOMPtr<nsIDocument> mResponseXML;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
