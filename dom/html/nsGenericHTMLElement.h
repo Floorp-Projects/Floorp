@@ -1400,7 +1400,7 @@ public:
    * Called when we have been cloned and adopted, and the information of the
    * node has been changed.
    */
-  virtual void NodeInfoChanged(mozilla::dom::NodeInfo* aOldNodeInfo) override;
+  virtual void NodeInfoChanged() override;
 
 protected:
   /* Generates the state key for saving the form state in the session if not
