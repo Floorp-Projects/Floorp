@@ -568,9 +568,36 @@ add_test(function test_filter_duplicate_names() {
     deepEqual(user.collection("clients").keys().sort(),
               [recentID, dupeID, oldID, engine.localID].sort(),
               "Our record should be uploaded on first sync");
+
     deepEqual(Object.keys(store.getAllIDs()).sort(),
-              [recentID, oldID, engine.localID].sort(),
-              "Fresh clients should be downloaded on first sync");
+              [recentID, dupeID, oldID, engine.localID].sort(),
+              "Duplicate ID should remain in getAllIDs");
+    ok(engine._store.itemExists(dupeID), "Dupe ID should be considered as existing for Sync methods.");
+
+    // dupe desktop should not appear in .deviceTypes.
+    equal(engine.deviceTypes.get("desktop"), 2);
+    equal(engine.deviceTypes.get("mobile"), 1);
+
+    // dupe desktop should not appear in stats
+    deepEqual(engine.stats, {
+      hasMobile: 1,
+      names: [engine.localName, "My Phone", "My old desktop"],
+      numClients: 3,
+    });
+
+    // Check that a subsequent Sync doesn't report anything as being processed.
+    let counts;
+    Svc.Obs.add("weave:engine:sync:applied", function observe(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:applied", observe);
+      counts = subject;
+    });
+
+    engine._sync();
+    equal(counts.applied, 0); // We didn't report applying any records.
+    equal(counts.reconciled, 4); // We reported reconcilliation for all records
+    equal(counts.succeeded, 0);
+    equal(counts.failed, 0);
+    equal(counts.newFailed, 0);
 
     _("Broadcast logout to all clients");
     engine.sendCommand("logout", []);
@@ -605,6 +632,17 @@ add_test(function test_filter_duplicate_names() {
     deepEqual(Object.keys(store.getAllIDs()).sort(),
               [recentID, oldID, dupeID, engine.localID].sort(),
               "Stale client synced, so it should no longer be marked as a dupe");
+
+    // Recently synced dupe desktop should appear in .deviceTypes.
+    equal(engine.deviceTypes.get("desktop"), 3);
+
+    // Recently synced dupe desktop should now appear in stats
+    deepEqual(engine.stats, {
+      hasMobile: 1,
+      names: [engine.localName, "My Phone", engine.localName, "My old desktop"],
+      numClients: 4,
+    });
+
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
