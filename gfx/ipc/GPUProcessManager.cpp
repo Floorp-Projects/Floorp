@@ -8,6 +8,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -354,6 +355,33 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
     if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
       return false;
   }
+
+  *aOutEndpoint = Move(childPipe);
+  return true;
+}
+
+bool
+GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
+                                            ipc::Endpoint<PImageBridgeChild>* aOutEndpoint)
+{
+  EnsureImageBridgeChild();
+
+  base::ProcessId gpuPid = base::GetCurrentProcId();
+
+  ipc::Endpoint<PImageBridgeParent> parentPipe;
+  ipc::Endpoint<PImageBridgeChild> childPipe;
+  nsresult rv = PImageBridge::CreateEndpoints(
+    gpuPid,
+    aOtherProcess,
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Could not create content compositor bridge: " << hexa(int(rv));
+    return false;
+  }
+
+  if (!ImageBridgeParent::CreateForContent(Move(parentPipe)))
+    return false;
 
   *aOutEndpoint = Move(childPipe);
   return true;
