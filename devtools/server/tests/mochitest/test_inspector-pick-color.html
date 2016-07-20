@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the inspector actor has the pickColorFromPage and cancelPickColorFromPage
+methods and that when a color is picked the color-picked event is emitted and that when
+the eyedropper is dimissed, the color-pick-canceled event is emitted.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1262439
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1262439</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  const Cu = Components.utils;
+  Cu.import("resource://devtools/shared/Loader.jsm");
+  const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+  const {InspectorFront} = devtools.require("devtools/shared/fronts/inspector");
+  const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+
+  SimpleTest.waitForExplicitFinish();
+
+  let win = null;
+  let inspector = null;
+
+  addAsyncTest(function*() {
+    info("Setting up inspector actor");
+
+    let url = document.getElementById("inspectorContent").href;
+
+    yield new Promise(resolve => {
+      attachURL(url, function(err, client, tab, doc) {
+        win = doc.defaultView;
+        inspector = InspectorFront(client, tab);
+        resolve();
+      });
+    });
+
+    runNextTest();
+  });
+
+  addAsyncTest(function*() {
+    info("Start picking a color from the page");
+    yield inspector.pickColorFromPage();
+
+    info("Click in the page and make sure a color-picked event is received");
+    let onColorPicked = waitForEvent("color-picked");
+    win.document.body.click();
+    let color = yield onColorPicked;
+
+    is(color, "#000000", "The color-picked event was received with the right color");
+
+    runNextTest();
+  });
+
+  addAsyncTest(function*() {
+    info("Start picking a color from the page");
+    yield inspector.pickColorFromPage();
+
+    info("Use the escape key to dismiss the eyedropper");
+    let onPickCanceled = waitForEvent("color-pick-canceled");
+
+    let keyboardEvent = win.document.createEvent("KeyboardEvent");
+    keyboardEvent.initKeyEvent("keydown", true, true, win, false, false,
+                               false, false, 27, 0);
+    win.document.dispatchEvent(keyboardEvent);
+
+    yield onPickCanceled;
+    ok(true, "The color-pick-canceled event was received");
+
+    runNextTest();
+  });
+
+  addAsyncTest(function*() {
+    info("Start picking a color from the page");
+    yield inspector.pickColorFromPage();
+
+    info("And cancel the color picking");
+    yield inspector.cancelPickColorFromPage();
+
+    runNextTest();
+  });
+
+  function waitForEvent(name) {
+    return new Promise(resolve => inspector.once(name, resolve));
+  }
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a id="inspectorContent" target="_blank" href="inspector-eyedropper.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
