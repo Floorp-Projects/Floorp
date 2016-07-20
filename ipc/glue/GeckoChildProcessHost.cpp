@@ -1117,9 +1117,10 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     base::LaunchApp(cmdLine, false, false, &process);
 
 #ifdef MOZ_SANDBOX
-    // We need to be able to duplicate handles to non-sandboxed content
+    // We need to be able to duplicate handles to non-sandboxed content and GMP
     // processes, so add it as a target peer.
-    if (mProcessType == GeckoProcessType_Content) {
+    if (mProcessType == GeckoProcessType_Content ||
+        mProcessType == GeckoProcessType_GMPlugin) {
       if (!mSandboxBroker.AddTargetPeer(process)) {
         NS_WARNING("Failed to add content process as target peer.");
       }
