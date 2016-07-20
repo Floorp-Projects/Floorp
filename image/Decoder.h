@@ -343,7 +343,7 @@ protected:
   // this frame.
   void PostFrameStop(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
                      DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
-                     FrameTimeout aTimeout = FrameTimeout::FromRawMilliseconds(0),
+                     FrameTimeout aTimeout = FrameTimeout::Forever(),
                      BlendMethod aBlendMethod = BlendMethod::OVER,
                      const Maybe<nsIntRect>& aBlendRect = Nothing());
 
@@ -427,6 +427,7 @@ private:
   Progress mProgress;
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
+  FrameTimeout mLoopLength;  // Length of a single loop of this image.
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;

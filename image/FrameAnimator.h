@@ -87,6 +87,16 @@ public:
   void SetLoopCount(int32_t aLoopCount) { mLoopCount = aLoopCount; }
   int32_t LoopCount() const { return mLoopCount; }
 
+  /// Set the @aLength of a single loop through this image.
+  void SetLoopLength(FrameTimeout aLength) { mLoopLength = Some(aLength); }
+
+  /**
+   * @return the length of a single loop of this image. If this image is not
+   * finished decoding, is not animated, or it is animated but does not loop,
+   * returns FrameTimeout::Forever().
+   */
+  FrameTimeout LoopLength() const;
+
   /*
    * Get or set the timeout for the first frame. This is used to allow animation
    * scheduling even before a full decode runs for this image.
@@ -111,6 +121,9 @@ private:
 
   //! The total number of loops for the image.
   int32_t mLoopCount;
+
+  //! The length of a single loop through this image.
+  Maybe<FrameTimeout> mLoopLength;
 
   //! The timeout for the first frame of this image.
   FrameTimeout mFirstFrameTimeout;
@@ -209,13 +222,6 @@ private: // methods
    * Get the @aIndex-th frame in the frame index, ignoring results of blending.
    */
   RawAccessFrameRef GetRawFrame(uint32_t aFrameNum) const;
-
-  /**
-   * @return the length of a single loop of this image, as a FrameTimeout value
-   * in milliseconds. If this image is not finished decoding, is not animated,
-   * or it is animated but does not loop, returns FrameTimeout::Forever().
-   */
-  FrameTimeout GetSingleLoopTime(AnimationState& aState) const;
 
   /// @return the given frame's timeout.
   FrameTimeout GetTimeoutForFrame(uint32_t aFrameNum) const;

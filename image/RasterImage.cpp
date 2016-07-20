@@ -874,6 +874,10 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
   if (mAnimationState) {
     mAnimationState->SetLoopCount(aMetadata.GetLoopCount());
     mAnimationState->SetFirstFrameTimeout(aMetadata.GetFirstFrameTimeout());
+
+    if (aMetadata.HasLoopLength()) {
+      mAnimationState->SetLoopLength(aMetadata.GetLoopLength());
+    }
   }
 
   if (aMetadata.HasHotspot()) {
