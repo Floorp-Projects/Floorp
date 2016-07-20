@@ -360,7 +360,9 @@ class MochitestB2G(MochitestBase):
         options.logFile = self.local_log
 
 
-def run_test_harness(options):
+def run_test_harness(parser, options):
+    parser.validate(options)
+
     # create our Marionette instance
     marionette_args = {
         'adb_path': options.adbPath,
@@ -413,7 +415,7 @@ def run_test_harness(options):
 def main():
     parser = MochitestArgumentParser(app='b2g')
     options = parser.parse_args()
-    return run_test_harness(options)
+    return run_test_harness(parser, options)
 
 if __name__ == "__main__":
     sys.exit(main())
