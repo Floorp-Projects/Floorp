@@ -2437,7 +2437,6 @@ tls13_SendCertificateVerify(sslSocket *ss, SECKEYPrivateKey *privKey)
 {
     SECStatus rv = SECFailure;
     SECItem buf = { siBuffer, NULL, 0 };
-    KeyType keyType;
     unsigned int len;
     SSLSignatureAndHashAlg sigAndHash;
     TLS13CombinedHash hash;
@@ -2455,13 +2454,30 @@ tls13_SendCertificateVerify(sslSocket *ss, SECKEYPrivateKey *privKey)
         return SECFailure;
     }
 
-    rv = tls13_AddContextToHashes(ss, &hash, tls13_GetHash(ss), PR_TRUE,
+    if (ss->sec.isServer) {
+        rv = ssl3_PickSignatureHashAlgorithm(ss, &sigAndHash);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+    } else {
+        PORT_Assert(ss->ssl3.hs.tls12CertVerifyHash != ssl_hash_none);
+        if (ss->ssl3.hs.tls12CertVerifyHash == ssl_hash_none) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            return SECFailure;
+        }
+        sigAndHash.hashAlg = ss->ssl3.hs.tls12CertVerifyHash;
+        rv = ssl3_TLSSignatureAlgorithmForKeyType(privKey->keyType,
+                                                  &sigAndHash.sigAlg);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+    }
+    rv = tls13_AddContextToHashes(ss, &hash, sigAndHash.hashAlg, PR_TRUE,
                                   &tbsHash);
     if (rv != SECSuccess) {
         return SECFailure;
     }
 
-    keyType = privKey->keyType;
     rv = ssl3_SignHashes(&tbsHash, privKey, &buf, PR_TRUE);
     if (rv == SECSuccess && !ss->sec.isServer) {
         /* Remember the info about the slot that did the signing.
@@ -2488,13 +2504,7 @@ tls13_SendCertificateVerify(sslSocket *ss, SECKEYPrivateKey *privKey)
     if (rv != SECSuccess) {
         goto done; /* error code set by AppendHandshake */
     }
-    rv = ssl3_TLSSignatureAlgorithmForKeyType(keyType,
-                                              &sigAndHash.sigAlg);
-    if (rv != SECSuccess) {
-        goto done;
-    }
 
-    sigAndHash.hashAlg = tbsHash.hashAlg;
     rv = ssl3_AppendSignatureAndHashAlgorithm(ss, &sigAndHash);
     if (rv != SECSuccess) {
         goto done; /* err set by AppendHandshake. */
@@ -2538,19 +2548,6 @@ tls13_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
     }
     PORT_Assert(hashes);
 
-    /* We only support CertificateVerify messages that use the handshake
-     * hash.
-     * TODO(ekr@rtfm.com): This should be easy to relax in TLS 1.3 by
-     * reading the client's hash algorithm first, but there may
-     * be subtleties so retain the restriction for now.
-     */
-    rv = tls13_AddContextToHashes(ss, hashes, tls13_GetHash(ss), PR_FALSE,
-                                  &tbsHash);
-    if (rv != SECSuccess) {
-        FATAL_ERROR(ss, SSL_ERROR_DIGEST_FAILURE, internal_error);
-        return SECFailure;
-    }
-
     rv = ssl3_ConsumeSignatureAndHashAlgorithm(ss, &b, &length,
                                                &sigAndHash);
     if (rv != SECSuccess) {
@@ -2565,10 +2562,10 @@ tls13_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
         return SECFailure;
     }
 
-    /* We only support CertificateVerify messages that use the handshake
-     * hash. TODO(ekr@rtfm.com): bug 1179338. */
-    if (sigAndHash.hashAlg != tls13_GetHash(ss)) {
-        FATAL_ERROR(ss, SSL_ERROR_UNSUPPORTED_HASH_ALGORITHM, decrypt_error);
+    rv = tls13_AddContextToHashes(ss, hashes, sigAndHash.hashAlg, PR_FALSE,
+                                  &tbsHash);
+    if (rv != SECSuccess) {
+        FATAL_ERROR(ss, SSL_ERROR_DIGEST_FAILURE, internal_error);
         return SECFailure;
     }
 
@@ -3197,6 +3194,7 @@ static const struct {
     { ssl_tls13_early_data_xtn, ExtensionSendClear },
     { ssl_next_proto_nego_xtn, ExtensionNotUsed },
     { ssl_renegotiation_info_xtn, ExtensionNotUsed },
+    { ssl_signed_cert_timestamp_xtn, ExtensionSendEncrypted },
     { ssl_tls13_draft_version_xtn, ExtensionClientOnly }
 };
 
