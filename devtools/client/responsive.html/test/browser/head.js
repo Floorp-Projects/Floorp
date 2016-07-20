@@ -135,14 +135,14 @@ var setViewportSize = Task.async(function* (ui, manager, width, height) {
 function openDeviceModal(ui) {
   let { document } = ui.toolWindow;
   let select = document.querySelector(".viewport-device-selector");
-  let modal = document.querySelector(".device-modal");
+  let modal = document.querySelector("#device-modal-wrapper");
   let editDeviceOption = [...select.options].filter(o => {
     return o.value === OPEN_DEVICE_MODAL_VALUE;
   })[0];
 
   info("Checking initial device modal state");
-  ok(modal.classList.contains("hidden"),
-    "The device modal is hidden by default.");
+  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
+    "The device modal is closed by default.");
 
   info("Opening device modal through device selector.");
   EventUtils.synthesizeMouseAtCenter(select, {type: "mousedown"},
@@ -150,7 +150,7 @@ function openDeviceModal(ui) {
   EventUtils.synthesizeMouseAtCenter(editDeviceOption, {type: "mouseup"},
     ui.toolWindow);
 
-  ok(!modal.classList.contains("hidden"),
+  ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
     "The device modal is displayed.");
 }
 

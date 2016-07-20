@@ -1921,9 +1921,9 @@ nsGenericHTMLElement::SetUndoScopeInternal(bool aUndoScope)
 
 // static
 bool
-nsGenericHTMLElement::TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */)
+nsGenericHTMLElement::TouchEventsEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  return TouchEvent::PrefEnabled();
+  return TouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
 //----------------------------------------------------------------------

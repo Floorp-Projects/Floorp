@@ -53,7 +53,8 @@ nsICODecoder::GetNumColors()
 
 nsICODecoder::nsICODecoder(RasterImage* aImage)
   : Decoder(aImage)
-  , mLexer(Transition::To(ICOState::HEADER, ICOHEADERSIZE))
+  , mLexer(Transition::To(ICOState::HEADER, ICOHEADERSIZE),
+           Transition::TerminateSuccess())
   , mBiggestResourceColorDepth(0)
   , mBestResourceDelta(INT_MIN)
   , mBestResourceColorDepth(0)

@@ -1038,6 +1038,10 @@ private:
   // has been called without a matching NotifyRunToCompletionStop.
   uint32_t mJSRunToCompletionDepth;
 
+  // Whether or not touch events are overridden. Possible values are defined
+  // as constants in the nsIDocShell.idl file.
+  uint32_t mTouchEventsOverride;
+
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
   nsresult DoFindItemWithName(const char16_t* aName,

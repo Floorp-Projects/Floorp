@@ -12,8 +12,7 @@
 
 // This test append data to a mediasource and then seek to half the duration
 // of the video.
-// We then shorten the video to 1/3rd of its original size by modifying the
-// mediasource.duration attribute.
+// We then shorten the video to 1/3rd of its original size.
 // We ensure that the buffered range immediately reflect the truncation
 // and that we've seeked to the new end of the media as per W3C spec and
 // video.currentTime got updated.
@@ -34,27 +33,35 @@ function do_seeked(e) {
   var v = e.target;
   v.removeEventListener("seeked", do_seeked, false);
   var duration = round(v.duration / 3);
-  v._ms.duration = duration
-  v._sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
-  ok(v.seeking, "seeking is true");
-  // test playback position was updated (bug 1130839).
-  is(v.currentTime, duration, "current time was updated");
-  is(v.duration, duration, "element duration was updated");
-  is(v._sb.buffered.length, 1, "One buffered range");
-  // Truncated mediasource duration will cause the video element to seek.
-  v.addEventListener("seeking", do_seeking, false);
+  is(v._sb.updating, false, "sourcebuffer isn't updating");
+  v._sb.remove(duration, Infinity);
+  once(v._sb, "updateend", function() {
+    v._ms.duration = duration
+    // frames aren't truncated, so duration may be slightly more.
+    isfuzzy(v.duration, duration, 1/30, "element duration was updated");
+    v._sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
+    ok(v.seeking, "seeking is true");
+    // test playback position was updated (bug 1130839).
+    is(v.currentTime, v.duration, "current time was updated");
+    is(v._sb.buffered.length, 1, "One buffered range");
+    // Truncated mediasource duration will cause the video element to seek.
+    v.addEventListener("seeking", do_seeking, false);
+  });
 }
 
 function do_loaded(e) {
   var v = e.target;
   v.removeEventListener("loadeddata", do_loaded, false);
   // mp4 metadata states 10s when we only have 1.6s worth of video.
-  v._ms.duration = v._sb.buffered.end(0);
-  is(v.duration, v._ms.duration, "current time updated with mediasource duration");
-  v.currentTime = v.duration / 2;
-  is(v.currentTime, v.duration / 2, "current time was updated");
-  ok(v.seeking, "seeking is true");
-  v.addEventListener("seeked", do_seeked, false);
+  v._sb.remove(v._sb.buffered.end(0), Infinity);
+  once(v._sb, "updateend", function() {
+    v._ms.duration = v._sb.buffered.end(0);
+    is(v.duration, v._ms.duration, "current time updated with mediasource duration");
+    v.currentTime = v.duration / 2;
+    is(v.currentTime, v.duration / 2, "current time was updated");
+    ok(v.seeking, "seeking is true");
+    v.addEventListener("seeked", do_seeked, false);
+  });
 }
 
 runWithMSE(function (ms, v) {

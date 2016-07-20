@@ -70,5 +70,15 @@ CompositorWidget::GetGLFrameBufferFormat()
   return LOCAL_GL_RGBA;
 }
 
+RefPtr<VsyncObserver>
+CompositorWidget::GetVsyncObserver() const
+{
+  // This should only used when the widget is in the GPU process, and should be
+  // implemented by IPDL-enabled CompositorWidgets.
+  // GPU process does not have a CompositorVsyncDispatcher.
+  MOZ_ASSERT_UNREACHABLE("Must be implemented by derived class");
+  return nullptr;
+}
+
 } // namespace widget
 } // namespace mozilla

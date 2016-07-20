@@ -20,6 +20,7 @@ LOCAL_INCLUDES += [
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += [ 'tests/chrome.ini' ]
+BROWSER_CHROME_MANIFESTS += [ 'tests/browser.ini' ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

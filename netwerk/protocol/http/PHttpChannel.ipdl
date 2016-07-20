@@ -99,7 +99,8 @@ child:
                        NetAddr             selfAddr,
                        NetAddr             peerAddr,
                        int16_t             redirectCount,
-                       uint32_t            cacheKey);
+                       uint32_t            cacheKey,
+                       bool                contentDecodingWillBeCalledOnParent);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

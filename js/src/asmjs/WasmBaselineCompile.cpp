@@ -5200,7 +5200,7 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
                              ? mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]]
                              : mg_.tables[0];
 
-    funcPtrCall(sig, sigIndex, table.length, table.globalDataOffset, callee, baselineCall);
+    funcPtrCall(sig, sigIndex, table.initial, table.globalDataOffset, callee, baselineCall);
 
     endCall(baselineCall);
 

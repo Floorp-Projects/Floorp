@@ -121,7 +121,8 @@ protected:
                           const NetAddr& selfAddr,
                           const NetAddr& peerAddr,
                           const int16_t& redirectCount,
-                          const uint32_t& cacheKey) override;
+                          const uint32_t& cacheKey,
+                          const bool& contentDecodingWillBeCalledOnParent) override;
   bool RecvOnTransportAndData(const nsresult& channelStatus,
                               const nsresult& status,
                               const uint64_t& progress,

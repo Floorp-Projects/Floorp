@@ -1,0 +1,26 @@
+[
+{
+"version": "gcc 4.8.5 + PR64905",
+"size": 80160264,
+"digest": "c1a9dc9da289b8528874d16300b9d13a997cec99195bb0bc46ff665216d8535d6d6cb5af6b4b1f2749af6815dab12e703fdb3849014e5c23a70eff351a0baf4e",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": true
+},
+{
+"version": "clang 3.8.0, libgcc 4.8.5",
+"size": 139183100,
+"digest": "a056a151d4f25f415b6d905136c3fa8d51d12a5a815c3df37d5663c67d59571736641a4c990884a69f78ea6b5e37a6a7bfff0417dfe38936d842d6fa0776ae54",
+"algorithm": "sha512",
+"filename": "clang.tar.xz",
+"unpack": true
+},
+{
+"size": 12072532,
+"digest": "3915f8ec396c56a8a92e6f9695b70f09ce9d1582359d1258e37e3fd43a143bc974410e4cfc27f500e095f34a8956206e0ebf799b7287f0f38def0d5e34ed71c9",
+"algorithm": "sha512",
+"filename": "gtk3.tar.xz",
+"setup": "setup.sh",
+"unpack": true
+}
+]

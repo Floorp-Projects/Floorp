@@ -89,6 +89,11 @@ USE_LIBS += [
     'zlib',
 ]
 
+if CONFIG['BUILD_ARM_NEON']:
+    USE_LIBS += [
+        'yuv_neon',
+    ]
+
 if CONFIG['JS_SHARED_LIBRARY']:
     USE_LIBS += [
         'js',

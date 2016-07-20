@@ -31,7 +31,6 @@ loader.lazyRequireGetter(this, "ComputedViewTool", "devtools/client/inspector/co
 loader.lazyRequireGetter(this, "FontInspector", "devtools/client/inspector/fonts/fonts", true);
 loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
-loader.lazyRequireGetter(this, "LayoutView", "devtools/client/inspector/layout/layout", true);
 loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup", true);
 loader.lazyRequireGetter(this, "RuleViewTool", "devtools/client/inspector/rules/rules", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
@@ -423,11 +422,6 @@ InspectorPanel.prototype = {
       strings.GetStringFromName("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
-    this.sidebar.addExistingTab(
-      "layoutview",
-      strings.GetStringFromName("inspector.sidebar.layoutViewTitle"),
-      defaultTab == "layoutview");
-
     this._setDefaultSidebar = (event, toolId) => {
       Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
     };
@@ -436,7 +430,6 @@ InspectorPanel.prototype = {
 
     this.ruleview = new RuleViewTool(this, this.panelWin);
     this.computedview = new ComputedViewTool(this, this.panelWin);
-    this.layoutview = new LayoutView(this, this.panelWin);
 
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
@@ -750,10 +743,6 @@ InspectorPanel.prototype = {
 
     if (this.fontInspector) {
       this.fontInspector.destroy();
-    }
-
-    if (this.layoutview) {
-      this.layoutview.destroy();
     }
 
     let cssPropertiesDestroyer = this._cssPropertiesLoaded.then(({front}) => {

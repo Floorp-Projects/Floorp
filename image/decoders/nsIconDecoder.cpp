@@ -17,7 +17,8 @@ static const uint32_t ICON_HEADER_SIZE = 2;
 
 nsIconDecoder::nsIconDecoder(RasterImage* aImage)
  : Decoder(aImage)
- , mLexer(Transition::To(State::HEADER, ICON_HEADER_SIZE))
+ , mLexer(Transition::To(State::HEADER, ICON_HEADER_SIZE),
+          Transition::TerminateSuccess())
  , mBytesPerRow()   // set by ReadHeader()
 {
   // Nothing to do

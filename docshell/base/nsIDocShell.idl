@@ -1114,4 +1114,22 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript,notxpcom,nostdcall] TabChildRef GetTabChild();
 
   [noscript,nostdcall,notxpcom] nsICommandManager GetCommandManager();
+
+  /**
+   * This allows chrome to override the default choice of whether touch events
+   * are available on a specific docshell. Possible values are listed below.
+   */
+  attribute unsigned long touchEventsOverride;
+  /**
+   * Override platform/pref default behaviour and force-disable touch events.
+   */
+  const unsigned long TOUCHEVENTS_OVERRIDE_DISABLED = 0;
+  /**
+   * Override platform/pref default behaviour and force-enable touch events.
+   */
+  const unsigned long TOUCHEVENTS_OVERRIDE_ENABLED = 1;
+  /**
+   * Don't override the platform/pref default behaviour for touch events.
+   */
+  const unsigned long TOUCHEVENTS_OVERRIDE_NONE = 2;
 };

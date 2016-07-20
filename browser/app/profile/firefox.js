@@ -1371,8 +1371,10 @@ pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/fi
 // Enable Contextual Identity Containers
 #ifdef NIGHTLY_BUILD
 pref("privacy.userContext.enabled", true);
+pref("privacy.userContext.ui.enabled", true);
 #else
 pref("privacy.userContext.enabled", false);
+pref("privacy.userContext.ui.enabled", false);
 #endif
 
 #ifndef RELEASE_BUILD

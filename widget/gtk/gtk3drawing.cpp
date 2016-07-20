@@ -34,9 +34,6 @@ static GtkWidget* gComboBoxEntryWidget;
 static GtkWidget* gComboBoxEntryTextareaWidget;
 static GtkWidget* gComboBoxEntryButtonWidget;
 static GtkWidget* gComboBoxEntryArrowWidget;
-static GtkWidget* gHandleBoxWidget;
-static GtkWidget* gToolbarWidget;
-static GtkWidget* gFrameWidget;
 static GtkWidget* gTabWidget;
 static GtkWidget* gTextViewWidget;
 static GtkWidget* gImageMenuItemWidget;
@@ -45,8 +42,6 @@ static GtkWidget* gTreeViewWidget;
 static GtkTreeViewColumn* gMiddleTreeViewColumn;
 static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
-static GtkWidget* gExpanderWidget;
-static GtkWidget* gToolbarSeparatorWidget;
 static GtkWidget* gMenuSeparatorWidget;
 static GtkWidget* gHPanedWidget;
 static GtkWidget* gVPanedWidget;
@@ -402,56 +397,12 @@ ensure_combo_box_entry_widgets()
     return MOZ_GTK_SUCCESS;
 }
 
-
-static gint
-ensure_handlebox_widget()
-{
-    if (!gHandleBoxWidget) {
-        gHandleBoxWidget = gtk_handle_box_new();
-        setup_widget_prototype(gHandleBoxWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_toolbar_widget()
-{
-    if (!gToolbarWidget) {
-        ensure_handlebox_widget();
-        gToolbarWidget = gtk_toolbar_new();
-        gtk_container_add(GTK_CONTAINER(gHandleBoxWidget), gToolbarWidget);
-        gtk_widget_realize(gToolbarWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_toolbar_separator_widget()
-{
-    if (!gToolbarSeparatorWidget) {
-        ensure_toolbar_widget();
-        gToolbarSeparatorWidget = GTK_WIDGET(gtk_separator_tool_item_new());
-        setup_widget_prototype(gToolbarSeparatorWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
 static gint
 ensure_tab_widget()
 {
     if (!gTabWidget) {
         gTabWidget = gtk_notebook_new();
         setup_widget_prototype(gTabWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_frame_widget()
-{
-    if (!gFrameWidget) {
-        gFrameWidget = gtk_frame_new(NULL);
-        setup_widget_prototype(gFrameWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -542,16 +493,6 @@ ensure_tree_header_cell_widget()
         gTreeHeaderCellWidget = gtk_tree_view_column_get_button(gMiddleTreeViewColumn);
         /* TODO, but it can't be NULL */
         gTreeHeaderSortArrowWidget = gtk_button_new();
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_expander_widget()
-{
-    if (!gExpanderWidget) {
-        gExpanderWidget = gtk_expander_new("M");
-        setup_widget_prototype(gExpanderWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1250,20 +1191,12 @@ moz_gtk_gripper_paint(cairo_t *cr, GdkRectangle* rect,
                       GtkWidgetState* state,
                       GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-
-    ensure_handlebox_widget();
-    gtk_widget_set_direction(gHandleBoxWidget, direction);
-
-    style = gtk_widget_get_style_context(gHandleBoxWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_GRIP);
-    gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
-
+    GtkStyleContext* style =
+            ClaimStyleContext(MOZ_GTK_GRIPPER, direction,
+                              GetStateFlagsFromGtkWidgetState(state));
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1753,19 +1686,10 @@ static gint
 moz_gtk_toolbar_paint(cairo_t *cr, GdkRectangle* rect,
                       GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-
-    ensure_toolbar_widget();
-    gtk_widget_set_direction(gToolbarWidget, direction);
-
-    style = gtk_widget_get_style_context(gToolbarWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOOLBAR);
-
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_TOOLBAR, direction);
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1775,7 +1699,6 @@ static gint
 moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                                 GtkTextDirection direction)
 {
-    GtkStyleContext* style;
     gint     separator_width;
     gint     paint_width;
     gboolean wide_separators;
@@ -1784,16 +1707,14 @@ moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
     const double start_fraction = 0.2;
     const double end_fraction = 0.8;
 
-    ensure_toolbar_separator_widget();
-    gtk_widget_set_direction(gToolbarSeparatorWidget, direction);
-
-    style = gtk_widget_get_style_context(gToolbarSeparatorWidget);
-
-    gtk_style_context_get_style(gtk_widget_get_style_context(gToolbarWidget),
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_TOOLBAR);
+    gtk_style_context_get_style(style,
                                 "wide-separators", &wide_separators,
                                 "separator-width", &separator_width,
                                 NULL);
+    ReleaseStyleContext(style);
 
+    style = ClaimStyleContext(MOZ_GTK_TOOLBAR_SEPARATOR, direction);
     if (wide_separators) {
         if (separator_width > rect->width)
             separator_width = rect->width;
@@ -1817,7 +1738,7 @@ moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                         rect->x + (rect->width - paint_width) / 2,
                         rect->y + rect->height * end_fraction);
     }
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1873,16 +1794,9 @@ static gint
 moz_gtk_frame_paint(cairo_t *cr, GdkRectangle* rect,
                     GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-
-    ensure_frame_widget();
-    gtk_widget_set_direction(gFrameWidget, direction);
-    style = gtk_widget_get_style_context(gFrameWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_FRAME);
-
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_FRAME, direction);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -2701,8 +2615,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         w = gVScaleWidget;
         break;
     case MOZ_GTK_FRAME:
-        ensure_frame_widget();
-        w = gFrameWidget;
+        w = GetWidget(MOZ_GTK_FRAME);
         break;
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
@@ -2886,11 +2799,9 @@ moz_gtk_get_toolbar_separator_width(gint* size)
 {
     gboolean wide_separators;
     gint separator_width;
-    GtkStyleContext* style;
     GtkBorder border;
 
-    ensure_toolbar_widget();
-    style = gtk_widget_get_style_context(gToolbarWidget);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_TOOLBAR);
     gtk_style_context_get_style(style,
                                 "space-size", size,
                                 "wide-separators",  &wide_separators,
@@ -2899,17 +2810,18 @@ moz_gtk_get_toolbar_separator_width(gint* size)
     /* Just in case... */
     gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
     *size = MAX(*size, (wide_separators ? separator_width : border.left));
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
 gint
 moz_gtk_get_expander_size(gint* size)
 {
-    ensure_expander_widget();
-    gtk_style_context_get_style(gtk_widget_get_style_context(gExpanderWidget),
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_EXPANDER);
+    gtk_style_context_get_style(style,
                                 "expander-size", size,
                                 NULL);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -3321,9 +3233,6 @@ moz_gtk_shutdown()
     gComboBoxEntryButtonWidget = NULL;
     gComboBoxEntryArrowWidget = NULL;
     gComboBoxEntryTextareaWidget = NULL;
-    gHandleBoxWidget = NULL;
-    gToolbarWidget = NULL;
-    gFrameWidget = NULL;
     gTabWidget = NULL;
     gTextViewWidget = nullptr;
     gImageMenuItemWidget = NULL;
@@ -3332,8 +3241,6 @@ moz_gtk_shutdown()
     gMiddleTreeViewColumn = NULL;
     gTreeHeaderCellWidget = NULL;
     gTreeHeaderSortArrowWidget = NULL;
-    gExpanderWidget = NULL;
-    gToolbarSeparatorWidget = NULL;
     gMenuSeparatorWidget = NULL;
     gHPanedWidget = NULL;
     gVPanedWidget = NULL;

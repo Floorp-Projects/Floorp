@@ -258,8 +258,6 @@ public class GeckoAppShell
 
     public static native float computeRenderIntegrity();
 
-    public static native SurfaceBits getSurfaceBits(Surface surface);
-
     public static native void addPresentationSurface(Surface surface);
     public static native void removePresentationSurface(Surface surface);
 
@@ -1659,7 +1657,7 @@ public class GeckoAppShell
         ArrayList<String> directories = new ArrayList<String>();
         PackageManager pm = getApplicationContext().getPackageManager();
         List<ResolveInfo> plugins = pm.queryIntentServices(new Intent(PLUGIN_ACTION),
-                PackageManager.GET_SERVICES | PackageManager.GET_META_DATA);
+                PackageManager.GET_META_DATA);
 
         synchronized (mPackageInfoCache) {
 

@@ -146,6 +146,8 @@ CSS_STATE_PSEUDO_CLASS(link, ":link", 0, "", NS_EVENT_STATE_UNVISITED)
 // what matches :link or :visited
 CSS_STATE_PSEUDO_CLASS(mozAnyLink, ":-moz-any-link", 0, "",
                        NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)
+CSS_STATE_PSEUDO_CLASS(anyLink, ":any-link", 0, "",
+                       NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)
 CSS_STATE_PSEUDO_CLASS(visited, ":visited", 0, "", NS_EVENT_STATE_VISITED)
 
 CSS_STATE_PSEUDO_CLASS(active, ":active", 0, "", NS_EVENT_STATE_ACTIVE)

@@ -54,8 +54,6 @@ this.ContextualIdentityService = {
       alreadyOpened: false },
   ],
 
-  _cssRule: false,
-
   getIdentities() {
     return this._identities.filter(info => info.public);
   },

@@ -184,7 +184,7 @@ interface inIDOMUtils : nsISupports
                                 [retval, array, size_is(aCount)] out wstring aNames);
 
   // pseudo-class style locking methods. aPseudoClass must be a valid pseudo-class
-  // selector string, e.g. ":hover". ":-moz-any-link" and non-event-state
+  // selector string, e.g. ":hover". ":any-link" and non-event-state
   // pseudo-classes are ignored.
   void addPseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
   void removePseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);

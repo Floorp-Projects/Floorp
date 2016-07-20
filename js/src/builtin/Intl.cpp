@@ -77,6 +77,33 @@ using icu::NumberingSystem;
  * directory for license.
  */
 
+typedef bool UBool;
+typedef char16_t UChar;
+typedef double UDate;
+
+enum UErrorCode {
+    U_ZERO_ERROR,
+    U_BUFFER_OVERFLOW_ERROR,
+};
+
+static inline UBool
+U_FAILURE(UErrorCode code)
+{
+    MOZ_CRASH("U_FAILURE: Intl API disabled");
+}
+
+inline const UChar*
+Char16ToUChar(const char16_t* chars)
+{
+    MOZ_CRASH("Char16ToUChar: Intl API disabled");
+}
+
+inline UChar*
+Char16ToUChar(char16_t* chars)
+{
+    MOZ_CRASH("Char16ToUChar: Intl API disabled");
+}
+
 static int32_t
 u_strlen(const UChar* s)
 {
