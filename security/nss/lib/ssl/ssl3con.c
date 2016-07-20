@@ -9971,10 +9971,6 @@ ssl3_SendServerHello(sslSocket *ss)
     return SECSuccess;
 }
 
-static SECStatus
-ssl3_PickSignatureHashAlgorithm(sslSocket *ss,
-                                SSLSignatureAndHashAlg *out);
-
 SECStatus
 ssl_CreateDHEKeyPair(const namedGroupDef *groupDef,
                      const ssl3DHParams *params,
@@ -10137,7 +10133,7 @@ loser:
  * signature algorithm.) Prior to TLS 1.2, the MD5/SHA1 combination is always
  * used. With TLS 1.2, a client may advertise its support for signature and
  * hash combinations. */
-static SECStatus
+SECStatus
 ssl3_PickSignatureHashAlgorithm(sslSocket *ss,
                                 SSLSignatureAndHashAlg *out)
 {

@@ -745,10 +745,6 @@ private:
   bool
   DeallocPAPZParent(PAPZParent* aActor) override;
 
-  PImageBridgeParent*
-  AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
-                          base::ProcessId aOtherProcess) override;
-
   PSharedBufferManagerParent*
   AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranport,
                                    base::ProcessId aOtherProcess) override;

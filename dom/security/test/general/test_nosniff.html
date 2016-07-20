@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 471020 - Add X-Content-Type-Options: nosniff support to Firefox</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <!-- add the two css tests -->
+  <link rel="stylesheet" id="cssCorrectType">
+  <link rel="stylesheet" id="cssWrongType">
+</head>
+<body>
+
+<!-- add the two script tests -->
+<script id="scriptCorrectType"></script>
+<script id="scriptWrongType"></script>
+
+<!-- add the two img tests -->
+<img id="imgCorrectType" />
+<img id="imgWrongType" />
+
+<script class="testbody" type="text/javascript">
+/* Description of the test:
+ * We load 2 css files, 2 script files and 2 image files, where
+ * the sever either responds with the right mime type or
+ * the wrong mime type for each test.
+ */
+
+SimpleTest.waitForExplicitFinish();
+const NUM_TESTS = 6;
+
+var testCounter = 0;
+function checkFinish() {
+	testCounter++;
+	if (testCounter === NUM_TESTS) {
+		SimpleTest.finish();
+	}
+}
+
+// 1) Test CSS with correct mime type
+var cssCorrectType = document.getElementById("cssCorrectType");
+cssCorrectType.onload = function() {
+  ok(true, "style nosniff correct type should load");
+  checkFinish();
+}
+cssCorrectType.onerror = function() {
+  ok(false, "style nosniff correct type should load");
+  checkFinish();
+}
+cssCorrectType.href = "file_nosniff_testserver.sjs?cssCorrectType";
+
+// 2) Test CSS with wrong mime type
+var cssWrongType = document.getElementById("cssWrongType");
+cssWrongType.onload = function() {
+  ok(false, "style nosniff wrong type should not load");
+  checkFinish();
+}
+cssWrongType.onerror = function() {
+  ok(true, "style nosniff wrong type should not load");
+  checkFinish();
+}
+cssWrongType.href = "file_nosniff_testserver.sjs?cssWrongType";
+
+// 3) Test SCRIPT with correct mime type
+var scriptCorrectType = document.getElementById("scriptCorrectType");
+scriptCorrectType.onload = function() {
+  ok(true, "script nosniff correct type should load");
+  checkFinish();
+}
+scriptCorrectType.onerror = function() {
+  ok(false, "script nosniff correct type should load");
+  checkFinish();
+}
+scriptCorrectType.src = "file_nosniff_testserver.sjs?scriptCorrectType";
+
+// 4) Test SCRIPT with wrong mime type
+var scriptWrongType = document.getElementById("scriptWrongType");
+scriptWrongType.onload = function() {
+  ok(false, "script nosniff wrong type should not load");
+  checkFinish();
+}
+scriptWrongType.onerror = function() {
+  ok(true, "script nosniff wrong type should not load");
+  checkFinish();
+}
+scriptWrongType.src = "file_nosniff_testserver.sjs?scriptWrongType";
+
+// 5) Test IMG with correct mime type
+var imgCorrectType = document.getElementById("imgCorrectType");
+imgCorrectType.onload = function() {
+  ok(true, "img nosniff correct type should load");
+  checkFinish();
+}
+imgCorrectType.onerror = function() {
+  ok(false, "img nosniff correct type should load");
+  checkFinish();
+}
+imgCorrectType.src = "file_nosniff_testserver.sjs?imgCorrectType";
+
+// 6) Test IMG with wrong mime type
+var imgWrongType = document.getElementById("imgWrongType");
+imgWrongType.onload = function() {
+  ok(false, "img nosniff wrong type should not load");
+  checkFinish();
+}
+imgWrongType.onerror = function() {
+  ok(true, "img nosniff wrong type should not load");
+  checkFinish();
+}
+imgWrongType.src = "file_nosniff_testserver.sjs?imgWrongType";
+
+</script>
+</body>
+</html>

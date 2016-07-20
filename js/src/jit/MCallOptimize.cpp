@@ -1492,11 +1492,14 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
     // jsop_initelem_array is doing because we do not expect to bailout
     // because the memory is supposed to be allocated by now.
     for (uint32_t i = 0; i < initLength; i++) {
-       MConstant* value = arrayValues[i];
-       current->add(value);
+        if (!alloc().ensureBallast())
+            return InliningStatus_Error;
 
-       if (!initializeArrayElement(array, i, value, unboxedType, /* addResumePoint = */ false))
-           return InliningStatus_Error;
+        MConstant* value = arrayValues[i];
+        current->add(value);
+
+        if (!initializeArrayElement(array, i, value, unboxedType, /* addResumePoint = */ false))
+            return InliningStatus_Error;
     }
 
     MInstruction* setLength = setInitializedLength(array, unboxedType, initLength);

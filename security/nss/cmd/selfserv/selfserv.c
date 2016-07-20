@@ -161,7 +161,7 @@ PrintUsageHeader(const char *progName)
             "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
             "         [-V [min-version]:[max-version]] [-a sni_name]\n"
             "         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
-            "         [-C SSLCacheEntries] [-S dsa_nickname]"
+            "         [-C SSLCacheEntries] [-S dsa_nickname] -Q"
 #ifndef NSS_DISABLE_ECC
             " [-e ec_nickname]"
 #endif /* NSS_DISABLE_ECC */
@@ -224,7 +224,8 @@ PrintParameterUsage()
         "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
         "-c Restrict ciphers\n"
         "-Y prints cipher values allowed for parameter -c and exits\n"
-        "-G enables the extended master secret extension [RFC7627]\n",
+        "-G enables the extended master secret extension [RFC7627]\n"
+        "-Q enables ALPN for HTTP/1.1 [RFC7301]\n",
         stderr);
 }
 
@@ -848,6 +849,7 @@ PRBool enableCompression = PR_FALSE;
 PRBool failedToNegotiateName = PR_FALSE;
 PRBool enableExtendedMasterSecret = PR_FALSE;
 PRBool zeroRTT = PR_FALSE;
+PRBool enableALPN = PR_FALSE;
 
 static char *virtServerNameArray[MAX_VIRT_SERVER_NAME_ARRAY_INDEX];
 static int virtServerNameIndex = 1;
@@ -2012,6 +2014,20 @@ server_main(
         }
     }
 
+    if (enableALPN) {
+        PRUint8 alpnVal[] = {0x08,
+                             0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31};
+        rv = SSL_OptionSet(model_sock, SSL_ENABLE_ALPN, PR_TRUE);
+        if (rv != SECSuccess) {
+            errExit("error enabling ALPN");
+        }
+
+        rv = SSL_SetNextProtoNego(model_sock, alpnVal, sizeof(alpnVal));
+        if (rv != SECSuccess) {
+            errExit("error enabling ALPN");
+        }
+    }
+
     /* This cipher is not on by default. The Acceptance test
      * would like it to be. Turn this cipher on.
      */
@@ -2264,7 +2280,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical.
     */
     optstate = PL_CreateOptState(argc, argv,
-                                 "2:A:BC:DEGH:L:M:NP:RS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
+                                 "2:A:BC:DEGH:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         ++optionsFound;
         switch (optstate->option) {
@@ -2489,6 +2505,10 @@ main(int argc, char **argv)
 
             case 'Z':
                 zeroRTT = PR_TRUE;
+                break;
+
+            case 'Q':
+                enableALPN = PR_TRUE;
                 break;
 
             default:

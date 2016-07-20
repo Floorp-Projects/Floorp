@@ -1248,18 +1248,17 @@ ContentChild::RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint)
   return CompositorBridgeChild::InitForContent(Move(aEndpoint));
 }
 
+bool
+ContentChild::RecvInitImageBridge(Endpoint<PImageBridgeChild>&& aEndpoint)
+{
+  return ImageBridgeChild::InitForContent(Move(aEndpoint));
+}
+
 PSharedBufferManagerChild*
 ContentChild::AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
                                               base::ProcessId aOtherProcess)
 {
   return SharedBufferManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
-}
-
-PImageBridgeChild*
-ContentChild::AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
-                                     base::ProcessId aOtherProcess)
-{
-  return ImageBridgeChild::StartUpInChildProcess(aTransport, aOtherProcess);
 }
 
 gfx::PVRManagerChild*

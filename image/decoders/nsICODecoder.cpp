@@ -645,9 +645,13 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount)
   // get resumed when there's more data available, as usual, so we don't need
   // the contained decoder to get resumed too. To avoid that, we provide an
   // IResumable which just does nothing.
-  if (NS_FAILED(mContainedDecoder->Decode())) {
+  LexerResult result = mContainedDecoder->Decode();
+  if (result == LexerResult(TerminalState::FAILURE)) {
     succeeded = false;
   }
+
+  MOZ_ASSERT(result != LexerResult(Yield::OUTPUT_AVAILABLE),
+             "Unexpected yield");
 
   // Make our state the same as the state of the contained decoder, and
   // propagate errors.

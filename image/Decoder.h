@@ -48,9 +48,14 @@ public:
    * If more data is needed and @aOnResume is non-null, Decode() will schedule
    * @aOnResume to be called when more data is available.
    *
-   * Any errors are reported by setting the appropriate state on the decoder.
+   * @return a LexerResult which may indicate:
+   *   - the image has been successfully decoded (TerminalState::SUCCESS), or
+   *   - the image has failed to decode (TerminalState::FAILURE), or
+   *   - the decoder is yielding until it gets more data (Yield::NEED_MORE_DATA), or
+   *   - the decoder is yielding to allow the caller to access intermediate
+   *     output (Yield::OUTPUT_AVAILABLE).
    */
-  nsresult Decode(IResumable* aOnResume = nullptr);
+  LexerResult Decode(IResumable* aOnResume = nullptr);
 
   /**
    * Given a maximum number of bytes we're willing to decode, @aByteLimit,

@@ -84,14 +84,15 @@ tls13_HkdfExtract(PK11SymKey *ikm1, PK11SymKey *ikm2in, SSLHashType baseHash,
 
     /* A zero ikm2 is a key of hash-length 0s. */
     if (!ikm2in) {
-        slot = PK11_GetInternalSlot();
         SECItem zeroItem = {
             siBuffer,
             (unsigned char *)zeroKeyBuf,
             kTlsHkdfInfo[baseHash].hashSize
         };
-        if (!slot)
+        slot = PK11_GetInternalSlot();
+        if (!slot) {
             return SECFailure;
+        }
         zeroKey = PK11_ImportSymKey(slot,
                                     kTlsHkdfInfo[baseHash].pkcs11Mech,
                                     PK11_OriginUnwrap,

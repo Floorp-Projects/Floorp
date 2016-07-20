@@ -1318,12 +1318,16 @@ DeleteCertTrustMatchingSlot(PK11SlotInfo *pk11slot, nssPKIObject *tObject)
 
 /*
 ** Delete trust objects matching the slot of the given certificate.
-** Returns an error if any device fails to delete. 
+** Returns an error if any device fails to delete.
 */
 NSS_EXTERN PRStatus
 STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
 {
     PRStatus nssrv = PR_SUCCESS;
+
+    unsigned int i;
+    nssPKIObject *tobject = NULL;
+    nssPKIObject *cobject = &c->object;
 
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSTrust *nssTrust = nssTrustDomain_FindTrustForCertificate(td, c);
@@ -1331,9 +1335,7 @@ STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
         return PR_FAILURE;
     }
 
-    nssPKIObject *tobject = &nssTrust->object;
-    nssPKIObject *cobject = &c->object;
-    unsigned int i;
+    tobject = &nssTrust->object;
 
     /* Iterate through the cert and trust object instances looking for
      * those with matching pk11 slots to delete. Even if some device

@@ -7,6 +7,7 @@ DEPTH      = ../..
 MODULE = nss
 
 CPPSRCS = \
+      pk11_aeskeywrap_unittest.cc \
       pk11_chacha20poly1305_unittest.cc \
       pk11_pbkdf2_unittest.cc \
       pk11_prf_unittest.cc \
