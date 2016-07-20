@@ -12,7 +12,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,20 +25,16 @@ import org.mozilla.gecko.RobocopUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 
-import android.app.Activity;
 import android.content.ContentValues;
-import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.os.Build;
-import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -47,7 +42,6 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.robotium.solo.Condition;
-import com.robotium.solo.Solo;
 import com.robotium.solo.Timeout;
 
 /**
