@@ -134,6 +134,8 @@ struct BaseRect {
   // this and aRect2.
   // Thus, empty input rectangles are ignored.
   // If both rectangles are empty, returns this.
+  // WARNING! This is not safe against overflow, prefer using SafeUnion instead
+  // when dealing with int-based rects.
   MOZ_MUST_USE Sub Union(const Sub& aRect) const
   {
     if (IsEmpty()) {
@@ -147,6 +149,8 @@ struct BaseRect {
   // Returns the smallest rectangle that contains both the points (including
   // edges) of both aRect1 and aRect2.
   // Thus, empty input rectangles are allowed to affect the result.
+  // WARNING! This is not safe against overflow, prefer using SafeUnionEdges
+  // instead when dealing with int-based rects.
   MOZ_MUST_USE Sub UnionEdges(const Sub& aRect) const
   {
     Sub result;

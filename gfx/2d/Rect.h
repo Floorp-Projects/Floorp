@@ -85,6 +85,7 @@ struct IntRectTyped :
                   "'units' must be a coordinate system tag");
 
     typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> > Super;
+    typedef IntRectTyped<units> Self;
 
     IntRectTyped() : Super() {}
     IntRectTyped(const IntPointTyped<units>& aPos, const IntSizeTyped<units>& aSize) :
@@ -114,6 +115,41 @@ struct IntRectTyped :
       CheckedInt<int32_t> yMost = this->y;
       yMost += this->height;
       return !xMost.isValid() || !yMost.isValid();
+    }
+
+    // Same as Union(), but in the cases where aRect is non-empty, the union is
+    // done while guarding against overflow. If an overflow is detected, Nothing
+    // is returned.
+    MOZ_MUST_USE Maybe<Self> SafeUnion(const Self& aRect) const
+    {
+      if (this->IsEmpty()) {
+        return aRect.Overflows() ? Nothing() : Some(aRect);
+      } else if (aRect.IsEmpty()) {
+        return Some(*static_cast<const Self*>(this));
+      } else {
+        return this->SafeUnionEdges(aRect);
+      }
+    }
+
+    // Same as UnionEdges, but guards against overflow. If an overflow is detected,
+    // Nothing is returned.
+    MOZ_MUST_USE Maybe<Self> SafeUnionEdges(const Self& aRect) const
+    {
+      if (this->Overflows() || aRect.Overflows()) {
+        return Nothing();
+      }
+      // If neither |this| nor |aRect| overflow, then their XMost/YMost values
+      // should be safe to use.
+      CheckedInt<int32_t> newX = std::min(this->x, aRect.x);
+      CheckedInt<int32_t> newY = std::min(this->y, aRect.y);
+      CheckedInt<int32_t> newXMost = std::max(this->XMost(), aRect.XMost());
+      CheckedInt<int32_t> newYMost = std::max(this->YMost(), aRect.YMost());
+      CheckedInt<int32_t> newW = newXMost - newX;
+      CheckedInt<int32_t> newH = newYMost - newY;
+      if (!newW.isValid() || !newH.isValid()) {
+        return Nothing();
+      }
+      return Some(Self(newX.value(), newY.value(), newW.value(), newH.value()));
     }
 
     // This is here only to keep IPDL-generated code happy. DO NOT USE.
