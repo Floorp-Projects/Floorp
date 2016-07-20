@@ -428,6 +428,8 @@ private:
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
   FrameTimeout mLoopLength;  // Length of a single loop of this image.
+  gfx::IntRect mFirstFrameRefreshArea;  // The area of the image that needs to
+                                        // be invalidated when the animation loops.
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;
