@@ -107,7 +107,7 @@ validate_stream_params(cubeb_stream_params * input_stream_params,
 int
 validate_latency(int latency)
 {
-  if (latency < 1 || latency > 2000) {
+  if (latency < 1 || latency > 96000) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
   return CUBEB_OK;

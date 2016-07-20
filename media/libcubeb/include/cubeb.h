@@ -32,10 +32,10 @@ extern "C" {
     cubeb_init(&app_ctx, "Example Application");
     int rv;
     int rate;
-    int latency_ms;
+    int latency_frames;
     uint64_t ts;
 
-    rv = cubeb_get_min_latency(app_ctx, output_params, &latency_ms);
+    rv = cubeb_get_min_latency(app_ctx, output_params, &latency_frames);
     if (rv != CUBEB_OK) {
       fprintf(stderr, "Could not get minimum latency");
       return rv;
@@ -61,7 +61,7 @@ extern "C" {
     rv = cubeb_stream_init(app_ctx, &stm, "Example Stream 1",
                            NULL, input_params,
                            NULL, output_params,
-                           latency_ms,
+                           latency_frames,
                            data_cb, state_cb,
                            NULL);
     if (rv != CUBEB_OK) {
@@ -284,8 +284,8 @@ typedef struct {
   unsigned int max_rate;      /**< Maximum sample rate supported. */
   unsigned int min_rate;      /**< Minimum sample rate supported. */
 
-  unsigned int latency_lo_ms; /**< Lowest possible latency in milliseconds. */
-  unsigned int latency_hi_ms; /**< Higest possible latency in milliseconds. */
+  unsigned int latency_lo; /**< Lowest possible latency in frames. */
+  unsigned int latency_hi; /**< Higest possible latency in frames. */
 } cubeb_device_info;
 
 /** Device collection. */
@@ -363,19 +363,20 @@ char const * cubeb_get_backend_id(cubeb * context);
     @retval CUBEB_ERROR */
 int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
 
-/** Get the minimal latency value, in milliseconds, that is guaranteed to work
+/** Get the minimal latency value, in frames, that is guaranteed to work
     when creating a stream for the specified sample rate. This is platform,
     hardware and backend dependant.
     @param context A pointer to the cubeb context.
     @param params On some backends, the minimum achievable latency depends on
                   the characteristics of the stream.
-    @param latency_ms The latency value, in ms, to pass to cubeb_stream_init.
+    @param latency_frames The latency value, in frames, to pass to
+                          cubeb_stream_init.
     @retval CUBEB_OK
     @retval CUBEB_ERROR_INVALID_PARAMETER
     @retval CUBEB_ERROR_NOT_SUPPORTED */
 int cubeb_get_min_latency(cubeb * context,
                           cubeb_stream_params params,
-                          uint32_t * latency_ms);
+                          uint32_t * latency_frames);
 
 /** Get the preferred sample rate for this backend: this is hardware and
     platform dependant, and can avoid resampling, and/or trigger fastpaths.
@@ -404,8 +405,8 @@ void cubeb_destroy(cubeb * context);
                          default output device is used.
     @param output_stream_params Parameters for the output side of the stream, or
                                 NULL if this stream is input only.
-    @param latency Approximate stream latency in milliseconds.  Valid range
-                   is [1, 2000].
+    @param latency Stream latency in frames.  Valid range
+                   is [1, 96000].
     @param data_callback Will be called to preroll data before playback is
                          started by cubeb_stream_start.
     @param state_callback A pointer to a state callback.
@@ -422,7 +423,7 @@ int cubeb_stream_init(cubeb * context,
                       cubeb_stream_params * input_stream_params,
                       cubeb_devid output_device,
                       cubeb_stream_params * output_stream_params,
-                      unsigned int latency,
+                      unsigned int latency_frames,
                       cubeb_data_callback data_callback,
                       cubeb_state_callback state_callback,
                       void * user_ptr);
