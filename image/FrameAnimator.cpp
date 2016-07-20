@@ -43,7 +43,7 @@ AnimationState::SetAnimationMode(uint16_t aAnimationMode)
 }
 
 void
-AnimationState::SetFirstFrameRefreshArea(const gfx::IntRect& aRefreshArea)
+AnimationState::SetFirstFrameRefreshArea(const IntRect& aRefreshArea)
 {
   mFirstFrameRefreshArea = aRefreshArea;
 }
@@ -369,7 +369,7 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
 // DoBlend gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
 bool
-FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
+FrameAnimator::DoBlend(IntRect* aDirtyRect,
                        uint32_t aPrevFrameIndex,
                        uint32_t aNextFrameIndex)
 {
@@ -650,7 +650,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
 //******************************************************************************
 // Fill aFrame with black. Does also clears the mask.
 void
-FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect)
+FrameAnimator::ClearFrame(uint8_t* aFrameData, const IntRect& aFrameRect)
 {
   if (!aFrameData) {
     return;
@@ -661,15 +661,15 @@ FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect)
 
 //******************************************************************************
 void
-FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect,
-                          const nsIntRect& aRectToClear)
+FrameAnimator::ClearFrame(uint8_t* aFrameData, const IntRect& aFrameRect,
+                          const IntRect& aRectToClear)
 {
   if (!aFrameData || aFrameRect.width <= 0 || aFrameRect.height <= 0 ||
       aRectToClear.width <= 0 || aRectToClear.height <= 0) {
     return;
   }
 
-  nsIntRect toClear = aFrameRect.Intersect(aRectToClear);
+  IntRect toClear = aFrameRect.Intersect(aRectToClear);
   if (toClear.IsEmpty()) {
     return;
   }
@@ -686,9 +686,9 @@ FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect,
 // we can do about a failure, so there we don't return a nsresult
 bool
 FrameAnimator::CopyFrameImage(const uint8_t* aDataSrc,
-                              const nsIntRect& aRectSrc,
+                              const IntRect& aRectSrc,
                               uint8_t* aDataDest,
-                              const nsIntRect& aRectDest)
+                              const IntRect& aRectDest)
 {
   uint32_t dataLengthSrc = aRectSrc.width * aRectSrc.height * 4;
   uint32_t dataLengthDest = aRectDest.width * aRectDest.height * 4;
@@ -703,10 +703,10 @@ FrameAnimator::CopyFrameImage(const uint8_t* aDataSrc,
 }
 
 nsresult
-FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
+FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const IntRect& aSrcRect,
                            uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
-                           uint8_t* aDstPixels, const nsIntRect& aDstRect,
-                           BlendMethod aBlendMethod, const Maybe<nsIntRect>& aBlendRect)
+                           uint8_t* aDstPixels, const IntRect& aDstRect,
+                           BlendMethod aBlendMethod, const Maybe<IntRect>& aBlendRect)
 {
   NS_ENSURE_ARG_POINTER(aSrcData);
   NS_ENSURE_ARG_POINTER(aDstPixels);
