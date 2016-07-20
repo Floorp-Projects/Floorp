@@ -10,7 +10,7 @@ interface nsIDNSRecord;
 interface nsIDNSListener;
 
 %{C++
-template<class T> class nsTArray;
+#include "nsTArrayForwardDeclare.h"
 namespace mozilla { namespace net {
     struct DNSCacheEntries;
 } }

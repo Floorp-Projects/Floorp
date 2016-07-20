@@ -12,9 +12,9 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 #include "nsColor.h"
+#include "nsTArrayForwardDeclare.h"
 
 struct nsStyleFilter;
-template<class T> class nsTArray;
 
 /**
  * This class helps nsFilterInstance build its filter graph. It turns a CSS
