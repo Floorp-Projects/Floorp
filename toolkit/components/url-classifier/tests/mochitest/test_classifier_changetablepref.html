@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1281083 - Changing the urlclassifier.*Table prefs doesn't take effect before the next browser restart.</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+const testTable = "moz-track-digest256";
+const UPDATE_URL = "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/update.sjs";
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+var prefService = Cc["@mozilla.org/preferences-service;1"]
+                  .getService(Ci.nsIPrefService);
+
+var timer = Cc["@mozilla.org/timer;1"]
+            .createInstance(Ci.nsITimer);
+
+// If default preference contain the table we want to test,
+// We should change test table to a different one.
+var trackingTables = SpecialPowers.getCharPref("urlclassifier.trackingTable").split(",");
+ok(!trackingTables.includes(testTable), "test table should not be in the preference");
+
+var listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+                    getService(Ci.nsIUrlListManager);
+
+is(listmanager.getGethashUrl(testTable), "",
+   "gethash url for test table should be empty before setting to preference");
+
+function loadTestFrame() {
+  // gethash url of test table "moz-track-digest256" should be updated
+  // after setting preference.
+  var url = listmanager.getGethashUrl(testTable);
+  var expected = SpecialPowers.getCharPref("browser.safebrowsing.provider.mozilla.gethashURL");
+
+  is(url, expected, testTable + " matches its gethash url");
+
+  // Trigger update
+  listmanager.disableUpdate(testTable);
+  listmanager.enableUpdate(testTable);
+  listmanager.maybeToggleUpdateChecking();
+
+  // We wait until "nextupdattime" was set as a signal that update is complete.
+  waitForUpdateSuccess(function() {
+    document.getElementById("testFrame").src = "bug_1281083.html";
+  });
+}
+
+function waitForUpdateSuccess(callback) {
+  let nextupdatetime =
+    SpecialPowers.getCharPref("browser.safebrowsing.provider.mozilla.nextupdatetime");
+
+  if (nextupdatetime !== "1") {
+    callback();
+    return;
+  }
+
+  timer.initWithCallback(function() {
+    waitForUpdateSuccess(callback);
+  }, 10, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+}
+
+function addCompletionToServer(list, url) {
+  return new Promise(function(resolve, reject) {
+    var listParam = "list=" + list;
+    var fullhashParam = "fullhash=" + hash(url);
+
+    var xhr = new XMLHttpRequest;
+    xhr.open("PUT", UPDATE_URL + "?" +
+             listParam + "&" +
+             fullhashParam, true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.onreadystatechange = function() {
+      if (this.readyState == this.DONE) {
+        resolve();
+      }
+    };
+    xhr.send();
+  });
+}
+
+function hash(str) {
+  function bytesFromString(str) {
+    var converter =
+      SpecialPowers.Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                       .createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    return converter.convertToByteArray(str);
+  }
+
+  var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"]
+                               .createInstance(SpecialPowers.Ci.nsICryptoHash);
+
+  var data = bytesFromString(str);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(true);
+}
+
+function runTest() {
+  /**
+   * In this test we try to modify only urlclassifier.*Table preference to see if
+   * url specified in the table will be blocked after update.
+   */
+  var pushPrefPromise = SpecialPowers.pushPrefEnv(
+    {"set" : [["urlclassifier.trackingTable", testTable]]});
+
+  // To make sure url is not blocked by an already blocked url.
+  // Here we use non-tracking.example.com as a tracked url.
+  // Since this table is only used in this bug, so it won't affect other testcases.
+  var addCompletePromise =
+    addCompletionToServer(testTable, "bug1281083.example.com/");
+
+  Promise.all([pushPrefPromise, addCompletePromise])
+    .then(() => {
+      loadTestFrame();
+    });
+}
+
+// Set nextupdatetime to 1 to trigger an update
+SpecialPowers.pushPrefEnv(
+  {"set" : [["privacy.trackingprotection.enabled", true],
+            ["channelclassifier.allowlist_example", true],
+            ["browser.safebrowsing.provider.mozilla.nextupdatetime", "1"],
+            ["browser.safebrowsing.provider.mozilla.lists", testTable],
+            ["browser.safebrowsing.provider.mozilla.updateURL", UPDATE_URL]]},
+  runTest);
+
+// Expected finish() call is in "bug_1281083.html".
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>
+

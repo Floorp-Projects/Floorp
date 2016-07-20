@@ -331,7 +331,6 @@ function getSetting(name) {
   return deferred.promise;
 }
 
-exports.is64Bit = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).is64Bit;
 exports.getSystemInfo = Task.async(getSystemInfo);
 exports.getAppIniString = getAppIniString;
 exports.getSetting = getSetting;

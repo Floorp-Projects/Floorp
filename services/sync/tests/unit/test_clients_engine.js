@@ -568,9 +568,41 @@ add_test(function test_filter_duplicate_names() {
     deepEqual(user.collection("clients").keys().sort(),
               [recentID, dupeID, oldID, engine.localID].sort(),
               "Our record should be uploaded on first sync");
+
     deepEqual(Object.keys(store.getAllIDs()).sort(),
-              [recentID, oldID, engine.localID].sort(),
-              "Fresh clients should be downloaded on first sync");
+              [recentID, dupeID, oldID, engine.localID].sort(),
+              "Duplicate ID should remain in getAllIDs");
+    ok(engine._store.itemExists(dupeID), "Dupe ID should be considered as existing for Sync methods.");
+    ok(!engine.remoteClientExists(dupeID), "Dupe ID should not be considered as existing for external methods.");
+
+    // dupe desktop should not appear in .deviceTypes.
+    equal(engine.deviceTypes.get("desktop"), 2);
+    equal(engine.deviceTypes.get("mobile"), 1);
+
+    // dupe desktop should not appear in stats
+    deepEqual(engine.stats, {
+      hasMobile: 1,
+      names: [engine.localName, "My Phone", "My old desktop"],
+      numClients: 3,
+    });
+
+    ok(engine.remoteClientExists(oldID), "non-dupe ID should exist.");
+    ok(!engine.remoteClientExists(dupeID), "dupe ID should not exist");
+    equal(engine.remoteClients.length, 2, "dupe should not be in remoteClients");
+
+    // Check that a subsequent Sync doesn't report anything as being processed.
+    let counts;
+    Svc.Obs.add("weave:engine:sync:applied", function observe(subject, data) {
+      Svc.Obs.remove("weave:engine:sync:applied", observe);
+      counts = subject;
+    });
+
+    engine._sync();
+    equal(counts.applied, 0); // We didn't report applying any records.
+    equal(counts.reconciled, 4); // We reported reconcilliation for all records
+    equal(counts.succeeded, 0);
+    equal(counts.failed, 0);
+    equal(counts.newFailed, 0);
 
     _("Broadcast logout to all clients");
     engine.sendCommand("logout", []);
@@ -605,6 +637,22 @@ add_test(function test_filter_duplicate_names() {
     deepEqual(Object.keys(store.getAllIDs()).sort(),
               [recentID, oldID, dupeID, engine.localID].sort(),
               "Stale client synced, so it should no longer be marked as a dupe");
+
+    ok(engine.remoteClientExists(dupeID), "Dupe ID should appear as it synced.");
+
+    // Recently synced dupe desktop should appear in .deviceTypes.
+    equal(engine.deviceTypes.get("desktop"), 3);
+
+    // Recently synced dupe desktop should now appear in stats
+    deepEqual(engine.stats, {
+      hasMobile: 1,
+      names: [engine.localName, "My Phone", engine.localName, "My old desktop"],
+      numClients: 4,
+    });
+
+    ok(engine.remoteClientExists(dupeID), "recently synced dupe ID should now exist");
+    equal(engine.remoteClients.length, 3, "recently synced dupe should now be in remoteClients");
+
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
