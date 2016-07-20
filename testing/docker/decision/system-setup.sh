@@ -75,23 +75,6 @@ EOF
 
 chmod 644 /etc/mercurial/hgrc
 
-# Install node
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 5676610,
-    "digest": "ce27b788dfd141a5ba7674332825fc136fe2c4f49a319dd19b3a87c8fffa7a97d86cbb8535661c9a68c9122719aa969fc6a8c886458a0df9fc822eec99ed130b",
-    "algorithm": "sha512",
-    "filename": "node-v0.10.36-linux-x64.tar.gz"
-}
-]
-
-EOF
-tar -C /usr/local -xz --strip-components 1 < node-*.tar.gz
-node -v  # verify
-
-npm install -g taskcluster-vcs@2.3.34
-
 cd /
 rm -rf $BUILD
 apt-get clean
