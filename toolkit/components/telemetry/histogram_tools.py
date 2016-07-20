@@ -244,6 +244,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if '#' in name:
             raise ValueError, '"#" not permitted for %s' % (name)
 
+        # Avoid C++ identifier conflicts between histogram enums and label enum names.
+        if name.startswith("LABELS_"):
+            raise ValueError, "Histogram name '%s' can not start with LABELS_" % (name)
+
     def check_expiration(self, name, definition):
         expiration = definition.get('expires_in_version')
 

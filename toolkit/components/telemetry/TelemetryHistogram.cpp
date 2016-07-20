@@ -597,6 +597,23 @@ internal_HistogramAdd(Histogram& histogram, int32_t value)
   return internal_HistogramAdd(histogram, value, dataset);
 }
 
+nsresult
+internal_HistogramAddCategorical(mozilla::Telemetry::ID id, const nsCString& label)
+{
+  uint32_t labelId = 0;
+  if (NS_FAILED(gHistograms[id].label_id(label.get(), &labelId))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  Histogram* h = nullptr;
+  nsresult rv = internal_GetHistogramByEnumId(id, &h);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return internal_HistogramAdd(*h, labelId);
+}
+
 void
 internal_HistogramClear(Histogram& aHistogram, bool onlySubsession)
 {
@@ -1110,13 +1127,12 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
       return false;
     }
 
-    uint32_t labelId = 0;
-    if (NS_FAILED(gHistograms[id].label_id(NS_ConvertUTF16toUTF8(label).get(), &labelId))) {
+    nsresult rv = internal_HistogramAddCategorical(id, NS_ConvertUTF16toUTF8(label));
+    if (NS_FAILED(rv)) {
       JS_ReportError(cx, "Unknown label for categorical histogram");
       return false;
     }
 
-    internal_HistogramAdd(*h, labelId);
     return true;
   }
 
@@ -1932,6 +1948,14 @@ TelemetryHistogram::Accumulate(const char* name,
   if (NS_SUCCEEDED(rv)) {
     internal_Accumulate(id, key, sample);
   }
+}
+
+void
+TelemetryHistogram::AccumulateCategorical(mozilla::Telemetry::ID aId,
+                                          const nsCString& label)
+{
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  internal_HistogramAddCategorical(aId, label);
 }
 
 void
