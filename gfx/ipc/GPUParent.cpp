@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUParent.h"
 #include "gfxConfig.h"
+#include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "VsyncBridgeParent.h"
@@ -39,6 +40,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
   CompositorThreadHolder::Start();
+  gfxPlatform::InitNullMetadata();
   return true;
 }
 
