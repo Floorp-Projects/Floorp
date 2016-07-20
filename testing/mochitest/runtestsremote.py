@@ -293,7 +293,9 @@ class MochiRemote(MochitestDesktop):
         return self._automation.runApp(*args, **kwargs)
 
 
-def run_test_harness(options):
+def run_test_harness(parser, options):
+    parser.validate(options)
+
     message_logger = MessageLogger(logger=None)
     process_args = {'messageLogger': message_logger}
     auto = RemoteAutomation(None, "fennec", processArgs=process_args)
@@ -385,7 +387,7 @@ def main(args=sys.argv[1:]):
     parser = MochitestArgumentParser(app='android')
     options = parser.parse_args(args)
 
-    return run_test_harness(options)
+    return run_test_harness(parser, options)
 
 
 if __name__ == "__main__":
