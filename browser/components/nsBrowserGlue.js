@@ -158,6 +158,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
                                   "resource:///modules/ShellService.jsm");
 
@@ -556,6 +559,27 @@ BrowserGlue.prototype = {
     if (AppConstants.NIGHTLY_BUILD) {
       os.addObserver(this, AddonWatcher.TOPIC_SLOW_ADDON_DETECTED, false);
     }
+
+    ExtensionManagement.registerScript("chrome://browser/content/ext-bookmarks.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-browserAction.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-commands.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-contextMenus.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-desktop-runtime.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-history.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-pageAction.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-tabs.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-utils.js");
+    ExtensionManagement.registerScript("chrome://browser/content/ext-windows.js");
+
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/bookmarks.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/browser_action.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/commands.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/context_menus.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/context_menus_internal.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/history.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/page_action.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/tabs.json");
+    ExtensionManagement.registerSchema("chrome://browser/content/schemas/windows.json");
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
