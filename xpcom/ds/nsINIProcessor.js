@@ -75,9 +75,9 @@ INIProcessor.prototype = {
 
         let iniParser = Cc["@mozilla.org/xpcom/ini-parser-factory;1"]
             .getService(Ci.nsIINIParserFactory).createINIParser(this._iniFile);
-        for (let section of XPCOMUtils.IterStringEnumerator(iniParser.getSections())) {
+        for (let section in XPCOMUtils.IterStringEnumerator(iniParser.getSections())) {
             this._iniData[section] = {};
-            for (let key of XPCOMUtils.IterStringEnumerator(iniParser.getKeys(section))) {
+            for (let key in XPCOMUtils.IterStringEnumerator(iniParser.getKeys(section))) {
                 this._iniData[section][key] = iniParser.getString(section, key);
             }
         }
