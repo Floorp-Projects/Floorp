@@ -43,9 +43,9 @@ AnimationState::SetAnimationMode(uint16_t aAnimationMode)
 }
 
 void
-AnimationState::UnionFirstFrameRefreshArea(const nsIntRect& aRect)
+AnimationState::SetFirstFrameRefreshArea(const gfx::IntRect& aRefreshArea)
 {
-  mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, aRect);
+  mFirstFrameRefreshArea = aRefreshArea;
 }
 
 void
@@ -66,12 +66,6 @@ uint32_t
 AnimationState::GetCurrentAnimationFrameIndex() const
 {
   return mCurrentAnimationFrameIndex;
-}
-
-nsIntRect
-AnimationState::GetFirstFrameRefreshArea() const
-{
-  return mFirstFrameRefreshArea;
 }
 
 FrameTimeout
@@ -203,7 +197,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   }
 
   if (nextFrameIndex == 0) {
-    ret.dirtyRect = aState.mFirstFrameRefreshArea;
+    ret.dirtyRect = aState.FirstFrameRefreshArea();
   } else {
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
 

@@ -54,10 +54,11 @@ public:
   void SetAnimationMode(uint16_t aAnimationMode);
 
   /**
-   * Union the area to refresh when we loop around to the first frame with this
-   * rect.
+   * Get or set the area of the image to invalidate when we loop around to the
+   * first frame.
    */
-  void UnionFirstFrameRefreshArea(const nsIntRect& aRect);
+  void SetFirstFrameRefreshArea(const gfx::IntRect& aRefreshArea);
+  gfx::IntRect FirstFrameRefreshArea() const { return mFirstFrameRefreshArea; }
 
   /**
    * If the animation frame time has not yet been set, set it to
@@ -74,11 +75,6 @@ public:
    * The current frame we're on, from 0 to (numFrames - 1).
    */
   uint32_t GetCurrentAnimationFrameIndex() const;
-
-  /**
-   * Get the area we refresh when we loop around to the first frame.
-   */
-  nsIntRect GetFirstFrameRefreshArea() const;
 
   /*
    * Set number of times to loop the image.

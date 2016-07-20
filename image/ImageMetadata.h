@@ -47,6 +47,13 @@ public:
   void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
   FrameTimeout GetFirstFrameTimeout() const { return mFirstFrameTimeout; }
 
+  void SetFirstFrameRefreshArea(const gfx::IntRect& aRefreshArea)
+  {
+    mFirstFrameRefreshArea = Some(aRefreshArea);
+  }
+  gfx::IntRect GetFirstFrameRefreshArea() const { return *mFirstFrameRefreshArea; }
+  bool HasFirstFrameRefreshArea() const { return mFirstFrameRefreshArea.isSome(); }
+
   void SetSize(int32_t width, int32_t height, Orientation orientation)
   {
     if (!HasSize()) {
@@ -74,6 +81,10 @@ private:
 
   /// The timeout of an animated image's first frame.
   FrameTimeout mFirstFrameTimeout;
+
+  // The area of the image that needs to be invalidated when the animation
+  // loops.
+  Maybe<gfx::IntRect> mFirstFrameRefreshArea;
 
   Maybe<nsIntSize> mSize;
   Maybe<Orientation> mOrientation;
