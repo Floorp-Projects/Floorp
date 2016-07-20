@@ -88,6 +88,11 @@ PushServiceBase.prototype = {
     if (topic === "android-push-service") {
       // Load PushService immediately.
       this._handleReady();
+      if (data === "android-fxa-subscribe") {
+        Services.obs.notifyObservers(null, "PushServiceAndroidGCM:FxASubscribe", null);
+      } else if (data === "android-fxa-unsubscribe") {
+        Services.obs.notifyObservers(null, "PushServiceAndroidGCM:FxAUnsubscribe", null);
+      }
       return;
     }
   },
