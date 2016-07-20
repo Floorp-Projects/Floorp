@@ -886,6 +886,11 @@ HTMLBreadcrumbs.prototype = {
       this.scroll();
       this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
       doneUpdating();
+    }, e => {
+      // Only log this as an error if we haven't been destroyed in the meantime.
+      if (!this.isDestroyed) {
+        console.error(e);
+      }
     });
   }
 };
