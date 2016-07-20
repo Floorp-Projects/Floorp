@@ -1876,7 +1876,7 @@ template<typename E, class Alloc>
 template<class Item, typename ActualAlloc>
 auto
 nsTArray_Impl<E, Alloc>::ReplaceElementsAt(index_type aStart, size_type aCount,
-                                           const Item* aArray, size_type aArrayLen) -> elem_type* 
+                                           const Item* aArray, size_type aArrayLen) -> elem_type*
 {
   // Adjust memory allocation up-front to catch errors.
   if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
