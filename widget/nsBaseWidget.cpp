@@ -50,7 +50,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/VsyncDispatcher.h"
-#include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/ChromeProcessController.h"
@@ -994,7 +994,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
 
   mAPZC->SetDPI(GetDPI());
 
-  RefPtr<APZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
+  RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
 
   ContentReceivedInputBlockCallback callback(
       [treeManager](const ScrollableLayerGuid& aGuid,
@@ -1004,7 +1004,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
         MOZ_ASSERT(NS_IsMainThread());
         APZThreadUtils::RunOnControllerThread(NewRunnableMethod
                                               <uint64_t, bool>(treeManager,
-                                                               &APZCTreeManager::ContentReceivedInputBlock,
+                                                               &IAPZCTreeManager::ContentReceivedInputBlock,
                                                                aInputBlockId,
                                                                aPreventDefault));
       });
@@ -1017,7 +1017,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod
       <uint64_t,
        StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(treeManager,
-                                                          &APZCTreeManager::SetAllowedTouchBehavior,
+                                                          &IAPZCTreeManager::SetAllowedTouchBehavior,
                                                           aInputBlockId, aFlags));
   };
 
@@ -1046,8 +1046,8 @@ nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                                      const nsTArray<ScrollableLayerGuid>& aTargets) const
 {
   // Need to specifically bind this since it's overloaded.
-  void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
-          = &APZCTreeManager::SetTargetAPZC;
+  void (IAPZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
+          = &IAPZCTreeManager::SetTargetAPZC;
   APZThreadUtils::RunOnControllerThread(NewRunnableMethod
     <uint64_t, StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(mAPZC,
                                                                    setTargetApzcFunc,
@@ -1183,7 +1183,7 @@ class DispatchWheelInputOnControllerThread : public Runnable
 {
 public:
   DispatchWheelInputOnControllerThread(const WidgetWheelEvent& aWheelEvent,
-                                       APZCTreeManager* aAPZC,
+                                       IAPZCTreeManager* aAPZC,
                                        nsBaseWidget* aWidget)
     : mMainMessageLoop(MessageLoop::current())
     , mWheelInput(aWheelEvent)
@@ -1207,7 +1207,7 @@ public:
 private:
   MessageLoop* mMainMessageLoop;
   ScrollWheelInput mWheelInput;
-  RefPtr<APZCTreeManager> mAPZC;
+  RefPtr<IAPZCTreeManager> mAPZC;
   nsBaseWidget* mWidget;
   nsEventStatus mAPZResult;
   uint64_t mInputBlockId;
@@ -1311,20 +1311,24 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
 
+  bool useAPZ = UseAPZ();
+
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
     this,
     lm,
     GetDefaultScale(),
-    UseAPZ(),
+    useAPZ,
     UseExternalCompositingSurface(),
     gfx::IntSize(aWidth, aHeight));
   mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
   mCompositorWidgetDelegate = mCompositorSession->GetCompositorWidgetDelegate();
 
-  mAPZC = mCompositorSession->GetAPZCTreeManager();
-  if (mAPZC) {
+  if (useAPZ) {
+    mAPZC = mCompositorSession->GetAPZCTreeManager();
     ConfigureAPZCTreeManager();
+  } else {
+    mAPZC = nullptr;
   }
 
   if (mInitialZoomConstraints) {
@@ -1939,7 +1943,7 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
 
   APZThreadUtils::RunOnControllerThread(NewRunnableMethod
     <ScrollableLayerGuid, AsyncDragMetrics>(mAPZC,
-                                            &APZCTreeManager::StartScrollbarDrag,
+                                            &IAPZCTreeManager::StartScrollbarDrag,
                                             guid, aDragMetrics));
 }
 
