@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1273430 - Test CSP upgrade-insecure-requests for doc.write(iframe)</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * Load an iframe which ships with a CSP of upgrade-insecure-requests.
+ * Within that iframe a script performs doc.write(iframe) using an
+ * *http* URL. Make sure, the URL is upgraded to *https*.
+ *
+ * +-----------------------------------------+
+ * |                                         |
+ * | http(s); csp: upgrade-insecure-requests |       |
+ * | +---------------------------------+     |
+ * | |                                 |     |
+ * | | doc.write(<iframe src='http'>); | <--------- upgrade to https
+ * | |                                 |     |
+ * | +---------------------------------+     |
+ * |                                         |
+ * +-----------------------------------------+
+ *
+ */
+
+const TEST_FRAME_URL =
+  "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_docwrite_iframe.sjs?testframe";
+
+// important: the RESULT should have a scheme of *https*
+const RESULT =
+  "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_docwrite_iframe.sjs?docwriteframe";
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  is(event.data.result, RESULT, "doc.write(iframe) of http should be upgraded to https!");
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+// start the test
+SimpleTest.waitForExplicitFinish();
+var testframe = document.getElementById("testframe");
+testframe.src = TEST_FRAME_URL;
+
+</script>
+</body>
+</html>

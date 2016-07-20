@@ -8,10 +8,6 @@ SharedLibrary('plugin_child_interpose')
 
 UNIFIED_SOURCES += [ "%s.mm" % (LIBRARY_NAME) ]
 
-UNIFIED_SOURCES += [
-    'plugin_child_quirks.mm',
-]
-
 OS_LIBS += ['-framework Carbon']
 
 DIST_INSTALL = True

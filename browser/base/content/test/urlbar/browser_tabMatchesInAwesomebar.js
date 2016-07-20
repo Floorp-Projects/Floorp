@@ -14,155 +14,128 @@ const TEST_URL_BASES = [
 var gController = Cc["@mozilla.org/autocomplete/controller;1"].
                   getService(Ci.nsIAutoCompleteController);
 
-var gTabWaitCount = 0;
 var gTabCounter = 0;
 
-var gTestSteps = [
-  function() {
-    info("Running step 1");
-    let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
-    for (let i = 0; i < maxResults - 1; i++) {
-      let tab = gBrowser.addTab();
-      loadTab(tab, TEST_URL_BASES[0] + (++gTabCounter));
-    }
-  },
-  function() {
-    info("Running step 2");
-    gBrowser.selectTabAtIndex(1);
-    gBrowser.removeCurrentTab();
-    gBrowser.selectTabAtIndex(1);
-    gBrowser.removeCurrentTab();
-    for (let i = 1; i < gBrowser.tabs.length; i++)
-      loadTab(gBrowser.tabs[i], TEST_URL_BASES[1] + (++gTabCounter));
-  },
-  function() {
-    info("Running step 3");
-    for (let i = 1; i < gBrowser.tabs.length; i++)
-      loadTab(gBrowser.tabs[i], TEST_URL_BASES[0] + gTabCounter);
-  },
-  function() {
-    info("Running step 4 - ensure we don't register subframes as open pages");
+add_task(function* step_1() {
+  info("Running step 1");
+  let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
+  let promises = [];
+  for (let i = 0; i < maxResults - 1; i++) {
     let tab = gBrowser.addTab();
-    tab.linkedBrowser.addEventListener("load", function () {
-      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-      // Start the sub-document load.
-      executeSoon(function () {
-        tab.linkedBrowser.addEventListener("load", function (e) {
-          tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-            ensure_opentabs_match_db(nextStep);
-        }, true);
-        tab.linkedBrowser.contentDocument.querySelector("iframe").src = "http://test2.example.org/";
-      });
-    }, true);
-    tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
-  },
-  function() {
-    info("Running step 5 - remove tab immediately");
-    let tab = gBrowser.addTab("about:logo");
-    gBrowser.removeTab(tab);
-    ensure_opentabs_match_db(nextStep);
-  },
-  function() {
-    info("Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
-    let tabToKeep = gBrowser.addTab();
-    let tab = gBrowser.addTab();
-    tab.linkedBrowser.addEventListener("load", function () {
-      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-      gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
-      gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
-      ensure_opentabs_match_db(function () {
-        gBrowser.removeTab(tabToKeep);
-        ensure_opentabs_match_db(nextStep);
-      });
-    }, true);
-    tab.linkedBrowser.loadURI("about:mozilla");
-  },
-  function() {
-    info("Running step 7 - close all tabs");
-
-    Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
-
-    gBrowser.addTab("about:blank", {skipAnimation: true});
-    while (gBrowser.tabs.length > 1) {
-      info("Removing tab: " + gBrowser.tabs[0].linkedBrowser.currentURI.spec);
-      gBrowser.selectTabAtIndex(0);
-      gBrowser.removeCurrentTab();
-    }
-    ensure_opentabs_match_db(nextStep);
+    promises.push(loadTab(tab, TEST_URL_BASES[0] + (++gTabCounter)));
   }
-];
 
+  yield Promise.all(promises);
+  yield ensure_opentabs_match_db();
+});
 
+add_task(function* step_2() {
+  info("Running step 2");
+  gBrowser.selectTabAtIndex(1);
+  gBrowser.removeCurrentTab();
+  gBrowser.selectTabAtIndex(1);
+  gBrowser.removeCurrentTab();
 
-function test() {
-  waitForExplicitFinish();
-  nextStep();
-}
+  let promises = [];
+  for (let i = 1; i < gBrowser.tabs.length; i++)
+    promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[1] + (++gTabCounter)));
+
+  yield Promise.all(promises);
+  yield ensure_opentabs_match_db();
+});
+
+add_task(function* step_3() {
+  info("Running step 3");
+  let promises = [];
+  for (let i = 1; i < gBrowser.tabs.length; i++)
+    promises.push(loadTab(gBrowser.tabs[i], TEST_URL_BASES[0] + gTabCounter));
+
+  yield Promise.all(promises);
+  yield ensure_opentabs_match_db();
+});
+
+add_task(function* step_4() {
+  info("Running step 4 - ensure we don't register subframes as open pages");
+  let tab = gBrowser.addTab();
+  tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
+    let iframe_loaded = ContentTaskUtils.waitForEvent(content.document, "load", true);
+    content.document.querySelector("iframe").src = "http://test2.example.org/";
+    yield iframe_loaded;
+  });
+
+  yield ensure_opentabs_match_db();
+});
+
+add_task(function* step_5() {
+  info("Running step 5 - remove tab immediately");
+  let tab = gBrowser.addTab("about:logo");
+  yield BrowserTestUtils.removeTab(tab);
+  yield ensure_opentabs_match_db();
+});
+
+add_task(function* step_6() {
+  info("Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
+  let tabToKeep = gBrowser.addTab();
+  let tab = gBrowser.addTab();
+  tab.linkedBrowser.loadURI("about:mozilla");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
+  gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
+
+  yield ensure_opentabs_match_db()
+
+  yield BrowserTestUtils.removeTab(tabToKeep);
+
+  yield ensure_opentabs_match_db();
+});
+
+add_task(function* step_7() {
+  info("Running step 7 - close all tabs");
+
+  Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
+
+  gBrowser.addTab("about:blank", {skipAnimation: true});
+  while (gBrowser.tabs.length > 1) {
+    info("Removing tab: " + gBrowser.tabs[0].linkedBrowser.currentURI.spec);
+    gBrowser.selectTabAtIndex(0);
+    gBrowser.removeCurrentTab();
+  }
+
+  yield ensure_opentabs_match_db();
+});
+
+add_task(function* cleanup() {
+  info("Cleaning up");
+
+  yield PlacesTestUtils.clearHistory();
+});
 
 function loadTab(tab, url) {
   // Because adding visits is async, we will not be notified immediately.
-  let visited = false;
-  let loaded = false;
-
-  function maybeCheckResults() {
-    if (visited && loaded && --gTabWaitCount == 0) {
-      ensure_opentabs_match_db(nextStep);
-    }
-  }
-
-  tab.linkedBrowser.addEventListener("load", function () {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    loaded = true;
-    maybeCheckResults();
-  }, true);
-
-  if (!visited) {
+  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let visited = new Promise(resolve => {
     Services.obs.addObserver(
-      function (aSubject, aTopic, aData) {
+      function observer(aSubject, aTopic, aData) {
         if (url != aSubject.QueryInterface(Ci.nsIURI).spec)
           return;
-        Services.obs.removeObserver(arguments.callee, aTopic);
-        visited = true;
-        maybeCheckResults();
+        Services.obs.removeObserver(observer, aTopic);
+        resolve();
       },
       "uri-visit-saved",
       false
     );
-  }
+  });
 
-  gTabWaitCount++;
   info("Loading page: " + url);
   tab.linkedBrowser.loadURI(url);
+  return Promise.all([ loaded, visited ]);
 }
 
-function waitForRestoredTab(tab) {
-  gTabWaitCount++;
-
-  tab.linkedBrowser.addEventListener("load", function () {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    if (--gTabWaitCount == 0) {
-      ensure_opentabs_match_db(nextStep);
-    }
-  }, true);
-}
-
-
-function nextStep() {
-  if (gTestSteps.length == 0) {
-    while (gBrowser.tabs.length > 1) {
-      gBrowser.selectTabAtIndex(1);
-      gBrowser.removeCurrentTab();
-    }
-
-    PlacesTestUtils.clearHistory().then(finish);
-    return;
-  }
-
-  var stepFunc = gTestSteps.shift();
-  stepFunc();
-}
-
-function ensure_opentabs_match_db(aCallback) {
+function ensure_opentabs_match_db() {
   var tabs = {};
 
   var winEnum = Services.wm.getEnumerator("navigator:browser");
@@ -184,7 +157,9 @@ function ensure_opentabs_match_db(aCallback) {
     }
   }
 
-  checkAutocompleteResults(tabs, aCallback);
+  return new Promise(resolve => {
+    checkAutocompleteResults(tabs, resolve);
+  });
 }
 
 function checkAutocompleteResults(aExpected, aCallback)

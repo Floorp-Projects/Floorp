@@ -317,12 +317,13 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     mp_int p, q, g;  /* PQG parameters */
     mp_int x, k;     /* private key & pseudo-random integer */
     mp_int r, s;     /* tuple (r, s) is signature) */
+    mp_int t;        /* holding tmp values */
     mp_err err   = MP_OKAY;
     SECStatus rv = SECSuccess;
     unsigned int dsa_subprime_len, dsa_signature_len, offset;
     SECItem localDigest;
     unsigned char localDigestData[DSA_MAX_SUBPRIME_LEN];
-    
+    SECItem t2 = { siBuffer, NULL, 0 };
 
     /* FIPS-compliance dictates that digest is a SHA hash. */
     /* Check args. */
@@ -360,6 +361,7 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     MP_DIGITS(&k) = 0;
     MP_DIGITS(&r) = 0;
     MP_DIGITS(&s) = 0;
+    MP_DIGITS(&t) = 0;
     CHECK_MPI_OK( mp_init(&p) );
     CHECK_MPI_OK( mp_init(&q) );
     CHECK_MPI_OK( mp_init(&g) );
@@ -367,6 +369,7 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     CHECK_MPI_OK( mp_init(&k) );
     CHECK_MPI_OK( mp_init(&r) );
     CHECK_MPI_OK( mp_init(&s) );
+    CHECK_MPI_OK( mp_init(&t) );
     /*
     ** Convert stored PQG and private key into MPI integers.
     */
@@ -387,8 +390,16 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     **
     ** s = (k**-1 * (HASH(M) + x*r)) mod q
     */
-    SECITEM_TO_MPINT(localDigest, &s);          /* s = HASH(M)     */
+    if (DSA_NewRandom(NULL, &key->params.subPrime, &t2) != SECSuccess) {
+        PORT_SetError(SEC_ERROR_NEED_RANDOM);
+        rv = SECFailure;
+        goto cleanup;
+    }
+    SECITEM_TO_MPINT(t2, &t); /* t <-$ Zq */
+    CHECK_MPI_OK( mp_mulmod(&k, &t, &q, &k) );  /* k = k * t mod q */
     CHECK_MPI_OK( mp_invmod(&k, &q, &k) );      /* k = k**-1 mod q */
+    CHECK_MPI_OK( mp_mulmod(&k, &t, &q, &k) );  /* k = k * t mod q */
+    SECITEM_TO_MPINT(localDigest, &s);          /* s = HASH(M)     */
     CHECK_MPI_OK( mp_mulmod(&x, &r, &q, &x) );  /* x = x * r mod q */
     CHECK_MPI_OK( mp_addmod(&s, &x, &q, &s) );  /* s = s + x mod q */
     CHECK_MPI_OK( mp_mulmod(&s, &k, &q, &s) );  /* s = s * k mod q */
@@ -422,6 +433,8 @@ cleanup:
     mp_clear(&k);
     mp_clear(&r);
     mp_clear(&s);
+    mp_clear(&t);
+    SECITEM_FreeItem(&t2, PR_FALSE);
     if (err) {
 	translate_mpi_error(err);
 	rv = SECFailure;
