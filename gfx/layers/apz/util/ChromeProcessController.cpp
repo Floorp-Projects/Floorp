@@ -11,7 +11,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZEventState.h"
-#include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -25,7 +25,7 @@ using namespace mozilla::widget;
 
 ChromeProcessController::ChromeProcessController(nsIWidget* aWidget,
                                                  APZEventState* aAPZEventState,
-                                                 APZCTreeManager* aAPZCTreeManager)
+                                                 IAPZCTreeManager* aAPZCTreeManager)
   : mWidget(aWidget)
   , mAPZEventState(aAPZEventState)
   , mAPZCTreeManager(aAPZCTreeManager)
