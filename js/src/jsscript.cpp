@@ -670,7 +670,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             if (!comp->creationOptions().cloneSingletons() ||
                 !comp->behaviors().getSingletonsAsTemplates())
             {
-                return xdr->fail(TranscodeResult_Failure_RunOnceNotSupported);
+                JS_ReportError(cx,
+                               "Can't serialize a run-once non-function script "
+                               "when we're not doing singleton cloning");
+                return false;
             }
         }
 
@@ -1100,7 +1103,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
                     funEnclosingScope = function->nonLazyScript()->enclosingStaticScope();
                 else {
                     MOZ_ASSERT(function->isAsmJSNative());
-                    return xdr->fail(TranscodeResult_Failure_AsmJSNotSupported);
+                    JS_ReportError(cx, "AsmJS modules are not yet supported in XDR serialization.");
+                    return false;
                 }
 
                 StaticScopeIter<NoGC> ssi(funEnclosingScope);
@@ -1166,7 +1170,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
 
           default: {
             MOZ_ASSERT(false, "Unknown class kind.");
-            return xdr->fail(TranscodeResult_Failure_UnknownClassKind);
+            return false;
           }
         }
     }

@@ -59,16 +59,6 @@ XDRBuffer::grow(size_t n)
 }
 
 template<XDRMode mode>
-void
-XDRState<mode>::postProcessContextErrors(JSContext* cx)
-{
-    if (cx->isExceptionPending()) {
-        MOZ_ASSERT(resultCode_ == TranscodeResult_Ok);
-        resultCode_ = TranscodeResult_Throw;
-    }
-}
-
-template<XDRMode mode>
 bool
 XDRState<mode>::codeChars(const Latin1Char* chars, size_t nchars)
 {
@@ -119,8 +109,10 @@ VersionCheck(XDRState<mode>* xdr)
     if (!xdr->codeUint32(&buildIdLength))
         return false;
 
-    if (mode == XDR_DECODE && buildIdLength != buildId.length())
-        return xdr->fail(TranscodeResult_Failure_BadBuildId);
+    if (mode == XDR_DECODE && buildIdLength != buildId.length()) {
+        JS_ReportErrorNumber(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_BUILD_ID);
+        return false;
+    }
 
     if (mode == XDR_ENCODE) {
         if (!xdr->codeBytes(buildId.begin(), buildIdLength))
@@ -138,9 +130,11 @@ VersionCheck(XDRState<mode>* xdr)
         if (!xdr->codeBytes(decodedBuildId.begin(), buildIdLength))
             return false;
 
-        // We do not provide binary compatibility with older scripts.
-        if (!PodEqual(decodedBuildId.begin(), buildId.begin(), buildIdLength))
-            return xdr->fail(TranscodeResult_Failure_BadBuildId);
+        if (!PodEqual(decodedBuildId.begin(), buildId.begin(), buildIdLength)) {
+            // We do not provide binary compatibility with older scripts.
+            JS_ReportErrorNumber(xdr->cx(), GetErrorMessage, nullptr, JSMSG_BAD_BUILD_ID);
+            return false;
+        }
     }
 
     return true;
@@ -157,12 +151,7 @@ XDRState<mode>::codeFunction(MutableHandleFunction objp)
         return false;
 
     RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
-    if (!XDRInterpretedFunction(this, staticLexical, nullptr, objp)) {
-        postProcessContextErrors(cx());
-        return false;
-    }
-
-    return true;
+    return XDRInterpretedFunction(this, staticLexical, nullptr, objp);
 }
 
 template<XDRMode mode>
@@ -176,10 +165,8 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
         return false;
 
     RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
-    if (!XDRScript(this, staticLexical, nullptr, nullptr, scriptp)) {
-        postProcessContextErrors(cx());
+    if (!XDRScript(this, staticLexical, nullptr, nullptr, scriptp))
         return false;
-    }
 
     return true;
 }

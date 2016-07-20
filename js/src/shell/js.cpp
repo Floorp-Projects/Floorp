@@ -1303,42 +1303,6 @@ CacheEntry_setBytecode(JSContext* cx, HandleObject cache, uint8_t* buffer, uint3
 }
 
 static bool
-ConvertTranscodeResultToJSException(JSContext* cx, TranscodeResult rv)
-{
-    switch (rv) {
-      case TranscodeResult_Ok:
-        return true;
-
-      default:
-        MOZ_FALLTHROUGH;
-      case TranscodeResult_Failure:
-        MOZ_ASSERT(!cx->isExceptionPending());
-        JS_ReportError(cx, "generic warning");
-        return false;
-      case TranscodeResult_Failure_BadBuildId:
-        MOZ_ASSERT(!cx->isExceptionPending());
-        JS_ReportError(cx, "the build-id does not match");
-        return false;
-      case TranscodeResult_Failure_RunOnceNotSupported:
-        MOZ_ASSERT(!cx->isExceptionPending());
-        JS_ReportError(cx, "run-once script are not supported by XDR");
-        return false;
-      case TranscodeResult_Failure_AsmJSNotSupported:
-        MOZ_ASSERT(!cx->isExceptionPending());
-        JS_ReportError(cx, "Asm.js is not supported by XDR");
-        return false;
-      case TranscodeResult_Failure_UnknownClassKind:
-        MOZ_ASSERT(!cx->isExceptionPending());
-        JS_ReportError(cx, "Unknown class kind, go fix it.");
-        return false;
-
-      case TranscodeResult_Throw:
-        MOZ_ASSERT(cx->isExceptionPending());
-        return false;
-    }
-}
-
-static bool
 Evaluate(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1483,9 +1447,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             }
 
             if (loadBytecode) {
-                TranscodeResult rv = JS_DecodeScript(cx, loadBuffer, loadLength, &script);
-                if (!ConvertTranscodeResultToJSException(cx, rv))
-                    return false;
+                script = JS_DecodeScript(cx, loadBuffer, loadLength);
             } else {
                 mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
                 (void) JS::Compile(cx, options, chars.start().get(), chars.length(), &script);
@@ -1534,9 +1496,8 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (saveBytecode) {
-            TranscodeResult rv = JS_EncodeScript(cx, script, &saveLength,
-                                                 reinterpret_cast<void**>(&saveBuffer.rwget()));
-            if (!ConvertTranscodeResultToJSException(cx, rv))
+            saveBuffer = reinterpret_cast<uint8_t*>(JS_EncodeScript(cx, script, &saveLength));
+            if (!saveBuffer)
                 return false;
         }
     }
