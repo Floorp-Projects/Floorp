@@ -32,12 +32,18 @@ extern mozilla::LogModule* GetTimerLog();
     {0x84, 0x27, 0xfb, 0xab, 0x44, 0xf2, 0x9b, 0xc8} \
 }
 
-class nsTimerImpl final : public nsITimer
+// TimerThread, nsTimerEvent, and nsTimer have references to these. nsTimer has
+// a separate lifecycle so we can Cancel() the underlying timer when the user of
+// the nsTimer has let go of its last reference.
+class nsTimerImpl
 {
+  ~nsTimerImpl();
 public:
   typedef mozilla::TimeStamp TimeStamp;
 
-  nsTimerImpl();
+  explicit nsTimerImpl(nsITimer* aTimer);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsTimerImpl)
+  NS_DECL_NON_VIRTUAL_NSITIMER
 
   static nsresult Startup();
   static void Shutdown();
@@ -46,12 +52,6 @@ public:
   friend class nsTimerEvent;
   friend struct TimerAdditionComparator;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITIMER
-
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-private:
   void SetDelayInternal(uint32_t aDelay);
 
   void Fire();
@@ -77,7 +77,6 @@ private:
     Observer = 3,
   };
 
-  ~nsTimerImpl();
   nsresult InitCommon(uint32_t aDelay, uint32_t aType);
 
   void ReleaseCallback()
@@ -95,20 +94,29 @@ private:
     }
   }
 
+  // Permanently disables this timer. This gets called when the last nsTimer
+  // ref (besides mITimer) goes away. If called from the target thread, it
+  // guarantees that the timer will not fire again. If called from anywhere
+  // else, it could race.
+  void Neuter();
+
   bool IsRepeating() const
   {
-    static_assert(TYPE_ONE_SHOT < TYPE_REPEATING_SLACK,
+    static_assert(nsITimer::TYPE_ONE_SHOT < nsITimer::TYPE_REPEATING_SLACK,
                   "invalid ordering of timer types!");
-    static_assert(TYPE_REPEATING_SLACK < TYPE_REPEATING_PRECISE,
-                  "invalid ordering of timer types!");
-    static_assert(TYPE_REPEATING_PRECISE < TYPE_REPEATING_PRECISE_CAN_SKIP,
-                  "invalid ordering of timer types!");
-    return mType >= TYPE_REPEATING_SLACK;
+    static_assert(
+        nsITimer::TYPE_REPEATING_SLACK < nsITimer::TYPE_REPEATING_PRECISE,
+        "invalid ordering of timer types!");
+    static_assert(
+        nsITimer::TYPE_REPEATING_PRECISE <
+          nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+        "invalid ordering of timer types!");
+    return mType >= nsITimer::TYPE_REPEATING_SLACK;
   }
 
   bool IsRepeatingPrecisely() const
   {
-    return mType >= TYPE_REPEATING_PRECISE;
+    return mType >= nsITimer::TYPE_REPEATING_PRECISE;
   }
 
   nsCOMPtr<nsIEventTarget> mEventTarget;
@@ -181,6 +189,28 @@ private:
   static double         sDeltaSum;
   static double         sDeltaSumSquared;
   static double         sDeltaNum;
+  RefPtr<nsITimer>      mITimer;
+};
+
+class nsTimer final : public nsITimer
+{
+  virtual ~nsTimer();
+public:
+  nsTimer() : mImpl(new nsTimerImpl(this)) {}
+
+  friend class TimerThread;
+  friend class nsTimerEvent;
+  friend struct TimerAdditionComparator;
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_SAFE_NSITIMER(mImpl);
+
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+private:
+  // nsTimerImpl holds a strong ref to us. When our refcount goes to 1, we will
+  // null this to break the cycle.
+  RefPtr<nsTimerImpl> mImpl;
 };
 
 #endif /* nsTimerImpl_h___ */
