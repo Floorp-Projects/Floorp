@@ -59,9 +59,38 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
+// Register built-in parts of the API. Other parts may be registered
+// in browser/, mobile/, or b2g/.
+ExtensionManagement.registerScript("chrome://extensions/content/ext-alarms.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-backgroundPage.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-cookies.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-downloads.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-notifications.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-i18n.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-idle.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-runtime.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-extension.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-webNavigation.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
+
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
-const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
-const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
+
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/alarms.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/downloads.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/idle.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/notifications.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/runtime.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/storage.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/test.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/events.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_navigation.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_request.json");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -110,20 +139,18 @@ var Management = {
     // extended by other schemas, so needs to be loaded first.
     let promise = Schemas.load(BASE_SCHEMA).then(() => {
       let promises = [];
-      for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
-        promises.push(Schemas.load(value));
+      for (let schema of ExtensionManagement.getSchemas()) {
+        promises.push(Schemas.load(schema));
       }
       return Promise.all(promises);
     });
 
-    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
-      let scope = {
-        extensions: this,
-        global: scriptScope,
-        ExtensionContext: ExtensionContext,
-        GlobalManager: GlobalManager,
-      };
-      Services.scriptloader.loadSubScript(value, scope, "UTF-8");
+    for (let script of ExtensionManagement.getScripts()) {
+      let scope = {extensions: this,
+                   global: scriptScope,
+                   ExtensionContext: ExtensionContext,
+                   GlobalManager: GlobalManager};
+      Services.scriptloader.loadSubScript(script, scope, "UTF-8");
 
       // Save the scope to avoid it being garbage collected.
       this.scopes.push(scope);
