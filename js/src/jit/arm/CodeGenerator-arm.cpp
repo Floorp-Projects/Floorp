@@ -2714,9 +2714,7 @@ void
 CodeGeneratorARM::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 {
     const MWasmStoreGlobalVar* mir = ins->mir();
-
     MIRType type = mir->value()->type();
-    MOZ_ASSERT(IsNumberType(type));
 
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
     if (type == MIRType::Int32) {
@@ -2725,7 +2723,7 @@ CodeGeneratorARM::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
         VFPRegister vd(ToFloatRegister(ins->value()));
         masm.ma_vstr(vd.singleOverlay(), Address(GlobalReg, addr));
     } else {
-        MOZ_ASSERT(mir->type() == MIRType::Double);
+        MOZ_ASSERT(type == MIRType::Double);
         masm.ma_vstr(ToFloatRegister(ins->value()), Address(GlobalReg, addr));
     }
 }
