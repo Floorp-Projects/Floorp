@@ -501,8 +501,9 @@ class TryOptionSyntax(object):
             elif attr('legacy_kind') == 'talos':
                 return match_test(self.talos, 'talos_try_name')
             return False
+        elif attr('kind') in ('desktop-test', 'android-test'):
+            return match_test(self.unittests, 'unittest_try_name')
         else:
-            # TODO: match other kinds
             return False
 
     def __str__(self):

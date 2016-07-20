@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-implementation: 'taskgraph.kind.docker_image:DockerImageTask'
+implementation: 'taskgraph.task.docker_image:DockerImageTask'
 images_path: '../../../testing/docker'
 
 # make a task for each docker-image we might want.  For the moment, since we

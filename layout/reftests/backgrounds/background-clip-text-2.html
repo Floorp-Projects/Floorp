@@ -1,0 +1,28 @@
+<!doctype HTML>
+<html>
+  <head>
+    <title>background-clip: text shadow</title>
+    <style>
+      div.out {
+        width: 500px;
+        height: 300px;
+        margin: 0px;
+        background-image: linear-gradient(green, green);
+        background-clip: text;
+        color: transparent;
+        font-size: 50px;
+        font-family: serif;
+        text-shadow: 0px 60px 5px red;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
+  </head>
+  <body style="margin: 0px;">
+    <div class="out">
+      Text Shadow
+      <div style="display:inline-block; width:0px; height:100px;"/>
+    </div>
+    <!-- A white div which is used to cover on text -->
+    <div style="position: absolute; top: 0px; left:0px; width:500px; height:110px;background-color:white;"/>
+  </body>
+</html>

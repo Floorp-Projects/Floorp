@@ -4714,12 +4714,10 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
     UpdateSrcMediaStreamPlaying();
     UpdateAudioChannelPlayingState();
     if (aPauseElement) {
-      if (mMediaSource) {
-        ReportTelemetry();
+      ReportTelemetry();
 #ifdef MOZ_EME
-        ReportEMETelemetry();
+      ReportEMETelemetry();
 #endif
-      }
 
 #ifdef MOZ_EME
       // For EME content, force destruction of the CDM client (and CDM

@@ -665,25 +665,27 @@ public:
 private:
   inline nsStyleSet* StyleSet() const;
 
-  // Enum for the result of RestyleSelf, which indicates whether the
+  // Enum class for the result of RestyleSelf, which indicates whether the
   // restyle procedure should continue to the children, and how.
   //
   // These values must be ordered so that later values imply that all
   // the work of the earlier values is also done.
-  enum RestyleResult {
+  enum class RestyleResult : uint8_t {
+    // default initial value
+    eNone,
 
     // we left the old style context on the frame; do not restyle children
-    eRestyleResult_Stop = 1,
+    eStop,
 
     // we got a new style context on this frame, but we know that children
     // do not depend on the changed values; do not restyle children
-    eRestyleResult_StopWithStyleChange,
+    eStopWithStyleChange,
 
     // continue restyling children
-    eRestyleResult_Continue,
+    eContinue,
 
     // continue restyling children with eRestyle_ForceDescendants set
-    eRestyleResult_ContinueAndForceDescendants
+    eContinueAndForceDescendants
   };
 
   struct SwapInstruction

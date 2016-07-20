@@ -36,7 +36,7 @@ differently.  Some kinds may generate task definitions entirely internally (for
 example, symbol-upload tasks are all alike, and very simple), while other kinds
 may do little more than parse a directory of YAML files.
 
-A `kind.yml` file contains data about the kind, as well as referring to a
+A ``kind.yml`` file contains data about the kind, as well as referring to a
 Python class implementing the kind in its ``implementation`` key.  That
 implementation may rely on lots of code shared with other kinds, or contain a
 completely unique implementation of some functionality.
@@ -61,14 +61,10 @@ the bread-and-butter build and test configuration more complicated.
 Dependencies
 ------------
 
-Dependency links between tasks are always between different kinds(*).  At a
-large scale, you can think of the dependency graph as one between kinds, rather
-than between tasks.  For example, the unittest kind depends on the build kind.
-The details of *which* tasks of the two kinds are linked is left to the kind
-definition.
-
-(*) A kind can depend on itself, though.  You can safely ignore that detail.
-Tasks can also be linked within a kind using explicit dependencies.
+Dependencies between tasks are represented as labeled edges in the task graph.
+For example, a test task must depend on the build task creating the artifact it
+tests, and this dependency edge is named 'build'.  The task graph generation
+process later resolves these dependencies to specific taskIds.
 
 Decision Task
 -------------
@@ -76,10 +72,16 @@ Decision Task
 The decision task is the first task created when a new graph begins.  It is
 responsible for creating the rest of the task graph.
 
-The decision task for pushes is defined in-tree, in ``.taskcluster.yml``.  The
+The decision task for pushes is defined in-tree, in ``.taskcluster.yml``.  That
 task description invokes ``mach taskcluster decision`` with some metadata about
 the push.  That mach command determines the optimized task graph, then calls
 the TaskCluster API to create the tasks.
+
+Note that this mach command is *not* designed to be invoked directly by humans.
+Instead, use the mach commands described below, supplying ``parameters.yml``
+from a recent decision task.  These commands allow testing everything the
+decision task does except the command-line processing and the
+``queue.createTask`` calls.
 
 Graph Generation
 ----------------
@@ -173,12 +175,29 @@ Each of these commands taskes a ``--parameters`` option giving a file with
 parameters to guide the graph generation.  The decision task helpfully produces
 such a file on every run, and that is generally the easiest way to get a
 parameter file.  The parameter keys and values are described in
-:doc:`parameters`.
+:doc:`parameters`; using that information, you may modify an existing
+``parameters.yml`` or create your own.
 
-Finally, the ``mach taskgraph decision`` subcommand performs the entire
-task-graph generation process, then creates the tasks.  This command should
-only be used within a decision task, as it assumes it is running in that
-context.
+Task Parameterization
+---------------------
+
+A few components of tasks are only known at the very end of the decision task
+-- just before the ``queue.createTask`` call is made.  These are specified
+using simple parameterized values, as follows:
+
+``{"relative-datestamp": "certain number of seconds/hours/days/years"}``
+    Objects of this form will be replaced with an offset from the current time
+    just before the ``queue.createTask`` call is made.  For example, an
+    artifact expiration might be specified as ``{"relative-timestamp": "1
+    year"}``.
+
+``{"task-reference": "string containing <dep-name>"}``
+    The task definition may contain "task references" of this form.  These will
+    be replaced during the optimization step, with the appropriate taskId for
+    the named dependency substituted for ``<dep-name>`` in the string.
+    Multiple labels may be substituted in a single string, and ``<<>`` can be
+    used to escape a literal ``<``.
+
 
 The ``mach taskgraph action-task`` subcommand is used by Action Tasks to
 create a task graph of the requested jobs and its non-optimized dependencies.
@@ -216,18 +235,6 @@ Each task has the following properties:
 ``kind_implementation``
    The module and the class name which was used to implement this particular task.
    It is always of the form ``<module-path>:<object-path>``
-
-The task definition may contain "relative datestamps" of the form
-``{"relative-datestamp": "certain number of seconds/hours/days/years"}``.
-These will be replaced in the last step, while creating tasks.
-The UTC timestamp at that moment is noted, and all the relative datestamps
-are replaced with respect to this timestamp.
-
-The task definition may contain "task references" of the form
-``{"task-reference": "string containing <task-label>"}``.  These will be
-replaced during the optimization step, with the appropriate taskId substituted
-for ``<task-label>`` in the string.  Multiple labels may be substituted in a
-single string, and ``<<>`` can be used to escape a literal ``<``.
 
 The results from each command are in the same format, but with some differences
 in the content:

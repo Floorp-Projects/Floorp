@@ -347,7 +347,7 @@ public:
    * that we did not add as restyle roots initially (due to there being
    * an ancestor with the restyle root bit set), but which we might
    * not have got around to restyling due to the restyle process
-   * terminating early with eRestyleResult_Stop (see ElementRestyler::Restyle).
+   * terminating early with RestyleResul::eStop (see ElementRestyler::Restyle).
    *
    * This function must be called with elements in order such that
    * appending them to mRestyleRoots maintains its ordering invariant that
