@@ -126,12 +126,31 @@
   border: 1px solid rgb(192,192,192);
   border-radius: 3px;
   margin: 5px;
-  padding: 2px 12px;
+  padding: 2px 10px;
   background-color: rgb(251,251,251);
   color: rgb(71,71,71);
   box-shadow: 0 1px rgba(255, 255, 255, 0.5),
               inset 0 1px rgba(255, 255, 255, 0.5);
   -moz-appearance: none;
+}
+
+.customizationmode-button > .box-inherit {
+  border-width: 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0;
+}
+
+.customizationmode-button > .button-icon {
+  margin-inline-start: 0;
+}
+
+.customizationmode-button:not([type=menu]) > .button-text {
+  margin-inline-end: 0;
+}
+
+.customizationmode-button > .button-menu-dropmarker {
+  margin-inline-end: 0;
+  padding-inline-end: 0;
 }
 
 #customization-titlebar-visibility-button[checked],
@@ -155,11 +174,6 @@
 #customization-titlebar-visibility-button {
   list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
   -moz-image-region: rect(0, 24px, 24px, 0);
-}
-
-#customization-lwtheme-button,
-#customization-titlebar-visibility-button  {
-  padding: 2px 7px;
 }
 
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-text,
