@@ -7078,7 +7078,7 @@ DebuggerFrame::create(JSContext* cx, HandleObject proto, AbstractFramePtr refere
 DebuggerFrame::getCallee(JSContext* cx, Handle<DebuggerFrame*> frame,
                          MutableHandle<DebuggerObject*> result)
 {
-    AbstractFramePtr referent = frame->referent();
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
     if (!referent.isFunctionFrame()) {
         result.set(nullptr);
         return true;
@@ -7163,9 +7163,20 @@ DebuggerFrame::getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
 }
 
 /* static */ bool
-DebuggerFrame::isGenerator() const
+DebuggerFrame::getIsGenerator(Handle<DebuggerFrame*> frame)
 {
-    return referent().script()->isGenerator();
+    return DebuggerFrame::getReferent(frame).script()->isGenerator();
+}
+
+/* static */ AbstractFramePtr
+DebuggerFrame::getReferent(Handle<DebuggerFrame*> frame)
+{
+    AbstractFramePtr referent = AbstractFramePtr::FromRaw(frame->getPrivate());
+    if (referent.isScriptFrameIterData()) {
+        ScriptFrameIter iter(*(ScriptFrameIter::Data*)(referent.raw()));
+        referent = iter.abstractFramePtr();
+    }
+    return referent;
 }
 
 /* static */ bool
@@ -7388,7 +7399,7 @@ DebuggerFrame::generatorGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER_FRAME(cx, argc, vp, "get callee", args, frame);
 
-    args.rval().setBoolean(frame->isGenerator());
+    args.rval().setBoolean(DebuggerFrame::getIsGenerator(frame));
     return true;
 }
 
