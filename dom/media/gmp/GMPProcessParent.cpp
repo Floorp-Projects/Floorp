@@ -63,7 +63,20 @@ GMPProcessParent::Launch(int32_t aTimeoutMs)
     NS_WARNING("ResolveMovedUsersFolder failed for GMP path.");
     return false;
   }
-  mAllowedFilesRead.push_back(wGMPPath + L"\\*");
+
+  // If the GMP path is a network path that is not mapped to a drive letter,
+  // then we need to fix the path format for the sandbox rule.
+  wchar_t volPath[MAX_PATH];
+  if (::GetVolumePathNameW(wGMPPath.c_str(), volPath, MAX_PATH) &&
+      ::GetDriveTypeW(volPath) == DRIVE_REMOTE &&
+      wGMPPath.compare(0, 2, L"\\\\") == 0) {
+    std::wstring sandboxGMPPath(wGMPPath);
+    sandboxGMPPath.insert(1, L"??\\UNC");
+    mAllowedFilesRead.push_back(sandboxGMPPath + L"\\*");
+  } else {
+    mAllowedFilesRead.push_back(wGMPPath + L"\\*");
+  }
+
   args.push_back(WideToUTF8(wGMPPath));
 #else
   args.push_back(mGMPPath);
