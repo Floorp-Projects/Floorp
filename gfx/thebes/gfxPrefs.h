@@ -70,7 +70,6 @@ static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists());             \
 static const char* Get##Name##PrefName() { return Prefname; }                 \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 private:                                                                      \
-static Pref* Get##Name##PrefPtr() { return &GetSingleton().mPref##Name; }     \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
 namespace mozilla {
