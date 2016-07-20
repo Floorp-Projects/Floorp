@@ -22,12 +22,14 @@ interface nsITelemetry : nsISupports
    * HISTOGRAM_BOOLEAN - For storing 0/1 values
    * HISTOGRAM_FLAG - For storing a single value; its count is always == 1.
    * HISTOGRAM_COUNT - For storing counter values without bucketing.
+   * HISTOGRAM_CATEGORICAL - For storing enumerated values by label.
    */
   const unsigned long HISTOGRAM_EXPONENTIAL = 0;
   const unsigned long HISTOGRAM_LINEAR = 1;
   const unsigned long HISTOGRAM_BOOLEAN = 2;
   const unsigned long HISTOGRAM_FLAG = 3;
   const unsigned long HISTOGRAM_COUNT = 4;
+  const unsigned long HISTOGRAM_CATEGORICAL = 5;
 
   /**
    * Scalar types:

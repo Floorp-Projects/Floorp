@@ -119,10 +119,13 @@ struct HistogramInfo {
   uint32_t id_offset;
   uint32_t expiration_offset;
   uint32_t dataset;
+  uint32_t label_index;
+  uint32_t label_count;
   bool keyed;
 
   const char *id() const;
   const char *expiration() const;
+  nsresult label_id(const char* label, uint32_t* labelId) const;
 };
 
 struct AddonHistogramInfo {
@@ -289,6 +292,31 @@ HistogramInfo::expiration() const
   return &gHistogramStringTable[this->expiration_offset];
 }
 
+nsresult
+HistogramInfo::label_id(const char* label, uint32_t* labelId) const
+{
+  MOZ_ASSERT(label);
+  MOZ_ASSERT(this->histogramType == nsITelemetry::HISTOGRAM_CATEGORICAL);
+  if (this->histogramType != nsITelemetry::HISTOGRAM_CATEGORICAL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (uint32_t i = 0; i < this->label_count; ++i) {
+    // gHistogramLabelTable contains the indices of the label strings in the
+    // gHistogramStringTable.
+    // They are stored in-order and consecutively, from the offset label_index
+    // to (label_index + label_count).
+    uint32_t string_offset = gHistogramLabelTable[this->label_index + i];
+    const char* const str = &gHistogramStringTable[string_offset];
+    if (::strcmp(label, str) == 0) {
+      *labelId = i;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 } // namespace
 
 
@@ -354,6 +382,7 @@ internal_HistogramGet(const char *name, const char *expiration,
     *result = Histogram::FactoryGet(name, min, max, bucketCount, Histogram::kUmaTargetedHistogramFlag);
     break;
   case nsITelemetry::HISTOGRAM_LINEAR:
+  case nsITelemetry::HISTOGRAM_CATEGORICAL:
     *result = LinearHistogram::FactoryGet(name, min, max, bucketCount, Histogram::kUmaTargetedHistogramFlag);
     break;
   case nsITelemetry::HISTOGRAM_BOOLEAN:
@@ -1047,6 +1076,7 @@ bool
 internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
+  MOZ_ASSERT(obj);
   if (!obj) {
     return false;
   }
@@ -1057,29 +1087,57 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 
   JS::CallArgs args = CallArgsFromVp(argc, vp);
 
+  if (!internal_CanRecordBase()) {
+    return true;
+  }
+
   // If we don't have an argument for the count histogram, assume an increment of 1.
   // Otherwise, make sure to run some sanity checks on the argument.
-  int32_t value = 1;
-  if ((type != base::CountHistogram::COUNT_HISTOGRAM) || args.length()) {
-    if (!args.length()) {
-      JS_ReportError(cx, "Expected one argument");
-      return false;
-    }
-
-    if (!(args[0].isNumber() || args[0].isBoolean())) {
-      JS_ReportError(cx, "Not a number");
-      return false;
-    }
-
-    if (!JS::ToInt32(cx, args[0], &value)) {
-      return false;
-    }
+  if ((type == base::CountHistogram::COUNT_HISTOGRAM) && (args.length() == 0)) {
+    internal_HistogramAdd(*h, 1);
+    return true;
   }
 
-  if (internal_CanRecordBase()) {
-    internal_HistogramAdd(*h, value);
+  // For categorical histograms we allow passing a string argument that specifies the label.
+  mozilla::Telemetry::ID id;
+  if (type == base::LinearHistogram::LINEAR_HISTOGRAM &&
+      (args.length() > 0) && args[0].isString() &&
+      NS_SUCCEEDED(internal_GetHistogramEnumId(h->histogram_name().c_str(), &id)) &&
+      gHistograms[id].histogramType == nsITelemetry::HISTOGRAM_CATEGORICAL) {
+    nsAutoJSString label;
+    if (!label.init(cx, args[0])) {
+      JS_ReportError(cx, "Invalid string parameter");
+      return false;
+    }
+
+    uint32_t labelId = 0;
+    if (NS_FAILED(gHistograms[id].label_id(NS_ConvertUTF16toUTF8(label).get(), &labelId))) {
+      JS_ReportError(cx, "Unknown label for categorical histogram");
+      return false;
+    }
+
+    internal_HistogramAdd(*h, labelId);
+    return true;
   }
 
+  // All other accumulations expect one numerical argument.
+  int32_t value = 0;
+  if (!args.length()) {
+    JS_ReportError(cx, "Expected one argument");
+    return false;
+  }
+
+  if (!(args[0].isNumber() || args[0].isBoolean())) {
+    JS_ReportError(cx, "Not a number");
+    return false;
+  }
+
+  if (!JS::ToInt32(cx, args[0], &value)) {
+    JS_ReportError(cx, "Failed to convert argument");
+    return false;
+  }
+
+  internal_HistogramAdd(*h, value);
   return true;
 }
 

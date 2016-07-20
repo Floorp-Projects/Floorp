@@ -107,13 +107,17 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._cpp_guard = definition.get('cpp_guard')
         self._keyed = definition.get('keyed', False)
         self._expiration = definition.get('expires_in_version')
+        self._labels = definition.get('labels', [])
         self.compute_bucket_parameters(definition)
-        table = { 'boolean': 'BOOLEAN',
-                  'flag': 'FLAG',
-                  'count': 'COUNT',
-                  'enumerated': 'LINEAR',
-                  'linear': 'LINEAR',
-                  'exponential': 'EXPONENTIAL' }
+        table = {
+            'boolean': 'BOOLEAN',
+            'flag': 'FLAG',
+            'count': 'COUNT',
+            'enumerated': 'LINEAR',
+            'categorical': 'CATEGORICAL',
+            'linear': 'LINEAR',
+            'exponential': 'EXPONENTIAL',
+        }
         table_dispatch(self.kind(), table,
                        lambda k: self._set_nsITelemetry_kind(k))
         datasets = { 'opt-in': 'DATASET_RELEASE_CHANNEL_OPTIN',
@@ -133,7 +137,8 @@ symbol that should guard C/C++ definitions associated with the histogram."""
 
     def kind(self):
         """Return the kind of the histogram.
-Will be one of 'boolean', 'flag', 'count', 'enumerated', 'linear', or 'exponential'."""
+Will be one of 'boolean', 'flag', 'count', 'enumerated', 'categorical', 'linear',
+or 'exponential'."""
         return self._kind
 
     def expiration(self):
@@ -173,14 +178,21 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         """Returns the dataset this histogram belongs into."""
         return self._dataset
 
+    def labels(self):
+        """Returns a list of labels for a categorical histogram, [] for others."""
+        return self._labels
+
     def ranges(self):
         """Return an array of lower bounds for each bucket in the histogram."""
-        table = { 'boolean': linear_buckets,
-                  'flag': linear_buckets,
-                  'count': linear_buckets,
-                  'enumerated': linear_buckets,
-                  'linear': linear_buckets,
-                  'exponential': exponential_buckets }
+        table = {
+            'boolean': linear_buckets,
+            'flag': linear_buckets,
+            'count': linear_buckets,
+            'enumerated': linear_buckets,
+            'categorical': linear_buckets,
+            'linear': linear_buckets,
+            'exponential': exponential_buckets,
+        }
         return table_dispatch(self.kind(), table,
                               lambda p: p(self.low(), self.high(), self.n_buckets()))
 
@@ -190,9 +202,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'flag': Histogram.boolean_flag_bucket_parameters,
             'count': Histogram.boolean_flag_bucket_parameters,
             'enumerated': Histogram.enumerated_bucket_parameters,
+            'categorical': Histogram.categorical_bucket_parameters,
             'linear': Histogram.linear_bucket_parameters,
-            'exponential': Histogram.exponential_bucket_parameters
-            }
+            'exponential': Histogram.exponential_bucket_parameters,
+        }
         table_dispatch(self.kind(), table,
                        lambda p: self.set_bucket_parameters(*p(definition)))
 
@@ -205,9 +218,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'flag': always_allowed_keys,
             'count': always_allowed_keys,
             'enumerated': always_allowed_keys + ['n_values'],
+            'categorical': always_allowed_keys + ['labels'],
             'linear': general_keys,
-            'exponential': general_keys
-            }
+            'exponential': general_keys,
+        }
         # We removed extended_statistics_ok on the client, but the server-side,
         # where _strict_type_checks==False, has to deal with historical data.
         if not self._strict_type_checks:
@@ -253,18 +267,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             if field not in definition and name not in whitelists[field]:
                 raise KeyError, 'New histogram "%s" must have a %s field.' % (name, field)
 
-    def check_bug_numbers(self, name, definition):
-        # Use counters don't have any mechanism to add the bug numbers field.
-        if self._is_use_counter:
-            return
-
-        bug_numbers = definition.get('bug_numbers')
-        if not bug_numbers:
-            if whitelists is None or name in whitelists['bug_numbers']:
-                return
-            else:
-                raise KeyError, 'New histogram "%s" must have a bug_numbers field.' % name
-
     def check_field_types(self, name, definition):
         # Define expected types for the histogram properties.
         type_checked_fields = {
@@ -284,6 +286,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         type_checked_list_fields = {
             "bug_numbers": int,
             "alert_emails": basestring,
+            "labels": basestring,
         }
 
         # For the server-side, where _strict_type_checks==False, we want to
@@ -350,6 +353,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
     @staticmethod
     def enumerated_bucket_parameters(definition):
         n_values = definition['n_values']
+        return (1, n_values, n_values + 1)
+
+    @staticmethod
+    def categorical_bucket_parameters(definition):
+        n_values = len(definition['labels'])
         return (1, n_values, n_values + 1)
 
     @staticmethod

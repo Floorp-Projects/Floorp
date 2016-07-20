@@ -35,6 +35,13 @@ class StringTable:
             self.current_index += self.c_strlen(string)
             return result
 
+    def stringIndexes(self, strings):
+        """ Returns a list of indexes for the provided list of strings.
+        Adds the strings to the table if they are not in it yet.
+        :param strings: list of strings to put into the table.
+        """
+        return [self.stringIndex(s) for s in strings]
+
     def writeDefinition(self, f, name):
         """Writes the string table to a file as a C const char array.
 
