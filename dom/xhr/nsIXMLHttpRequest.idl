@@ -279,8 +279,6 @@ interface nsIXMLHttpRequest : nsISupports
    *
    * @param principal The principal to use for the request. This must not be
    *                  null.
-   * @param scriptContext The script context to use for the request. May be
-   *                      null.
    * @param globalObject The associated global for the request. Can be the
    *                     outer window, a sandbox, or a backstage pass.
    *                     May be null, but then the request cannot create a
@@ -292,7 +290,6 @@ interface nsIXMLHttpRequest : nsISupports
    *                  load group.
    */
   [noscript] void init(in nsIPrincipal principal,
-                       in nsIScriptContext scriptContext,
                        in nsIGlobalObject globalObject,
                        in nsIURI baseURI,
                        [optional] in nsILoadGroup loadGroup);

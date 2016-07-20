@@ -551,7 +551,6 @@ public:
   nsresult Init();
 
   nsresult init(nsIPrincipal* principal,
-                nsIScriptContext* scriptContext,
                 nsPIDOMWindowInner* globalObject,
                 nsIURI* baseURI);
 
