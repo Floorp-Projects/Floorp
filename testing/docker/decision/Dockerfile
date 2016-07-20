@@ -5,8 +5,7 @@ MAINTAINER    Greg Arndt <garndt@mozilla.com>
 RUN useradd -d /home/worker -s /bin/bash -m worker
 RUN mkdir /home/worker/artifacts && chown worker:worker /home/worker/artifacts
 
-# install non-build specific dependencies in a single layer
-ADD system-setup.sh   /tmp/system-setup.sh
+ADD system-setup.sh tooltool.py /tmp/
 RUN bash /tmp/system-setup.sh
 
 ADD bin /home/worker/bin
