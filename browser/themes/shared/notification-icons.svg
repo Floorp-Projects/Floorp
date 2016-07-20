@@ -33,6 +33,7 @@
     <path id="login-detailed-icon" d="m 1,27 0,3.5 a 0.5,0.5 0 0 0 0.5,0.5 l 5,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-1.5 1.5,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-1.5 1,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-1 1,0 a 0.5,0.5 0 0 0 0.5,-0.5 l 0,-2 2,0 2.5,-2.5 q 0.5,-0.5 1,0 l 1,1 c 0.5,0.5 1,0.5 1.5,-0.5 l 1,-2 a 9,9 0 1 0 -8,-8 l -2,1 c -1,0.5 -1,1 -0.5,1.5 l 1.5,1.5 q 0.5,0.5 0,1 z m 21,-19.1 a 2,2 0 1 1 0,0.2 z" />
     <path id="microphone-icon" d="m 8,14 0,4 a 8,8 0 0 0 6,7.7 l 0,2.3 -2,0 a 2,2 0 0 0 -2,2 l 12,0 a 2,2 0 0 0 -2,-2 l -2,0 0,-2.3 a 8,8 0 0 0 6,-7.7 l 0,-4 -2,0 0,4 a 6,6 0 0 1 -12,0 l 0,-4 z m 4,4 a 4,4 0 0 0 8,0 l 0,-12 a 4,4 0 0 0 -8,0 z" />
     <path id="microphone-detailed-icon" d="m 8,18 a 8,8 0 0 0 6,7.7 l 0,2.3 -1,0 a 3,2 0 0 0 -3,2 l 12,0 a 3,2 0 0 0 -3,-2 l -1,0 0,-2.3 a 8,8 0 0 0 6,-7.7 l 0,-4 a 1,1 0 0 0 -2,0 l 0,4 a 6,6 0 0 1 -12,0 l 0,-4 a 1,1 0 0 0 -2,0 z m 4,0 a 4,4 0 0 0 8,0 l 0,-12 a 4,4 0 0 0 -8,0 z" />
+    <path id="plugin-icon" d="m 2,26 a 2,2 0 0 0 2,2 l 24,0 a 2,2 0 0 0 2,-2 l 0,-16 a 2,2 0 0 0 -2,-2 l -24,0 a 2,2 0 0 0 -2,2 z m 2,-20 10,0 0,-2 a 2,2 0 0 0 -2,-2 l -6,0 a 2,2 0 0 0 -2,2 z m 14,0 10,0 0,-2 a 2,2 0 0 0 -2,-2 l -6,0 a 2,2 0 0 0 -2,2 z" />
     <path id="pointerLock-icon" d="m 8,24 6,-5 5,10 4,-2 -5,-10 7,-1 -17,-14 z" />
     <path id="popup-icon" d="m 2,24 a 4,4 0 0 0 4,4 l 8,0 a 10,10 0 0 1 -2,-4 l -4,0 a 2,2 0 0 1 -2,-2 l 0,-12 18,0 0,2 a 10,10 0 0 1 4,2 l 0,-8 a 4,4 0 0 0 -4,-4 l -18,0 a 4,4 0 0 0 -4,4 z m 12,-2.1 a 8,8 0 1 1 0,0.2 m 10.7,-4.3 a 5,5 0 0 0 -6.9,6.9 z m -5.4,8.4 a 5,5 0 0 0 6.9,-6.9 z" />
     <path id="screen-icon" d="m 2,18 a 2,2 0 0 0 2,2 l 2,0 0,-6 a 4,4 0 0 1 4,-4 l 14,0 0,-6 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z m 6,10 a 2,2 0 0 0 2,2 l 18,0 a 2,2 0 0 0 2,-2 l 0,-14 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z" />
@@ -61,6 +62,8 @@
   <use id="microphone" xlink:href="#microphone-icon" />
   <use id="microphone-blocked" class="blocked" xlink:href="#microphone-icon" />
   <use id="microphone-detailed" xlink:href="#microphone-detailed-icon" />
+  <use id="plugin" xlink:href="#plugin-icon" />
+  <use id="plugin-blocked" class="blocked" xlink:href="#plugin-icon" />
   <use id="pointerLock" xlink:href="#pointerLock-icon" />
   <use id="pointerLock-blocked" class="blocked" xlink:href="#pointerLock-icon" />
   <use id="popup" xlink:href="#popup-icon" />

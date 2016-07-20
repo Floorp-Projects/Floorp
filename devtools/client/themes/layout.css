@@ -2,66 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
-#sidebar-panel-layoutview {
-  display: block;
-  overflow: auto;
-  height: 100%;
-}
-
-#layout-wrapper {
-  /* The sidebar-panel is not focusable, this wrapper will catch click events in
-     all the empty area around the layout-container */
-  height: 100%;
-}
-
 #layout-container {
   /* The view will grow bigger as the window gets resized, until 400px */
   max-width: 400px;
   margin: 0px auto;
   padding: 0;
-  /* "Contain" the absolutely positioned #layout-main element */
-  position: relative;
 }
 
-/* Header: contains the position and size of the element */
+/* Header */
 
-#layout-header {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 4px 14px;
-  display: -moz-box;
-  vertical-align: top;
+#layout-header,
+#layout-info {
+  display: flex;
+  align-items: center;
+  padding: 4px 17px;
 }
 
-#layout-header:dir(rtl) {
-  -moz-box-direction: reverse;
+#layout-geometry-editor {
+  visibility: hidden;
 }
 
-#layout-header > span {
-  display: -moz-box;
-}
-
-#layout-element-size {
-  -moz-box-flex: 1;
-}
-
-#layout-element-size:dir(rtl) {
-  -moz-box-pack: end;
-}
-
-@media (max-height: 250px) {
-  #layout-header {
-    padding-top: 0;
-    padding-bottom: 0;
-    margin-top: 10px;
-    margin-bottom: 8px;
-  }
+#layout-geometry-editor::before {
+  background: url(images/geometry-editor.svg) no-repeat center center / 16px 16px;
 }
 
 /* Main: contains the box-model regions */
 
 #layout-main {
-  position: absolute;
+  position: relative;
   box-sizing: border-box;
   /* The regions are semi-transparent, so the white background is partly
      visible */
@@ -316,7 +284,7 @@
   }
 }
 
-/* Legend, displayed inside regions */
+/* Legend: displayed inside regions */
 
 .layout-legend {
   position: absolute;
@@ -356,23 +324,13 @@
   cursor: default;
 }
 
-/* Hide all values when the view is inactive */
+/* Layout info: contains the position and size of the element */
 
-#layout-container.inactive > #layout-header > #layout-element-position,
-#layout-container.inactive > #layout-header > #layout-element-size,
-#layout-container.inactive > #layout-main > p {
-   visibility: hidden;
+#layout-element-size {
+  flex: 1;
 }
 
 #layout-position-group {
   display: flex;
   align-items: center;
-}
-
-#layout-geometry-editor {
-  visibility: hidden;
-}
-
-#layout-geometry-editor::before {
-  background: url(images/geometry-editor.svg) no-repeat center center / 16px 16px;
 }

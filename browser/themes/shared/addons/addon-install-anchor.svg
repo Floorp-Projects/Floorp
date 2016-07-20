@@ -5,15 +5,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="16" height="16" viewBox="0 0 16 16">
   <defs>
-    <style>
-      use:not(:target) {
-        display: none;
-      }
-      .style-icon-notification {
-        fill: #999;
-      }
-    </style>
     <path id="shape-notifications-addons" d="M10,15c0.5,0,1-0.4,1-1v-3c0,0,0-0.8,0.8-0.8c0.6,0,0.6,0.8,1.8,0.8c0.6,0,1.5-0.2,1.5-2c0-1.8-0.9-2-1.5-2 c-1.1,0-1.1,0.7-1.8,0.7C11,7.7,11,7,11,7V6c0-0.6-0.5-1-1-1H8c0,0-0.8,0-0.8-0.8C7.2,3.6,8,3.6,8,2.5C8,1.9,7.8,1,6,1 C4.2,1,4,1.9,4,2.5c0,1.1,0.8,1.1,0.8,1.8C4.8,5,4,5,4,5H2C1.5,5,1,5.4,1,6l0,1.5c0,0-0.1,1,1.1,1c0.8,0,0.9-1,1.9-1 C4.5,7.4,5,8,5,9c0,1-0.5,1.6-1,1.6c-1,0-1.1-1.1-1.9-1.1C0.9,9.5,1,10.8,1,10.8V14c0,0.6,0.5,1,1,1l2.6,0c0,0,1.1,0,1.1-1 c0-0.8-1-0.1-1-1.1c0-0.5,0.7-1.2,1.8-1.2s1.8,0.7,1.8,1.2c0,1-1.1,0.3-1.1,1.1c0,1,1.2,1,1.2,1H10z"/>
   </defs>
-  <use id="default" xlink:href="#shape-notifications-addons" class="style-icon-notification"/>
+  <use id="default" xlink:href="#shape-notifications-addons" />
 </svg>

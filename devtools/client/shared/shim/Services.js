@@ -465,6 +465,42 @@ const Services = {
    * by devtools is implemented here.
    */
   prefs: new PrefBranch(null, "", ""),
+
+  /**
+   * An implementation of Services.appinfo that holds just the
+   * properties needed by devtools.
+   */
+  appinfo: {
+    get OS() {
+      const os = window.navigator.userAgent;
+      if (os) {
+        if (os.includes("Linux")) {
+          return "Linux";
+        } else if (os.includes("Windows")) {
+          return "WINNT";
+        } else if (os.includes("Mac")) {
+          return "Darwin";
+        }
+      }
+      return "Unknown";
+    },
+
+    // It's fine for this to be an approximation.
+    get name() {
+      return window.navigator.userAgent;
+    },
+
+    // It's fine for this to be an approximation.
+    get version() {
+      return window.navigator.appVersion;
+    },
+
+    // This is only used by telemetry, which is disabled for the
+    // content case.  So, being totally wrong is ok.
+    get is64Bit() {
+      return true;
+    },
+  },
 };
 
 /**

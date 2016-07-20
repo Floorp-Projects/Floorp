@@ -87,7 +87,7 @@ define(function (require, exports, module) {
         }
       }
 
-      if (array.length > max + 1) {
+      if (array.length > max) {
         items.pop();
         let objectLink = this.props.objectLink || span;
         items.push(Caption({
