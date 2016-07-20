@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
   params.channels = 1;
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb record (mono)", NULL, &params, NULL, nullptr,
-                        250, data_cb, state_cb, &stream_state);
+                        4096, data_cb, state_cb, &stream_state);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream\n");
     return r;

@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
   cubeb_stream_params output_params;
   int r;
   user_state stream_state = { false };
-  uint32_t latency_ms = 0;
+  uint32_t latency_frames = 0;
 
   r = cubeb_init(&ctx, "Cubeb duplex example");
   if (r != CUBEB_OK) {
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
   output_params.rate = 48000;
   output_params.channels = 2;
 
-  r = cubeb_get_min_latency(ctx, output_params, &latency_ms);
+  r = cubeb_get_min_latency(ctx, output_params, &latency_frames);
 
   if (r != CUBEB_OK) {
     fprintf(stderr, "Could not get minimal latency\n");
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
                         NULL, &input_params, NULL, &output_params,
-                        latency_ms, data_cb, state_cb, &stream_state);
+                        latency_frames, data_cb, state_cb, &stream_state);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream\n");
     return r;
