@@ -2300,13 +2300,13 @@ const KTableEntry nsCSSProps::kFillRuleKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kClipShapeSizingKTable[] = {
-  { eCSSKeyword_content_box,   NS_STYLE_CLIP_SHAPE_SIZING_CONTENT },
-  { eCSSKeyword_padding_box,   NS_STYLE_CLIP_SHAPE_SIZING_PADDING },
-  { eCSSKeyword_border_box,    NS_STYLE_CLIP_SHAPE_SIZING_BORDER },
-  { eCSSKeyword_margin_box,    NS_STYLE_CLIP_SHAPE_SIZING_MARGIN },
-  { eCSSKeyword_fill_box,      NS_STYLE_CLIP_SHAPE_SIZING_FILL },
-  { eCSSKeyword_stroke_box,    NS_STYLE_CLIP_SHAPE_SIZING_STROKE },
-  { eCSSKeyword_view_box,      NS_STYLE_CLIP_SHAPE_SIZING_VIEW },
+  { eCSSKeyword_content_box,   uint8_t(StyleClipShapeSizing::Content) },
+  { eCSSKeyword_padding_box,   uint8_t(StyleClipShapeSizing::Padding) },
+  { eCSSKeyword_border_box,    uint8_t(StyleClipShapeSizing::Border) },
+  { eCSSKeyword_margin_box,    uint8_t(StyleClipShapeSizing::Margin) },
+  { eCSSKeyword_fill_box,      uint8_t(StyleClipShapeSizing::Fill) },
+  { eCSSKeyword_stroke_box,    uint8_t(StyleClipShapeSizing::Stroke) },
+  { eCSSKeyword_view_box,      uint8_t(StyleClipShapeSizing::View) },
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 

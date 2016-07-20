@@ -3573,7 +3573,8 @@ StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
       MOZ_ASSERT_UNREACHABLE("Unknown shape type");
       return false;
   }
-  aResult->Item(1).SetIntValue(aClipPath.GetSizingBox(), eCSSUnit_Enumerated);
+  aResult->Item(1).SetIntValue(uint8_t(aClipPath.GetSizingBox()),
+                               eCSSUnit_Enumerated);
   return true;
 }
 
@@ -3963,7 +3964,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             result->SetURLValue(url);
             aComputedValue.SetAndAdoptCSSValueValue(result.release(), eUnit_URL);
           } else if (type == NS_STYLE_CLIP_PATH_BOX) {
-            aComputedValue.SetIntValue(clipPath.GetSizingBox(), eUnit_Enumerated);
+            aComputedValue.SetIntValue(uint8_t(clipPath.GetSizingBox()),
+                                       eUnit_Enumerated);
           } else if (type == NS_STYLE_CLIP_PATH_SHAPE) {
             RefPtr<nsCSSValue::Array> result = nsCSSValue::Array::Create(2);
             if (!StyleClipBasicShapeToCSSArray(clipPath, result)) {

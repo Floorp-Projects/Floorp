@@ -61,14 +61,16 @@ enum class StyleBoxSizing : uint8_t {
 };
 
 // clip-path sizing
-#define NS_STYLE_CLIP_SHAPE_SIZING_NOBOX   0
-#define NS_STYLE_CLIP_SHAPE_SIZING_CONTENT 1
-#define NS_STYLE_CLIP_SHAPE_SIZING_PADDING 2
-#define NS_STYLE_CLIP_SHAPE_SIZING_BORDER  3
-#define NS_STYLE_CLIP_SHAPE_SIZING_MARGIN  4
-#define NS_STYLE_CLIP_SHAPE_SIZING_FILL    5
-#define NS_STYLE_CLIP_SHAPE_SIZING_STROKE  6
-#define NS_STYLE_CLIP_SHAPE_SIZING_VIEW    7
+enum class StyleClipShapeSizing : uint8_t {
+    NoBox,
+    Content,
+    Padding,
+    Border,
+    Margin,
+    Fill,
+    Stroke,
+    View,
+};
 
 // Basic Shapes
 #define NS_STYLE_BASIC_SHAPE_POLYGON       0

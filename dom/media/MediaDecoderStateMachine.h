@@ -870,11 +870,6 @@ private:
   // simplified.
   bool mNotifyMetadataBeforeFirstFrame;
 
-  // True if we've dispatched an event to the decode task queue to call
-  // DecodeThreadRun(). We use this flag to prevent us from dispatching
-  // unnecessary runnables, since the decode thread runs in a loop.
-  bool mDispatchedEventToDecode;
-
   // If this is true while we're in buffering mode, we can exit early,
   // as it's likely we may be able to playback. This happens when we enter
   // buffering mode soon after the decode starts, because the decode-ahead

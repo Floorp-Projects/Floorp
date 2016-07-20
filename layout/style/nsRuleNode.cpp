@@ -9701,17 +9701,17 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
   MOZ_ASSERT(array->Count() == 1 || array->Count() == 2,
              "Expect one or both of a shape function and geometry-box");
 
-  uint8_t sizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
+  StyleClipShapeSizing sizingBox = StyleClipShapeSizing::NoBox;
   RefPtr<nsStyleBasicShape> basicShape;
   for (size_t i = 0; i < array->Count(); ++i) {
     if (array->Item(i).GetUnit() == eCSSUnit_Enumerated) {
       int32_t type = array->Item(i).GetIntValue();
-      if (type > NS_STYLE_CLIP_SHAPE_SIZING_VIEW ||
-          type < NS_STYLE_CLIP_SHAPE_SIZING_NOBOX) {
+      if (type > uint8_t(StyleClipShapeSizing::View) ||
+          type < uint8_t(StyleClipShapeSizing::NoBox)) {
         NS_NOTREACHED("unexpected reference box");
         return;
       }
-      sizingBox = (uint8_t)type;
+      sizingBox = static_cast<StyleClipShapeSizing>(type);
     } else if (array->Item(i).GetUnit() == eCSSUnit_Function) {
       basicShape = GetStyleBasicShapeFromCSSValue(array->Item(i), aStyleContext,
                                                   aPresContext, aConditions);
