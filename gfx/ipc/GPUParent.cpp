@@ -48,8 +48,9 @@ GPUParent::Init(base::ProcessId aParentPid,
 bool
 GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs)
 {
-  for (auto setting : prefs) {
-    gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
+  const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
+  for (auto& setting : prefs) {
+    gfxPrefs::Pref* pref = globalPrefs[setting.index()];
     pref->SetCachedValue(setting.value());
   }
   return true;
