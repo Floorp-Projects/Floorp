@@ -483,7 +483,7 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
   return true;
 }
 
-already_AddRefed<APZCTreeManager>
+already_AddRefed<IAPZCTreeManager>
 GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
 {
   return CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
