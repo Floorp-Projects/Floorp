@@ -184,21 +184,8 @@ typedef const char16_t* char16ptr_t;
 
 #endif
 
-/*
- * Macro arguments used in concatenation or stringification won't be expanded.
- * Therefore, in order for |MOZ_UTF16(FOO)| to work as expected (which is to
- * expand |FOO| before doing whatever |MOZ_UTF16| needs to do to it) a helper
- * macro, |MOZ_UTF16_HELPER| needs to be inserted in between to allow the macro
- * argument to expand. See "3.10.6 Separate Expansion of Macro Arguments" of the
- * CPP manual for a more accurate and precise explanation.
- */
-#define MOZ_UTF16_HELPER(s) u##s
-#define MOZ_UTF16(s) MOZ_UTF16_HELPER(s)
-
 static_assert(sizeof(char16_t) == 2, "Is char16_t type 16 bits?");
 static_assert(char16_t(-1) > char16_t(0), "Is char16_t type unsigned?");
-static_assert(sizeof(MOZ_UTF16('A')) == 2, "Is char literal 16 bits?");
-static_assert(sizeof(MOZ_UTF16("")[0]) == 2, "Is string char 16 bits?");
 static_assert(sizeof(u'A') == 2, "Is unicode char literal 16 bits?");
 static_assert(sizeof(u""[0]) == 2, "Is unicode string char 16 bits?");
 

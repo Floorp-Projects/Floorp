@@ -15,7 +15,7 @@
 
 #define NS_STATIC_ATOM_BUFFER(buffer_name, str_data) \
   static nsFakeStringBuffer<sizeof(str_data)> buffer_name = \
-    { 1, sizeof(str_data) * sizeof(char16_t), MOZ_UTF16(str_data) };
+    { 1, sizeof(str_data) * sizeof(char16_t), (u"" str_data) };
 
 /**
  * Holds data used to initialize large number of atoms during startup. Use
