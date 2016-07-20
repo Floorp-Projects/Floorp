@@ -475,8 +475,6 @@ nsGIFDecoder2::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
         return FinishedGlobalColorTable();
       case State::BLOCK_HEADER:
         return ReadBlockHeader(aData);
-      case State::BLOCK_HEADER_AFTER_YIELD:
-        return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
       case State::EXTENSION_HEADER:
         return ReadExtensionHeader(aData);
       case State::GRAPHIC_CONTROL_EXTENSION:
@@ -977,7 +975,7 @@ nsGIFDecoder2::ReadImageDataSubBlock(const char* aData)
   if (subBlockLength == 0) {
     // We hit the block terminator.
     EndImageFrame();
-    return Transition::ToAfterYield(State::BLOCK_HEADER_AFTER_YIELD);
+    return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
   }
 
   if (mGIFStruct.pixels_remaining == 0) {
