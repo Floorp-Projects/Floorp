@@ -22,7 +22,6 @@ upload = lambda url: "data:text/html,%s" % urllib.quote("""
 
 
 class TestFileUpload(MarionetteTestCase):
-
     def test_sets_one_file(self):
         self.marionette.navigate(single)
         input = self.input
@@ -32,9 +31,9 @@ class TestFileUpload(MarionetteTestCase):
             input.send_keys(f.name)
             exp = [f.name]
 
-        files = self.get_files(input)
+        files = self.get_file_names(input)
         self.assertEqual(len(files), 1)
-        self.assertFilesEqual(files, exp)
+        self.assertFileNamesEqual(files, exp)
 
     def test_sets_multiple_files(self):
         self.marionette.navigate(multiple)
@@ -46,9 +45,9 @@ class TestFileUpload(MarionetteTestCase):
             input.send_keys(b.name)
             exp = [a.name, b.name]
 
-        files = self.get_files(input)
+        files = self.get_file_names(input)
         self.assertEqual(len(files), 2)
-        self.assertFilesEqual(files, exp)
+        self.assertFileNamesEqual(files, exp)
 
     def test_sets_multiple_indentical_files(self):
         self.marionette.navigate(multiple)
@@ -60,9 +59,9 @@ class TestFileUpload(MarionetteTestCase):
             input.send_keys(f.name)
             exp = f.name
 
-        files = self.get_files(input)
+        files = self.get_file_names(input)
         self.assertEqual(len(files), 2)
-        self.assertFilesEqual(files, exp)
+        self.assertFileNamesEqual(files, exp)
 
     def test_clear_file(self):
         self.marionette.navigate(single)
@@ -122,15 +121,15 @@ class TestFileUpload(MarionetteTestCase):
         return Wait(self.marionette).until(
             expected.element_present(By.TAG_NAME, "body"))
 
-    def get_files(self, el):
-        # This is horribly complex because (1) Marionette doesn't serialise arrays properly,
-        # and (2) accessing File.name in the content JS throws a permissions
-        # error.
-        fl = self.marionette.execute_script(
-            "return arguments[0].files", script_args=[el])
-        return [f["name"] for f in [v for k, v in fl.iteritems() if k.isdigit()]]
+    def get_file_names(self, el):
+        fl = self.get_files(el)
+        return [f["name"] for f in fl]
 
-    def assertFilesEqual(self, act, exp):
+    def get_files(self, el):
+        return self.marionette.execute_script(
+            "return arguments[0].files", script_args=[el])
+
+    def assertFileNamesEqual(self, act, exp):
         # File array returned from browser doesn't contain full path names,
         # this cuts off the path of the expected files.
         filenames = [f.rsplit("/", 0)[-1] for f in act]

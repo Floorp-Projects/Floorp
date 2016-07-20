@@ -479,13 +479,6 @@ this.AddonRepository = {
    * Whether caching is currently enabled
    */
   get cacheEnabled() {
-    // Act as though caching is disabled if there was an unrecoverable error
-    // openning the database.
-    if (!AddonDatabase.databaseOk) {
-      logger.warn("Cache is disabled because database is not OK");
-      return false;
-    }
-
     let preference = PREF_GETADDONS_CACHE_ENABLED;
     let enabled = false;
     try {
@@ -1561,9 +1554,6 @@ this.AddonRepository = {
 };
 
 var AddonDatabase = {
-  // false if there was an unrecoverable error opening the database
-  databaseOk: true,
-
   connectionPromise: null,
   // the in-memory database
   DB: BLANK_DB(),
@@ -1609,31 +1599,30 @@ var AddonDatabase = {
        } catch (e) {
          if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
            logger.debug("No " + FILE_DATABASE + " found.");
+         } else {
+           logger.error(`Malformed ${FILE_DATABASE}: ${e} - resetting to empty`);
+         }
 
-           // Create a blank addons.json file
-           this._saveDBToDisk();
+         // Create a blank addons.json file
+         this._saveDBToDisk();
 
-           let dbSchema = 0;
-           try {
-             dbSchema = Services.prefs.getIntPref(PREF_GETADDONS_DB_SCHEMA);
-           } catch (e) {}
+         let dbSchema = 0;
+         try {
+           dbSchema = Services.prefs.getIntPref(PREF_GETADDONS_DB_SCHEMA);
+         } catch (e) {}
 
-           if (dbSchema < DB_MIN_JSON_SCHEMA) {
-             let results = yield new Promise((resolve, reject) => {
-               AddonRepository_SQLiteMigrator.migrate(resolve);
-             });
+         if (dbSchema < DB_MIN_JSON_SCHEMA) {
+           let results = yield new Promise((resolve, reject) => {
+             AddonRepository_SQLiteMigrator.migrate(resolve);
+           });
 
-             if (results.length) {
-               yield this._insertAddons(results);
-             }
-
+           if (results.length) {
+             yield this._insertAddons(results);
            }
 
-           Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
-         } else {
-           logger.error("Malformed " + FILE_DATABASE + ": " + e);
-           this.databaseOk = false;
          }
+
+         Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
          return this.DB;
        }
 
@@ -1671,8 +1660,6 @@ var AddonDatabase = {
    *         when the database is going to be deleted afterwards.
    */
   shutdown: function(aSkipFlush) {
-    this.databaseOk = true;
-
     if (!this.connectionPromise) {
       return Promise.resolve();
     }

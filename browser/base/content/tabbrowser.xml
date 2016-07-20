@@ -3785,11 +3785,6 @@
                   this.getTabState(this.requestedTab) == this.STATE_LOADED) {
                 // After this point the tab has switched from the content thread's point of view.
                 // The changes will be visible after the next refresh driver tick + composite.
-                let event = new CustomEvent("TabSwitched", {
-                  bubbles: true,
-                  cancelable: true
-                });
-                this.tabbrowser.dispatchEvent(event);
                 let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
                 if (time != -1) {
                   TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_E10S_MS", window);

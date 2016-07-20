@@ -1,6 +1,0 @@
-$inherits:
-  from: 'tasks/tests/fx_linux64_mochitest_chrome.yml'
-task:
-  payload:
-    command:
-      - --download-symbols=true

@@ -156,7 +156,7 @@ enum nsChangeHint {
 
   /**
    * A hint reflecting that style data changed with no change handling
-   * behavior.  We need to return this, rather than NS_STYLE_HINT_NONE,
+   * behavior.  We need to return this, rather than nsChangeHint(0),
    * so that certain optimizations that manipulate the style context tree are
    * correct.
    *
@@ -346,8 +346,6 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
 }
 
 // Redefine the old NS_STYLE_HINT constants in terms of the new hint structure
-#define NS_STYLE_HINT_NONE \
-  nsChangeHint(0)
 #define NS_STYLE_HINT_VISUAL \
   nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView | \
                nsChangeHint_SchedulePaint)

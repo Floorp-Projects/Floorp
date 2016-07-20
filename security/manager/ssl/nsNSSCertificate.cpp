@@ -16,7 +16,6 @@
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsCertVerificationThread.h"
 #include "nsICertificateDialogs.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
@@ -35,7 +34,6 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsUsageArrayHelper.h"
 #include "nsXULAppAPI.h"
 #include "nspr.h"
 #include "nssb64.h"
@@ -1270,90 +1268,6 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity)
 
   nsCOMPtr<nsIX509CertValidity> validity = new nsX509CertValidity(mCert);
   validity.forget(aValidity);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetUsagesArray(bool localOnly,
-                                 uint32_t* _verified,
-                                 uint32_t* _count,
-                                 char16_t*** _usages)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsresult rv;
-  const int max_usages = 13;
-  char16_t* tmpUsages[max_usages];
-  const char* suffix = "";
-  uint32_t tmpCount;
-  nsUsageArrayHelper uah(mCert.get());
-  rv = uah.GetUsagesArray(suffix, localOnly, max_usages, _verified, &tmpCount,
-                          tmpUsages);
-  NS_ENSURE_SUCCESS(rv,rv);
-  if (tmpCount > 0) {
-    *_usages = (char16_t**) moz_xmalloc(sizeof(char16_t*) * tmpCount);
-    if (!*_usages)
-      return NS_ERROR_OUT_OF_MEMORY;
-    for (uint32_t i=0; i<tmpCount; i++) {
-      (*_usages)[i] = tmpUsages[i];
-    }
-    *_count = tmpCount;
-    return NS_OK;
-  }
-  *_usages = (char16_t**) moz_xmalloc(sizeof(char16_t*));
-  if (!*_usages)
-    return NS_ERROR_OUT_OF_MEMORY;
-  *_count = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::RequestUsagesArrayAsync(
-  nsICertVerificationListener* aResultListener)
-{
-  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
-
-  if (!aResultListener)
-    return NS_ERROR_FAILURE;
-
-  nsCertVerificationJob* job = new nsCertVerificationJob;
-
-  job->mCert = this;
-  job->mListener =
-    new nsMainThreadPtrHolder<nsICertVerificationListener>(aResultListener);
-
-  nsresult rv = nsCertVerificationThread::addJob(job);
-  if (NS_FAILED(rv))
-    delete job;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsNSSCertificate::GetUsagesString(bool localOnly, uint32_t* _verified,
-                                  nsAString& _usages)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsresult rv;
-  const int max_usages = 13;
-  char16_t* tmpUsages[max_usages];
-  const char* suffix = "_p";
-  uint32_t tmpCount;
-  nsUsageArrayHelper uah(mCert.get());
-  rv = uah.GetUsagesArray(suffix, localOnly, max_usages, _verified, &tmpCount,
-                          tmpUsages);
-  NS_ENSURE_SUCCESS(rv,rv);
-  _usages.Truncate();
-  for (uint32_t i=0; i<tmpCount; i++) {
-    if (i>0) _usages.Append(',');
-    _usages.Append(tmpUsages[i]);
-    free(tmpUsages[i]);
-  }
   return NS_OK;
 }
 

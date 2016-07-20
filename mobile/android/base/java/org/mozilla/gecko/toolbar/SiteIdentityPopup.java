@@ -26,7 +26,7 @@ import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
-import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -231,12 +231,18 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                         } else {
                             manager.setText(password);
                         }
-                        SnackbarHelper.showSnackbar(activity, activity.getString(R.string.doorhanger_login_select_toast_copy), Snackbar.LENGTH_SHORT);
+                        SnackbarBuilder.builder(activity)
+                                .message(R.string.doorhanger_login_select_toast_copy)
+                                .duration(Snackbar.LENGTH_SHORT)
+                                .buildAndShow();
                     }
                     dismiss();
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Error handling Select login button click", e);
-                    SnackbarHelper.showSnackbar(activity, activity.getString(R.string.doorhanger_login_select_toast_copy_error), Snackbar.LENGTH_SHORT);
+                    SnackbarBuilder.builder(activity)
+                            .message(R.string.doorhanger_login_select_toast_copy_error)
+                            .duration(Snackbar.LENGTH_SHORT)
+                            .buildAndShow();
                 }
             }
         };

@@ -13,6 +13,7 @@ FINAL_TARGET_PP_FILES += ['clearkey.info.in']
 UNIFIED_SOURCES += [
     'ClearKeyAsyncShutdown.cpp',
     'ClearKeyBase64.cpp',
+    'ClearKeyCencParser.cpp',
     'ClearKeyDecryptionManager.cpp',
     'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',

@@ -21,8 +21,6 @@ SeekTask::SeekTask(const void* aDecoderID,
   , mIsDiscarded(false)
   , mIsAudioQueueFinished(false)
   , mIsVideoQueueFinished(false)
-  , mNeedToStopPrerollingAudio(false)
-  , mNeedToStopPrerollingVideo(false)
 {
   AssertOwnerThread();
 }
@@ -43,8 +41,6 @@ SeekTask::Resolve(const char* aCallSite)
   val.mSeekedVideoData = mSeekedVideoData;
   val.mIsAudioQueueFinished = mIsAudioQueueFinished;
   val.mIsVideoQueueFinished = mIsVideoQueueFinished;
-  val.mNeedToStopPrerollingAudio = mNeedToStopPrerollingAudio;
-  val.mNeedToStopPrerollingVideo = mNeedToStopPrerollingVideo;
 
   mSeekTaskPromise.Resolve(val, aCallSite);
 }
@@ -57,8 +53,6 @@ SeekTask::RejectIfExist(const char* aCallSite)
   SeekTaskRejectValue val;
   val.mIsAudioQueueFinished = mIsAudioQueueFinished;
   val.mIsVideoQueueFinished = mIsVideoQueueFinished;
-  val.mNeedToStopPrerollingAudio = mNeedToStopPrerollingAudio;
-  val.mNeedToStopPrerollingVideo = mNeedToStopPrerollingVideo;
 
   mSeekTaskPromise.RejectIfExists(val, aCallSite);
 }

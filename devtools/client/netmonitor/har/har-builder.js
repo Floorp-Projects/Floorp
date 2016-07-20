@@ -3,15 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci, Cc } = require("chrome");
 const { defer, all } = require("promise");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const Services = require("Services");
+const appInfo = Services.appinfo;
 
 loader.lazyRequireGetter(this, "NetworkHelper", "devtools/shared/webconsole/network-helper");
-
-loader.lazyGetter(this, "appInfo", () => {
-  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-});
 
 loader.lazyGetter(this, "L10N", () => {
   return new LocalizationHelper("chrome://devtools/locale/har.properties");

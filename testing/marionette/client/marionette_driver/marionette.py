@@ -1310,10 +1310,7 @@ class Marionette(object):
     def get_active_frame(self):
         """Returns an HTMLElement representing the frame Marionette is
         currently acting on."""
-        element = self._send_message("getActiveFrame", key="value")
-        if element:
-            return HTMLElement(self, element)
-        return None
+        return self._send_message("getActiveFrame", key="value")
 
     def switch_to_default_content(self):
         """Switch the current context to page's default content."""

@@ -25,7 +25,7 @@ import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -130,7 +130,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
 
         // This flow is from the option menu which has check to see if a bookmark was already added.
         // So, it is safe here to show the snackbar that bookmark_added without any checks.
-        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
+        final SnackbarBuilder.SnackbarCallback callback = new SnackbarBuilder.SnackbarCallback() {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "bookmark_options");
@@ -138,11 +138,12 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
             }
         };
 
-        SnackbarHelper.showSnackbarWithAction(browserApp,
-                browserApp.getResources().getString(R.string.bookmark_added),
-                Snackbar.LENGTH_LONG,
-                browserApp.getResources().getString(R.string.bookmark_options),
-                callback);
+        SnackbarBuilder.builder(browserApp)
+                .message(R.string.bookmark_added)
+                .duration(Snackbar.LENGTH_LONG)
+                .action(R.string.bookmark_options)
+                .callback(callback)
+                .buildAndShow();
     }
 
     private void showBookmarkRemovedSnackbar() {
@@ -151,7 +152,10 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
             return;
         }
 
-        SnackbarHelper.showSnackbar(browserApp, browserApp.getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_LONG);
+        SnackbarBuilder.builder(browserApp)
+                .message(R.string.bookmark_removed)
+                .duration(Snackbar.LENGTH_LONG)
+                .buildAndShow();
     }
 
     private static void showBookmarkDialog(final BrowserApp browserApp) {
@@ -213,20 +217,21 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
 
         final Drawable iconDownloaded = DrawableUtil.tintDrawable(browserApp, R.drawable.status_icon_readercache, Color.WHITE);
 
-        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
+        final SnackbarBuilder.SnackbarCallback callback = new SnackbarBuilder.SnackbarCallback() {
             @Override
             public void onClick(View v) {
                 browserApp.openUrlAndStopEditing("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.BOOKMARKS));
             }
         };
 
-        SnackbarHelper.showSnackbarWithActionAndColors(browserApp,
-                browserApp.getResources().getString(R.string.reader_saved_offline),
-                Snackbar.LENGTH_LONG,
-                browserApp.getResources().getString(R.string.reader_switch_to_bookmarks),
-                callback,
-                iconDownloaded,
-                ContextCompat.getColor(browserApp, R.color.link_blue),
-                Color.WHITE);
+        SnackbarBuilder.builder(browserApp)
+                .message(R.string.reader_saved_offline)
+                .duration(Snackbar.LENGTH_LONG)
+                .action(R.string.reader_switch_to_bookmarks)
+                .callback(callback)
+                .icon(iconDownloaded)
+                .backgroundColor(ContextCompat.getColor(browserApp, R.color.link_blue))
+                .actionColor(Color.WHITE)
+                .buildAndShow();
     }
 }

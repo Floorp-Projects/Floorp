@@ -53,6 +53,7 @@ const {PrefObserver} = require("devtools/client/styleeditor/utils");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {template} = require("devtools/shared/gcli/templater");
 const nodeConstants = require("devtools/shared/dom-node-constants");
+const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
@@ -632,14 +633,14 @@ MarkupView.prototype = {
   _selectionWalker: function (start) {
     let walker = this.doc.createTreeWalker(
       start || this._elt,
-      Ci.nsIDOMNodeFilter.SHOW_ELEMENT,
+      nodeFilterConstants.SHOW_ELEMENT,
       function (element) {
         if (element.container &&
             element.container.elt === element &&
             element.container.visible) {
-          return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
+          return nodeFilterConstants.FILTER_ACCEPT;
         }
-        return Ci.nsIDOMNodeFilter.FILTER_SKIP;
+        return nodeFilterConstants.FILTER_SKIP;
       }
     );
     walker.currentNode = this._selectedContainer.elt;
@@ -3193,6 +3194,7 @@ ElementEditor.prototype = {
     // Create the template editor, which will save some variables here.
     let data = {
       attrName: attribute.name,
+      tabindex: this.container.canFocus ? "0" : "-1",
     };
     this.template("attribute", data);
     let {attr, inner, name, val} = data;

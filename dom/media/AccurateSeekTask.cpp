@@ -324,6 +324,7 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
     mSeekedAudioData = audio;
     mDoneAudioSeeking = true;
   } else if (NS_FAILED(DropAudioUpToSeekTarget(audio))) {
+    CancelCallbacks();
     RejectIfExist(__func__);
     return;
   }
@@ -351,6 +352,7 @@ AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
     // If this is a decode error, delegate to the generic error path.
+    CancelCallbacks();
     RejectIfExist(__func__);
     return;
   }
@@ -415,6 +417,7 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
     mSeekedVideoData = video;
     mDoneVideoSeeking = true;
   } else if (NS_FAILED(DropVideoUpToSeekTarget(video.get()))) {
+    CancelCallbacks();
     RejectIfExist(__func__);
     return;
   }
@@ -475,9 +478,9 @@ void
 AccurateSeekTask::CancelCallbacks()
 {
   AssertOwnerThread();
-  mAudioCallback.Disconnect();
-  mVideoCallback.Disconnect();
-  mAudioWaitCallback.Disconnect();
-  mVideoWaitCallback.Disconnect();
+  mAudioCallback.DisconnectIfExists();
+  mVideoCallback.DisconnectIfExists();
+  mAudioWaitCallback.DisconnectIfExists();
+  mVideoWaitCallback.DisconnectIfExists();
 }
 } // namespace mozilla

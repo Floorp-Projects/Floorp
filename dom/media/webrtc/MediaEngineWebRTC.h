@@ -72,19 +72,23 @@ public:
     : MediaEngineAudioSource(kReleased)
   {
   }
-  void GetName(nsAString& aName) override;
-  void GetUUID(nsACString& aUUID) override;
+  void GetName(nsAString& aName) const override;
+  void GetUUID(nsACString& aUUID) const override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin) override
+                    const nsACString& aOrigin,
+                    BaseAllocationHandle** aOutHandle,
+                    const char** aOutBadConstraint) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
+    aOutHandle = nullptr;
     return NS_OK;
   }
-  nsresult Deallocate() override
+  nsresult Deallocate(BaseAllocationHandle* aHandle) override
   {
     // Nothing to do here, everything is managed in MediaManager.cpp
+    MOZ_ASSERT(!aHandle);
     return NS_OK;
   }
   void Shutdown() override
@@ -95,9 +99,11 @@ public:
                  TrackID aId,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aMediaStream, TrackID aId) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId) override;
+                   const nsString& aDeviceId,
+                   const char** aOutBadConstraint) override;
   void SetDirectListeners(bool aDirect) override
   {}
   void NotifyOutputData(MediaStreamGraph* aGraph,
@@ -129,8 +135,8 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   uint32_t GetBestFitnessDistance(
-    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) override;
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId) const override;
 
 protected:
   virtual ~MediaEngineWebRTCAudioCaptureSource() { Shutdown(); }
@@ -445,21 +451,25 @@ public:
     // We'll init lazily as needed
   }
 
-  void GetName(nsAString& aName) override;
-  void GetUUID(nsACString& aUUID) override;
+  void GetName(nsAString& aName) const override;
+  void GetUUID(nsACString& aUUID) const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin) override;
-  nsresult Deallocate() override;
+                    const nsACString& aOrigin,
+                    BaseAllocationHandle** aOutHandle,
+                    const char** aOutBadConstraint) override;
+  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream* aStream,
                  TrackID aID,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId) override;
+                   const nsString& aDeviceId,
+                   const char** aOutBadConstraint) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
 
   void NotifyPull(MediaStreamGraph* aGraph,
@@ -492,8 +502,8 @@ public:
   }
 
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) override;
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+      const nsString& aDeviceId) const override;
 
   // VoEMediaProcess.
   void Process(int channel, webrtc::ProcessingTypes type,

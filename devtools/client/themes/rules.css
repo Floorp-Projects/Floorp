@@ -45,7 +45,6 @@
 
 #ruleview-toolbar {
   display: flex;
-  height: 23px;
 }
 
 #ruleview-toolbar > .devtools-searchbox:first-child {
@@ -256,11 +255,9 @@
 .theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-namecontainer,
 .theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-namecontainer *,
 .theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-propertyvaluecontainer,
-.theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-propertyvaluecontainer * {
-  color: #CCCCCC;
-}
-
-.theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-computedlist * {
+.theme-firebug .ruleview-enableproperty:not([checked]) ~ .ruleview-propertyvaluecontainer *,
+.theme-firebug .ruleview-overridden > * > .ruleview-computed:not(.ruleview-overridden),
+.theme-firebug .ruleview-overridden > * > .ruleview-computed:not(.ruleview-overridden) * {
   color: #CCCCCC;
 }
 

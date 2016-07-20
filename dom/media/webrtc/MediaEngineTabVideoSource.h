@@ -20,27 +20,31 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     MediaEngineTabVideoSource();
 
     void Shutdown() override {};
-    void GetName(nsAString_internal&) override;
-    void GetUUID(nsACString_internal&) override;
+    void GetName(nsAString_internal&) const override;
+    void GetUUID(nsACString_internal&) const override;
     nsresult Allocate(const dom::MediaTrackConstraints &,
                       const mozilla::MediaEnginePrefs&,
                       const nsString& aDeviceId,
-                      const nsACString& aOrigin) override;
-    nsresult Deallocate() override;
+                      const nsACString& aOrigin,
+                      BaseAllocationHandle** aOutHandle,
+                      const char** aOutBadConstraint) override;
+    nsresult Deallocate(BaseAllocationHandle* aHandle) override;
     nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID, const mozilla::PrincipalHandle&) override;
     void SetDirectListeners(bool aHasDirectListeners) override {};
     void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime, const mozilla::PrincipalHandle& aPrincipalHandle) override;
     nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
-    nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+    nsresult Restart(BaseAllocationHandle* aHandle,
+                     const dom::MediaTrackConstraints& aConstraints,
                      const mozilla::MediaEnginePrefs& aPrefs,
-                     const nsString& aDeviceId) override;
+                     const nsString& aDeviceId,
+                     const char** aOutBadConstraint) override;
     bool IsFake() override;
     dom::MediaSourceEnum GetMediaSource() const override {
       return dom::MediaSourceEnum::Browser;
     }
     uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) override
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+      const nsString& aDeviceId) const override
     {
       return 0;
     }

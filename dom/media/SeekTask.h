@@ -9,14 +9,13 @@
 
 #include "mozilla/MozPromise.h"
 #include "MediaCallbackID.h"
-#include "SeekJob.h"
+#include "SeekTarget.h"
 
 namespace mozilla {
 
 class AbstractThread;
 class MediaData;
 class MediaDecoderReaderWrapper;
-class MediaInfo;
 
 namespace media {
 class TimeUnit;
@@ -28,16 +27,12 @@ struct SeekTaskResolveValue
   RefPtr<MediaData> mSeekedVideoData;
   bool mIsAudioQueueFinished;
   bool mIsVideoQueueFinished;
-  bool mNeedToStopPrerollingAudio;
-  bool mNeedToStopPrerollingVideo;
 };
 
 struct SeekTaskRejectValue
 {
   bool mIsAudioQueueFinished;
   bool mIsVideoQueueFinished;
-  bool mNeedToStopPrerollingAudio;
-  bool mNeedToStopPrerollingVideo;
 };
 
 class SeekTask {
@@ -95,8 +90,6 @@ protected:
   RefPtr<MediaData> mSeekedVideoData;
   bool mIsAudioQueueFinished;
   bool mIsVideoQueueFinished;
-  bool mNeedToStopPrerollingAudio;
-  bool mNeedToStopPrerollingVideo;
 };
 
 } // namespace mozilla

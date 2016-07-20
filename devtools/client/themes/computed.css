@@ -32,11 +32,17 @@
   align-items: center;
 }
 
+#computedview-container {
+  overflow: auto;
+}
+
 #propertyContainer {
   -moz-user-select: text;
   overflow-y: auto;
   overflow-x: hidden;
   flex: auto;
+  border-top-width: 1px;
+  border-top-style: dotted;
 }
 
 .row-striped {
@@ -59,7 +65,9 @@
 }
 
 .property-value-container {
-  width: 168px;
+  display: flex;
+  flex: 1 1 168px;
+  overflow: hidden;
 }
 
 .property-name-container > *,

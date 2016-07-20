@@ -396,35 +396,31 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
 
     if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
         bool accelAngleSupport = IsAccelAngleSupported(gfxInfo, out_failureId);
-
         bool shouldTryAccel = forceAccel || accelAngleSupport;
-        bool shouldTryWARP = !shouldTryAccel;
+        bool shouldTryWARP = !forceAccel; // Only if ANGLE not supported or fails
+
+        // If WARP preferred, will override ANGLE support
         if (gfxPrefs::WebGLANGLEForceWARP()) {
             shouldTryWARP = true;
             shouldTryAccel = false;
         }
 
-        // Fallback to a WARP display if non-WARP is blacklisted, or if WARP is forced.
-        if (shouldTryWARP) {
-            chosenDisplay = GetAndInitWARPDisplay(*this, EGL_DEFAULT_DISPLAY);
-            if (chosenDisplay) {
-                mIsWARP = true;
-            }
+        // Hardware accelerated ANGLE path (supported or force accel)
+        if (shouldTryAccel) {
+            chosenDisplay = GetAndInitDisplayForAccelANGLE(*this);
         }
 
-        if (!chosenDisplay) {
-            // If falling back to WARP did not work and we don't want to try
-            // using HW accelerated ANGLE, then fail.
-            if (!shouldTryAccel) {
+        // Fallback to a WARP display if ANGLE fails, or if WARP is forced
+        if (!chosenDisplay && shouldTryWARP) {
+            chosenDisplay = GetAndInitWARPDisplay(*this, EGL_DEFAULT_DISPLAY);
+            if (!chosenDisplay) {
                 if (out_failureId->IsEmpty()) {
                     *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
                 }
-                NS_ERROR("Fallback WARP ANGLE context failed to initialize.");
+                NS_ERROR("Fallback WARP context failed to initialize.");
                 return false;
             }
-
-            // Hardware accelerated ANGLE path
-            chosenDisplay = GetAndInitDisplayForAccelANGLE(*this);
+            mIsWARP = true;
         }
     } else {
         chosenDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);

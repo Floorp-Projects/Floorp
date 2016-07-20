@@ -292,11 +292,10 @@ XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx)
 
     // Use an nsExpandedPrincipal to create asymmetric security.
     nsIPrincipal* principal = GetPrincipal();
-    nsCOMPtr<nsIExpandedPrincipal> ep;
-    MOZ_ASSERT(!(ep = do_QueryInterface(principal)));
+    MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
     nsTArray< nsCOMPtr<nsIPrincipal> > principalAsArray(1);
     principalAsArray.AppendElement(principal);
-    ep = new nsExpandedPrincipal(principalAsArray);
+    nsCOMPtr<nsIExpandedPrincipal> ep = new nsExpandedPrincipal(principalAsArray);
 
     // Create the sandbox.
     RootedValue v(cx);

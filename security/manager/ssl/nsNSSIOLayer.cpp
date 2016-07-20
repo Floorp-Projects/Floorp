@@ -693,7 +693,7 @@ nsSSLIOLayerHelpers::rememberTolerantAtVersion(const nsACString& hostName,
   mTLSIntoleranceInfo.Put(key, entry);
 }
 
-uint16_t
+void
 nsSSLIOLayerHelpers::forgetIntolerance(const nsACString& hostName,
                                        int16_t port)
 {
@@ -702,12 +702,10 @@ nsSSLIOLayerHelpers::forgetIntolerance(const nsACString& hostName,
 
   MutexAutoLock lock(mutex);
 
-  uint16_t tolerant = 0;
   IntoleranceEntry entry;
   if (mTLSIntoleranceInfo.Get(key, &entry)) {
     entry.AssertInvariant();
 
-    tolerant = entry.tolerant;
     entry.intolerant = 0;
     entry.intoleranceReason = 0;
     if (entry.strongCipherStatus != StrongCiphersWorked) {
@@ -717,8 +715,6 @@ nsSSLIOLayerHelpers::forgetIntolerance(const nsACString& hostName,
     entry.AssertInvariant();
     mTLSIntoleranceInfo.Put(key, entry);
   }
-
-  return tolerant;
 }
 
 bool
@@ -741,49 +737,7 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
 {
   if (intolerant <= minVersion || fallbackLimitReached(hostName, intolerant)) {
     // We can't fall back any further. Assume that intolerance isn't the issue.
-    uint32_t tolerant = forgetIntolerance(hostName, port);
-    // If we know the server is tolerant at the version, we don't have to
-    // gather the telemetry.
-    if (intolerant <= tolerant) {
-      return false;
-    }
-
-    // This telemetry doesn't support TLS 1.3
-    // See bug 1250582
-    uint32_t fallbackLimitBucket = 0;
-    // added if the version has reached the min version.
-    if (intolerant <= minVersion) {
-      switch (minVersion) {
-        case SSL_LIBRARY_VERSION_TLS_1_0:
-          fallbackLimitBucket += 1;
-          break;
-        case SSL_LIBRARY_VERSION_TLS_1_1:
-          fallbackLimitBucket += 2;
-          break;
-        case SSL_LIBRARY_VERSION_TLS_1_2:
-          fallbackLimitBucket += 3;
-          break;
-      }
-    }
-    // added if the version has reached the fallback limit.
-    if (intolerant <= mVersionFallbackLimit) {
-      switch (mVersionFallbackLimit) {
-        case SSL_LIBRARY_VERSION_TLS_1_0:
-          fallbackLimitBucket += 4;
-          break;
-        case SSL_LIBRARY_VERSION_TLS_1_1:
-          fallbackLimitBucket += 8;
-          break;
-        case SSL_LIBRARY_VERSION_TLS_1_2:
-          fallbackLimitBucket += 12;
-          break;
-      }
-    }
-    if (fallbackLimitBucket) {
-      Telemetry::Accumulate(Telemetry::SSL_FALLBACK_LIMIT_REACHED,
-                            fallbackLimitBucket);
-    }
-
+    forgetIntolerance(hostName, port);
     return false;
   }
 

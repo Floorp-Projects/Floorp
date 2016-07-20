@@ -1657,7 +1657,7 @@ public class GeckoAppShell
         ArrayList<String> directories = new ArrayList<String>();
         PackageManager pm = getApplicationContext().getPackageManager();
         List<ResolveInfo> plugins = pm.queryIntentServices(new Intent(PLUGIN_ACTION),
-                PackageManager.GET_SERVICES | PackageManager.GET_META_DATA);
+                PackageManager.GET_META_DATA);
 
         synchronized (mPackageInfoCache) {
 
