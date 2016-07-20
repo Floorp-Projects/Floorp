@@ -7,6 +7,7 @@
 #include "GPUProcessHost.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -132,6 +133,14 @@ GPUProcessManager::EnsureGPUReady()
 }
 
 void
+GPUProcessManager::EnsureImageBridgeChild()
+{
+  if (!ImageBridgeChild::IsCreated()) {
+    ImageBridgeChild::InitSameProcess();
+  }
+}
+
+void
 GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 {
   MOZ_ASSERT(mProcess && mProcess == aHost);
@@ -226,6 +235,8 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
                                             const gfx::IntSize& aSurfaceSize)
 {
   uint64_t layerTreeId = AllocateLayerTreeId();
+
+  EnsureImageBridgeChild();
 
   if (mGPUChild) {
     RefPtr<CompositorSession> session = CreateRemoteSession(

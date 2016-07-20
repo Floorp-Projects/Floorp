@@ -143,6 +143,8 @@ private:
   void EnsureVsyncIOThread();
   void ShutdownVsyncIOThread();
 
+  void EnsureImageBridgeChild();
+
   RefPtr<CompositorSession> CreateRemoteSession(
     nsBaseWidget* aWidget,
     ClientLayerManager* aLayerManager,
