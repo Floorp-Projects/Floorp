@@ -573,24 +573,6 @@ bool ImageBridgeChild::IsCreated()
 #include "ipc/Nuwa.h"
 #endif
 
-static void
-ConnectImageBridgeInChildProcess(Transport* aTransport,
-                                 ProcessId aOtherPid)
-{
-  // Bind the IPC channel to the image bridge thread.
-  sImageBridgeChildSingleton->Open(aTransport, aOtherPid,
-                                   XRE_GetIOMessageLoop(),
-                                   ipc::ChildSide);
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    sImageBridgeChildThread
-      ->message_loop()->PostTask(NewRunnableFunction(NuwaMarkCurrentThread,
-                                                     (void (*)(void *))nullptr,
-                                                     (void *)nullptr));
-  }
-#endif
-}
-
 static void ReleaseImageClientNow(ImageClient* aClient,
                                   PImageContainerChild* aChild)
 {
@@ -915,9 +897,8 @@ static void CallSendImageBridgeThreadId(ImageBridgeChild* aImageBridgeChild)
   aImageBridgeChild->SendImageBridgeThreadId();
 }
 
-PImageBridgeChild*
-ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
-                                        ProcessId aOtherPid)
+bool
+ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -925,18 +906,25 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 
   sImageBridgeChildThread = new ImageBridgeThread();
   if (!sImageBridgeChildThread->Start()) {
-    return nullptr;
+    return false;
   }
 
   sImageBridgeChildSingleton = new ImageBridgeChild();
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(ConnectImageBridgeInChildProcess,
-                        aTransport, aOtherPid));
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(CallSendImageBridgeThreadId,
-                        sImageBridgeChildSingleton.get()));
+
+  MessageLoop* loop = sImageBridgeChildSingleton->GetMessageLoop();
+
+  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
+    sImageBridgeChildSingleton, &ImageBridgeChild::Bind, Move(aEndpoint)));
+  loop->PostTask(NewRunnableFunction(
+    CallSendImageBridgeThreadId, sImageBridgeChildSingleton.get()));
 
   return sImageBridgeChildSingleton;
+}
+
+void
+ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
+{
+  aEndpoint.Bind(this, nullptr);
 }
 
 void ImageBridgeChild::ShutDown()
@@ -993,8 +981,7 @@ ImageBridgeChild::InitSameProcess()
   }
 
   sImageBridgeChildSingleton = new ImageBridgeChild();
-  sImageBridgeParentSingleton = new ImageBridgeParent(
-    CompositorThreadHolder::Loop(), base::GetCurrentProcId());
+  sImageBridgeParentSingleton = ImageBridgeParent::CreateSameProcess();
   sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     NewRunnableFunction(CallSendImageBridgeThreadId,

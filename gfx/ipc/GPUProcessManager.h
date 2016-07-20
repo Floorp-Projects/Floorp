@@ -28,7 +28,7 @@ class CompositorSession;
 class ClientLayerManager;
 class CompositorUpdateObserver;
 class PCompositorBridgeChild;
-class PCompositorBridgeParent;
+class PImageBridgeChild;
 } // namespace layers
 namespace widget {
 class CompositorWidget;
@@ -56,6 +56,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener
   typedef layers::CompositorSession CompositorSession;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
+  typedef layers::PImageBridgeChild PImageBridgeChild;
 
 public:
   static void Initialize();
@@ -82,6 +83,9 @@ public:
 
   bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
                                      ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
+
+  bool CreateContentImageBridge(base::ProcessId aOtherProcess,
+                                ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
