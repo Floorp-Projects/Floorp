@@ -16,11 +16,9 @@ mkdir $BUILD
 
 tooltool_fetch() {
     cat >manifest.tt
-    python2.7 $BUILD/tooltool.py fetch
+    python2.7 /tmp/tooltool.py fetch
     rm manifest.tt
 }
-
-curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > ${BUILD}/tooltool.py
 
 # Install Mercurial from custom debs since distro packages tend to lag behind.
 cd $BUILD
