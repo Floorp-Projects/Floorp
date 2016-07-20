@@ -21,6 +21,7 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.annotation.ReflectionTarget;
+import org.mozilla.gecko.fxa.FxAccountPushHandler;
 import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -50,6 +51,7 @@ public class PushService implements BundleEventListener {
     private static final String LOG_TAG = "GeckoPushService";
 
     public static final String SERVICE_WEBPUSH = "webpush";
+    public static final String SERVICE_FXA = "fxa";
 
     private static PushService sInstance;
 
@@ -63,6 +65,7 @@ public class PushService implements BundleEventListener {
             "PushServiceAndroidGCM:UnregisterUserAgent",
             "PushServiceAndroidGCM:SubscribeChannel",
             "PushServiceAndroidGCM:UnsubscribeChannel",
+            "PushServiceAndroidGCM:ReceivedPushMessageToDecode:Response",
             "History:GetPrePathLastVisitedTimeMilliseconds",
     };
 
@@ -150,69 +153,83 @@ public class PushService implements BundleEventListener {
             return;
         }
 
+        boolean isWebPush = SERVICE_WEBPUSH.equals(subscription.service);
+        boolean isFxAPush = SERVICE_FXA.equals(subscription.service);
+        if (!isWebPush && !isFxAPush) {
+            Log.e(LOG_TAG, "Message directed to unknown service; dropping: " + subscription.service);
+            return;
+        }
+
         Log.i(LOG_TAG, "Message directed to service: " + subscription.service);
 
-        if (SERVICE_WEBPUSH.equals(subscription.service)) {
-            if (subscription.serviceData == null) {
-                Log.e(LOG_TAG, "No serviceData found for chid: " + chid + "; ignoring dom/push message.");
+        if (subscription.serviceData == null) {
+            Log.e(LOG_TAG, "No serviceData found for chid: " + chid + "; ignoring dom/push message.");
+            return;
+        }
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "dom-push-api");
+
+        final String profileName = subscription.serviceData.optString("profileName", null);
+        final String profilePath = subscription.serviceData.optString("profilePath", null);
+        if (profileName == null || profilePath == null) {
+            Log.e(LOG_TAG, "Corrupt serviceData found for chid: " + chid + "; ignoring dom/push message.");
+            return;
+        }
+
+        if (canSendPushMessagesToGecko) {
+            if (!GeckoThread.canUseProfile(profileName, new File(profilePath))) {
+                Log.e(LOG_TAG, "Mismatched profile for chid: " + chid + "; ignoring dom/push message.");
                 return;
-            }
-
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "dom-push-api");
-
-            final String profileName = subscription.serviceData.optString("profileName", null);
-            final String profilePath = subscription.serviceData.optString("profilePath", null);
-            if (profileName == null || profilePath == null) {
-                Log.e(LOG_TAG, "Corrupt serviceData found for chid: " + chid + "; ignoring dom/push message.");
-                return;
-            }
-
-            if (canSendPushMessagesToGecko) {
-                if (!GeckoThread.canUseProfile(profileName, new File(profilePath))) {
-                    Log.e(LOG_TAG, "Mismatched profile for chid: " + chid + "; ignoring dom/push message.");
-                    return;
-                }
-            } else {
-                final Intent intent = GeckoService.getIntentToCreateServices(context, "android-push-service");
-                GeckoService.setIntentProfile(intent, profileName, profilePath);
-                context.startService(intent);
-            }
-
-            // DELIVERANCE!
-            final JSONObject data = new JSONObject();
-            try {
-                data.put("channelID", chid);
-                data.put("con", bundle.getString("con"));
-                data.put("enc", bundle.getString("enc"));
-                // Only one of cryptokey (newer) and enckey (deprecated) should be set, but the
-                // Gecko handler will verify this.
-                data.put("cryptokey", bundle.getString("cryptokey"));
-                data.put("enckey", bundle.getString("enckey"));
-                data.put("message", bundle.getString("body"));
-
-                if (!canSendPushMessagesToGecko) {
-                    data.put("profileName", profileName);
-                    data.put("profilePath", profilePath);
-                }
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Got exception delivering dom/push message to Gecko!", e);
-                return;
-            }
-
-            if (canSendPushMessagesToGecko) {
-                sendMessageToGeckoService(data);
-            } else {
-                Log.i(LOG_TAG, "Service not initialized, adding message to queue.");
-                pendingPushMessages.add(data);
             }
         } else {
-            Log.e(LOG_TAG, "Message directed to unknown service; dropping: " + subscription.service);
+            final Intent intent = GeckoService.getIntentToCreateServices(context, "android-push-service");
+            GeckoService.setIntentProfile(intent, profileName, profilePath);
+            context.startService(intent);
+        }
+
+        final JSONObject data = new JSONObject();
+        try {
+            data.put("channelID", chid);
+            data.put("con", bundle.getString("con"));
+            data.put("enc", bundle.getString("enc"));
+            // Only one of cryptokey (newer) and enckey (deprecated) should be set, but the
+            // Gecko handler will verify this.
+            data.put("cryptokey", bundle.getString("cryptokey"));
+            data.put("enckey", bundle.getString("enckey"));
+            data.put("message", bundle.getString("body"));
+
+            if (!canSendPushMessagesToGecko) {
+                data.put("profileName", profileName);
+                data.put("profilePath", profilePath);
+                data.put("service", subscription.service);
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Got exception delivering dom/push message to Gecko!", e);
+            return;
+        }
+
+        if (canSendPushMessagesToGecko) {
+            if (isWebPush) {
+                sendMessageToGeckoService(data);
+            } else {
+                sendMessageToDecodeToGeckoService(data);
+            }
+        } else {
+            Log.i(LOG_TAG, "Service not initialized, adding message to queue.");
+            pendingPushMessages.add(data);
         }
     }
 
     protected void sendMessageToGeckoService(final @NonNull JSONObject message) {
         Log.i(LOG_TAG, "Delivering dom/push message to Gecko!");
         GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage",
+                                      message.toString(),
+                                      GeckoThread.State.PROFILE_READY);
+    }
+
+    protected void sendMessageToDecodeToGeckoService(final @NonNull JSONObject message) {
+        Log.i(LOG_TAG, "Delivering dom/push message to decode to Gecko!");
+        GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessageToDecode",
                                       message.toString(),
                                       GeckoThread.State.PROFILE_READY);
     }
@@ -283,6 +300,7 @@ public class PushService implements BundleEventListener {
                 for (JSONObject pushMessage : pendingPushMessages) {
                     final String profileName = pushMessage.optString("profileName", null);
                     final String profilePath = pushMessage.optString("profilePath", null);
+                    final String service = pushMessage.optString("service", null);
                     if (profileName == null || profilePath == null ||
                             !GeckoThread.canUseProfile(profileName, new File(profilePath))) {
                         Log.e(LOG_TAG, "Mismatched profile for chid: " +
@@ -290,7 +308,11 @@ public class PushService implements BundleEventListener {
                                        "; ignoring dom/push message.");
                         continue;
                     }
-                    sendMessageToGeckoService(pushMessage);
+                    if (SERVICE_WEBPUSH.equals(service)) {
+                        sendMessageToGeckoService(pushMessage);
+                    } else /* FxA Push */ {
+                        sendMessageToDecodeToGeckoService(pushMessage);
+                    }
                 }
                 pendingPushMessages.clear();
                 callback.sendSuccess(null);
@@ -320,7 +342,9 @@ public class PushService implements BundleEventListener {
                 return;
             }
             if ("PushServiceAndroidGCM:SubscribeChannel".equals(event)) {
-                final String service = SERVICE_WEBPUSH;
+                final String service = SERVICE_FXA.equals(message.getString("service")) ?
+                                       SERVICE_FXA :
+                                       SERVICE_WEBPUSH;
                 final JSONObject serviceData;
                 final String appServerKey = message.getString("appServerKey");
                 try {
@@ -372,6 +396,10 @@ public class PushService implements BundleEventListener {
                 }
 
                 callback.sendError("Could not unsubscribe from channel: " + channelID);
+                return;
+            }
+            if ("PushServiceAndroidGCM:ReceivedPushMessageToDecode:Response".equals(event)) {
+                FxAccountPushHandler.handleFxAPushMessage(context, message);
                 return;
             }
             if ("History:GetPrePathLastVisitedTimeMilliseconds".equals(event)) {

@@ -5,6 +5,8 @@
 package org.mozilla.gecko.fxa;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -12,8 +14,8 @@ import android.util.Log;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
-import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -21,8 +23,13 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.TokensAndKeysState;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,63 +38,100 @@ import java.util.concurrent.Executors;
  * and also stores the registration details in the Android FxAccount.
  * This should be used in a state where we possess a sessionToken, most likely the Married state.
  */
-public class FxAccountDeviceRegistrator {
-
-  public abstract static class RegisterDelegate {
-    private boolean allowRecursion = true;
-    protected abstract void onComplete(String deviceId);
-  }
-
-  public static class InvalidFxAState extends Exception {
-    private static final long serialVersionUID = -8537626959811195978L;
-
-    public InvalidFxAState(String message) {
-      super(message);
-    }
-  }
+public class FxAccountDeviceRegistrator implements BundleEventListener {
+  private static final String LOG_TAG = "FxADeviceRegistrator";
 
   // The current version of the device registration, we use this to re-register
   // devices after we update what we send on device registration.
   public static final Integer DEVICE_REGISTRATION_VERSION = 1;
 
-  private static final String LOG_TAG = "FxADeviceRegistrator";
+  private static FxAccountDeviceRegistrator instance;
+  private final WeakReference<Context> context;
 
-  private FxAccountDeviceRegistrator() {}
-
-  public static void register(final AndroidFxAccount fxAccount, final Context context) throws InvalidFxAState {
-    register(fxAccount, context, new RegisterDelegate() {
-      @Override
-      public void onComplete(String deviceId) {}
-    });
+  private FxAccountDeviceRegistrator(Context appContext) {
+    this.context = new WeakReference<Context>(appContext);
   }
 
-  /**
-   * @throws InvalidFxAState thrown if we're not in a fxa state with a session token
-   */
-  public static void register(final AndroidFxAccount fxAccount, final Context context,
-                              final RegisterDelegate delegate) throws InvalidFxAState {
-    final byte[] sessionToken = getSessionToken(fxAccount);
+  private static FxAccountDeviceRegistrator getInstance(Context appContext) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    if (instance == null) {
+      FxAccountDeviceRegistrator tempInstance = new FxAccountDeviceRegistrator(appContext);
+      tempInstance.setupListeners(); // Set up listener for FxAccountPush:Subscribe:Response
+      instance = tempInstance;
+    }
+    return instance;
+  }
 
+  public static void register(Context context) {
+    Context appContext = context.getApplicationContext();
+    try {
+      getInstance(appContext).beginRegistration(appContext);
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Could not start FxA device registration", e);
+    }
+  }
+
+  private void beginRegistration(Context context) {
+    // Fire up gecko and send event
+    // We create the Intent ourselves instead of using GeckoService.getIntentToCreateServices
+    // because we can't import these modules (circular dependency between browser and services)
+    final Intent geckoIntent = new Intent();
+    geckoIntent.setAction("create-services");
+    geckoIntent.setClassName(context, "org.mozilla.gecko.GeckoService");
+    geckoIntent.putExtra("category", "android-push-service");
+    geckoIntent.putExtra("data", "android-fxa-subscribe");
+    final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
+    geckoIntent.putExtra("org.mozilla.gecko.intent.PROFILE_NAME", fxAccount.getProfile());
+    context.startService(geckoIntent);
+    // -> handleMessage()
+  }
+
+  @Override
+  public void handleMessage(String event, Bundle message, EventCallback callback) {
+    if ("PushServiceAndroidGCM:FxASubscribe:Response".equals(event)) {
+      try {
+        doFxaRegistration(message.getBundle("subscription"));
+      } catch (InvalidFxAState e) {
+        Log.d(LOG_TAG, "Invalid state when trying to register with FxA ", e);
+      }
+    } else {
+      Log.e(LOG_TAG, "No action defined for " + event);
+    }
+  }
+
+  private void doFxaRegistration(Bundle subscription) throws InvalidFxAState {
+    final Context context = this.context.get();
+    if (this.context == null) {
+      throw new IllegalStateException("Application context has been gc'ed");
+    }
+    doFxaRegistration(context, subscription, true);
+  }
+
+  private static void doFxaRegistration(final Context context, final Bundle subscription, final boolean allowRecursion) throws InvalidFxAState {
+    String pushCallback = subscription.getString("pushCallback");
+    String pushPublicKey = subscription.getString("pushPublicKey");
+    String pushAuthKey = subscription.getString("pushAuthKey");
+
+    final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
+    final byte[] sessionToken = getSessionToken(fxAccount);
     final FxAccountDevice device;
     String deviceId = fxAccount.getDeviceId();
     String clientName = getClientName(fxAccount, context);
     if (TextUtils.isEmpty(deviceId)) {
       Log.i(LOG_TAG, "Attempting registration for a new device");
-      device = FxAccountDevice.forRegister(clientName, "mobile");
+      device = FxAccountDevice.forRegister(clientName, "mobile", pushCallback, pushPublicKey, pushAuthKey);
     } else {
       Log.i(LOG_TAG, "Attempting registration for an existing device");
       Logger.pii(LOG_TAG, "Device ID: " + deviceId);
-      device = FxAccountDevice.forUpdate(deviceId, clientName);
+      device = FxAccountDevice.forUpdate(deviceId, clientName, pushCallback, pushPublicKey, pushAuthKey);
     }
 
     ExecutorService executor = Executors.newSingleThreadExecutor(); // Not called often, it's okay to spawn another thread
     final FxAccountClient20 fxAccountClient =
-        new FxAccountClient20(fxAccount.getAccountServerURI(), executor);
+            new FxAccountClient20(fxAccount.getAccountServerURI(), executor);
     fxAccountClient.registerOrUpdateDevice(sessionToken, device, new RequestDelegate<FxAccountDevice>() {
       @Override
       public void handleError(Exception e) {
         Log.e(LOG_TAG, "Error while updating a device registration: ", e);
-        delegate.onComplete(null);
       }
 
       @Override
@@ -96,19 +140,16 @@ public class FxAccountDeviceRegistrator {
         if (error.httpStatusCode == 400) {
           if (error.apiErrorNumber == FxAccountRemoteError.UNKNOWN_DEVICE) {
             recoverFromUnknownDevice(fxAccount);
-            delegate.onComplete(null);
           } else if (error.apiErrorNumber == FxAccountRemoteError.DEVICE_SESSION_CONFLICT) {
-            recoverFromDeviceSessionConflict(error, fxAccountClient, sessionToken, fxAccount,
-                context, delegate); // Will call delegate.onComplete
+            recoverFromDeviceSessionConflict(error, fxAccountClient, sessionToken, fxAccount, context,
+                    subscription, allowRecursion);
           }
         } else
         if (error.httpStatusCode == 401
-            && error.apiErrorNumber == FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN) {
+                && error.apiErrorNumber == FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN) {
           handleTokenError(error, fxAccountClient, fxAccount);
-          delegate.onComplete(null);
         } else {
           logErrorAndResetDeviceRegistrationVersion(error, fxAccount);
-          delegate.onComplete(null);
         }
       }
 
@@ -117,7 +158,6 @@ public class FxAccountDeviceRegistrator {
         Log.i(LOG_TAG, "Device registration complete");
         Logger.pii(LOG_TAG, "Registered device ID: " + result.id);
         fxAccount.setFxAUserData(result.id, DEVICE_REGISTRATION_VERSION);
-        delegate.onComplete(result.id);
       }
     });
   }
@@ -195,13 +235,13 @@ public class FxAccountDeviceRegistrator {
                                                        final byte[] sessionToken,
                                                        final AndroidFxAccount fxAccount,
                                                        final Context context,
-                                                       final RegisterDelegate delegate) {
+                                                       final Bundle subscription,
+                                                       final boolean allowRecursion) {
     Log.w(LOG_TAG, "device session conflict, attempting to ascertain the correct device id");
     fxAccountClient.deviceList(sessionToken, new RequestDelegate<FxAccountDevice[]>() {
       private void onError() {
         Log.e(LOG_TAG, "failed to recover from device-session conflict");
         logErrorAndResetDeviceRegistrationVersion(error, fxAccount);
-        delegate.onComplete(null);
       }
 
       @Override
@@ -219,13 +259,12 @@ public class FxAccountDeviceRegistrator {
         for (FxAccountDevice device : devices) {
           if (device.isCurrentDevice) {
             fxAccount.setFxAUserData(device.id, 0); // Reset device registration version
-            if (!delegate.allowRecursion) {
+            if (!allowRecursion) {
               Log.d(LOG_TAG, "Failure to register a device on the second try");
               break;
             }
-            delegate.allowRecursion = false; // Make sure we don't fall into an infinite loop
             try {
-              register(fxAccount, context, delegate); // Will call delegate.onComplete()
+              doFxaRegistration(context, subscription, false);
               return;
             } catch (InvalidFxAState e) {
               Log.d(LOG_TAG, "Invalid state when trying to recover from a session conflict ", e);
@@ -236,5 +275,24 @@ public class FxAccountDeviceRegistrator {
         onError();
       }
     });
+  }
+
+  private void setupListeners() throws ClassNotFoundException, NoSuchMethodException,
+          InvocationTargetException, IllegalAccessException {
+    // We have no choice but to use reflection here, sorry :(
+    Class<?> eventDispatcher = Class.forName("org.mozilla.gecko.EventDispatcher");
+    Method getInstance = eventDispatcher.getMethod("getInstance");
+    Object instance = getInstance.invoke(null);
+    Method registerBackgroundThreadListener = eventDispatcher.getMethod("registerBackgroundThreadListener",
+            BundleEventListener.class, String[].class);
+    registerBackgroundThreadListener.invoke(instance, this, new String[] { "PushServiceAndroidGCM:FxASubscribe:Response" });
+  }
+
+  public static class InvalidFxAState extends Exception {
+    private static final long serialVersionUID = -8537626959811195978L;
+
+    public InvalidFxAState(String message) {
+      super(message);
+    }
   }
 }

@@ -360,16 +360,16 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     // the pickle file directly without being afraid from a StrictMode violation.
     ThreadUtils.assertNotOnUiThread();
 
-    Logger.info(LOG_TAG, "Firefox account named " + account.name + " being removed; " +
-            "deleting saved pickle file '" + FxAccountConstants.ACCOUNT_PICKLE_FILENAME + "'.");
-    deletePickle();
-
     final Intent serviceIntent = androidFxAccount.populateDeletedAccountIntent(
             new Intent(context, FxAccountDeletedService.class)
     );
     Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
         "starting FxAccountDeletedService with action: " + serviceIntent.getAction() + ".");
     context.startService(serviceIntent);
+
+    Logger.info(LOG_TAG, "Firefox account named " + account.name + " being removed; " +
+            "deleting saved pickle file '" + FxAccountConstants.ACCOUNT_PICKLE_FILENAME + "'.");
+    deletePickle();
 
     return result;
   }
