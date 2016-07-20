@@ -12,8 +12,8 @@ var backgroundPagesMap = new WeakMap();
 // Responsible for the background_page section of the manifest.
 function BackgroundPage(options, extension) {
   this.extension = extension;
+  this.scripts = options.scripts || [];
   this.page = options.page || null;
-  this.isGenerated = !!options.scripts;
   this.contentWindow = null;
   this.chromeWebNav = null;
   this.webNav = null;
@@ -28,8 +28,9 @@ BackgroundPage.prototype = {
     let url;
     if (this.page) {
       url = this.extension.baseURI.resolve(this.page);
-    } else if (this.isGenerated) {
-      url = this.extension.baseURI.resolve("_generated_background_page.html");
+    } else {
+      // TODO: Chrome uses "_generated_background_page.html" for this.
+      url = this.extension.baseURI.resolve("_blank.html");
     }
 
     if (!this.extension.isExtensionURL(url)) {
@@ -101,6 +102,16 @@ BackgroundPage.prototype = {
         return;
       }
       event.currentTarget.removeEventListener("load", loadListener, true);
+
+      if (this.scripts) {
+        let doc = window.document;
+        for (let script of this.scripts) {
+          let tag = doc.createElement("script");
+          tag.setAttribute("src", script);
+          tag.async = false;
+          doc.body.appendChild(tag);
+        }
+      }
 
       if (this.extension.onStartup) {
         this.extension.onStartup();

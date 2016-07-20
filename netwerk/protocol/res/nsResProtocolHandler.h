@@ -52,9 +52,7 @@ protected:
     nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult) override;
     virtual ~nsResProtocolHandler() {}
 
-    bool ResolveSpecialCases(const nsACString& aHost,
-                             const nsACString& aPath,
-                             const nsACString& aPathname,
+    bool ResolveSpecialCases(const nsACString& aHost, const nsACString& aPath,
                              nsACString& aResult) override;
 
 private:
