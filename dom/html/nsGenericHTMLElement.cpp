@@ -3082,7 +3082,7 @@ nsGenericHTMLFormElementWithState::RestoreFormControlState()
 }
 
 void
-nsGenericHTMLFormElementWithState::NodeInfoChanged(mozilla::dom::NodeInfo* aOldNodeInfo)
+nsGenericHTMLFormElementWithState::NodeInfoChanged()
 {
   mStateKey.SetIsVoid(true);
 }
