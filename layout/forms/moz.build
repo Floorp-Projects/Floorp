@@ -52,11 +52,5 @@ LOCAL_INCLUDES += [
     '/dom/html',
 ]
 
-if CONFIG['ENABLE_INTL_API']:
-    # nsNumberControlFrame.cpp requires ICUUtils.h which in turn requires
-    # i18n/unum.h
-    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-    LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
-
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']

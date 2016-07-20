@@ -236,9 +236,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 # We prefer to use ICU for normalization functions, but currently it is only
 # available if we're building with the Intl API enabled:
 if CONFIG['ENABLE_INTL_API']:
-    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-    CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-    LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
     USE_LIBS += [
         'icu',
     ]
