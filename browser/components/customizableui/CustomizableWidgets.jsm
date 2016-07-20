@@ -1094,13 +1094,11 @@ const CustomizableWidgets = [
       let win = aEvent.view;
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser)
     }
-  }];
-
-if (Services.prefs.getBoolPref("privacy.userContext.enabled")) {
-  CustomizableWidgets.push({
+  }, {
     id: "containers-panelmenu",
     type: "view",
     viewId: "PanelUI-containers",
+    hasObserver: false,
     onCreated: function(aNode) {
       let doc = aNode.ownerDocument;
       let win = doc.defaultView;
@@ -1115,6 +1113,13 @@ if (Services.prefs.getBoolPref("privacy.userContext.enabled")) {
 
       if (PrivateBrowsingUtils.isWindowPrivate(win)) {
         aNode.setAttribute("disabled", "true");
+      }
+
+      this.updateVisibility(aNode);
+
+      if (!this.hasObserver) {
+        Services.prefs.addObserver("privacy.userContext.enabled", this, true);
+        this.hasObserver = true;
       }
     },
     onViewShowing: function(aEvent) {
@@ -1142,9 +1147,26 @@ if (Services.prefs.getBoolPref("privacy.userContext.enabled")) {
       });
 
       items.appendChild(fragment);
-    }
-  });
-}
+    },
+
+    updateVisibility(aNode) {
+      aNode.hidden = !Services.prefs.getBoolPref("privacy.userContext.enabled");
+    },
+
+    observe(aSubject, aTopic, aData) {
+      let {instances} = CustomizableUI.getWidget("containers-panelmenu");
+      for (let {node} of instances) {
+	if (node) {
+	  this.updateVisibility(node);
+	}
+      }
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsISupportsWeakReference,
+      Ci.nsIObserver
+    ]),
+  }];
 
 let preferencesButton = {
   id: "preferences-button",

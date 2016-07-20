@@ -2032,6 +2032,8 @@ SECStatus ssl3_TLSSignatureAlgorithmForKeyType(KeyType keyType,
 
 SECStatus ssl3_SetCipherSuite(sslSocket *ss, ssl3CipherSuite chosenSuite,
                               PRBool initHashes);
+SECStatus ssl3_PickSignatureHashAlgorithm(sslSocket *ss,
+                                          SSLSignatureAndHashAlg *out);
 
 /* Pull in TLS 1.3 functions */
 #include "tls13con.h"

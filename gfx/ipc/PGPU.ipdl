@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCompositorBridge;
+include protocol PImageBridge;
 include protocol PVsyncBridge;
 
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
@@ -30,7 +31,8 @@ parent:
   // Sent by the UI process to initiate core settings.
   async Init(GfxPrefSetting[] prefs);
 
-  async InitVsyncBridge(Endpoint<PVsyncBridgeParent> vsyncEndpoint);
+  async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
+  async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
 
   // Called to update a gfx preference.
   async UpdatePref(GfxPrefSetting pref);
@@ -43,6 +45,7 @@ parent:
 
   // Create a new content-process compositor bridge.
   async NewContentCompositorBridge(Endpoint<PCompositorBridgeParent> endpoint);
+  async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
 };
 
 } // namespace gfx
