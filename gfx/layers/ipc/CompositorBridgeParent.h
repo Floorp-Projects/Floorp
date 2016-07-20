@@ -234,8 +234,6 @@ public:
   virtual bool RecvWillClose() override;
   virtual bool RecvPause() override;
   virtual bool RecvResume() override;
-  virtual bool RecvNotifyHidden(const uint64_t& id) override { return true; }
-  virtual bool RecvNotifyVisible(const uint64_t& id) override { return true; }
   virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
   virtual bool RecvAdoptChild(const uint64_t& child) override;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,

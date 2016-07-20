@@ -699,26 +699,6 @@ CompositorBridgeChild::SendResume()
 }
 
 bool
-CompositorBridgeChild::SendNotifyHidden(const uint64_t& id)
-{
-  MOZ_ASSERT(mCanSend);
-  if (!mCanSend) {
-    return true;
-  }
-  return PCompositorBridgeChild::SendNotifyHidden(id);
-}
-
-bool
-CompositorBridgeChild::SendNotifyVisible(const uint64_t& id)
-{
-  MOZ_ASSERT(mCanSend);
-  if (!mCanSend) {
-    return true;
-  }
-  return PCompositorBridgeChild::SendNotifyVisible(id);
-}
-
-bool
 CompositorBridgeChild::SendNotifyChildCreated(const uint64_t& id)
 {
   MOZ_ASSERT(mCanSend);
