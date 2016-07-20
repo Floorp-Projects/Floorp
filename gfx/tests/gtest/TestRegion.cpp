@@ -690,6 +690,86 @@ TEST(Gfx, TiledRegionIntersects) {
   EXPECT_FALSE(tiledRegion.Intersects(nsIntRect(0, 0, 50, 500)));
 }
 
+TEST(Gfx, TiledRegionBoundaryConditions1) {
+  TiledIntRegion tiledRegion;
+  // This one works fine
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MIN, INT_MIN, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(INT_MIN, INT_MIN, 1, 1)));
+
+  // This causes the tiledRegion.mBounds to overflow, so it is ignored
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MAX - 1, INT_MAX - 1, 1, 1)));
+
+  // Verify that the tiledRegion contains only things we expect
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(INT_MIN, INT_MIN, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(INT_MAX - 1, INT_MAX - 1, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
+}
+
+TEST(Gfx, TiledRegionBoundaryConditions2) {
+  TiledIntRegion tiledRegion;
+  // This one works fine
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MAX - 1, INT_MIN, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(INT_MAX - 1, INT_MIN, 1, 1)));
+
+  // As with TiledRegionBoundaryConditions1, this overflows, so it is ignored
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MIN, INT_MAX - 1, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(INT_MAX - 1, INT_MIN, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(INT_MIN, INT_MAX - 1, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
+}
+
+TEST(Gfx, TiledRegionBigRects) {
+  TiledIntRegion tiledRegion;
+  // Super wide region, forces simplification into bounds mode
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MIN, INT_MIN, INT_MAX, 100)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(INT_MIN, INT_MIN, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(-2, INT_MIN + 99, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(-2, INT_MIN + 100, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(-1, INT_MIN + 99, 1, 1)));
+
+  // Add another rect, verify that simplification caused the entire bounds
+  // to expand by a lot more.
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MIN, INT_MIN + 200, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(-2, INT_MIN + 100, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(-2, INT_MIN + 200, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(-2, INT_MIN + 201, 1, 1)));
+}
+
+TEST(Gfx, TiledRegionBoundaryOverflow) {
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(nsIntRegion(nsIntRect(100, 100, 1, 1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(100, 100, 1, 1)));
+
+  // The next region is invalid, so it gets ignored
+  tiledRegion.Add(nsIntRegion(nsIntRect(INT_MAX, INT_MAX, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(INT_MAX, INT_MAX, 1, 1)));
+
+  // Try that again as a rect, it will also get ignored
+  tiledRegion.Add(nsIntRect(INT_MAX, INT_MAX, 1, 1));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(INT_MAX, INT_MAX, 1, 1)));
+
+  // Try with a bigger overflowing rect
+  tiledRegion.Add(nsIntRect(INT_MAX, INT_MAX, 500, 500));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(INT_MIN, INT_MIN, 10, 10)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(INT_MAX, INT_MAX, 100, 100)));
+
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
+}
+
+TEST(Gfx, TiledRegionNegativeRect) {
+  TiledIntRegion tiledRegion;
+  // The next region is invalid, so it gets ignored
+  tiledRegion.Add(nsIntRegion(nsIntRect(0, 0, -500, -500)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(-50, -50, 1, 1)));
+  // Rects with negative widths/heights are treated as empty and ignored
+  tiledRegion.Add(nsIntRect(0, 0, -500, -500));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(-1, -1, 1, 1)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
+  // Empty rects are always contained
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(0, 0, -1, -1)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(100, 100, -1, -1)));
+}
+
 MOZ_GTEST_BENCH(GfxBench, RegionOr, []{
   const int size = 5000;
 
