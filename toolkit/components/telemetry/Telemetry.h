@@ -51,7 +51,7 @@ void DestroyStatisticsRecorder();
 void Init();
 
 /**
- * Adds sample to a histogram defined in TelemetryHistograms.h
+ * Adds sample to a histogram defined in TelemetryHistogramEnums.h
  *
  * @param id - histogram id
  * @param sample - value to record.
@@ -59,7 +59,7 @@ void Init();
 void Accumulate(ID id, uint32_t sample);
 
 /**
- * Adds sample to a keyed histogram defined in TelemetryHistograms.h
+ * Adds sample to a keyed histogram defined in TelemetryHistogramEnums.h
  *
  * @param id - keyed histogram id
  * @param key - the string key
@@ -68,7 +68,7 @@ void Accumulate(ID id, uint32_t sample);
 void Accumulate(ID id, const nsCString& key, uint32_t sample = 1);
 
 /**
- * Adds a sample to a histogram defined in TelemetryHistograms.h.
+ * Adds a sample to a histogram defined in TelemetryHistogramEnums.h.
  * This function is here to support telemetry measurements from Java,
  * where we have only names and not numeric IDs.  You should almost
  * certainly be using the by-enum-id version instead of this one.
@@ -79,7 +79,7 @@ void Accumulate(ID id, const nsCString& key, uint32_t sample = 1);
 void Accumulate(const char* name, uint32_t sample);
 
 /**
- * Adds a sample to a histogram defined in TelemetryHistograms.h.
+ * Adds a sample to a histogram defined in TelemetryHistogramEnums.h.
  * This function is here to support telemetry measurements from Java,
  * where we have only names and not numeric IDs.  You should almost
  * certainly be using the by-enum-id version instead of this one.
@@ -91,7 +91,33 @@ void Accumulate(const char* name, uint32_t sample);
 void Accumulate(const char *name, const nsCString& key, uint32_t sample = 1);
 
 /**
- * Adds time delta in milliseconds to a histogram defined in TelemetryHistograms.h
+ * Adds sample to a categorical histogram defined in TelemetryHistogramEnums.h
+ * This is the typesafe - and preferred - way to use the categorical histograms
+ * by passing values from the corresponding Telemetry::LABELS_* enum.
+ *
+ * @param enumValue - Label value from one of the Telemetry::LABELS_* enums.
+ */
+template<class E>
+void AccumulateCategorical(E enumValue) {
+  static_assert(IsCategoricalLabelEnum<E>::value,
+                "Only categorical label enum types are supported.");
+  Accumulate(static_cast<ID>(CategoricalLabelId<E>::value),
+             static_cast<uint32_t>(enumValue));
+};
+
+/**
+ * Adds sample to a categorical histogram defined in TelemetryHistogramEnums.h
+ * This string will be matched against the labels defined in Histograms.json.
+ * If the string does not match a label defined for the histogram, nothing will
+ * be recorded.
+ *
+ * @param id - The histogram id.
+ * @param label - A string label value that is defined in Histograms.json for this histogram.
+ */
+void AccumulateCategorical(ID id, const nsCString& label);
+
+/**
+ * Adds time delta in milliseconds to a histogram defined in TelemetryHistogramEnums.h
  *
  * @param id - histogram id
  * @param start - start time
@@ -100,7 +126,7 @@ void Accumulate(const char *name, const nsCString& key, uint32_t sample = 1);
 void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
- * This clears the data for a histogram in TelemetryHistograms.h.
+ * This clears the data for a histogram in TelemetryHistogramEnums.h.
  *
  * @param id - histogram id
  */
