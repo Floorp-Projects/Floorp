@@ -8,7 +8,9 @@
 #define builtin_Intl_h
 
 #include "NamespaceImports.h"
+#if ENABLE_INTL_API
 #include "unicode/utypes.h"
+#endif
 
 /*
  * The Intl module specified by standard ECMA-402,
@@ -179,6 +181,7 @@ intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 
+#if ENABLE_INTL_API
 /**
  * Cast char16_t* strings to UChar* strings used by ICU.
  */
@@ -193,6 +196,7 @@ Char16ToUChar(char16_t* chars)
 {
   return reinterpret_cast<UChar*>(chars);
 }
+#endif // ENABLE_INTL_API
 
 } // namespace js
 
