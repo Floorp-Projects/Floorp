@@ -29,5 +29,20 @@ var TalosPowersContent;
       }));
     },
 
+    getStartupInfo() {
+      return new Promise((resolve) => {
+        var event = new CustomEvent("TalosPowersContentGetStartupInfo", {
+          bubbles: true,
+        });
+        document.dispatchEvent(event);
+
+        addEventListener("TalosPowersContentGetStartupInfoResult",
+                         function onResult(e) {
+          removeEventListener("TalosPowersContentGetStartupInfoResult",
+                              onResult);
+          resolve(e.detail);
+        });
+      });
+    },
   };
 })();
