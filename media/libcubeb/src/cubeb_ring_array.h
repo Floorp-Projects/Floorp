@@ -8,7 +8,9 @@
 #ifndef CUBEB_RING_ARRAY_H
 #define CUBEB_RING_ARRAY_H
 
-#include "cubeb_utils.h"
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /** Ring array of pointers is used to hold buffers. In case that
     asynchronous producer/consumer callbacks do not arrive in a
@@ -32,11 +34,10 @@ single_audiobuffer_init(AudioBuffer * buffer,
   assert(bytesPerFrame > 0 && channelsPerFrame && frames > 0);
 
   size_t size = bytesPerFrame * frames;
-  buffer->mData = operator new(size);
+  buffer->mData = calloc(1, size);
   if (buffer->mData == NULL) {
     return CUBEB_ERROR;
   }
-  PodZero(static_cast<char*>(buffer->mData), size);
 
   buffer->mNumberChannels = channelsPerFrame;
   buffer->mDataByteSize = size;
@@ -63,8 +64,7 @@ ring_array_init(ring_array * ra,
   ra->tail = 0;
   ra->count = 0;
 
-  ra->buffer_array = new AudioBuffer[ra->capacity];
-  PodZero(ra->buffer_array, ra->capacity);
+  ra->buffer_array = calloc(ra->capacity, sizeof(AudioBuffer));
   if (ra->buffer_array == NULL) {
     return CUBEB_ERROR;
   }
@@ -92,10 +92,10 @@ ring_array_destroy(ring_array * ra)
   }
   for (unsigned int i = 0; i < ra->capacity; ++i) {
     if (ra->buffer_array[i].mData) {
-      operator delete(ra->buffer_array[i].mData);
+      free(ra->buffer_array[i].mData);
     }
   }
-  delete [] ra->buffer_array;
+  free(ra->buffer_array);
 }
 
 /** Get the allocated buffer to be stored with fresh data.
@@ -111,7 +111,7 @@ ring_array_get_free_buffer(ring_array * ra)
   }
 
   assert(ra->count == 0 || (ra->tail + ra->count) % ra->capacity != ra->tail);
-  AudioBuffer * ret = &ra->buffer_array[(ra->tail + ra->count) % ra->capacity];
+  void * ret = &ra->buffer_array[(ra->tail + ra->count) % ra->capacity];
 
   ++ra->count;
   assert(ra->count <= ra->capacity);
@@ -131,7 +131,7 @@ ring_array_get_data_buffer(ring_array * ra)
   if (ra->count == 0) {
     return NULL;
   }
-  AudioBuffer * ret = &ra->buffer_array[ra->tail];
+  void * ret = &ra->buffer_array[ra->tail];
 
   ra->tail = (ra->tail + 1) % ra->capacity;
   assert(ra->tail < ra->capacity);
@@ -155,5 +155,9 @@ ring_array_get_dummy_buffer(ring_array * ra)
   }
   return &ra->buffer_array[0];
 }
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif //CUBEB_RING_ARRAY_H
