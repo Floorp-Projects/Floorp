@@ -1350,54 +1350,131 @@ XMLHttpRequestMainThread::IsSystemXHR() const
 }
 
 NS_IMETHODIMP
-XMLHttpRequestMainThread::Open(const nsACString& method, const nsACString& url,
-                               bool async, const nsAString& user,
-                               const nsAString& password, uint8_t optional_argc)
+XMLHttpRequestMainThread::Open(const nsACString& aMethod, const nsACString& aUrl,
+                               bool aAsync, const nsAString& aUsername,
+                               const nsAString& aPassword, uint8_t optional_argc)
 {
+  Optional<bool> async;
   if (!optional_argc) {
     // No optional arguments were passed in. Default async to true.
-    async = true;
+    async.Construct() = true;
+  } else {
+    async.Construct() = aAsync;
   }
-  Optional<nsAString> realUser;
+  Optional<nsAString> username;
   if (optional_argc > 1) {
-    realUser = &user;
+    username = &aUsername;
   }
-  Optional<nsAString> realPassword;
+  Optional<nsAString> password;
   if (optional_argc > 2) {
-    realPassword = &password;
+    password = &aPassword;
   }
-  return Open(method, url, async, realUser, realPassword);
+  return OpenInternal(aMethod, aUrl, async, username, password);
+}
+
+// This case is hit when the async parameter is outright omitted, which
+// should set it to true (and the username and password to null).
+void
+XMLHttpRequestMainThread::Open(const nsACString& aMethod, const nsAString& aUrl,
+                               ErrorResult& aRv)
+{
+  aRv = OpenInternal(aMethod, NS_ConvertUTF16toUTF8(aUrl), Optional<bool>(true),
+                     Optional<nsAString>(), Optional<nsAString>());
+}
+
+// This case is hit when the async parameter is specified, even if the
+// JS value was "undefined" (which due to legacy reasons should be
+// treated as true, which is how it will already be passed in here).
+void
+XMLHttpRequestMainThread::Open(const nsACString& aMethod,
+                               const nsAString& aUrl,
+                               bool aAsync,
+                               const Optional<nsAString>& aUsername,
+                               const Optional<nsAString>& aPassword,
+                               ErrorResult& aRv)
+{
+  aRv = OpenInternal(aMethod, NS_ConvertUTF16toUTF8(aUrl),
+                     Optional<bool>(aAsync), aUsername, aPassword);
 }
 
 nsresult
-XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url,
-                               bool async, const Optional<nsAString>& user,
-                               const Optional<nsAString>& password)
+XMLHttpRequestMainThread::OpenInternal(const nsACString& aMethod,
+                                       const nsACString& aUrl,
+                                       const Optional<bool>& aAsync,
+                                       const Optional<nsAString>& aUsername,
+                                       const Optional<nsAString>& aPassword)
 {
-  if (inMethod.IsEmpty()) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
+  bool async = aAsync.WasPassed() ? aAsync.Value() : true;
 
+  // Gecko-specific
   if (!async && !DontWarnAboutSyncXHR() && GetOwner() &&
       GetOwner()->GetExtantDoc()) {
     GetOwner()->GetExtantDoc()->WarnOnceAbout(nsIDocument::eSyncXMLHttpRequest);
   }
 
-  Telemetry::Accumulate(Telemetry::XMLHTTPREQUEST_ASYNC_OR_SYNC,
-                        async ? 0 : 1);
+  Telemetry::Accumulate(Telemetry::XMLHTTPREQUEST_ASYNC_OR_SYNC, async ? 0 : 1);
 
+  // Step 1
+  nsCOMPtr<nsIDocument> responsibleDocument = GetDocumentIfCurrent();
+  if (!responsibleDocument) {
+    // This could be because we're no longer current or because we're in some
+    // non-window context...
+    nsresult rv = CheckInnerWindowCorrectness();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+  }
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
+  // Steps 2-4
   nsAutoCString method;
-  nsresult rv = FetchUtil::GetValidRequestMethod(inMethod, method);
+  nsresult rv = FetchUtil::GetValidRequestMethod(aMethod, method);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // sync request is not allowed to use responseType or timeout
-  // in window context
-  if (!async && HasOrHasHadOwner() &&
-      (mTimeoutMilliseconds ||
+  // Steps 5-6
+  nsCOMPtr<nsIURI> baseURI;
+  if (mBaseURI) {
+    baseURI = mBaseURI;
+  } else if (responsibleDocument) {
+    baseURI = responsibleDocument->GetBaseURI();
+  }
+  nsCOMPtr<nsIURI> parsedURL;
+  rv = NS_NewURI(getter_AddRefs(parsedURL), aUrl, nullptr, baseURI);
+  if (NS_FAILED(rv)) {
+    if (rv ==  NS_ERROR_MALFORMED_URI) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+    return rv;
+  }
+  if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  // Step 7 is already done above.
+  // Note that the username and password are already passed in as null by Open()
+  // if the async parameter is omitted, so there's no need check again here.
+
+  // Step 8
+  if (aAsync.WasPassed()) {
+    nsAutoCString host;
+    parsedURL->GetHost(host);
+    if (!host.IsEmpty()) {
+      nsAutoCString userpass;
+      if (aUsername.WasPassed()) {
+        CopyUTF16toUTF8(aUsername.Value(), userpass);
+      }
+      userpass.AppendLiteral(":");
+      if (aPassword.WasPassed()) {
+        AppendUTF16toUTF8(aPassword.Value(), userpass);
+      }
+      parsedURL->SetUserPass(userpass);
+    }
+  }
+
+  // Step 9
+  if (!async && HasOrHasHadOwner() && (mTimeoutMilliseconds ||
        mResponseType != XMLHttpRequestResponseType::_empty)) {
     if (mTimeoutMilliseconds) {
       LogMessage("TimeoutSyncXHRWarning", GetOwner());
@@ -1408,140 +1485,30 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
-  nsCOMPtr<nsIURI> uri;
+  // Step 10
+  CloseRequest();
 
-  CloseRequest(); // spec step 10
-  ResetResponse(); // (part of) spec step 11
-
+  // Step 11
+  // timeouts are handled without a flag
   mFlagSend = false;
+  mRequestMethod.Assign(method);
+  mRequestURL = parsedURL;
+  mFlagSynchronous = !async;
+  mAuthorRequestHeaders.Clear();
+  ResetResponse();
 
-  // Unset any pre-existing aborted and timed-out flags.
+  // Gecko-specific
+  mFlagHadUploadListenersOnSend = false;
   mFlagAborted = false;
   mFlagTimedOut = false;
 
-  mFlagSynchronous = !async;
-
-  nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
-  if (!doc) {
-    // This could be because we're no longer current or because we're in some
-    // non-window context...
-    if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
-      return NS_ERROR_DOM_INVALID_STATE_ERR;
-    }
-  }
-
-  nsCOMPtr<nsIURI> baseURI;
-  if (mBaseURI) {
-    baseURI = mBaseURI;
-  }
-  else if (doc) {
-    baseURI = doc->GetBaseURI();
-  }
-
-  rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, baseURI);
-
-  if (NS_FAILED(rv)) {
-    if (rv ==  NS_ERROR_MALFORMED_URI) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-    return rv;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(CheckInnerWindowCorrectness()))) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  // XXXbz this is wrong: we should only be looking at whether
-  // user/password were passed, not at the values!  See bug 759624.
-  if (user.WasPassed() && !user.Value().IsEmpty()) {
-    nsAutoCString userpass;
-    CopyUTF16toUTF8(user.Value(), userpass);
-    if (password.WasPassed() && !password.Value().IsEmpty()) {
-      userpass.Append(':');
-      AppendUTF16toUTF8(password.Value(), userpass);
-    }
-    uri->SetUserPass(userpass);
-  }
-
-  // Clear our record of previously set headers so future header set
-  // operations will merge/override correctly.
-  mAuthorRequestHeaders.Clear();
-
-  // When we are called from JS we can find the load group for the page,
-  // and add ourselves to it. This way any pending requests
-  // will be automatically aborted if the user leaves the page.
-  nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
-
-  nsSecurityFlags secFlags;
-  nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND |
-    nsIChannel::LOAD_CLASSIFY_URI;
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
-    // When chrome is loading we want to make sure to sandbox any potential
-    // result document. We also want to allow cross-origin loads.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
-               nsILoadInfo::SEC_SANDBOXED;
-  }
-  else if (IsSystemXHR()) {
-    // For pages that have appropriate permissions, we want to still allow
-    // cross-origin loads, but make sure that the any potential result
-    // documents get the same principal as the loader.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-  }
-  else {
-    // Otherwise use CORS. Again, make sure that potential result documents
-    // use the same principal as the loader.
-    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
-               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-  }
-
-  if (mIsAnon) {
-    secFlags |= nsILoadInfo::SEC_COOKIES_OMIT;
-  }
-
-  // If we have the document, use it. Unfortunately, for dedicated workers
-  // 'doc' ends up being the parent document, which is not the document
-  // that we want to use. So make sure to avoid using 'doc' in that situation.
-  if (doc && doc->NodePrincipal() == mPrincipal) {
-    rv = NS_NewChannel(getter_AddRefs(mChannel),
-                       uri,
-                       doc,
-                       secFlags,
-                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                       loadGroup,
-                       nullptr,   // aCallbacks
-                       loadFlags);
-  } else {
-    //otherwise use the principal
-    rv = NS_NewChannel(getter_AddRefs(mChannel),
-                       uri,
-                       mPrincipal,
-                       secFlags,
-                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                       loadGroup,
-                       nullptr,   // aCallbacks
-                       loadFlags);
-  }
-
+  rv = InitChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mFlagHadUploadListenersOnSend = false;
-
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-  if (httpChannel) {
-    rv = httpChannel->SetRequestMethod(method);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Set the initiator type
-    nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
-    if (timedChannel) {
-      timedChannel->SetInitiatorType(kLiteralString_xmlhttprequest);
-    }
-  }
-
+  // Step 12
   if (mState != State::opened) {
-    ChangeState(State::opened);
+    mState = State::opened;
+    FireReadystatechangeEvent();
   }
 
   return NS_OK;
@@ -2137,6 +2104,81 @@ XMLHttpRequestMainThread::ChangeStateToDone()
     // This matches what IE does.
     mChannel = nullptr;
   }
+}
+
+nsresult
+XMLHttpRequestMainThread::InitChannel()
+{
+  // When we are called from JS we can find the load group for the page,
+  // and add ourselves to it. This way any pending requests
+  // will be automatically aborted if the user leaves the page.
+  nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
+
+  nsSecurityFlags secFlags;
+  nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND |
+                          nsIChannel::LOAD_CLASSIFY_URI;
+  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    // When chrome is loading we want to make sure to sandbox any potential
+    // result document. We also want to allow cross-origin loads.
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
+               nsILoadInfo::SEC_SANDBOXED;
+  } else if (IsSystemXHR()) {
+    // For pages that have appropriate permissions, we want to still allow
+    // cross-origin loads, but make sure that the any potential result
+    // documents get the same principal as the loader.
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+  } else {
+    // Otherwise use CORS. Again, make sure that potential result documents
+    // use the same principal as the loader.
+    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
+               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+
+  if (mIsAnon) {
+    secFlags |= nsILoadInfo::SEC_COOKIES_OMIT;
+  }
+
+  // Use the responsibleDocument if we have it, except for dedicated workers
+  // where it will be the parent document, which is not the one we want to use.
+  nsresult rv;
+  nsCOMPtr<nsIDocument> responsibleDocument = GetDocumentIfCurrent();
+  if (responsibleDocument && responsibleDocument->NodePrincipal() == mPrincipal) {
+    rv = NS_NewChannel(getter_AddRefs(mChannel),
+                       mRequestURL,
+                       responsibleDocument,
+                       secFlags,
+                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+                       loadGroup,
+                       nullptr,   // aCallbacks
+                       loadFlags);
+  } else {
+    // Otherwise use the principal.
+    rv = NS_NewChannel(getter_AddRefs(mChannel),
+                       mRequestURL,
+                       mPrincipal,
+                       secFlags,
+                       nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+                       loadGroup,
+                       nullptr,   // aCallbacks
+                       loadFlags);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (httpChannel) {
+    rv = httpChannel->SetRequestMethod(mRequestMethod);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Set the initiator type
+    nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
+    if (timedChannel) {
+      timedChannel->SetInitiatorType(NS_LITERAL_STRING("xmlhttprequest"));
+    }
+  }
+
+  return NS_OK;
 }
 
 static nsresult
