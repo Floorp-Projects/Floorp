@@ -89,8 +89,8 @@ tasks:
           - -cx
           - >
             mkdir -p /home/worker/artifacts &&
-            checkout-gecko workspace &&
-            cd workspace/gecko &&
+            checkout-gecko /home/worker/workspace &&
+            cd /home/worker/workspace/gecko &&
             ln -s /home/worker/artifacts artifacts &&
             ./mach taskgraph decision
             --pushlog-id='{{pushlog_id}}'
