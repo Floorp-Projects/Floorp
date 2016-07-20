@@ -551,7 +551,6 @@ public:
   nsresult Init();
 
   nsresult init(nsIPrincipal* principal,
-                nsIScriptContext* scriptContext,
                 nsPIDOMWindowInner* globalObject,
                 nsIURI* baseURI);
 
@@ -760,6 +759,11 @@ protected:
   // A platform-specific identifer to represent the network interface
   // that this request is associated with.
   nsCString mNetworkInterfaceId;
+
+  /**
+   * Close the XMLHttpRequest's channels.
+   */
+  void CloseRequest();
 
   /**
    * Close the XMLHttpRequest's channels and dispatch appropriate progress

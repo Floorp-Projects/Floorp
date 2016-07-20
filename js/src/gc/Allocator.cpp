@@ -288,7 +288,7 @@ void
 GCRuntime::startBackgroundAllocTaskIfIdle()
 {
     AutoLockHelperThreadState helperLock;
-    if (allocTask.isRunning())
+    if (allocTask.isRunningWithLockHeld(helperLock))
         return;
 
     // Join the previous invocation of the task. This will return immediately

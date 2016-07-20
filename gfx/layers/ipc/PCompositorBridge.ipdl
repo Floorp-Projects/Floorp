@@ -142,14 +142,6 @@ parent:
   sync Pause();
   sync Resume();
 
-  // The child layer tree is hidden. id is the layers id of the child
-  // layer tree.
-  async NotifyHidden(uint64_t id);
-
-  // The child layer tree is visible. id is the layers id of the child
-  // layer tree.
-  async NotifyVisible(uint64_t id);
-
   async NotifyChildCreated(uint64_t id);
   async AdoptChild(uint64_t id);
 

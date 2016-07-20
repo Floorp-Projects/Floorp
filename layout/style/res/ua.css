@@ -112,11 +112,11 @@
 
 /* Links */
 
-*|*:-moz-any-link {
+*|*:any-link {
   cursor: pointer;
 }
 
-*|*:-moz-any-link:-moz-focusring {
+*|*:any-link:-moz-focusring {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;
 }
@@ -292,7 +292,7 @@
   min-height: 0 !important;
   max-height: none !important;
   box-sizing: border-box !important;
-  object-fit: contain !important;
+  object-fit: contain;
   transform: none !important;
 }
 

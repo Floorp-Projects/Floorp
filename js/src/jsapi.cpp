@@ -494,15 +494,15 @@ JS_GetCurrentEmbedderTime()
 }
 
 JS_PUBLIC_API(void*)
-JS_GetRuntimePrivate(JSRuntime* rt)
+JS_GetContextPrivate(JSContext* cx)
 {
-    return rt->data;
+    return cx->data;
 }
 
 JS_PUBLIC_API(void)
-JS_SetRuntimePrivate(JSRuntime* rt, void* data)
+JS_SetContextPrivate(JSContext* cx, void* data)
 {
-    rt->data = data;
+    cx->data = data;
 }
 
 JS_PUBLIC_API(void)
@@ -4081,10 +4081,19 @@ JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSScript*)
-JS::FinishOffThreadScript(JSContext* maybecx, JSRuntime* rt, void* token)
+JS::FinishOffThreadScript(JSContext* cx, void* token)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return HelperThreadState().finishScriptParseTask(maybecx, rt, token);
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    return HelperThreadState().finishScriptParseTask(cx, token);
+}
+
+JS_PUBLIC_API(void)
+JS::CancelOffThreadScript(JSContext* cx, void* token)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    HelperThreadState().cancelParseTask(cx, ParseTaskKind::Script, token);
 }
 
 JS_PUBLIC_API(bool)
@@ -4097,10 +4106,19 @@ JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSObject*)
-JS::FinishOffThreadModule(JSContext* maybecx, JSRuntime* rt, void* token)
+JS::FinishOffThreadModule(JSContext* cx, void* token)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return HelperThreadState().finishModuleParseTask(maybecx, rt, token);
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    return HelperThreadState().finishModuleParseTask(cx, token);
+}
+
+JS_PUBLIC_API(void)
+JS::CancelOffThreadModule(JSContext* cx, void* token)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx));
+    HelperThreadState().cancelParseTask(cx, ParseTaskKind::Module, token);
 }
 
 JS_PUBLIC_API(bool)
@@ -4373,7 +4391,8 @@ JS_ExecuteScript(JSContext* cx, AutoObjectVector& scopeChain, HandleScript scrip
 }
 
 JS_PUBLIC_API(bool)
-JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg)
+JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg,
+                          JS::MutableHandleValue rval)
 {
     CHECK_REQUEST(cx);
     RootedScript script(cx, scriptArg);
@@ -4386,7 +4405,7 @@ JS::CloneAndExecuteScript(JSContext* cx, HandleScript scriptArg)
 
         js::Debugger::onNewScript(cx, script);
     }
-    return ExecuteScript(cx, globalLexical, script, nullptr);
+    return ExecuteScript(cx, globalLexical, script, rval.address());
 }
 
 static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;

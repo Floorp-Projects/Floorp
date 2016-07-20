@@ -348,6 +348,10 @@ IndexedDatabaseManager::Init()
 
     mDeleteTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     NS_ENSURE_STATE(mDeleteTimer);
+
+    if (QuotaManager* quotaManager = QuotaManager::Get()) {
+      NoteLiveQuotaManager(quotaManager);
+    }
   }
 
   Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
@@ -747,13 +751,24 @@ IndexedDatabaseManager::ClearBackgroundActor()
 }
 
 void
-IndexedDatabaseManager::NoteBackgroundThread(nsIEventTarget* aBackgroundThread)
+IndexedDatabaseManager::NoteLiveQuotaManager(QuotaManager* aQuotaManager)
 {
   MOZ_ASSERT(IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBackgroundThread);
+  MOZ_ASSERT(aQuotaManager);
 
-  mBackgroundThread = aBackgroundThread;
+  mBackgroundThread = aQuotaManager->OwningThread();
+}
+
+void
+IndexedDatabaseManager::NoteShuttingDownQuotaManager()
+{
+  MOZ_ASSERT(IsMainProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
+
+  mBackgroundThread = nullptr;
 }
 
 already_AddRefed<FileManager>
@@ -851,6 +866,10 @@ IndexedDatabaseManager::AsyncDeleteFile(FileManager* aFileManager,
   MOZ_ASSERT(aFileManager);
   MOZ_ASSERT(aFileId > 0);
   MOZ_ASSERT(mDeleteTimer);
+
+  if (!mBackgroundThread) {
+    return NS_OK;
+  }
 
   nsresult rv = mDeleteTimer->Cancel();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1043,6 +1062,7 @@ IndexedDatabaseManager::Notify(nsITimer* aTimer)
 {
   MOZ_ASSERT(IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBackgroundThread);
 
   for (auto iter = mPendingDeleteInfos.ConstIter(); !iter.Done(); iter.Next()) {
     auto key = iter.Key();

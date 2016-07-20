@@ -708,8 +708,7 @@ nsScriptLoader::CreateModuleScript(nsModuleLoadRequest* aRequest)
     JS::Rooted<JSObject*> module(cx);
 
     if (aRequest->mWasCompiledOMT) {
-      module = JS::FinishOffThreadModule(cx, xpc::GetJSRuntime(),
-                                         aRequest->mOffThreadToken);
+      module = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
       aRequest->mOffThreadToken = nullptr;
       rv = module ? NS_OK : NS_ERROR_FAILURE;
     } else {
@@ -1277,7 +1276,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   // Check the type attribute to determine language and version.
   // If type exists, it trumps the deprecated 'language='
   nsAutoString type;
-  aElement->GetScriptType(type);
+  bool hasType = aElement->GetScriptType(type);
+
   nsScriptKind scriptKind = nsScriptKind::Classic;
   if (!type.IsEmpty()) {
     // Support type="module" only for chrome documents.
@@ -1286,7 +1286,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     } else {
       NS_ENSURE_TRUE(ParseTypeAttribute(type, &version), false);
     }
-  } else {
+  } else if (!hasType) {
     // no 'type=' element
     // "language" is a deprecated attribute of HTML, so we check it only for
     // HTML script elements.
@@ -1829,7 +1829,8 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
     // (disappearing window, some other error, ...). Finish the
     // request to avoid leaks in the JS engine.
     MOZ_ASSERT(!aRequest->IsModuleRequest());
-    JS::FinishOffThreadScript(nullptr, xpc::GetJSRuntime(), aRequest->mOffThreadToken);
+    JSContext* cx = JS_GetContext(xpc::GetJSRuntime());
+    JS::CancelOffThreadScript(cx, aRequest->mOffThreadToken);
     aRequest->mOffThreadToken = nullptr;
   }
 

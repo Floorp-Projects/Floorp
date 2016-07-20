@@ -26,6 +26,13 @@ public:
   bool RecvClearTransparentWindow() override;
   bool RecvResizeTransparentWindow(const IntSize& aSize) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  nsIWidget* RealWidget() override;
+  void ObserveVsync(VsyncObserver* aObserver) override;
+  RefPtr<VsyncObserver> GetVsyncObserver() const override;
+
+private:
+  RefPtr<VsyncObserver> mVsyncObserver;
 };
 
 } // namespace widget

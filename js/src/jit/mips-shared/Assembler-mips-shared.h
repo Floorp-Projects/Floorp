@@ -1224,6 +1224,9 @@ class AssemblerMIPSShared : public AssemblerShared
         return false;
 #endif
     }
+    static bool SupportsUnalignedAccesses() {
+        return false;
+    }
     static bool SupportsSimd() {
         return js::jit::SupportsSimd;
     }

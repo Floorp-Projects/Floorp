@@ -1154,69 +1154,6 @@ auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool 
     return mozilla::jni::Method<OnPrefChange_t>::Call(PrefsHelper::Context(), nullptr, a0, a1, a2, a3, a4);
 }
 
-const char SurfaceBits::name[] =
-        "org/mozilla/gecko/SurfaceBits";
-
-constexpr char SurfaceBits::New_t::name[];
-constexpr char SurfaceBits::New_t::signature[];
-
-auto SurfaceBits::New() -> SurfaceBits::LocalRef
-{
-    return mozilla::jni::Constructor<New_t>::Call(SurfaceBits::Context(), nullptr);
-}
-
-constexpr char SurfaceBits::Buffer_t::name[];
-constexpr char SurfaceBits::Buffer_t::signature[];
-
-auto SurfaceBits::Buffer() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Field<Buffer_t>::Get(SurfaceBits::mCtx, nullptr);
-}
-
-auto SurfaceBits::Buffer(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Field<Buffer_t>::Set(SurfaceBits::mCtx, nullptr, a0);
-}
-
-constexpr char SurfaceBits::Format_t::name[];
-constexpr char SurfaceBits::Format_t::signature[];
-
-auto SurfaceBits::Format() const -> int32_t
-{
-    return mozilla::jni::Field<Format_t>::Get(SurfaceBits::mCtx, nullptr);
-}
-
-auto SurfaceBits::Format(int32_t a0) const -> void
-{
-    return mozilla::jni::Field<Format_t>::Set(SurfaceBits::mCtx, nullptr, a0);
-}
-
-constexpr char SurfaceBits::Height_t::name[];
-constexpr char SurfaceBits::Height_t::signature[];
-
-auto SurfaceBits::Height() const -> int32_t
-{
-    return mozilla::jni::Field<Height_t>::Get(SurfaceBits::mCtx, nullptr);
-}
-
-auto SurfaceBits::Height(int32_t a0) const -> void
-{
-    return mozilla::jni::Field<Height_t>::Set(SurfaceBits::mCtx, nullptr, a0);
-}
-
-constexpr char SurfaceBits::Width_t::name[];
-constexpr char SurfaceBits::Width_t::signature[];
-
-auto SurfaceBits::Width() const -> int32_t
-{
-    return mozilla::jni::Field<Width_t>::Get(SurfaceBits::mCtx, nullptr);
-}
-
-auto SurfaceBits::Width(int32_t a0) const -> void
-{
-    return mozilla::jni::Field<Width_t>::Set(SurfaceBits::mCtx, nullptr, a0);
-}
-
 const char ThumbnailHelper::name[] =
         "org/mozilla/gecko/ThumbnailHelper";
 

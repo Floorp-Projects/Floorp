@@ -310,7 +310,7 @@ video:not([controls]) > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#noControls");
 }
 
-*:-moz-any-link:active,
+*:any-link:active,
 *[role=button]:active,
 button:not(:disabled):active,
 input:not(:focus):not(:disabled):active,

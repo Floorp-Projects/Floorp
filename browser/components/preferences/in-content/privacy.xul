@@ -74,6 +74,11 @@
               name="browser.privatebrowsing.autostart"
               type="bool"/>
 
+  <!-- Containers -->
+  <preference id="privacy.userContext.enabled"
+              name="privacy.userContext.enabled"
+              type="bool"/>
+
 </preferences>
 
 <hbox id="header-privacy"
@@ -282,4 +287,15 @@
   <label class="text-link" onclick="if (event.button == 0) gotoPref('search')">
     &suggestionSettings.label;
   </label>
+</groupbox>
+
+<!-- Containers -->
+<groupbox id="browserContainersGroup" data-category="panePrivacy" hidden="true">
+  <vbox id="browserContainersbox" hidden="true">
+    <caption><label>&browserContainersHeader.label;</label></caption>
+    <checkbox id="browserContainersCheckbox"
+              label="&browserContainersEnabled.label;"
+              accesskey="&browserContainersEnabled.accesskey;"
+              preference="privacy.userContext.enabled"/>
+  </vbox>
 </groupbox>

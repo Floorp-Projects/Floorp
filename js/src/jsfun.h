@@ -716,10 +716,10 @@ class FunctionExtended : public JSFunction
     static const unsigned WASM_INSTANCE_SLOT = 0;
 
     /*
-     * wasm/asm.js exported functions store the index of the export in the
-     * module's export vector in the second slot.
+     * wasm/asm.js exported functions store the function index of the exported
+     * function in the original module.
      */
-    static const unsigned WASM_EXPORT_INDEX_SLOT = 1;
+    static const unsigned WASM_FUNC_INDEX_SLOT = 1;
 
     /*
      * asm.js module functions store their WasmModuleObject in the first slot.

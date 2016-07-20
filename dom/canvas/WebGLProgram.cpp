@@ -396,6 +396,10 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         }
     }
 
+    // Frag outputs
+
+    prog->EnumerateFragOutputs(info->fragDataMap);
+
     return info.forget();
 }
 
@@ -632,9 +636,9 @@ WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
     }
 
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
-
     nsCString mappedName;
-    if (!FindActiveOutputMappedNameByUserName(userName, &mappedName)) {
+
+    if (!LinkInfo()->FindFragData(userName, &mappedName)) {
         mappedName = userName;
     }
 
@@ -1190,17 +1194,6 @@ WebGLProgram::LinkAndUpdate()
 }
 
 bool
-WebGLProgram::FindActiveOutputMappedNameByUserName(const nsACString& userName,
-                                                   nsCString* const out_mappedName) const
-{
-    if (mFragShader->FindActiveOutputMappedNameByUserName(userName, out_mappedName)) {
-        return true;
-    }
-
-    return false;
-}
-
-bool
 WebGLProgram::FindAttribUserNameByMappedName(const nsACString& mappedName,
                                              nsDependentCString* const out_userName) const
 {
@@ -1307,6 +1300,14 @@ WebGLProgram::FindUniformBlockByMappedName(const nsACString& mappedName,
         return true;
 
     return false;
+}
+
+void
+WebGLProgram::EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const
+{
+    MOZ_ASSERT(mFragShader);
+
+    mFragShader->EnumerateFragOutputs(out_FragOutputs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

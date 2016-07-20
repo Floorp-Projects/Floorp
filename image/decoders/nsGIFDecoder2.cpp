@@ -81,7 +81,8 @@ static const uint8_t PACKED_FIELDS_TABLE_DEPTH_MASK = 0x07;
 
 nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
   : Decoder(aImage)
-  , mLexer(Transition::To(State::GIF_HEADER, GIF_HEADER_LEN))
+  , mLexer(Transition::To(State::GIF_HEADER, GIF_HEADER_LEN),
+           Transition::TerminateSuccess())
   , mOldColor(0)
   , mCurrentFrameIndex(-1)
   , mColorTablePos(0)

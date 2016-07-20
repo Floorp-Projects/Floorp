@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: check that duration change behaves properly</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    fetchWithXHR("seek.webm", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
+      once(v, "loadedmetadata")
+      .then(function() {
+        is(v.duration, ms.duration, "video duration is mediasource one");
+        try {
+          ms.duration = 0;
+        } catch (e) { ok(false, "must not throw as operation is valid"); }
+        is(v.duration, 0, "reducing duration with no data buffered is valid");
+        sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+        // Adding more data will fire durationchange.
+        once(sb, "updateend")
+        .then(function() {
+          ok(true, "got updateend");
+          // XXX: Duration should be exactly 4.0, see bug 1065207.
+          ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
+          var error = false;
+          try {
+            ms.duration = 0;
+          } catch (e) {
+            ok(true, "must use remove for range removal");
+            is(e.name, "InvalidStateError", "Error is InvalidStateError");
+            error = true;
+          }
+          ok(error, "got an error");
+          ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
+          try {
+            ms.duration = 10;
+          } catch (e) { ok(false, "must not throw as setting duration past data is valid"); }
+          is(v.duration, 10, "extending duration is always valid");
+          // The last sample has a start time of 3.967000s and a end time of 4.001 (see bug 1065207).
+          try {
+            ms.duration = 3.967000;
+          } catch (e) { ok(false, "setting duration with >= highest frame presentation time is valid"); }
+          is(v.duration, sb.buffered.end(0), "duration is the highest end time reported by the buffered attribute ");
+          try {
+            ms.duration = 3.97;
+          } catch (e) { ok(false, "setting duration with >= highest frame presentation time is valid"); }
+          is(v.duration, sb.buffered.end(0), "duration is the highest end time reported by the buffered attribute ");
+          error = false;
+          try {
+            ms.duration = 3.96;
+          } catch (e) {
+            ok(true, "setting duration with < highest frame presentation time is not valid");
+            is(e.name, "InvalidStateError", "Error is InvalidStateError");
+            error = true;
+          }
+          ok(error, "got an error");
+          is(v.duration, sb.buffered.end(0), "duration is the highest end time reported by the buffered attribute ");
+          error = false;
+          try {
+            ms.duration = -1;
+          } catch (e) {
+            ok(true, "can't set a negative duration");
+            is(e.name, "TypeError", "Error is TypeError");
+            error = true;
+          }
+          ok(error, "got an error");
+          sb.remove(sb.buffered.end(0), Infinity);
+          is(sb.updating, true, "updating is true")
+          error = false;
+          try {
+            ms.duration = Infinity;
+          } catch (e) {
+            ok(true, "setting the duration while updating is not allowed");
+            is(e.name, "InvalidStateError", "Error is InvalidStateError");
+            error = true;
+          }
+          ok(error, "got an error");
+          error = false;
+          try {
+            sb.abort();
+          } catch (e) {
+            ok(true, "Can't use abort while range removal is in progress");
+            is(e.name, "InvalidStateError", "Error is InvalidStateError");
+            error = true;
+          }
+          ok(error, "got an error");
+          is(v.duration, sb.buffered.end(0), "duration is the highest end time reported by the buffered attribute ");
+          once(sb, "updateend", () => ms.endOfStream());
+        });
+      });
+    });
+  });
+  ms.addEventListener("sourceended", function () {
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

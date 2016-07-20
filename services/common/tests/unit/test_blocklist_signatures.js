@@ -53,6 +53,36 @@ function getCertChain() {
   return chain.join("\n");
 }
 
+function* checkRecordCount(count) {
+  // open the collection manually
+  const base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
+  const bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
+  const collectionName =
+      Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION);
+
+  const Kinto = loadKinto();
+
+  const FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
+
+  const config = {
+    remote: base,
+    bucket: bucket,
+    adapter: FirefoxAdapter,
+  };
+
+  const db = new Kinto(config);
+  const collection = db.collection(collectionName);
+
+  yield collection.db.open();
+
+  // Check we have the expected number of records
+  let records = yield collection.list();
+  do_check_eq(count, records.data.length);
+
+  // Close the collection so the test can exit cleanly
+  yield collection.db.close();
+}
+
 // Check to ensure maybeSync is called with correct values when a changes
 // document contains information on when a collection was last modified
 add_task(function* test_check_signatures(){
@@ -244,7 +274,7 @@ add_task(function* test_check_signatures(){
   };
 
   const RESPONSE_BODY_META_EMPTY_SIG = makeMetaResponseBody(1000,
-    "lJj7PfrLvvLcDBPBWQrV10rY5s1OlUAITx9UT-K_wzxmgEgS7vy8LzJQh5-rdpXHfZW5lKM5itpYwyscV9LkJSuVaozITP81_5zg8Pw6OifmqHcvBE81AtRv0r_eBVd0");
+    "vxuAg5rDCB-1pul4a91vqSBQRXJG_j7WOYUTswxRSMltdYmbhLRH8R8brQ9YKuNDF56F-w6pn4HWxb076qgKPwgcEBtUeZAO_RtaHXRkRUUgVzAr86yQL4-aJTbv3D6u");
 
   // The collection metadata containing the signature for the empty
   // collection.
@@ -284,7 +314,7 @@ add_task(function* test_check_signatures(){
   };
 
   const RESPONSE_BODY_META_TWO_ITEMS_SIG = makeMetaResponseBody(3000,
-    "f4pA2tYM5jQgWY6YUmhUwQiBLj6QO5sHLD_5MqLePz95qv-7cNCuQoZnPQwxoptDtW8hcWH3kLb0quR7SB-r82gkpR9POVofsnWJRA-ETb0BcIz6VvI3pDT49ZLlNg3p");
+    "dwhJeypadNIyzGj3QdI0KMRTPnHhFPF_j73mNrsPAHKMW46S2Ftf4BzsPMvPMB8h0TjDus13wo_R4l432DHe7tYyMIWXY0PBeMcoe5BREhFIxMxTsh9eGVXBD1e3UwRy");
 
   // A signature response for the collection containg RECORD1 and RECORD2
   const RESPONSE_META_TWO_ITEMS_SIG =
@@ -315,7 +345,7 @@ add_task(function* test_check_signatures(){
   };
 
   const RESPONSE_BODY_META_THREE_ITEMS_SIG = makeMetaResponseBody(4000,
-    "wxVc0AvHZZ0fyZR8tZVtZRBrsVNYIBxOjaKZXgnjyJqfwnyENSZkJLQlm3mho-J_QAxDTp7QPXXVSA-r1SrE3rlqV4BkqE9NTGREKvl5BJzaDEOtxH7VF5WMw49k8q0O");
+    "MIEmNghKnkz12UodAAIc3q_Y4a3IJJ7GhHF4JYNYmm8avAGyPM9fYU7NzVo94pzjotG7vmtiYuHyIX2rTHTbT587w0LdRWxipgFd_PC1mHiwUyjFYNqBBG-kifYk7kEw");
 
   // signature response for the collection containing RECORD2 and RECORD3
   const RESPONSE_META_THREE_ITEMS_SIG =
@@ -385,7 +415,7 @@ add_task(function* test_check_signatures(){
 
   const badSigGoodSigResponses = {
     // In this test, we deliberately serve a bad signature initially. The
-    // subsequent sitnature returned is a valid one for the three item
+    // subsequent signature returned is a valid one for the three item
     // collection.
     "GET:/v1/buckets/blocklists/collections/certificates?":
       [RESPONSE_META_BAD_SIG, RESPONSE_META_THREE_ITEMS_SIG],
@@ -405,6 +435,30 @@ add_task(function* test_check_signatures(){
   };
 
   registerHandlers(badSigGoodSigResponses);
+  yield OneCRLBlocklistClient.maybeSync(5000, startTime);
+
+  const badSigGoodOldResponses = {
+    // In this test, we deliberately serve a bad signature initially. The
+    // subsequent sitnature returned is a valid one for the three item
+    // collection.
+    "GET:/v1/buckets/blocklists/collections/certificates?":
+      [RESPONSE_META_BAD_SIG, RESPONSE_META_EMPTY_SIG],
+    // The first collection state is the current state (since there's no update
+    // - but, since the signature is wrong, another request will be made)
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=4000":
+      [RESPONSE_EMPTY_NO_UPDATE],
+    // The next request is for the full collection sorted by id. This will be
+    // checked against the valid signature and last_modified times will be
+    // compared. Sync should fail, even though the signature is good,
+    // because the local collection is newer.
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=id":
+      [RESPONSE_EMPTY_INITIAL],
+  };
+
+  // ensure our collection hasn't been replaced with an older, empty one
+  yield checkRecordCount(2);
+
+  registerHandlers(badSigGoodOldResponses);
   yield OneCRLBlocklistClient.maybeSync(5000, startTime);
 
   const allBadSigResponses = {
@@ -427,33 +481,7 @@ add_task(function* test_check_signatures(){
     yield OneCRLBlocklistClient.maybeSync(6000, startTime);
     do_throw("Sync should fail (the signature is intentionally bad)");
   } catch (e) {
-    // open the collection manually
-    const base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-    const bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
-    const collectionName =
-      Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION);
-
-    const Kinto = loadKinto();
-
-    const FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
-
-    const config = {
-      remote: base,
-      bucket: bucket,
-      adapter: FirefoxAdapter,
-    };
-
-    const db = new Kinto(config);
-    const collection = db.collection(collectionName);
-
-    yield collection.db.open();
-
-    // Check we have the expected number of records
-    let records = yield collection.list();
-    do_check_eq(2, records.data.length);
-
-    // Close the collection so the test can exit cleanly
-    yield collection.db.close()
+    yield checkRecordCount(2);
   }
 });
 

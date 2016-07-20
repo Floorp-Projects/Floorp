@@ -34,13 +34,6 @@ void ScalePlane(const uint8* src, int src_stride,
                 int dst_width, int dst_height,
                 enum FilterMode filtering);
 
-LIBYUV_API
-void ScalePlane_16(const uint16* src, int src_stride,
-                   int src_width, int src_height,
-                   uint16* dst, int dst_stride,
-                   int dst_width, int dst_height,
-                   enum FilterMode filtering);
-
 // Scales a YUV 4:2:0 image from the src width and height to the
 // dst width and height.
 // If filtering is kFilterNone, a simple nearest-neighbor algorithm is
@@ -61,17 +54,6 @@ int I420Scale(const uint8* src_y, int src_stride_y,
               uint8* dst_v, int dst_stride_v,
               int dst_width, int dst_height,
               enum FilterMode filtering);
-
-LIBYUV_API
-int I420Scale_16(const uint16* src_y, int src_stride_y,
-                 const uint16* src_u, int src_stride_u,
-                 const uint16* src_v, int src_stride_v,
-                 int src_width, int src_height,
-                 uint16* dst_y, int dst_stride_y,
-                 uint16* dst_u, int dst_stride_u,
-                 uint16* dst_v, int dst_stride_v,
-                 int dst_width, int dst_height,
-                 enum FilterMode filtering);
 
 #ifdef __cplusplus
 // Legacy API.  Deprecated.

@@ -11,6 +11,7 @@
 # all related options.
 from __future__ import print_function
 from optparse import OptionParser
+import mozfile
 import os
 import os.path
 import sys
@@ -126,10 +127,10 @@ def _nsinstall_internal(argv):
           os.chmod(targetpath, options.m)
       else:
         if os.path.exists(targetpath):
-          # On Windows, read-only files can't be deleted
           if sys.platform == "win32":
-            os.chmod(targetpath, stat.S_IWUSR)
-          os.remove(targetpath)
+            mozfile.remove(targetpath)
+          else:
+            os.remove(targetpath)
         if options.t:
           shutil.copy2(srcpath, targetpath)
         else:

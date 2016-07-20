@@ -12,42 +12,40 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var updateCount = 0;
 var durationChangeCount = 0;
 
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
 
+    v.addEventListener("durationchange", function () {
+      durationChangeCount++;
+    });
+
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-      sb.addEventListener("updateend", function () {
-        updateCount++;
-        if (updateCount == 1) {
-          v.addEventListener("loadedmetadata", function () {
-            v.addEventListener("durationchange", function () {
-              durationChangeCount++;
-            });
-            // Set mediasource duration to 0, so future appendBuffer
-            // will update the mediasource duration
-            // setting ms.duration will fire updatestart/update/updateend
-            // event as per w3c spec followed by a durationchange
-            ms.duration = 0;
-          });
-        } else if (updateCount == 2) {
-          // will fire updatestart/update/updateend
-          // and a durationchange
-          sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
-        } else if (updateCount == 3) {
+      // Adding the first init segment will fire a durationchange.
+      once(v, "loadedmetadata")
+      .then(function() {
+        ok(true, "got loadedmetadata");
+        // Set mediasource duration to 0, so future appendBuffer
+        // will update the mediasource duration.
+        // Changing the duration will fire a durationchange.
+        ms.duration = 0;
+        sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+        // Adding more data will fire durationchange.
+        once(sb, "updateend")
+        .then(function() {
+          ok(true, "got updateend");
           // this will not fire durationchange as new duration == old duration
           ms.endOfStream();
-        }
+        });
       });
     });
   });
   ms.addEventListener("sourceended", function () {
+    is(durationChangeCount, 3, "durationchange not fired as many times as expected");
     // XXX: Duration should be exactly 4.0, see bug 1065207.
-    is(durationChangeCount, 2, "durationchange not fired as many times as expected");
     ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
     SimpleTest.finish();
   });

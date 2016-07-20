@@ -91,6 +91,11 @@ this.AutoCompleteE10S = {
   },
 
   _initPopup: function(browserWindow, rect, direction) {
+    if (this._popupCache) {
+      this._popupCache.browserWindow.removeEventListener("unload", this);
+    }
+    browserWindow.addEventListener("unload", this);
+
     this._popupCache = { browserWindow, rect, direction };
 
     this.browser = browserWindow.gBrowser.selectedBrowser;
@@ -104,6 +109,18 @@ this.AutoCompleteE10S = {
     this.y = rect.top;
     this.width = rect.width;
     this.height = rect.height;
+  },
+
+  handleEvent: function(evt) {
+    if (evt.type === "unload") {
+      this._uninitPopup();
+    }
+  },
+
+  _uninitPopup: function() {
+    this._popupCache = null;
+    this.browser = null;
+    this.popup = null;
   },
 
   _showPopup: function(results) {
