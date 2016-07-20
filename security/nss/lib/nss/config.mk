@@ -105,3 +105,10 @@ DEFINES += -DWIN32_NSS3_DLL_COMPAT
 DLLFLAGS += -EXPORT:mktemp=nss_mktemp,PRIVATE
 endif
 endif
+
+ifdef POLICY_FILE
+ifndef POLICY_PATH
+$(error You must define POLICY_PATH if you set POLICY_FILE)
+endif
+DEFINES += -DPOLICY_FILE=\"$(POLICY_FILE)\" -DPOLICY_PATH=\"$(POLICY_PATH)\"
+endif

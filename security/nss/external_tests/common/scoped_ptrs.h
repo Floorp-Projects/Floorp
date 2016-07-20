@@ -7,6 +7,7 @@
 #ifndef scoped_ptrs_h__
 #define scoped_ptrs_h__
 
+#include <memory>
 #include "cert.h"
 #include "keyhi.h"
 #include "pk11pub.h"

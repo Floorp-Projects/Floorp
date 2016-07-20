@@ -7,6 +7,8 @@
 #include "GPUProcessHost.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -132,6 +134,34 @@ GPUProcessManager::EnsureGPUReady()
 }
 
 void
+GPUProcessManager::EnsureImageBridgeChild()
+{
+  if (ImageBridgeChild::IsCreated()) {
+    return;
+  }
+
+  if (!mGPUChild) {
+    ImageBridgeChild::InitSameProcess();
+    return;
+  }
+
+  ipc::Endpoint<PImageBridgeParent> parentPipe;
+  ipc::Endpoint<PImageBridgeChild> childPipe;
+  nsresult rv = PImageBridge::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    DisableGPUProcess("Failed to create PImageBridge endpoints");
+    return;
+  }
+
+  mGPUChild->SendInitImageBridge(Move(parentPipe));
+  ImageBridgeChild::InitWithGPUProcess(Move(childPipe));
+}
+
+void
 GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 {
   MOZ_ASSERT(mProcess && mProcess == aHost);
@@ -227,6 +257,8 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 {
   uint64_t layerTreeId = AllocateLayerTreeId();
 
+  EnsureImageBridgeChild();
+
   if (mGPUChild) {
     RefPtr<CompositorSession> session = CreateRemoteSession(
       aWidget,
@@ -294,18 +326,21 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
     aScale,
     aUseExternalSurfaceSize,
     aSurfaceSize);
-  if (!ok)
+  if (!ok) {
     return nullptr;
+  }
 
   RefPtr<CompositorVsyncDispatcher> dispatcher = aWidget->GetCompositorVsyncDispatcher();
   RefPtr<CompositorWidgetVsyncObserver> observer =
     new CompositorWidgetVsyncObserver(mVsyncBridge, aRootLayerTreeId);
 
   CompositorWidgetChild* widget = new CompositorWidgetChild(dispatcher, observer);
-  if (!child->SendPCompositorWidgetConstructor(widget, initData))
+  if (!child->SendPCompositorWidgetConstructor(widget, initData)) {
     return nullptr;
-  if (!child->SendInitialize(aRootLayerTreeId))
+  }
+  if (!child->SendInitialize(aRootLayerTreeId)) {
     return nullptr;
+  }
 
   RefPtr<RemoteCompositorSession> session =
     new RemoteCompositorSession(child, widget, aRootLayerTreeId);
@@ -340,8 +375,43 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
   if (mGPUChild) {
     mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
   } else {
-    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
+    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe))) {
       return false;
+    }
+  }
+
+  *aOutEndpoint = Move(childPipe);
+  return true;
+}
+
+bool
+GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
+                                            ipc::Endpoint<PImageBridgeChild>* aOutEndpoint)
+{
+  EnsureImageBridgeChild();
+
+  base::ProcessId gpuPid = mGPUChild
+                           ? mGPUChild->OtherPid()
+                           : base::GetCurrentProcId();
+
+  ipc::Endpoint<PImageBridgeParent> parentPipe;
+  ipc::Endpoint<PImageBridgeChild> childPipe;
+  nsresult rv = PImageBridge::CreateEndpoints(
+    gpuPid,
+    aOtherProcess,
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Could not create content compositor bridge: " << hexa(int(rv));
+    return false;
+  }
+
+  if (mGPUChild) {
+    mGPUChild->SendNewContentImageBridge(Move(parentPipe));
+  } else {
+    if (!ImageBridgeParent::CreateForContent(Move(parentPipe))) {
+      return false;
+    }
   }
 
   *aOutEndpoint = Move(childPipe);
