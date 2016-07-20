@@ -17,7 +17,6 @@
   --command-frames-image: url(images/command-frames.svg);
   --command-splitconsole-image: url(images/command-console.svg);
   --command-noautohide-image: url(images/command-noautohide.svg);
-  --command-eyedropper-image: url(images/command-eyedropper.svg);
   --command-rulers-image: url(images/command-rulers.svg);
   --command-measure-image: url(images/command-measure.svg);
 }
@@ -36,7 +35,6 @@
   --command-frames-image: url(images/firebug/command-frames.svg);
   --command-splitconsole-image: url(images/firebug/command-console.svg);
   --command-noautohide-image: url(images/firebug/command-noautohide.svg);
-  --command-eyedropper-image: url(images/firebug/command-eyedropper.svg);
   --command-rulers-image: url(images/firebug/command-rulers.svg);
   --command-measure-image: url(images/firebug/command-measure.svg);
 }

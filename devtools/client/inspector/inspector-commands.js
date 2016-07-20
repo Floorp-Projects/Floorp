@@ -5,8 +5,8 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-loader.lazyRequireGetter(this, "gDevTools",
-                         "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+const {EyeDropper, HighlighterEnvironment} = require("devtools/server/actors/highlighters");
 
 exports.items = [{
   item: "command",
@@ -26,6 +26,24 @@ exports.items = [{
     let target = context.environment.target;
     return gDevTools.showToolbox(target, "inspector").then(toolbox => {
       toolbox.getCurrentPanel().selection.setNode(args.selector, "gcli");
+    });
+  }
+}, {
+  item: "command",
+  runAt: "server",
+  name: "eyedropper",
+  description: l10n.lookup("eyedropperDesc"),
+  manual: l10n.lookup("eyedropperManual"),
+  exec: function (args, {environment}) {
+    let env = new HighlighterEnvironment();
+    env.initFromWindow(environment.window);
+    let eyeDropper = new EyeDropper(env);
+
+    eyeDropper.show(environment.document.documentElement, {copyOnSelect: true});
+
+    eyeDropper.once("hidden", () => {
+      eyeDropper.destroy();
+      env.destroy();
     });
   }
 }];
