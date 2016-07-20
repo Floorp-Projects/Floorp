@@ -276,6 +276,7 @@ PushRecord.prototype = {
       lastPush: this.lastPush,
       pushCount: this.pushCount,
       p256dhKey: this.p256dhPublicKey,
+      p256dhPrivateKey: this.p256dhPrivateKey,
       authenticationSecret: this.authenticationSecret,
       appServerKey: this.appServerKey,
       quota: this.quotaApplies() ? this.quota : -1,

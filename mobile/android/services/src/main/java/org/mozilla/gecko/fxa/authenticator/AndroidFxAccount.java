@@ -146,6 +146,15 @@ public class AndroidFxAccount {
     this.accountManager = AccountManager.get(this.context);
   }
 
+  public static AndroidFxAccount fromContext(Context context) {
+    context = context.getApplicationContext();
+    Account account = FirefoxAccounts.getFirefoxAccount(context);
+    if (account == null) {
+      return null;
+    }
+    return new AndroidFxAccount(context, account);
+  }
+
   /**
    * Persist the Firefox account to disk as a JSON object. Note that this is a wrapper around
    * {@link AccountPickler#pickle}, and is identical to calling it directly.
@@ -648,6 +657,7 @@ public class AndroidFxAccount {
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_VERSION_KEY,
         Long.valueOf(FxAccountConstants.ACCOUNT_DELETED_INTENT_VERSION));
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_KEY, account.name);
+    intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_PROFILE, getProfile());
 
     // Get the tokens from AccountManager. Note: currently, only reading list service supports OAuth. The following logic will
     // be extended in future to support OAuth for other services.
