@@ -296,9 +296,6 @@ pref("devtools.webconsole.autoMultiline", true);
 // Enable the experimental webconsole frontend (work in progress)
 pref("devtools.webconsole.new-frontend-enabled", false);
 
-// Enable the experimental support for source maps in console (work in progress)
-pref("devtools.sourcemap.locations.enabled", false);
-
 // The number of lines that are displayed in the web console.
 pref("devtools.hud.loglimit", 1000);
 
