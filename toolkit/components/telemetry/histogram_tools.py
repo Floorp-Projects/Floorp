@@ -248,6 +248,14 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if name.startswith("LABELS_"):
             raise ValueError, "Histogram name '%s' can not start with LABELS_" % (name)
 
+        # To make it easier to generate C++ identifiers from this etc., we restrict
+        # the histogram names to a strict pattern.
+        # We skip this on the server to avoid failures with old Histogram.json revisions.
+        if self._strict_type_checks:
+            pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
+            if not re.match(pattern, name, re.IGNORECASE):
+                raise ValueError, "Histogram name '%s' doesn't confirm to '%s'" % (name, pattern)
+
     def check_expiration(self, name, definition):
         expiration = definition.get('expires_in_version')
 
