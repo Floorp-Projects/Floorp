@@ -1,4 +1,4 @@
-FROM          ubuntu:14.04
+FROM          ubuntu:16.04
 MAINTAINER    Greg Arndt <garndt@mozilla.com>
 
 # Add worker user
@@ -12,7 +12,7 @@ RUN bash /tmp/system-setup.sh
 ADD bin /home/worker/bin
 RUN chmod +x /home/worker/bin/*
 
-ENV PATH /home/worker/bin:/usr/local/lib/python2.7.10/bin:$PATH
+ENV PATH /home/worker/bin:$PATH
 ENV SHELL /bin/bash
 ENV HOME /home/worker
 
