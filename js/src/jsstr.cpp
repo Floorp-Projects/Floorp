@@ -613,6 +613,18 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
         size_t i = 0;
         for (; i < length; i++) {
             char16_t c = chars[i];
+            if (!IsSame<CharT, Latin1Char>::value) {
+                if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
+                    char16_t trail = chars[i + 1];
+                    if (unicode::IsTrailSurrogate(trail)) {
+                        if (unicode::CanLowerCaseNonBMP(c, trail))
+                            break;
+
+                        i++;
+                        continue;
+                    }
+                }
+            }
             if (unicode::CanLowerCase(c))
                 break;
         }
@@ -628,7 +640,21 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
         PodCopy(newChars.get(), chars, i);
 
         for (; i < length; i++) {
-            char16_t c = unicode::ToLowerCase(chars[i]);
+            char16_t c = chars[i];
+            if (!IsSame<CharT, Latin1Char>::value) {
+                if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
+                    char16_t trail = chars[i + 1];
+                    if (unicode::IsTrailSurrogate(trail)) {
+                        trail = unicode::ToLowerCaseNonBMPTrail(c, trail);
+                        newChars[i] = c;
+                        newChars[i + 1] = trail;
+                        i++;
+                        continue;
+                    }
+                }
+            }
+
+            c = unicode::ToLowerCase(c);
             MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value), c <= JSString::MAX_LATIN1_CHAR);
             newChars[i] = c;
         }
@@ -707,7 +733,20 @@ ToUpperCaseImpl(DestChar* destChars, const SrcChar* srcChars, size_t firstLowerC
         destChars[i] = srcChars[i];
 
     for (size_t i = firstLowerCase; i < length; i++) {
-        char16_t c = unicode::ToUpperCase(srcChars[i]);
+        char16_t c = srcChars[i];
+        if (!IsSame<DestChar, Latin1Char>::value) {
+            if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
+                char16_t trail = srcChars[i + 1];
+                if (unicode::IsTrailSurrogate(trail)) {
+                    trail = unicode::ToUpperCaseNonBMPTrail(c, trail);
+                    destChars[i] = c;
+                    destChars[i + 1] = trail;
+                    i++;
+                    continue;
+                }
+            }
+        }
+        c = unicode::ToUpperCase(c);
         MOZ_ASSERT_IF((IsSame<DestChar, Latin1Char>::value), c <= JSString::MAX_LATIN1_CHAR);
         destChars[i] = c;
     }
@@ -732,6 +771,18 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
         size_t i = 0;
         for (; i < length; i++) {
             char16_t c = chars[i];
+            if (!IsSame<CharT, Latin1Char>::value) {
+                if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
+                    char16_t trail = chars[i + 1];
+                    if (unicode::IsTrailSurrogate(trail)) {
+                        if (unicode::CanUpperCaseNonBMP(c, trail))
+                            break;
+
+                        i++;
+                        continue;
+                    }
+                }
+            }
             if (unicode::CanUpperCase(c))
                 break;
         }
