@@ -12,19 +12,29 @@ const Cr = Components.results;
 
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
-Cu.import("resource://gre/modules/Messaging.jsm"); /*global: Services */
-Cu.import("resource://gre/modules/Services.jsm"); /*global: Services */
-Cu.import("resource://gre/modules/Preferences.jsm"); /*global: Preferences */
-Cu.import("resource://gre/modules/Promise.jsm"); /*global: Promise */
-Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global: XPCOMUtils */
-
-const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("Push");
-
 const {
   PushCrypto,
   concatArray,
   getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm"); /*global: Services */
+Cu.import("resource://gre/modules/Services.jsm"); /*global: Services */
+Cu.import("resource://gre/modules/Preferences.jsm"); /*global: Preferences */
+Cu.import("resource://gre/modules/Promise.jsm"); /*global: Promise */
+Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global: XPCOMUtils */
+XPCOMUtils.defineLazyServiceGetter(this, "PushService",
+  "@mozilla.org/push/Service;1", "nsIPushService");
+
+const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("Push");
+const FXA_PUSH_SCOPE = "chrome://fxa-push";
+const LOG_TAG = "PushServiceAndroidGCM";
+
+const topics = [
+  "PushServiceAndroidGCM:ReceivedPushMessage",
+  "PushServiceAndroidGCM:ReceivedPushMessageToDecode",
+  "PushServiceAndroidGCM:FxASubscribe",
+  "PushServiceAndroidGCM:FxAUnsubscribe",
+]
 
 this.EXPORTED_SYMBOLS = ["PushServiceAndroidGCM"];
 
@@ -43,6 +53,10 @@ const kPUSHANDROIDGCMDB_STORE_NAME = "pushAndroidGCM";
 
 const prefs = new Preferences("dom.push.");
 
+function urlsafeBase64Encode(key) {
+  return ChromeUtils.base64URLEncode(new Uint8Array(key), { pad: false });
+}
+
 /**
  * The implementation of WebPush push backed by Android's GCM
  * delivery.
@@ -50,6 +64,7 @@ const prefs = new Preferences("dom.push.");
 this.PushServiceAndroidGCM = {
   _mainPushService: null,
   _serverURI: null,
+  _decoder: new TextDecoder(),
 
   newPushDB: function() {
     return new PushDB(kPUSHANDROIDGCMDB_DB_NAME,
@@ -76,57 +91,99 @@ this.PushServiceAndroidGCM = {
   },
 
   observe: function(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      if (data == "dom.push.debug") {
-        // Reconfigure.
-        let debug = !!prefs.get("debug");
-        console.info("Debug parameter changed; updating configuration with new debug", debug);
-        this._configure(this._serverURI, debug);
-      }
+    switch (topic) {
+      case "nsPref:changed":
+        if (data == "dom.push.debug") {
+          // Reconfigure.
+          let debug = !!prefs.get("debug");
+          console.info("Debug parameter changed; updating configuration with new debug", debug);
+          this._configure(this._serverURI, debug);
+        }
+        break;
+      case "PushServiceAndroidGCM:FxASubscribe":
+        this._subscribeFxAPush();
+        break;
+      case "PushServiceAndroidGCM:FxAUnsubscribe":
+        this._unsubscribeFxAPush().catch(err => {
+          Log.e(LOG_TAG, "Error during unsubscribe", err);
+        });
+        break;
+      case "PushServiceAndroidGCM:ReceivedPushMessage":
+        this._onPushMessageReceived(data);
+        break;
+      case "PushServiceAndroidGCM:ReceivedPushMessageToDecode":
+        this._onPushMessageReceived(data, true);
+        break;
+      default:
+        break;
+    }
+  },
+
+  _onPushMessageReceived(data, sendToChrome = false) {
+    // TODO: Use Messaging.jsm for this.
+    if (this._mainPushService == null) {
+      // Shouldn't ever happen, but let's be careful.
+      console.error("No main PushService!  Dropping message.");
       return;
     }
+    if (!data) {
+      console.error("No data from Java!  Dropping message.");
+      return;
+    }
+    data = JSON.parse(data);
+    console.debug("ReceivedPushMessage with data", data);
 
-    if (topic == "PushServiceAndroidGCM:ReceivedPushMessage") {
-      // TODO: Use Messaging.jsm for this.
-      if (this._mainPushService == null) {
-        // Shouldn't ever happen, but let's be careful.
-        console.error("No main PushService!  Dropping message.");
-        return;
-      }
-      if (!data) {
-        console.error("No data from Java!  Dropping message.");
-        return;
-      }
-      data = JSON.parse(data);
-      console.debug("ReceivedPushMessage with data", data);
+    let { message, cryptoParams } = this._messageAndCryptoParams(data);
 
-      // Default is no data (and no encryption).
-      let message = null;
-      let cryptoParams = null;
-
-      if (data.message && data.enc && (data.enckey || data.cryptokey)) {
-        let headers = {
-          encryption_key: data.enckey,
-          crypto_key: data.cryptokey,
-          encryption: data.enc,
-          encoding: data.con,
-        };
-        cryptoParams = getCryptoParams(headers);
-        // Ciphertext is (urlsafe) Base 64 encoded.
-        message = ChromeUtils.base64URLDecode(data.message, {
-          // The Push server may append padding.
-          padding: "ignore",
-        });
-      }
-
+    if (!sendToChrome) {
       console.debug("Delivering message to main PushService:", message, cryptoParams);
       this._mainPushService.receivedPushMessage(
         data.channelID, "", message, cryptoParams, (record) => {
           // Always update the stored record.
           return record;
         });
-      return;
+    } else {
+      console.debug("Delivering message back to chrome:", message, cryptoParams);
+      this._mainPushService.getByKeyID(data.channelID)
+      .then(record => {
+        if (!cryptoParams) {
+          return new Uint8Array();
+        }
+        return this._mainPushService.decryptMessage(message, record, cryptoParams);
+      })
+      .then(decryptedMessage => {
+        decryptedMessage = this._decoder.decode(decryptedMessage);
+        Messaging.sendRequestForResult({
+          type: "PushServiceAndroidGCM:ReceivedPushMessageToDecode:Response",
+          decryptedMessage
+        });
+      })
+      .catch(err => {
+        Log.d(LOG_TAG, "Error while decoding incoming message : " + err);
+      })
     }
+  },
+
+  _messageAndCryptoParams(data) {
+    // Default is no data (and no encryption).
+    let message = null;
+    let cryptoParams = null;
+
+    if (data.message && data.enc && (data.enckey || data.cryptokey)) {
+      let headers = {
+        encryption_key: data.enckey,
+        crypto_key: data.cryptokey,
+        encryption: data.enc,
+        encoding: data.con,
+      };
+      cryptoParams = getCryptoParams(headers);
+      // Ciphertext is (urlsafe) Base 64 encoded.
+      message = ChromeUtils.base64URLDecode(data.message, {
+        // The Push server may append padding.
+        padding: "ignore",
+      });
+    }
+    return { message, cryptoParams };
   },
 
   _configure: function(serverURL, debug) {
@@ -143,7 +200,9 @@ this.PushServiceAndroidGCM = {
     this._serverURI = serverURL;
 
     prefs.observe("debug", this);
-    Services.obs.addObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage", false);
+    for (let topic of topics) {
+      Services.obs.addObserver(this, topic, false);
+    }
 
     return this._configure(serverURL, !!prefs.get("debug")).then(() => {
       Messaging.sendRequestForResult({
@@ -159,7 +218,9 @@ this.PushServiceAndroidGCM = {
     });
 
     this._mainPushService = null;
-    Services.obs.removeObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage");
+    for (let topic of topics) {
+      Services.obs.removeObserver(this, topic);
+    }
     prefs.ignore("debug", this);
   },
 
@@ -209,11 +270,16 @@ this.PushServiceAndroidGCM = {
         // The Push server requires padding.
         pad: true,
       }) : null;
-    // Caller handles errors.
-    return Messaging.sendRequestForResult({
+    let message = {
       type: "PushServiceAndroidGCM:SubscribeChannel",
       appServerKey: appServerKey,
-    }).then(data => {
+    }
+    if (record.scope == FXA_PUSH_SCOPE) {
+      message.service = "fxa";
+    }
+    // Caller handles errors.
+    return Messaging.sendRequestForResult(message)
+    .then(data => {
       console.debug("Got data:", data);
       return PushCrypto.generateKeys()
         .then(exportedKeys =>
@@ -225,6 +291,7 @@ this.PushServiceAndroidGCM = {
             scope: record.scope,
             originAttributes: record.originAttributes,
             ctime: ctime,
+            systemRecord: record.systemRecord,
             // Cryptography!
             p256dhPublicKey: exportedKeys[0],
             p256dhPrivateKey: exportedKeys[1],
@@ -246,6 +313,56 @@ this.PushServiceAndroidGCM = {
   reportDeliveryError: function(messageID, reason) {
     console.warn("reportDeliveryError: Ignoring message delivery error",
       messageID, reason);
+  },
+
+  _subscribeFxAPush() {
+    Log.i(LOG_TAG, "PushServiceAndroidGCM _subscribeFxAPush");
+    return new Promise((resolve, reject) => {
+      PushService.subscribe(FXA_PUSH_SCOPE,
+        Services.scriptSecurityManager.getSystemPrincipal(),
+        (result, subscription) => {
+          if (Components.isSuccessCode(result)) {
+            Log.d(LOG_TAG, "FxA Push got subscription");
+            resolve(subscription);
+          } else {
+            Log.w(LOG_TAG, "FxA Push failed to subscribe", result);
+            reject(new Error("FxA Push failed to subscribe"));
+          }
+        });
+    })
+    .then(subscription => {
+      Messaging.sendRequest({
+        type: "PushServiceAndroidGCM:FxASubscribe:Response",
+        subscription: {
+          pushCallback: subscription.endpoint,
+          pushPublicKey: urlsafeBase64Encode(subscription.getKey('p256dh')),
+          pushAuthKey: urlsafeBase64Encode(subscription.getKey('auth'))
+        }
+      });
+    })
+    .catch(err => {
+      Log.i(LOG_TAG, "Error when registering FxA push endpoint " + err);
+    });
+  },
+
+  _unsubscribeFxAPush() {
+    Log.i(LOG_TAG, "PushServiceAndroidGCM _subscribeFxAPush");
+    return new Promise((resolve) => {
+      PushService.unsubscribe(FXA_PUSH_SCOPE,
+        Services.scriptSecurityManager.getSystemPrincipal(),
+        (result, ok) => {
+          if (Components.isSuccessCode(result)) {
+            if (ok === true) {
+              Log.d(LOG_TAG, "FxA Push unsubscribed");
+            } else {
+              Log.d(LOG_TAG, "FxA Push had no subscription to unsubscribe");
+            }
+          } else {
+            Log.w(LOG_TAG, "FxA Push failed to unsubscribe", result);
+          }
+          return resolve(ok);
+        })
+    })
   },
 };
 
