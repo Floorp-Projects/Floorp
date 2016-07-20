@@ -9,6 +9,10 @@ import os
 import re
 import sys
 
+# Constants.
+MAX_LABEL_LENGTH = 20
+MAX_LABEL_COUNT = 100
+
 # histogram_tools.py is used by scripts from a mozilla-central build tree
 # and also by outside consumers, such as the telemetry server.  We need
 # to ensure that importing things works in both contexts.  Therefore,
@@ -232,8 +236,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         self.check_name(name)
         self.check_field_types(name, definition)
-        self.check_expiration(name, definition)
         self.check_whitelistable_fields(name, definition)
+        self.check_expiration(name, definition)
+        self.check_label_values(name, definition)
 
     def check_name(self, name):
         if '#' in name:
@@ -251,6 +256,28 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             expiration = expiration + "a1"
 
         definition['expires_in_version'] = expiration
+
+    def check_label_values(self, name, definition):
+        labels = definition.get('labels')
+        if not labels:
+            return
+
+        invalid = filter(lambda l: len(l) > MAX_LABEL_LENGTH, labels)
+        if len(invalid) > 0:
+            raise ValueError, 'Label values for %s exceed length limit of %d: %s' % \
+                              (name, MAX_LABEL_LENGTH, ', '.join(invalid))
+
+        if len(labels) > MAX_LABEL_COUNT:
+            raise ValueError, 'Label count for %s exceeds limit of %d' % \
+                              (name, MAX_LABEL_COUNT)
+
+        # To make it easier to generate C++ identifiers from this etc., we restrict
+        # the label values to a strict pattern.
+        pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
+        invalid = filter(lambda l: not re.match(pattern, l, re.IGNORECASE), labels)
+        if len(invalid) > 0:
+            raise ValueError, 'Label values for %s are not matching pattern "%s": %s' % \
+                              (name, pattern, ', '.join(invalid))
 
     # Check for the presence of fields that old histograms are whitelisted for.
     def check_whitelistable_fields(self, name, definition):
