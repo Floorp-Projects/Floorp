@@ -66,8 +66,7 @@ nsInputStreamPump::Create(nsInputStreamPump  **result,
         rv = pump->Init(stream, streamPos, streamLen,
                         segsize, segcount, closeWhenDone);
         if (NS_SUCCEEDED(rv)) {
-            *result = nullptr;
-            pump.swap(*result);
+            pump.forget(result);
         }
     }
     return rv;
