@@ -21,18 +21,28 @@ class nsIWidget;
 
 namespace mozilla {
 
+namespace layers {
+class PAPZCTreeManagerParent;
+class APZCTreeManagerChild;
+}
+
 namespace dom {
 class Touch;
 } // namespace dom
 
 enum InputType
 {
+  // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+  // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
   MULTITOUCH_INPUT,
   MOUSE_INPUT,
   PANGESTURE_INPUT,
   PINCHGESTURE_INPUT,
   TAPGESTURE_INPUT,
-  SCROLLWHEEL_INPUT
+  SCROLLWHEEL_INPUT,
+
+  // Used as an upper bound for ContiguousEnumSerializer
+  SENTINEL_INPUT,
 };
 
 class MultiTouchInput;
@@ -62,6 +72,8 @@ class ScrollWheelInput;
 class InputData
 {
 public:
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   InputType mInputType;
   // Time in milliseconds that this data is relevant to. This only really
   // matters when this data is used as an event. We use uint32_t instead of
@@ -158,6 +170,9 @@ public:
 
   already_AddRefed<dom::Touch> ToNewDOMTouch() const;
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
+
   // A unique number assigned to each SingleTouchData within a MultiTouchInput so
   // that they can be easily distinguished when handling a touch start/move/end.
   int32_t mIdentifier;
@@ -198,10 +213,15 @@ class MultiTouchInput : public InputData
 public:
   enum MultiTouchType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
     MULTITOUCH_START,
     MULTITOUCH_MOVE,
     MULTITOUCH_END,
-    MULTITOUCH_CANCEL
+    MULTITOUCH_CANCEL,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    MULTITOUCH_SENTINEL,
   };
 
   MultiTouchInput(MultiTouchType aType, uint32_t aTime, TimeStamp aTimeStamp,
@@ -245,6 +265,8 @@ public:
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
   bool mHandledByAPZ;
@@ -252,9 +274,24 @@ public:
 
 class MouseInput : public InputData
 {
+protected:
+  friend mozilla::layers::PAPZCTreeManagerParent;
+  friend mozilla::layers::APZCTreeManagerChild;
+
+  MouseInput()
+    : InputData(MOUSE_INPUT)
+    , mType(MOUSE_NONE)
+    , mButtonType(NONE)
+    , mInputSource(0)
+    , mButtons(0)
+    , mHandledByAPZ(false)
+  {}
+
 public:
   enum MouseType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
     MOUSE_NONE,
     MOUSE_MOVE,
     MOUSE_DOWN,
@@ -263,14 +300,22 @@ public:
     MOUSE_DRAG_END,
     MOUSE_WIDGET_ENTER,
     MOUSE_WIDGET_EXIT,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    MOUSE_SENTINEL,
   };
 
   enum ButtonType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
     LEFT_BUTTON,
     MIDDLE_BUTTON,
     RIGHT_BUTTON,
-    NONE
+    NONE,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    BUTTON_SENTINEL,
   };
 
   MouseInput(MouseType aType, ButtonType aButtonType, uint16_t aInputSource, int16_t aButtons, const ScreenPoint& aPoint,
@@ -284,15 +329,6 @@ public:
     , mHandledByAPZ(false)
   {}
 
-  MouseInput()
-    : InputData(MOUSE_INPUT)
-    , mType(MOUSE_NONE)
-    , mButtonType(NONE)
-    , mInputSource(0)
-    , mButtons(0)
-    , mHandledByAPZ(false)
-  {}
-
   explicit MouseInput(const WidgetMouseEventBase& aMouseEvent);
 
   bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
@@ -300,6 +336,8 @@ public:
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
   WidgetMouseEvent ToWidgetMouseEvent(nsIWidget* aWidget) const;
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   MouseType mType;
   ButtonType mButtonType;
   uint16_t mInputSource;
@@ -315,9 +353,28 @@ public:
  */
 class PanGestureInput : public InputData
 {
+protected:
+  friend mozilla::layers::PAPZCTreeManagerParent;
+  friend mozilla::layers::APZCTreeManagerChild;
+
+  PanGestureInput()
+    : InputData(PANGESTURE_INPUT),
+      mLineOrPageDeltaX(0),
+      mLineOrPageDeltaY(0),
+      mUserDeltaMultiplierX(1.0),
+      mUserDeltaMultiplierY(1.0),
+      mHandledByAPZ(false),
+      mFollowedByMomentum(false),
+      mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
+  {
+  }
+
 public:
   enum PanGestureType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
+
     // MayStart: Dispatched before any actual panning has occurred but when a
     // pan gesture is probably about to start, for example when the user
     // starts touching the touchpad. Should interrupt any ongoing APZ
@@ -359,7 +416,10 @@ public:
     // MomentumEnd: The momentum animation has ended, for example because the
     // momentum velocity has gone below the stopping threshold, or because the
     // user has stopped the animation by putting their fingers on a touchpad.
-    PANGESTURE_MOMENTUMEND
+    PANGESTURE_MOMENTUMEND,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    PANGESTURE_SENTINEL,
   };
 
   PanGestureInput(PanGestureType aType,
@@ -391,6 +451,8 @@ public:
   ScreenPoint UserMultipliedPanDisplacement() const;
   ParentLayerPoint UserMultipliedLocalPanDisplacement() const;
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   PanGestureType mType;
   ScreenPoint mPanStartPoint;
 
@@ -432,12 +494,26 @@ public:
  */
 class PinchGestureInput : public InputData
 {
+protected:
+  friend mozilla::layers::PAPZCTreeManagerParent;
+  friend mozilla::layers::APZCTreeManagerChild;
+
+  PinchGestureInput()
+    : InputData(PINCHGESTURE_INPUT)
+  {
+  }
+
 public:
   enum PinchGestureType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
     PINCHGESTURE_START,
     PINCHGESTURE_SCALE,
-    PINCHGESTURE_END
+    PINCHGESTURE_END,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    PINCHGESTURE_SENTINEL,
   };
 
   // Construct a tap gesture from a Screen point.
@@ -476,6 +552,8 @@ public:
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   PinchGestureType mType;
 
   // Center point of the pinch gesture. That is, if there are two fingers on the
@@ -510,15 +588,29 @@ public:
  */
 class TapGestureInput : public InputData
 {
+protected:
+  friend mozilla::layers::PAPZCTreeManagerParent;
+  friend mozilla::layers::APZCTreeManagerChild;
+
+  TapGestureInput()
+    : InputData(TAPGESTURE_INPUT)
+  {
+  }
+
 public:
   enum TapGestureType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
     TAPGESTURE_LONG,
     TAPGESTURE_LONG_UP,
     TAPGESTURE_UP,
     TAPGESTURE_CONFIRMED,
     TAPGESTURE_DOUBLE,
-    TAPGESTURE_CANCEL
+    TAPGESTURE_CANCEL,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    TAPGESTURE_SENTINEL,
   };
 
   // Construct a tap gesture from a Screen point.
@@ -549,6 +641,8 @@ public:
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   TapGestureType mType;
 
   // The location of the tap in screen pixels.
@@ -564,14 +658,36 @@ public:
 // scroll gestures.
 class ScrollWheelInput : public InputData
 {
+protected:
+  friend mozilla::layers::PAPZCTreeManagerParent;
+  friend mozilla::layers::APZCTreeManagerChild;
+
+  ScrollWheelInput()
+    : InputData(SCROLLWHEEL_INPUT)
+    , mHandledByAPZ(false)
+    , mLineOrPageDeltaX(0)
+    , mLineOrPageDeltaY(0)
+    , mScrollSeriesNumber(0)
+    , mUserDeltaMultiplierX(1.0)
+    , mUserDeltaMultiplierY(1.0)
+    , mMayHaveMomentum(false)
+    , mIsMomentum(false)
+  {}
+
 public:
   enum ScrollDeltaType
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
+
     // There are three kinds of scroll delta modes in Gecko: "page", "line" and
     // "pixel".
     SCROLLDELTA_LINE,
     SCROLLDELTA_PAGE,
-    SCROLLDELTA_PIXEL
+    SCROLLDELTA_PIXEL,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    SCROLLDELTA_SENTINEL,
   };
 
   static ScrollDeltaType
@@ -608,8 +724,14 @@ public:
 
   enum ScrollMode
   {
+    // Warning, this enum is serialized and sent over IPC. If you reorder, add,
+    // or remove a value, you need to update its ParamTraits<> in nsGUIEventIPC.h
+
     SCROLLMODE_INSTANT,
-    SCROLLMODE_SMOOTH
+    SCROLLMODE_SMOOTH,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    SCROLLMODE_SENTINEL,
   };
 
   ScrollWheelInput(uint32_t aTime,
@@ -645,6 +767,8 @@ public:
 
   bool IsCustomizedByUserPrefs() const;
 
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   ScrollDeltaType mDeltaType;
   ScrollMode mScrollMode;
   ScreenPoint mOrigin;
