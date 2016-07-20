@@ -77,12 +77,10 @@ CommandList.prototype = {
     for (let name of Object.keys(manifest.commands)) {
       let command = manifest.commands[name];
       let shortcut = command.suggested_key[os] || command.suggested_key.default;
-      if (shortcut) {
-        commands.set(name, {
-          description: command.description,
-          shortcut: shortcut.replace(/\s+/g, ""),
-        });
-      }
+      commands.set(name, {
+        description: command.description,
+        shortcut: shortcut.replace(/\s+/g, ""),
+      });
     }
     return commands;
   },
@@ -126,7 +124,7 @@ CommandList.prototype = {
     // therefore the listeners for these elements will be garbage collected.
     keyElement.addEventListener("command", (event) => {
       if (name == "_execute_page_action") {
-        let win = event.target.ownerDocument.defaultView;
+        let win = event.target.ownerGlobal;
         pageActionFor(this.extension).triggerAction(win);
       } else {
         this.emit("command", name);

@@ -2,185 +2,32 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-
 add_task(function* test_user_defined_commands() {
-  const testCommands = [
-    // Ctrl Shortcuts
-    {
-      name: "toggle-ctrl-a",
-      shortcut: "Ctrl+A",
-      key: "A",
-      modifiers: {
-        accelKey: true,
-      },
-    },
-    {
-      name: "toggle-ctrl-up",
-      shortcut: "Ctrl+Up",
-      key: "VK_UP",
-      modifiers: {
-        accelKey: true,
-      },
-    },
-    // Alt Shortcuts
-    {
-      name: "toggle-alt-1",
-      shortcut: "Alt+1",
-      key: "1",
-      modifiers: {
-        altKey: true,
-      },
-    },
-    {
-      name: "toggle-alt-a",
-      shortcut: "Alt+A",
-      key: "A",
-      modifiers: {
-        altKey: true,
-      },
-    },
-    {
-      name: "toggle-alt-down",
-      shortcut: "Alt+Down",
-      key: "VK_DOWN",
-      modifiers: {
-        altKey: true,
-      },
-    },
-    // Mac Shortcuts
-    {
-      name: "toggle-command-shift-page-up",
-      shortcutMac: "Command+Shift+PageUp",
-      key: "VK_PAGE_UP",
-      modifiers: {
-        accelKey: true,
-        shiftKey: true,
-      },
-    },
-    {
-      name: "toggle-mac-control-b",
-      shortcut: "Ctrl+B",
-      shortcutMac: "MacCtrl+B",
-      key: "B",
-      modifiers: {
-        ctrlKey: true,
-      },
-    },
-    // Ctrl+Shift Shortcuts
-    {
-      name: "toggle-ctrl-shift-1",
-      shortcut: "Ctrl+Shift+1",
-      key: "1",
-      modifiers: {
-        accelKey: true,
-        shiftKey: true,
-      },
-    },
-    {
-      name: "toggle-ctrl-shift-i",
-      shortcut: "Ctrl+Shift+I",
-      key: "I",
-      modifiers: {
-        accelKey: true,
-        shiftKey: true,
-      },
-    },
-    {
-      name: "toggle-ctrl-shift-left",
-      shortcut: "Ctrl+Shift+Left",
-      key: "VK_LEFT",
-      modifiers: {
-        accelKey: true,
-        shiftKey: true,
-      },
-    },
-    // Alt+Shift Shortcuts
-    {
-      name: "toggle-alt-shift-1",
-      shortcut: "Alt+Shift+1",
-      key: "1",
-      modifiers: {
-        altKey: true,
-        shiftKey: true,
-      },
-    },
-    {
-      name: "toggle-alt-shift-a",
-      shortcut: "Alt+Shift+A",
-      key: "A",
-      modifiers: {
-        altKey: true,
-        shiftKey: true,
-      },
-    },
-    {
-      name: "toggle-alt-shift-right",
-      shortcut: "Alt+Shift+Right",
-      key: "VK_RIGHT",
-      modifiers: {
-        altKey: true,
-        shiftKey: true,
-      },
-    },
-    // Misc Shortcuts
-    {
-      name: "unrecognized-property-name",
-      shortcut: "Alt+Shift+3",
-      key: "3",
-      modifiers: {
-        altKey: true,
-        shiftKey: true,
-      },
-      unrecognized_property: "with-a-random-value",
-    },
-    {
-      name: "spaces-in-shortcut-name",
-      shortcut: "  Alt + Shift + 2  ",
-      key: "2",
-      modifiers: {
-        altKey: true,
-        shiftKey: true,
-      },
-    },
-  ];
-
   // Create a window before the extension is loaded.
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
   yield BrowserTestUtils.loadURI(win1.gBrowser.selectedBrowser, "about:robots");
   yield BrowserTestUtils.browserLoaded(win1.gBrowser.selectedBrowser);
 
-  let commands = {};
-  let isMac = AppConstants.platform == "macosx";
-  let totalMacOnlyCommands = 0;
-
-  for (let testCommand of testCommands) {
-    let command = {
-      suggested_key: {},
-    };
-
-    if (testCommand.shortcut) {
-      command.suggested_key.default = testCommand.shortcut;
-    }
-
-    if (testCommand.shortcutMac) {
-      command.suggested_key.mac = testCommand.shortcutMac;
-    }
-
-    if (testCommand.shortcutMac && !testCommand.shortcut) {
-      totalMacOnlyCommands++;
-    }
-
-    if (testCommand.unrecognized_property) {
-      command.unrecognized_property = testCommand.unrecognized_property;
-    }
-
-    commands[testCommand.name] = command;
-  }
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "commands": commands,
+      "commands": {
+        "toggle-feature-using-alt-shift-3": {
+          "suggested_key": {
+            "default": "Alt+Shift+3",
+          },
+        },
+        "toggle-feature-using-alt-shift-comma": {
+          "suggested_key": {
+            "default": "Alt+Shift+Comma",
+          },
+          "unrecognized_property": "with-a-random-value",
+        },
+        "toggle-feature-with-whitespace-in-suggested-key": {
+          "suggested_key": {
+            "default": "  Alt + Shift + 2  ",
+          },
+        },
+      },
     },
 
     background: function() {
@@ -190,6 +37,7 @@ add_task(function* test_user_defined_commands() {
       browser.test.sendMessage("ready");
     },
   });
+
 
   SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
@@ -201,41 +49,35 @@ add_task(function* test_user_defined_commands() {
   yield extension.startup();
   yield extension.awaitMessage("ready");
 
-  function* runTest() {
-    for (let testCommand of testCommands) {
-      if (testCommand.shortcutMac && !isMac) {
-        continue;
-      }
-      EventUtils.synthesizeKey(testCommand.key, testCommand.modifiers);
-      let message = yield extension.awaitMessage("oncommand");
-      is(message, testCommand.name, "Expected onCommand listener to fire with the correct command name");
-    }
-  }
-
   // Create another window after the extension is loaded.
   let win2 = yield BrowserTestUtils.openNewBrowserWindow();
   yield BrowserTestUtils.loadURI(win2.gBrowser.selectedBrowser, "about:config");
   yield BrowserTestUtils.browserLoaded(win2.gBrowser.selectedBrowser);
 
-  let totalTestCommands = Object.keys(testCommands).length;
-  let expectedCommandsRegistered = isMac ? totalTestCommands : totalTestCommands - totalMacOnlyCommands;
-
   // Confirm the keysets have been added to both windows.
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(keyset.childNodes.length, 3, "Expected keyset to have 3 children");
 
   keyset = win2.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+  is(keyset.childNodes.length, 3, "Expected keyset to have 3 children");
 
   // Confirm that the commands are registered to both windows.
   yield focusWindow(win1);
-  yield runTest();
+  EventUtils.synthesizeKey("3", {altKey: true, shiftKey: true});
+  let message = yield extension.awaitMessage("oncommand");
+  is(message, "toggle-feature-using-alt-shift-3", "Expected onCommand listener to fire with correct message");
 
   yield focusWindow(win2);
-  yield runTest();
+  EventUtils.synthesizeKey("VK_COMMA", {altKey: true, shiftKey: true});
+  message = yield extension.awaitMessage("oncommand");
+  is(message, "toggle-feature-using-alt-shift-comma", "Expected onCommand listener to fire with correct message");
+
+  EventUtils.synthesizeKey("2", {altKey: true, shiftKey: true});
+  message = yield extension.awaitMessage("oncommand");
+  is(message, "toggle-feature-with-whitespace-in-suggested-key", "Expected onCommand listener to fire with correct message");
 
   yield extension.unload();
 
@@ -252,3 +94,5 @@ add_task(function* test_user_defined_commands() {
   SimpleTest.endMonitorConsole();
   yield waitForConsole;
 });
+
+
