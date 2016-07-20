@@ -68,7 +68,7 @@ function doTest() {
       }
     }
   }
-  ensureEventFired(browser, "load").then(() => {
+  ensureFrameLoaded(browser).then(() => {
     // First check the the sidebar is initially visible, and loaded
     ok(!command.hidden, "toggle command should be visible");
     let mm = getGroupMessageManager("social");

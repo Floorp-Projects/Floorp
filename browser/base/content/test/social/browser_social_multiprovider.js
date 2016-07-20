@@ -42,23 +42,23 @@ var tests = {
     }
 
     // the menu is not populated until onpopupshowing, so wait for popupshown
-    ensureEventFired(menu, "popupshown").then(()=>{
+    BrowserTestUtils.waitForEvent(menu, "popupshown", true).then(()=>{
       menu.hidePopup(); // doesn't need visibility
       // first provider should already be visible in the sidebar
       is(Social.providers[0].origin, SocialSidebar.provider.origin, "selected provider in sidebar");
       checkProviderMenu(Social.providers[0]);
 
       // Now activate "provider 2"
-      ensureEventFired(sbrowser, "load").then(()=>{
+      BrowserTestUtils.waitForEvent(sbrowser, "load", true).then(()=>{
         checkUIStateMatchesProvider(Social.providers[1]);
 
-        ensureEventFired(sbrowser, "load").then(()=>{
+        BrowserTestUtils.waitForEvent(sbrowser, "load", true).then(()=>{
           checkUIStateMatchesProvider(Social.providers[0]);
           next();
         });
 
         // show the menu again so the menu is updated with the correct commands
-        ensureEventFired(menu, "popupshown").then(()=>{
+        BrowserTestUtils.waitForEvent(menu, "popupshown", true).then(()=>{
           // click on the provider menuitem to switch providers
           let el = menu.getElementsByAttribute("origin", Social.providers[0].origin);
           is(el.length, 1, "selected provider menu item exists");
