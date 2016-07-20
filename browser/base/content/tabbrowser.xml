@@ -6124,18 +6124,34 @@
 
         // screen.availLeft et. al. only check the screen that this window is on,
         // but we want to look at the screen the tab is being dropped onto.
-        var sX = {}, sY = {}, sWidth = {}, sHeight = {};
-        Cc["@mozilla.org/gfx/screenmanager;1"]
-          .getService(Ci.nsIScreenManager)
-          .screenForRect(eX, eY, 1, 1)
-          .GetAvailRect(sX, sY, sWidth, sHeight);
+        var screen = Cc["@mozilla.org/gfx/screenmanager;1"]
+                       .getService(Ci.nsIScreenManager)
+                       .screenForRect(eX, eY, 1, 1);
+        var fullX = {}, fullY = {}, fullWidth = {}, fullHeight = {};
+        var availX = {}, availY = {}, availWidth = {}, availHeight = {};
+        // get full screen rect and available rect, both in desktop pix
+        screen.GetRectDisplayPix(fullX, fullY, fullWidth, fullHeight);
+        screen.GetAvailRectDisplayPix(availX, availY, availWidth, availHeight);
+
+        // scale factor to convert desktop pixels to CSS px
+        var scaleFactor =
+          screen.contentsScaleFactor / screen.defaultCSSScaleFactor;
+        // synchronize CSS-px top-left coordinates with the screen's desktop-px
+        // coordinates, to ensure uniqueness across multiple screens
+        // (compare the equivalent adjustments in nsGlobalWindow::GetScreenXY()
+        // and related methods)
+        availX.value = (availX.value - fullX.value) * scaleFactor + fullX.value;
+        availY.value = (availY.value - fullY.value) * scaleFactor + fullY.value;
+        availWidth.value *= scaleFactor;
+        availHeight.value *= scaleFactor;
+
         // ensure new window entirely within screen
-        var winWidth = Math.min(window.outerWidth, sWidth.value);
-        var winHeight = Math.min(window.outerHeight, sHeight.value);
-        var left = Math.min(Math.max(eX - draggedTab._dragData.offsetX, sX.value),
-                            sX.value + sWidth.value - winWidth);
-        var top = Math.min(Math.max(eY - draggedTab._dragData.offsetY, sY.value),
-                           sY.value + sHeight.value - winHeight);
+        var winWidth = Math.min(window.outerWidth, availWidth.value);
+        var winHeight = Math.min(window.outerHeight, availHeight.value);
+        var left = Math.min(Math.max(eX - draggedTab._dragData.offsetX, availX.value),
+                            availX.value + availWidth.value - winWidth);
+        var top = Math.min(Math.max(eY - draggedTab._dragData.offsetY, availY.value),
+                           availY.value + availHeight.value - winHeight);
 
         delete draggedTab._dragData;
 
