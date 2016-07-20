@@ -70,34 +70,9 @@ BackgroundPage.prototype = {
 
     // TODO: Right now we run onStartup after the background page
     // finishes. See if this is what Chrome does.
+    // TODO(robwu): This implementation of onStartup is wrong, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1247435#c1
     let loadListener = event => {
-      // Override the `alert()` method inside background windows;
-      // we alias it to console.log().
-      // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1203394
-      let alertDisplayedWarning = false;
-      let alertOverwrite = text => {
-        if (!alertDisplayedWarning) {
-          let consoleWindow = Services.wm.getMostRecentWindow("devtools:webconsole");
-          if (!consoleWindow) {
-            let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-            require("devtools/client/framework/devtools-browser");
-            let hudservice = require("devtools/client/webconsole/hudservice");
-            hudservice.toggleBrowserConsole().catch(Cu.reportError);
-          } else {
-            // the Browser Console was already open
-            consoleWindow.focus();
-          }
-
-          this.contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
-
-          alertDisplayedWarning = true;
-        }
-
-        window.console.log(text);
-      };
-      Components.utils.exportFunction(alertOverwrite, window, {
-        defineAs: "alert",
-      });
       if (event.target != window.document) {
         return;
       }

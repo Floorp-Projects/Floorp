@@ -660,6 +660,9 @@ GlobalManager = {
 
     let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
     inject(extension, context);
+    if (type == "background") {
+      this._initializeBackgroundPage(contentWindow);
+    }
 
     let eventHandler = docShell.chromeEventHandler;
     let listener = event => {
@@ -670,6 +673,34 @@ GlobalManager = {
       context.unload();
     };
     eventHandler.addEventListener("unload", listener, true);
+  },
+
+  _initializeBackgroundPage(contentWindow) {
+    // Override the `alert()` method inside background windows;
+    // we alias it to console.log().
+    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1203394
+    let alertDisplayedWarning = false;
+    let alertOverwrite = text => {
+      if (!alertDisplayedWarning) {
+        let consoleWindow = Services.wm.getMostRecentWindow("devtools:webconsole");
+        if (!consoleWindow) {
+          let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+          require("devtools/client/framework/devtools-browser");
+          let hudservice = require("devtools/client/webconsole/hudservice");
+          hudservice.toggleBrowserConsole().catch(Cu.reportError);
+        } else {
+          // the Browser Console was already open
+          consoleWindow.focus();
+        }
+
+        contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
+
+        alertDisplayedWarning = true;
+      }
+
+      contentWindow.console.log(text);
+    };
+    Cu.exportFunction(alertOverwrite, contentWindow, {defineAs: "alert"});
   },
 };
 
