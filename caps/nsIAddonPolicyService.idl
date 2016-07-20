@@ -34,13 +34,6 @@ interface nsIAddonPolicyService : nsISupports
   AString getAddonCSP(in AString aAddonId);
 
   /**
-   * Returns the generated background page as a data-URI, if any. If the addon
-   * does not have an auto-generated background page, an empty string is
-   * returned.
-   */
-  ACString getGeneratedBackgroundPageUrl(in ACString aAddonId);
-
-  /**
    * Returns true if unprivileged code associated with the given addon may load
    * data from |aURI|.
    */

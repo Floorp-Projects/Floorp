@@ -55,10 +55,7 @@ protected:
 
   // Override this in the subclass to check for special case when resolving URIs
   // _before_ checking substitutions.
-  virtual bool ResolveSpecialCases(const nsACString& aHost,
-                                   const nsACString& aPath,
-                                   const nsACString& aPathname,
-                                   nsACString& aResult)
+  virtual bool ResolveSpecialCases(const nsACString& aHost, const nsACString& aPath, nsACString& aResult)
   {
     return false;
   }

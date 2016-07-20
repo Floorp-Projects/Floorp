@@ -28,7 +28,6 @@ function AddonPolicyService()
 {
   this.wrappedJSObject = this;
   this.cspStrings = new Map();
-  this.backgroundPageUrlCallbacks = new Map();
   this.mayLoadURICallbacks = new Map();
   this.localizeCallbacks = new Map();
 
@@ -54,16 +53,6 @@ AddonPolicyService.prototype = {
   getAddonCSP(aAddonId) {
     let csp = this.cspStrings.get(aAddonId);
     return csp || this.defaultCSP;
-  },
-
-  /**
-   * Returns the generated background page as a data-URI, if any. If the addon
-   * does not have an auto-generated background page, an empty string is
-   * returned.
-   */
-  getGeneratedBackgroundPageUrl(aAddonId) {
-    let cb = this.backgroundPageUrlCallbacks.get(aAddonId);
-    return cb && cb(aAddonId) || '';
   },
 
   /*
@@ -142,17 +131,6 @@ AddonPolicyService.prototype = {
       this.cspStrings.set(aAddonId, aCSPString);
     } else {
       this.cspStrings.delete(aAddonId);
-    }
-  },
-
-  /**
-   * Set the callback that generates a data-URL for the background page.
-   */
-  setBackgroundPageUrlCallback(aAddonId, aCallback) {
-    if (aCallback) {
-      this.backgroundPageUrlCallbacks.set(aAddonId, aCallback);
-    } else {
-      this.backgroundPageUrlCallbacks.delete(aAddonId);
     }
   },
 
