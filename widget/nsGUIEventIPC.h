@@ -14,6 +14,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "InputData.h"
 
 namespace IPC
 {
@@ -1027,6 +1028,314 @@ struct ParamTraits<mozilla::widget::CandidateWindowPosition>
     return ReadParam(aMsg, aIter, &aResult->mPoint) &&
            ReadParam(aMsg, aIter, &aResult->mRect) &&
            ReadParam(aMsg, aIter, &aResult->mExcludeRect);
+  }
+};
+
+// InputData.h
+
+template<>
+struct ParamTraits<mozilla::InputType>
+  : public ContiguousEnumSerializer<
+             mozilla::InputType,
+             mozilla::InputType::MULTITOUCH_INPUT,
+             mozilla::InputType::SENTINEL_INPUT>
+{};
+
+template<>
+struct ParamTraits<mozilla::InputData>
+{
+  typedef mozilla::InputData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mInputType);
+    WriteParam(aMsg, aParam.mTime);
+    WriteParam(aMsg, aParam.mTimeStamp);
+    WriteParam(aMsg, aParam.modifiers);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mInputType) &&
+           ReadParam(aMsg, aIter, &aResult->mTime) &&
+           ReadParam(aMsg, aIter, &aResult->mTimeStamp) &&
+           ReadParam(aMsg, aIter, &aResult->modifiers);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::SingleTouchData>
+{
+  typedef mozilla::SingleTouchData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mIdentifier);
+    WriteParam(aMsg, aParam.mScreenPoint);
+    WriteParam(aMsg, aParam.mLocalScreenPoint);
+    WriteParam(aMsg, aParam.mRadius);
+    WriteParam(aMsg, aParam.mRotationAngle);
+    WriteParam(aMsg, aParam.mForce);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mIdentifier) &&
+            ReadParam(aMsg, aIter, &aResult->mScreenPoint) &&
+            ReadParam(aMsg, aIter, &aResult->mLocalScreenPoint) &&
+            ReadParam(aMsg, aIter, &aResult->mRadius) &&
+            ReadParam(aMsg, aIter, &aResult->mRotationAngle) &&
+            ReadParam(aMsg, aIter, &aResult->mForce));
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::MultiTouchInput::MultiTouchType>
+  : public ContiguousEnumSerializer<
+             mozilla::MultiTouchInput::MultiTouchType,
+             mozilla::MultiTouchInput::MultiTouchType::MULTITOUCH_START,
+             mozilla::MultiTouchInput::MultiTouchType::MULTITOUCH_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::MultiTouchInput>
+{
+  typedef mozilla::MultiTouchInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mTouches);
+    WriteParam(aMsg, aParam.mHandledByAPZ);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mTouches) &&
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::MouseInput::MouseType>
+  : public ContiguousEnumSerializer<
+             mozilla::MouseInput::MouseType,
+             mozilla::MouseInput::MouseType::MOUSE_NONE,
+             mozilla::MouseInput::MouseType::MOUSE_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::MouseInput::ButtonType>
+  : public ContiguousEnumSerializer<
+             mozilla::MouseInput::ButtonType,
+             mozilla::MouseInput::ButtonType::LEFT_BUTTON,
+             mozilla::MouseInput::ButtonType::BUTTON_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::MouseInput>
+{
+  typedef mozilla::MouseInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mButtonType);
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mInputSource);
+    WriteParam(aMsg, aParam.mButtons);
+    WriteParam(aMsg, aParam.mOrigin);
+    WriteParam(aMsg, aParam.mLocalOrigin);
+    WriteParam(aMsg, aParam.mHandledByAPZ);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mButtonType) &&
+           ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mInputSource) &&
+           ReadParam(aMsg, aIter, &aResult->mButtons) &&
+           ReadParam(aMsg, aIter, &aResult->mOrigin) &&
+           ReadParam(aMsg, aIter, &aResult->mLocalOrigin) &&
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::PanGestureInput::PanGestureType>
+  : public ContiguousEnumSerializer<
+             mozilla::PanGestureInput::PanGestureType,
+             mozilla::PanGestureInput::PanGestureType::PANGESTURE_MAYSTART,
+             mozilla::PanGestureInput::PanGestureType::PANGESTURE_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::PanGestureInput>
+{
+  typedef mozilla::PanGestureInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mPanStartPoint);
+    WriteParam(aMsg, aParam.mPanDisplacement);
+    WriteParam(aMsg, aParam.mLocalPanStartPoint);
+    WriteParam(aMsg, aParam.mLocalPanDisplacement);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaX);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaY);
+    WriteParam(aMsg, aParam.mUserDeltaMultiplierX);
+    WriteParam(aMsg, aParam.mUserDeltaMultiplierY);
+    WriteParam(aMsg, aParam.mHandledByAPZ);
+    WriteParam(aMsg, aParam.mFollowedByMomentum);
+    WriteParam(aMsg, aParam.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mPanStartPoint) &&
+           ReadParam(aMsg, aIter, &aResult->mPanDisplacement) &&
+           ReadParam(aMsg, aIter, &aResult->mLocalPanStartPoint) &&
+           ReadParam(aMsg, aIter, &aResult->mLocalPanDisplacement) &&
+           ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaX) &&
+           ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&
+           ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierX) &&
+           ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierY) &&
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
+           ReadParam(aMsg, aIter, &aResult->mFollowedByMomentum) &&
+           ReadParam(aMsg, aIter, &aResult->mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::PinchGestureInput::PinchGestureType>
+  : public ContiguousEnumSerializer<
+             mozilla::PinchGestureInput::PinchGestureType,
+             mozilla::PinchGestureInput::PinchGestureType::PINCHGESTURE_START,
+             mozilla::PinchGestureInput::PinchGestureType::PINCHGESTURE_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::PinchGestureInput>
+{
+  typedef mozilla::PinchGestureInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mFocusPoint);
+    WriteParam(aMsg, aParam.mLocalFocusPoint);
+    WriteParam(aMsg, aParam.mCurrentSpan);
+    WriteParam(aMsg, aParam.mPreviousSpan);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mFocusPoint) &&
+           ReadParam(aMsg, aIter, &aResult->mLocalFocusPoint) &&
+           ReadParam(aMsg, aIter, &aResult->mCurrentSpan) &&
+           ReadParam(aMsg, aIter, &aResult->mPreviousSpan);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::TapGestureInput::TapGestureType>
+  : public ContiguousEnumSerializer<
+             mozilla::TapGestureInput::TapGestureType,
+             mozilla::TapGestureInput::TapGestureType::TAPGESTURE_LONG,
+             mozilla::TapGestureInput::TapGestureType::TAPGESTURE_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::TapGestureInput>
+{
+  typedef mozilla::TapGestureInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mPoint);
+    WriteParam(aMsg, aParam.mLocalPoint);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mPoint) &&
+           ReadParam(aMsg, aIter, &aResult->mLocalPoint);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::ScrollWheelInput::ScrollDeltaType>
+  : public ContiguousEnumSerializer<
+             mozilla::ScrollWheelInput::ScrollDeltaType,
+             mozilla::ScrollWheelInput::ScrollDeltaType::SCROLLDELTA_LINE,
+             mozilla::ScrollWheelInput::ScrollDeltaType::SCROLLDELTA_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::ScrollWheelInput::ScrollMode>
+  : public ContiguousEnumSerializer<
+             mozilla::ScrollWheelInput::ScrollMode,
+             mozilla::ScrollWheelInput::ScrollMode::SCROLLMODE_INSTANT,
+             mozilla::ScrollWheelInput::ScrollMode::SCROLLMODE_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::ScrollWheelInput>
+{
+  typedef mozilla::ScrollWheelInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mDeltaType);
+    WriteParam(aMsg, aParam.mScrollMode);
+    WriteParam(aMsg, aParam.mOrigin);
+    WriteParam(aMsg, aParam.mHandledByAPZ);
+    WriteParam(aMsg, aParam.mDeltaX);
+    WriteParam(aMsg, aParam.mDeltaY);
+    WriteParam(aMsg, aParam.mLocalOrigin);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaX);
+    WriteParam(aMsg, aParam.mLineOrPageDeltaY);
+    WriteParam(aMsg, aParam.mScrollSeriesNumber);
+    WriteParam(aMsg, aParam.mUserDeltaMultiplierX);
+    WriteParam(aMsg, aParam.mUserDeltaMultiplierY);
+    WriteParam(aMsg, aParam.mMayHaveMomentum);
+    WriteParam(aMsg, aParam.mIsMomentum);
+    WriteParam(aMsg, aParam.mAllowToOverrideSystemScrollSpeed);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mDeltaType) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollMode) &&
+           ReadParam(aMsg, aIter, &aResult->mOrigin) &&
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
+           ReadParam(aMsg, aIter, &aResult->mDeltaX) &&
+           ReadParam(aMsg, aIter, &aResult->mDeltaY) &&
+           ReadParam(aMsg, aIter, &aResult->mLocalOrigin) &&
+           ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaX) &&
+           ReadParam(aMsg, aIter, &aResult->mLineOrPageDeltaY) &&
+           ReadParam(aMsg, aIter, &aResult->mScrollSeriesNumber) &&
+           ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierX) &&
+           ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierY) &&
+           ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
+           ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
+           ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed);
   }
 };
 

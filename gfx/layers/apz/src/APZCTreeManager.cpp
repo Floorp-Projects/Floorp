@@ -865,6 +865,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         tapInput.mPoint = *untransformedPoint;
       }
       break;
+    } case SENTINEL_INPUT: {
+      MOZ_ASSERT_UNREACHABLE("Invalid InputType.");
+      break;
     }
   }
   return result;

@@ -1003,7 +1003,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   }
   case SCROLLWHEEL_INPUT: {
     ScrollWheelInput scrollInput = aEvent.AsScrollWheelInput();
-    if (!scrollInput.TransformToLocal(aTransformToApzc)) { 
+    if (!scrollInput.TransformToLocal(aTransformToApzc)) {
       return rv;
     }
 
@@ -1012,7 +1012,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   }
   case PINCHGESTURE_INPUT: {
     PinchGestureInput pinchInput = aEvent.AsPinchGestureInput();
-    if (!pinchInput.TransformToLocal(aTransformToApzc)) { 
+    if (!pinchInput.TransformToLocal(aTransformToApzc)) {
       return rv;
     }
 
@@ -1021,7 +1021,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   }
   case TAPGESTURE_INPUT: {
     TapGestureInput tapInput = aEvent.AsTapGestureInput();
-    if (!tapInput.TransformToLocal(aTransformToApzc)) { 
+    if (!tapInput.TransformToLocal(aTransformToApzc)) {
       return rv;
     }
 
@@ -1470,7 +1470,7 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* a
     ScreenToScreenMatrix4x4 transformScreenToGecko =
         treeManagerLocal->GetScreenToApzcTransform(this)
       * treeManagerLocal->GetApzcToGeckoTransform(this);
-    
+
     Maybe<ScreenIntPoint> layoutPoint = UntransformBy(
         transformScreenToGecko, aPoint);
     if (!layoutPoint) {
@@ -1774,6 +1774,11 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
 
       WheelScrollAnimation* animation = mAnimation->AsWheelScrollAnimation();
       animation->Update(aEvent.mTimeStamp, deltaInAppUnits, nsSize(velocity.x, velocity.y));
+      break;
+    }
+
+    case ScrollWheelInput::SCROLLMODE_SENTINEL: {
+      MOZ_ASSERT_UNREACHABLE("Invalid ScrollMode.");
       break;
     }
   }
