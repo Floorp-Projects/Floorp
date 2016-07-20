@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Bug 1272475 - scale function with an extreme large value</title>
+  <script>
+    function test() {
+      var div = document.createElement("div");
+      div.setAttribute("style", "width: 1px; height: 1px; " +
+                                "background: red;");
+      document.body.appendChild(div);
+      div.animate([ { "transform": "scale(8)" },
+                    { "transform": "scale(9.5e+307)" },
+                    { "transform": "scale(32)" } ],
+                  { "duration": 1000, "fill": "both" });
+    }
+  </script>
+  </head>
+  <body onload="test()">
+  </body>
+</html>
