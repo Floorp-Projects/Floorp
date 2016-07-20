@@ -2432,17 +2432,26 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     if (useOffMainThreadCompositing) {
       GPUProcessManager* gpm = GPUProcessManager::Get();
 
-      Endpoint<PCompositorBridgeChild> endpoint;
-      DebugOnly<bool> opened =
-        gpm->CreateContentCompositorBridge(OtherPid(), &endpoint);
-      MOZ_ASSERT(opened);
-      Unused << SendInitCompositor(Move(endpoint));
+      {
+        Endpoint<PCompositorBridgeChild> endpoint;
+        DebugOnly<bool> opened =
+          gpm->CreateContentCompositorBridge(OtherPid(), &endpoint);
+        MOZ_ASSERT(opened);
+        Unused << SendInitCompositor(Move(endpoint));
+      }
 
-      opened = PImageBridge::Open(this);
-      MOZ_ASSERT(opened);
+      {
+        Endpoint<PImageBridgeChild> endpoint;
+        DebugOnly<bool> opened =
+          gpm->CreateContentImageBridge(OtherPid(), &endpoint);
+        MOZ_ASSERT(opened);
+        Unused << SendInitImageBridge(Move(endpoint));
+      }
 
-      opened = gfx::PVRManager::Open(this);
-      MOZ_ASSERT(opened);
+      {
+        DebugOnly<bool> opened = gfx::PVRManager::Open(this);
+        MOZ_ASSERT(opened);
+      }
     }
 #ifdef MOZ_WIDGET_GONK
     DebugOnly<bool> opened = PSharedBufferManager::Open(this);
@@ -3237,13 +3246,6 @@ ContentParent::AllocPVRManagerParent(Transport* aTransport,
                                      ProcessId aOtherProcess)
 {
   return gfx::VRManagerParent::CreateCrossProcess(aTransport, aOtherProcess);
-}
-
-PImageBridgeParent*
-ContentParent::AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
-                                       base::ProcessId aOtherProcess)
-{
-  return ImageBridgeParent::Create(aTransport, aOtherProcess);
 }
 
 PBackgroundParent*

@@ -573,7 +573,11 @@ TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsHandshake) {
   SignedCertificateTimestampsExtractor timestamps_extractor(*client_);
   Handshake();
   CheckConnected();
-  timestamps_extractor.assertTimestamps(timestamps);
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    timestamps_extractor.assertTimestamps(timestamps);
+  }
+  const SECItem* c_timestamps = SSL_PeerSignedCertTimestamps(client_->ssl_fd());
+  ASSERT_EQ(SECEqual, SECITEM_CompareItem(&si_timestamps, c_timestamps));
 }
 
 // Test SSL_PeerSignedCertTimestamps returning zero-length SECItem

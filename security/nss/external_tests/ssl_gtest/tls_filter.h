@@ -7,6 +7,7 @@
 #ifndef tls_filter_h_
 #define tls_filter_h_
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -214,6 +215,44 @@ class TlsExtensionCapture : public TlsExtensionFilter {
  private:
   const uint16_t extension_;
   DataBuffer data_;
+};
+
+class TlsAgent;
+typedef std::function<void(void)> VoidFunction;
+
+class AfterRecordN : public TlsRecordFilter {
+ public:
+  AfterRecordN(TlsAgent *src, TlsAgent *dest, unsigned int record,
+               VoidFunction func) :
+      src_(src),
+      dest_(dest),
+      record_(record),
+      func_(func),
+      counter_(0) {}
+
+  virtual PacketFilter::Action FilterRecord(
+      const RecordHeader& header, const DataBuffer& body, DataBuffer* out);
+
+ private:
+  TlsAgent *src_;
+  TlsAgent *dest_;
+  unsigned int record_;
+  VoidFunction func_;
+  unsigned int counter_;
+};
+
+// When we see the ClientKeyExchange from |client|, increment the
+// ClientHelloVersion on |server|.
+class TlsInspectorClientHelloVersionChanger : public TlsHandshakeFilter {
+ public:
+  TlsInspectorClientHelloVersionChanger(TlsAgent* server) : server_(server) {}
+
+  virtual PacketFilter::Action FilterHandshake(
+      const HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output);
+
+ private:
+  TlsAgent* server_;
 };
 
 }  // namespace nss_test

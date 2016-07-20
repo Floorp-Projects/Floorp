@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -106,7 +105,7 @@ Decoder::Init()
   return rv;
 }
 
-nsresult
+LexerResult
 Decoder::Decode(IResumable* aOnResume /* = nullptr */)
 {
   MOZ_ASSERT(mInitialized, "Should be initialized here");
@@ -114,7 +113,8 @@ Decoder::Decode(IResumable* aOnResume /* = nullptr */)
 
   // If we're already done, don't attempt to keep decoding.
   if (GetDecodeDone()) {
-    return HasError() ? NS_ERROR_FAILURE : NS_OK;
+    return LexerResult(HasError() ? TerminalState::FAILURE
+                                  : TerminalState::SUCCESS);
   }
 
   LexerResult lexerResult(TerminalState::FAILURE);
@@ -126,11 +126,10 @@ Decoder::Decode(IResumable* aOnResume /* = nullptr */)
   };
 
   if (lexerResult.is<Yield>()) {
-    // We need more data to continue. If @aOnResume was non-null, the
-    // SourceBufferIterator will automatically reschedule us. Otherwise, it's up
-    // to the caller.
-    MOZ_ASSERT(lexerResult.as<Yield>() == Yield::NEED_MORE_DATA);
-    return NS_OK;
+    // We either need more data to continue (in which case either @aOnResume or
+    // the caller will reschedule us to run again later), or the decoder is
+    // yielding to allow the caller access to some intermediate output.
+    return lexerResult;
   }
 
   // We reached a terminal state; we're now done decoding.
@@ -145,7 +144,8 @@ Decoder::Decode(IResumable* aOnResume /* = nullptr */)
   // Perform final cleanup.
   CompleteDecode();
 
-  return HasError() ? NS_ERROR_FAILURE : NS_OK;
+  return LexerResult(HasError() ? TerminalState::FAILURE
+                                : TerminalState::SUCCESS);
 }
 
 bool
@@ -445,12 +445,6 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
   if (!ShouldSendPartialInvalidations() && mFrameCount == 1) {
     mInvalidRect.UnionRect(mInvalidRect,
                            gfx::IntRect(gfx::IntPoint(0, 0), GetSize()));
-  }
-
-  // If we are going to keep decoding we should notify now about the first frame being done.
-  if (mImage && mFrameCount == 1 && HasAnimation()) {
-    MOZ_ASSERT(HasProgress());
-    IDecodingTask::NotifyProgress(WrapNotNull(this));
   }
 }
 

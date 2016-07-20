@@ -1150,8 +1150,9 @@ _NSSUTIL_GetSecmodName(const char *param, NSSDBType *dbType, char **appName,
    }
 
    /* only use the renamed secmod for legacy databases */
-   if ((*dbType != NSS_DB_TYPE_LEGACY) && 
-	(*dbType != NSS_DB_TYPE_MULTIACCESS)) {
+   if ((*dbType != NSS_DB_TYPE_LEGACY) &&
+	(*dbType != NSS_DB_TYPE_MULTIACCESS) &&
+	  !NSSUTIL_ArgHasFlag("flags", "forceSecmodChoice", save_params)) {
 	secmodName="pkcs11.txt";
    }
 

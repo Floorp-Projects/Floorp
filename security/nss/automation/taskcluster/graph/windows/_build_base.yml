@@ -5,7 +5,7 @@ task:
   created: !from_now 0
   deadline: !from_now 24
   provisionerId: aws-provisioner-v1
-  workerType: ttaubert-win2012r2
+  workerType: nss-win2012r2
   schedulerId: task-graph-scheduler
 
   metadata:
@@ -21,8 +21,8 @@ task:
         expires: !from_now 24
 
     command:
-      - "time /t && hg clone -r %NSS_HEAD_REVISION% %NSS_HEAD_REPOSITORY% nss"
-      - "time /t && bash -c nss/automation/taskcluster/windows/build.sh"
+      - "hg clone -r %NSS_HEAD_REVISION% %NSS_HEAD_REPOSITORY% nss"
+      - "bash -c nss/automation/taskcluster/windows/build.sh"
 
     env:
       PATH: "c:\\mozilla-build\\python;c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;c:\\mozilla-build\\info-zip;c:\\mozilla-build\\python\\Scripts;c:\\mozilla-build\\yasm;c:\\mozilla-build\\msys\\bin;c:\\Windows\\system32;c:\\mozilla-build\\upx391w;c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget"

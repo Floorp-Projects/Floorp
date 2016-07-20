@@ -13,6 +13,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/ImageBridgeParent.h"
 
 namespace mozilla {
 namespace gfx {
@@ -62,6 +63,13 @@ GPUParent::RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint)
 }
 
 bool
+GPUParent::RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
+{
+  ImageBridgeParent::CreateForGPUProcess(Move(aEndpoint));
+  return true;
+}
+
+bool
 GPUParent::RecvUpdatePref(const GfxPrefSetting& setting)
 {
   gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
@@ -96,6 +104,12 @@ bool
 GPUParent::RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint)
 {
   return CompositorBridgeParent::CreateForContent(Move(aEndpoint));
+}
+
+bool
+GPUParent::RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
+{
+  return ImageBridgeParent::CreateForContent(Move(aEndpoint));
 }
 
 void

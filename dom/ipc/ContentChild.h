@@ -150,14 +150,12 @@ public:
 
   bool
   RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint) override;
+  bool
+  RecvInitImageBridge(Endpoint<PImageBridgeChild>&& aEndpoint) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
                                   base::ProcessId aOtherProcess) override;
-
-  PImageBridgeChild*
-  AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
-                         base::ProcessId aOtherProcess) override;
 
   PProcessHangMonitorChild*
   AllocPProcessHangMonitorChild(Transport* aTransport,

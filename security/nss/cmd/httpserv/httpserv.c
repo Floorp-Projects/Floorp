@@ -278,7 +278,7 @@ launch_threads(
                                           local)
                                              ? PR_LOCAL_THREAD
                                              : PR_GLOBAL_THREAD,
-                                         PR_UNJOINABLE_THREAD, 0);
+                                         PR_JOINABLE_THREAD, 0);
         if (slot->prThread == NULL) {
             printf("httpserv: Failed to launch thread!\n");
             slot->state = rs_idle;
@@ -307,13 +307,24 @@ launch_threads(
 void
 terminateWorkerThreads(void)
 {
-    VLOG(("httpserv: server_thead: waiting on stopping"));
+    int i;
+
+    VLOG(("httpserv: server_thread: waiting on stopping"));
     PZ_Lock(qLock);
     PZ_NotifyAllCondVar(jobQNotEmptyCv);
-    while (threadCount > 0) {
-        PZ_WaitCondVar(threadCountChangeCv, PR_INTERVAL_NO_TIMEOUT);
+    PZ_Unlock(qLock);
+
+    /* Wait for worker threads to terminate. */
+    for (i = 0; i < maxThreads; ++i) {
+        perThread *slot = threads + i;
+        if (slot->prThread) {
+            PR_JoinThread(slot->prThread);
+        }
     }
+
     /* The worker threads empty the jobQ before they terminate. */
+    PZ_Lock(qLock);
+    PORT_Assert(threadCount == 0);
     PORT_Assert(PR_CLIST_IS_EMPTY(&jobQ));
     PZ_Unlock(qLock);
 

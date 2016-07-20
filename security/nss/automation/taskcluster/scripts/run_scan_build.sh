@@ -22,6 +22,8 @@ cd nss && make nss_build_all
 
 # we run scan-build on these folders
 declare -a scan=("lib/ssl" "lib/freebl")
+# corresponds to the number of errors that are expected in the |scan| folder
+declare -a ignore=(1 0)
 
 for i in "${scan[@]}"
 do
@@ -34,9 +36,16 @@ scan-build -o /home/worker/artifacts/ make nss_build_all && cd ..
 
 # print errors we found
 set +v +x
-for i in "${scan[@]}"
+STATUS=0
+for i in "${!scan[@]}"
 do
-   n=$(grep -Rn "${i#*/}/" /home/worker/artifacts/*/index.html | wc -l)
-   # TODO: print FAILED/PASSED and set exit code for folders we expect to be clean
-   echo "$(date '+%T') WARNING - TEST-UNEXPECTED-FAIL: $i contains $n scan-build errors"
+   n=$(grep -Rn "${scan[i]}" /home/worker/artifacts/*/report-*.html | wc -l)
+   if [ $n -ne ${ignore[$i]} ]; then
+     STATUS=1
+     echo "$(date '+%T') WARNING - TEST-UNEXPECTED-FAIL: ${scan[$i]} contains $n scan-build errors"
+   elif [ $n -ne 0 ]; then
+     echo "$(date '+%T') WARNING - TEST-UNEXPECTED-FAIL: ${scan[$i]} contains $n scan-build errors (nonfatal!)"
+   fi
+
 done
+exit $STATUS
