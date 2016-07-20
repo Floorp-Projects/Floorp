@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- http://creativecommons.org/publicdomain/zero/1.0/ */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejections should be fixed.
@@ -8,7 +8,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed(
   "TypeError: this.transport is null");
 
 /**
- * Tests the SourceMapService updates generated sources when source maps
+ * Tests the SourceMapController updates generated sources when source maps
  * are subsequently found. Also checks when no column is provided, and
  * when tagging an already source mapped location initially.
  */
@@ -16,18 +16,18 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed(
 const DEBUGGER_ROOT = "http://example.com/browser/devtools/client/debugger/test/mochitest/";
 // Empty page
 const PAGE_URL = `${DEBUGGER_ROOT}doc_empty-tab-01.html`;
-const JS_URL = `${URL_ROOT}code_binary_search.js`;
-const COFFEE_URL = `${URL_ROOT}code_binary_search.coffee`;
-const { SourceMapService } = require("devtools/client/framework/source-map-service");
+const JS_URL = `${DEBUGGER_ROOT}code_binary_search.js`;
+const COFFEE_URL = `${DEBUGGER_ROOT}code_binary_search.coffee`;
+const { SourceLocationController } = require("devtools/client/framework/source-location");
 
 add_task(function* () {
-  const toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
+  let toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
 
-  const service = new SourceMapService(toolbox.target);
+  let controller = new SourceLocationController(toolbox.target);
 
-  const aggregator = [];
+  let aggregator = [];
 
-  function onUpdate(e, oldLoc, newLoc) {
+  function onUpdate(oldLoc, newLoc) {
     if (oldLoc.line === 6) {
       checkLoc1(oldLoc, newLoc);
     } else if (oldLoc.line === 8) {
@@ -42,19 +42,20 @@ add_task(function* () {
 
   let loc1 = { url: JS_URL, line: 6 };
   let loc2 = { url: JS_URL, line: 8, column: 3 };
+  let loc3 = { url: COFFEE_URL, line: 2, column: 0 };
 
-  service.subscribe(loc1, onUpdate);
-  service.subscribe(loc2, onUpdate);
+  controller.bindLocation(loc1, onUpdate);
+  controller.bindLocation(loc2, onUpdate);
+  controller.bindLocation(loc3, onUpdate);
 
   // Inject JS script
-  let sourceShown = waitForSourceShown(toolbox.getCurrentPanel(), "code_binary_search");
   yield createScript(JS_URL);
-  yield sourceShown;
 
-  yield waitUntil(() => aggregator.length === 2);
+  yield waitUntil(() => aggregator.length === 3);
 
   ok(aggregator.find(i => i.url === COFFEE_URL && i.line === 4), "found first updated location");
   ok(aggregator.find(i => i.url === COFFEE_URL && i.line === 6), "found second updated location");
+  ok(aggregator.find(i => i.url === COFFEE_URL && i.line === 2), "found third updated location");
 
   yield toolbox.destroy();
   gBrowser.removeCurrentTab();
@@ -79,6 +80,15 @@ function checkLoc2(oldLoc, newLoc) {
   is(newLoc.url, COFFEE_URL, "Correct url for JS:8:3 -> COFFEE");
 }
 
+function checkLoc3(oldLoc, newLoc) {
+  is(oldLoc.line, 2, "Correct line for COFFEE:2:0");
+  is(oldLoc.column, 0, "Correct column for COFFEE:2:0");
+  is(oldLoc.url, COFFEE_URL, "Correct url for COFFEE:2:0");
+  is(newLoc.line, 2, "Correct line for COFFEE:2:0 -> COFFEE");
+  is(newLoc.column, 0, "Correct column for COFFEE:2:0 -> COFFEE");
+  is(newLoc.url, COFFEE_URL, "Correct url for COFFEE:2:0 -> COFFEE");
+}
+
 function createScript(url) {
   info(`Creating script: ${url}`);
   let mm = getFrameScript();
@@ -89,22 +99,4 @@ function createScript(url) {
     null;
   `;
   return evalInDebuggee(mm, command);
-}
-
-function waitForSourceShown(debuggerPanel, url) {
-  let { panelWin } = debuggerPanel;
-  let deferred = defer();
-
-  info(`Waiting for source ${url} to be shown in the debugger...`);
-  panelWin.on(panelWin.EVENTS.SOURCE_SHOWN, function onSourceShown(_, source) {
-
-    let sourceUrl = source.url || source.generatedUrl;
-    if (sourceUrl.includes(url)) {
-      panelWin.off(panelWin.EVENTS.SOURCE_SHOWN, onSourceShown);
-      info(`Source shown for ${url}`);
-      deferred.resolve(source);
-    }
-  });
-
-  return deferred.promise;
 }
