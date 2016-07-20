@@ -1228,10 +1228,12 @@ InspectorPanel.prototype = {
       let rect = sidePaneContainer.getBoundingClientRect();
       if (!sidePaneContainer.hasAttribute("width")) {
         sidePaneContainer.setAttribute("width", rect.width);
+        sidePane.style.width = rect.width + "px";
       }
       // always refresh the height attribute before collapsing, it could have
       // been modified by resizing the container.
       sidePaneContainer.setAttribute("height", rect.height);
+      sidePane.style.height = rect.height + "px";
     }
 
     let onAnimationDone = () => {
