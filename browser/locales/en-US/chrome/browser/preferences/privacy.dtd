@@ -106,5 +106,6 @@
 <!ENTITY  clearOnCloseSettings.accesskey "t">
 
 <!ENTITY  browserContainersHeader.label         "Container Tabs">
+<!ENTITY  browserContainersLearnMore.label      "Learn more">
 <!ENTITY  browserContainersEnabled.label        "Enable Container Tabs">
 <!ENTITY  browserContainersEnabled.accesskey    "a">
