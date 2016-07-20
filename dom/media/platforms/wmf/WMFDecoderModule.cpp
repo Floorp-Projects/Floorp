@@ -25,7 +25,6 @@
 #include "prsystem.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
-#include "gfxConfig.h"
 
 namespace mozilla {
 
@@ -48,7 +47,7 @@ WMFDecoderModule::~WMFDecoderModule()
 void
 WMFDecoderModule::Init()
 {
-  sDXVAEnabled = gfx::gfxConfig::IsEnabled(gfx::Feature::HW_VIDEO_DECODING);
+  sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 }
 
 /* static */

@@ -402,6 +402,15 @@ gfxWindowsPlatform::InitAcceleration()
 }
 
 bool
+gfxWindowsPlatform::CanUseHardwareVideoDecoding()
+{
+  if (!gfxPrefs::LayersPreferD3D9() && !mCompositorD3D11TextureSharingWorks) {
+    return false;
+  }
+  return !IsWARP() && gfxPlatform::CanUseHardwareVideoDecoding();
+}
+
+bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
   MOZ_ASSERT(!mDWriteFactory && IsVistaOrLater());
@@ -1920,17 +1929,6 @@ InitializeANGLEConfig()
     d3d11ANGLE.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
-}
-
-void
-gfxWindowsPlatform::InitHWVideoDecoodingConfig(FeatureState& hwVideoDecFeature)
-{
-    if (!gfxPrefs::LayersPreferD3D9() && !CompositorD3D11TextureSharingWorks()) {
-      hwVideoDecFeature.UserDisable("D3d9 not used, and d3d11 texture sharing not working", NS_LITERAL_CSTRING("FEATURE_FAILURE_HW_VIDEO_DEC_D3D_NOT_WORKING"));
-    }
-    else if (!IsWARP()) {
-      hwVideoDecFeature.UserDisable("WARP is disabled.", NS_LITERAL_CSTRING("FEATURE_FAILURE_HW_VIDEO_DEC_NO_WARP"));
-    }
 }
 
 void

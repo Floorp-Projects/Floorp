@@ -31,7 +31,6 @@
 #include "nsServiceManagerUtils.h"
 #include "gfxPlatform.h"
 #include "mozilla/Snprintf.h"
-#include "gfxConfig.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -82,7 +81,7 @@ IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
   bool mp4supported =
     DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"),
                                        aDiagnostics);
-  bool hwsupported = gfx::gfxConfig::IsEnabled(gfx::Feature::HW_VIDEO_DECODING);
+  bool hwsupported = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
 }
 
