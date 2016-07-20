@@ -8288,50 +8288,6 @@ DebuggerObject::errorMessageNameGetter(JSContext *cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* static */ bool
-DebuggerObject::isProxyGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get isProxy", args, object)
-
-    args.rval().setBoolean(object->isProxy());
-    return true;
-}
-
-/* static */ bool
-DebuggerObject::proxyTargetGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get proxyTarget", args, object)
-
-    if (!object->isProxy()) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    Rooted<DebuggerObject*> result(cx);
-    if (!DebuggerObject::proxyTarget(cx, object, &result))
-        return false;
-
-    args.rval().setObject(*result);
-    return true;
-}
-
-/* static */ bool
-DebuggerObject::proxyHandlerGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get proxyHandler", args, object)
-
-    if (!object->isProxy()) {
-        args.rval().setUndefined();
-        return true;
-    }
-    Rooted<DebuggerObject*> result(cx);
-    if (!DebuggerObject::proxyHandler(cx, object, &result))
-        return false;
-
-    args.rval().setObject(*result);
-    return true;
-}
-
 #ifdef SPIDERMONKEY_PROMISE
 /* static */ bool
 DebuggerObject::isPromiseGetter(JSContext* cx, unsigned argc, Value* vp)
@@ -8898,9 +8854,6 @@ const JSPropertySpec DebuggerObject::properties_[] = {
     JS_PSG("global", DebuggerObject::globalGetter, 0),
     JS_PSG("allocationSite", DebuggerObject::allocationSiteGetter, 0),
     JS_PSG("errorMessageName", DebuggerObject::errorMessageNameGetter, 0),
-    JS_PSG("isProxy", DebuggerObject::isProxyGetter, 0),
-    JS_PSG("proxyTarget", DebuggerObject::proxyTargetGetter, 0),
-    JS_PSG("proxyHandler", DebuggerObject::proxyHandlerGetter, 0),
     JS_PS_END
 };
 
@@ -9028,12 +8981,6 @@ DebuggerObject::isPromise() const
         obj = CheckedUnwrap(obj);
 
     return obj->is<PromiseObject>();
-}
-
-bool
-DebuggerObject::isProxy() const
-{
-    return js::IsScriptedProxy(referent());
 }
 
 /* static */ bool
@@ -9691,28 +9638,6 @@ DebuggerObject::requireGlobal(JSContext* cx, Handle<DebuggerObject*> object)
     }
 
     return true;
-}
-
-/* static */ bool
-DebuggerObject::proxyTarget(JSContext* cx, Handle<DebuggerObject*> object,
-                            MutableHandle<DebuggerObject*> result)
-{
-    MOZ_ASSERT(isProxy());
-    RootedObject referent(cx, object->referent());
-    Debugger* dbg = object->owner();
-    RootedObject unwrapped(cx, js::GetProxyTargetObject(referent));
-    return dbg->wrapDebuggeeObject(cx, unwrapped, result);
-}
-
-/* static */ bool
-DebuggerObject::proxyHandler(JSContext* cx, Handle<DebuggerObject*> object,
-                            MutableHandle<DebuggerObject*> result)
-{
-    MOZ_ASSERT(isProxy());
-    RootedObject referent(cx, object->referent());
-    Debugger* dbg = object->owner();
-    RootedObject unwrapped(cx, js::GetProxyExtra(referent, 0).toObjectOrNull());
-    return dbg->wrapDebuggeeObject(cx, unwrapped, result);
 }
 
 
