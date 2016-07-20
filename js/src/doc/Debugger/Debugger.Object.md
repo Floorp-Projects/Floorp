@@ -188,19 +188,26 @@ from its prototype:
     function, not a debuggee function, or not a function at all, this is
     `undefined`.
 
-`isProxy`
-:   If the referent is a (scripted) proxy, return `true`. If the referent is not
-    a proxy, return `false`.
-
-`proxyTarget`
-:   If the referent is a (scripted) proxy, return a `Debugger.Object` instance
-    referring to the ECMAScript `[[ProxyTarget]]` of the referent. If the referent
-    is not a proxy, return `undefined`.
-
 `proxyHandler`
-:   If the referent is a (scripted) proxy, return a `Debugger.Object` instance
-    referring to the ECMAScript `[[ProxyHandler]]` of the referent. If the referent
-    is not a proxy, return `undefined`.
+:   If the referent is a proxy whose handler object was allocated by
+    debuggee code, this is its handler object—the object whose methods are
+    invoked to implement accesses of the proxy's properties. If the referent
+    is not a proxy whose handler object was allocated by debuggee code, this
+    is `null`.
+
+`proxyCallTrap`
+:   If the referent is a function proxy whose handler object was allocated
+    by debuggee code, this is its call trap function—the function called
+    when the function proxy is called. If the referent is not a function
+    proxy whose handler object was allocated by debuggee code, this is
+    `null`.
+
+`proxyConstructTrap`
+:   If the referent is a function proxy whose handler object was allocated
+    by debuggee code, its construction trap function—the function called
+    when the function proxy is called via a `new` expression. If the
+    referent is not a function proxy whose handler object was allocated by
+    debuggee code, this is `null`.
 
 `promiseState`
 :   If the referent is a [`Promise`][promise], this is an object describing

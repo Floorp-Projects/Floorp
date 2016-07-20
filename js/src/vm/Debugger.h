@@ -1202,10 +1202,6 @@ class DebuggerObject : public NativeObject
                                             MutableHandleObject result);
     static MOZ_MUST_USE bool getErrorMessageName(JSContext* cx, Handle<DebuggerObject*> object,
                                                  MutableHandleString result);
-    static MOZ_MUST_USE bool proxyTarget(JSContext* cx, Handle<DebuggerObject*> object,
-                                         MutableHandle<DebuggerObject*> result);
-    static MOZ_MUST_USE bool proxyHandler(JSContext* cx, Handle<DebuggerObject*> object,
-                                          MutableHandle<DebuggerObject*> result);
 
     // Methods
     static MOZ_MUST_USE bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object,
@@ -1255,7 +1251,6 @@ class DebuggerObject : public NativeObject
     bool isArrowFunction() const;
     bool isGlobal() const;
     bool isPromise() const;
-    bool isProxy() const;
     JSAtom* name() const;
     JSAtom* displayName() const;
 
@@ -1304,9 +1299,6 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool globalGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool errorMessageNameGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool isProxyGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool proxyTargetGetter(JSContext* cx, unsigned argc, Value* vp);
-    static MOZ_MUST_USE bool proxyHandlerGetter(JSContext* cx, unsigned argc, Value* vp);
 #ifdef SPIDERMONKEY_PROMISE
     static MOZ_MUST_USE bool isPromiseGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool promiseStateGetter(JSContext* cx, unsigned argc, Value* vp);
