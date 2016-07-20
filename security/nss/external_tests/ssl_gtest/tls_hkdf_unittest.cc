@@ -110,6 +110,11 @@ void DumpKey(const std::string& label, ScopedPK11SymKey& key) {
   DumpData(label, key_data->data, key_data->len);
 }
 
+extern "C" {
+  extern char ssl_trace;
+  extern FILE* ssl_trace_iob;
+}
+
 class TlsHkdfTest
   : public ::testing::Test,
     public ::testing::WithParamInterface<SSLHashType> {
@@ -120,6 +125,11 @@ class TlsHkdfTest
       hash_type_(GetParam()),
       slot_(PK11_GetInternalSlot()) {
     EXPECT_NE(nullptr, slot_);
+    char *ev = getenv("SSLTRACE");
+    if (ev && ev[0]) {
+      ssl_trace = atoi(ev);
+      ssl_trace_iob = stderr;
+    }
   }
 
   void SetUp() {

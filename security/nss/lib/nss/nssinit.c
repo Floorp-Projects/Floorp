@@ -338,7 +338,7 @@ nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
  * set statics (from PKCS11_Configure, for instance), and uses it to kick off
  * the loading of the various PKCS #11 modules.
  */
-static SECStatus
+static SECMODModule *
 nss_InitModules(const char *configdir, const char *certPrefix, 
 		const char *keyPrefix, const char *secmodName, 
 		const char *updateDir, const char *updCertPrefix, 
@@ -348,7 +348,7 @@ nss_InitModules(const char *configdir, const char *certPrefix,
 		PRBool noModDB, PRBool forceOpen, PRBool optimizeSpace,
 		PRBool isContextInit)
 {
-    SECStatus rv = SECFailure;
+    SECMODModule *module = NULL;
     char *moduleSpec = NULL;
     char *flags = NULL;
     char *lconfigdir = NULL;
@@ -363,12 +363,12 @@ nss_InitModules(const char *configdir, const char *certPrefix,
 
     if (NSS_InitializePRErrorTable() != SECSuccess) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	return rv;
+	return NULL;
     }
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
 					pwRequired, optimizeSpace);
-    if (flags == NULL) return rv;
+    if (flags == NULL) return NULL;
 
     /*
      * configdir is double nested, and Windows uses the same character
@@ -435,14 +435,14 @@ loser:
     if (lupdateName) PORT_Free(lupdateName);
 
     if (moduleSpec) {
-	SECMODModule *module = SECMOD_LoadModule(moduleSpec,NULL,PR_TRUE);
+	module = SECMOD_LoadModule(moduleSpec, NULL, PR_TRUE);
 	PR_smprintf_free(moduleSpec);
-	if (module) {
-	    if (module->loaded) rv=SECSuccess;
+	if (module && !module->loaded) {
 	    SECMOD_DestroyModule(module);
+	    return NULL;
 	}
     }
-    return rv;
+    return module;
 }
 
 /*
@@ -520,18 +520,18 @@ nss_doLockInit(void)
 
 static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
-		 const char *secmodName, const char *updateDir, 
+		 const char *secmodName, const char *updateDir,
 		 const char *updCertPrefix, const char *updKeyPrefix,
 		 const char *updateID, const char *updateName,
 		 NSSInitContext ** initContextPtr,
 		 NSSInitParameters *initParams,
-		 PRBool readOnly, PRBool noCertDB, 
+		 PRBool readOnly, PRBool noCertDB,
 		 PRBool noModDB, PRBool forceOpen, PRBool noRootInit,
 		 PRBool optimizeSpace, PRBool noSingleThreadedModules,
 		 PRBool allowAlreadyInitializedModules,
 		 PRBool dontFinalizeModules)
 {
-    SECStatus rv = SECFailure;
+    SECMODModule *parent = NULL;
 #ifndef NSS_DISABLE_LIBPKIX
     PKIX_UInt32 actualMinorVersion = 0;
     PKIX_Error *pkixError = NULL;
@@ -540,13 +540,16 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     char *configStrings = NULL;
     char *configName = NULL;
     PRBool passwordRequired = PR_FALSE;
+#ifdef POLICY_FILE
+    char *ignoreVar;
+#endif
 
     /* if we are trying to init with a traditional NSS_Init call, maintain
      * the traditional idempotent behavior. */
     if (!initContextPtr && nssIsInitted) {
 	return SECSuccess;
     }
-  
+
     /* make sure our lock and condition variable are initialized one and only
      * one time */ 
     if (PR_CallOnce(&nssInitOnce, nss_doLockInit) != PR_SUCCESS) {
@@ -643,13 +646,13 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     /* Skip the module init if we are already initted and we are trying
      * to init with noCertDB and noModDB */
     if (!(isReallyInitted && noCertDB && noModDB)) {
-	rv = nss_InitModules(configdir, certPrefix, keyPrefix, secmodName, 
-		updateDir, updCertPrefix, updKeyPrefix, updateID, 
+	parent = nss_InitModules(configdir, certPrefix, keyPrefix, secmodName,
+		updateDir, updCertPrefix, updKeyPrefix, updateID,
 		updateName, configName, configStrings, passwordRequired,
-		readOnly, noCertDB, noModDB, forceOpen, optimizeSpace, 
+		readOnly, noCertDB, noModDB, forceOpen, optimizeSpace,
 		(initContextPtr != NULL));
 
-	if (rv != SECSuccess) {
+	if (parent == NULL) {
 	    goto loser;
 	}
     }
@@ -688,7 +691,30 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 		}
 	    }
 	}
-
+#ifdef POLICY_FILE
+	/* Load the system crypto policy file if it exists,
+	 * unless the NSS_IGNORE_SYSTEM_POLICY environment
+	 * variable has been set to 1. */
+	ignoreVar = PR_GetEnvSecure("NSS_IGNORE_SYSTEM_POLICY");
+	if (ignoreVar == NULL || strncmp(ignoreVar, "1", sizeof("1")) != 0) {
+	    if (PR_Access(POLICY_PATH "/" POLICY_FILE, PR_ACCESS_READ_OK) == PR_SUCCESS) {
+	    SECMODModule *module = SECMOD_LoadModule(
+		"name=\"Policy File\" "
+		"parameters=\"configdir='sql:" POLICY_PATH "' "
+		"secmod='" POLICY_FILE "' "
+		"flags=readOnly,noCertDB,forceSecmodChoice,forceOpen\" "
+		"NSS=\"flags=internal,moduleDB,skipFirst,moduleDBOnly,critical\"",
+		parent, PR_TRUE);
+	    if (module) {
+		PRBool isLoaded = module->loaded;
+		SECMOD_DestroyModule(module);
+		if (!isLoaded) {
+		    goto loser;
+		}
+	    }
+	}
+    }
+#endif
 	pk11sdr_Init();
 	cert_CreateSubjectKeyIDHashTable();
 
@@ -729,6 +755,9 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     if (initContextPtr && configStrings) {
 	PR_smprintf_free(configStrings);
     }
+    if (parent) {
+	SECMOD_DestroyModule(parent);
+    }
 
     return SECSuccess;
 
@@ -745,6 +774,9 @@ loser:
     /* We failed to init, allow one to move forward */
     PZ_NotifyCondVar(nssInitCondition);
     PZ_Unlock(nssInitLock);
+    if (parent) {
+	SECMOD_DestroyModule(parent);
+    }
     return SECFailure;
 }
 
