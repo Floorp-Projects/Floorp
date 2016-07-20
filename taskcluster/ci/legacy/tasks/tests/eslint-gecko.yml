@@ -21,11 +21,11 @@ task:
 
     command:
       - /home/worker/bin/checkout-gecko-and-run
-      - gecko
+      - /home/worker/workspace/gecko
       - bash
       - -cx
       - >
-          cd gecko/tools/lint/eslint &&
+          cd /home/worker/workspace/gecko/tools/lint/eslint &&
           /build/tooltool.py fetch -m manifest.tt &&
           tar xvfz eslint.tar.gz &&
           rm eslint.tar.gz &&
