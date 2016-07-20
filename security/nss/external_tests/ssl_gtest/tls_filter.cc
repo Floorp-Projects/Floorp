@@ -7,7 +7,13 @@
 #include "tls_filter.h"
 #include "sslproto.h"
 
+extern "C" {
+// This is not something that should make you happy.
+#include "libssl_internals.h"
+}
+
 #include <iostream>
+#include "tls_agent.h"
 #include "gtest_utils.h"
 
 namespace nss_test {
@@ -406,6 +412,31 @@ PacketFilter::Action TlsExtensionCapture::FilterExtension(
     uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
   if (extension_type == extension_) {
     data_.Assign(input);
+  }
+  return KEEP;
+}
+
+PacketFilter::Action AfterRecordN::FilterRecord(
+      const RecordHeader& header, const DataBuffer& body, DataBuffer* out) {
+  if (counter_++ == record_) {
+    DataBuffer buf;
+    header.Write(&buf, 0, body);
+    src_->SendDirect(buf);
+    dest_->Handshake();
+    func_();
+    return DROP;
+  }
+
+  return KEEP;
+}
+
+PacketFilter::Action TlsInspectorClientHelloVersionChanger::FilterHandshake(
+    const HandshakeHeader& header,
+    const DataBuffer& input, DataBuffer* output) {
+  if (header.handshake_type() == kTlsHandshakeClientKeyExchange) {
+    EXPECT_EQ(
+        SECSuccess,
+        SSLInt_IncrementClientHandshakeVersion(server_->ssl_fd()));
   }
   return KEEP;
 }

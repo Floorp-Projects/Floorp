@@ -119,10 +119,10 @@ public:
    * We may want to use a specifi thread in the future. In this case, use
    * CreateWithThread instead.
    */
-  static void StartUp();
+  static void InitSameProcess();
 
-  static PImageBridgeChild*
-  StartUpInChildProcess(Transport* aTransport, ProcessId aOtherProcess);
+  static void InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint);
+  static bool InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint);
 
   /**
    * Destroys the image bridge by calling DestroyBridge, and destroys the
@@ -132,11 +132,6 @@ public:
    * instead.
    */
   static void ShutDown();
-
-  /**
-   * Creates the ImageBridgeChild manager protocol.
-   */
-  static bool StartUpOnThread(base::Thread* aThread);
 
   /**
    * Returns true if the singleton has been created.
@@ -349,6 +344,7 @@ public:
   void MarkShutDown();
 
   void FallbackDestroyActors();
+
 protected:
   ImageBridgeChild();
   bool DispatchAllocShmemInternal(size_t aSize,
@@ -356,6 +352,9 @@ protected:
                                   Shmem* aShmem,
                                   bool aUnsafe);
 
+  void Bind(Endpoint<PImageBridgeChild>&& aEndpoint);
+
+private:
   CompositableTransaction* mTxn;
   Atomic<bool> mShuttingDown;
   static Atomic<bool> sIsShutDown;

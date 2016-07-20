@@ -47,3 +47,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
+
+ifndef NSS_ENABLE_TLS_1_3
+CPPSRCS := $(filter-out ssl_0rtt_unittest.cc, $(CPPSRCS))
+endif
