@@ -52,6 +52,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mImage(aImage)
   , mProgress(NoProgress)
   , mFrameCount(0)
+  , mLoopLength(FrameTimeout::Zero())
   , mDecoderFlags(DefaultDecoderFlags())
   , mSurfaceFlags(DefaultSurfaceFlags())
   , mInitialized(false)
@@ -423,8 +424,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
                          /* = Opacity::SOME_TRANSPARENCY */,
                        DisposalMethod aDisposalMethod
                          /* = DisposalMethod::KEEP */,
-                       FrameTimeout aTimeout
-                         /* = FrameTimeout::FromRawMilliseconds(0) */,
+                       FrameTimeout aTimeout /* = FrameTimeout::Forever() */,
                        BlendMethod aBlendMethod /* = BlendMethod::OVER */,
                        const Maybe<nsIntRect>& aBlendRect /* = Nothing() */)
 {
@@ -440,6 +440,8 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
                         aBlendMethod, aBlendRect);
 
   mProgress |= FLAG_FRAME_COMPLETE;
+
+  mLoopLength += aTimeout;
 
   // If we're not sending partial invalidations, then we send an invalidation
   // here when the first frame is complete.
@@ -475,6 +477,13 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   mDecodeDone = true;
 
   mImageMetadata.SetLoopCount(aLoopCount);
+
+  // Let the image know how long a single loop through this image is. If this is
+  // a first-frame-only decode, our accumulated loop length only includes the
+  // first frame, so it's not correct and we don't record it.
+  if (!IsFirstFrameDecode()) {
+    mImageMetadata.SetLoopLength(mLoopLength);
+  }
 
   mProgress |= FLAG_DECODE_COMPLETE;
 }

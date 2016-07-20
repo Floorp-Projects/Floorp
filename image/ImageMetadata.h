@@ -40,6 +40,10 @@ public:
   }
   int32_t GetLoopCount() const { return mLoopCount; }
 
+  void SetLoopLength(FrameTimeout aLength) { mLoopLength = Some(aLength); }
+  FrameTimeout GetLoopLength() const { return *mLoopLength; }
+  bool HasLoopLength() const { return mLoopLength.isSome(); }
+
   void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
   FrameTimeout GetFirstFrameTimeout() const { return mFirstFrameTimeout; }
 
@@ -64,6 +68,9 @@ private:
 
   /// The loop count for animated images, or -1 for infinite loop.
   int32_t mLoopCount;
+
+  // The total length of a single loop through an animated image.
+  Maybe<FrameTimeout> mLoopLength;
 
   /// The timeout of an animated image's first frame.
   FrameTimeout mFirstFrameTimeout;
