@@ -2057,25 +2057,11 @@ class BaseCompiler
             masm.move32(Imm32(sigIndex), WasmTableCallSigReg);
         }
 
-#if defined(JS_CODEGEN_X64)
-        // CodeGeneratorX64::visitAsmJSLoadFuncPtr()
         {
             ScratchI32 scratch(*this);
-            CodeOffset label = masm.loadRipRelativeInt64(scratch);
-            masm.append(GlobalAccess(label, globalDataOffset));
-            masm.loadPtr(Operand(scratch, ptrReg, ScalePointer, 0), ptrReg);
+            masm.loadWasmGlobalPtr(globalDataOffset, scratch);
+            masm.loadPtr(BaseIndex(scratch, ptrReg, ScalePointer, 0), ptrReg);
         }
-#elif defined(JS_CODEGEN_X86)
-        // CodeGeneratorX86::visitAsmJSLoadFuncPtr()
-        {
-            ScratchI32 scratch(*this);
-            CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
-            masm.append(GlobalAccess(label, globalDataOffset));
-            masm.loadPtr(Operand(scratch, ptrReg, ScalePointer), ptrReg);
-        }
-#else
-        MOZ_CRASH("BaseCompiler platform hook: funcPtrCall");
-#endif
 
         callDynamic(ptrReg, call);
     }
@@ -2085,18 +2071,7 @@ class BaseCompiler
     void ffiCall(unsigned globalDataOffset, const FunctionCall& call)
     {
         Register ptrReg = WasmTableCallPtrReg;
-
-#if defined(JS_CODEGEN_X64)
-        // CodeGeneratorX64::visitAsmJSLoadFFIFunc()
-        CodeOffset label = masm.loadRipRelativeInt64(ptrReg);
-        masm.append(GlobalAccess(label, globalDataOffset));
-#elif defined(JS_CODEGEN_X86)
-        // CodeGeneratorX86::visitAsmJSLoadFFIFunc()
-        CodeOffset label = masm.movlWithPatch(PatchedAbsoluteAddress(), ptrReg);
-        masm.append(GlobalAccess(label, globalDataOffset));
-#else
-        MOZ_CRASH("BaseCompiler platform hook: ffiCall");
-#endif
+        masm.loadWasmGlobalPtr(globalDataOffset, ptrReg);
         callDynamic(ptrReg, call);
     }
 

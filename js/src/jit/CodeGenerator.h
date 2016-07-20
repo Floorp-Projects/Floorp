@@ -363,6 +363,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitAsmJSParameter(LAsmJSParameter* lir);
     void visitAsmJSReturn(LAsmJSReturn* ret);
     void visitAsmJSVoidReturn(LAsmJSVoidReturn* ret);
+    void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
+    void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitLexicalCheck(LLexicalCheck* ins);
     void visitThrowRuntimeLexicalError(LThrowRuntimeLexicalError* ins);
     void visitGlobalNameConflictsCheck(LGlobalNameConflictsCheck* ins);

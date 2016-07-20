@@ -704,18 +704,6 @@ CodeGeneratorARM64::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
 }
 
 void
-CodeGeneratorARM64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
-{
-    MOZ_CRASH("visitAsmJSLoadFuncPtr");
-}
-
-void
-CodeGeneratorARM64::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
-{
-    MOZ_CRASH("visitAsmJSLoadFFIFunc");
-}
-
-void
 CodeGeneratorARM64::visitNegI(LNegI* ins)
 {
     MOZ_CRASH("visitNegI");
