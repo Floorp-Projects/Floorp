@@ -3164,6 +3164,7 @@ public:
   const nsRegion& NoActionRegion() { return mNoActionRegion; }
   const nsRegion& HorizontalPanRegion() { return mHorizontalPanRegion; }
   const nsRegion& VerticalPanRegion() { return mVerticalPanRegion; }
+  nsRegion CombinedTouchActionRegion();
 
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
