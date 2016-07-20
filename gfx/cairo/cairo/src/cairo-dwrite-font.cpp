@@ -641,8 +641,9 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 	    run.fontEmSize = 1.0f;
 	}
 
+	HRESULT hr;
 	if (!transform) {
-	    DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+	    hr = DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
 							      1.0f,
 							      NULL,
 							      DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC,
@@ -652,7 +653,7 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 							      &analysis);
 	} else {
 	    DWRITE_MATRIX dwmatrix = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
-	    DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
+	    hr = DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
 							      1.0f,
 							      &dwmatrix,
 							      DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC,
@@ -660,6 +661,10 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 							      0,
 							      0,
 							      &analysis);
+	}
+
+	if (FAILED(hr) || !analysis) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
 	RECT r;

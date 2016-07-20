@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from ..kind import base
+from ..task import base
 
 
 class TestTask(base.Task):

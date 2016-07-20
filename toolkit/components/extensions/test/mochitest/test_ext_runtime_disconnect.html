@@ -17,6 +17,9 @@ function backgroundScript() {
   browser.runtime.onConnect.addListener(port => {
     browser.test.assertEq(port.name, "ernie", "port name correct");
     port.onDisconnect.addListener(() => {
+      // Closing an already-disconnected port is a no-op.
+      port.disconnect();
+      port.disconnect();
       browser.test.sendMessage("disconnected");
     });
     browser.test.sendMessage("connected");

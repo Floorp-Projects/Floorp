@@ -449,7 +449,7 @@ RestyleTracker::AddRestyleRootsIfAwaitingRestyle(
   // The RestyleData for a given element has stored in mDescendants
   // the list of descendants we need to end up restyling.  Since we
   // won't necessarily end up restyling them, due to the restyle
-  // process finishing early (see how eRestyleResult_Stop is handled
+  // process finishing early (see how RestyleResult::eStop is handled
   // in ElementRestyler::Restyle), we add them to the list of restyle
   // roots to handle the next time around the
   // RestyleTracker::DoProcessRestyles loop.
