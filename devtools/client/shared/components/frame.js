@@ -34,8 +34,6 @@ module.exports = createClass({
     showEmptyPathAsHost: PropTypes.bool,
     // Option to display a full source instead of just the filename.
     showFullSourceUrl: PropTypes.bool,
-    // Service to enable the source map feature for console.
-    sourceMapService: PropTypes.object,
   },
 
   getDefaultProps() {
@@ -48,84 +46,16 @@ module.exports = createClass({
     };
   },
 
-  componentWillMount() {
-    const sourceMapService = this.props.sourceMapService;
-    if (sourceMapService) {
-      const source = this.getSource();
-      sourceMapService.subscribe(source, this.onSourceUpdated);
-    }
-  },
-
-  componentWillUnmount() {
-    const sourceMapService = this.props.sourceMapService;
-    if (sourceMapService) {
-      const source = this.getSource();
-      sourceMapService.unsubscribe(source, this.onSourceUpdated);
-    }
-  },
-
-  /**
-   * Component method to update the FrameView when a resolved location is available
-   * @param event
-   * @param location
-   */
-  onSourceUpdated(event, location, resolvedLocation) {
-    const frame = this.getFrame(resolvedLocation);
-    this.setState({
-      frame,
-      isSourceMapped: true,
-    });
-  },
-
-  /**
-   * Utility method to convert the Frame object to the
-   * Source Object model required by SourceMapService
-   * @param frame
-   * @returns {{url: *, line: *, column: *}}
-   */
-  getSource(frame) {
-    frame = frame || this.props.frame;
-    const { source, line, column } = frame;
-    return {
-      url: source,
-      line,
-      column,
-    };
-  },
-
-  /**
-   * Utility method to convert the Source object model to the
-   * Frame object model required by FrameView class.
-   * @param source
-   * @returns {{source: *, line: *, column: *, functionDisplayName: *}}
-   */
-  getFrame(source) {
-    const { url, line, column } = source;
-    return {
-      source: url,
-      line,
-      column,
-      functionDisplayName: this.props.frame.functionDisplayName,
-    };
-  },
-
   render() {
-    let frame, isSourceMapped;
     let {
       onClick,
+      frame,
       showFunctionName,
       showAnonymousFunctionName,
       showHost,
       showEmptyPathAsHost,
       showFullSourceUrl
     } = this.props;
-
-    if (this.state && this.state.isSourceMapped) {
-      frame = this.state.frame;
-      isSourceMapped = this.state.isSourceMapped;
-    } else {
-      frame = this.props.frame;
-    }
 
     let source = frame.source ? String(frame.source) : "";
     let line = frame.line != void 0 ? Number(frame.line) : null;
@@ -136,23 +66,17 @@ module.exports = createClass({
     // has already cached this indirectly. We don't want to attempt to
     // link to "self-hosted" and "(unknown)". However, we do want to link
     // to Scratchpad URIs.
-    // Source mapped sources might not necessary linkable, but they
-    // are still valid in the debugger.
-    const isLinkable = !!(isScratchpadScheme(source) || parseURL(source)) || isSourceMapped;
+    const isLinkable = !!(isScratchpadScheme(source) || parseURL(source));
     const elements = [];
     const sourceElements = [];
     let sourceEl;
 
     let tooltip = long;
-
-    // If the source is linkable and line > 0
-    const shouldDisplayLine = isLinkable && line;
-
     // Exclude all falsy values, including `0`, as even
     // a number 0 for line doesn't make sense, and should not be displayed.
     // If source isn't linkable, don't attempt to append line and column
     // info, as this probably doesn't make sense.
-    if (shouldDisplayLine) {
+    if (isLinkable && line) {
       tooltip += `:${line}`;
       // Intentionally exclude 0
       if (column) {
@@ -180,17 +104,8 @@ module.exports = createClass({
     }
 
     let displaySource = showFullSourceUrl ? long : short;
-    // SourceMapped locations might not be parsed properly by parseURL.
-    // Eg: sourcemapped location could be /folder/file.coffee instead of a url
-    // and so the url parser would not parse non-url locations properly
-    // Check for "/" in displaySource. If "/" is in displaySource, take everything after last "/".
-    if (isSourceMapped) {
-      displaySource = displaySource.lastIndexOf("/") < 0 ?
-        displaySource :
-        displaySource.slice(displaySource.lastIndexOf("/") + 1);
-    } else if (showEmptyPathAsHost && (displaySource === "" || displaySource === "/")) {
+    if (showEmptyPathAsHost && (displaySource === "" || displaySource === "/")) {
       displaySource = host;
-
     }
 
     sourceElements.push(dom.span({
@@ -198,7 +113,7 @@ module.exports = createClass({
     }, displaySource));
 
     // If source is linkable, and we have a line number > 0
-    if (shouldDisplayLine) {
+    if (isLinkable && line) {
       let lineInfo = `:${line}`;
       // Add `data-line` attribute for testing
       attributes["data-line"] = line;
@@ -219,7 +134,7 @@ module.exports = createClass({
       sourceEl = dom.a({
         onClick: e => {
           e.preventDefault();
-          onClick(this.getSource(frame));
+          onClick(frame);
         },
         href: source,
         className: "frame-link-source",
