@@ -5693,17 +5693,38 @@ class MOZ_RAII AutoHideScriptedCaller
  * Encode/Decode interpreted scripts and functions to/from memory.
  */
 
-extern JS_PUBLIC_API(void*)
-JS_EncodeScript(JSContext* cx, JS::HandleScript script, uint32_t* lengthp);
+enum TranscodeResult
+{
+    // Successful encoding / decoding.
+    TranscodeResult_Ok = 0,
 
-extern JS_PUBLIC_API(void*)
-JS_EncodeInterpretedFunction(JSContext* cx, JS::HandleObject funobj, uint32_t* lengthp);
+    // A warning message, is set to the message out-param.
+    TranscodeResult_Failure = 0x100,
+    TranscodeResult_Failure_BadBuildId =          TranscodeResult_Failure | 0x1,
+    TranscodeResult_Failure_RunOnceNotSupported = TranscodeResult_Failure | 0x2,
+    TranscodeResult_Failure_AsmJSNotSupported =   TranscodeResult_Failure | 0x3,
+    TranscodeResult_Failure_UnknownClassKind =    TranscodeResult_Failure | 0x4,
 
-extern JS_PUBLIC_API(JSScript*)
-JS_DecodeScript(JSContext* cx, const void* data, uint32_t length);
+    // A error, the JSContext has a pending exception.
+    TranscodeResult_Throw = 0x200
+};
 
-extern JS_PUBLIC_API(JSObject*)
-JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length);
+extern JS_PUBLIC_API(TranscodeResult)
+JS_EncodeScript(JSContext* cx, JS::HandleScript script,
+                uint32_t* lengthp, void** buffer);
+
+extern JS_PUBLIC_API(TranscodeResult)
+JS_EncodeInterpretedFunction(JSContext* cx, JS::HandleObject funobj,
+                             uint32_t* lengthp, void** buffer);
+
+extern JS_PUBLIC_API(TranscodeResult)
+JS_DecodeScript(JSContext* cx, const void* data, uint32_t length,
+                JS::MutableHandleScript scriptp);
+
+extern JS_PUBLIC_API(TranscodeResult)
+JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length,
+                             JS::MutableHandleFunction funp);
+
 
 namespace JS {
 

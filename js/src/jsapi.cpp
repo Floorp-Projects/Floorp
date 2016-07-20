@@ -6457,44 +6457,50 @@ JS::detail::AssertArgumentsAreSane(JSContext* cx, HandleValue value)
 }
 #endif /* JS_DEBUG */
 
-JS_PUBLIC_API(void*)
-JS_EncodeScript(JSContext* cx, HandleScript scriptArg, uint32_t* lengthp)
+JS_PUBLIC_API(TranscodeResult)
+JS_EncodeScript(JSContext* cx, HandleScript scriptArg,
+                uint32_t* lengthp, void** buffer)
 {
     XDREncoder encoder(cx);
     RootedScript script(cx, scriptArg);
-    if (!encoder.codeScript(&script))
-        return nullptr;
-    return encoder.forgetData(lengthp);
+    *buffer = nullptr;
+    if (encoder.codeScript(&script))
+        *buffer = encoder.forgetData(lengthp);
+    MOZ_ASSERT(bool(*buffer) == (encoder.resultCode() == TranscodeResult_Ok));
+    return encoder.resultCode();
 }
 
-JS_PUBLIC_API(void*)
-JS_EncodeInterpretedFunction(JSContext* cx, HandleObject funobjArg, uint32_t* lengthp)
+JS_PUBLIC_API(TranscodeResult)
+JS_EncodeInterpretedFunction(JSContext* cx, HandleObject funobjArg,
+                             uint32_t* lengthp, void** buffer)
 {
     XDREncoder encoder(cx);
     RootedFunction funobj(cx, &funobjArg->as<JSFunction>());
-    if (!encoder.codeFunction(&funobj))
-        return nullptr;
-    return encoder.forgetData(lengthp);
+    *buffer = nullptr;
+    if (encoder.codeFunction(&funobj))
+        *buffer = encoder.forgetData(lengthp);
+    MOZ_ASSERT(bool(*buffer) == (encoder.resultCode() == TranscodeResult_Ok));
+    return encoder.resultCode();
 }
 
-JS_PUBLIC_API(JSScript*)
-JS_DecodeScript(JSContext* cx, const void* data, uint32_t length)
+JS_PUBLIC_API(TranscodeResult)
+JS_DecodeScript(JSContext* cx, const void* data, uint32_t length,
+                JS::MutableHandleScript scriptp)
 {
     XDRDecoder decoder(cx, data, length);
-    RootedScript script(cx);
-    if (!decoder.codeScript(&script))
-        return nullptr;
-    return script;
+    decoder.codeScript(scriptp);
+    MOZ_ASSERT(bool(scriptp) == (decoder.resultCode() == TranscodeResult_Ok));
+    return decoder.resultCode();
 }
 
-JS_PUBLIC_API(JSObject*)
-JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length)
+JS_PUBLIC_API(TranscodeResult)
+JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length,
+                             JS::MutableHandleFunction funp)
 {
     XDRDecoder decoder(cx, data, length);
-    RootedFunction funobj(cx);
-    if (!decoder.codeFunction(&funobj))
-        return nullptr;
-    return funobj;
+    decoder.codeFunction(funp);
+    MOZ_ASSERT(bool(funp) == (decoder.resultCode() == TranscodeResult_Ok));
+    return decoder.resultCode();
 }
 
 JS_PUBLIC_API(void)
