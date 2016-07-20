@@ -19,8 +19,8 @@ namespace image {
 // Helpers for sending notifications to the image associated with a decoder.
 ///////////////////////////////////////////////////////////////////////////////
 
-static void
-NotifyProgress(NotNull<Decoder*> aDecoder)
+/* static */ void
+IDecodingTask::NotifyProgress(NotNull<Decoder*> aDecoder)
 {
   MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
 
@@ -85,31 +85,20 @@ DecodingTask::DecodingTask(NotNull<Decoder*> aDecoder)
 void
 DecodingTask::Run()
 {
-  while (true) {
-    LexerResult result = mDecoder->Decode(WrapNotNull(this));
+  nsresult rv = mDecoder->Decode(WrapNotNull(this));
 
-    if (result.is<TerminalState>()) {
-      NotifyDecodeComplete(mDecoder);
-      return;  // We're done.
-    }
-
-    MOZ_ASSERT(result.is<Yield>());
-
+  if (NS_SUCCEEDED(rv) && !mDecoder->GetDecodeDone()) {
     // Notify for the progress we've made so far.
     if (mDecoder->HasProgress()) {
       NotifyProgress(mDecoder);
     }
 
-    if (result == LexerResult(Yield::NEED_MORE_DATA)) {
-      // We can't make any more progress right now. The decoder itself will
-      // ensure that we get reenqueued when more data is available; just return
-      // for now.
-      return;
-    }
-
-    // Right now we don't do anything special for other kinds of yields, so just
-    // keep working.
+    // We don't need to do anything else for this case. The decoder itself will
+    // ensure that we get reenqueued when more data is available.
+    return;
   }
+
+  NotifyDecodeComplete(mDecoder);
 }
 
 bool
@@ -133,22 +122,17 @@ MetadataDecodingTask::MetadataDecodingTask(NotNull<Decoder*> aDecoder)
 void
 MetadataDecodingTask::Run()
 {
-  LexerResult result = mDecoder->Decode(WrapNotNull(this));
+  nsresult rv = mDecoder->Decode(WrapNotNull(this));
 
-  if (result.is<TerminalState>()) {
-    NotifyDecodeComplete(mDecoder);
-    return;  // We're done.
-  }
-
-  if (result == LexerResult(Yield::NEED_MORE_DATA)) {
-    // We can't make any more progress right now. We also don't want to report
-    // any progress, because it's important that metadata decode results are
-    // delivered atomically. The decoder itself will ensure that we get
-    // reenqueued when more data is available; just return for now.
+  if (NS_SUCCEEDED(rv) && !mDecoder->GetDecodeDone()) {
+    // It's important that metadata decode results are delivered atomically, so
+    // we'll wait until NotifyDecodeComplete() to report any progress.  We don't
+    // need to do anything else for this case. The decoder itself will ensure
+    // that we get reenqueued when more data is available.
     return;
   }
 
-  MOZ_ASSERT_UNREACHABLE("Metadata decode yielded for an unexpected reason");
+  NotifyDecodeComplete(mDecoder);
 }
 
 
@@ -163,23 +147,7 @@ AnonymousDecodingTask::AnonymousDecodingTask(NotNull<Decoder*> aDecoder)
 void
 AnonymousDecodingTask::Run()
 {
-  while (true) {
-    LexerResult result = mDecoder->Decode(WrapNotNull(this));
-
-    if (result.is<TerminalState>()) {
-      return;  // We're done.
-    }
-
-    if (result == LexerResult(Yield::NEED_MORE_DATA)) {
-      // We can't make any more progress right now. Let the caller decide how to
-      // handle it.
-      return;
-    }
-
-    // Right now we don't do anything special for other kinds of yields, so just
-    // keep working.
-    MOZ_ASSERT(result.is<Yield>());
-  }
+  mDecoder->Decode(WrapNotNull(this));
 }
 
 } // namespace image
