@@ -873,6 +873,7 @@ UnicodeRangesAtom(LifoAlloc* alloc,
 #define CALL_CALC(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
         CalculateCaseInsensitiveRanges(alloc, FROM, TO, DIFF, wide_ranges, &tmp_wide_ranges);
         FOR_EACH_NON_BMP_CASE_FOLDING(CALL_CALC)
+        FOR_EACH_NON_BMP_REV_CASE_FOLDING(CALL_CALC)
 #undef CALL_CALC
 
         if (tmp_wide_ranges) {
@@ -1314,6 +1315,7 @@ SurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail, bool ignore_c
         if (lead == LEAD &&trail >= TRAIL_FROM && trail <= TRAIL_TO) \
             return CaseFoldingSurrogatePairAtom(alloc, lead, trail, DIFF);
         FOR_EACH_NON_BMP_CASE_FOLDING(CALL_ATOM)
+        FOR_EACH_NON_BMP_REV_CASE_FOLDING(CALL_ATOM)
 #undef CALL_ATOM
     }
 
