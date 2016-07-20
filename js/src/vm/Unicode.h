@@ -235,6 +235,50 @@ CanLowerCase(char16_t ch)
     return CharInfo(ch).lowerCase != 0;
 }
 
+#define CHECK_RANGE(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+    if (lead == LEAD && trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+        return true;
+
+inline bool
+CanUpperCaseNonBMP(char16_t lead, char16_t trail)
+{
+    FOR_EACH_NON_BMP_UPPERCASE(CHECK_RANGE)
+    return false;
+}
+
+inline bool
+CanLowerCaseNonBMP(char16_t lead, char16_t trail)
+{
+    FOR_EACH_NON_BMP_LOWERCASE(CHECK_RANGE)
+    return false;
+}
+
+#undef CHECK_RANGE
+
+inline char16_t
+ToUpperCaseNonBMPTrail(char16_t lead, char16_t trail)
+{
+#define CALC_TRAIL(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+    if (lead == LEAD && trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+        return trail + DIFF;
+    FOR_EACH_NON_BMP_UPPERCASE(CALC_TRAIL)
+#undef CALL_TRAIL
+
+    return trail;
+}
+
+inline char16_t
+ToLowerCaseNonBMPTrail(char16_t lead, char16_t trail)
+{
+#define CALC_TRAIL(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+    if (lead == LEAD && trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+        return trail + DIFF;
+    FOR_EACH_NON_BMP_LOWERCASE(CALC_TRAIL)
+#undef CALL_TRAIL
+
+    return trail;
+}
+
 class FoldingInfo {
   public:
     uint16_t folding;
