@@ -10,16 +10,12 @@
 
 #include "libyuv/basic_types.h"
 
-#include "libyuv/compare_row.h"
-#include "libyuv/row.h"
-
 #ifdef __cplusplus
 namespace libyuv {
 extern "C" {
 #endif
 
-#if !defined(LIBYUV_DISABLE_NEON) && defined(__ARM_NEON__) && \
-    !defined(__aarch64__)
+#if !defined(LIBYUV_DISABLE_NEON) && defined(__ARM_NEON__)
 
 uint32 SumSquareError_NEON(const uint8* src_a, const uint8* src_b, int count) {
   volatile uint32 sse;
@@ -29,10 +25,9 @@ uint32 SumSquareError_NEON(const uint8* src_a, const uint8* src_b, int count) {
     "vmov.u8    q9, #0                         \n"
     "vmov.u8    q11, #0                        \n"
 
+    ".p2align  2                               \n"
   "1:                                          \n"
-    MEMACCESS(0)
     "vld1.8     {q0}, [%0]!                    \n"
-    MEMACCESS(1)
     "vld1.8     {q1}, [%1]!                    \n"
     "subs       %2, %2, #16                    \n"
     "vsubl.u8   q2, d0, d2                     \n"
@@ -58,7 +53,7 @@ uint32 SumSquareError_NEON(const uint8* src_a, const uint8* src_b, int count) {
   return sse;
 }
 
-#endif  // defined(__ARM_NEON__) && !defined(__aarch64__)
+#endif  // __ARM_NEON__
 
 #ifdef __cplusplus
 }  // extern "C"

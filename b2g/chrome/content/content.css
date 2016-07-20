@@ -297,7 +297,7 @@ select[disabled] > button {
   padding: 1px 7px 1px 7px;
 }
 
-*:-moz-any-link:active,
+*:any-link:active,
 *[role=button]:active,
 button:active,
 option:active,

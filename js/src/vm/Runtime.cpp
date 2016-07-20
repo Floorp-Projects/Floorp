@@ -208,7 +208,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     runningOOMTest(false),
 #endif
     allowRelazificationForTesting(false),
-    data(nullptr),
     defaultFreeOp_(thisFromCtor()),
     debuggerMutations(0),
     securityCallbacks(&NullSecurityCallbacks),
@@ -854,7 +853,6 @@ JSRuntime::activeGCInAtomsZone()
 {
     Zone* zone = atomsCompartment_->zone();
     return (zone->needsIncrementalBarrier() && !gc.isVerifyPreBarriersEnabled()) ||
-           zone->isGCScheduled() ||
            zone->wasGCStarted();
 }
 

@@ -24,10 +24,6 @@
 #include "js/TypeDecls.h"
 
 namespace js {
-
-class ArrayBufferObjectMaybeShared;
-class WasmInstanceObject;
-
 namespace wasm {
 
 // LinkData contains all the metadata necessary to patch all the locations
@@ -117,18 +113,18 @@ class Export
     CacheableChars fieldName_;
     struct CacheablePod {
         DefinitionKind kind_;
-        uint32_t funcExportIndex_;
+        uint32_t funcIndex_;
     } pod;
 
   public:
     Export() = default;
-    explicit Export(UniqueChars fieldName, uint32_t funcExportIndex);
+    explicit Export(UniqueChars fieldName, uint32_t funcIndex);
     explicit Export(UniqueChars fieldName, DefinitionKind kind);
 
     const char* fieldName() const { return fieldName_.get(); }
 
     DefinitionKind kind() const { return pod.kind_; }
-    uint32_t funcExportIndex() const;
+    uint32_t funcIndex() const;
 
     WASM_DECLARE_SERIALIZABLE(Export)
 };
@@ -190,7 +186,10 @@ class Module : public RefCounted<Module>
     const SharedBytes       bytecode_;
 
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, const CodeSegment& cs, SharedTableVector* tables) const;
+    bool instantiateTable(JSContext* cx, const CodeSegment& codeSegment,
+                          HandleWasmTableObject tableImport, SharedTableVector* tables) const;
+    bool initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
+                   HandleWasmTableObject tableObj) const;
 
   public:
     Module(Bytes&& code,
@@ -218,8 +217,10 @@ class Module : public RefCounted<Module>
 
     bool instantiate(JSContext* cx,
                      Handle<FunctionVector> funcImports,
+                     HandleWasmTableObject tableImport,
                      HandleWasmMemoryObject memoryImport,
-                     HandleWasmInstanceObject instanceObj) const;
+                     HandleObject instanceProto,
+                     MutableHandleWasmInstanceObject instanceObj) const;
 
     // Structured clone support:
 
@@ -237,18 +238,6 @@ class Module : public RefCounted<Module>
 };
 
 typedef RefPtr<Module> SharedModule;
-
-// These accessors are used to implemented the special asm.js semantics of
-// exported wasm functions:
-
-extern bool
-IsExportedFunction(JSFunction* fun);
-
-extern Instance&
-ExportedFunctionToInstance(JSFunction* fun);
-
-extern uint32_t
-ExportedFunctionToExportIndex(JSFunction* fun);
 
 } // namespace wasm
 } // namespace js

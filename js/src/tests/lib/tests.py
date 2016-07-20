@@ -32,6 +32,10 @@ JITFLAGS = {
         ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
         ['--baseline-eager'],
     ],
+    # Interpreter-only, for tools that cannot handle binary code generation.
+    'interp': [
+        ['--no-baseline', '--no-asmjs']
+    ],
     'none': [
         [] # no flags, normal baseline and ion
     ]
@@ -45,6 +49,8 @@ def get_jitflags(variant, **kwargs):
         return kwargs['none']
     return JITFLAGS[variant]
 
+def valid_jitflags():
+    return JITFLAGS.keys()
 
 def get_environment_overlay(js_shell):
     """

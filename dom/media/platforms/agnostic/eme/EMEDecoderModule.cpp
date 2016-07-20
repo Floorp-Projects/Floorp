@@ -84,12 +84,12 @@ public:
       return;
     }
 
-    if (aDecrypted.mStatus == GMPNoKeyErr) {
+    if (aDecrypted.mStatus == NoKeyErr) {
       // Key became unusable after we sent the sample to CDM to decrypt.
       // Call Input() again, so that the sample is enqueued for decryption
       // if the key becomes usable again.
       Input(aDecrypted.mSample);
-    } else if (GMP_FAILED(aDecrypted.mStatus)) {
+    } else if (aDecrypted.mStatus != Ok) {
       if (mCallback) {
         mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
       }

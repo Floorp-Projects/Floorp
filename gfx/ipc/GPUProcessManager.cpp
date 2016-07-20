@@ -13,7 +13,10 @@
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 # include "mozilla/widget/CompositorWidgetChild.h"
 #endif
+#include "nsBaseWidget.h"
 #include "nsContentUtils.h"
+#include "VsyncBridgeChild.h"
+#include "VsyncIOThreadHolder.h"
 
 namespace mozilla {
 namespace gfx {
@@ -84,7 +87,7 @@ GPUProcessManager::OnXPCOMShutdown()
     mObserver = nullptr;
   }
 
-  DestroyProcess();
+  CleanShutdown();
 }
 
 void
@@ -93,6 +96,9 @@ GPUProcessManager::EnableGPUProcess()
   if (mProcess) {
     return;
   }
+
+  // Start the Vsync I/O thread so can use it as soon as the process launches.
+  EnsureVsyncIOThread();
 
   // The subprocess is launched asynchronously, so we wait for a callback to
   // acquire the IPDL actor.
@@ -109,6 +115,7 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
   gfxCriticalNote << aMessage;
 
   DestroyProcess();
+  ShutdownVsyncIOThread();
 }
 
 void
@@ -136,6 +143,21 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 
   mGPUChild = mProcess->GetActor();
   mProcessToken = mProcess->GetProcessToken();
+
+  Endpoint<PVsyncBridgeParent> vsyncParent;
+  Endpoint<PVsyncBridgeChild> vsyncChild;
+  nsresult rv = PVsyncBridge::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &vsyncParent,
+    &vsyncChild);
+  if (NS_FAILED(rv)) {
+    DisableGPUProcess("Failed to create PVsyncBridge endpoints");
+    return;
+  }
+
+  mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
+  mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
 }
 
 void
@@ -169,6 +191,19 @@ GPUProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
 }
 
 void
+GPUProcessManager::CleanShutdown()
+{
+  if (!mProcess) {
+    return;
+  }
+
+#ifdef NS_FREE_PERMANENT_DATA
+  mVsyncBridge->Close();
+#endif
+  DestroyProcess();
+}
+
+void
 GPUProcessManager::DestroyProcess()
 {
   if (!mProcess) {
@@ -179,10 +214,11 @@ GPUProcessManager::DestroyProcess()
   mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
+  mVsyncBridge = nullptr;
 }
 
 RefPtr<CompositorSession>
-GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
+GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
                                             ClientLayerManager* aLayerManager,
                                             CSSToLayoutDeviceScale aScale,
                                             bool aUseAPZ,
@@ -219,7 +255,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsIWidget* aWidget,
 }
 
 RefPtr<CompositorSession>
-GPUProcessManager::CreateRemoteSession(nsIWidget* aWidget,
+GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
                                        ClientLayerManager* aLayerManager,
                                        const uint64_t& aRootLayerTreeId,
                                        CSSToLayoutDeviceScale aScale,
@@ -261,7 +297,11 @@ GPUProcessManager::CreateRemoteSession(nsIWidget* aWidget,
   if (!ok)
     return nullptr;
 
-  CompositorWidgetChild* widget = new CompositorWidgetChild(aWidget);
+  RefPtr<CompositorVsyncDispatcher> dispatcher = aWidget->GetCompositorVsyncDispatcher();
+  RefPtr<CompositorWidgetVsyncObserver> observer =
+    new CompositorWidgetVsyncObserver(mVsyncBridge, aRootLayerTreeId);
+
+  CompositorWidgetChild* widget = new CompositorWidgetChild(dispatcher, observer);
   if (!child->SendPCompositorWidgetConstructor(widget, initData))
     return nullptr;
   if (!child->SendInitialize(aRootLayerTreeId))
@@ -356,6 +396,23 @@ GPUProcessManager::UpdateRemoteContentController(uint64_t aLayersId,
     aContentParent,
     aTabId,
     aBrowserParent);
+}
+
+void
+GPUProcessManager::EnsureVsyncIOThread()
+{
+  if (mVsyncIOThread) {
+    return;
+  }
+
+  mVsyncIOThread = new VsyncIOThreadHolder();
+  MOZ_RELEASE_ASSERT(mVsyncIOThread->Start());
+}
+
+void
+GPUProcessManager::ShutdownVsyncIOThread()
+{
+  mVsyncIOThread = nullptr;
 }
 
 } // namespace gfx

@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUParent.h"
 #include "gfxConfig.h"
+#include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
+#include "VsyncBridgeParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -38,6 +40,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
   CompositorThreadHolder::Start();
+  gfxPlatform::InitNullMetadata();
   return true;
 }
 
@@ -48,7 +51,13 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs)
     gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
     pref->SetCachedValue(setting.value());
   }
+  return true;
+}
 
+bool
+GPUParent::RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint)
+{
+  VsyncBridgeParent::Start(Move(aVsyncEndpoint));
   return true;
 }
 
@@ -104,6 +113,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   ProcessChild::QuickExit();
 #endif
 
+  if (mVsyncBridge) {
+    mVsyncBridge->Shutdown();
+  }
   CompositorThreadHolder::Shutdown();
   XRE_ShutdownChildProcess();
 }

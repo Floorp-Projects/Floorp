@@ -81,7 +81,7 @@ SVGScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) co
 void
 SVGScriptElement::GetType(nsAString & aType)
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
+  GetScriptType(aType);
 }
 
 void
@@ -115,10 +115,10 @@ SVGScriptElement::Href()
 //----------------------------------------------------------------------
 // nsIScriptElement methods
 
-void
+bool
 SVGScriptElement::GetScriptType(nsAString& type)
 {
-  GetType(type);
+  return GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
 }
 
 void
@@ -230,4 +230,3 @@ SVGScriptElement::GetCORSMode() const
 
 } // namespace dom
 } // namespace mozilla
-

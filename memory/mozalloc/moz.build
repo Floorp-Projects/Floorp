@@ -25,6 +25,12 @@ if CONFIG['WRAP_STL_INCLUDES']:
                 'msvc_raise_wrappers.cpp',
             ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    # Keep this file separate to avoid #include'ing windows.h everywhere.
+    SOURCES += [
+        'winheap.cpp',
+    ]
+
 UNIFIED_SOURCES += [
     'mozalloc.cpp',
     'mozalloc_abort.cpp',

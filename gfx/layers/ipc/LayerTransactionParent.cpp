@@ -146,8 +146,7 @@ ShadowChild(const OpRaiseToTopChild& op)
 LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
                                                ShadowLayersManager* aLayersManager,
                                                uint64_t aId)
-  : CompositableParentManager("LayerTransactionParent")
-  , mLayerManager(aManager)
+  : mLayerManager(aManager)
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
   , mPendingTransaction(0)

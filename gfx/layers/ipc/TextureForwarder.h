@@ -22,8 +22,7 @@ namespace layers {
 class TextureForwarder : public ClientIPCAllocator
 {
 public:
-
-  TextureForwarder(const char* aName);
+  TextureForwarder();
 
   virtual ~TextureForwarder();
 

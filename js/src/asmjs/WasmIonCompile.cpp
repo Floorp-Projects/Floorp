@@ -1737,7 +1737,7 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
                              : f.mg().tables[0];
 
     MDefinition* def;
-    if (!f.funcPtrCall(sigIndex, table.length, table.globalDataOffset, callee, args, &def))
+    if (!f.funcPtrCall(sigIndex, table.initial, table.globalDataOffset, callee, args, &def))
         return false;
 
     if (IsVoid(sig.ret()))

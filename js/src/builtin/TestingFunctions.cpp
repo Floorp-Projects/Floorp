@@ -875,6 +875,8 @@ GCState(JSContext* cx, unsigned argc, Value* vp)
         state = "finalize";
     else if (globalState == gc::COMPACT)
         state = "compact";
+    else if (globalState == gc::DECOMMIT)
+        state = "decommit";
     else
         MOZ_CRASH("Unobserveable global GC state");
 
@@ -1514,6 +1516,15 @@ FinalizeCount(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+ResetFinalizeCount(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    finalizeCount = 0;
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 DumpHeap(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1600,6 +1611,13 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
     RootedObject stack(cx, NewDenseEmptyArray(cx));
     if (!stack)
         return false;
+
+    // If profiler sampling has been suppressed, return an empty
+    // stack.
+    if (!cx->runtime()->isProfilerSamplingEnabled()) {
+      args.rval().setObject(*stack);
+      return true;
+    }
 
     RootedObject inlineStack(cx);
     RootedObject inlineFrameInfo(cx);
@@ -3029,7 +3047,8 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
 
     AutoCompartment ac(cx, global);
 
-    if (!JS::CloneAndExecuteScript(cx, script))
+    JS::RootedValue rval(cx);
+    if (!JS::CloneAndExecuteScript(cx, script, &rval))
         return false;
 
     args.rval().setUndefined();
@@ -3670,6 +3689,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "finalizeCount()",
 "  Return the current value of the finalization counter that is incremented\n"
 "  each time an object returned by the makeFinalizeObserver is finalized."),
+
+    JS_FN_HELP("resetFinalizeCount", ResetFinalizeCount, 0, 0,
+"resetFinalizeCount()",
+"  Reset the value returned by finalizeCount()."),
 
     JS_FN_HELP("gcPreserveCode", GCPreserveCode, 0, 0,
 "gcPreserveCode()",

@@ -1047,7 +1047,7 @@ private:
     // Make sure we're not seeing the result of a 404 or something by checking
     // the 'requestSucceeded' attribute on the http channel.
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
-    nsAutoCString tCspHeaderValue, tCspROHeaderValue;
+    nsAutoCString tCspHeaderValue, tCspROHeaderValue, tRPHeaderCValue;
 
     if (httpChannel) {
       bool requestSucceeded;
@@ -1065,6 +1065,10 @@ private:
       httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("content-security-policy-report-only"),
         tCspROHeaderValue);
+
+      httpChannel->GetResponseHeader(
+        NS_LITERAL_CSTRING("referrer-policy"),
+        tRPHeaderCValue);
     }
 
     // May be null.
@@ -1219,6 +1223,16 @@ private:
       if (parent) {
         // XHR Params Allowed
         mWorkerPrivate->SetXHRParamsAllowed(parent->XHRParamsAllowed());
+      }
+    }
+
+    NS_ConvertUTF8toUTF16 tRPHeaderValue(tRPHeaderCValue);
+    // If there's a Referrer-Policy header, apply it.
+    if (!tRPHeaderValue.IsEmpty()) {
+      net::ReferrerPolicy policy =
+        nsContentUtils::GetReferrerPolicyFromHeader(tRPHeaderValue);
+      if (policy != net::RP_Unset) {
+        mWorkerPrivate->SetReferrerPolicy(policy);
       }
     }
 

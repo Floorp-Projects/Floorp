@@ -257,7 +257,7 @@ QuotaManagerService::NoteLiveManager(QuotaManager* aManager)
 }
 
 void
-QuotaManagerService::NoteFinishedManager()
+QuotaManagerService::NoteShuttingDownManager()
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());

@@ -29,8 +29,7 @@ var data = [
   { type: 'password', apply: false },
   { type: 'datetime', apply: true, todo: true },
   { type: 'date', apply: true },
-  // TODO: temporary set to false until bug 888324 is fixed.
-  { type: 'month', apply: false },
+  { type: 'month', apply: true },
   { type: 'week', apply: true, todo: true },
   { type: 'time', apply: true },
   { type: 'datetime-local', apply: true, todo: true },
@@ -71,7 +70,8 @@ function checkValidity(aElement, aValidity, aApply, aRangeApply)
   is(aElement.validity.rangeOverflow, !aValidity,
      "element overflow status should be " + !aValidity);
   var overflowMsg =
-        (aElement.type == "date" || aElement.type == "time") ?
+        (aElement.type == "date" || aElement.type == "time" ||
+         aElement.type == "month") ?
         ("Please select a value that is no later than " + aElement.max + ".") :
         ("Please select a value that is no more than " + aElement.max + ".");
   is(aElement.validationMessage,
@@ -147,7 +147,7 @@ for (var test of data) {
       input.max = '10';
       break;
     case 'month':
-      // TODO: this is temporary until bug 888324 is fixed.
+      input.max = '2016-12';
       break;
     default:
       ok(false, 'please, add a case for this new type (' + input.type + ')');
@@ -335,6 +335,44 @@ for (var test of data) {
 
       input.value = '01:00:00.1';
       checkValidity(input, false, apply, apply);
+
+      input.max = '';
+      checkValidity(input, true, apply, false);
+
+      input.max = 'foo';
+      checkValidity(input, true, apply, false);
+
+      break;
+    case 'month':
+      input.value = '2016-06';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-12';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2017-01';
+      checkValidity(input, false, apply, apply);
+
+      input.max = '2017-07';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2017-12';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '1000-01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '20160-01';
+      checkValidity(input, false, apply, apply);
+
+      input.max = '0050-01';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '0049-12';
+      checkValidity(input, true, apply, apply);
 
       input.max = '';
       checkValidity(input, true, apply, false);

@@ -124,11 +124,11 @@ InProcessCompositorWidget::RealWidget()
   return mWidget;
 }
 
-already_AddRefed<CompositorVsyncDispatcher>
-InProcessCompositorWidget::GetCompositorVsyncDispatcher()
+void
+InProcessCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
 {
   RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher();
-  return cvd.forget();
+  cvd->SetCompositorVsyncObserver(aObserver);
 }
 
 } // namespace widget

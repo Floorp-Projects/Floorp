@@ -41,7 +41,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIScriptElement
-  virtual void GetScriptType(nsAString& type) override;
+  virtual bool GetScriptType(nsAString& type) override;
   virtual void GetScriptText(nsAString& text) override;
   virtual void GetScriptCharset(nsAString& charset) override;
   virtual void FreezeUriAsyncDefer() override;

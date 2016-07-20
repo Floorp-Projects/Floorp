@@ -339,6 +339,11 @@ case "$target" in
             CFLAGS="$CFLAGS -wd4091"
             CXXFLAGS="$CXXFLAGS -wd4091"
 
+            # This is intended as a temporary hack to support building with VS2015.
+            # 'noexcept' used with no exception handling mode specified;
+            # termination on exception is not guaranteed. Specify /EHsc
+            CXXFLAGS="$CXXFLAGS -wd4577"
+
             if test -n "$WIN_UCRT_REDIST_DIR"; then
               if test ! -d "$WIN_UCRT_REDIST_DIR"; then
                 AC_MSG_ERROR([Invalid Windows UCRT Redist directory: ${WIN_UCRT_REDIST_DIR}])
@@ -753,74 +758,7 @@ if test -n "${CLANG_CXX}${CLANG_CL}"; then
     _WARNINGS_CXXFLAGS="-Qunused-arguments ${_WARNINGS_CXXFLAGS}"
 fi
 
-dnl ========================================================
-dnl = Use Address Sanitizer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(address-sanitizer,
-[  --enable-address-sanitizer       Enable Address Sanitizer (default=no)],
-    MOZ_ASAN=1,
-    MOZ_ASAN= )
-if test -n "$MOZ_ASAN"; then
-    MOZ_LLVM_HACKS=1
-    if test -n "$CLANG_CL"; then
-        # Look for clang_rt.asan_dynamic-i386.dll
-        MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-i386.dll
-        # We use MOZ_PATH_PROG in order to get a Windows style path.
-        MOZ_PATH_PROG(MOZ_CLANG_RT_ASAN_LIB_PATH, $MOZ_CLANG_RT_ASAN_LIB)
-        if test -z "$MOZ_CLANG_RT_ASAN_LIB_PATH"; then
-            AC_MSG_ERROR([Couldn't find $MOZ_CLANG_RT_ASAN_LIB.  It should be available in the same location as clang-cl.])
-        fi
-        AC_SUBST(MOZ_CLANG_RT_ASAN_LIB_PATH)
-    fi
-    AC_DEFINE(MOZ_ASAN)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-fi
-AC_SUBST(MOZ_ASAN)
-
-dnl ========================================================
-dnl = Use Memory Sanitizer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(memory-sanitizer,
-[  --enable-memory-sanitizer       Enable Memory Sanitizer (default=no)],
-    MOZ_MSAN=1,
-    MOZ_MSAN= )
-if test -n "$MOZ_MSAN"; then
-    MOZ_LLVM_HACKS=1
-    AC_DEFINE(MOZ_MSAN)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-fi
-AC_SUBST(MOZ_MSAN)
-
-dnl ========================================================
-dnl = Use Thread Sanitizer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(thread-sanitizer,
-[  --enable-thread-sanitizer       Enable Thread Sanitizer (default=no)],
-   MOZ_TSAN=1,
-   MOZ_TSAN= )
-if test -n "$MOZ_TSAN"; then
-    MOZ_LLVM_HACKS=1
-    AC_DEFINE(MOZ_TSAN)
-    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
-fi
-AC_SUBST(MOZ_TSAN)
-
-# The LLVM symbolizer is used by all sanitizers
-AC_SUBST(LLVM_SYMBOLIZER)
-
-dnl ========================================================
-dnl = Enable hacks required for LLVM instrumentations
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(llvm-hacks,
-[  --enable-llvm-hacks       Enable workarounds required for several LLVM instrumentations (default=no)],
-    MOZ_LLVM_HACKS=1,
-    MOZ_LLVM_HACKS= )
-if test -n "$MOZ_LLVM_HACKS"; then
-    MOZ_NO_WLZDEFS=1
-    MOZ_CFLAGS_NSS=1
-fi
-AC_SUBST(MOZ_NO_WLZDEFS)
-AC_SUBST(MOZ_CFLAGS_NSS)
+MOZ_CONFIG_SANITIZE
 
 dnl ========================================================
 dnl = Enable treating compiler warnings as errors
@@ -1757,6 +1695,7 @@ if test -n "$MOZ_X11"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
     XLIBS="-lX11-xcb -lX11 -lxcb-shm -lxcb $XLIBS"
     _SAVE_LDFLAGS="$LDFLAGS"
+    _SAVE_LIBS="$LIBS"
     LDFLAGS="$XLDFLAGS $LDFLAGS"
     AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
         [MISSING_X="$MISSING_X -lX11"], $XLIBS)
@@ -1787,6 +1726,7 @@ if test -n "$MOZ_X11"; then
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
     LDFLAGS="$_SAVE_LDFLAGS"
+    LIBS="$_SAVE_LIBS"
 fi # $MOZ_X11
 
 AC_SUBST_LIST(XCFLAGS)
@@ -5585,9 +5525,13 @@ MOZ_ARG_WITH_STRING(servo,
   SERVO_TARGET_DIR=$withval,
   SERVO_TARGET_DIR=)
 if test -n "$SERVO_TARGET_DIR"; then
-   MOZ_SERVO_LIBS="-L${SERVO_TARGET_DIR} -lgeckoservo"
-   AC_DEFINE(MOZ_STYLO)
-   AC_SUBST_LIST(MOZ_SERVO_LIBS)
+    if test -n "$_WIN32_MSVC"; then
+        MOZ_SERVO_LIBS="${SERVO_TARGET_DIR}/geckoservo"
+    else
+        MOZ_SERVO_LIBS="-L${SERVO_TARGET_DIR} -lgeckoservo"
+    fi
+    AC_DEFINE(MOZ_STYLO)
+    AC_SUBST_LIST(MOZ_SERVO_LIBS)
 fi
 
 dnl ========================================================

@@ -9,6 +9,7 @@
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "Units.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/gfx/Point.h"
@@ -16,6 +17,8 @@
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/ipc/Transport.h"
 #include "nsIObserverService.h"
+#include "nsThreadUtils.h"
+class nsBaseWidget;
 
 
 namespace mozilla {
@@ -40,6 +43,8 @@ class GeckoChildProcessHost;
 namespace gfx {
 
 class GPUChild;
+class VsyncBridgeChild;
+class VsyncIOThreadHolder;
 
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
 // objects that may live in another process. Currently, it provides access
@@ -68,7 +73,7 @@ public:
   void EnsureGPUReady();
 
   RefPtr<CompositorSession> CreateTopLevelCompositor(
-    nsIWidget* aWidget,
+    nsBaseWidget* aWidget,
     ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
@@ -132,10 +137,14 @@ private:
   void DisableGPUProcess(const char* aMessage);
 
   // Shutdown the GPU process.
+  void CleanShutdown();
   void DestroyProcess();
 
+  void EnsureVsyncIOThread();
+  void ShutdownVsyncIOThread();
+
   RefPtr<CompositorSession> CreateRemoteSession(
-    nsIWidget* aWidget,
+    nsBaseWidget* aWidget,
     ClientLayerManager* aLayerManager,
     const uint64_t& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
@@ -161,11 +170,14 @@ private:
 private:
   RefPtr<Observer> mObserver;
   ipc::TaskFactory<GPUProcessManager> mTaskFactory;
+  RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
   uint64_t mNextLayerTreeId;
 
+  // Fields that are associated with the current GPU process.
   GPUProcessHost* mProcess;
   uint64_t mProcessToken;
   GPUChild* mGPUChild;
+  RefPtr<VsyncBridgeChild> mVsyncBridge;
 };
 
 } // namespace gfx

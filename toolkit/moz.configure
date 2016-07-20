@@ -68,6 +68,19 @@ imply_option('--enable-profiling', dmd)
 imply_option('--enable-jemalloc', dmd)
 imply_option('--enable-replace-malloc', dmd)
 
+# JACK cubeb backend
+# ==============================================================
+option('--enable-jack', env='MOZ_JACK',
+       help='Enable JACK audio backend.')
+
+@depends('--enable-jack')
+def jack(value):
+    if value:
+        return True
+
+set_config('MOZ_JACK', jack)
+set_define('MOZ_JACK', jack)
+
 # Javascript engine
 # ==============================================================
 include('../js/moz.configure')

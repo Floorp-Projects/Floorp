@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCompositorBridge;
+include protocol PVsyncBridge;
 
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
@@ -28,6 +29,8 @@ sync protocol PGPU
 parent:
   // Sent by the UI process to initiate core settings.
   async Init(GfxPrefSetting[] prefs);
+
+  async InitVsyncBridge(Endpoint<PVsyncBridgeParent> vsyncEndpoint);
 
   // Called to update a gfx preference.
   async UpdatePref(GfxPrefSetting pref);

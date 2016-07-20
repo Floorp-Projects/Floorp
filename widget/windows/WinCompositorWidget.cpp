@@ -4,26 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WinCompositorWidget.h"
-#include "nsWindow.h"
-#include "VsyncDispatcher.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
+#include "nsWindow.h"
+#include "VsyncDispatcher.h"
 
 namespace mozilla {
 namespace widget {
 
 using namespace mozilla::gfx;
 
-/* static */ RefPtr<CompositorWidget>
-CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
-{
-  return new WinCompositorWidget(aInitData, static_cast<nsWindow*>(aWidget));
-}
-
-WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitData,
-                                         nsWindow* aWindow)
- : mWindow(aWindow),
-   mWidgetKey(aInitData.widgetKey()),
+WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitData)
+ : mWidgetKey(aInitData.widgetKey()),
    mWnd(reinterpret_cast<HWND>(aInitData.hWnd())),
    mTransparencyMode(static_cast<nsTransparencyMode>(aInitData.transparencyMode())),
    mMemoryDC(nullptr),
@@ -55,13 +47,6 @@ void
 WinCompositorWidget::PostRender(layers::LayerManagerComposite* aManager)
 {
   mPresentLock.Leave();
-}
-
-nsIWidget*
-WinCompositorWidget::RealWidget()
-{
-  MOZ_ASSERT(mWindow);
-  return mWindow;
 }
 
 LayoutDeviceIntSize
@@ -171,13 +156,6 @@ WinCompositorWidget::EndBackBufferDrawing()
     mLockedBackBufferData = nullptr;
   }
   return CompositorWidget::EndBackBufferDrawing();
-}
-
-already_AddRefed<CompositorVsyncDispatcher>
-WinCompositorWidget::GetCompositorVsyncDispatcher()
-{
-  RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher();
-  return cvd.forget();
 }
 
 uintptr_t

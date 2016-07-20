@@ -36,7 +36,6 @@
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
 #include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/CompositorLRU.h"  // for CompositorLRU
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -256,7 +255,7 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aComp
   , mIsObservingVsync(false)
   , mNeedsComposite(0)
   , mVsyncNotificationsSkipped(0)
-  , mCompositorVsyncDispatcher(aWidget->GetCompositorVsyncDispatcher())
+  , mWidget(aWidget)
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mCurrentCompositeTask(nullptr)
   , mSetNeedsCompositeMonitor("SetNeedsCompositeMonitor")
@@ -269,7 +268,7 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aComp
 #endif
 #endif
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread() || XRE_GetProcessType() == GeckoProcessType_GPU);
   mVsyncObserver = new Observer(this);
 #ifdef MOZ_WIDGET_GONK
   GeckoTouchDispatcher::GetInstance()->SetCompositorVsyncScheduler(this);
@@ -451,8 +450,10 @@ CompositorVsyncScheduler::SetNeedsComposite()
 bool
 CompositorVsyncScheduler::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
-  // Called from the vsync dispatch thread
-  MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
+  // Called from the vsync dispatch thread. When in the GPU Process, that's
+  // the same as the compositor thread.
+  MOZ_ASSERT_IF(XRE_IsParentProcess(), !CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT_IF(XRE_GetProcessType() == GeckoProcessType_GPU, CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(!NS_IsMainThread());
   PostCompositeTask(aVsyncTimestamp);
   return true;
@@ -539,7 +540,7 @@ void
 CompositorVsyncScheduler::ObserveVsync()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mCompositorVsyncDispatcher->SetCompositorVsyncObserver(mVsyncObserver);
+  mWidget->ObserveVsync(mVsyncObserver);
   mIsObservingVsync = true;
 }
 
@@ -547,7 +548,7 @@ void
 CompositorVsyncScheduler::UnobserveVsync()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mCompositorVsyncDispatcher->SetCompositorVsyncObserver(nullptr);
+  mWidget->ObserveVsync(nullptr);
   mIsObservingVsync = false;
 }
 
@@ -602,8 +603,7 @@ CompositorLoop()
 CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
                                                bool aUseExternalSurfaceSize,
                                                const gfx::IntSize& aSurfaceSize)
-  : CompositorBridgeParentIPCAllocator("CompositorBridgeParent")
-  , mWidget(nullptr)
+  : mWidget(nullptr)
   , mScale(aScale)
   , mIsTesting(false)
   , mPendingTransaction(0)
@@ -626,7 +626,6 @@ CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
 {
   // Always run destructor on the main thread
   MOZ_ASSERT(NS_IsMainThread());
-  SetMessageLoopToPostDestructionTo(MessageLoop::current());
 }
 
 void
@@ -639,7 +638,6 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
   if (aUseAPZ) {
     mApzcTreeManager = new APZCTreeManager();
   }
-  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 
   // IPDL initialization. mSelfRef is cleared in DeferredDestroy.
   SetOtherProcessId(base::GetCurrentProcId());
@@ -690,6 +688,8 @@ CompositorBridgeParent::Initialize()
   }
 
   LayerScope::SetPixelScale(mScale.scale);
+
+  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 }
 
 uint64_t
@@ -701,8 +701,6 @@ CompositorBridgeParent::RootLayerTreeId()
 
 CompositorBridgeParent::~CompositorBridgeParent()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   InfallibleTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
   // We expect all textures to be destroyed by now.
@@ -722,7 +720,6 @@ CompositorBridgeParent::ForceIsFirstPaint()
 void
 CompositorBridgeParent::StopAndClearResources()
 {
-  CancelCurrentCompositeTask();
   if (mForceCompositionTask) {
     mForceCompositionTask->Cancel();
     mForceCompositionTask = nullptr;
@@ -747,6 +744,12 @@ CompositorBridgeParent::StopAndClearResources()
     mCompositor->DetachWidget();
     mCompositor->Destroy();
     mCompositor = nullptr;
+  }
+
+  // This must be destroyed now since it accesses the widget.
+  if (mCompositorScheduler) {
+    mCompositorScheduler->Destroy();
+    mCompositorScheduler = nullptr;
   }
 
   // After this point, it is no longer legal to access the widget.
@@ -921,8 +924,6 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
     mApzcTreeManager->ClearTree();
     mApzcTreeManager = nullptr;
   }
-
-  mCompositorScheduler->Destroy();
 
   { // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -1684,6 +1685,28 @@ CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id)
   return retval;
 }
 
+void
+CompositorBridgeParent::NotifyVsync(const TimeStamp& aTimeStamp, const uint64_t& aLayersId)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  auto it = sIndirectLayerTrees.find(aLayersId);
+  if (it == sIndirectLayerTrees.end())
+    return;
+
+  CompositorBridgeParent* cbp = it->second.mParent;
+  if (!cbp || !cbp->mWidget)
+    return;
+
+  RefPtr<VsyncObserver> obs = cbp->mWidget->GetVsyncObserver();
+  if (!obs)
+    return;
+
+  obs->NotifyVsync(aTimeStamp);
+}
+
 bool
 CompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child)
 {
@@ -1941,13 +1964,10 @@ class CrossProcessCompositorBridgeParent final : public PCompositorBridgeParent,
 
 public:
   explicit CrossProcessCompositorBridgeParent()
-    : CompositorBridgeParentIPCAllocator("CrossProcessCompositorBridgeParent")
-    , mNotifyAfterRemotePaint(false)
+    : mNotifyAfterRemotePaint(false)
     , mDestroyCalled(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    // Always run destructor on the main thread
-    SetMessageLoopToPostDestructionTo(MessageLoop::current());
   }
 
   void Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint) {
@@ -1971,8 +1991,6 @@ public:
   virtual bool RecvWillClose() override { return true; }
   virtual bool RecvPause() override { return true; }
   virtual bool RecvResume() override { return true; }
-  virtual bool RecvNotifyHidden(const uint64_t& id) override;
-  virtual bool RecvNotifyVisible(const uint64_t& id) override;
   virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
   virtual bool RecvAdoptChild(const uint64_t& child) override { return false; }
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
@@ -2376,22 +2394,6 @@ CompositorBridgeParent::IsSameProcess() const
 }
 
 bool
-CrossProcessCompositorBridgeParent::RecvNotifyHidden(const uint64_t& id)
-{
-  RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
-  lru->Add(this, id);
-  return true;
-}
-
-bool
-CrossProcessCompositorBridgeParent::RecvNotifyVisible(const uint64_t& id)
-{
-  RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
-  lru->Remove(this, id);
-  return true;
-}
-
-bool
 CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint()
 {
   mNotifyAfterRemotePaint = true;
@@ -2401,9 +2403,6 @@ CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint()
 void
 CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
-  lru->Remove(this);
-
   // We must keep this object alive untill the code handling message
   // reception is finished on this thread.
   MessageLoop::current()->PostTask(NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy));
@@ -2885,7 +2884,6 @@ CrossProcessCompositorBridgeParent::DeferredDestroy()
 
 CrossProcessCompositorBridgeParent::~CrossProcessCompositorBridgeParent()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_GetIOMessageLoop());
   MOZ_ASSERT(IToplevelProtocol::GetTransport());
 }

@@ -170,12 +170,12 @@ protected:
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);
     mIPCOpen = true;
-    ADDREF_MANUALLY(this);
+    AddRef();
   }
   void ReleaseIPDLReference() {
     MOZ_ASSERT(mIPCOpen == true);
     mIPCOpen = false;
-    RELEASE_MANUALLY(this);
+    Release();
   }
   friend class CompositorBridgeParent;
   friend class CrossProcessCompositorBridgeParent;

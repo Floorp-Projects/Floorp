@@ -115,27 +115,32 @@ typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A FuncExport represents a single function inside a wasm Module that has been
-// exported one or more times.
+// exported one or more times. A FuncExport represents an internal entry point
+// that can be called via function-index by Instance::callExport(). To allow
+// O(log(n)) lookup of a FuncExport by function-index, the FuncExportVector
+// is stored sorted by function index.
 
 class FuncExport
 {
     Sig sig_;
     struct CacheablePod {
         uint32_t funcIndex_;
-        uint32_t stubOffset_;
+        uint32_t entryOffset_;
+        uint32_t tableEntryOffset_;
     } pod;
 
   public:
     FuncExport() = default;
-    explicit FuncExport(Sig&& sig, uint32_t funcIndex)
+    explicit FuncExport(Sig&& sig, uint32_t funcIndex, uint32_t tableEntryOffset)
       : sig_(Move(sig))
     {
         pod.funcIndex_ = funcIndex;
-        pod.stubOffset_ = UINT32_MAX;
+        pod.entryOffset_ = UINT32_MAX;
+        pod.tableEntryOffset_ = tableEntryOffset;
     }
-    void initStubOffset(uint32_t stubOffset) {
-        MOZ_ASSERT(pod.stubOffset_ == UINT32_MAX);
-        pod.stubOffset_ = stubOffset;
+    void initEntryOffset(uint32_t entryOffset) {
+        MOZ_ASSERT(pod.entryOffset_ == UINT32_MAX);
+        pod.entryOffset_ = entryOffset;
     }
 
     const Sig& sig() const {
@@ -144,9 +149,12 @@ class FuncExport
     uint32_t funcIndex() const {
         return pod.funcIndex_;
     }
-    uint32_t stubOffset() const {
-        MOZ_ASSERT(pod.stubOffset_ != UINT32_MAX);
-        return pod.stubOffset_;
+    uint32_t entryOffset() const {
+        MOZ_ASSERT(pod.entryOffset_ != UINT32_MAX);
+        return pod.entryOffset_;
+    }
+    uint32_t tableEntryOffset() const {
+        return pod.tableEntryOffset_;
     }
 
     WASM_DECLARE_SERIALIZABLE(FuncExport)
@@ -170,7 +178,10 @@ class FuncImport
     } pod;
 
   public:
-    FuncImport() = default;
+    FuncImport() {
+      memset(&pod, 0, sizeof(CacheablePod));
+    }
+
     FuncImport(Sig&& sig, uint32_t exitGlobalDataOffset)
       : sig_(Move(sig))
     {
@@ -221,10 +232,11 @@ struct TableDesc
 {
     TableKind kind;
     uint32_t globalDataOffset;
-    uint32_t length;
+    uint32_t initial;
+    uint32_t maximum;
 
-    TableDesc() : kind(TableKind::AnyFunction), globalDataOffset(0), length(0) {}
-    explicit TableDesc(TableKind kind) : kind(kind) {}
+    TableDesc() { PodZero(this); }
+    explicit TableDesc(TableKind kind) : kind(kind), globalDataOffset(0), initial(0), maximum(0) {}
 };
 
 WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
@@ -418,7 +430,7 @@ class MetadataCacheablePod
     static const uint32_t NO_START_FUNCTION = UINT32_MAX;
     static_assert(NO_START_FUNCTION > MaxFuncs, "sentinel value");
 
-    uint32_t              startFuncExportIndex_;
+    uint32_t              startFuncIndex_;
 
   public:
     ModuleKind            kind;
@@ -428,20 +440,20 @@ class MetadataCacheablePod
 
     MetadataCacheablePod() {
         mozilla::PodZero(this);
-        startFuncExportIndex_ = NO_START_FUNCTION;
+        startFuncIndex_ = NO_START_FUNCTION;
     }
 
     bool hasStartFunction() const {
-        return startFuncExportIndex_ != NO_START_FUNCTION;
+        return startFuncIndex_ != NO_START_FUNCTION;
     }
-    void initStartFuncExportIndex(uint32_t i) {
+    void initStartFuncIndex(uint32_t i) {
         MOZ_ASSERT(!hasStartFunction());
-        startFuncExportIndex_ = i;
+        startFuncIndex_ = i;
         MOZ_ASSERT(hasStartFunction());
     }
-    uint32_t startFuncExportIndex() const {
+    uint32_t startFuncIndex() const {
         MOZ_ASSERT(hasStartFunction());
-        return startFuncExportIndex_;
+        return startFuncIndex_;
     }
 };
 
@@ -466,6 +478,8 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
+
+    const FuncExport& lookupFuncExport(uint32_t funcIndex) const;
 
     // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
     // encapsulated within AsmJS.cpp, but the additional virtual functions allow
