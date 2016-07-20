@@ -1092,7 +1092,7 @@ public:
   }
 };
 
-StaticRefPtr<CacheFileIOManager> CacheFileIOManager::gInstance;
+CacheFileIOManager * CacheFileIOManager::gInstance = nullptr;
 
 NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback)
 
@@ -1130,7 +1130,7 @@ CacheFileIOManager::Init()
   nsresult rv = ioMan->InitInternal();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  gInstance = ioMan.forget();
+  ioMan.swap(gInstance);
   return NS_OK;
 }
 
@@ -1154,7 +1154,7 @@ CacheFileIOManager::InitInternal()
 nsresult
 CacheFileIOManager::Shutdown()
 {
-  LOG(("CacheFileIOManager::Shutdown() [gInstance=%p]", gInstance.get()));
+  LOG(("CacheFileIOManager::Shutdown() [gInstance=%p]", gInstance));
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1185,7 +1185,8 @@ CacheFileIOManager::Shutdown()
     gInstance->SyncRemoveAllCacheFiles();
   }
 
-  gInstance = nullptr;
+  RefPtr<CacheFileIOManager> ioMan;
+  ioMan.swap(gInstance);
 
   return NS_OK;
 }
@@ -1258,7 +1259,7 @@ CacheFileIOManager::ShutdownInternal()
 nsresult
 CacheFileIOManager::OnProfile()
 {
-  LOG(("CacheFileIOManager::OnProfile() [gInstance=%p]", gInstance.get()));
+  LOG(("CacheFileIOManager::OnProfile() [gInstance=%p]", gInstance));
 
   RefPtr<CacheFileIOManager> ioMan = gInstance;
   if (!ioMan) {

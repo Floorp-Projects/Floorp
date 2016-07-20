@@ -21,7 +21,6 @@
 #include "nsDataHashtable.h"
 #include "nsClassHashtable.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "nsWeakPtr.h"
@@ -407,7 +406,7 @@ protected:
   AutoTArray<JS::Heap<JSObject*>, 2> mAnonymousGlobalScopes;
 
   static nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>* sCachedScripts;
-  static mozilla::StaticRefPtr<nsScriptCacheCleaner> sScriptCacheCleaner;
+  static nsScriptCacheCleaner* sScriptCacheCleaner;
 };
 
 class nsScriptCacheCleaner final : public nsIObserver
