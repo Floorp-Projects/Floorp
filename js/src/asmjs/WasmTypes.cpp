@@ -280,7 +280,8 @@ SignalUsage::SignalUsage()
     // size is an even divisor of the WebAssembly page size.
     forOOB(HaveSignalHandlers() &&
            gc::SystemPageSize() <= PageSize &&
-           PageSize % gc::SystemPageSize() == 0),
+           PageSize % gc::SystemPageSize() == 0 &&
+           !JitOptions.wasmExplicitBoundsChecks),
 #else
     forOOB(false),
 #endif
