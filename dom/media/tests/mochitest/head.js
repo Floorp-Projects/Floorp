@@ -764,9 +764,12 @@ function AudioStreamHelper() {
 
 AudioStreamHelper.prototype = {
   checkAudio: function(stream, analyser, fun) {
+    /*
     analyser.enableDebugCanvas();
     return analyser.waitForAnalysisSuccess(fun)
       .then(() => analyser.disableDebugCanvas());
+    */
+    return analyser.waitForAnalysisSuccess(fun);
   },
 
   checkAudioFlowing: function(stream) {
