@@ -32,6 +32,7 @@ apt-get install -y --force-yes --no-install-recommends \
     mime-support \
     netbase \
     net-tools \
+    python2.7 \
     python-dev \
     python-pip \
     python-crypto \
@@ -54,27 +55,6 @@ tooltool_fetch() {
 }
 
 curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > ${BUILD}/tooltool.py
-
-cd $BUILD
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 12250696,
-    "digest": "67615a6defbcda062f15a09f9dd3b9441afd01a8cc3255e5bc45b925378a0ddc38d468b7701176f6cc153ec52a4f21671b433780d9bde343aa9b9c1b2ae29feb",
-    "algorithm": "sha512",
-    "filename": "Python-2.7.10.tar.xz",
-    "unpack": true
-}
-]
-EOF
-
-cd Python-2.7.10
-./configure --prefix /usr/local/lib/python2.7.10
-make -j$(nproc)
-make install
-
-PATH=/usr/local/lib/python2.7.10/bin/:$PATH
-python --version
 
 # Enough python utilities to get "peep" working
 cd $BUILD
