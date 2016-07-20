@@ -34,14 +34,20 @@ static CriticalAddress gCriticalAddress;
 #include <dlfcn.h>
 #endif
 
-#define MOZ_STACKWALK_SUPPORTS_MACOSX \
-  (defined(XP_DARWIN) && \
-   (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE)))
+#if (defined(XP_DARWIN) && \
+     (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE)))
+#define MOZ_STACKWALK_SUPPORTS_MACOSX 1
+#else
+#define MOZ_STACKWALK_SUPPORTS_MACOSX 0
+#endif
 
-#define MOZ_STACKWALK_SUPPORTS_LINUX \
-  (defined(linux) && \
-   ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
-    defined(HAVE__UNWIND_BACKTRACE)))
+#if (defined(linux) && \
+     ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
+      defined(HAVE__UNWIND_BACKTRACE)))
+#define MOZ_STACKWALK_SUPPORTS_LINUX 1
+#else
+#define MOZ_STACKWALK_SUPPORTS_LINUX 0
+#endif
 
 #if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
 #define HAVE___LIBC_STACK_END 1
@@ -885,8 +891,9 @@ void DemangleSymbol(const char* aSymbol,
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
 
-#define X86_OR_PPC (defined(__i386) || defined(PPC) || defined(__ppc__))
-#if X86_OR_PPC && (MOZ_STACKWALK_SUPPORTS_MACOSX || MOZ_STACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
+// {x86, ppc} x {Linux, Mac} stackwalking code.
+#if ((defined(__i386) || defined(PPC) || defined(__ppc__)) && \
+     (MOZ_STACKWALK_SUPPORTS_MACOSX || MOZ_STACKWALK_SUPPORTS_LINUX))
 
 MFBT_API bool
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
