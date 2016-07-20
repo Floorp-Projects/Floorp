@@ -203,6 +203,35 @@ add_task(function* test_count_histogram() {
   do_check_eq(s.sum, 2);
 });
 
+add_task(function* test_categorical_histogram()
+{
+  let h1 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL");
+  for (let v of ["CommonLabel", "Label2", "Label3", "Label3", 0, 0, 1]) {
+    h1.add(v);
+  }
+  for (let s of ["", "Label4", "1234"]) {
+    Assert.throws(() => h1.add(s));
+  }
+
+  let snapshot = h1.snapshot();
+  Assert.equal(snapshot.sum, 6);
+  Assert.deepEqual(snapshot.ranges, [0, 1, 2, 3]);
+  Assert.deepEqual(snapshot.counts, [3, 2, 2, 0]);
+
+  let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL_OPTOUT");
+  for (let v of ["CommonLabel", "CommonLabel", "Label4", "Label5", "Label6", 0, 1]) {
+    h2.add(v);
+  }
+  for (let s of ["", "Label3", "1234"]) {
+    Assert.throws(() => h2.add(s));
+  }
+
+  snapshot = h2.snapshot();
+  Assert.equal(snapshot.sum, 7);
+  Assert.deepEqual(snapshot.ranges, [0, 1, 2, 3, 4]);
+  Assert.deepEqual(snapshot.counts, [3, 2, 1, 1, 0]);
+});
+
 add_task(function* test_getHistogramById() {
   try {
     Telemetry.getHistogramById("nonexistent");
