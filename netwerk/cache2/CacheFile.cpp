@@ -1087,14 +1087,6 @@ CacheFile::ReleaseOutsideLock(RefPtr<nsISupports> aObject)
 }
 
 nsresult
-CacheFile::GetChunk(uint32_t aIndex, ECallerType aCaller,
-                    CacheFileChunkListener *aCallback, CacheFileChunk **_retval)
-{
-  CacheFileAutoLock lock(this);
-  return GetChunkLocked(aIndex, aCaller, aCallback, _retval);
-}
-
-nsresult
 CacheFile::GetChunkLocked(uint32_t aIndex, ECallerType aCaller,
                           CacheFileChunkListener *aCallback,
                           CacheFileChunk **_retval)
