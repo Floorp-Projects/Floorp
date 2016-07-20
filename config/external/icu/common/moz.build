@@ -17,7 +17,7 @@ DEFINES['U_COMMON_IMPLEMENTATION'] = True
 #FIXME: should probably stop including mozilla-config.h
 DEFINES['LOCALE_SNAME'] = 0x5c
 
-LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
+LOCAL_INCLUDES += ['/intl/icu/source/i18n']
 
 include('../defs.mozbuild')
 include('sources.mozbuild')

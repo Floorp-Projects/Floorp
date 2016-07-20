@@ -85,6 +85,8 @@ public:
   //  No event is fired and no action is performed on the sourcebuffers.
   void ClearSimple();
 
+  double HighestStartTime();
+
 private:
   ~SourceBufferList();
 

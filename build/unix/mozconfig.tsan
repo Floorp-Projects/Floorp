@@ -7,11 +7,6 @@ export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
 
-# Mandatory flag for TSan
-export CFLAGS="-fsanitize=thread"
-export CXXFLAGS="-fsanitize=thread"
-export LDFLAGS="-fsanitize=thread"
-
 # Use a newer binutils, from the tooltool gcc package, if it's there
 if [ -e "$topsrcdir/gcc/bin/ld" ]; then
     export CC="$CC -B $topsrcdir/gcc/bin"
@@ -21,7 +16,7 @@ fi
 # Enable TSan specific code and build workarounds
 ac_add_options --enable-thread-sanitizer
 
-# The ThreadSanitizer is not compatible with sanboxing
+# The ThreadSanitizer is not compatible with sandboxing
 # (see bug 1182565)
 ac_add_options --disable-sandbox
 

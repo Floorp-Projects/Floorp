@@ -17,7 +17,7 @@ def add_libdir_to_path():
 add_libdir_to_path()
 
 import jittests
-from tests import get_jitflags, get_cpu_count, get_environment_overlay, \
+from tests import get_jitflags, valid_jitflags, get_cpu_count, get_environment_overlay, \
                   change_env
 
 # Python 3.3 added shutil.which, but we can't use that yet.
@@ -109,21 +109,21 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='none', type='string',
-                  help='IonMonkey option combinations. One of all, debug,'
-                  ' ion, and none (default %default).')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output',
                   action='store_true',
                   help='With --write-failures=FILE, additionally write the'
                   ' output of failed tests to [FILE]')
-    op.add_option('--ion', dest='ion', action='store_true',
+    op.add_option('--jitflags', dest='jitflags', default='none',
+                  choices=valid_jitflags(),
+                  help='IonMonkey option combinations. One of %s.' % ', '.join(valid_jitflags()))
+    op.add_option('--ion', dest='jitflags', action='store_const', const='ion',
                   help='Run tests once with --ion-eager and once with'
-                  ' --baseline-eager (ignores --jitflags)')
-    op.add_option('--tbpl', dest='tbpl', action='store_true',
+                  ' --baseline-eager (equivalent to --jitflags=ion)')
+    op.add_option('--tbpl', dest='jit_flags', action='store_const', const='all',
                   help='Run tests with all IonMonkey option combinations'
-                  ' (ignores --jitflags)')
+                  ' (equivalent to --jitflags=all)')
     op.add_option('-j', '--worker-count', dest='max_jobs', type=int,
                   default=max(1, get_cpu_count()),
                   help='Number of tests to run in parallel (default %default)')
@@ -194,8 +194,16 @@ def main(argv):
     read_all = True
 
     # Forbid running several variants of the same asmjs test, when debugging.
-    options.can_test_also_noasmjs = not options.debugger
-    options.can_test_also_wasm_baseline = not options.debugger
+    # But also, no point in adding in noasmjs and wasm-baseline variants if the
+    # jitflags forbid asmjs in the first place. (This is to avoid getting a
+    # wasm-baseline run when requesting --jitflags=interp, but the test
+    # contains test-also-noasmjs.)
+    test_flags = get_jitflags(options.jitflags)
+    options.can_test_also_noasmjs = True
+    options.can_test_also_wasm_baseline = True
+    if options.debugger or all(['--no-asmjs' in flags for flags in test_flags]):
+        options.can_test_also_noasmjs = False
+        options.can_test_also_wasm_baseline = False
 
     if test_args:
         read_all = False
@@ -258,15 +266,6 @@ def main(argv):
         sys.exit(0)
 
     # The full test list is ready. Now create copies for each JIT configuration.
-    if options.tbpl:
-        # Running all bits would take forever. Instead, we test a few
-        # interesting combinations.
-        test_flags = get_jitflags('all')
-    elif options.ion:
-        test_flags = get_jitflags('ion')
-    else:
-        test_flags = get_jitflags(options.jitflags)
-
     test_list = [_ for test in test_list for _ in test.copy_variants(test_flags)]
 
     job_list = (test for test in test_list)

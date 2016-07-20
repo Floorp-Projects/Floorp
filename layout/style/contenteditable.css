@@ -37,7 +37,7 @@ a:-moz-read-write:active img, a:-moz-read-write:-moz-only-whitespace[name] {
   cursor: default;
 }
 
-*|*:-moz-any-link:-moz-read-write {
+*|*:any-link:-moz-read-write {
   cursor: text;
 }
 

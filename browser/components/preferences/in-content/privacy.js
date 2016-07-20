@@ -54,6 +54,17 @@ var gPrivacyPane = {
   },
 
   /**
+   * Show the Containers UI depending on the privacy.userContext.ui.enabled pref.
+   */
+  _initBrowserContainers: function () {
+    if (!Services.prefs.getBoolPref("privacy.userContext.ui.enabled")) {
+      return;
+    }
+
+    document.getElementById("browserContainersbox").hidden = false;
+  },
+
+  /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
@@ -73,6 +84,7 @@ var gPrivacyPane = {
     this._initTrackingProtection();
     this._initTrackingProtectionPBM();
     this._initAutocomplete();
+    this._initBrowserContainers();
 
     setEventListener("privacy.sanitize.sanitizeOnShutdown", "change",
                      gPrivacyPane._updateSanitizeSettingsButton);

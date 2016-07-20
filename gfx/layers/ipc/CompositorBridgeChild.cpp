@@ -48,16 +48,12 @@ static StaticRefPtr<CompositorBridgeChild> sCompositorBridge;
 Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 
 CompositorBridgeChild::CompositorBridgeChild(ClientLayerManager *aLayerManager)
-  : TextureForwarder("CompositorBridgeChild")
-  , mLayerManager(aLayerManager)
+  : mLayerManager(aLayerManager)
   , mCanSend(false)
   , mFwdTransactionId(0)
   , mMessageLoop(MessageLoop::current())
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // Ensure destruction on the main thread
-  SetMessageLoopToPostDestructionTo(mMessageLoop);
 }
 
 CompositorBridgeChild::~CompositorBridgeChild()
@@ -87,7 +83,6 @@ void
 CompositorBridgeChild::Destroy()
 {
   // This must not be called from the destructor!
-  MOZ_ASSERT(!IsDead());
   mTexturesWaitingRecycled.Clear();
 
   if (!mCanSend) {
@@ -701,26 +696,6 @@ CompositorBridgeChild::SendResume()
     return true;
   }
   return PCompositorBridgeChild::SendResume();
-}
-
-bool
-CompositorBridgeChild::SendNotifyHidden(const uint64_t& id)
-{
-  MOZ_ASSERT(mCanSend);
-  if (!mCanSend) {
-    return true;
-  }
-  return PCompositorBridgeChild::SendNotifyHidden(id);
-}
-
-bool
-CompositorBridgeChild::SendNotifyVisible(const uint64_t& id)
-{
-  MOZ_ASSERT(mCanSend);
-  if (!mCanSend) {
-    return true;
-  }
-  return PCompositorBridgeChild::SendNotifyVisible(id);
 }
 
 bool

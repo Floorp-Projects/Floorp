@@ -594,6 +594,11 @@ protected:
   nsTArray<RefPtr<TextureHost>> mNotifyNotUsedAfterComposition;
 
   /**
+   * Last Composition end time.
+   */
+  TimeStamp mLastCompositionEndTime;
+
+  /**
    * Render time for the current composition.
    */
   TimeStamp mCompositionTime;

@@ -90,6 +90,9 @@ struct LinkedProgramInfo final
 
     //////
 
+    // The maps for the frag data names to the translated names.
+    std::map<nsCString, const nsCString> fragDataMap;
+
     explicit LinkedProgramInfo(WebGLProgram* prog);
     ~LinkedProgramInfo();
 
@@ -97,6 +100,19 @@ struct LinkedProgramInfo final
     bool FindUniform(const nsCString& baseUserName, UniformInfo** const out) const;
     bool FindUniformBlock(const nsCString& baseUserName,
                           const UniformBlockInfo** const out) const;
+
+    bool
+    FindFragData(const nsCString& baseUserName,
+                 nsCString* const out_baseMappedName) const
+    {
+        const auto itr = fragDataMap.find(baseUserName);
+        if (itr == fragDataMap.end()) {
+            return false;
+        }
+
+        *out_baseMappedName = itr->second;
+        return true;
+    }
 };
 
 } // namespace webgl
@@ -144,8 +160,6 @@ public:
 
     ////////////////
 
-    bool FindActiveOutputMappedNameByUserName(const nsACString& userName,
-                                              nsCString* const out_mappedName) const;
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
                                         nsDependentCString* const out_userName) const;
     bool FindVaryingByMappedName(const nsACString& mappedName,
@@ -161,6 +175,8 @@ public:
     void TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
                                    GLenum bufferMode);
     already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(GLuint index);
+
+    void EnumerateFragOutputs(std::map<nsCString, const nsCString> &out_FragOutputs) const;
 
     bool IsLinked() const { return mMostRecentLinkInfo; }
 

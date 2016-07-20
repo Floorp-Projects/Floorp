@@ -46,8 +46,7 @@ class WinCompositorWidget
    public CompositorWidgetDelegate
 {
 public:
-  WinCompositorWidget(const CompositorWidgetInitData& aInitData,
-                      nsWindow* aWindow = nullptr);
+  WinCompositorWidget(const CompositorWidgetInitData& aInitData);
 
   bool PreRender(layers::LayerManagerComposite*) override;
   void PostRender(layers::LayerManagerComposite*) override;
@@ -58,9 +57,7 @@ public:
                                                             const LayoutDeviceIntRect& aRect,
                                                             const LayoutDeviceIntRect& aClearRect) override;
   already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
-  already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
   uintptr_t GetWidgetKey() override;
-  nsIWidget* RealWidget() override;
   WinCompositorWidget* AsWindows() override {
     return this;
   }
@@ -95,7 +92,6 @@ private:
   void CreateTransparentSurface(const gfx::IntSize& aSize);
 
 private:
-  nsWindow* mWindow;
   uintptr_t mWidgetKey;
   HWND mWnd;
   gfx::CriticalSection mPresentLock;

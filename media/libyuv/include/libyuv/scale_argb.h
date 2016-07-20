@@ -35,6 +35,7 @@ int ARGBScaleClip(const uint8* src_argb, int src_stride_argb,
                   int clip_x, int clip_y, int clip_width, int clip_height,
                   enum FilterMode filtering);
 
+// TODO(fbarchard): Implement this.
 // Scale with YUV conversion to ARGB and clipping.
 LIBYUV_API
 int YUVToARGBScaleClip(const uint8* src_y, int src_stride_y,

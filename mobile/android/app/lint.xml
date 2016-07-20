@@ -15,6 +15,11 @@
     <!-- We have our own l10n system & don't use the platform's plurals. -->
     <issue id="PluralsCandidate" severity="ignore" />
 
+    <!-- We don't want to have to follow the SDK release schedule: we can keep
+	 the warning in order to not forget that there's a new SDK, but there's
+	 no need to break on update. -->
+    <issue id="OldTargetApi" severity="warning" />
+
     <!-- We want all lint warnings to be fatal errors.
          Right now, we set these to lint warnings so:
 
@@ -136,7 +141,6 @@
     <issue id="NfcTechWhitespace" severity="error" />
     <issue id="NotSibling" severity="error" />
     <issue id="ObsoleteLayoutParam" severity="error" />
-    <issue id="OldTargetApi" severity="error" />
     <issue id="OnClick" severity="error" />
     <issue id="Orientation" severity="error" />
     <issue id="Override" severity="error" />

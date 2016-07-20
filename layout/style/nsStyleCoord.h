@@ -104,7 +104,7 @@ public:
   // Reference counted calc() value.  This is the type that is used to store
   // the calc() value in nsStyleCoord.
   struct Calc final : public CalcValue {
-    NS_INLINE_DECL_REFCOUNTING(Calc)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Calc)
     Calc() {}
 
   private:

@@ -384,10 +384,11 @@ Statistics::formatCompactSummaryMessage() const
         return UniqueChars(nullptr);
 
     JS_snprintf(buffer, sizeof(buffer),
-                "Zones: %d of %d; Compartments: %d of %d; HeapSize: %.3f MiB; "\
+                "Zones: %d of %d (-%d); Compartments: %d of %d (-%d); HeapSize: %.3f MiB; "\
                 "HeapChange (abs): %+d (%d); ",
-                zoneStats.collectedZoneCount, zoneStats.zoneCount,
+                zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
                 zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
+                zoneStats.sweptCompartmentCount,
                 double(preBytes) / bytesPerMiB,
                 counts[STAT_NEW_CHUNK] - counts[STAT_DESTROY_CHUNK],
                 counts[STAT_NEW_CHUNK] + counts[STAT_DESTROY_CHUNK]);
@@ -479,8 +480,8 @@ Statistics::formatDetailedDescription()
   Invocation Kind: %s\n\
   Reason: %s\n\
   Incremental: %s%s\n\
-  Zones Collected: %d of %d\n\
-  Compartments Collected: %d of %d\n\
+  Zones Collected: %d of %d (-%d)\n\
+  Compartments Collected: %d of %d (-%d)\n\
   MinorGCs since last GC: %d\n\
   Store Buffer Overflows: %d\n\
   MMU 20ms:%.1f%%; 50ms:%.1f%%\n\
@@ -496,8 +497,9 @@ Statistics::formatDetailedDescription()
                 ExplainReason(slices[0].reason),
                 nonincrementalReason_ ? "no - " : "yes",
                                                   nonincrementalReason_ ? nonincrementalReason_ : "",
-                zoneStats.collectedZoneCount, zoneStats.zoneCount,
+                zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
                 zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
+                zoneStats.sweptCompartmentCount,
                 counts[STAT_MINOR_GC],
                 counts[STAT_STOREBUFFER_OVERFLOW],
                 mmu20 * 100., mmu50 * 100.,

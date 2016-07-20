@@ -5,6 +5,14 @@ load(libdir + "asserts.js");
 if (!getBuildConfiguration()["arm-simulator"])
     quit();
 
+const Module = WebAssembly.Module;
+const Instance = WebAssembly.Instance;
+const Table = WebAssembly.Table;
+
+// Explicitly opt into the new binary format for imports and exports until it
+// is used by default everywhere.
+const textToBinary = str => wasmTextToBinary(str, 'new-format');
+
 function normalize(stack)
 {
     var wasmFrameTypes = [
@@ -50,7 +58,7 @@ function test(code, expect)
 {
     enableSPSProfiling();
 
-    var f = wasmEvalText(code);
+    var f = new Instance(new Module(textToBinary(code))).exports[""];
     enableSingleStepProfiling();
     f();
     assertEqStacks(disableSingleStepProfiling(), expect);
@@ -102,3 +110,45 @@ testError(
     (export "" $foo)
 )`,
 Error);
+
+(function() {
+    var e = new Instance(new Module(textToBinary(`
+    (module
+        (func $foo (result i32) (i32.const 42))
+        (export "foo" $foo)
+        (func $bar (result i32) (i32.const 13))
+        (table $foo $bar)
+        (export "tbl" table)
+    )
+    `))).exports;
+    assertEq(e.foo(), 42);
+    assertEq(e.tbl.get(0)(), 42);
+    assertEq(e.tbl.get(1)(), 13);
+
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e.tbl.get(0)(), 42);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", ""]);
+    disableSPSProfiling();
+
+    assertEq(e.foo(), 42);
+    assertEq(e.tbl.get(0)(), 42);
+    assertEq(e.tbl.get(1)(), 13);
+
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e.tbl.get(1)(), 13);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", ">", ""]);
+    disableSPSProfiling();
+
+    assertEq(e.tbl.get(0)(), 42);
+    assertEq(e.tbl.get(1)(), 13);
+    assertEq(e.foo(), 42);
+
+    enableSPSProfiling();
+    enableSingleStepProfiling();
+    assertEq(e.foo(), 42);
+    assertEq(e.tbl.get(1)(), 13);
+    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
+    disableSPSProfiling();
+})();

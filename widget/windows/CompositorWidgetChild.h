@@ -8,8 +8,11 @@
 
 #include "WinCompositorWidget.h"
 #include "mozilla/widget/PCompositorWidgetChild.h"
+#include "mozilla/widget/CompositorWidgetVsyncObserver.h"
 
 namespace mozilla {
+class CompositorVsyncDispatcher;
+
 namespace widget {
 
 class CompositorWidgetChild final
@@ -17,7 +20,8 @@ class CompositorWidgetChild final
    public CompositorWidgetDelegate
 {
 public:
-  CompositorWidgetChild(nsIWidget* aWidget);
+  CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
+                        RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver);
   ~CompositorWidgetChild() override;
 
   void EnterPresentLock() override;
@@ -27,6 +31,13 @@ public:
   void ClearTransparentWindow() override;
   void ResizeTransparentWindow(const gfx::IntSize& aSize) override;
   HDC GetTransparentDC() const override;
+
+  bool RecvObserveVsync() override;
+  bool RecvUnobserveVsync() override;
+
+private:
+  RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;
+  RefPtr<CompositorWidgetVsyncObserver> mVsyncObserver;
 };
 
 } // namespace widget

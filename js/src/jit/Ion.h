@@ -157,7 +157,7 @@ void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder);
 void StopAllOffThreadCompilations(Zone* zone);
 void StopAllOffThreadCompilations(JSCompartment* comp);
 
-void LazyLink(JSContext* cx, HandleScript calleescript);
+void LinkIonScript(JSContext* cx, HandleScript calleescript);
 uint8_t* LazyLinkTopActivation(JSContext* cx);
 
 static inline bool

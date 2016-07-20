@@ -45,7 +45,8 @@ struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
 {
     explicit FreeMallocedBuffersTask(FreeOp* fop) : fop_(fop) {}
     bool init() { return buffers_.init(); }
-    void transferBuffersToFree(MallocedBuffersSet& buffersToFree);
+    void transferBuffersToFree(MallocedBuffersSet& buffersToFree,
+                               const AutoLockHelperThreadState& lock);
     ~FreeMallocedBuffersTask() override { join(); }
 
   private:
@@ -614,11 +615,12 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
 }
 
 void
-js::Nursery::FreeMallocedBuffersTask::transferBuffersToFree(MallocedBuffersSet& buffersToFree)
+js::Nursery::FreeMallocedBuffersTask::transferBuffersToFree(MallocedBuffersSet& buffersToFree,
+                                                            const AutoLockHelperThreadState& lock)
 {
     // Transfer the contents of the source set to the task's buffers_ member by
     // swapping the sets, which also clears the source.
-    MOZ_ASSERT(!isRunning());
+    MOZ_ASSERT(!isRunningWithLockHeld(lock));
     MOZ_ASSERT(buffers_.empty());
     mozilla::Swap(buffers_, buffersToFree);
 }
@@ -641,7 +643,7 @@ js::Nursery::freeMallocedBuffers()
     {
         AutoLockHelperThreadState lock;
         freeMallocedBuffersTask->joinWithLockHeld(lock);
-        freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers);
+        freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers, lock);
         started = freeMallocedBuffersTask->startWithLockHeld();
     }
 

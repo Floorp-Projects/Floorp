@@ -8347,6 +8347,25 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
 }
 
 // static
+net::ReferrerPolicy
+nsContentUtils::GetReferrerPolicyFromHeader(const nsAString& aHeader)
+{
+  // Multiple headers could be concatenated into one comma-separated
+  // list of policies. Need to tokenize the multiple headers.
+  nsCharSeparatedTokenizer tokenizer(aHeader, ',');
+  nsAutoString token;
+  net::ReferrerPolicy referrerPolicy = mozilla::net::RP_Unset;
+  while (tokenizer.hasMoreTokens()) {
+    token = tokenizer.nextToken();
+    net::ReferrerPolicy policy = net::ReferrerPolicyFromString(token);
+    if (policy != net::RP_Unset) {
+      referrerPolicy = policy;
+    }
+  }
+  return referrerPolicy;
+}
+
+// static
 bool
 nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
 {
@@ -9211,4 +9230,44 @@ nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentat
   }
 
   topFrameElement->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
+}
+
+/* static */ nsIDocShell*
+nsContentUtils::GetDocShellForEventTarget(EventTarget* aTarget)
+{
+  nsCOMPtr<nsINode> node(do_QueryInterface(aTarget));
+  nsIDocument* doc = nullptr;
+  nsIDocShell* docShell = nullptr;
+
+  if (node) {
+    doc = node->OwnerDoc();
+    if (!doc->GetDocShell()) {
+      bool ignore;
+      nsCOMPtr<nsPIDOMWindowInner> window =
+        do_QueryInterface(doc->GetScriptHandlingObject(ignore));
+      if (window) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  } else {
+    nsCOMPtr<nsPIDOMWindowInner> window(do_QueryInterface(aTarget));
+    if (window) {
+      doc = window->GetExtantDoc();
+    }
+  }
+
+  if (!doc) {
+    nsCOMPtr<DOMEventTargetHelper> helper(do_QueryInterface(aTarget));
+    if (helper) {
+      if (nsPIDOMWindowInner* window = helper->GetOwner()) {
+        doc = window->GetExtantDoc();
+      }
+    }
+  }
+
+  if (doc) {
+    docShell = doc->GetDocShell();
+  }
+
+  return docShell;
 }

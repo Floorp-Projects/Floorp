@@ -75,12 +75,6 @@ function append_datafile(status, entry)
 }
 
 function run_test() {
-  if (newCacheBackEndUsed()) {
-    // Needs limit preferences
-    do_check_true(true, "This test doesn't run with the new cache backend, the test or the cache needs to be fixed");
-    return;
-  }
-
   do_get_profile();
 
   // clear the cache

@@ -157,16 +157,11 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
       doc->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(scriptObject);
 
-    nsIScriptContext *context = scriptObject->GetContext();
-    NS_ENSURE_TRUE(context, NS_OK);
-
     nsCOMPtr<nsIXMLHttpRequest> req =
         do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = req->Init(docPrincipal, context,
-                   scriptObject ? scriptObject : doc->GetScopeObject(),
-                   nullptr, nullptr);
+    rv = req->Init(docPrincipal, scriptObject, nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = req->Open(NS_LITERAL_CSTRING("GET"), uriStr, true,

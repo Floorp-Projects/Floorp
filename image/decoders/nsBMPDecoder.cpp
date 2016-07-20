@@ -170,7 +170,7 @@ static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
 
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength)
   : Decoder(aImage)
-  , mLexer(Transition::To(aState, aLength))
+  , mLexer(Transition::To(aState, aLength), Transition::TerminateSuccess())
   , mIsWithinICO(false)
   , mMayHaveTransparency(false)
   , mDoesHaveTransparency(false)

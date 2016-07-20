@@ -78,9 +78,8 @@ class CompositableForwarder : public TextureForwarder
 {
 public:
 
-  CompositableForwarder(const char* aName)
-    : TextureForwarder(aName)
-    , mActiveResourceTracker(1000, "CompositableForwarder")
+  CompositableForwarder()
+    : mActiveResourceTracker(1000, "CompositableForwarder")
     , mSerial(++sSerialCounter)
   {}
 

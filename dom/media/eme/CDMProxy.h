@@ -8,91 +8,93 @@
 #define CDMProxy_h_
 
 #include "mozilla/CDMCaps.h"
-#include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 
+#include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeys.h"
 
 #include "nsIThread.h"
-#include "nsString.h"
-#include "nsAutoPtr.h"
-#include "GMPDecryptorProxy.h"
 
 namespace mozilla {
 class MediaRawData;
-class GMPCDMCallbackProxy;
 
-namespace dom {
-class MediaKeySession;
-} // namespace dom
+enum DecryptStatus {
+  Ok = 0,
+  GenericErr = 1,
+  NoKeyErr = 2,
+  AbortedErr = 3,
+};
 
 struct DecryptResult {
-  DecryptResult(GMPErr aStatus, MediaRawData* aSample)
+  DecryptResult(DecryptStatus aStatus, MediaRawData* aSample)
     : mStatus(aStatus)
     , mSample(aSample)
   {}
-  GMPErr mStatus;
+  DecryptStatus mStatus;
   RefPtr<MediaRawData> mSample;
 };
 
-// Proxies calls GMP/CDM, and proxies calls back.
+// Proxies calls CDM, and proxies calls back.
 // Note: Promises are passed in via a PromiseId, so that the ID can be
 // passed via IPC to the CDM, which can then signal when to reject or
 // resolve the promise using its PromiseId.
 class CDMProxy {
+protected:
   typedef dom::PromiseId PromiseId;
   typedef dom::SessionType SessionType;
 public:
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CDMProxy)
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
 
   typedef MozPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
 
   // Main thread only.
-  CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem);
+  CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem)
+  : mKeys(aKeys), mKeySystem(aKeySystem)
+  {}
 
   // Main thread only.
   // Loads the CDM corresponding to mKeySystem.
   // Calls MediaKeys::OnCDMCreated() when the CDM is created.
-  void Init(PromiseId aPromiseId,
-            const nsAString& aOrigin,
-            const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName,
-            bool aInPrivateBrowsing,
-            GMPCrashHelper* aHelper);
+  virtual void Init(PromiseId aPromiseId,
+                    const nsAString& aOrigin,
+                    const nsAString& aTopLevelOrigin,
+                    const nsAString& aName,
+                    bool aInPrivateBrowsing) = 0;
 
   // Main thread only.
   // Uses the CDM to create a key session.
   // Calls MediaKeys::OnSessionActivated() when session is created.
   // Assumes ownership of (Move()s) aInitData's contents.
-  void CreateSession(uint32_t aCreateSessionToken,
-                     dom::SessionType aSessionType,
-                     PromiseId aPromiseId,
-                     const nsAString& aInitDataType,
-                     nsTArray<uint8_t>& aInitData);
+  virtual void CreateSession(uint32_t aCreateSessionToken,
+                             dom::SessionType aSessionType,
+                             PromiseId aPromiseId,
+                             const nsAString& aInitDataType,
+                             nsTArray<uint8_t>& aInitData) = 0;
 
   // Main thread only.
   // Uses the CDM to load a presistent session stored on disk.
   // Calls MediaKeys::OnSessionActivated() when session is loaded.
-  void LoadSession(PromiseId aPromiseId,
-                   const nsAString& aSessionId);
+  virtual void LoadSession(PromiseId aPromiseId,
+                           const nsAString& aSessionId) = 0;
 
   // Main thread only.
   // Sends a new certificate to the CDM.
   // Calls MediaKeys->ResolvePromise(aPromiseId) after the CDM has
   // processed the request.
   // Assumes ownership of (Move()s) aCert's contents.
-  void SetServerCertificate(PromiseId aPromiseId,
-                            nsTArray<uint8_t>& aCert);
+  virtual void SetServerCertificate(PromiseId aPromiseId,
+                                    nsTArray<uint8_t>& aCert) = 0;
 
   // Main thread only.
   // Sends an update to the CDM.
   // Calls MediaKeys->ResolvePromise(aPromiseId) after the CDM has
   // processed the request.
   // Assumes ownership of (Move()s) aResponse's contents.
-  void UpdateSession(const nsAString& aSessionId,
-                     PromiseId aPromiseId,
-                     nsTArray<uint8_t>& aResponse);
+  virtual void UpdateSession(const nsAString& aSessionId,
+                             PromiseId aPromiseId,
+                             nsTArray<uint8_t>& aResponse) = 0;
 
   // Main thread only.
   // Calls MediaKeys->ResolvePromise(aPromiseId) after the CDM has
@@ -100,200 +102,90 @@ public:
   // If processing this operation results in the session actually closing,
   // we also call MediaKeySession::OnClosed(), which in turn calls
   // MediaKeys::OnSessionClosed().
-  void CloseSession(const nsAString& aSessionId,
-                    PromiseId aPromiseId);
+  virtual void CloseSession(const nsAString& aSessionId,
+                            PromiseId aPromiseId) = 0;
 
   // Main thread only.
   // Removes all data for a persisent session.
   // Calls MediaKeys->ResolvePromise(aPromiseId) after the CDM has
   // processed the request.
-  void RemoveSession(const nsAString& aSessionId,
-                     PromiseId aPromiseId);
+  virtual void RemoveSession(const nsAString& aSessionId,
+                             PromiseId aPromiseId) = 0;
 
   // Main thread only.
-  void Shutdown();
+  virtual void Shutdown() = 0;
 
   // Main thread only.
-  void Terminated();
+  virtual void Terminated() = 0;
 
   // Threadsafe.
-  const nsCString& GetNodeId() const;
+  virtual const nsCString& GetNodeId() const = 0;
 
   // Main thread only.
-  void OnSetSessionId(uint32_t aCreateSessionToken,
-                      const nsAString& aSessionId);
+  virtual void OnSetSessionId(uint32_t aCreateSessionToken,
+                              const nsAString& aSessionId) = 0;
 
   // Main thread only.
-  void OnResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess);
+  virtual void OnResolveLoadSessionPromise(uint32_t aPromiseId,
+                                           bool aSuccess) = 0;
 
   // Main thread only.
-  void OnSessionMessage(const nsAString& aSessionId,
-                        GMPSessionMessageType aMessageType,
-                        nsTArray<uint8_t>& aMessage);
+  virtual void OnSessionMessage(const nsAString& aSessionId,
+                                dom::MediaKeyMessageType aMessageType,
+                                nsTArray<uint8_t>& aMessage) = 0;
 
   // Main thread only.
-  void OnExpirationChange(const nsAString& aSessionId,
-                          GMPTimestamp aExpiryTime);
+  virtual void OnExpirationChange(const nsAString& aSessionId,
+                                  int64_t aExpiryTime) = 0;
 
   // Main thread only.
-  void OnSessionClosed(const nsAString& aSessionId);
+  virtual void OnSessionClosed(const nsAString& aSessionId) = 0;
 
   // Main thread only.
-  void OnSessionError(const nsAString& aSessionId,
-                      nsresult aException,
-                      uint32_t aSystemCode,
-                      const nsAString& aMsg);
+  virtual void OnSessionError(const nsAString& aSessionId,
+                              nsresult aException,
+                              uint32_t aSystemCode,
+                              const nsAString& aMsg) = 0;
 
   // Main thread only.
-  void OnRejectPromise(uint32_t aPromiseId,
-                       nsresult aDOMException,
-                       const nsCString& aMsg);
+  virtual void OnRejectPromise(uint32_t aPromiseId,
+                               nsresult aDOMException,
+                               const nsCString& aMsg) = 0;
 
-  RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample);
+  virtual RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample) = 0;
+
+  // Owner thread only.
+  virtual void OnDecrypted(uint32_t aId,
+                           DecryptStatus aResult,
+                           const nsTArray<uint8_t>& aDecryptedData) = 0;
 
   // Reject promise with DOMException corresponding to aExceptionCode.
   // Can be called from any thread.
-  void RejectPromise(PromiseId aId, nsresult aExceptionCode,
-                     const nsCString& aReason);
+  virtual void RejectPromise(PromiseId aId,
+                             nsresult aExceptionCode,
+                             const nsCString& aReason) = 0;
 
   // Resolves promise with "undefined".
   // Can be called from any thread.
-  void ResolvePromise(PromiseId aId);
+  virtual void ResolvePromise(PromiseId aId) = 0;
 
   // Threadsafe.
-  const nsString& KeySystem() const;
+  virtual const nsString& KeySystem() const = 0;
 
-  // GMP thread only.
-  void gmp_Decrypted(uint32_t aId,
-                     GMPErr aResult,
-                     const nsTArray<uint8_t>& aDecryptedData);
-
-  CDMCaps& Capabilites();
+  virtual  CDMCaps& Capabilites() = 0;
 
   // Main thread only.
-  void OnKeyStatusesChange(const nsAString& aSessionId);
+  virtual void OnKeyStatusesChange(const nsAString& aSessionId) = 0;
 
-  void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
-                             nsTArray<nsCString>& aSessionIds);
+  virtual void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
+                                     nsTArray<nsCString>& aSessionIds) = 0;
 
 #ifdef DEBUG
-  bool IsOnGMPThread();
+  virtual bool IsOnOwnerThread() = 0;
 #endif
 
-private:
-  friend class gmp_InitDoneCallback;
-  friend class gmp_InitGetGMPDecryptorCallback;
-
-  struct InitData {
-    uint32_t mPromiseId;
-    nsString mOrigin;
-    nsString mTopLevelOrigin;
-    nsString mGMPName;
-    RefPtr<GMPCrashHelper> mCrashHelper;
-    bool mInPrivateBrowsing;
-  };
-
-  // GMP thread only.
-  void gmp_Init(nsAutoPtr<InitData>&& aData);
-  void gmp_InitDone(GMPDecryptorProxy* aCDM, nsAutoPtr<InitData>&& aData);
-  void gmp_InitGetGMPDecryptor(nsresult aResult,
-                               const nsACString& aNodeId,
-                               nsAutoPtr<InitData>&& aData);
-
-  // GMP thread only.
-  void gmp_Shutdown();
-
-  // Main thread only.
-  void OnCDMCreated(uint32_t aPromiseId);
-
-  struct CreateSessionData {
-    dom::SessionType mSessionType;
-    uint32_t mCreateSessionToken;
-    PromiseId mPromiseId;
-    nsCString mInitDataType;
-    nsTArray<uint8_t> mInitData;
-  };
-  // GMP thread only.
-  void gmp_CreateSession(nsAutoPtr<CreateSessionData> aData);
-
-  struct SessionOpData {
-    PromiseId mPromiseId;
-    nsCString mSessionId;
-  };
-  // GMP thread only.
-  void gmp_LoadSession(nsAutoPtr<SessionOpData> aData);
-
-  struct SetServerCertificateData {
-    PromiseId mPromiseId;
-    nsTArray<uint8_t> mCert;
-  };
-  // GMP thread only.
-  void gmp_SetServerCertificate(nsAutoPtr<SetServerCertificateData> aData);
-
-  struct UpdateSessionData {
-    PromiseId mPromiseId;
-    nsCString mSessionId;
-    nsTArray<uint8_t> mResponse;
-  };
-  // GMP thread only.
-  void gmp_UpdateSession(nsAutoPtr<UpdateSessionData> aData);
-
-  // GMP thread only.
-  void gmp_CloseSession(nsAutoPtr<SessionOpData> aData);
-
-  // GMP thread only.
-  void gmp_RemoveSession(nsAutoPtr<SessionOpData> aData);
-
-  class DecryptJob {
-  public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecryptJob)
-
-    explicit DecryptJob(MediaRawData* aSample)
-      : mId(0)
-      , mSample(aSample)
-    {
-    }
-
-    void PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecryptedData);
-    void PostResult(GMPErr aResult);
-
-    RefPtr<DecryptPromise> Ensure() {
-      return mPromise.Ensure(__func__);
-    }
-
-    uint32_t mId;
-    RefPtr<MediaRawData> mSample;
-  private:
-    ~DecryptJob() {}
-    MozPromiseHolder<DecryptPromise> mPromise;
-  };
-  // GMP thread only.
-  void gmp_Decrypt(RefPtr<DecryptJob> aJob);
-
-  class RejectPromiseTask : public Runnable {
-  public:
-    RejectPromiseTask(CDMProxy* aProxy,
-                      PromiseId aId,
-                      nsresult aCode,
-                      const nsCString& aReason)
-      : mProxy(aProxy)
-      , mId(aId)
-      , mCode(aCode)
-      , mReason(aReason)
-    {
-    }
-    NS_METHOD Run() {
-      mProxy->RejectPromise(mId, mCode, mReason);
-      return NS_OK;
-    }
-  private:
-    RefPtr<CDMProxy> mProxy;
-    PromiseId mId;
-    nsresult mCode;
-    nsCString mReason;
-  };
-
-  ~CDMProxy();
+protected:
+  virtual ~CDMProxy() {}
 
   // Helper to enforce that a raw pointer is only accessed on the main thread.
   template<class Type>
@@ -330,30 +222,13 @@ private:
 
   const nsString mKeySystem;
 
-  // Gecko Media Plugin thread. All interactions with the out-of-process
-  // EME plugin must come from this thread.
-  RefPtr<nsIThread> mGMPThread;
+  // Onwer specified thread. e.g. Gecko Media Plugin thread.
+  // All interactions with the out-of-process EME plugin must come from this thread.
+  RefPtr<nsIThread> mOwnerThread;
 
   nsCString mNodeId;
 
-  GMPDecryptorProxy* mCDM;
   CDMCaps mCapabilites;
-  nsAutoPtr<GMPCDMCallbackProxy> mCallback;
-
-  // Decryption jobs sent to CDM, awaiting result.
-  // GMP thread only.
-  nsTArray<RefPtr<DecryptJob>> mDecryptionJobs;
-
-  // Number of buffers we've decrypted. Used to uniquely identify
-  // decryption jobs sent to CDM. Note we can't just use the length of
-  // mDecryptionJobs as that shrinks as jobs are completed and removed
-  // from it.
-  // GMP thread only.
-  uint32_t mDecryptionJobCount;
-
-  // True if CDMProxy::gmp_Shutdown was called.
-  // GMP thread only.
-  bool mShutdownCalled;
 };
 
 

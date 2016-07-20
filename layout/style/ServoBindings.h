@@ -10,6 +10,7 @@
 #include "stdint.h"
 #include "nsColor.h"
 #include "nsStyleStruct.h"
+#include "nsStyleCoord.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "nsProxyRelease.h"
 
@@ -192,6 +193,14 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len);
 
 void Gecko_InitializeImageLayer(nsStyleImageLayers::Layer* layer,
                                 nsStyleImageLayers::LayerType layer_type);
+
+// Clean up pointer-based coordinates
+void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
+
+// Set an nsStyleCoord to a computed `calc()` value
+void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value, nsStyleCoord::CalcValue calc);
+
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 // Styleset and Stylesheet management.
 //

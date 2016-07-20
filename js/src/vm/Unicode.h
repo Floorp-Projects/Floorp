@@ -8,6 +8,7 @@
 #define vm_Unicode_h
 
 #include "jspubtd.h"
+#include "vm/UnicodeNonBMP.h"
 
 extern const bool js_isidstart[];
 extern const bool js_isident[];
@@ -234,6 +235,50 @@ CanLowerCase(char16_t ch)
     return CharInfo(ch).lowerCase != 0;
 }
 
+#define CHECK_RANGE(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+    if (lead == LEAD && trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+        return true;
+
+inline bool
+CanUpperCaseNonBMP(char16_t lead, char16_t trail)
+{
+    FOR_EACH_NON_BMP_UPPERCASE(CHECK_RANGE)
+    return false;
+}
+
+inline bool
+CanLowerCaseNonBMP(char16_t lead, char16_t trail)
+{
+    FOR_EACH_NON_BMP_LOWERCASE(CHECK_RANGE)
+    return false;
+}
+
+#undef CHECK_RANGE
+
+inline char16_t
+ToUpperCaseNonBMPTrail(char16_t lead, char16_t trail)
+{
+#define CALC_TRAIL(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+    if (lead == LEAD && trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+        return trail + DIFF;
+    FOR_EACH_NON_BMP_UPPERCASE(CALC_TRAIL)
+#undef CALL_TRAIL
+
+    return trail;
+}
+
+inline char16_t
+ToLowerCaseNonBMPTrail(char16_t lead, char16_t trail)
+{
+#define CALC_TRAIL(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+    if (lead == LEAD && trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+        return trail + DIFF;
+    FOR_EACH_NON_BMP_LOWERCASE(CALC_TRAIL)
+#undef CALL_TRAIL
+
+    return trail;
+}
+
 class FoldingInfo {
   public:
     uint16_t folding;
@@ -323,13 +368,5 @@ UTF16Decode(size_t lead, size_t trail)
 
 } /* namespace unicode */
 } /* namespace js */
-
-#define FOR_EACH_NON_BMP_CASE_FOLDING(macro)                            \
-    macro(0x10400, 0x10427, 0xD801, 0xDC00, 0xDC27, 0x28)               \
-    macro(0x10428, 0x1044F, 0xD801, 0xDC28, 0xDC4F, -0x28)              \
-    macro(0x10C80, 0x10CB2, 0xD803, 0xDC80, 0xDCB2, 0x40)               \
-    macro(0x10CC0, 0x10CF2, 0xD803, 0xDCC0, 0xDCF2, -0x40)              \
-    macro(0x118A0, 0x118bf, 0xD806, 0xDCA0, 0xDCBF, 0x20)               \
-    macro(0x118C0, 0x118df, 0xD806, 0xDCC0, 0xDCDF, -0x20)
 
 #endif /* vm_Unicode_h */

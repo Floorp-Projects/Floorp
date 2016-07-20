@@ -69,7 +69,7 @@ public:
   NoteLiveManager(QuotaManager* aManager);
 
   void
-  NoteFinishedManager();
+  NoteShuttingDownManager();
 
   // Called when a process is being shot down. Aborts any running operations
   // for the given process.

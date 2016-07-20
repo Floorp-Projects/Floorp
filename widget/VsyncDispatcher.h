@@ -31,7 +31,18 @@ protected:
   virtual ~VsyncObserver() {}
 }; // VsyncObserver
 
-// Used to dispatch vsync events in the parent process to compositors
+// Used to dispatch vsync events in the parent process to compositors.
+//
+// When the compositor is in-process, CompositorWidgets own a
+// CompositorVsyncDispatcher, and directly attach the compositor's observer
+// to it.
+//
+// When the compositor is out-of-process, the CompositorWidgetDelegate owns
+// the vsync dispatcher instead. The widget receives vsync observer/unobserve
+// commands via IPDL, and uses this to attach a CompositorWidgetVsyncObserver.
+// This observer forwards vsync notifications (on the vsync thread) to a
+// dedicated vsync I/O thread, which then forwards the notification to the
+// compositor thread in the compositor process.
 class CompositorVsyncDispatcher final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncDispatcher)
@@ -46,13 +57,7 @@ public:
   void SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
   void Shutdown();
 
-  // This can be used to enable or disable thread assertions.
-  // This is useful for gtests because usually things run
-  // in only one thread in that environment
-  static void SetThreadAssertionsEnabled(bool aEnable);
-
 private:
-  void AssertOnCompositorThread();
   virtual ~CompositorVsyncDispatcher();
   void ObserveVsync(bool aEnable);
 

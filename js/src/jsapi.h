@@ -991,16 +991,16 @@ JS_PUBLIC_API(double)
 JS_GetCurrentEmbedderTime();
 
 JS_PUBLIC_API(void*)
-JS_GetRuntimePrivate(JSRuntime* rt);
+JS_GetContextPrivate(JSContext* cx);
+
+JS_PUBLIC_API(void)
+JS_SetContextPrivate(JSContext* cx, void* data);
 
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetParentRuntime(JSRuntime* rt);
-
-JS_PUBLIC_API(void)
-JS_SetRuntimePrivate(JSRuntime* rt, void* data);
 
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext* cx);
@@ -4050,10 +4050,11 @@ CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t
  * After successfully triggering an off thread compile of a script, the
  * callback will eventually be invoked with the specified data and a token
  * for the compilation. The callback will be invoked while off the main thread,
- * so must ensure that its operations are thread safe. Afterwards,
- * FinishOffThreadScript must be invoked on the main thread to get the result
- * script or nullptr. If maybecx is not specified, the resources will be freed,
- * but no script will be returned.
+ * so must ensure that its operations are thread safe. Afterwards, one of the
+ * following functions must be invoked on the main thread:
+ *
+ * - FinishOffThreadScript, to get the result script (or nullptr on failure).
+ * - CancelOffThreadScript, to free the resources without creating a script.
  *
  * The characters passed in to CompileOffThread must remain live until the
  * callback is invoked, and the resulting script will be rooted until the call
@@ -4066,7 +4067,10 @@ CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                  OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadScript(JSContext* maybecx, JSRuntime* rt, void* token);
+FinishOffThreadScript(JSContext* cx, void* token);
+
+extern JS_PUBLIC_API(void)
+CancelOffThreadScript(JSContext* cx, void* token);
 
 extern JS_PUBLIC_API(bool)
 CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -4074,7 +4078,10 @@ CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
                        OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSObject*)
-FinishOffThreadModule(JSContext* maybecx, JSRuntime* rt, void* token);
+FinishOffThreadModule(JSContext* cx, void* token);
+
+extern JS_PUBLIC_API(void)
+CancelOffThreadModule(JSContext* cx, void* token);
 
 /**
  * Compile a function with scopeChain plus the global as its scope chain.
@@ -4167,7 +4174,8 @@ namespace JS {
  * cross-compartment, it is cloned into the current compartment before executing.
  */
 extern JS_PUBLIC_API(bool)
-CloneAndExecuteScript(JSContext* cx, JS::Handle<JSScript*> script);
+CloneAndExecuteScript(JSContext* cx, JS::Handle<JSScript*> script,
+                      JS::MutableHandleValue rval);
 
 } /* namespace JS */
 
