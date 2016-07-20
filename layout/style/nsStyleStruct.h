@@ -3522,10 +3522,11 @@ struct nsStyleClipPath
   }
 
   void SetBasicShape(nsStyleBasicShape* mBasicShape,
-                     uint8_t aSizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX);
+                     mozilla::StyleClipShapeSizing aSizingBox =
+                     mozilla::StyleClipShapeSizing::NoBox);
 
-  uint8_t GetSizingBox() const { return mSizingBox; }
-  void SetSizingBox(uint8_t aSizingBox);
+  mozilla::StyleClipShapeSizing GetSizingBox() const { return mSizingBox; }
+  void SetSizingBox(mozilla::StyleClipShapeSizing aSizingBox);
 
 private:
   void ReleaseRef();
@@ -3536,7 +3537,7 @@ private:
     nsStyleBasicShape* mBasicShape;
     nsIURI* mURL;
   };
-  uint8_t mSizingBox; // see NS_STYLE_CLIP_SHAPE_SIZING_* constants in nsStyleConsts.h
+  mozilla::StyleClipShapeSizing mSizingBox;
 };
 
 struct nsStyleFilter
