@@ -42,10 +42,9 @@ define(function (require, exports, module) {
           key: "default",
           style: rowStyle},
           span({ className: "treeIcon" }),
-          span({
-            className: "treeLabel " + member.type + "Label",
-            "data-level": level
-          }, member.name)
+          span({ className: "treeLabel " + member.type + "Label" },
+            member.name
+          )
         )
       );
     }
