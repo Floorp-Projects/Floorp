@@ -26,17 +26,13 @@ FreezeThaw(JSContext* cx, JS::HandleScript script)
 
     // freeze
     uint32_t nbytes;
-    void* memory = nullptr;
-    TranscodeResult rs = JS_EncodeScript(cx, script, &nbytes, &memory);
-    if (rs != TranscodeResult_Ok)
+    void* memory = JS_EncodeScript(cx, script, &nbytes);
+    if (!memory)
         return nullptr;
 
     // thaw
-    JS::RootedScript script2(cx);
-    rs = JS_DecodeScript(cx, memory, nbytes, &script2);
+    JSScript* script2 = JS_DecodeScript(cx, memory, nbytes);
     js_free(memory);
-    if (rs != TranscodeResult_Ok)
-        return nullptr;
     return script2;
 }
 
