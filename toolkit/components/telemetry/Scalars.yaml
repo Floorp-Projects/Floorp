@@ -121,3 +121,31 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+
+  total_uri_count:
+    bug_numbers:
+      - 1271313
+    description: >
+      The count of the total non-unique http(s) URIs visited in a subsession, including
+      page reloads, after the session has been restored. This does not include background
+      page requests and URIs from embedded pages or private browsing.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
+
+  unique_domains_count:
+    bug_numbers:
+      - 1271310
+    description: >
+      The count of the unique domains visited in a subsession, after the session
+      has been restored. Subdomains under eTLD are aggregated after the first level
+      (i.e. test.example.com and other.example.com are only counted once).
+      This does not include background page requests and domains from embedded pages
+      or private browsing. The count is limited to 100 unique domains.
+    expires: "55"
+    kind: uint
+    notification_emails:
+      - rweiss@mozilla.com
+    release_channel_collection: opt-out
