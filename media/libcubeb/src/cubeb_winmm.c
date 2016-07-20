@@ -89,7 +89,7 @@ struct cubeb {
   PSLIST_HEADER work;
   CRITICAL_SECTION lock;
   unsigned int active_streams;
-  unsigned int minimum_latency;
+  unsigned int minimum_latency_ms;
 };
 
 struct cubeb_stream {
@@ -336,7 +336,7 @@ winmm_init(cubeb ** context, char const * context_name)
   InitializeCriticalSection(&ctx->lock);
   ctx->active_streams = 0;
 
-  ctx->minimum_latency = calculate_minimum_latency();
+  ctx->minimum_latency_ms = calculate_minimum_latency();
 
   *context = ctx;
 
@@ -384,7 +384,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
                   cubeb_stream_params * input_stream_params,
                   cubeb_devid output_device,
                   cubeb_stream_params * output_stream_params,
-                  unsigned int latency,
+                  unsigned int latency_frames,
                   cubeb_data_callback data_callback,
                   cubeb_state_callback state_callback,
                   void * user_ptr)
@@ -467,11 +467,13 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   stm->user_ptr = user_ptr;
   stm->written = 0;
 
-  if (latency < context->minimum_latency) {
-    latency = context->minimum_latency;
+  uint32_t latency_ms = latency_frames * 1000 / output_stream_params->rate;
+
+  if (latency_ms < context->minimum_latency_ms) {
+    latency_ms = context->minimum_latency_ms;
   }
 
-  bufsz = (size_t) (stm->params.rate / 1000.0 * latency * bytes_per_frame(stm->params) / NBUFS);
+  bufsz = (size_t) (stm->params.rate / 1000.0 * latency_ms * bytes_per_frame(stm->params) / NBUFS);
   if (bufsz % bytes_per_frame(stm->params) != 0) {
     bufsz += bytes_per_frame(stm->params) - (bufsz % bytes_per_frame(stm->params));
   }
@@ -600,7 +602,7 @@ static int
 winmm_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency)
 {
   // 100ms minimum, if we are not in a bizarre configuration.
-  *latency = ctx->minimum_latency;
+  *latency = ctx->minimum_latency_ms * params.rate / 1000;
 
   return CUBEB_OK;
 }
@@ -854,8 +856,8 @@ winmm_create_device_from_outcaps2(LPWAVEOUTCAPS2A caps, UINT devid)
       &ret->format, &ret->default_format);
 
   /* Hardcoed latency estimates... */
-  ret->latency_lo_ms = 100;
-  ret->latency_hi_ms = 200;
+  ret->latency_lo = 100 * ret->default_rate / 1000;
+  ret->latency_hi = 200 * ret->default_rate / 1000;
 
   return ret;
 }
@@ -885,8 +887,8 @@ winmm_create_device_from_outcaps(LPWAVEOUTCAPSA caps, UINT devid)
       &ret->format, &ret->default_format);
 
   /* Hardcoed latency estimates... */
-  ret->latency_lo_ms = 100;
-  ret->latency_hi_ms = 200;
+  ret->latency_lo = 100 * ret->default_rate / 1000;
+  ret->latency_hi = 200 * ret->default_rate / 1000;
 
   return ret;
 }
@@ -935,8 +937,8 @@ winmm_create_device_from_incaps2(LPWAVEINCAPS2A caps, UINT devid)
       &ret->format, &ret->default_format);
 
   /* Hardcoed latency estimates... */
-  ret->latency_lo_ms = 100;
-  ret->latency_hi_ms = 200;
+  ret->latency_lo = 100 * ret->default_rate / 1000;
+  ret->latency_hi = 200 * ret->default_rate / 1000;
 
   return ret;
 }
@@ -966,8 +968,8 @@ winmm_create_device_from_incaps(LPWAVEINCAPSA caps, UINT devid)
       &ret->format, &ret->default_format);
 
   /* Hardcoed latency estimates... */
-  ret->latency_lo_ms = 100;
-  ret->latency_hi_ms = 200;
+  ret->latency_lo = 100 * ret->default_rate / 1000;
+  ret->latency_hi = 200 * ret->default_rate / 1000;
 
   return ret;
 }
