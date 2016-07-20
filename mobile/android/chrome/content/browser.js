@@ -4693,7 +4693,6 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
-    BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
     InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
@@ -4716,9 +4715,6 @@ var BrowserEventHandler = {
         break;
       case 'MozMouseHittest':
         this._handleRetargetedTouchStart(aEvent);
-        break;
-      case 'OpenMediaWithExternalApp':
-        ExternalApps.openExternal(aEvent.target);
         break;
     }
   },

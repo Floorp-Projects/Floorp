@@ -1,0 +1,16 @@
+$inherits:
+  from: 'tasks/builds/sm_variant_base.yml'
+  variables:
+    build_name: 'sm-tsan'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'tsan'
+      TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/linux64/tsan.manifest'
+  metadata:
+    name: '[TC] Spidermonkey Thread Sanitizer'
+    description: 'Spidermonkey Thread Sanitizer'
+  extra:
+    treeherder:
+      symbol: tsan

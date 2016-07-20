@@ -125,8 +125,6 @@ TEST_F(VsyncTester, EnableVsync)
 // Test that if we have vsync enabled, the display should get vsync notifications
 TEST_F(VsyncTester, CompositorGetVsyncNotifications)
 {
-  CompositorVsyncDispatcher::SetThreadAssertionsEnabled(false);
-
   VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
   globalDisplay.DisableVsync();
   ASSERT_FALSE(globalDisplay.IsVsyncEnabled());

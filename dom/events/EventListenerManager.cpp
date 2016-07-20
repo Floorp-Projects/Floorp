@@ -1154,45 +1154,6 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
   }
 }
 
-nsIDocShell*
-EventListenerManager::GetDocShellForTarget()
-{
-  nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
-  nsIDocument* doc = nullptr;
-  nsIDocShell* docShell = nullptr;
-
-  if (node) {
-    doc = node->OwnerDoc();
-    if (!doc->GetDocShell()) {
-      bool ignore;
-      nsCOMPtr<nsPIDOMWindowInner> window =
-        do_QueryInterface(doc->GetScriptHandlingObject(ignore));
-      if (window) {
-        doc = window->GetExtantDoc();
-      }
-    }
-  } else {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
-      doc = window->GetExtantDoc();
-    }
-  }
-
-  if (!doc) {
-    nsCOMPtr<DOMEventTargetHelper> helper(do_QueryInterface(mTarget));
-    if (helper) {
-      if (nsPIDOMWindowInner* window = helper->GetOwner()) {
-        doc = window->GetExtantDoc();
-      }
-    }
-  }
-
-  if (doc) {
-    docShell = doc->GetDocShell();
-  }
-
-  return docShell;
-}
-
 /**
 * Causes a check for event listeners and processing by them if they exist.
 * @param an event listener
@@ -1269,7 +1230,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
             if (mIsMainThreadELM &&
                 listener->mListenerType != Listener::eNativeListener) {
-              docShell = GetDocShellForTarget();
+              docShell = nsContentUtils::GetDocShellForEventTarget(mTarget);
               if (docShell) {
                 if (timelines && timelines->HasConsumer(docShell)) {
                   needsEndEventMarker = true;
@@ -1733,11 +1694,10 @@ EventListenerManager::IsApzAwareEvent(nsIAtom* aEvent)
   // less expecting touch listeners on the page to immediately start preventing
   // scrolling without so much as a repaint. Tests that we write can work
   // around this constraint easily enough.
-  if (TouchEvent::PrefEnabled()) {
-    if (aEvent == nsGkAtoms::ontouchstart ||
-        aEvent == nsGkAtoms::ontouchmove) {
-      return true;
-    }
+  if (aEvent == nsGkAtoms::ontouchstart ||
+      aEvent == nsGkAtoms::ontouchmove) {
+    return TouchEvent::PrefEnabled(
+        nsContentUtils::GetDocShellForEventTarget(mTarget));
   }
   return false;
 }

@@ -346,8 +346,7 @@ js::CancelOffThreadParses(JSRuntime* rt)
             if (task->runtimeMatches(rt)) {
                 found = true;
                 AutoUnlockHelperThreadState unlock(lock);
-                HelperThreadState().finishParseTask(/* maybecx = */ nullptr, rt, task->kind,
-                                                    task);
+                HelperThreadState().cancelParseTask(rt->contextFromMainThread(), task->kind, task);
             }
         }
         if (!found)
@@ -1088,10 +1087,17 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
 }
 
 bool
-js::GCParallelTask::isRunning() const
+js::GCParallelTask::isRunningWithLockHeld(const AutoLockHelperThreadState& locked) const
 {
     MOZ_ASSERT(HelperThreadState().isLocked());
     return state == Dispatched;
+}
+
+bool
+js::GCParallelTask::isRunning() const
+{
+    AutoLockHelperThreadState helperLock;
+    return isRunningWithLockHeld(helperLock);
 }
 
 void
@@ -1119,41 +1125,40 @@ LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
     rt->clearUsedByExclusiveThread(task->cx->zone());
 }
 
-JSScript*
-GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, ParseTaskKind kind,
-                                         void* token)
+ParseTask*
+GlobalHelperThreadState::removeFinishedParseTask(ParseTaskKind kind, void* token)
 {
-    ScopedJSDeletePtr<ParseTask> parseTask;
-
     // The token is a ParseTask* which should be in the finished list.
     // Find and remove its entry.
-    {
-        AutoLockHelperThreadState lock;
-        ParseTaskVector& finished = parseFinishedList();
-        for (size_t i = 0; i < finished.length(); i++) {
-            if (finished[i] == token) {
-                parseTask = finished[i];
-                remove(finished, &i);
-                break;
-            }
+
+    AutoLockHelperThreadState lock;
+    ParseTaskVector& finished = parseFinishedList();
+
+    for (size_t i = 0; i < finished.length(); i++) {
+        if (finished[i] == token) {
+            ParseTask* parseTask = finished[i];
+            remove(finished, &i);
+            MOZ_ASSERT(parseTask);
+            MOZ_ASSERT(parseTask->kind == kind);
+            return parseTask;
         }
     }
-    MOZ_ASSERT(parseTask);
-    MOZ_ASSERT(parseTask->kind == kind);
 
-    if (!maybecx) {
-        LeaveParseTaskZone(rt, parseTask);
-        return nullptr;
-    }
+    MOZ_CRASH("Invalid ParseTask token");
+}
 
-    JSContext* cx = maybecx;
+JSScript*
+GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void* token)
+{
     MOZ_ASSERT(cx->compartment());
+
+    ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
 
     // Make sure we have all the constructors we need for the prototype
     // remapping below, since we can't GC while that's happening.
     Rooted<GlobalObject*> global(cx, &cx->global()->as<GlobalObject>());
     if (!EnsureParserCreatedClasses(cx, kind)) {
-        LeaveParseTaskZone(rt, parseTask);
+        LeaveParseTaskZone(cx, parseTask);
         return nullptr;
     }
 
@@ -1162,7 +1167,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, Pars
     if (!parseTask->finish(cx))
         return nullptr;
 
-    RootedScript script(rt, parseTask->script);
+    RootedScript script(cx, parseTask->script);
     releaseAssertSameCompartment(cx, script);
 
     // Report out of memory errors eagerly, or errors could be malformed.
@@ -1194,31 +1199,35 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, Pars
 }
 
 JSScript*
-GlobalHelperThreadState::finishScriptParseTask(JSContext* maybecx, JSRuntime* rt, void* token)
+GlobalHelperThreadState::finishScriptParseTask(JSContext* cx, void* token)
 {
-    JSScript* script = finishParseTask(maybecx, rt, ParseTaskKind::Script, token);
+    JSScript* script = finishParseTask(cx, ParseTaskKind::Script, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
     return script;
 }
 
 JSObject*
-GlobalHelperThreadState::finishModuleParseTask(JSContext* maybecx, JSRuntime* rt, void* token)
+GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, void* token)
 {
-    JSScript* script = finishParseTask(maybecx, rt, ParseTaskKind::Module, token);
+    JSScript* script = finishParseTask(cx, ParseTaskKind::Module, token);
     if (!script)
         return nullptr;
 
     MOZ_ASSERT(script->module());
-    if (!maybecx)
-        return nullptr;
 
-    JSContext* cx = maybecx;
     RootedModuleObject module(cx, script->module());
     module->fixScopesAfterCompartmentMerge(cx);
     if (!ModuleObject::Freeze(cx, module))
         return nullptr;
 
     return module;
+}
+
+void
+GlobalHelperThreadState::cancelParseTask(JSContext* cx, ParseTaskKind kind, void* token)
+{
+    ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
+    LeaveParseTaskZone(cx, parseTask);
 }
 
 JSObject*

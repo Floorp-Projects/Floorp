@@ -19,6 +19,11 @@ UNIFIED_SOURCES += [
     '../mozalloc_oom.cpp',
 ]
 
+# Keep this file separate to avoid #include'ing windows.h everywhere.
+SOURCES += [
+    '../winheap.cpp',
+]
+
 LOCAL_INCLUDES += ['!/xpcom']
 
 DISABLE_STL_WRAPPING = True

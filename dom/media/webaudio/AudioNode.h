@@ -94,7 +94,17 @@ public:
   virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
                        ErrorResult& aRv);
 
+  virtual void Disconnect(ErrorResult& aRv);
   virtual void Disconnect(uint32_t aOutput, ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination, ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination, uint32_t aOutput,
+                          ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination,
+                          uint32_t aOutput, uint32_t aInput,
+                          ErrorResult& aRv);
+  virtual void Disconnect(AudioParam& aDestination, ErrorResult& aRv);
+  virtual void Disconnect(AudioParam& aDestination, uint32_t aOutput,
+                          ErrorResult& aRv);
 
   // Called after input nodes have been explicitly added or removed through
   // the Connect() or Disconnect() methods.
@@ -218,6 +228,8 @@ private:
   }
   // Callers must hold a reference to 'this'.
   void DisconnectFromGraph();
+  bool DisconnectFromOutputIfConnected(AudioNode& aDestination, uint32_t aOutputIndex, uint32_t aInputIndex);
+  bool DisconnectFromParamIfConnected(AudioParam& aDestination, uint32_t aOutputIndex, uint32_t aInputIndex);
 
 protected:
   // Helpers for sending different value types to streams

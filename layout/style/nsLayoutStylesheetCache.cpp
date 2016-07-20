@@ -882,7 +882,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
 
   sheetText.AppendPrintf(
       "*|*:link { color: #%02x%02x%02x; }\n"
-      "*|*:-moz-any-link:active { color: #%02x%02x%02x; }\n"
+      "*|*:any-link:active { color: #%02x%02x%02x; }\n"
       "*|*:visited { color: #%02x%02x%02x; }\n",
       NS_GET_R_G_B(linkColor),
       NS_GET_R_G_B(activeColor),
@@ -891,7 +891,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(StyleSheetHandle::RefPtr* aSheet,
   bool underlineLinks =
     aPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
   sheetText.AppendPrintf(
-      "*|*:-moz-any-link%s { text-decoration: %s; }\n",
+      "*|*:any-link%s { text-decoration: %s; }\n",
       underlineLinks ? ":not(svg|a)" : "",
       underlineLinks ? "underline" : "none");
 

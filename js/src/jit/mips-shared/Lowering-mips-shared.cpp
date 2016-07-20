@@ -274,6 +274,75 @@ LIRGeneratorMIPSShared::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
+LIRGeneratorMIPSShared::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
+{
+    if (!gen->needsBoundsCheckBranch(ins))
+        return;
+
+    MDefinition* index = ins->input();
+    auto* lir = new(alloc()) LWasmBoundsCheck(useRegisterAtStart(index));
+    add(lir, ins);
+}
+
+void
+LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
+{
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    if (ins->type() == MIRType::Int64) {
+        auto* lir = new(alloc()) LWasmLoadI64(useRegisterOrZeroAtStart(base));
+        defineInt64(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LWasmLoad(useRegisterOrZeroAtStart(base));
+    define(lir, ins);
+}
+
+void
+LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
+{
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    MDefinition* value = ins->value();
+    LAllocation valueAlloc;
+    switch (ins->accessType()) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+        valueAlloc = useRegisterOrConstantAtStart(value);
+        break;
+      case Scalar::Int64:
+        // No way to encode an int64-to-memory move on x64.
+        if (value->isConstant() && value->type() != MIRType::Int64)
+            valueAlloc = useOrConstantAtStart(value);
+        else
+            valueAlloc = useRegisterAtStart(value);
+        break;
+      case Scalar::Float32:
+      case Scalar::Float64:
+      case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Int32x4:
+        valueAlloc = useRegisterAtStart(value);
+        break;
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected array type");
+    }
+
+    LAllocation baseAlloc = useRegisterOrZeroAtStart(base);
+    auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
+    add(lir, ins);
+}
+
+void
 LIRGeneratorMIPSShared::visitAsmSelect(MAsmSelect* ins)
 {
     if (ins->type() == MIRType::Int64) {
@@ -377,12 +446,6 @@ LIRGeneratorMIPSShared::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
         baseAlloc = useRegisterAtStart(base);
 
     add(new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value())), ins);
-}
-
-void
-LIRGeneratorMIPSShared::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins)
-{
-    define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index())), ins);
 }
 
 void

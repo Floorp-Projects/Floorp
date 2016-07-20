@@ -1,8 +1,8 @@
 // Parent config file for all browser-chrome files.
 {
   "rules": {
-    "mozilla/import-headjs-globals": 1,
-    "mozilla/import-browserjs-globals": 1,
+    "mozilla/import-headjs-globals": 2,
+    "mozilla/import-browserjs-globals": 2,
   },
 
   "env": {

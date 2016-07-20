@@ -191,7 +191,7 @@ assertEq(String(tableProto), "[object Object]");
 assertEq(Object.getPrototypeOf(tableProto), Object.prototype);
 
 // 'WebAssembly.Table' instance objects
-const tbl1 = new Table({initial:1});
+const tbl1 = new Table({initial:2});
 assertEq(typeof tbl1, "object");
 assertEq(String(tbl1), "[object WebAssembly.Table]");
 assertEq(Object.getPrototypeOf(tbl1), tableProto);
@@ -205,8 +205,51 @@ assertEq(lengthDesc.configurable, true);
 
 // 'WebAssembly.Table.prototype.length' getter
 const lengthGetter = lengthDesc.get;
+assertEq(lengthGetter.length, 0);
 assertErrorMessage(() => lengthGetter.call(), TypeError, /called on incompatible undefined/);
 assertErrorMessage(() => lengthGetter.call({}), TypeError, /called on incompatible Object/);
 assertEq(typeof lengthGetter.call(tbl1), "number");
-assertEq(lengthGetter.call(tbl1), 1);
+assertEq(lengthGetter.call(tbl1), 2);
 
+// 'WebAssembly.Table.prototype.get' property
+const getDesc = Object.getOwnPropertyDescriptor(tableProto, 'get');
+assertEq(typeof getDesc.value, "function");
+assertEq(getDesc.enumerable, false);
+assertEq(getDesc.configurable, true);
+
+// 'WebAssembly.Table.prototype.get' method
+const get = getDesc.value;
+assertEq(get.length, 1);
+assertErrorMessage(() => get.call(), TypeError, /called on incompatible undefined/);
+assertErrorMessage(() => get.call({}), TypeError, /called on incompatible Object/);
+assertEq(get.call(tbl1, 0), null);
+assertEq(get.call(tbl1, 1), null);
+assertEq(get.call(tbl1, 1.5), null);
+assertErrorMessage(() => get.call(tbl1, 2), RangeError, /out-of-range index/);
+assertErrorMessage(() => get.call(tbl1, 2.5), RangeError, /out-of-range index/);
+assertErrorMessage(() => get.call(tbl1, -1), RangeError, /out-of-range index/);
+assertErrorMessage(() => get.call(tbl1, Math.pow(2,33)), RangeError, /out-of-range index/);
+assertErrorMessage(() => get.call(tbl1, {valueOf() { throw new Error("hi") }}), Error, "hi");
+
+// 'WebAssembly.Table.prototype.set' property
+const setDesc = Object.getOwnPropertyDescriptor(tableProto, 'set');
+assertEq(typeof setDesc.value, "function");
+assertEq(setDesc.enumerable, false);
+assertEq(setDesc.configurable, true);
+
+// 'WebAssembly.Table.prototype.set' method
+const set = setDesc.value;
+assertEq(set.length, 2);
+assertErrorMessage(() => set.call(), TypeError, /called on incompatible undefined/);
+assertErrorMessage(() => set.call({}), TypeError, /called on incompatible Object/);
+assertErrorMessage(() => set.call(tbl1, 0), TypeError, /requires more than 1 argument/);
+assertErrorMessage(() => set.call(tbl1, 2, null), RangeError, /out-of-range index/);
+assertErrorMessage(() => set.call(tbl1, -1, null), RangeError, /out-of-range index/);
+assertErrorMessage(() => set.call(tbl1, Math.pow(2,33), null), RangeError, /out-of-range index/);
+assertErrorMessage(() => set.call(tbl1, 0, undefined), TypeError, /second argument must be null or an exported WebAssembly Function object/);
+assertErrorMessage(() => set.call(tbl1, 0, {}), TypeError, /second argument must be null or an exported WebAssembly Function object/);
+assertErrorMessage(() => set.call(tbl1, 0, function() {}), TypeError, /second argument must be null or an exported WebAssembly Function object/);
+assertErrorMessage(() => set.call(tbl1, 0, Math.sin), TypeError, /second argument must be null or an exported WebAssembly Function object/);
+assertErrorMessage(() => set.call(tbl1, {valueOf() { throw Error("hai") }}, null), Error, "hai");
+assertEq(set.call(tbl1, 0, null), undefined);
+assertEq(set.call(tbl1, 1, null), undefined);

@@ -1781,6 +1781,8 @@ JSFunction::maybeRelazify(JSRuntime* rt)
         MOZ_ASSERT(isExtended());
         MOZ_ASSERT(getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString()->isAtom());
     }
+
+    comp->scheduleDelazificationForDebugger();
 }
 
 static bool

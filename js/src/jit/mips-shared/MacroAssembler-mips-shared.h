@@ -190,6 +190,11 @@ class MacroAssemblerMIPSShared : public Assembler
         as_mfc1(dest, src);
     }
 
+    // Evaluate srcDest = minmax<isMax>{Float32,Double}(srcDest, other).
+    // Handle NaN specially if handleNaN is true.
+    void minMaxDouble(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
+    void minMaxFloat32(FloatRegister srcDest, FloatRegister other, bool handleNaN, bool isMax);
+
   private:
     void atomicEffectOpMIPSr2(int nbytes, AtomicOp op, const Register& value, const Register& addr,
                               Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp);

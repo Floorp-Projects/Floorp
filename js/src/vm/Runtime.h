@@ -970,9 +970,6 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSCList             onNewGlobalObjectWatchers;
 
-    /* Client opaque pointers */
-    void*               data;
-
 #if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
     js::wasm::MachExceptionHandler wasmMachExceptionHandler;
 #endif

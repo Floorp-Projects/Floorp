@@ -59,6 +59,7 @@ function* checkColorCycling(container, view) {
 function* checkSwatchShiftClick(container, win, expectedValue, comment) {
   let swatch = container.querySelector(".computedview-colorswatch");
   let valueNode = container.querySelector(".computedview-color");
+  swatch.scrollIntoView();
 
   let onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(swatch, {

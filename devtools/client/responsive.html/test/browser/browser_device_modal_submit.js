@@ -23,7 +23,7 @@ const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, function* ({ ui }) {
   let { store, document } = ui.toolWindow;
-  let modal = document.querySelector(".device-modal");
+  let modal = document.querySelector("#device-modal-wrapper");
   let select = document.querySelector(".viewport-device-selector");
   let submitButton = document.querySelector("#device-submit-button");
 
@@ -61,8 +61,8 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   uncheckedCb.click();
   submitButton.click();
 
-  ok(modal.classList.contains("hidden"),
-    "The device modal is hidden on submit.");
+  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
+    "The device modal is closed on submit.");
 
   info("Checking that the new device is added to the user preference list.");
   let preferredDevices = _loadPreferredDevices();

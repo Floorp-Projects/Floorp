@@ -571,7 +571,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'sqlite/SQLiteBridge.java',
     'sqlite/SQLiteBridgeException.java',
     'SuggestClient.java',
-    'SurfaceBits.java',
     'Tab.java',
     'tabqueue/TabQueueHelper.java',
     'tabqueue/TabQueuePrompt.java',

@@ -50,6 +50,7 @@ enum State {
     SWEEP,
     FINALIZE,
     COMPACT,
+    DECOMMIT,
 
     NUM_STATES
 };
@@ -971,6 +972,7 @@ class GCParallelTask
     }
 
     // Check if a task is actively running.
+    bool isRunningWithLockHeld(const AutoLockHelperThreadState& locked) const;
     bool isRunning() const;
 
     // This should be friended to HelperThread, but cannot be because it

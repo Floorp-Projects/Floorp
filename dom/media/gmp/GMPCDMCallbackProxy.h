@@ -56,7 +56,7 @@ public:
   ~GMPCDMCallbackProxy() {}
 
 private:
-  friend class CDMProxy;
+  friend class GMPCDMProxy;
   explicit GMPCDMCallbackProxy(CDMProxy* aProxy);
 
   // Warning: Weak ref.

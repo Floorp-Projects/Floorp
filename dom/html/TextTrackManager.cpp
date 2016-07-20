@@ -224,6 +224,8 @@ TextTrackManager::DidSeek()
 void
 TextTrackManager::UpdateCueDisplay()
 {
+  mUpdateCueDisplayDispatched = false;
+
   if (!mMediaElement || !mTextTracks) {
     return;
   }
@@ -241,7 +243,7 @@ TextTrackManager::UpdateCueDisplay()
   }
 
   nsTArray<RefPtr<TextTrackCue> > activeCues;
-  mTextTracks->UpdateAndGetShowingCues(activeCues);
+  mTextTracks->GetShowingCues(activeCues);
 
   if (activeCues.Length() > 0) {
     RefPtr<nsVariantCC> jsCues = new nsVariantCC();
@@ -250,7 +252,6 @@ TextTrackManager::UpdateCueDisplay()
                        &NS_GET_IID(nsIDOMEventTarget),
                        activeCues.Length(),
                        static_cast<void*>(activeCues.Elements()));
-
     nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (window) {
       sParserWrapper->ProcessCues(window, jsCues, overlay, controls);
@@ -277,6 +278,10 @@ TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue)
     mNewCues->RemoveCue(aCue);
   }
   DispatchTimeMarchesOn();
+  if (aCue.GetActive()) {
+    // We remove an active cue, need to update the display.
+    DispatchUpdateCueDisplay();
+  }
 }
 
 void
@@ -522,6 +527,16 @@ public:
 private:
   nsTArray<RefPtr<TextTrack>> mTextTracks;
 };
+
+void
+TextTrackManager::DispatchUpdateCueDisplay()
+{
+  if (!mUpdateCueDisplayDispatched && !mShutdown &&
+      (mMediaElement->GetHasUserInteraction() || mMediaElement->IsCurrentlyPlaying())) {
+    NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::UpdateCueDisplay));
+    mUpdateCueDisplayDispatched = true;
+  }
+}
 
 void
 TextTrackManager::DispatchTimeMarchesOn()

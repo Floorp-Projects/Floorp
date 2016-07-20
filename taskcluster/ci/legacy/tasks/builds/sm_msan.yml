@@ -1,0 +1,16 @@
+$inherits:
+  from: 'tasks/builds/sm_variant_base.yml'
+  variables:
+    build_name: 'sm-msan'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'msan'
+      TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/linux64/msan.manifest'
+  metadata:
+    name: '[TC] Spidermonkey Memory Sanitizer'
+    description: 'Spidermonkey Memory Sanitizer'
+  extra:
+    treeherder:
+      symbol: msan

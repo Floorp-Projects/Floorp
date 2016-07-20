@@ -508,6 +508,7 @@ class InnerViewTable
     typedef Vector<ArrayBufferViewObject*, 1, SystemAllocPolicy> ViewVector;
 
     friend class ArrayBufferObject;
+    friend class WeakCacheBase<InnerViewTable>;
 
   private:
     struct MapGCPolicy {
@@ -561,11 +562,33 @@ class InnerViewTable
     void sweep();
     void sweepAfterMinorGC();
 
-    bool needsSweepAfterMinorGC() {
+    bool needsSweepAfterMinorGC() const {
         return !nurseryKeys.empty() || !nurseryKeysValid;
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+};
+
+template <>
+class WeakCacheBase<InnerViewTable>
+{
+    InnerViewTable& table() {
+        return static_cast<JS::WeakCache<InnerViewTable>*>(this)->get();
+    }
+    const InnerViewTable& table() const {
+        return static_cast<const JS::WeakCache<InnerViewTable>*>(this)->get();
+    }
+
+  public:
+    InnerViewTable::ViewVector* maybeViewsUnbarriered(ArrayBufferObject* obj) {
+        return table().maybeViewsUnbarriered(obj);
+    }
+    void removeViews(ArrayBufferObject* obj) { table().removeViews(obj); }
+    void sweepAfterMinorGC() { table().sweepAfterMinorGC(); }
+    bool needsSweepAfterMinorGC() const { return table().needsSweepAfterMinorGC(); }
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+        return table().sizeOfExcludingThis(mallocSizeOf);
+    }
 };
 
 extern JSObject*

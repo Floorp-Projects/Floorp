@@ -122,6 +122,7 @@ public:
   // This may be called on any thread.
   // Buffered must conform to http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
   media::TimeIntervals Buffered();
+  media::TimeUnit HighestStartTime();
 
   // Return the size of the data managed by this SourceBufferContentManager.
   int64_t GetSize() const;
@@ -280,6 +281,10 @@ private:
     // The variable is initially unset to indicate that no coded frames have
     // been appended yet.
     Maybe<media::TimeUnit> mHighestEndTimestamp;
+    // Highest presentation timestamp in track buffer.
+    // Protected by global monitor, except when reading on the task queue as it
+    // is only written there.
+    media::TimeUnit mHighestStartTimestamp;
     // Longest frame duration seen since last random access point.
     // Only ever accessed when mLastDecodeTimestamp and mLastFrameDuration are
     // set.
@@ -345,6 +350,8 @@ private:
   void InsertFrames(TrackBuffer& aSamples,
                     const media::TimeIntervals& aIntervals,
                     TrackData& aTrackData);
+  void UpdateHighestTimestamp(TrackData& aTrackData,
+                              const media::TimeUnit& aHighestTime);
   // Remove all frames and their dependencies contained in aIntervals.
   // Return the index at which frames were first removed or 0 if no frames
   // removed.

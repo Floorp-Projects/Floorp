@@ -44,7 +44,7 @@ nsresult TestGetURL(const nsCString& aURL)
   rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   TEST_ENSURE_SUCCESS(rv, "Couldn't get system principal!");
 
-  rv = xhr->Init(systemPrincipal, nullptr, nullptr, nullptr, nullptr);
+  rv = xhr->Init(systemPrincipal, nullptr, nullptr, nullptr);
   TEST_ENSURE_SUCCESS(rv, "Couldn't initialize the XHR!");
 
   rv = xhr->Open(getString, aURL, false, empty, empty);

@@ -2439,13 +2439,25 @@ ParseImport(WasmParseContext& c, bool newFormat, AstModule* module)
     AstRef sigRef;
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
-        if (newFormat && c.ts.getIf(WasmToken::Memory)) {
-            AstResizable memory;
-            if (!ParseResizable(c, &memory))
-                return nullptr;
-            if (!c.ts.match(WasmToken::CloseParen, c.error))
-                return nullptr;
-            return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(), memory);
+        if (newFormat) {
+            if (c.ts.getIf(WasmToken::Memory)) {
+                AstResizable memory;
+                if (!ParseResizable(c, &memory))
+                    return nullptr;
+                if (!c.ts.match(WasmToken::CloseParen, c.error))
+                    return nullptr;
+                return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
+                                             DefinitionKind::Memory, memory);
+            }
+            if (c.ts.getIf(WasmToken::Table)) {
+                AstResizable table;
+                if (!ParseResizable(c, &table))
+                    return nullptr;
+                if (!c.ts.match(WasmToken::CloseParen, c.error))
+                    return nullptr;
+                return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
+                                             DefinitionKind::Table, table);
+            }
         }
 
         if (c.ts.getIf(WasmToken::Type)) {
@@ -3558,9 +3570,8 @@ EncodeImport(Encoder& e, bool newFormat, AstImport& imp)
             return false;
         break;
       case DefinitionKind::Table:
-        MOZ_CRASH("NYI");
       case DefinitionKind::Memory:
-        if (!EncodeResizable(e, imp.memory()))
+        if (!EncodeResizable(e, imp.resizable()))
             return false;
         break;
     }

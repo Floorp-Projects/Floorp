@@ -22,6 +22,9 @@ xptiInterfaceEntry::Create(const char* name, const nsID& iid,
     int namelen = strlen(name);
     void* place =
         XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry) + namelen);
+    if (!place) {
+        return nullptr;
+    }
     return new (place) xptiInterfaceEntry(name, namelen, iid, aDescriptor,
                                           aTypelib);
 }
