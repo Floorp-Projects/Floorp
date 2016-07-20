@@ -541,7 +541,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             // Register the device if necessary (asynchronous, in another thread)
             if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
                 || TextUtils.isEmpty(fxAccount.getDeviceId())) {
-              FxAccountDeviceRegistrator.register(fxAccount, context);
+              FxAccountDeviceRegistrator.register(context);
             }
 
             // Force fetch the profile avatar information. (asynchronous, in another thread)
