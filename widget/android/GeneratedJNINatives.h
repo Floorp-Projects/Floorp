@@ -86,7 +86,7 @@ template<class Impl>
 class GeckoEditable::Natives : public mozilla::jni::NativeImpl<GeckoEditable, Impl>
 {
 public:
-    static const JNINativeMethod methods[7];
+    static const JNINativeMethod methods[8];
 };
 
 template<class Impl>
@@ -107,6 +107,10 @@ const JNINativeMethod GeckoEditable::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeReplaceText_t>(
             mozilla::jni::NativeStub<GeckoEditable::OnImeReplaceText_t, Impl>
             ::template Wrap<&Impl::OnImeReplaceText>),
+
+    mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeRequestCursorUpdates_t>(
+            mozilla::jni::NativeStub<GeckoEditable::OnImeRequestCursorUpdates_t, Impl>
+            ::template Wrap<&Impl::OnImeRequestCursorUpdates>),
 
     mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeSynchronize_t>(
             mozilla::jni::NativeStub<GeckoEditable::OnImeSynchronize_t, Impl>
