@@ -39,7 +39,8 @@ set_config('JS_DISABLE_SHELL', js_disable_shell)
 
 # Use SpiderMonkey Promise implementation if it's enabled
 # =======================================================
-js_option('--enable-sm-promise', help='Enable SpiderMonkey promises')
+js_option('--enable-sm-promise', default=True,
+          help='Enable SpiderMonkey promises')
 
 @depends('--enable-sm-promise')
 def sm_promise(value):

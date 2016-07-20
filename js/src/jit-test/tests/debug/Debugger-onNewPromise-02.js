@@ -1,11 +1,13 @@
 // onNewPromise handlers fire, until they are removed.
+if (!('Promise' in this))
+    quit(0);
 
 var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 
 log = '';
-g.makeFakePromise();
+new g.Promise(function (){});
 assertEq(log, '');
 
 dbg.onNewPromise = function (promise) {
@@ -15,10 +17,10 @@ dbg.onNewPromise = function (promise) {
 };
 
 log = '';
-g.makeFakePromise();
+new g.Promise(function (){});
 assertEq(log, 'n');
 
 log = '';
 dbg.onNewPromise = undefined;
-g.makeFakePromise();
+new g.Promise(function (){});
 assertEq(log, '');
