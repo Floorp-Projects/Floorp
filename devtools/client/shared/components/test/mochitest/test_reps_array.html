@@ -14,6 +14,9 @@ Test ArrayRep rep
 <pre id="test">
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
+"use strict";
+/* import-globals-from head.js */
+
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { ArrayRep } = browserRequire("devtools/client/shared/components/reps/array");
@@ -35,7 +38,9 @@ window.onload = Task.async(function* () {
 
     // Test that properties are rendered as expected by ItemRep
     yield testNested();
-  } catch(e) {
+
+    yield testArray();
+  } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
     SimpleTest.finish();
@@ -45,7 +50,9 @@ window.onload = Task.async(function* () {
     // Test that correct rep is chosen
     const stub = [];
     const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ArrayRep.rep, `Rep correctly selects ${ArrayRep.rep.displayName}`);
+    is(renderedRep.type, ArrayRep.rep,
+       `Rep correctly selects ${ArrayRep.rep.displayName}`);
+
 
     // Test rendering
     const defaultOutput = `[]`;
@@ -201,6 +208,39 @@ window.onload = Task.async(function* () {
       {
         mode: "short",
         expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testNested", componentUnderTest, stub);
+  }
+
+  function testArray() {
+    let stub = [
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+    ];
+
+    const defaultOutput = `["a", "b", "c", "d", "e", "f", "g", "h", "i", "j",` +
+                          ` "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",` +
+                          ` "u", "v", "w", "x", "y", "z"]`;
+    const shortOutput = `["a", "b", "c", more...]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: shortOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[26]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: shortOutput,
       },
       {
         mode: "long",
