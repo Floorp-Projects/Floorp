@@ -48,7 +48,7 @@
 }
 
 /* Firebug theme doesn't stretch the tabs. */
-.theme-firebug .tabs .tabs-navigation .tabs-menu {
-  display: block;
+.theme-firebug .tabs .tabs-navigation .tabs-menu-item {
+  flex-grow: 0;
 }
 
