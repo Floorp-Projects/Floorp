@@ -6,51 +6,17 @@ test `whoami` == 'root'
 
 apt-get update
 apt-get install -y --force-yes --no-install-recommends \
-    autotools-dev \
-    blt-dev \
-    bzip2 \
-    curl \
     ca-certificates \
-    dpkg-dev \
-    gcc-multilib \
-    g++-multilib \
+    curl \
     jq \
-    libbluetooth-dev \
-    libbz2-dev \
-    libexpat1-dev \
-    libffi-dev \
-    libffi6 \
-    libffi6-dbg \
-    libgdbm-dev \
-    libgpm2 \
-    libncursesw5-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libssl-dev \
-    libtinfo-dev \
-    make \
-    mime-support \
-    netbase \
-    net-tools \
-    python2.7 \
-    python-dev \
-    python-pip \
-    python-crypto \
-    python-mox3 \
-    python-pil \
-    python-ply \
-    quilt \
-    tar \
-    tk-dev \
-    xz-utils \
-    zlib1g-dev
+    python
 
 BUILD=/root/build
 mkdir $BUILD
 
 tooltool_fetch() {
     cat >manifest.tt
-    python $BUILD/tooltool.py fetch
+    python2.7 $BUILD/tooltool.py fetch
     rm manifest.tt
 }
 
