@@ -1048,7 +1048,9 @@ Port.prototype = {
 
   disconnect() {
     if (this.disconnected) {
-      throw new this.context.contentWindow.Error("Attempt to disconnect() a disconnected port");
+      // disconnect() may be called without side effects even after the port is
+      // closed - https://developer.chrome.com/extensions/runtime#type-Port
+      return;
     }
     this.handleDisconnection();
     this.messageManager.sendAsyncMessage(this.disconnectName);

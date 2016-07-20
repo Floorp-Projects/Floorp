@@ -50,6 +50,7 @@ def create_tasks(taskgraph, label_to_taskid):
                 task_def['dependencies'] = [decision_task_id]
 
             task_def['taskGroupId'] = task_group_id
+            task_def['schedulerId'] = '-'
 
             # Wait for dependencies before submitting this.
             deps_fs = [fs[dep] for dep in task_def.get('dependencies', [])

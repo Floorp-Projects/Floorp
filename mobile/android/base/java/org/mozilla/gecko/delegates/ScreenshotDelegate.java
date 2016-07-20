@@ -15,7 +15,7 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ScreenshotObserver;
-import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -61,8 +61,10 @@ public class ScreenshotDelegate extends BrowserAppDelegateWithReference implemen
         GeckoProfile.get(activity).getDB().getUrlAnnotations().insertScreenshot(
                 activity.getContentResolver(), selectedTab.getURL(), screenshotPath);
 
-        SnackbarHelper.showSnackbar(activity,
-                activity.getResources().getString(R.string.screenshot_added_to_bookmarks), Snackbar.LENGTH_SHORT);
+        SnackbarBuilder.builder(activity)
+                .message(R.string.screenshot_added_to_bookmarks)
+                .duration(Snackbar.LENGTH_SHORT)
+                .buildAndShow();
     }
 
     @Override

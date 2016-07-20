@@ -8,6 +8,7 @@
 Library('clang-plugin-tests')
 
 SOURCES += [
+    'TestAssertWithAssignment.cpp',
     'TestBadImplicitConversionCtor.cpp',
     'TestCustomHeap.cpp',
     'TestExplicitOperatorBool.cpp',

@@ -232,7 +232,7 @@ def get_compiler_info(compiler, language):
         #endif
         #elif defined(__clang__)
         %COMPILER clang
-        #  if !__cplusplus || __cpp_static_assert
+        #  if !__cplusplus || __has_feature(cxx_alignof)
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
         #  endif
         #elif defined(__GNUC__)

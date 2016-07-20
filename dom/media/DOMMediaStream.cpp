@@ -979,7 +979,8 @@ DOMMediaStream::RemovePrincipalChangeObserver(
 
 MediaStreamTrack*
 DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
-                               MediaStreamTrackSource* aSource)
+                               MediaStreamTrackSource* aSource,
+                               const MediaTrackConstraints& aConstraints)
 {
   MOZ_RELEASE_ASSERT(mInputStream);
   MOZ_RELEASE_ASSERT(mOwnedStream);
@@ -989,10 +990,10 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
   MediaStreamTrack* track;
   switch (aType) {
   case MediaSegment::AUDIO:
-    track = new AudioStreamTrack(this, aTrackID, aTrackID, aSource);
+    track = new AudioStreamTrack(this, aTrackID, aTrackID, aSource, aConstraints);
     break;
   case MediaSegment::VIDEO:
-    track = new VideoStreamTrack(this, aTrackID, aTrackID, aSource);
+    track = new VideoStreamTrack(this, aTrackID, aTrackID, aSource, aConstraints);
     break;
   default:
     MOZ_CRASH("Unhandled track type");

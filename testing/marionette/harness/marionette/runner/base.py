@@ -537,6 +537,7 @@ class BaseMarionetteTestRunner(object):
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
         self.e10s = e10s
+        self._filename_pattern = None
 
         def gather_debug(test, status):
             rv = {}
@@ -573,6 +574,13 @@ class BaseMarionetteTestRunner(object):
             self.gecko_log = gecko_log
 
         self.results = []
+
+    @property
+    def filename_pattern(self):
+        if self._filename_pattern is None:
+            self._filename_pattern = re.compile("^test(((_.+?)+?\.((py)|(js)))|(([A-Z].*?)+?\.js))$")
+
+        return self._filename_pattern
 
     @property
     def testvars(self):
@@ -823,16 +831,16 @@ setReq.onerror = function() {
         for test in tests:
             self.add_test(test)
 
-        pattern = re.compile("^test(((_.+?)+?\.((py)|(js)))|(([A-Z].*?)+?\.js))$")
-        def is_valid(test):
-            filename = os.path.basename(test['filepath'])
-            return pattern.match(filename)
-        invalid_tests = [t['filepath'] for t in self.tests if not is_valid(t)]
+        invalid_tests = [t['filepath'] for t in self.tests if not self._is_filename_valid(t['filepath'])]
         if invalid_tests:
             raise Exception("Test file names must be of the form "
                             "'test_something.py', 'test_something.js', or 'testSomething.js'."
                             " Invalid test names:\n  %s"
                             % '\n  '.join(invalid_tests))
+
+    def _is_filename_valid(self, filename):
+        filename = os.path.basename(filename)
+        return self.filename_pattern.match(filename)
 
     def _log_skipped_tests(self):
         for test in self.manifest_skipped_tests:
@@ -950,13 +958,12 @@ setReq.onerror = function() {
         if os.path.isdir(filepath):
             for root, dirs, files in os.walk(filepath):
                 for filename in files:
-                    if (filename.endswith('.ini')):
+                    if filename.endswith('.ini'):
                         msg_tmpl = ("Ignoring manifest '{0}'; running all tests in '{1}'."
                                     " See --help for details.")
                         relpath = os.path.relpath(os.path.join(root, filename), filepath)
                         self.logger.warning(msg_tmpl.format(relpath, filepath))
-                    elif (filename.startswith('test_') and
-                        (filename.endswith('.py') or filename.endswith('.js'))):
+                    elif self._is_filename_valid(filename):
                         test_file = os.path.join(root, filename)
                         self.add_test(test_file)
             return

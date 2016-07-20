@@ -66,7 +66,14 @@ public:
                         int32_t aModType,
                         const nsAttrValue* aOldValue);
   nsresult ReparentStyleContext(nsIFrame* aFrame);
-  bool HasPendingRestyles();
+
+  bool HasPendingRestyles() {
+    if (MOZ_UNLIKELY(IsDisconnected())) {
+      return false;
+    }
+
+    return PresContext()->PresShell()->GetDocument()->HasDirtyDescendantsForServo();
+  }
 
 protected:
   ~ServoRestyleManager() {}

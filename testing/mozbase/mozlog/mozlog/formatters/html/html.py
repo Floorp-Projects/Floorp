@@ -97,6 +97,16 @@ class HTMLFormatter(base.BaseFormatter):
         tc_time = (data["time"] - self.start_times.pop(data["test"])) / 1000.
         additional_html = []
         debug = data.get("extra", {})
+        # Add support for log exported from wptrunner. The structure of
+        # reftest_screenshots is listed in wptrunner/executors/base.py.
+        if debug.get('reftest_screenshots'):
+            log_data = debug.get("reftest_screenshots", {})
+            debug = {
+                'image1':'data:image/png;base64,' + log_data[0].get("screenshot", {}),
+                'image2':'data:image/png;base64,' + log_data[2].get("screenshot", {}),
+                'differences': "Not Implemented",
+            }
+
         links_html = []
 
         status = status_name = data["status"]
@@ -120,10 +130,7 @@ class HTMLFormatter(base.BaseFormatter):
                     additional_html.append(html.div(
                         html.a(html.img(src=screenshot), href="#"),
                         html.br(),
-                        html.a(
-                            description,
-                            href=screenshot,
-                            target='_blank'),
+                        html.a(description),
                         class_='screenshot'))
 
             if debug.get('screenshot'):

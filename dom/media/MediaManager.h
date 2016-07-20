@@ -63,15 +63,27 @@ extern LogModule* GetMediaManagerLog();
 class MediaDevice : public nsIMediaDevice
 {
 public:
+  typedef MediaEngineSource Source;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
   void SetId(const nsAString& aID);
   virtual uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets);
+  virtual Source* GetSource() = 0;
+  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+                    const MediaEnginePrefs &aPrefs,
+                    const nsACString& aOrigin,
+                    const char** aOutBadConstraint);
+  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
+                   const MediaEnginePrefs &aPrefs,
+                   const char** aOutBadConstraint);
+  nsresult Deallocate();
 protected:
   virtual ~MediaDevice() {}
   explicit MediaDevice(MediaEngineSource* aSource, bool aIsVideo);
+
   static uint32_t FitnessDistance(nsString aN,
     const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint);
 private:
@@ -84,6 +96,7 @@ protected:
   nsString mID;
   dom::MediaSourceEnum mMediaSource;
   RefPtr<MediaEngineSource> mSource;
+  RefPtr<MediaEngineSource::BaseAllocationHandle> mAllocationHandle;
 public:
   dom::MediaSourceEnum GetMediaSource() {
     return mMediaSource;
@@ -97,13 +110,8 @@ public:
   typedef MediaEngineVideoSource Source;
 
   explicit VideoDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType);
-  Source* GetSource();
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsACString& aOrigin);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
+  NS_IMETHOD GetType(nsAString& aType) override;
+  Source* GetSource() override;
 };
 
 class AudioDevice : public MediaDevice
@@ -112,13 +120,8 @@ public:
   typedef MediaEngineAudioSource Source;
 
   explicit AudioDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType);
-  Source* GetSource();
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsACString& aOrigin);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
+  NS_IMETHOD GetType(nsAString& aType) override;
+  Source* GetSource() override;
 };
 
 class GetUserMediaNotificationEvent: public Runnable
@@ -256,6 +259,7 @@ public:
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
   typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
+  typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 
   static bool IsPrivileged();
   static bool IsLoop(nsIURI* aDocURI);
@@ -321,7 +325,7 @@ private:
 
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
-  media::CoatCheck<media::Pledge<bool, dom::MediaStreamError*>> mOutstandingVoidPledges;
+  media::CoatCheck<PledgeVoid> mOutstandingVoidPledges;
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
   RefPtr<nsDOMCameraManager> mCameraManager;
 #endif

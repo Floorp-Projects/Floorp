@@ -84,12 +84,13 @@ this.HostManifestManager = {
   },
 
   _winLookup(application, context) {
+    const REGISTRY = Ci.nsIWindowsRegKey;
     let regPath = `${REGPATH}\\${application}`;
-    let path = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                          regPath, "");
+    let path = WindowsRegistry.readRegKey(REGISTRY.ROOT_KEY_CURRENT_USER,
+                                          regPath, "", REGISTRY.WOW64_64);
     if (!path) {
       path = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                                        regPath, "");
+                                        regPath, "", REGISTRY.WOW64_64);
     }
     if (!path) {
       return null;

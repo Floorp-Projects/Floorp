@@ -1142,16 +1142,9 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
   }
 
   if (mMetadataRequest.Exists()) {
-    if (mPendingDormant && mPendingDormant.ref() != aDormant && !aDormant) {
-      // We already have a dormant request pending; the new request would have
-      // resumed from dormant, we can just cancel any pending dormant requests.
-      mPendingDormant.reset();
-    } else {
-      mPendingDormant = Some(aDormant);
-    }
+    mPendingDormant = aDormant;
     return;
   }
-  mPendingDormant.reset();
 
   DECODER_LOG("SetDormant=%d", aDormant);
 
@@ -1203,7 +1196,7 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     // on that in other places (i.e. seeking), so it seems reasonable to rely on
     // it here as well.
     mReader->ReleaseMediaResources();
-  } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
+  } else if (mState == DECODER_STATE_DORMANT) {
     mDecodingFirstFrame = true;
     SetState(DECODER_STATE_DECODING_METADATA);
     ReadMetadata();
@@ -1698,14 +1691,6 @@ MediaDecoderStateMachine::OnSeekTaskResolved(SeekTaskResolveValue aValue)
     StopPrerollingVideo();
   }
 
-  if (aValue.mNeedToStopPrerollingAudio) {
-    StopPrerollingAudio();
-  }
-
-  if (aValue.mNeedToStopPrerollingVideo) {
-    StopPrerollingVideo();
-  }
-
   SeekCompleted();
 }
 
@@ -1724,14 +1709,6 @@ MediaDecoderStateMachine::OnSeekTaskRejected(SeekTaskRejectValue aValue)
 
   if (aValue.mIsVideoQueueFinished) {
     VideoQueue().Finish();
-    StopPrerollingVideo();
-  }
-
-  if (aValue.mNeedToStopPrerollingAudio) {
-    StopPrerollingAudio();
-  }
-
-  if (aValue.mNeedToStopPrerollingVideo) {
     StopPrerollingVideo();
   }
 
@@ -1992,7 +1969,8 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   mMetadataRequest.Complete();
 
   if (mPendingDormant) {
-    SetDormant(mPendingDormant.ref());
+    mPendingDormant = false;
+    SetDormant(true);
     return;
   }
 

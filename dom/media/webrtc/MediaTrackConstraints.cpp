@@ -6,6 +6,8 @@
 #include "MediaTrackConstraints.h"
 
 #include <limits>
+#include <algorithm>
+#include <iterator>
 
 namespace mozilla {
 
@@ -15,7 +17,7 @@ void
 NormalizedConstraintSet::Range<ValueType>::SetFrom(const ConstrainRange& aOther)
 {
   if (aOther.mIdeal.WasPassed()) {
-    mIdeal.Construct(aOther.mIdeal.Value());
+    mIdeal.emplace(aOther.mIdeal.Value());
   }
   if (aOther.mExact.WasPassed()) {
     mMin = aOther.mExact.Value();
@@ -30,31 +32,97 @@ NormalizedConstraintSet::Range<ValueType>::SetFrom(const ConstrainRange& aOther)
   }
 }
 
+// The Range code works surprisingly well for bool, except when averaging ideals.
+template<>
+bool
+NormalizedConstraintSet::Range<bool>::Merge(const Range& aOther) {
+  if (!Intersects(aOther)) {
+    return false;
+  }
+  Intersect(aOther);
+
+  // To avoid "unsafe use of type 'bool'", we keep counter in mMergeDenominator
+  uint32_t counter = mMergeDenominator >> 16;
+  uint32_t denominator = mMergeDenominator & 0xffff;
+
+  if (aOther.mIdeal.isSome()) {
+    if (mIdeal.isNothing()) {
+      mIdeal.emplace(aOther.Get(false));
+      counter = aOther.Get(false);
+      denominator = 1;
+    } else {
+      if (!denominator) {
+        counter = Get(false);
+        denominator = 1;
+      }
+      counter += aOther.Get(false);
+      denominator++;
+    }
+  }
+  mMergeDenominator = ((counter & 0xffff) << 16) + (denominator & 0xffff);
+  return true;
+}
+
+template<>
+void
+NormalizedConstraintSet::Range<bool>::FinalizeMerge()
+{
+  if (mMergeDenominator) {
+    uint32_t counter = mMergeDenominator >> 16;
+    uint32_t denominator = mMergeDenominator & 0xffff;
+
+    *mIdeal = !!(counter / denominator);
+    mMergeDenominator = 0;
+  }
+}
+
 NormalizedConstraintSet::LongRange::LongRange(
-    const dom::OwningLongOrConstrainLongRange& aOther, bool advanced)
-: Range<int32_t>(1 + INT32_MIN, INT32_MAX) // +1 avoids Windows compiler bug
+    LongPtrType aMemberPtr,
+    const char* aName,
+    const dom::OwningLongOrConstrainLongRange& aOther,
+    bool advanced,
+    nsTArray<MemberPtrType>* aList)
+: Range<int32_t>((MemberPtrType)aMemberPtr, aName,
+                 1 + INT32_MIN, INT32_MAX, // +1 avoids Windows compiler bug
+                 aList)
 {
   if (aOther.IsLong()) {
     if (advanced) {
       mMin = mMax = aOther.GetAsLong();
     } else {
-      mIdeal.Construct(aOther.GetAsLong());
+      mIdeal.emplace(aOther.GetAsLong());
     }
   } else {
     SetFrom(aOther.GetAsConstrainLongRange());
   }
 }
 
+NormalizedConstraintSet::LongLongRange::LongLongRange(
+    LongLongPtrType aMemberPtr,
+    const char* aName,
+    const long long& aOther,
+    nsTArray<MemberPtrType>* aList)
+: Range<int64_t>((MemberPtrType)aMemberPtr, aName,
+                 1 + INT64_MIN, INT64_MAX, // +1 avoids Windows compiler bug
+                 aList)
+{
+  mIdeal.emplace(aOther);
+}
+
 NormalizedConstraintSet::DoubleRange::DoubleRange(
-    const dom::OwningDoubleOrConstrainDoubleRange& aOther, bool advanced)
-: Range<double>(-std::numeric_limits<double>::infinity(),
-                std::numeric_limits<double>::infinity())
+    DoublePtrType aMemberPtr,
+    const char* aName,
+    const dom::OwningDoubleOrConstrainDoubleRange& aOther, bool advanced,
+    nsTArray<MemberPtrType>* aList)
+: Range<double>((MemberPtrType)aMemberPtr, aName,
+                -std::numeric_limits<double>::infinity(),
+                std::numeric_limits<double>::infinity(), aList)
 {
   if (aOther.IsDouble()) {
     if (advanced) {
       mMin = mMax = aOther.GetAsDouble();
     } else {
-      mIdeal.Construct(aOther.GetAsDouble());
+      mIdeal.emplace(aOther.GetAsDouble());
     }
   } else {
     SetFrom(aOther.GetAsConstrainDoubleRange());
@@ -62,19 +130,23 @@ NormalizedConstraintSet::DoubleRange::DoubleRange(
 }
 
 NormalizedConstraintSet::BooleanRange::BooleanRange(
-    const dom::OwningBooleanOrConstrainBooleanParameters& aOther, bool advanced)
-: Range<bool>(false, true)
+    BooleanPtrType aMemberPtr,
+    const char* aName,
+    const dom::OwningBooleanOrConstrainBooleanParameters& aOther,
+    bool advanced,
+    nsTArray<MemberPtrType>* aList)
+: Range<bool>((MemberPtrType)aMemberPtr, aName, false, true, aList)
 {
   if (aOther.IsBoolean()) {
     if (advanced) {
       mMin = mMax = aOther.GetAsBoolean();
     } else {
-      mIdeal.Construct(aOther.GetAsBoolean());
+      mIdeal.emplace(aOther.GetAsBoolean());
     }
   } else {
     const ConstrainBooleanParameters& r = aOther.GetAsConstrainBooleanParameters();
     if (r.mIdeal.WasPassed()) {
-      mIdeal.Construct(r.mIdeal.Value());
+      mIdeal.emplace(r.mIdeal.Value());
     }
     if (r.mExact.WasPassed()) {
       mMin = r.mExact.Value();
@@ -83,31 +155,219 @@ NormalizedConstraintSet::BooleanRange::BooleanRange(
   }
 }
 
-FlattenedConstraints::FlattenedConstraints(const dom::MediaTrackConstraints& aOther)
-: NormalizedConstraintSet(aOther, false)
+NormalizedConstraintSet::StringRange::StringRange(
+    StringPtrType aMemberPtr,
+    const char* aName,
+    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aOther,
+    bool advanced,
+    nsTArray<MemberPtrType>* aList)
+  : BaseRange((MemberPtrType)aMemberPtr, aName, aList)
+{
+  if (aOther.IsString()) {
+    if (advanced) {
+      mExact.insert(aOther.GetAsString());
+    } else {
+      mIdeal.insert(aOther.GetAsString());
+    }
+  } else if (aOther.IsStringSequence()) {
+    if (advanced) {
+      mExact.clear();
+      for (auto& str : aOther.GetAsStringSequence()) {
+        mExact.insert(str);
+      }
+    } else {
+      mIdeal.clear();
+      for (auto& str : aOther.GetAsStringSequence()) {
+        mIdeal.insert(str);
+      }
+    }
+  } else {
+    SetFrom(aOther.GetAsConstrainDOMStringParameters());
+  }
+}
+
+void
+NormalizedConstraintSet::StringRange::SetFrom(
+    const ConstrainDOMStringParameters& aOther)
+{
+  if (aOther.mIdeal.WasPassed()) {
+    mIdeal.clear();
+    if (aOther.mIdeal.Value().IsString()) {
+      mIdeal.insert(aOther.mIdeal.Value().GetAsString());
+    } else {
+      for (auto& str : aOther.mIdeal.Value().GetAsStringSequence()) {
+        mIdeal.insert(str);
+      }
+    }
+  }
+  if (aOther.mExact.WasPassed()) {
+    mExact.clear();
+    if (aOther.mExact.Value().IsString()) {
+      mExact.insert(aOther.mExact.Value().GetAsString());
+    } else {
+      for (auto& str : aOther.mExact.Value().GetAsStringSequence()) {
+        mIdeal.insert(str);
+      }
+    }
+  }
+}
+
+auto
+NormalizedConstraintSet::StringRange::Clamp(const ValueType& n) const -> ValueType
+{
+  if (!mExact.size()) {
+    return n;
+  }
+  ValueType result;
+  for (auto& entry : n) {
+    if (mExact.find(entry) != mExact.end()) {
+      result.insert(entry);
+    }
+  }
+  return result;
+}
+
+bool
+NormalizedConstraintSet::StringRange::Intersects(const StringRange& aOther) const
+{
+  if (!mExact.size() || !aOther.mExact.size()) {
+    return true;
+  }
+
+  ValueType intersection;
+  set_intersection(mExact.begin(), mExact.end(),
+                   aOther.mExact.begin(), aOther.mExact.end(),
+                   std::inserter(intersection, intersection.begin()));
+  return !!intersection.size();
+}
+
+void
+NormalizedConstraintSet::StringRange::Intersect(const StringRange& aOther)
+{
+  if (!aOther.mExact.size()) {
+    return;
+  }
+
+  ValueType intersection;
+  set_intersection(mExact.begin(), mExact.end(),
+                   aOther.mExact.begin(), aOther.mExact.end(),
+                   std::inserter(intersection, intersection.begin()));
+  mExact = intersection;
+}
+
+bool
+NormalizedConstraintSet::StringRange::Merge(const StringRange& aOther)
+{
+  if (!Intersects(aOther)) {
+    return false;
+  }
+  Intersect(aOther);
+
+  ValueType unioned;
+  set_union(mIdeal.begin(), mIdeal.end(),
+            aOther.mIdeal.begin(), aOther.mIdeal.end(),
+            std::inserter(unioned, unioned.begin()));
+  mIdeal = unioned;
+  return true;
+}
+
+NormalizedConstraints::NormalizedConstraints(
+    const dom::MediaTrackConstraints& aOther,
+    nsTArray<MemberPtrType>* aList)
+  : NormalizedConstraintSet(aOther, false, aList)
+  , mBadConstraint(nullptr)
 {
   if (aOther.mAdvanced.WasPassed()) {
-    const auto& advanced = aOther.mAdvanced.Value();
-    for (size_t i = 0; i < advanced.Length(); i++) {
-      NormalizedConstraintSet set(advanced[i], true);
-      // Must only apply compatible i.e. inherently non-overconstraining sets
-      // This rule is pretty much why this code is centralized here.
-      if (mWidth.Intersects(set.mWidth) &&
-          mHeight.Intersects(set.mHeight) &&
-          mFrameRate.Intersects(set.mFrameRate)) {
-        mWidth.Intersect(set.mWidth);
-        mHeight.Intersect(set.mHeight);
-        mFrameRate.Intersect(set.mFrameRate);
+    for (auto& entry : aOther.mAdvanced.Value()) {
+      mAdvanced.push_back(NormalizedConstraintSet(entry, true));
+    }
+  }
+}
+
+// Merge constructor. Create net constraints out of merging a set of others.
+// This is only used to resolve competing constraints from concurrent requests,
+// something the spec doesn't cover.
+
+NormalizedConstraints::NormalizedConstraints(
+    const nsTArray<const NormalizedConstraints*>& aOthers)
+  : NormalizedConstraintSet(*aOthers[0])
+  , mBadConstraint(nullptr)
+{
+  // Create a list of member pointers.
+  nsTArray<MemberPtrType> list;
+  NormalizedConstraints dummy(MediaTrackConstraints(), &list);
+
+  // Do intersection of all required constraints, and average of ideals,
+
+  for (uint32_t i = 1; i < aOthers.Length(); i++) {
+    auto& other = *aOthers[i];
+
+    for (auto& memberPtr : list) {
+      auto& member = this->*memberPtr;
+      auto& otherMember = other.*memberPtr;
+
+      if (!member.Merge(otherMember)) {
+        mBadConstraint = member.mName;
+        return;
       }
-      if (mEchoCancellation.Intersects(set.mEchoCancellation)) {
-          mEchoCancellation.Intersect(set.mEchoCancellation);
-      }
-      if (mMozNoiseSuppression.Intersects(set.mMozNoiseSuppression)) {
-          mMozNoiseSuppression.Intersect(set.mMozNoiseSuppression);
-      }
-      if (mMozAutoGainControl.Intersects(set.mMozAutoGainControl)) {
-          mMozAutoGainControl.Intersect(set.mMozAutoGainControl);
-      }
+    }
+
+    for (auto& entry : other.mAdvanced) {
+      mAdvanced.push_back(entry);
+    }
+  }
+  for (auto& memberPtr : list) {
+    (this->*memberPtr).FinalizeMerge();
+  }
+
+  // ...except for resolution and frame rate where we take the highest ideal.
+  // This is a bit of a hack based on the perception that people would be more
+  // surprised if they were to get lower resolution than they ideally requested.
+  //
+  // The spec gives browsers leeway here, saying they "SHOULD use the one with
+  // the smallest fitness distance", and also does not directly address the
+  // problem of competing constraints at all. There is no real web interop issue
+  // here since this is more about interop with other tabs on the same browser.
+  //
+  // We should revisit this logic once we support downscaling of resolutions and
+  // decimating of frame rates, per track.
+
+  for (auto& other : aOthers) {
+    mWidth.TakeHighestIdeal(other->mWidth);
+    mHeight.TakeHighestIdeal(other->mHeight);
+
+    // Consider implicit 30 fps default in comparison of competing constraints.
+    // Avoids 160x90x10 and 640x480 becoming 1024x768x10 (fitness distance flaw)
+    // This pretty much locks in 30 fps or higher, except for single-tab use.
+    auto frameRate = other->mFrameRate;
+    if (frameRate.mIdeal.isNothing()) {
+      frameRate.mIdeal.emplace(30);
+    }
+    mFrameRate.TakeHighestIdeal(frameRate);
+  }
+}
+
+FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
+: NormalizedConstraintSet(aOther)
+{
+  for (auto& set : aOther.mAdvanced) {
+    // Must only apply compatible i.e. inherently non-overconstraining sets
+    // This rule is pretty much why this code is centralized here.
+    if (mWidth.Intersects(set.mWidth) &&
+        mHeight.Intersects(set.mHeight) &&
+        mFrameRate.Intersects(set.mFrameRate)) {
+      mWidth.Intersect(set.mWidth);
+      mHeight.Intersect(set.mHeight);
+      mFrameRate.Intersect(set.mFrameRate);
+    }
+    if (mEchoCancellation.Intersects(set.mEchoCancellation)) {
+        mEchoCancellation.Intersect(set.mEchoCancellation);
+    }
+    if (mMozNoiseSuppression.Intersects(set.mMozNoiseSuppression)) {
+        mMozNoiseSuppression.Intersect(set.mMozNoiseSuppression);
+    }
+    if (mMozAutoGainControl.Intersects(set.mMozAutoGainControl)) {
+        mMozAutoGainControl.Intersect(set.mMozAutoGainControl);
     }
   }
 }
@@ -124,118 +384,80 @@ FlattenedConstraints::FlattenedConstraints(const dom::MediaTrackConstraints& aOt
 
 uint32_t
 MediaConstraintsHelper::GetMinimumFitnessDistance(
-    const dom::MediaTrackConstraintSet &aConstraints,
-    bool aAdvanced,
+    const NormalizedConstraintSet &aConstraints,
     const nsString& aDeviceId)
 {
-  uint64_t distance =
-    uint64_t(FitnessDistance(aDeviceId, aConstraints.mDeviceId, aAdvanced));
-
-  // This function is modeled on MediaEngineCameraVideoSource::GetFitnessDistance
-  // and will make more sense once more audio constraints are added.
-
-  return uint32_t(std::min(distance, uint64_t(UINT32_MAX)));
+  return FitnessDistance(aDeviceId, aConstraints.mDeviceId);
 }
 
-template<class ValueType, class ConstrainRange>
+template<class ValueType, class NormalizedRange>
 /* static */ uint32_t
 MediaConstraintsHelper::FitnessDistance(ValueType aN,
-                                        const ConstrainRange& aRange)
+                                        const NormalizedRange& aRange)
 {
-  if ((aRange.mExact.WasPassed() && aRange.mExact.Value() != aN) ||
-      (aRange.mMin.WasPassed() && aRange.mMin.Value() > aN) ||
-      (aRange.mMax.WasPassed() && aRange.mMax.Value() < aN)) {
+  if (aRange.mMin > aN || aRange.mMax < aN) {
     return UINT32_MAX;
   }
-  if (!aRange.mIdeal.WasPassed() || aN == aRange.mIdeal.Value()) {
+  if (aN == aRange.mIdeal.valueOr(aN)) {
     return 0;
   }
-  return uint32_t(ValueType((std::abs(aN - aRange.mIdeal.Value()) * 1000) /
-                            std::max(std::abs(aN), std::abs(aRange.mIdeal.Value()))));
-}
-
-// Binding code doesn't templatize well...
-
-/*static*/ uint32_t
-MediaConstraintsHelper::FitnessDistance(int32_t aN,
-    const OwningLongOrConstrainLongRange& aConstraint, bool aAdvanced)
-{
-  if (aConstraint.IsLong()) {
-    ConstrainLongRange range;
-    (aAdvanced ? range.mExact : range.mIdeal).Construct(aConstraint.GetAsLong());
-    return FitnessDistance(aN, range);
-  } else {
-    return FitnessDistance(aN, aConstraint.GetAsConstrainLongRange());
-  }
-}
-
-/*static*/ uint32_t
-MediaConstraintsHelper::FitnessDistance(double aN,
-    const OwningDoubleOrConstrainDoubleRange& aConstraint,
-    bool aAdvanced)
-{
-  if (aConstraint.IsDouble()) {
-    ConstrainDoubleRange range;
-    (aAdvanced ? range.mExact : range.mIdeal).Construct(aConstraint.GetAsDouble());
-    return FitnessDistance(aN, range);
-  } else {
-    return FitnessDistance(aN, aConstraint.GetAsConstrainDoubleRange());
-  }
+  return uint32_t(ValueType((std::abs(aN - aRange.mIdeal.value()) * 1000) /
+                            std::max(std::abs(aN), std::abs(aRange.mIdeal.value()))));
 }
 
 // Fitness distance returned as integer math * 1000. Infinity = UINT32_MAX
 
 /* static */ uint32_t
-MediaConstraintsHelper::FitnessDistance(nsString aN,
-                             const ConstrainDOMStringParameters& aParams)
+MediaConstraintsHelper::FitnessDistance(
+    nsString aN,
+    const NormalizedConstraintSet::StringRange& aParams)
 {
-  struct Func
-  {
-    static bool
-    Contains(const OwningStringOrStringSequence& aStrings, nsString aN)
-    {
-      return aStrings.IsString() ? aStrings.GetAsString() == aN
-                                 : aStrings.GetAsStringSequence().Contains(aN);
-    }
-  };
-
-  if (aParams.mExact.WasPassed() && !Func::Contains(aParams.mExact.Value(), aN)) {
+  if (aParams.mExact.size() && aParams.mExact.find(aN) == aParams.mExact.end()) {
     return UINT32_MAX;
   }
-  if (aParams.mIdeal.WasPassed() && !Func::Contains(aParams.mIdeal.Value(), aN)) {
+  if (aParams.mIdeal.size() && aParams.mIdeal.find(aN) == aParams.mIdeal.end()) {
     return 1000;
   }
   return 0;
 }
 
-/* static */ uint32_t
-MediaConstraintsHelper::FitnessDistance(nsString aN,
-    const OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint,
-    bool aAdvanced)
+template<class MediaEngineSourceType>
+const char*
+MediaConstraintsHelper::FindBadConstraint(
+    const NormalizedConstraints& aConstraints,
+    const MediaEngineSourceType& aMediaEngineSource,
+    const nsString& aDeviceId)
 {
-  if (aConstraint.IsString()) {
-    ConstrainDOMStringParameters params;
-    if (aAdvanced) {
-      params.mExact.Construct();
-      params.mExact.Value().SetAsString() = aConstraint.GetAsString();
-    } else {
-      params.mIdeal.Construct();
-      params.mIdeal.Value().SetAsString() = aConstraint.GetAsString();
+  class MockDevice
+  {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MockDevice);
+
+    explicit MockDevice(const MediaEngineSourceType* aMediaEngineSource,
+                        const nsString& aDeviceId)
+    : mMediaEngineSource(aMediaEngineSource),
+      // The following dud code exists to avoid 'unused typedef' error on linux.
+      mDeviceId(MockDevice::HasThreadSafeRefCnt::value ? aDeviceId : nsString()) {}
+
+    uint32_t GetBestFitnessDistance(
+        const nsTArray<const NormalizedConstraintSet*>& aConstraintSets)
+    {
+      return mMediaEngineSource->GetBestFitnessDistance(aConstraintSets,
+                                                        mDeviceId);
     }
-    return FitnessDistance(aN, params);
-  } else if (aConstraint.IsStringSequence()) {
-    ConstrainDOMStringParameters params;
-    if (aAdvanced) {
-      params.mExact.Construct();
-      params.mExact.Value().SetAsStringSequence() = aConstraint.GetAsStringSequence();
-    } else {
-      params.mIdeal.Construct();
-      params.mIdeal.Value().SetAsStringSequence() = aConstraint.GetAsStringSequence();
-    }
-    return FitnessDistance(aN, params);
-  } else {
-    return FitnessDistance(aN, aConstraint.GetAsConstrainDOMStringParameters());
-  }
+
+  private:
+    ~MockDevice() {}
+
+    const MediaEngineSourceType* mMediaEngineSource;
+    nsString mDeviceId;
+  };
+
+  Unused << typename MockDevice::HasThreadSafeRefCnt();
+
+  nsTArray<RefPtr<MockDevice>> devices;
+  devices.AppendElement(new MockDevice(&aMediaEngineSource, aDeviceId));
+  return FindBadConstraint(aConstraints, devices);
 }
 
 }

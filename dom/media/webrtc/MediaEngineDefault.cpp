@@ -57,14 +57,14 @@ MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()
 {}
 
 void
-MediaEngineDefaultVideoSource::GetName(nsAString& aName)
+MediaEngineDefaultVideoSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(MOZ_UTF16("Default Video Device"));
   return;
 }
 
 void
-MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID)
+MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.AssignLiteral("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
   return;
@@ -72,13 +72,13 @@ MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID)
 
 uint32_t
 MediaEngineDefaultVideoSource::GetBestFitnessDistance(
-    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId)
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId) const
 {
   uint32_t distance = 0;
 #ifdef MOZ_WEBRTC
-  for (const dom::MediaTrackConstraintSet* cs : aConstraintSets) {
-    distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
+  for (const auto* cs : aConstraintSets) {
+    distance = GetMinimumFitnessDistance(*cs, aDeviceId);
     break; // distance is read from first entry only
   }
 #endif
@@ -89,7 +89,9 @@ nsresult
 MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
-                                        const nsACString& aOrigin)
+                                        const nsACString& aOrigin,
+                                        BaseAllocationHandle** aOutHandle,
+                                        const char** aOutBadConstraint)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -105,12 +107,14 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
   mOpts.mWidth = mOpts.mWidth ? mOpts.mWidth : MediaEngine::DEFAULT_43_VIDEO_WIDTH;
   mOpts.mHeight = mOpts.mHeight ? mOpts.mHeight : MediaEngine::DEFAULT_43_VIDEO_HEIGHT;
   mState = kAllocated;
+  aOutHandle = nullptr;
   return NS_OK;
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Deallocate()
+MediaEngineDefaultVideoSource::Deallocate(BaseAllocationHandle* aHandle)
 {
+  MOZ_ASSERT(!aHandle);
   if (mState != kStopped && mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }
@@ -214,9 +218,12 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
-                                       const MediaEnginePrefs &aPrefs,
-                                       const nsString& aDeviceId)
+MediaEngineDefaultVideoSource::Restart(
+    BaseAllocationHandle* aHandle,
+    const dom::MediaTrackConstraints& aConstraints,
+    const MediaEnginePrefs &aPrefs,
+    const nsString& aDeviceId,
+    const char** aOutBadConstraint)
 {
   return NS_OK;
 }
@@ -378,14 +385,14 @@ MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource()
 {}
 
 void
-MediaEngineDefaultAudioSource::GetName(nsAString& aName)
+MediaEngineDefaultAudioSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(MOZ_UTF16("Default Audio Device"));
   return;
 }
 
 void
-MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID)
+MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.AssignLiteral("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
   return;
@@ -393,13 +400,13 @@ MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID)
 
 uint32_t
 MediaEngineDefaultAudioSource::GetBestFitnessDistance(
-    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId)
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId) const
 {
   uint32_t distance = 0;
 #ifdef MOZ_WEBRTC
-  for (const dom::MediaTrackConstraintSet* cs : aConstraintSets) {
-    distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
+  for (const auto* cs : aConstraintSets) {
+    distance = GetMinimumFitnessDistance(*cs, aDeviceId);
     break; // distance is read from first entry only
   }
 #endif
@@ -410,7 +417,9 @@ nsresult
 MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
-                                        const nsACString& aOrigin)
+                                        const nsACString& aOrigin,
+                                        BaseAllocationHandle** aOutHandle,
+                                        const char** aOutBadConstraint)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -426,12 +435,14 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
   // generate sine wave (default 1KHz)
   mSineGenerator = new SineWaveGenerator(AUDIO_RATE,
                                          static_cast<uint32_t>(aPrefs.mFreq ? aPrefs.mFreq : 1000));
+  aOutHandle = nullptr;
   return NS_OK;
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Deallocate()
+MediaEngineDefaultAudioSource::Deallocate(BaseAllocationHandle* aHandle)
 {
+  MOZ_ASSERT(!aHandle);
   if (mState != kStopped && mState != kAllocated) {
     return NS_ERROR_FAILURE;
   }
@@ -519,9 +530,11 @@ MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+MediaEngineDefaultAudioSource::Restart(BaseAllocationHandle* aHandle,
+                                       const dom::MediaTrackConstraints& aConstraints,
                                        const MediaEnginePrefs &aPrefs,
-                                       const nsString& aDeviceId)
+                                       const nsString& aDeviceId,
+                                       const char** aOutBadConstraint)
 {
   return NS_OK;
 }

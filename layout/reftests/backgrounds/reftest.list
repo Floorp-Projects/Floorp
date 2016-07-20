@@ -185,3 +185,5 @@ pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) 
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2595) == background-clip-text-1d.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,102,2032) fuzzy-if(skiaContent,102,2595) == background-clip-text-1e.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,false) != background-clip-text-1a.html background-clip-text-1-ref.html
+
+pref(layout.css.background-clip-text.enabled,true) == background-clip-text-2.html background-clip-text-2-ref.html

@@ -38,6 +38,12 @@ nsShmImage::nsShmImage(Display* aDisplay,
 {
   mConnection = XGetXCBConnection(aDisplay);
   mozilla::PodZero(&mLastRequest);
+  if (aDisplay == mozilla::DefaultXDisplay()) {
+    // If another thread spins the X event loop during a checked call,
+    // an error that should've been checked by XCB may be handled by the Xlib
+    // error handler. See bug 1287463.
+    NS_WARNING("Main thread X display used with nsShmImage!");
+  }
 }
 
 nsShmImage::~nsShmImage()

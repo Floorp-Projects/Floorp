@@ -15,7 +15,7 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-haz-mulet'
 
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-mulet-linux-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-mulet-haz-linux-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 

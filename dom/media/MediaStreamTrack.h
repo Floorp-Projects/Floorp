@@ -14,6 +14,9 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/CORSMode.h"
 #include "PrincipalChangeObserver.h"
+#include "mozilla/dom/MediaStreamTrackBinding.h"
+#include "mozilla/dom/MediaTrackSettingsBinding.h"
+#include "mozilla/media/MediaUtils.h"
 
 namespace mozilla {
 
@@ -36,6 +39,7 @@ namespace dom {
 
 class AudioStreamTrack;
 class VideoStreamTrack;
+class MediaStreamError;
 
 /**
  * Common interface through which a MediaStreamTrack can communicate with its
@@ -120,14 +124,21 @@ public:
    */
   virtual nsresult TakePhoto(MediaEnginePhotoCallback*) const { return NS_ERROR_NOT_IMPLEMENTED; }
 
+  typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
+
   /**
    * We provide a fallback solution to ApplyConstraints() here.
    * Sources that support ApplyConstraints() will have to override it.
    */
-  virtual already_AddRefed<Promise>
+  virtual already_AddRefed<PledgeVoid>
   ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints,
-                   ErrorResult &aRv);
+                   const dom::MediaTrackConstraints& aConstraints);
+
+  /**
+   * Same for GetSettings (no-op).
+   */
+  virtual void
+  GetSettings(dom::MediaTrackSettings& aResult) {};
 
   /**
    * Called by the source interface when all registered sinks have unregistered.
@@ -208,6 +219,9 @@ public:
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
+  void
+  GetSettings(dom::MediaTrackSettings& aResult) override {}
+
   void Stop() override {}
 
 protected:
@@ -240,8 +254,9 @@ public:
    * MediaStream owned by aStream.
    */
   MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                   TrackID aInputTrackID,
-                   MediaStreamTrackSource* aSource);
+      TrackID aInputTrackID,
+      MediaStreamTrackSource* aSource,
+      const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
@@ -263,6 +278,9 @@ public:
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
   void Stop();
+  void GetConstraints(dom::MediaTrackConstraints& aResult);
+  void GetSettings(dom::MediaTrackSettings& aResult);
+
   already_AddRefed<Promise>
   ApplyConstraints(const dom::MediaTrackConstraints& aConstraints, ErrorResult &aRv);
   already_AddRefed<MediaStreamTrack> Clone();
@@ -426,6 +444,7 @@ protected:
   MediaStreamTrackState mReadyState;
   bool mEnabled;
   const bool mRemote;
+  dom::MediaTrackConstraints mConstraints;
 };
 
 } // namespace dom

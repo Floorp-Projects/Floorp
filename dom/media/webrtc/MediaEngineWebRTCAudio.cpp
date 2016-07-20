@@ -184,14 +184,14 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
 }
 
 void
-MediaEngineWebRTCMicrophoneSource::GetName(nsAString& aName)
+MediaEngineWebRTCMicrophoneSource::GetName(nsAString& aName) const
 {
   aName.Assign(mDeviceName);
   return;
 }
 
 void
-MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID)
+MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.Assign(mDeviceUUID);
   return;
@@ -206,13 +206,13 @@ MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID)
 // A finite result may be used to calculate this device's ranking as a choice.
 
 uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
-    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId)
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId) const
 {
   uint32_t distance = 0;
 
-  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
-    distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
+  for (const auto* cs : aConstraintSets) {
+    distance = GetMinimumFitnessDistance(*cs, aDeviceId);
     break; // distance is read from first entry only
   }
   return distance;
@@ -222,7 +222,9 @@ nsresult
 MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                             const MediaEnginePrefs &aPrefs,
                                             const nsString& aDeviceId,
-                                            const nsACString& aOrigin)
+                                            const nsACString& aOrigin,
+                                            BaseAllocationHandle** aOutHandle,
+                                            const char** aOutBadConstraint)
 {
   AssertIsOnOwningThread();
   if (mState == kReleased) {
@@ -258,14 +260,18 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
     }
   }
   ++mNrAllocations;
-  return Restart(aConstraints, aPrefs, aDeviceId);
+  aOutHandle = nullptr;
+  return Restart(nullptr, aConstraints, aPrefs, aDeviceId, aOutBadConstraint);
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+MediaEngineWebRTCMicrophoneSource::Restart(BaseAllocationHandle* aHandle,
+                                           const dom::MediaTrackConstraints& aConstraints,
                                            const MediaEnginePrefs &aPrefs,
-                                           const nsString& aDeviceId)
+                                           const nsString& aDeviceId,
+                                           const char** aOutBadConstraint)
 {
+  MOZ_ASSERT(!aHandle);
   FlattenedConstraints c(aConstraints);
 
   bool aec_on = c.mEchoCancellation.Get(aPrefs.mAecOn);
@@ -309,9 +315,10 @@ MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aCo
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Deallocate()
+MediaEngineWebRTCMicrophoneSource::Deallocate(BaseAllocationHandle* aHandle)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(!aHandle);
   --mNrAllocations;
   MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
   if (mNrAllocations == 0) {
@@ -732,8 +739,9 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
     MOZ_ASSERT(mState == kStopped);
   }
 
-  if (mState == kAllocated || mState == kStopped) {
-    Deallocate();
+  while (mNrAllocations) {
+    MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+    Deallocate(nullptr); // XXX Extend concurrent constraints code to mics.
   }
 
   FreeChannel();
@@ -791,13 +799,13 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
 }
 
 void
-MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName)
+MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName) const
 {
   aName.AssignLiteral("AudioCapture");
 }
 
 void
-MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID)
+MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID) const
 {
   nsID uuid;
   char uuidBuffer[NSID_LENGTH];
@@ -839,17 +847,20 @@ MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
 
 nsresult
 MediaEngineWebRTCAudioCaptureSource::Restart(
+    BaseAllocationHandle* aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs &aPrefs,
-    const nsString& aDeviceId)
+    const nsString& aDeviceId,
+    const char** aOutBadConstraint)
 {
+  MOZ_ASSERT(!aHandle);
   return NS_OK;
 }
 
 uint32_t
 MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
-    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId)
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId) const
 {
   // There is only one way of capturing audio for now, and it's always adequate.
   return 0;

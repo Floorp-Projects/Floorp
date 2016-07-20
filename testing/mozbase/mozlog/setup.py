@@ -5,7 +5,7 @@
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozlog'
-PACKAGE_VERSION = '3.2'
+PACKAGE_VERSION = '3.3'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
