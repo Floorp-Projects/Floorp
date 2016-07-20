@@ -63,3 +63,20 @@ addEventListener("TalosPowersContentFocus", (e) => {
   }, content);
   content.dispatchEvent(new content.CustomEvent("TalosPowersContentFocused", contentEvent));
 }, true, true);
+
+addEventListener("TalosPowersContentGetStartupInfo", (e) => {
+  sendAsyncMessage("TalosPowersContent:GetStartupInfo");
+  addMessageListener("TalosPowersContent:GetStartupInfo:Result",
+                     function onResult(msg) {
+    removeMessageListener("TalosPowersContent:GetStartupInfo:Result",
+                          onResult);
+    let event = Cu.cloneInto({
+      bubbles: true,
+      detail: msg.data,
+    }, content);
+
+    content.dispatchEvent(
+      new content.CustomEvent("TalosPowersContentGetStartupInfoResult",
+                              event));
+  });
+});
