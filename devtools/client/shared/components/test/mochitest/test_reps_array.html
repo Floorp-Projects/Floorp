@@ -19,13 +19,18 @@ window.onload = Task.async(function* () {
   let { ArrayRep } = browserRequire("devtools/client/shared/components/reps/array");
 
   let componentUnderTest = ArrayRep;
+  const maxLength = {
+    short: 3,
+    long: 300
+  };
 
   try {
     yield testBasic();
 
     // Test property iterator
     yield testMaxProps();
-    yield testMoreThanMaxProps();
+    yield testMoreThanShortMaxProps();
+    yield testMoreThanLongMaxProps();
     yield testRecursiveArray();
 
     // Test that properties are rendered as expected by ItemRep
@@ -93,26 +98,53 @@ window.onload = Task.async(function* () {
     testRepRenderModes(modeTests, "testMaxProps", componentUnderTest, stub);
   }
 
-  function testMoreThanMaxProps() {
-    const stub = Array(302).fill("foo");
-    const defaultOutput = `["foo", "foo", "foo", more…]`;
+  function testMoreThanShortMaxProps() {
+    const stub = Array(maxLength.short + 1).fill("foo");
+    const defaultShortOutput = `[${Array(maxLength.short).fill("\"foo\"").join(", ")}, more…]`;
 
     const modeTests = [
       {
         mode: undefined,
-        expectedOutput: defaultOutput,
+        expectedOutput: defaultShortOutput,
       },
       {
         mode: "tiny",
-        expectedOutput: `[302]`,
+        expectedOutput: `[${maxLength.short + 1}]`,
       },
       {
         mode: "short",
-        expectedOutput: defaultOutput,
+        expectedOutput: defaultShortOutput,
       },
       {
         mode: "long",
-        expectedOutput: `[${Array(300).fill("\"foo\"").join(", ")}, more…]`,
+        expectedOutput: `[${Array(maxLength.short + 1).fill("\"foo\"").join(", ")}]`,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testMoreThanMaxProps", componentUnderTest, stub);
+  }
+
+  function testMoreThanLongMaxProps() {
+    const stub = Array(maxLength.long + 1).fill("foo");
+    const defaultShortOutput = `[${Array(maxLength.short).fill("\"foo\"").join(", ")}, more…]`;
+    const defaultLongOutput = `[${Array(maxLength.long).fill("\"foo\"").join(", ")}, more…]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultShortOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[${maxLength.long + 1}]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultShortOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultLongOutput,
       }
     ];
 
