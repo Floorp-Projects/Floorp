@@ -992,21 +992,6 @@ void SourceSurfaceDestroyed(void *aData)
   delete static_cast<DependentSourceSurfaceUserData*>(aData);
 }
 
-/**
- * Used to update (enable or disable) hw video decode feature based on pref
- * Dummy parameters are used to work with existing RegisterCallback func
- */
-static void
-UpdateHWDecBasedOnPref(const char* aPref, void* aClosure)
-{
-  FeatureState& hwVideoDecFeature = gfxConfig::GetFeature(Feature::HW_VIDEO_DECODING);
-
-  if (!Preferences::GetBool("media.hardware-video-decoding.failed", false))
-  {
-    hwVideoDecFeature.UserDisable("Hardware video decoding disabled by user preference.", NS_LITERAL_CSTRING("FEATURE_FAILURE_HW_VIDEO_DEC_DISABLED_BY_PREF"));
-  }
-}
-
 void
 gfxPlatform::ClearSourceSurfaceForSurface(gfxASurface *aSurface)
 {
@@ -2085,6 +2070,8 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
  * and remember the values.  Changing these preferences during the run will
  * not have any effect until we restart.
  */
+static mozilla::Atomic<bool> sLayersSupportsHardwareVideoDecoding(false);
+static bool sLayersHardwareVideoDecodingFailed = false;
 static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
 
@@ -2110,37 +2097,22 @@ gfxPlatform::InitAcceleration()
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsCString discardFailureId;
+  int32_t status;
 
-  FeatureState& hwVideoDecFeature = gfxConfig::GetFeature(Feature::HW_VIDEO_DECODING);
-
-  // feature prefs on
-  if (Preferences::GetBool("media.hardware-video-decoding.enabled", false)
+  if (Preferences::GetBool("media.hardware-video-decoding.enabled", false) &&
 #ifdef XP_WIN
-    && Preferences::GetBool("media.windows-media-foundation.use-dxva", true)
+    Preferences::GetBool("media.windows-media-foundation.use-dxva", true) &&
 #endif
-  ) {
-    hwVideoDecFeature.EnableByDefault();
-  }
-  // not forced on and prefs not set
-  else {
-    hwVideoDecFeature.DisableByDefault(FeatureStatus::Disabled, "HW video decode pref not set.", NS_LITERAL_CSTRING("FEATURE_FAILURE_HW_VIDEO_DEC_DISABLED"));
-  }
-
-  // force enabled feature
-  if (gfxPrefs::HardwareVideoDecodingForceEnabled()) {
-    hwVideoDecFeature.UserForceEnable("User force-enabled video decoding.");
+      NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
+                                               discardFailureId, &status))) {
+      if (status == nsIGfxInfo::FEATURE_STATUS_OK || gfxPrefs::HardwareVideoDecodingForceEnabled()) {
+         sLayersSupportsHardwareVideoDecoding = true;
+    }
   }
 
-  gPlatform->InitHWVideoDecodingConfig(hwVideoDecFeature);
-
-  //blocklist
-  nsCString message;
-  nsCString failureId;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, &message, failureId)) {
-    hwVideoDecFeature.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
-  }
-
-  Preferences::RegisterCallback(UpdateHWDecBasedOnPref, "media.hardware-video-decoding.failed", NULL, Preferences::ExactMatch);
+  Preferences::AddBoolVarCache(&sLayersHardwareVideoDecodingFailed,
+                               "media.hardware-video-decoding.failed",
+                               false);
 
   if (XRE_IsParentProcess()) {
     if (gfxPrefs::GPUProcessDevEnabled()) {
@@ -2197,6 +2169,15 @@ gfxPlatform::InitCompositorAccelerationPrefs()
     feature.ForceDisable(FeatureStatus::Blocked, "Acceleration blocked by safe-mode",
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
   }
+}
+
+bool
+gfxPlatform::CanUseHardwareVideoDecoding()
+{
+  // this function is called from the compositor thread, so it is not
+  // safe to init the prefs etc. from here.
+  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
+  return sLayersSupportsHardwareVideoDecoding && !sLayersHardwareVideoDecodingFailed;
 }
 
 bool

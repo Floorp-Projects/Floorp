@@ -52,7 +52,6 @@ class ScaledFont;
 class DrawEventRecorder;
 class VsyncSource;
 class DeviceInitData;
-class FeatureState;
 
 inline uint32_t
 BackendTypeBit(BackendType b)
@@ -173,8 +172,6 @@ public:
 
     static void InitLayersIPC();
     static void ShutdownLayersIPC();
-
-    virtual void InitHWVideoDecodingConfig(mozilla::gfx::FeatureState& hwVideoDecFeature){};
 
     /**
      * Initialize ScrollMetadata statics. Does not depend on gfxPlatform.
@@ -454,6 +451,8 @@ public:
     static bool InSafeMode();
 
     static bool OffMainThreadCompositingEnabled();
+
+    virtual bool CanUseHardwareVideoDecoding();
 
     // Returns a prioritized list of all available compositor backends.
     void GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends);
