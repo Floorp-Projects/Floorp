@@ -400,7 +400,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep, nsINode **aResult)
                       getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  newNode.swap(*aResult);
+  newNode.forget(aResult);
   return NS_OK;
 }
 
