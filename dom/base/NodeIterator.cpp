@@ -181,7 +181,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(NodeIterator)
 
 NS_IMETHODIMP NodeIterator::GetRoot(nsIDOMNode * *aRoot)
 {
-    NS_ADDREF(*aRoot = Root()->AsDOMNode());
+    nsCOMPtr<nsIDOMNode> root = Root()->AsDOMNode();
+    root.forget(aRoot);
     return NS_OK;
 }
 
