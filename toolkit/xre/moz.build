@@ -30,7 +30,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'nsNativeAppSupportWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    EXPORTS += ['MacQuirks.h']
     UNIFIED_SOURCES += [
         'MacApplicationDelegate.mm',
         'MacAutoreleasePool.mm',

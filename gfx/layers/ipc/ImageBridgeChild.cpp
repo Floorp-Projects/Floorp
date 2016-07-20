@@ -391,12 +391,7 @@ ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 
 // Singleton
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
-static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
-
-void ReleaseImageBridgeParentSingleton() {
-  sImageBridgeParentSingleton = nullptr;
-}
 
 void
 ImageBridgeChild::FallbackDestroyActors() {
@@ -504,6 +499,7 @@ ImageBridgeChild::ImageBridgeChild()
 
   mTxn = new CompositableTransaction();
 }
+
 ImageBridgeChild::~ImageBridgeChild()
 {
   delete mTxn;
@@ -568,33 +564,9 @@ bool ImageBridgeChild::IsCreated()
   return GetSingleton() != nullptr;
 }
 
-void ImageBridgeChild::StartUp()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-  ImageBridgeChild::StartUpOnThread(new ImageBridgeThread());
-}
-
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #endif
-
-static void
-ConnectImageBridgeInChildProcess(Transport* aTransport,
-                                 ProcessId aOtherPid)
-{
-  // Bind the IPC channel to the image bridge thread.
-  sImageBridgeChildSingleton->Open(aTransport, aOtherPid,
-                                   XRE_GetIOMessageLoop(),
-                                   ipc::ChildSide);
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    sImageBridgeChildThread
-      ->message_loop()->PostTask(NewRunnableFunction(NuwaMarkCurrentThread,
-                                                     (void (*)(void *))nullptr,
-                                                     (void *)nullptr));
-  }
-#endif
-}
 
 static void ReleaseImageClientNow(ImageClient* aClient,
                                   PImageContainerChild* aChild)
@@ -920,9 +892,8 @@ static void CallSendImageBridgeThreadId(ImageBridgeChild* aImageBridgeChild)
   aImageBridgeChild->SendImageBridgeThreadId();
 }
 
-PImageBridgeChild*
-ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
-                                        ProcessId aOtherPid)
+bool
+ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -930,18 +901,25 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 
   sImageBridgeChildThread = new ImageBridgeThread();
   if (!sImageBridgeChildThread->Start()) {
-    return nullptr;
+    return false;
   }
 
   sImageBridgeChildSingleton = new ImageBridgeChild();
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(ConnectImageBridgeInChildProcess,
-                        aTransport, aOtherPid));
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(CallSendImageBridgeThreadId,
-                        sImageBridgeChildSingleton.get()));
+
+  MessageLoop* loop = sImageBridgeChildSingleton->GetMessageLoop();
+
+  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
+    sImageBridgeChildSingleton, &ImageBridgeChild::Bind, Move(aEndpoint)));
+  loop->PostTask(NewRunnableFunction(
+    CallSendImageBridgeThreadId, sImageBridgeChildSingleton.get()));
 
   return sImageBridgeChildSingleton;
+}
+
+void
+ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
+{
+  aEndpoint.Bind(this, nullptr);
 }
 
 void ImageBridgeChild::ShutDown()
@@ -984,25 +962,45 @@ void ImageBridgeChild::ShutDown()
   }
 }
 
-bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
+void
+ImageBridgeChild::InitSameProcess()
 {
-  MOZ_ASSERT(aThread, "ImageBridge needs a thread.");
-  if (sImageBridgeChildSingleton == nullptr) {
-    sImageBridgeChildThread = aThread;
-    if (!aThread->IsRunning()) {
-      aThread->Start();
-    }
-    sImageBridgeChildSingleton = new ImageBridgeChild();
-    sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorThreadHolder::Loop(), base::GetCurrentProcId());
-    sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
-    sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-      NewRunnableFunction(CallSendImageBridgeThreadId,
-                          sImageBridgeChildSingleton.get()));
-    return true;
-  } else {
-    return false;
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
+
+  MOZ_ASSERT(!sImageBridgeChildSingleton);
+  MOZ_ASSERT(!sImageBridgeChildThread);
+
+  sImageBridgeChildThread = new ImageBridgeThread();
+  if (!sImageBridgeChildThread->IsRunning()) {
+    sImageBridgeChildThread->Start();
   }
+
+  sImageBridgeChildSingleton = new ImageBridgeChild();
+  RefPtr<ImageBridgeParent> parent = ImageBridgeParent::CreateSameProcess();
+
+  sImageBridgeChildSingleton->ConnectAsync(parent);
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    NewRunnableFunction(CallSendImageBridgeThreadId,
+                        sImageBridgeChildSingleton.get()));
+}
+
+/* static */ void
+ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!sImageBridgeChildSingleton);
+  MOZ_ASSERT(!sImageBridgeChildThread);
+
+  sImageBridgeChildThread = new ImageBridgeThread();
+  if (!sImageBridgeChildThread->IsRunning()) {
+    sImageBridgeChildThread->Start();
+  }
+
+  sImageBridgeChildSingleton = new ImageBridgeChild();
+
+  MessageLoop* loop = sImageBridgeChildSingleton->GetMessageLoop();
+  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
+    sImageBridgeChildSingleton, &ImageBridgeChild::Bind, Move(aEndpoint)));
 }
 
 bool InImageBridgeChildThread()

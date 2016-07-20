@@ -522,6 +522,10 @@ public:
         }
     }
 
+    ProcessId OtherPid() const {
+        return mOtherPid;
+    }
+
     // This method binds aActor to this endpoint. After this call, the actor can
     // be used to send and receive messages. The endpoint becomes invalid. The
     // |aProcessActor| parameter is used to associate protocols with content
