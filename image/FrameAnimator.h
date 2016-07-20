@@ -131,6 +131,36 @@ private:
   bool mDoneDecoding;
 };
 
+/**
+ * RefreshResult is used to let callers know how the state of the animation
+ * changed during a call to FrameAnimator::RequestRefresh().
+ */
+struct RefreshResult
+{
+  RefreshResult()
+    : mFrameAdvanced(false)
+    , mAnimationFinished(false)
+  { }
+
+  /// Merges another RefreshResult's changes into this RefreshResult.
+  void Accumulate(const RefreshResult& aOther)
+  {
+    mFrameAdvanced = mFrameAdvanced || aOther.mFrameAdvanced;
+    mAnimationFinished = mAnimationFinished || aOther.mAnimationFinished;
+    mDirtyRect = mDirtyRect.Union(aOther.mDirtyRect);
+  }
+
+  // The region of the image that has changed.
+  gfx::IntRect mDirtyRect;
+
+  // If true, we changed frames at least once. Note that, due to looping, we
+  // could still have ended up on the same frame!
+  bool mFrameAdvanced : 1;
+
+  // Whether the animation has finished playing.
+  bool mAnimationFinished : 1;
+};
+
 class FrameAnimator
 {
 public:
@@ -146,34 +176,6 @@ public:
   {
     MOZ_COUNT_DTOR(FrameAnimator);
   }
-
-  /**
-   * Return value from RequestRefresh. Tells callers what happened in that call
-   * to RequestRefresh.
-   */
-  struct RefreshResult
-  {
-    // The dirty rectangle to be re-drawn after this RequestRefresh().
-    nsIntRect dirtyRect;
-
-    // Whether any frame changed, and hence the dirty rect was set.
-    bool frameAdvanced : 1;
-
-    // Whether the animation has finished playing.
-    bool animationFinished : 1;
-
-    RefreshResult()
-      : frameAdvanced(false)
-      , animationFinished(false)
-    { }
-
-    void Accumulate(const RefreshResult& other)
-    {
-      frameAdvanced = frameAdvanced || other.frameAdvanced;
-      animationFinished = animationFinished || other.animationFinished;
-      dirtyRect = dirtyRect.Union(other.dirtyRect);
-    }
-  };
 
   /**
    * Re-evaluate what frame we're supposed to be on, and do whatever blending

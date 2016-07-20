@@ -115,7 +115,7 @@ FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState) const
   return currentFrameEndTime;
 }
 
-FrameAnimator::RefreshResult
+RefreshResult
 FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
 {
   NS_ASSERTION(aTime <= TimeStamp::Now(),
@@ -157,7 +157,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
     // it's time to stop animating.
     if (aState.mAnimationMode == imgIContainer::kLoopOnceAnimMode ||
         aState.mLoopRemainingCount == 0) {
-      ret.animationFinished = true;
+      ret.mAnimationFinished = true;
     }
 
     nextFrameIndex = 0;
@@ -167,7 +167,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
     }
 
     // If we're done, exit early.
-    if (ret.animationFinished) {
+    if (ret.mAnimationFinished) {
       return ret;
     }
   }
@@ -193,16 +193,16 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   }
 
   if (GetTimeoutForFrame(nextFrameIndex) == FrameTimeout::Forever()) {
-    ret.animationFinished = true;
+    ret.mAnimationFinished = true;
   }
 
   if (nextFrameIndex == 0) {
-    ret.dirtyRect = aState.FirstFrameRefreshArea();
+    ret.mDirtyRect = aState.FirstFrameRefreshArea();
   } else {
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
 
     // Change frame
-    if (!DoBlend(&ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
+    if (!DoBlend(&ret.mDirtyRect, currentFrameIndex, nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
@@ -238,12 +238,12 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   aState.mCurrentAnimationFrameIndex = nextFrameIndex;
 
   // If we're here, we successfully advanced the frame.
-  ret.frameAdvanced = true;
+  ret.mFrameAdvanced = true;
 
   return ret;
 }
 
-FrameAnimator::RefreshResult
+RefreshResult
 FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 {
   // only advance the frame if the current time is greater than or
@@ -263,10 +263,10 @@ FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 
     currentFrameEndTime = GetCurrentImgFrameEndTime(aState);
 
-    // if we didn't advance a frame, and our frame end time didn't change,
+    // If we didn't advance a frame, and our frame end time didn't change,
     // then we need to break out of this loop & wait for the frame(s)
-    // to finish downloading
-    if (!frameRes.frameAdvanced && (currentFrameEndTime == oldFrameEndTime)) {
+    // to finish downloading.
+    if (!frameRes.mFrameAdvanced && (currentFrameEndTime == oldFrameEndTime)) {
       break;
     }
   }
