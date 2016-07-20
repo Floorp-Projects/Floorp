@@ -669,6 +669,11 @@ public:
     case __NR_clone:
       return ClonePolicy(Error(EPERM));
 
+#ifdef __NR_fadvise64
+    case __NR_fadvise64:
+      return Allow();
+#endif
+
 #endif // DESKTOP
 
 #ifdef __NR_getrandom
