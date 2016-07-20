@@ -391,12 +391,7 @@ ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 
 // Singleton
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
-static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
-
-void ReleaseImageBridgeParentSingleton() {
-  sImageBridgeParentSingleton = nullptr;
-}
 
 void
 ImageBridgeChild::FallbackDestroyActors() {
@@ -981,11 +976,31 @@ ImageBridgeChild::InitSameProcess()
   }
 
   sImageBridgeChildSingleton = new ImageBridgeChild();
-  sImageBridgeParentSingleton = ImageBridgeParent::CreateSameProcess();
-  sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
+  RefPtr<ImageBridgeParent> parent = ImageBridgeParent::CreateSameProcess();
+
+  sImageBridgeChildSingleton->ConnectAsync(parent);
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     NewRunnableFunction(CallSendImageBridgeThreadId,
                         sImageBridgeChildSingleton.get()));
+}
+
+/* static */ void
+ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!sImageBridgeChildSingleton);
+  MOZ_ASSERT(!sImageBridgeChildThread);
+
+  sImageBridgeChildThread = new ImageBridgeThread();
+  if (!sImageBridgeChildThread->IsRunning()) {
+    sImageBridgeChildThread->Start();
+  }
+
+  sImageBridgeChildSingleton = new ImageBridgeChild();
+
+  MessageLoop* loop = sImageBridgeChildSingleton->GetMessageLoop();
+  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
+    sImageBridgeChildSingleton, &ImageBridgeChild::Bind, Move(aEndpoint)));
 }
 
 bool InImageBridgeChildThread()

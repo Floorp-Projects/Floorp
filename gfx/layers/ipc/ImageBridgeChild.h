@@ -121,6 +121,7 @@ public:
    */
   static void InitSameProcess();
 
+  static void InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint);
   static bool InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint);
 
   /**

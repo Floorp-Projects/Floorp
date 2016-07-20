@@ -136,9 +136,29 @@ GPUProcessManager::EnsureGPUReady()
 void
 GPUProcessManager::EnsureImageBridgeChild()
 {
-  if (!ImageBridgeChild::IsCreated()) {
-    ImageBridgeChild::InitSameProcess();
+  if (ImageBridgeChild::IsCreated()) {
+    return;
   }
+
+  if (!mGPUChild) {
+    ImageBridgeChild::InitSameProcess();
+    return;
+  }
+
+  ipc::Endpoint<PImageBridgeParent> parentPipe;
+  ipc::Endpoint<PImageBridgeChild> childPipe;
+  nsresult rv = PImageBridge::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    DisableGPUProcess("Failed to create PImageBridge endpoints");
+    return;
+  }
+
+  mGPUChild->SendInitImageBridge(Move(parentPipe));
+  ImageBridgeChild::InitWithGPUProcess(Move(childPipe));
 }
 
 void
@@ -306,18 +326,21 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
     aScale,
     aUseExternalSurfaceSize,
     aSurfaceSize);
-  if (!ok)
+  if (!ok) {
     return nullptr;
+  }
 
   RefPtr<CompositorVsyncDispatcher> dispatcher = aWidget->GetCompositorVsyncDispatcher();
   RefPtr<CompositorWidgetVsyncObserver> observer =
     new CompositorWidgetVsyncObserver(mVsyncBridge, aRootLayerTreeId);
 
   CompositorWidgetChild* widget = new CompositorWidgetChild(dispatcher, observer);
-  if (!child->SendPCompositorWidgetConstructor(widget, initData))
+  if (!child->SendPCompositorWidgetConstructor(widget, initData)) {
     return nullptr;
-  if (!child->SendInitialize(aRootLayerTreeId))
+  }
+  if (!child->SendInitialize(aRootLayerTreeId)) {
     return nullptr;
+  }
 
   RefPtr<RemoteCompositorSession> session =
     new RemoteCompositorSession(child, widget, aRootLayerTreeId);
@@ -352,8 +375,9 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
   if (mGPUChild) {
     mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
   } else {
-    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe)))
+    if (!CompositorBridgeParent::CreateForContent(Move(parentPipe))) {
       return false;
+    }
   }
 
   *aOutEndpoint = Move(childPipe);
@@ -366,7 +390,9 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
 {
   EnsureImageBridgeChild();
 
-  base::ProcessId gpuPid = base::GetCurrentProcId();
+  base::ProcessId gpuPid = mGPUChild
+                           ? mGPUChild->OtherPid()
+                           : base::GetCurrentProcId();
 
   ipc::Endpoint<PImageBridgeParent> parentPipe;
   ipc::Endpoint<PImageBridgeChild> childPipe;
@@ -380,8 +406,13 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (!ImageBridgeParent::CreateForContent(Move(parentPipe)))
-    return false;
+  if (mGPUChild) {
+    mGPUChild->SendNewContentImageBridge(Move(parentPipe));
+  } else {
+    if (!ImageBridgeParent::CreateForContent(Move(parentPipe))) {
+      return false;
+    }
+  }
 
   *aOutEndpoint = Move(childPipe);
   return true;

@@ -76,13 +76,36 @@ ImageBridgeParent::~ImageBridgeParent()
   sImageBridges.erase(OtherPid());
 }
 
+static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
+
+void ReleaseImageBridgeParentSingleton() {
+  sImageBridgeParentSingleton = nullptr;
+}
+
 /* static */ ImageBridgeParent*
 ImageBridgeParent::CreateSameProcess()
 {
   RefPtr<ImageBridgeParent> parent =
     new ImageBridgeParent(CompositorThreadHolder::Loop(), base::GetCurrentProcId());
   parent->mSelfRef = parent;
+
+  sImageBridgeParentSingleton = parent;
   return parent;
+}
+
+/* static */ bool
+ImageBridgeParent::CreateForGPUProcess(Endpoint<PImageBridgeParent>&& aEndpoint)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
+
+  MessageLoop* loop = CompositorThreadHolder::Loop();
+  RefPtr<ImageBridgeParent> parent = new ImageBridgeParent(loop, aEndpoint.OtherPid());
+
+  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeParent>&&>(
+    parent, &ImageBridgeParent::Bind, Move(aEndpoint)));
+
+  sImageBridgeParentSingleton = parent;
+  return true;
 }
 
 void
