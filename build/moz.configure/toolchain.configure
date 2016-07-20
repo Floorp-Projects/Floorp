@@ -268,6 +268,17 @@ def get_compiler_info(compiler, language):
             })
         check += '#endif\n'
 
+    # Also check for endianness. The advantage of living in modern times is
+    # that all the modern compilers we support now have __BYTE_ORDER__ defined
+    # by the preprocessor, except MSVC, which only supports little endian.
+    check += dedent('''\
+        #if _MSC_VER || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        %ENDIANNESS little
+        #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        %ENDIANNESS big
+        #endif
+    ''')
+
     result = try_preprocess(compiler, language, check)
 
     if not result:
@@ -308,6 +319,7 @@ def get_compiler_info(compiler, language):
         version=version,
         cpu=data.get('CPU'),
         kernel=data.get('KERNEL'),
+        endianness=data.get('ENDIANNESS'),
         language='C++' if cplusplus else 'C',
         language_version=cplusplus if cplusplus else stdc_version,
     )
@@ -374,11 +386,16 @@ def check_compiler(compiler, language, target):
         if info.type == 'clang':
             append_flag('--target=%s' % target.toolchain)
 
+    if not info.endianness or info.endianness != target.endianness:
+        if info.type == 'clang':
+            append_flag('--target=%s' % target.toolchain)
+
     return namespace(
         type=info.type,
         version=info.version,
         target_cpu=info.cpu,
         target_kernel=info.kernel,
+        target_endianness=info.endianness,
         flags=flags,
     )
 
@@ -588,6 +605,15 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 % (host_or_target_str.capitalize(), language,
                    info.target_kernel or 'unknown', host_or_target_str,
                    host_or_target.kernel))
+
+        if not info.target_endianness or (info.target_endianness !=
+                                          host_or_target.endianness):
+            raise FatalCheckError(
+                '%s %s compiler target endianness (%s) does not match --%s '
+                'endianness (%s)'
+                % (host_or_target_str.capitalize(), language,
+                   info.target_endianness or 'unknown', host_or_target_str,
+                   host_or_target.endianness))
 
         if info.flags:
             raise FatalCheckError(

@@ -405,10 +405,10 @@ def split_triplet(triplet):
         endianness = 'big' if cpu.startswith(('armeb', 'armbe')) else 'little'
     elif cpu in ('mips', 'mipsel'):
         canonical_cpu = 'mips32'
-        endianness = 'little' if 'le' in cpu else 'big'
+        endianness = 'little' if 'el' in cpu else 'big'
     elif cpu in ('mips64', 'mips64el'):
         canonical_cpu = 'mips64'
-        endianness = 'little' if 'le' in cpu else 'big'
+        endianness = 'little' if 'el' in cpu else 'big'
     elif cpu.startswith('aarch64'):
         canonical_cpu = 'aarch64'
         endianness = 'little'
