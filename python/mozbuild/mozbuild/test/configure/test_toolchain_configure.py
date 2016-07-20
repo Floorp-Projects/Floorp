@@ -54,6 +54,8 @@ def GCC_BASE(version):
         '__GNUC_MINOR__': version.minor,
         '__GNUC_PATCHLEVEL__': version.patch,
         '__STDC__': 1,
+        '__ORDER_LITTLE_ENDIAN__': 1234,
+        '__ORDER_BIG_ENDIAN__': 4321,
     })
 
 
@@ -74,7 +76,15 @@ GXX_4_9 = GXX('4.9.3')
 GCC_5 = GCC('5.2.1') + DEFAULT_C11
 GXX_5 = GXX('5.2.1')
 
-GCC_PLATFORM_X86 = {
+GCC_PLATFORM_LITTLE_ENDIAN = {
+    '__BYTE_ORDER__': 1234,
+}
+
+GCC_PLATFORM_BIG_ENDIAN = {
+    '__BYTE_ORDER__': 4321,
+}
+
+GCC_PLATFORM_X86 = FakeCompiler(GCC_PLATFORM_LITTLE_ENDIAN) + {
     None: {
         '__i386__': 1,
     },
@@ -84,7 +94,7 @@ GCC_PLATFORM_X86 = {
     },
 }
 
-GCC_PLATFORM_X86_64 = {
+GCC_PLATFORM_X86_64 = FakeCompiler(GCC_PLATFORM_LITTLE_ENDIAN) + {
     None: {
         '__x86_64__': 1,
     },
@@ -94,7 +104,7 @@ GCC_PLATFORM_X86_64 = {
     },
 }
 
-GCC_PLATFORM_ARM = {
+GCC_PLATFORM_ARM = FakeCompiler(GCC_PLATFORM_LITTLE_ENDIAN) + {
     '__arm__': 1,
 }
 
@@ -919,24 +929,28 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
     GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
     GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
 
+    little_endian = FakeCompiler(GCC_PLATFORM_LINUX,
+                                 GCC_PLATFORM_LITTLE_ENDIAN)
+    big_endian = FakeCompiler(GCC_PLATFORM_LINUX, GCC_PLATFORM_BIG_ENDIAN)
+
     PLATFORMS = {
         'i686-pc-linux-gnu': GCC_PLATFORM_X86_LINUX,
         'x86_64-pc-linux-gnu': GCC_PLATFORM_X86_64_LINUX,
         'arm-unknown-linux-gnu': GCC_PLATFORM_ARM_LINUX,
-        'aarch64-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'aarch64-unknown-linux-gnu': little_endian + {
             '__aarch64__': 1,
         },
-        'ia64-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'ia64-unknown-linux-gnu': little_endian + {
             '__ia64__': 1,
         },
-        's390x-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        's390x-unknown-linux-gnu': big_endian + {
             '__s390x__': 1,
             '__s390__': 1,
         },
-        's390-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        's390-unknown-linux-gnu': big_endian + {
             '__s390__': 1,
         },
-        'powerpc64-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'powerpc64-unknown-linux-gnu': big_endian + {
             None: {
                 '__powerpc64__': 1,
                 '__powerpc__': 1,
@@ -945,7 +959,7 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
                 '__powerpc64__': False,
             },
         },
-        'powerpc-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'powerpc-unknown-linux-gnu': big_endian + {
             None: {
                 '__powerpc__': 1,
             },
@@ -953,13 +967,13 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
                 '__powerpc64__': 1,
             },
         },
-        'alpha-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'alpha-unknown-linux-gnu': little_endian + {
             '__alpha__': 1,
         },
-        'hppa-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'hppa-unknown-linux-gnu': big_endian + {
             '__hppa__': 1,
         },
-        'sparc64-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'sparc64-unknown-linux-gnu': big_endian + {
             None: {
                 '__arch64__': 1,
                 '__sparc__': 1,
@@ -968,7 +982,7 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
                 '__arch64__': False,
             },
         },
-        'sparc-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'sparc-unknown-linux-gnu': big_endian + {
             None: {
                 '__sparc__': 1,
             },
@@ -976,14 +990,21 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
                 '__arch64__': 1,
             },
         },
-        'mips64-unknown-linux-gnuabi64': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'mips64-unknown-linux-gnuabi64': big_endian + {
             '__mips64': 1,
             '__mips__': 1,
         },
-        'mips-unknown-linux-gnu': FakeCompiler(GCC_PLATFORM_LINUX) + {
+        'mips-unknown-linux-gnu': big_endian + {
             '__mips__': 1,
         },
     }
+
+    PLATFORMS['powerpc64le-unknown-linux-gnu'] = \
+        PLATFORMS['powerpc64-unknown-linux-gnu'] + GCC_PLATFORM_LITTLE_ENDIAN
+    PLATFORMS['mips64el-unknown-linux-gnuabi64'] = \
+        PLATFORMS['mips64-unknown-linux-gnuabi64'] + GCC_PLATFORM_LITTLE_ENDIAN
+    PLATFORMS['mipsel-unknown-linux-gnu'] = \
+        PLATFORMS['mips-unknown-linux-gnu'] + GCC_PLATFORM_LITTLE_ENDIAN
 
     def do_test_cross_gcc_32_64(self, host, target):
         self.HOST = host
@@ -1059,6 +1080,19 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
         for target in self.PLATFORMS:
             if not target.endswith('-pc-linux-gnu'):
                 self.do_test_cross_gcc('x86_64-pc-linux-gnu', target)
+
+    def test_cannot_cross(self):
+        self.TARGET = 'mipsel-unknown-linux-gnu'
+
+        paths = {
+            '/usr/bin/gcc': GCC_4_9 + self.PLATFORMS['mips-unknown-linux-gnu'],
+            '/usr/bin/g++': GXX_4_9 + self.PLATFORMS['mips-unknown-linux-gnu'],
+        }
+        self.do_toolchain_test(paths, {
+            'c_compiler': ('Target C compiler target endianness (big) '
+                           'does not match --target endianness (little)'),
+        })
+        self.TARGET = LinuxCrossCompileToolchainTest.TARGET
 
     def test_overridden_cross_gcc(self):
         self.do_toolchain_test(self.PATHS, {
