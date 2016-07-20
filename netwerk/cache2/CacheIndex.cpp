@@ -223,7 +223,7 @@ NS_IMETHODIMP FileOpenHelper::OnFileOpened(CacheFileHandle *aHandle,
 NS_IMPL_ISUPPORTS(FileOpenHelper, CacheFileIOListener);
 
 
-StaticRefPtr<CacheIndex> CacheIndex::gInstance;
+CacheIndex * CacheIndex::gInstance = nullptr;
 StaticMutex  CacheIndex::sLock;
 
 
@@ -289,7 +289,7 @@ CacheIndex::Init(nsIFile *aCacheDirectory)
   nsresult rv = idx->InitInternal(aCacheDirectory);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  gInstance = idx.forget();
+  idx.swap(gInstance);
   return NS_OK;
 }
 
@@ -316,7 +316,7 @@ CacheIndex::PreShutdown()
 
   StaticMutexAutoLock lock(sLock);
 
-  LOG(("CacheIndex::PreShutdown() [gInstance=%p]", gInstance.get()));
+  LOG(("CacheIndex::PreShutdown() [gInstance=%p]", gInstance));
 
   nsresult rv;
   RefPtr<CacheIndex> index = gInstance;
@@ -410,9 +410,10 @@ CacheIndex::Shutdown()
 
   StaticMutexAutoLock lock(sLock);
 
-  LOG(("CacheIndex::Shutdown() [gInstance=%p]", gInstance.get()));
+  LOG(("CacheIndex::Shutdown() [gInstance=%p]", gInstance));
 
-  RefPtr<CacheIndex> index = gInstance.forget();
+  RefPtr<CacheIndex> index;
+  index.swap(gInstance);
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;

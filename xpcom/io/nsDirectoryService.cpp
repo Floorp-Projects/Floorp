@@ -192,7 +192,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
   return NS_ERROR_FAILURE;
 } // GetCurrentProcessDirectory()
 
-StaticRefPtr<nsDirectoryService> nsDirectoryService::gService;
+nsDirectoryService* nsDirectoryService::gService = nullptr;
 
 nsDirectoryService::nsDirectoryService()
   : mHashtable(128)
@@ -243,13 +243,15 @@ nsDirectoryService::RealInit()
   NS_ASSERTION(!gService,
                "nsDirectoryService::RealInit Mustn't initialize twice!");
 
-  gService = new nsDirectoryService();
+  RefPtr<nsDirectoryService> self = new nsDirectoryService();
 
   NS_RegisterStaticAtoms(directory_atoms);
 
   // Let the list hold the only reference to the provider.
   nsAppFileLocationProvider* defaultProvider = new nsAppFileLocationProvider;
-  gService->mProviders.AppendElement(defaultProvider);
+  self->mProviders.AppendElement(defaultProvider);
+
+  self.swap(gService);
 }
 
 nsDirectoryService::~nsDirectoryService()

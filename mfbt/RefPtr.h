@@ -19,7 +19,6 @@ class nsCOMPtr_helper;
 
 namespace mozilla {
 template<class T> class OwningNonNull;
-template<class T> class StaticRefPtr;
 
 // Traditionally, RefPtr supports automatic refcounting of any pointer type
 // with AddRef() and Release() methods that follow the traditional semantics.
@@ -149,10 +148,6 @@ public:
   template<class U>
   MOZ_IMPLICIT RefPtr(const mozilla::OwningNonNull<U>& aOther);
 
-  // Defined in StaticPtr.h
-  template<class U>
-  MOZ_IMPLICIT RefPtr(const mozilla::StaticRefPtr<U>& aOther);
-
   // Assignment operators
 
   RefPtr<T>&
@@ -212,11 +207,6 @@ public:
   template<class U>
   RefPtr<T>&
   operator=(const mozilla::OwningNonNull<U>& aOther);
-
-  // Defined in StaticPtr.h
-  template<class U>
-  RefPtr<T>&
-  operator=(const mozilla::StaticRefPtr<U>& aOther);
 
   // Other pointer operators
 
