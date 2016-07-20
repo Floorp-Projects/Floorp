@@ -4599,9 +4599,6 @@ pref("layers.force-active", false);
 // platform and are the optimal surface type.
 pref("layers.gralloc.disable", false);
 
-// Don't use compositor-lru on this platform
-pref("layers.compositor-lru-size", 0);
-
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
