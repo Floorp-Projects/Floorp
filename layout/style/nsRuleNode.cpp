@@ -2427,7 +2427,13 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // the context by our caller) as not being owned by the context.
     if (!isReset) {
       aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+    } else if (HasAnimationData()) {
+      // If we have animation data, the struct should be cached on the style
+      // context so that we can peek the struct.
+      // See comment in AnimValuesStyleRule::MapRuleInfoInto.
+      StoreStyleOnContext(aContext, aSID, startStruct);
     }
+
     return startStruct;
   }
   if ((!startStruct && !isReset &&
@@ -2830,6 +2836,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       SetStyleData(eStyleStruct_##type_, data_);                              \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(eStyleStruct_##type_, aHighestNode, data_);         \
+    if (HasAnimationData()) {                                                 \
+      /* If we have animation data, the struct should be cached on the */     \
+      /* style context so that we can peek the struct. */                     \
+      /* See comment in AnimValuesStyleRule::MapRuleInfoInto. */              \
+      StoreStyleOnContext(aContext, eStyleStruct_##type_, data_);             \
+    }                                                                         \
   } else if (conditions.Cacheable()) {                                        \
     if (!mStyleData.mResetData) {                                             \
       mStyleData.mResetData = new (mPresContext) nsConditionalResetStyleData; \
@@ -10268,7 +10280,13 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
       // the context by our caller) as not being owned by the context.
       if (!nsCachedStyleData::IsReset(aSID)) {
         aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+      } else if (HasAnimationData()) {
+        // If we have animation data, the struct should be cached on the style
+        // context so that we can peek the struct.
+        // See comment in AnimValuesStyleRule::MapRuleInfoInto.
+        StoreStyleOnContext(aContext, aSID, const_cast<void*>(data));
       }
+
       return data; // We have a fully specified struct. Just return it.
     }
   }
@@ -10625,6 +10643,15 @@ nsRuleNode::ParentHasPseudoElementData(nsStyleContext* aContext)
 {
   nsStyleContext* parent = aContext->GetParent();
   return parent && parent->HasPseudoElementData();
+}
+
+/* static */ void
+nsRuleNode::StoreStyleOnContext(nsStyleContext* aContext,
+                                nsStyleStructID aSID,
+                                void* aStruct)
+{
+  aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+  aContext->SetStyle(aSID, aStruct);
 }
 
 #ifdef DEBUG
