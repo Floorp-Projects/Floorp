@@ -292,7 +292,10 @@
 <!-- Containers -->
 <groupbox id="browserContainersGroup" data-category="panePrivacy" hidden="true">
   <vbox id="browserContainersbox" hidden="true">
-    <caption><label>&browserContainersHeader.label;</label></caption>
+    <caption><label>&browserContainersHeader.label;
+      <label id="browserContainersLearnMore" class="text-link"
+             value="&browserContainersLearnMore.label;"/>
+    </label></caption>
     <checkbox id="browserContainersCheckbox"
               label="&browserContainersEnabled.label;"
               accesskey="&browserContainersEnabled.accesskey;"
