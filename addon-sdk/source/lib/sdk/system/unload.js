@@ -10,16 +10,33 @@ module.metadata = {
   "stability": "experimental"
 };
 
+const { Cu } = require('chrome');
 const { on, off } = require('./events');
 const unloadSubject = require('@loader/unload');
 
 const observers = [];
 const unloaders = [];
 
-var when = exports.when = function when(observer) {
-  if (observers.indexOf(observer) != -1)
-    return;
-  observers.unshift(observer);
+function WeakObserver(inner) {
+  this._inner = Cu.getWeakReference(inner);
+}
+
+Object.defineProperty(WeakObserver.prototype, 'value', {
+  get: function() { this._inner.get() }
+});
+
+var when = exports.when = function when(observer, opts) {
+  opts = opts || {};
+  for (var i = 0; i < observers.length; ++i) {
+    if (observers[i] === observer || observers[i].value === observer) {
+      return;
+    }
+  }
+  if (opts.weak) {
+    observers.unshift(new WeakObserver(observer));
+  } else {
+    observers.unshift(observer);
+  }
 };
 
 var ensure = exports.ensure = function ensure(obj, destructorName) {
@@ -55,7 +72,12 @@ var ensure = exports.ensure = function ensure(obj, destructorName) {
 function unload(reason) {
   observers.forEach(function(observer) {
     try {
-      observer(reason);
+      if (observer instanceof WeakObserver) {
+        observer = observer.value;
+      }
+      if (typeof observer === 'function') {
+        observer(reason);
+      }
     }
     catch (error) {
       console.exception(error);
