@@ -10203,5 +10203,14 @@
     "bug_numbers": [1296606],
     "kind": "count",
     "description": "Number of named profiles."
+  },
+  "WEB_PERMISSION_CLEARED": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1286118],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 6,
+    "description": "Number of revoke actions on permissions in the control center, keyed by permission id. Values represent the permission type that was revoked. (0=unknown, 1=permanently allowed, 2=permanently blocked, 3=temporarily allowed, 4=temporarily blocked)"
   }
 }
