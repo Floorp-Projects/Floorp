@@ -165,8 +165,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     virtual void visitTruncateFToInt32(LTruncateFToInt32* ins);
 
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* lir);
-    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
-    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
 
     // Out of line visitors.
     virtual void visitOutOfLineBailout(OutOfLineBailout* ool) = 0;
@@ -201,6 +199,8 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
+    void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins);
+    void visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins);
     void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
 

@@ -4899,11 +4899,10 @@ MAsmJSLoadHeap::congruentTo(const MDefinition* ins) const
 }
 
 MDefinition::AliasType
-MWasmLoadGlobalVar::mightAlias(const MDefinition* def) const
+MAsmJSLoadGlobalVar::mightAlias(const MDefinition* def) const
 {
-    if (def->isWasmStoreGlobalVar()) {
-        const MWasmStoreGlobalVar* store = def->toWasmStoreGlobalVar();
-        // Global variables can't alias each other or be type-reinterpreted.
+    if (def->isAsmJSStoreGlobalVar()) {
+        const MAsmJSStoreGlobalVar* store = def->toAsmJSStoreGlobalVar();
         return (store->globalDataOffset() == globalDataOffset_) ? AliasType::MayAlias :
                                                                   AliasType::NoAlias;
     }
@@ -4911,7 +4910,7 @@ MWasmLoadGlobalVar::mightAlias(const MDefinition* def) const
 }
 
 HashNumber
-MWasmLoadGlobalVar::valueHash() const
+MAsmJSLoadGlobalVar::valueHash() const
 {
     HashNumber hash = MDefinition::valueHash();
     hash = addU32ToHash(hash, globalDataOffset_);
@@ -4919,20 +4918,22 @@ MWasmLoadGlobalVar::valueHash() const
 }
 
 bool
-MWasmLoadGlobalVar::congruentTo(const MDefinition* ins) const
+MAsmJSLoadGlobalVar::congruentTo(const MDefinition* ins) const
 {
-    if (ins->isWasmLoadGlobalVar())
-        return globalDataOffset_ == ins->toWasmLoadGlobalVar()->globalDataOffset_;
+    if (ins->isAsmJSLoadGlobalVar()) {
+        const MAsmJSLoadGlobalVar* load = ins->toAsmJSLoadGlobalVar();
+        return globalDataOffset_ == load->globalDataOffset_;
+    }
     return false;
 }
 
 MDefinition*
-MWasmLoadGlobalVar::foldsTo(TempAllocator& alloc)
+MAsmJSLoadGlobalVar::foldsTo(TempAllocator& alloc)
 {
-    if (!dependency() || !dependency()->isWasmStoreGlobalVar())
+    if (!dependency() || !dependency()->isAsmJSStoreGlobalVar())
         return this;
 
-    MWasmStoreGlobalVar* store = dependency()->toWasmStoreGlobalVar();
+    MAsmJSStoreGlobalVar* store = dependency()->toAsmJSStoreGlobalVar();
     if (!store->block()->dominates(block()))
         return this;
 
