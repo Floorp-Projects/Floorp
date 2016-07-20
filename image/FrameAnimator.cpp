@@ -74,39 +74,28 @@ AnimationState::GetFirstFrameRefreshArea() const
   return mFirstFrameRefreshArea;
 }
 
+FrameTimeout
+AnimationState::LoopLength() const
+{
+  // If we don't know the loop length yet, we have to treat it as infinite.
+  if (!mLoopLength) {
+    return FrameTimeout::Forever();
+  }
+
+  MOZ_ASSERT(mDoneDecoding, "We know the loop length but decoding isn't done?");
+
+  // If we're not looping, a single loop time has no meaning.
+  if (mAnimationMode != imgIContainer::kNormalAnimMode) {
+    return FrameTimeout::Forever();
+  }
+
+  return *mLoopLength;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // FrameAnimator implementation.
 ///////////////////////////////////////////////////////////////////////////////
-
-FrameTimeout
-FrameAnimator::GetSingleLoopTime(AnimationState& aState) const
-{
-  // If we aren't done decoding, we don't know the image's full play time.
-  if (!aState.mDoneDecoding) {
-    return FrameTimeout::Forever();
-  }
-
-  // If we're not looping, a single loop time has no meaning.
-  if (aState.mAnimationMode != imgIContainer::kNormalAnimMode) {
-    return FrameTimeout::Forever();
-  }
-
-  // Add up the timeouts of all the frames.
-  FrameTimeout loopTime = FrameTimeout::Zero();
-  for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
-    loopTime += GetTimeoutForFrame(i);
-  }
-
-  if (loopTime == FrameTimeout::Forever()) {
-    // We have at least one frame that never times out. This may be an error,
-    // but we'll try to handle it gracefully.
-    // XXX(seth): I don't think this is actually ever an error.
-    NS_WARNING("Infinite frame timeout - how did this happen?");
-  }
-
-  return loopTime;
-}
 
 TimeStamp
 FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState) const
@@ -235,9 +224,10 @@ FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
   aState.mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime(aState);
 
   // If we can get closer to the current time by a multiple of the image's loop
-  // time, we should. We need to be done decoding in order to know the full loop
-  // time though!
-  FrameTimeout loopTime = GetSingleLoopTime(aState);
+  // time, we should. We can only do this if we're done decoding; otherwise, we
+  // don't know the full loop length, and LoopLength() will have to return
+  // FrameTimeout::Forever().
+  FrameTimeout loopTime = aState.LoopLength();
   if (loopTime != FrameTimeout::Forever()) {
     TimeDuration delay = aTime - aState.mCurrentAnimationFrameTime;
     if (delay.ToMilliseconds() > loopTime.AsMilliseconds()) {
