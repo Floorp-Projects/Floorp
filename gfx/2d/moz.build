@@ -88,6 +88,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
         'JobScheduler_posix.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
+    SOURCES += [
+        'ScaledFontFontconfig.cpp',
+    ]
+
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
         'convolver.cpp',

@@ -36,6 +36,9 @@ typedef _cairo_surface cairo_surface_t;
 struct _cairo_scaled_font;
 typedef _cairo_scaled_font cairo_scaled_font_t;
 
+struct _FcPattern;
+typedef _FcPattern FcPattern;
+
 struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
@@ -1296,6 +1299,11 @@ public:
   static already_AddRefed<ScaledFont>
     CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
 
+#ifdef MOZ_WIDGET_GTK
+  static already_AddRefed<ScaledFont>
+    CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern, Float aSize);
+#endif
+
   /**
    * This creates a NativeFontResource from TrueType data.
    *
@@ -1387,10 +1395,6 @@ public:
 
   static void PurgeAllCaches();
 
-#if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
-  static already_AddRefed<GlyphRenderingOptions>
-    CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting, AntialiasMode aAntialiasMode = AntialiasMode::DEFAULT);
-#endif
   static already_AddRefed<DrawTarget>
     CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB);
 
