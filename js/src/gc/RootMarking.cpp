@@ -414,6 +414,9 @@ void
 BufferGrayRootsTracer::onChild(const JS::GCCellPtr& thing)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
+    MOZ_RELEASE_ASSERT(thing);
+    // Check if |thing| is corrupt by calling a method that touches the heap.
+    MOZ_RELEASE_ASSERT(thing.asCell()->getTraceKind() <= JS::TraceKind::Null);
 
     if (bufferingGrayRootsFailed)
         return;
