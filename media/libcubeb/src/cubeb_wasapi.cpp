@@ -62,23 +62,6 @@ DEFINE_PROPERTYKEY(PKEY_Device_InstanceId,      0x78c34fc8, 0x104a, 0x4aca, 0x9e
   (sizeof(array_) / sizeof(array_[0]))
 
 namespace {
-uint32_t
-ms_to_hns(uint32_t ms)
-{
-  return ms * 10000;
-}
-
-uint32_t
-hns_to_ms(REFERENCE_TIME hns)
-{
-  return static_cast<uint32_t>(hns / 10000);
-}
-
-double
-hns_to_s(REFERENCE_TIME hns)
-{
-  return static_cast<double>(hns) / 10000000;
-}
 
 void
 SafeRelease(HANDLE handle)
@@ -240,7 +223,7 @@ struct cubeb_stream
   /* The input and output device, or NULL for default. */
   cubeb_devid input_device;
   cubeb_devid output_device;
-  /* The latency initially requested for this stream. */
+  /* The latency initially requested for this stream, in frames. */
   unsigned latency;
   cubeb_state_callback state_callback;
   cubeb_data_callback data_callback;
@@ -436,6 +419,50 @@ bool should_downmix(cubeb_stream_params & stream, cubeb_stream_params & mixer)
 double stream_to_mix_samplerate_ratio(cubeb_stream_params & stream, cubeb_stream_params & mixer)
 {
   return double(stream.rate) / mixer.rate;
+}
+
+
+uint32_t
+get_rate(cubeb_stream * stm)
+{
+  return has_input(stm) ? stm->input_stream_params.rate
+                        : stm->output_stream_params.rate;
+}
+
+uint32_t
+ms_to_hns(uint32_t ms)
+{
+  return ms * 10000;
+}
+
+uint32_t
+hns_to_ms(REFERENCE_TIME hns)
+{
+  return static_cast<uint32_t>(hns / 10000);
+}
+
+double
+hns_to_s(REFERENCE_TIME hns)
+{
+  return static_cast<double>(hns) / 10000000;
+}
+
+uint32_t
+hns_to_frames(cubeb_stream * stm, REFERENCE_TIME hns)
+{
+  return hns_to_ms(hns * get_rate(stm)) / 1000;
+}
+
+uint32_t
+hns_to_frames(uint32_t rate, REFERENCE_TIME hns)
+{
+  return hns_to_ms(hns * rate) / 1000;
+}
+
+REFERENCE_TIME
+frames_to_hns(cubeb_stream * stm, uint32_t frames)
+{
+   return frames * 1000 / get_rate(stm);
 }
 
 /* Upmix function, copies a mono channel into L and R */
@@ -1244,7 +1271,7 @@ wasapi_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 }
 
 int
-wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
   HRESULT hr;
   IAudioClient * client;
@@ -1287,7 +1314,8 @@ wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
   /* According to the docs, the best latency we can achieve is by synchronizing
      the stream and the engine.
      http://msdn.microsoft.com/en-us/library/windows/desktop/dd370871%28v=vs.85%29.aspx */
-  *latency_ms = hns_to_ms(default_period);
+
+  *latency_frames = hns_to_frames(params.rate, default_period);
 
   SafeRelease(client);
 
@@ -1476,7 +1504,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   hr = (*audio_client)->Initialize(AUDCLNT_SHAREMODE_SHARED,
                                    AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
                                    AUDCLNT_STREAMFLAGS_NOPERSIST,
-                                   ms_to_hns(stm->latency),
+                                   frames_to_hns(stm, stm->latency),
                                    0,
                                    mix_format,
                                    NULL);
@@ -1642,7 +1670,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
                    cubeb_stream_params * input_stream_params,
                    cubeb_devid output_device,
                    cubeb_stream_params * output_stream_params,
-                   unsigned int latency, cubeb_data_callback data_callback,
+                   unsigned int latency_frames, cubeb_data_callback data_callback,
                    cubeb_state_callback state_callback, void * user_ptr)
 {
   HRESULT hr;
@@ -1652,7 +1680,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  XASSERT(context && stream);
+  XASSERT(context && stream && (input_stream_params || output_stream_params));
 
   if (output_stream_params && output_stream_params->format != CUBEB_SAMPLE_FLOAT32NE ||
       input_stream_params && input_stream_params->format != CUBEB_SAMPLE_FLOAT32NE) {
@@ -1676,7 +1704,8 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     stm->output_stream_params = *output_stream_params;
     stm->output_device = output_device;
   }
-  stm->latency = latency;
+
+  stm->latency = latency_frames;
   stm->volume = 1.0;
 
   stm->stream_reset_lock = new owned_critical_section();
@@ -1733,8 +1762,6 @@ void close_wasapi_stream(cubeb_stream * stm)
   XASSERT(stm);
 
   stm->stream_reset_lock->assert_current_thread_owns();
-
-  XASSERT(stm->output_client || stm->input_client);
 
   SafeRelease(stm->output_client);
   stm->output_client = NULL;
@@ -1947,8 +1974,7 @@ int wasapi_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   if (FAILED(hr)) {
     return CUBEB_ERROR;
   }
-  double latency_s = hns_to_s(latency_hns);
-  *latency = static_cast<uint32_t>(latency_s * stm->output_stream_params.rate);
+  *latency = hns_to_frames(stm, latency_hns);
 
   return CUBEB_OK;
 }
@@ -2141,11 +2167,11 @@ wasapi_create_device(IMMDeviceEnumerator * enumerator, IMMDevice * dev)
 
   if (SUCCEEDED(dev->Activate(__uuidof(IAudioClient), CLSCTX_INPROC_SERVER, NULL, (void**)&client)) &&
       SUCCEEDED(client->GetDevicePeriod(&def_period, &min_period))) {
-    ret->latency_lo_ms = hns_to_ms(min_period);
-    ret->latency_hi_ms = hns_to_ms(def_period);
+    ret->latency_lo = hns_to_frames(ret->default_rate, min_period);
+    ret->latency_hi = hns_to_frames(ret->default_rate, def_period);
   } else {
-    ret->latency_lo_ms = 0;
-    ret->latency_hi_ms = 0;
+    ret->latency_lo = 0;
+    ret->latency_hi = 0;
   }
   SafeRelease(client);
 
