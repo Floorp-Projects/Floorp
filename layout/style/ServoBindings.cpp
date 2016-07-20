@@ -711,7 +711,7 @@ Servo_DropStyleSet(RawServoStyleSet* set)
 }
 
 ServoDeclarationBlock*
-Servo_ParseStyleAttribute(const uint8_t* bytes, uint8_t length,
+Servo_ParseStyleAttribute(const uint8_t* bytes, uint32_t length,
                           nsHTMLCSSStyleSheet* cache)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_ParseStyleAttribute in a "
@@ -743,6 +743,14 @@ void
 Servo_ClearDeclarationBlockCachePointer(ServoDeclarationBlock* declarations)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_ClearDeclarationBlockCachePointer in a "
+            "non-MOZ_STYLO build");
+}
+
+bool
+Servo_CSSSupports(const uint8_t* name, uint32_t name_length,
+                  const uint8_t* value, uint32_t value_length)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_CSSSupports in a "
             "non-MOZ_STYLO build");
 }
 

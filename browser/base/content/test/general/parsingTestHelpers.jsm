@@ -70,7 +70,8 @@ function iterateOverPath(path, extensions) {
         let uriSpec = getURLForFile(file);
         files.push(Services.io.newURI(uriSpec, null, null));
       }
-    } else if (entry.name.endsWith(".ja") || entry.name.endsWith(".jar")) {
+    } else if (entry.name.endsWith(".ja") || entry.name.endsWith(".jar") ||
+               entry.name.endsWith(".zip") || entry.name.endsWith(".xpi")) {
       let file = parentDir.clone();
       file.append(entry.name);
       for (let extension of extensions) {

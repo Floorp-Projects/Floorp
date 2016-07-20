@@ -466,7 +466,7 @@ nsHTMLStyleSheet::ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aCol
     Element* root = mDocument->GetRootElement();
     if (root) {
       mDocument->GetShell()->GetPresContext()->RestyleManager()->
-        PostRestyleEvent(root, eRestyle_Subtree, NS_STYLE_HINT_NONE);
+        PostRestyleEvent(root, eRestyle_Subtree, nsChangeHint(0));
     }
   }
   return NS_OK;

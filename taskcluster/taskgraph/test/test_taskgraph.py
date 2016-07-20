@@ -7,8 +7,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 from ..graph import Graph
-from ..kind.docker_image import DockerImageTask
-from ..kind.legacy import LegacyTask
+from ..task.docker_image import DockerImageTask
+from ..task.legacy import LegacyTask
 from ..taskgraph import TaskGraph
 from mozunit import main
 
@@ -21,7 +21,7 @@ class TestTargetTasks(unittest.TestCase):
             'task': {},
             'dependencies': {},
             'label': 'a',
-            'kind_implementation': 'taskgraph.kind.legacy:LegacyTask'
+            'kind_implementation': 'taskgraph.task.legacy:LegacyTask'
         }
         graph = TaskGraph(tasks={
             'a': LegacyTask(kind='legacy',
@@ -37,6 +37,7 @@ class TestTargetTasks(unittest.TestCase):
         }, graph=Graph(nodes={'a', 'b'}, edges=set()))
 
         tasks, new_graph = TaskGraph.from_json(graph.to_json(), "taskcluster/ci")
+        self.assertEqual(graph.tasks['a'], new_graph.tasks['a'])
         self.assertEqual(graph, new_graph)
 
 if __name__ == '__main__':

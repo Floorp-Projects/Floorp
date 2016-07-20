@@ -1432,7 +1432,7 @@ nsChangeHint
 nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                      int32_t aModType) const
 {
-    nsChangeHint retval(NS_STYLE_HINT_NONE);
+    nsChangeHint retval(nsChangeHint(0));
 
     if (aAttribute == nsGkAtoms::value &&
         (aModType == nsIDOMMutationEvent::REMOVAL ||

@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
 const Services = require("Services");
-
-loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS);
+const osString = Services.appinfo.OS;
 
 // Panels
 loader.lazyGetter(this, "OptionsPanel", () => require("devtools/client/framework/toolbox-options").OptionsPanel);

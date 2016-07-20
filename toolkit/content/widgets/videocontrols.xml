@@ -641,19 +641,23 @@
                 },
 
                 terminateEventListeners : function () {
-                    for (let event of this.videoEvents) {
-                        this.video.removeEventListener(event, this, {
-                            capture: true,
-                            mozSystemGroup: true
-                        });
+                    if (this.videoEvents) {
+                      for (let event of this.videoEvents) {
+                          this.video.removeEventListener(event, this, {
+                              capture: true,
+                              mozSystemGroup: true
+                          });
+                      }
                     }
 
-                    for (let element of this.controlListeners) {
-                        element.item.removeEventListener(element.event, element.func,
-                                                         { mozSystemGroup: true });
-                    }
+                    if (this.controlListeners) {
+                      for (let element of this.controlListeners) {
+                          element.item.removeEventListener(element.event, element.func,
+                                                           { mozSystemGroup: true });
+                      }
 
-                    delete this.controlListeners;
+                      delete this.controlListeners;
+                    }
 
                     this.log("--- videocontrols terminated ---");
                 },

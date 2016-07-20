@@ -32,9 +32,13 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   dom::MediaSourceEnum aMediaSource, const char* aMonitorName)
   : MediaEngineCameraVideoSource(aIndex, aMonitorName),
     mMediaSource(aMediaSource),
-    mCapEngine(aCapEngine)
+    mCapEngine(aCapEngine),
+    mInShutdown(false)
 {
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other);
+  mSettings.mWidth.Construct(0);
+  mSettings.mHeight.Construct(0);
+  mSettings.mFrameRate.Construct(0);
   Init();
 }
 
@@ -68,6 +72,7 @@ MediaEngineRemoteVideoSource::Shutdown()
   if (!mInitDone) {
     return;
   }
+  mInShutdown = true;
   if (mState == kStarted) {
     SourceMediaStream *source;
     bool empty;
@@ -87,20 +92,24 @@ MediaEngineRemoteVideoSource::Shutdown()
     MOZ_ASSERT(mState == kStopped);
   }
 
-  if (mState == kAllocated || mState == kStopped) {
-    Deallocate();
+  for (auto& registered : mRegisteredHandles) {
+    MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+    Deallocate(registered.get());
   }
 
-  mState = kReleased;
+  MOZ_ASSERT(mState == kReleased);
   mInitDone = false;
   return;
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
-                                       const MediaEnginePrefs& aPrefs,
-                                       const nsString& aDeviceId,
-                                       const nsACString& aOrigin)
+MediaEngineRemoteVideoSource::Allocate(
+    const dom::MediaTrackConstraints& aConstraints,
+    const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId,
+    const nsACString& aOrigin,
+    BaseAllocationHandle** aOutHandle,
+    const char** aOutBadConstraint)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
@@ -110,23 +119,15 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
     return NS_ERROR_FAILURE;
   }
 
-  if (mState == kReleased) {
-    // Note: if shared, we don't allow a later opener to affect the resolution.
-    // (This may change depending on spec changes for Constraints/settings)
+  RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin,
+                                                         aPrefs, aDeviceId);
 
-    if (!ChooseCapability(aConstraints, aPrefs, aDeviceId)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    if (mozilla::camera::GetChildAndCall(
-      &mozilla::camera::CamerasChild::AllocateCaptureDevice,
-      mCapEngine, GetUUID().get(), kMaxUniqueIdLength, mCaptureIndex, aOrigin)) {
-      return NS_ERROR_FAILURE;
-    }
-    mState = kAllocated;
-    LOG(("Video device %d allocated for %s", mCaptureIndex,
-         PromiseFlatCString(aOrigin).get()));
-  } else if (MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
+  nsresult rv = UpdateNew(handle, aPrefs, aDeviceId, aOutBadConstraint);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (mState == kStarted &&
+      MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
       MOZ_ASSERT(mPrincipalHandles.IsEmpty());
@@ -135,22 +136,35 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
       LOG(("Video device %d allocated shared", mCaptureIndex));
     }
   }
-
+  mRegisteredHandles.AppendElement(handle);
   ++mNrAllocations;
-
+  handle.forget(aOutHandle);
   return NS_OK;
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Deallocate()
+MediaEngineRemoteVideoSource::Deallocate(BaseAllocationHandle* aHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aHandle);
+  RefPtr<AllocationHandle> handle = static_cast<AllocationHandle*>(aHandle);
 
+  class Comparator {
+  public:
+    static bool Equals(const RefPtr<AllocationHandle>& a,
+                       const RefPtr<AllocationHandle>& b) {
+      return a.get() == b.get();
+    }
+  };
+  MOZ_ASSERT(mRegisteredHandles.Contains(handle, Comparator()));
+  mRegisteredHandles.RemoveElementAt(mRegisteredHandles.IndexOf(handle, 0,
+                                                                Comparator()));
   --mNrAllocations;
   MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
 
   if (mNrAllocations == 0) {
+    MOZ_ASSERT(!mRegisteredHandles.Length());
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }
@@ -161,6 +175,13 @@ MediaEngineRemoteVideoSource::Deallocate()
     LOG(("Video device %d deallocated", mCaptureIndex));
   } else {
     LOG(("Video device %d deallocated but still in use", mCaptureIndex));
+    MOZ_ASSERT(mRegisteredHandles.Length());
+    if (!mInShutdown) {
+      // Whenever constraints are removed, other parties may get closer to ideal.
+      auto& first = mRegisteredHandles[0];
+      const char* badConstraint = nullptr;
+      return UpdateRemove(first->mPrefs, first->mDeviceId, &badConstraint);
+    }
   }
   return NS_OK;
 }
@@ -246,32 +267,114 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
+                                      const dom::MediaTrackConstraints& aConstraints,
                                       const MediaEnginePrefs& aPrefs,
-                                      const nsString& aDeviceId)
+                                      const nsString& aDeviceId,
+                                      const char** aOutBadConstraint)
 {
   AssertIsOnOwningThread();
   if (!mInitDone) {
     LOG(("Init not done"));
     return NS_ERROR_FAILURE;
   }
-  if (!ChooseCapability(aConstraints, aPrefs, aDeviceId)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  MOZ_ASSERT(aHandle);
+  NormalizedConstraints constraints(aConstraints);
+  return UpdateExisting(static_cast<AllocationHandle*>(aHandle), &constraints,
+                        aPrefs, aDeviceId, aOutBadConstraint);
+}
+
+nsresult
+MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
+                                             NormalizedConstraints* aNewConstraints,
+                                             const MediaEnginePrefs& aPrefs,
+                                             const nsString& aDeviceId,
+                                             const char** aOutBadConstraint)
+{
+  // aHandle and/or aNewConstraints may be nullptr
+
+  AutoTArray<const NormalizedConstraints*, 10> allConstraints;
+  for (auto& registered : mRegisteredHandles) {
+    if (aNewConstraints && registered.get() == aHandle) {
+      continue; // Don't count old constraints
+    }
+    allConstraints.AppendElement(&registered->mConstraints);
   }
-  if (mState != kStarted) {
-    return NS_OK;
+  if (aNewConstraints) {
+    allConstraints.AppendElement(aNewConstraints);
+  } else if (aHandle) {
+    // In the case of UpdateNew, the handle isn't registered yet.
+    allConstraints.AppendElement(&aHandle->mConstraints);
   }
 
-  mozilla::camera::GetChildAndCall(
-    &mozilla::camera::CamerasChild::StopCapture,
-    mCapEngine, mCaptureIndex);
-  if (mozilla::camera::GetChildAndCall(
-    &mozilla::camera::CamerasChild::StartCapture,
-    mCapEngine, mCaptureIndex, mCapability, this)) {
-    LOG(("StartCapture failed"));
+  NormalizedConstraints netConstraints(allConstraints);
+  if (netConstraints.mBadConstraint) {
+    *aOutBadConstraint = netConstraints.mBadConstraint;
     return NS_ERROR_FAILURE;
   }
+
+  if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
+    *aOutBadConstraint = FindBadConstraint(netConstraints, *this, aDeviceId);
+    return NS_ERROR_FAILURE;
+  }
+
+  switch (mState) {
+    case kReleased:
+      MOZ_ASSERT(aHandle);
+      MOZ_ASSERT(!aNewConstraints);
+      MOZ_ASSERT(!mRegisteredHandles.Length());
+      if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
+                                  mCapEngine, GetUUID().get(),
+                                  kMaxUniqueIdLength, mCaptureIndex,
+                                  aHandle->mOrigin)) {
+        return NS_ERROR_FAILURE;
+      }
+      mState = kAllocated;
+      SetLastCapability(mCapability);
+      LOG(("Video device %d allocated for %s", mCaptureIndex,
+           aHandle->mOrigin.get()));
+      break;
+
+    case kStarted:
+      if (mCapability != mLastCapability) {
+        camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                                mCapEngine, mCaptureIndex);
+        if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
+                                    mCapEngine, mCaptureIndex, mCapability,
+                                    this)) {
+          LOG(("StartCapture failed"));
+          return NS_ERROR_FAILURE;
+        }
+        SetLastCapability(mCapability);
+      }
+      break;
+
+    default:
+      LOG(("Video device %d %s in ignored state %d", mCaptureIndex,
+             (aHandle? aHandle->mOrigin.get() : ""), mState));
+      break;
+  }
+  if (aHandle && aNewConstraints) {
+    aHandle->mConstraints = *aNewConstraints;
+  }
   return NS_OK;
+}
+
+void
+MediaEngineRemoteVideoSource::SetLastCapability(
+    const webrtc::CaptureCapability& aCapability)
+{
+  mLastCapability = mCapability;
+
+  webrtc::CaptureCapability cap = aCapability;
+  RefPtr<MediaEngineRemoteVideoSource> that = this;
+
+  NS_DispatchToMainThread(media::NewRunnableFrom([this, that, cap]() mutable {
+    mSettings.mWidth.Value() = cap.width;
+    mSettings.mHeight.Value() = cap.height;
+    mSettings.mFrameRate.Value() = cap.maxFPS;
+    return NS_OK;
+  }));
 }
 
 void
@@ -367,7 +470,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
 }
 
 size_t
-MediaEngineRemoteVideoSource::NumCapabilities()
+MediaEngineRemoteVideoSource::NumCapabilities() const
 {
   int num = mozilla::camera::GetChildAndCall(
       &mozilla::camera::CamerasChild::NumberOfCapabilities,
@@ -419,7 +522,8 @@ MediaEngineRemoteVideoSource::NumCapabilities()
 }
 
 bool
-MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aConstraints,
+MediaEngineRemoteVideoSource::ChooseCapability(
+    const NormalizedConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId)
 {
@@ -430,12 +534,15 @@ MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aCon
     case dom::MediaSourceEnum::Window:
     case dom::MediaSourceEnum::Application: {
       FlattenedConstraints c(aConstraints);
-      mCapability.width = ((c.mWidth.mIdeal.WasPassed() ?
-        c.mWidth.mIdeal.Value() : 0) & 0xffff) << 16 | (c.mWidth.mMax & 0xffff);
-      mCapability.height = ((c.mHeight.mIdeal.WasPassed() ?
-        c.mHeight.mIdeal.Value() : 0) & 0xffff) << 16 | (c.mHeight.mMax & 0xffff);
-      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.WasPassed() ?
-        c.mFrameRate.mIdeal.Value() : aPrefs.mFPS);
+      // The actual resolution to constrain around is not easy to find ahead of
+      // time (and may in fact change over time), so as a hack, we push ideal
+      // and max constraints down to desktop_capture_impl.cc and finish the
+      // algorithm there.
+      mCapability.width = (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 |
+                          (c.mWidth.mMax & 0xffff);
+      mCapability.height = (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 |
+                           (c.mHeight.mMax & 0xffff);
+      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
       return true;
     }
     default:
@@ -446,7 +553,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aCon
 
 void
 MediaEngineRemoteVideoSource::GetCapability(size_t aIndex,
-                                            webrtc::CaptureCapability& aOut)
+                                            webrtc::CaptureCapability& aOut) const
 {
   if (!mHardcodedCapabilities.IsEmpty()) {
     MediaEngineCameraVideoSource::GetCapability(aIndex, aOut);

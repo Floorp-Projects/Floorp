@@ -6,6 +6,13 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph import try_option_syntax
+from taskgraph.util.attributes import attrmatch
+
+BUILD_AND_TEST_KINDS = set([
+    'legacy',  # builds
+    'desktop-test',
+    'android-test',
+])
 
 _target_task_methods = {}
 
@@ -44,5 +51,27 @@ def target_tasks_all_builds_and_tests(full_task_graph, parameters):
     """Trivially target all build and test tasks.  This is used for
     branches where we want to build "everyting", but "everything"
     does not include uninteresting things like docker images"""
-    return [t.label for t in full_task_graph.tasks.itervalues()
-            if t.attributes.get('kind') == 'legacy']
+    def filter(task):
+        return t.attributes.get('kind') in BUILD_AND_TEST_KINDS
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('ash_tasks')
+def target_tasks_ash_tasks(full_task_graph, parameters):
+    """Special case for builds on ash."""
+    def filter(task):
+        # NOTE: on the ash branch, update taskcluster/ci/desktop-test/tests.yml to
+        # run the M-dt-e10s tasks
+        attrs = t.attributes
+        if attrs.get('kind') not in BUILD_AND_TEST_KINDS:
+            return False
+        if not attrmatch(attrs, build_platform=set([
+            'linux64',
+            'linux64-asan',
+            'linux64-pgo',
+        ])):
+            return False
+        if not attrmatch(attrs, e10s=True):
+            return False
+        return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

@@ -41,19 +41,23 @@ public:
 
   void Shutdown() override {};
 
-  void GetName(nsAString&) override;
-  void GetUUID(nsACString&) override;
+  void GetName(nsAString&) const override;
+  void GetUUID(nsACString&) const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin) override;
-  nsresult Deallocate() override;
+                    const nsACString& aOrigin,
+                    BaseAllocationHandle** aOutHandle,
+                    const char** aOutBadConstraint) override;
+  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId) override;
+                   const nsString& aDeviceId,
+                   const char** aOutBadConstraint) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
   void NotifyPull(MediaStreamGraph* aGraph,
                   SourceMediaStream *aSource,
@@ -61,8 +65,8 @@ public:
                   StreamTime aDesiredTime,
                   const PrincipalHandle& aPrincipalHandle) override;
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) override;
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+      const nsString& aDeviceId) const override;
 
   bool IsFake() override {
     return true;
@@ -112,19 +116,23 @@ public:
 
   void Shutdown() override {};
 
-  void GetName(nsAString&) override;
-  void GetUUID(nsACString&) override;
+  void GetName(nsAString&) const override;
+  void GetUUID(nsACString&) const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
-                    const nsACString& aOrigin) override;
-  nsresult Deallocate() override;
+                    const nsACString& aOrigin,
+                    BaseAllocationHandle** aOutHandle,
+                    const char** aOutBadConstraint) override;
+  nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId) override;
+                   const nsString& aDeviceId,
+                   const char** aOutBadConstraint) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
   void AppendToSegment(AudioSegment& aSegment,
                        TrackTicks aSamples);
@@ -166,8 +174,8 @@ public:
   }
 
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) override;
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+      const nsString& aDeviceId) const override;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK

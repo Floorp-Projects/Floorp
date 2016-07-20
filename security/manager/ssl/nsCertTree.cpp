@@ -1104,47 +1104,6 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
     rv = cert->GetTokenName(_retval);
   } else if (NS_LITERAL_STRING("emailcol").Equals(colID) && cert) {
     rv = cert->GetEmailAddress(_retval);
-  } else if (NS_LITERAL_STRING("purposecol").Equals(colID) && mNSSComponent && cert) {
-    uint32_t verified;
-
-    nsAutoString theUsages;
-    rv = cert->GetUsagesString(false, &verified, theUsages); // allow OCSP
-    if (NS_FAILED(rv)) {
-      verified = nsIX509Cert::NOT_VERIFIED_UNKNOWN;
-    }
-
-    switch (verified) {
-      case nsIX509Cert::VERIFIED_OK:
-        _retval = theUsages;
-        break;
-
-      case nsIX509Cert::CERT_REVOKED:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyRevoked", _retval);
-        break;
-      case nsIX509Cert::CERT_EXPIRED:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyExpired", _retval);
-        break;
-      case nsIX509Cert::CERT_NOT_TRUSTED:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyNotTrusted", _retval);
-        break;
-      case nsIX509Cert::ISSUER_NOT_TRUSTED:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyIssuerNotTrusted", _retval);
-        break;
-      case nsIX509Cert::ISSUER_UNKNOWN:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyIssuerUnknown", _retval);
-        break;
-      case nsIX509Cert::INVALID_CA:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyInvalidCA", _retval);
-        break;
-      case nsIX509Cert::SIGNATURE_ALGORITHM_DISABLED:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyDisabledAlgorithm", _retval);
-        break;
-      case nsIX509Cert::NOT_VERIFIED_UNKNOWN:
-      case nsIX509Cert::USAGE_NOT_ALLOWED:
-      default:
-        rv = mNSSComponent->GetPIPNSSBundleString("VerifyUnknown", _retval);
-        break;
-    }
   } else if (NS_LITERAL_STRING("issuedcol").Equals(colID) && cert) {
     nsCOMPtr<nsIX509CertValidity> validity;
 
@@ -1161,17 +1120,6 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
     }
   } else if (NS_LITERAL_STRING("serialnumcol").Equals(colID) && cert) {
     rv = cert->GetSerialNumber(_retval);
-
-
-  } else if (NS_LITERAL_STRING("overridetypecol").Equals(colID)) {
-    // default to classic permanent-trust
-    nsCertOverride::OverrideBits ob = nsCertOverride::ob_Untrusted;
-    if (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override) {
-      ob = certdi->mOverrideBits;
-    }
-    nsAutoCString temp;
-    nsCertOverride::convertBitsToString(ob, temp);
-    _retval = NS_ConvertUTF8toUTF16(temp);
   } else if (NS_LITERAL_STRING("sitecol").Equals(colID)) {
     if (certdi->mTypeOfEntry == nsCertTreeDispInfo::host_port_override) {
       nsAutoCString hostPort;
@@ -1185,28 +1133,6 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
     const char *stringID = 
       (certdi->mIsTemporary) ? "CertExceptionTemporary" : "CertExceptionPermanent";
     rv = mNSSComponent->GetPIPNSSBundleString(stringID, _retval);
-  } else if (NS_LITERAL_STRING("typecol").Equals(colID) && cert) {
-    uint32_t type = nsIX509Cert::UNKNOWN_CERT;
-    rv = cert->GetCertType(&type);
-
-    switch (type) {
-    case nsIX509Cert::USER_CERT:
-        rv = mNSSComponent->GetPIPNSSBundleString("CertUser", _retval);
-	break;
-    case nsIX509Cert::CA_CERT:
-        rv = mNSSComponent->GetPIPNSSBundleString("CertCA", _retval);
-	break;
-    case nsIX509Cert::SERVER_CERT:
-        rv = mNSSComponent->GetPIPNSSBundleString("CertSSL", _retval);
-	break;
-    case nsIX509Cert::EMAIL_CERT:
-        rv = mNSSComponent->GetPIPNSSBundleString("CertEmail", _retval);
-	break;
-    default:
-        rv = mNSSComponent->GetPIPNSSBundleString("CertUnknown", _retval);
-	break;
-    }
-
   } else {
     return NS_ERROR_FAILURE;
   }

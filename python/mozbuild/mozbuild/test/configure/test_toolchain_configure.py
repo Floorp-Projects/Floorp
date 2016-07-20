@@ -102,7 +102,7 @@ CLANGXX_3_3 = CLANGXX('3.3.0')
 CLANG_3_6 = CLANG('3.6.2') + DEFAULT_C11
 CLANGXX_3_6 = CLANGXX('3.6.2') + {
     '-std=gnu++11': {
-        '__cpp_static_assert': '200410',
+        '__has_feature(cxx_alignof)': '1',
     },
 }
 

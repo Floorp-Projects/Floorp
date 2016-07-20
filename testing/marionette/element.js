@@ -287,9 +287,10 @@ function find_(container, strategy, selector, searchFn, opts) {
         `Given ${strategy} expression "${selector}" is invalid: ${e}`);
   }
 
-  if (element.isElementCollection(res)) {
-    return res;
-  } else if (res) {
+  if (res) {
+    if (opts.all) {
+      return res;
+    }
     return [res];
   }
   return [];
@@ -577,14 +578,22 @@ function implicitlyWaitFor(func, timeout, interval = 100) {
         reject(e);
       }
 
-      // empty arrays evaluate to true in JS,
-      // so we must first ascertan if the result is a collection
-      //
-      // we also return immediately if timeout is 0,
-      // allowing |func| to be evaluated at least once
-      let col = element.isElementCollection(res);
-      if (((col && res.length > 0 ) || (!col && !!res)) ||
-          (startTime == endTime || new Date().getTime() >= endTime)) {
+      if (
+        // collections that might contain web elements
+        // should be checked until they are not empty
+        (element.isCollection(res) && res.length > 0)
+
+        // !![] (ensuring boolean type on empty array) always returns true
+        // and we can only use it on non-collections
+        || (!element.isCollection(res) && !!res)
+
+        // return immediately if timeout is 0,
+        // allowing |func| to be evaluted at least once
+        || startTime == endTime
+
+        // return if timeout has elapsed
+        || new Date().getTime() >= endTime
+      ) {
         resolve(res);
       }
     };
@@ -605,19 +614,22 @@ function implicitlyWaitFor(func, timeout, interval = 100) {
   });
 }
 
-element.isElementCollection = function(seq) {
-  if (seq === null) {
-    return false;
+/** Determines if |obj| is an HTML or JS collection. */
+element.isCollection = function(seq) {
+  switch (Object.prototype.toString.call(seq)) {
+    case "[object Arguments]":
+    case "[object Array]":
+    case "[object FileList]":
+    case "[object HTMLAllCollection]":
+    case "[object HTMLCollection]":
+    case "[object HTMLFormControlsCollection]":
+    case "[object HTMLOptionsCollection]":
+    case "[object NodeList]":
+      return true;
+
+    default:
+      return false;
   }
-
-  const arrayLike = {
-    "[object Array]": 0,
-    "[object HTMLCollection]": 1,
-    "[object NodeList]": 2,
-  };
-
-  let typ = Object.prototype.toString.call(seq);
-  return typ in arrayLike;
 };
 
 element.makeWebElement = function(uuid) {
@@ -706,43 +718,40 @@ element.fromJson = function(
  *     web elements.
  */
 element.toJson = function(obj, seenEls) {
-  switch (typeof obj) {
-    case "undefined":
-      return null;
+  let t = Object.prototype.toString.call(obj);
 
-    case "boolean":
-    case "number":
-    case "string":
-      return obj;
+  // null
+  if (t == "[object Undefined]" || t == "[object Null]") {
+    return null;
+  }
 
-    case "object":
-      if (obj === null) {
-        return obj;
+  // literals
+  else if (t == "[object Boolean]" || t == "[object Number]" || t == "[object String]") {
+    return obj;
+  }
+
+  // Array, NodeList, HTMLCollection, et al.
+  else if (element.isCollection(obj)) {
+    return [...obj].map(el => element.toJson(el, seenEls));
+  }
+
+  // HTMLElement
+  else if ("nodeType" in obj && obj.nodeType == 1) {
+    let uuid = seenEls.add(obj);
+    return {[element.Key]: uuid, [element.LegacyKey]: uuid};
+  }
+
+  // arbitrary objects + files
+  else {
+    let rv = {};
+    for (let prop in obj) {
+      try {
+        rv[prop] = element.toJson(obj[prop], seenEls);
+      } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
+        logger.debug(`Skipping ${prop}: ${e.message}`);
       }
-
-      // NodeList, HTMLCollection
-      else if (element.isElementCollection(obj)) {
-        return [...obj].map(el => element.toJson(el, seenEls));
-      }
-
-      // DOM element
-      else if (obj.nodeType == 1) {
-        let uuid = seenEls.add(obj);
-        return {[element.Key]: uuid, [element.LegacyKey]: uuid};
-      }
-
-      // arbitrary objects
-      else {
-        let rv = {};
-        for (let prop in obj) {
-          try {
-            rv[prop] = element.toJson(obj[prop], seenEls);
-          } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
-            logger.debug(`Skipping ${prop}: ${e.message}`);
-          }
-        }
-        return rv;
-      }
+    }
+    return rv;
   }
 };
 

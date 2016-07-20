@@ -24,11 +24,45 @@
 
 namespace mozilla {
 
+static uint32_t ComputeMaxRefFrames(const MediaByteBuffer* aExtraData)
+{
+  uint32_t maxRefFrames = 4;
+  // Retrieve video dimensions from H264 SPS NAL.
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata)) {
+    // max_num_ref_frames determines the size of the sliding window
+    // we need to queue that many frames in order to guarantee proper
+    // pts frames ordering. Use a minimum of 4 to ensure proper playback of
+    // non compliant videos.
+    maxRefFrames =
+      std::min(std::max(maxRefFrames, spsdata.max_num_ref_frames + 1), 16u);
+  }
+  return maxRefFrames;
+}
+
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
                                TaskQueue* aTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
-  : AppleVDADecoder(aConfig, aTaskQueue, aCallback, aImageContainer)
+  : mExtraData(aConfig.mExtraData)
+  , mCallback(aCallback)
+  , mPictureWidth(aConfig.mImage.width)
+  , mPictureHeight(aConfig.mImage.height)
+  , mDisplayWidth(aConfig.mDisplay.width)
+  , mDisplayHeight(aConfig.mDisplay.height)
+  , mQueuedSamples(0)
+  , mTaskQueue(aTaskQueue)
+  , mMaxRefFrames(ComputeMaxRefFrames(aConfig.mExtraData))
+  , mImageContainer(aImageContainer)
+  , mInputIncoming(0)
+  , mIsShutDown(false)
+#ifdef MOZ_WIDGET_UIKIT
+  , mUseSoftwareImages(true)
+#else
+  , mUseSoftwareImages(false)
+#endif
+  , mIsFlushing(false)
+  , mMonitor("AppleVideoDecoder")
   , mFormat(nullptr)
   , mSession(nullptr)
   , mIsHardwareAccelerated(false)
@@ -56,6 +90,88 @@ AppleVTDecoder::Init()
   }
 
   return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+}
+
+nsresult
+AppleVTDecoder::Input(MediaRawData* aSample)
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+
+  LOG("mp4 input sample %p pts %lld duration %lld us%s %d bytes",
+      aSample,
+      aSample->mTime,
+      aSample->mDuration,
+      aSample->mKeyframe ? " keyframe" : "",
+      aSample->Size());
+
+  mInputIncoming++;
+
+  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
+    this, &AppleVTDecoder::ProcessDecode, aSample));
+  return NS_OK;
+}
+
+nsresult
+AppleVTDecoder::Flush()
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> runnable =
+    NewRunnableMethod(this, &AppleVTDecoder::ProcessFlush);
+  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
+  mIsFlushing = false;
+  // All ProcessDecode() tasks should be done.
+  MOZ_ASSERT(mInputIncoming == 0);
+
+  mSeekTargetThreshold.reset();
+
+  return NS_OK;
+}
+
+nsresult
+AppleVTDecoder::Drain()
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  nsCOMPtr<nsIRunnable> runnable =
+    NewRunnableMethod(this, &AppleVTDecoder::ProcessDrain);
+  mTaskQueue->Dispatch(runnable.forget());
+  return NS_OK;
+}
+
+nsresult
+AppleVTDecoder::Shutdown()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
+  mIsShutDown = true;
+  if (mTaskQueue) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod(this, &AppleVTDecoder::ProcessShutdown);
+    mTaskQueue->Dispatch(runnable.forget());
+  } else {
+    ProcessShutdown();
+  }
+  return NS_OK;
+}
+
+nsresult
+AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
+{
+  AssertOnTaskQueueThread();
+
+  mInputIncoming--;
+
+  if (mIsFlushing) {
+    return NS_OK;
+  }
+
+  auto rv = DoDecode(aSample);
+  // Ask for more data.
+  if (NS_SUCCEEDED(rv) && !mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
+    LOG("%s task queue empty; requesting more data", GetDescriptionName());
+    mCallback->InputExhausted();
+  }
+
+  return rv;
 }
 
 void
@@ -99,6 +215,40 @@ AppleVTDecoder::ProcessDrain()
   mCallback->DrainComplete();
 }
 
+AppleVTDecoder::AppleFrameRef*
+AppleVTDecoder::CreateAppleFrameRef(const MediaRawData* aSample)
+{
+  MOZ_ASSERT(aSample);
+  return new AppleFrameRef(*aSample);
+}
+
+void
+AppleVTDecoder::DrainReorderedFrames()
+{
+  MonitorAutoLock mon(mMonitor);
+  while (!mReorderQueue.IsEmpty()) {
+    mCallback->Output(mReorderQueue.Pop().get());
+  }
+  mQueuedSamples = 0;
+}
+
+void
+AppleVTDecoder::ClearReorderedFrames()
+{
+  MonitorAutoLock mon(mMonitor);
+  while (!mReorderQueue.IsEmpty()) {
+    mReorderQueue.Pop();
+  }
+  mQueuedSamples = 0;
+}
+
+void
+AppleVTDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  LOG("SetSeekThreshold %lld", aTime.ToMicroseconds());
+  mSeekTargetThreshold = Some(aTime);
+}
+
 //
 // Implementation details.
 //
@@ -134,6 +284,157 @@ PlatformCallback(void* decompressionOutputRefCon,
       "VideoToolbox returned an unexpected image type");
   }
   decoder->OutputFrame(image, *frameRef);
+}
+
+// Copy and return a decoded frame.
+nsresult
+AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
+                            AppleVTDecoder::AppleFrameRef aFrameRef)
+{
+  if (mIsShutDown || mIsFlushing) {
+    // We are in the process of flushing or shutting down; ignore frame.
+    return NS_OK;
+  }
+
+  LOG("mp4 output frame %lld dts %lld pts %lld duration %lld us%s",
+      aFrameRef.byte_offset,
+      aFrameRef.decode_timestamp.ToMicroseconds(),
+      aFrameRef.composition_timestamp.ToMicroseconds(),
+      aFrameRef.duration.ToMicroseconds(),
+      aFrameRef.is_sync_point ? " keyframe" : ""
+  );
+
+  if (mQueuedSamples > mMaxRefFrames) {
+    // We had stopped requesting more input because we had received too much at
+    // the time. We can ask for more once again.
+    mCallback->InputExhausted();
+  }
+  MOZ_ASSERT(mQueuedSamples);
+  mQueuedSamples--;
+
+  if (!aImage) {
+    // Image was dropped by decoder.
+    return NS_OK;
+  }
+
+  bool useNullSample = false;
+  if (mSeekTargetThreshold.isSome()) {
+    if ((aFrameRef.composition_timestamp + aFrameRef.duration) < mSeekTargetThreshold.ref()) {
+      useNullSample = true;
+    } else {
+      mSeekTargetThreshold.reset();
+    }
+  }
+
+  // Where our resulting image will end up.
+  RefPtr<MediaData> data;
+  // Bounds.
+  VideoInfo info;
+  info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
+  gfx::IntRect visible = gfx::IntRect(0,
+                                      0,
+                                      mPictureWidth,
+                                      mPictureHeight);
+
+  if (useNullSample) {
+    data = new NullData(aFrameRef.byte_offset,
+                        aFrameRef.composition_timestamp.ToMicroseconds(),
+                        aFrameRef.duration.ToMicroseconds());
+  } else if (mUseSoftwareImages) {
+    size_t width = CVPixelBufferGetWidth(aImage);
+    size_t height = CVPixelBufferGetHeight(aImage);
+    DebugOnly<size_t> planes = CVPixelBufferGetPlaneCount(aImage);
+    MOZ_ASSERT(planes == 2, "Likely not NV12 format and it must be.");
+
+    VideoData::YCbCrBuffer buffer;
+
+    // Lock the returned image data.
+    CVReturn rv = CVPixelBufferLockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
+    if (rv != kCVReturnSuccess) {
+      NS_ERROR("error locking pixel data");
+      mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+      return NS_ERROR_FAILURE;
+    }
+    // Y plane.
+    buffer.mPlanes[0].mData =
+      static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 0));
+    buffer.mPlanes[0].mStride = CVPixelBufferGetBytesPerRowOfPlane(aImage, 0);
+    buffer.mPlanes[0].mWidth = width;
+    buffer.mPlanes[0].mHeight = height;
+    buffer.mPlanes[0].mOffset = 0;
+    buffer.mPlanes[0].mSkip = 0;
+    // Cb plane.
+    buffer.mPlanes[1].mData =
+      static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 1));
+    buffer.mPlanes[1].mStride = CVPixelBufferGetBytesPerRowOfPlane(aImage, 1);
+    buffer.mPlanes[1].mWidth = (width+1) / 2;
+    buffer.mPlanes[1].mHeight = (height+1) / 2;
+    buffer.mPlanes[1].mOffset = 0;
+    buffer.mPlanes[1].mSkip = 1;
+    // Cr plane.
+    buffer.mPlanes[2].mData =
+      static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 1));
+    buffer.mPlanes[2].mStride = CVPixelBufferGetBytesPerRowOfPlane(aImage, 1);
+    buffer.mPlanes[2].mWidth = (width+1) / 2;
+    buffer.mPlanes[2].mHeight = (height+1) / 2;
+    buffer.mPlanes[2].mOffset = 1;
+    buffer.mPlanes[2].mSkip = 1;
+
+    // Copy the image data into our own format.
+    data =
+      VideoData::Create(info,
+                        mImageContainer,
+                        nullptr,
+                        aFrameRef.byte_offset,
+                        aFrameRef.composition_timestamp.ToMicroseconds(),
+                        aFrameRef.duration.ToMicroseconds(),
+                        buffer,
+                        aFrameRef.is_sync_point,
+                        aFrameRef.decode_timestamp.ToMicroseconds(),
+                        visible);
+    // Unlock the returned image data.
+    CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
+  } else {
+#ifndef MOZ_WIDGET_UIKIT
+    IOSurfacePtr surface = MacIOSurfaceLib::CVPixelBufferGetIOSurface(aImage);
+    MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
+
+    RefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
+
+    RefPtr<layers::Image> image = new MacIOSurfaceImage(macSurface);
+
+    data =
+      VideoData::CreateFromImage(info,
+                                 mImageContainer,
+                                 aFrameRef.byte_offset,
+                                 aFrameRef.composition_timestamp.ToMicroseconds(),
+                                 aFrameRef.duration.ToMicroseconds(),
+                                 image.forget(),
+                                 aFrameRef.is_sync_point,
+                                 aFrameRef.decode_timestamp.ToMicroseconds(),
+                                 visible);
+#else
+    MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
+#endif
+  }
+
+  if (!data) {
+    NS_ERROR("Couldn't create VideoData for frame");
+    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Frames come out in DTS order but we need to output them
+  // in composition order.
+  MonitorAutoLock mon(mMonitor);
+  mReorderQueue.Push(data);
+  while (mReorderQueue.Length() > mMaxRefFrames) {
+    mCallback->Output(mReorderQueue.Pop().get());
+  }
+  LOG("%llu decoded frames queued",
+      static_cast<unsigned long long>(mReorderQueue.Length()));
+
+  return NS_OK;
 }
 
 nsresult
@@ -338,5 +639,72 @@ AppleVTDecoder::CreateDecoderSpecification()
                             &kCFTypeDictionaryKeyCallBacks,
                             &kCFTypeDictionaryValueCallBacks);
 }
+
+CFDictionaryRef
+AppleVTDecoder::CreateOutputConfiguration()
+{
+  if (mUseSoftwareImages) {
+    // Output format type:
+    SInt32 PixelFormatTypeValue =
+      kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+    AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+      CFNumberCreate(kCFAllocatorDefault,
+                     kCFNumberSInt32Type,
+                     &PixelFormatTypeValue);
+    const void* outputKeys[] = { kCVPixelBufferPixelFormatTypeKey };
+    const void* outputValues[] = { PixelFormatTypeNumber };
+    static_assert(ArrayLength(outputKeys) == ArrayLength(outputValues),
+                  "Non matching keys/values array size");
+
+    return CFDictionaryCreate(kCFAllocatorDefault,
+                              outputKeys,
+                              outputValues,
+                              ArrayLength(outputKeys),
+                              &kCFTypeDictionaryKeyCallBacks,
+                              &kCFTypeDictionaryValueCallBacks);
+  }
+
+#ifndef MOZ_WIDGET_UIKIT
+  // Output format type:
+  SInt32 PixelFormatTypeValue = kCVPixelFormatType_422YpCbCr8;
+  AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+    CFNumberCreate(kCFAllocatorDefault,
+                   kCFNumberSInt32Type,
+                   &PixelFormatTypeValue);
+  // Construct IOSurface Properties
+  const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
+  const void* IOSurfaceValues[] = { kCFBooleanTrue };
+  static_assert(ArrayLength(IOSurfaceKeys) == ArrayLength(IOSurfaceValues),
+                "Non matching keys/values array size");
+
+  // Contruct output configuration.
+  AutoCFRelease<CFDictionaryRef> IOSurfaceProperties =
+    CFDictionaryCreate(kCFAllocatorDefault,
+                       IOSurfaceKeys,
+                       IOSurfaceValues,
+                       ArrayLength(IOSurfaceKeys),
+                       &kCFTypeDictionaryKeyCallBacks,
+                       &kCFTypeDictionaryValueCallBacks);
+
+  const void* outputKeys[] = { kCVPixelBufferIOSurfacePropertiesKey,
+                               kCVPixelBufferPixelFormatTypeKey,
+                               kCVPixelBufferOpenGLCompatibilityKey };
+  const void* outputValues[] = { IOSurfaceProperties,
+                                 PixelFormatTypeNumber,
+                                 kCFBooleanTrue };
+  static_assert(ArrayLength(outputKeys) == ArrayLength(outputValues),
+                "Non matching keys/values array size");
+
+  return CFDictionaryCreate(kCFAllocatorDefault,
+                            outputKeys,
+                            outputValues,
+                            ArrayLength(outputKeys),
+                            &kCFTypeDictionaryKeyCallBacks,
+                            &kCFTypeDictionaryValueCallBacks);
+#else
+  MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
+#endif
+}
+
 
 } // namespace mozilla

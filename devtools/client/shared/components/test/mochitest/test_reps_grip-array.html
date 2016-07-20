@@ -19,13 +19,18 @@ window.onload = Task.async(function* () {
   let { GripArray } = browserRequire("devtools/client/shared/components/reps/grip-array");
 
   let componentUnderTest = GripArray;
+  const maxLength = {
+    short: 3,
+    long: 300
+  };
 
   try {
     yield testBasic();
 
     // Test property iterator
     yield testMaxProps();
-    yield testMoreThanMaxProps();
+    yield testMoreThanShortMaxProps();
+    yield testMoreThanLongMaxProps();
     yield testRecursiveArray();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
@@ -95,11 +100,11 @@ window.onload = Task.async(function* () {
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
-  function testMoreThanMaxProps() {
-    // Test array = `["test string"…] //301 items`
-    const testName = "testMoreThanMaxProps";
+  function testMoreThanShortMaxProps() {
+    // Test array = `["test string"…] //4 items`
+    const testName = "testMoreThanShortMaxProps";
 
-    const defaultOutput = `[${Array(3).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultOutput = `[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
 
     const modeTests = [
       {
@@ -108,7 +113,7 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "tiny",
-        expectedOutput: `[302]`,
+        expectedOutput: `[${maxLength.short + 1}]`,
       },
       {
         mode: "short",
@@ -116,7 +121,36 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "long",
-        expectedOutput: `[${Array(300).fill("\"test string\"").join(", ")}, more…]`,
+        expectedOutput: `[${Array(maxLength.short + 1).fill("\"test string\"").join(", ")}]`,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testMoreThanLongMaxProps() {
+    // Test array = `["test string"…] //301 items`
+    const testName = "testMoreThanLongMaxProps";
+
+    const defaultShortOutput = `[${Array(maxLength.short).fill("\"test string\"").join(", ")}, more…]`;
+    const defaultLongOutput = `[${Array(maxLength.long).fill("\"test string\"").join(", ")}, more…]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultShortOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[${maxLength.long + 1}]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultShortOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultLongOutput
       }
     ];
 
@@ -200,8 +234,8 @@ window.onload = Task.async(function* () {
           }
         };
 
-      case "testMoreThanMaxProps":
-        let grip = {
+      case "testMoreThanShortMaxProps":
+        let shortArrayGrip = {
           "type": "object",
           "class": "Array",
           "actor": "server1.conn1.obj35",
@@ -211,18 +245,42 @@ window.onload = Task.async(function* () {
           "ownPropertyLength": 4,
           "preview": {
             "kind": "ArrayLike",
-            "length": 302,
+            "length": maxLength.short + 1,
             "items": []
           }
         };
 
-        // Generate 101 properties, which is more that the maximum
-        // limit in case of the 'long' mode.
-        for (let i = 0; i < 302; i++) {
-          grip.preview.items.push("test string");
+        // Generate array grip with length 4, which is more that the maximum
+        // limit in case of the 'short' mode.
+        for (let i = 0; i < maxLength.short + 1; i++) {
+          shortArrayGrip.preview.items.push("test string");
         }
 
-        return grip;
+        return shortArrayGrip;
+
+      case "testMoreThanLongMaxProps":
+        let longArrayGrip = {
+          "type": "object",
+          "class": "Array",
+          "actor": "server1.conn1.obj35",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": maxLength.long + 1,
+            "items": []
+          }
+        };
+
+        // Generate array grip with length 301, which is more that the maximum
+        // limit in case of the 'long' mode.
+        for (let i = 0; i < maxLength.long + 1; i++) {
+          longArrayGrip.preview.items.push("test string");
+        }
+
+        return longArrayGrip;
 
       case "testRecursiveArray":
         return {

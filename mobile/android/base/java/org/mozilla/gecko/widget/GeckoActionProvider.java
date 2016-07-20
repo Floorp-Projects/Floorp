@@ -13,7 +13,7 @@ import android.view.Menu;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
@@ -296,9 +296,10 @@ public class GeckoActionProvider {
             // We should be, but currently aren't, statically guaranteed an Activity context.
             // Try our best.
             if (mContext instanceof Activity) {
-                SnackbarHelper.showSnackbar((Activity) mContext,
-                        mContext.getApplicationContext().getString(R.string.share_image_failed),
-                        Snackbar.LENGTH_LONG);
+                SnackbarBuilder.builder((Activity) mContext)
+                        .message(mContext.getApplicationContext().getString(R.string.share_image_failed))
+                        .duration(Snackbar.LENGTH_LONG)
+                        .buildAndShow();
             }
             return;
         }

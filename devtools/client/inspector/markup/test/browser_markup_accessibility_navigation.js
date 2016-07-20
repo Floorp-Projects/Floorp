@@ -1,12 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* import-globals-from helper_markup_accessibility_navigation.js */
 
 "use strict";
 
-/* global getContainerForSelector, openInspectorForURL */
-
 // Test keyboard navigation accessibility of inspector's markup view.
+
+loadHelperScript("helper_markup_accessibility_navigation.js");
 
 /**
  * Test data has the format of:
@@ -237,15 +238,12 @@ const TESTS = [
   },
 ];
 
-let elms = {};
 let containerID = 0;
+let elms = {};
 
 add_task(function* () {
   let { inspector } = yield openInspectorForURL(`data:text/html;charset=utf-8,
     <h1 id="some-id" class="some-class">foo<span>Child span<span></h1>`);
-  let markup = inspector.markup;
-  let doc = markup.doc;
-  let win = doc.defaultView;
 
   // Record containers that are created after inspector is initialized to be
   // useful in testing.
@@ -254,48 +252,26 @@ add_task(function* () {
     inspector.off("container-created", memorizeContainer);
   });
 
-  elms.docBody = doc.body;
-  elms.root = markup.getContainer(markup._rootNode);
+  elms.docBody = inspector.markup.doc.body;
+  elms.root = inspector.markup.getContainer(inspector.markup._rootNode);
   elms.header = yield getContainerForSelector("h1", inspector);
   elms.body = yield getContainerForSelector("body", inspector);
 
   // Initial focus is on root element and active descendant should be set on
   // body tag line.
-  testNavigationState(doc, elms.docBody, elms.body.tagLine);
+  testNavigationState(inspector, elms, elms.docBody, elms.body.tagLine);
 
   // Focus on the tree element.
   elms.root.elt.focus();
 
-  for (let {desc, waitFor, focused, activedescendant, key, options} of TESTS) {
-    info(desc);
-    let updated;
-    if (waitFor) {
-      updated = waitFor === "inspector-updated" ?
-        inspector.once(waitFor) : markup.once(waitFor);
-    } else {
-      updated = Promise.resolve();
-    }
-
-    EventUtils.synthesizeKey(key, options, win);
-    yield updated;
-    testNavigationState(doc, getElm(focused), getElm(activedescendant));
+  for (let testData of TESTS) {
+    yield runAccessibilityNavigationTest(inspector, elms, testData);
   }
+
+  elms = null;
 });
 
 // Record all containers that are created dynamically into elms object.
 function memorizeContainer(event, container) {
   elms[`container-${containerID++}`] = container;
-}
-
-// Parse and lookup an element from elms object based on dotted path.
-function getElm(path) {
-  let segments = path.split(".");
-  return segments.reduce((prev, current) => prev[current], elms);
-}
-
-function testNavigationState(doc, focused, activedescendant) {
-  let id = activedescendant.getAttribute("id");
-  is(doc.activeElement, focused, `Keyboard focus should be set to ${focused}`);
-  is(elms.root.elt.getAttribute("aria-activedescendant"), id,
-    `Active descendant should be set to ${id}`);
 }

@@ -23,7 +23,7 @@ const kWhitelist = [
   {sourceName: /loop\/.*\.css$/i,
    errorMessage: /Unknown pseudo-class.*placeholder/i},
   {sourceName: /loop\/.*shared\/css\/common.css$/i,
-   errorMessage: /Unknown property 'user-select'/i},
+   errorMessage: /Unknown property .user-select./i},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i},

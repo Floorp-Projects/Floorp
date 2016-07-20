@@ -39,6 +39,32 @@ typedef ASTConsumer *ASTConsumerPtr;
 #define cxxRecordDecl recordDecl
 #endif
 
+// Check if the given expression contains an assignment expression.
+// This can either take the form of a Binary Operator or a
+// Overloaded Operator Call.
+bool HasSideEffectAssignment(const Expr *expr) {
+  if (auto opCallExpr = dyn_cast_or_null<CXXOperatorCallExpr>(expr)) {
+    auto binOp = opCallExpr->getOperator();
+    if (binOp == OO_Equal || (binOp >= OO_PlusEqual && binOp <= OO_PipeEqual)) {
+      return true;
+    }
+  } else if (auto binOpExpr = dyn_cast_or_null<BinaryOperator>(expr)) {
+    if (binOpExpr->isAssignmentOp()) {
+      return true;
+    }
+  }
+
+  // Recurse to children.
+  for (const Stmt *SubStmt : expr->children()) {
+    auto childExpr = dyn_cast_or_null<Expr>(SubStmt);
+    if (childExpr && HasSideEffectAssignment(childExpr)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 namespace {
 
 using namespace clang::ast_matchers;
@@ -124,6 +150,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class AssertAssignmentChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker scopeChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
@@ -139,6 +170,7 @@ private:
   NoAutoTypeChecker noAutoTypeChecker;
   NoExplicitMoveConstructorChecker noExplicitMoveConstructorChecker;
   RefCountedCopyConstructorChecker refCountedCopyConstructorChecker;
+  AssertAssignmentChecker assertAttributionChecker;
   MatchFinder astMatcher;
 };
 
@@ -762,6 +794,15 @@ AST_MATCHER(CXXConstructorDecl, isExplicitMoveConstructor) {
 AST_MATCHER(CXXConstructorDecl, isCompilerProvidedCopyConstructor) {
   return !Node.isUserProvided() && Node.isCopyConstructor();
 }
+
+AST_MATCHER(CallExpr, isAssertAssignmentTestFunc) {
+  static const std::string assertName = "MOZ_AssertAssignmentTest";
+  const FunctionDecl *method = Node.getDirectCallee();
+
+  return method
+      && method->getDeclName().isIdentifier()
+      && method->getName() == assertName;
+}
 }
 }
 
@@ -1070,6 +1111,10 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
                                             ofClass(hasRefCntMember()))))
           .bind("node"),
       &refCountedCopyConstructorChecker);
+
+  astMatcher.addMatcher(
+      callExpr(isAssertAssignmentTestFunc()).bind("funcCall"),
+      &assertAttributionChecker);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1543,6 +1588,18 @@ void DiagnosticsMatcher::RefCountedCopyConstructorChecker::run(
 
   Diag.Report(E->getLocation(), ErrorID);
   Diag.Report(E->getLocation(), NoteID);
+}
+
+void DiagnosticsMatcher::AssertAssignmentChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned assignInsteadOfComp = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Forbidden assignment in assert expression");
+  const CallExpr *funcCall = Result.Nodes.getNodeAs<CallExpr>("funcCall");
+
+  if (funcCall && HasSideEffectAssignment(funcCall)) {
+    Diag.Report(funcCall->getLocStart(), assignInsteadOfComp);
+  }
 }
 
 class MozCheckAction : public PluginASTAction {

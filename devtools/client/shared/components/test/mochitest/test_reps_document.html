@@ -1,0 +1,54 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Document rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Document</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { Document } = browserRequire("devtools/client/shared/components/reps/document");
+
+  try {
+    let gripStub = {
+      "type": "object",
+      "class": "HTMLDocument",
+      "actor": "server1.conn17.obj115",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 1,
+      "preview": {
+        "kind": "DOMNode",
+        "nodeType": 9,
+        "nodeName": "#document",
+        "location": "https://www.mozilla.org/en-US/firefox/new/"
+      }
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Document.rep, `Rep correctly selects ${Document.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(Document.rep, { object: gripStub });
+    is(renderedComponent.textContent, "/en-US/firefox/new/", "Document rep has expected text content");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
