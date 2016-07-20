@@ -29,7 +29,7 @@ public:
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
-  already_AddRefed<APZCTreeManager> GetAPZCTreeManager() const override;
+  already_AddRefed<IAPZCTreeManager> GetAPZCTreeManager() const override;
   void Shutdown() override;
 
 private:
