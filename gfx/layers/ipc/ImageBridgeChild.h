@@ -121,8 +121,7 @@ public:
    */
   static void InitSameProcess();
 
-  static PImageBridgeChild*
-  StartUpInChildProcess(Transport* aTransport, ProcessId aOtherProcess);
+  static bool InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint);
 
   /**
    * Destroys the image bridge by calling DestroyBridge, and destroys the
@@ -344,6 +343,7 @@ public:
   void MarkShutDown();
 
   void FallbackDestroyActors();
+
 protected:
   ImageBridgeChild();
   bool DispatchAllocShmemInternal(size_t aSize,
@@ -351,6 +351,9 @@ protected:
                                   Shmem* aShmem,
                                   bool aUnsafe);
 
+  void Bind(Endpoint<PImageBridgeChild>&& aEndpoint);
+
+private:
   CompositableTransaction* mTxn;
   Atomic<bool> mShuttingDown;
   static Atomic<bool> sIsShutDown;
