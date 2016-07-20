@@ -278,8 +278,8 @@ namespace jit {
     _(AsmJSUnsignedToFloat32)                                               \
     _(AsmJSLoadHeap)                                                        \
     _(AsmJSStoreHeap)                                                       \
-    _(WasmLoadGlobalVar)                                                    \
-    _(WasmStoreGlobalVar)                                                   \
+    _(AsmJSLoadGlobalVar)                                                   \
+    _(AsmJSStoreGlobalVar)                                                  \
     _(AsmJSLoadFuncPtr)                                                     \
     _(AsmJSLoadFFIFunc)                                                     \
     _(AsmJSReturn)                                                          \

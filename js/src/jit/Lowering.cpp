@@ -4081,15 +4081,15 @@ LIRGenerator::visitHasClass(MHasClass* ins)
 }
 
 void
-LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins)
+LIRGenerator::visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar* ins)
 {
-    define(new(alloc()) LWasmLoadGlobalVar, ins);
+    define(new(alloc()) LAsmJSLoadGlobalVar, ins);
 }
 
 void
-LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
+LIRGenerator::visitAsmJSStoreGlobalVar(MAsmJSStoreGlobalVar* ins)
 {
-    add(new(alloc()) LWasmStoreGlobalVar(useRegisterAtStart(ins->value())), ins);
+    add(new(alloc()) LAsmJSStoreGlobalVar(useRegisterAtStart(ins->value())), ins);
 }
 
 void

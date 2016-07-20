@@ -13281,9 +13281,9 @@ class MAsmJSAtomicBinopHeap
     }
 };
 
-class MWasmLoadGlobalVar : public MNullaryInstruction
+class MAsmJSLoadGlobalVar : public MNullaryInstruction
 {
-    MWasmLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
+    MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
       : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
     {
         MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
@@ -13295,7 +13295,7 @@ class MWasmLoadGlobalVar : public MNullaryInstruction
     bool isConstant_;
 
   public:
-    INSTRUCTION_HEADER(WasmLoadGlobalVar)
+    INSTRUCTION_HEADER(AsmJSLoadGlobalVar)
     TRIVIAL_NEW_WRAPPERS
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
@@ -13311,18 +13311,18 @@ class MWasmLoadGlobalVar : public MNullaryInstruction
     AliasType mightAlias(const MDefinition* def) const override;
 };
 
-class MWasmStoreGlobalVar
+class MAsmJSStoreGlobalVar
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MWasmStoreGlobalVar(unsigned globalDataOffset, MDefinition* v)
+    MAsmJSStoreGlobalVar(unsigned globalDataOffset, MDefinition* v)
       : MUnaryInstruction(v), globalDataOffset_(globalDataOffset)
     {}
 
     unsigned globalDataOffset_;
 
   public:
-    INSTRUCTION_HEADER(WasmStoreGlobalVar)
+    INSTRUCTION_HEADER(AsmJSStoreGlobalVar)
     TRIVIAL_NEW_WRAPPERS
 
     unsigned globalDataOffset() const { return globalDataOffset_; }
