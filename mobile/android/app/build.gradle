@@ -45,10 +45,9 @@ android {
     }
 
     productFlavors {
-        // For fast local development.  If you have an API 21 device, you should
-        // use this.
+        // For API 21+ - with multi dex, this will be faster for local development.
         local {
-            // Setting `minSdkVersion 21` allows the Android gradle plugin to
+            // For multi dex, setting `minSdkVersion 21` allows the Android gradle plugin to
             // pre-DEX each module and produce an APK that can be tested on
             // Android Lollipop without time consuming DEX merging processes.
             minSdkVersion 21
@@ -57,8 +56,9 @@ android {
                 multiDexEnabled true
             }
         }
-        // For local development on older devices.  Use this only if you only
-        // have a pre-API 21 device, or if you want to test API-specific things.
+        // For API < 21 - does not support multi dex because local development
+        // is slow in that case. Most builds will not require multi dex so this
+        // should not be an issue.
         localOld {
         }
         // Automation builds.
