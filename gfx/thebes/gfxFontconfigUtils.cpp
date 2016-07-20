@@ -1087,4 +1087,13 @@ gfxFontconfigUtils::ActivateBundledFonts()
     }
 }
 
+gfxFontconfigFontBase::gfxFontconfigFontBase(cairo_scaled_font_t *aScaledFont,
+                                             FcPattern *aPattern,
+                                             gfxFontEntry *aFontEntry,
+                                             const gfxFontStyle *aFontStyle)
+    : gfxFT2FontBase(aScaledFont, aFontEntry, aFontStyle)
+    , mPattern(aPattern)
+{
+}
+
 #endif

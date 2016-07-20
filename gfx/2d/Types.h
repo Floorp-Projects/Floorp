@@ -146,7 +146,8 @@ enum class FontType : int8_t {
   MAC,
   SKIA,
   CAIRO,
-  COREGRAPHICS
+  COREGRAPHICS,
+  FONTCONFIG
 };
 
 enum class NativeSurfaceType : int8_t {

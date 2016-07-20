@@ -59,11 +59,6 @@ public: // new functions
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontCacheSizes* aSizes) const override;
 
-#ifdef USE_SKIA
-    virtual already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-        GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
-#endif
-
 protected:
     virtual bool ShapeText(DrawTarget      *aDrawTarget,
                            const char16_t *aText,

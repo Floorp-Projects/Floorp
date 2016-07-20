@@ -29,6 +29,9 @@
 #include "ScaledFontMac.h"
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#include "ScaledFontFontconfig.h"
+#endif
 
 #ifdef XP_DARWIN
 #include "DrawTargetCG.h"
@@ -575,6 +578,14 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, c
 #endif
 }
 
+#ifdef MOZ_WIDGET_GTK
+already_AddRefed<ScaledFont>
+Factory::CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern, Float aSize)
+{
+  return MakeAndAddRef<ScaledFontFontconfig>(aScaledFont, aPattern, aSize);
+}
+#endif
+
 already_AddRefed<DrawTarget>
 Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
 {
@@ -723,20 +734,6 @@ void
 Factory::PurgeAllCaches()
 {
 }
-
-#ifdef USE_SKIA_FREETYPE
-already_AddRefed<GlyphRenderingOptions>
-Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting, AntialiasMode aAntialiasMode)
-{
-  RefPtr<GlyphRenderingOptionsCairo> options =
-    new GlyphRenderingOptionsCairo();
-
-  options->SetHinting(aHinting);
-  options->SetAutoHinting(aAutoHinting);
-  options->SetAntialiasMode(aAntialiasMode);
-  return options.forget();
-}
-#endif
 
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat)

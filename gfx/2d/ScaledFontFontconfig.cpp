@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ScaledFontCairo.h"
+#include "ScaledFontFontconfig.h"
 #include "Logging.h"
 
-#if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
+#ifdef USE_SKIA
 #include "skia/include/ports/SkTypeface_cairo.h"
 #endif
 
@@ -17,17 +17,26 @@ namespace gfx {
 // an SkFontHost implementation that allows Skia to render using this.
 // This is mainly because FT_Face is not good for sharing between libraries, which
 // is a requirement when we consider runtime switchable backends and so on
-ScaledFontCairo::ScaledFontCairo(cairo_scaled_font_t* aScaledFont, Float aSize)
-  : ScaledFontBase(aSize)
-{ 
+ScaledFontFontconfig::ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont,
+                                           FcPattern* aPattern,
+                                           Float aSize)
+  : ScaledFontBase(aSize),
+    mPattern(aPattern)
+{
   SetCairoScaledFont(aScaledFont);
+  FcPatternReference(aPattern);
 }
 
-#if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
-SkTypeface* ScaledFontCairo::GetSkTypeface()
+ScaledFontFontconfig::~ScaledFontFontconfig()
+{
+  FcPatternDestroy(mPattern);
+}
+
+#ifdef USE_SKIA
+SkTypeface* ScaledFontFontconfig::GetSkTypeface()
 {
   if (!mTypeface) {
-    mTypeface = SkCreateTypefaceFromCairoFTFont(mScaledFont);
+    mTypeface = SkCreateTypefaceFromCairoFTFontWithFontconfig(mScaledFont, mPattern);
   }
 
   return mTypeface;
