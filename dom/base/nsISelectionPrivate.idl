@@ -15,9 +15,9 @@ interface nsINode;
 class nsIFrame;
 struct nsPoint;
 struct ScrollAxis;
-template<class T> class nsTArray;
 #include "nsDirection.h"
 #include "nsIPresShell.h" // TODO: Remove this include
+#include "nsTArrayForwardDeclare.h"
 #include "mozilla/EventForwards.h"
 %}
 
