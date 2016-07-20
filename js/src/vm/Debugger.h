@@ -1154,6 +1154,8 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
                                             MutableHandle<DebuggerEnvironment*> result);
     static bool getIsGenerator(Handle<DebuggerFrame*> frame);
+    static MOZ_MUST_USE bool getOffset(JSContext* cx, Handle<DebuggerFrame*> frame,
+                                       size_t& offset);
 
     bool isLive() const;
 
@@ -1175,6 +1177,7 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool liveGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool offsetGetter(JSContext* cx, unsigned argc, Value* vp);
 
     Debugger* owner() const;
 };
