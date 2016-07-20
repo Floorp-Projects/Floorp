@@ -53,7 +53,7 @@ public:
   ~ImageBridgeParent();
 
   static ImageBridgeParent* CreateSameProcess();
-
+  static bool CreateForGPUProcess(Endpoint<PImageBridgeParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint);
 
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
