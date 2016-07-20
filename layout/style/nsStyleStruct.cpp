@@ -1007,14 +1007,14 @@ nsStyleBasicShape::GetShapeTypeName() const
 nsStyleClipPath::nsStyleClipPath()
   : mType(NS_STYLE_CLIP_PATH_NONE)
   , mURL(nullptr)
-  , mSizingBox(NS_STYLE_CLIP_SHAPE_SIZING_NOBOX)
+  , mSizingBox(mozilla::StyleClipShapeSizing::NoBox)
 {
 }
 
 nsStyleClipPath::nsStyleClipPath(const nsStyleClipPath& aSource)
   : mType(NS_STYLE_CLIP_PATH_NONE)
   , mURL(nullptr)
-  , mSizingBox(NS_STYLE_CLIP_SHAPE_SIZING_NOBOX)
+  , mSizingBox(mozilla::StyleClipShapeSizing::NoBox)
 {
   if (aSource.mType == NS_STYLE_CLIP_PATH_URL) {
     SetURL(aSource.mURL);
@@ -1045,7 +1045,7 @@ nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
     SetSizingBox(aOther.mSizingBox);
   } else {
     ReleaseRef();
-    mSizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
+    mSizingBox = mozilla::StyleClipShapeSizing::NoBox;
     mType = NS_STYLE_CLIP_PATH_NONE;
   }
   return *this;
@@ -1096,7 +1096,8 @@ nsStyleClipPath::SetURL(nsIURI* aURL)
 }
 
 void
-nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape, uint8_t aSizingBox)
+nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape,
+                               mozilla::StyleClipShapeSizing aSizingBox)
 {
   NS_ASSERTION(aBasicShape, "expected pointer");
   ReleaseRef();
@@ -1107,7 +1108,7 @@ nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape, uint8_t aSizingBo
 }
 
 void
-nsStyleClipPath::SetSizingBox(uint8_t aSizingBox)
+nsStyleClipPath::SetSizingBox(mozilla::StyleClipShapeSizing aSizingBox)
 {
   ReleaseRef();
   mSizingBox = aSizingBox;
