@@ -429,7 +429,7 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     public final void verifyHomePagerHidden() {
-        final View homePagerContainer = mSolo.getView(R.id.home_pager_container);
+        final View homePagerContainer = mSolo.getView(R.id.home_screen_container);
 
         boolean rc = waitForCondition(new Condition() {
             @Override

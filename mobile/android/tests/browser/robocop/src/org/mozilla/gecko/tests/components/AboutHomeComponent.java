@@ -46,7 +46,7 @@ public class AboutHomeComponent extends BaseComponent {
     }
 
     private View getHomePagerContainer() {
-        return mSolo.getView(R.id.home_pager_container);
+        return mSolo.getView(R.id.home_screen_container);
     }
 
     private ViewPager getHomePagerView() {

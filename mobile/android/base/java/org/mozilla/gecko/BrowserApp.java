@@ -239,7 +239,12 @@ public class BrowserApp extends GeckoApp
     private FirstrunAnimationContainer mFirstrunAnimationContainer;
     private HomePager mHomePager;
     private TabsPanel mTabsPanel;
-    private ViewGroup mHomePagerContainer;
+    /**
+     * Container for the home screen implementation. This will be populated with any valid
+     * home screen implementation (currently that is just the HomePager, but that will be extended
+     * to permit further experimental replacement panels such as the activity-stream panel).
+     */
+    private ViewGroup mHomeScreenContainer;
     private ActionModeCompat mActionMode;
     private TabHistoryController tabHistoryController;
     private ZoomedView mZoomedView;
@@ -648,7 +653,7 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        mHomePagerContainer = (ViewGroup) findViewById(R.id.home_pager_container);
+        mHomeScreenContainer = (ViewGroup) findViewById(R.id.home_screen_container);
 
         mBrowserSearchContainer = findViewById(R.id.search_container);
         mBrowserSearch = (BrowserSearch) getSupportFragmentManager().findFragmentByTag(BROWSER_SEARCH_TAG);
@@ -726,7 +731,7 @@ public class BrowserApp extends GeckoApp
 
         if (savedInstanceState != null) {
             mDynamicToolbar.onRestoreInstanceState(savedInstanceState);
-            mHomePagerContainer.setPadding(0, savedInstanceState.getInt(STATE_ABOUT_HOME_TOP_PADDING), 0, 0);
+            mHomeScreenContainer.setPadding(0, savedInstanceState.getInt(STATE_ABOUT_HOME_TOP_PADDING), 0, 0);
         }
 
         mDynamicToolbar.setEnabledChangedListener(new DynamicToolbar.OnEnabledChangedListener() {
@@ -1209,14 +1214,14 @@ public class BrowserApp extends GeckoApp
                 mLayerView.getDynamicToolbarAnimator().addTranslationListener(this);
             }
             setToolbarMargin(0);
-            mHomePagerContainer.setPadding(0, mBrowserChrome.getHeight(), 0, 0);
+            mHomeScreenContainer.setPadding(0, mBrowserChrome.getHeight(), 0, 0);
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
             if (mLayerView != null) {
                 mLayerView.getDynamicToolbarAnimator().removeTranslationListener(this);
             }
-            mHomePagerContainer.setPadding(0, 0, 0, 0);
+            mHomeScreenContainer.setPadding(0, 0, 0, 0);
             if (mBrowserChrome != null) {
                 ViewHelper.setTranslationY(mBrowserChrome, 0);
             }
@@ -1561,7 +1566,7 @@ public class BrowserApp extends GeckoApp
                 // When the dynamic toolbar is enabled, set the padding on the
                 // about:home widget directly - this is to avoid resizing the
                 // LayerView, which can cause visible artifacts.
-                mHomePagerContainer.setPadding(0, height, 0, 0);
+                mHomeScreenContainer.setPadding(0, height, 0, 0);
             } else {
                 setToolbarMargin(height);
                 height = 0;
@@ -2197,7 +2202,7 @@ public class BrowserApp extends GeckoApp
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mDynamicToolbar.onSaveInstanceState(outState);
-        outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePagerContainer.getPaddingTop());
+        outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomeScreenContainer.getPaddingTop());
     }
 
     /**
@@ -2292,12 +2297,12 @@ public class BrowserApp extends GeckoApp
 
     private boolean isHomePagerVisible() {
         return (mHomePager != null && mHomePager.isVisible()
-            && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
+                && mHomeScreenContainer != null && mHomeScreenContainer.getVisibility() == View.VISIBLE);
     }
 
     private boolean isFirstrunVisible() {
         return (mFirstrunAnimationContainer != null && mFirstrunAnimationContainer.isVisible()
-            && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
+                && mHomeScreenContainer != null && mHomeScreenContainer.getVisibility() == View.VISIBLE);
     }
 
     /**
@@ -2651,7 +2656,7 @@ public class BrowserApp extends GeckoApp
             });
         }
 
-        mHomePagerContainer.setVisibility(View.VISIBLE);
+        mHomeScreenContainer.setVisibility(View.VISIBLE);
     }
 
     private void showHomePager(String panelId, Bundle panelRestoreData) {
@@ -2716,13 +2721,13 @@ public class BrowserApp extends GeckoApp
                     @Override
                     public void onDismiss() {
                         mHomePager.setBanner(null);
-                        mHomePagerContainer.removeView(homeBanner);
+                        mHomeScreenContainer.removeView(homeBanner);
                     }
                 });
             }
         }
 
-        mHomePagerContainer.setVisibility(View.VISIBLE);
+        mHomeScreenContainer.setVisibility(View.VISIBLE);
         mHomePager.load(getSupportLoaderManager(),
                         getSupportFragmentManager(),
                         panelId,
@@ -2803,7 +2808,7 @@ public class BrowserApp extends GeckoApp
 
         // Display the previously hidden web content (which prevented screen reader access).
         mLayerView.setVisibility(View.VISIBLE);
-        mHomePagerContainer.setVisibility(View.GONE);
+        mHomeScreenContainer.setVisibility(View.GONE);
 
         if (mHomePager != null) {
             mHomePager.unload();
@@ -2842,7 +2847,7 @@ public class BrowserApp extends GeckoApp
 
         // Prevent overdraw by hiding the underlying web content and HomePager View
         hideWebContent();
-        mHomePagerContainer.setVisibility(View.INVISIBLE);
+        mHomeScreenContainer.setVisibility(View.INVISIBLE);
 
         final FragmentManager fm = getSupportFragmentManager();
 
