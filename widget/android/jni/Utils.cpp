@@ -60,7 +60,6 @@ template<> const char ObjectBase<TypedObject<jlongArray>, jlongArray>::name[] = 
 template<> const char ObjectBase<TypedObject<jfloatArray>, jfloatArray>::name[] = "[F";
 template<> const char ObjectBase<TypedObject<jdoubleArray>, jdoubleArray>::name[] = "[D";
 template<> const char ObjectBase<TypedObject<jobjectArray>, jobjectArray>::name[] = "[Ljava/lang/Object;";
-template<> const char ObjectBase<ByteBuffer, jobject>::name[] = "java/nio/ByteBuffer";
 
 
 JNIEnv* sGeckoThreadEnv;
