@@ -13,7 +13,7 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 #include "nsPresContext.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGridContainerFrame.h"

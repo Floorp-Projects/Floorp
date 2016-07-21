@@ -10,7 +10,7 @@
 
 #include "nsFloatManager.h"
 #include "nsLineBox.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 
 class nsBlockFrame;
 class nsFrameList;

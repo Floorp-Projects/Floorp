@@ -11,7 +11,7 @@
 // Helper Classes
 #include "nsStyleCoord.h"
 #include "nsSize.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXPIDLString.h"

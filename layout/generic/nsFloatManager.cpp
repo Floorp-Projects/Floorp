@@ -8,7 +8,7 @@
 #include "nsFloatManager.h"
 #include "nsIPresShell.h"
 #include "nsMemory.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 #include "nsBlockDebugFlags.h"
 #include "nsError.h"
 #include <algorithm>
