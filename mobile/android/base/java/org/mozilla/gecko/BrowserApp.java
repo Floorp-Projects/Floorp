@@ -50,6 +50,7 @@ import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomePanelsManager;
+import org.mozilla.gecko.home.HomeScreen;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.javaaddons.JavaAddonManager;
 import org.mozilla.gecko.media.AudioFocusAgent;
@@ -237,7 +238,7 @@ public class BrowserApp extends GeckoApp
     private TabStripInterface mTabStrip;
     private ToolbarProgressView mProgressView;
     private FirstrunAnimationContainer mFirstrunAnimationContainer;
-    private HomePager mHomePager;
+    private HomeScreen mHomeScreen;
     private TabsPanel mTabsPanel;
     /**
      * Container for the home screen implementation. This will be populated with any valid
@@ -639,14 +640,14 @@ public class BrowserApp extends GeckoApp
                 // If we get a gamepad panning MotionEvent while the focus is not on the layerview,
                 // put the focus on the layerview and carry on
                 if (mLayerView != null && !mLayerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
-                    if (mHomePager == null) {
+                    if (mHomeScreen == null) {
                         return false;
                     }
 
                     if (isHomePagerVisible()) {
                         mLayerView.requestFocus();
                     } else {
-                        mHomePager.requestFocus();
+                        mHomeScreen.requestFocus();
                     }
                 }
                 return false;
@@ -1157,7 +1158,7 @@ public class BrowserApp extends GeckoApp
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (isHomePagerVisible()) {
-                    mHomePager.onToolbarFocusChange(hasFocus);
+                    mHomeScreen.onToolbarFocusChange(hasFocus);
                 }
             }
         });
@@ -2296,7 +2297,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private boolean isHomePagerVisible() {
-        return (mHomePager != null && mHomePager.isVisible()
+        return (mHomeScreen != null && mHomeScreen.isVisible()
                 && mHomeScreenContainer != null && mHomeScreenContainer.getVisibility() == View.VISIBLE);
     }
 
@@ -2666,7 +2667,7 @@ public class BrowserApp extends GeckoApp
     private void showHomePagerWithAnimator(String panelId, Bundle panelRestoreData, PropertyAnimator animator) {
         if (isHomePagerVisible()) {
             // Home pager already visible, make sure it shows the correct panel.
-            mHomePager.showPanel(panelId, panelRestoreData);
+            mHomeScreen.showPanel(panelId, panelRestoreData);
             return;
         }
 
@@ -2685,11 +2686,11 @@ public class BrowserApp extends GeckoApp
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
 
-        if (mHomePager == null) {
+        if (mHomeScreen == null) {
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
-            mHomePager = (HomePager) homePagerStub.inflate();
+            mHomeScreen = (HomePager) homePagerStub.inflate();
 
-            mHomePager.setOnPanelChangeListener(new HomePager.OnPanelChangeListener() {
+            mHomeScreen.setOnPanelChangeListener(new HomeScreen.OnPanelChangeListener() {
                 @Override
                 public void onPanelSelected(String panelId) {
                     final Tab currentTab = Tabs.getInstance().getSelectedTab();
@@ -2700,7 +2701,7 @@ public class BrowserApp extends GeckoApp
             });
 
             // Set this listener to persist restore data (via the Tab) every time panel state changes.
-            mHomePager.setPanelStateChangeListener(new HomeFragment.PanelStateChangeListener() {
+            mHomeScreen.setPanelStateChangeListener(new HomeFragment.PanelStateChangeListener() {
                 @Override
                 public void onStateChanged(Bundle bundle) {
                     final Tab currentTab = Tabs.getInstance().getSelectedTab();
@@ -2714,13 +2715,13 @@ public class BrowserApp extends GeckoApp
             if (!Restrictions.isUserRestricted()) {
                 final ViewStub homeBannerStub = (ViewStub) findViewById(R.id.home_banner_stub);
                 final HomeBanner homeBanner = (HomeBanner) homeBannerStub.inflate();
-                mHomePager.setBanner(homeBanner);
+                mHomeScreen.setBanner(homeBanner);
 
                 // Remove the banner from the view hierarchy if it is dismissed.
                 homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
                     @Override
                     public void onDismiss() {
-                        mHomePager.setBanner(null);
+                        mHomeScreen.setBanner(null);
                         mHomeScreenContainer.removeView(homeBanner);
                     }
                 });
@@ -2728,7 +2729,7 @@ public class BrowserApp extends GeckoApp
         }
 
         mHomeScreenContainer.setVisibility(View.VISIBLE);
-        mHomePager.load(getSupportLoaderManager(),
+        mHomeScreen.load(getSupportLoaderManager(),
                         getSupportFragmentManager(),
                         panelId,
                         panelRestoreData,
@@ -2810,8 +2811,8 @@ public class BrowserApp extends GeckoApp
         mLayerView.setVisibility(View.VISIBLE);
         mHomeScreenContainer.setVisibility(View.GONE);
 
-        if (mHomePager != null) {
-            mHomePager.unload();
+        if (mHomeScreen != null) {
+            mHomeScreen.unload();
         }
 
         mBrowserToolbar.setNextFocusDownId(R.id.layer_view);
