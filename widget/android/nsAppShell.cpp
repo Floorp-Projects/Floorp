@@ -42,7 +42,6 @@
 #include <pthread.h>
 #include <wchar.h>
 
-#include "mozilla/dom/ScreenOrientation.h"
 #ifdef MOZ_GAMEPAD
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/dom/Gamepad.h"
@@ -802,34 +801,6 @@ nsAppShell::LegacyGeckoEvent::Run()
                 curEvent->Time(),
                 curEvent->CharactersExtra().get()
                 );
-        break;
-    }
-
-    case AndroidGeckoEvent::SCREENORIENTATION_CHANGED: {
-        nsresult rv;
-        nsCOMPtr<nsIScreenManager> screenMgr =
-            do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("Can't find nsIScreenManager!");
-            break;
-        }
-
-        nsIntRect rect;
-        int32_t colorDepth, pixelDepth;
-        int16_t angle;
-        dom::ScreenOrientationInternal orientation;
-        nsCOMPtr<nsIScreen> screen;
-
-        screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-        screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height);
-        screen->GetColorDepth(&colorDepth);
-        screen->GetPixelDepth(&pixelDepth);
-        orientation =
-            static_cast<dom::ScreenOrientationInternal>(curEvent->ScreenOrientation());
-        angle = curEvent->ScreenAngle();
-
-        hal::NotifyScreenConfigurationChange(
-            hal::ScreenConfiguration(rect, orientation, angle, colorDepth, pixelDepth));
         break;
     }
 
