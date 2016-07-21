@@ -88,7 +88,6 @@ hardware (via AudioStream).
 
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
-#include "MediaCallbackID.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
