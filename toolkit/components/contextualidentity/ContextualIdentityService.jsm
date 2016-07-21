@@ -23,28 +23,36 @@ this.ContextualIdentityService = {
       color: "#00a7e0",
       label: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
-      alreadyOpened: false },
+      alreadyOpened: false,
+      telemetryId: 1,
+    },
     { userContextId: 2,
       public: true,
       icon: "chrome://browser/skin/usercontext/work.svg",
       color: "#f89c24",
       label: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
-      alreadyOpened: false },
+      alreadyOpened: false,
+      telemetryId: 2,
+    },
     { userContextId: 3,
       public: true,
       icon: "chrome://browser/skin/usercontext/banking.svg",
       color: "#7dc14c",
       label: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
-      alreadyOpened: false },
+      alreadyOpened: false,
+      telemetryId: 3,
+    },
     { userContextId: 4,
       public: true,
       icon: "chrome://browser/skin/usercontext/shopping.svg",
       color: "#ee5195",
       label: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
-      alreadyOpened: false },
+      alreadyOpened: false,
+      telemetryId: 4,
+    },
     { userContextId: Math.pow(2, 31) - 1,
       public: false,
       icon: "",
@@ -97,7 +105,7 @@ this.ContextualIdentityService = {
     let identity = this.getIdentityFromId(userContextId);
 
     // Let's ignore unknown identities for now.
-    if (!identity) {
+    if (!identity || !identity.public) {
       return;
     }
 
@@ -107,5 +115,10 @@ this.ContextualIdentityService = {
     }
 
     Services.telemetry.getHistogramById("TOTAL_CONTAINERS_OPENED").add(1);
+
+    if (identity.telemetryId) {
+      Services.telemetry.getHistogramById("CONTAINER_USED")
+                        .add(identity.telemetryId);
+    }
   },
 }
