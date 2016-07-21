@@ -85,9 +85,8 @@ using mozilla::Unused;
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::layers;
-using namespace mozilla::java;
 using namespace mozilla::widget;
+using namespace mozilla::layers;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
@@ -278,7 +277,8 @@ private:
             , mOldEnd(aIMENotification.mTextChangeData.mRemovedEndOffset)
             , mNewEnd(aIMENotification.mTextChangeData.mAddedEndOffset)
         {
-            MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE,
+            MOZ_ASSERT(aIMENotification.mMessage ==
+                           mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,
                        "IMETextChange initialized with wrong notification");
             MOZ_ASSERT(aIMENotification.mTextChangeData.IsValid(),
                        "The text change notification isn't initialized");
@@ -290,7 +290,7 @@ private:
     };
 
     // GeckoEditable instance used by this nsWindow;
-    java::GeckoEditable::GlobalRef mEditable;
+    mozilla::widget::GeckoEditable::GlobalRef mEditable;
     AutoTArray<mozilla::UniquePtr<mozilla::WidgetEvent>, 8> mIMEKeyEvents;
     AutoTArray<IMETextChange, 4> mIMETextChanges;
     InputContext mInputContext;
@@ -568,13 +568,13 @@ public:
         MouseInput::ButtonType result = MouseInput::NONE;
 
         switch (button) {
-            case java::sdk::MotionEvent::BUTTON_PRIMARY:
+            case widget::sdk::MotionEvent::BUTTON_PRIMARY:
                 result = MouseInput::LEFT_BUTTON;
                 break;
-            case java::sdk::MotionEvent::BUTTON_SECONDARY:
+            case widget::sdk::MotionEvent::BUTTON_SECONDARY:
                 result = MouseInput::RIGHT_BUTTON;
                 break;
-            case java::sdk::MotionEvent::BUTTON_TERTIARY:
+            case widget::sdk::MotionEvent::BUTTON_TERTIARY:
                 result = MouseInput::MIDDLE_BUTTON;
                 break;
             default:
@@ -587,19 +587,19 @@ public:
     static int16_t ConvertButtons(int buttons) {
         int16_t result = 0;
 
-        if (buttons & java::sdk::MotionEvent::BUTTON_PRIMARY) {
+        if (buttons & widget::sdk::MotionEvent::BUTTON_PRIMARY) {
             result |= WidgetMouseEventBase::eLeftButtonFlag;
         }
-        if (buttons & java::sdk::MotionEvent::BUTTON_SECONDARY) {
+        if (buttons & widget::sdk::MotionEvent::BUTTON_SECONDARY) {
             result |= WidgetMouseEventBase::eRightButtonFlag;
         }
-        if (buttons & java::sdk::MotionEvent::BUTTON_TERTIARY) {
+        if (buttons & widget::sdk::MotionEvent::BUTTON_TERTIARY) {
             result |= WidgetMouseEventBase::eMiddleButtonFlag;
         }
-        if (buttons & java::sdk::MotionEvent::BUTTON_BACK) {
+        if (buttons & widget::sdk::MotionEvent::BUTTON_BACK) {
             result |= WidgetMouseEventBase::e4thButtonFlag;
         }
-        if (buttons & java::sdk::MotionEvent::BUTTON_FORWARD) {
+        if (buttons & widget::sdk::MotionEvent::BUTTON_FORWARD) {
             result |= WidgetMouseEventBase::e5thButtonFlag;
         }
 
@@ -2466,7 +2466,7 @@ ConvertAndroidScanCodeToCodeNameIndex(int scanCode)
 static bool
 IsModifierKey(int32_t keyCode)
 {
-    using mozilla::java::sdk::KeyEvent;
+    using mozilla::widget::sdk::KeyEvent;
     return keyCode == KeyEvent::KEYCODE_ALT_LEFT ||
            keyCode == KeyEvent::KEYCODE_ALT_RIGHT ||
            keyCode == KeyEvent::KEYCODE_SHIFT_LEFT ||
@@ -2480,7 +2480,7 @@ IsModifierKey(int32_t keyCode)
 static Modifiers
 GetModifiers(int32_t metaState)
 {
-    using mozilla::java::sdk::KeyEvent;
+    using mozilla::widget::sdk::KeyEvent;
     return (metaState & KeyEvent::META_ALT_MASK ? MODIFIER_ALT : 0)
         | (metaState & KeyEvent::META_SHIFT_MASK ? MODIFIER_SHIFT : 0)
         | (metaState & KeyEvent::META_CTRL_MASK ? MODIFIER_CONTROL : 0)

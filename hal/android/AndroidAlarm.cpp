@@ -4,15 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Hal.h"
+#include "AndroidBridge.h"
 
 #include "GeneratedJNINatives.h"
-#include "GeneratedJNIWrappers.h"
 
 using namespace mozilla::hal;
 
 namespace mozilla {
 
-class AlarmReceiver : public java::AlarmReceiver::Natives<AlarmReceiver>
+class AlarmReceiver : public widget::AlarmReceiver::Natives<AlarmReceiver>
 {
 private:
     AlarmReceiver();
@@ -38,13 +38,13 @@ EnableAlarm()
 void
 DisableAlarm()
 {
-    java::GeckoAppShell::DisableAlarm();
+    widget::GeckoAppShell::DisableAlarm();
 }
 
 bool
 SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 {
-    return java::GeckoAppShell::SetAlarm(aSeconds, aNanoseconds);
+    return widget::GeckoAppShell::SetAlarm(aSeconds, aNanoseconds);
 }
 
 } // hal_impl

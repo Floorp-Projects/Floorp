@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Hal.h"
-#include "GeneratedJNIWrappers.h"
+#include "AndroidBridge.h"
 
 using namespace mozilla::hal;
 
@@ -13,12 +13,12 @@ namespace hal_impl {
 
 void
 EnableSensorNotifications(SensorType aSensor) {
-  java::GeckoAppShell::EnableSensor(aSensor);
+  widget::GeckoAppShell::EnableSensor(aSensor);
 }
 
 void
 DisableSensorNotifications(SensorType aSensor) {
-  java::GeckoAppShell::DisableSensor(aSensor);
+  widget::GeckoAppShell::DisableSensor(aSensor);
 }
 
 } // hal_impl

@@ -6,6 +6,7 @@
 #include "base/basictypes.h"
 #include "AndroidCaptureProvider.h"
 #include "nsXULAppAPI.h"
+#include "AndroidBridge.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsMemory.h"

@@ -11,7 +11,7 @@
 #include "mozilla/jni/Natives.h"
 
 namespace mozilla {
-namespace java {
+namespace widget {
 
 template<class Impl>
 class ANRReporter::Natives : public mozilla::jni::NativeImpl<ANRReporter, Impl>

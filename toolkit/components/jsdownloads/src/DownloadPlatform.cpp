@@ -27,7 +27,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNIWrappers.h"
+#include "AndroidBridge.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -84,7 +84,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
 #ifdef MOZ_WIDGET_ANDROID
       if (addToRecentDocs) {
-        java::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
+        mozilla::widget::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
       }
 #else
       if (addToRecentDocs && !aIsPrivate) {

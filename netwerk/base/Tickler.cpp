@@ -60,7 +60,7 @@ Tickler::Init()
   MOZ_ASSERT(!mFD);
 
   if (jni::IsAvailable()) {
-      java::GeckoAppShell::EnableNetworkNotifications();
+      widget::GeckoAppShell::EnableNetworkNotifications();
   }
 
   mFD = PR_OpenUDPSocket(PR_AF_INET);

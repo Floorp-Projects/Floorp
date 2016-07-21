@@ -35,7 +35,7 @@ static PRLogModuleInfo* AndroidDecoderModuleLog()
 
 using namespace mozilla;
 using namespace mozilla::gl;
-using namespace mozilla::java::sdk;
+using namespace mozilla::widget::sdk;
 using media::TimeUnit;
 
 namespace mozilla {
@@ -179,9 +179,9 @@ public:
                                                   &buffer));
 
     if (!buffer && aConfig.mCodecSpecificConfig->Length() >= 2) {
-      buffer = jni::ByteBuffer::New(
-          aConfig.mCodecSpecificConfig->Elements(),
-          aConfig.mCodecSpecificConfig->Length());
+      buffer = jni::Object::LocalRef::Adopt(
+          env, env->NewDirectByteBuffer(aConfig.mCodecSpecificConfig->Elements(),
+          aConfig.mCodecSpecificConfig->Length()));
       NS_ENSURE_SUCCESS_VOID(aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"),
                                                     buffer));
     }
@@ -277,7 +277,7 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
     return false;
   }
 
-  return java::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
+  return widget::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
       nsCString(TranslateMimeType(aMimeType)));
 }
 
