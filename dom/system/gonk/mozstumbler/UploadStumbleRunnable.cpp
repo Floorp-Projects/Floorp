@@ -50,7 +50,7 @@ UploadStumbleRunnable::Upload()
   rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = xhr->Init(systemPrincipal, nullptr, nullptr, nullptr, nullptr);
+  rv = xhr->Init(systemPrincipal, nullptr, nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURLFormatter> formatter =
