@@ -17,6 +17,7 @@ DevToolsModules(
     'director-manager.js',
     'director-registry.js',
     'environment.js',
+    'eventlooplag.js',
     'frame.js',
     'framerate.js',
     'gcli.js',
