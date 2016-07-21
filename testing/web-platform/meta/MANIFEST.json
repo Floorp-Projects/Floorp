@@ -12206,6 +12206,14 @@
         "url": "/IndexedDB/idbobjectstore_getAll.html"
       },
       {
+        "path": "IndexedDB/idbobjectstore_getKey.htm",
+        "url": "/IndexedDB/idbobjectstore_getKey.htm"
+      },
+      {
+        "path": "IndexedDB/idbobjectstore_getKey_exception_order.htm",
+        "url": "/IndexedDB/idbobjectstore_getKey_exception_order.htm"
+      },
+      {
         "path": "IndexedDB/idbobjectstore_getAllKeys.html",
         "url": "/IndexedDB/idbobjectstore_getAllKeys.html"
       },
