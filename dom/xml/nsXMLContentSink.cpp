@@ -1329,8 +1329,8 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   mContentStack.Clear();
   mNotifyLevel = 0;
 
-  rv = HandleProcessingInstruction(MOZ_UTF16("xml-stylesheet"),
-                                   MOZ_UTF16("href=\"chrome://global/locale/intl.css\" type=\"text/css\""));
+  rv = HandleProcessingInstruction(u"xml-stylesheet",
+                                   u"href=\"chrome://global/locale/intl.css\" type=\"text/css\"");
   NS_ENSURE_SUCCESS(rv, rv);
 
   const char16_t* noAtts[] = { 0, 0 };

@@ -5,12 +5,12 @@
 
 /* state used in reflow of block frames */
 
-#ifndef nsBlockReflowState_h__
-#define nsBlockReflowState_h__
+#ifndef BlockReflowInput_h
+#define BlockReflowInput_h
 
 #include "nsFloatManager.h"
 #include "nsLineBox.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 
 class nsBlockFrame;
 class nsFrameList;
@@ -18,19 +18,19 @@ class nsOverflowContinuationTracker;
 
 // Block reflow state flags.
 //
-// BRS_UNCONSTRAINEDBSIZE is set in the nsBlockReflowState constructor when the
+// BRS_UNCONSTRAINEDBSIZE is set in the BlockReflowInput constructor when the
 // frame being reflowed has been given NS_UNCONSTRAINEDSIZE as its available
-// BSize in the nsHTMLReflowState. If set, NS_UNCONSTRAINEDSIZE is passed to
+// BSize in the ReflowInput. If set, NS_UNCONSTRAINEDSIZE is passed to
 // nsLineLayout as the available BSize.
 #define BRS_UNCONSTRAINEDBSIZE    0x00000001
-// BRS_ISBSTARTMARGINROOT is set in the nsBlockReflowState constructor when
+// BRS_ISBSTARTMARGINROOT is set in the BlockReflowInput constructor when
 // reflowing a "block margin root" frame (i.e. a frame with the
 // NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
 //
 // The flag is also set when reflowing a frame whose computed BStart border
 // padding is non-zero.
 #define BRS_ISBSTARTMARGINROOT    0x00000002
-// BRS_ISBENDMARGINROOT is set in the nsBlockReflowState constructor when
+// BRS_ISBENDMARGINROOT is set in the BlockReflowInput constructor when
 // reflowing a "block margin root" frame (i.e. a frame with the
 // NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
 //
@@ -52,7 +52,7 @@ class nsOverflowContinuationTracker;
 // won't be set, so subsequent calls to ShouldApplyBStartMargin() will continue
 // crawl the line list.)
 //
-// This flag is also set in the nsBlockReflowState constructor if
+// This flag is also set in the BlockReflowInput constructor if
 // BRS_ISBSTARTMARGINROOT is set; that is, the frame being reflowed is a margin
 // root by default.
 #define BRS_APPLYBSTARTMARGIN     0x00000008
@@ -71,12 +71,16 @@ class nsOverflowContinuationTracker;
 #define BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED 0x00000400
 #define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
 
-// nsBlockReflowState contains additional reflow state information that the
-// block frame uses along with nsHTMLReflowState. Like nsHTMLReflowState, this
+namespace mozilla {
+
+// BlockReflowInput contains additional reflow state information that the
+// block frame uses along with ReflowInput. Like ReflowInput, this
 // is read-only data that is passed down from a parent frame to its children.
-class nsBlockReflowState {
+class BlockReflowInput {
+  using ReflowInput = mozilla::ReflowInput;
+
 public:
-  nsBlockReflowState(const nsHTMLReflowState& aReflowState,
+  BlockReflowInput(const ReflowInput& aReflowInput,
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      bool aBStartMarginRoot, bool aBEndMarginRoot,
@@ -133,12 +137,12 @@ public:
   // next column/page).
   bool AdvanceToNextBand(const mozilla::LogicalRect& aFloatAvailableSpace,
                          nscoord *aBCoord) const {
-    mozilla::WritingMode wm = mReflowState.GetWritingMode();
+    mozilla::WritingMode wm = mReflowInput.GetWritingMode();
     if (aFloatAvailableSpace.BSize(wm) > 0) {
       // See if there's room in the next band.
       *aBCoord += aFloatAvailableSpace.BSize(wm);
     } else {
-      if (mReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
+      if (mReflowInput.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
         // Stop trying to clear here; we'll just get pushed to the
         // next column or page and try again there.
         return false;
@@ -153,7 +157,7 @@ public:
                             const nsFlowAreaRect& aFloatAvailableSpace) const;
 
   bool IsAdjacentWithTop() const {
-    return mBCoord == mBorderPadding.BStart(mReflowState.GetWritingMode());
+    return mBCoord == mBorderPadding.BStart(mReflowInput.GetWritingMode());
   }
 
   /**
@@ -205,7 +209,7 @@ public:
 
   nsPresContext* mPresContext;
 
-  const nsHTMLReflowState& mReflowState;
+  const ReflowInput& mReflowInput;
 
   nsFloatManager* mFloatManager;
 
@@ -238,25 +242,25 @@ public:
   // coordinate overflow may occur.
   mozilla::LogicalRect mContentArea;
   nscoord ContentIStart() const {
-    return mContentArea.IStart(mReflowState.GetWritingMode());
+    return mContentArea.IStart(mReflowInput.GetWritingMode());
   }
   nscoord ContentISize() const {
-    return mContentArea.ISize(mReflowState.GetWritingMode());
+    return mContentArea.ISize(mReflowInput.GetWritingMode());
   }
   nscoord ContentIEnd() const {
-    return mContentArea.IEnd(mReflowState.GetWritingMode());
+    return mContentArea.IEnd(mReflowInput.GetWritingMode());
   }
   nscoord ContentBStart() const {
-    return mContentArea.BStart(mReflowState.GetWritingMode());
+    return mContentArea.BStart(mReflowInput.GetWritingMode());
   }
   nscoord ContentBSize() const {
-    return mContentArea.BSize(mReflowState.GetWritingMode());
+    return mContentArea.BSize(mReflowInput.GetWritingMode());
   }
   nscoord ContentBEnd() const {
-    return mContentArea.BEnd(mReflowState.GetWritingMode());
+    return mContentArea.BEnd(mReflowInput.GetWritingMode());
   }
   mozilla::LogicalSize ContentSize(mozilla::WritingMode aWM) const {
-    mozilla::WritingMode wm = mReflowState.GetWritingMode();
+    mozilla::WritingMode wm = mReflowInput.GetWritingMode();
     return mContentArea.Size(wm).ConvertTo(aWM, wm);
   }
 
@@ -376,4 +380,6 @@ private:
   void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 };
 
-#endif // nsBlockReflowState_h__
+}; // namespace mozilla
+
+#endif // BlockReflowInput_h

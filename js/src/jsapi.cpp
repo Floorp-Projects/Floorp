@@ -6147,6 +6147,9 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_WASM_TEST_MODE:
         jit::JitOptions.wasmTestMode = !!value;
         break;
+      case JSJITCOMPILER_WASM_EXPLICIT_BOUNDS_CHECKS:
+        jit::JitOptions.wasmExplicitBoundsChecks = !!value;
+        break;
       default:
         break;
     }
@@ -6174,6 +6177,8 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt)
         return rt->canUseOffthreadIonCompilation();
       case JSJITCOMPILER_WASM_TEST_MODE:
         return jit::JitOptions.wasmTestMode ? 1 : 0;
+      case JSJITCOMPILER_WASM_EXPLICIT_BOUNDS_CHECKS:
+        return jit::JitOptions.wasmExplicitBoundsChecks ? 1 : 0;
       default:
         break;
     }

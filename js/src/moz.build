@@ -285,6 +285,7 @@ UNIFIED_SOURCES += [
     'jit/TypePolicy.cpp',
     'jit/ValueNumbering.cpp',
     'jit/VMFunctions.cpp',
+    'jit/WasmBCE.cpp',
     'jsalloc.cpp',
     'jsapi.cpp',
     'jsbool.cpp',

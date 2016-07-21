@@ -662,11 +662,11 @@ BuiltinCounterStyle::GetSuffix(nsSubstring& aResult)
     case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
     case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
     case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-      aResult.AssignLiteral(MOZ_UTF16(", "));
+      aResult.AssignLiteral(u", ");
       break;
 
     default:
-      aResult.AssignLiteral(MOZ_UTF16(". "));
+      aResult.AssignLiteral(u". ");
       break;
   }
 }
@@ -758,7 +758,7 @@ BuiltinCounterStyle::GetNegative(NegativeType& aResult)
       break;
 
     default:
-      aResult.before.AssignLiteral(MOZ_UTF16("-"));
+      aResult.before.AssignLiteral(u"-");
   }
   aResult.after.Truncate();
 }
@@ -1266,7 +1266,7 @@ CustomCounterStyle::GetSuffix(nsSubstring& aResult)
     } else if (IsExtendsSystem()) {
       GetExtends()->GetSuffix(mSuffix);
     } else {
-      mSuffix.AssignLiteral(MOZ_UTF16(". "));
+      mSuffix.AssignLiteral(u". ");
     }
   }
   aResult = mSuffix;
@@ -1325,7 +1325,7 @@ CustomCounterStyle::GetNegative(NegativeType& aResult)
         if (IsExtendsSystem()) {
           GetExtends()->GetNegative(mNegative);
         } else {
-          mNegative.before.AssignLiteral(MOZ_UTF16("-"));
+          mNegative.before.AssignLiteral(u"-");
           mNegative.after.Truncate();
         }
       }
@@ -1775,7 +1775,7 @@ AnonymousCounterStyle::IsBullet()
 /* virtual */ void
 AnonymousCounterStyle::GetNegative(NegativeType& aResult)
 {
-  aResult.before.AssignLiteral(MOZ_UTF16("-"));
+  aResult.before.AssignLiteral(u"-");
   aResult.after.Truncate();
 }
 

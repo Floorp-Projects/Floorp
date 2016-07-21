@@ -387,13 +387,13 @@ Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& o
     return true;
 }
 
-const char16_t Concrete<JS::Symbol>::concreteTypeName[] = MOZ_UTF16("JS::Symbol");
-const char16_t Concrete<JSScript>::concreteTypeName[] = MOZ_UTF16("JSScript");
-const char16_t Concrete<js::LazyScript>::concreteTypeName[] = MOZ_UTF16("js::LazyScript");
-const char16_t Concrete<js::jit::JitCode>::concreteTypeName[] = MOZ_UTF16("js::jit::JitCode");
-const char16_t Concrete<js::Shape>::concreteTypeName[] = MOZ_UTF16("js::Shape");
-const char16_t Concrete<js::BaseShape>::concreteTypeName[] = MOZ_UTF16("js::BaseShape");
-const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = MOZ_UTF16("js::ObjectGroup");
+const char16_t Concrete<JS::Symbol>::concreteTypeName[] = u"JS::Symbol";
+const char16_t Concrete<JSScript>::concreteTypeName[] = u"JSScript";
+const char16_t Concrete<js::LazyScript>::concreteTypeName[] = u"js::LazyScript";
+const char16_t Concrete<js::jit::JitCode>::concreteTypeName[] = u"js::jit::JitCode";
+const char16_t Concrete<js::Shape>::concreteTypeName[] = u"js::Shape";
+const char16_t Concrete<js::BaseShape>::concreteTypeName[] = u"js::BaseShape";
+const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = u"js::ObjectGroup";
 
 namespace JS {
 namespace ubi {
@@ -478,7 +478,7 @@ RootList::init(HandleObject debuggees)
     // Ensure that each of our debuggee globals are in the root list.
     for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
         if (!addRoot(JS::ubi::Node(static_cast<JSObject*>(r.front())),
-                     MOZ_UTF16("debuggee global")))
+                     u"debuggee global"))
         {
             return false;
         }
@@ -503,7 +503,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     return edges.append(mozilla::Move(Edge(name.release(), node)));
 }
 
-const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("JS::ubi::RootList");
+const char16_t Concrete<RootList>::concreteTypeName[] = u"JS::ubi::RootList";
 
 UniquePtr<EdgeRange>
 Concrete<RootList>::edges(JSRuntime* rt, bool wantNames) const {

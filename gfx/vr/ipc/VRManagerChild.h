@@ -28,12 +28,13 @@ public:
   int GetInputFrameID();
   bool GetVRDevices(nsTArray<RefPtr<VRDeviceProxy> >& aDevices);
   bool RefreshVRDevicesWithCallback(dom::Navigator* aNavigator);
-  static VRManagerChild* StartUpInChildProcess(Transport* aTransport,
-                                               ProcessId aOtherProcess);
 
-  static void StartUpSameProcess();
+  static void InitSameProcess();
+  static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
+  static bool InitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
   static void ShutDown();
 
+  static bool IsCreated();
 
   static VRManagerChild* Get();
 

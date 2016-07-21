@@ -1033,7 +1033,7 @@ nsEditingSession::TimerCallback(nsITimer* aTimer, void* aClosure)
   {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     if (webNav)
-      webNav->LoadURI(MOZ_UTF16("about:blank"),
+      webNav->LoadURI(u"about:blank",
                       0, nullptr, nullptr, nullptr);
   }
 }

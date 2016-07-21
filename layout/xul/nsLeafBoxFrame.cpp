@@ -192,8 +192,8 @@ nsLeafBoxFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 void
 nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
+                     ReflowOutput&     aDesiredSize,
+                     const ReflowInput& aReflowInput,
                      nsReflowStatus&          aStatus)
 {
   // This is mostly a copy of nsBoxFrame::Reflow().
@@ -203,15 +203,15 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
 
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
-  NS_ASSERTION(aReflowState.ComputedWidth() >=0 &&
-               aReflowState.ComputedHeight() >= 0, "Computed Size < 0");
+  NS_ASSERTION(aReflowInput.ComputedWidth() >=0 &&
+               aReflowInput.ComputedHeight() >= 0, "Computed Size < 0");
 
 #ifdef DO_NOISY_REFLOW
   printf("\n-------------Starting LeafBoxFrame Reflow ----------------------------\n");
   printf("%p ** nsLBF::Reflow %d R: ", this, myCounter++);
-  switch (aReflowState.reason) {
+  switch (aReflowInput.reason) {
     case eReflowReason_Initial:
       printf("Ini");break;
     case eReflowReason_Incremental:
@@ -223,13 +223,13 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
     case eReflowReason_Dirty:
       printf("Drt ");
       break;
-    default:printf("<unknown>%d", aReflowState.reason);break;
+    default:printf("<unknown>%d", aReflowInput.reason);break;
   }
   
-  printSize("AW", aReflowState.AvailableWidth());
-  printSize("AH", aReflowState.AvailableHeight());
-  printSize("CW", aReflowState.ComputedWidth());
-  printSize("CH", aReflowState.ComputedHeight());
+  printSize("AW", aReflowInput.AvailableWidth());
+  printSize("AH", aReflowInput.AvailableHeight());
+  printSize("CW", aReflowInput.ComputedWidth());
+  printSize("CH", aReflowInput.ComputedHeight());
 
   printf(" *\n");
 
@@ -238,17 +238,17 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // create the layout state
-  nsBoxLayoutState state(aPresContext, aReflowState.rendContext);
+  nsBoxLayoutState state(aPresContext, aReflowInput.mRenderingContext);
 
-  nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.ComputedHeight());
+  nsSize computedSize(aReflowInput.ComputedWidth(),aReflowInput.ComputedHeight());
 
   nsMargin m;
-  m = aReflowState.ComputedPhysicalBorderPadding();
+  m = aReflowInput.ComputedPhysicalBorderPadding();
 
   //GetXULBorderAndPadding(m);
 
   // this happens sometimes. So lets handle it gracefully.
-  if (aReflowState.ComputedHeight() == 0) {
+  if (aReflowInput.ComputedHeight() == 0) {
     nsSize minSize = GetXULMinSize(state);
     computedSize.height = minSize.height - m.top - m.bottom;
   }
@@ -264,13 +264,13 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   }
 
   // get our desiredSize
-  if (aReflowState.ComputedWidth() == NS_INTRINSICSIZE) {
+  if (aReflowInput.ComputedWidth() == NS_INTRINSICSIZE) {
     computedSize.width = prefSize.width;
   } else {
     computedSize.width += m.left + m.right;
   }
 
-  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
+  if (aReflowInput.ComputedHeight() == NS_INTRINSICSIZE) {
     computedSize.height = prefSize.height;
   } else {
     computedSize.height += m.top + m.bottom;
@@ -280,11 +280,11 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // XXXbz the width handling here seems to be wrong, since
   // mComputedMin/MaxWidth is a content-box size, whole
   // computedSize.width is a border-box size...
-  if (computedSize.width > aReflowState.ComputedMaxWidth())
-    computedSize.width = aReflowState.ComputedMaxWidth();
+  if (computedSize.width > aReflowInput.ComputedMaxWidth())
+    computedSize.width = aReflowInput.ComputedMaxWidth();
 
-  if (computedSize.width < aReflowState.ComputedMinWidth())
-    computedSize.width = aReflowState.ComputedMinWidth();
+  if (computedSize.width < aReflowInput.ComputedMinWidth())
+    computedSize.width = aReflowInput.ComputedMinWidth();
 
   // Now adjust computedSize.height for our min and max computed
   // height.  The only problem is that those are content-box sizes,
@@ -292,8 +292,8 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // m.TopBottom() before adjusting, then readd it.
   computedSize.height = std::max(0, computedSize.height - m.TopBottom());
   computedSize.height = NS_CSS_MINMAX(computedSize.height,
-                                      aReflowState.ComputedMinHeight(),
-                                      aReflowState.ComputedMaxHeight());
+                                      aReflowInput.ComputedMinHeight(),
+                                      aReflowInput.ComputedMaxHeight());
   computedSize.height += m.TopBottom();
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);

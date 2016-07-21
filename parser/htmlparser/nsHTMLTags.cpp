@@ -15,8 +15,8 @@
 using namespace mozilla;
 
 // static array of unicode tag names
-#define HTML_TAG(_tag, _classname) MOZ_UTF16(#_tag),
-#define HTML_HTMLELEMENT_TAG(_tag) MOZ_UTF16(#_tag),
+#define HTML_TAG(_tag, _classname) (u"" #_tag),
+#define HTML_HTMLELEMENT_TAG(_tag) (u"" #_tag),
 #define HTML_OTHER(_tag)
 const char16_t* const nsHTMLTags::sTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"

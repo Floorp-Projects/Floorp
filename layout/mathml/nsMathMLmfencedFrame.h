@@ -36,8 +36,8 @@ public:
 
   virtual void
   Reflow(nsPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         ReflowOutput&     aDesiredSize,
+         const ReflowInput& aReflowInput,
          nsReflowStatus&          aStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -46,7 +46,7 @@ public:
 
   virtual void
   GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
-                           nsHTMLReflowMetrics& aDesiredSize) override;
+                           ReflowOutput& aDesiredSize) override;
 
   virtual nsresult
   AttributeChanged(int32_t         aNameSpaceID,
@@ -59,7 +59,7 @@ public:
 
   // override the base method so that we can deal with fences and separators
   virtual nscoord
-  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize) override;
+  FixInterFrameSpacing(ReflowOutput& aDesiredSize) override;
 
   // helper routines to format the MathMLChars involved here
   static nsresult

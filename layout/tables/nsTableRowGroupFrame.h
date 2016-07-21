@@ -16,31 +16,9 @@
 #include "mozilla/WritingModes.h"
 
 class nsTableRowFrame;
-
-struct nsRowGroupReflowState {
-  const nsHTMLReflowState& reflowState;  // Our reflow state
-
-  nsTableFrame* tableFrame;
-
-  // The available size (computed from the parent)
-  mozilla::LogicalSize availSize;
-
-  // Running block-offset
-  nscoord bCoord;
-
-  nsRowGroupReflowState(const nsHTMLReflowState& aReflowState,
-                        nsTableFrame*            aTableFrame)
-      : reflowState(aReflowState)
-      , tableFrame(aTableFrame)
-      , availSize(aReflowState.GetWritingMode(),
-                  aReflowState.AvailableISize(),
-                  aReflowState.AvailableBSize())
-      , bCoord(0)
-  {
-  }
-
-  ~nsRowGroupReflowState() {}
-};
+namespace mozilla {
+struct TableRowGroupReflowInput;
+} // namespace mozilla
 
 #define MIN_ROWS_NEEDING_CURSOR 20
 
@@ -57,6 +35,8 @@ class nsTableRowGroupFrame final
   : public nsContainerFrame
   , public nsILineIterator
 {
+  using TableRowGroupReflowInput = mozilla::TableRowGroupReflowInput;
+
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
   NS_DECL_QUERYFRAME
@@ -109,8 +89,8 @@ public:
     * @see nsIFrame::Reflow
     */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
@@ -161,7 +141,7 @@ public:
   /**
    * Get the total bsize of all the row rects
    */
-  nscoord GetBSizeBasis(const nsHTMLReflowState& aReflowState);
+  nscoord GetBSizeBasis(const ReflowInput& aReflowInput);
 
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
 
@@ -343,52 +323,52 @@ public:
 protected:
   explicit nsTableRowGroupFrame(nsStyleContext* aContext);
 
-  void InitChildReflowState(nsPresContext&     aPresContext,
+  void InitChildReflowInput(nsPresContext&     aPresContext,
                             bool               aBorderCollapse,
-                            nsHTMLReflowState& aReflowState);
+                            ReflowInput& aReflowInput);
 
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
 
   void PlaceChild(nsPresContext*         aPresContext,
-                  nsRowGroupReflowState& aReflowState,
+                  TableRowGroupReflowInput& aReflowInput,
                   nsIFrame*              aKidFrame,
                   mozilla::WritingMode   aWM,
                   const mozilla::LogicalPoint& aKidPosition,
                   const nsSize&          aContainerSize,
-                  nsHTMLReflowMetrics&   aDesiredSize,
+                  ReflowOutput&   aDesiredSize,
                   const nsRect&          aOriginalKidRect,
                   const nsRect&          aOriginalKidVisualOverflow);
 
   void CalculateRowBSizes(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState);
+                          ReflowOutput&     aDesiredSize,
+                          const ReflowInput& aReflowInput);
 
-  void DidResizeRows(nsHTMLReflowMetrics& aDesiredSize);
+  void DidResizeRows(ReflowOutput& aDesiredSize);
 
-  void SlideChild(nsRowGroupReflowState& aReflowState,
+  void SlideChild(TableRowGroupReflowInput& aReflowInput,
                   nsIFrame*              aKidFrame);
 
   /**
    * Reflow the frames we've already created
    *
    * @param   aPresContext presentation context to use
-   * @param   aReflowState current inline state
+   * @param   aReflowInput current inline state
    */
   void ReflowChildren(nsPresContext*         aPresContext,
-                      nsHTMLReflowMetrics&   aDesiredSize,
-                      nsRowGroupReflowState& aReflowState,
+                      ReflowOutput&   aDesiredSize,
+                      TableRowGroupReflowInput& aReflowInput,
                       nsReflowStatus&        aStatus,
                       bool*                aPageBreakBeforeEnd = nullptr);
 
   nsresult SplitRowGroup(nsPresContext*           aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
+                         ReflowOutput&     aDesiredSize,
+                         const ReflowInput& aReflowInput,
                          nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus,
                          bool                     aRowForcedPageBreak);
 
   void SplitSpanningCells(nsPresContext&           aPresContext,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowInput,
                           nsTableFrame&            aTableFrame,
                           nsTableRowFrame&         aFirstRow,
                           nsTableRowFrame&         aLastRow,

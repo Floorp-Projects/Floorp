@@ -16,7 +16,6 @@
 #include "mozilla/TypedEnumBits.h"
 
 class nsContainerFrame;
-struct nsHTMLReflowState;
 class nsPresContext;
 
 /**
@@ -34,6 +33,8 @@ class nsPresContext;
  */
 class nsAbsoluteContainingBlock
 {
+  using ReflowInput = mozilla::ReflowInput;
+
 public:
   typedef nsIFrame::ChildListID ChildListID;
 
@@ -95,7 +96,7 @@ public:
    */
   void Reflow(nsContainerFrame*        aDelegatingFrame,
               nsPresContext*           aPresContext,
-              const nsHTMLReflowState& aReflowState,
+              const ReflowInput& aReflowInput,
               nsReflowStatus&          aReflowStatus,
               const nsRect&            aContainingBlock,
               AbsPosReflowFlags        aFlags,
@@ -128,7 +129,7 @@ protected:
 
   void ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                            nsPresContext*           aPresContext,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowInput,
                            const nsRect&            aContainingBlockRect,
                            AbsPosReflowFlags        aFlags,
                            nsIFrame*                aKidFrame,

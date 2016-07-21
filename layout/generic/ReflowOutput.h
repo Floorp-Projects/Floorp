@@ -5,8 +5,8 @@
 
 /* struct containing the output from nsIFrame::Reflow */
 
-#ifndef nsHTMLReflowMetrics_h___
-#define nsHTMLReflowMetrics_h___
+#ifndef mozilla_ReflowOutput_h
+#define mozilla_ReflowOutput_h
 
 #include "mozilla/WritingModes.h"
 #include "nsBoundingMetrics.h"
@@ -14,7 +14,9 @@
 
 //----------------------------------------------------------------------
 
-struct nsHTMLReflowState;
+namespace mozilla {
+struct ReflowInput;
+} // namespace mozilla
 
 // Option flags
 #define NS_REFLOW_CALC_BOUNDING_METRICS  0x0001
@@ -190,13 +192,15 @@ struct nsCollapsingMargin {
       }
 };
 
+namespace mozilla {
+
 /**
  * Reflow metrics used to return the frame's desired size and alignment
  * information.
  *
  * @see #Reflow()
  */
-class nsHTMLReflowMetrics {
+class ReflowOutput {
 public:
   // XXXldb Should |aFlags| generally be passed from parent to child?
   // Some places do it, and some don't.  |aFlags| should perhaps go away
@@ -204,7 +208,7 @@ public:
   // XXX width/height/ascent are OUT parameters and so they shouldn't
   // have to be initialized, but there are some bad frame classes that
   // aren't properly setting them when returning from Reflow()...
-  explicit nsHTMLReflowMetrics(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
+  explicit ReflowOutput(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
     : mISize(0)
     , mBSize(0)
     , mBlockStartAscent(ASK_FOR_BASELINE)
@@ -212,7 +216,7 @@ public:
     , mWritingMode(aWritingMode)
   {}
 
-  explicit nsHTMLReflowMetrics(const nsHTMLReflowState& aState, uint32_t aFlags = 0);
+  explicit ReflowOutput(const ReflowInput& aState, uint32_t aFlags = 0);
 
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to
@@ -339,4 +343,6 @@ private:
   mozilla::WritingMode mWritingMode;
 };
 
-#endif /* nsHTMLReflowMetrics_h___ */
+} // mozilla namespace
+
+#endif // mozilla_ReflowOutput_h

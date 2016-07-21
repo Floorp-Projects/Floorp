@@ -39,11 +39,6 @@ jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
-jfieldID AndroidGeckoEvent::jConnectionTypeField = 0;
-jfieldID AndroidGeckoEvent::jIsWifiField = 0;
-jfieldID AndroidGeckoEvent::jDHCPGatewayField = 0;
-jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
-jfieldID AndroidGeckoEvent::jScreenAngleField = 0;
 jfieldID AndroidGeckoEvent::jByteBufferField = 0;
 jfieldID AndroidGeckoEvent::jWidthField = 0;
 jfieldID AndroidGeckoEvent::jHeightField = 0;
@@ -112,11 +107,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jFlagsField = geckoEvent.getField("mFlags", "I");
     jCountField = geckoEvent.getField("mCount", "I");
     jPointerIndexField = geckoEvent.getField("mPointerIndex", "I");
-    jConnectionTypeField = geckoEvent.getField("mConnectionType", "I");
-    jIsWifiField = geckoEvent.getField("mIsWifi", "Z");
-    jDHCPGatewayField = geckoEvent.getField("mDHCPGateway", "I");
-    jScreenOrientationField = geckoEvent.getField("mScreenOrientation", "S");
-    jScreenAngleField = geckoEvent.getField("mScreenAngle", "S");
     jByteBufferField = geckoEvent.getField("mBuffer", "Ljava/nio/ByteBuffer;");
     jWidthField = geckoEvent.getField("mWidth", "I");
     jHeightField = geckoEvent.getField("mHeight", "I");
@@ -314,22 +304,9 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
             break;
 
-        case LOAD_URI: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            break;
-        }
-
         case VIEWPORT: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);
-            break;
-        }
-
-        case NETWORK_CHANGED: {
-            mConnectionType = jenv->GetIntField(jobj, jConnectionTypeField);
-            mIsWifi = jenv->GetBooleanField(jobj, jIsWifiField);
-            mDHCPGateway = jenv->GetIntField(jobj, jDHCPGatewayField);
             break;
         }
 
@@ -348,12 +325,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case SCREENORIENTATION_CHANGED: {
-            mScreenOrientation = jenv->GetShortField(jobj, jScreenOrientationField);
-            mScreenAngle = jenv->GetShortField(jobj, jScreenAngleField);
-            break;
-        }
-
         case CALL_OBSERVER: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);
@@ -368,11 +339,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case LOW_MEMORY: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            break;
-        }
-
-        case NETWORK_LINK_CHANGE: {
-            ReadCharactersField(jenv);
             break;
         }
 

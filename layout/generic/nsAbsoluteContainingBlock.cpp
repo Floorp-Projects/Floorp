@@ -13,7 +13,7 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 #include "nsPresContext.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGridContainerFrame.h"
@@ -110,7 +110,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
 void
 nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                   nsPresContext*           aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
+                                  const ReflowInput& aReflowInput,
                                   nsReflowStatus&          aReflowStatus,
                                   const nsRect&            aContainingBlock,
                                   AbsPosReflowFlags        aFlags,
@@ -118,7 +118,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
 {
   nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
-  const bool reflowAll = aReflowState.ShouldReflowAllKids();
+  const bool reflowAll = aReflowInput.ShouldReflowAllKids();
   const bool isGrid = !!(aFlags & AbsPosReflowFlags::eIsGridContainerCB);
   nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
@@ -132,7 +132,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
       const nsRect& cb = isGrid ? nsGridContainerFrame::GridItemCB(kidFrame)
                                 : aContainingBlock;
-      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState, cb,
+      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput, cb,
                           aFlags, kidFrame, kidStatus, aOverflowAreas);
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
       if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus) &&
@@ -216,7 +216,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
   // 2) Horizontal positioning.  "left" must be auto and "right" must be auto
   //    (otherwise the horizontal position is completely determined by
   //    whichever of them is not auto and the width).
-  // See nsHTMLReflowState::InitAbsoluteConstraints -- these are the
+  // See ReflowInput::InitAbsoluteConstraints -- these are the
   // only cases when we call CalculateHypotheticalBox().
   if ((pos->mOffset.GetTopUnit() == eStyleUnit_Auto &&
        pos->mOffset.GetBottomUnit() == eStyleUnit_Auto) ||
@@ -343,7 +343,7 @@ nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
 void
 nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                                nsPresContext*           aPresContext,
-                                               const nsHTMLReflowState& aReflowState,
+                                               const ReflowInput& aReflowInput,
                                                const nsRect&            aContainingBlock,
                                                AbsPosReflowFlags        aFlags,
                                                nsIFrame*                aKidFrame,
@@ -360,11 +360,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
     char width[16];
     char height[16];
-    PrettyUC(aReflowState.AvailableWidth(), width, 16);
-    PrettyUC(aReflowState.AvailableHeight(), height, 16);
+    PrettyUC(aReflowInput.AvailableWidth(), width, 16);
+    PrettyUC(aReflowInput.AvailableHeight(), height, 16);
     printf(" a=%s,%s ", width, height);
-    PrettyUC(aReflowState.ComputedWidth(), width, 16);
-    PrettyUC(aReflowState.ComputedHeight(), height, 16);
+    PrettyUC(aReflowInput.ComputedWidth(), width, 16);
+    PrettyUC(aReflowInput.ComputedHeight(), height, 16);
     printf("c=%s,%s \n", width, height);
   }
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
@@ -374,11 +374,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   LogicalSize logicalCBSize(wm, aContainingBlock.Size());
   nscoord availISize = logicalCBSize.ISize(wm);
   if (availISize == -1) {
-    NS_ASSERTION(aReflowState.ComputedSize(wm).ISize(wm) !=
+    NS_ASSERTION(aReflowInput.ComputedSize(wm).ISize(wm) !=
                    NS_UNCONSTRAINEDSIZE,
                  "Must have a useful inline-size _somewhere_");
     availISize =
-      aReflowState.ComputedSizeWithPadding(wm).ISize(wm);
+      aReflowInput.ComputedSizeWithPadding(wm).ISize(wm);
   }
 
   uint32_t rsFlags = 0;
@@ -389,48 +389,48 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsIFrame* placeholder =
       aPresContext->PresShell()->GetPlaceholderFrameFor(aKidFrame);
     if (placeholder && placeholder->GetParent() == aDelegatingFrame) {
-      rsFlags |= nsHTMLReflowState::STATIC_POS_IS_CB_ORIGIN;
+      rsFlags |= ReflowInput::STATIC_POS_IS_CB_ORIGIN;
     }
   }
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
+  ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
                                    LogicalSize(wm, availISize,
                                                NS_UNCONSTRAINEDSIZE),
                                    &logicalCBSize, rsFlags);
 
   // Get the border values
-  WritingMode outerWM = aReflowState.GetWritingMode();
+  WritingMode outerWM = aReflowInput.GetWritingMode();
   const LogicalMargin border(outerWM,
-                             aReflowState.mStyleBorder->GetComputedBorder());
+                             aReflowInput.mStyleBorder->GetComputedBorder());
   const LogicalMargin margin =
-    kidReflowState.ComputedLogicalMargin().ConvertTo(outerWM, wm);
-  bool constrainBSize = (aReflowState.AvailableBSize() != NS_UNCONSTRAINEDSIZE)
+    kidReflowInput.ComputedLogicalMargin().ConvertTo(outerWM, wm);
+  bool constrainBSize = (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)
     && (aFlags & AbsPosReflowFlags::eConstrainHeight)
        // Don't split if told not to (e.g. for fixed frames)
     && (aDelegatingFrame->GetType() != nsGkAtoms::inlineFrame)
        //XXX we don't handle splitting frames for inline absolute containing blocks yet
     && (aKidFrame->GetLogicalRect(aContainingBlock.Size()).BStart(wm) <=
-        aReflowState.AvailableBSize());
+        aReflowInput.AvailableBSize());
        // Don't split things below the fold. (Ideally we shouldn't *have*
        // anything totally below the fold, but we can't position frames
        // across next-in-flow breaks yet.
   if (constrainBSize) {
-    kidReflowState.AvailableBSize() =
-      aReflowState.AvailableBSize() - border.ConvertTo(wm, outerWM).BStart(wm) -
-      kidReflowState.ComputedLogicalMargin().BStart(wm);
-    if (NS_AUTOOFFSET != kidReflowState.ComputedLogicalOffsets().BStart(wm)) {
-      kidReflowState.AvailableBSize() -=
-        kidReflowState.ComputedLogicalOffsets().BStart(wm);
+    kidReflowInput.AvailableBSize() =
+      aReflowInput.AvailableBSize() - border.ConvertTo(wm, outerWM).BStart(wm) -
+      kidReflowInput.ComputedLogicalMargin().BStart(wm);
+    if (NS_AUTOOFFSET != kidReflowInput.ComputedLogicalOffsets().BStart(wm)) {
+      kidReflowInput.AvailableBSize() -=
+        kidReflowInput.ComputedLogicalOffsets().BStart(wm);
     }
   }
 
   // Do the reflow
-  nsHTMLReflowMetrics kidDesiredSize(kidReflowState);
-  aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
+  ReflowOutput kidDesiredSize(kidReflowInput);
+  aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowInput, aStatus);
 
   const LogicalSize kidSize = kidDesiredSize.Size(wm).ConvertTo(outerWM, wm);
 
   LogicalMargin offsets =
-    kidReflowState.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
+    kidReflowInput.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
 
   // If we're solving for start in either inline or block direction,
   // then compute it now that we know the dimensions.
@@ -439,8 +439,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     if (-1 == logicalCBSize.ISize(wm)) {
       // Get the containing block width/height
       logicalCBSize =
-        kidReflowState.ComputeContainingBlockRectangle(aPresContext,
-                                                       &aReflowState);
+        kidReflowInput.ComputeContainingBlockRectangle(aPresContext,
+                                                       &aReflowInput);
     }
 
     if (NS_AUTOOFFSET == offsets.IStart(outerWM)) {
@@ -457,7 +457,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
         offsets.BEnd(outerWM) - margin.BStartEnd(outerWM) -
         kidSize.BSize(outerWM);
     }
-    kidReflowState.SetComputedLogicalOffsets(offsets.ConvertTo(wm, outerWM));
+    kidReflowInput.SetComputedLogicalOffsets(offsets.ConvertTo(wm, outerWM));
   }
 
   // Position the child relative to our padding edge
@@ -476,15 +476,15 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // positioned based on its containing block and we don't need to offset
   // (unless the caller demands it (the STATIC_POS_IS_CB_ORIGIN case)).
   if (aContainingBlock.TopLeft() != nsPoint(0, 0)) {
-    const nsStyleSides& offsets = kidReflowState.mStylePosition->mOffset;
+    const nsStyleSides& offsets = kidReflowInput.mStylePosition->mOffset;
     if (!(offsets.GetLeftUnit() == eStyleUnit_Auto &&
           offsets.GetRightUnit() == eStyleUnit_Auto) ||
-        (rsFlags & nsHTMLReflowState::STATIC_POS_IS_CB_ORIGIN)) {
+        (rsFlags & ReflowInput::STATIC_POS_IS_CB_ORIGIN)) {
       r.x += aContainingBlock.x;
     }
     if (!(offsets.GetTopUnit() == eStyleUnit_Auto &&
           offsets.GetBottomUnit() == eStyleUnit_Auto) ||
-        (rsFlags & nsHTMLReflowState::STATIC_POS_IS_CB_ORIGIN)) {
+        (rsFlags & ReflowInput::STATIC_POS_IS_CB_ORIGIN)) {
       r.y += aContainingBlock.y;
     }
   }
@@ -501,7 +501,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsContainerFrame::PositionChildViews(aKidFrame);
   }
 
-  aKidFrame->DidReflow(aPresContext, &kidReflowState,
+  aKidFrame->DidReflow(aPresContext, &kidReflowInput,
                        nsDidReflowStatus::FINISHED);
 
 #ifdef DEBUG

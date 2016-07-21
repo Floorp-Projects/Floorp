@@ -334,7 +334,7 @@ protected:
   //
   // @param aTimeout The time for which the first frame should be shown before
   //                 we advance to the next frame.
-  void PostIsAnimated(int32_t aFirstFrameTimeout);
+  void PostIsAnimated(FrameTimeout aFirstFrameTimeout);
 
   // Called by decoders when they end a frame. Informs the image, sends
   // notifications, and does internal book-keeping.
@@ -343,7 +343,7 @@ protected:
   // this frame.
   void PostFrameStop(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
                      DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
-                     int32_t aTimeout = 0,
+                     FrameTimeout aTimeout = FrameTimeout::Forever(),
                      BlendMethod aBlendMethod = BlendMethod::OVER,
                      const Maybe<nsIntRect>& aBlendRect = Nothing());
 
@@ -427,6 +427,9 @@ private:
   Progress mProgress;
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
+  FrameTimeout mLoopLength;  // Length of a single loop of this image.
+  gfx::IntRect mFirstFrameRefreshArea;  // The area of the image that needs to
+                                        // be invalidated when the animation loops.
 
   // Telemetry data for this decoder.
   TimeDuration mDecodeTime;

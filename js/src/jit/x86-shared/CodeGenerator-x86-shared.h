@@ -98,7 +98,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
                                     Register ptr, Label* fail);
 
   protected:
-    void maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr);
+    void maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr,
+                                        bool redundant = false);
 
   public:
     // For SIMD and atomic loads and stores (which throw on out-of-bounds):

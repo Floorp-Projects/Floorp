@@ -185,7 +185,7 @@ public:
   }
 };
 
-const char16_t Concrete<FakeNode>::concreteTypeName[] = MOZ_UTF16("FakeNode");
+const char16_t Concrete<FakeNode>::concreteTypeName[] = u"FakeNode";
 
 } // namespace ubi
 } // namespace JS

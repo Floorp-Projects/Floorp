@@ -218,8 +218,8 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
   RefPtr<StorageNotifierRunnable> r =
     new StorageNotifierRunnable(event,
                                 GetType() == LocalStorage
-                                  ? MOZ_UTF16("localStorage")
-                                  : MOZ_UTF16("sessionStorage"));
+                                  ? u"localStorage"
+                                  : u"sessionStorage");
   NS_DispatchToMainThread(r);
 }
 

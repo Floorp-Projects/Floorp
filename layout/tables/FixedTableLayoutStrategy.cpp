@@ -153,9 +153,9 @@ AllocateUnassigned(nscoord aUnassignedSpace, float aShare)
 }
 
 /* virtual */ void
-FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowState)
+FixedTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowInput)
 {
-  nscoord tableISize = aReflowState.ComputedISize();
+  nscoord tableISize = aReflowInput.ComputedISize();
 
   if (mLastCalcISize == tableISize) {
     return;
@@ -213,7 +213,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
     const nsStyleCoord *styleISize = &colFrame->StylePosition()->ISize(wm);
     nscoord colISize;
     if (styleISize->ConvertsToLength()) {
-      colISize = nsLayoutUtils::ComputeISizeValue(aReflowState.rendContext,
+      colISize = nsLayoutUtils::ComputeISizeValue(aReflowInput.mRenderingContext,
                                                   colFrame, 0, 0, 0,
                                                   *styleISize);
       specTotal += colISize;
@@ -247,7 +247,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
           // MIN_ISIZE for symmetry with GetMinISize above, just in case
           // there is a difference.
           colISize =
-            nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+            nsLayoutUtils::IntrinsicForContainer(aReflowInput.mRenderingContext,
                                                  cellFrame,
                                                  nsLayoutUtils::MIN_ISIZE);
         } else if (styleISize->GetUnit() == eStyleUnit_Percent) {

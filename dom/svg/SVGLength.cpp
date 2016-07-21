@@ -25,7 +25,7 @@ SVGLength::GetValueAsString(nsAString &aValue) const
 {
   char16_t buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
-                            MOZ_UTF16("%g"),
+                            u"%g",
                             (double)mValue);
   aValue.Assign(buf);
 

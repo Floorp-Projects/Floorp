@@ -304,10 +304,6 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
   MOZ_ASSERT(aChildData);
 
-#ifdef HAS_DLL_BLOCKLIST
-  DllBlocklist_Initialize();
-#endif
-
 #ifdef MOZ_JPROF
   // Call the code to install our handler
   setupProfilingStuff();

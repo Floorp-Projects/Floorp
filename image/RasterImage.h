@@ -27,6 +27,7 @@
 #include "nsThreadUtils.h"
 #include "DecodePool.h"
 #include "DecoderFactory.h"
+#include "FrameAnimator.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
@@ -133,7 +134,6 @@ class Image;
 namespace image {
 
 class Decoder;
-class FrameAnimator;
 class ImageMetadata;
 class SourceBuffer;
 
@@ -178,7 +178,7 @@ public:
   // Decoder callbacks.
   //////////////////////////////////////////////////////////////////////////////
 
-  void OnAddedFrame(uint32_t aNewFrameCount, const nsIntRect& aNewRefreshArea);
+  void OnAddedFrame(uint32_t aNewFrameCount);
 
   /**
    * Sends the provided progress notifications to ProgressTracker.
@@ -275,8 +275,6 @@ private:
   uint32_t GetCurrentFrameIndex() const;
   uint32_t GetRequestedFrameIndex(uint32_t aWhichFrame) const;
 
-  nsIntRect GetFirstFrameRect();
-
   Pair<DrawResult, RefPtr<layers::Image>>
     GetCurrentImage(layers::ImageContainer* aContainer, uint32_t aFlags);
 
@@ -287,7 +285,7 @@ private:
   // never unlock so that animated images always have their lock count >= 1. In
   // that case we use our animation consumers count as a proxy for lock count.
   bool IsUnlocked() {
-    return (mLockCount == 0 || (mAnim && mAnimationConsumers == 0));
+    return (mLockCount == 0 || (mAnimationState && mAnimationConsumers == 0));
   }
 
 
@@ -350,7 +348,10 @@ private: // data
   nsCOMPtr<nsIProperties>   mProperties;
 
   /// If this image is animated, a FrameAnimator which manages its animation.
-  UniquePtr<FrameAnimator> mAnim;
+  UniquePtr<FrameAnimator> mFrameAnimator;
+
+  /// Animation timeline and other state for animation images.
+  Maybe<AnimationState> mAnimationState;
 
   // Image locking.
   uint32_t                   mLockCount;

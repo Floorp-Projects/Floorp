@@ -1302,7 +1302,7 @@ nsGonkCameraControl::StopRecordingImpl()
       MOZ_ASSERT(NS_IsMainThread());
 
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      obs->NotifyObservers(mFile, "file-watcher-notify", MOZ_UTF16("modified"));
+      obs->NotifyObservers(mFile, "file-watcher-notify", u"modified");
       return NS_OK;
     }
 

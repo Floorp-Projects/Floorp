@@ -16,7 +16,6 @@
 class  nsIContent;
 class  nsPresContext;
 struct nsRect;
-struct nsHTMLReflowState;
 struct nsSize;
 class  nsIAtom;
 class  nsHTMLFramesetBorderFrame;
@@ -102,8 +101,8 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsIAtom* GetType() const override;
@@ -151,8 +150,8 @@ protected:
                       nsString&             aNewAttr);
 
   virtual void GetDesiredSize(nsPresContext*          aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics&     aDesiredSize);
+                              const ReflowInput& aReflowInput,
+                              ReflowOutput&     aDesiredSize);
 
   int32_t GetBorderWidth(nsPresContext* aPresContext,
                          bool aTakeForcingIntoAccount);
@@ -177,7 +176,7 @@ protected:
   
   void ReflowPlaceChild(nsIFrame*                aChild,
                         nsPresContext*          aPresContext,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowInput,
                         nsPoint&                 aOffset,
                         nsSize&                  aSize,
                         nsIntPoint*              aCellIndex = 0);

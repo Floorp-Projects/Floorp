@@ -387,7 +387,6 @@ prio(normal upto urgent) sync protocol PContent
     parent opens PProcessHangMonitor;
     parent opens PSharedBufferManager;
     parent opens PGMPService;
-    parent opens PVRManager;
     child opens PBackground;
 
     manages PAPZ;
@@ -472,6 +471,7 @@ child:
     // Give the content process its endpoints to the compositor.
     async InitCompositor(Endpoint<PCompositorBridgeChild> compositor);
     async InitImageBridge(Endpoint<PImageBridgeChild> bridge);
+    async InitVRManager(Endpoint<PVRManagerChild> endpoint);
 
     /**
      * Enable system-level sandboxing features, if available.  Can

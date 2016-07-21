@@ -2317,7 +2317,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
 
         const char16_t* params[] = { reportSpec.get(), reportScheme.get() };
         uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
-        CSP_LogLocalizedStr(MOZ_UTF16("upgradeInsecureRequest"),
+        CSP_LogLocalizedStr(u"upgradeInsecureRequest",
                             params, ArrayLength(params),
                             EmptyString(), // aSourceFile
                             EmptyString(), // aScriptSample

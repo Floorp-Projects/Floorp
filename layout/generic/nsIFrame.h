@@ -31,7 +31,7 @@
 #include "nsDirection.h"
 #include "nsFrameList.h"
 #include "nsFrameState.h"
-#include "nsHTMLReflowMetrics.h"
+#include "mozilla/ReflowOutput.h"
 #include "nsITheme.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
@@ -61,7 +61,6 @@
  * 5. the view system handles moving of widgets, i.e., it's not our problem
  */
 
-struct nsHTMLReflowState;
 class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
@@ -94,6 +93,8 @@ namespace mozilla {
 
 enum class CSSPseudoElementType : uint8_t;
 class EventStates;
+struct ReflowInput;
+class ReflowOutput;
 
 namespace layers {
 class Layer;
@@ -312,8 +313,8 @@ typedef uint32_t nsReflowStatus;
 #define NS_FRAME_TRUNCATED  0x0010
 #define NS_FRAME_IS_TRUNCATED(status) \
   (0 != ((status) & NS_FRAME_TRUNCATED))
-#define NS_FRAME_SET_TRUNCATION(status, aReflowState, aMetrics) \
-  aReflowState.SetTruncated(aMetrics, &status);
+#define NS_FRAME_SET_TRUNCATION(status, aReflowInput, aMetrics) \
+  aReflowInput.SetTruncated(aMetrics, &status);
 
 // Merge the incompleteness, truncation and NS_FRAME_REFLOW_NEXTINFLOW
 // status from aSecondary into aPrimary.
@@ -423,6 +424,8 @@ public:
   using OnNonvisible = mozilla::OnNonvisible;
   template<typename T=void>
   using PropertyDescriptor = const mozilla::FramePropertyDescriptor<T>*;
+  using ReflowInput = mozilla::ReflowInput;
+  using ReflowOutput = mozilla::ReflowOutput;
   using Visibility = mozilla::Visibility;
   using VisibilityCounter = mozilla::VisibilityCounter;
 
@@ -811,9 +814,9 @@ public:
    * saved normal position (see GetNormalPosition below).
    *
    * This must be used only when moving a frame *after*
-   * nsHTMLReflowState::ApplyRelativePositioning is called.  When moving
+   * ReflowInput::ApplyRelativePositioning is called.  When moving
    * a frame during the reflow process prior to calling
-   * nsHTMLReflowState::ApplyRelativePositioning, the position should
+   * ReflowInput::ApplyRelativePositioning, the position should
    * simply be adjusted directly (e.g., using SetPosition()).
    */
   void MovePositionBy(const nsPoint& aTranslation);
@@ -1918,7 +1921,7 @@ public:
 
   /**
    * Compute the size that a frame will occupy.  Called while
-   * constructing the nsHTMLReflowState to be used to Reflow the frame,
+   * constructing the ReflowInput to be used to Reflow the frame,
    * in order to fill its mComputedWidth and mComputedHeight member
    * variables.
    *
@@ -2031,7 +2034,7 @@ public:
    *          size, then your parent frame is responsible for making sure that
    *          the difference between the two rects is repainted
    *
-   * @param aReflowState information about your reflow including the reason
+   * @param aReflowInput information about your reflow including the reason
    *          for the reflow and the available space in which to lay out. Each
    *          dimension of the available space can either be constrained or
    *          unconstrained (a value of NS_UNCONSTRAINEDSIZE).
@@ -2045,8 +2048,8 @@ public:
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aReflowMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aReflowMetrics,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) = 0;
 
   /**
@@ -2065,7 +2068,7 @@ public:
    * a given reflow?
    */
   virtual void DidReflow(nsPresContext*           aPresContext,
-                         const nsHTMLReflowState* aReflowState,
+                         const ReflowInput* aReflowInput,
                          nsDidReflowStatus        aStatus) = 0;
 
   /**
@@ -2293,7 +2296,7 @@ public:
     // from the outside
     eReplacedContainsBlock =            1 << 8,
     // A frame that participates in inline reflow, i.e., one that
-    // requires nsHTMLReflowState::mLineLayout.
+    // requires ReflowInput::mLineLayout.
     eLineParticipant =                  1 << 9,
     eXULBox =                           1 << 10,
     eCanContainOverflowContainers =     1 << 11,
@@ -2633,7 +2636,7 @@ public:
   bool FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                               nsSize aNewSize, nsSize* aOldSize = nullptr);
 
-  bool FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
+  bool FinishAndStoreOverflow(ReflowOutput* aMetrics) {
     return FinishAndStoreOverflow(aMetrics->mOverflowAreas,
                                   nsSize(aMetrics->Width(), aMetrics->Height()));
   }
@@ -2662,13 +2665,13 @@ public:
    *       if this frame has a previous or next continuation to determine
    *       if a side should be skipped.
    *       Unfortunately, this only works after reflow has been completed. In
-   *       lieu of this, during reflow, an nsHTMLReflowState parameter can be
+   *       lieu of this, during reflow, an ReflowInput parameter can be
    *       passed in, indicating that it should be used to determine if sides
    *       should be skipped during reflow.
    */
-  Sides GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
+  Sides GetSkipSides(const ReflowInput* aReflowInput = nullptr) const;
   virtual LogicalSides
-  GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const {
+  GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const {
     return LogicalSides();
   }
 

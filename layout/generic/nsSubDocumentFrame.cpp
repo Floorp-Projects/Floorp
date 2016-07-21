@@ -759,21 +759,21 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
 void
 nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           ReflowOutput&     aDesiredSize,
+                           const ReflowInput& aReflowInput,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsSubDocumentFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsSubDocumentFrame::Reflow: maxSize=%d,%d",
-      aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
+      aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
+  NS_ASSERTION(aReflowInput.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                "Shouldn't have unconstrained stuff here "
                "thanks to the rules of reflow");
-  NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
+  NS_ASSERTION(NS_INTRINSICSIZE != aReflowInput.ComputedHeight(),
                "Shouldn't have unconstrained stuff here "
                "thanks to ComputeAutoSize");
 
@@ -783,16 +783,16 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                "Shouldn't happen");
 
   // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-  aDesiredSize.SetSize(aReflowState.GetWritingMode(),
-                       aReflowState.ComputedSizeWithBorderPadding());
+  aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
+                       aReflowInput.ComputedSizeWithBorderPadding());
 
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
-  nsPoint offset = nsPoint(aReflowState.ComputedPhysicalBorderPadding().left,
-                           aReflowState.ComputedPhysicalBorderPadding().top);
+  nsPoint offset = nsPoint(aReflowInput.ComputedPhysicalBorderPadding().left,
+                           aReflowInput.ComputedPhysicalBorderPadding().top);
 
   if (mInnerView) {
-    const nsMargin& bp = aReflowState.ComputedPhysicalBorderPadding();
+    const nsMargin& bp = aReflowInput.ComputedPhysicalBorderPadding();
     nsSize innerSize(aDesiredSize.Width() - bp.LeftRight(),
                      aDesiredSize.Height() - bp.TopBottom());
 
@@ -833,7 +833,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
      ("exit nsSubDocumentFrame::Reflow: size=%d,%d status=%x",
       aDesiredSize.Width(), aDesiredSize.Height(), aStatus));
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 bool

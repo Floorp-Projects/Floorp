@@ -16,8 +16,8 @@ DEF_TEST(SerializesEdgeNames, {
     FakeNode node;
     FakeNode referent;
 
-    const char16_t edgeName[] = MOZ_UTF16("edge name");
-    const char16_t emptyStr[] = MOZ_UTF16("");
+    const char16_t edgeName[] = u"edge name";
+    const char16_t emptyStr[] = u"";
 
     AddEdge(node, referent, edgeName);
     AddEdge(node, referent, emptyStr);

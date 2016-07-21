@@ -172,12 +172,12 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override
   {
-    *aResult = CloneDataNode(aNodeInfo, true);
+    nsCOMPtr<nsINode> result = CloneDataNode(aNodeInfo, true);
+    result.forget(aResult);
+
     if (!*aResult) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    NS_ADDREF(*aResult);
 
     return NS_OK;
   }

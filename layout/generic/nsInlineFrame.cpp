@@ -361,24 +361,24 @@ ReparentChildListStyle(nsPresContext* aPresContext,
 
 void
 nsInlineFrame::Reflow(nsPresContext*          aPresContext,
-                      nsHTMLReflowMetrics&     aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aMetrics,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsInlineFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
-  if (nullptr == aReflowState.mLineLayout) {
-    NS_ERROR("must have non-null aReflowState.mLineLayout");
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
+  if (nullptr == aReflowInput.mLineLayout) {
+    NS_ERROR("must have non-null aReflowInput.mLineLayout");
     return;
   }
-  if (IsFrameTreeTooDeep(aReflowState, aMetrics, aStatus)) {
+  if (IsFrameTreeTooDeep(aReflowInput, aMetrics, aStatus)) {
     return;
   }
 
   bool    lazilySetParentPointer = false;
 
-  nsIFrame* lineContainer = aReflowState.mLineLayout->LineContainerFrame();
+  nsIFrame* lineContainer = aReflowInput.mLineLayout->LineContainerFrame();
 
    // Check for an overflow list with our prev-in-flow
   nsInlineFrame* prevInFlow = (nsInlineFrame*)GetPrevInFlow();
@@ -420,7 +420,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
         // the special first-line styling. In the lazilySetParentPointer case
         // we reparent the style contexts when we set their parents in
         // nsInlineFrame::ReflowFrames and nsInlineFrame::ReflowInlineFrame.
-        if (aReflowState.mLineLayout->GetInFirstLine()) {
+        if (aReflowInput.mLineLayout->GetInFirstLine()) {
           ReparentChildListStyle(aPresContext, newFrames, this);
         }
       }
@@ -441,18 +441,18 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     DrainFlags flags =
       lazilySetParentPointer ? eDontReparentFrames : DrainFlags(0);
-    if (aReflowState.mLineLayout->GetInFirstLine()) {
+    if (aReflowInput.mLineLayout->GetInFirstLine()) {
       flags = DrainFlags(flags | eInFirstLine);
     }
     DrainSelfOverflowListInternal(flags, lineContainer);
   }
 
   // Set our own reflow state (additional state above and beyond
-  // aReflowState)
-  InlineReflowState irs;
+  // aReflowInput)
+  InlineReflowInput irs;
   irs.mPrevFrame = nullptr;
   irs.mLineContainer = lineContainer;
-  irs.mLineLayout = aReflowState.mLineLayout;
+  irs.mLineLayout = aReflowInput.mLineLayout;
   irs.mNextInFlow = (nsInlineFrame*) GetNextInFlow();
   irs.mSetParentPointer = lazilySetParentPointer;
 
@@ -463,14 +463,14 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
     (void) PullOneFrame(aPresContext, irs, &complete);
   }
 
-  ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
+  ReflowFrames(aPresContext, aReflowInput, irs, aMetrics, aStatus);
 
-  ReflowAbsoluteFrames(aPresContext, aMetrics, aReflowState, aStatus);
+  ReflowAbsoluteFrames(aPresContext, aMetrics, aReflowInput, aStatus);
 
   // Note: the line layout code will properly compute our
   // overflow-rect state for us.
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
 nsresult 
@@ -569,19 +569,19 @@ nsInlineFrame::PullOverflowsFromPrevInFlow()
 
 void
 nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
-                            const nsHTMLReflowState& aReflowState,
-                            InlineReflowState& irs,
-                            nsHTMLReflowMetrics& aMetrics,
+                            const ReflowInput& aReflowInput,
+                            InlineReflowInput& irs,
+                            ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus)
 {
   aStatus = NS_FRAME_COMPLETE;
 
-  nsLineLayout* lineLayout = aReflowState.mLineLayout;
-  bool inFirstLine = aReflowState.mLineLayout->GetInFirstLine();
+  nsLineLayout* lineLayout = aReflowInput.mLineLayout;
+  bool inFirstLine = aReflowInput.mLineLayout->GetInFirstLine();
   RestyleManagerHandle restyleManager = aPresContext->RestyleManager();
-  WritingMode frameWM = aReflowState.GetWritingMode();
-  WritingMode lineWM = aReflowState.mLineLayout->mRootSpan->mWritingMode;
-  LogicalMargin framePadding = aReflowState.ComputedLogicalBorderPadding();
+  WritingMode frameWM = aReflowInput.GetWritingMode();
+  WritingMode lineWM = aReflowInput.mLineLayout->mRootSpan->mWritingMode;
+  LogicalMargin framePadding = aReflowInput.ComputedLogicalBorderPadding();
   nscoord startEdge = 0;
   const bool boxDecorationBreakClone =
     MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
@@ -594,13 +594,13 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       boxDecorationBreakClone) {
     startEdge = framePadding.IStart(frameWM);
   }
-  nscoord availableISize = aReflowState.AvailableISize();
+  nscoord availableISize = aReflowInput.AvailableISize();
   NS_ASSERTION(availableISize != NS_UNCONSTRAINEDSIZE,
                "should no longer use available widths");
   // Subtract off inline axis border+padding from availableISize
   availableISize -= startEdge;
   availableISize -= framePadding.IEnd(frameWM);
-  lineLayout->BeginSpan(this, &aReflowState, startEdge,
+  lineLayout->BeginSpan(this, &aReflowInput, startEdge,
                         startEdge + availableISize, &mBaseline);
 
   // First reflow our principal children.
@@ -686,7 +686,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
     if (!done) {
       bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
-      ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
+      ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
       done = NS_INLINE_IS_BREAK(aStatus) || 
              (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus));
       if (done) {
@@ -724,7 +724,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
         }
         break;
       }
-      ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
+      ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
       if (NS_INLINE_IS_BREAK(aStatus) || 
           (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
         break;
@@ -794,12 +794,12 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
 void
 nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
-                                 InlineReflowState& irs,
+                                 const ReflowInput& aReflowInput,
+                                 InlineReflowInput& irs,
                                  nsIFrame* aFrame,
                                  nsReflowStatus& aStatus)
 {
-  nsLineLayout* lineLayout = aReflowState.mLineLayout;
+  nsLineLayout* lineLayout = aReflowInput.mLineLayout;
   bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   bool pushedFrame;
   lineLayout->ReflowFrame(aFrame, aStatus, nullptr, pushedFrame);
@@ -857,7 +857,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
 
 nsIFrame*
 nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
-                            InlineReflowState& irs,
+                            InlineReflowInput& irs,
                             bool* aIsComplete)
 {
   bool isComplete = true;
@@ -918,7 +918,7 @@ void
 nsInlineFrame::PushFrames(nsPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling,
-                          InlineReflowState& aState)
+                          InlineReflowInput& aState)
 {
   NS_PRECONDITION(aFromChild, "null pointer");
   NS_PRECONDITION(aPrevSibling, "pushing first child");
@@ -941,7 +941,7 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 //////////////////////////////////////////////////////////////////////
 
 nsIFrame::LogicalSides
-nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsInlineFrame::GetLogicalSkipSides(const ReflowInput* aReflowInput) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
@@ -1076,7 +1076,7 @@ nsFirstLineFrame::GetType() const
 }
 
 nsIFrame*
-nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& irs,
+nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowInput& irs,
                                bool* aIsComplete)
 {
   nsIFrame* frame = nsInlineFrame::PullOneFrame(aPresContext, irs, aIsComplete);
@@ -1092,16 +1092,16 @@ nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& i
 
 void
 nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
-                         nsHTMLReflowMetrics& aMetrics,
-                         const nsHTMLReflowState& aReflowState,
+                         ReflowOutput& aMetrics,
+                         const ReflowInput& aReflowInput,
                          nsReflowStatus& aStatus)
 {
   MarkInReflow();
-  if (nullptr == aReflowState.mLineLayout) {
+  if (nullptr == aReflowInput.mLineLayout) {
     return;  // XXX does this happen? why?
   }
 
-  nsIFrame* lineContainer = aReflowState.mLineLayout->LineContainerFrame();
+  nsIFrame* lineContainer = aReflowInput.mLineLayout->LineContainerFrame();
 
   // Check for an overflow list with our prev-in-flow
   nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)GetPrevInFlow();
@@ -1125,11 +1125,11 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   DrainSelfOverflowList();
 
   // Set our own reflow state (additional state above and beyond
-  // aReflowState)
-  InlineReflowState irs;
+  // aReflowInput)
+  InlineReflowInput irs;
   irs.mPrevFrame = nullptr;
   irs.mLineContainer = lineContainer;
-  irs.mLineLayout = aReflowState.mLineLayout;
+  irs.mLineLayout = aReflowInput.mLineLayout;
   irs.mNextInFlow = (nsInlineFrame*) GetNextInFlow();
 
   bool wasEmpty = mFrames.IsEmpty();
@@ -1159,13 +1159,13 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     irs.mPrevFrame = nullptr;
   }
 
-  NS_ASSERTION(!aReflowState.mLineLayout->GetInFirstLine(),
+  NS_ASSERTION(!aReflowInput.mLineLayout->GetInFirstLine(),
                "Nested first-line frames? BOGUS");
-  aReflowState.mLineLayout->SetInFirstLine(true);
-  ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
-  aReflowState.mLineLayout->SetInFirstLine(false);
+  aReflowInput.mLineLayout->SetInFirstLine(true);
+  ReflowFrames(aPresContext, aReflowInput, irs, aMetrics, aStatus);
+  aReflowInput.mLineLayout->SetInFirstLine(false);
 
-  ReflowAbsoluteFrames(aPresContext, aMetrics, aReflowState, aStatus);
+  ReflowAbsoluteFrames(aPresContext, aMetrics, aReflowInput, aStatus);
 
   // Note: the line layout code will properly compute our overflow state for us
 }
