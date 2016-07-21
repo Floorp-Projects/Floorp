@@ -174,7 +174,7 @@ public:
   {
     JNIEnv* const env = jni::GetEnvForThread();
 
-    jni::Object::LocalRef buffer(env);
+    jni::ByteBuffer::LocalRef buffer(env);
     NS_ENSURE_SUCCESS_VOID(aFormat->GetByteBuffer(NS_LITERAL_STRING("csd-0"),
                                                   &buffer));
 
