@@ -1,6 +1,10 @@
 FROM          ubuntu:14.04
 MAINTAINER    Greg Arndt <garndt@mozilla.com>
 
+# Add worker user
+RUN useradd -d /home/worker -s /bin/bash -m worker
+RUN mkdir /home/worker/artifacts && chown worker:worker /home/worker/artifacts
+
 # install non-build specific dependencies in a single layer
 ADD system-setup.sh   /tmp/system-setup.sh
 RUN bash /tmp/system-setup.sh
