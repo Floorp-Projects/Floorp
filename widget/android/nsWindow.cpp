@@ -30,6 +30,7 @@ using mozilla::Unused;
 #include "nsWindow.h"
 
 #include "nsIBaseWindow.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIObserverService.h"
 #include "nsISelection.h"
 #include "nsISupportsArray.h"
@@ -247,6 +248,8 @@ public:
 
     // Reattach this nsWindow to a new GeckoView.
     void Reattach(GeckoView::Param aView);
+
+    void LoadUri(jni::String::Param aUri, int32_t aFlags);
 
     /**
      * GeckoEditable methods
@@ -1206,6 +1209,40 @@ nsWindow::GeckoViewSupport::Reattach(GeckoView::Param aView)
 {
     // Associate our previous GeckoEditable with the new GeckoView.
     mEditable->OnViewChange(aView);
+}
+
+void
+nsWindow::GeckoViewSupport::LoadUri(jni::String::Param aUri, int32_t aFlags)
+{
+    if (!mDOMWindow) {
+        return;
+    }
+
+    nsCOMPtr<nsIURI> uri = nsAppShell::ResolveURI(aUri->ToCString());
+    if (NS_WARN_IF(!uri)) {
+        return;
+    }
+
+    nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(mDOMWindow);
+    nsCOMPtr<nsIBrowserDOMWindow> browserWin;
+
+    if (NS_WARN_IF(!chromeWin) || NS_WARN_IF(NS_FAILED(
+            chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserWin))))) {
+        return;
+    }
+
+    const int flags = aFlags == GeckoView::LOAD_NEW_TAB ?
+                        nsIBrowserDOMWindow::OPEN_NEWTAB :
+                      aFlags == GeckoView::LOAD_SWITCH_TAB ?
+                        nsIBrowserDOMWindow::OPEN_SWITCHTAB :
+                        nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
+    nsCOMPtr<mozIDOMWindowProxy> newWin;
+
+    if (NS_FAILED(browserWin->OpenURI(
+            uri, nullptr, flags, nsIBrowserDOMWindow::OPEN_EXTERNAL,
+            getter_AddRefs(newWin)))) {
+        NS_WARNING("Failed to open URI");
+    }
 }
 
 void
