@@ -29,8 +29,8 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual void Reflow(nsPresContext*           aCX,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsIAtom* GetType() const override;
@@ -82,7 +82,7 @@ protected:
   // Helper function which reflow the anonymous div frame.
   void ReflowBarFrame(nsIFrame*                aBarFrame,
                       nsPresContext*           aPresContext,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus);
   /**
    * The div used to show the meter bar.

@@ -15,9 +15,9 @@ interface nsINode;
 class nsIFrame;
 struct nsPoint;
 struct ScrollAxis;
-template<class T> class nsTArray;
 #include "nsDirection.h"
 #include "nsIPresShell.h" // TODO: Remove this include
+#include "nsTArrayForwardDeclare.h"
 #include "mozilla/EventForwards.h"
 %}
 
@@ -52,7 +52,7 @@ interface nsISelectionPrivate : nsISelection
     void  removeSelectionListener(in nsISelectionListener listenerToRemove);
 
     /* Table selection stuff
-       We should probably move this and table-related 
+       We should probably move this and table-related
        items in nsFrameSelection  to a
        new nsITableSelection interface
     */
@@ -95,7 +95,7 @@ interface nsISelectionPrivate : nsISelection
      */
     [noscript, notxpcom] nsDirection getSelectionDirection();
     [noscript, notxpcom] void setSelectionDirection(in nsDirection aDirection);
-    
+
     /**
      * Returns the type of the selection (see nsISelectionController for
      * available constants).

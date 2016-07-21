@@ -226,12 +226,11 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
     case PatternType::LINEAR_GRADIENT: {
       const LinearGradientPattern& pat = static_cast<const LinearGradientPattern&>(aPattern);
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
-      SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
-
-      if (stops->mCount < 2 ||
+      if (!stops || stops->mCount < 2 ||
           !pat.mBegin.IsFinite() || !pat.mEnd.IsFinite()) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
+        SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
         SkPoint points[2];
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mBegin.x), SkFloatToScalar(pat.mBegin.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mEnd.x), SkFloatToScalar(pat.mEnd.y));
@@ -250,13 +249,12 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
     case PatternType::RADIAL_GRADIENT: {
       const RadialGradientPattern& pat = static_cast<const RadialGradientPattern&>(aPattern);
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
-      SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
-
-      if (stops->mCount < 2 ||
+      if (!stops || stops->mCount < 2 ||
           !pat.mCenter1.IsFinite() || !IsFinite(pat.mRadius1) ||
           !pat.mCenter2.IsFinite() || !IsFinite(pat.mRadius2)) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
+        SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
         SkPoint points[2];
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mCenter1.x), SkFloatToScalar(pat.mCenter1.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mCenter2.x), SkFloatToScalar(pat.mCenter2.y));

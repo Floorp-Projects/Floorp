@@ -5556,7 +5556,8 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
     Register(JUMP_THRESHOLD, "jump-threshold")                             \
-    Register(WASM_TEST_MODE, "wasm.test-mode")
+    Register(WASM_TEST_MODE, "wasm.test-mode")                             \
+    Register(WASM_EXPLICIT_BOUNDS_CHECKS, "wasm.explicit-bounds-checks")
 
 typedef enum JSJitCompilerOption {
 #define JIT_COMPILER_DECLARE(key, str) \

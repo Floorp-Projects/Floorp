@@ -23,8 +23,8 @@ if test -n "$MOZ_ASAN"; then
         fi
         AC_SUBST(MOZ_CLANG_RT_ASAN_LIB_PATH)
     fi
-    CFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC $CFLAGS"
-    CXXFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC $CXXFLAGS"
+    CFLAGS="-fsanitize=address $CFLAGS"
+    CXXFLAGS="-fsanitize=address $CXXFLAGS"
     LDFLAGS="-fsanitize=address $LDFLAGS"
     AC_DEFINE(MOZ_ASAN)
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)

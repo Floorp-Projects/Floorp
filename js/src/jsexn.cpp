@@ -639,7 +639,7 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
      * reportp->ucmessage without prefixing it with anything.
      */
     if (str) {
-        RootedString separator(cx, JS_NewUCStringCopyN(cx, MOZ_UTF16(": "), 2));
+        RootedString separator(cx, JS_NewUCStringCopyN(cx, u": ", 2));
         if (!separator)
             return nullptr;
         str = ConcatStrings<CanGC>(cx, str, separator);

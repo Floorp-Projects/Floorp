@@ -50,7 +50,11 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
       ok(frame.asyncParent !== null, "Parent frame has async parent");
       is(frame.asyncParent.asyncCause, "promise callback",
          "Async parent has correct cause");
-      is(frame.asyncParent.functionDisplayName, "do_promise",
+      let asyncFrame = frame.asyncParent;
+      // Skip over self-hosted parts of our Promise implementation.
+      while (asyncFrame.source === 'self-hosted')
+        asyncFrame = asyncFrame.parent;
+      is(asyncFrame.functionDisplayName, "do_promise",
          "Async parent has correct function name");
     }
   }, {
@@ -71,7 +75,11 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
       ok(frame.asyncParent !== null, "Parent frame has async parent");
       is(frame.asyncParent.asyncCause, "promise callback",
          "Async parent has correct cause");
-      is(frame.asyncParent.functionDisplayName, "do_promise_script",
+      let asyncFrame = frame.asyncParent;
+      // Skip over self-hosted parts of our Promise implementation.
+      while (asyncFrame.source === 'self-hosted')
+        asyncFrame = asyncFrame.parent;
+      is(asyncFrame.functionDisplayName, "do_promise_script",
          "Async parent has correct function name");
     }
   });

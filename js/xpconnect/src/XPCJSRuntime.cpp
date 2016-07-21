@@ -1512,7 +1512,7 @@ XPCJSRuntime::CustomLargeAllocationFailureCallback()
 {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-        os->NotifyObservers(nullptr, "memory-pressure", MOZ_UTF16("heap-minimize"));
+        os->NotifyObservers(nullptr, "memory-pressure", u"heap-minimize");
     }
 }
 

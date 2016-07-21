@@ -145,7 +145,9 @@ QuotaUsageRequestChild::HandleResponse(const UsageResponse& aResponse)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  mRequest->SetResult(aResponse.usage(), aResponse.fileUsage());
+  mRequest->SetResult(aResponse.usage(),
+                      aResponse.fileUsage(),
+                      aResponse.limit());
 }
 
 void

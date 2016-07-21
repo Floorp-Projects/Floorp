@@ -355,11 +355,11 @@ nsListControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 
 void
 nsListControlFrame::Reflow(nsPresContext*           aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           ReflowOutput&     aDesiredSize,
+                           const ReflowInput& aReflowInput,
                            nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aReflowState.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+  NS_PRECONDITION(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
                   "Must have a computed inline size");
 
   SchedulePaint();
@@ -382,7 +382,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (IsInDropDownMode()) {
-    ReflowAsDropdown(aPresContext, aDesiredSize, aReflowState, aStatus);
+    ReflowAsDropdown(aPresContext, aDesiredSize, aReflowInput, aStatus);
     return;
   }
 
@@ -409,12 +409,12 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
    *   the old one.
    */
 
-  bool autoBSize = (aReflowState.ComputedBSize() == NS_UNCONSTRAINEDSIZE);
+  bool autoBSize = (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE);
 
   mMightNeedSecondPass = autoBSize &&
-    (NS_SUBTREE_DIRTY(this) || aReflowState.ShouldReflowAllKids());
+    (NS_SUBTREE_DIRTY(this) || aReflowInput.ShouldReflowAllKids());
 
-  nsHTMLReflowState state(aReflowState);
+  ReflowInput state(aReflowInput);
   int32_t length = GetNumberOfRows();
 
   nscoord oldBSizeOfARow = BSizeOfARow();
@@ -493,24 +493,24 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
-                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState,
+                                     ReflowOutput&     aDesiredSize,
+                                     const ReflowInput& aReflowInput,
                                      nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aReflowState.ComputedBSize() == NS_UNCONSTRAINEDSIZE,
+  NS_PRECONDITION(aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE,
                   "We should not have a computed block size here!");
 
   mMightNeedSecondPass = NS_SUBTREE_DIRTY(this) ||
-    aReflowState.ShouldReflowAllKids();
+    aReflowInput.ShouldReflowAllKids();
 
-  WritingMode wm = aReflowState.GetWritingMode();
+  WritingMode wm = aReflowInput.GetWritingMode();
 #ifdef DEBUG
   nscoord oldBSizeOfARow = BSizeOfARow();
   nscoord oldVisibleBSize = (GetStateBits() & NS_FRAME_FIRST_REFLOW) ?
     NS_UNCONSTRAINEDSIZE : GetScrolledFrame()->BSize(wm);
 #endif
 
-  nsHTMLReflowState state(aReflowState);
+  ReflowInput state(aReflowInput);
 
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // When not doing an initial reflow, and when the block size is
@@ -583,7 +583,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
       mNumDisplayRows = 1;
       mDropdownCanGrow = GetNumberOfRows() > 1;
     } else {
-      nscoord bp = aReflowState.ComputedLogicalBorderPadding().BStartEnd(wm);
+      nscoord bp = aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm);
       nscoord availableBSize = std::max(before, after) - bp;
       nscoord newBSize;
       uint32_t rows;
@@ -1494,13 +1494,13 @@ nsListControlFrame::AboutToRollup()
 
 void
 nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
-                              const nsHTMLReflowState* aReflowState,
+                              const ReflowInput* aReflowInput,
                               nsDidReflowStatus        aStatus)
 {
   bool wasInterrupted = !mHasPendingInterruptAtStartOfReflow &&
                           aPresContext->HasPendingInterrupt();
 
-  nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
+  nsHTMLScrollFrame::DidReflow(aPresContext, aReflowInput, aStatus);
 
   if (mNeedToReset && !wasInterrupted) {
     mNeedToReset = false;

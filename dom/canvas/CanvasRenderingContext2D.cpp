@@ -1562,8 +1562,8 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
 
     if (mTarget) {
       // Restore clip and transform.
-      mTarget->SetTransform(CurrentState().transform);
       for (uint32_t i = 0; i < mStyleStack.Length(); i++) {
+        mTarget->SetTransform(mStyleStack[i].transform);
         for (uint32_t c = 0; c < mStyleStack[i].clipsPushed.Length(); c++) {
           mTarget->PushClip(mStyleStack[i].clipsPushed[c]);
         }

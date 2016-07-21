@@ -4537,7 +4537,7 @@ if test -n "$gonkdir"; then
 fi
 
 case "$OS_TARGET:$NIGHTLY_BUILD" in
-WINNT:1)
+WINNT:*)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
 Darwin:1)

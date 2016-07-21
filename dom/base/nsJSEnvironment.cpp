@@ -1621,8 +1621,8 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      MOZ_UTF16("CC(T+%.1f)[%s] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n")
-      MOZ_UTF16("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu"));
+      u"CC(T+%.1f)[%s] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
+      u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu");
     nsString msg;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
                                         ProcessNameForCollectorLog(),
@@ -1648,31 +1648,31 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 
   if (sPostGCEventsToObserver) {
     NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
-       MOZ_UTF16("{ \"timestamp\": %llu, ")
-         MOZ_UTF16("\"duration\": %lu, ")
-         MOZ_UTF16("\"max_slice_pause\": %lu, ")
-         MOZ_UTF16("\"total_slice_pause\": %lu, ")
-         MOZ_UTF16("\"max_finish_gc_duration\": %lu, ")
-         MOZ_UTF16("\"max_sync_skippable_duration\": %lu, ")
-         MOZ_UTF16("\"suspected\": %lu, ")
-         MOZ_UTF16("\"visited\": { ")
-             MOZ_UTF16("\"RCed\": %lu, ")
-             MOZ_UTF16("\"GCed\": %lu }, ")
-         MOZ_UTF16("\"collected\": { ")
-             MOZ_UTF16("\"RCed\": %lu, ")
-             MOZ_UTF16("\"GCed\": %lu }, ")
-         MOZ_UTF16("\"waiting_for_gc\": %lu, ")
-         MOZ_UTF16("\"zones_waiting_for_gc\": %lu, ")
-         MOZ_UTF16("\"short_living_objects_waiting_for_gc\": %lu, ")
-         MOZ_UTF16("\"forced_gc\": %d, ")
-         MOZ_UTF16("\"forget_skippable\": { ")
-             MOZ_UTF16("\"times_before_cc\": %lu, ")
-             MOZ_UTF16("\"min\": %lu, ")
-             MOZ_UTF16("\"max\": %lu, ")
-             MOZ_UTF16("\"avg\": %lu, ")
-             MOZ_UTF16("\"total\": %lu, ")
-             MOZ_UTF16("\"removed\": %lu } ")
-       MOZ_UTF16("}"));
+       u"{ \"timestamp\": %llu, "
+         u"\"duration\": %lu, "
+         u"\"max_slice_pause\": %lu, "
+         u"\"total_slice_pause\": %lu, "
+         u"\"max_finish_gc_duration\": %lu, "
+         u"\"max_sync_skippable_duration\": %lu, "
+         u"\"suspected\": %lu, "
+         u"\"visited\": { "
+             u"\"RCed\": %lu, "
+             u"\"GCed\": %lu }, "
+         u"\"collected\": { "
+             u"\"RCed\": %lu, "
+             u"\"GCed\": %lu }, "
+         u"\"waiting_for_gc\": %lu, "
+         u"\"zones_waiting_for_gc\": %lu, "
+         u"\"short_living_objects_waiting_for_gc\": %lu, "
+         u"\"forced_gc\": %d, "
+         u"\"forget_skippable\": { "
+             u"\"times_before_cc\": %lu, "
+             u"\"min\": %lu, "
+             u"\"max\": %lu, "
+             u"\"avg\": %lu, "
+             u"\"total\": %lu, "
+             u"\"removed\": %lu } "
+       u"}");
     nsString json;
     json.Adopt(nsTextFormatter::smprintf(kJSONFmt.get(), endCCTime, ccNowDuration,
                                          gCCStats.mMaxSliceTime,

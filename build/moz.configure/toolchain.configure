@@ -213,11 +213,7 @@ def get_compiler_info(compiler, language):
     # in Xcode have a completely different versioning scheme despite exposing
     # the version with the same defines.
     # So instead, we make things such that the version is missing when the
-    # clang used is below the minimum supported version (currently clang 3.4).
-    # Normally, we'd use __has_feature, but there are unfortunately no C++11
-    # differences in clang 3.4. However, it supports the 2013-08-28 draft of
-    # the ISO WG21 SG10 feature test macro recommendations, and thus exposes
-    # new __cpp_* macros that older clang versions didn't.
+    # clang used is below the minimum supported version (currently clang 3.6).
     # We then only include the version information when the C++ compiler
     # matches the feature check, so that an unsupported version of clang would
     # have no version number.
@@ -538,7 +534,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         # __cpp_static_assert above, and see the associated comment.
         if info.type == 'clang' and not info.version:
             raise FatalCheckError(
-                'Only clang/llvm 3.4 or newer is supported.')
+                'Only clang/llvm 3.6 or newer is supported.')
 
         if info.type == 'msvc':
             if info.version < '19.00.23918':

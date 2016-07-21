@@ -25,6 +25,8 @@ interface nsIQuotaUsageRequest : nsIQuotaRequestBase
 
   readonly attribute unsigned long long fileUsage;
 
+  readonly attribute unsigned long long limit;
+
   attribute nsIQuotaUsageCallback callback;
 
   void

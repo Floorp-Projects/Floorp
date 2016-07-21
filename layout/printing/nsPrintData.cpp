@@ -41,7 +41,7 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
   if (svc) {
     svc->CreateBundle( "chrome://branding/locale/brand.properties", getter_AddRefs( brandBundle ) );
     if (brandBundle) {
-      brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"), &mBrandName );
+      brandBundle->GetStringFromName(u"brandShortName", &mBrandName );
     }
   }
 

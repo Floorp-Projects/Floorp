@@ -178,8 +178,6 @@ private:
   const char16_t* mData;
 };
 
-
-
 void
 GonkGPSGeolocationProvider::StatusCallback(GpsStatus* status)
 {
@@ -196,11 +194,11 @@ GonkGPSGeolocationProvider::StatusCallback(GpsStatus* status)
       break;
     case GPS_STATUS_ENGINE_ON:
       msgStream = "geo: GPS_STATUS_ENGINE_ON\n";
-      NS_DispatchToMainThread(new NotifyObserversGPSTask( MOZ_UTF16("GPSStarting")));
+      NS_DispatchToMainThread(new NotifyObserversGPSTask(u"GPSStarting"));
       break;
     case GPS_STATUS_ENGINE_OFF:
       msgStream = "geo: GPS_STATUS_ENGINE_OFF\n";
-      NS_DispatchToMainThread(new NotifyObserversGPSTask( MOZ_UTF16("GPSShutdown")));
+      NS_DispatchToMainThread(new NotifyObserversGPSTask(u"GPSShutdown"));
       break;
     default:
       msgStream = "geo: Unknown GPS status\n";

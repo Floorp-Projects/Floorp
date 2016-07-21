@@ -458,12 +458,12 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
         WritingMode wm = cb->GetWritingMode();
         const LogicalSize size(wm, cb->GetContentRectRelativeToSelf().Size());
 
-        nsHTMLReflowState::ComputeRelativeOffsets(wm, cont, size, newOffsets);
+        ReflowInput::ComputeRelativeOffsets(wm, cont, size, newOffsets);
         NS_ASSERTION(newOffsets.left == -newOffsets.right &&
                      newOffsets.top == -newOffsets.bottom,
                      "ComputeRelativeOffsets should return valid results");
 
-        // nsHTMLReflowState::ApplyRelativePositioning would work here, but
+        // ReflowInput::ApplyRelativePositioning would work here, but
         // since we've already checked mPosition and aren't changing the frame's
         // normal position, go ahead and add the offsets directly.
         cont->SetPosition(cont->GetNormalPosition() +
@@ -489,55 +489,55 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   LogicalSize parentSize = parentFrame->GetLogicalSize();
 
   nsFrameState savedState = parentFrame->GetStateBits();
-  nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
+  ReflowInput parentReflowInput(aFrame->PresContext(), parentFrame,
                                       &rc, parentSize);
   parentFrame->RemoveStateBits(~nsFrameState(0));
   parentFrame->AddStateBits(savedState);
 
   // The bogus parent state here was created with no parent state of its own,
-  // and therefore it won't have an mCBReflowState set up.
-  // But we may need one (for InitCBReflowState in a child state), so let's
+  // and therefore it won't have an mCBReflowInput set up.
+  // But we may need one (for InitCBReflowInput in a child state), so let's
   // try to create one here for the cases where it will be needed.
-  Maybe<nsHTMLReflowState> cbReflowState;
+  Maybe<ReflowInput> cbReflowInput;
   nsIFrame* cbFrame = parentFrame->GetContainingBlock();
   if (cbFrame && (aFrame->GetContainingBlock() != parentFrame ||
                   parentFrame->GetType() == nsGkAtoms::tableFrame)) {
     LogicalSize cbSize = cbFrame->GetLogicalSize();
-    cbReflowState.emplace(cbFrame->PresContext(), cbFrame, &rc, cbSize);
-    cbReflowState->ComputedPhysicalMargin() = cbFrame->GetUsedMargin();
-    cbReflowState->ComputedPhysicalPadding() = cbFrame->GetUsedPadding();
-    cbReflowState->ComputedPhysicalBorderPadding() =
+    cbReflowInput.emplace(cbFrame->PresContext(), cbFrame, &rc, cbSize);
+    cbReflowInput->ComputedPhysicalMargin() = cbFrame->GetUsedMargin();
+    cbReflowInput->ComputedPhysicalPadding() = cbFrame->GetUsedPadding();
+    cbReflowInput->ComputedPhysicalBorderPadding() =
       cbFrame->GetUsedBorderAndPadding();
-    parentReflowState.mCBReflowState = cbReflowState.ptr();
+    parentReflowInput.mCBReflowInput = cbReflowInput.ptr();
   }
 
   NS_WARN_IF_FALSE(parentSize.ISize(parentWM) != NS_INTRINSICSIZE &&
                    parentSize.BSize(parentWM) != NS_INTRINSICSIZE,
                    "parentSize should be valid");
-  parentReflowState.SetComputedISize(std::max(parentSize.ISize(parentWM), 0));
-  parentReflowState.SetComputedBSize(std::max(parentSize.BSize(parentWM), 0));
-  parentReflowState.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
+  parentReflowInput.SetComputedISize(std::max(parentSize.ISize(parentWM), 0));
+  parentReflowInput.SetComputedBSize(std::max(parentSize.BSize(parentWM), 0));
+  parentReflowInput.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
 
-  parentReflowState.ComputedPhysicalPadding() = parentFrame->GetUsedPadding();
-  parentReflowState.ComputedPhysicalBorderPadding() =
+  parentReflowInput.ComputedPhysicalPadding() = parentFrame->GetUsedPadding();
+  parentReflowInput.ComputedPhysicalBorderPadding() =
     parentFrame->GetUsedBorderAndPadding();
   LogicalSize availSize = parentSize.ConvertTo(frameWM, parentWM);
   availSize.BSize(frameWM) = NS_INTRINSICSIZE;
 
   ViewportFrame* viewport = do_QueryFrame(parentFrame);
   nsSize cbSize = viewport ?
-    viewport->AdjustReflowStateAsContainingBlock(&parentReflowState).Size()
+    viewport->AdjustReflowInputAsContainingBlock(&parentReflowInput).Size()
     : aFrame->GetContainingBlock()->GetSize();
   const nsMargin& parentBorder =
-    parentReflowState.mStyleBorder->GetComputedBorder();
+    parentReflowInput.mStyleBorder->GetComputedBorder();
   cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
   LogicalSize lcbSize(frameWM, cbSize);
-  nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
+  ReflowInput reflowInput(aFrame->PresContext(), parentReflowInput,
                                 aFrame, availSize, &lcbSize);
-  nsSize computedSize(reflowState.ComputedWidth(), reflowState.ComputedHeight());
-  computedSize.width += reflowState.ComputedPhysicalBorderPadding().LeftRight();
+  nsSize computedSize(reflowInput.ComputedWidth(), reflowInput.ComputedHeight());
+  computedSize.width += reflowInput.ComputedPhysicalBorderPadding().LeftRight();
   if (computedSize.height != NS_INTRINSICSIZE) {
-    computedSize.height += reflowState.ComputedPhysicalBorderPadding().TopBottom();
+    computedSize.height += reflowInput.ComputedPhysicalBorderPadding().TopBottom();
   }
   nsSize size = aFrame->GetSize();
   // The RecomputePosition hint is not used if any offset changed between auto
@@ -550,27 +550,27 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
       (computedSize.height == NS_INTRINSICSIZE || computedSize.height == size.height)) {
     // If we're solving for 'left' or 'top', then compute it here, in order to
     // match the reflow code path.
-    if (NS_AUTOOFFSET == reflowState.ComputedPhysicalOffsets().left) {
-      reflowState.ComputedPhysicalOffsets().left = cbSize.width -
-                                          reflowState.ComputedPhysicalOffsets().right -
-                                          reflowState.ComputedPhysicalMargin().right -
+    if (NS_AUTOOFFSET == reflowInput.ComputedPhysicalOffsets().left) {
+      reflowInput.ComputedPhysicalOffsets().left = cbSize.width -
+                                          reflowInput.ComputedPhysicalOffsets().right -
+                                          reflowInput.ComputedPhysicalMargin().right -
                                           size.width -
-                                          reflowState.ComputedPhysicalMargin().left;
+                                          reflowInput.ComputedPhysicalMargin().left;
     }
 
-    if (NS_AUTOOFFSET == reflowState.ComputedPhysicalOffsets().top) {
-      reflowState.ComputedPhysicalOffsets().top = cbSize.height -
-                                         reflowState.ComputedPhysicalOffsets().bottom -
-                                         reflowState.ComputedPhysicalMargin().bottom -
+    if (NS_AUTOOFFSET == reflowInput.ComputedPhysicalOffsets().top) {
+      reflowInput.ComputedPhysicalOffsets().top = cbSize.height -
+                                         reflowInput.ComputedPhysicalOffsets().bottom -
+                                         reflowInput.ComputedPhysicalMargin().bottom -
                                          size.height -
-                                         reflowState.ComputedPhysicalMargin().top;
+                                         reflowInput.ComputedPhysicalMargin().top;
     }
 
     // Move the frame
-    nsPoint pos(parentBorder.left + reflowState.ComputedPhysicalOffsets().left +
-                reflowState.ComputedPhysicalMargin().left,
-                parentBorder.top + reflowState.ComputedPhysicalOffsets().top +
-                reflowState.ComputedPhysicalMargin().top);
+    nsPoint pos(parentBorder.left + reflowInput.ComputedPhysicalOffsets().left +
+                reflowInput.ComputedPhysicalMargin().left,
+                parentBorder.top + reflowInput.ComputedPhysicalOffsets().top +
+                reflowInput.ComputedPhysicalMargin().top);
     aFrame->SetPosition(pos);
 
     return true;

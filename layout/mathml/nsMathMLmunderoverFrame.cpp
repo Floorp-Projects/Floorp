@@ -303,7 +303,7 @@ i.e.,:
 /* virtual */ nsresult
 nsMathMLmunderoverFrame::Place(DrawTarget*          aDrawTarget,
                                bool                 aPlaceOrigin,
-                               nsHTMLReflowMetrics& aDesiredSize)
+                               ReflowOutput& aDesiredSize)
 {
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
@@ -340,9 +340,9 @@ nsMathMLmunderoverFrame::Place(DrawTarget*          aDrawTarget,
   // Get the children's desired sizes
 
   nsBoundingMetrics bmBase, bmUnder, bmOver;
-  nsHTMLReflowMetrics baseSize(aDesiredSize.GetWritingMode());
-  nsHTMLReflowMetrics underSize(aDesiredSize.GetWritingMode());
-  nsHTMLReflowMetrics overSize(aDesiredSize.GetWritingMode());
+  ReflowOutput baseSize(aDesiredSize.GetWritingMode());
+  ReflowOutput underSize(aDesiredSize.GetWritingMode());
+  ReflowOutput overSize(aDesiredSize.GetWritingMode());
   nsIFrame* overFrame = nullptr;
   nsIFrame* underFrame = nullptr;
   nsIFrame* baseFrame = mFrames.FirstChild();

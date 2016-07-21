@@ -7838,15 +7838,15 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     // First, check for image/audio/video filters...
     if (token.EqualsLiteral("image/*")) {
       filterMask = nsIFilePicker::filterImages;
-      filterBundle->GetStringFromName(MOZ_UTF16("imageFilter"),
+      filterBundle->GetStringFromName(u"imageFilter",
                                       getter_Copies(extensionListStr));
     } else if (token.EqualsLiteral("audio/*")) {
       filterMask = nsIFilePicker::filterAudio;
-      filterBundle->GetStringFromName(MOZ_UTF16("audioFilter"),
+      filterBundle->GetStringFromName(u"audioFilter",
                                       getter_Copies(extensionListStr));
     } else if (token.EqualsLiteral("video/*")) {
       filterMask = nsIFilePicker::filterVideo;
-      filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"),
+      filterBundle->GetStringFromName(u"videoFilter",
                                       getter_Copies(extensionListStr));
     } else if (token.First() == '.') {
       if (token.Contains(';') || token.Contains('*')) {

@@ -27,13 +27,11 @@ class NumericLimits : public std::numeric_limits<T>
 {
 };
 
-#ifdef MOZ_CHAR16_IS_NOT_WCHAR
 template<>
 class NumericLimits<char16_t> : public std::numeric_limits<uint16_t>
 {
   // char16_t and uint16_t numeric limits should be exactly the same.
 };
-#endif
 
 } // namespace mozilla
 

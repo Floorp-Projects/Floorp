@@ -52,7 +52,7 @@ public:
   Stretch(mozilla::gfx::DrawTarget* aDrawTarget,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
-          nsHTMLReflowMetrics& aDesiredStretchSize) override
+          mozilla::ReflowOutput& aDesiredStretchSize) override
   {
     return NS_OK;
   }

@@ -85,8 +85,8 @@ public:
     * This involves reflowing the caption and the inner table.
     * @see nsIFrame::Reflow */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   /**
@@ -185,8 +185,8 @@ protected:
   explicit nsTableWrapperFrame(nsStyleContext* aContext);
   virtual ~nsTableWrapperFrame();
 
-  void InitChildReflowState(nsPresContext&     aPresContext,
-                            nsHTMLReflowState& aReflowState);
+  void InitChildReflowInput(nsPresContext&     aPresContext,
+                            ReflowInput& aReflowInput);
 
   // Get a NS_STYLE_CAPTION_SIDE_* value, or NO_SIDE if no caption is present.
   // (Remember that caption-side values are interpreted logically, despite
@@ -231,22 +231,22 @@ protected:
   // reflow the child (caption or innertable frame)
   void OuterBeginReflowChild(nsPresContext*                     aPresContext,
                              nsIFrame*                          aChildFrame,
-                             const nsHTMLReflowState&           aOuterRS,
-                             mozilla::Maybe<nsHTMLReflowState>& aChildRS,
+                             const ReflowInput&           aOuterRI,
+                             mozilla::Maybe<ReflowInput>& aChildRI,
                              nscoord                            aAvailISize);
 
   void OuterDoReflowChild(nsPresContext*           aPresContext,
                           nsIFrame*                aChildFrame,
-                          const nsHTMLReflowState& aChildRS,
-                          nsHTMLReflowMetrics&     aMetrics,
+                          const ReflowInput& aChildRI,
+                          ReflowOutput&     aMetrics,
                           nsReflowStatus&          aStatus);
 
   // Set the overflow areas in our reflow metrics
-  void UpdateOverflowAreas(nsHTMLReflowMetrics& aMet);
+  void UpdateOverflowAreas(ReflowOutput& aMet);
 
   // Get the margin.
   void GetChildMargin(nsPresContext*           aPresContext,
-                      const nsHTMLReflowState& aOuterRS,
+                      const ReflowInput& aOuterRI,
                       nsIFrame*                aChildFrame,
                       nscoord                  aAvailableWidth,
                       mozilla::LogicalMargin&  aMargin);

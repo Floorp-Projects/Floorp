@@ -152,6 +152,8 @@ public:
   RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint) override;
   bool
   RecvInitImageBridge(Endpoint<PImageBridgeChild>&& aEndpoint) override;
+  bool
+  RecvInitVRManager(Endpoint<PVRManagerChild>&& aEndpoint) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
@@ -160,10 +162,6 @@ public:
   PProcessHangMonitorChild*
   AllocPProcessHangMonitorChild(Transport* aTransport,
                                 ProcessId aOtherProcess) override;
-
-  PVRManagerChild*
-  AllocPVRManagerChild(Transport* aTransport,
-                       ProcessId aOtherProcess) override;
 
   virtual bool RecvSetProcessSandbox(const MaybeFileDesc& aBroker) override;
 

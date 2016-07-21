@@ -24,8 +24,8 @@ public:
                                       nsStyleContext* aContext);
 
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aMaxSize,
+                      ReflowOutput& aDesiredSize,
+                      const ReflowInput& aMaxSize,
                       nsReflowStatus&      aStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -112,8 +112,8 @@ class nsPageBreakFrame : public nsLeafFrame
   ~nsPageBreakFrame();
 
   virtual void Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          ReflowOutput&     aDesiredSize,
+                          const ReflowInput& aReflowInput,
                           nsReflowStatus&          aStatus) override;
 
   virtual nsIAtom* GetType() const override;
