@@ -13,6 +13,10 @@ ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /build/install-mercuri
 ADD system-setup.sh /tmp/system-setup.sh
 RUN bash /tmp/system-setup.sh
 
+# %include testing/docker/recipes/checkout-gecko-and-run
+ADD topsrcdir/testing/docker/recipes/checkout-gecko-and-run /home/worker/bin/checkout-gecko-and-run
+RUN chown -R worker:worker /home/worker/bin && chmod 755 /home/worker/bin/*
+
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
 ENV           HOME          /home/worker
