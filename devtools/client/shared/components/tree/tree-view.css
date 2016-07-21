@@ -23,6 +23,11 @@
   white-space: nowrap;
 }
 
+.treeTable .treeLabelCell::after {
+  content: ":";
+  color: var(--object-color);
+}
+
 .treeTable .treeValueCell {
   padding: 2px 0 2px 5px;
   overflow: hidden;
