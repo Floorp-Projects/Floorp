@@ -26,7 +26,7 @@ using namespace mozilla::layout;
 
 namespace mozilla {
 
-struct nsRowGroupReflowState {
+struct TableRowGroupReflowInput {
   const ReflowInput& reflowState;  // Our reflow state
 
   nsTableFrame* tableFrame;
@@ -37,7 +37,7 @@ struct nsRowGroupReflowState {
   // Running block-offset
   nscoord bCoord;
 
-  nsRowGroupReflowState(const ReflowInput& aReflowState,
+  TableRowGroupReflowInput(const ReflowInput& aReflowState,
                         nsTableFrame*            aTableFrame)
       : reflowState(aReflowState)
       , tableFrame(aTableFrame)
@@ -48,7 +48,7 @@ struct nsRowGroupReflowState {
   {
   }
 
-  ~nsRowGroupReflowState() {}
+  ~TableRowGroupReflowInput() {}
 };
 
 } // namespace mozilla
@@ -285,7 +285,7 @@ nsTableRowGroupFrame::GetLogicalSkipSides(const ReflowInput* aReflowState) const
 // Position and size aKidFrame and update our reflow state.
 void
 nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
-                                 nsRowGroupReflowState& aReflowState,
+                                 TableRowGroupReflowInput& aReflowState,
                                  nsIFrame*              aKidFrame,
                                  WritingMode            aWM,
                                  const LogicalPoint&    aKidPosition,
@@ -348,7 +348,7 @@ CacheRowBSizesForPrinting(nsPresContext*   aPresContext,
 void
 nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
                                      nsHTMLReflowMetrics&   aDesiredSize,
-                                     nsRowGroupReflowState& aReflowState,
+                                     TableRowGroupReflowInput& aReflowState,
                                      nsReflowStatus&        aStatus,
                                      bool*                aPageBreakBeforeEnd)
 {
@@ -914,7 +914,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
 
 // Move a child that was skipped during a reflow.
 void
-nsTableRowGroupFrame::SlideChild(nsRowGroupReflowState& aReflowState,
+nsTableRowGroupFrame::SlideChild(TableRowGroupReflowInput& aReflowState,
                                  nsIFrame*              aKidFrame)
 {
   // Move the frame if we need to.
@@ -1360,7 +1360,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowState);
 
   nsTableFrame* tableFrame = GetTableFrame();
-  nsRowGroupReflowState state(aReflowState, tableFrame);
+  TableRowGroupReflowInput state(aReflowState, tableFrame);
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
