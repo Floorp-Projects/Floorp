@@ -28,6 +28,7 @@ class nsFloatManager;
 struct nsStyleText;
 
 class nsLineLayout {
+  using nsBlockReflowState = mozilla::nsBlockReflowState;
   using ReflowInput = mozilla::ReflowInput;
 
 public:
