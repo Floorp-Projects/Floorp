@@ -944,7 +944,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   } else {
     static_cast<nsTextFrame*>(aFrame)->
       ReflowText(*this, availableSpaceOnLine,
-                 psd->mReflowState->rendContext->GetDrawTarget(),
+                 psd->mReflowState->mRenderingContext->GetDrawTarget(),
                  metrics, aReflowStatus);
   }
 
@@ -2588,7 +2588,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       // might have a soft hyphen which should now appear, changing the frame's
       // width
       nsTextFrame::TrimOutput trimOutput = static_cast<nsTextFrame*>(pfd->mFrame)->
-          TrimTrailingWhiteSpace(mBlockReflowState->rendContext->GetDrawTarget());
+          TrimTrailingWhiteSpace(mBlockReflowState->mRenderingContext->GetDrawTarget());
 #ifdef NOISY_TRIM
       nsFrame::ListTag(stdout, psd->mFrame->mFrame);
       printf(": trim of ");

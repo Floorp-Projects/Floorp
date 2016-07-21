@@ -181,7 +181,7 @@ BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(
     iEndOffset = 0;
   } else {
     LogicalMargin frameMargin(wm);
-    SizeComputationInput os(aFrame, mReflowState.rendContext,
+    SizeComputationInput os(aFrame, mReflowState.mRenderingContext,
                         wm, mContentArea.ISize(wm));
     frameMargin =
       os.ComputedLogicalMargin().ConvertTo(wm, aFrame->GetWritingMode());
@@ -237,7 +237,7 @@ BlockReflowInput::ComputeBlockAvailSpace(nsIFrame* aFrame,
   aResult.BSize(wm) = GetFlag(BRS_UNCONSTRAINEDBSIZE)
     ? NS_UNCONSTRAINEDSIZE
     : mReflowState.AvailableBSize() - mBCoord
-      - GetBEndMarginClone(aFrame, mReflowState.rendContext, mContentArea, wm);
+      - GetBEndMarginClone(aFrame, mReflowState.mRenderingContext, mContentArea, wm);
   // mBCoord might be greater than mBEndEdge if the block's top margin pushes
   // it off the page/column. Negative available height can confuse other code
   // and is nonsense in principle.
@@ -686,7 +686,7 @@ FloatMarginISize(const ReflowInput& aCBReflowState,
 
   LogicalSize floatSize =
     aFloat->ComputeSize(
-              aCBReflowState.rendContext,
+              aCBReflowState.mRenderingContext,
               wm,
               aCBReflowState.ComputedSize(wm),
               aFloatAvailableISize,
@@ -746,7 +746,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   NS_ASSERTION(aFloat->GetParent() == mBlock,
                "Float frame has wrong parent");
 
-  SizeComputationInput offsets(aFloat, mReflowState.rendContext,
+  SizeComputationInput offsets(aFloat, mReflowState.mRenderingContext,
                            wm, mReflowState.ComputedISize());
 
   nscoord floatMarginISize = FloatMarginISize(mReflowState,

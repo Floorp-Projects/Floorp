@@ -238,7 +238,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // create the layout state
-  nsBoxLayoutState state(aPresContext, aReflowState.rendContext);
+  nsBoxLayoutState state(aPresContext, aReflowState.mRenderingContext);
 
   nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.ComputedHeight());
 

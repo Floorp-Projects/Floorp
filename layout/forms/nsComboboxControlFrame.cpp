@@ -870,7 +870,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     nsIScrollableFrame* scrollable = do_QueryFrame(mListControlFrame);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
     buttonISize = scrollable->GetNondisappearingScrollbarWidth(
-      PresContext(), aReflowState.rendContext, wm);
+      PresContext(), aReflowState.mRenderingContext, wm);
     if (buttonISize > aReflowState.ComputedISize()) {
       buttonISize = 0;
     }

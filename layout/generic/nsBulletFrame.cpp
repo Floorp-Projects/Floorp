@@ -642,7 +642,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   SetFontSizeInflation(inflation);
 
   // Get the base size
-  GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics, inflation,
+  GetDesiredSize(aPresContext, aReflowState.mRenderingContext, aMetrics, inflation,
                  &mPadding);
 
   // Add in the border and padding; split the top/bottom between the

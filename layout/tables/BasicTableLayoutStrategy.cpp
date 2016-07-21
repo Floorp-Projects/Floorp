@@ -537,7 +537,7 @@ BasicTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
                  "dirtyness out of sync");
     // XXX Is this needed?
     if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
-        ComputeIntrinsicISizes(aReflowState.rendContext);
+        ComputeIntrinsicISizes(aReflowState.mRenderingContext);
     }
 
     nsTableCellMap *cellMap = mTableFrame->GetCellMap();
