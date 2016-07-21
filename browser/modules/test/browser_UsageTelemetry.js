@@ -30,7 +30,7 @@ function browserLocationChanged(browser) {
           browser.webProgress.removeProgressListener(filter);
           filter.removeProgressListener(wpl);
           resolve();
-        };
+        }
       },
       QueryInterface: XPCOMUtils.generateQI([
         Ci.nsIWebProgressListener,
@@ -42,7 +42,7 @@ function browserLocationChanged(browser) {
     filter.addProgressListener(wpl, Ci.nsIWebProgress.NOTIFY_ALL);
     browser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
   });
-};
+}
 
 /**
  * An helper that checks the value of a scalar if it's expected to be > 0,
