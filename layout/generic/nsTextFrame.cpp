@@ -7454,7 +7454,7 @@ nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
   UpdateIteratorFromOffset(properties, aInOffset, iter);
 
   const int32_t kContentEnd = GetContentEnd();
-  const int32_t kEndOffset = std::min(aInOffset + aLength, kContentEnd + 1);
+  const int32_t kEndOffset = std::min(aInOffset + aLength, kContentEnd);
   while (aInOffset < kEndOffset) {
     if (!iter.IsOriginalCharSkipped() &&
         !mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
