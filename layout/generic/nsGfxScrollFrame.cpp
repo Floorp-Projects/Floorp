@@ -205,6 +205,8 @@ nsHTMLScrollFrame::GetType() const
  All other things being equal, we prefer layouts with fewer scrollbars showing.
 */
 
+namespace mozilla {
+
 struct MOZ_STACK_CLASS ScrollReflowState {
   const ReflowInput& mReflowState;
   nsBoxLayoutState mBoxState;
@@ -233,6 +235,8 @@ struct MOZ_STACK_CLASS ScrollReflowState {
     mStyles(aFrame->GetScrollbarStyles()) {
   }
 };
+
+} // namespace mozilla
 
 // XXXldb Can this go away?
 static nsSize ComputeInsideBorderSize(ScrollReflowState* aState,
