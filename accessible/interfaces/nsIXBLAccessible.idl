@@ -10,7 +10,7 @@
  * XBL controls can implement this interface to provide own implementation of
  * accessible properties.
  */
-[scriptable, uuid(3716eb86-166b-445b-a94a-9b522fee96e6)]
+[scriptable, builtinclass, uuid(3716eb86-166b-445b-a94a-9b522fee96e6)]
 interface nsIXBLAccessible : nsISupports
 {
   /**

@@ -15,7 +15,7 @@
  * Current implementation assumes every embedded object is a link.
  */
 
-[scriptable, uuid(b33684e2-090c-4e1d-a3d9-f4b46f4237b9)]
+[scriptable, builtinclass, uuid(b33684e2-090c-4e1d-a3d9-f4b46f4237b9)]
 interface nsIAccessibleHyperText : nsISupports
 {
   /**

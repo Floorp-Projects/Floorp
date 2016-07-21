@@ -11,7 +11,7 @@ interface nsIAccessible;
 /**
  * This interface gives access to an accessible's set of relations.
  */
-[scriptable, uuid(55b308c4-2ae4-46bc-b4cd-4d4370e0a660)]
+[scriptable, builtinclass, uuid(55b308c4-2ae4-46bc-b4cd-4d4370e0a660)]
 interface nsIAccessibleRelation : nsISupports
 {
   /**
