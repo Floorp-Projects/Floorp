@@ -14,7 +14,9 @@
 
 //----------------------------------------------------------------------
 
+namespace mozilla {
 struct nsHTMLReflowState;
+} // namespace mozilla
 
 // Option flags
 #define NS_REFLOW_CALC_BOUNDING_METRICS  0x0001
@@ -197,6 +199,8 @@ struct nsCollapsingMargin {
  * @see #Reflow()
  */
 class nsHTMLReflowMetrics {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
 public:
   // XXXldb Should |aFlags| generally be passed from parent to child?
   // Some places do it, and some don't.  |aFlags| should perhaps go away

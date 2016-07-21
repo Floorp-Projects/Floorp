@@ -769,7 +769,7 @@ public:
   struct DR_cookie {
     DR_cookie(nsPresContext*          aPresContext,
               nsIFrame*                aFrame, 
-              const nsHTMLReflowState& aReflowState,
+              const mozilla::nsHTMLReflowState& aReflowState,
               nsHTMLReflowMetrics&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
@@ -777,7 +777,7 @@ public:
 
     nsPresContext*          mPresContext;
     nsIFrame*                mFrame;
-    const nsHTMLReflowState& mReflowState;
+    const mozilla::nsHTMLReflowState& mReflowState;
     nsHTMLReflowMetrics&     mMetrics;
     nsReflowStatus&          mStatus;    
     void*                    mValue;
@@ -814,35 +814,35 @@ public:
   };
 
   struct DR_init_constraints_cookie {
-    DR_init_constraints_cookie(nsIFrame* aFrame, nsHTMLReflowState* aState,
+    DR_init_constraints_cookie(nsIFrame* aFrame, mozilla::nsHTMLReflowState* aState,
                                nscoord aCBWidth, nscoord aCBHeight,
                                const nsMargin* aBorder,
                                const nsMargin* aPadding);
     ~DR_init_constraints_cookie();
 
     nsIFrame* mFrame;
-    nsHTMLReflowState* mState;
+    mozilla::nsHTMLReflowState* mState;
     void* mValue;
   };
 
   struct DR_init_offsets_cookie {
-    DR_init_offsets_cookie(nsIFrame* aFrame, nsCSSOffsetState* aState,
+    DR_init_offsets_cookie(nsIFrame* aFrame, mozilla::nsCSSOffsetState* aState,
                            const mozilla::LogicalSize& aPercentBasis,
                            const nsMargin* aBorder,
                            const nsMargin* aPadding);
     ~DR_init_offsets_cookie();
 
     nsIFrame* mFrame;
-    nsCSSOffsetState* mState;
+    mozilla::nsCSSOffsetState* mState;
     void* mValue;
   };
 
   struct DR_init_type_cookie {
-    DR_init_type_cookie(nsIFrame* aFrame, nsHTMLReflowState* aState);
+    DR_init_type_cookie(nsIFrame* aFrame, mozilla::nsHTMLReflowState* aState);
     ~DR_init_type_cookie();
 
     nsIFrame* mFrame;
-    nsHTMLReflowState* mState;
+    mozilla::nsHTMLReflowState* mState;
     void* mValue;
   };
 

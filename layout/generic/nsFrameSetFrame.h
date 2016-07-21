@@ -16,7 +16,6 @@
 class  nsIContent;
 class  nsPresContext;
 struct nsRect;
-struct nsHTMLReflowState;
 struct nsSize;
 class  nsIAtom;
 class  nsHTMLFramesetBorderFrame;
