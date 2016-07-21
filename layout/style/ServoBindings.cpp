@@ -446,13 +446,14 @@ SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot, ServoElementSnapshot)
 ServoNodeData*
 Gecko_GetNodeData(RawGeckoNode* aNode)
 {
-  return aNode->GetServoNodeData();
+  return aNode->ServoData().get();
 }
 
 void
 Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
 {
-  aNode->SetServoNodeData(aData);
+  MOZ_ASSERT(!aNode->ServoData());
+  aNode->ServoData().reset(aData);
 }
 
 nsIAtom*
