@@ -26,8 +26,8 @@ public:
   explicit VRManagerParent(ProcessId aChildProcessId);
 
   static VRManagerParent* CreateSameProcess();
+  static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint);
-
 
   // Overriden from IToplevelProtocol
   ipc::IToplevelProtocol*
