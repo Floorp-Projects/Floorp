@@ -143,15 +143,55 @@ add_task(function test_rememberSignons()
 });
 
 /**
- * Tests storing disabled hosts containing non-ASCII characters.
+ * Tests storing disabled hosts with non-ASCII characters where IDN is supported.
  */
-add_task(function* test_storage_setLoginSavingEnabled_nonascii()
+add_task(function* test_storage_setLoginSavingEnabled_nonascii_IDN_is_supported()
 {
-  let hostname = "http://" + String.fromCharCode(355) + ".example.com";
-  Services.logins.setLoginSavingEnabled(hostname, false);
+  let hostname = "http://大.net";
+  let encoding = "http://xn--pss.net";
 
+  // Test adding disabled host with nonascii URL (http://大.net).
+  Services.logins.setLoginSavingEnabled(hostname, false);
   yield* LoginTestUtils.reloadData();
-  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                          [hostname]);
+  Assert.equal(Services.logins.getLoginSavingEnabled(hostname), false);
+  Assert.equal(Services.logins.getLoginSavingEnabled(encoding), false);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [hostname]);
+
+  LoginTestUtils.clearData();
+
+  // Test adding disabled host with IDN ("http://xn--pss.net").
+  Services.logins.setLoginSavingEnabled(encoding, false);
+  yield* LoginTestUtils.reloadData();
+  Assert.equal(Services.logins.getLoginSavingEnabled(hostname), false);
+  Assert.equal(Services.logins.getLoginSavingEnabled(encoding), false);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [hostname]);
+
+  LoginTestUtils.clearData();
+});
+
+/**
+ * Tests storing disabled hosts with non-ASCII characters where IDN is not supported.
+ */
+add_task(function* test_storage_setLoginSavingEnabled_nonascii_IDN_not_supported()
+{
+  let hostname = "http://√.com";
+  let encoding = "http://xn--19g.com";
+
+  // Test adding disabled host with nonascii URL (http://√.com).
+  Services.logins.setLoginSavingEnabled(hostname, false);
+  yield* LoginTestUtils.reloadData();
+  Assert.equal(Services.logins.getLoginSavingEnabled(hostname), false);
+  Assert.equal(Services.logins.getLoginSavingEnabled(encoding), false);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [encoding]);
+
+  LoginTestUtils.clearData();
+
+  // Test adding disabled host with IDN ("http://xn--19g.com").
+  Services.logins.setLoginSavingEnabled(encoding, false);
+  yield* LoginTestUtils.reloadData();
+  Assert.equal(Services.logins.getLoginSavingEnabled(hostname), false);
+  Assert.equal(Services.logins.getLoginSavingEnabled(encoding), false);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), [encoding]);
+
   LoginTestUtils.clearData();
 });
