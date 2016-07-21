@@ -10,7 +10,7 @@
 #define nsBlockReflowContext_h___
 
 #include "nsIFrame.h"
-#include "nsHTMLReflowMetrics.h"
+#include "mozilla/ReflowOutput.h"
 
 class nsLineBox;
 class nsPresContext;
