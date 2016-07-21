@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.JNITarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.EventCallback;
@@ -72,8 +73,11 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
 
     private ManagerState currentState = ManagerState.OffNoListeners;
     private ConnectionType currentConnectionType = ConnectionType.NONE;
-    private NetworkStatus currentNetworkStatus = NetworkStatus.UNKNOWN;
+    private ConnectionType previousConnectionType = ConnectionType.NONE;
     private ConnectionSubType currentConnectionSubtype = ConnectionSubType.UNKNOWN;
+    private ConnectionSubType previousConnectionSubtype = ConnectionSubType.UNKNOWN;
+    private NetworkStatus currentNetworkStatus = NetworkStatus.UNKNOWN;
+    private NetworkStatus previousNetworkStatus = NetworkStatus.UNKNOWN;
 
     private enum InfoType {
         MCC,
@@ -283,27 +287,52 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         Log.d(LOGTAG, "New network state: " + currentNetworkStatus + ", " + currentConnectionType + ", " + currentConnectionSubtype);
     }
 
+    @WrapForJNI
+    private static native void onConnectionChanged(int type, String subType,
+                                                   boolean isWifi, int DHCPGateway);
+
+    @WrapForJNI
+    private static native void onStatusChanged(String status);
+
     /**
      * Send current network state and connection type as a GeckoEvent, to whomever is listening.
      */
     private void sendNetworkStateToListeners() {
-        final Context applicationContext = GeckoAppShell.getApplicationContext();
-        final GeckoEvent networkEvent = GeckoEvent.createNetworkEvent(
-                currentConnectionType.value,
-                currentConnectionType == ConnectionType.WIFI,
-                wifiDhcpGatewayAddress(applicationContext),
-                currentConnectionSubtype.value
-        );
-        final GeckoEvent networkLinkChangeValueEvent = GeckoEvent.createNetworkLinkChangeEvent(
-                currentNetworkStatus.value
-        );
-        final GeckoEvent networkLinkChangeNotificationEvent = GeckoEvent.createNetworkLinkChangeEvent(
-                LINK_DATA_CHANGED
-        );
+        if (currentConnectionType != previousConnectionType ||
+                currentConnectionSubtype != previousConnectionSubtype) {
+            previousConnectionType = currentConnectionType;
+            previousConnectionSubtype = currentConnectionSubtype;
 
-        GeckoAppShell.sendEventToGecko(networkEvent);
-        GeckoAppShell.sendEventToGecko(networkLinkChangeValueEvent);
-        GeckoAppShell.sendEventToGecko(networkLinkChangeNotificationEvent);
+            final boolean isWifi = currentConnectionType == ConnectionType.WIFI;
+            final int gateway = !isWifi ? 0 :
+                    wifiDhcpGatewayAddress(GeckoAppShell.getApplicationContext());
+
+            if (GeckoThread.isRunning()) {
+                onConnectionChanged(currentConnectionType.value,
+                                    currentConnectionSubtype.value, isWifi, gateway);
+            } else {
+                GeckoThread.queueNativeCall(GeckoNetworkManager.class, "onConnectionChanged",
+                                            currentConnectionType.value,
+                                            String.class, currentConnectionSubtype.value,
+                                            isWifi, gateway);
+            }
+        }
+
+        final String status;
+
+        if (currentNetworkStatus != previousNetworkStatus) {
+            previousNetworkStatus = currentNetworkStatus;
+            status = currentNetworkStatus.value;
+        } else {
+            status = LINK_DATA_CHANGED;
+        }
+
+        if (GeckoThread.isRunning()) {
+            onStatusChanged(status);
+        } else {
+            GeckoThread.queueNativeCall(GeckoNetworkManager.class, "onStatusChanged",
+                                        String.class, status);
+        }
     }
 
     /**

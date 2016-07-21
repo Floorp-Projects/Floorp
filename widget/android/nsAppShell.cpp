@@ -61,6 +61,7 @@
 #endif
 
 #include "ANRReporter.h"
+#include "GeckoNetworkManager.h"
 #include "PrefsHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
@@ -385,6 +386,7 @@ nsAppShell::nsAppShell()
         GeckoAppShellSupport::Init();
         GeckoThreadSupport::Init();
         mozilla::ANRReporter::Init();
+        mozilla::GeckoNetworkManager::Init();
         mozilla::PrefsHelper::Init();
         nsWindow::InitNatives();
 
