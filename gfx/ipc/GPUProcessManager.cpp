@@ -17,6 +17,7 @@
 #endif
 #include "nsBaseWidget.h"
 #include "nsContentUtils.h"
+#include "VRManagerChild.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeChild.h"
 #include "VsyncIOThreadHolder.h"
@@ -135,12 +136,6 @@ GPUProcessManager::EnsureGPUReady()
 }
 
 void
-GPUProcessManager::EnsureVRManager()
-{
-  VRManagerChild::InitSameProcess();
-}
-
-void
 GPUProcessManager::EnsureImageBridgeChild()
 {
   if (ImageBridgeChild::IsCreated()) {
@@ -166,6 +161,34 @@ GPUProcessManager::EnsureImageBridgeChild()
 
   mGPUChild->SendInitImageBridge(Move(parentPipe));
   ImageBridgeChild::InitWithGPUProcess(Move(childPipe));
+}
+
+void
+GPUProcessManager::EnsureVRManager()
+{
+  if (VRManagerChild::IsCreated()) {
+    return;
+  }
+
+  if (!mGPUChild) {
+    VRManagerChild::InitSameProcess();
+    return;
+  }
+
+  ipc::Endpoint<PVRManagerParent> parentPipe;
+  ipc::Endpoint<PVRManagerChild> childPipe;
+  nsresult rv = PVRManager::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    DisableGPUProcess("Failed to create PVRManager endpoints");
+    return;
+  }
+
+  mGPUChild->SendInitVRManager(Move(parentPipe));
+  VRManagerChild::InitWithGPUProcess(Move(childPipe));
 }
 
 void
@@ -430,7 +453,11 @@ bool
 GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
                                           ipc::Endpoint<PVRManagerChild>* aOutEndpoint)
 {
-  base::ProcessId gpuPid = base::GetCurrentProcId();
+  EnsureVRManager();
+
+  base::ProcessId gpuPid = mGPUChild
+                           ? mGPUChild->OtherPid()
+                           : base::GetCurrentProcId();
 
   ipc::Endpoint<PVRManagerParent> parentPipe;
   ipc::Endpoint<PVRManagerChild> childPipe;
@@ -444,8 +471,12 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (!VRManagerParent::CreateForContent(Move(parentPipe))) {
-    return false;
+  if (mGPUChild) {
+    mGPUChild->SendNewContentVRManager(Move(parentPipe));
+  } else {
+    if (!VRManagerParent::CreateForContent(Move(parentPipe))) {
+      return false;
+    }
   }
 
   *aOutEndpoint = Move(childPipe);

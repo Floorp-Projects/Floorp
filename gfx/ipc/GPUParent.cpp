@@ -8,12 +8,14 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
-#include "VsyncBridgeParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
+#include "VRManager.h"
+#include "VRManagerParent.h"
+#include "VsyncBridgeParent.h"
 
 namespace mozilla {
 namespace gfx {
@@ -41,6 +43,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
   CompositorThreadHolder::Start();
+  VRManager::ManagerInit();
   gfxPlatform::InitNullMetadata();
   return true;
 }
@@ -67,6 +70,13 @@ bool
 GPUParent::RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
 {
   ImageBridgeParent::CreateForGPUProcess(Move(aEndpoint));
+  return true;
+}
+
+bool
+GPUParent::RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
+{
+  VRManagerParent::CreateForGPUProcess(Move(aEndpoint));
   return true;
 }
 
@@ -111,6 +121,12 @@ bool
 GPUParent::RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint)
 {
   return ImageBridgeParent::CreateForContent(Move(aEndpoint));
+}
+
+bool
+GPUParent::RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
+{
+  return VRManagerParent::CreateForContent(Move(aEndpoint));
 }
 
 void
