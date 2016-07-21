@@ -944,7 +944,7 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
   // code won't know how to calculate the containing block height
   // because it's calculated bottom up. So we use our own computed
   // size as the dimensions.
-  nsIFrame* frame = aReflowState.frame;
+  nsIFrame* frame = aReflowState.mFrame;
 
   LogicalSize cbSize(aFrameSize);
     // Containing block is relative to the padding edge
@@ -971,19 +971,19 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
     const ReflowInput* aLastRS = &aReflowState;
     const ReflowInput* lastButOneRS = &aReflowState;
     while (aLastRS->mParentReflowState &&
-           aLastRS->mParentReflowState->frame->GetContent() == frame->GetContent() &&
-           aLastRS->mParentReflowState->frame->GetType() != nsGkAtoms::fieldSetFrame) {
+           aLastRS->mParentReflowState->mFrame->GetContent() == frame->GetContent() &&
+           aLastRS->mParentReflowState->mFrame->GetType() != nsGkAtoms::fieldSetFrame) {
       lastButOneRS = aLastRS;
       aLastRS = aLastRS->mParentReflowState;
     }
     if (aLastRS != &aReflowState) {
       // Scrollbars need to be specifically excluded, if present, because they are outside the
       // padding-edge. We need better APIs for getting the various boxes from a frame.
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRS->frame);
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRS->mFrame);
       nsMargin scrollbars(0,0,0,0);
       if (scrollFrame) {
         scrollbars =
-          scrollFrame->GetDesiredScrollbarSizes(aLastRS->frame->PresContext(),
+          scrollFrame->GetDesiredScrollbarSizes(aLastRS->mFrame->PresContext(),
                                                 aLastRS->rendContext);
         if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
           scrollbars.top = scrollbars.bottom = 0;
@@ -3628,7 +3628,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 #ifdef NOISY_BLOCK_DIR_MARGINS
             ListTag(stdout);
             printf(": reflow incomplete, frame=");
-            nsFrame::ListTag(stdout, frame);
+            nsFrame::ListTag(stdout, mFrame);
             printf(" prevBEndMargin=%d, setting to zero\n",
                    aState.mPrevBEndMargin.get());
 #endif
@@ -3656,7 +3656,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 #ifdef NOISY_BLOCK_DIR_MARGINS
             ListTag(stdout);
             printf(": reflow complete but overflow incomplete for ");
-            nsFrame::ListTag(stdout, frame);
+            nsFrame::ListTag(stdout, mFrame);
             printf(" prevBEndMargin=%d collapsedBEndMargin=%d\n",
                    aState.mPrevBEndMargin.get(), collapsedBEndMargin.get());
 #endif
@@ -3667,7 +3667,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 #ifdef NOISY_BLOCK_DIR_MARGINS
           ListTag(stdout);
           printf(": reflow complete for ");
-          nsFrame::ListTag(stdout, frame);
+          nsFrame::ListTag(stdout, mFrame);
           printf(" prevBEndMargin=%d collapsedBEndMargin=%d\n",
                  aState.mPrevBEndMargin.get(), collapsedBEndMargin.get());
 #endif
@@ -3676,7 +3676,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 #ifdef NOISY_BLOCK_DIR_MARGINS
         ListTag(stdout);
         printf(": frame=");
-        nsFrame::ListTag(stdout, frame);
+        nsFrame::ListTag(stdout, mFrame);
         printf(" carriedOutBEndMargin=%d collapsedBEndMargin=%d => %d\n",
                brc.GetCarriedOutBEndMargin().get(), collapsedBEndMargin.get(),
                aState.mPrevBEndMargin.get());

@@ -33,7 +33,7 @@ nsFontInflationData::FindFontInflationDataFor(const nsIFrame *aFrame)
 /* static */ bool
 nsFontInflationData::UpdateFontInflationDataISizeFor(const ReflowInput& aReflowState)
 {
-  nsIFrame *bfc = aReflowState.frame;
+  nsIFrame *bfc = aReflowState.mFrame;
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have been given a flow root");
   FrameProperties bfcProps(bfc->Properties());
@@ -124,7 +124,7 @@ static nscoord
 ComputeDescendantISize(const ReflowInput& aAncestorReflowState,
                        nsIFrame *aDescendantFrame)
 {
-  nsIFrame *ancestorFrame = aAncestorReflowState.frame->FirstInFlow();
+  nsIFrame *ancestorFrame = aAncestorReflowState.mFrame->FirstInFlow();
   if (aDescendantFrame == ancestorFrame) {
     return aAncestorReflowState.ComputedISize();
   }
@@ -152,13 +152,13 @@ ComputeDescendantISize(const ReflowInput& aAncestorReflowState,
     LogicalSize availSize = parentReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     MOZ_ASSERT(frame->GetParent()->FirstInFlow() ==
-                 parentReflowState.frame->FirstInFlow(),
+                 parentReflowState.mFrame->FirstInFlow(),
                "bad logic in this function");
     new (reflowStates + i) ReflowInput(presContext, parentReflowState,
                                              frame, availSize);
   }
 
-  MOZ_ASSERT(reflowStates[len - 1].frame == aDescendantFrame,
+  MOZ_ASSERT(reflowStates[len - 1].mFrame == aDescendantFrame,
              "bad logic in this function");
   nscoord result = reflowStates[len - 1].ComputedISize();
 
@@ -173,7 +173,7 @@ ComputeDescendantISize(const ReflowInput& aAncestorReflowState,
 void
 nsFontInflationData::UpdateISize(const ReflowInput &aReflowState)
 {
-  nsIFrame *bfc = aReflowState.frame;
+  nsIFrame *bfc = aReflowState.mFrame;
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "must be block formatting context");
 

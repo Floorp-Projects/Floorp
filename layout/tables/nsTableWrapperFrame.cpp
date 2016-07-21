@@ -235,7 +235,7 @@ nsTableWrapperFrame::InitChildReflowState(nsPresContext&     aPresContext,
   nsMargin collapsePadding(0,0,0,0);
   nsMargin* pCollapseBorder  = nullptr;
   nsMargin* pCollapsePadding = nullptr;
-  if (aReflowState.frame == InnerTableFrame() &&
+  if (aReflowState.mFrame == InnerTableFrame() &&
       InnerTableFrame()->IsBorderCollapse()) {
     WritingMode wm = aReflowState.GetWritingMode();
     LogicalMargin border = InnerTableFrame()->GetIncludedOuterBCBorder(wm);
