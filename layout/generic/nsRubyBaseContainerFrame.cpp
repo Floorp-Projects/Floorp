@@ -288,7 +288,7 @@ nsRubyBaseContainerFrame::GetLogicalBaseline(WritingMode aWritingMode) const
   return mBaseline;
 }
 
-struct nsRubyBaseContainerFrame::ReflowState
+struct nsRubyBaseContainerFrame::RubyReflowInput
 {
   bool mAllowInitialLineBreak;
   bool mAllowLineBreak;
@@ -384,7 +384,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
   nscoord isize = 0;
   // Reflow columns excluding any span
-  ReflowState reflowState = {
+  RubyReflowInput reflowState = {
     allowInitialLineBreak, allowLineBreak && !hasSpan,
     textContainers, aReflowState, reflowStates
   };
@@ -405,7 +405,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
       NS_FRAME_IS_COMPLETE(aStatus) && hasSpan) {
     // Reflow spans
-    ReflowState reflowState = {
+    RubyReflowInput reflowState = {
       false, false, textContainers, aReflowState, reflowStates
     };
     nscoord spanISize = ReflowSpans(reflowState);
@@ -459,7 +459,7 @@ struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState
 };
 
 nscoord
-nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
+nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowState,
                                         nsReflowStatus& aStatus)
 {
   nsLineLayout* lineLayout = aReflowState.mBaseReflowState.mLineLayout;
@@ -568,7 +568,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const ReflowState& aReflowState,
 }
 
 nscoord
-nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
+nsRubyBaseContainerFrame::ReflowOneColumn(const RubyReflowInput& aReflowState,
                                           uint32_t aColumnIndex,
                                           const RubyColumn& aColumn,
                                           nsReflowStatus& aStatus)
@@ -808,7 +808,7 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
 }
 
 nscoord
-nsRubyBaseContainerFrame::ReflowSpans(const ReflowState& aReflowState)
+nsRubyBaseContainerFrame::ReflowSpans(const RubyReflowInput& aReflowState)
 {
   nscoord spanISize = 0;
   for (uint32_t i = 0, iend = aReflowState.mTextContainers.Length();
