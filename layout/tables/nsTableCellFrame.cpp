@@ -118,11 +118,11 @@ nsTableCellFrame::NotifyPercentBSize(const ReflowInput& aReflowInput)
   // these tests are probably unnecessary.
 
   // Maybe the cell reflow state; we sure if we're inside the |if|.
-  const ReflowInput *cellRS = aReflowInput.mCBReflowInput;
+  const ReflowInput *cellRI = aReflowInput.mCBReflowInput;
 
-  if (cellRS && cellRS->mFrame == this &&
-      (cellRS->ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
-       cellRS->ComputedBSize() == 0)) { // XXXldb Why 0?
+  if (cellRI && cellRI->mFrame == this &&
+      (cellRI->ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
+       cellRI->ComputedBSize() == 0)) { // XXXldb Why 0?
     // This is a percentage bsize on a frame whose percentage bsizes
     // are based on the bsize of the cell, since its containing block
     // is the inner cell frame.
@@ -131,18 +131,18 @@ nsTableCellFrame::NotifyPercentBSize(const ReflowInput& aReflowInput)
     // have specified/pct bsize. (Also, siblings only count for this if
     // both this cell and the sibling cell span exactly 1 row.)
 
-    if (nsTableFrame::AncestorsHaveStyleBSize(*cellRS) ||
+    if (nsTableFrame::AncestorsHaveStyleBSize(*cellRI) ||
         (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
-         cellRS->mParentReflowInput->mFrame->
+         cellRI->mParentReflowInput->mFrame->
            HasAnyStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
 
       for (const ReflowInput *rs = aReflowInput.mParentReflowInput;
-           rs != cellRS;
+           rs != cellRI;
            rs = rs->mParentReflowInput) {
         rs->mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       }
 
-      nsTableFrame::RequestSpecialBSizeReflow(*cellRS);
+      nsTableFrame::RequestSpecialBSizeReflow(*cellRI);
     }
   }
 }

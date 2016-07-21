@@ -63,7 +63,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mBaseLineLayout(aBaseLineLayout),
     mLastOptionalBreakFrame(nullptr),
     mForceBreakFrame(nullptr),
-    mBlockRS(nullptr),/* XXX temporary */
+    mBlockRI(nullptr),/* XXX temporary */
     mLastOptionalBreakPriority(gfxBreakPriority::eNoBreak),
     mLastOptionalBreakFrameOffset(-1),
     mForceBreakFrameOffset(-1),

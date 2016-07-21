@@ -9085,16 +9085,16 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     const ReflowInput *outerReflowInput = aState.OuterReflowInput();
     NS_ASSERTION(!outerReflowInput || outerReflowInput->mFrame != this,
                  "in and out of XUL on a single frame?");
-    const ReflowInput* parentRS;
+    const ReflowInput* parentRI;
     if (outerReflowInput && outerReflowInput->mFrame == parentFrame) {
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
       // This means we actually have a real parent reflow state.
       // nsLayoutUtils::InflationMinFontSizeFor used to need this to be
       // linked up correctly for text control frames, so do so here).
-      parentRS = outerReflowInput;
+      parentRI = outerReflowInput;
     } else {
-      parentRS = &parentReflowInput;
+      parentRI = &parentReflowInput;
     }
 
     // XXX Is it OK that this reflow state has only one ancestor?
@@ -9102,14 +9102,14 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     WritingMode wm = GetWritingMode();
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
     logicalSize.BSize(wm) = NS_INTRINSICSIZE;
-    ReflowInput reflowInput(aPresContext, *parentRS, this,
+    ReflowInput reflowInput(aPresContext, *parentRI, this,
                                   logicalSize, nullptr,
                                   ReflowInput::DUMMY_PARENT_REFLOW_STATE);
 
     // XXX_jwir3: This is somewhat fishy. If this is actually changing the value
     //            here (which it might be), then we should make sure that it's
     //            correct the first time around, rather than changing it later.
-    reflowInput.mCBReflowInput = parentRS;
+    reflowInput.mCBReflowInput = parentRI;
 
     reflowInput.mReflowDepth = aState.GetReflowDepth();
 
@@ -10223,8 +10223,8 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   // find the frame of the parent reflow state (usually just the parent of aFrame)
   nsIFrame* parentFrame;
   if (aReflowInput) {
-    const ReflowInput* parentRS = aReflowInput->mParentReflowInput;
-    parentFrame = (parentRS) ? parentRS->mFrame : nullptr;
+    const ReflowInput* parentRI = aReflowInput->mParentReflowInput;
+    parentFrame = (parentRI) ? parentRI->mFrame : nullptr;
   } else {
     parentFrame = aFrame->GetParent();
   }

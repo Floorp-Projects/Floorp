@@ -360,7 +360,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
     // Line number is useless for ruby text
     // XXX nullptr here may cause problem, see comments for
-    //     nsLineLayout::mBlockRS and nsLineLayout::AddFloat
+    //     nsLineLayout::mBlockRI and nsLineLayout::AddFloat
     lineLayout->Init(nullptr, reflowInput->CalcLineHeight(), -1);
     reflowInput->mLineLayout = lineLayout;
 
