@@ -30,9 +30,9 @@ class nsIContent;
 class nsIAtom;
 class nsPresState;
 class nsIScrollPositionListener;
-struct ScrollReflowState;
 
 namespace mozilla {
+struct ScrollReflowState;
 namespace layers {
 class Layer;
 } // namespace layers
@@ -652,6 +652,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 public:
   typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
   typedef mozilla::CSSIntPoint CSSIntPoint;
+  typedef mozilla::ScrollReflowState ScrollReflowState;
   friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
                                                   nsStyleContext* aContext,
                                                   bool aIsRoot);
