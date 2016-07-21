@@ -12,14 +12,17 @@
 #include "nsIFrame.h"
 #include "nsHTMLReflowMetrics.h"
 
-class nsBlockReflowState;
 class nsLineBox;
 class nsPresContext;
+namespace mozilla {
+class nsBlockReflowState;
+} // namespace mozilla
 
 /**
  * An encapsulation of the state and algorithm for reflowing block frames.
  */
 class nsBlockReflowContext {
+  using nsBlockReflowState = mozilla::nsBlockReflowState;
   using ReflowInput = mozilla::ReflowInput;
 
 public:
