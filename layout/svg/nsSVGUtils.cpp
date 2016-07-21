@@ -1300,6 +1300,19 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
   return color;
 }
 
+/* static */ gfxTextContextPaint*
+nsSVGUtils::GetContextPaint(nsIContent* aContent)
+{
+  nsIDocument* ownerDoc = aContent->OwnerDoc();
+
+  if (!ownerDoc->IsBeingUsedAsImage()) {
+    return nullptr;
+  }
+
+  return static_cast<gfxTextContextPaint*>(
+           ownerDoc->GetProperty(nsGkAtoms::svgContextPaint));
+}
+
 /**
  * Stores in |aTargetPaint| information on how to reconstruct the current
  * fill or stroke pattern. Will also set the paint opacity to transparent if
@@ -1771,16 +1784,13 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 }
 
 bool
-nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
-                          gfxTextContextPaint* aContextPaint)
+nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext)
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();
   nsISVGChildFrame* svgFrame = do_QueryFrame(frame);
   if (!svgFrame) {
     return false;
   }
-  aContext->GetDrawTarget()->AddUserData(&gfxTextContextPaint::sUserDataKey,
-                                         aContextPaint, nullptr);
   gfxMatrix m;
   if (frame->GetContent()->IsSVGElement()) {
     // PaintSVG() expects the passed transform to be the transform to its own
