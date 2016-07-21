@@ -2212,7 +2212,7 @@ Serialize(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSAutoStructuredCloneBuffer clonebuf;
+    JSAutoStructuredCloneBuffer clonebuf(JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
     if (!clonebuf.write(cx, args.get(0), args.get(1)))
         return false;
 
@@ -2254,7 +2254,10 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
 
     RootedValue deserialized(cx);
     if (!JS_ReadStructuredClone(cx, obj->data(), obj->nbytes(),
-                                JS_STRUCTURED_CLONE_VERSION, &deserialized, nullptr, nullptr)) {
+                                JS_STRUCTURED_CLONE_VERSION,
+                                JS::StructuredCloneScope::SameProcessSameThread,
+                                &deserialized, nullptr, nullptr))
+    {
         return false;
     }
     args.rval().set(deserialized);
