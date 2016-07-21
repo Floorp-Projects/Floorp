@@ -98,6 +98,11 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-sign-compare',
         '-Wno-unused-function', # so many of these warnings; just ignore them
     ]
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-Wno-unreachable-code',
+        '-Wno-unneeded-internal-declaration',
+    ]
 
 ASFLAGS += CONFIG['VPX_ASFLAGS']
 ASFLAGS += [
