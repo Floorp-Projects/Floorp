@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
+
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.util.Log;
@@ -130,6 +132,9 @@ public class GeckoScreenOrientation {
         return update(getScreenOrientation(aAndroidOrientation, getRotation()));
     }
 
+    @WrapForJNI
+    private static native void onOrientationChange(short screenOrientation, short angle);
+
     /*
      * Update screen orientation given the screen orientation.
      *
@@ -152,9 +157,13 @@ public class GeckoScreenOrientation {
             } else if (aScreenOrientation == ScreenOrientation.LANDSCAPE) {
                 aScreenOrientation = ScreenOrientation.LANDSCAPE_PRIMARY;
             }
-            GeckoAppShell.sendEventToGecko(
-                GeckoEvent.createScreenOrientationEvent(aScreenOrientation.value,
-                                                        getAngle()));
+
+            if (GeckoThread.isRunning()) {
+                onOrientationChange(aScreenOrientation.value, getAngle());
+            } else {
+                GeckoThread.queueNativeCall(GeckoScreenOrientation.class, "onOrientationChange",
+                                            aScreenOrientation.value, getAngle());
+            }
         }
         GeckoAppShell.resetScreenSize();
         return true;
