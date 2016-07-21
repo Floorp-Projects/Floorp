@@ -12,8 +12,9 @@
 
 namespace mozilla {
 
-WebGLContextUnchecked::WebGLContextUnchecked(gl::GLContext* gl)
-    : gl(gl)
+WebGLContextUnchecked::WebGLContextUnchecked(gl::GLContext* _gl)
+    : mGL_NeverTouchDirectly(_gl)
+    , gl(mGL_NeverTouchDirectly) // const reference
 { }
 
 
