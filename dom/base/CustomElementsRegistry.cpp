@@ -94,5 +94,20 @@ CustomElementsRegistry::WhenDefined(const nsAString& name, ErrorResult& aRv)
   return nullptr;
 }
 
+CustomElementDefinition::CustomElementDefinition(JSObject* aPrototype,
+                                                 nsIAtom* aType,
+                                                 nsIAtom* aLocalName,
+                                                 LifecycleCallbacks* aCallbacks,
+                                                 uint32_t aNamespaceID,
+                                                 uint32_t aDocOrder)
+  : mPrototype(aPrototype),
+    mType(aType),
+    mLocalName(aLocalName),
+    mCallbacks(aCallbacks),
+    mNamespaceID(aNamespaceID),
+    mDocOrder(aDocOrder)
+{
+}
+
 } // namespace dom
 } // namespace mozilla
