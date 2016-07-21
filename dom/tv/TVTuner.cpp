@@ -235,7 +235,8 @@ TVTuner::CreateSimulatedMediaStream()
   }
 
   ErrorResult error;
-  RefPtr<Element> element = doc->CreateElement(VIDEO_TAG, error);
+  ElementCreationOptions options;
+  RefPtr<Element> element = doc->CreateElement(VIDEO_TAG, options, error);
   if (NS_WARN_IF(error.Failed())) {
     return nullptr;
   }

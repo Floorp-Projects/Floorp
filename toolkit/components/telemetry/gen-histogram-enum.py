@@ -21,21 +21,37 @@ import sys
 banner = """/* This file is auto-generated, see gen-histogram-enum.py.  */
 """
 
+header = """
+#ifndef mozilla_TelemetryHistogramEnums_h
+#define mozilla_TelemetryHistogramEnums_h
+
+#include "mozilla/TemplateLib.h"
+
+namespace mozilla {
+namespace Telemetry {
+"""
+
+footer = """
+} // namespace mozilla
+} // namespace Telemetry
+#endif // mozilla_TelemetryHistogramEnums_h"""
+
 def main(output, *filenames):
+    # Print header.
     print(banner, file=output)
-    print("#ifndef mozilla_TelemetryHistogramEnums_h", file=output);
-    print("#define mozilla_TelemetryHistogramEnums_h", file=output);
-    print("namespace mozilla {", file=output)
-    print("namespace Telemetry {", file=output)
-    print("enum ID : uint32_t {", file=output)
+    print(header, file=output)
 
-    groups = itertools.groupby(histogram_tools.from_files(filenames),
+    # Load the histograms.
+    all_histograms = list(histogram_tools.from_files(filenames))
+    groups = itertools.groupby(all_histograms,
                                lambda h: h.name().startswith("USE_COUNTER2_"))
-    seen_use_counters = False
 
+    # Print the histogram enums.
     # Note that histogram_tools.py guarantees that all of the USE_COUNTER2_*
     # histograms are defined in a contiguous block.  We therefore assume
     # that there's at most one group for which use_counter_group is true.
+    print("enum ID : uint32_t {", file=output)
+    seen_use_counters = False
     for (use_counter_group, histograms) in groups:
         if use_counter_group:
             seen_use_counters = True
@@ -67,9 +83,25 @@ def main(output, *filenames):
         print("  HistogramLastUseCounter = 0,", file=output)
         print("  HistogramUseCounterCount = 0", file=output)
     print("};", file=output)
-    print("} // namespace mozilla", file=output)
-    print("} // namespace Telemetry", file=output)
-    print("#endif // mozilla_TelemetryHistogramEnums_h", file=output);
+
+    # Write categorical label enums.
+    categorical = filter(lambda h: h.kind() == "categorical", all_histograms)
+    enums = [("LABELS_" + h.name(), h.labels(), h.name()) for h in categorical]
+    for name,labels,_ in enums:
+        print("\nenum class %s : uint32_t {" % name, file=output)
+        print("  %s" % ",\n  ".join(labels), file=output)
+        print("};", file=output)
+
+    print("\ntemplate<class T> struct IsCategoricalLabelEnum : FalseType {};", file=output)
+    for name,_,_ in enums:
+        print("template<> struct IsCategoricalLabelEnum<%s> : TrueType {};" % name, file=output)
+
+    print("\ntemplate<class T> struct CategoricalLabelId {};", file=output)
+    for name,_,id in enums:
+        print("template<> struct CategoricalLabelId<%s> : IntegralConstant<uint32_t, %s> {};" % (name, id), file=output)
+
+    # Footer.
+    print(footer, file=output)
 
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

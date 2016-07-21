@@ -161,6 +161,7 @@ var Service = {
     this.aps.setAddonLoadURICallback(extension.id, this.checkAddonMayLoad.bind(this, extension));
     this.aps.setAddonLocalizeCallback(extension.id, extension.localize.bind(extension));
     this.aps.setAddonCSP(extension.id, extension.manifest.content_security_policy);
+    this.aps.setBackgroundPageUrlCallback(uuid, this.generateBackgroundPageUrl.bind(this, extension));
   },
 
   // Called when an extension is unloaded.
@@ -170,6 +171,7 @@ var Service = {
     this.aps.setAddonLoadURICallback(extension.id, null);
     this.aps.setAddonLocalizeCallback(extension.id, null);
     this.aps.setAddonCSP(extension.id, null);
+    this.aps.setBackgroundPageUrlCallback(uuid, null);
 
     let handler = Services.io.getProtocolHandler("moz-extension");
     handler.QueryInterface(Ci.nsISubstitutingProtocolHandler);
@@ -198,6 +200,21 @@ var Service = {
   // determines this.
   checkAddonMayLoad(extension, uri) {
     return extension.whiteListedHosts.matchesIgnoringPath(uri);
+  },
+
+  generateBackgroundPageUrl(extension) {
+    let background_scripts = extension.manifest.background &&
+      extension.manifest.background.scripts;
+    if (!background_scripts) {
+      return;
+    }
+    let html = "<!DOCTYPE html>\n<body>\n";
+    for (let script of background_scripts) {
+      script = script.replace(/"/g, "&quot;");
+      html += `<script src="${script}"></script>\n`;
+    }
+    html += "</body>\n</html>\n";
+    return "data:text/html;charset=utf-8," + encodeURIComponent(html);
   },
 
   // Finds the add-on ID associated with a given moz-extension:// URI.

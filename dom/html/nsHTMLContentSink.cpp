@@ -236,7 +236,7 @@ public:
 
 nsresult
 NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                  FromParser aFromParser)
+                  FromParser aFromParser, nsAString* aIs)
 {
   *aResult = nullptr;
 
@@ -254,8 +254,9 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
   // Per the Custom Element specification, unknown tags that are valid custom
   // element names should be HTMLElement instead of HTMLUnknownElement.
   int32_t tag = parserService->HTMLCaseSensitiveAtomTagToId(name);
-  if (tag == eHTMLTag_userdefined &&
-      nsContentUtils::IsCustomElementName(name)) {
+  if ((tag == eHTMLTag_userdefined &&
+      nsContentUtils::IsCustomElementName(name)) ||
+      aIs) {
     nsIDocument* doc = nodeInfo->GetDocument();
 
     NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
@@ -263,7 +264,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    doc->SetupCustomElement(*aResult, kNameSpaceID_XHTML);
+    doc->SetupCustomElement(*aResult, kNameSpaceID_XHTML, aIs);
 
     return NS_OK;
   }

@@ -10,6 +10,8 @@
 #include "AndroidBridge.h"
 #endif
 
+#include "mozilla/Atomics.h"
+
 // First time MediaPrefs::GetSingleton() needs to be called on the main thread,
 // before any of the methods accessing the values are used, but after
 // the Preferences system has been initialized.
@@ -33,7 +35,7 @@ public:                                                                       \
 static const Type& Name() { MOZ_ASSERT(SingletonExists()); return GetSingleton().mPref##Name.mValue; } \
 private:                                                                      \
 static const char* Get##Name##PrefName() { return Pref; }                     \
-static Type Get##Name##PrefDefault() { return Default; }                      \
+static StripAtomic<Type> Get##Name##PrefDefault() { return Default; }         \
 PrefTemplate<Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
 // Custom Definitions.
@@ -47,10 +49,24 @@ template<class T> class StaticAutoPtr;
 
 class MediaPrefs final
 {
+  typedef Atomic<uint32_t, Relaxed> AtomicUint32;
+
+  template <typename T>
+  struct StripAtomicImpl {
+    typedef T Type;
+  };
+
+  template <typename T, MemoryOrdering Order>
+  struct StripAtomicImpl<Atomic<T, Order>> {
+    typedef T Type;
+  };
+
+  template <typename T>
+  using StripAtomic = typename StripAtomicImpl<T>::Type;
 
 private:
   // Since we cannot use const char*, use a function that returns it.
-  template <class T, T Default(), const char* Pref()>
+  template <class T, StripAtomic<T> Default(), const char* Pref()>
   class PrefTemplate
   {
   public:
@@ -114,7 +130,7 @@ private:
 
   // MediaDecoderStateMachine
   DECL_MEDIA_PREF("media.suspend-bkgnd-video.enabled",        MDSMSuspendBackgroundVideoEnabled, bool, false);
-  DECL_MEDIA_PREF("media.suspend-bkgnd-video.delay-ms",       MDSMSuspendBackgroundVideoDelay, uint32_t, SUSPEND_BACKGROUND_VIDEO_DELAY_MS);
+  DECL_MEDIA_PREF("media.suspend-bkgnd-video.delay-ms",       MDSMSuspendBackgroundVideoDelay, AtomicUint32, SUSPEND_BACKGROUND_VIDEO_DELAY_MS);
 
   // WebSpeech
   DECL_MEDIA_PREF("media.webspeech.synth.force_global_queue", WebSpeechForceGlobal, bool, false);
@@ -156,6 +172,7 @@ private:
   static void PrefAddVarCache(int32_t*, const char*, int32_t);
   static void PrefAddVarCache(uint32_t*, const char*, uint32_t);
   static void PrefAddVarCache(float*, const char*, float);
+  static void PrefAddVarCache(AtomicUint32*, const char*, uint32_t);
 
   static void AssertMainThread();
 
