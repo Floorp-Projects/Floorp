@@ -223,6 +223,13 @@ private:
   bool IndexIsValid();
 #endif
 
+  /**
+   * Clears soon-to-be-invalid weak references in external objects that were
+   * set up during the creation of this object. This should be called during
+   * destruction and during cycle collection.
+   */
+  void CleanupWeakRefs();
+
   RefPtr<DOMSVGLengthList> mList;
 
   // Bounds for the following are checked in the ctor, so be sure to update
