@@ -5,7 +5,7 @@
 
 /* struct containing the output from nsIFrame::Reflow */
 
-#include "nsHTMLReflowMetrics.h"
+#include "mozilla/ReflowOutput.h"
 #include "mozilla/ReflowInput.h"
 
 void

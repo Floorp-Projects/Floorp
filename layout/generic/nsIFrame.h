@@ -31,7 +31,7 @@
 #include "nsDirection.h"
 #include "nsFrameList.h"
 #include "nsFrameState.h"
-#include "nsHTMLReflowMetrics.h"
+#include "mozilla/ReflowOutput.h"
 #include "nsITheme.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
