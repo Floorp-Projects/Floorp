@@ -260,6 +260,10 @@ WorkerRunnable::Run()
 
     MOZ_ASSERT(IsCanceled(), "Subclass Cancel() didn't set IsCanceled()!");
 
+    if (mBehavior == WorkerThreadModifyBusyCount) {
+      mWorkerPrivate->ModifyBusyCountFromWorker(false);
+    }
+
     return NS_OK;
   }
 
