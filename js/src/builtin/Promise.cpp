@@ -642,7 +642,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleValue handler_, HandleValue handl
     // handler's compartment above, because we should pass objects from a
     // single compartment to the enqueuePromiseJob callback.
     RootedObject promise(cx);
-    if (promise_->is<PromiseObject>()) {
+    if (promise_ && promise_->is<PromiseObject>()) {
       promise = promise_;
       if (!cx->compartment()->wrap(cx, &promise))
           return false;
