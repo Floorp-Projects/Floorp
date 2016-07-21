@@ -89,7 +89,7 @@ public:
     * @see nsIFrame::Reflow
     */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -335,15 +335,15 @@ protected:
                   mozilla::WritingMode   aWM,
                   const mozilla::LogicalPoint& aKidPosition,
                   const nsSize&          aContainerSize,
-                  nsHTMLReflowMetrics&   aDesiredSize,
+                  ReflowOutput&   aDesiredSize,
                   const nsRect&          aOriginalKidRect,
                   const nsRect&          aOriginalKidVisualOverflow);
 
   void CalculateRowBSizes(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState);
 
-  void DidResizeRows(nsHTMLReflowMetrics& aDesiredSize);
+  void DidResizeRows(ReflowOutput& aDesiredSize);
 
   void SlideChild(TableRowGroupReflowInput& aReflowState,
                   nsIFrame*              aKidFrame);
@@ -355,13 +355,13 @@ protected:
    * @param   aReflowState current inline state
    */
   void ReflowChildren(nsPresContext*         aPresContext,
-                      nsHTMLReflowMetrics&   aDesiredSize,
+                      ReflowOutput&   aDesiredSize,
                       TableRowGroupReflowInput& aReflowState,
                       nsReflowStatus&        aStatus,
                       bool*                aPageBreakBeforeEnd = nullptr);
 
   nsresult SplitRowGroup(nsPresContext*           aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
+                         ReflowOutput&     aDesiredSize,
                          const ReflowInput& aReflowState,
                          nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus,

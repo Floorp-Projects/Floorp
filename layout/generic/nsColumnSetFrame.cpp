@@ -342,7 +342,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowState,
 }
 
 bool
-nsColumnSetFrame::ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
+nsColumnSetFrame::ReflowColumns(ReflowOutput& aDesiredSize,
                                 const ReflowInput& aReflowState,
                                 nsReflowStatus& aReflowStatus,
                                 ReflowConfig& aConfig,
@@ -449,7 +449,7 @@ nsColumnSetFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 bool
-nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
+nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
                                  const ReflowInput& aReflowState,
                                  nsReflowStatus&          aStatus,
                                  const ReflowConfig&      aConfig,
@@ -629,7 +629,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         kidReflowState.mFlags.mNextInFlowUntouched = true;
       }
 
-      nsHTMLReflowMetrics kidDesiredSize(wm, aDesiredSize.mFlags);
+      ReflowOutput kidDesiredSize(wm, aDesiredSize.mFlags);
 
       // XXX it would be cool to consult the float manager for the
       // previous block to figure out the region of floats from the
@@ -865,7 +865,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowState,
                                        nsPresContext* aPresContext,
                                        ReflowConfig& aConfig,
                                        ColumnBalanceData& aColData,
-                                       nsHTMLReflowMetrics& aDesiredSize,
+                                       ReflowOutput& aDesiredSize,
                                        nsCollapsingMargin& aOutMargin,
                                        bool& aUnboundedLastColumn,
                                        bool& aRunWasFeasible,
@@ -1020,7 +1020,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowState,
 
 void
 nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
+                         ReflowOutput&     aDesiredSize,
                          const ReflowInput& aReflowState,
                          nsReflowStatus&          aStatus)
 {

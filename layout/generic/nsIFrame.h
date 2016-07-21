@@ -94,7 +94,7 @@ namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 class EventStates;
 struct ReflowInput;
-class nsHTMLReflowMetrics;
+class ReflowOutput;
 
 namespace layers {
 class Layer;
@@ -425,7 +425,7 @@ public:
   template<typename T=void>
   using PropertyDescriptor = const mozilla::FramePropertyDescriptor<T>*;
   using ReflowInput = mozilla::ReflowInput;
-  using nsHTMLReflowMetrics = mozilla::nsHTMLReflowMetrics;
+  using ReflowOutput = mozilla::ReflowOutput;
   using Visibility = mozilla::Visibility;
   using VisibilityCounter = mozilla::VisibilityCounter;
 
@@ -2048,7 +2048,7 @@ public:
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aReflowMetrics,
+                      ReflowOutput&     aReflowMetrics,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) = 0;
 
@@ -2636,7 +2636,7 @@ public:
   bool FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                               nsSize aNewSize, nsSize* aOldSize = nullptr);
 
-  bool FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
+  bool FinishAndStoreOverflow(ReflowOutput* aMetrics) {
     return FinishAndStoreOverflow(aMetrics->mOverflowAreas,
                                   nsSize(aMetrics->Width(), aMetrics->Height()));
   }

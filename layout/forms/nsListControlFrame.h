@@ -67,7 +67,7 @@ public:
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
 
   virtual void Reflow(nsPresContext*           aCX,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -345,7 +345,7 @@ protected:
    * pass are different.  This will be called from Reflow() as needed.
    */
   void ReflowAsDropdown(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
+                        ReflowOutput&     aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus);
 

@@ -163,7 +163,7 @@ nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
 void
 nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
-                           nsHTMLReflowMetrics&     aMetrics,
+                           ReflowOutput&     aMetrics,
                            const ReflowInput& aReflowState,
                            nsReflowStatus&          aReflowStatus)
 {
@@ -188,7 +188,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   WritingMode lineWM = aMetrics.GetWritingMode();
-  nsHTMLReflowMetrics kidMetrics(lineWM);
+  ReflowOutput kidMetrics(lineWM);
 
   // Reflow the child
   if (!aReflowState.mLineLayout) {

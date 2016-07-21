@@ -86,7 +86,7 @@ nsBackdropFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 /* virtual */ void
 nsBackdropFrame::Reflow(nsPresContext* aPresContext,
-                        nsHTMLReflowMetrics& aDesiredSize,
+                        ReflowOutput& aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus& aStatus)
 {

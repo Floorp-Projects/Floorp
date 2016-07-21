@@ -105,7 +105,7 @@ nsNumberControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 
 void
 nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
-                             nsHTMLReflowMetrics& aDesiredSize,
+                             ReflowOutput& aDesiredSize,
                              const ReflowInput& aReflowState,
                              nsReflowStatus& aStatus)
 {
@@ -156,7 +156,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
   } else {
     NS_ASSERTION(outerWrapperFrame == mFrames.FirstChild(), "huh?");
 
-    nsHTMLReflowMetrics wrappersDesiredSize(aReflowState);
+    ReflowOutput wrappersDesiredSize(aReflowState);
 
     WritingMode wrapperWM = outerWrapperFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wrapperWM);

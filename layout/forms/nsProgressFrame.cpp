@@ -109,7 +109,7 @@ nsProgressFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsProgressFrame::Reflow(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
+                        ReflowOutput&     aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
@@ -203,7 +203,7 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   xoffset += reflowState.ComputedPhysicalMargin().left;
   yoffset += reflowState.ComputedPhysicalMargin().top;
 
-  nsHTMLReflowMetrics barDesiredSize(aReflowState);
+  ReflowOutput barDesiredSize(aReflowState);
   ReflowChild(aBarFrame, aPresContext, barDesiredSize, reflowState, xoffset,
               yoffset, 0, aStatus);
   FinishReflowChild(aBarFrame, aPresContext, barDesiredSize, &reflowState,

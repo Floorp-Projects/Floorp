@@ -58,7 +58,7 @@ public:
                   bool aShrinkWrap) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -162,7 +162,7 @@ protected:
                               nsPresContext*           aPresContext,
                               const ReflowInput& aReflowState,
                               nsReflowStatus&          aStatus,
-                              nsHTMLReflowMetrics& aParentDesiredSize);
+                              ReflowOutput& aParentDesiredSize);
 
 public: //for methods who access nsTextControlFrame directly
   void SetValueChanged(bool aValueChanged);

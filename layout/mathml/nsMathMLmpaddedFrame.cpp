@@ -255,7 +255,7 @@ void
 nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
                                   int32_t                  aPseudoUnit,
                                   const nsCSSValue&        aCSSValue,
-                                  const nsHTMLReflowMetrics& aDesiredSize,
+                                  const ReflowOutput& aDesiredSize,
                                   nscoord&                 aValueToUpdate,
                                   float                aFontSizeInflation) const
 {
@@ -304,7 +304,7 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
 
 void
 nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
-                             nsHTMLReflowMetrics&     aDesiredSize,
+                             ReflowOutput&     aDesiredSize,
                              const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {
@@ -321,7 +321,7 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
 /* virtual */ nsresult
 nsMathMLmpaddedFrame::Place(DrawTarget*          aDrawTarget,
                             bool                 aPlaceOrigin,
-                            nsHTMLReflowMetrics& aDesiredSize)
+                            ReflowOutput& aDesiredSize)
 {
   nsresult rv =
     nsMathMLContainerFrame::Place(aDrawTarget, false, aDesiredSize);
@@ -442,7 +442,7 @@ nsMathMLmpaddedFrame::Place(DrawTarget*          aDrawTarget,
 
 /* virtual */ nsresult
 nsMathMLmpaddedFrame::MeasureForWidth(DrawTarget* aDrawTarget,
-                                      nsHTMLReflowMetrics& aDesiredSize)
+                                      ReflowOutput& aDesiredSize)
 {
   ProcessAttributes();
   return Place(aDrawTarget, false, aDesiredSize);

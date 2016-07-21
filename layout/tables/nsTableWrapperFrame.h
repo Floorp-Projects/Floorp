@@ -85,7 +85,7 @@ public:
     * This involves reflowing the caption and the inner table.
     * @see nsIFrame::Reflow */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -238,11 +238,11 @@ protected:
   void OuterDoReflowChild(nsPresContext*           aPresContext,
                           nsIFrame*                aChildFrame,
                           const ReflowInput& aChildRS,
-                          nsHTMLReflowMetrics&     aMetrics,
+                          ReflowOutput&     aMetrics,
                           nsReflowStatus&          aStatus);
 
   // Set the overflow areas in our reflow metrics
-  void UpdateOverflowAreas(nsHTMLReflowMetrics& aMet);
+  void UpdateOverflowAreas(ReflowOutput& aMet);
 
   // Get the margin.
   void GetChildMargin(nsPresContext*           aPresContext,

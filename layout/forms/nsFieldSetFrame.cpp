@@ -383,7 +383,7 @@ nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
 void
 nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
+                        ReflowOutput&     aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
@@ -455,7 +455,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                                 legendAvailSize);
   }
   if (reflowLegend) {
-    nsHTMLReflowMetrics legendDesiredSize(aReflowState);
+    ReflowOutput legendDesiredSize(aReflowState);
 
     // We'll move the legend to its proper place later, so the position
     // and containerSize passed here are unimportant.
@@ -531,7 +531,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
         std::max(0, aReflowState.ComputedMaxBSize() - mLegendSpace);
     }
 
-    nsHTMLReflowMetrics kidDesiredSize(kidReflowState,
+    ReflowOutput kidDesiredSize(kidReflowState,
                                        aDesiredSize.mFlags);
     // Reflow the frame
     NS_ASSERTION(kidReflowState.ComputedPhysicalMargin() == nsMargin(0,0,0,0),

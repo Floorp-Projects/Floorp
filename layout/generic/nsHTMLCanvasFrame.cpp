@@ -248,7 +248,7 @@ nsHTMLCanvasFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
 void
 nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aMetrics,
+                          ReflowOutput&     aMetrics,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus)
 {
@@ -291,7 +291,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   LogicalSize availSize = aReflowState.ComputedSize(childWM);
   availSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
   NS_ASSERTION(!childFrame->GetNextSibling(), "HTML canvas should have 1 kid");
-  nsHTMLReflowMetrics childDesiredSize(aReflowState.GetWritingMode(), aMetrics.mFlags);
+  ReflowOutput childDesiredSize(aReflowState.GetWritingMode(), aMetrics.mFlags);
   ReflowInput childReflowState(aPresContext, aReflowState, childFrame,
                                      availSize);
   ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState,

@@ -355,7 +355,7 @@ nsListControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 
 void
 nsListControlFrame::Reflow(nsPresContext*           aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
+                           ReflowOutput&     aDesiredSize,
                            const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
@@ -493,7 +493,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
-                                     nsHTMLReflowMetrics&     aDesiredSize,
+                                     ReflowOutput&     aDesiredSize,
                                      const ReflowInput& aReflowState,
                                      nsReflowStatus&          aStatus)
 {

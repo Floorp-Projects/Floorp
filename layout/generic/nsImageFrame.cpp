@@ -948,7 +948,7 @@ nsImageFrame::GetIntrinsicRatio()
 
 void
 nsImageFrame::Reflow(nsPresContext*          aPresContext,
-                     nsHTMLReflowMetrics&     aMetrics,
+                     ReflowOutput&     aMetrics,
                      const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {

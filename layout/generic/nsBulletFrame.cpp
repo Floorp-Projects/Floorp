@@ -537,7 +537,7 @@ nsBulletFrame::AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
                               nsRenderingContext *aRenderingContext,
-                              nsHTMLReflowMetrics& aMetrics,
+                              ReflowOutput& aMetrics,
                               float aFontSizeInflation,
                               LogicalMargin* aPadding)
 {
@@ -630,7 +630,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 
 void
 nsBulletFrame::Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aMetrics,
+                      ReflowOutput& aMetrics,
                       const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus)
 {
@@ -675,7 +675,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 nsBulletFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
-  nsHTMLReflowMetrics metrics(wm);
+  ReflowOutput metrics(wm);
   DISPLAY_MIN_WIDTH(this, metrics.ISize(wm));
   LogicalMargin padding(wm);
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f, &padding);
@@ -687,7 +687,7 @@ nsBulletFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 nsBulletFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
-  nsHTMLReflowMetrics metrics(wm);
+  ReflowOutput metrics(wm);
   DISPLAY_PREF_WIDTH(this, metrics.ISize(wm));
   LogicalMargin padding(wm);
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f, &padding);

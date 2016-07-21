@@ -3444,7 +3444,7 @@ MeasuringReflow(nsIFrame*                aChild,
   ReflowInput childRS(pc, *rs, aChild, aAvailableSize, nullptr,
                             ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
                             ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE);
-  nsHTMLReflowMetrics childSize(childRS);
+  ReflowOutput childSize(childRS);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
   WritingMode wm = childRS.GetWritingMode();
@@ -4612,7 +4612,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
                                         const Fragmentainer*   aFragmentainer,
                                         const GridReflowState& aState,
                                         const LogicalRect&     aContentArea,
-                                        nsHTMLReflowMetrics&   aDesiredSize,
+                                        ReflowOutput&   aDesiredSize,
                                         nsReflowStatus&        aStatus)
 {
   nsPresContext* pc = PresContext();
@@ -4721,7 +4721,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   // We need the width of the child before we can correctly convert
   // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
   // aContainerSize, and then pass the correct position to FinishReflowChild.
-  nsHTMLReflowMetrics childSize(childRS);
+  ReflowOutput childSize(childRS);
   const nsSize dummyContainerSize;
   ReflowChild(aChild, pc, childSize, childRS, childWM, LogicalPoint(childWM),
               dummyContainerSize, 0, aStatus);
@@ -4762,7 +4762,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
 nscoord
 nsGridContainerFrame::ReflowInFragmentainer(GridReflowState&     aState,
                                             const LogicalRect&   aContentArea,
-                                            nsHTMLReflowMetrics& aDesiredSize,
+                                            ReflowOutput& aDesiredSize,
                                             nsReflowStatus&      aStatus,
                                             Fragmentainer&       aFragmentainer,
                                             const nsSize&        aContainerSize)
@@ -4980,7 +4980,7 @@ nscoord
 nsGridContainerFrame::ReflowRowsInFragmentainer(
   GridReflowState&                     aState,
   const LogicalRect&                   aContentArea,
-  nsHTMLReflowMetrics&                 aDesiredSize,
+  ReflowOutput&                 aDesiredSize,
   nsReflowStatus&                      aStatus,
   Fragmentainer&                       aFragmentainer,
   const nsSize&                        aContainerSize,
@@ -5258,7 +5258,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
 nscoord
 nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
                                      const LogicalRect&   aContentArea,
-                                     nsHTMLReflowMetrics& aDesiredSize,
+                                     ReflowOutput& aDesiredSize,
                                      nsReflowStatus&      aStatus)
 {
   MOZ_ASSERT(aState.mReflowState);
@@ -5346,7 +5346,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
 
 void
 nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
-                             nsHTMLReflowMetrics&     aDesiredSize,
+                             ReflowOutput&     aDesiredSize,
                              const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {

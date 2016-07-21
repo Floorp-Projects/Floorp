@@ -326,7 +326,7 @@ nsTableRowFrame::DidResize()
   nsTableFrame* tableFrame = GetTableFrame();
 
   WritingMode wm = GetWritingMode();
-  nsHTMLReflowMetrics desiredSize(wm);
+  ReflowOutput desiredSize(wm);
   desiredSize.SetSize(wm, GetLogicalSize(wm));
   desiredSize.SetOverflowAreasToDesiredBounds();
 
@@ -785,7 +785,7 @@ nscoord CalcBSizeFromUnpaginatedBSize(nsTableRowFrame& aRow,
 
 void
 nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
-                                nsHTMLReflowMetrics&     aDesiredSize,
+                                ReflowOutput&     aDesiredSize,
                                 const ReflowInput& aReflowState,
                                 nsTableFrame&            aTableFrame,
                                 nsReflowStatus&          aStatus)
@@ -822,7 +822,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
                        LogicalSize(kidFrame->GetWritingMode(), 0, 0),
                        ReflowInput::CALLER_WILL_INIT);
       InitChildReflowState(*aPresContext, LogicalSize(wm), false, kidReflowState);
-      nsHTMLReflowMetrics desiredSize(aReflowState);
+      ReflowOutput desiredSize(aReflowState);
       nsReflowStatus  status;
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, status);
       kidFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
@@ -887,7 +887,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       nscoord availCellISize = CalcAvailISize(aTableFrame, *cellFrame);
 
       Maybe<TableCellReflowInput> kidReflowState;
-      nsHTMLReflowMetrics desiredSize(aReflowState);
+      ReflowOutput desiredSize(aReflowState);
 
       // If the avail isize is not the same as last time we reflowed the cell or
       // the cell wants to be bigger than what was available last time or
@@ -1080,7 +1080,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
   */
 void
 nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
+                        ReflowOutput&     aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
@@ -1160,7 +1160,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
   cellReflowState.mFlags.mIsTopOfPage = aIsTopOfPage;
 
-  nsHTMLReflowMetrics desiredSize(aReflowState);
+  ReflowOutput desiredSize(aReflowState);
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);

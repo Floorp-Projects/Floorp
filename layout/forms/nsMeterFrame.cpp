@@ -104,7 +104,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
 nsMeterFrame::Reflow(nsPresContext*           aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
+                     ReflowOutput&     aDesiredSize,
                      const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
@@ -190,7 +190,7 @@ nsMeterFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   xoffset += reflowState.ComputedPhysicalMargin().left;
   yoffset += reflowState.ComputedPhysicalMargin().top;
 
-  nsHTMLReflowMetrics barDesiredSize(reflowState);
+  ReflowOutput barDesiredSize(reflowState);
   ReflowChild(aBarFrame, aPresContext, barDesiredSize, reflowState, xoffset,
               yoffset, 0, aStatus);
   FinishReflowChild(aBarFrame, aPresContext, barDesiredSize, &reflowState,

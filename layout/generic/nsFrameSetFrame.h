@@ -101,7 +101,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -151,7 +151,7 @@ protected:
 
   virtual void GetDesiredSize(nsPresContext*          aPresContext,
                               const ReflowInput& aReflowState,
-                              nsHTMLReflowMetrics&     aDesiredSize);
+                              ReflowOutput&     aDesiredSize);
 
   int32_t GetBorderWidth(nsPresContext* aPresContext,
                          bool aTakeForcingIntoAccount);

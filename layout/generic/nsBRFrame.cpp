@@ -37,7 +37,7 @@ public:
                               PeekWordState* aState) override;
 
   virtual void Reflow(nsPresContext* aPresContext,
-                          nsHTMLReflowMetrics& aDesiredSize,
+                          ReflowOutput& aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus& aStatus) override;
   virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
@@ -80,7 +80,7 @@ BRFrame::~BRFrame()
 
 void
 BRFrame::Reflow(nsPresContext* aPresContext,
-                nsHTMLReflowMetrics& aMetrics,
+                ReflowOutput& aMetrics,
                 const ReflowInput& aReflowState,
                 nsReflowStatus& aStatus)
 {

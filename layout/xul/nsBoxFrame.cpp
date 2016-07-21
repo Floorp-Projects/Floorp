@@ -629,7 +629,7 @@ nsBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
 void
 nsBoxFrame::Reflow(nsPresContext*          aPresContext,
-                   nsHTMLReflowMetrics&     aDesiredSize,
+                   ReflowOutput&     aDesiredSize,
                    const ReflowInput& aReflowState,
                    nsReflowStatus&          aStatus)
 {
@@ -924,7 +924,7 @@ nsBoxFrame::DoXULLayout(nsBoxLayoutState& aState)
                                               NS_UNCONSTRAINEDSIZE));
 
     // Set up a |desiredSize| to pass into ReflowAbsoluteFrames
-    nsHTMLReflowMetrics desiredSize(reflowState);
+    ReflowOutput desiredSize(reflowState);
     desiredSize.Width() = mRect.width;
     desiredSize.Height() = mRect.height;
 

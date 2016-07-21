@@ -49,7 +49,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 void
 nsLegendFrame::Reflow(nsPresContext*          aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
+                     ReflowOutput&     aDesiredSize,
                      const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
