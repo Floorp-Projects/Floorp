@@ -20,8 +20,8 @@
 
 using namespace mozilla;
 using namespace mozilla::jni;
-using namespace mozilla::widget;
-using namespace mozilla::widget::sdk;
+using namespace mozilla::java;
+using namespace mozilla::java::sdk;
 
 namespace mozilla {
 namespace gl {

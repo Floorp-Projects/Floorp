@@ -36,7 +36,7 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI * aURI)
     mimeType = NS_ConvertUTF8toUTF16(mType);
   }
 
-  if (widget::GeckoAppShell::OpenUriExternal(
+  if (java::GeckoAppShell::OpenUriExternal(
       NS_ConvertUTF8toUTF16(uriSpec), mimeType, EmptyString(),
       EmptyString(), EmptyString(), EmptyString())) {
     return NS_OK;

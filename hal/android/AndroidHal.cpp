@@ -15,6 +15,8 @@
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 
+namespace java = mozilla::java;
+
 namespace mozilla {
 namespace hal_impl {
 
@@ -54,19 +56,19 @@ CancelVibrate(const WindowIdentifier &)
 {
   // Ignore WindowIdentifier parameter.
 
-  mozilla::widget::GeckoAppShell::CancelVibrate();
+  java::GeckoAppShell::CancelVibrate();
 }
 
 void
 EnableBatteryNotifications()
 {
-  mozilla::widget::GeckoAppShell::EnableBatteryNotifications();
+  java::GeckoAppShell::EnableBatteryNotifications();
 }
 
 void
 DisableBatteryNotifications()
 {
-  mozilla::widget::GeckoAppShell::DisableBatteryNotifications();
+  java::GeckoAppShell::DisableBatteryNotifications();
 }
 
 void
@@ -78,13 +80,13 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 void
 EnableNetworkNotifications()
 {
-  mozilla::widget::GeckoAppShell::EnableNetworkNotifications();
+  java::GeckoAppShell::EnableNetworkNotifications();
 }
 
 void
 DisableNetworkNotifications()
 {
-  mozilla::widget::GeckoAppShell::DisableNetworkNotifications();
+  java::GeckoAppShell::DisableNetworkNotifications();
 }
 
 void
@@ -96,13 +98,13 @@ GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
 void
 EnableScreenConfigurationNotifications()
 {
-  mozilla::widget::GeckoAppShell::EnableScreenOrientationNotifications();
+  java::GeckoAppShell::EnableScreenOrientationNotifications();
 }
 
 void
 DisableScreenConfigurationNotifications()
 {
-  mozilla::widget::GeckoAppShell::DisableScreenOrientationNotifications();
+  java::GeckoAppShell::DisableScreenOrientationNotifications();
 }
 
 void
@@ -155,7 +157,7 @@ LockScreenOrientation(const ScreenOrientationInternal& aOrientation)
     case eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_Default:
-      mozilla::widget::GeckoAppShell::LockScreenOrientation(orientation);
+      java::GeckoAppShell::LockScreenOrientation(orientation);
       return true;
     default:
       return false;
@@ -165,7 +167,7 @@ LockScreenOrientation(const ScreenOrientationInternal& aOrientation)
 void
 UnlockScreenOrientation()
 {
-  mozilla::widget::GeckoAppShell::UnlockScreenOrientation();
+  java::GeckoAppShell::UnlockScreenOrientation();
 }
 
 } // hal_impl
