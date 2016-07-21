@@ -14,7 +14,7 @@
 
 class  nsTableCellFrame;
 namespace mozilla {
-struct nsTableCellReflowState;
+struct TableCellReflowInput;
 } // namespace mozilla
 
 /**
@@ -29,7 +29,7 @@ struct nsTableCellReflowState;
  */
 class nsTableRowFrame : public nsContainerFrame
 {
-  using nsTableCellReflowState = mozilla::nsTableCellReflowState;
+  using TableCellReflowInput = mozilla::TableCellReflowInput;
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableRowFrame)
@@ -265,7 +265,7 @@ protected:
   void InitChildReflowState(nsPresContext&              aPresContext,
                             const mozilla::LogicalSize& aAvailSize,
                             bool                        aBorderCollapse,
-                            nsTableCellReflowState&     aReflowState);
+                            TableCellReflowInput&     aReflowState);
   
   virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 

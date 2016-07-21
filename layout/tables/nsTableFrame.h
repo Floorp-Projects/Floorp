@@ -28,7 +28,7 @@ class nsStyleContext;
 namespace mozilla {
 class WritingMode;
 class LogicalMargin;
-struct nsTableReflowState;
+struct TableReflowInput;
 } // namespace mozilla
 
 struct BCPropertyData;
@@ -132,7 +132,7 @@ class nsTableFrame : public nsContainerFrame
   typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalMargin LogicalMargin;
-  typedef mozilla::nsTableReflowState nsTableReflowState;
+  typedef mozilla::TableReflowInput TableReflowInput;
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableFrame)
@@ -627,11 +627,11 @@ protected:
   // A helper function to reflow a header or footer with unconstrained height
   // to see if it should be made repeatable and also to determine its desired
   // height.
-  nsresult SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
+  nsresult SetupHeaderFooterChild(const TableReflowInput& aReflowState,
                                   nsTableRowGroupFrame* aFrame,
                                   nscoord* aDesiredHeight);
 
-  void ReflowChildren(nsTableReflowState&  aReflowState,
+  void ReflowChildren(TableReflowInput&  aReflowState,
                       nsReflowStatus&      aStatus,
                       nsIFrame*&           aLastChildReflowed,
                       nsOverflowAreas&     aOverflowAreas);
@@ -705,13 +705,13 @@ protected:
   void DistributeBSizeToRows(const ReflowInput& aReflowState,
                              nscoord                  aAmount);
 
-  void PlaceChild(nsTableReflowState&  aReflowState,
+  void PlaceChild(TableReflowInput&  aReflowState,
                   nsIFrame*            aKidFrame,
                   nsPoint              aKidPosition,
                   nsHTMLReflowMetrics& aKidDesiredSize,
                   const nsRect&        aOriginalKidRect,
                   const nsRect&        aOriginalKidVisualOverflow);
-   void PlaceRepeatedFooter(nsTableReflowState& aReflowState,
+   void PlaceRepeatedFooter(TableReflowInput& aReflowState,
                             nsTableRowGroupFrame *aTfoot,
                             nscoord aFooterHeight);
 
