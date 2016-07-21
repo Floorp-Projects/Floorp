@@ -140,19 +140,30 @@ DOMSVGLength::DOMSVGLength(nsSVGLength2* aVal, nsSVGElement* aSVGElement,
 {
 }
 
-DOMSVGLength::~DOMSVGLength()
+void
+DOMSVGLength::CleanupWeakRefs()
 {
-  // Our mList's weak ref to us must be nulled out when we die. If GC has
-  // unlinked us using the cycle collector code, then that has already
-  // happened, and mList is null.
+  // Our mList's weak ref to us must be nulled out when we die (or when we're
+  // cycle collected), so we that don't leave behind a pointer to
+  // free / soon-to-be-free memory.
   if (mList) {
+    MOZ_ASSERT(mList->mItems[mListIndex] == this,
+               "Clearing out the wrong list index...?");
     mList->mItems[mListIndex] = nullptr;
   }
 
+  // Similarly, we must update the tearoff table to remove its (non-owning)
+  // pointer to mVal.
   if (mVal) {
-    auto& table = mIsAnimValItem ? sAnimSVGLengthTearOffTable : sBaseSVGLengthTearOffTable;
+    auto& table = mIsAnimValItem ?
+      sAnimSVGLengthTearOffTable : sBaseSVGLengthTearOffTable;
     table.RemoveTearoff(mVal);
   }
+}
+
+DOMSVGLength::~DOMSVGLength()
+{
+  CleanupWeakRefs();
 }
 
 already_AddRefed<DOMSVGLength>
