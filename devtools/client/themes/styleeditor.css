@@ -115,14 +115,15 @@
   background-size: 16px;
   width: 24px;
   height: 40px;
+  filter: var(--icon-filter);
 }
 
 .disabled > .stylesheet-enabled {
   opacity: 0.3;
 }
 
-/* Invert all toggle icons but the one in the active row for light theme */
-.theme-light .splitview-nav > li:not(.splitview-active) .stylesheet-enabled {
+/* Invert the toggle icon in the active row for light theme */
+.theme-light .splitview-nav > li.splitview-active .stylesheet-enabled {
   filter: invert(1);
 }
 

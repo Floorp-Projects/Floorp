@@ -12,23 +12,6 @@
   font-family: var(--proportional-font-family);
 }
 
-/* Remove filters on firebug specific images */
-
-.theme-firebug .devtools-tabbar .devtools-button::before,
-.theme-firebug .devtools-option-toolbarbutton > image,
-.theme-firebug .command-button-invertable::before,
-.theme-firebug #sources-toolbar image,
-.theme-firebug [id$="pane-toggle"] > image,
-.theme-firebug [id$="pane-toggle"]::before,
-.theme-firebug .sidebar-toggle::before,
-.theme-firebug #element-picker::before,
-.theme-firebug #rewind-timeline::before,
-.theme-firebug #pause-resume-timeline::before,
-.theme-firebug #debugger-controls .toolbarbutton-icon,
-.theme-firebug #filter-button .toolbarbutton-icon {
-  filter: none !important;
-}
-
 /* CodeMirror Color Syntax */
 
 .theme-firebug .cm-keyword {color: BlueViolet; font-weight: bold;}
