@@ -9,7 +9,6 @@ ADD system-setup.sh tooltool.py /tmp/
 RUN bash /tmp/system-setup.sh
 
 ADD bin /home/worker/bin
-RUN chmod +x /home/worker/bin/*
 
 ENV PATH /home/worker/bin:$PATH
 ENV SHELL /bin/bash

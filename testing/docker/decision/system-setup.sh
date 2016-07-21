@@ -9,7 +9,8 @@ apt-get install -y --force-yes --no-install-recommends \
     ca-certificates \
     curl \
     jq \
-    python
+    python \
+    sudo
 
 BUILD=/root/build
 mkdir $BUILD
