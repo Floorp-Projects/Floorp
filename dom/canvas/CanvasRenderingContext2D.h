@@ -936,7 +936,7 @@ protected:
                      fillRule(mozilla::gfx::FillRule::FILL_WINDING),
                      lineCap(mozilla::gfx::CapStyle::BUTT),
                      lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
-                     filterString(MOZ_UTF16("none")),
+                     filterString(u"none"),
                      updateFilterOnWriteOnly(false),
                      imageSmoothingEnabled(true),
                      fontExplicitLanguage(false)

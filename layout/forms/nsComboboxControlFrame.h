@@ -80,8 +80,8 @@ public:
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   virtual void Reflow(nsPresContext*           aCX,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
@@ -217,7 +217,7 @@ protected:
 
   // Utilities
   void ReflowDropdown(nsPresContext*          aPresContext, 
-                      const nsHTMLReflowState& aReflowState);
+                      const ReflowInput& aReflowInput);
 
   enum DropDownPositionState {
     // can't show the dropdown at its current position

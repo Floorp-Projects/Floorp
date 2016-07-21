@@ -119,7 +119,7 @@ class DateTimeInfo
         }
     };
 
-    friend const char* ::JS_InitWithFailureDiagnostic();
+    friend const char* JS::detail::InitWithFailureDiagnostic(bool);
 
     // Initialize global date/time tracking state.  This operation occurs
     // during, and is restricted to, SpiderMonkey initialization.

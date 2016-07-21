@@ -466,6 +466,11 @@ public:
   AnimatedGeometryRoot* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
   /**
+   * A region including the horizontal pan, vertical pan, and no action regions.
+   */
+  nsRegion CombinedTouchActionRegion();
+
+  /**
    * Add the given hit regions to the hit regions to the hit retions for this
    * PaintedLayer.
    */
@@ -3243,6 +3248,12 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       &containingPaintedLayerData->mHitRegion,
       &containingPaintedLayerData->mMaybeHitRegion,
       &matrixCache);
+    // See the comment in nsDisplayList::AddFrame, where the touch action regions
+    // are handled. The same thing applies here.
+    bool alreadyHadRegions =
+        !containingPaintedLayerData->mNoActionRegion.IsEmpty() ||
+        !containingPaintedLayerData->mHorizontalPanRegion.IsEmpty() ||
+        !containingPaintedLayerData->mVerticalPanRegion.IsEmpty();
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
       data->mNoActionRegion,
       mContainerReferenceFrame,
@@ -3264,7 +3275,10 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       &containingPaintedLayerData->mVerticalPanRegion,
       &containingPaintedLayerData->mDispatchToContentHitRegion,
       &matrixCache);
-
+    if (alreadyHadRegions) {
+      containingPaintedLayerData->mDispatchToContentHitRegion.OrWith(
+        containingPaintedLayerData->CombinedTouchActionRegion());
+    }
   } else {
     EventRegions regions;
     regions.mHitRegion = ScaleRegionToOutsidePixels(data->mHitRegion);
@@ -3461,17 +3475,35 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   }
 }
 
+nsRegion
+PaintedLayerData::CombinedTouchActionRegion()
+{
+  nsRegion result;
+  result.Or(mHorizontalPanRegion, mVerticalPanRegion);
+  result.OrWith(mNoActionRegion);
+  return result;
+}
+
 void
 PaintedLayerData::AccumulateEventRegions(ContainerState* aState, nsDisplayLayerEventRegions* aEventRegions)
 {
   FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
 
-  mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
-  mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
-  mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aEventRegions->DispatchToContentHitRegion());
-  mNoActionRegion.Or(mNoActionRegion, aEventRegions->NoActionRegion());
-  mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
-  mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
+  mHitRegion.OrWith(aEventRegions->HitRegion());
+  mMaybeHitRegion.OrWith(aEventRegions->MaybeHitRegion());
+  mDispatchToContentHitRegion.OrWith(aEventRegions->DispatchToContentHitRegion());
+
+  // See the comment in nsDisplayList::AddFrame, where the touch action regions
+  // are handled. The same thing applies here.
+  bool alreadyHadRegions = !mNoActionRegion.IsEmpty() ||
+      !mHorizontalPanRegion.IsEmpty() ||
+      !mVerticalPanRegion.IsEmpty();
+  mNoActionRegion.OrWith(aEventRegions->NoActionRegion());
+  mHorizontalPanRegion.OrWith(aEventRegions->HorizontalPanRegion());
+  mVerticalPanRegion.OrWith(aEventRegions->VerticalPanRegion());
+  if (alreadyHadRegions) {
+    mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
+  }
 
   // Calculate scaled versions of the bounds of mHitRegion and mMaybeHitRegion
   // for quick access in FindPaintedLayerFor().

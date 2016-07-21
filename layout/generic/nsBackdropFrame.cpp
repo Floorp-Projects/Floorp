@@ -86,19 +86,19 @@ nsBackdropFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 /* virtual */ void
 nsBackdropFrame::Reflow(nsPresContext* aPresContext,
-                        nsHTMLReflowMetrics& aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        ReflowOutput& aDesiredSize,
+                        const ReflowInput& aReflowInput,
                         nsReflowStatus& aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsBackdropFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
   // Note that this frame is a child of the viewport frame.
-  WritingMode wm = aReflowState.GetWritingMode();
-  LogicalMargin borderPadding = aReflowState.ComputedLogicalBorderPadding();
-  nscoord isize = aReflowState.ComputedISize() + borderPadding.IStartEnd(wm);
-  nscoord bsize = aReflowState.ComputedBSize() + borderPadding.BStartEnd(wm);
+  WritingMode wm = aReflowInput.GetWritingMode();
+  LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding();
+  nscoord isize = aReflowInput.ComputedISize() + borderPadding.IStartEnd(wm);
+  nscoord bsize = aReflowInput.ComputedBSize() + borderPadding.BStartEnd(wm);
   aDesiredSize.SetSize(wm, LogicalSize(wm, isize, bsize));
   aStatus = NS_FRAME_COMPLETE;
 }

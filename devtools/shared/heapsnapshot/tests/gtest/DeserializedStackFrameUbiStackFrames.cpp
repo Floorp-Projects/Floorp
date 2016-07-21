@@ -24,8 +24,8 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
     StackFrameId id = uint64_t(1) << 42;
     uint32_t line = 1337;
     uint32_t column = 9; // 3 space tabs!?
-    const char16_t* source = MOZ_UTF16("my-javascript-file.js");
-    const char16_t* functionDisplayName = MOZ_UTF16("myFunctionName");
+    const char16_t* source = u"my-javascript-file.js";
+    const char16_t* functionDisplayName = u"myFunctionName";
 
     MockDeserializedStackFrame mocked;
     mocked.id = id;

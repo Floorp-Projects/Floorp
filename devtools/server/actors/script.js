@@ -19,9 +19,7 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn, update, fetch } = DevToolsUtils;
 const promise = require("promise");
-const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
-const ScriptStore = require("./utils/ScriptStore");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const object = require("sdk/util/object");
 const { threadSpec } = require("devtools/shared/specs/script");
@@ -494,14 +492,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._threadLifetimePool;
   },
 
-  get scripts() {
-    if (!this._scripts) {
-      this._scripts = new ScriptStore();
-      this._scripts.addScripts(this.dbg.findScripts());
-    }
-    return this._scripts;
-  },
-
   get sources() {
     return this._parent.sources;
   },
@@ -644,8 +634,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return { error: "notAttached" };
       }
       packet.why = { type: "attached" };
-
-      this._restoreBreakpoints();
 
       // Send the response to the attach request now (rather than
       // returning it), because we're going to start a nested event loop
@@ -1184,7 +1172,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         // stored in the breakpoint actor map.
         let actor = new BreakpointActor(this);
         this.threadLifetimePool.addActor(actor);
-        let scripts = this.scripts.getScriptsBySourceAndLine(script.source, line);
+
+        let scripts = this.dbg.findScripts({ source: script.source, line: line });
         let entryPoints = findEntryPointsForLine(scripts, line);
         setBreakpointAtEntryPoints(actor, entryPoints);
         this._hiddenBreakpoints.set(actor.actorID, actor);
@@ -1318,7 +1307,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _discoverSources: function () {
     // Only get one script per Debugger.Source.
     const sourcesToScripts = new Map();
-    const scripts = this.scripts.getAllScripts();
+    const scripts = this.dbg.findScripts();
+
     for (let i = 0, len = scripts.length; i < len; i++) {
       let s = scripts[i];
       if (s.source) {
@@ -1924,19 +1914,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * Restore any pre-existing breakpoints to the sources that we have access to.
-   */
-  _restoreBreakpoints: function () {
-    if (this.breakpointActorMap.size === 0) {
-      return;
-    }
-
-    for (let s of this.scripts.getSources()) {
-      this._addSource(s);
-    }
-  },
-
-  /**
    * Add the provided source to the server cache.
    *
    * @param aSource Debugger.Source
@@ -1947,12 +1924,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (!this.sources.allowSource(aSource) || this._debuggerSourcesSeen.has(aSource)) {
       return false;
     }
-
-    // The scripts must be added to the ScriptStore before restoring
-    // breakpoints. If we try to add them to the ScriptStore any later, we can
-    // accidentally set a breakpoint in a top level script as a "closest match"
-    // because we wouldn't have added the child scripts to the ScriptStore yet.
-    this.scripts.addScripts(this.dbg.findScripts({ source: aSource }));
 
     let sourceActor = this.sources.createNonSourceMappedActor(aSource);
     let bpActors = [...this.breakpointActorMap.findActors()];

@@ -92,7 +92,7 @@ nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
 /* virtual */ nsresult
 nsMathMLmmultiscriptsFrame::Place(DrawTarget*          aDrawTarget,
                                   bool                 aPlaceOrigin,
-                                  nsHTMLReflowMetrics& aDesiredSize)
+                                  ReflowOutput& aDesiredSize)
 {
   nscoord subScriptShift = 0;
   nscoord supScriptShift = 0;
@@ -146,7 +146,7 @@ nsresult
 nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
                                         DrawTarget*          aDrawTarget,
                                         bool                 aPlaceOrigin,
-                                        nsHTMLReflowMetrics& aDesiredSize,
+                                        ReflowOutput& aDesiredSize,
                                         nsMathMLContainerFrame* aFrame,
                                         nscoord              aUserSubScriptShift,
                                         nscoord              aUserSupScriptShift,
@@ -300,10 +300,10 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
   nscoord trySupScriptShift = supScriptShift;
   nscoord maxSubScriptShift = subScriptShift;
   nscoord maxSupScriptShift = supScriptShift;
-  nsHTMLReflowMetrics baseSize(wm);
-  nsHTMLReflowMetrics subScriptSize(wm);
-  nsHTMLReflowMetrics supScriptSize(wm);
-  nsHTMLReflowMetrics multiSubSize(wm), multiSupSize(wm);
+  ReflowOutput baseSize(wm);
+  ReflowOutput subScriptSize(wm);
+  ReflowOutput supScriptSize(wm);
+  ReflowOutput multiSubSize(wm), multiSupSize(wm);
   baseFrame = nullptr;
   nsIFrame* subScriptFrame = nullptr;
   nsIFrame* supScriptFrame = nullptr;

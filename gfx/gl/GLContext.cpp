@@ -11,6 +11,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <vector>
+#ifdef MOZ_WIDGET_ANDROID
+#include <fcntl.h>
+#include <sys/mman.h>
+#endif
 
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
@@ -32,6 +36,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/gfx/Logging.h"
 
 #include "OGLShaderProgram.h" // for ShaderProgramType
 
@@ -43,6 +48,10 @@
 
 #if defined(MOZ_WIDGET_COCOA)
 #include "nsCocoaFeatures.h"
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
 #endif
 
 namespace mozilla {
@@ -461,6 +470,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mMaxSamples(0),
     mNeedsTextureSizeChecks(false),
     mNeedsFlushBeforeDeleteFB(false),
+    mTextureAllocCrashesOnMapFailure(false),
     mWorkAroundDriverBugs(true),
     mHeavyGLCallsSinceLastFlush(false)
 {
@@ -805,7 +815,9 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         "Adreno 205",
         "Adreno (TM) 200",
         "Adreno (TM) 205",
+        "Adreno (TM) 305",
         "Adreno (TM) 320",
+        "Adreno (TM) 330",
         "Adreno (TM) 420",
         "Mali-400 MP",
         "PowerVR SGX 530",
@@ -1048,6 +1060,17 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         // prevents occasional driver crash.
         mNeedsFlushBeforeDeleteFB = true;
     }
+#ifdef MOZ_WIDGET_ANDROID
+    if (mWorkAroundDriverBugs &&
+        (Renderer() == GLRenderer::AdrenoTM305 ||
+         Renderer() == GLRenderer::AdrenoTM320 ||
+         Renderer() == GLRenderer::AdrenoTM330) &&
+        AndroidBridge::Bridge()->GetAPIVersion() < 21) {
+        // Bug 1164027. Driver crashes when functions such as
+        // glTexImage2D fail due to virtual memory exhaustion.
+        mTextureAllocCrashesOnMapFailure = true;
+    }
+#endif
 
     mMaxTextureImageSize = mMaxTextureSize;
 
@@ -2850,6 +2873,58 @@ GLContext::fDeleteFramebuffers(GLsizei n, const GLuint* names)
     TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
 }
 
+#ifdef MOZ_WIDGET_ANDROID
+/**
+ * Conservatively estimate whether there is enough available
+ * contiguous virtual address space to map a newly allocated texture.
+ */
+static bool
+WillTextureMapSucceed(GLsizei width, GLsizei height, GLenum format, GLenum type)
+{
+    bool willSucceed = false;
+    // Some drivers leave large gaps between textures, so require
+    // there to be double the actual size of the texture available.
+    size_t size = width * height * GetBytesPerTexel(format, type) * 2;
+
+    int fd = open("/dev/zero", O_RDONLY);
+
+    void *p = mmap(nullptr, size, PROT_NONE, MAP_SHARED, fd, 0);
+    if (p != MAP_FAILED) {
+        willSucceed = true;
+        munmap(p, size);
+    }
+
+    close(fd);
+
+    return willSucceed;
+}
+#endif // MOZ_WIDGET_ANDROID
+
+void
+GLContext::fTexImage2D(GLenum target, GLint level, GLint internalformat,
+                       GLsizei width, GLsizei height, GLint border,
+                       GLenum format, GLenum type, const GLvoid* pixels) {
+    if (!IsTextureSizeSafeToPassToDriver(target, width, height)) {
+        // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
+        // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
+        level = -1;
+        width = -1;
+        height = -1;
+        border = -1;
+    }
+#if MOZ_WIDGET_ANDROID
+    if (mTextureAllocCrashesOnMapFailure) {
+        // We have no way of knowing whether this texture already has
+        // storage allocated for it, and therefore whether this check
+        // is necessary. We must therefore assume it does not and
+        // always perform the check.
+        if (!WillTextureMapSucceed(width, height, internalformat, type)) {
+            return;
+        }
+    }
+#endif
+    raw_fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+}
 
 GLuint
 GLContext::GetDrawFB()
@@ -2968,6 +3043,50 @@ CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
     return CreateTexture(aGL, internalFormat, unpackFormat, unpackType, aSize);
 }
 
+uint32_t
+GetBytesPerTexel(GLenum format, GLenum type)
+{
+    // If there is no defined format or type, we're not taking up any memory
+    if (!format || !type) {
+        return 0;
+    }
+
+    if (format == LOCAL_GL_DEPTH_COMPONENT) {
+        if (type == LOCAL_GL_UNSIGNED_SHORT)
+            return 2;
+        else if (type == LOCAL_GL_UNSIGNED_INT)
+            return 4;
+    } else if (format == LOCAL_GL_DEPTH_STENCIL) {
+        if (type == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
+            return 4;
+    }
+
+    if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT || type == LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV) {
+        uint32_t multiplier = type == LOCAL_GL_UNSIGNED_BYTE ? 1 : 4;
+        switch (format) {
+            case LOCAL_GL_ALPHA:
+            case LOCAL_GL_LUMINANCE:
+                return 1 * multiplier;
+            case LOCAL_GL_LUMINANCE_ALPHA:
+                return 2 * multiplier;
+            case LOCAL_GL_RGB:
+                return 3 * multiplier;
+            case LOCAL_GL_RGBA:
+                return 4 * multiplier;
+            default:
+                break;
+        }
+    } else if (type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
+               type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
+               type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
+    {
+        return 2;
+    }
+
+    gfxCriticalError() << "Unknown texture type " << type << " or format " << format;
+    MOZ_CRASH();
+    return 0;
+}
 
 } /* namespace gl */
 } /* namespace mozilla */

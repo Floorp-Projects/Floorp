@@ -11,7 +11,7 @@ BEGIN_TEST(testJSEvaluateScript)
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     CHECK(obj);
 
-    static const char16_t src[] = MOZ_UTF16("var x = 5;");
+    static const char16_t src[] = u"var x = 5;";
 
     JS::RootedValue retval(cx);
     JS::CompileOptions opts(cx);

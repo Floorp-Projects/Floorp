@@ -631,12 +631,22 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleValue handler_, HandleValue handl
 
     // When using JS::AddPromiseReactions, no actual promise is created, so we
     // might not have one here.
-    // If we do, Wrap it in case we entered the handler's compartment above,
-    // because we should pass objects from a single compartment to the
-    // enqueuePromiseJob callback.
-    RootedObject promise(cx, promise_);
-    if (!cx->compartment()->wrap(cx, &promise))
-        return false;
+    // Additionally, we might have an object here that isn't an instance of
+    // Promise. This can happen if content overrides the value of
+    // Promise[@@species] (or invokes Promise#then on a Promise subclass
+    // instance with a non-default @@species value on the constructor) with a
+    // function that returns objects that're not Promise (subclass) instances.
+    // In that case, we just pretend we didn't have an object in the first
+    // place.
+    // If after all this we do have an object, wrap it in case we entered the
+    // handler's compartment above, because we should pass objects from a
+    // single compartment to the enqueuePromiseJob callback.
+    RootedObject promise(cx);
+    if (promise_ && promise_->is<PromiseObject>()) {
+      promise = promise_;
+      if (!cx->compartment()->wrap(cx, &promise))
+          return false;
+    }
 
     // Using objectFromIncumbentGlobal, we can derive the incumbent global by
     // unwrapping and then getting the global. This is very convoluted, but

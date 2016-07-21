@@ -568,7 +568,7 @@ class Base {
     virtual CoarseType coarseType() const { return CoarseType::Other; }
 
     // Return a human-readable name for the referent's type. The result should
-    // be statically allocated. (You can use MOZ_UTF16("strings") for this.)
+    // be statically allocated. (You can use u"strings" for this.)
     //
     // This must always return Concrete<T>::concreteTypeName; we use that
     // pointer as a tag for this particular referent type.

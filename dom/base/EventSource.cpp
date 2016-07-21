@@ -878,11 +878,11 @@ EventSource::ConsoleError()
 
   if (mReadyState == CONNECTING) {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
-                             MOZ_UTF16("connectionFailure"),
+                             u"connectionFailure",
                              formatStrings, ArrayLength(formatStrings));
   } else {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
-                             MOZ_UTF16("netInterrupt"),
+                             u"netInterrupt",
                              formatStrings, ArrayLength(formatStrings));
   }
   NS_ENSURE_SUCCESS(rv, rv);

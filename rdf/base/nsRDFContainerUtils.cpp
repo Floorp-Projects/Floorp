@@ -338,7 +338,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
                                      &kRDF_Seq);
             gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "Alt"),
                                      &kRDF_Alt);
-            gRDFService->GetLiteral(MOZ_UTF16("1"), &kOne);
+            gRDFService->GetLiteral(u"1", &kOne);
         }
     }
 }

@@ -2091,41 +2091,35 @@ TabActor.prototype = {
   onResolveLocation(request) {
     let { url, line } = request;
     let column = request.column || 0;
-    let actor = this.sources.getSourceActorByURL(url);
+    const scripts = this.threadActor.dbg.findScripts({ url });
 
-    if (actor) {
-      // Get the generated source actor if this is source mapped
-      let generatedActor = actor.generatedSource ?
-        this.sources.createNonSourceMappedActor(actor.generatedSource) :
-        actor;
-      let generatedLocation = new GeneratedLocation(
-        generatedActor, line, column);
-
-      return this.sources.getOriginalLocation(generatedLocation).then(loc => {
-        // If no map found, return this packet
-        if (loc.originalLine == null) {
-          return {
-            from: this.actorID,
-            type: "resolveLocation",
-            error: "MAP_NOT_FOUND"
-          };
-        }
-
-        loc = loc.toJSON();
-        return {
-          from: this.actorID,
-          url: loc.source.url,
-          column: loc.column,
-          line: loc.line
-        };
+    if (!scripts[0] || !scripts[0].source) {
+      return promise.resolve({
+        from: this.actorID,
+        type: "resolveLocation",
+        error: "SOURCE_NOT_FOUND"
       });
     }
+    const source = scripts[0].source;
+    const generatedActor = this.sources.createNonSourceMappedActor(source);
+    let generatedLocation = new GeneratedLocation(
+      generatedActor, line, column);
+    return this.sources.getOriginalLocation(generatedLocation).then(loc => {
+      // If no map found, return this packet
+      if (loc.originalLine == null) {
+        return {
+          type: "resolveLocation",
+          error: "MAP_NOT_FOUND"
+        };
+      }
 
-    // Fall back to this packet when source is not found
-    return promise.resolve({
-      from: this.actorID,
-      type: "resolveLocation",
-      error: "SOURCE_NOT_FOUND"
+      loc = loc.toJSON();
+      return {
+        from: this.actorID,
+        url: loc.source.url,
+        column: loc.column,
+        line: loc.line
+      };
     });
   },
 };

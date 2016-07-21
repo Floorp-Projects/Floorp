@@ -22,7 +22,7 @@ public:
   virtual nsresult
   Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) override;
+        ReflowOutput& aDesiredSize) override;
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent) override;

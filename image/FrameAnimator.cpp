@@ -20,62 +20,103 @@ using namespace gfx;
 
 namespace image {
 
-int32_t
-FrameAnimator::GetSingleLoopTime() const
+///////////////////////////////////////////////////////////////////////////////
+// AnimationState implementation.
+///////////////////////////////////////////////////////////////////////////////
+
+void
+AnimationState::SetDoneDecoding(bool aDone)
 {
-  // If we aren't done decoding, we don't know the image's full play time.
-  if (!mDoneDecoding) {
-    return -1;
-  }
-
-  // If we're not looping, a single loop time has no meaning
-  if (mAnimationMode != imgIContainer::kNormalAnimMode) {
-    return -1;
-  }
-
-  int32_t looptime = 0;
-  for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
-    int32_t timeout = GetTimeoutForFrame(i);
-    if (timeout >= 0) {
-      looptime += static_cast<uint32_t>(timeout);
-    } else {
-      // If we have a frame that never times out, we're probably in an error
-      // case, but let's handle it more gracefully.
-      NS_WARNING("Negative frame timeout - how did this happen?");
-      return -1;
-    }
-  }
-
-  return looptime;
+  mDoneDecoding = aDone;
 }
 
-TimeStamp
-FrameAnimator::GetCurrentImgFrameEndTime() const
+void
+AnimationState::ResetAnimation()
 {
-  TimeStamp currentFrameTime = mCurrentAnimationFrameTime;
-  int32_t timeout =
-    GetTimeoutForFrame(mCurrentAnimationFrameIndex);
+  mCurrentAnimationFrameIndex = 0;
+}
 
-  if (timeout < 0) {
+void
+AnimationState::SetAnimationMode(uint16_t aAnimationMode)
+{
+  mAnimationMode = aAnimationMode;
+}
+
+void
+AnimationState::SetFirstFrameRefreshArea(const IntRect& aRefreshArea)
+{
+  mFirstFrameRefreshArea = aRefreshArea;
+}
+
+void
+AnimationState::InitAnimationFrameTimeIfNecessary()
+{
+  if (mCurrentAnimationFrameTime.IsNull()) {
+    mCurrentAnimationFrameTime = TimeStamp::Now();
+  }
+}
+
+void
+AnimationState::SetAnimationFrameTime(const TimeStamp& aTime)
+{
+  mCurrentAnimationFrameTime = aTime;
+}
+
+uint32_t
+AnimationState::GetCurrentAnimationFrameIndex() const
+{
+  return mCurrentAnimationFrameIndex;
+}
+
+FrameTimeout
+AnimationState::LoopLength() const
+{
+  // If we don't know the loop length yet, we have to treat it as infinite.
+  if (!mLoopLength) {
+    return FrameTimeout::Forever();
+  }
+
+  MOZ_ASSERT(mDoneDecoding, "We know the loop length but decoding isn't done?");
+
+  // If we're not looping, a single loop time has no meaning.
+  if (mAnimationMode != imgIContainer::kNormalAnimMode) {
+    return FrameTimeout::Forever();
+  }
+
+  return *mLoopLength;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// FrameAnimator implementation.
+///////////////////////////////////////////////////////////////////////////////
+
+TimeStamp
+FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState) const
+{
+  TimeStamp currentFrameTime = aState.mCurrentAnimationFrameTime;
+  FrameTimeout timeout = GetTimeoutForFrame(aState.mCurrentAnimationFrameIndex);
+
+  if (timeout == FrameTimeout::Forever()) {
     // We need to return a sentinel value in this case, because our logic
-    // doesn't work correctly if we have a negative timeout value. We use
-    // one year in the future as the sentinel because it works with the loop
-    // in RequestRefresh() below.
+    // doesn't work correctly if we have an infinitely long timeout. We use one
+    // year in the future as the sentinel because it works with the loop in
+    // RequestRefresh() below.
     // XXX(seth): It'd be preferable to make our logic work correctly with
-    // negative timeouts.
+    // infinitely long timeouts.
     return TimeStamp::NowLoRes() +
            TimeDuration::FromMilliseconds(31536000.0);
   }
 
   TimeDuration durationOfTimeout =
-    TimeDuration::FromMilliseconds(static_cast<double>(timeout));
+    TimeDuration::FromMilliseconds(double(timeout.AsMilliseconds()));
   TimeStamp currentFrameEndTime = currentFrameTime + durationOfTimeout;
 
   return currentFrameEndTime;
 }
 
-FrameAnimator::RefreshResult
-FrameAnimator::AdvanceFrame(TimeStamp aTime)
+RefreshResult
+FrameAnimator::AdvanceFrame(AnimationState& aState, TimeStamp aTime)
 {
   NS_ASSERTION(aTime <= TimeStamp::Now(),
                "Given time appears to be in the future");
@@ -84,13 +125,13 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   RefreshResult ret;
 
   // Determine what the next frame is, taking into account looping.
-  uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
+  uint32_t currentFrameIndex = aState.mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
 
   if (mImage->GetNumFrames() == nextFrameIndex) {
     // We can only accurately determine if we are at the end of the loop if we are
     // done decoding, otherwise we don't know how many frames there will be.
-    if (!mDoneDecoding) {
+    if (!aState.mDoneDecoding) {
       // We've already advanced to the last decoded frame, nothing more we can do.
       // We're blocked by network/decoding from displaying the animation at the
       // rate specified, so that means the frame we are displaying (the latest
@@ -101,32 +142,32 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
       // done decoding (and thus can loop around back to the start of the
       // animation) we would then jump to a random point in the animation to
       // try to catch up. But we were never behind in the animation.
-      mCurrentAnimationFrameTime = aTime;
+      aState.mCurrentAnimationFrameTime = aTime;
       return ret;
     }
 
     // End of an animation loop...
 
     // If we are not looping forever, initialize the loop counter
-    if (mLoopRemainingCount < 0 && LoopCount() >= 0) {
-      mLoopRemainingCount = LoopCount();
+    if (aState.mLoopRemainingCount < 0 && aState.LoopCount() >= 0) {
+      aState.mLoopRemainingCount = aState.LoopCount();
     }
 
     // If animation mode is "loop once", or we're at end of loop counter,
     // it's time to stop animating.
-    if (mAnimationMode == imgIContainer::kLoopOnceAnimMode ||
-        mLoopRemainingCount == 0) {
-      ret.animationFinished = true;
+    if (aState.mAnimationMode == imgIContainer::kLoopOnceAnimMode ||
+        aState.mLoopRemainingCount == 0) {
+      ret.mAnimationFinished = true;
     }
 
     nextFrameIndex = 0;
 
-    if (mLoopRemainingCount > 0) {
-      mLoopRemainingCount--;
+    if (aState.mLoopRemainingCount > 0) {
+      aState.mLoopRemainingCount--;
     }
 
     // If we're done, exit early.
-    if (ret.animationFinished) {
+    if (ret.mAnimationFinished) {
       return ret;
     }
   }
@@ -142,7 +183,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   // If we're done decoding, we know we've got everything we're going to get.
   // If we aren't, we only display fully-downloaded frames; everything else
   // gets delayed.
-  bool canDisplay = mDoneDecoding ||
+  bool canDisplay = aState.mDoneDecoding ||
                     (nextFrame && nextFrame->IsFinished());
 
   if (!canDisplay) {
@@ -151,68 +192,63 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     return ret;
   }
 
-  // Bad data
-  if (GetTimeoutForFrame(nextFrameIndex) < 0) {
-    ret.animationFinished = true;
-    ret.error = true;
+  if (GetTimeoutForFrame(nextFrameIndex) == FrameTimeout::Forever()) {
+    ret.mAnimationFinished = true;
   }
 
   if (nextFrameIndex == 0) {
-    ret.dirtyRect = mFirstFrameRefreshArea;
+    ret.mDirtyRect = aState.FirstFrameRefreshArea();
   } else {
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
 
     // Change frame
-    if (!DoBlend(&ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
+    if (!DoBlend(&ret.mDirtyRect, currentFrameIndex, nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
-      mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime();
-      mCurrentAnimationFrameIndex = nextFrameIndex;
+      aState.mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime(aState);
+      aState.mCurrentAnimationFrameIndex = nextFrameIndex;
 
-      ret.error = true;
       return ret;
     }
 
     nextFrame->SetCompositingFailed(false);
   }
 
-  mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime();
+  aState.mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime(aState);
 
   // If we can get closer to the current time by a multiple of the image's loop
-  // time, we should. We need to be done decoding in order to know the full loop
-  // time though!
-  int32_t loopTime = GetSingleLoopTime();
-  if (loopTime > 0) {
-    // We shouldn't be advancing by a whole loop unless we are decoded and know
-    // what a full loop actually is. GetSingleLoopTime should return -1 so this
-    // never happens.
-    MOZ_ASSERT(mDoneDecoding);
-    TimeDuration delay = aTime - mCurrentAnimationFrameTime;
-    if (delay.ToMilliseconds() > loopTime) {
+  // time, we should. We can only do this if we're done decoding; otherwise, we
+  // don't know the full loop length, and LoopLength() will have to return
+  // FrameTimeout::Forever().
+  FrameTimeout loopTime = aState.LoopLength();
+  if (loopTime != FrameTimeout::Forever()) {
+    TimeDuration delay = aTime - aState.mCurrentAnimationFrameTime;
+    if (delay.ToMilliseconds() > loopTime.AsMilliseconds()) {
       // Explicitly use integer division to get the floor of the number of
       // loops.
-      uint64_t loops = static_cast<uint64_t>(delay.ToMilliseconds()) / loopTime;
-      mCurrentAnimationFrameTime +=
-        TimeDuration::FromMilliseconds(loops * loopTime);
+      uint64_t loops = static_cast<uint64_t>(delay.ToMilliseconds())
+                     / loopTime.AsMilliseconds();
+      aState.mCurrentAnimationFrameTime +=
+        TimeDuration::FromMilliseconds(loops * loopTime.AsMilliseconds());
     }
   }
 
   // Set currentAnimationFrameIndex at the last possible moment
-  mCurrentAnimationFrameIndex = nextFrameIndex;
+  aState.mCurrentAnimationFrameIndex = nextFrameIndex;
 
   // If we're here, we successfully advanced the frame.
-  ret.frameAdvanced = true;
+  ret.mFrameAdvanced = true;
 
   return ret;
 }
 
-FrameAnimator::RefreshResult
-FrameAnimator::RequestRefresh(const TimeStamp& aTime)
+RefreshResult
+FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 {
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
-  TimeStamp currentFrameEndTime = GetCurrentImgFrameEndTime();
+  TimeStamp currentFrameEndTime = GetCurrentImgFrameEndTime(aState);
 
   // By default, an empty RefreshResult.
   RefreshResult ret;
@@ -220,73 +256,22 @@ FrameAnimator::RequestRefresh(const TimeStamp& aTime)
   while (currentFrameEndTime <= aTime) {
     TimeStamp oldFrameEndTime = currentFrameEndTime;
 
-    RefreshResult frameRes = AdvanceFrame(aTime);
+    RefreshResult frameRes = AdvanceFrame(aState, aTime);
 
     // Accumulate our result for returning to callers.
     ret.Accumulate(frameRes);
 
-    currentFrameEndTime = GetCurrentImgFrameEndTime();
+    currentFrameEndTime = GetCurrentImgFrameEndTime(aState);
 
-    // if we didn't advance a frame, and our frame end time didn't change,
+    // If we didn't advance a frame, and our frame end time didn't change,
     // then we need to break out of this loop & wait for the frame(s)
-    // to finish downloading
-    if (!frameRes.frameAdvanced && (currentFrameEndTime == oldFrameEndTime)) {
+    // to finish downloading.
+    if (!frameRes.mFrameAdvanced && (currentFrameEndTime == oldFrameEndTime)) {
       break;
     }
   }
 
   return ret;
-}
-
-void
-FrameAnimator::ResetAnimation()
-{
-  mCurrentAnimationFrameIndex = 0;
-  mLastCompositedFrameIndex = -1;
-}
-
-void
-FrameAnimator::SetDoneDecoding(bool aDone)
-{
-  mDoneDecoding = aDone;
-}
-
-void
-FrameAnimator::SetAnimationMode(uint16_t aAnimationMode)
-{
-  mAnimationMode = aAnimationMode;
-}
-
-void
-FrameAnimator::InitAnimationFrameTimeIfNecessary()
-{
-  if (mCurrentAnimationFrameTime.IsNull()) {
-    mCurrentAnimationFrameTime = TimeStamp::Now();
-  }
-}
-
-void
-FrameAnimator::SetAnimationFrameTime(const TimeStamp& aTime)
-{
-  mCurrentAnimationFrameTime = aTime;
-}
-
-void
-FrameAnimator::UnionFirstFrameRefreshArea(const nsIntRect& aRect)
-{
-  mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, aRect);
-}
-
-uint32_t
-FrameAnimator::GetCurrentAnimationFrameIndex() const
-{
-  return mCurrentAnimationFrameIndex;
-}
-
-nsIntRect
-FrameAnimator::GetFirstFrameRefreshArea() const
-{
-  return mFirstFrameRefreshArea;
 }
 
 LookupResult
@@ -311,40 +296,17 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
   return result;
 }
 
-int32_t
+FrameTimeout
 FrameAnimator::GetTimeoutForFrame(uint32_t aFrameNum) const
 {
-  int32_t rawTimeout = 0;
-
   RawAccessFrameRef frame = GetRawFrame(aFrameNum);
   if (frame) {
     AnimationData data = frame->GetAnimationData();
-    rawTimeout = data.mRawTimeout;
-  } else if (aFrameNum == 0) {
-    rawTimeout = mFirstFrameTimeout;
-  } else {
-    NS_WARNING("No frame; called GetTimeoutForFrame too early?");
-    return 100;
+    return data.mTimeout;
   }
 
-  // Ensure a minimal time between updates so we don't throttle the UI thread.
-  // consider 0 == unspecified and make it fast but not too fast.  Unless we
-  // have a single loop GIF. See bug 890743, bug 125137, bug 139677, and bug
-  // 207059. The behavior of recent IE and Opera versions seems to be:
-  // IE 6/Win:
-  //   10 - 50ms go 100ms
-  //   >50ms go correct speed
-  // Opera 7 final/Win:
-  //   10ms goes 100ms
-  //   >10ms go correct speed
-  // It seems that there are broken tools out there that set a 0ms or 10ms
-  // timeout when they really want a "default" one.  So munge values in that
-  // range.
-  if (rawTimeout >= 0 && rawTimeout <= 10) {
-    return 100;
-  }
-
-  return rawTimeout;
+  NS_WARNING("No frame; called GetTimeoutForFrame too early?");
+  return FrameTimeout::FromRawMilliseconds(100);
 }
 
 static void
@@ -407,7 +369,7 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
 // DoBlend gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
 bool
-FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
+FrameAnimator::DoBlend(IntRect* aDirtyRect,
                        uint32_t aPrevFrameIndex,
                        uint32_t aNextFrameIndex)
 {
@@ -688,7 +650,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
 //******************************************************************************
 // Fill aFrame with black. Does also clears the mask.
 void
-FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect)
+FrameAnimator::ClearFrame(uint8_t* aFrameData, const IntRect& aFrameRect)
 {
   if (!aFrameData) {
     return;
@@ -699,15 +661,15 @@ FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect)
 
 //******************************************************************************
 void
-FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect,
-                          const nsIntRect& aRectToClear)
+FrameAnimator::ClearFrame(uint8_t* aFrameData, const IntRect& aFrameRect,
+                          const IntRect& aRectToClear)
 {
   if (!aFrameData || aFrameRect.width <= 0 || aFrameRect.height <= 0 ||
       aRectToClear.width <= 0 || aRectToClear.height <= 0) {
     return;
   }
 
-  nsIntRect toClear = aFrameRect.Intersect(aRectToClear);
+  IntRect toClear = aFrameRect.Intersect(aRectToClear);
   if (toClear.IsEmpty()) {
     return;
   }
@@ -724,9 +686,9 @@ FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect,
 // we can do about a failure, so there we don't return a nsresult
 bool
 FrameAnimator::CopyFrameImage(const uint8_t* aDataSrc,
-                              const nsIntRect& aRectSrc,
+                              const IntRect& aRectSrc,
                               uint8_t* aDataDest,
-                              const nsIntRect& aRectDest)
+                              const IntRect& aRectDest)
 {
   uint32_t dataLengthSrc = aRectSrc.width * aRectSrc.height * 4;
   uint32_t dataLengthDest = aRectDest.width * aRectDest.height * 4;
@@ -741,10 +703,10 @@ FrameAnimator::CopyFrameImage(const uint8_t* aDataSrc,
 }
 
 nsresult
-FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
+FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const IntRect& aSrcRect,
                            uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
-                           uint8_t* aDstPixels, const nsIntRect& aDstRect,
-                           BlendMethod aBlendMethod, const Maybe<nsIntRect>& aBlendRect)
+                           uint8_t* aDstPixels, const IntRect& aDstRect,
+                           BlendMethod aBlendMethod, const Maybe<IntRect>& aBlendRect)
 {
   NS_ENSURE_ARG_POINTER(aSrcData);
   NS_ENSURE_ARG_POINTER(aDstPixels);

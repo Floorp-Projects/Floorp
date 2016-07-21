@@ -10,10 +10,10 @@
 
 #include "nsContainerFrame.h"
 
-struct nsHTMLReflowState;
-
 class nsFontInflationData
 {
+  using ReflowInput = mozilla::ReflowInput;
+
 public:
 
   static nsFontInflationData* FindFontInflationDataFor(const nsIFrame *aFrame);
@@ -21,7 +21,7 @@ public:
   // Returns whether the effective width changed (which requires the
   // caller to mark its descendants dirty
   static bool
-    UpdateFontInflationDataISizeFor(const nsHTMLReflowState& aReflowState);
+    UpdateFontInflationDataISizeFor(const ReflowInput& aReflowInput);
 
   static void MarkFontInflationDataTextDirty(nsIFrame *aFrame);
 
@@ -43,7 +43,7 @@ private:
   nsFontInflationData(const nsFontInflationData&) = delete;
   void operator=(const nsFontInflationData&) = delete;
 
-  void UpdateISize(const nsHTMLReflowState &aReflowState);
+  void UpdateISize(const ReflowInput &aReflowInput);
   enum SearchDirection { eFromStart, eFromEnd };
   static nsIFrame* FindEdgeInflatableFrameIn(nsIFrame *aFrame,
                                              SearchDirection aDirection);

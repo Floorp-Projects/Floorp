@@ -236,8 +236,8 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
     // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
     // so addons not providing a loadingPrincipal do not break in release builds.
     const char16_t* params[] = {
-      MOZ_UTF16("nsFaviconService::setAndFetchFaviconForPage()"),
-      MOZ_UTF16("nsFaviconService::setAndFetchFaviconForPage(..., [optional aLoadingPrincipal])")
+      u"nsFaviconService::setAndFetchFaviconForPage()",
+      u"nsFaviconService::setAndFetchFaviconForPage(..., [optional aLoadingPrincipal])"
     };
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("Security by Default"),
@@ -398,8 +398,8 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
     // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
     // so addons not providing a loadingPrincipal do not break in release builds.
     const char16_t* params[] = {
-      MOZ_UTF16("nsFaviconService::ReplaceFaviconDataFromDataURL()"),
-      MOZ_UTF16("nsFaviconService::ReplaceFaviconDataFromDataURL(..., [optional aLoadingPrincipal])")
+      u"nsFaviconService::ReplaceFaviconDataFromDataURL()",
+      u"nsFaviconService::ReplaceFaviconDataFromDataURL(..., [optional aLoadingPrincipal])"
     };
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("Security by Default"),
