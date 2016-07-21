@@ -2969,26 +2969,8 @@ public:
 
     static auto SendThumbnail(mozilla::jni::ByteBuffer::Param, int32_t, bool, bool) -> void;
 
-    struct RequestThumbnail_t {
-        typedef ThumbnailHelper Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::ByteBuffer::Param,
-                int32_t,
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "requestThumbnail";
-        static constexpr char signature[] =
-                "(Ljava/nio/ByteBuffer;III)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
     static const bool isMultithreaded = false;
 
-    template<class Impl> class Natives;
 };
 
 class Distribution : public mozilla::jni::ObjectBase<Distribution, jobject>

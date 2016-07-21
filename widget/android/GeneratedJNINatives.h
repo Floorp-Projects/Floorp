@@ -327,21 +327,6 @@ const JNINativeMethod PrefsHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
-class ThumbnailHelper::Natives : public mozilla::jni::NativeImpl<ThumbnailHelper, Impl>
-{
-public:
-    static const JNINativeMethod methods[1];
-};
-
-template<class Impl>
-const JNINativeMethod ThumbnailHelper::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<ThumbnailHelper::RequestThumbnail_t>(
-            mozilla::jni::NativeStub<ThumbnailHelper::RequestThumbnail_t, Impl>
-            ::template Wrap<&Impl::RequestThumbnail>)
-};
-
-template<class Impl>
 class GLController::Natives : public mozilla::jni::NativeImpl<GLController, Impl>
 {
 public:
