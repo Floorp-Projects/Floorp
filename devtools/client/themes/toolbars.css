@@ -14,7 +14,8 @@
   --magnifying-glass-image: url(images/search.svg);
   --filter-image: url(images/filter.svg);
   --tool-options-image: url(images/tool-options.svg);
-  --icon-filter: invert(1);
+  --icon-filter: none;
+  --checked-icon-filter: url(images/filters.svg#checked-icon-state);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
 
@@ -28,14 +29,16 @@
   --magnifying-glass-image: url(images/search.svg);
   --filter-image: url(images/filter.svg);
   --tool-options-image: url(images/tool-options.svg);
-  --icon-filter: none;
+  --icon-filter: invert(1);
+  --checked-icon-filter: url(images/filters.svg#checked-icon-state);
   --toolbar-button-border-color: rgba(0, 0, 0, .4);
 }
 
 .theme-firebug {
   --magnifying-glass-image: url(images/search.svg);
   --tool-options-image: url(images/firebug/tool-options.svg);
-  --icon-filter: invert(1);
+  --icon-filter: none;
+  --checked-icon-filter: none;
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
 
@@ -252,7 +255,7 @@
 .devtools-button[open]:empty::before,
 .devtools-toolbarbutton:not([label])[checked=true] > image,
 .devtools-toolbarbutton:not([label])[open=true] > image {
-  filter: url(images/filters.svg#checked-icon-state);
+  filter: var(--checked-icon-filter);
 }
 
 /* Icon-and-text buttons */
@@ -597,33 +600,31 @@
   background: var(--theme-selection-background);
 }
 
-/* Invert the colors of certain dark theme images for displaying
- * inside of the light theme.
+/* Invert the colors of certain light theme images for displaying
+ * inside of the dark theme.
  */
-.theme-light .devtools-tab[icon-invertable] > image,
-.theme-light .devtools-toolbarbutton > image,
-.theme-light .devtools-button::before,
-.theme-light #breadcrumb-separator-normal,
-.theme-light .scrollbutton-up > .toolbarbutton-icon,
-.theme-light .scrollbutton-down > .toolbarbutton-icon,
-.theme-light #black-boxed-message-button .button-icon,
-.theme-light #requests-menu-perf-notice-button .button-icon,
-.theme-light #requests-menu-network-summary-button .button-icon,
-.theme-light #toggle-breakpoints[checked] > image,
-.theme-light .event-tooltip-debugger-icon {
+.devtools-tab[icon-invertable] > image,
+.devtools-toolbarbutton > image,
+.devtools-button::before,
+#breadcrumb-separator-normal,
+.scrollbutton-up > .toolbarbutton-icon,
+.scrollbutton-down > .toolbarbutton-icon,
+#black-boxed-message-button .button-icon,
+#requests-menu-perf-notice-button .button-icon,
+#canvas-debugging-empty-notice-button .button-icon,
+#toggle-breakpoints[checked] > image,
+.event-tooltip-debugger-icon {
   filter: var(--icon-filter);
 }
 
-/* Reset the filter defined above */
-.theme-light .command-button:not(.command-button-invertable) {
-  filter: none !important;
+/* Since the tab selected background is blue, we should invert the icon */
+.devtools-tab[icon-invertable][selected] > image {
+  filter: invert(1);
 }
 
-/* Since selected backgrounds are blue, we want to use the normal
- * (light) icons. */
-.theme-light .devtools-tab[icon-invertable][selected] > image,
-.theme-light .devtools-tab[icon-invertable][highlighted] > image {
-  filter: none !important;
+/* Since "highlighted" icons are green, we should omit the filter */
+.devtools-tab[icon-invertable][highlighted] > image {
+  filter: none;
 }
 
 .hidden-labels-box:not(.visible) > label,
