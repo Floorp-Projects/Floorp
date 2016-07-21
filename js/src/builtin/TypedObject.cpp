@@ -32,6 +32,7 @@ using mozilla::AssertedCast;
 using mozilla::CheckedInt32;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
+using mozilla::PointerRangeSize;
 
 using namespace js;
 
@@ -67,7 +68,8 @@ ToObjectIf(HandleValue value)
     return &value.toObject().as<T>();
 }
 
-static inline CheckedInt32 roundUpToAlignment(CheckedInt32 address, int32_t align)
+static inline CheckedInt32
+RoundUpToAlignment(CheckedInt32 address, uint32_t align)
 {
     MOZ_ASSERT(IsPowerOfTwo(align));
 
@@ -232,16 +234,16 @@ const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
     JS_FS_END
 };
 
-int32_t
+uint32_t
 ScalarTypeDescr::size(Type t)
 {
-    return Scalar::byteSize(t);
+    return AssertedCast<uint32_t>(Scalar::byteSize(t));
 }
 
-int32_t
+uint32_t
 ScalarTypeDescr::alignment(Type t)
 {
-    return Scalar::byteSize(t);
+    return AssertedCast<uint32_t>(Scalar::byteSize(t));
 }
 
 /*static*/ const char*
@@ -339,20 +341,20 @@ const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
     JS_FS_END
 };
 
-static const int32_t ReferenceSizes[] = {
+static const uint32_t ReferenceSizes[] = {
 #define REFERENCE_SIZE(_kind, _type, _name)                        \
     sizeof(_type),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(REFERENCE_SIZE) 0
 #undef REFERENCE_SIZE
 };
 
-int32_t
+uint32_t
 ReferenceTypeDescr::size(Type t)
 {
     return ReferenceSizes[t];
 }
 
-int32_t
+uint32_t
 ReferenceTypeDescr::alignment(Type t)
 {
     return ReferenceSizes[t];
@@ -424,7 +426,7 @@ SimdTypeDescr::type() const {
     return SimdType(t);
 }
 
-int32_t
+uint32_t
 SimdTypeDescr::size(SimdType t)
 {
     MOZ_ASSERT(unsigned(t) < unsigned(SimdType::Count));
@@ -448,7 +450,7 @@ SimdTypeDescr::size(SimdType t)
     MOZ_CRASH("unexpected SIMD type");
 }
 
-int32_t
+uint32_t
 SimdTypeDescr::alignment(SimdType t)
 {
     MOZ_ASSERT(unsigned(t) < unsigned(SimdType::Count));
@@ -554,7 +556,7 @@ js::CreateUserSizeAndAlignmentProperties(JSContext* cx, HandleTypeDescr descr)
     // If data is transparent, also store the public slots.
     if (descr->transparent()) {
         // byteLength
-        RootedValue typeByteLength(cx, Int32Value(descr->size()));
+        RootedValue typeByteLength(cx, Int32Value(AssertedCast<int32_t>(descr->size())));
         if (!DefineProperty(cx, descr, cx->names().byteLength, typeByteLength,
                             nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
@@ -798,7 +800,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     RootedObject userFieldOffsets(cx); // User-exposed {f:offset} object
     RootedObject userFieldTypes(cx);   // User-exposed {f:descr} object.
     CheckedInt32 sizeSoFar(0);         // Size of struct thus far.
-    int32_t alignment = 1;             // Alignment of struct.
+    uint32_t alignment = 1;            // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
     userFieldOffsets = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
@@ -862,7 +864,7 @@ StructMetaTypeDescr::create(JSContext* cx,
 
         // Offset of this field is the current total size adjusted for
         // the field's alignment.
-        CheckedInt32 offset = roundUpToAlignment(sizeSoFar, fieldType->alignment());
+        CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldType->alignment());
         if (!offset.isValid()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
@@ -903,7 +905,7 @@ StructMetaTypeDescr::create(JSContext* cx,
         return nullptr;
 
     // Adjust the total size to be a multiple of the final alignment.
-    CheckedInt32 totalSize = roundUpToAlignment(sizeSoFar, alignment);
+    CheckedInt32 totalSize = RoundUpToAlignment(sizeSoFar, alignment);
     if (!totalSize.isValid()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
         return nullptr;
@@ -921,7 +923,7 @@ StructMetaTypeDescr::create(JSContext* cx,
 
     descr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(type::Struct));
     descr->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
-    descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(alignment));
+    descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(AssertedCast<int32_t>(alignment)));
     descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(totalSize.value()));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(opaque));
 
@@ -1137,7 +1139,7 @@ DefineSimpleTypeDescr(JSContext* cx,
     descr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(T::Kind));
     descr->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(className));
     descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(T::alignment(type)));
-    descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(T::size(type)));
+    descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(AssertedCast<int32_t>(T::size(type))));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(T::Opaque));
     descr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(type));
 
@@ -1325,15 +1327,15 @@ js::InitTypedObjectModuleObject(JSContext* cx, HandleObject obj)
  * Typed objects
  */
 
-int32_t
+uint32_t
 TypedObject::offset() const
 {
     if (is<InlineTypedObject>())
         return 0;
-    return typedMem() - typedMemBase();
+    return PointerRangeSize(typedMemBase(), typedMem());
 }
 
-int32_t
+uint32_t
 TypedObject::length() const
 {
     return typeDescr().as<ArrayTypeDescr>().length();
@@ -1403,7 +1405,7 @@ TypedObject::GetBuffer(JSContext* cx, unsigned argc, Value* vp)
 TypedObject::GetByteOffset(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(args[0].toObject().as<TypedObject>().offset());
+    args.rval().setInt32(AssertedCast<int32_t>(args[0].toObject().as<TypedObject>().offset()));
     return true;
 }
 
@@ -1470,11 +1472,11 @@ OutlineTypedObject::createUnattachedWithClass(JSContext* cx,
 }
 
 void
-OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer, int32_t offset)
+OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer, uint32_t offset)
 {
     MOZ_ASSERT(!isAttached());
-    MOZ_ASSERT(offset >= 0);
-    MOZ_ASSERT((size_t) (offset + size()) <= buffer.byteLength());
+    MOZ_ASSERT(offset <= buffer.byteLength());
+    MOZ_ASSERT(size() <= buffer.byteLength() - offset);
 
     // If the owner's data is from an inline typed object, associate this with
     // the inline typed object instead, to simplify tracing.
@@ -1496,7 +1498,7 @@ OutlineTypedObject::attach(JSContext* cx, ArrayBufferObject& buffer, int32_t off
 }
 
 void
-OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj, int32_t offset)
+OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj, uint32_t offset)
 {
     MOZ_ASSERT(!isAttached());
     MOZ_ASSERT(typedObj.isAttached());
@@ -1504,6 +1506,7 @@ OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj, int32_t offset)
     JSObject* owner = &typedObj;
     if (typedObj.is<OutlineTypedObject>()) {
         owner = &typedObj.as<OutlineTypedObject>().owner();
+        MOZ_ASSERT(typedObj.offset() <= UINT32_MAX - offset);
         offset += typedObj.offset();
     }
 
@@ -1518,7 +1521,7 @@ OutlineTypedObject::attach(JSContext* cx, TypedObject& typedObj, int32_t offset)
 
 // Returns a suitable JS_TYPEDOBJ_SLOT_LENGTH value for an instance of
 // the type `type`.
-static int32_t
+static uint32_t
 TypedObjLengthFromType(TypeDescr& descr)
 {
     switch (descr.kind()) {
@@ -1536,7 +1539,7 @@ TypedObjLengthFromType(TypeDescr& descr)
 
 /*static*/ OutlineTypedObject*
 OutlineTypedObject::createDerived(JSContext* cx, HandleTypeDescr type,
-                                  HandleTypedObject typedObj, int32_t offset)
+                                  HandleTypedObject typedObj, uint32_t offset)
 {
     MOZ_ASSERT(offset <= typedObj->size());
     MOZ_ASSERT(offset + type->size() <= typedObj->size());
@@ -1559,7 +1562,7 @@ OutlineTypedObject::createDerived(JSContext* cx, HandleTypeDescr type,
 TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, int32_t length, gc::InitialHeap heap)
 {
     // If possible, create an object with inline data.
-    if ((size_t) descr->size() <= InlineTypedObject::MaximumSize) {
+    if (descr->size() <= InlineTypedObject::MaximumSize) {
         AutoSetNewObjectMetadata metadata(cx);
 
         InlineTypedObject* obj = InlineTypedObject::create(cx, descr, heap);
@@ -2043,7 +2046,7 @@ TypedObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& proper
         if (!properties.reserve(typedObj->length()))
             return false;
 
-        for (int32_t index = 0; index < typedObj->length(); index++) {
+        for (uint32_t index = 0; index < typedObj->length(); index++) {
             id = INT_TO_JSID(index);
             properties.infallibleAppend(id);
         }
@@ -2141,7 +2144,7 @@ InlineTypedObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObje
         uint8_t* oldData = reinterpret_cast<uint8_t*>(src) + offsetOfDataStart();
         uint8_t* newData = dst->as<InlineTypedObject>().inlineTypedMem();
         trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, oldData, newData,
-                                                             size_t(descr.size()) >= sizeof(uintptr_t));
+                                                             descr.size() >= sizeof(uintptr_t));
     }
 }
 
@@ -2269,18 +2272,8 @@ LengthForType(TypeDescr& descr)
 }
 
 static bool
-CheckOffset(int32_t offset,
-            int32_t size,
-            int32_t alignment,
-            int32_t bufferLength)
+CheckOffset(uint32_t offset, uint32_t size, uint32_t alignment, uint32_t bufferLength)
 {
-    MOZ_ASSERT(size >= 0);
-    MOZ_ASSERT(alignment >= 0);
-
-    // No negative offsets.
-    if (offset < 0)
-        return false;
-
     // Offset (plus size) must be fully contained within the buffer.
     if (offset > bufferLength)
         return false;
@@ -2295,6 +2288,9 @@ CheckOffset(int32_t offset,
 
     return true;
 }
+
+template<typename T, typename U, typename V, typename W>
+inline bool CheckOffset(T, U, V, W) = delete;
 
 /*static*/ bool
 TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
@@ -2331,9 +2327,9 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
             return false;
         }
 
-        int32_t offset;
+        uint32_t offset;
         if (args.length() >= 2 && !args[1].isUndefined()) {
-            if (!args[1].isInt32()) {
+            if (!args[1].isInt32() || args[1].toInt32() < 0) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
                 return false;
             }
@@ -2417,7 +2413,7 @@ js::NewDerivedTypedObject(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
     Rooted<TypedObject*> typedObj(cx, &args[1].toObject().as<TypedObject>());
-    int32_t offset = args[2].toInt32();
+    uint32_t offset = AssertedCast<uint32_t>(args[2].toInt32());
 
     Rooted<TypedObject*> obj(cx);
     obj = OutlineTypedObject::createDerived(cx, descr, typedObj, offset);
@@ -2438,7 +2434,7 @@ js::AttachTypedObject(JSContext* cx, unsigned argc, Value* vp)
     OutlineTypedObject& handle = args[0].toObject().as<OutlineTypedObject>();
     TypedObject& target = args[1].toObject().as<TypedObject>();
     MOZ_ASSERT(!handle.isAttached());
-    size_t offset = args[2].toInt32();
+    uint32_t offset = AssertedCast<uint32_t>(args[2].toInt32());
 
     handle.attach(cx, target, offset);
 
@@ -2780,7 +2776,7 @@ visitReferences(TypeDescr& descr,
       {
         ArrayTypeDescr& arrayDescr = descr.as<ArrayTypeDescr>();
         TypeDescr& elementDescr = arrayDescr.elementType();
-        for (int32_t i = 0; i < arrayDescr.length(); i++) {
+        for (uint32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();
         }
@@ -2977,7 +2973,7 @@ CreateTraceList(JSContext* cx, HandleTypeDescr descr)
     // for larger objects, both to limit the size of the trace lists and
     // because tracing outline typed objects is considerably more complicated
     // than inline ones.
-    if ((size_t) descr->size() > InlineTypedObject::MaximumSize || descr->transparent())
+    if (descr->size() > InlineTypedObject::MaximumSize || descr->transparent())
         return true;
 
     TraceListVisitor visitor;
