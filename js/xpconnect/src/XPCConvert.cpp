@@ -519,7 +519,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         nsAString* ws = *((nsAString**)d);
 
         if (!str) {
-            ws->AssignLiteral(MOZ_UTF16("undefined"));
+            ws->AssignLiteral(u"undefined");
         } else if (XPCStringConvert::IsDOMString(str)) {
             // The characters represent an existing nsStringBuffer that
             // was shared by XPCStringConvert::ReadableToJSVal.

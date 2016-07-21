@@ -90,8 +90,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 //----------------------------------------------------------------------
 
 void
-nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
-                                          const nsHTMLReflowState& aReflowState,
+nsSimplePageSequenceFrame::SetDesiredSize(ReflowOutput& aDesiredSize,
+                                          const ReflowInput& aReflowInput,
                                           nscoord aWidth,
                                           nscoord aHeight)
 {
@@ -99,9 +99,9 @@ nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
     // can act as a background in print preview but also handle overflow
     // in child page frames correctly.
     // Use availableWidth so we don't cause a needless horizontal scrollbar.
-    aDesiredSize.Width() = std::max(aReflowState.AvailableWidth(),
+    aDesiredSize.Width() = std::max(aReflowInput.AvailableWidth(),
                                 nscoord(aWidth * PresContext()->GetPrintPreviewScale()));
-    aDesiredSize.Height() = std::max(aReflowState.ComputedHeight(),
+    aDesiredSize.Height() = std::max(aReflowInput.ComputedHeight(),
                                  nscoord(aHeight * PresContext()->GetPrintPreviewScale()));
 }
 
@@ -144,15 +144,15 @@ nsSimplePageSequenceFrame::ComputeCenteringMargin(
 
 void
 nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
-                                  nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
+                                  ReflowOutput&     aDesiredSize,
+                                  const ReflowInput& aReflowInput,
                                   nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   NS_PRECONDITION(aPresContext->IsRootPaginatedDocument(),
                   "A Page Sequence is only for real pages");
   DO_GLOBAL_REFLOW_COUNT("nsSimplePageSequenceFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
@@ -161,7 +161,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // it right in paginated mode.
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // Return our desired size
-    SetDesiredSize(aDesiredSize, aReflowState, mSize.width, mSize.height);
+    SetDesiredSize(aDesiredSize, aReflowInput, mSize.width, mSize.height);
     aDesiredSize.SetOverflowAreasToDesiredBounds();
     FinishAndStoreOverflow(&aDesiredSize);
 
@@ -171,7 +171,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
         nsIFrame* child = e.get();
         nsMargin pageCSSMargin = child->GetUsedMargin();
         nscoord centeringMargin =
-          ComputeCenteringMargin(aReflowState.ComputedWidth(),
+          ComputeCenteringMargin(aReflowInput.ComputedWidth(),
                                  child->GetRect().width,
                                  pageCSSMargin);
         nscoord newX = pageCSSMargin.left + centeringMargin;
@@ -242,7 +242,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nscoord maxXMost = 0;
 
   // Tile the pages vertically
-  nsHTMLReflowMetrics kidSize(aReflowState);
+  ReflowOutput kidSize(aReflowInput);
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nsIFrame* kidFrame = e.get();
     // Set the shared data into the page frame before reflow
@@ -250,25 +250,25 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     pf->SetSharedPageData(mPageData);
 
     // Reflow the page
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
+    ReflowInput kidReflowInput(aPresContext, aReflowInput, kidFrame,
                                      LogicalSize(kidFrame->GetWritingMode(),
                                                  pageSize));
     nsReflowStatus  status;
 
-    kidReflowState.SetComputedWidth(kidReflowState.AvailableWidth());
-    //kidReflowState.SetComputedHeight(kidReflowState.AvailableHeight());
-    PR_PL(("AV W: %d   H: %d\n", kidReflowState.AvailableWidth(), kidReflowState.AvailableHeight()));
+    kidReflowInput.SetComputedWidth(kidReflowInput.AvailableWidth());
+    //kidReflowInput.SetComputedHeight(kidReflowInput.AvailableHeight());
+    PR_PL(("AV W: %d   H: %d\n", kidReflowInput.AvailableWidth(), kidReflowInput.AvailableHeight()));
 
-    nsMargin pageCSSMargin = kidReflowState.ComputedPhysicalMargin();
+    nsMargin pageCSSMargin = kidReflowInput.ComputedPhysicalMargin();
     y += pageCSSMargin.top;
 
     nscoord x = pageCSSMargin.left;
 
     // Place and size the page.
-    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
+    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowInput, x, y, 0, status);
 
     // If the page is narrower than our width, then center it horizontally:
-    x += ComputeCenteringMargin(aReflowState.ComputedWidth(),
+    x += ComputeCenteringMargin(aReflowInput.ComputedWidth(),
                                 kidSize.Width(), pageCSSMargin);
 
     FinishReflowChild(kidFrame, aPresContext, kidSize, nullptr, x, y, 0);
@@ -330,7 +330,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Return our desired size
   // Adjust the reflow size by PrintPreviewScale so the scrollbars end up the
   // correct size
-  SetDesiredSize(aDesiredSize, aReflowState, maxXMost, y);
+  SetDesiredSize(aDesiredSize, aReflowInput, maxXMost, y);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
@@ -341,7 +341,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   mSize.height = y;
 
   NS_FRAME_TRACE_REFLOW_OUT("nsSimplePageSequeceFrame::Reflow", aStatus);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 //----------------------------------------------------------------------

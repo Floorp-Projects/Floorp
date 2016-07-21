@@ -64,7 +64,6 @@ contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e
 # BrowserCLH.js
 component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js application={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 contract @mozilla.org/browser/browser-clh;1 {be623d20-d305-11de-8a39-0800200c9a66}
-category command-line-handler x-browser @mozilla.org/browser/browser-clh;1
 category app-startup BrowserCLH @mozilla.org/browser/browser-clh;1
 
 # ContentDispatchChooser.js

@@ -686,12 +686,12 @@ nsContentUtils::InitializeModifierStrings()
   nsXPIDLString modifierSeparator;
   if (bundle) {
     //macs use symbols for each modifier key, so fetch each from the bundle, which also covers i18n
-    bundle->GetStringFromName(MOZ_UTF16("VK_SHIFT"), getter_Copies(shiftModifier));
-    bundle->GetStringFromName(MOZ_UTF16("VK_META"), getter_Copies(metaModifier));
-    bundle->GetStringFromName(MOZ_UTF16("VK_WIN"), getter_Copies(osModifier));
-    bundle->GetStringFromName(MOZ_UTF16("VK_ALT"), getter_Copies(altModifier));
-    bundle->GetStringFromName(MOZ_UTF16("VK_CONTROL"), getter_Copies(controlModifier));
-    bundle->GetStringFromName(MOZ_UTF16("MODIFIER_SEPARATOR"), getter_Copies(modifierSeparator));
+    bundle->GetStringFromName(u"VK_SHIFT", getter_Copies(shiftModifier));
+    bundle->GetStringFromName(u"VK_META", getter_Copies(metaModifier));
+    bundle->GetStringFromName(u"VK_WIN", getter_Copies(osModifier));
+    bundle->GetStringFromName(u"VK_ALT", getter_Copies(altModifier));
+    bundle->GetStringFromName(u"VK_CONTROL", getter_Copies(controlModifier));
+    bundle->GetStringFromName(u"MODIFIER_SEPARATOR", getter_Copies(modifierSeparator));
   }
   //if any of these don't exist, we get  an empty string
   sShiftText = new nsString(shiftModifier);
@@ -5122,7 +5122,7 @@ nsContentUtils::GetMostRecentNonPBWindow()
   nsCOMPtr<nsIWindowMediator_44> wm = do_QueryInterface(windowMediator);
 
   nsCOMPtr<mozIDOMWindowProxy> window;
-  wm->GetMostRecentNonPBWindow(MOZ_UTF16("navigator:browser"),
+  wm->GetMostRecentNonPBWindow(u"navigator:browser",
                                getter_AddRefs(window));
   nsCOMPtr<nsPIDOMWindowOuter> pwindow;
   pwindow = do_QueryInterface(window);
@@ -6391,16 +6391,12 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString& aString, const fallible_t& aFa
 {
   if (aString.FindChar(char16_t('\r')) != -1) {
     // Windows linebreaks: Map CRLF to LF:
-    if (!aString.ReplaceSubstring(MOZ_UTF16("\r\n"),
-                                  MOZ_UTF16("\n"),
-                                  aFallible)) {
+    if (!aString.ReplaceSubstring(u"\r\n", u"\n", aFallible)) {
       return false;
     }
 
     // Mac linebreaks: Map any remaining CR to LF:
-    if (!aString.ReplaceSubstring(MOZ_UTF16("\r"),
-                                  MOZ_UTF16("\n"),
-                                  aFallible)) {
+    if (!aString.ReplaceSubstring(u"\r", u"\n", aFallible)) {
       return false;
     }
   }

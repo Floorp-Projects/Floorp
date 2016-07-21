@@ -527,7 +527,7 @@ cvt_S(SprintfState* aState, const char16_t* aStr, int aWidth, int aPrec,
   }
 
   /* and away we go */
-  return fill2(aState, aStr ? aStr : MOZ_UTF16("(null)"), slen, aWidth, aFlags);
+  return fill2(aState, aStr ? aStr : u"(null)", slen, aWidth, aFlags);
 }
 
 /*

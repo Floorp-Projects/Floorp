@@ -15,7 +15,7 @@ DEF_TEST(SerializesTypeNames, {
 
     ::testing::NiceMock<MockWriter> writer;
     EXPECT_CALL(writer, writeNode(Property(&JS::ubi::Node::typeName,
-                                           UTF16StrEq(MOZ_UTF16("FakeNode"))),
+                                           UTF16StrEq(u"FakeNode")),
                                   _))
       .Times(1)
       .WillOnce(Return(true));

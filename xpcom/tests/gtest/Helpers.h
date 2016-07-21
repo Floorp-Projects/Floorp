@@ -10,11 +10,11 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsString.h"
+#include "nsTArrayForwardDeclare.h"
 #include <stdint.h>
 
 class nsIInputStream;
 class nsIOutputStream;
-template <class T> class nsTArray;
 
 namespace testing {
 

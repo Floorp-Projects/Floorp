@@ -40,25 +40,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                        'Uint8ClampedArray'];
   errorObjectClasses = ['Error', 'InternalError', 'EvalError', 'RangeError', 'ReferenceError',
                         'SyntaxError', 'TypeError', 'URIError'];
+
+  // A simpleConstructors entry can either be the name of a constructor as a
+  // string, or an object containing the properties `name`, and `args`.
+  // In the former case, the constructor is invoked without any args; in the
+  // latter case, it is invoked with `args` as the arguments list.
   simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
-                        'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'Map', 'Set'].concat(typedArrayClasses)
-                                                                                   .concat(errorObjectClasses);
+                        'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'Map', 'Set',
+                        {name: 'Promise', args: [function(){}]}].concat(typedArrayClasses)
+                                                                .concat(errorObjectClasses);
 
   function go() {
     window.iwin = document.getElementById('ifr').contentWindow;
 
-    // Test constructors that can be instantiated with zero arguments.
+    // Test constructors that can be instantiated with zero arguments, or with
+    // a fixed set of arguments provided using `...rest`.
     for (var c of simpleConstructors) {
+      var args = [];
+      if (typeof c === 'object') {
+        args = c.args;
+        c = c.name;
+      }
       ok(iwin[c], "Constructors appear: " + c);
       is(iwin[c], Cu.unwaiveXrays(iwin.wrappedJSObject[c]),
          "we end up with the appropriate constructor: " + c);
-      is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin[c]).constructor), iwin[c],
+      is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin[c](...args)).constructor), iwin[c],
          "constructor property is set up right: " + c);
-      let expectedProto = /Opaque/.test(new iwin[c]) ? iwin['Object'].prototype
+      let expectedProto = /Opaque/.test(new iwin[c](...args)) ? iwin['Object'].prototype
                                                      : iwin[c].prototype;
-      is(Object.getPrototypeOf(new iwin[c]), expectedProto,
+      is(Object.getPrototypeOf(new iwin[c](...args)), expectedProto,
          "prototype is correct: " + c);
-      is(global(new iwin[c]), iwin, "Got the right global: " + c);
+      is(global(new iwin[c](...args)), iwin, "Got the right global: " + c);
     }
 
     // Test Object in more detail.
@@ -131,6 +143,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     testErrorObjects();
 
     testRegExp();
+
+    testPromise();
 
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
@@ -227,6 +241,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                       "leftContext", "rightContext", "$1", "$2", "$3", "$4",
                       "$5", "$6", "$7", "$8", "$9", "$_", "$&", "$+",
                       "$`", "$'", Symbol.species])
+
+  gPrototypeProperties['Promise'] =
+    ["constructor", "catch", "then"];
+  gConstructorProperties['Promise'] =
+    constructorProps(["resolve", "reject", "all", "race", Symbol.species]);
 
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
@@ -846,6 +865,21 @@ for (var prop of props) {
     }
   }
 
+  // Note: this is a small set of basic tests. More in-depth tests are located
+  // in test_promise_xrays.html.
+  function testPromise() {
+    testXray('Promise', new iwin.Promise(function(){}), new iwin.Promise(function(){}));
+
+    // Test catch and then.
+    var pr = new iwin.Promise(function(){});
+    isnot(pr.catch, Cu.unwaiveXrays(pr.wrappedJSObject.catch), "Different function identities");
+    is(Cu.getGlobalForObject(pr.catch), window, "Xray global is correct");
+    is(Cu.getGlobalForObject(pr.wrappedJSObject.catch), iwin, "Underlying global is correct");
+
+    isnot(pr.then, Cu.unwaiveXrays(pr.wrappedJSObject.then), "Different function identities");
+    is(Cu.getGlobalForObject(pr.then), window, "Xray global is correct");
+    is(Cu.getGlobalForObject(pr.wrappedJSObject.then), iwin, "Underlying global is correct");
+  }
 
   ]]>
   </script>

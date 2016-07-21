@@ -138,7 +138,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
       if (obs && pathString) {
         if (NS_SUCCEEDED(pathString->SetData(path))) {
           (void)obs->NotifyObservers(pathString, "download-watcher-notify",
-                                     MOZ_UTF16("modified"));
+                                     u"modified");
         }
       }
     }

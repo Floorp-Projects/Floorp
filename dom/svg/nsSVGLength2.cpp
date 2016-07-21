@@ -89,7 +89,7 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
 {
   char16_t buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
-                            MOZ_UTF16("%g"),
+                            u"%g",
                             (double)aValue);
   aValueAsString.Assign(buf);
 

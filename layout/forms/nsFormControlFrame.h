@@ -82,8 +82,8 @@ public:
     * @see nsIFrame::Reflow
     */
   virtual void Reflow(nsPresContext*      aCX,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&      aStatus) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

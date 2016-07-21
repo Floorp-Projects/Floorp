@@ -29,14 +29,14 @@ public:
 
   virtual void
   Reflow(nsPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         ReflowOutput&     aDesiredSize,
+         const ReflowInput& aReflowInput,
          nsReflowStatus&          aStatus) override;
   
   virtual nsresult
   Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) override;
+        ReflowOutput& aDesiredSize) override;
 
   bool
   IsMrowLike() override {
@@ -50,7 +50,7 @@ protected:
 
   virtual nsresult
   MeasureForWidth(DrawTarget* aDrawTarget,
-                  nsHTMLReflowMetrics& aDesiredSize) override;
+                  ReflowOutput& aDesiredSize) override;
 
 private:
   nsCSSValue mWidth;
@@ -85,7 +85,7 @@ private:
   UpdateValue(int32_t                  aSign,
               int32_t                  aPseudoUnit,
               const nsCSSValue&        aCSSValue,
-              const nsHTMLReflowMetrics& aDesiredSize,
+              const ReflowOutput& aDesiredSize,
               nscoord&                 aValueToUpdate,
               float                    aFontSizeInflation) const;
 };

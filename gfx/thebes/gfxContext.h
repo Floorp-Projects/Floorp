@@ -19,7 +19,6 @@
 
 typedef struct _cairo cairo_t;
 class GlyphBufferAzure;
-template <typename T> class FallibleTArray;
 
 namespace mozilla {
 namespace gfx {
@@ -213,7 +212,7 @@ public:
     /**
      * Takes the given rect and tries to align it to device pixels.  If
      * this succeeds, the method will return true, and the rect will
-     * be in device coordinates (already transformed by the CTM).  If it 
+     * be in device coordinates (already transformed by the CTM).  If it
      * fails, the method will return false, and the rect will not be
      * changed.
      *
@@ -226,7 +225,7 @@ public:
     /**
      * Takes the given point and tries to align it to device pixels.  If
      * this succeeds, the method will return true, and the point will
-     * be in device coordinates (already transformed by the CTM).  If it 
+     * be in device coordinates (already transformed by the CTM).  If it
      * fails, the method will return false, and the point will not be
      * changed.
      *
@@ -390,8 +389,8 @@ public:
     bool HasComplexClip() const;
 
     /**
-     * Returns true if the given rectangle is fully contained in the current clip. 
-     * This is conservative; it may return false even when the given rectangle is 
+     * Returns true if the given rectangle is fully contained in the current clip.
+     * This is conservative; it may return false even when the given rectangle is
      * fully contained by the current clip.
      */
     bool ClipContainsRect(const gfxRect& aRect);
@@ -471,7 +470,7 @@ private:
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::PathBuilder PathBuilder;
   typedef mozilla::gfx::SourceSurface SourceSurface;
-  
+
   struct AzureState {
     AzureState()
       : op(mozilla::gfx::CompositionOp::OP_OVER)
@@ -562,7 +561,7 @@ public:
   void SetContext(gfxContext *aContext) {
     NS_ASSERTION(!mContext, "Not going to call Restore() on some context!!!");
     mContext = aContext;
-    mContext->Save();    
+    mContext->Save();
   }
 
   void EnsureSaved(gfxContext *aContext) {

@@ -44,20 +44,20 @@ public:
 
   virtual void
   Reflow(nsPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         ReflowOutput&     aDesiredSize,
+         const ReflowInput& aReflowInput,
          nsReflowStatus&          aStatus) override;
 
   virtual nsresult
   Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) override;
+        ReflowOutput& aDesiredSize) override;
 
   virtual void MarkIntrinsicISizesDirty() override;
 
   virtual void
   GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
-                           nsHTMLReflowMetrics& aDesiredSize) override;
+                           ReflowOutput& aDesiredSize) override;
 
   virtual nsresult
   AttributeChanged(int32_t         aNameSpaceID,
@@ -70,7 +70,7 @@ public:
   Stretch(DrawTarget*          aDrawTarget,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
-          nsHTMLReflowMetrics& aDesiredStretchSize) override;
+          ReflowOutput& aDesiredStretchSize) override;
 
   virtual nsresult
   ChildListChanged(int32_t aModType) override

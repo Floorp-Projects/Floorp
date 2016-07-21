@@ -15,6 +15,16 @@
 /* Define to 1 if SpiderMonkey is in debug mode. */
 #undef JS_DEBUG
 
+#ifdef JS_DEBUG
+# ifndef DEBUG
+#  error "SpiderMonkey was configured with --enable-debug, so DEBUG must be defined when including this header"
+# endif
+#else
+# ifdef DEBUG
+#  error "SpiderMonkey was configured with --disable-debug, so DEBUG must be not defined when including this header"
+# endif
+#endif
+
 /* Define to 1 if SpiderMonkey should not use struct types in debug builds. */
 #undef JS_NO_JSVAL_JSID_STRUCT_TYPES
 
