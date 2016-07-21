@@ -260,12 +260,14 @@ NoteViewBufferWasDetached(ArrayBufferViewObject* view,
     MarkObjectStateChange(cx, view);
 }
 
-/* static */ void
+/* static */ bool
 ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
-    MOZ_ASSERT(!buffer->isWasm(), "WASM/asm.js ArrayBuffers cannot be detached");
-    MOZ_ASSERT(buffer->hasDetachableContents(), "detaching the non-detachable");
+    if (buffer->isWasm()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+        return false;
+    }
 
     // When detaching buffers where we don't know all views, the new data must
     // match the old data. All missing views are typed objects, which do not
@@ -312,6 +314,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
 
     buffer->setByteLength(0);
     buffer->setIsDetached();
+    return true;
 }
 
 void
@@ -726,39 +729,35 @@ ArrayBufferObject::createDataViewForThis(JSContext* cx, unsigned argc, Value* vp
 
 /* static */ ArrayBufferObject::BufferContents
 ArrayBufferObject::stealContents(JSContext* cx, Handle<ArrayBufferObject*> buffer,
-                                 bool forceCopy)
+                                 bool hasStealableContents)
 {
-    if (buffer->isDetached()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
-        return BufferContents::createPlain(nullptr);
-    }
-    if (!buffer->hasDetachableContents()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-        return BufferContents::createPlain(nullptr);
-    }
+    MOZ_ASSERT_IF(hasStealableContents, buffer->hasStealableContents());
 
     BufferContents oldContents(buffer->dataPointer(), buffer->bufferKind());
+    BufferContents newContents = AllocateArrayBufferContents(cx, buffer->byteLength());
+    if (!newContents)
+        return BufferContents::createPlain(nullptr);
 
-    if (!forceCopy && buffer->ownsData()) {
-        // Return the old contents and reset the detached buffer's data
-        // pointer. This pointer should never be accessed.
-        auto newContents = BufferContents::createPlain(nullptr);
-        buffer->setOwnsData(DoesntOwnData); // Do not free the stolen data.
-        ArrayBufferObject::detach(cx, buffer, newContents);
-        buffer->setOwnsData(DoesntOwnData); // Do not free the nullptr.
+    if (hasStealableContents) {
+        // Return the old contents and give the detached buffer a pointer to
+        // freshly allocated memory that we will never write to and should
+        // never get committed.
+        buffer->setOwnsData(DoesntOwnData);
+        if (!ArrayBufferObject::detach(cx, buffer, newContents)) {
+            js_free(newContents.data());
+            return BufferContents::createPlain(nullptr);
+        }
         return oldContents;
     }
 
-    // Create a new chunk of memory to return since we cannot remove the
-    // existing contents pointer from the buffer.
-    BufferContents contentsCopy = AllocateArrayBufferContents(cx, buffer->byteLength());
-    if (!contentsCopy)
+    // Create a new chunk of memory to return since we cannot steal the
+    // existing contents away from the buffer.
+    memcpy(newContents.data(), oldContents.data(), buffer->byteLength());
+    if (!ArrayBufferObject::detach(cx, buffer, oldContents)) {
+        js_free(newContents.data());
         return BufferContents::createPlain(nullptr);
-
-    if (buffer->byteLength() > 0)
-        memcpy(contentsCopy.data(), oldContents.data(), buffer->byteLength());
-    ArrayBufferObject::detach(cx, buffer, oldContents);
-    return contentsCopy;
+    }
+    return newContents;
 }
 
 /* static */ void
@@ -1033,11 +1032,10 @@ ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg)
         if (IsArrayBuffer(&bufSlot.toObject())) {
             ArrayBufferObject& buf = AsArrayBuffer(MaybeForwarded(&bufSlot.toObject()));
             uint32_t offset = uint32_t(obj->getFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT).toInt32());
+            MOZ_ASSERT(buf.dataPointer() != nullptr);
             MOZ_ASSERT(offset <= INT32_MAX);
 
             if (buf.forInlineTypedObject()) {
-                MOZ_ASSERT(buf.dataPointer() != nullptr);
-
                 // The data is inline with an InlineTypedObject associated with the
                 // buffer. Get a new address for the typed object if it moved.
                 JSObject* view = buf.firstView();
@@ -1057,8 +1055,6 @@ ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg)
                 trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, srcData, dstData,
                                                                      /* direct = */ false);
             } else {
-                MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
-
                 // The data may or may not be inline with the buffer. The buffer
                 // can only move during a compacting GC, in which case its
                 // objectMoved hook has already updated the buffer's data pointer.
@@ -1085,6 +1081,7 @@ JSObject::is<js::ArrayBufferObjectMaybeShared>() const
 void
 ArrayBufferViewObject::notifyBufferDetached(void* newData)
 {
+    MOZ_ASSERT(newData != nullptr);
     if (is<DataViewObject>()) {
         as<DataViewObject>().notifyBufferDetached(newData);
     } else if (is<TypedArrayObject>()) {
@@ -1193,20 +1190,19 @@ JS_DetachArrayBuffer(JSContext* cx, HandleObject obj,
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
 
-    if (buffer->isDetached())
-        return true;
-
-    if (buffer->isWasm()) {
-        JS_ReportError(cx, "Cannot detach WASM ArrayBuffer");
-        return false;
+    if (changeData == ChangeData && buffer->hasStealableContents()) {
+        ArrayBufferObject::BufferContents newContents =
+            AllocateArrayBufferContents(cx, buffer->byteLength());
+        if (!newContents)
+            return false;
+        if (!ArrayBufferObject::detach(cx, buffer, newContents)) {
+            js_free(newContents.data());
+            return false;
+        }
+    } else {
+        if (!ArrayBufferObject::detach(cx, buffer, buffer->contents()))
+            return false;
     }
-
-    if (!buffer->hasDetachableContents()) {
-        JS_ReportError(cx, "Cannot detach ArrayBuffer");
-        return false;
-    }
-
-    ArrayBufferObject::detach(cx, buffer, buffer->contents());
 
     return true;
 }
@@ -1290,14 +1286,18 @@ JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
+    if (buffer->isDetached()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return nullptr;
+    }
 
-    // The caller assumes that a plain malloc'd buffer is returned. ownsData is
-    // true for (owned) mapped buffers, so we must additionally require that
-    // the buffer is plain. In the future, we could consider returning
-    // something that handles releasing the memory.
-    bool forceCopy = !buffer->ownsData() || !buffer->hasMallocedContents();
+    // The caller assumes that a plain malloc'd buffer is returned.
+    // hasStealableContents is true for mapped buffers, so we must additionally
+    // require that the buffer is plain. In the future, we could consider
+    // returning something that handles releasing the memory.
+    bool hasStealableContents = buffer->hasStealableContents() && buffer->hasMallocedContents();
 
-    return ArrayBufferObject::stealContents(cx, buffer, forceCopy).data();
+    return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents).data();
 }
 
 JS_PUBLIC_API(JSObject*)

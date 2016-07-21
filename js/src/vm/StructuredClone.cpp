@@ -1339,10 +1339,13 @@ JSStructuredCloneWriter::transferOwnership()
 
             // Structured cloning currently only has optimizations for mapped
             // and malloc'd buffers, not asm.js-ified buffers.
+            bool hasStealableContents = arrayBuffer->hasStealableContents() &&
+                                        (arrayBuffer->isMapped() || arrayBuffer->hasMallocedContents());
+
             ArrayBufferObject::BufferContents bufContents =
-                ArrayBufferObject::stealContents(context(), arrayBuffer, false);
+                ArrayBufferObject::stealContents(context(), arrayBuffer, hasStealableContents);
             if (!bufContents)
-                return false; // already transferred data or non-transferable buffer type
+                return false; // Destructor will clean up the already-transferred data.
 
             content = bufContents.data();
             tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
