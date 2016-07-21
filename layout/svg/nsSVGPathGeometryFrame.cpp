@@ -804,9 +804,7 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
     }
   }
 
-  gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)drawTarget->
-      GetUserData(&gfxTextContextPaint::sUserDataKey);
+  gfxTextContextPaint* contextPaint = nsSVGUtils::GetContextPaint(mContent);
 
   if (aRenderComponents & eRenderFill) {
     GeneralPattern fillPattern;
@@ -874,8 +872,7 @@ void
 nsSVGPathGeometryFrame::PaintMarkers(gfxContext& aContext,
                                      const gfxMatrix& aTransform)
 {
-  gfxTextContextPaint *contextPaint =
-    (gfxTextContextPaint*)aContext.GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
+  gfxTextContextPaint* contextPaint = nsSVGUtils::GetContextPaint(mContent);
 
   if (static_cast<nsSVGPathGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);

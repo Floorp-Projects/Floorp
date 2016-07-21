@@ -163,6 +163,26 @@ private:
 };
 
 /**
+ * RAII class used to temporarily set and remove SVG context paint while
+ * painting a piece of SVG.  The context paint is set on the SVG's owner
+ * document, as expected by nsSVGUtils::GetContextPaint.  Any pre-existing
+ * context paint is restored after this class removes the context paint that it
+ * set.
+ */
+class MOZ_RAII AutoSetRestoreSVGContextPaint
+{
+public:
+  AutoSetRestoreSVGContextPaint(gfxTextContextPaint* aContextPaint,
+                                nsIDocument* aSVGDocument);
+  ~AutoSetRestoreSVGContextPaint();
+private:
+  nsIDocument* mSVGDocument;
+  // The context paint that needs to be restored by our dtor after it removes
+  // aContextPaint:
+  void* mOuterContextPaint;
+};
+
+/**
  * Used for trickling down paint information through to SVG glyphs.
  */
 class gfxTextContextPaint
@@ -173,8 +193,6 @@ protected:
     gfxTextContextPaint() { }
 
 public:
-    static mozilla::gfx::UserDataKey sUserDataKey;
-
     /*
      * Get text context pattern with the specified opacity value.
      * This lets us inherit paints and paint opacities (i.e. fill/stroke and
