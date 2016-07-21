@@ -229,7 +229,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
                                   nsLineBox*          aLine,
                                   ReflowInput&  aFrameRS,
                                   nsReflowStatus&     aFrameReflowStatus,
-                                  nsBlockReflowState& aState)
+                                  BlockReflowInput& aState)
 {
   mFrame = aFrameRS.frame;
   mWritingMode = aState.mReflowState.GetWritingMode();

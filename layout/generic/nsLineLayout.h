@@ -28,7 +28,7 @@ class nsFloatManager;
 struct nsStyleText;
 
 class nsLineLayout {
-  using nsBlockReflowState = mozilla::nsBlockReflowState;
+  using BlockReflowInput = mozilla::BlockReflowInput;
   using ReflowInput = mozilla::ReflowInput;
 
 public:
@@ -43,7 +43,7 @@ public:
                nsLineLayout* aBaseLineLayout);
   ~nsLineLayout();
 
-  void Init(nsBlockReflowState* aState, nscoord aMinLineBSize,
+  void Init(BlockReflowInput* aState, nscoord aMinLineBSize,
             int32_t aLineNumber) {
     mBlockRS = aState;
     mMinLineBSize = aMinLineBSize;
@@ -411,7 +411,7 @@ protected:
   //     member. It should not be a problem currently, since the only
   //     code use it is handling float, which does not affect ruby.
   //     See comment in nsLineLayout::AddFloat
-  nsBlockReflowState* mBlockRS;/* XXX hack! */
+  BlockReflowInput* mBlockRS;/* XXX hack! */
 
   nsLineList::iterator mLineBox;
 
