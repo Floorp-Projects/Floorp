@@ -5,10 +5,12 @@
 /* Main container: Displays the filters and presets in 2 columns */
 
 #filter-container {
-  height: 100%;
+  width: 510px;
+  height: 200px;
   display: flex;
   position: relative;
   padding: 5px;
+  box-sizing: border-box;
   /* when opened in a xul:panel, a gray color is applied to text */
   color: var(--theme-body-color);
 }

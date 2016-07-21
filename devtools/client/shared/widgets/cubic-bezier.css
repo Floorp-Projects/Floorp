@@ -7,11 +7,12 @@
 
 .cubic-bezier-container {
   display: flex;
-  width: 500px;
+  width: 510px;
   height: 370px;
   flex-direction: row-reverse;
   overflow: hidden;
   padding: 5px;
+  box-sizing: border-box;
 }
 
 .display-wrap {

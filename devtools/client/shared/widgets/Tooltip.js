@@ -780,7 +780,7 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     eyedropper.className = "devtools-button";
     container.appendChild(eyedropper);
 
-    this.tooltip.setContent(container, { width: 210, height: 216 });
+    this.tooltip.setContent(container, { width: 218, height: 224 });
 
     let spectrum = new Spectrum(spectrumNode, color);
 
