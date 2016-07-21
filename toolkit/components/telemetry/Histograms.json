@@ -5080,6 +5080,32 @@
     "kind": "count",
     "description": "a testing histogram; not meant to be touched - initially not recording"
   },
+  "TELEMETRY_TEST_CATEGORICAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1188888],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "CommonLabel",
+      "Label2",
+      "Label3"
+    ],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_CATEGORICAL_OPTOUT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1188888],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "CommonLabel",
+      "Label4",
+      "Label5",
+      "Label6"
+    ],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD": {
     "expires_in_version": "never",
     "kind": "count",

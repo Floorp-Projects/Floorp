@@ -2800,6 +2800,12 @@ Accumulate(const char *name, const nsCString& key, uint32_t sample)
 }
 
 void
+AccumulateCategorical(ID id, const nsCString& label)
+{
+  TelemetryHistogram::AccumulateCategorical(id, label);
+}
+
+void
 AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
