@@ -6,26 +6,49 @@
 #ifndef mozilla_layers_APZCTreeManager_h
 #define mozilla_layers_APZCTreeManager_h
 
+#include <stdint.h>                     // for uint64_t, uint32_t
 #include <map>                          // for std::map
 
+#include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "gfxPoint.h"                   // for gfxPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/EventForwards.h"      // for WidgetInputEvent, nsEventStatus
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/layers/APZUtils.h"    // for HitTestResult
 #include "mozilla/layers/TouchCounter.h"// for TouchCounter
-#include "mozilla/layers/IAPZCTreeManager.h" // for IAPZCTreeManager
 #include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for mozilla::TimeStamp
 #include "nsCOMPtr.h"                   // for already_AddRefed
-
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
+#include "nsTArrayForwardDeclare.h"     // for nsTArray, nsTArray_Impl, etc
+#include "Units.h"                      // for CSSPoint, CSSRect, etc
 
 namespace mozilla {
+class InputData;
 class MultiTouchInput;
 
 namespace layers {
 
+enum AllowedTouchBehavior {
+  NONE =               0,
+  VERTICAL_PAN =       1 << 0,
+  HORIZONTAL_PAN =     1 << 1,
+  PINCH_ZOOM =         1 << 2,
+  DOUBLE_TAP_ZOOM =    1 << 3,
+  UNKNOWN =            1 << 4
+};
+
+enum ZoomToRectBehavior : uint32_t {
+  DEFAULT_BEHAVIOR =   0,
+  DISABLE_ZOOM_OUT =   1 << 0,
+  PAN_INTO_VIEW_ONLY = 1 << 1,
+  ONLY_ZOOM_TO_DEFAULT_SCALE  = 1 << 2
+};
+
 class Layer;
+class AsyncDragMetrics;
 class AsyncPanZoomController;
 class CompositorBridgeParent;
 class OverscrollHandoffChain;
@@ -77,7 +100,8 @@ class HitTestingTreeNode;
  *
  * Behaviour of APZ is controlled by a number of preferences shown \ref APZCPrefs "here".
  */
-class APZCTreeManager : public IAPZCTreeManager {
+class APZCTreeManager {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZCTreeManager)
 
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
@@ -159,10 +183,29 @@ public:
    * @param aOutInputBlockId returns the id of the input block that this event
    * was added to, if that was the case. May be null.
    */
-  nsEventStatus ReceiveInputEvent(
-      InputData& aEvent,
-      ScrollableLayerGuid* aOutTargetGuid,
-      uint64_t* aOutInputBlockId) override;
+  nsEventStatus ReceiveInputEvent(InputData& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
+
+  /**
+   * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
+   * already-existing instance of an WidgetInputEvent which may be an
+   * WidgetTouchEvent) to have its coordinates in DOM space. This is so that the
+   * event can be passed through the DOM and content can handle them.
+   *
+   * NOTE: Be careful of invoking the WidgetInputEvent variant. This can only be
+   * called on the main thread. See widget/InputData.h for more information on
+   * why we have InputData and WidgetInputEvent separated. If this function is
+   * used, the controller thread must be the main thread, or undefined behaviour
+   * may occur.
+   * NOTE: On unix, mouse events are treated as touch and are forwarded
+   * to the appropriate apz as such.
+   *
+   * See documentation for other ReceiveInputEvent above.
+   */
+  nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
@@ -170,10 +213,9 @@ public:
    * up. |aRect| must be given in CSS pixels, relative to the document.
    * |aFlags| is a combination of the ZoomToRectBehavior enum values.
    */
-  void ZoomToRect(
-      const ScrollableLayerGuid& aGuid,
-      const CSSRect& aRect,
-      const uint32_t aFlags = DEFAULT_BEHAVIOR) override;
+  void ZoomToRect(const ScrollableLayerGuid& aGuid,
+                  const CSSRect& aRect,
+                  const uint32_t aFlags = DEFAULT_BEHAVIOR);
 
   /**
    * If we have touch listeners, this should always be called when we know
@@ -182,9 +224,7 @@ public:
    * queue will be discarded. This function must be called on the controller
    * thread.
    */
-  void ContentReceivedInputBlock(
-      uint64_t aInputBlockId,
-      bool aPreventDefault) override;
+  void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault);
 
   /**
    * When the event regions code is enabled, this function should be invoked to
@@ -197,9 +237,8 @@ public:
    * target, or the target is not a scrollable frame, the target's |mScrollId|
    * should be set to FrameMetrics::NULL_SCROLL_ID.
    */
-  void SetTargetAPZC(
-      uint64_t aInputBlockId,
-      const nsTArray<ScrollableLayerGuid>& aTargets) override;
+  void SetTargetAPZC(uint64_t aInputBlockId,
+                     const nsTArray<ScrollableLayerGuid>& aTargets);
 
   /**
    * Helper function for SetTargetAPZC when used with single-target events,
@@ -212,16 +251,15 @@ public:
    * If the |aConstraints| is Nothing() then previously-provided constraints for
    * the given |aGuid| are cleared.
    */
-  void UpdateZoomConstraints(
-      const ScrollableLayerGuid& aGuid,
-      const Maybe<ZoomConstraints>& aConstraints) override;
+  void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
+                             const Maybe<ZoomConstraints>& aConstraints);
 
   /**
    * Cancels any currently running animation. Note that all this does is set the
    * state of the AsyncPanZoomController back to NOTHING, but it is the
    * animation's responsibility to check this before advancing.
    */
-  void CancelAnimation(const ScrollableLayerGuid &aGuid) override;
+  void CancelAnimation(const ScrollableLayerGuid &aGuid);
 
   /**
    * Adjusts the root APZC to compensate for a shift in the surface. See the
@@ -229,7 +267,7 @@ public:
    * some more details. This is only currently needed due to surface shifts
    * caused by the dynamic toolbar on Android.
    */
-  void AdjustScrollForSurfaceShift(const ScreenPoint& aShift) override;
+  void AdjustScrollForSurfaceShift(const ScreenPoint& aShift);
 
   /**
    * Calls Destroy() on all APZC instances attached to the tree, and resets the
@@ -255,10 +293,10 @@ public:
     const ParentLayerPoint& aVelocity);
 
   /**
-   * Sets the dpi value used by all AsyncPanZoomControllers.
+   * Set the dpi value used by all AsyncPanZoomControllers.
    * DPI defaults to 72 if not set using SetDPI() at any point.
    */
-  void SetDPI(float aDpiValue) override { sDPI = aDpiValue; }
+  static void SetDPI(float aDpiValue) { sDPI = aDpiValue; }
 
   /**
    * Returns the current dpi value in use.
@@ -280,9 +318,8 @@ public:
    * touch-session.
    * This must be called on the controller thread.
    */
-  void SetAllowedTouchBehavior(
-      uint64_t aInputBlockId,
-      const nsTArray<TouchBehaviorFlags>& aValues) override;
+  void SetAllowedTouchBehavior(uint64_t aInputBlockId,
+                               const nsTArray<TouchBehaviorFlags>& aValues);
 
   /**
    * This is a callback for AsyncPanZoomController to call when it wants to
@@ -364,9 +401,8 @@ public:
   void DispatchFling(AsyncPanZoomController* aApzc,
                      FlingHandoffState& aHandoffState);
 
-  void StartScrollbarDrag(
-      const ScrollableLayerGuid& aGuid,
-      const AsyncDragMetrics& aDragMetrics) override;
+  void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
+                          const AsyncDragMetrics& aDragMetrics);
 
   /*
    * Build the chain of APZCs that will handle overscroll for a pan starting at |aInitialTarget|.
@@ -379,19 +415,11 @@ public:
    * On slow running tests, drags and touch events can be misinterpreted
    * as a long tap. This allows tests to disable long tap gesture detection.
    */
-  void SetLongTapEnabled(bool aTapGestureEnabled) override;
+  static void SetLongTapEnabled(bool aTapGestureEnabled);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
-
-  // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
-  void TransformEventRefPoint(
-      LayoutDeviceIntPoint* aRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid) override;
-  void UpdateWheelTransaction(
-      LayoutDeviceIntPoint aRefPoint,
-      EventMessage aEventMessage) override;
 
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
@@ -420,7 +448,7 @@ public:
    * is occurring such as when the toolbar is being hidden/shown in Fennec.
    * This function can be called to have the y axis' velocity queue updated.
    */
-  void ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY) override;
+  void ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY);
 private:
   typedef bool (*GuidComparator)(const ScrollableLayerGuid&, const ScrollableLayerGuid&);
 
@@ -450,6 +478,16 @@ private:
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
                                   ScrollableLayerGuid* aOutTargetGuid,
                                   uint64_t* aOutInputBlockId);
+  nsEventStatus ProcessWheelEvent(WidgetWheelEvent& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
+  nsEventStatus ProcessEvent(WidgetInputEvent& inputEvent,
+                             ScrollableLayerGuid* aOutTargetGuid,
+                             uint64_t* aOutInputBlockId);
+  nsEventStatus ProcessMouseEvent(WidgetMouseEventBase& aInput,
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  uint64_t* aOutInputBlockId);
+  void UpdateWheelTransaction(WidgetInputEvent& aEvent);
   void FlushRepaintsToClearScreenToGeckoTransform();
 
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,

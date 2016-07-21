@@ -418,7 +418,7 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
   return true;
 }
 
-already_AddRefed<IAPZCTreeManager>
+already_AddRefed<APZCTreeManager>
 GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
 {
   return CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
