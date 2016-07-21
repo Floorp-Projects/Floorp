@@ -594,20 +594,25 @@ function BlockOnPromise(promise, blockedPromise, onResolve, onReject) {
     if (!addToDependent)
         return;
 
-    // The promise created by the |promise.then| call or the inlined version
+    // The object created by the |promise.then| call or the inlined version
     // of it above is visible to content (either because |promise.then| was
     // overridden by content and could leak it, or because a constructor
     // other than the original value of |Promise| was used to create it).
-    // To have both that promise and |blockedPromise| show up as dependent
+    // To have both that object and |blockedPromise| show up as dependent
     // promises in the debugger, add a dummy reaction to the list of reject
     // reactions that contains |blockedPromise|, but otherwise does nothing.
-    if (IsPromise(promise))
+    // If the object isn't a maybe-wrapped instance of |Promise|, we ignore
+    // it. All this does is lose some small amount of debug information
+    // in scenarios that are highly unlikely to occur in useful code.
+    if (IsPromise(promise)) {
         return callFunction(AddPromiseReaction, promise, PROMISE_REJECT_REACTIONS_SLOT,
                             blockedPromise);
+    }
 
-    assert(IsWrappedPromise(promise), "Can only block on, maybe wrapped, Promise objects");
-    callFunction(CallPromiseMethodIfWrapped, promise, PROMISE_REJECT_REACTIONS_SLOT,
-                 blockedPromise, "AddPromiseReaction");
+    if (IsWrappedPromise(promise)) {
+        callFunction(CallPromiseMethodIfWrapped, promise, PROMISE_REJECT_REACTIONS_SLOT,
+                     blockedPromise, "AddPromiseReaction");
+    }
 }
 
 /**
