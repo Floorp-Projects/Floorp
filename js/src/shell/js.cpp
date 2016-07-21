@@ -6047,7 +6047,7 @@ js::shell::AutoReportException::~AutoReportException()
     ShellContext* sc = GetShellContext(cx);
     js::ErrorReport report(cx);
     if (!report.init(cx, exn, js::ErrorReport::WithSideEffects)) {
-        fprintf(stderr, "out of memory initializing ErrorReport\n");
+        PrintError(cx, stderr, "out of memory initializing ErrorReport", nullptr, reportWarnings);
         JS_ClearPendingException(cx);
         return;
     }
