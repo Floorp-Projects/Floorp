@@ -17,7 +17,7 @@
 
 class nsTableRowFrame;
 namespace mozilla {
-struct nsRowGroupReflowState;
+struct TableRowGroupReflowInput;
 } // namespace mozilla
 
 #define MIN_ROWS_NEEDING_CURSOR 20
@@ -35,7 +35,7 @@ class nsTableRowGroupFrame final
   : public nsContainerFrame
   , public nsILineIterator
 {
-  using nsRowGroupReflowState = mozilla::nsRowGroupReflowState;
+  using TableRowGroupReflowInput = mozilla::TableRowGroupReflowInput;
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
@@ -330,7 +330,7 @@ protected:
   virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 
   void PlaceChild(nsPresContext*         aPresContext,
-                  nsRowGroupReflowState& aReflowState,
+                  TableRowGroupReflowInput& aReflowState,
                   nsIFrame*              aKidFrame,
                   mozilla::WritingMode   aWM,
                   const mozilla::LogicalPoint& aKidPosition,
@@ -345,7 +345,7 @@ protected:
 
   void DidResizeRows(nsHTMLReflowMetrics& aDesiredSize);
 
-  void SlideChild(nsRowGroupReflowState& aReflowState,
+  void SlideChild(TableRowGroupReflowInput& aReflowState,
                   nsIFrame*              aKidFrame);
 
   /**
@@ -356,7 +356,7 @@ protected:
    */
   void ReflowChildren(nsPresContext*         aPresContext,
                       nsHTMLReflowMetrics&   aDesiredSize,
-                      nsRowGroupReflowState& aReflowState,
+                      TableRowGroupReflowInput& aReflowState,
                       nsReflowStatus&        aStatus,
                       bool*                aPageBreakBeforeEnd = nullptr);
 

@@ -28,9 +28,9 @@ using namespace mozilla;
 
 namespace mozilla {
 
-struct nsTableCellReflowState : public ReflowInput
+struct TableCellReflowInput : public ReflowInput
 {
-  nsTableCellReflowState(nsPresContext*           aPresContext,
+  TableCellReflowInput(nsPresContext*           aPresContext,
                          const ReflowInput& aParentReflowState,
                          nsIFrame*                aFrame,
                          const LogicalSize&       aAvailableSpace,
@@ -45,7 +45,7 @@ struct nsTableCellReflowState : public ReflowInput
 
 } // namespace mozilla
 
-void nsTableCellReflowState::FixUp(const LogicalSize& aAvailSpace)
+void TableCellReflowInput::FixUp(const LogicalSize& aAvailSpace)
 {
   // fix the mComputed values during a pass 2 reflow since the cell can be a percentage base
   NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aAvailSpace.ISize(mWritingMode),
@@ -71,7 +71,7 @@ void
 nsTableRowFrame::InitChildReflowState(nsPresContext&          aPresContext,
                                       const LogicalSize&      aAvailSize,
                                       bool                    aBorderCollapse,
-                                      nsTableCellReflowState& aReflowState)
+                                      TableCellReflowInput& aReflowState)
 {
   nsMargin collapseBorder;
   nsMargin* pCollapseBorder = nullptr;
@@ -817,7 +817,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       NS_NOTREACHED("yikes, a non-row child");
 
       // it's an unknown frame type, give it a generic reflow and ignore the results
-      nsTableCellReflowState
+      TableCellReflowInput
         kidReflowState(aPresContext, aReflowState, kidFrame,
                        LogicalSize(kidFrame->GetWritingMode(), 0, 0),
                        ReflowInput::CALLER_WILL_INIT);
@@ -886,7 +886,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       // column isizes
       nscoord availCellISize = CalcAvailISize(aTableFrame, *cellFrame);
 
-      Maybe<nsTableCellReflowState> kidReflowState;
+      Maybe<TableCellReflowInput> kidReflowState;
       nsHTMLReflowMetrics desiredSize(aReflowState);
 
       // If the avail isize is not the same as last time we reflowed the cell or
@@ -1154,7 +1154,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
   bool borderCollapse = GetTableFrame()->IsBorderCollapse();
   NS_ASSERTION(aCellFrame->GetWritingMode() == wm,
                "expected consistent writing-mode within table");
-  nsTableCellReflowState
+  TableCellReflowInput
     cellReflowState(aPresContext, aReflowState, aCellFrame, availSize,
                     ReflowInput::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
