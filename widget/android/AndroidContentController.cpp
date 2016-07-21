@@ -8,12 +8,12 @@
 #include "AndroidBridge.h"
 #include "base/message_loop.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "nsIObserverService.h"
 #include "nsLayoutUtils.h"
 #include "nsWindow.h"
 
-using mozilla::layers::IAPZCTreeManager;
+using mozilla::layers::APZCTreeManager;
 
 namespace mozilla {
 namespace widget {
@@ -26,7 +26,7 @@ AndroidContentController::Destroy()
 }
 
 void
-AndroidContentController::NotifyDefaultPrevented(IAPZCTreeManager* aManager,
+AndroidContentController::NotifyDefaultPrevented(APZCTreeManager* aManager,
                                                  uint64_t aInputBlockId,
                                                  bool aDefaultPrevented)
 {
@@ -35,7 +35,7 @@ AndroidContentController::NotifyDefaultPrevented(IAPZCTreeManager* aManager,
         // APZ "controller" thread) but we get it from the Gecko thread, so we
         // have to throw it onto the other thread.
         AndroidBridge::Bridge()->PostTaskToUiThread(NewRunnableMethod<uint64_t, bool>(
-            aManager, &IAPZCTreeManager::ContentReceivedInputBlock,
+            aManager, &APZCTreeManager::ContentReceivedInputBlock,
             aInputBlockId, aDefaultPrevented), 0);
         return;
     }
