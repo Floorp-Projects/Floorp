@@ -88,6 +88,18 @@ VRManagerParent::CreateSameProcess()
   return vmp.get();
 }
 
+bool
+VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
+{
+  MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
+
+  RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid());
+  vmp->mCompositorThreadHolder = layers::CompositorThreadHolder::GetSingleton();
+  loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
+    vmp, &VRManagerParent::Bind, Move(aEndpoint)));
+  return true;
+}
+
 void
 VRManagerParent::DeferredDestroy()
 {
