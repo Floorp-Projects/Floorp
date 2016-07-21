@@ -40,9 +40,11 @@ enum LineReflowStatus {
   LINE_REFLOW_TRUNCATED
 };
 
-class nsBlockReflowState;
 class nsBlockInFlowLineIterator;
 class nsBulletFrame;
+namespace mozilla {
+class nsBlockReflowState;
+} // namespace mozilla
 
 /**
  * Some invariants:
@@ -75,6 +77,8 @@ class nsBulletFrame;
  */
 class nsBlockFrame : public nsContainerFrame
 {
+  using nsBlockReflowState = mozilla::nsBlockReflowState;
+
 public:
   NS_DECL_QUERYFRAME_TARGET(nsBlockFrame)
   NS_DECL_FRAMEARENA_HELPERS
@@ -888,7 +892,7 @@ protected:
   // XXXmats blocks rarely have floats, make it a frame property
   nsFrameList mFloats;
 
-  friend class nsBlockReflowState;
+  friend class mozilla::nsBlockReflowState;
   friend class nsBlockInFlowLineIterator;
 
 #ifdef DEBUG

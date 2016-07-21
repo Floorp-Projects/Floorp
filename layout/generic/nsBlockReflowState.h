@@ -5,8 +5,8 @@
 
 /* state used in reflow of block frames */
 
-#ifndef nsBlockReflowState_h__
-#define nsBlockReflowState_h__
+#ifndef nsBlockReflowState_h
+#define nsBlockReflowState_h
 
 #include "nsFloatManager.h"
 #include "nsLineBox.h"
@@ -70,6 +70,8 @@ class nsOverflowContinuationTracker;
 // Set when the pref layout.float-fragments-inside-column.enabled is true.
 #define BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED 0x00000400
 #define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
+
+namespace mozilla {
 
 // nsBlockReflowState contains additional reflow state information that the
 // block frame uses along with ReflowInput. Like ReflowInput, this
@@ -378,4 +380,6 @@ private:
   void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 };
 
-#endif // nsBlockReflowState_h__
+}; // namespace mozilla
+
+#endif // nsBlockReflowState_h
