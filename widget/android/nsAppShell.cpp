@@ -133,29 +133,6 @@ NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 nsCOMPtr<nsIPowerManagerService> sPowerManagerService = nullptr;
 StaticRefPtr<WakeLockListener> sWakeLockListener;
 
-namespace {
-
-already_AddRefed<nsIURI>
-ResolveURI(const nsCString& uriStr)
-{
-    nsCOMPtr<nsIIOService> ioServ = do_GetIOService();
-    nsCOMPtr<nsIURI> uri;
-
-    if (NS_SUCCEEDED(ioServ->NewURI(uriStr, nullptr,
-                                    nullptr, getter_AddRefs(uri)))) {
-        return uri.forget();
-    }
-
-    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-    if (fixup && NS_SUCCEEDED(
-            fixup->CreateFixupURI(uriStr, 0, nullptr, getter_AddRefs(uri)))) {
-        return uri.forget();
-    }
-    return nullptr;
-}
-
-} // namespace
-
 
 class GeckoThreadSupport final
     : public widget::GeckoThread::Natives<GeckoThreadSupport>
@@ -176,7 +153,7 @@ public:
         return UsesGeckoThreadProxy::OnNativeCall(aCall);
     }
 
-    static void SpeculativeConnect(jni::String::Param uriStr)
+    static void SpeculativeConnect(jni::String::Param aUriStr)
     {
         if (!NS_IsMainThread()) {
             // We will be on the main thread if the call was queued on the Java
@@ -192,7 +169,7 @@ public:
             return;
         }
 
-        nsCOMPtr<nsIURI> uri = ResolveURI(uriStr->ToCString());
+        nsCOMPtr<nsIURI> uri = nsAppShell::ResolveURI(aUriStr->ToCString());
         if (!uri) {
             return;
         }
@@ -656,6 +633,25 @@ nsAppShell::SyncRunEvent(Event&& event,
     while (!finished && MOZ_LIKELY(sAppShell && !sAppShell->mSyncRunQuit)) {
         appShell->mSyncRunFinished.Wait();
     }
+}
+
+already_AddRefed<nsIURI>
+nsAppShell::ResolveURI(const nsCString& aUriStr)
+{
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService();
+    nsCOMPtr<nsIURI> uri;
+
+    if (NS_SUCCEEDED(ioServ->NewURI(aUriStr, nullptr,
+                                    nullptr, getter_AddRefs(uri)))) {
+        return uri.forget();
+    }
+
+    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+    if (fixup && NS_SUCCEEDED(
+            fixup->CreateFixupURI(aUriStr, 0, nullptr, getter_AddRefs(uri)))) {
+        return uri.forget();
+    }
+    return nullptr;
 }
 
 class nsAppShell::LegacyGeckoEvent : public Event
