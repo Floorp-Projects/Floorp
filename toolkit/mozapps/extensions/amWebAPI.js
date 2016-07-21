@@ -122,7 +122,7 @@ function AddonInstall(window, properties) {
  * We must take care only to wrap and reject with errors that are meant
  * to be visible to content, and not internal errors.
  * This function is a wrapper to handle the common bits.
- * 
+ *
  *   apiRequest is the name of the command to invoke in the parent process
  *   apiArgs is a callable that takes the content-provided args for the
  *           method and returns the arguments to send in the request to
