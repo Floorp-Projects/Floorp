@@ -23,7 +23,7 @@ class ImageMetadata
 public:
   ImageMetadata()
     : mLoopCount(-1)
-    , mFirstFrameTimeout(0)
+    , mFirstFrameTimeout(FrameTimeout::Forever())
     , mHasAnimation(false)
   { }
 
@@ -40,8 +40,19 @@ public:
   }
   int32_t GetLoopCount() const { return mLoopCount; }
 
-  void SetFirstFrameTimeout(int32_t aTimeout) { mFirstFrameTimeout = aTimeout; }
-  int32_t GetFirstFrameTimeout() const { return mFirstFrameTimeout; }
+  void SetLoopLength(FrameTimeout aLength) { mLoopLength = Some(aLength); }
+  FrameTimeout GetLoopLength() const { return *mLoopLength; }
+  bool HasLoopLength() const { return mLoopLength.isSome(); }
+
+  void SetFirstFrameTimeout(FrameTimeout aTimeout) { mFirstFrameTimeout = aTimeout; }
+  FrameTimeout GetFirstFrameTimeout() const { return mFirstFrameTimeout; }
+
+  void SetFirstFrameRefreshArea(const gfx::IntRect& aRefreshArea)
+  {
+    mFirstFrameRefreshArea = Some(aRefreshArea);
+  }
+  gfx::IntRect GetFirstFrameRefreshArea() const { return *mFirstFrameRefreshArea; }
+  bool HasFirstFrameRefreshArea() const { return mFirstFrameRefreshArea.isSome(); }
 
   void SetSize(int32_t width, int32_t height, Orientation orientation)
   {
@@ -65,8 +76,15 @@ private:
   /// The loop count for animated images, or -1 for infinite loop.
   int32_t mLoopCount;
 
+  // The total length of a single loop through an animated image.
+  Maybe<FrameTimeout> mLoopLength;
+
   /// The timeout of an animated image's first frame.
-  int32_t mFirstFrameTimeout;
+  FrameTimeout mFirstFrameTimeout;
+
+  // The area of the image that needs to be invalidated when the animation
+  // loops.
+  Maybe<gfx::IntRect> mFirstFrameRefreshArea;
 
   Maybe<nsIntSize> mSize;
   Maybe<Orientation> mOrientation;

@@ -214,47 +214,47 @@ nsBaseFilePicker::AppendFilters(int32_t aFilterMask)
   nsXPIDLString filter;
 
   if (aFilterMask & filterAll) {
-    titleBundle->GetStringFromName(MOZ_UTF16("allTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("allFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"allTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"allFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterHTML) {
-    titleBundle->GetStringFromName(MOZ_UTF16("htmlTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("htmlFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"htmlTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"htmlFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterText) {
-    titleBundle->GetStringFromName(MOZ_UTF16("textTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("textFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"textTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"textFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterImages) {
-    titleBundle->GetStringFromName(MOZ_UTF16("imageTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("imageFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"imageTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"imageFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterAudio) {
-    titleBundle->GetStringFromName(MOZ_UTF16("audioTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("audioFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"audioTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"audioFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterVideo) {
-    titleBundle->GetStringFromName(MOZ_UTF16("videoTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"videoTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"videoFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXML) {
-    titleBundle->GetStringFromName(MOZ_UTF16("xmlTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("xmlFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"xmlTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"xmlFilter", getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXUL) {
-    titleBundle->GetStringFromName(MOZ_UTF16("xulTitle"), getter_Copies(title));
-    filterBundle->GetStringFromName(MOZ_UTF16("xulFilter"), getter_Copies(filter));
+    titleBundle->GetStringFromName(u"xulTitle", getter_Copies(title));
+    filterBundle->GetStringFromName(u"xulFilter", getter_Copies(filter));
     AppendFilter(title, filter);
   }
   if (aFilterMask & filterApps) {
-    titleBundle->GetStringFromName(MOZ_UTF16("appsTitle"), getter_Copies(title));
+    titleBundle->GetStringFromName(u"appsTitle", getter_Copies(title));
     // Pass the magic string "..apps" to the platform filepicker, which it
     // should recognize and do the correct platform behavior for.
     AppendFilter(title, NS_LITERAL_STRING("..apps"));

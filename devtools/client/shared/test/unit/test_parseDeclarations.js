@@ -346,7 +346,13 @@ const TEST_DATA = [
     input: "/*! walrus: zebra; */",
     expected: [{name: "walrus", value: "zebra", priority: "",
                 offsets: [4, 18], commentOffsets: [0, 21]}]
-  }
+  },
+
+  // Regression test for bug 1287620.
+  {
+    input: "color: blue \\9 no\\_need",
+    expected: [{name: "color", value: "blue \\9 no_need", priority: "", offsets: [0, 23]}]
+  },
 ];
 
 function run_test() {

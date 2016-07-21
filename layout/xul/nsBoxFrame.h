@@ -94,8 +94,8 @@ public:
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual void SetInitialChildList(ChildListID  aListID,
@@ -124,7 +124,7 @@ public:
 
     // This is bogus, but it's what we've always done.
     // (Given that we're replaced, we need to say we're a replaced element
-    // that contains a block so nsHTMLReflowState doesn't tell us to be
+    // that contains a block so ReflowInput doesn't tell us to be
     // NS_INTRINSICSIZE wide.)
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | eXULBox |
@@ -136,7 +136,7 @@ public:
 #endif
 
   virtual void DidReflow(nsPresContext*           aPresContext,
-                         const nsHTMLReflowState* aReflowState,
+                         const ReflowInput* aReflowInput,
                          nsDidReflowStatus        aStatus) override;
 
   virtual bool HonorPrintBackgroundSettings() override;

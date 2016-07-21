@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Test that pseudoelements are displayed correctly in the rule view
+// Test that pseudoelements are displayed correctly in the markup view.
 
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 

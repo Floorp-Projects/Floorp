@@ -9485,7 +9485,7 @@ nsGlobalWindow::FindOuter(const nsAString& aString, bool aCaseSensitive,
     nsCOMPtr<mozIDOMWindowProxy> findDialog;
 
     if (windowMediator) {
-      windowMediator->GetMostRecentWindow(MOZ_UTF16("findInPage"),
+      windowMediator->GetMostRecentWindow(u"findInPage",
                                           getter_AddRefs(findDialog));
     }
 
@@ -11119,7 +11119,7 @@ nsGlobalWindow::ShowSlowScriptDialog()
       }
 
       // Insert U+2026 HORIZONTAL ELLIPSIS
-      filenameUTF16.Replace(cutStart, cutLength, NS_LITERAL_STRING("\x2026"));
+      filenameUTF16.Replace(cutStart, cutLength, NS_LITERAL_STRING(u"\x2026"));
     }
     const char16_t *formatParams[] = { filenameUTF16.get() };
     rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
@@ -11537,7 +11537,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 #endif // MOZ_B2G
 
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    MOZ_ASSERT(!NS_strcmp(aData, MOZ_UTF16("intl.accept_languages")));
+    MOZ_ASSERT(!NS_strcmp(aData, u"intl.accept_languages"));
     MOZ_ASSERT(IsInnerWindow());
 
     // The user preferred languages have changed, we need to fire an event on

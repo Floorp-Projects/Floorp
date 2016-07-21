@@ -89,13 +89,13 @@ protected:
    * Retrieve the effective computed block size of this frame, which is the
    * computed block size, minus the block size consumed by any previous in-flows.
    */
-  nscoord GetEffectiveComputedBSize(const nsHTMLReflowState& aReflowState,
+  nscoord GetEffectiveComputedBSize(const ReflowInput& aReflowInput,
                                     nscoord aConsumed = NS_INTRINSICSIZE) const;
 
   /**
    * @see nsIFrame::GetLogicalSkipSides()
    */
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
 
   /**
    * A faster version of GetLogicalSkipSides() that is intended to be used

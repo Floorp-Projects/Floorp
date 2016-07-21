@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAttrValue.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsCSPUtils.h"
 #include "nsDebug.h"

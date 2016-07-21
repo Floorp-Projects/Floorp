@@ -116,26 +116,42 @@ function startTest() {
   // document.createElement with extended type.
   var extendedProto = Object.create(HTMLButtonElement.prototype);
   var buttonConstructor = document.registerElement("x-extended-button", { prototype: extendedProto, extends: "button" });
-  var extendedButton = document.createElement("button", "x-extended-button");
+  var extendedButton = document.createElement("button", {is: "x-extended-button"});
   is(extendedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
   is(extendedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
   is(extendedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
 
   // document.createElementNS with different namespace than definition.
-  var svgButton = document.createElementNS("http://www.w3.org/2000/svg", "button", "x-extended-button");
-  isnot(svgButton.__proto__, extendedProto, "Definition for element is in html namespace, registration should not apply for SVG elements.");
+  try {
+    var svgButton = document.createElementNS("http://www.w3.org/2000/svg", "button", {is: "x-extended-button"});
+    ok(false, "An exception should've been thrown");
+  } catch(err) {
+    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
+  }
 
   // document.createElementNS with no namespace.
-  var noNamespaceButton = document.createElementNS("", "button", "x-extended-button");
-  isnot(noNamespaceButton.__proto__, extendedProto, "Definition for element is in html namespace, registration should not apply for elements with no namespace.");
+  try {
+    var noNamespaceButton = document.createElementNS("", "button", {is: "x-extended-button"});
+    ok(false, "An exception should've been thrown");
+  } catch(err) {
+    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
+  }
 
   // document.createElement with non-existant extended type.
-  var normalButton = document.createElement("button", "x-non-existant");
-  is(normalButton.__proto__, HTMLButtonElement.prototype, "When the extended type doesn't exist, prototype should not change.");
+  try {
+    var normalButton = document.createElement("button", {is: "x-non-existant"});
+    ok(false, "An exception should've been thrown");
+  } catch(err) {
+    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
+  }
 
   // document.createElement with exteneded type that does not match with local name of element.
-  var normalDiv = document.createElement("div", "x-extended-button");
-  is(normalDiv.__proto__, HTMLDivElement.prototype, "Prototype should not change when local name of extended type defintion does not match.");
+  try {
+    var normalDiv = document.createElement("div", {is: "x-extended-button"});
+    ok(false, "An exception should've been thrown");
+  } catch(err) {
+    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
+  }
 
   // Custom element constructor.
   var constructedButton = new buttonConstructor();
@@ -143,23 +159,13 @@ function startTest() {
   is(constructedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
   is(constructedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
 
-  // document.createElementNS with extended type.
-  var svgExtendedProto = Object.create(SVGTextElement.prototype);
-  var svgConstructor = document.registerElement("x-extended-text", { prototype: svgExtendedProto, extends: "text"});
-  var extendedText = document.createElementNS("http://www.w3.org/2000/svg", "text", "x-extended-text");
-  is(extendedText.tagName, "text", "Created element should have a local name of |text|.");
-  is(extendedText.__proto__, svgExtendedProto, "Created element have the registered prototype.");
-  is(extendedText.getAttribute("is"), "x-extended-text", "The |is| attribute of the created element should be the extended type.");
-
   // document.createElement with different namespace than definition for extended element.
-  var htmlText = document.createElement("text", "x-extended-text");
-  isnot(htmlText.__proto__, svgExtendedProto, "Definition for element in SVG namespace should not apply to HTML elements.");
-
-  // Custom element constructor for a SVG element.
-  var constructedText = new svgConstructor();
-  is(constructedText.tagName, "text", "Created element should have a local name of |text|.");
-  is(constructedText.__proto__, svgExtendedProto, "Created element have the registered prototype.");
-  is(constructedText.getAttribute("is"), "x-extended-text", "The |is| attribute of the created element should be the extended type.");
+  try {
+    var htmlText = document.createElement("text", {is: "x-extended-text"});
+    ok(false, "An exception should've been thrown");
+  } catch(err) {
+    is(err.name, "NotFoundError", "A NotFoundError exception should've been thrown");
+  }
 
   // Try creating an element with a custom element name, but not in the html namespace.
   var htmlNamespaceProto = Object.create(HTMLElement.prototype);

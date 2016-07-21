@@ -8,7 +8,7 @@
 #include "nsFloatManager.h"
 #include "nsIPresShell.h"
 #include "nsMemory.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 #include "nsBlockDebugFlags.h"
 #include "nsError.h"
 #include <algorithm>
@@ -562,11 +562,11 @@ nsAutoFloatManager::~nsAutoFloatManager()
     printf("restoring old float manager %p\n", mOld);
 #endif
 
-    mReflowState.mFloatManager = mOld;
+    mReflowInput.mFloatManager = mOld;
 
 #ifdef NOISY_FLOATMANAGER
     if (mOld) {
-      static_cast<nsFrame *>(mReflowState.frame)->ListTag(stdout);
+      static_cast<nsFrame *>(mReflowInput.frame)->ListTag(stdout);
       printf(": space-manager %p after reflow\n", mOld);
       mOld->List(stdout);
     }
@@ -583,17 +583,17 @@ nsAutoFloatManager::CreateFloatManager(nsPresContext *aPresContext)
   // state. `Remember' the old float manager so we can restore it
   // later.
   mNew = new nsFloatManager(aPresContext->PresShell(),
-                            mReflowState.GetWritingMode());
+                            mReflowInput.GetWritingMode());
   if (! mNew)
     return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef NOISY_FLOATMANAGER
   printf("constructed new float manager %p (replacing %p)\n",
-         mNew, mReflowState.mFloatManager);
+         mNew, mReflowInput.mFloatManager);
 #endif
 
   // Set the float manager in the existing reflow state
-  mOld = mReflowState.mFloatManager;
-  mReflowState.mFloatManager = mNew;
+  mOld = mReflowInput.mFloatManager;
+  mReflowInput.mFloatManager = mNew;
   return NS_OK;
 }

@@ -66,17 +66,13 @@ public class GeckoEvent {
     public enum NativeGeckoEvent {
         NATIVE_POKE(0),
         MOTION_EVENT(2),
-        LOAD_URI(12),
         NOOP(15),
         VIEWPORT(20),
-        NETWORK_CHANGED(22),
         THUMBNAIL(25),
-        SCREENORIENTATION_CHANGED(27),
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
         LOW_MEMORY(35),
-        NETWORK_LINK_CHANGE(36),
         TELEMETRY_HISTOGRAM_ADD(37),
         TELEMETRY_UI_SESSION_START(42),
         TELEMETRY_UI_SESSION_STOP(43),
@@ -125,13 +121,6 @@ public class GeckoEvent {
     private String mCharacters;
     private String mCharactersExtra;
     private String mData;
-
-    private int     mConnectionType;
-    private boolean mIsWifi;
-    private int     mDHCPGateway;
-
-    private short mScreenOrientation;
-    private short mScreenAngle;
 
     private ByteBuffer mBuffer;
 
@@ -351,29 +340,6 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createURILoadEvent(String uri) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
-        event.mCharacters = uri;
-        event.mCharactersExtra = "";
-        return event;
-    }
-
-    public static GeckoEvent createBookmarkLoadEvent(String uri) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
-        event.mCharacters = uri;
-        event.mCharactersExtra = "-bookmark";
-        return event;
-    }
-
-    public static GeckoEvent createNetworkEvent(int connectionType, boolean isWifi, int DHCPGateway, String status) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.NETWORK_CHANGED);
-        event.mConnectionType = connectionType;
-        event.mIsWifi = isWifi;
-        event.mDHCPGateway = DHCPGateway;
-        event.mCharacters = status;
-        return event;
-    }
-
     public static GeckoEvent createThumbnailEvent(int tabId, int bufw, int bufh, ByteBuffer buffer) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.THUMBNAIL);
         event.mPoints = new Point[1];
@@ -394,13 +360,6 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation, short aScreenAngle) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.SCREENORIENTATION_CHANGED);
-        event.mScreenOrientation = aScreenOrientation;
-        event.mScreenAngle = aScreenAngle;
-        return event;
-    }
-
     public static GeckoEvent createCallObserverEvent(String observerKey, String topic, String data) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.CALL_OBSERVER);
         event.mCharacters = observerKey;
@@ -418,12 +377,6 @@ public class GeckoEvent {
     public static GeckoEvent createLowMemoryEvent(int level) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOW_MEMORY);
         event.mMetaState = level;
-        return event;
-    }
-
-    public static GeckoEvent createNetworkLinkChangeEvent(String status) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.NETWORK_LINK_CHANGE);
-        event.mCharacters = status;
         return event;
     }
 

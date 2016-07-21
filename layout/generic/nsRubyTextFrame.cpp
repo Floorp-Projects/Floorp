@@ -75,8 +75,8 @@ nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 /* virtual */ void
 nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
-                        nsHTMLReflowMetrics& aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        ReflowOutput& aDesiredSize,
+                        const ReflowInput& aReflowInput,
                         nsReflowStatus& aStatus)
 {
   // Even if we want to hide this frame, we have to reflow it first.
@@ -85,12 +85,12 @@ nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
   // the content is no longer the same, until next reflow triggered by
   // some other change. In general, we always reflow all the frames we
   // created. There might be other problems if we don't do that.
-  nsRubyContentFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsRubyContentFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   if (IsAutoHidden()) {
     // Reset the ISize. The BSize is not changed so that it won't
     // affect vertical positioning in unexpected way.
-    WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
+    WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();
     aDesiredSize.ISize(lineWM) = 0;
     aDesiredSize.SetOverflowAreasToDesiredBounds();
   }

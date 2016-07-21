@@ -730,7 +730,7 @@ class Marionette(object):
 
         raise errors.lookup(error)(message, stacktrace=stacktrace)
 
-    def _reset_timeouts(self):
+    def reset_timeouts(self):
         if self.timeout is not None:
             self.timeouts(self.TIMEOUT_SEARCH, self.timeout)
             self.timeouts(self.TIMEOUT_SCRIPT, self.timeout)
@@ -1010,7 +1010,24 @@ class Marionette(object):
             self.instance.restart(prefs)
             self.raise_for_port(self.wait_for_port())
             self.start_session()
-            self._reset_timeouts()
+            self.reset_timeouts()
+
+    def quit_in_app(self):
+        """
+        This will terminate the currently running instance.
+        """
+        if not self.instance:
+            raise errors.MarionetteException("quit_in_app can only be called "
+                                             "on gecko instances launched by Marionette")
+        # Values here correspond to constants in nsIAppStartup.
+        # See http://mzl.la/1X0JZsC
+        restart_flags = [
+            "eForceQuit",
+            "eRestart",
+        ]
+        self._send_message("quitApplication", {"flags": restart_flags})
+        self.client.close()
+        self.raise_for_port(self.wait_for_port())
 
     def restart(self, clean=False, in_app=False):
         """
@@ -1030,21 +1047,14 @@ class Marionette(object):
         if in_app:
             if clean:
                 raise ValueError
-            # Values here correspond to constants in nsIAppStartup.
-            # See http://mzl.la/1X0JZsC
-            restart_flags = [
-                "eForceQuit",
-                "eRestart",
-            ]
-            self._send_message("quitApplication", {"flags": restart_flags})
-            self.client.close()
+            self.quit_in_app()
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
+            self.raise_for_port(self.wait_for_port())
 
-        self.raise_for_port(self.wait_for_port())
         self.start_session(session_id=self.session_id)
-        self._reset_timeouts()
+        self.reset_timeouts()
 
         if in_app:
             # In some cases Firefox restarts itself by spawning into a new process group.

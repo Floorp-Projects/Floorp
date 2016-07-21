@@ -1260,7 +1260,7 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
     nsCOMPtr<mozIDOMWindowProxy> navWin;
-    GetMostRecentWindow( MOZ_UTF16("navigator:browser"), getter_AddRefs( navWin ) );
+    GetMostRecentWindow( u"navigator:browser", getter_AddRefs( navWin ) );
     if ( navWin ) {
         // Activate that window.
         activateWindow( navWin );

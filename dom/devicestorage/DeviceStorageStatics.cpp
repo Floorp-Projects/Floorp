@@ -703,9 +703,9 @@ DeviceStorageStatics::Observe(nsISupports* aSubject,
     // of a file in a specific location while a low device storage situation
     // exists or after recovery of a low storage situation. For Firefox OS,
     // these notifications are specific for apps storage.
-    if (!NS_strcmp(aData, MOZ_UTF16("full"))) {
+    if (!NS_strcmp(aData, u"full")) {
       sInstance->mLowDiskSpace = true;
-    } else if (!NS_strcmp(aData, MOZ_UTF16("free"))) {
+    } else if (!NS_strcmp(aData, u"free")) {
       sInstance->mLowDiskSpace = false;
     } else {
       return NS_OK;

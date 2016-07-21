@@ -347,7 +347,9 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
         if (hasBang) {
           current += "!";
         }
-        current += token.text;
+        // Re-escape the token to avoid dequoting problems.
+        // See bug 1287620.
+        current += CSS.escape(token.text);
       }
     } else if (token.tokenType === "symbol" && token.text === "!") {
       hasBang = true;

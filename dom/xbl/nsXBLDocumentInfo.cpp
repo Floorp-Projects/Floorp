@@ -246,7 +246,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
     }
   }
 
-  docInfo.swap(*aDocInfo);
+  docInfo.forget(aDocInfo);
   return NS_OK;
 }
 

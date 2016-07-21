@@ -33,6 +33,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
               aMouseEvent.mModifiers)
   , mType(MOUSE_NONE)
   , mButtonType(NONE)
+  , mInputSource(aMouseEvent.inputSource)
   , mButtons(aMouseEvent.buttons)
   , mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ)
 {

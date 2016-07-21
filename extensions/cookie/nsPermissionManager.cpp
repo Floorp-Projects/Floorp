@@ -1695,7 +1695,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       aPermission,
                                       aExpireType,
                                       aExpireTime,
-                                      MOZ_UTF16("added"));
+                                      u"added");
       }
 
       break;
@@ -1719,7 +1719,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       oldPermissionEntry.mPermission,
                                       oldPermissionEntry.mExpireType,
                                       oldPermissionEntry.mExpireTime,
-                                      MOZ_UTF16("deleted"));
+                                      u"deleted");
       }
 
       // If there are no more permissions stored for that entry, clear it.
@@ -1765,7 +1765,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       aPermission,
                                       aExpireType,
                                       aExpireTime,
-                                      MOZ_UTF16("changed"));
+                                      u"changed");
       }
 
       break;
@@ -1813,7 +1813,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       aPermission,
                                       aExpireType,
                                       aExpireTime,
-                                      MOZ_UTF16("changed"));
+                                      u"changed");
       }
 
     }
@@ -1924,7 +1924,7 @@ nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
   ImportDefaults();
 
   if (aNotifyObservers) {
-    NotifyObservers(nullptr, MOZ_UTF16("cleared"));
+    NotifyObservers(nullptr, u"cleared");
   }
 
   // clear the db
@@ -2453,7 +2453,7 @@ nsPermissionManager::RemoveExpiredPermissionsForApp(uint32_t aAppId)
                                       oldPermEntry.mPermission,
                                       oldPermEntry.mExpireType,
                                       oldPermEntry.mExpireTime,
-                                      MOZ_UTF16("deleted"));
+                                      u"deleted");
 
         --i;
         continue;
@@ -2468,7 +2468,7 @@ nsPermissionManager::RemoveExpiredPermissionsForApp(uint32_t aAppId)
                                     permEntry.mPermission,
                                     permEntry.mExpireType,
                                     permEntry.mExpireTime,
-                                    MOZ_UTF16("changed"));
+                                    u"changed");
     }
   }
 

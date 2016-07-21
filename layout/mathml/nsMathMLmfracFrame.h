@@ -59,12 +59,12 @@ public:
 
   virtual nsresult
   MeasureForWidth(DrawTarget* aDrawTarget,
-                  nsHTMLReflowMetrics& aDesiredSize) override;
+                  ReflowOutput& aDesiredSize) override;
 
   virtual nsresult
   Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) override;
+        ReflowOutput& aDesiredSize) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -80,7 +80,7 @@ public:
 
   // override the base method so that we can deal with the fraction line
   virtual nscoord
-  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize) override;
+  FixInterFrameSpacing(ReflowOutput& aDesiredSize) override;
 
   // helper to translate the thickness attribute into a usable form
   static nscoord 
@@ -100,7 +100,7 @@ protected:
 
   nsresult PlaceInternal(DrawTarget*          aDrawTarget,
                          bool                 aPlaceOrigin,
-                         nsHTMLReflowMetrics& aDesiredSize,
+                         ReflowOutput& aDesiredSize,
                          bool                 aWidthOnly);
 
   // Display a slash

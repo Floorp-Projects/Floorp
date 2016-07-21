@@ -22,13 +22,13 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
 void
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           ReflowOutput&     aDesiredSize,
+                           const ReflowInput& aReflowInput,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPageContentFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   if (GetPrevInFlow() && (GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
@@ -42,8 +42,8 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   // Set our size up front, since some parts of reflow depend on it
   // being already set.  Note that the computed height may be
   // unconstrained; that's ok.  Consumers should watch out for that.
-  nsSize  maxSize(aReflowState.ComputedWidth(),
-                  aReflowState.ComputedHeight());
+  nsSize  maxSize(aReflowInput.ComputedWidth(),
+                  aReflowInput.ComputedHeight());
   SetSize(maxSize);
  
   // A PageContentFrame must always have one child: the canvas frame.
@@ -53,12 +53,12 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     nsIFrame* frame = mFrames.FirstChild();
     WritingMode wm = frame->GetWritingMode();
     LogicalSize logicalSize(wm, maxSize);
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
+    ReflowInput kidReflowInput(aPresContext, aReflowInput,
                                      frame, logicalSize);
-    kidReflowState.SetComputedBSize(logicalSize.BSize(wm));
+    kidReflowInput.SetComputedBSize(logicalSize.BSize(wm));
 
     // Reflow the page content area
-    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowInput, 0, 0, 0, aStatus);
 
     // The document element's background should cover the entire canvas, so
     // take into account the combined area and any space taken up by
@@ -67,7 +67,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
 
     // XXXbz this screws up percentage padding (sets padding to zero
     // in the percentage padding case)
-    kidReflowState.mStylePadding->GetPadding(padding);
+    kidReflowInput.mStylePadding->GetPadding(padding);
 
     // This is for shrink-to-fit, and therefore we want to use the
     // scrollable overflow, since the purpose of shrink to fit is to
@@ -79,7 +79,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
       nscoord xmost = aDesiredSize.ScrollableOverflow().XMost();
       if (xmost > aDesiredSize.Width()) {
         nscoord widthToFit = xmost + padding.right +
-          kidReflowState.mStyleBorder->GetComputedBorderWidth(NS_SIDE_RIGHT);
+          kidReflowInput.mStyleBorder->GetComputedBorderWidth(NS_SIDE_RIGHT);
         float ratio = float(maxSize.width) / widthToFit;
         NS_ASSERTION(ratio >= 0.0 && ratio < 1.0, "invalid shrink-to-fit ratio");
         mPD->mShrinkToFitRatio = std::min(mPD->mShrinkToFitRatio, ratio);
@@ -87,7 +87,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     // Place and size the child
-    FinishReflowChild(frame, aPresContext, aDesiredSize, &kidReflowState, 0, 0, 0);
+    FinishReflowChild(frame, aPresContext, aDesiredSize, &kidReflowInput, 0, 0, 0);
 
     NS_ASSERTION(aPresContext->IsDynamic() || !NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                   !frame->GetNextInFlow(), "bad child flow list");
@@ -95,18 +95,18 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
 
   // Reflow our fixed frames
   nsReflowStatus fixedStatus = NS_FRAME_COMPLETE;
-  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, fixedStatus);
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, fixedStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size
-  WritingMode wm = aReflowState.GetWritingMode();
-  aDesiredSize.ISize(wm) = aReflowState.ComputedISize();
-  if (aReflowState.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.BSize(wm) = aReflowState.ComputedBSize();
+  WritingMode wm = aReflowInput.GetWritingMode();
+  aDesiredSize.ISize(wm) = aReflowInput.ComputedISize();
+  if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.BSize(wm) = aReflowInput.ComputedBSize();
   }
   FinishAndStoreOverflow(&aDesiredSize);
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 nsIAtom*

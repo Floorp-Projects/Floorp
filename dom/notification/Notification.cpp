@@ -839,11 +839,11 @@ NotificationTelemetryService::Observe(nsISupports* aSubject,
 {
   uint32_t capability;
   if (strcmp("perm-changed", aTopic) ||
-      !NS_strcmp(MOZ_UTF16("cleared"), aData) ||
+      !NS_strcmp(u"cleared", aData) ||
       !GetNotificationPermission(aSubject, &capability)) {
     return NS_OK;
   }
-  if (!NS_strcmp(MOZ_UTF16("deleted"), aData)) {
+  if (!NS_strcmp(u"deleted", aData)) {
     if (capability == nsIPermissionManager::DENY_ACTION) {
       Telemetry::Accumulate(
         Telemetry::WEB_NOTIFICATION_PERMISSION_REMOVED, 0);

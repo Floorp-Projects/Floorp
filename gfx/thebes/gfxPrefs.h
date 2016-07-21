@@ -70,7 +70,6 @@ static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists());             \
 static const char* Get##Name##PrefName() { return Prefname; }                 \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 private:                                                                      \
-static Pref* Get##Name##PrefPtr() { return &GetSingleton().mPref##Name; }     \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
 namespace mozilla {
@@ -416,7 +415,6 @@ private:
   DECL_GFX_PREF(Once, "image.multithreaded_decoding.limit",    ImageMTDecodingLimit, int32_t, -1);
   DECL_GFX_PREF(Live, "image.single-color-optimization.enabled", ImageSingleColorOptimizationEnabled, bool, true);
 
-  DECL_GFX_PREF(Live, "layers.child-process-shutdown",         ChildProcessShutdown, bool, true);
   DECL_GFX_PREF(Once, "layers.acceleration.disabled",          LayersAccelerationDisabledDoNotUseDirectly, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, bool, false);
@@ -428,7 +426,7 @@ private:
   DECL_GFX_PREF(Once, "layers.async-pan-zoom.separate-event-thread", AsyncPanZoomSeparateEventThread, bool, false);
   DECL_GFX_PREF(Live, "layers.bench.enabled",                  LayersBenchEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.bufferrotation.enabled",         BufferRotationEnabled, bool, true);
-  DECL_GFX_PREF(Live, "layers.shared-buffer-provider.enabled", PersistentBufferProviderSharedEnabled, bool, false);
+  DECL_GFX_PREF(Live, "layers.child-process-shutdown",         ChildProcessShutdown, bool, true);
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
   // If MOZ_GFX_OPTIMIZE_MOBILE is defined, we force component alpha off
   // and ignore the preference.
@@ -477,6 +475,8 @@ private:
   DECL_GFX_PREF(Once, "layers.prefer-d3d9",                    LayersPreferD3D9, bool, false);
   DECL_GFX_PREF(Once, "layers.prefer-opengl",                  LayersPreferOpenGL, bool, false);
   DECL_GFX_PREF(Live, "layers.progressive-paint",              ProgressivePaintDoNotUseDirectly, bool, false);
+  DECL_GFX_PREF(Live, "layers.shared-buffer-provider.enabled", PersistentBufferProviderSharedEnabled, bool, false);
+  DECL_GFX_PREF(Live, "layers.single-tile.enabled",            LayersSingleTileEnabled, bool, true);
   DECL_GFX_PREF(Once, "layers.stereo-video.enabled",           StereoVideoEnabled, bool, false);
 
   // We allow for configurable and rectangular tile size to avoid wasting memory on devices whose
@@ -484,8 +484,8 @@ private:
   // they are often the same size as the screen, especially for width.
   DECL_GFX_PREF(Once, "layers.tile-width",                     LayersTileWidth, int32_t, 256);
   DECL_GFX_PREF(Once, "layers.tile-height",                    LayersTileHeight, int32_t, 256);
-  DECL_GFX_PREF(Once, "layers.tile-max-pool-size",             LayersTileMaxPoolSize, uint32_t, (uint32_t)50);
-  DECL_GFX_PREF(Once, "layers.tile-shrink-pool-timeout",       LayersTileShrinkPoolTimeout, uint32_t, (uint32_t)1000);
+  DECL_GFX_PREF(Once, "layers.tile-initial-pool-size",         LayersTileInitialPoolSize, uint32_t, (uint32_t)50);
+  DECL_GFX_PREF(Once, "layers.tile-pool-increment-size",       LayersTilePoolIncrementSize, uint32_t, (uint32_t)10);
   DECL_GFX_PREF(Once, "layers.tiles.adjust",                   LayersTilesAdjust, bool, true);
   DECL_GFX_PREF(Once, "layers.tiles.edge-padding",             TileEdgePaddingEnabled, bool, true);
   DECL_GFX_PREF(Live, "layers.tiles.fade-in.enabled",          LayerTileFadeInEnabled, bool, false);
@@ -493,7 +493,6 @@ private:
   DECL_GFX_PREF(Live, "layers.transaction.warning-ms",         LayerTransactionWarning, uint32_t, 200);
   DECL_GFX_PREF(Once, "layers.uniformity-info",                UniformityInfo, bool, false);
   DECL_GFX_PREF(Once, "layers.use-image-offscreen-surfaces",   UseImageOffscreenSurfaces, bool, true);
-  DECL_GFX_PREF(Live, "layers.single-tile.enabled",            LayersSingleTileEnabled, bool, true);
 
   DECL_GFX_PREF(Live, "layout.css.scroll-behavior.damping-ratio", ScrollBehaviorDampingRatio, float, 1.0f);
   DECL_GFX_PREF(Live, "layout.css.scroll-behavior.enabled",    ScrollBehaviorEnabled, bool, false);
@@ -510,6 +509,9 @@ private:
 
   // This and code dependent on it should be removed once containerless scrolling looks stable.
   DECL_GFX_PREF(Once, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, bool, true);
+
+  DECL_GFX_PREF(Once, "media.hardware-video-decoding.force-enabled",
+                                                               HardwareVideoDecodingForceEnabled, bool, false);
 
   // These affect how line scrolls from wheel events will be accelerated.
   DECL_GFX_PREF(Live, "mousewheel.acceleration.factor",        MouseWheelAccelerationFactor, int32_t, -1);
@@ -563,9 +565,6 @@ private:
   DECL_GFX_PREF(Live, "webgl.allow-immediate-queries",         WebGLImmediateQueries, bool, false);
 
   DECL_GFX_PREF(Live, "webgl.webgl2-compat-mode",              WebGL2CompatMode, bool, false);
-
-  DECL_GFX_PREF(Once, "media.hardware-video-decoding.force-enabled",
-                                                               HardwareVideoDecodingForceEnabled, bool, false);
 
   // WARNING:
   // Please make sure that you've added your new preference to the list above in alphabetical order.
