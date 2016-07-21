@@ -38,8 +38,6 @@ using namespace mozilla;
 
 typedef mozilla::dom::Element Element;
 
-mozilla::gfx::UserDataKey gfxTextContextPaint::sUserDataKey;
-
 /* static */ const Color SimpleTextContextPaint::sZero = Color();
 
 gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry)
@@ -221,7 +219,9 @@ gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
     Element *glyph = mGlyphIdMap.Get(aGlyphId);
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-    return nsSVGUtils::PaintSVGGlyph(glyph, aContext, aContextPaint);
+    AutoSetRestoreSVGContextPaint autoSetRestore(aContextPaint, glyph->OwnerDoc());
+
+    return nsSVGUtils::PaintSVGGlyph(glyph, aContext);
 }
 
 bool
@@ -458,6 +458,37 @@ gfxSVGGlyphsDocument::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) c
            + mGlyphIdMap.ShallowSizeOfExcludingThis(aMallocSizeOf)
            + mSVGGlyphsDocumentURI.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
+}
+
+AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
+                                 gfxTextContextPaint* aContextPaint,
+                                 nsIDocument* aSVGDocument)
+  : mSVGDocument(aSVGDocument)
+  , mOuterContextPaint(aSVGDocument->GetProperty(nsGkAtoms::svgContextPaint))
+{
+  // The way that we supply context paint is to temporarily set the context
+  // paint on the owner document of the SVG that we're painting while it's
+  // being painted.
+
+  MOZ_ASSERT(aSVGDocument->IsBeingUsedAsImage(),
+             "nsSVGUtils::GetContextPaint assumes this");
+
+  if (mOuterContextPaint) {
+    mSVGDocument->UnsetProperty(nsGkAtoms::svgContextPaint);
+  }
+  DebugOnly<nsresult> res =
+    mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint, aContextPaint);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(res), "Failed to set context paint");
+}
+
+AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
+{
+  mSVGDocument->UnsetProperty(nsGkAtoms::svgContextPaint);
+  if (mOuterContextPaint) {
+    DebugOnly<nsresult> res =
+      mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint, mOuterContextPaint);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(res), "Failed to restore context paint");
+  }
 }
 
 void
