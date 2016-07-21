@@ -1768,7 +1768,7 @@ GetScaleFactor(nsPresContext* aPresContext) {
 }
 
 nsresult
-AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedViewRect, Object::Param buffer,
+AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedViewRect, ByteBuffer::Param buffer,
                                   float zoomFactor) {
     nsresult rv;
 
@@ -1814,7 +1814,7 @@ AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedVie
     gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
     uint32_t stride = gfxASurface::FormatStrideForWidth(iFormat, zoomedViewRect.width);
 
-    uint8_t* data = static_cast<uint8_t*> (env->GetDirectBufferAddress(buffer.Get()));
+    uint8_t* data = static_cast<uint8_t*>(buffer->Address());
     if (!data) {
         return NS_ERROR_FAILURE;
     }
@@ -1844,7 +1844,7 @@ AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedVie
     return NS_OK;
 }
 
-nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t bufW, int32_t bufH, int32_t tabId, Object::Param buffer, bool &shouldStore)
+nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t bufW, int32_t bufH, int32_t tabId, ByteBuffer::Param buffer, bool &shouldStore)
 {
     nsresult rv;
     float scale = 1.0;
@@ -1917,7 +1917,7 @@ nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t buf
     bool is24bit = (GetScreenDepth() == 24);
     uint32_t stride = bufW * (is24bit ? 4 : 2);
 
-    uint8_t* data = static_cast<uint8_t*>(env->GetDirectBufferAddress(buffer.Get()));
+    uint8_t* data = static_cast<uint8_t*>(buffer->Address());
     if (!data)
         return NS_ERROR_FAILURE;
 
@@ -2219,7 +2219,7 @@ uint32_t AndroidBridge::InputStreamAvailable(Object::Param obj) {
 
 nsresult AndroidBridge::InputStreamRead(Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
     JNIEnv* const env = GetEnvForThread();
-    auto arr = Object::LocalRef::Adopt(env, env->NewDirectByteBuffer(aBuf, aCount));
+    auto arr = ByteBuffer::New(aBuf, aCount);
     jint read = env->CallIntMethod(obj.Get(), sBridge->jByteBufferRead, arr.Get());
 
     if (env->ExceptionCheck()) {
