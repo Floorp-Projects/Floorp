@@ -2955,7 +2955,7 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
+                mozilla::jni::ByteBuffer::Param,
                 int32_t,
                 bool,
                 bool> Args;
@@ -2967,7 +2967,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto SendThumbnail(mozilla::jni::Object::Param, int32_t, bool, bool) -> void;
+    static auto SendThumbnail(mozilla::jni::ByteBuffer::Param, int32_t, bool, bool) -> void;
 
     static const bool isMultithreaded = false;
 
@@ -3616,7 +3616,7 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
+                mozilla::jni::ByteBuffer::Param> Args;
         static constexpr char name[] = "updateZoomedView";
         static constexpr char signature[] =
                 "(Ljava/nio/ByteBuffer;)V";
@@ -3625,7 +3625,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto updateZoomedView(mozilla::jni::Object::Param) -> void;
+    static auto updateZoomedView(mozilla::jni::ByteBuffer::Param) -> void;
 
     static const bool isMultithreaded = true;
 
