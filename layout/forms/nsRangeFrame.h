@@ -47,7 +47,7 @@ public:
                         const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -158,7 +158,7 @@ private:
 
   // Helper function which reflows the anonymous div frames.
   void ReflowAnonymousContent(nsPresContext*           aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
+                              ReflowOutput&     aDesiredSize,
                               const ReflowInput& aReflowState);
 
   void DoUpdateThumbPosition(nsIFrame* aThumbFrame,

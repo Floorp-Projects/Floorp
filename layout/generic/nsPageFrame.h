@@ -24,7 +24,7 @@ public:
                                       nsStyleContext* aContext);
 
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aMaxSize,
                       nsReflowStatus&      aStatus) override;
 
@@ -112,7 +112,7 @@ class nsPageBreakFrame : public nsLeafFrame
   ~nsPageBreakFrame();
 
   virtual void Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 

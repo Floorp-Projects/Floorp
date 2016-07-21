@@ -180,13 +180,13 @@ nsMathMLmfracFrame::AttributeChanged(int32_t  aNameSpaceID,
 
 /* virtual */ nsresult
 nsMathMLmfracFrame::MeasureForWidth(DrawTarget* aDrawTarget,
-                                    nsHTMLReflowMetrics& aDesiredSize)
+                                    ReflowOutput& aDesiredSize)
 {
   return PlaceInternal(aDrawTarget, false, aDesiredSize, true);
 }
 
 nscoord
-nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmfracFrame::FixInterFrameSpacing(ReflowOutput& aDesiredSize)
 {
   nscoord gap = nsMathMLContainerFrame::FixInterFrameSpacing(aDesiredSize);
   if (!gap) return 0;
@@ -198,7 +198,7 @@ nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 /* virtual */ nsresult
 nsMathMLmfracFrame::Place(DrawTarget*          aDrawTarget,
                           bool                 aPlaceOrigin,
-                          nsHTMLReflowMetrics& aDesiredSize)
+                          ReflowOutput& aDesiredSize)
 {
   return PlaceInternal(aDrawTarget, aPlaceOrigin, aDesiredSize, false);
 }
@@ -206,14 +206,14 @@ nsMathMLmfracFrame::Place(DrawTarget*          aDrawTarget,
 nsresult
 nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
                                   bool                 aPlaceOrigin,
-                                  nsHTMLReflowMetrics& aDesiredSize,
+                                  ReflowOutput& aDesiredSize,
                                   bool                 aWidthOnly)
 {
   ////////////////////////////////////
   // Get the children's desired sizes
   nsBoundingMetrics bmNum, bmDen;
-  nsHTMLReflowMetrics sizeNum(aDesiredSize.GetWritingMode());
-  nsHTMLReflowMetrics sizeDen(aDesiredSize.GetWritingMode());
+  ReflowOutput sizeNum(aDesiredSize.GetWritingMode());
+  ReflowOutput sizeDen(aDesiredSize.GetWritingMode());
   nsIFrame* frameDen = nullptr;
   nsIFrame* frameNum = mFrames.FirstChild();
   if (frameNum) 

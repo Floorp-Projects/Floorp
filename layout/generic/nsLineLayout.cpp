@@ -805,7 +805,7 @@ IsPercentageAware(const nsIFrame* aFrame)
 void
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsReflowStatus& aReflowStatus,
-                          nsHTMLReflowMetrics* aMetrics,
+                          ReflowOutput* aMetrics,
                           bool& aPushedFrame)
 {
   // Initialize OUT parameter
@@ -924,7 +924,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // going to end up moving it when we do the block-direction alignment.
 
   // Adjust spacemanager coordinate system for the frame.
-  nsHTMLReflowMetrics metrics(lineWM);
+  ReflowOutput metrics(lineWM);
 #ifdef DEBUG
   metrics.ISize(lineWM) = nscoord(0xdeadbeef);
   metrics.BSize(lineWM) = nscoord(0xdeadbeef);
@@ -1271,7 +1271,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
                             bool aNotSafeToBreak,
                             bool aFrameCanContinueTextRun,
                             bool aCanRollBackBeforeFrame,
-                            nsHTMLReflowMetrics& aMetrics,
+                            ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus,
                             bool* aOptionalBreakAfterFits)
 {
@@ -1430,7 +1430,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
  * Place the frame. Update running counters.
  */
 void
-nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
+nsLineLayout::PlaceFrame(PerFrameData* pfd, ReflowOutput& aMetrics)
 {
   WritingMode lineWM = mRootSpan->mWritingMode;
 
@@ -1440,7 +1440,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   if (pfd->mWritingMode.GetBlockDir() != lineWM.GetBlockDir()) {
     pfd->mAscent = lineWM.IsLineInverted() ? 0 : aMetrics.BSize(lineWM);
   } else {
-    if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+    if (aMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
       pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
     } else {
       pfd->mAscent = aMetrics.BlockStartAscent();
@@ -1465,7 +1465,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 
 void
 nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
-                             const nsHTMLReflowMetrics& aMetrics)
+                             const ReflowOutput& aMetrics)
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
   NS_ASSERTION(mGotLineBox, "must have line box");
@@ -1482,7 +1482,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
   PerFrameData* pfd = NewPerFrameData(aFrame);
   mRootSpan->AppendFrame(pfd);
   pfd->mIsBullet = true;
-  if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+  if (aMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
     pfd->mAscent = aFrame->GetLogicalBaseline(lineWM);
   } else {
     pfd->mAscent = aMetrics.BlockStartAscent();

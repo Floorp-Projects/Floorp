@@ -192,7 +192,7 @@ nsLeafBoxFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 void
 nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
+                     ReflowOutput&     aDesiredSize,
                      const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {

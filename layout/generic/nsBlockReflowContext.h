@@ -24,7 +24,7 @@ class BlockReflowInput;
 class nsBlockReflowContext {
   using BlockReflowInput = mozilla::BlockReflowInput;
   using ReflowInput = mozilla::ReflowInput;
-  using nsHTMLReflowMetrics = mozilla::nsHTMLReflowMetrics;
+  using ReflowOutput = mozilla::ReflowOutput;
 
 public:
   nsBlockReflowContext(nsPresContext* aPresContext,
@@ -52,7 +52,7 @@ public:
     return mMetrics.mCarriedOutBEndMargin;
   }
 
-  const nsHTMLReflowMetrics& GetMetrics() const {
+  const ReflowOutput& GetMetrics() const {
     return mMetrics;
   }
 
@@ -91,7 +91,7 @@ protected:
   nscoord mICoord, mBCoord;
   nsSize mContainerSize;
   mozilla::WritingMode mWritingMode;
-  nsHTMLReflowMetrics mMetrics;
+  ReflowOutput mMetrics;
   nsCollapsingMargin mBStartMargin;
 };
 

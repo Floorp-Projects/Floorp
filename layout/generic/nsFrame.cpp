@@ -4964,7 +4964,7 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
 
 void
 nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
-                                        nsHTMLReflowMetrics&     aDesiredSize,
+                                        ReflowOutput&     aDesiredSize,
                                         const ReflowInput& aReflowState,
                                         nsReflowStatus&          aStatus,
                                         bool                     aConstrainBSize)
@@ -4976,7 +4976,7 @@ nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
 
 void
 nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
+                              ReflowOutput&     aDesiredSize,
                               const ReflowInput& aReflowState,
                               nsReflowStatus&          aStatus,
                               bool                     aConstrainBSize)
@@ -5030,7 +5030,7 @@ nsFrame::CanContinueTextRun() const
 
 void
 nsFrame::Reflow(nsPresContext*          aPresContext,
-                nsHTMLReflowMetrics&     aDesiredSize,
+                ReflowOutput&     aDesiredSize,
                 const ReflowInput& aReflowState,
                 nsReflowStatus&          aStatus)
 {
@@ -6045,7 +6045,7 @@ nsFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas)
 
 bool
 nsFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowState,
-                            nsHTMLReflowMetrics& aMetrics,
+                            ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus)
 {
   if (aReflowState.mReflowDepth >  MAX_FRAME_DEPTH) {
@@ -8720,7 +8720,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     // do the nasty.
     const WritingMode wm = aState.OuterReflowState() ?
       aState.OuterReflowState()->GetWritingMode() : GetWritingMode();
-    nsHTMLReflowMetrics desiredSize(wm);
+    ReflowOutput desiredSize(wm);
     BoxReflow(aState, presContext, desiredSize, rendContext,
               rect.x, rect.y,
               metrics->mBlockPrefSize.width, NS_UNCONSTRAINEDSIZE);
@@ -8752,7 +8752,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     metrics->mBlockPrefSize.height = metrics->mBlockMinSize.height;
 
     if (desiredSize.BlockStartAscent() ==
-        nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+        ReflowOutput::ASK_FOR_BASELINE) {
       if (!nsLayoutUtils::GetFirstLineBaseline(wm, this,
                                                &metrics->mBlockAscent))
         metrics->mBlockAscent = GetLogicalBaseline(wm);
@@ -8910,7 +8910,7 @@ nsFrame::DoXULLayout(nsBoxLayoutState& aState)
   WritingMode ourWM = GetWritingMode();
   const WritingMode outerWM = aState.OuterReflowState() ?
     aState.OuterReflowState()->GetWritingMode() : ourWM;
-  nsHTMLReflowMetrics desiredSize(outerWM);
+  ReflowOutput desiredSize(outerWM);
   LogicalSize ourSize = GetLogicalSize(outerWM);
 
   if (rendContext) {
@@ -8985,7 +8985,7 @@ nsFrame::DoXULLayout(nsBoxLayoutState& aState)
 void
 nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                    nsPresContext*           aPresContext,
-                   nsHTMLReflowMetrics&     aDesiredSize,
+                   ReflowOutput&     aDesiredSize,
                    nsRenderingContext*     aRenderingContext,
                    nscoord                  aX,
                    nscoord                  aY,
@@ -9190,7 +9190,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       metrics->mAscent = 0;
     } else {
       if (aDesiredSize.BlockStartAscent() ==
-          nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+          ReflowOutput::ASK_FOR_BASELINE) {
         if (!nsLayoutUtils::GetFirstLineBaseline(wm, this, &metrics->mAscent))
           metrics->mAscent = GetLogicalBaseline(wm);
       } else
@@ -9610,7 +9610,7 @@ nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList)
 DR_cookie::DR_cookie(nsPresContext*          aPresContext,
                      nsIFrame*                aFrame, 
                      const ReflowInput& aReflowState,
-                     nsHTMLReflowMetrics&     aMetrics,
+                     ReflowOutput&     aMetrics,
                      nsReflowStatus&          aStatus)
   :mPresContext(aPresContext), mFrame(aFrame), mReflowState(aReflowState), mMetrics(aMetrics), mStatus(aStatus)
 {
@@ -10437,7 +10437,7 @@ void* nsFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame,
 
 void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
                                 nsIFrame*            aFrame,
-                                nsHTMLReflowMetrics& aMetrics,
+                                ReflowOutput& aMetrics,
                                 nsReflowStatus       aStatus,
                                 void*                aFrameTreeNode)
 {

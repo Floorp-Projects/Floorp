@@ -160,7 +160,7 @@ nsMathMLmrootFrame::GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
 
 void
 nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
+                           ReflowOutput&     aDesiredSize,
                            const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
@@ -180,12 +180,12 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   int32_t count = 0;
   nsIFrame* baseFrame = nullptr;
   nsIFrame* indexFrame = nullptr;
-  nsHTMLReflowMetrics baseSize(aReflowState);
-  nsHTMLReflowMetrics indexSize(aReflowState);
+  ReflowOutput baseSize(aReflowState);
+  ReflowOutput indexSize(aReflowState);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
     // ask our children to compute their bounding metrics 
-    nsHTMLReflowMetrics childDesiredSize(aReflowState,
+    ReflowOutput childDesiredSize(aReflowState,
                                          aDesiredSize.mFlags
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
     WritingMode wm = childFrame->GetWritingMode();
@@ -358,7 +358,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 /* virtual */ void
-nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext, nsHTMLReflowMetrics& aDesiredSize)
+nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext, ReflowOutput& aDesiredSize)
 {
   nsIFrame* baseFrame = mFrames.FirstChild();
   nsIFrame* indexFrame = nullptr;

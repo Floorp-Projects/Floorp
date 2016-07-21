@@ -2960,7 +2960,7 @@ ReflowInput::ComputeMinMaxValues(const LogicalSize&aCBSize)
 }
 
 void
-ReflowInput::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
+ReflowInput::SetTruncated(const ReflowOutput& aMetrics,
                                 nsReflowStatus* aStatus) const
 {
   const WritingMode containerWM = aMetrics.GetWritingMode();

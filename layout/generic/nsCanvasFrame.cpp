@@ -572,7 +572,7 @@ nsCanvasFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
 void
 nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {
@@ -612,7 +612,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
   // don't need to be reflowed. The normal child is always comes before
   // the fixed-pos placeholders, because we insert it at the start
   // of the child list, above.
-  nsHTMLReflowMetrics kidDesiredSize(aReflowState);
+  ReflowOutput kidDesiredSize(aReflowState);
   if (mFrames.IsEmpty()) {
     // We have no child frame, so return an empty size
     aDesiredSize.Width() = aDesiredSize.Height() = 0;

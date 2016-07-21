@@ -606,7 +606,7 @@ NS_IMETHODIMP
 nsMathMLmoFrame::Stretch(DrawTarget*          aDrawTarget,
                          nsStretchDirection   aStretchDirection,
                          nsBoundingMetrics&   aContainerSize,
-                         nsHTMLReflowMetrics& aDesiredStretchSize)
+                         ReflowOutput& aDesiredStretchSize)
 {
   if (NS_MATHML_STRETCH_WAS_DONE(mPresentationData.flags)) {
     NS_WARNING("it is wrong to fire stretch more than once on a frame");
@@ -944,7 +944,7 @@ nsMathMLmoFrame::SetInitialChildList(ChildListID     aListID,
 
 void
 nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
+                        ReflowOutput&     aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
@@ -959,7 +959,7 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
 nsresult
 nsMathMLmoFrame::Place(DrawTarget*          aDrawTarget,
                        bool                 aPlaceOrigin,
-                       nsHTMLReflowMetrics& aDesiredSize)
+                       ReflowOutput& aDesiredSize)
 {
   nsresult rv = nsMathMLTokenFrame::Place(aDrawTarget, aPlaceOrigin, aDesiredSize);
 
@@ -1036,7 +1036,7 @@ nsMathMLmoFrame::MarkIntrinsicISizesDirty()
 
 /* virtual */ void
 nsMathMLmoFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
-                                          nsHTMLReflowMetrics& aDesiredSize)
+                                          ReflowOutput& aDesiredSize)
 {
   ProcessOperatorData();
   if (UseMathMLChar()) {

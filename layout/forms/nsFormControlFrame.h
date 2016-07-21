@@ -82,7 +82,7 @@ public:
     * @see nsIFrame::Reflow
     */
   virtual void Reflow(nsPresContext*      aCX,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&      aStatus) override;
 

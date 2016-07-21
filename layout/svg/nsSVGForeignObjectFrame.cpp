@@ -124,7 +124,7 @@ nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
 
 void
 nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
-                                nsHTMLReflowMetrics&     aDesiredSize,
+                                ReflowOutput&     aDesiredSize,
                                 const ReflowInput& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
@@ -545,7 +545,7 @@ nsSVGForeignObjectFrame::DoReflow()
                                 &renderingContext,
                                 LogicalSize(wm, ISize(wm),
                                             NS_UNCONSTRAINEDSIZE));
-  nsHTMLReflowMetrics desiredSize(reflowState);
+  ReflowOutput desiredSize(reflowState);
   nsReflowStatus status;
 
   // We don't use mRect.height above because that tells the child to do

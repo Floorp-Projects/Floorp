@@ -361,7 +361,7 @@ ReparentChildListStyle(nsPresContext* aPresContext,
 
 void
 nsInlineFrame::Reflow(nsPresContext*          aPresContext,
-                      nsHTMLReflowMetrics&     aMetrics,
+                      ReflowOutput&     aMetrics,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {
@@ -571,7 +571,7 @@ void
 nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             const ReflowInput& aReflowState,
                             InlineReflowState& irs,
-                            nsHTMLReflowMetrics& aMetrics,
+                            ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus)
 {
   aStatus = NS_FRAME_COMPLETE;
@@ -1092,7 +1092,7 @@ nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& i
 
 void
 nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
-                         nsHTMLReflowMetrics& aMetrics,
+                         ReflowOutput& aMetrics,
                          const ReflowInput& aReflowState,
                          nsReflowStatus& aStatus)
 {

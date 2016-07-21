@@ -313,7 +313,7 @@ public:
   /**
    * Calculates the size of this frame after reflowing (calling Reflow on, and
    * updating the size and position of) its children, as necessary.  The
-   * calculated size is returned to the caller via the nsHTMLReflowMetrics
+   * calculated size is returned to the caller via the ReflowOutput
    * outparam.  (The caller is responsible for setting the actual size and
    * position of this frame.)
    *
@@ -333,7 +333,7 @@ public:
    * updated, then UpdateOverflow should be called instead of Reflow.
    */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
   virtual void DidReflow(nsPresContext*           aPresContext,
@@ -346,12 +346,12 @@ public:
    * that, this method won't modify aStatus.
    */
   void ReflowAbsoluteFrames(nsPresContext*           aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
+                            ReflowOutput&     aDesiredSize,
                             const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus,
                             bool                     aConstrainBSize = true);
   void FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
-                                      nsHTMLReflowMetrics&     aDesiredSize,
+                                      ReflowOutput&     aDesiredSize,
                                       const ReflowInput& aReflowState,
                                       nsReflowStatus&          aStatus,
                                       bool                     aConstrainBSize = true);
@@ -432,7 +432,7 @@ public:
   // unmarked "unflowable" and the metrics and reflow status are not
   // touched and false is returned.
   bool IsFrameTreeTooDeep(const ReflowInput& aReflowState,
-                            nsHTMLReflowMetrics& aMetrics,
+                            ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus);
 
   // Incorporate the child overflow areas into aOverflowAreas.
@@ -488,7 +488,7 @@ public:
                                          const char* aType);
   static void  DisplayReflowExit(nsPresContext*      aPresContext,
                                  nsIFrame*            aFrame,
-                                 nsHTMLReflowMetrics& aMetrics,
+                                 ReflowOutput& aMetrics,
                                  uint32_t             aStatus,
                                  void*                aFrameTreeNode);
   static void  DisplayLayoutExit(nsIFrame* aFrame,
@@ -670,7 +670,7 @@ protected:
 private:
   void BoxReflow(nsBoxLayoutState& aState,
                  nsPresContext*    aPresContext,
-                 nsHTMLReflowMetrics&     aDesiredSize,
+                 ReflowOutput&     aDesiredSize,
                  nsRenderingContext* aRenderingContext,
                  nscoord aX,
                  nscoord aY,
@@ -770,7 +770,7 @@ public:
     DR_cookie(nsPresContext*          aPresContext,
               nsIFrame*                aFrame, 
               const mozilla::ReflowInput& aReflowState,
-              mozilla::nsHTMLReflowMetrics&     aMetrics,
+              mozilla::ReflowOutput&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
     void Change() const;
@@ -778,7 +778,7 @@ public:
     nsPresContext*          mPresContext;
     nsIFrame*                mFrame;
     const mozilla::ReflowInput& mReflowState;
-    mozilla::nsHTMLReflowMetrics&     mMetrics;
+    mozilla::ReflowOutput&     mMetrics;
     nsReflowStatus&          mStatus;    
     void*                    mValue;
   };

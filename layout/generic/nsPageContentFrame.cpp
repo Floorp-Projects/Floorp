@@ -22,7 +22,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
 void
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
+                           ReflowOutput&     aDesiredSize,
                            const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {

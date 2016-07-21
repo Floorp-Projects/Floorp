@@ -121,7 +121,7 @@ public:
   virtual IntrinsicISizeOffsetData IntrinsicISizeOffsets() override;
 
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&      aStatus) override;
 
@@ -211,7 +211,7 @@ public:
   inline mozilla::LogicalSize GetDesiredSize();
 
   /** set the desired size returned by this frame during its last reflow */
-  inline void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
+  inline void SetDesiredSize(const ReflowOutput & aDesiredSize);
 
   bool GetContentEmpty();
   void SetContentEmpty(bool aContentEmpty);
@@ -271,7 +271,7 @@ inline void nsTableCellFrame::SetPriorAvailISize(nscoord aPriorAvailISize)
 inline mozilla::LogicalSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
 
-inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
+inline void nsTableCellFrame::SetDesiredSize(const ReflowOutput & aDesiredSize)
 {
   mozilla::WritingMode wm = aDesiredSize.GetWritingMode();
   mDesiredSize = aDesiredSize.Size(wm).ConvertTo(GetWritingMode(), wm);

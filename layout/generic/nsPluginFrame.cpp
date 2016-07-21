@@ -426,7 +426,7 @@ nsPluginFrame::GetWidgetConfiguration(nsTArray<nsIWidget::Configuration>* aConfi
 void
 nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
                               const ReflowInput& aReflowState,
-                              nsHTMLReflowMetrics& aMetrics)
+                              ReflowOutput& aMetrics)
 {
   // By default, we have no area
   aMetrics.ClearSize();
@@ -490,7 +490,7 @@ nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
 
 void
 nsPluginFrame::Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aMetrics,
+                      ReflowOutput&     aMetrics,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {

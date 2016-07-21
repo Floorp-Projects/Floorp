@@ -66,7 +66,7 @@ public:
 
   // nsIFrame
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aMaxSize,
                       nsReflowStatus&      aStatus) override;
 
@@ -125,7 +125,7 @@ protected:
 
   // Sets the frame desired size to the size of the viewport, or the given
   // nscoords, whichever is larger. Print scaling is applied in this function.
-  void SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+  void SetDesiredSize(ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nscoord aWidth, nscoord aHeight);
 

@@ -640,7 +640,7 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent)
 
   firstKid->SetPosition(aWM, LogicalPoint(aWM, kidRect.IStart(aWM),
                                           kidBStart), containerSize);
-  nsHTMLReflowMetrics desiredSize(aWM);
+  ReflowOutput desiredSize(aWM);
   desiredSize.SetSize(aWM, GetLogicalSize(aWM));
 
   nsRect overflow(nsPoint(0,0), GetSize());
@@ -809,7 +809,7 @@ nsTableCellFrame::IntrinsicISizeOffsets()
 #define PROBABLY_TOO_LARGE 1000000
 static
 void DebugCheckChildSize(nsIFrame*            aChild,
-                         nsHTMLReflowMetrics& aMet)
+                         ReflowOutput& aMet)
 {
   WritingMode wm = aMet.GetWritingMode();
   if ((aMet.ISize(wm) < 0) || (aMet.ISize(wm) > PROBABLY_TOO_LARGE)) {
@@ -857,7 +857,7 @@ CalcUnpaginatedBSize(nsTableCellFrame& aCellFrame,
 
 void
 nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
+                         ReflowOutput&     aDesiredSize,
                          const ReflowInput& aReflowState,
                          nsReflowStatus&          aStatus)
 {
@@ -893,7 +893,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     availSize.BSize(wm) = 1;
   }
 
-  nsHTMLReflowMetrics kidSize(wm, aDesiredSize.mFlags);
+  ReflowOutput kidSize(wm, aDesiredSize.mFlags);
   kidSize.ClearSize();
   SetPriorAvailISize(aReflowState.AvailableISize());
   nsIFrame* firstKid = mFrames.FirstChild();

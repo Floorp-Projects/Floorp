@@ -72,7 +72,7 @@ public:
 
   // nsIFrame overrides
   void Reflow(nsPresContext*           aPresContext,
-              nsHTMLReflowMetrics&     aDesiredSize,
+              ReflowOutput&     aDesiredSize,
               const ReflowInput& aReflowState,
               nsReflowStatus&          aStatus) override;
   nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
@@ -211,7 +211,7 @@ protected:
    */
   nscoord ReflowChildren(GridReflowState&     aState,
                          const LogicalRect&   aContentArea,
-                         nsHTMLReflowMetrics& aDesiredSize,
+                         ReflowOutput& aDesiredSize,
                          nsReflowStatus&      aStatus);
 
   /**
@@ -264,7 +264,7 @@ private:
   // @return the consumed size of all continuations so far including this frame
   nscoord ReflowInFragmentainer(GridReflowState&     aState,
                                 const LogicalRect&   aContentArea,
-                                nsHTMLReflowMetrics& aDesiredSize,
+                                ReflowOutput& aDesiredSize,
                                 nsReflowStatus&      aStatus,
                                 Fragmentainer&       aFragmentainer,
                                 const nsSize&        aContainerSize);
@@ -273,7 +273,7 @@ private:
   // @return the consumed size of all continuations so far including this frame
   nscoord ReflowRowsInFragmentainer(GridReflowState&     aState,
                                     const LogicalRect&   aContentArea,
-                                    nsHTMLReflowMetrics& aDesiredSize,
+                                    ReflowOutput& aDesiredSize,
                                     nsReflowStatus&      aStatus,
                                     Fragmentainer&       aFragmentainer,
                                     const nsSize&        aContainerSize,
@@ -291,7 +291,7 @@ private:
                          const Fragmentainer*    aFragmentainer,
                          const GridReflowState&  aState,
                          const LogicalRect&      aContentArea,
-                         nsHTMLReflowMetrics&    aDesiredSize,
+                         ReflowOutput&    aDesiredSize,
                          nsReflowStatus&         aStatus);
 
   /**

@@ -120,7 +120,7 @@ nsMathMLTokenFrame::InsertFrames(ChildListID aListID,
 
 void
 nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
+                           ReflowOutput&     aDesiredSize,
                            const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
@@ -134,7 +134,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 
   for (nsIFrame* childFrame : PrincipalChildList()) {
     // ask our children to compute their bounding metrics
-    nsHTMLReflowMetrics childDesiredSize(aReflowState.GetWritingMode(),
+    ReflowOutput childDesiredSize(aReflowState.GetWritingMode(),
                                          aDesiredSize.mFlags
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
     WritingMode wm = childFrame->GetWritingMode();
@@ -162,11 +162,11 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 /* virtual */ nsresult
 nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
                           bool                 aPlaceOrigin,
-                          nsHTMLReflowMetrics& aDesiredSize)
+                          ReflowOutput& aDesiredSize)
 {
   mBoundingMetrics = nsBoundingMetrics();
   for (nsIFrame* childFrame :PrincipalChildList()) {
-    nsHTMLReflowMetrics childSize(aDesiredSize.GetWritingMode());
+    ReflowOutput childSize(aDesiredSize.GetWritingMode());
     GetReflowAndBoundingMetricsFor(childFrame, childSize,
                                    childSize.mBoundingMetrics, nullptr);
     // compute and cache the bounding metrics
@@ -187,7 +187,7 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
     for (nsIFrame* childFrame : PrincipalChildList()) {
-      nsHTMLReflowMetrics childSize(aDesiredSize.GetWritingMode());
+      ReflowOutput childSize(aDesiredSize.GetWritingMode());
       GetReflowAndBoundingMetricsFor(childFrame, childSize,
                                      childSize.mBoundingMetrics);
 

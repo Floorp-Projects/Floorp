@@ -8702,7 +8702,7 @@ nsLayoutUtils::IsOutlineStyleAutoEnabled()
 
 /* static */ void
 nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
-                                       nsHTMLReflowMetrics& aMetrics,
+                                       ReflowOutput& aMetrics,
                                        const LogicalMargin& aFramePadding,
                                        WritingMode aLineWM,
                                        WritingMode aFrameWM)

@@ -57,7 +57,7 @@ public:
    * and descent will be set to 0.
    */
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&      aStatus) override;
   
@@ -65,7 +65,7 @@ public:
    * This method does most of the work that Reflow() above need done.
    */
   virtual void DoReflow(nsPresContext*      aPresContext,
-                        nsHTMLReflowMetrics& aDesiredSize,
+                        ReflowOutput& aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus&      aStatus);
 
@@ -100,7 +100,7 @@ protected:
    * Set aDesiredSize to be the available size
    */
   void SizeToAvailSize(const ReflowInput& aReflowState,
-                       nsHTMLReflowMetrics& aDesiredSize);
+                       ReflowOutput& aDesiredSize);
 };
 
 #endif /* nsLeafFrame_h___ */
