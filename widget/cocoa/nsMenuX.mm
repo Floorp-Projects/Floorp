@@ -119,7 +119,7 @@ nsMenuX::nsMenuX()
   }
 
   mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
-
+    
   if (!nsMenuBarX::sNativeEventTarget)
     nsMenuBarX::sNativeEventTarget = [[NativeMenuItemTarget alloc] init];
 
@@ -287,7 +287,7 @@ nsresult nsMenuX::GetVisibleItemCount(uint32_t &aCount)
 // If you need to iterate or search, consider using GetItemAt and doing your own filtering
 nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos)
 {
-
+  
   uint32_t count = mMenuObjectsArray.Length();
   if (aPos >= mVisibleItemsCount || aPos >= count)
     return NULL;
@@ -362,7 +362,7 @@ nsEventStatus nsMenuX::MenuOpened()
   GetMenuPopupContent(getter_AddRefs(popupContent));
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
-
+  
   return nsEventStatus_eConsumeNoDefault;
 }
 
@@ -396,7 +396,7 @@ void nsMenuX::MenuConstruct()
 {
   mConstructed = false;
   gConstructingMenu = true;
-
+  
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
   mDestroyHandlerCalled = false;
 
@@ -564,10 +564,10 @@ bool nsMenuX::OnOpen()
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShowing, nullptr,
                          WidgetMouseEvent::eReal);
-
+  
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
-
+  
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   rv = dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
@@ -609,12 +609,12 @@ bool nsMenuX::OnClose()
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   rv = dispatchTo->DispatchDOMEvent(&event, nullptr, nullptr, &status);
-
+  
   mDestroyHandlerCalled = true;
-
+  
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
     return false;
-
+  
   return true;
 }
 
@@ -626,7 +626,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   if (!aResult)
     return;
   *aResult = nullptr;
-
+  
   // Check to see if we are a "menupopup" node (if we are a native menu).
   {
     int32_t dummy;
@@ -639,7 +639,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   }
 
   // Otherwise check our child nodes.
-
+  
   uint32_t count = mContent->GetChildCount();
 
   for (uint32_t i = 0; i < count; i++) {
@@ -704,7 +704,7 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
     }
     else if (parentType == eSubmenuObjectType) {
       static_cast<nsMenuX*>(mParent)->SetRebuild(true);
-    }
+    }    
     else if (parentType == eStandaloneNativeMenuObjectType) {
       static_cast<nsStandaloneNativeMenu*>(mParent)->GetMenuXObject()->SetRebuild(true);
     }
@@ -902,7 +902,7 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
 - (id)initWithItem:(NSMenuItem *)aItem table:(NSMapTable *)aTable
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
+  
   if (!gShadowKeyEquivDB)
     gShadowKeyEquivDB = [[NSMutableDictionary alloc] init];
   self = [super init];

@@ -170,13 +170,13 @@ enum nsTransparencyMode {
  */
 
 enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
-                eCursor_standard,
+                eCursor_standard, 
                   ///(system is busy,      usually rendered as a hourglass or watch)
-                eCursor_wait,
+                eCursor_wait, 
                   ///(Selecting something, usually rendered as an IBeam)
-                eCursor_select,
+                eCursor_select, 
                   ///(can hyper-link,      usually rendered as a human hand)
-                eCursor_hyperlink,
+                eCursor_hyperlink, 
                   ///(north/south/west/east edge sizing)
                 eCursor_n_resize,
                 eCursor_s_resize,
@@ -212,7 +212,7 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_none,
                 // This one better be the last one in this list.
                 eCursorCount
-                };
+                }; 
 
 enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
@@ -389,9 +389,9 @@ class nsIWidget : public nsISupports
       ClearNativeTouchSequence(nullptr);
     }
 
-
+        
     /**
-     * Create and initialize a widget.
+     * Create and initialize a widget. 
      *
      * All the arguments can be null in which case a top level window
      * with size 0 is created. The event callback function has to be
@@ -400,10 +400,10 @@ class nsIWidget : public nsISupports
      * hook called synchronously. The return value determines whether
      * the event goes to the default window procedure or it is hidden
      * to the os. The assumption is that if the event handler returns
-     * false the widget does not see the event. The widget should not
-     * automatically clear the window to the background color. The
-     * calling code must handle paint messages and clear the background
-     * itself.
+     * false the widget does not see the event. The widget should not 
+     * automatically clear the window to the background color. The 
+     * calling code must handle paint messages and clear the background 
+     * itself. 
      *
      * In practice at least one of aParent and aNativeParent will be null. If
      * both are null the widget isn't parented (e.g. context menus or
@@ -466,7 +466,7 @@ class nsIWidget : public nsISupports
                 bool aForceUseIWidgetParent = false) = 0;
 
     /**
-     * Attach to a top level widget.
+     * Attach to a top level widget. 
      *
      * In cases where a top level chrome widget is being used as a content
      * container, attach a secondary listener and update the device
@@ -500,7 +500,7 @@ class nsIWidget : public nsISupports
     //@}
 
     /**
-     * Close and destroy the internal native window.
+     * Close and destroy the internal native window. 
      * This method does not delete the widget.
      */
 
@@ -518,12 +518,12 @@ class nsIWidget : public nsISupports
      *
      * Change the widget's parent. Null parents are allowed.
      *
-     * @param     aNewParent   new parent
+     * @param     aNewParent   new parent 
      */
     NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
 
     /**
-     * Return the parent Widget of this Widget or nullptr if this is a
+     * Return the parent Widget of this Widget or nullptr if this is a 
      * top level window
      *
      * @return the parent widget or nullptr if it does not have a parent
@@ -590,7 +590,7 @@ class nsIWidget : public nsISupports
     nsIWidget* GetFirstChild() const {
         return mFirstChild;
     }
-
+    
     /**
      * Return the last child of this widget.  Will return null if
      * there are no children.
@@ -605,14 +605,14 @@ class nsIWidget : public nsISupports
     nsIWidget* GetNextSibling() const {
         return mNextSibling;
     }
-
+    
     /**
      * Set the next sibling of this widget
      */
     void SetNextSibling(nsIWidget* aSibling) {
         mNextSibling = aSibling;
     }
-
+    
     /**
      * Return the previous sibling of this widget
      */
@@ -800,7 +800,7 @@ class nsIWidget : public nsISupports
     virtual void SetZIndex(int32_t aZIndex) = 0;
 
     /**
-     * Gets the widget's z-index.
+     * Gets the widget's z-index. 
      */
     int32_t GetZIndex()
     {
@@ -982,7 +982,7 @@ class nsIWidget : public nsISupports
     NS_IMETHOD SetCursor(imgIContainer* aCursor,
                          uint32_t aHotspotX, uint32_t aHotspotY) = 0;
 
-    /**
+    /** 
      * Get the window type of this widget.
      */
     nsWindowType WindowType() { return mWindowType; }
@@ -1157,7 +1157,7 @@ class nsIWidget : public nsISupports
      */
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) {}
 
-    /**
+    /** 
      * Hide window chrome (borders, buttons) for this widget.
      *
      */
@@ -1378,10 +1378,10 @@ class nsIWidget : public nsISupports
      *
      */
     NS_IMETHOD EnableDragDrop(bool aEnable) = 0;
-
+   
     /**
      * Enables/Disables system mouse capture.
-     * @param aCapture true enables mouse capture, false disables mouse capture
+     * @param aCapture true enables mouse capture, false disables mouse capture 
      *
      */
     NS_IMETHOD CaptureMouse(bool aCapture) = 0;
@@ -1395,7 +1395,7 @@ class nsIWidget : public nsISupports
      * Enables/Disables system capture of any and all events that would cause a
      * popup to be rolled up. aListener should be set to a non-null value for
      * any popups that are not managed by the popup manager.
-     * @param aDoCapture true enables capture, false disables capture
+     * @param aDoCapture true enables capture, false disables capture 
      *
      */
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture) = 0;
@@ -1407,8 +1407,8 @@ class nsIWidget : public nsISupports
      * the Mac.  The notification should be suppressed if the window is already
      * in the foreground and should be dismissed when the user brings this window
      * to the foreground.
-     * @param aCycleCount Maximum number of times to animate the window per system
-     *                    conventions. If set to -1, cycles indefinitely until
+     * @param aCycleCount Maximum number of times to animate the window per system 
+     *                    conventions. If set to -1, cycles indefinitely until 
      *                    window is brought into the foreground.
      */
     NS_IMETHOD GetAttention(int32_t aCycleCount) = 0;
@@ -1427,9 +1427,9 @@ class nsIWidget : public nsISupports
      * Ignored on any platform that does not support it. Ignored by widgets that
      * do not represent windows.
      *
-     * @param aColor  The color to set the title bar background to. Alpha values
-     *                other than fully transparent (0) are respected if possible
-     *                on the platform. An alpha of 0 will cause the window to
+     * @param aColor  The color to set the title bar background to. Alpha values 
+     *                other than fully transparent (0) are respected if possible  
+     *                on the platform. An alpha of 0 will cause the window to 
      *                draw with the default style for the platform.
      *
      * @param aActive Whether the color should be applied to active or inactive
@@ -1705,7 +1705,7 @@ public:
      * This is used for native menu system testing.
      *
      * Updates a native menu at the position specified by the index string.
-     * The index string is a string of positive integers separated by the "|"
+     * The index string is a string of positive integers separated by the "|" 
      * (pipe) character.
      *
      * Example: 1|0|4
@@ -1752,7 +1752,7 @@ public:
     /*
      * Tell the plugin has focus.  It is unnecessary to use IPC
      */
-    bool PluginHasFocus()
+    bool PluginHasFocus() 
     {
       return GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN;
     }

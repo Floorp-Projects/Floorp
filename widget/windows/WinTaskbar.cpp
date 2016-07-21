@@ -57,7 +57,7 @@ HWND
 GetHWNDFromDOMWindow(mozIDOMWindow *dw) {
   nsCOMPtr<nsIWidget> widget;
 
-  if (!dw)
+  if (!dw) 
     return nullptr;
 
   nsCOMPtr<nsPIDOMWindowInner> window = nsPIDOMWindowInner::From(dw);
@@ -125,7 +125,7 @@ class DefaultController final : public nsITaskbarPreviewController
   ~DefaultController() {}
   HWND mWnd;
 public:
-  DefaultController(HWND hWnd)
+  DefaultController(HWND hWnd) 
     : mWnd(hWnd)
   {
   }
@@ -241,7 +241,7 @@ WinTaskbar::Initialize() {
   return true;
 }
 
-WinTaskbar::WinTaskbar()
+WinTaskbar::WinTaskbar() 
   : mTaskbar(nullptr) {
 }
 
@@ -456,7 +456,7 @@ WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder) {
   if (JumpListBuilder::sBuildingList)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-  nsCOMPtr<nsIJumpListBuilder> builder =
+  nsCOMPtr<nsIJumpListBuilder> builder = 
     do_CreateInstance(kJumpListBuilderCID, &rv);
   if (NS_FAILED(rv))
     return NS_ERROR_UNEXPECTED;
@@ -479,7 +479,7 @@ WinTaskbar::PrepareFullScreen(mozIDOMWindow *aWindow, bool aFullScreen) {
   HWND toplevelHWND = ::GetAncestor(GetHWNDFromDOMWindow(aWindow), GA_ROOT);
   if (!toplevelHWND)
     return NS_ERROR_INVALID_ARG;
-
+  
   return PrepareFullScreenHWND(toplevelHWND, aFullScreen);
 }
 
@@ -490,7 +490,7 @@ WinTaskbar::PrepareFullScreenHWND(void *aHWND, bool aFullScreen) {
 
   NS_ENSURE_ARG_POINTER(aHWND);
 
-  if (!::IsWindow((HWND)aHWND))
+  if (!::IsWindow((HWND)aHWND)) 
     return NS_ERROR_INVALID_ARG;
 
   HRESULT hr = mTaskbar->MarkFullscreenWindow((HWND)aHWND, aFullScreen);
