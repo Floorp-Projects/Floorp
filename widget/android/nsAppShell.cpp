@@ -62,6 +62,7 @@
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
+#include "ThumbnailHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #define EVLOG(args...)  ALOG(args)
@@ -388,6 +389,7 @@ nsAppShell::nsAppShell()
         mozilla::GeckoNetworkManager::Init();
         mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
+        mozilla::ThumbnailHelper::Init();
         nsWindow::InitNatives();
 
         widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
