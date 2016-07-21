@@ -802,36 +802,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::LOAD_URI: {
-        nsCOMPtr<nsICommandLineRunner> cmdline
-            (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-        if (!cmdline)
-            break;
-
-        if (curEvent->Characters().Length() == 0)
-            break;
-
-        char *uri = ToNewUTF8String(curEvent->Characters());
-        if (!uri)
-            break;
-
-        char *flag = ToNewUTF8String(curEvent->CharactersExtra());
-
-        const char *argv[4] = {
-            "dummyappname",
-            "-url",
-            uri,
-            flag ? flag : ""
-        };
-        nsresult rv = cmdline->Init(4, argv, nullptr, nsICommandLine::STATE_REMOTE_AUTO);
-        if (NS_SUCCEEDED(rv))
-            cmdline->Run();
-        free(uri);
-        if (flag)
-            free(flag);
-        break;
-    }
-
     case AndroidGeckoEvent::NETWORK_CHANGED: {
         hal::NotifyNetworkChange(hal::NetworkInformation(curEvent->ConnectionType(),
                                                          curEvent->IsWifi(),
