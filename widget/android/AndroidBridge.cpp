@@ -313,6 +313,68 @@ AutoGlobalWrappedJavaObject::~AutoGlobalWrappedJavaObject() {
     Dispose();
 }
 
+// Decides if we should store thumbnails for a given docshell based on the presence
+// of a Cache-Control: no-store header and the "browser.cache.disk_cache_ssl" pref.
+static bool ShouldStoreThumbnail(nsIDocShell* docshell) {
+    if (!docshell) {
+        return false;
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+
+    docshell->GetCurrentDocumentChannel(getter_AddRefs(channel));
+    if (!channel) {
+        return false;
+    }
+
+    nsCOMPtr<nsIHttpChannel> httpChannel;
+    rv = channel->QueryInterface(NS_GET_IID(nsIHttpChannel), getter_AddRefs(httpChannel));
+    if (!NS_SUCCEEDED(rv)) {
+        return false;
+    }
+
+    // Don't store thumbnails for sites that didn't load
+    uint32_t responseStatus;
+    rv = httpChannel->GetResponseStatus(&responseStatus);
+    if (!NS_SUCCEEDED(rv) || floor((double) (responseStatus / 100)) != 2) {
+        return false;
+    }
+
+    // Cache-Control: no-store.
+    bool isNoStoreResponse = false;
+    httpChannel->IsNoStoreResponse(&isNoStoreResponse);
+    if (isNoStoreResponse) {
+        return false;
+    }
+
+    // Deny storage if we're viewing a HTTPS page with a
+    // 'Cache-Control' header having a value that is not 'public'.
+    nsCOMPtr<nsIURI> uri;
+    rv = channel->GetURI(getter_AddRefs(uri));
+    if (!NS_SUCCEEDED(rv)) {
+        return false;
+    }
+
+    // Don't capture HTTPS pages unless the user enabled it
+    // or the page has a Cache-Control:public header.
+    bool isHttps = false;
+    uri->SchemeIs("https", &isHttps);
+    if (isHttps && !Preferences::GetBool("browser.cache.disk_cache_ssl", false)) {
+        nsAutoCString cacheControl;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"), cacheControl);
+        if (!NS_SUCCEEDED(rv)) {
+            return false;
+        }
+
+        if (!cacheControl.IsEmpty() && !cacheControl.LowerCaseEqualsLiteral("public")) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static void
 getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
                            nsIMutableArray *aHandlersArray,
@@ -1778,6 +1840,110 @@ AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedVie
 
     LayerView::updateZoomedView(buffer);
 
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+}
+
+nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t bufW, int32_t bufH, int32_t tabId, ByteBuffer::Param buffer, bool &shouldStore)
+{
+    nsresult rv;
+    float scale = 1.0;
+
+    if (!buffer)
+        return NS_ERROR_FAILURE;
+
+    // take a screenshot, as wide as possible, proportional to the destination size
+    nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+    if (!utils)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMClientRect> rect;
+    rv = utils->GetRootBounds(getter_AddRefs(rect));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!rect)
+        return NS_ERROR_FAILURE;
+
+    float left, top, width, height;
+    rect->GetLeft(&left);
+    rect->GetTop(&top);
+    rect->GetWidth(&width);
+    rect->GetHeight(&height);
+
+    if (width == 0 || height == 0)
+        return NS_ERROR_FAILURE;
+
+    int32_t srcX = left;
+    int32_t srcY = top;
+    int32_t srcW;
+    int32_t srcH;
+
+    float aspectRatio = ((float) bufW) / bufH;
+    if (width / aspectRatio < height) {
+        srcW = width;
+        srcH = width / aspectRatio;
+    } else {
+        srcW = height * aspectRatio;
+        srcH = height;
+    }
+
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+
+    MOZ_ASSERT(window);
+    nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(window);
+    RefPtr<nsPresContext> presContext;
+
+    nsIDocShell* docshell = win->GetDocShell();
+
+    // Decide if callers should store this thumbnail for later use.
+    shouldStore = ShouldStoreThumbnail(docshell);
+
+    if (docshell) {
+        docshell->GetPresContext(getter_AddRefs(presContext));
+    }
+
+    if (!presContext)
+        return NS_ERROR_FAILURE;
+    nscolor bgColor = NS_RGB(255, 255, 255);
+    nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+    uint32_t renderDocFlags = (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+                               nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+    nsRect r(nsPresContext::CSSPixelsToAppUnits(srcX / scale),
+             nsPresContext::CSSPixelsToAppUnits(srcY / scale),
+             nsPresContext::CSSPixelsToAppUnits(srcW / scale),
+             nsPresContext::CSSPixelsToAppUnits(srcH / scale));
+
+    bool is24bit = (GetScreenDepth() == 24);
+    uint32_t stride = bufW * (is24bit ? 4 : 2);
+
+    uint8_t* data = static_cast<uint8_t*>(buffer->Address());
+    if (!data)
+        return NS_ERROR_FAILURE;
+
+    MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
+               "Need BackendType::CAIRO support");
+    RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                         data,
+                                         IntSize(bufW, bufH),
+                                         stride,
+                                         is24bit ? SurfaceFormat::B8G8R8X8 :
+                                                   SurfaceFormat::R5G6B5_UINT16);
+    if (!dt || !dt->IsValid()) {
+        ALOG_BRIDGE("Error creating DrawTarget");
+        return NS_ERROR_FAILURE;
+    }
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+    MOZ_ASSERT(context); // checked the draw target above
+
+    context->SetMatrix(
+      context->CurrentMatrix().Scale(scale * bufW / srcW,
+                                     scale * bufH / srcH));
+    rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
+    if (is24bit) {
+        gfxUtils::ConvertBGRAtoRGBA(data, stride * bufH);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 }
