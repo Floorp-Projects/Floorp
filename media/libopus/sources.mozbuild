@@ -163,6 +163,11 @@ silk_sources_sse4_1 = [
     'silk/x86/x86_silk_map.c',
 ]
 
+silk_sources_arm_neon_intr = [
+    'silk/arm/arm_silk_map.c',
+    'silk/arm/NSQ_neon.c',
+]
+
 silk_sources_fixed = [
     'silk/fixed/apply_sine_window_FIX.c',
     'silk/fixed/autocorr_FIX.c',

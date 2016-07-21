@@ -861,7 +861,7 @@ nsFileView::FilterFiles()
       for (uint32_t j = 0; j < filterCount; ++j) {
         bool matched = false;
         if (!nsCRT::strcmp(mCurrentFilters.ElementAt(j),
-                           MOZ_UTF16("..apps")))
+                           u"..apps"))
         {
           file->IsExecutable(&matched);
         } else

@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 %{C++
-template<class T> class nsTArray;
+#include "nsTArrayForwardDeclare.h"
 class nsCString;
 %}
 

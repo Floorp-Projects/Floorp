@@ -255,9 +255,11 @@ MacOSFontEntry::IsCFF()
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                int32_t aWeight,
-                               bool aIsStandardFace)
+                               bool aIsStandardFace,
+                               double aSizeHint)
     : gfxFontEntry(aPostscriptName, aIsStandardFace),
       mFontRef(NULL),
+      mSizeHint(aSizeHint),
       mFontRefInitialized(false),
       mRequiresAAT(false),
       mIsCFF(false),
@@ -274,6 +276,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                bool aIsLocalUserFont)
     : gfxFontEntry(aPostscriptName, false),
       mFontRef(NULL),
+      mSizeHint(0.0),
       mFontRefInitialized(false),
       mRequiresAAT(false),
       mIsCFF(false),
@@ -301,6 +304,19 @@ MacOSFontEntry::GetFontRef()
         mFontRefInitialized = true;
         NSString *psname = GetNSStringForString(mName);
         mFontRef = ::CGFontCreateWithFontName(CFStringRef(psname));
+        if (!mFontRef) {
+            // This happens on macOS 10.12 for font entry names that start with
+            // .AppleSystemUIFont. For those fonts, we need to go through NSFont
+            // to get the correct CGFontRef.
+            // Both the Text and the Display variant of the display font use
+            // .AppleSystemUIFontSomethingSomething as their member names.
+            // That's why we're carrying along mSizeHint to this place so that
+            // we get the variant that we want for this family.
+            NSFont* font = [NSFont fontWithName:psname size:mSizeHint];
+            if (font) {
+                mFontRef = CTFontCopyGraphicsFont((CTFontRef)font, nullptr);
+            }
+        }
     }
     return mFontRef;
 }
@@ -399,8 +415,9 @@ MacOSFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 class gfxMacFontFamily : public gfxFontFamily
 {
 public:
-    explicit gfxMacFontFamily(nsAString& aName) :
-        gfxFontFamily(aName)
+    explicit gfxMacFontFamily(nsAString& aName, double aSizeHint) :
+        gfxFontFamily(aName),
+        mSizeHint(aSizeHint)
     {}
 
     virtual ~gfxMacFontFamily() {}
@@ -408,6 +425,9 @@ public:
     virtual void LocalizedName(nsAString& aLocalizedName);
 
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
+
+protected:
+    double mSizeHint;
 };
 
 void
@@ -507,7 +527,7 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         // create a font entry
         MacOSFontEntry *fontEntry =
-            new MacOSFontEntry(postscriptFontName, cssWeight, isStandardFace);
+            new MacOSFontEntry(postscriptFontName, cssWeight, isStandardFace, mSizeHint);
         if (!fontEntry) {
             break;
         }
@@ -673,10 +693,16 @@ gfxMacPlatformFontList::AddFamily(CFStringRef aFamily)
     nsAutoString familyName;
     nsCocoaUtils::GetStringForNSString(family, familyName);
 
+    double sizeHint = 0.0;
+    if (hiddenSystemFont && mUseSizeSensitiveSystemFont &&
+        mSystemDisplayFontFamilyName.Equals(familyName)) {
+        sizeHint = 128.0;
+    }
+
     nsAutoString key;
     ToLowerCase(familyName, key);
 
-    gfxFontFamily* familyEntry = new gfxMacFontFamily(familyName);
+    gfxFontFamily* familyEntry = new gfxMacFontFamily(familyName, sizeHint);
     table.Put(key, familyEntry);
 
     // check the bad underline blacklist
@@ -698,6 +724,8 @@ gfxMacPlatformFontList::InitFontList()
     
     // iterate over available families
 
+    InitSystemFontNames();
+
     CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
 
     for (NSString* familyName in (NSArray*)familyNames) {
@@ -707,8 +735,6 @@ gfxMacPlatformFontList::InitFontList()
     CFRelease(familyNames);
 
     InitSingleFaceList();
-
-    InitSystemFonts();
 
     // to avoid full search of font name tables, seed the other names table with localized names from
     // some of the prefs fonts which are accessed via their localized names.  changes in the pref fonts will only cause
@@ -792,7 +818,7 @@ static NSString* GetRealFamilyName(NSFont* aFont)
 const CGFloat kTextDisplayCrossover = 20.0; // use text family below this size
 
 void
-gfxMacPlatformFontList::InitSystemFonts()
+gfxMacPlatformFontList::InitSystemFontNames()
 {
     // system font under 10.11 are two distinct families for text/display sizes
     if (nsCocoaFeatures::OnElCapitanOrLater()) {
@@ -804,21 +830,18 @@ gfxMacPlatformFontList::InitSystemFonts()
     NSString* textFamilyName = GetRealFamilyName(sys);
     nsAutoString familyName;
     nsCocoaUtils::GetStringForNSString(textFamilyName, familyName);
-    mSystemTextFontFamily = FindSystemFontFamily(familyName);
-    NS_ASSERTION(mSystemTextFontFamily, "null system display font family");
+    mSystemTextFontFamilyName = familyName;
 
     // display font family, if on OSX 10.11
     if (mUseSizeSensitiveSystemFont) {
         NSFont* displaySys = [NSFont systemFontOfSize: 128.0];
         NSString* displayFamilyName = GetRealFamilyName(displaySys);
         nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
-        mSystemDisplayFontFamily = FindSystemFontFamily(familyName);
-        NS_ASSERTION(mSystemDisplayFontFamily, "null system display font family");
+        mSystemDisplayFontFamilyName = familyName;
 
 #if DEBUG
         // confirm that the optical size switch is at 20.0
-        NS_ASSERTION(mSystemTextFontFamily && mSystemDisplayFontFamily &&
-                     [textFamilyName compare:displayFamilyName] != NSOrderedSame,
+        NS_ASSERTION([textFamilyName compare:displayFamilyName] != NSOrderedSame,
                      "system text/display fonts are the same!");
         NSString* fam19 = GetRealFamilyName([NSFont systemFontOfSize:
                                              (kTextDisplayCrossover - 1.0)]);
@@ -1110,10 +1133,10 @@ gfxMacPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     if (aFamily.EqualsLiteral(kSystemFont_system)) {
         if (mUseSizeSensitiveSystemFont &&
             aStyle && (aStyle->size * aDevToCssSize) >= kTextDisplayCrossover) {
-            aOutput->AppendElement(mSystemDisplayFontFamily);
+            aOutput->AppendElement(FindSystemFontFamily(mSystemDisplayFontFamilyName));
             return true;
         }
-        aOutput->AppendElement(mSystemTextFontFamily);
+        aOutput->AppendElement(FindSystemFontFamily(mSystemTextFontFamilyName));
         return true;
     }
 

@@ -300,7 +300,7 @@ function testAttributeChangedExtended() {
 
   document.registerElement("x-extended-attribute-change", { prototype: p, extends: "button" });
 
-  var elem = document.createElement("button", "x-extended-attribute-change");
+  var elem = document.createElement("button", {is: "x-extended-attribute-change"});
   elem.setAttribute("foo", "bar");
 }
 

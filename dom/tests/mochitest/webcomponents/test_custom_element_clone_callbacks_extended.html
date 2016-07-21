@@ -14,40 +14,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1081039
 
 SimpleTest.waitForExplicitFinish();
 
-// Test to make sure created callback is called on clones that are upgraded and clones
-// created after registering the custom element.
+// Test to make sure created callback is called on clones created after
+// registering the custom element.
 
-var callbackCalledOnUpgrade = false;
-var callbackCalledOnClone = false;
-
-var foo = document.createElement("button", "x-foo");
-is(foo.getAttribute("is"), "x-foo");
-
-var fooClone = foo.cloneNode(true);
-
+var count = 0;
 var p = Object.create(HTMLButtonElement.prototype);
-p.createdCallback = function() {
+p.createdCallback = function() { // should be called by createElement and cloneNode
   is(this.__proto__, p, "Correct prototype should be set on custom elements.");
 
-  if (this == fooClone) {
-    // Callback called for the element created before registering the custom element.
-    // Should be called on element upgrade.
-    is(callbackCalledOnUpgrade, false, "Upgrade should only be called once per clone.");
-    callbackCalledOnUpgrade = true;
-  } else if (this != foo) {
-    // Callback called for the element created after registering the custom element.
-    is(callbackCalledOnClone, false, "Upgrade should only be called once per clone.");
-    callbackCalledOnClone = true;
-  }
-
-  if (callbackCalledOnUpgrade && callbackCalledOnClone) {
+  if (++count == 2) {
     SimpleTest.finish();
   }
 };
 
 document.registerElement("x-foo", { prototype: p, extends: "button" });
+var foo = document.createElement("button", {is: "x-foo"});
+is(foo.getAttribute("is"), "x-foo");
 
-var anotherFooClone = foo.cloneNode(true);
+var fooClone = foo.cloneNode(true);
 
 SimpleTest.waitForExplicitFinish();
 

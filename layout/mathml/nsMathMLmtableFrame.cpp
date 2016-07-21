@@ -821,14 +821,14 @@ nsMathMLmtableWrapperFrame::GetRowFrameAt(int32_t aRowIndex)
 
 void
 nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
-                                   nsHTMLReflowMetrics&     aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState,
+                                   ReflowOutput&     aDesiredSize,
+                                   const ReflowInput& aReflowInput,
                                    nsReflowStatus&          aStatus)
 {
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
 
-  nsTableWrapperFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsTableWrapperFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
   NS_ASSERTION(aDesiredSize.Height() >= 0, "illegal height for mtable");
   NS_ASSERTION(aDesiredSize.Width() >= 0, "illegal width for mtable");
 
@@ -854,7 +854,7 @@ nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
       // translate the coordinates to be relative to us and in our writing mode
       nsIFrame* frame = rowFrame;
       LogicalRect rect(wm, frame->GetRect(),
-                       aReflowState.ComputedSizeAsContainerIfConstrained());
+                       aReflowInput.ComputedSizeAsContainerIfConstrained());
       blockSize = rect.BSize(wm);
       do {
         dy += rect.BStart(wm);
@@ -890,7 +890,7 @@ nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
       RefPtr<nsFontMetrics> fm =
         nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
       nscoord axisHeight;
-      GetAxisHeight(aReflowState.rendContext->GetDrawTarget(), fm, axisHeight);
+      GetAxisHeight(aReflowInput.mRenderingContext->GetDrawTarget(), fm, axisHeight);
       if (rowFrame) {
         // anchor the table on the axis of the row of reference
         // XXX fallback to baseline because it is a hard problem
@@ -919,7 +919,7 @@ nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
   mBoundingMetrics.rightBearing = aDesiredSize.Width();
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 nsContainerFrame*
@@ -1316,12 +1316,12 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 
 void
 nsMathMLmtdInnerFrame::Reflow(nsPresContext*           aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              ReflowOutput&     aDesiredSize,
+                              const ReflowInput& aReflowInput,
                               nsReflowStatus&          aStatus)
 {
   // Let the base class do the reflow
-  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   // more about <maligngroup/> and <malignmark/> later
   // ...

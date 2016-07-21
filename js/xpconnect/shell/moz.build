@@ -31,6 +31,7 @@ if CONFIG['_MSC_VER']:
     # a console application.
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
+# DELAYLOAD_DLLS in this block ensure that the DLL blocklist initializes
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'xpcshell.rc'
 
@@ -44,6 +45,15 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         USE_LIBS += [
             'sandbox_s',
         ]
+
+        DELAYLOAD_DLLS += [
+            'winmm.dll',
+            'user32.dll',
+        ]
+
+    DELAYLOAD_DLLS += [
+        'xul.dll',
+    ]
 
 CFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']

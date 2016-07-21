@@ -521,7 +521,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         htmlEscSpec.get()
     };
 
-    rv = mBundle->FormatStringFromName(MOZ_UTF16("DirTitle"),
+    rv = mBundle->FormatStringFromName(u"DirTitle",
                                        formatTitle,
                                        sizeof(formatTitle)/sizeof(char16_t*),
                                        getter_Copies(title));
@@ -584,7 +584,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         htmlEscSpec.get()
     };
 
-    rv = mBundle->FormatStringFromName(MOZ_UTF16("DirTitle"),
+    rv = mBundle->FormatStringFromName(u"DirTitle",
                                        formatHeading,
                                        sizeof(formatHeading)/sizeof(char16_t*),
                                        getter_Copies(title));
@@ -595,7 +595,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
 
     if (!parentStr.IsEmpty()) {
         nsXPIDLString parentText;
-        rv = mBundle->GetStringFromName(MOZ_UTF16("DirGoUp"),
+        rv = mBundle->GetStringFromName(u"DirGoUp",
                                         getter_Copies(parentText));
         if (NS_FAILED(rv)) return rv;
 
@@ -610,7 +610,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
 
     if (isSchemeFile) {
         nsXPIDLString showHiddenText;
-        rv = mBundle->GetStringFromName(MOZ_UTF16("ShowHidden"),
+        rv = mBundle->GetStringFromName(u"ShowHidden",
                                         getter_Copies(showHiddenText));
         if (NS_FAILED(rv)) return rv;
 
@@ -627,21 +627,21 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
                          "  <tr>\n"
                          "   <th>");
 
-    rv = mBundle->GetStringFromName(MOZ_UTF16("DirColName"),
+    rv = mBundle->GetStringFromName(u"DirColName",
                                     getter_Copies(columnText));
     if (NS_FAILED(rv)) return rv;
     AppendNonAsciiToNCR(columnText, buffer);
     buffer.AppendLiteral("</th>\n"
                          "   <th>");
 
-    rv = mBundle->GetStringFromName(MOZ_UTF16("DirColSize"),
+    rv = mBundle->GetStringFromName(u"DirColSize",
                                     getter_Copies(columnText));
     if (NS_FAILED(rv)) return rv;
     AppendNonAsciiToNCR(columnText, buffer);
     buffer.AppendLiteral("</th>\n"
                          "   <th colspan=\"2\">");
 
-    rv = mBundle->GetStringFromName(MOZ_UTF16("DirColMTime"),
+    rv = mBundle->GetStringFromName(u"DirColMTime",
                                     getter_Copies(columnText));
     if (NS_FAILED(rv)) return rv;
     AppendNonAsciiToNCR(columnText, buffer);
@@ -796,7 +796,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.AppendLiteral("?size=16\" alt=\"");
 
         nsXPIDLString altText;
-        rv = mBundle->GetStringFromName(MOZ_UTF16("DirFileLabel"),
+        rv = mBundle->GetStringFromName(u"DirFileLabel",
                                         getter_Copies(altText));
         if (NS_FAILED(rv)) return rv;
         AppendNonAsciiToNCR(altText, pushBuffer);

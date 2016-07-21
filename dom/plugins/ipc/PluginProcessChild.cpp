@@ -21,7 +21,6 @@ extern "C" CGError CGSSetDebugOptions(int options);
 #endif
 
 #ifdef XP_WIN
-#include <objbase.h>
 bool ShouldProtectPluginCurrentDirectory(char16ptr_t pluginFilePath);
 #if defined(MOZ_SANDBOX)
 #define TARGET_SANDBOX_EXPORTS
@@ -79,12 +78,6 @@ PluginProcessChild::Init()
             PR_SetEnv(setInterposePtr);
         }
     }
-#endif
-
-#ifdef XP_WIN
-    // Drag-and-drop needs OleInitialize to be called, and Silverlight depends
-    // on the host calling CoInitialize (which is called by OleInitialize).
-    ::OleInitialize(nullptr);
 #endif
 
     // Certain plugins, such as flash, steal the unhandled exception filter
@@ -149,9 +142,6 @@ PluginProcessChild::Init()
 void
 PluginProcessChild::CleanUp()
 {
-#ifdef XP_WIN
-    ::OleUninitialize();
-#endif
     nsRegion::ShutdownStatic();
 }
 

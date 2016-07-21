@@ -827,7 +827,7 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, bool aUseStandinsForNativeColors,
 
   return NS_ERROR_NOT_AVAILABLE;
 }
-  
+
 nsresult
 nsXPLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 {

@@ -220,6 +220,10 @@ DefaultJitOptions::DefaultJitOptions()
 
     // Test whether wasm int64 / double NaN bits testing is enabled.
     SET_DEFAULT(wasmTestMode, false);
+
+    // Determines whether explicit bounds check will be used for OOB
+    // instead of signals (even when signals are available).
+    SET_DEFAULT(wasmExplicitBoundsChecks, false);
 }
 
 bool

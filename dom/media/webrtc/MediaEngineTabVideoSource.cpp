@@ -122,7 +122,7 @@ MediaEngineTabVideoSource::InitRunnable::Run()
 void
 MediaEngineTabVideoSource::GetName(nsAString_internal& aName) const
 {
-  aName.AssignLiteral(MOZ_UTF16("&getUserMedia.videoSource.tabShare;"));
+  aName.AssignLiteral(u"&getUserMedia.videoSource.tabShare;");
 }
 
 void

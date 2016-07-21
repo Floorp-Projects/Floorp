@@ -404,6 +404,13 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       : broker->LStat(path, buf);
   }
 
+  static intptr_t GetPPidTrap(ArgsRef aArgs, void* aux) {
+    // In a pid namespace, getppid() will return 0. We will return 0 instead
+    // of the real parent pid to see what breaks when we introduce the
+    // pid namespace (Bug 1151624).
+    return 0;
+  }
+
 public:
   explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker):mBroker(aBroker) { }
   virtual ~ContentSandboxPolicy() { }
@@ -511,6 +518,9 @@ public:
 
     switch (sysno) {
 #ifdef DESKTOP
+    case __NR_getppid:
+      return Trap(GetPPidTrap, nullptr);
+
       // Filesystem syscalls that need more work to determine who's
       // using them, if they need to be, and what we intend to about it.
     case __NR_mkdir:

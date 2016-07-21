@@ -17,38 +17,8 @@
  * is a 16-bit code unit of a Unicode code point, not a "character".
  */
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-   /*
-    * C++11 says char16_t is a distinct builtin type, but Windows's yvals.h
-    * typedefs char16_t as an unsigned short prior to MSVC 2015, which
-    * implemented C++11's distinct char16_t type. We would like to alias
-    * char16_t to Windows's 16-bit wchar_t so we can declare UTF-16 literals as
-    * constant expressions (and pass char16_t pointers to Windows APIs). We
-    * #define _CHAR16T here in order to prevent yvals.h from overriding our
-    * char16_t typedefs, which we set to wchar_t for C++ code.
-    *
-    * In addition, #defining _CHAR16T will prevent yvals.h from defining a
-    * char32_t type, so we have to undo that damage here and provide our own,
-    * which is identical to the yvals.h type.
-    */
-#  define MOZ_UTF16_HELPER(s) L##s
-#  define _CHAR16T
-typedef wchar_t char16_t;
-typedef unsigned int char32_t;
-#else
-   /* C++11 has a builtin char16_t type. */
-#  define MOZ_UTF16_HELPER(s) u##s
-   /**
-    * This macro is used to distinguish when char16_t would be a distinct
-    * typedef from wchar_t.
-    */
-#  define MOZ_CHAR16_IS_NOT_WCHAR
-#  ifdef WIN32
-#    define MOZ_USE_CHAR16_WRAPPER
-#  endif
-#endif
-
-#ifdef MOZ_USE_CHAR16_WRAPPER
+#ifdef WIN32
+# define MOZ_USE_CHAR16_WRAPPER
 # include <cstdint>
   /**
    * Win32 API extensively uses wchar_t, which is represented by a separated
@@ -214,20 +184,10 @@ typedef const char16_t* char16ptr_t;
 
 #endif
 
-/*
- * Macro arguments used in concatenation or stringification won't be expanded.
- * Therefore, in order for |MOZ_UTF16(FOO)| to work as expected (which is to
- * expand |FOO| before doing whatever |MOZ_UTF16| needs to do to it) a helper
- * macro, |MOZ_UTF16_HELPER| needs to be inserted in between to allow the macro
- * argument to expand. See "3.10.6 Separate Expansion of Macro Arguments" of the
- * CPP manual for a more accurate and precise explanation.
- */
-#define MOZ_UTF16(s) MOZ_UTF16_HELPER(s)
-
 static_assert(sizeof(char16_t) == 2, "Is char16_t type 16 bits?");
 static_assert(char16_t(-1) > char16_t(0), "Is char16_t type unsigned?");
-static_assert(sizeof(MOZ_UTF16('A')) == 2, "Is char literal 16 bits?");
-static_assert(sizeof(MOZ_UTF16("")[0]) == 2, "Is string char 16 bits?");
+static_assert(sizeof(u'A') == 2, "Is unicode char literal 16 bits?");
+static_assert(sizeof(u""[0]) == 2, "Is unicode string char 16 bits?");
 
 #endif
 

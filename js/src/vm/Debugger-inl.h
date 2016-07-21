@@ -86,17 +86,6 @@ js::DebuggerEnvironment::owner() const
     return Debugger::fromJSObject(dbgobj);
 }
 
-inline js::AbstractFramePtr
-js::DebuggerFrame::referent() const
-{
-    AbstractFramePtr frame = AbstractFramePtr::FromRaw(getPrivate());
-    if (frame.isScriptFrameIterData()) {
-        ScriptFrameIter iter(*(ScriptFrameIter::Data*)(frame.raw()));
-        frame = iter.abstractFramePtr();
-    }
-    return frame;
-}
-
 inline js::Debugger*
 js::DebuggerFrame::owner() const
 {

@@ -840,14 +840,14 @@ MediaDevice::GetType(nsAString& aType)
 NS_IMETHODIMP
 VideoDevice::GetType(nsAString& aType)
 {
-  aType.AssignLiteral(MOZ_UTF16("video"));
+  aType.AssignLiteral(u"video");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AudioDevice::GetType(nsAString& aType)
 {
-  aType.AssignLiteral(MOZ_UTF16("audio"));
+  aType.AssignLiteral(u"audio");
   return NS_OK;
 }
 
@@ -3052,7 +3052,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       MOZ_ASSERT(msg);
       msg->GetData(errorMessage);
       if (errorMessage.IsEmpty())
-        errorMessage.AssignLiteral(MOZ_UTF16("InternalError"));
+        errorMessage.AssignLiteral(u"InternalError");
     }
 
     nsString key(aData);

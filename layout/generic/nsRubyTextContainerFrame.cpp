@@ -121,20 +121,20 @@ nsRubyTextContainerFrame::UpdateSpanFlag()
 
 /* virtual */ void
 nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
-                                 nsHTMLReflowMetrics& aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState,
+                                 ReflowOutput& aDesiredSize,
+                                 const ReflowInput& aReflowInput,
                                  nsReflowStatus& aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsRubyTextContainerFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
   // Although a ruby text container may have continuations, returning
   // NS_FRAME_COMPLETE here is still safe, since its parent, ruby frame,
   // ignores the status, and continuations of the ruby base container
   // will take care of our continuations.
   aStatus = NS_FRAME_COMPLETE;
-  WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
+  WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();
 
   nscoord minBCoord = nscoord_MAX;
   nscoord maxBCoord = nscoord_MIN;

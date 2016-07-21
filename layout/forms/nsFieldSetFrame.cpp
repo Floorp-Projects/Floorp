@@ -383,15 +383,15 @@ nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
 void
 nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        ReflowOutput&     aDesiredSize,
+                        const ReflowInput& aReflowInput,
                         nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
-  NS_PRECONDITION(aReflowState.ComputedISize() != NS_INTRINSICSIZE,
+  NS_PRECONDITION(aReflowInput.ComputedISize() != NS_INTRINSICSIZE,
                   "Should have a precomputed inline-size!");
 
   // Initialize OUT parameter
@@ -400,7 +400,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   nsOverflowAreas ocBounds;
   nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
   if (GetPrevInFlow()) {
-    ReflowOverflowContainerChildren(aPresContext, aReflowState, ocBounds, 0,
+    ReflowOverflowContainerChildren(aPresContext, aReflowInput, ocBounds, 0,
                                     ocStatus);
   }
 
@@ -409,7 +409,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   bool reflowLegend;
   nsIFrame* legend = GetLegend();
   nsIFrame* inner = GetInner();
-  if (aReflowState.ShouldReflowAllKids()) {
+  if (aReflowInput.ShouldReflowAllKids()) {
     reflowInner = inner != nullptr;
     reflowLegend = legend != nullptr;
   } else {
@@ -424,43 +424,43 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   WritingMode wm = GetWritingMode();
   WritingMode innerWM = inner ? inner->GetWritingMode() : wm;
   WritingMode legendWM = legend ? legend->GetWritingMode() : wm;
-  LogicalSize innerAvailSize = aReflowState.ComputedSizeWithPadding(innerWM);
-  LogicalSize legendAvailSize = aReflowState.ComputedSizeWithPadding(legendWM);
+  LogicalSize innerAvailSize = aReflowInput.ComputedSizeWithPadding(innerWM);
+  LogicalSize legendAvailSize = aReflowInput.ComputedSizeWithPadding(legendWM);
   innerAvailSize.BSize(innerWM) = legendAvailSize.BSize(legendWM) =
     NS_UNCONSTRAINEDSIZE;
   NS_ASSERTION(!inner ||
-      nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+      nsLayoutUtils::IntrinsicForContainer(aReflowInput.mRenderingContext,
                                            inner,
                                            nsLayoutUtils::MIN_ISIZE) <=
                innerAvailSize.ISize(innerWM),
                "Bogus availSize.ISize; should be bigger");
   NS_ASSERTION(!legend ||
-      nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+      nsLayoutUtils::IntrinsicForContainer(aReflowInput.mRenderingContext,
                                            legend,
                                            nsLayoutUtils::MIN_ISIZE) <=
                legendAvailSize.ISize(legendWM),
                "Bogus availSize.ISize; should be bigger");
 
   // get our border and padding
-  LogicalMargin border = aReflowState.ComputedLogicalBorderPadding() -
-                         aReflowState.ComputedLogicalPadding();
+  LogicalMargin border = aReflowInput.ComputedLogicalBorderPadding() -
+                         aReflowInput.ComputedLogicalPadding();
 
   // Figure out how big the legend is if there is one.
   // get the legend's margin
   LogicalMargin legendMargin(wm);
   // reflow the legend only if needed
-  Maybe<nsHTMLReflowState> legendReflowState;
+  Maybe<ReflowInput> legendReflowInput;
   if (legend) {
-    legendReflowState.emplace(aPresContext, aReflowState, legend,
+    legendReflowInput.emplace(aPresContext, aReflowInput, legend,
                                 legendAvailSize);
   }
   if (reflowLegend) {
-    nsHTMLReflowMetrics legendDesiredSize(aReflowState);
+    ReflowOutput legendDesiredSize(aReflowInput);
 
     // We'll move the legend to its proper place later, so the position
     // and containerSize passed here are unimportant.
     const nsSize dummyContainerSize;
-    ReflowChild(legend, aPresContext, legendDesiredSize, *legendReflowState,
+    ReflowChild(legend, aPresContext, legendDesiredSize, *legendReflowInput,
                 wm, LogicalPoint(wm), dummyContainerSize,
                 NS_FRAME_NO_MOVE_FRAME, aStatus);
 #ifdef NOISY_REFLOW
@@ -490,7 +490,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     FinishReflowChild(legend, aPresContext, legendDesiredSize,
-                      legendReflowState.ptr(), wm, LogicalPoint(wm),
+                      legendReflowInput.ptr(), wm, LogicalPoint(wm),
                       dummyContainerSize, NS_FRAME_NO_MOVE_FRAME);
   } else if (!legend) {
     mLegendRect.SetEmpty();
@@ -507,34 +507,34 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                           border.Size(wm)).GetPhysicalSize(wm);
   // reflow the content frame only if needed
   if (reflowInner) {
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, inner,
+    ReflowInput kidReflowInput(aPresContext, aReflowInput, inner,
                                      innerAvailSize, nullptr,
-                                     nsHTMLReflowState::CALLER_WILL_INIT);
+                                     ReflowInput::CALLER_WILL_INIT);
     // Override computed padding, in case it's percentage padding
-    kidReflowState.Init(aPresContext, nullptr, nullptr,
-                        &aReflowState.ComputedPhysicalPadding());
+    kidReflowInput.Init(aPresContext, nullptr, nullptr,
+                        &aReflowInput.ComputedPhysicalPadding());
     // Our child is "height:100%" but we actually want its height to be reduced
     // by the amount of content-height the legend is eating up, unless our
     // height is unconstrained (in which case the child's will be too).
-    if (aReflowState.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-      kidReflowState.SetComputedBSize(
-         std::max(0, aReflowState.ComputedBSize() - mLegendSpace));
+    if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+      kidReflowInput.SetComputedBSize(
+         std::max(0, aReflowInput.ComputedBSize() - mLegendSpace));
     }
 
-    if (aReflowState.ComputedMinBSize() > 0) {
-      kidReflowState.ComputedMinBSize() =
-        std::max(0, aReflowState.ComputedMinBSize() - mLegendSpace);
+    if (aReflowInput.ComputedMinBSize() > 0) {
+      kidReflowInput.ComputedMinBSize() =
+        std::max(0, aReflowInput.ComputedMinBSize() - mLegendSpace);
     }
 
-    if (aReflowState.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
-      kidReflowState.ComputedMaxBSize() =
-        std::max(0, aReflowState.ComputedMaxBSize() - mLegendSpace);
+    if (aReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
+      kidReflowInput.ComputedMaxBSize() =
+        std::max(0, aReflowInput.ComputedMaxBSize() - mLegendSpace);
     }
 
-    nsHTMLReflowMetrics kidDesiredSize(kidReflowState,
+    ReflowOutput kidDesiredSize(kidReflowInput,
                                        aDesiredSize.mFlags);
     // Reflow the frame
-    NS_ASSERTION(kidReflowState.ComputedPhysicalMargin() == nsMargin(0,0,0,0),
+    NS_ASSERTION(kidReflowInput.ComputedPhysicalMargin() == nsMargin(0,0,0,0),
                  "Margins on anonymous fieldset child not supported!");
     LogicalPoint pt(wm, border.IStart(wm), border.BStart(wm) + mLegendSpace);
 
@@ -542,14 +542,14 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // so we use a dummy value for now; FinishReflowChild will fix the position
     // if necessary.
     const nsSize dummyContainerSize;
-    ReflowChild(inner, aPresContext, kidDesiredSize, kidReflowState,
+    ReflowChild(inner, aPresContext, kidDesiredSize, kidReflowInput,
                 wm, pt, dummyContainerSize, 0, aStatus);
 
     // Update containerSize to account for size of the inner frame, so that
     // FinishReflowChild can position it correctly.
     containerSize += kidDesiredSize.PhysicalSize();
     FinishReflowChild(inner, aPresContext, kidDesiredSize,
-                      &kidReflowState, wm, pt, containerSize, 0);
+                      &kidReflowInput, wm, pt, containerSize, 0);
     NS_FRAME_TRACE_REFLOW_OUT("FieldSet::Reflow", aStatus);
   } else if (inner) {
     // |inner| didn't need to be reflowed but we do need to include its size
@@ -566,7 +566,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // Our content rect must fill up the available width
-  LogicalSize availSize = aReflowState.ComputedSizeWithPadding(wm);
+  LogicalSize availSize = aReflowInput.ComputedSizeWithPadding(wm);
   if (availSize.ISize(wm) > contentRect.ISize(wm)) {
     contentRect.ISize(wm) = innerAvailSize.ISize(wm);
   }
@@ -575,7 +575,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // The legend is positioned inline-wards within the inner's content rect
     // (so that padding on the fieldset affects the legend position).
     LogicalRect innerContentRect = contentRect;
-    innerContentRect.Deflate(wm, aReflowState.ComputedLogicalPadding());
+    innerContentRect.Deflate(wm, aReflowInput.ComputedLogicalPadding());
     // If the inner content rect is larger than the legend, we can align the
     // legend.
     if (innerContentRect.ISize(wm) > mLegendRect.ISize(wm)) {
@@ -607,7 +607,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       mLegendRect.IStart(wm) = innerContentRect.IStart(wm);
       innerContentRect.ISize(wm) = mLegendRect.ISize(wm);
       contentRect.ISize(wm) = mLegendRect.ISize(wm) +
-        aReflowState.ComputedLogicalPadding().IStartEnd(wm);
+        aReflowInput.ComputedLogicalPadding().IStartEnd(wm);
     }
 
     // place the legend
@@ -618,9 +618,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // Note that legend's writing mode may be different from the fieldset's,
     // so we need to convert offsets before applying them to it (bug 1134534).
     LogicalMargin offsets =
-      legendReflowState->ComputedLogicalOffsets().
-        ConvertTo(wm, legendReflowState->GetWritingMode());
-    nsHTMLReflowState::ApplyRelativePositioning(legend, wm, offsets,
+      legendReflowInput->ComputedLogicalOffsets().
+        ConvertTo(wm, legendReflowInput->GetWritingMode());
+    ReflowInput::ApplyRelativePositioning(legend, wm, offsets,
                                                 &actualLegendPos,
                                                 containerSize);
 
@@ -647,11 +647,11 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.mOverflowAreas.UnionWith(ocBounds);
   NS_MergeReflowStatusInto(&aStatus, ocStatus);
 
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
+  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   InvalidateFrame();
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 #ifdef DEBUG

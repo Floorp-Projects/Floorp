@@ -80,10 +80,10 @@ ParseKeySystem(const nsAString& aExpectedKeySystem,
   return true;
 }
 
-static const char16_t* sKeySystems[] = {
-  MOZ_UTF16("org.w3.clearkey"),
-  MOZ_UTF16("com.adobe.primetime"),
-  MOZ_UTF16("com.widevine.alpha"),
+static const char16_t *const sKeySystems[] = {
+  u"org.w3.clearkey",
+  u"com.adobe.primetime",
+  u"com.widevine.alpha",
 };
 
 bool
