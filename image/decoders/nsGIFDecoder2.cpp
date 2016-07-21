@@ -256,7 +256,7 @@ nsGIFDecoder2::EndImageFrame()
   // Tell the superclass we finished a frame
   PostFrameStop(opacity,
                 DisposalMethod(mGIFStruct.disposal_method),
-                mGIFStruct.delay_time);
+                FrameTimeout::FromRawMilliseconds(mGIFStruct.delay_time));
 
   // Reset the transparent pixel
   if (mOldColor) {
@@ -695,7 +695,7 @@ nsGIFDecoder2::ReadGraphicControlExtension(const char* aData)
 
   mGIFStruct.delay_time = LittleEndian::readUint16(aData + 1) * 10;
   if (mGIFStruct.delay_time > 0) {
-    PostIsAnimated(mGIFStruct.delay_time);
+    PostIsAnimated(FrameTimeout::FromRawMilliseconds(mGIFStruct.delay_time));
   }
 
   return Transition::To(State::SKIP_SUB_BLOCKS, SUB_BLOCK_HEADER_LEN);
@@ -765,7 +765,7 @@ nsGIFDecoder2::ReadImageDescriptor(const char* aData)
       // animated image with a first frame timeout of zero. Signal that we're
       // animated now, before the first-frame decode early exit below, so that
       // RasterImage can detect that this happened.
-      PostIsAnimated(0);
+      PostIsAnimated(FrameTimeout::FromRawMilliseconds(0));
     }
 
     if (IsFirstFrameDecode()) {

@@ -27,7 +27,7 @@ add_task(function* () {
   markup._onMouseMove({
     preventDefault: () => {},
     target: markup.doc.body,
-    pageY: viewHeight
+    pageY: viewHeight + markup.doc.defaultView.scrollY
   });
 
   let bottomScrollPos = yield onScrolled;
@@ -39,7 +39,7 @@ add_task(function* () {
   markup._onMouseMove({
     preventDefault: () => {},
     target: markup.doc.body,
-    pageY: 0
+    pageY: markup.doc.defaultView.scrollY
   });
 
   let topScrollPos = yield onScrolled;

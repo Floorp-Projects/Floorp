@@ -824,23 +824,23 @@ static void test_strip_chars_helper(const char16_t* str, const char16_t* strip, 
 
 TEST(String, strip_chars)
 {
-  test_strip_chars_helper(MOZ_UTF16("foo \r \nbar"),
-                          MOZ_UTF16(" \n\r"),
+  test_strip_chars_helper(u"foo \r \nbar",
+                          u" \n\r",
                           NS_LITERAL_STRING("foobar"));
-  test_strip_chars_helper(MOZ_UTF16("\r\nfoo\r\n"),
-                          MOZ_UTF16(" \n\r"),
+  test_strip_chars_helper(u"\r\nfoo\r\n",
+                          u" \n\r",
                           NS_LITERAL_STRING("foo"));
-  test_strip_chars_helper(MOZ_UTF16("foo"),
-                          MOZ_UTF16(" \n\r"),
+  test_strip_chars_helper(u"foo",
+                          u" \n\r",
                           NS_LITERAL_STRING("foo"));
-  test_strip_chars_helper(MOZ_UTF16("foo"),
-                          MOZ_UTF16("fo"),
+  test_strip_chars_helper(u"foo",
+                          u"fo",
                           NS_LITERAL_STRING(""));
-  test_strip_chars_helper(MOZ_UTF16("foo"),
-                          MOZ_UTF16("foo"),
+  test_strip_chars_helper(u"foo",
+                          u"foo",
                           NS_LITERAL_STRING(""));
-  test_strip_chars_helper(MOZ_UTF16(" foo"),
-                          MOZ_UTF16(" "),
+  test_strip_chars_helper(u" foo",
+                          u" ",
                           NS_LITERAL_STRING(" foo"), 1);
 }
 

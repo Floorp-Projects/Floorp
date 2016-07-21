@@ -22,10 +22,16 @@ interface nsIQuotaManagerService : nsISupports
    *        A principal for the origin whose usage is being queried.
    * @param aCallback
    *        The callback that will be called when the usage is available.
+   * @param aGetGroupUsage
+   *        An optional flag to indicate whether getting group usage and limit
+   *        or origin usage and file usage. The default value is false.
+   * Note:  Origin usage here represents total usage of an origin. However,
+   *        group usage here represents only non-persistent usage of a group.
    */
   nsIQuotaUsageRequest
   getUsageForPrincipal(in nsIPrincipal aPrincipal,
-                       in nsIQuotaUsageCallback aCallback);
+                       in nsIQuotaUsageCallback aCallback,
+                       [optional] in boolean aGetGroupUsage);
 
   /**
    * Removes all storages. The files may not be deleted immediately depending

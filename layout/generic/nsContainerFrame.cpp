@@ -994,8 +994,8 @@ nsContainerFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
 void
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsPresContext*           aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              ReflowOutput&     aDesiredSize,
+                              const ReflowInput& aReflowInput,
                               const WritingMode&       aWM,
                               const LogicalPoint&      aPos,
                               const nsSize&            aContainerSize,
@@ -1003,7 +1003,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
-  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+  NS_PRECONDITION(aReflowInput.mFrame == aKidFrame, "bad reflow state");
   if (aWM.IsVerticalRL() || (!aWM.IsVertical() && !aWM.IsBidiLTR())) {
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "ReflowChild with unconstrained container width!");
@@ -1019,7 +1019,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   }
 
   // Reflow the child frame
-  aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   // If the child frame is complete, delete any next-in-flows,
   // but only if the NO_DELETE_NEXT_IN_FLOW flag isn't set.
@@ -1042,15 +1042,15 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 void
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsPresContext*           aPresContext,
-                              nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              ReflowOutput&     aDesiredSize,
+                              const ReflowInput& aReflowInput,
                               nscoord                  aX,
                               nscoord                  aY,
                               uint32_t                 aFlags,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
-  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+  NS_PRECONDITION(aReflowInput.mFrame == aKidFrame, "bad reflow state");
 
   // Position the child frame and its view if requested.
   if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
@@ -1062,7 +1062,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   }
 
   // Reflow the child frame
-  aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   // If the child frame is complete, delete any next-in-flows,
   // but only if the NO_DELETE_NEXT_IN_FLOW flag isn't set.
@@ -1135,8 +1135,8 @@ nsContainerFrame::PositionChildViews(nsIFrame* aFrame)
 void
 nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
                                     nsPresContext*             aPresContext,
-                                    const nsHTMLReflowMetrics& aDesiredSize,
-                                    const nsHTMLReflowState*   aReflowState,
+                                    const ReflowOutput& aDesiredSize,
+                                    const ReflowInput*   aReflowInput,
                                     const WritingMode&         aWM,
                                     const LogicalPoint&        aPos,
                                     const nsSize&              aContainerSize,
@@ -1176,7 +1176,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
     }
   }
 
-  aKidFrame->DidReflow(aPresContext, aReflowState, nsDidReflowStatus::FINISHED);
+  aKidFrame->DidReflow(aPresContext, aReflowInput, nsDidReflowStatus::FINISHED);
 }
 
 //XXX temporary: hold on to a copy of the old physical version of
@@ -1184,8 +1184,8 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
 void
 nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
                                     nsPresContext*             aPresContext,
-                                    const nsHTMLReflowMetrics& aDesiredSize,
-                                    const nsHTMLReflowState*   aReflowState,
+                                    const ReflowOutput& aDesiredSize,
+                                    const ReflowInput*   aReflowInput,
                                     nscoord                    aX,
                                     nscoord                    aY,
                                     uint32_t                   aFlags)
@@ -1215,12 +1215,12 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
     }
   }
 
-  aKidFrame->DidReflow(aPresContext, aReflowState, nsDidReflowStatus::FINISHED);
+  aKidFrame->DidReflow(aPresContext, aReflowInput, nsDidReflowStatus::FINISHED);
 }
 
 void
 nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
-                                                  const nsHTMLReflowState& aReflowState,
+                                                  const ReflowInput& aReflowInput,
                                                   nsOverflowAreas&         aOverflowRects,
                                                   uint32_t                 aFlags,
                                                   nsReflowStatus&          aStatus,
@@ -1234,7 +1234,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
   }
 
   nsOverflowContinuationTracker tracker(this, false, false);
-  bool shouldReflowAllKids = aReflowState.ShouldReflowAllKids();
+  bool shouldReflowAllKids = aReflowInput.ShouldReflowAllKids();
 
   for (nsIFrame* frame : *overflowContainers) {
     if (frame->GetPrevInFlow()->GetParent() != GetPrevInFlow()) {
@@ -1252,14 +1252,14 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       NS_ASSERTION(frame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER,
                    "overflow container frame must have overflow container bit set");
       WritingMode wm = frame->GetWritingMode();
-      nsSize containerSize = aReflowState.AvailableSize(wm).GetPhysicalSize(wm);
+      nsSize containerSize = aReflowInput.AvailableSize(wm).GetPhysicalSize(wm);
       LogicalRect prevRect = prevInFlow->GetLogicalRect(wm, containerSize);
 
       // Initialize reflow params
       LogicalSize availSpace(wm, prevRect.ISize(wm),
-                             aReflowState.AvailableSize(wm).BSize(wm));
-      nsHTMLReflowMetrics desiredSize(aReflowState);
-      nsHTMLReflowState frameState(aPresContext, aReflowState,
+                             aReflowInput.AvailableSize(wm).BSize(wm));
+      ReflowOutput desiredSize(aReflowInput);
+      ReflowInput frameState(aPresContext, aReflowInput,
                                    frame, availSpace);
       nsReflowStatus frameStatus;
 
@@ -1309,10 +1309,10 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
     }
     else {
       tracker.Skip(frame, aStatus);
-      if (aReflowState.mFloatManager) {
-        nsBlockFrame::RecoverFloatsFor(frame, *aReflowState.mFloatManager,
-                                       aReflowState.GetWritingMode(),
-                                       aReflowState.ComputedPhysicalSize());
+      if (aReflowInput.mFloatManager) {
+        nsBlockFrame::RecoverFloatsFor(frame, *aReflowInput.mFloatManager,
+                                       aReflowInput.GetWritingMode(),
+                                       aReflowInput.ComputedPhysicalSize());
       }
     }
     ConsiderChildOverflow(aOverflowRects, frame);

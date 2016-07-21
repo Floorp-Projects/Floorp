@@ -91,7 +91,7 @@ GetMostRecentNavigatorHWND()
   }
 
   nsCOMPtr<mozIDOMWindowProxy> navWin;
-  rv = winMediator->GetMostRecentWindow(MOZ_UTF16("navigator:browser"),
+  rv = winMediator->GetMostRecentWindow(u"navigator:browser",
                                         getter_AddRefs(navWin));
   if (NS_FAILED(rv) || !navWin) {
     return nullptr;
@@ -659,7 +659,7 @@ GetFileInfo(const nsAFlatString& aName, PRFileInfo64* aInfo)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileData;
 
-  if (aName.IsEmpty() || aName.FindCharInSet(MOZ_UTF16("?*")) != kNotFound) {
+  if (aName.IsEmpty() || aName.FindCharInSet(u"?*") != kNotFound) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -3312,7 +3312,7 @@ nsLocalFile::Launch()
   // "what do you want to do" dialog
   if (r == SE_ERR_NOASSOC) {
     nsAutoString shellArg;
-    shellArg.AssignLiteral(MOZ_UTF16("shell32.dll,OpenAs_RunDLL "));
+    shellArg.AssignLiteral(u"shell32.dll,OpenAs_RunDLL ");
     shellArg.Append(mResolvedPath);
     seinfo.lpFile = L"RUNDLL32.EXE";
     seinfo.lpParameters = shellArg.get();

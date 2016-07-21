@@ -6,6 +6,7 @@
 
 #include "vm/Compression.h"
 
+#include "mozilla/MemoryChecking.h"
 #include "js/Utility.h"
 
 using namespace js;
@@ -108,9 +109,7 @@ js::DecompressString(const unsigned char* inp, size_t inplen, unsigned char* out
     MOZ_ASSERT(inplen <= UINT32_MAX);
 
     // Mark the memory we pass to zlib as initialized for MSan.
-#ifdef MOZ_MSAN
-    __msan_unpoison(out, outlen);
-#endif
+    MOZ_MAKE_MEM_DEFINED(out, outlen);
 
     z_stream zs;
     zs.zalloc = zlib_alloc;

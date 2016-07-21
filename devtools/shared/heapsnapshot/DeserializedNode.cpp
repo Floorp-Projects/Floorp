@@ -59,7 +59,7 @@ namespace ubi {
 using mozilla::devtools::DeserializedEdge;
 
 const char16_t Concrete<DeserializedNode>::concreteTypeName[] =
-  MOZ_UTF16("mozilla::devtools::DeserializedNode");
+  u"mozilla::devtools::DeserializedNode";
 
 const char16_t*
 Concrete<DeserializedNode>::typeName() const

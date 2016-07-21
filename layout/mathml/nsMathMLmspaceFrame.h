@@ -31,8 +31,8 @@ public:
 
   virtual void
   Reflow(nsPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         ReflowOutput&     aDesiredSize,
+         const ReflowInput& aReflowInput,
          nsReflowStatus&          aStatus) override;
   
 protected:
@@ -41,7 +41,7 @@ protected:
 
   virtual nsresult
   MeasureForWidth(DrawTarget* aDrawTarget,
-                  nsHTMLReflowMetrics& aDesiredSize) override;
+                  ReflowOutput& aDesiredSize) override;
 
 private:
   nscoord mWidth;

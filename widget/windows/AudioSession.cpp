@@ -209,7 +209,7 @@ AudioSession::Start()
                                 getter_AddRefs(bundle));
     NS_ENSURE_TRUE(bundle, NS_ERROR_FAILURE);
 
-    bundle->GetStringFromName(MOZ_UTF16("brandFullName"),
+    bundle->GetStringFromName(u"brandFullName",
                               getter_Copies(mDisplayName));
 
     wchar_t *buffer;

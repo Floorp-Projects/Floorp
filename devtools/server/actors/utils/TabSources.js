@@ -245,7 +245,7 @@ TabSources.prototype = {
       }
     }
 
-    throw new Error("getSourceByURL: could not find source for " + url);
+    throw new Error("getSourceActorByURL: could not find source for " + url);
     return null;
   },
 

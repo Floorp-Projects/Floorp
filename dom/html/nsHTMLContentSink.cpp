@@ -172,8 +172,6 @@ protected:
   // yet.  We want to make sure to only do this once.
   bool mNotifiedRootInsertion;
 
-  mozilla::dom::NodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
-
   nsresult FlushTags() override;
 
   // Routines for tags that require special handling
@@ -217,7 +215,7 @@ private:
   // What this actually does is check whether we've notified for all
   // of the parent's kids.
   bool HaveNotifiedForCurrentContent() const;
-  
+
 public:
   HTMLContentSink* mSink;
   int32_t mNotifyLevel;
@@ -250,7 +248,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
 
   nsIAtom *name = nodeInfo->NameAtom();
 
-  NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML), 
+  NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
                "Trying to HTML elements that don't have the XHTML namespace");
 
   // Per the Custom Element specification, unknown tags that are valid custom
@@ -674,10 +672,6 @@ HTMLContentSink::~HTMLContentSink()
   delete mCurrentContext;
 
   delete mHeadContext;
-
-  for (i = 0; uint32_t(i) < ArrayLength(mNodeInfoCache); ++i) {
-    NS_IF_RELEASE(mNodeInfoCache[i]);
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLContentSink)
@@ -687,9 +681,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLContentSink, nsContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBody)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHead)
-  for (uint32_t i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
-    NS_IF_RELEASE(tmp->mNodeInfoCache[i]);
-  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
                                                   nsContentSink)
@@ -697,11 +688,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBody)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHead)
-  for (uint32_t i = 0; i < ArrayLength(tmp->mNodeInfoCache); ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfoCache[i]");
-    cb.NoteNativeChild(tmp->mNodeInfoCache[i],
-                       NS_CYCLE_COLLECTION_PARTICIPANT(NodeInfo));
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLContentSink)
@@ -721,7 +707,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIChannel* aChannel)
 {
   NS_ENSURE_TRUE(aContainer, NS_ERROR_NULL_POINTER);
-  
+
   nsresult rv = nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
   if (NS_FAILED(rv)) {
     return rv;
@@ -839,7 +825,7 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
   // thing sufficient?
   mDocument->RemoveObserver(this);
   mIsDocumentObserver = false;
-  
+
   mDocument->EndLoad();
 
   DropParserAndPerfHint();
@@ -900,7 +886,7 @@ HTMLContentSink::OpenBody()
     int32_t numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
     int32_t childCount = parent->GetChildCount();
     NS_ASSERTION(numFlushed < childCount, "Already notified on the body?");
-    
+
     int32_t insertionPoint =
       mCurrentContext->mStack[parentIndex].mInsertionPoint;
 
@@ -1096,7 +1082,7 @@ HTMLContentSink::FlushTags()
     NotifyRootInsertion();
     return NS_OK;
   }
-  
+
   return mCurrentContext ? mCurrentContext->FlushTags() : NS_OK;
 }
 

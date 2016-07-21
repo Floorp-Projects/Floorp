@@ -318,7 +318,7 @@ static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1
 }
 
 static inline const char* generic_null_str(const char*) { return "(null)"; }
-static inline const char16_t* generic_null_str(const char16_t*) { return MOZ_UTF16("(null)"); }
+static inline const char16_t* generic_null_str(const char16_t*) { return u"(null)"; }
 
 static inline size_t generic_strlen(const char* s) { return strlen(s); }
 static inline size_t generic_strlen(const char16_t* s) { return js_strlen(s); }

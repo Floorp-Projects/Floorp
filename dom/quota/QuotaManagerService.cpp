@@ -497,6 +497,7 @@ NS_IMPL_QUERY_INTERFACE(QuotaManagerService,
 NS_IMETHODIMP
 QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
                                           nsIQuotaUsageCallback* aCallback,
+                                          bool aGetGroupUsage,
                                           nsIQuotaUsageRequest** _retval)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -509,7 +510,6 @@ QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
   UsageParams params;
 
   PrincipalInfo& principalInfo = params.principalInfo();
-
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -519,6 +519,8 @@ QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
       principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  params.getGroupUsage() = aGetGroupUsage;
 
   nsAutoPtr<PendingRequestInfo> info(new UsageRequestInfo(request, params));
 

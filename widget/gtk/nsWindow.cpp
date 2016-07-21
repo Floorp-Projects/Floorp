@@ -3526,11 +3526,11 @@ GetBrandName(nsXPIDLString& brandName)
 
     if (bundle)
         bundle->GetStringFromName(
-            MOZ_UTF16("brandShortName"),
+            u"brandShortName",
             getter_Copies(brandName));
 
     if (brandName.IsEmpty())
-        brandName.AssignLiteral(MOZ_UTF16("Mozilla"));
+        brandName.AssignLiteral(u"Mozilla");
 }
 
 static GdkWindow *

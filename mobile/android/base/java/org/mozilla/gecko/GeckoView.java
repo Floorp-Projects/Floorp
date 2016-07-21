@@ -118,6 +118,7 @@ public class GeckoView extends LayerView
         @Override protected native void disposeNative();
         native void close();
         native void reattach(GeckoView view);
+        native void loadUri(String uri, int flags);
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -269,6 +270,23 @@ public class GeckoView extends LayerView
                     window, "close");
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     window, "disposeNative");
+        }
+    }
+
+    @WrapForJNI public static final int LOAD_DEFAULT = 0;
+    @WrapForJNI public static final int LOAD_NEW_TAB = 1;
+    @WrapForJNI public static final int LOAD_SWITCH_TAB = 2;
+
+    public void loadUri(String uri, int flags) {
+        if (window == null) {
+            throw new IllegalStateException("Not attached to window");
+        }
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            window.loadUri(uri, flags);
+        }  else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                    window, "loadUri", String.class, uri, flags);
         }
     }
 

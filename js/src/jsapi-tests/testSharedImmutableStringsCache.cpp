@@ -15,11 +15,11 @@ const int NUM_THREADS = 256;
 const int NUM_ITERATIONS = 256;
 
 const int NUM_STRINGS = 4;
-const char16_t* STRINGS[NUM_STRINGS] = {
-    MOZ_UTF16("uno"),
-    MOZ_UTF16("dos"),
-    MOZ_UTF16("tres"),
-    MOZ_UTF16("quattro")
+const char16_t *const STRINGS[NUM_STRINGS] = {
+    u"uno",
+    u"dos",
+    u"tres",
+    u"quattro"
 };
 
 struct CacheAndIndex

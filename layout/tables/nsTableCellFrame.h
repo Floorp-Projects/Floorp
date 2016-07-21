@@ -99,9 +99,9 @@ public:
 
   virtual nsMargin GetUsedMargin() const override;
 
-  virtual void NotifyPercentBSize(const nsHTMLReflowState& aReflowState) override;
+  virtual void NotifyPercentBSize(const ReflowInput& aReflowInput) override;
 
-  virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState) override;
+  virtual bool NeedsToObserve(const ReflowInput& aReflowInput) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -121,8 +121,8 @@ public:
   virtual IntrinsicISizeOffsetData IntrinsicISizeOffsets() override;
 
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&      aStatus) override;
 
   /**
@@ -211,7 +211,7 @@ public:
   inline mozilla::LogicalSize GetDesiredSize();
 
   /** set the desired size returned by this frame during its last reflow */
-  inline void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
+  inline void SetDesiredSize(const ReflowOutput & aDesiredSize);
 
   bool GetContentEmpty();
   void SetContentEmpty(bool aContentEmpty);
@@ -243,7 +243,7 @@ public:
 
 protected:
   virtual LogicalSides
-  GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
 
   /**
    * GetBorderOverflow says how far the cell's own borders extend
@@ -271,7 +271,7 @@ inline void nsTableCellFrame::SetPriorAvailISize(nscoord aPriorAvailISize)
 inline mozilla::LogicalSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
 
-inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
+inline void nsTableCellFrame::SetDesiredSize(const ReflowOutput & aDesiredSize)
 {
   mozilla::WritingMode wm = aDesiredSize.GetWritingMode();
   mDesiredSize = aDesiredSize.Size(wm).ConvertTo(GetWritingMode(), wm);

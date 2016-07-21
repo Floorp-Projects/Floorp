@@ -262,7 +262,8 @@ nsPNGDecoder::EndImageFrame()
     opacity = Opacity::FULLY_OPAQUE;
   }
 
-  PostFrameStop(opacity, mAnimInfo.mDispose, mAnimInfo.mTimeout,
+  PostFrameStop(opacity, mAnimInfo.mDispose,
+                FrameTimeout::FromRawMilliseconds(mAnimInfo.mTimeout),
                 mAnimInfo.mBlend, Some(mFrameRect));
 }
 
@@ -675,7 +676,8 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 #ifdef PNG_APNG_SUPPORTED
   bool isAnimated = png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL);
   if (isAnimated) {
-    decoder->PostIsAnimated(GetNextFrameDelay(png_ptr, info_ptr));
+    int32_t rawTimeout = GetNextFrameDelay(png_ptr, info_ptr);
+    decoder->PostIsAnimated(FrameTimeout::FromRawMilliseconds(rawTimeout));
 
     if (decoder->mDownscaler && !decoder->IsFirstFrameDecode()) {
       MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode "

@@ -381,51 +381,6 @@ TexImage2DHelper(GLContext* gl,
     }
 }
 
-static uint32_t
-GetBytesPerTexel(GLenum format, GLenum type)
-{
-    // If there is no defined format or type, we're not taking up any memory
-    if (!format || !type) {
-        return 0;
-    }
-
-    if (format == LOCAL_GL_DEPTH_COMPONENT) {
-        if (type == LOCAL_GL_UNSIGNED_SHORT)
-            return 2;
-        else if (type == LOCAL_GL_UNSIGNED_INT)
-            return 4;
-    } else if (format == LOCAL_GL_DEPTH_STENCIL) {
-        if (type == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
-            return 4;
-    }
-
-    if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT || type == LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV) {
-        uint32_t multiplier = type == LOCAL_GL_UNSIGNED_BYTE ? 1 : 4;
-        switch (format) {
-            case LOCAL_GL_ALPHA:
-            case LOCAL_GL_LUMINANCE:
-                return 1 * multiplier;
-            case LOCAL_GL_LUMINANCE_ALPHA:
-                return 2 * multiplier;
-            case LOCAL_GL_RGB:
-                return 3 * multiplier;
-            case LOCAL_GL_RGBA:
-                return 4 * multiplier;
-            default:
-                break;
-        }
-    } else if (type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
-               type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
-               type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
-    {
-        return 2;
-    }
-
-    gfxCriticalError() << "Unknown texture type " << type << " or format " << format;
-    MOZ_CRASH();
-    return 0;
-}
-
 SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,

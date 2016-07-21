@@ -25,8 +25,6 @@ class nsFontMetrics;
 class nsImageMap;
 class nsIURI;
 class nsILoadGroup;
-struct nsHTMLReflowState;
-class nsHTMLReflowMetrics;
 class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
@@ -91,8 +89,8 @@ public:
   virtual mozilla::IntrinsicSize GetIntrinsicSize() override;
   virtual nsSize GetIntrinsicRatio() override;
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
   
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
@@ -133,7 +131,7 @@ public:
     return NS_FRAME_SPLITTABLE;
   }
 
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
 
   nsresult GetIntrinsicImageSize(nsSize& aSize);
 

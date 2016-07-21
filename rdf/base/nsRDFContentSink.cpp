@@ -1373,7 +1373,7 @@ RDFContentSinkImpl::ReinitContainer(nsIRDFResource* aContainerType, nsIRDFResour
     nsresult rv;
 
     nsCOMPtr<nsIRDFLiteral> one;
-    rv = gRDFService->GetLiteral(MOZ_UTF16("1"), getter_AddRefs(one));
+    rv = gRDFService->GetLiteral(u"1", getter_AddRefs(one));
     if (NS_FAILED(rv)) return rv;
 
     // Re-initialize the 'nextval' property

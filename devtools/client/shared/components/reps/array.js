@@ -127,7 +127,8 @@ define(function (require, exports, module) {
       let items;
 
       if (mode == "tiny") {
-        items = DOM.span({className: "length"}, object.length);
+        let isEmpty = object.length === 0;
+        items = DOM.span({className: "length"}, isEmpty ? "" : object.length);
       } else {
         let max = (mode == "short") ? 3 : 300;
         items = this.arrayIterator(object, max);

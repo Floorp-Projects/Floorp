@@ -1,11 +1,13 @@
 // onPromiseSettled handlers fire, until they are removed.
+if (!('Promise' in this))
+    quit(0);
 
 var g = newGlobal();
 var dbg = new Debugger(g);
 var log;
 
 log = '';
-g.settleFakePromise(g.makeFakePromise());
+g.settlePromiseNow(new g.Promise(function (){}));
 assertEq(log, '');
 
 dbg.onPromiseSettled = function (promise) {
@@ -15,10 +17,10 @@ dbg.onPromiseSettled = function (promise) {
 };
 
 log = '';
-g.settleFakePromise(g.makeFakePromise());
+g.settlePromiseNow(new g.Promise(function (){}));
 assertEq(log, 's');
 
 log = '';
 dbg.onPromiseSettled = undefined;
-g.settleFakePromise(g.makeFakePromise());
+g.settlePromiseNow(new g.Promise(function (){}));
 assertEq(log, '');

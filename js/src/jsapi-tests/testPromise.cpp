@@ -16,7 +16,9 @@ static bool executor_called = false;
 static bool
 PromiseExecutor(JSContext* cx, unsigned argc, Value* vp)
 {
+#ifdef DEBUG
     CallArgs args = CallArgsFromVp(argc, vp);
+#endif // DEBUG
     MOZ_ASSERT(args.length() == 2);
     MOZ_ASSERT(args[0].toObject().is<JSFunction>());
     MOZ_ASSERT(args[1].toObject().is<JSFunction>());

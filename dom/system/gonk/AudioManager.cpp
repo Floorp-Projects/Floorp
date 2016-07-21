@@ -56,10 +56,10 @@ using namespace mozilla::dom::bluetooth;
 #undef LOG
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args)
 
-#define HEADPHONES_STATUS_HEADSET     MOZ_UTF16("headset")
-#define HEADPHONES_STATUS_HEADPHONE   MOZ_UTF16("headphone")
-#define HEADPHONES_STATUS_OFF         MOZ_UTF16("off")
-#define HEADPHONES_STATUS_UNKNOWN     MOZ_UTF16("unknown")
+#define HEADPHONES_STATUS_HEADSET     u"headset"
+#define HEADPHONES_STATUS_HEADPHONE   u"headphone"
+#define HEADPHONES_STATUS_OFF         u"off"
+#define HEADPHONES_STATUS_UNKNOWN     u"unknown"
 #define HEADPHONES_STATUS_CHANGED     "headphones-status-changed"
 #define MOZ_SETTINGS_CHANGE_ID        "mozsettings-changed"
 #define AUDIO_CHANNEL_PROCESS_CHANGED "audio-channel-process-changed"

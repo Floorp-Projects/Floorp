@@ -13057,9 +13057,12 @@ class MWasmBoundsCheck
     public MWasmMemoryAccess,
     public NoTypePolicy::Data
 {
+    bool redundant_;
+
     explicit MWasmBoundsCheck(MDefinition* index, const MWasmMemoryAccess& access)
       : MUnaryInstruction(index),
-        MWasmMemoryAccess(access)
+        MWasmMemoryAccess(access),
+        redundant_(false)
     {
         setMovable();
         setGuard(); // Effectful: throws for OOB.
@@ -13080,6 +13083,14 @@ class MWasmBoundsCheck
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
+    }
+
+    bool isRedundant() const {
+        return redundant_;
+    }
+
+    void setRedundant(bool val) {
+        redundant_ = val;
     }
 };
 

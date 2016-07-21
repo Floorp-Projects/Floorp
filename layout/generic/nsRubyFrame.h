@@ -35,8 +35,8 @@ public:
   virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                   InlinePrefISizeData *aData) override;
   virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -56,7 +56,7 @@ protected:
     : nsInlineFrame(aContext) {}
 
   void ReflowSegment(nsPresContext* aPresContext,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowInput,
                      nsRubyBaseContainerFrame* aBaseContainer,
                      nsReflowStatus& aStatus);
 

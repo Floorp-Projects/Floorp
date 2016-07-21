@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Complex touch-action test</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function checkScroll(target, x, y, desc) {
+  is(target.scrollLeft, x, desc + " - x axis");
+  is(target.scrollTop, y, desc + " - y axis");
+}
+
+function resetConfiguration(config, testDriver) {
+  // Cycle through all the configuration_X elements, setting them to display:none
+  // except for when X == config, in which case set it to display:block
+  var i = 0;
+  while (true) {
+    i++;
+    var element = document.getElementById('configuration_' + i);
+    if (element == null) {
+      if (i <= config) {
+        ok(false, "The configuration requested was not encountered!");
+      }
+      break;
+    }
+
+    if (i == config) {
+      element.style.display = 'block';
+    } else {
+      element.style.display = 'none';
+    }
+  }
+
+  // Also reset the scroll position on the scrollframe
+  var s = document.getElementById('scrollframe');
+  s.scrollLeft = 0;
+  s.scrollTop = 0;
+
+  return waitForAllPaints(function() {
+    flushApzRepaints(testDriver);
+  });
+}
+
+function* test(testDriver) {
+  var scrollframe = document.getElementById('scrollframe');
+
+  document.body.addEventListener('touchend', testDriver, { passive: true });
+
+  // Helper function for the tests below.
+  // Touch-pan configuration |configuration| towards scroll offset (dx, dy) with
+  // the pan touching down at (x, y). Check that the final scroll offset is
+  // (ex, ey). |desc| is some description string.
+  function* scrollAndCheck(configuration, x, y, dx, dy, ex, ey, desc) {
+    // Start with a clean slate
+    yield resetConfiguration(configuration, testDriver);
+    // Figure out the panning deltas
+    if (dx != 0) {
+      dx = -(dx + TOUCH_SLOP);
+    }
+    if (dy != 0) {
+      dy = -(dy + TOUCH_SLOP);
+    }
+    // Do the pan
+    yield ok(synthesizeNativeTouchDrag(scrollframe, x, y, dx, dy),
+        "Synthesized drag of (" + dx + ", " + dy + ") on configuration " + configuration);
+    yield waitForAllPaints(function() {
+      flushApzRepaints(testDriver);
+    });
+    // Check for expected scroll position
+    checkScroll(scrollframe, ex, ey, 'configuration ' + configuration + ' ' + desc);
+  }
+
+  // Test configuration_1, which contains two sibling elements that are
+  // overlapping. The touch-action from the second sibling (which is on top)
+  // should be used for the overlapping area.
+  yield* scrollAndCheck(1,  25,  75, 20,  0, 20,  0, "first element horizontal scroll");
+  yield* scrollAndCheck(1,  25,  75,  0, 50,  0,  0, "first element vertical scroll");
+  yield* scrollAndCheck(1,  75,  75, 50,  0,  0,  0, "overlap horizontal scroll");
+  yield* scrollAndCheck(1,  75,  75,  0, 50,  0, 50, "overlap vertical scroll");
+  yield* scrollAndCheck(1, 125,  75, 20,  0,  0,  0, "second element horizontal scroll");
+  yield* scrollAndCheck(1, 125,  75,  0, 50,  0, 50, "second element vertical scroll");
+
+  // Test configuration_2, which contains two overlapping elements with a
+  // parent/child relationship. The parent has pan-x and the child has pan-y,
+  // which means that panning on the parent should work horizontally only, and
+  // on the child no panning should occur at all.
+  yield* scrollAndCheck(2, 125, 125, 50, 50,  0,  0, "child scroll");
+  yield* scrollAndCheck(2,  75,  75, 50, 50,  0,  0, "overlap scroll");
+  yield* scrollAndCheck(2,  25,  75,  0, 50,  0,  0, "parent vertical scroll");
+  yield* scrollAndCheck(2,  75,  25, 50,  0, 50,  0, "parent horizontal scroll");
+
+  // Test configuration_3, which is the same as configuration_2, except the child
+  // has a rotation transform applied. This forces the event regions on the two
+  // elements to be built separately and then get merged.
+  yield* scrollAndCheck(3, 125, 125, 50, 50,  0,  0, "child scroll");
+  yield* scrollAndCheck(3,  75,  75, 50, 50,  0,  0, "overlap scroll");
+  yield* scrollAndCheck(3,  25,  75,  0, 50,  0,  0, "parent vertical scroll");
+  yield* scrollAndCheck(3,  75,  25, 50,  0, 50,  0, "parent horizontal scroll");
+
+  // Test configuration_4 has two elements, one above the other, not overlapping,
+  // and the second element is a child of the first. The parent has pan-x, the
+  // child has pan-y, but that means panning horizontally on the parent should
+  // work and panning in any direction on the child should not do anything.
+  yield* scrollAndCheck(4,  75,  75, 50, 50,  50, 0, "parent diagonal scroll");
+  yield* scrollAndCheck(4,  75, 150, 50, 50,   0, 0, "child diagonal scroll");
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+</head>
+<body>
+ <div id="scrollframe" style="width: 300px; height: 300px; overflow:scroll">
+  <div id="scrolled_content" style="width: 1000px; height: 1000px; background-color: green">
+  </div>
+  <div id="configuration_1" style="display:none; position: relative; top: -1000px">
+   <div style="touch-action: pan-x; width: 100px; height: 100px; background-color: blue"></div>
+   <div style="touch-action: pan-y; width: 100px; height: 100px; position: relative; top: -100px; left: 50px; background-color: yellow"></div>
+  </div>
+  <div id="configuration_2" style="display:none; position: relative; top: -1000px">
+   <div style="touch-action: pan-x; width: 100px; height: 100px; background-color: blue">
+    <div style="touch-action: pan-y; width: 100px; height: 100px; position: relative; top: 50px; left: 50px; background-color: yellow"></div>
+   </div>
+  </div>
+  <div id="configuration_3" style="display:none; position: relative; top: -1000px">
+   <div style="touch-action: pan-x; width: 100px; height: 100px; background-color: blue">
+    <div style="touch-action: pan-y; width: 100px; height: 100px; position: relative; top: 50px; left: 50px; background-color: yellow; transform: rotate(90deg)"></div>
+   </div>
+  </div>
+  <div id="configuration_4" style="display:none; position: relative; top: -1000px">
+   <div style="touch-action: pan-x; width: 100px; height: 100px; background-color: blue">
+    <div style="touch-action: pan-y; width: 100px; height: 100px; position: relative; top: 125px; background-color: yellow"></div>
+   </div>
+  </div>
+ </div>
+</body>
+</html>

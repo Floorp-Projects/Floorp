@@ -923,7 +923,8 @@ const char* gc::ZealModeHelpText =
     "   12: (ElementsBarrier) Always use the individual element post-write barrier, regardless of elements size\n"
     "   13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
     "   14: (Compact) Perform a shrinking collection every N allocations\n"
-    "   15: (CheckHeapOnMovingGC) Walk the heap to check all pointers have been updated\n";
+    "   15: (CheckHeapOnMovingGC) Walk the heap to check all pointers have been updated\n"
+    "   16: (CheckNursery) Check nursery integrity on minor GC\n";
 
 void
 GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
