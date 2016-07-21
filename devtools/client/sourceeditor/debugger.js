@@ -190,7 +190,15 @@ function removeBreakpoints(ctx) {
     meta.breakpoints = {};
   }
 
-  cm.doc.iter((line) => { removeBreakpoint(ctx, line); });
+  cm.doc.iter((line) => {
+    // The hasBreakpoint is a slow operation: checks the line type, whether cm
+    // is initialized and creates several new objects. Inlining the line's
+    // wrapClass property check directly.
+    if (line.wrapClass == null || !line.wrapClass.includes("breakpoint")) {
+      return;
+    }
+    removeBreakpoint(ctx, line);
+  });
 }
 
 /**
