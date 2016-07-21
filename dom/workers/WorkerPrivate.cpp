@@ -605,9 +605,7 @@ class CloseEventRunnable final : public WorkerRunnable
 public:
   explicit CloseEventRunnable(WorkerPrivate* aWorkerPrivate)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-  {
-    aWorkerPrivate->CloseHandlerStarted();
-  }
+  { }
 
 private:
   virtual bool
@@ -625,6 +623,8 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
+    aWorkerPrivate->CloseHandlerStarted();
+
     WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
 
     RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
