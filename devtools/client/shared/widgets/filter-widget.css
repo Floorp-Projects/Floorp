@@ -140,12 +140,6 @@ input {
   width: 8em;
 }
 
-.theme-light .add,
-.theme-light .remove-button,
-.theme-light #toggle-presets {
-  filter: invert(1);
-}
-
 .preset {
   display: flex;
   margin-bottom: 10px;
@@ -174,10 +168,6 @@ input {
 
 .preset:hover label, .preset:hover span {
   color: var(--theme-selection-color);
-}
-
-.theme-light .preset:hover .remove-button {
-  filter: invert(0);
 }
 
 .preset .remove-button {
@@ -238,6 +228,12 @@ input {
 
 #toggle-presets {
   background: url(chrome://devtools/skin/images/pseudo-class.svg);
+}
+
+.add,
+.remove-button,
+#toggle-presets {
+  filter: var(--icon-filter);
 }
 
 .show-presets #toggle-presets {
