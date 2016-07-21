@@ -36,7 +36,7 @@ PostMessageEvent::PostMessageEvent(nsGlobalWindow* aSource,
                                    nsIDocument* aSourceDocument,
                                    bool aTrustedCaller)
 : StructuredCloneHolder(CloningSupported, TransferringSupported,
-                        SameProcessSameThread),
+                        StructuredCloneScope::SameProcessSameThread),
   mSource(aSource),
   mCallerOrigin(aCallerOrigin),
   mTargetWindow(aTargetWindow),

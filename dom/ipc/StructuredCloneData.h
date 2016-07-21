@@ -80,7 +80,7 @@ public:
   StructuredCloneData()
     : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
                             StructuredCloneHolder::TransferringSupported,
-                            StructuredCloneHolder::DifferentProcess)
+                            StructuredCloneHolder::StructuredCloneScope::DifferentProcess)
     , mExternalData(nullptr)
     , mExternalDataLength(0)
   {}
