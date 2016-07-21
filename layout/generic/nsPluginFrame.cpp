@@ -425,7 +425,7 @@ nsPluginFrame::GetWidgetConfiguration(nsTArray<nsIWidget::Configuration>* aConfi
 
 void
 nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // By default, we have no area
@@ -491,7 +491,7 @@ nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
 void
 nsPluginFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -822,7 +822,7 @@ nsPluginFrame::GetWindowOriginInPixels(bool aWindowless)
 
 void
 nsPluginFrame::DidReflow(nsPresContext*            aPresContext,
-                         const nsHTMLReflowState*  aReflowState,
+                         const ReflowInput*  aReflowState,
                          nsDidReflowStatus         aStatus)
 {
   // Do this check before calling the superclass, as that clears

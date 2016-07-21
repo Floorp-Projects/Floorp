@@ -105,7 +105,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 void
 nsMeterFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -141,14 +141,14 @@ nsMeterFrame::Reflow(nsPresContext*           aPresContext,
 void
 nsMeterFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
                              nsPresContext*           aPresContext,
-                             const nsHTMLReflowState& aReflowState,
+                             const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {
   bool vertical = ResolvedOrientationIsVertical();
   WritingMode wm = aBarFrame->GetWritingMode();
   LogicalSize availSize = aReflowState.ComputedSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  nsHTMLReflowState reflowState(aPresContext, aReflowState,
+  ReflowInput reflowState(aPresContext, aReflowState,
                                 aBarFrame, availSize);
   nscoord size = vertical ? aReflowState.ComputedHeight()
                           : aReflowState.ComputedWidth();

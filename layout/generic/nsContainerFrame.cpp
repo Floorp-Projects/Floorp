@@ -995,7 +995,7 @@ void
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsPresContext*           aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               const WritingMode&       aWM,
                               const LogicalPoint&      aPos,
                               const nsSize&            aContainerSize,
@@ -1043,7 +1043,7 @@ void
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsPresContext*           aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               nscoord                  aX,
                               nscoord                  aY,
                               uint32_t                 aFlags,
@@ -1136,7 +1136,7 @@ void
 nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
                                     nsPresContext*             aPresContext,
                                     const nsHTMLReflowMetrics& aDesiredSize,
-                                    const nsHTMLReflowState*   aReflowState,
+                                    const ReflowInput*   aReflowState,
                                     const WritingMode&         aWM,
                                     const LogicalPoint&        aPos,
                                     const nsSize&              aContainerSize,
@@ -1185,7 +1185,7 @@ void
 nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
                                     nsPresContext*             aPresContext,
                                     const nsHTMLReflowMetrics& aDesiredSize,
-                                    const nsHTMLReflowState*   aReflowState,
+                                    const ReflowInput*   aReflowState,
                                     nscoord                    aX,
                                     nscoord                    aY,
                                     uint32_t                   aFlags)
@@ -1220,7 +1220,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
 
 void
 nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
-                                                  const nsHTMLReflowState& aReflowState,
+                                                  const ReflowInput& aReflowState,
                                                   nsOverflowAreas&         aOverflowRects,
                                                   uint32_t                 aFlags,
                                                   nsReflowStatus&          aStatus,
@@ -1259,7 +1259,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
       LogicalSize availSpace(wm, prevRect.ISize(wm),
                              aReflowState.AvailableSize(wm).BSize(wm));
       nsHTMLReflowMetrics desiredSize(aReflowState);
-      nsHTMLReflowState frameState(aPresContext, aReflowState,
+      ReflowInput frameState(aPresContext, aReflowState,
                                    frame, availSpace);
       nsReflowStatus frameStatus;
 

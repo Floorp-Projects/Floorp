@@ -57,7 +57,7 @@ nsScrollbarFrame::Init(nsIContent*       aContent,
 void
 nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
+                         const ReflowInput& aReflowState,
                          nsReflowStatus&          aStatus)
 {
   nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);

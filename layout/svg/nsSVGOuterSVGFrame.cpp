@@ -358,7 +358,7 @@ nsSVGOuterSVGFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 void
 nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -504,7 +504,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
-                              const nsHTMLReflowState*  aReflowState,
+                              const ReflowInput*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
   nsSVGDisplayContainerFrame::DidReflow(aPresContext,aReflowState,aStatus);

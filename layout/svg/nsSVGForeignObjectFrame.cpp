@@ -125,7 +125,7 @@ nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
 void
 nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
-                                const nsHTMLReflowState& aReflowState,
+                                const ReflowInput& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
@@ -541,7 +541,7 @@ nsSVGForeignObjectFrame::DoReflow()
   mInReflow = true;
 
   WritingMode wm = kid->GetWritingMode();
-  nsHTMLReflowState reflowState(presContext, kid,
+  ReflowInput reflowState(presContext, kid,
                                 &renderingContext,
                                 LogicalSize(wm, ISize(wm),
                                             NS_UNCONSTRAINEDSIZE));

@@ -122,7 +122,7 @@ nsRubyTextContainerFrame::UpdateSpanFlag()
 /* virtual */ void
 nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
                                  nsHTMLReflowMetrics& aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  nsReflowStatus& aStatus)
 {
   MarkInReflow();

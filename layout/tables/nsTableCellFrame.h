@@ -99,9 +99,9 @@ public:
 
   virtual nsMargin GetUsedMargin() const override;
 
-  virtual void NotifyPercentBSize(const nsHTMLReflowState& aReflowState) override;
+  virtual void NotifyPercentBSize(const ReflowInput& aReflowState) override;
 
-  virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState) override;
+  virtual bool NeedsToObserve(const ReflowInput& aReflowState) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -122,7 +122,7 @@ public:
 
   virtual void Reflow(nsPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&      aStatus) override;
 
   /**
@@ -243,7 +243,7 @@ public:
 
 protected:
   virtual LogicalSides
-  GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 
   /**
    * GetBorderOverflow says how far the cell's own borders extend

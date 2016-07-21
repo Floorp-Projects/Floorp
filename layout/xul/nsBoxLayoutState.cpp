@@ -14,7 +14,7 @@
 
 nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
                                    nsRenderingContext* aRenderingContext,
-                                   const nsHTMLReflowState* aOuterReflowState,
+                                   const ReflowInput* aOuterReflowState,
                                    uint16_t aReflowDepth)
   : mPresContext(aPresContext)
   , mRenderingContext(aRenderingContext)

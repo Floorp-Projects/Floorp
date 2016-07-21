@@ -20,11 +20,11 @@ class nsPresContext;
  * An encapsulation of the state and algorithm for reflowing block frames.
  */
 class nsBlockReflowContext {
-  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+  using ReflowInput = mozilla::ReflowInput;
 
 public:
   nsBlockReflowContext(nsPresContext* aPresContext,
-                       const nsHTMLReflowState& aParentRS);
+                       const ReflowInput& aParentRS);
   ~nsBlockReflowContext() { }
 
   void ReflowBlock(const mozilla::LogicalRect& aSpace,
@@ -33,11 +33,11 @@ public:
                    nscoord                     aClearance,
                    bool                        aIsAdjacentWithBStart,
                    nsLineBox*                  aLine,
-                   nsHTMLReflowState&          aReflowState,
+                   ReflowInput&          aReflowState,
                    nsReflowStatus&             aReflowStatus,
                    nsBlockReflowState&         aState);
 
-  bool PlaceBlock(const nsHTMLReflowState& aReflowState,
+  bool PlaceBlock(const ReflowInput& aReflowState,
                   bool                     aForceFit,
                   nsLineBox*               aLine,
                   nsCollapsingMargin&      aBEndMarginResult /* out */,
@@ -71,7 +71,7 @@ public:
    * We return true if we changed the clearance state of any line and marked it
    * dirty.
    */
-  bool ComputeCollapsedBStartMargin(const nsHTMLReflowState& aRS,
+  bool ComputeCollapsedBStartMargin(const ReflowInput& aRS,
                                     nsCollapsingMargin* aMargin,
                                     nsIFrame* aClearanceFrame,
                                     bool* aMayNeedRetry,
@@ -79,7 +79,7 @@ public:
 
 protected:
   nsPresContext* mPresContext;
-  const nsHTMLReflowState& mOuterReflowState;
+  const ReflowInput& mOuterReflowState;
 
   nsIFrame* mFrame;
   mozilla::LogicalRect mSpace;

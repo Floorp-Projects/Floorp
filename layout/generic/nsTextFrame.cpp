@@ -5425,7 +5425,7 @@ nsTextFrame::ComputeDescentLimitForSelectionUnderline(
 {
   gfxFloat app = aPresContext->AppUnitsPerDevPixel();
   nscoord lineHeightApp =
-    nsHTMLReflowState::CalcLineHeight(GetContent(),
+    ReflowInput::CalcLineHeight(GetContent(),
                                       StyleContext(), NS_AUTOHEIGHT,
                                       GetFontSizeInflation());
   gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
@@ -8650,7 +8650,7 @@ struct NewlineProperty {
 void
 nsTextFrame::Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
-                    const nsHTMLReflowState& aReflowState,
+                    const ReflowInput& aReflowState,
                     nsReflowStatus&          aStatus)
 {
   MarkInReflow();

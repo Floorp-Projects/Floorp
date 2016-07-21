@@ -305,7 +305,7 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
 void
 nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
+                             const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {
   mPresentationData.flags &= ~NS_MATHML_ERROR;

@@ -121,7 +121,7 @@ nsMathMLTokenFrame::InsertFrames(ChildListID aListID,
 void
 nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -140,7 +140,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+    ReflowInput childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
                 childReflowState, aStatus);

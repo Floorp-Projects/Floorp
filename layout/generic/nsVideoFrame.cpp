@@ -283,7 +283,7 @@ public:
 void
 nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -317,7 +317,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
       LogicalSize availableSize = aReflowState.AvailableSize(wm);
       LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode()).
                              ConvertTo(wm, aMetrics.GetWritingMode());
-      nsHTMLReflowState kidReflowState(aPresContext,
+      ReflowInput kidReflowState(aPresContext,
                                        aReflowState,
                                        imageFrame,
                                        availableSize,
@@ -358,7 +358,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
       LogicalSize availableSize = aReflowState.AvailableSize(wm);
       LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode()).
                              ConvertTo(wm, aMetrics.GetWritingMode());
-      nsHTMLReflowState kidReflowState(aPresContext,
+      ReflowInput kidReflowState(aPresContext,
                                        aReflowState,
                                        child,
                                        availableSize,

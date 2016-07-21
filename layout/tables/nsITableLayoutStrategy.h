@@ -17,13 +17,13 @@
 
 class nsRenderingContext;
 namespace mozilla {
-struct nsHTMLReflowState;
+struct ReflowInput;
 } // namespace mozilla
 
 class nsITableLayoutStrategy
 {
 public:
-    using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+    using ReflowInput = mozilla::ReflowInput;
 
     virtual ~nsITableLayoutStrategy() {}
 
@@ -41,7 +41,7 @@ public:
      * Compute final column isizes based on the intrinsic isize data and
      * the available isize.
      */
-    virtual void ComputeColumnISizes(const nsHTMLReflowState& aReflowState) = 0;
+    virtual void ComputeColumnISizes(const ReflowInput& aReflowState) = 0;
 
     /**
      * Return the type of table layout strategy, without the cost of

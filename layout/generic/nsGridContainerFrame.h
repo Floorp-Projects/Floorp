@@ -73,7 +73,7 @@ public:
   // nsIFrame overrides
   void Reflow(nsPresContext*           aPresContext,
               nsHTMLReflowMetrics&     aDesiredSize,
-              const nsHTMLReflowState& aReflowState,
+              const ReflowInput& aReflowState,
               nsReflowStatus&          aStatus) override;
   nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;

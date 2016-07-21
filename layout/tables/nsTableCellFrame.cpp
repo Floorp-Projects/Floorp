@@ -108,9 +108,9 @@ nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot)
 // nsIPercentBSizeObserver methods
 
 void
-nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
+nsTableCellFrame::NotifyPercentBSize(const ReflowInput& aReflowState)
 {
-  // nsHTMLReflowState ensures the mCBReflowState of blocks inside a
+  // ReflowInput ensures the mCBReflowState of blocks inside a
   // cell is the cell frame, not the inner-cell block, and that the
   // containing block of an inner table is the containing block of its
   // table wrapper.
@@ -118,7 +118,7 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
   // these tests are probably unnecessary.
 
   // Maybe the cell reflow state; we sure if we're inside the |if|.
-  const nsHTMLReflowState *cellRS = aReflowState.mCBReflowState;
+  const ReflowInput *cellRS = aReflowState.mCBReflowState;
 
   if (cellRS && cellRS->frame == this &&
       (cellRS->ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
@@ -136,7 +136,7 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
          cellRS->mParentReflowState->frame->
            HasAnyStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
 
-      for (const nsHTMLReflowState *rs = aReflowState.mParentReflowState;
+      for (const ReflowInput *rs = aReflowState.mParentReflowState;
            rs != cellRS;
            rs = rs->mParentReflowState) {
         rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
@@ -149,9 +149,9 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
 
 // The cell needs to observe its block and things inside its block but nothing below that
 bool
-nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
+nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowState)
 {
-  const nsHTMLReflowState *rs = aReflowState.mParentReflowState;
+  const ReflowInput *rs = aReflowState.mParentReflowState;
   if (!rs)
     return false;
   if (rs->frame == this) {
@@ -561,7 +561,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nsIFrame::LogicalSides
-nsTableCellFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsTableCellFrame::GetLogicalSkipSides(const ReflowInput* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
@@ -858,7 +858,7 @@ CalcUnpaginatedBSize(nsTableCellFrame& aCellFrame,
 void
 nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
+                         const ReflowInput& aReflowState,
                          nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -901,7 +901,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   nsTableFrame* tableFrame = GetTableFrame();
 
   if (aReflowState.mFlags.mSpecialBSizeReflow) {
-    const_cast<nsHTMLReflowState&>(aReflowState).
+    const_cast<ReflowInput&>(aReflowState).
       SetComputedBSize(BSize(wm) - borderPadding.BStartEnd(wm));
     DISPLAY_REFLOW_CHANGE();
   }
@@ -910,7 +910,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
       CalcUnpaginatedBSize((nsTableCellFrame&)*this,
                            *tableFrame, borderPadding.BStartEnd(wm));
     if (computedUnpaginatedBSize > 0) {
-      const_cast<nsHTMLReflowState&>(aReflowState).SetComputedBSize(computedUnpaginatedBSize);
+      const_cast<ReflowInput&>(aReflowState).SetComputedBSize(computedUnpaginatedBSize);
       DISPLAY_REFLOW_CHANGE();
     }
   }
@@ -919,7 +919,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   WritingMode kidWM = firstKid->GetWritingMode();
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
+  ReflowInput kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize.ConvertTo(kidWM, wm));
 
   // Don't be a percent height observer if we're in the middle of

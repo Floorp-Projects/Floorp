@@ -28,7 +28,7 @@ class nsFloatManager;
 struct nsStyleText;
 
 class nsLineLayout {
-  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+  using ReflowInput = mozilla::ReflowInput;
 
 public:
   /**
@@ -37,7 +37,7 @@ public:
    */
   nsLineLayout(nsPresContext* aPresContext,
                nsFloatManager* aFloatManager,
-               const nsHTMLReflowState* aOuterReflowState,
+               const ReflowInput* aOuterReflowState,
                const nsLineList::iterator* aLine,
                nsLineLayout* aBaseLineLayout);
   ~nsLineLayout();
@@ -74,7 +74,7 @@ public:
                   const mozilla::LogicalRect& aNewAvailableSpace,
                   nsIFrame* aFloatFrame);
 
-  void BeginSpan(nsIFrame* aFrame, const nsHTMLReflowState* aSpanReflowState,
+  void BeginSpan(nsIFrame* aFrame, const ReflowInput* aSpanReflowState,
                  nscoord aLeftEdge, nscoord aRightEdge, nscoord* aBaseline);
 
   // Returns the width of the span
@@ -341,7 +341,7 @@ public:
    * context (e.g. MathML or floating first-letter).
    */
   nsIFrame* LineContainerFrame() const { return mBlockReflowState->frame; }
-  const nsHTMLReflowState* LineContainerRS() const { return mBlockReflowState; }
+  const ReflowInput* LineContainerRS() const { return mBlockReflowState; }
   const nsLineList::iterator* GetLine() const {
     return mGotLineBox ? &mLineBox : nullptr;
   }
@@ -381,7 +381,7 @@ protected:
   // This state is constant for a given block frame doing line layout
   nsFloatManager* mFloatManager;
   const nsStyleText* mStyleText; // for the block
-  const nsHTMLReflowState* mBlockReflowState;
+  const ReflowInput* mBlockReflowState;
 
   // The line layout for the base text.  It is usually nullptr.
   // It becomes not null when the current line layout is for ruby
@@ -532,7 +532,7 @@ protected:
     // the next.
     PerFrameData* mLastFrame;
 
-    const nsHTMLReflowState* mReflowState;
+    const ReflowInput* mReflowState;
     bool mNoWrap;
     mozilla::WritingMode mWritingMode;
     bool mContainsFloat;
@@ -665,7 +665,7 @@ protected:
   void PushFrame(nsIFrame* aFrame);
 
   void AllowForStartMargin(PerFrameData* pfd,
-                           nsHTMLReflowState& aReflowState);
+                           ReflowInput& aReflowState);
 
   void SyncAnnotationBounds(PerFrameData* aRubyFrame);
 

@@ -23,7 +23,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 void
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -53,7 +53,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     nsIFrame* frame = mFrames.FirstChild();
     WritingMode wm = frame->GetWritingMode();
     LogicalSize logicalSize(wm, maxSize);
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
+    ReflowInput kidReflowState(aPresContext, aReflowState,
                                      frame, logicalSize);
     kidReflowState.SetComputedBSize(logicalSize.BSize(wm));
 

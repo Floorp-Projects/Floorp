@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------
 
 namespace mozilla {
-struct nsHTMLReflowState;
+struct ReflowInput;
 } // namespace mozilla
 
 // Option flags
@@ -199,7 +199,7 @@ struct nsCollapsingMargin {
  * @see #Reflow()
  */
 class nsHTMLReflowMetrics {
-  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+  using ReflowInput = mozilla::ReflowInput;
 
 public:
   // XXXldb Should |aFlags| generally be passed from parent to child?
@@ -216,7 +216,7 @@ public:
     , mWritingMode(aWritingMode)
   {}
 
-  explicit nsHTMLReflowMetrics(const nsHTMLReflowState& aState, uint32_t aFlags = 0);
+  explicit nsHTMLReflowMetrics(const ReflowInput& aState, uint32_t aFlags = 0);
 
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to

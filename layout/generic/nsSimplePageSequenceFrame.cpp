@@ -91,7 +91,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
 nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
-                                          const nsHTMLReflowState& aReflowState,
+                                          const ReflowInput& aReflowState,
                                           nscoord aWidth,
                                           nscoord aHeight)
 {
@@ -145,7 +145,7 @@ nsSimplePageSequenceFrame::ComputeCenteringMargin(
 void
 nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
+                                  const ReflowInput& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -250,7 +250,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     pf->SetSharedPageData(mPageData);
 
     // Reflow the page
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
+    ReflowInput kidReflowState(aPresContext, aReflowState, kidFrame,
                                      LogicalSize(kidFrame->GetWritingMode(),
                                                  pageSize));
     nsReflowStatus  status;

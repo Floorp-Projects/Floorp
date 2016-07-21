@@ -52,7 +52,7 @@ nsPageFrame::~nsPageFrame()
 void
 nsPageFrame::Reflow(nsPresContext*           aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
+                                  const ReflowInput& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -94,7 +94,7 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
       return;
     }
 
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
+    ReflowInput kidReflowState(aPresContext, aReflowState, frame,
                                      LogicalSize(frame->GetWritingMode(),
                                                  maxSize));
     kidReflowState.mFlags.mIsTopOfPage = true;
@@ -709,7 +709,7 @@ nsPageBreakFrame::GetIntrinsicBSize()
 void
 nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
+                         const ReflowInput& aReflowState,
                          nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame");

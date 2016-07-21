@@ -153,7 +153,7 @@ AllocateUnassigned(nscoord aUnassignedSpace, float aShare)
 }
 
 /* virtual */ void
-FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowState)
+FixedTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
 {
   nscoord tableISize = aReflowState.ComputedISize();
 

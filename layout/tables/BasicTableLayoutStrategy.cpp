@@ -520,7 +520,7 @@ BasicTableLayoutStrategy::MarkIntrinsicISizesDirty()
 }
 
 /* virtual */ void
-BasicTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowState)
+BasicTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
 {
     nscoord iSize = aReflowState.ComputedISize();
 

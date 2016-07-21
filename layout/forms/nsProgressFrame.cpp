@@ -110,7 +110,7 @@ nsProgressFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsProgressFrame::Reflow(nsPresContext*           aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -145,14 +145,14 @@ nsProgressFrame::Reflow(nsPresContext*           aPresContext,
 void
 nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
                                 nsPresContext*           aPresContext,
-                                const nsHTMLReflowState& aReflowState,
+                                const ReflowInput& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
   bool vertical = ResolvedOrientationIsVertical();
   WritingMode wm = aBarFrame->GetWritingMode();
   LogicalSize availSize = aReflowState.ComputedSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  nsHTMLReflowState reflowState(aPresContext, aReflowState,
+  ReflowInput reflowState(aPresContext, aReflowState,
                                 aBarFrame, availSize);
   nscoord size = vertical ? aReflowState.ComputedHeight()
                           : aReflowState.ComputedWidth();

@@ -159,7 +159,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
     nsLayoutUtils::GetFontMetricsForFrame(this, aFontSizeInflation);
 
   lineHeight =
-    nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
+    ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
                                       NS_AUTOHEIGHT, aFontSizeInflation);
   charWidth = fontMet->AveCharWidth();
   charMaxAdvance = fontMet->MaxAdvance();
@@ -486,7 +486,7 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 void
 nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -512,7 +512,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   nscoord lineHeight = aReflowState.ComputedBSize();
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (!IsSingleLineTextControl()) {
-    lineHeight = nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
+    lineHeight = ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
                                                    NS_AUTOHEIGHT, inflation);
   }
   RefPtr<nsFontMetrics> fontMet =
@@ -542,7 +542,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
 void
 nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                                            nsPresContext*           aPresContext,
-                                           const nsHTMLReflowState& aReflowState,
+                                           const ReflowInput& aReflowState,
                                            nsReflowStatus&          aStatus,
                                            nsHTMLReflowMetrics& aParentDesiredSize)
 {
@@ -551,9 +551,9 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
   LogicalSize availSize = aReflowState.ComputedSizeWithPadding(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, 
+  ReflowInput kidReflowState(aPresContext, aReflowState, 
                                    aKid, availSize, nullptr,
-                                   nsHTMLReflowState::CALLER_WILL_INIT);
+                                   ReflowInput::CALLER_WILL_INIT);
   // Override padding with our computed padding in case we got it from theming or percentage
   kidReflowState.Init(aPresContext, nullptr, nullptr, &aReflowState.ComputedPhysicalPadding());
 

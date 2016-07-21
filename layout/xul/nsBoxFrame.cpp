@@ -554,7 +554,7 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
 
 void
 nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
-                      const nsHTMLReflowState*  aReflowState,
+                      const ReflowInput*  aReflowState,
                       nsDidReflowStatus         aStatus)
 {
   nsFrameState preserveBits =
@@ -630,7 +630,7 @@ nsBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 void
 nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
-                   const nsHTMLReflowState& aReflowState,
+                   const ReflowInput& aReflowState,
                    nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -918,7 +918,7 @@ nsBoxFrame::DoXULLayout(nsBoxLayoutState& aState)
   if (HasAbsolutelyPositionedChildren()) {
     // Set up a |reflowState| to pass into ReflowAbsoluteFrames
     WritingMode wm = GetWritingMode();
-    nsHTMLReflowState reflowState(aState.PresContext(), this,
+    ReflowInput reflowState(aState.PresContext(), this,
                                   aState.GetRenderingContext(),
                                   LogicalSize(wm, GetLogicalSize().ISize(wm),
                                               NS_UNCONSTRAINEDSIZE));

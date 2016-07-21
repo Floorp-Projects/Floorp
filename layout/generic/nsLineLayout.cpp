@@ -54,7 +54,7 @@ using namespace mozilla;
 
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsFloatManager* aFloatManager,
-                           const nsHTMLReflowState* aOuterReflowState,
+                           const ReflowInput* aOuterReflowState,
                            const nsLineList::iterator* aLine,
                            nsLineLayout* aBaseLineLayout)
   : mPresContext(aPresContext),
@@ -416,7 +416,7 @@ nsLineLayout::NewPerSpanData()
 
 void
 nsLineLayout::BeginSpan(nsIFrame* aFrame,
-                        const nsHTMLReflowState* aSpanReflowState,
+                        const ReflowInput* aSpanReflowState,
                         nscoord aIStart, nscoord aIEnd,
                         nscoord* aBaseline)
 {
@@ -873,7 +873,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord;
 
   // Setup reflow state for reflowing the frame
-  Maybe<nsHTMLReflowState> reflowStateHolder;
+  Maybe<ReflowInput> reflowStateHolder;
   if (!isText) {
     // Compute the available size for the frame. This available width
     // includes room for the side margins.
@@ -882,7 +882,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     availSize.BSize(frameWM) = NS_UNCONSTRAINEDSIZE;
     reflowStateHolder.emplace(mPresContext, *psd->mReflowState,
                               aFrame, availSize);
-    nsHTMLReflowState& reflowState = *reflowStateHolder;
+    ReflowInput& reflowState = *reflowStateHolder;
     reflowState.mLineLayout = this;
     reflowState.mFlags.mIsTopOfPage = mIsTopOfPage;
     if (reflowState.ComputedISize() == NS_UNCONSTRAINEDSIZE) {
@@ -914,7 +914,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // to be conservative, we do this if we *try* to fit a frame on a
   // line, even if we don't succeed.)  (Note also that we can only make
   // this IsPercentageAware check *after* we've constructed our
-  // nsHTMLReflowState, because that construction may be what forces aFrame
+  // ReflowInput, because that construction may be what forces aFrame
   // to lazily initialize its (possibly-percent-valued) intrinsic size.)
   if (mGotLineBox && IsPercentageAware(aFrame)) {
     mLineBox->DisableResizeReflowOptimization();
@@ -1170,7 +1170,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
 void
 nsLineLayout::AllowForStartMargin(PerFrameData* pfd,
-                                  nsHTMLReflowState& aReflowState)
+                                  ReflowInput& aReflowState)
 {
   NS_ASSERTION(!aReflowState.IsFloating(),
                "How'd we get a floated inline frame? "
@@ -1902,7 +1902,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // compute the top leading.
     float inflation =
       GetInflationForBlockDirAlignment(spanFrame, mInflationMinFontSize);
-    nscoord logicalBSize = nsHTMLReflowState::
+    nscoord logicalBSize = ReflowInput::
       CalcLineHeight(spanFrame->GetContent(), spanFrame->StyleContext(),
                      mBlockReflowState->ComputedHeight(),
                      inflation);
@@ -2191,7 +2191,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         // of the elements line block size value.
         float inflation =
           GetInflationForBlockDirAlignment(frame, mInflationMinFontSize);
-        pctBasis = nsHTMLReflowState::CalcLineHeight(frame->GetContent(),
+        pctBasis = ReflowInput::CalcLineHeight(frame->GetContent(),
           frame->StyleContext(), mBlockReflowState->ComputedBSize(),
           inflation);
       }
@@ -3264,8 +3264,8 @@ nsLineLayout::ApplyRelativePositioning(PerFrameData* aPFD)
   WritingMode frameWM = aPFD->mWritingMode;
   LogicalPoint origin = frame->GetLogicalPosition(ContainerSize());
   // right and bottom are handled by
-  // nsHTMLReflowState::ComputeRelativeOffsets
-  nsHTMLReflowState::ApplyRelativePositioning(frame, frameWM,
+  // ReflowInput::ComputeRelativeOffsets
+  ReflowInput::ApplyRelativePositioning(frame, frameWM,
                                               aPFD->mOffsets, &origin,
                                               ContainerSize());
   frame->SetPosition(frameWM, origin, ContainerSize());

@@ -20,7 +20,7 @@ class nsIPresShell;
 class nsIFrame;
 class nsPresContext;
 namespace mozilla {
-struct nsHTMLReflowState;
+struct ReflowInput;
 } // namespace mozilla
 
 /**
@@ -373,10 +373,10 @@ private:
  * manager in the reflow state when the object goes out of scope.
  */
 class nsAutoFloatManager {
-  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+  using ReflowInput = mozilla::ReflowInput;
 
 public:
-  explicit nsAutoFloatManager(nsHTMLReflowState& aReflowState)
+  explicit nsAutoFloatManager(ReflowInput& aReflowState)
     : mReflowState(aReflowState),
       mNew(nullptr),
       mOld(nullptr) {}
@@ -392,7 +392,7 @@ public:
   CreateFloatManager(nsPresContext *aPresContext);
 
 protected:
-  nsHTMLReflowState &mReflowState;
+  ReflowInput &mReflowState;
   nsFloatManager *mNew;
   nsFloatManager *mOld;
 };
