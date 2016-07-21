@@ -66,7 +66,7 @@ public:
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   /**
@@ -79,12 +79,12 @@ public:
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   /**
-   * Adjust aReflowState to account for scrollbars and pres shell
+   * Adjust aReflowInput to account for scrollbars and pres shell
    * GetScrollPositionClampingScrollPortSizeSet and
    * GetContentDocumentFixedPositionMargins adjustments.
    * @return the rect to use as containing block rect
    */
-  nsRect AdjustReflowStateAsContainingBlock(ReflowInput* aReflowState) const;
+  nsRect AdjustReflowInputAsContainingBlock(ReflowInput* aReflowInput) const;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -98,10 +98,10 @@ protected:
    * Calculate how much room is available for fixed frames. That means
    * determining if the viewport is scrollable and whether the vertical and/or
    * horizontal scrollbars are visible.  Adjust the computed width/height and
-   * available width for aReflowState accordingly.
+   * available width for aReflowInput accordingly.
    * @return the current scroll position, or 0,0 if not scrollable
    */
-  nsPoint AdjustReflowStateForScrollbars(ReflowInput* aReflowState) const;
+  nsPoint AdjustReflowInputForScrollbars(ReflowInput* aReflowInput) const;
 };
 
 

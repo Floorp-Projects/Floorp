@@ -50,15 +50,15 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 void
 nsLegendFrame::Reflow(nsPresContext*          aPresContext,
                      ReflowOutput&     aDesiredSize,
-                     const ReflowInput& aReflowState,
+                     const ReflowInput& aReflowInput,
                      nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsLegendFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
   }
-  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 }
 
 int32_t

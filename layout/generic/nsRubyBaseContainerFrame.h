@@ -48,7 +48,7 @@ public:
                 ComputeSizeFlags aFlags) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
   virtual nscoord
@@ -65,13 +65,13 @@ protected:
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
   struct RubyReflowInput;
-  nscoord ReflowColumns(const RubyReflowInput& aReflowState,
+  nscoord ReflowColumns(const RubyReflowInput& aReflowInput,
                         nsReflowStatus& aStatus);
-  nscoord ReflowOneColumn(const RubyReflowInput& aReflowState,
+  nscoord ReflowOneColumn(const RubyReflowInput& aReflowInput,
                           uint32_t aColumnIndex,
                           const mozilla::RubyColumn& aColumn,
                           nsReflowStatus& aStatus);
-  nscoord ReflowSpans(const RubyReflowInput& aReflowState);
+  nscoord ReflowSpans(const RubyReflowInput& aReflowInput);
 
   struct PullFrameState;
 

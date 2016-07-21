@@ -95,7 +95,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual void SetInitialChildList(ChildListID  aListID,
@@ -136,7 +136,7 @@ public:
 #endif
 
   virtual void DidReflow(nsPresContext*           aPresContext,
-                         const ReflowInput* aReflowState,
+                         const ReflowInput* aReflowInput,
                          nsDidReflowStatus        aStatus) override;
 
   virtual bool HonorPrintBackgroundSettings() override;

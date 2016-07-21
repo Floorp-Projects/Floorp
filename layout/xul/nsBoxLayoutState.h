@@ -30,8 +30,8 @@ class MOZ_STACK_CLASS nsBoxLayoutState
 public:
   explicit nsBoxLayoutState(nsPresContext* aPresContext,
                             nsRenderingContext* aRenderingContext = nullptr,
-                            // see OuterReflowState() below
-                            const ReflowInput* aOuterReflowState = nullptr,
+                            // see OuterReflowInput() below
+                            const ReflowInput* aOuterReflowInput = nullptr,
                             uint16_t aReflowDepth = 0);
   nsBoxLayoutState(const nsBoxLayoutState& aState);
 
@@ -60,14 +60,14 @@ public:
 
   // The HTML reflow state that lives outside the box-block boundary.
   // May not be set reliably yet.
-  const ReflowInput* OuterReflowState() { return mOuterReflowState; }
+  const ReflowInput* OuterReflowInput() { return mOuterReflowInput; }
 
   uint16_t GetReflowDepth() { return mReflowDepth; }
   
 private:
   RefPtr<nsPresContext> mPresContext;
   nsRenderingContext *mRenderingContext;
-  const ReflowInput *mOuterReflowState;
+  const ReflowInput *mOuterReflowInput;
   uint32_t mLayoutFlags;
   uint16_t mReflowDepth; 
   bool mPaintingDisabled;

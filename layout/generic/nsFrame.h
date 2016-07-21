@@ -334,10 +334,10 @@ public:
    */
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
   virtual void DidReflow(nsPresContext*           aPresContext,
-                         const ReflowInput* aReflowState,
+                         const ReflowInput* aReflowInput,
                          nsDidReflowStatus        aStatus) override;
 
   /**
@@ -347,12 +347,12 @@ public:
    */
   void ReflowAbsoluteFrames(nsPresContext*           aPresContext,
                             ReflowOutput&     aDesiredSize,
-                            const ReflowInput& aReflowState,
+                            const ReflowInput& aReflowInput,
                             nsReflowStatus&          aStatus,
                             bool                     aConstrainBSize = true);
   void FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
                                       ReflowOutput&     aDesiredSize,
-                                      const ReflowInput& aReflowState,
+                                      const ReflowInput& aReflowInput,
                                       nsReflowStatus&          aStatus,
                                       bool                     aConstrainBSize = true);
 
@@ -431,7 +431,7 @@ public:
   // the reflow status, and returns true. Otherwise, the frame is
   // unmarked "unflowable" and the metrics and reflow status are not
   // touched and false is returned.
-  bool IsFrameTreeTooDeep(const ReflowInput& aReflowState,
+  bool IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
                             ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus);
 
@@ -443,8 +443,8 @@ public:
   /**
    * @return true if we should avoid a page/column break in this frame.
    */
-  bool ShouldAvoidBreakInside(const ReflowInput& aReflowState) const {
-    return !aReflowState.mFlags.mIsTopOfPage &&
+  bool ShouldAvoidBreakInside(const ReflowInput& aReflowInput) const {
+    return !aReflowInput.mFlags.mIsTopOfPage &&
            NS_STYLE_PAGE_BREAK_AVOID == StyleDisplay()->mBreakInside &&
            !GetPrevInFlow();
   }
@@ -480,7 +480,7 @@ public:
   // Display Reflow Debugging 
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
-                                  const ReflowInput& aReflowState);
+                                  const ReflowInput& aReflowInput);
   static void* DisplayLayoutEnter(nsIFrame* aFrame);
   static void* DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
                                           const char* aType);
@@ -769,7 +769,7 @@ public:
   struct DR_cookie {
     DR_cookie(nsPresContext*          aPresContext,
               nsIFrame*                aFrame, 
-              const mozilla::ReflowInput& aReflowState,
+              const mozilla::ReflowInput& aReflowInput,
               mozilla::ReflowOutput&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
@@ -777,7 +777,7 @@ public:
 
     nsPresContext*          mPresContext;
     nsIFrame*                mFrame;
-    const mozilla::ReflowInput& mReflowState;
+    const mozilla::ReflowInput& mReflowInput;
     mozilla::ReflowOutput&     mMetrics;
     nsReflowStatus&          mStatus;    
     void*                    mValue;

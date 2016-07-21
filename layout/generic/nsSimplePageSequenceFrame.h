@@ -126,7 +126,7 @@ protected:
   // Sets the frame desired size to the size of the viewport, or the given
   // nscoords, whichever is larger. Print scaling is applied in this function.
   void SetDesiredSize(ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nscoord aWidth, nscoord aHeight);
 
   // Helper function to compute the offset needed to center a child

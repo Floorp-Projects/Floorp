@@ -58,7 +58,7 @@ public:
    */
   virtual void Reflow(nsPresContext*      aPresContext,
                       ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&      aStatus) override;
   
   /**
@@ -66,7 +66,7 @@ public:
    */
   virtual void DoReflow(nsPresContext*      aPresContext,
                         ReflowOutput& aDesiredSize,
-                        const ReflowInput& aReflowState,
+                        const ReflowInput& aReflowInput,
                         nsReflowStatus&      aStatus);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -99,7 +99,7 @@ protected:
   /**
    * Set aDesiredSize to be the available size
    */
-  void SizeToAvailSize(const ReflowInput& aReflowState,
+  void SizeToAvailSize(const ReflowInput& aReflowInput,
                        ReflowOutput& aDesiredSize);
 };
 

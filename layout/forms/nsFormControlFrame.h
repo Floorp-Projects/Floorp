@@ -83,7 +83,7 @@ public:
     */
   virtual void Reflow(nsPresContext*      aCX,
                       ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&      aStatus) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

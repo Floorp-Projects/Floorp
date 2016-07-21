@@ -48,7 +48,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
@@ -159,7 +159,7 @@ private:
   // Helper function which reflows the anonymous div frames.
   void ReflowAnonymousContent(nsPresContext*           aPresContext,
                               ReflowOutput&     aDesiredSize,
-                              const ReflowInput& aReflowState);
+                              const ReflowInput& aReflowInput);
 
   void DoUpdateThumbPosition(nsIFrame* aThumbFrame,
                              const nsSize& aRangeSize);

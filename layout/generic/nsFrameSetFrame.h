@@ -102,7 +102,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsIAtom* GetType() const override;
@@ -150,7 +150,7 @@ protected:
                       nsString&             aNewAttr);
 
   virtual void GetDesiredSize(nsPresContext*          aPresContext,
-                              const ReflowInput& aReflowState,
+                              const ReflowInput& aReflowInput,
                               ReflowOutput&     aDesiredSize);
 
   int32_t GetBorderWidth(nsPresContext* aPresContext,
@@ -176,7 +176,7 @@ protected:
   
   void ReflowPlaceChild(nsIFrame*                aChild,
                         nsPresContext*          aPresContext,
-                        const ReflowInput& aReflowState,
+                        const ReflowInput& aReflowInput,
                         nsPoint&                 aOffset,
                         nsSize&                  aSize,
                         nsIntPoint*              aCellIndex = 0);

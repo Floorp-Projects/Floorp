@@ -113,16 +113,16 @@ public:
   virtual void
   Reflow(nsPresContext*          aPresContext,
          ReflowOutput&     aDesiredSize,
-         const ReflowInput& aReflowState,
+         const ReflowInput& aReflowInput,
          nsReflowStatus&          aStatus) override;
 
   virtual void DidReflow(nsPresContext*           aPresContext,
-            const ReflowInput*  aReflowState,
+            const ReflowInput*  aReflowInput,
             nsDidReflowStatus         aStatus) override
 
   {
     mPresentationData.flags &= ~NS_MATHML_STRETCH_DONE;
-    return nsContainerFrame::DidReflow(aPresContext, aReflowState, aStatus);
+    return nsContainerFrame::DidReflow(aPresContext, aReflowInput, aStatus);
   }
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -278,7 +278,7 @@ public:
   ReflowChild(nsIFrame*                aKidFrame,
               nsPresContext*          aPresContext,
               ReflowOutput&     aDesiredSize,
-              const ReflowInput& aReflowState,
+              const ReflowInput& aReflowInput,
               nsReflowStatus&          aStatus);
 
 protected:
