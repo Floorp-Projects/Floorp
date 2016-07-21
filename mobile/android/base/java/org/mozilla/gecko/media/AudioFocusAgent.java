@@ -88,6 +88,10 @@ public class AudioFocusAgent {
     }
 
     private void requestAudioFocusIfNeeded() {
+        // Workaround for bug 1287116, disable audio focus only on FF48.
+        if (true) {
+            return;
+        }
         if (!isFirstAudibleElement()) {
             return;
         }
