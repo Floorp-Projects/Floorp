@@ -16,33 +16,9 @@
 #include "mozilla/WritingModes.h"
 
 class nsTableRowFrame;
-
-struct nsRowGroupReflowState {
-  using ReflowInput = mozilla::ReflowInput;
-
-  const ReflowInput& reflowState;  // Our reflow state
-
-  nsTableFrame* tableFrame;
-
-  // The available size (computed from the parent)
-  mozilla::LogicalSize availSize;
-
-  // Running block-offset
-  nscoord bCoord;
-
-  nsRowGroupReflowState(const ReflowInput& aReflowState,
-                        nsTableFrame*            aTableFrame)
-      : reflowState(aReflowState)
-      , tableFrame(aTableFrame)
-      , availSize(aReflowState.GetWritingMode(),
-                  aReflowState.AvailableISize(),
-                  aReflowState.AvailableBSize())
-      , bCoord(0)
-  {
-  }
-
-  ~nsRowGroupReflowState() {}
-};
+namespace mozilla {
+struct nsRowGroupReflowState;
+} // namespace mozilla
 
 #define MIN_ROWS_NEEDING_CURSOR 20
 
@@ -59,6 +35,8 @@ class nsTableRowGroupFrame final
   : public nsContainerFrame
   , public nsILineIterator
 {
+  using nsRowGroupReflowState = mozilla::nsRowGroupReflowState;
+
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
   NS_DECL_QUERYFRAME
