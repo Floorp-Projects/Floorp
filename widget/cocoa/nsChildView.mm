@@ -275,7 +275,7 @@ namespace {
 class GLPresenter : public GLManager
 {
 public:
-  static mozilla::UniquePtr<GLPresenter> CreateForWindow(nsIWidget* aWindow)
+  static GLPresenter* CreateForWindow(nsIWidget* aWindow)
   {
     // Contrary to CompositorOGL, we allow unaccelerated OpenGL contexts to be
     // used. BasicCompositor only requires very basic GL functionality.
@@ -291,7 +291,7 @@ public:
   {
     MOZ_ASSERT(aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
     MOZ_ASSERT(aFormat == gfx::SurfaceFormat::R8G8B8A8);
-    return mRGBARectProgram.get();
+    return mRGBARectProgram;
   }
   virtual const gfx::Matrix4x4& GetProjMatrix() const override
   {
@@ -315,7 +315,7 @@ public:
 
 protected:
   RefPtr<mozilla::gl::GLContext> mGLContext;
-  mozilla::UniquePtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
+  nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
   gfx::Matrix4x4 mProjMatrix;
   GLuint mQuadVBO;
 };
@@ -1988,7 +1988,7 @@ nsChildView::CleanupWindowEffects()
 bool
 nsChildView::PreRender(LayerManagerComposite* aManager)
 {
-  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
     return true;
   }
@@ -2010,7 +2010,7 @@ nsChildView::PreRender(LayerManagerComposite* aManager)
 void
 nsChildView::PostRender(LayerManagerComposite* aManager)
 {
-  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
     return;
   }
@@ -2023,9 +2023,9 @@ void
 nsChildView::DrawWindowOverlay(LayerManagerComposite* aManager,
                                LayoutDeviceIntRect aRect)
 {
-  mozilla::UniquePtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (manager) {
-    DrawWindowOverlay(manager.get(), aRect);
+    DrawWindowOverlay(manager, aRect);
   }
 }
 
@@ -2718,11 +2718,11 @@ nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect)
   mGLPresenter->BeginFrame(aRenderRect.Size());
 
   // Draw the result from the basic compositor.
-  mBasicCompositorImage->Draw(mGLPresenter.get(), LayoutDeviceIntPoint(0, 0));
+  mBasicCompositorImage->Draw(mGLPresenter, LayoutDeviceIntPoint(0, 0));
 
   // DrawWindowOverlay doesn't do anything for non-GL, so it didn't paint
   // anything during the basic compositor transaction. Draw the overlay now.
-  DrawWindowOverlay(mGLPresenter.get(), aRenderRect);
+  DrawWindowOverlay(mGLPresenter, aRenderRect);
 
   mGLPresenter->EndFrame();
 
@@ -3008,7 +3008,7 @@ GLPresenter::GLPresenter(GLContext* aContext)
   mGLContext->MakeCurrent();
   ShaderConfigOGL config;
   config.SetTextureTarget(LOCAL_GL_TEXTURE_RECTANGLE_ARB);
-  mRGBARectProgram = MakeUnique<ShaderProgramOGL>(mGLContext,
+  mRGBARectProgram = new ShaderProgramOGL(mGLContext,
     ProgramProfileOGL::GetProfileFor(config));
 
   // Create mQuadVBO.
