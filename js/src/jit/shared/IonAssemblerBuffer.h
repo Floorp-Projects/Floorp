@@ -8,6 +8,7 @@
 #define jit_shared_IonAssemblerBuffer_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "jit/shared/Assembler-shared.h"
 
@@ -169,8 +170,8 @@ class AssemblerBuffer
     { }
 
   public:
-    bool isAligned(int alignment) const {
-        MOZ_ASSERT(IsPowerOfTwo(alignment));
+    bool isAligned(size_t alignment) const {
+        MOZ_ASSERT(mozilla::IsPowerOfTwo(alignment));
         return !(size() & (alignment - 1));
     }
 
