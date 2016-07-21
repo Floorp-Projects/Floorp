@@ -5,8 +5,8 @@
 
 /* struct containing the output from nsIFrame::Reflow */
 
-#ifndef nsHTMLReflowMetrics_h___
-#define nsHTMLReflowMetrics_h___
+#ifndef mozilla_nsHTMLReflowMetrics_h
+#define mozilla_nsHTMLReflowMetrics_h
 
 #include "mozilla/WritingModes.h"
 #include "nsBoundingMetrics.h"
@@ -192,6 +192,8 @@ struct nsCollapsingMargin {
       }
 };
 
+namespace mozilla {
+
 /**
  * Reflow metrics used to return the frame's desired size and alignment
  * information.
@@ -199,8 +201,6 @@ struct nsCollapsingMargin {
  * @see #Reflow()
  */
 class nsHTMLReflowMetrics {
-  using ReflowInput = mozilla::ReflowInput;
-
 public:
   // XXXldb Should |aFlags| generally be passed from parent to child?
   // Some places do it, and some don't.  |aFlags| should perhaps go away
@@ -343,4 +343,6 @@ private:
   mozilla::WritingMode mWritingMode;
 };
 
-#endif /* nsHTMLReflowMetrics_h___ */
+} // mozilla namespace
+
+#endif // mozilla_nsHTMLReflowMetrics_h

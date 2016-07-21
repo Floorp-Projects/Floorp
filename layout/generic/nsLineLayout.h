@@ -30,7 +30,8 @@ struct nsStyleText;
 class nsLineLayout {
   using BlockReflowInput = mozilla::BlockReflowInput;
   using ReflowInput = mozilla::ReflowInput;
-
+  using nsHTMLReflowMetrics = mozilla::nsHTMLReflowMetrics;
+  
 public:
   /**
    * @param aBaseLineLayout the nsLineLayout for ruby base,

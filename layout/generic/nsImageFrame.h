@@ -25,7 +25,6 @@ class nsFontMetrics;
 class nsImageMap;
 class nsIURI;
 class nsILoadGroup;
-class nsHTMLReflowMetrics;
 class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;

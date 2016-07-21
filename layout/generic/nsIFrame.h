@@ -94,6 +94,7 @@ namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 class EventStates;
 struct ReflowInput;
+class nsHTMLReflowMetrics;
 
 namespace layers {
 class Layer;
@@ -424,6 +425,7 @@ public:
   template<typename T=void>
   using PropertyDescriptor = const mozilla::FramePropertyDescriptor<T>*;
   using ReflowInput = mozilla::ReflowInput;
+  using nsHTMLReflowMetrics = mozilla::nsHTMLReflowMetrics;
   using Visibility = mozilla::Visibility;
   using VisibilityCounter = mozilla::VisibilityCounter;
 

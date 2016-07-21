@@ -770,7 +770,7 @@ public:
     DR_cookie(nsPresContext*          aPresContext,
               nsIFrame*                aFrame, 
               const mozilla::ReflowInput& aReflowState,
-              nsHTMLReflowMetrics&     aMetrics,
+              mozilla::nsHTMLReflowMetrics&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
     void Change() const;
@@ -778,7 +778,7 @@ public:
     nsPresContext*          mPresContext;
     nsIFrame*                mFrame;
     const mozilla::ReflowInput& mReflowState;
-    nsHTMLReflowMetrics&     mMetrics;
+    mozilla::nsHTMLReflowMetrics&     mMetrics;
     nsReflowStatus&          mStatus;    
     void*                    mValue;
   };
