@@ -64,14 +64,14 @@ protected:
                                  nsStyleContext* aContext);
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
-  struct ReflowState;
-  nscoord ReflowColumns(const ReflowState& aReflowState,
+  struct RubyReflowInput;
+  nscoord ReflowColumns(const RubyReflowInput& aReflowState,
                         nsReflowStatus& aStatus);
-  nscoord ReflowOneColumn(const ReflowState& aReflowState,
+  nscoord ReflowOneColumn(const RubyReflowInput& aReflowState,
                           uint32_t aColumnIndex,
                           const mozilla::RubyColumn& aColumn,
                           nsReflowStatus& aStatus);
-  nscoord ReflowSpans(const ReflowState& aReflowState);
+  nscoord ReflowSpans(const RubyReflowInput& aReflowState);
 
   struct PullFrameState;
 
