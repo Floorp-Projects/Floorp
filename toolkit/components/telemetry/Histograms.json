@@ -9829,51 +9829,51 @@
     "kind": "boolean",
     "description": "Result of call to SandboxBroker::Initialize"
   },
-  "SANDBOX_CAPABILITIES_SECCOMP_BPF": {
+  "SANDBOX_HAS_SECCOMP_BPF": {
     "alert_emails": ["gcp@mozilla.com"],
     "bug_numbers": [1098428],
     "expires_in_version": "55",
-    "kind": "flag",
+    "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the system has seccomp-bpf capability"
   },
-  "SANDBOX_CAPABILITIES_SECCOMP_TSYNC": {
+  "SANDBOX_HAS_SECCOMP_TSYNC": {
     "alert_emails": ["gcp@mozilla.com"],
     "bug_numbers": [1098428],
     "expires_in_version": "55",
-    "kind": "flag",
+    "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the system has seccomp-bpf thread-sync capability"
   },
-  "SANDBOX_CAPABILITIES_USER_NAMESPACES": {
+  "SANDBOX_HAS_USER_NAMESPACES": {
     "alert_emails": ["gcp@mozilla.com"],
     "bug_numbers": [1098428],
     "expires_in_version": "55",
-    "kind": "flag",
+    "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether our process succedeed in creating a user namespace"
   },
-  "SANDBOX_CAPABILITIES_USER_NAMESPACES_PRIVILEGED": {
+  "SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED": {
     "alert_emails": ["gcp@mozilla.com"],
     "bug_numbers": [1098428],
     "expires_in_version": "55",
-    "kind": "flag",
+    "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the system has the capability to create privileged user namespaces"
   },
- "SANDBOX_CAPABILITIES_ENABLED_MEDIA": {
+ "SANDBOX_MEDIA_ENABLED": {
     "alert_emails": ["gcp@mozilla.com"],
     "bug_numbers": [1098428],
     "expires_in_version": "55",
-    "kind": "flag",
+    "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the sandbox is enabled for media/GMP plugins"
   },
- "SANDBOX_CAPABILITIES_ENABLED_CONTENT": {
+ "SANDBOX_CONTENT_ENABLED": {
     "alert_emails": ["gcp@mozilla.com"],
     "bug_numbers": [1098428],
     "expires_in_version": "55",
-    "kind": "flag",
+    "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the sandbox is enabled for the content process"
   },
