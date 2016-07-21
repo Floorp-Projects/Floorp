@@ -56,6 +56,7 @@ using mozilla::Compression::LZ4;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
+using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::PodCopy;
