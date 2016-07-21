@@ -15,6 +15,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
 #include <limits.h>
@@ -207,18 +208,14 @@ class MOZ_RAII AutoScopedAssign
     T old;
 };
 
-template <typename T>
-static inline bool
-IsPowerOfTwo(T t)
-{
-    return t && !(t & (t - 1));
-}
-
 template <typename T, typename U>
 static inline U
 ComputeByteAlignment(T bytes, U alignment)
 {
-    MOZ_ASSERT(IsPowerOfTwo(alignment));
+    static_assert(mozilla::IsUnsigned<U>::value,
+                  "alignment amount must be unsigned");
+
+    MOZ_ASSERT(mozilla::IsPowerOfTwo(alignment));
     return (alignment - (bytes % alignment)) % alignment;
 }
 
@@ -226,13 +223,10 @@ template <typename T, typename U>
 static inline T
 AlignBytes(T bytes, U alignment)
 {
-    return bytes + ComputeByteAlignment(bytes, alignment);
-}
+    static_assert(mozilla::IsUnsigned<U>::value,
+                  "alignment amount must be unsigned");
 
-static MOZ_ALWAYS_INLINE size_t
-UnsignedPtrDiff(const void* bigger, const void* smaller)
-{
-    return size_t(bigger) - size_t(smaller);
+    return bytes + ComputeByteAlignment(bytes, alignment);
 }
 
 /*****************************************************************************/
