@@ -339,7 +339,9 @@ protected:
     operator const nsIFrame*() const { return mFrame; }
     bool IsValid() const { return mFrame && mStartOffsetInNode >= 0; }
   };
-  // Get first frame in the given range for computing text rect.
+  // Get first frame after the start of the given range for computing text rect.
+  // This returns invalid FrameAndNodeOffset if there is no content which
+  // causes text after the start of the range.
   FrameAndNodeOffset GetFirstFrameHavingFlatTextInRange(nsRange* aRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final
