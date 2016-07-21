@@ -41,6 +41,8 @@ using mozilla::DebugOnly;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
+static const uintptr_t CanaryMagicValue = 0xDEADB15D;
+
 struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
 {
     explicit FreeMallocedBuffersTask(FreeOp* fop) : fop_(fop) {}
@@ -55,6 +57,26 @@ struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
 
     virtual void run() override;
 };
+
+js::Nursery::Nursery(JSRuntime* rt)
+  : runtime_(rt)
+  , position_(0)
+  , currentStart_(0)
+  , currentEnd_(0)
+  , heapStart_(0)
+  , heapEnd_(0)
+  , currentChunk_(0)
+  , numActiveChunks_(0)
+  , numNurseryChunks_(0)
+  , previousPromotionRate_(0)
+  , profileThreshold_(0)
+  , enableProfiling_(false)
+  , minorGcCount_(0)
+  , freeMallocedBuffersTask(nullptr)
+#ifdef JS_GC_ZEAL
+  , lastCanary_(nullptr)
+#endif
+{}
 
 bool
 js::Nursery::init(uint32_t maxNurseryBytes)
@@ -215,6 +237,12 @@ js::Nursery::allocate(size_t size)
     MOZ_ASSERT(!runtime()->isHeapBusy());
     MOZ_ASSERT(position() >= currentStart_);
 
+#ifdef JS_GC_ZEAL
+    static const size_t CanarySize = (sizeof(Nursery::Canary) + CellSize - 1) & ~CellMask;
+    if (runtime()->gc.hasZealMode(ZealMode::CheckNursery))
+        size += CanarySize;
+#endif
+
     if (currentEnd() < position() + size) {
         if (currentChunk_ + 1 == numActiveChunks_)
             return nullptr;
@@ -225,6 +253,20 @@ js::Nursery::allocate(size_t size)
     position_ = position() + size;
 
     JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size);
+
+#ifdef JS_GC_ZEAL
+    if (runtime()->gc.hasZealMode(ZealMode::CheckNursery)) {
+        auto canary = reinterpret_cast<Canary*>(position() - CanarySize);
+        canary->magicValue = CanaryMagicValue;
+        canary->next = nullptr;
+        if (lastCanary_) {
+            MOZ_ASSERT(!lastCanary_->next);
+            lastCanary_->next = canary;
+        }
+        lastCanary_ = canary;
+    }
+#endif
+
     MemProfiler::SampleNursery(reinterpret_cast<void*>(thing), size);
     return thing;
 }
@@ -451,6 +493,14 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     }
 
     rt->gc.incMinorGcNumber();
+
+#ifdef JS_GC_ZEAL
+    if (rt->gc.hasZealMode(ZealMode::CheckNursery)) {
+        for (auto canary = lastCanary_; canary; canary = canary->next)
+            MOZ_ASSERT(canary->magicValue == CanaryMagicValue);
+    }
+    lastCanary_ = nullptr;
+#endif
 
     rt->gc.stats.beginNurseryCollection(reason);
     TraceMinorGCStart();
