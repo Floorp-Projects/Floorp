@@ -132,7 +132,7 @@ public:
  * and 'id' mappings of a given string. This is so that
  * nsHTMLDocument::ResolveName only has to do one hash lookup instead
  * of two. It's not clear whether this still matters for performance.
- * 
+ *
  * We also store the document.all result list here. This is mainly so that
  * when all elements with the given ID are removed and we remove
  * the ID's nsIdentifierMapEntry, the document.all result is released too.
@@ -616,7 +616,7 @@ protected:
     // don't hand out references to the docshell.  The shims should all allow
     // getInterface back on us, but other than that each one should only
     // implement one interface.
-    
+
     // XXXbz I wish we could just derive the _allcaps thing from _i
 #define DECL_SHIM(_i, _allcaps)                                              \
     class _i##Shim final : public nsIInterfaceRequestor,                     \
@@ -655,7 +655,7 @@ protected:
   nsresult AddExternalResource(nsIURI* aURI, nsIContentViewer* aViewer,
                                nsILoadGroup* aLoadGroup,
                                nsIDocument* aDisplayDocument);
-  
+
   nsClassHashtable<nsURIHashKey, ExternalResource> mMap;
   nsRefPtrHashtable<nsURIHashKey, PendingLoad> mPendingLoads;
   bool mHaveShutDown;
