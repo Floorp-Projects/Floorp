@@ -26,7 +26,7 @@
 #include <webrtc/common_video/libyuv/include/webrtc_libyuv.h>
 
 using namespace mozilla;
-using namespace mozilla::widget::sdk;
+using namespace mozilla::java::sdk;
 
 static const int32_t DECODER_TIMEOUT = 10 * PR_USEC_PER_MSEC; // 10ms
 static const char MEDIACODEC_VIDEO_MIME_VP8[] = "video/x-vnd.on2.vp8";
