@@ -33,10 +33,8 @@ static nsSVGAttrTearoffTable<nsSVGLength2, DOMSVGLength>
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGLength)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGLength)
-  // We may not belong to a list, so we must null check tmp->mList.
-  if (tmp->mList) {
-    tmp->mList->mItems[tmp->mListIndex] = nullptr;
-  }
+  tmp->CleanupWeakRefs();
+  tmp->mVal = nullptr; // (owned by mSVGElement, which we drop our ref to here)
 NS_IMPL_CYCLE_COLLECTION_UNLINK(mList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK(mSVGElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
