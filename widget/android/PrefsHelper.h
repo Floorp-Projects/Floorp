@@ -12,8 +12,10 @@
 #include "nsCOMPtr.h"
 #include "nsVariant.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
@@ -66,17 +68,20 @@ class PrefsHelper
                 return false;
         }
 
-        jni::StringParam jstrVal(type == java::PrefsHelper::PREF_STRING ?
-                jni::StringParam(strVal, aPrefName.Env()) :
-                jni::StringParam(nullptr));
+        Maybe<jni::StringParam> jstrVal;
+        jstrVal.emplace(nullptr);
+        if (type == java::PrefsHelper::PREF_STRING) {
+            jstrVal.reset();
+            jstrVal.emplace(strVal, aPrefName.Env());
+        }
 
         if (aPrefHandler) {
             java::PrefsHelper::CallPrefHandler(
                     aPrefHandler, type, aPrefName,
-                    boolVal, intVal, jstrVal);
+                    boolVal, intVal, jstrVal.ref());
         } else {
             java::PrefsHelper::OnPrefChange(
-                    aPrefName, type, boolVal, intVal, jstrVal);
+                    aPrefName, type, boolVal, intVal, jstrVal.ref());
         }
         return true;
     }
@@ -189,11 +194,16 @@ public:
                     continue;
             }
 
+            Maybe<jni::StringParam> jstrVal;
+            jstrVal.emplace(nullptr);
+            if (type == java::PrefsHelper::PREF_STRING) {
+                jstrVal.reset();
+                jstrVal.emplace(strVal, aCls.Env());
+            }
+
             java::PrefsHelper::CallPrefHandler(
-                    aPrefHandler, type, nameStr, boolVal, intVal,
-                    jni::StringParam(type == java::PrefsHelper::PREF_STRING ?
-                        jni::StringParam(strVal, aCls.Env()) :
-                        jni::StringParam(nullptr)));
+                    aPrefHandler, type, nameStr,
+                    boolVal, intVal, jstrVal.ref());
         }
 
         java::PrefsHelper::CallPrefHandler(
@@ -313,10 +323,15 @@ public:
                 return;
         }
 
+        Maybe<jni::StringParam> jstrVal;
+        jstrVal.emplace(nullptr);
+        if (type == java::PrefsHelper::PREF_STRING) {
+            jstrVal.reset();
+            jstrVal.emplace(strVal);
+        }
+
         java::PrefsHelper::OnPrefChange(
-                name, type, boolVal, intVal,
-                jni::StringParam(type == java::PrefsHelper::PREF_STRING ?
-                    jni::StringParam(strVal) : jni::StringParam(nullptr)));
+                name, type, boolVal, intVal, jstrVal.ref());
     }
 };
 

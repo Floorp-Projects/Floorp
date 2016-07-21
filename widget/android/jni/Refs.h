@@ -680,16 +680,9 @@ public:
         , mEnv(env)
     {}
 
-    StringParam(StringParam&& other)
-        : Ref(other.Get())
-        , mEnv(other.mEnv)
-    {
-        other.mInstance = nullptr;
-    }
-
     ~StringParam()
     {
-        if (mEnv && Get()) {
+        if (mEnv) {
             mEnv->DeleteLocalRef(Get());
         }
     }
