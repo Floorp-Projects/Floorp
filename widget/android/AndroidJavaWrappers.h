@@ -479,8 +479,6 @@ public:
     int Flags() { return mFlags; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
-    short ScreenOrientation() { return mScreenOrientation; }
-    short ScreenAngle() { return mScreenAngle; }
     RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
     int Width() { return mWidth; }
     int Height() { return mHeight; }
@@ -516,8 +514,6 @@ protected:
     double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
-    short mScreenOrientation;
-    short mScreenAngle;
     RefPtr<RefCountedJavaObject> mByteBuffer;
     int mWidth, mHeight;
     int mID;
@@ -577,8 +573,6 @@ protected:
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
 
-    static jfieldID jScreenOrientationField;
-    static jfieldID jScreenAngleField;
     static jfieldID jByteBufferField;
 
     static jfieldID jWidthField;
@@ -598,7 +592,6 @@ public:
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,
         THUMBNAIL = 25,
-        SCREENORIENTATION_CHANGED = 27,
         NATIVE_GESTURE_EVENT = 31,
         CALL_OBSERVER = 33,
         REMOVE_OBSERVER = 34,
