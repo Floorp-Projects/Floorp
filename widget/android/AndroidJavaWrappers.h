@@ -604,7 +604,6 @@ public:
     enum {
         NATIVE_POKE = 0,
         MOTION_EVENT = 2,
-        LOAD_URI = 12,
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,

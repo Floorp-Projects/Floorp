@@ -314,12 +314,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
             break;
 
-        case LOAD_URI: {
-            ReadCharactersField(jenv);
-            ReadCharactersExtraField(jenv);
-            break;
-        }
-
         case VIEWPORT: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);

@@ -66,7 +66,6 @@ public class GeckoEvent {
     public enum NativeGeckoEvent {
         NATIVE_POKE(0),
         MOTION_EVENT(2),
-        LOAD_URI(12),
         NOOP(15),
         VIEWPORT(20),
         NETWORK_CHANGED(22),
@@ -348,20 +347,6 @@ public class GeckoEvent {
           .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
-        return event;
-    }
-
-    public static GeckoEvent createURILoadEvent(String uri) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
-        event.mCharacters = uri;
-        event.mCharactersExtra = "";
-        return event;
-    }
-
-    public static GeckoEvent createBookmarkLoadEvent(String uri) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOAD_URI);
-        event.mCharacters = uri;
-        event.mCharactersExtra = "-bookmark";
         return event;
     }
 
