@@ -145,8 +145,8 @@ public:
         mBrowserApp = aBrowserApp;
     }
 
-    nsIAndroidBrowserApp* GetBrowserApp() {
-        return mBrowserApp;
+    void GetBrowserApp(nsIAndroidBrowserApp* *aBrowserApp) {
+        *aBrowserApp = mBrowserApp;
     }
 
 protected:
