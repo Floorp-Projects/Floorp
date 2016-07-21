@@ -435,7 +435,7 @@ GetPrefName((_a2), aPrefName), (_a3));
  *  or read the prefs in using the printer name to qualify.
  *  It is either "print.attr_name" or "print.printer_HPLasr5.attr_name"
  */
-nsresult
+nsresult 
 nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
                           uint32_t aFlags)
 {
@@ -731,7 +731,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
  *  See documentation in nsPrintOptionsImpl.h
  *  @update 1/12/01 rods
  */
-nsresult
+nsresult 
 nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
                            uint32_t aFlags)
 {
@@ -796,7 +796,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     int16_t sizeUnit;
     double width, height;
     char16_t *name;
-
+ 
     if (
       NS_SUCCEEDED(aPS->GetPaperSizeUnit(&sizeUnit)) &&
       NS_SUCCEEDED(aPS->GetPaperWidth(&width)) &&
@@ -1103,7 +1103,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
 /** ---------------------------------------------------
  *  Helper function - Returns either the name or sets the length to zero
  */
-static nsresult
+static nsresult 
 GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
                        nsAString& aPrinterName)
 {
@@ -1113,7 +1113,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
   if (!aUsePNP)
     return NS_OK;
 
-  // Get the Printer Name from the PrintSettings
+  // Get the Printer Name from the PrintSettings 
   // to use as a prefix for Pref Names
   char16_t* prtName = nullptr;
 
@@ -1141,7 +1141,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
 }
 #endif
 
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
                                            bool aUsePNP, uint32_t aFlags)
 {

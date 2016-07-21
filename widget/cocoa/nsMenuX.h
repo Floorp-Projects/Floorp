@@ -75,7 +75,7 @@ protected:
   bool           OnClose();
   nsresult       AddMenuItem(nsMenuItemX* aMenuItem);
   nsMenuX*       AddMenu(mozilla::UniquePtr<nsMenuX> aMenu);
-  void           LoadMenuItem(nsIContent* inMenuItemContent);
+  void           LoadMenuItem(nsIContent* inMenuItemContent);  
   void           LoadSubMenu(nsIContent* inMenuContent);
   GeckoNSMenu*   CreateMenuWithGeckoString(nsString& menuTitle);
 

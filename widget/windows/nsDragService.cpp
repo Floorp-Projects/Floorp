@@ -73,7 +73,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     return false;
 
   memset(psdi, 0, sizeof(SHDRAGIMAGE));
-  if (!aDOMNode)
+  if (!aDOMNode) 
     return false;
 
   // Prepare the drag image
@@ -137,7 +137,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
   HDC hdcSrc = CreateCompatibleDC(nullptr);
   void *lpBits = nullptr;
   if (hdcSrc) {
-    psdi->hbmpDragImage =
+    psdi->hbmpDragImage = 
     ::CreateDIBSection(hdcSrc, (BITMAPINFO*)&bmih, DIB_RGB_COLORS,
                        (void**)&lpBits, nullptr, 0);
     if (psdi->hbmpDragImage && lpBits) {
@@ -297,7 +297,7 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   HRESULT res = ::DoDragDrop(aDataObj, nativeDragSrc, effects, &winDropRes);
 
   // In  cases where the drop operation completed outside the application, update
-  // the source node's nsIDOMDataTransfer dropEffect value so it is up to date.
+  // the source node's nsIDOMDataTransfer dropEffect value so it is up to date.  
   if (!mSentLocalDropEvent) {
     uint32_t dropResult;
     // Order is important, since multiple flags can be returned.
@@ -309,9 +309,9 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
         dropResult = DRAGDROP_ACTION_MOVE;
     else
         dropResult = DRAGDROP_ACTION_NONE;
-
+    
     if (mDataTransfer) {
-      if (res == DRAGDROP_S_DROP) // Success
+      if (res == DRAGDROP_S_DROP) // Success 
         mDataTransfer->SetDropEffectInt(dropResult);
       else
         mDataTransfer->SetDropEffectInt(DRAGDROP_ACTION_NONE);
@@ -373,7 +373,7 @@ nsDragService::GetNumDropItems(uint32_t * aNumItems)
     }
     else {
       // If the count cannot be determined just return 0.
-      // This can happen if we have collection data of type
+      // This can happen if we have collection data of type 
       // MULTI_MIME ("Mozilla/IDataObjectCollectionFormat") on the clipboard
       // from another process but we can't obtain an IID_IDataObjCollection
       // from this process.

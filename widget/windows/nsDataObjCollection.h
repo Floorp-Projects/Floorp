@@ -22,7 +22,7 @@ EXTERN_C const IID IID_IDataObjCollection;
 // this way we can filter out collection objects that aren't ours
 class nsIDataObjCollection : public IUnknown {
 public:
-
+  
 };
 
 /*
@@ -30,7 +30,7 @@ public:
  * can be adapted by an object derived from CfDragDrop. The CfDragDrop is
  * associated with instances via SetDragDrop().
  */
-
+ 
 class nsDataObjCollection final : public nsIDataObjCollection, public nsDataObj
 {
   public:
