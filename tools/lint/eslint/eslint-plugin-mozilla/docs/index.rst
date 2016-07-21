@@ -32,6 +32,9 @@ second argument (meaning they add the exported properties into global scope).
 "Cu.importGlobalProperties".  Use of this function is undesirable in
 some parts of the tree.
 
+``reject-some-requires`` rejects some calls to ``require``, according
+to a regexp passed in as an option.
+
 ``this-top-level-scope`` treats top-level assignments like
 ``this.mumble = value`` as declaring a global.
 
@@ -79,5 +82,6 @@ Example configuration::
    no-aArgs
    no-cpows-in-tests
    reject-importGlobalProperties
+   reject-some-requires
    this-top-level-scope
    var-only-at-top-level
