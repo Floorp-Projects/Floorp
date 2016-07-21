@@ -30,7 +30,7 @@ public:
   virtual bool IsFrameOfType(uint32_t aFlags) const override;
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP

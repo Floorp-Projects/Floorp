@@ -305,7 +305,7 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
 void
 nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
                              ReflowOutput&     aDesiredSize,
-                             const ReflowInput& aReflowState,
+                             const ReflowInput& aReflowInput,
                              nsReflowStatus&          aStatus)
 {
   mPresentationData.flags &= ~NS_MATHML_ERROR;
@@ -314,7 +314,7 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   ///////////////
   // Let the base class format our content like an inferred mrow
   nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
-                                 aReflowState, aStatus);
+                                 aReflowInput, aStatus);
   //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 }
 

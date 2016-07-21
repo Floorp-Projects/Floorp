@@ -81,7 +81,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aCX,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
@@ -217,7 +217,7 @@ protected:
 
   // Utilities
   void ReflowDropdown(nsPresContext*          aPresContext, 
-                      const ReflowInput& aReflowState);
+                      const ReflowInput& aReflowInput);
 
   enum DropDownPositionState {
     // can't show the dropdown at its current position

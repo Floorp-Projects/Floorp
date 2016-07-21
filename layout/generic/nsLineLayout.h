@@ -39,7 +39,7 @@ public:
    */
   nsLineLayout(nsPresContext* aPresContext,
                nsFloatManager* aFloatManager,
-               const ReflowInput* aOuterReflowState,
+               const ReflowInput* aOuterReflowInput,
                const nsLineList::iterator* aLine,
                nsLineLayout* aBaseLineLayout);
   ~nsLineLayout();
@@ -76,7 +76,7 @@ public:
                   const mozilla::LogicalRect& aNewAvailableSpace,
                   nsIFrame* aFloatFrame);
 
-  void BeginSpan(nsIFrame* aFrame, const ReflowInput* aSpanReflowState,
+  void BeginSpan(nsIFrame* aFrame, const ReflowInput* aSpanReflowInput,
                  nscoord aLeftEdge, nscoord aRightEdge, nscoord* aBaseline);
 
   // Returns the width of the span
@@ -342,8 +342,8 @@ public:
    * some other kind of frame when inline frames are reflowed in a non-block
    * context (e.g. MathML or floating first-letter).
    */
-  nsIFrame* LineContainerFrame() const { return mBlockReflowState->mFrame; }
-  const ReflowInput* LineContainerRS() const { return mBlockReflowState; }
+  nsIFrame* LineContainerFrame() const { return mBlockReflowInput->mFrame; }
+  const ReflowInput* LineContainerRS() const { return mBlockReflowInput; }
   const nsLineList::iterator* GetLine() const {
     return mGotLineBox ? &mLineBox : nullptr;
   }
@@ -383,7 +383,7 @@ protected:
   // This state is constant for a given block frame doing line layout
   nsFloatManager* mFloatManager;
   const nsStyleText* mStyleText; // for the block
-  const ReflowInput* mBlockReflowState;
+  const ReflowInput* mBlockReflowInput;
 
   // The line layout for the base text.  It is usually nullptr.
   // It becomes not null when the current line layout is for ruby
@@ -534,7 +534,7 @@ protected:
     // the next.
     PerFrameData* mLastFrame;
 
-    const ReflowInput* mReflowState;
+    const ReflowInput* mReflowInput;
     bool mNoWrap;
     mozilla::WritingMode mWritingMode;
     bool mContainsFloat;
@@ -667,7 +667,7 @@ protected:
   void PushFrame(nsIFrame* aFrame);
 
   void AllowForStartMargin(PerFrameData* pfd,
-                           ReflowInput& aReflowState);
+                           ReflowInput& aReflowInput);
 
   void SyncAnnotationBounds(PerFrameData* aRubyFrame);
 

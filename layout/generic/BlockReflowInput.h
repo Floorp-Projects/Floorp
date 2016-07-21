@@ -80,7 +80,7 @@ class BlockReflowInput {
   using ReflowInput = mozilla::ReflowInput;
 
 public:
-  BlockReflowInput(const ReflowInput& aReflowState,
+  BlockReflowInput(const ReflowInput& aReflowInput,
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      bool aBStartMarginRoot, bool aBEndMarginRoot,
@@ -137,12 +137,12 @@ public:
   // next column/page).
   bool AdvanceToNextBand(const mozilla::LogicalRect& aFloatAvailableSpace,
                          nscoord *aBCoord) const {
-    mozilla::WritingMode wm = mReflowState.GetWritingMode();
+    mozilla::WritingMode wm = mReflowInput.GetWritingMode();
     if (aFloatAvailableSpace.BSize(wm) > 0) {
       // See if there's room in the next band.
       *aBCoord += aFloatAvailableSpace.BSize(wm);
     } else {
-      if (mReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
+      if (mReflowInput.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
         // Stop trying to clear here; we'll just get pushed to the
         // next column or page and try again there.
         return false;
@@ -157,7 +157,7 @@ public:
                             const nsFlowAreaRect& aFloatAvailableSpace) const;
 
   bool IsAdjacentWithTop() const {
-    return mBCoord == mBorderPadding.BStart(mReflowState.GetWritingMode());
+    return mBCoord == mBorderPadding.BStart(mReflowInput.GetWritingMode());
   }
 
   /**
@@ -209,7 +209,7 @@ public:
 
   nsPresContext* mPresContext;
 
-  const ReflowInput& mReflowState;
+  const ReflowInput& mReflowInput;
 
   nsFloatManager* mFloatManager;
 
@@ -242,25 +242,25 @@ public:
   // coordinate overflow may occur.
   mozilla::LogicalRect mContentArea;
   nscoord ContentIStart() const {
-    return mContentArea.IStart(mReflowState.GetWritingMode());
+    return mContentArea.IStart(mReflowInput.GetWritingMode());
   }
   nscoord ContentISize() const {
-    return mContentArea.ISize(mReflowState.GetWritingMode());
+    return mContentArea.ISize(mReflowInput.GetWritingMode());
   }
   nscoord ContentIEnd() const {
-    return mContentArea.IEnd(mReflowState.GetWritingMode());
+    return mContentArea.IEnd(mReflowInput.GetWritingMode());
   }
   nscoord ContentBStart() const {
-    return mContentArea.BStart(mReflowState.GetWritingMode());
+    return mContentArea.BStart(mReflowInput.GetWritingMode());
   }
   nscoord ContentBSize() const {
-    return mContentArea.BSize(mReflowState.GetWritingMode());
+    return mContentArea.BSize(mReflowInput.GetWritingMode());
   }
   nscoord ContentBEnd() const {
-    return mContentArea.BEnd(mReflowState.GetWritingMode());
+    return mContentArea.BEnd(mReflowInput.GetWritingMode());
   }
   mozilla::LogicalSize ContentSize(mozilla::WritingMode aWM) const {
-    mozilla::WritingMode wm = mReflowState.GetWritingMode();
+    mozilla::WritingMode wm = mReflowInput.GetWritingMode();
     return mContentArea.Size(wm).ConvertTo(aWM, wm);
   }
 

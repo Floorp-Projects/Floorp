@@ -86,7 +86,7 @@ public:
     * @see nsIFrame::Reflow */
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   /**
@@ -185,8 +185,8 @@ protected:
   explicit nsTableWrapperFrame(nsStyleContext* aContext);
   virtual ~nsTableWrapperFrame();
 
-  void InitChildReflowState(nsPresContext&     aPresContext,
-                            ReflowInput& aReflowState);
+  void InitChildReflowInput(nsPresContext&     aPresContext,
+                            ReflowInput& aReflowInput);
 
   // Get a NS_STYLE_CAPTION_SIDE_* value, or NO_SIDE if no caption is present.
   // (Remember that caption-side values are interpreted logically, despite

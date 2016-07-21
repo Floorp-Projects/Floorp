@@ -113,7 +113,7 @@ class nsPageBreakFrame : public nsLeafFrame
 
   virtual void Reflow(nsPresContext*          aPresContext,
                           ReflowOutput&     aDesiredSize,
-                          const ReflowInput& aReflowState,
+                          const ReflowInput& aReflowInput,
                           nsReflowStatus&          aStatus) override;
 
   virtual nsIAtom* GetType() const override;

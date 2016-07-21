@@ -631,24 +631,24 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 void
 nsBulletFrame::Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aMetrics,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsBulletFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
 
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   SetFontSizeInflation(inflation);
 
   // Get the base size
-  GetDesiredSize(aPresContext, aReflowState.mRenderingContext, aMetrics, inflation,
+  GetDesiredSize(aPresContext, aReflowInput.mRenderingContext, aMetrics, inflation,
                  &mPadding);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
-  WritingMode wm = aReflowState.GetWritingMode();
-  const LogicalMargin& bp = aReflowState.ComputedLogicalBorderPadding();
+  WritingMode wm = aReflowInput.GetWritingMode();
+  const LogicalMargin& bp = aReflowInput.ComputedLogicalBorderPadding();
   mPadding.BStart(wm) += NSToCoordRound(bp.BStart(wm) * inflation);
   mPadding.IEnd(wm) += NSToCoordRound(bp.IEnd(wm) * inflation);
   mPadding.BEnd(wm) += NSToCoordRound(bp.BEnd(wm) * inflation);
@@ -668,7 +668,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   aMetrics.SetOverflowAreasToDesiredBounds();
 
   aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
 /* virtual */ nscoord

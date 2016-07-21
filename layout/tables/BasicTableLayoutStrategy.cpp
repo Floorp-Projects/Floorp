@@ -520,9 +520,9 @@ BasicTableLayoutStrategy::MarkIntrinsicISizesDirty()
 }
 
 /* virtual */ void
-BasicTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
+BasicTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowInput)
 {
-    nscoord iSize = aReflowState.ComputedISize();
+    nscoord iSize = aReflowInput.ComputedISize();
 
     if (mLastCalcISize == iSize) {
         return;
@@ -537,7 +537,7 @@ BasicTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
                  "dirtyness out of sync");
     // XXX Is this needed?
     if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
-        ComputeIntrinsicISizes(aReflowState.mRenderingContext);
+        ComputeIntrinsicISizes(aReflowInput.mRenderingContext);
     }
 
     nsTableCellMap *cellMap = mTableFrame->GetCellMap();

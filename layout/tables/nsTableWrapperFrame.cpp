@@ -228,22 +228,22 @@ nsTableWrapperFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
 
 void
-nsTableWrapperFrame::InitChildReflowState(nsPresContext&     aPresContext,
-                                          ReflowInput& aReflowState)
+nsTableWrapperFrame::InitChildReflowInput(nsPresContext&     aPresContext,
+                                          ReflowInput& aReflowInput)
 {
   nsMargin collapseBorder;
   nsMargin collapsePadding(0,0,0,0);
   nsMargin* pCollapseBorder  = nullptr;
   nsMargin* pCollapsePadding = nullptr;
-  if (aReflowState.mFrame == InnerTableFrame() &&
+  if (aReflowInput.mFrame == InnerTableFrame() &&
       InnerTableFrame()->IsBorderCollapse()) {
-    WritingMode wm = aReflowState.GetWritingMode();
+    WritingMode wm = aReflowInput.GetWritingMode();
     LogicalMargin border = InnerTableFrame()->GetIncludedOuterBCBorder(wm);
     collapseBorder = border.GetPhysicalMargin(wm);
     pCollapseBorder = &collapseBorder;
     pCollapsePadding = &collapsePadding;
   }
-  aReflowState.Init(&aPresContext, nullptr, pCollapseBorder, pCollapsePadding);
+  aReflowInput.Init(&aPresContext, nullptr, pCollapseBorder, pCollapsePadding);
 }
 
 // get the margin and padding data. ReflowInput doesn't handle the
@@ -267,7 +267,7 @@ nsTableWrapperFrame::GetChildMargin(nsPresContext*           aPresContext,
   LogicalSize availSize(wm, aAvailISize, aOuterRS.AvailableSize(wm).BSize(wm));
   ReflowInput childRS(aPresContext, aOuterRS, aChildFrame, availSize,
                             nullptr, ReflowInput::CALLER_WILL_INIT);
-  InitChildReflowState(*aPresContext, childRS);
+  InitChildReflowInput(*aPresContext, childRS);
 
   aMargin = childRS.ComputedLogicalMargin();
 }
@@ -276,7 +276,7 @@ static nsSize
 GetContainingBlockSize(const ReflowInput& aOuterRS)
 {
   nsSize size(0,0);
-  const ReflowInput* containRS = aOuterRS.mCBReflowState;
+  const ReflowInput* containRS = aOuterRS.mCBReflowInput;
 
   if (containRS) {
     size.width = containRS->ComputedWidth();
@@ -762,7 +762,7 @@ nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext*            aPresContex
   // so that caller can use it after we return.
   aChildRS.emplace(aPresContext, aOuterRS, aChildFrame, availSize,
                   nullptr, ReflowInput::CALLER_WILL_INIT);
-  InitChildReflowState(*aPresContext, *aChildRS);
+  InitChildReflowInput(*aPresContext, *aChildRS);
 
   // see if we need to reset top-of-page due to a caption
   if (aChildRS->mFlags.mIsTopOfPage &&

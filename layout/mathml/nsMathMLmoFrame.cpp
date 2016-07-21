@@ -945,7 +945,7 @@ nsMathMLmoFrame::SetInitialChildList(ChildListID     aListID,
 void
 nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
                         ReflowOutput&     aDesiredSize,
-                        const ReflowInput& aReflowState,
+                        const ReflowInput& aReflowInput,
                         nsReflowStatus&          aStatus)
 {
   // certain values use units that depend on our style context, so
@@ -953,7 +953,7 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
   ProcessOperatorData();
 
   nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
-                             aReflowState, aStatus);
+                             aReflowInput, aStatus);
 }
 
 nsresult
