@@ -275,8 +275,6 @@ using namespace mozilla::system;
 #include "nsThread.h"
 #endif
 
-#include "VRManagerParent.h"            // for VRManagerParent
-
 // For VP9Benchmark::sBenchmarkFpsPref
 #include "Benchmark.h"
 
@@ -2449,8 +2447,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
       }
 
       {
-        DebugOnly<bool> opened = gfx::PVRManager::Open(this);
+        Endpoint<PVRManagerChild> endpoint;
+        DebugOnly<bool> opened =
+          gpm->CreateContentVRManager(OtherPid(), &endpoint);
         MOZ_ASSERT(opened);
+        Unused << SendInitVRManager(Move(endpoint));
       }
     }
 #ifdef MOZ_WIDGET_GONK
@@ -3239,13 +3240,6 @@ bool
 ContentParent::DeallocPAPZParent(PAPZParent* aActor)
 {
   return true;
-}
-
-gfx::PVRManagerParent*
-ContentParent::AllocPVRManagerParent(Transport* aTransport,
-                                     ProcessId aOtherProcess)
-{
-  return gfx::VRManagerParent::CreateCrossProcess(aTransport, aOtherProcess);
 }
 
 PBackgroundParent*

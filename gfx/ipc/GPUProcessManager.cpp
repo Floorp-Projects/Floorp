@@ -17,6 +17,7 @@
 #endif
 #include "nsBaseWidget.h"
 #include "nsContentUtils.h"
+#include "VRManagerParent.h"
 #include "VsyncBridgeChild.h"
 #include "VsyncIOThreadHolder.h"
 
@@ -412,6 +413,32 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
     if (!ImageBridgeParent::CreateForContent(Move(parentPipe))) {
       return false;
     }
+  }
+
+  *aOutEndpoint = Move(childPipe);
+  return true;
+}
+
+bool
+GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
+                                          ipc::Endpoint<PVRManagerChild>* aOutEndpoint)
+{
+  base::ProcessId gpuPid = base::GetCurrentProcId();
+
+  ipc::Endpoint<PVRManagerParent> parentPipe;
+  ipc::Endpoint<PVRManagerChild> childPipe;
+  nsresult rv = PVRManager::CreateEndpoints(
+    gpuPid,
+    aOtherProcess,
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Could not create content compositor bridge: " << hexa(int(rv));
+    return false;
+  }
+
+  if (!VRManagerParent::CreateForContent(Move(parentPipe))) {
+    return false;
   }
 
   *aOutEndpoint = Move(childPipe);
