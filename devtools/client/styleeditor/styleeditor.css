@@ -131,21 +131,3 @@ li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
     -moz-box-flex: 0;
   }
 }
-
-.csscoverage-report-container {
-  -moz-box-flex: 1;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.csscoverage-report-content > * {
-  display: inline-block;
-}
-
-.csscoverage-report {
-  -moz-box-orient: horizontal;
-}
-
-.csscoverage-report .pie-table-chart-container {
-  -moz-box-orient: vertical;
-}
