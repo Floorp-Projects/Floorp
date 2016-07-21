@@ -990,7 +990,12 @@ void GrDrawContext::internalDrawPath(const GrClip& clip,
             if (!tmpPath.isValid()) {
                 tmpPath.init();
             }
-            dashlessStrokeInfo.setResScale(SkScalarAbs(viewMatrix.getMaxScale()));
+            SkScalar scale = SkScalarAbs(viewMatrix.getMaxScale());
+            if (!SkScalarIsFinite(scale)) {
+                SkDebugf("View matrix scale is not finite.\n");
+                return;
+            }
+            dashlessStrokeInfo.setResScale(scale);
             if (!dashlessStrokeInfo.applyToPath(tmpPath.get(), *pathPtr)) {
                 return;
             }
