@@ -25,7 +25,7 @@ class TaskbarPreviewButton : public nsITaskbarPreviewButton, public nsSupportsWe
 {
   virtual ~TaskbarPreviewButton();
 
-public:
+public: 
   TaskbarPreviewButton(TaskbarWindowPreview* preview, uint32_t index);
 
   NS_DECL_ISUPPORTS

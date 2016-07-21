@@ -125,12 +125,12 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   mIsChecked = aIsChecked;
-
+  
   // update the content model. This will also handle unchecking our siblings
   // if we are a radiomenu
-  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
+  mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, 
                     mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"), true);
-
+  
   // update native menu item
   if (mIsChecked)
     [mNativeMenuItem setState:NSOnState];
@@ -217,14 +217,14 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
   uint32_t count = parent->GetChildCount();
   for (uint32_t i = 0; i < count; i++) {
     nsIContent *sibling = parent->GetChildAt(i);
-    if (sibling) {
+    if (sibling) {      
       if (sibling != inCheckedContent) { // skip this node
         // if the current sibling is in the same group, clear it
         if (sibling->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                  myGroupName, eCaseMatters))
           sibling->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, NS_LITERAL_STRING("false"), true);
       }
-    }
+    }    
   }
 }
 
@@ -289,7 +289,7 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
 
   if (!aContent)
     return;
-
+  
   if (aContent == mContent) { // our own content node changed
     if (aAttribute == nsGkAtoms::checked) {
       // if we're a radio menu, uncheck our sibling radio items. No need to
@@ -330,7 +330,7 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, menuDisabled);
       if (!commandDisabled.Equals(menuDisabled)) {
         // The menu's disabled state needs to be updated to match the command.
-        if (commandDisabled.IsEmpty())
+        if (commandDisabled.IsEmpty()) 
           mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
         else
           mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandDisabled, true);
