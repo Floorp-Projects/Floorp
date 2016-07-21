@@ -207,7 +207,7 @@ nsHTMLScrollFrame::GetType() const
 
 namespace mozilla {
 
-struct MOZ_STACK_CLASS ScrollReflowState {
+struct MOZ_STACK_CLASS ScrollReflowInput {
   const ReflowInput& mReflowState;
   nsBoxLayoutState mBoxState;
   ScrollbarStyles mStyles;
@@ -226,7 +226,7 @@ struct MOZ_STACK_CLASS ScrollReflowState {
   // Whether we decided to show the vertical scrollbar
   bool mShowVScrollbar;
 
-  ScrollReflowState(nsIScrollableFrame* aFrame,
+  ScrollReflowInput(nsIScrollableFrame* aFrame,
                     const ReflowInput& aState) :
     mReflowState(aState),
     // mBoxState is just used for scrollbars so we don't need to
@@ -239,7 +239,7 @@ struct MOZ_STACK_CLASS ScrollReflowState {
 } // namespace mozilla
 
 // XXXldb Can this go away?
-static nsSize ComputeInsideBorderSize(ScrollReflowState* aState,
+static nsSize ComputeInsideBorderSize(ScrollReflowInput* aState,
                                       const nsSize& aDesiredInsideBorderSize)
 {
   // aDesiredInsideBorderSize is the frame size; i.e., it includes
@@ -298,7 +298,7 @@ GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize* aMin,
  * whether the horizontal and/or vertical scrollbars are present,
  * compute the resulting layout and return true if the layout is
  * consistent. If the layout is consistent then we fill in the
- * computed fields of the ScrollReflowState.
+ * computed fields of the ScrollReflowInput.
  *
  * The layout is consistent when both scrollbars are showing if and only
  * if they should be showing. A horizontal scrollbar should be showing if all
@@ -315,7 +315,7 @@ GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize* aMin,
  * @param aForce if true, then we just assume the layout is consistent.
  */
 bool
-nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
+nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
                              nsHTMLReflowMetrics* aKidMetrics,
                              bool aAssumeHScroll, bool aAssumeVScroll,
                              bool aForce)
@@ -432,7 +432,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
 // Currently this will only behave as expected for horizontal writing modes.
 // (See bug 1175509.)
 bool
-nsHTMLScrollFrame::ScrolledContentDependsOnHeight(ScrollReflowState* aState)
+nsHTMLScrollFrame::ScrolledContentDependsOnHeight(ScrollReflowInput* aState)
 {
   // Return true if ReflowScrolledFrame is going to do something different
   // based on the presence of a horizontal scrollbar.
@@ -444,7 +444,7 @@ nsHTMLScrollFrame::ScrolledContentDependsOnHeight(ScrollReflowState* aState)
 }
 
 void
-nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
+nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
                                        bool aAssumeHScroll,
                                        bool aAssumeVScroll,
                                        nsHTMLReflowMetrics* aMetrics,
@@ -587,7 +587,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
 }
 
 bool
-nsHTMLScrollFrame::GuessHScrollbarNeeded(const ScrollReflowState& aState)
+nsHTMLScrollFrame::GuessHScrollbarNeeded(const ScrollReflowInput& aState)
 {
   if (aState.mStyles.mHorizontal != NS_STYLE_OVERFLOW_AUTO)
     // no guessing required
@@ -597,7 +597,7 @@ nsHTMLScrollFrame::GuessHScrollbarNeeded(const ScrollReflowState& aState)
 }
 
 bool
-nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
+nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowInput& aState)
 {
   if (aState.mStyles.mVertical != NS_STYLE_OVERFLOW_AUTO)
     // no guessing required
@@ -649,7 +649,7 @@ nsHTMLScrollFrame::InInitialReflow() const
 }
 
 void
-nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
+nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
                                   const nsHTMLReflowMetrics& aDesiredSize)
 {
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.GetWritingMode(), aDesiredSize.mFlags);
@@ -723,7 +723,7 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
 }
 
 void
-nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState,
+nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowInput& aState,
                                    const nsPoint& aScrollPosition)
 {
   nsIFrame *scrolledFrame = mHelper.mScrolledFrame;
@@ -844,7 +844,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
 
   mHelper.HandleScrollbarStyleSwitching();
 
-  ScrollReflowState state(this, aReflowState);
+  ScrollReflowInput state(this, aReflowState);
   // sanity check: ensure that if we have no scrollbar, we treat it
   // as hidden.
   if (!mHelper.mVScrollbarBox || mHelper.mNeverHasVerticalScrollbar)

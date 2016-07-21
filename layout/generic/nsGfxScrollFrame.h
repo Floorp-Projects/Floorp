@@ -32,7 +32,7 @@ class nsPresState;
 class nsIScrollPositionListener;
 
 namespace mozilla {
-struct ScrollReflowState;
+struct ScrollReflowInput;
 namespace layers {
 class Layer;
 } // namespace layers
@@ -652,7 +652,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 public:
   typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
   typedef mozilla::CSSIntPoint CSSIntPoint;
-  typedef mozilla::ScrollReflowState ScrollReflowState;
+  typedef mozilla::ScrollReflowInput ScrollReflowInput;
   friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
                                                   nsStyleContext* aContext,
                                                   bool aIsRoot);
@@ -674,19 +674,19 @@ public:
     mHelper.BuildDisplayList(aBuilder, aDirtyRect, aLists);
   }
 
-  bool TryLayout(ScrollReflowState* aState,
+  bool TryLayout(ScrollReflowInput* aState,
                    nsHTMLReflowMetrics* aKidMetrics,
                    bool aAssumeVScroll, bool aAssumeHScroll,
                    bool aForce);
-  bool ScrolledContentDependsOnHeight(ScrollReflowState* aState);
-  void ReflowScrolledFrame(ScrollReflowState* aState,
+  bool ScrolledContentDependsOnHeight(ScrollReflowInput* aState);
+  void ReflowScrolledFrame(ScrollReflowInput* aState,
                            bool aAssumeHScroll,
                            bool aAssumeVScroll,
                            nsHTMLReflowMetrics* aMetrics,
                            bool aFirstPass);
-  void ReflowContents(ScrollReflowState* aState,
+  void ReflowContents(ScrollReflowInput* aState,
                       const nsHTMLReflowMetrics& aDesiredSize);
-  void PlaceScrollArea(const ScrollReflowState& aState,
+  void PlaceScrollArea(const ScrollReflowInput& aState,
                        const nsPoint& aScrollPosition);
   nscoord GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext);
 
@@ -1023,8 +1023,8 @@ protected:
   void SetSuppressScrollbarUpdate(bool aSuppress) {
     mHelper.mSupppressScrollbarUpdate = aSuppress;
   }
-  bool GuessHScrollbarNeeded(const ScrollReflowState& aState);
-  bool GuessVScrollbarNeeded(const ScrollReflowState& aState);
+  bool GuessHScrollbarNeeded(const ScrollReflowInput& aState);
+  bool GuessVScrollbarNeeded(const ScrollReflowInput& aState);
 
   bool IsScrollbarUpdateSuppressed() const {
     return mHelper.mSupppressScrollbarUpdate;
