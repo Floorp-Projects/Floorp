@@ -24,6 +24,7 @@ class BlockReflowInput;
 class nsBlockReflowContext {
   using BlockReflowInput = mozilla::BlockReflowInput;
   using ReflowInput = mozilla::ReflowInput;
+  using nsHTMLReflowMetrics = mozilla::nsHTMLReflowMetrics;
 
 public:
   nsBlockReflowContext(nsPresContext* aPresContext,
