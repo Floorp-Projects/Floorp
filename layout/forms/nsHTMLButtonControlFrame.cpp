@@ -185,7 +185,7 @@ nsHTMLButtonControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 void
 nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
                                  nsHTMLReflowMetrics& aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  nsReflowStatus& aStatus)
 {
   MarkInReflow();
@@ -242,9 +242,9 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 // focus border and padding that we're using. (This lets us provide a more
 // appropriate content-box size for descendents' percent sizes to resolve
 // against.)
-static nsHTMLReflowState
+static ReflowInput
 CloneReflowStateWithReducedContentBox(
-  const nsHTMLReflowState& aButtonReflowState,
+  const ReflowInput& aButtonReflowState,
   const nsMargin& aFocusPadding)
 {
   nscoord adjustedWidth =
@@ -258,7 +258,7 @@ CloneReflowStateWithReducedContentBox(
     adjustedHeight = std::max(0, adjustedHeight);
   }
 
-  nsHTMLReflowState clone(aButtonReflowState);
+  ReflowInput clone(aButtonReflowState);
   clone.SetComputedWidth(adjustedWidth);
   clone.SetComputedHeight(adjustedHeight);
 
@@ -268,7 +268,7 @@ CloneReflowStateWithReducedContentBox(
 void
 nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                                nsHTMLReflowMetrics& aButtonDesiredSize,
-                                               const nsHTMLReflowState& aButtonReflowState,
+                                               const ReflowInput& aButtonReflowState,
                                                nsIFrame* aFirstKid)
 {
   WritingMode wm = GetWritingMode();
@@ -315,11 +315,11 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
 
   // Give child a clone of the button's reflow state, with height/width reduced
   // by focusPadding, so that descendants with height:100% don't protrude.
-  nsHTMLReflowState adjustedButtonReflowState =
+  ReflowInput adjustedButtonReflowState =
     CloneReflowStateWithReducedContentBox(aButtonReflowState,
                                           focusPadding.GetPhysicalMargin(wm));
 
-  nsHTMLReflowState contentsReflowState(aPresContext,
+  ReflowInput contentsReflowState(aPresContext,
                                         adjustedButtonReflowState,
                                         aFirstKid, availSize);
 

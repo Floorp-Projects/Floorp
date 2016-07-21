@@ -28,7 +28,7 @@ using namespace mozilla::layout;
 static bool sFloatFragmentsInsideColumnEnabled;
 static bool sFloatFragmentsInsideColumnPrefCached;
 
-nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
+nsBlockReflowState::nsBlockReflowState(const ReflowInput& aReflowState,
                                        nsPresContext* aPresContext,
                                        nsBlockFrame* aFrame,
                                        bool aBStartMarginRoot,
@@ -676,7 +676,7 @@ nsBlockReflowState::CanPlaceFloat(nscoord aFloatISize,
 // has block-size:auto, and we'll need to actually reflow it to find out
 // how much inline-size it will occupy in the containing block's mode.
 static nscoord
-FloatMarginISize(const nsHTMLReflowState& aCBReflowState,
+FloatMarginISize(const ReflowInput& aCBReflowState,
                  nscoord aFloatAvailableISize,
                  nsIFrame *aFloat,
                  const nsCSSOffsetState& aFloatOffsetState)
@@ -952,7 +952,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
                       floatMargin.BStart(wm) + floatPos.B(wm));
 
   // If float is relatively positioned, factor that in as well
-  nsHTMLReflowState::ApplyRelativePositioning(aFloat, wm, floatOffsets,
+  ReflowInput::ApplyRelativePositioning(aFloat, wm, floatOffsets,
                                               &origin, ContainerSize());
 
   // Position the float and make sure and views are properly

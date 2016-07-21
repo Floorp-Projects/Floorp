@@ -325,7 +325,7 @@ public:
    * has changed.  For example, a change in the width of the frame may require
    * all of its children to be reflowed (even those without dirty bits set on
    * them), whereas a change in its height might not.
-   * (nsHTMLReflowState::ShouldReflowAllKids may be helpful in deciding whether
+   * (ReflowInput::ShouldReflowAllKids may be helpful in deciding whether
    * to reflow all the children, but for some frame types it might result in
    * over-reflow.)
    *
@@ -334,10 +334,10 @@ public:
    */
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
   virtual void DidReflow(nsPresContext*           aPresContext,
-                         const nsHTMLReflowState* aReflowState,
+                         const ReflowInput* aReflowState,
                          nsDidReflowStatus        aStatus) override;
 
   /**
@@ -347,12 +347,12 @@ public:
    */
   void ReflowAbsoluteFrames(nsPresContext*           aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
+                            const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus,
                             bool                     aConstrainBSize = true);
   void FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
                                       nsHTMLReflowMetrics&     aDesiredSize,
-                                      const nsHTMLReflowState& aReflowState,
+                                      const ReflowInput& aReflowState,
                                       nsReflowStatus&          aStatus,
                                       bool                     aConstrainBSize = true);
 
@@ -363,7 +363,7 @@ public:
    *
    * It's necessary to use PushDirtyBitToAbsoluteFrames() when you plan to
    * reflow this frame's absolutely-positioned children after the dirty bit on
-   * this frame has already been cleared, which prevents nsHTMLReflowState from
+   * this frame has already been cleared, which prevents ReflowInput from
    * propagating the dirty bit normally. This situation generally only arises
    * when a multipass layout algorithm is used.
    */
@@ -431,7 +431,7 @@ public:
   // the reflow status, and returns true. Otherwise, the frame is
   // unmarked "unflowable" and the metrics and reflow status are not
   // touched and false is returned.
-  bool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
+  bool IsFrameTreeTooDeep(const ReflowInput& aReflowState,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus);
 
@@ -443,7 +443,7 @@ public:
   /**
    * @return true if we should avoid a page/column break in this frame.
    */
-  bool ShouldAvoidBreakInside(const nsHTMLReflowState& aReflowState) const {
+  bool ShouldAvoidBreakInside(const ReflowInput& aReflowState) const {
     return !aReflowState.mFlags.mIsTopOfPage &&
            NS_STYLE_PAGE_BREAK_AVOID == StyleDisplay()->mBreakInside &&
            !GetPrevInFlow();
@@ -480,7 +480,7 @@ public:
   // Display Reflow Debugging 
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
-                                  const nsHTMLReflowState& aReflowState);
+                                  const ReflowInput& aReflowState);
   static void* DisplayLayoutEnter(nsIFrame* aFrame);
   static void* DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
                                           const char* aType);
@@ -769,7 +769,7 @@ public:
   struct DR_cookie {
     DR_cookie(nsPresContext*          aPresContext,
               nsIFrame*                aFrame, 
-              const mozilla::nsHTMLReflowState& aReflowState,
+              const mozilla::ReflowInput& aReflowState,
               nsHTMLReflowMetrics&     aMetrics,
               nsReflowStatus&          aStatus);     
     ~DR_cookie();
@@ -777,7 +777,7 @@ public:
 
     nsPresContext*          mPresContext;
     nsIFrame*                mFrame;
-    const mozilla::nsHTMLReflowState& mReflowState;
+    const mozilla::ReflowInput& mReflowState;
     nsHTMLReflowMetrics&     mMetrics;
     nsReflowStatus&          mStatus;    
     void*                    mValue;
@@ -814,14 +814,14 @@ public:
   };
 
   struct DR_init_constraints_cookie {
-    DR_init_constraints_cookie(nsIFrame* aFrame, mozilla::nsHTMLReflowState* aState,
+    DR_init_constraints_cookie(nsIFrame* aFrame, mozilla::ReflowInput* aState,
                                nscoord aCBWidth, nscoord aCBHeight,
                                const nsMargin* aBorder,
                                const nsMargin* aPadding);
     ~DR_init_constraints_cookie();
 
     nsIFrame* mFrame;
-    mozilla::nsHTMLReflowState* mState;
+    mozilla::ReflowInput* mState;
     void* mValue;
   };
 
@@ -838,11 +838,11 @@ public:
   };
 
   struct DR_init_type_cookie {
-    DR_init_type_cookie(nsIFrame* aFrame, mozilla::nsHTMLReflowState* aState);
+    DR_init_type_cookie(nsIFrame* aFrame, mozilla::ReflowInput* aState);
     ~DR_init_type_cookie();
 
     nsIFrame* mFrame;
-    mozilla::nsHTMLReflowState* mState;
+    mozilla::ReflowInput* mState;
     void* mValue;
   };
 

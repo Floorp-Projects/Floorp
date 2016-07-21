@@ -96,7 +96,7 @@ public:
     */
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   void DidResize();
@@ -125,7 +125,7 @@ public:
 
   // calculate the bsize, considering content bsize of the 
   // cells and the style bsize of the row and cells, excluding pct bsizes
-  nscoord CalcBSize(const nsHTMLReflowState& aReflowState);
+  nscoord CalcBSize(const ReflowInput& aReflowState);
 
   // Support for cells with 'vertical-align: baseline'.
 
@@ -148,7 +148,7 @@ public:
 
   /** used by row group frame code */
   nscoord ReflowCellFrame(nsPresContext*           aPresContext,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           bool                     aIsTopOfPage,
                           nsTableCellFrame*        aCellFrame,
                           nscoord                  aAvailableBSize,
@@ -263,11 +263,11 @@ protected:
                             bool                        aBorderCollapse,
                             nsTableCellReflowState&     aReflowState);
   
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 
   // row-specific methods
 
-  nscoord ComputeCellXOffset(const nsHTMLReflowState& aState,
+  nscoord ComputeCellXOffset(const ReflowInput& aState,
                              nsIFrame*                aKidFrame,
                              const nsMargin&          aKidMargin) const;
   /**
@@ -276,7 +276,7 @@ protected:
    */
   void ReflowChildren(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsTableFrame&            aTableFrame,
                       nsReflowStatus&          aStatus);
 

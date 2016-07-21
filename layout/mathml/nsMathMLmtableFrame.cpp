@@ -822,7 +822,7 @@ nsMathMLmtableWrapperFrame::GetRowFrameAt(int32_t aRowIndex)
 void
 nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState,
+                                   const ReflowInput& aReflowState,
                                    nsReflowStatus&          aStatus)
 {
   nsAutoString value;
@@ -1317,7 +1317,7 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 void
 nsMathMLmtdInnerFrame::Reflow(nsPresContext*           aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               nsReflowStatus&          aStatus)
 {
   // Let the base class do the reflow

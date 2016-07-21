@@ -32,7 +32,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
@@ -127,7 +127,7 @@ nsImageControlFrame::GetType() const
 void
 nsImageControlFrame::Reflow(nsPresContext*           aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
+                            const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame");

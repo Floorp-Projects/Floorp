@@ -92,7 +92,7 @@ void nsTableColFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
 void
 nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
+                                  const ReflowInput& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
   MarkInReflow();

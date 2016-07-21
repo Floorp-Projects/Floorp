@@ -248,7 +248,7 @@ public:
                                            nscoord* aXMost) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
   virtual bool CanContinueTextRun() const override;
   // Method that is called for a text frame that is logically

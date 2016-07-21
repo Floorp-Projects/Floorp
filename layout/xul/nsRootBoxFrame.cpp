@@ -68,7 +68,7 @@ public:
 
   virtual void Reflow(nsPresContext*          aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                WidgetGUIEvent* aEvent,
@@ -162,7 +162,7 @@ int32_t gReflows = 0;
 void
 nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
-                       const nsHTMLReflowState& aReflowState,
+                       const ReflowInput& aReflowState,
                        nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame");

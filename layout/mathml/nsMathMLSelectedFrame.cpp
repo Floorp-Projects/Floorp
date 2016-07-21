@@ -135,7 +135,7 @@ nsMathMLSelectedFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 void
 nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -149,7 +149,7 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+    ReflowInput childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, aDesiredSize,
                 childReflowState, aStatus);

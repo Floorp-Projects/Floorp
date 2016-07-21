@@ -59,7 +59,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
@@ -160,7 +160,7 @@ protected:
    */
   void ReflowTextControlChild(nsIFrame*                aFrame,
                               nsPresContext*           aPresContext,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               nsReflowStatus&          aStatus,
                               nsHTMLReflowMetrics& aParentDesiredSize);
 

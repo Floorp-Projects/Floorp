@@ -28,7 +28,7 @@ using namespace mozilla;
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
-                                           const nsHTMLReflowState& aParentRS)
+                                           const ReflowInput& aParentRS)
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
     mSpace(aParentRS.GetWritingMode()),
@@ -50,7 +50,7 @@ static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
 }
 
 bool
-nsBlockReflowContext::ComputeCollapsedBStartMargin(const nsHTMLReflowState& aRS,
+nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRS,
                                                    nsCollapsingMargin* aMargin,
                                                    nsIFrame* aClearanceFrame,
                                                    bool* aMayNeedRetry,
@@ -152,18 +152,18 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const nsHTMLReflowState& aRS,
           // we drilled down through a block wrapper. At the moment
           // we can only drill down one level so we only have to support
           // one extra reflow state.
-          const nsHTMLReflowState* outerReflowState = &aRS;
+          const ReflowInput* outerReflowState = &aRS;
           if (frame != aRS.frame) {
             NS_ASSERTION(frame->GetParent() == aRS.frame,
                          "Can only drill through one level of block wrapper");
             LogicalSize availSpace = aRS.ComputedSize(frame->GetWritingMode());
-            outerReflowState = new nsHTMLReflowState(prescontext,
+            outerReflowState = new ReflowInput(prescontext,
                                                      aRS, frame, availSpace);
           }
           {
             LogicalSize availSpace =
               outerReflowState->ComputedSize(kid->GetWritingMode());
-            nsHTMLReflowState innerReflowState(prescontext,
+            ReflowInput innerReflowState(prescontext,
                                                *outerReflowState, kid,
                                                availSpace);
             // Record that we're being optimistic by assuming the kid
@@ -186,7 +186,7 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const nsHTMLReflowState& aRS,
             }
           }
           if (outerReflowState != &aRS) {
-            delete const_cast<nsHTMLReflowState*>(outerReflowState);
+            delete const_cast<ReflowInput*>(outerReflowState);
           }
         }
         if (!isEmpty) {
@@ -227,7 +227,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
                                   nscoord             aClearance,
                                   bool                aIsAdjacentWithBStart,
                                   nsLineBox*          aLine,
-                                  nsHTMLReflowState&  aFrameRS,
+                                  ReflowInput&  aFrameRS,
                                   nsReflowStatus&     aFrameReflowStatus,
                                   nsBlockReflowState& aState)
 {
@@ -357,7 +357,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
  * collapse margins (CSS2 8.3.1). Also apply relative positioning.
  */
 bool
-nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState&  aReflowState,
+nsBlockReflowContext::PlaceBlock(const ReflowInput&  aReflowState,
                                  bool                      aForceFit,
                                  nsLineBox*                aLine,
                                  nsCollapsingMargin&       aBEndMarginResult,

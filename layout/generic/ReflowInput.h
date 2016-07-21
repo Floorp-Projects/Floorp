@@ -5,8 +5,8 @@
 
 /* struct containing the input to nsIFrame::Reflow */
 
-#ifndef mozilla_nsHTMLReflowState_h
-#define mozilla_nsHTMLReflowState_h
+#ifndef mozilla_ReflowInput_h
+#define mozilla_ReflowInput_h
 
 #include "nsMargin.h"
 #include "nsStyleCoord.h"
@@ -96,7 +96,7 @@ typedef uint32_t  nsCSSFrameType;
 
 namespace mozilla {
 
-// A base class of nsHTMLReflowState that computes only the padding,
+// A base class of ReflowInput that computes only the padding,
 // border, and margin, since those values are needed more often.
 struct nsCSSOffsetState {
 public:
@@ -314,10 +314,10 @@ protected:
  *
  * @see nsIFrame#Reflow()
  */
-struct nsHTMLReflowState : public nsCSSOffsetState {
+struct ReflowInput : public nsCSSOffsetState {
   // the reflow states are linked together. this is the pointer to the
   // parent's reflow state
-  const nsHTMLReflowState* mParentReflowState;
+  const ReflowInput* mParentReflowState;
 
   // pointer to the float manager associated with this area
   nsFloatManager* mFloatManager;
@@ -327,7 +327,7 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
 
   // The appropriate reflow state for the containing block (for
   // percentage widths, etc.) of this reflow state's frame.
-  const nsHTMLReflowState *mCBReflowState;
+  const ReflowInput *mCBReflowState;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
@@ -343,7 +343,7 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // This takes on an arbitrary value the first time a block is reflowed
   nscoord mBlockDelta;
 
-  // If an nsHTMLReflowState finds itself initialized with an unconstrained
+  // If an ReflowInput finds itself initialized with an unconstrained
   // inline-size, it will look up its parentReflowState chain for a state
   // with an orthogonal writing mode and a non-NS_UNCONSTRAINEDSIZE value for
   // orthogonal limit; when it finds such a reflow-state, it will use its
@@ -648,7 +648,7 @@ public:
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
-  nsHTMLReflowState(nsPresContext*              aPresContext,
+  ReflowInput(nsPresContext*              aPresContext,
                     nsIFrame*                   aFrame,
                     nsRenderingContext*         aRenderingContext,
                     const mozilla::LogicalSize& aAvailableSpace,
@@ -659,7 +659,7 @@ public:
    * state are copied from the parent's reflow state. The remainder is computed.
    *
    * @param aPresContext Must be equal to aFrame->PresContext().
-   * @param aParentReflowState A reference to an nsHTMLReflowState object that
+   * @param aParentReflowState A reference to an ReflowInput object that
    *        is to be the parent of this object.
    * @param aFrame The frame for whose reflow state is being constructed.
    * @param aAvailableSpace See comments for availableHeight and availableWidth
@@ -670,8 +670,8 @@ public:
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
-  nsHTMLReflowState(nsPresContext*              aPresContext,
-                    const nsHTMLReflowState&    aParentReflowState,
+  ReflowInput(nsPresContext*              aPresContext,
+                    const ReflowInput&    aParentReflowState,
                     nsIFrame*                   aFrame,
                     const mozilla::LogicalSize& aAvailableSpace,
                     const mozilla::LogicalSize* aContainingBlockSize = nullptr,
@@ -739,7 +739,7 @@ public:
 
   mozilla::LogicalSize ComputeContainingBlockRectangle(
          nsPresContext*           aPresContext,
-         const nsHTMLReflowState* aContainingBlockRS) const;
+         const ReflowInput* aContainingBlockRS) const;
 
   /**
    * Apply the mComputed(Min/Max)Width constraints to the content
@@ -905,18 +905,18 @@ public:
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.
   static void* DisplayInitConstraintsEnter(nsIFrame* aFrame,
-                                           nsHTMLReflowState* aState,
+                                           ReflowInput* aState,
                                            nscoord aCBISize,
                                            nscoord aCBBSize,
                                            const nsMargin* aBorder,
                                            const nsMargin* aPadding);
   static void DisplayInitConstraintsExit(nsIFrame* aFrame,
-                                         nsHTMLReflowState* aState,
+                                         ReflowInput* aState,
                                          void* aValue);
   static void* DisplayInitFrameTypeEnter(nsIFrame* aFrame,
-                                         nsHTMLReflowState* aState);
+                                         ReflowInput* aState);
   static void DisplayInitFrameTypeExit(nsIFrame* aFrame,
-                                       nsHTMLReflowState* aState,
+                                       ReflowInput* aState,
                                        void* aValue);
 #endif
 
@@ -947,12 +947,12 @@ protected:
   // (cbrs->frame), though it may differ in inline direction.
   void CalculateHypotheticalPosition(nsPresContext* aPresContext,
                                      nsIFrame* aPlaceholderFrame,
-                                     const nsHTMLReflowState* cbrs,
+                                     const ReflowInput* cbrs,
                                      nsHypotheticalPosition& aHypotheticalPos,
                                      nsIAtom* aFrameType) const;
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
-                               const nsHTMLReflowState* cbrs,
+                               const ReflowInput* cbrs,
                                const mozilla::LogicalSize& aContainingBlockSize,
                                nsIAtom* aFrameType);
 
@@ -974,4 +974,4 @@ protected:
 
 } // namespace mozilla
 
-#endif // mozilla_nsHTMLReflowState_h
+#endif // mozilla_ReflowInput_h

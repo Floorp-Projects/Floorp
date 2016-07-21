@@ -47,7 +47,7 @@ public:
   virtual void
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         const ReflowInput& aReflowState,
          nsReflowStatus&          aStatus) override;
 
   virtual nsQueryFrame::FrameIID GetFrameId() override = 0;

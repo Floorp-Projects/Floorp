@@ -20,7 +20,7 @@ class nsOverflowContinuationTracker;
 //
 // BRS_UNCONSTRAINEDBSIZE is set in the nsBlockReflowState constructor when the
 // frame being reflowed has been given NS_UNCONSTRAINEDSIZE as its available
-// BSize in the nsHTMLReflowState. If set, NS_UNCONSTRAINEDSIZE is passed to
+// BSize in the ReflowInput. If set, NS_UNCONSTRAINEDSIZE is passed to
 // nsLineLayout as the available BSize.
 #define BRS_UNCONSTRAINEDBSIZE    0x00000001
 // BRS_ISBSTARTMARGINROOT is set in the nsBlockReflowState constructor when
@@ -72,13 +72,13 @@ class nsOverflowContinuationTracker;
 #define BRS_LASTFLAG              BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED
 
 // nsBlockReflowState contains additional reflow state information that the
-// block frame uses along with nsHTMLReflowState. Like nsHTMLReflowState, this
+// block frame uses along with ReflowInput. Like ReflowInput, this
 // is read-only data that is passed down from a parent frame to its children.
 class nsBlockReflowState {
-  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+  using ReflowInput = mozilla::ReflowInput;
 
 public:
-  nsBlockReflowState(const nsHTMLReflowState& aReflowState,
+  nsBlockReflowState(const ReflowInput& aReflowState,
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      bool aBStartMarginRoot, bool aBEndMarginRoot,
@@ -207,7 +207,7 @@ public:
 
   nsPresContext* mPresContext;
 
-  const nsHTMLReflowState& mReflowState;
+  const ReflowInput& mReflowState;
 
   nsFloatManager* mFloatManager;
 

@@ -162,15 +162,15 @@ public:
 
   // Return true if aParentReflowState.frame or any of its ancestors within
   // the containing table have non-auto bsize. (e.g. pct or fixed bsize)
-  static bool AncestorsHaveStyleBSize(const nsHTMLReflowState& aParentReflowState);
+  static bool AncestorsHaveStyleBSize(const ReflowInput& aParentReflowState);
 
   // See if a special bsize reflow will occur due to having a pct bsize when
   // the pct bsize basis may not yet be valid.
-  static void CheckRequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
+  static void CheckRequestSpecialBSizeReflow(const ReflowInput& aReflowState);
 
   // Notify the frame and its ancestors (up to the containing table) that a special
   // height reflow will occur.
-  static void RequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState);
+  static void RequestSpecialBSizeReflow(const ReflowInput& aReflowState);
 
   static void RePositionViews(nsIFrame* aFrame);
 
@@ -186,7 +186,7 @@ public:
   static void UnregisterPositionedTablePart(nsIFrame* aFrame,
                                             nsIFrame* aDestructRoot);
 
-  nsPoint GetFirstSectionOrigin(const nsHTMLReflowState& aReflowState) const;
+  nsPoint GetFirstSectionOrigin(const ReflowInput& aReflowState) const;
   /*
    * Notification that aAttribute has changed for content inside a table (cell, row, etc)
    */
@@ -216,7 +216,7 @@ public:
 
   // Get the offset from the border box to the area where the row groups fit
   LogicalMargin GetChildAreaOffset(const WritingMode aWM,
-                                   const nsHTMLReflowState* aReflowState) const;
+                                   const ReflowInput* aReflowState) const;
 
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
@@ -369,11 +369,11 @@ public:
     */
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   void ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
-                   const nsHTMLReflowState& aReflowState,
+                   const ReflowInput& aReflowState,
                    nscoord                  aAvailBSize,
                    nsIFrame*&               aLastChildReflowed,
                    nsReflowStatus&          aStatus);
@@ -613,9 +613,9 @@ protected:
   /** destructor, responsible for mColumnLayoutData */
   virtual ~nsTableFrame();
 
-  void InitChildReflowState(nsHTMLReflowState& aReflowState);
+  void InitChildReflowState(ReflowInput& aReflowState);
 
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 
 public:
   bool IsRowInserted() const;
@@ -664,7 +664,7 @@ protected:
    */
   void FixupPositionedTableParts(nsPresContext*           aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState);
+                                 const ReflowInput& aReflowState);
 
   // Clears the list of positioned table parts.
   void ClearAllPositionedTableParts();
@@ -689,19 +689,19 @@ public:
 
   // calculate the computed block-size of aFrame including its border and
   // padding given its reflow state.
-  nscoord CalcBorderBoxBSize(const nsHTMLReflowState& aReflowState);
+  nscoord CalcBorderBoxBSize(const ReflowInput& aReflowState);
 
 protected:
 
   // update the  desired block-size of this table taking into account the current
   // reflow state, the table attributes and the content driven rowgroup bsizes
   // this function can change the overflow area
-  void CalcDesiredBSize(const nsHTMLReflowState& aReflowState,
+  void CalcDesiredBSize(const ReflowInput& aReflowState,
                         nsHTMLReflowMetrics& aDesiredSize);
 
   // The following is a helper for CalcDesiredBSize
 
-  void DistributeBSizeToRows(const nsHTMLReflowState& aReflowState,
+  void DistributeBSizeToRows(const ReflowInput& aReflowState,
                              nscoord                  aAmount);
 
   void PlaceChild(nsTableReflowState&  aReflowState,

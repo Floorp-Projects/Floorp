@@ -95,7 +95,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 void
 nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
+                            const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus)
 {
   MarkInReflow();

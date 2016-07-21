@@ -106,7 +106,7 @@ nsNumberControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 void
 nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
+                             const ReflowInput& aReflowState,
                              nsReflowStatus& aStatus)
 {
   MarkInReflow();
@@ -162,7 +162,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     LogicalSize availSize = aReflowState.ComputedSize(wrapperWM);
     availSize.BSize(wrapperWM) = NS_UNCONSTRAINEDSIZE;
 
-    nsHTMLReflowState wrapperReflowState(aPresContext, aReflowState,
+    ReflowInput wrapperReflowState(aPresContext, aReflowState,
                                          outerWrapperFrame, availSize);
 
     // Convert wrapper margin into my own writing-mode (in case it differs):

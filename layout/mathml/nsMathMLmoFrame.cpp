@@ -945,7 +945,7 @@ nsMathMLmoFrame::SetInitialChildList(ChildListID     aListID,
 void
 nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
   // certain values use units that depend on our style context, so

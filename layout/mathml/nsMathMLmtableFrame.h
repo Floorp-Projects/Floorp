@@ -33,7 +33,7 @@ public:
   virtual void
   Reflow(nsPresContext*           aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         const ReflowInput& aReflowState,
          nsReflowStatus&          aStatus) override;
 
   virtual nsresult
@@ -303,7 +303,7 @@ public:
   virtual void
   Reflow(nsPresContext*           aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
+         const ReflowInput& aReflowState,
          nsReflowStatus&          aStatus) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override

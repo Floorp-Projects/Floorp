@@ -105,7 +105,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
   bool GetVisibility() { return mVisibility; }
@@ -154,7 +154,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
 protected:
@@ -563,7 +563,7 @@ int32_t nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
 
 void
 nsHTMLFramesetFrame::GetDesiredSize(nsPresContext*           aPresContext,
-                                    const nsHTMLReflowState& aReflowState,
+                                    const ReflowInput& aReflowState,
                                     nsHTMLReflowMetrics&     aDesiredSize)
 {
   WritingMode wm = aReflowState.GetWritingMode();
@@ -682,13 +682,13 @@ nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       nsPresContext*           aPresContext,
-                                      const nsHTMLReflowState& aReflowState,
+                                      const ReflowInput& aReflowState,
                                       nsPoint&                 aOffset,
                                       nsSize&                  aSize,
                                       nsIntPoint*              aCellIndex)
 {
   // reflow the child
-  nsHTMLReflowState reflowState(aPresContext, aReflowState, aChild,
+  ReflowInput reflowState(aPresContext, aReflowState, aChild,
                                 LogicalSize(aChild->GetWritingMode(), aSize));
   reflowState.SetComputedWidth(std::max(0, aSize.width - reflowState.ComputedPhysicalBorderPadding().LeftRight()));
   reflowState.SetComputedHeight(std::max(0, aSize.height - reflowState.ComputedPhysicalBorderPadding().TopBottom()));
@@ -793,7 +793,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
 void
 nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
+                            const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -1373,7 +1373,7 @@ void nsHTMLFramesetBorderFrame::SetColor(nscolor aColor)
 void
 nsHTMLFramesetBorderFrame::Reflow(nsPresContext*           aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
+                                  const ReflowInput& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFramesetBorderFrame");
@@ -1588,7 +1588,7 @@ nscoord nsHTMLFramesetBlankFrame::GetIntrinsicBSize()
 void
 nsHTMLFramesetBlankFrame::Reflow(nsPresContext*           aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFramesetBlankFrame");

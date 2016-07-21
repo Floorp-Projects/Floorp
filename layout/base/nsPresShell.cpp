@@ -2663,7 +2663,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
     if (aIntrinsicDirty == eStyleChange) {
       // Mark all descendants dirty (using an nsTArray stack rather than
       // recursion).
-      // Note that nsHTMLReflowState::InitResizeFlags has some similar
+      // Note that ReflowInput::InitResizeFlags has some similar
       // code; see comments there for how and why it differs.
       AutoTArray<nsIFrame*, 32> stack;
       stack.AppendElement(subtreeRoot);
@@ -9545,8 +9545,8 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   // Don't pass size directly to the reflow state, since a
   // constrained height implies page/column breaking.
   LogicalSize reflowSize(wm, size.ISize(wm), NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowState reflowState(mPresContext, target, &rcx, reflowSize,
-                                nsHTMLReflowState::CALLER_WILL_INIT);
+  ReflowInput reflowState(mPresContext, target, &rcx, reflowSize,
+                                ReflowInput::CALLER_WILL_INIT);
   reflowState.mOrthogonalLimit = size.BSize(wm);
 
   if (rootFrame == target) {
@@ -9558,7 +9558,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     // resize in the block direction, since it changes the meaning of
     // percentage block-sizes even if no block-sizes actually changed.
     // The same applies when we reflow again after that computation. This is
-    // an unusual case, and isn't caught by nsHTMLReflowState::InitResizeFlags.
+    // an unusual case, and isn't caught by ReflowInput::InitResizeFlags.
     bool hasUnconstrainedBSize = size.BSize(wm) == NS_UNCONSTRAINEDSIZE;
 
     if (hasUnconstrainedBSize || mLastRootReflowHadUnconstrainedBSize) {

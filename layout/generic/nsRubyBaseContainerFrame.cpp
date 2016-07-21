@@ -293,14 +293,14 @@ struct nsRubyBaseContainerFrame::ReflowState
   bool mAllowInitialLineBreak;
   bool mAllowLineBreak;
   const AutoRubyTextContainerArray& mTextContainers;
-  const nsHTMLReflowState& mBaseReflowState;
-  const nsTArray<UniquePtr<nsHTMLReflowState>>& mTextReflowStates;
+  const ReflowInput& mBaseReflowState;
+  const nsTArray<UniquePtr<ReflowInput>>& mTextReflowStates;
 };
 
 /* virtual */ void
 nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                  nsHTMLReflowMetrics& aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  nsReflowStatus& aStatus)
 {
   MarkInReflow();
@@ -334,7 +334,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   // Since there are pointers refer to reflow states and line layouts,
   // it is necessary to guarantee that they won't be moved. For this
   // reason, they are wrapped in UniquePtr here.
-  AutoTArray<UniquePtr<nsHTMLReflowState>, RTC_ARRAY_SIZE> reflowStates;
+  AutoTArray<UniquePtr<ReflowInput>, RTC_ARRAY_SIZE> reflowStates;
   AutoTArray<UniquePtr<nsLineLayout>, RTC_ARRAY_SIZE> lineLayouts;
   reflowStates.SetCapacity(rtcCount);
   lineLayouts.SetCapacity(rtcCount);
@@ -347,7 +347,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
       hasSpan = true;
     }
 
-    nsHTMLReflowState* reflowState = new nsHTMLReflowState(
+    ReflowInput* reflowState = new ReflowInput(
       aPresContext, *aReflowState.mParentReflowState, textContainer,
       availSize.ConvertTo(textContainer->GetWritingMode(), lineWM));
     reflowStates.AppendElement(reflowState);
@@ -573,7 +573,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
                                           const RubyColumn& aColumn,
                                           nsReflowStatus& aStatus)
 {
-  const nsHTMLReflowState& baseReflowState = aReflowState.mBaseReflowState;
+  const ReflowInput& baseReflowState = aReflowState.mBaseReflowState;
   const auto& textReflowStates = aReflowState.mTextReflowStates;
   nscoord istart = baseReflowState.mLineLayout->GetCurrentICoord();
 

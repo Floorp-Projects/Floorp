@@ -206,7 +206,7 @@ nsHTMLScrollFrame::GetType() const
 */
 
 struct MOZ_STACK_CLASS ScrollReflowState {
-  const nsHTMLReflowState& mReflowState;
+  const ReflowInput& mReflowState;
   nsBoxLayoutState mBoxState;
   ScrollbarStyles mStyles;
   nsMargin mComputedBorder;
@@ -225,7 +225,7 @@ struct MOZ_STACK_CLASS ScrollReflowState {
   bool mShowVScrollbar;
 
   ScrollReflowState(nsIScrollableFrame* aFrame,
-                    const nsHTMLReflowState& aState) :
+                    const ReflowInput& aState) :
     mReflowState(aState),
     // mBoxState is just used for scrollbars so we don't need to
     // worry about the reflow depth here
@@ -508,11 +508,11 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   nsPresContext* presContext = PresContext();
 
   // Pass false for aInit so we can pass in the correct padding.
-  nsHTMLReflowState
+  ReflowInput
     kidReflowState(presContext, aState->mReflowState,
                    mHelper.mScrolledFrame,
                    LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
-                   nullptr, nsHTMLReflowState::CALLER_WILL_INIT);
+                   nullptr, ReflowInput::CALLER_WILL_INIT);
   const nsMargin physicalPadding = padding.GetPhysicalMargin(wm);
   kidReflowState.Init(presContext, nullptr, nullptr,
                       &physicalPadding);
@@ -831,7 +831,7 @@ GetBrowserRoot(nsIContent* aContent)
 void
 nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus)
 {
   MarkInReflow();

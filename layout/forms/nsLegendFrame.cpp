@@ -50,7 +50,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 void
 nsLegendFrame::Reflow(nsPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsLegendFrame");

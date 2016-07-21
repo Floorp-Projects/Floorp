@@ -760,7 +760,7 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 void
 nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();

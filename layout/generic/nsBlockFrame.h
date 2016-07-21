@@ -251,7 +251,7 @@ public:
    * @param aFinalSize Out parameter for final block-size.
    * @param aConsumed The block-size already consumed by our previous-in-flows.
    */
-  void ComputeFinalBSize(const nsHTMLReflowState&      aReflowState,
+  void ComputeFinalBSize(const ReflowInput&      aReflowState,
                          nsReflowStatus*               aStatus,
                          nscoord                       aContentBSize,
                          const mozilla::LogicalMargin& aBorderPadding,
@@ -260,7 +260,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
@@ -410,7 +410,7 @@ protected:
   // helper for SlideLine and UpdateLineContainerSize
   void MoveChildFramesOfLine(nsLineBox* aLine, nscoord aDeltaBCoord);
 
-  void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
+  void ComputeFinalSize(const ReflowInput& aReflowState,
                         nsBlockReflowState&      aState,
                         nsHTMLReflowMetrics&     aMetrics,
                         nscoord*                 aBottomEdgeOfChildren);

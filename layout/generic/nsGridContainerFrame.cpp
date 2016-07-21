@@ -67,7 +67,7 @@ ReparentFrames(nsFrameList& aFrameList, nsContainerFrame* aOldParent,
 }
 
 static nscoord
-ClampToCSSMaxBSize(nscoord aSize, const nsHTMLReflowState* aReflowState)
+ClampToCSSMaxBSize(nscoord aSize, const ReflowInput* aReflowState)
 {
   auto maxSize = aReflowState->ComputedMaxBSize();
   if (MOZ_UNLIKELY(maxSize != NS_UNCONSTRAINEDSIZE)) {
@@ -82,7 +82,7 @@ ClampToCSSMaxBSize(nscoord aSize, const nsHTMLReflowState* aReflowState)
 // i.e. we're effectively breaking in our overflow, so we should leave
 // aStatus as is (it will likely be set to OVERFLOW_INCOMPLETE later)).
 static nscoord
-ClampToCSSMaxBSize(nscoord aSize, const nsHTMLReflowState* aReflowState,
+ClampToCSSMaxBSize(nscoord aSize, const ReflowInput* aReflowState,
                    nsReflowStatus* aStatus)
 {
   auto maxSize = aReflowState->ComputedMaxBSize();
@@ -1671,7 +1671,7 @@ struct nsGridContainerFrame::SharedGridData
 struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
 {
   GridReflowState(nsGridContainerFrame*    aFrame,
-                  const nsHTMLReflowState& aRS)
+                  const ReflowInput& aRS)
     : GridReflowState(aFrame, *aRS.rendContext, &aRS, aRS.mStylePosition,
                       aRS.GetWritingMode())
   {}
@@ -1829,7 +1829,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
    * we'll construct a dummy parent reflow state if we need it to calculate
    * min/max-content contributions when sizing tracks.
    */
-  const nsHTMLReflowState* const mReflowState;
+  const ReflowInput* const mReflowState;
   nsRenderingContext& mRenderingContext;
   nsGridContainerFrame* const mFrame;
   SharedGridData* mSharedGridData; // [weak] owned by mFrame's first-in-flow.
@@ -1850,7 +1850,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
 private:
   GridReflowState(nsGridContainerFrame*    aFrame,
                   nsRenderingContext&      aRenderingContext,
-                  const nsHTMLReflowState* aReflowState,
+                  const ReflowInput* aReflowState,
                   const nsStylePosition*   aGridStyle,
                   const WritingMode&       aWM)
     : mIter(aFrame, kPrincipalList)
@@ -2309,7 +2309,7 @@ SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
 static void
 AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
                  bool aSameSide, nscoord aBaselineAdjust, nscoord aCBSize,
-                 const nsHTMLReflowState& aRS, const LogicalSize& aChildSize,
+                 const ReflowInput& aRS, const LogicalSize& aChildSize,
                  LogicalPoint* aPos)
 {
   MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO, "unexpected 'auto' "
@@ -2446,7 +2446,7 @@ SameSide(WritingMode aContainerWM, LogicalSide aContainerSide,
 static void
 AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
           uint8_t aAlignSelf, nscoord aCBSize, const WritingMode aCBWM,
-          const nsHTMLReflowState& aRS, const LogicalSize& aSize,
+          const ReflowInput& aRS, const LogicalSize& aSize,
           LogicalPoint* aPos)
 {
   auto alignSelf = aAlignSelf;
@@ -2480,7 +2480,7 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
 static void
 JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
             uint8_t aJustifySelf, nscoord aCBSize, const WritingMode aCBWM,
-            const nsHTMLReflowState& aRS, const LogicalSize& aSize,
+            const ReflowInput& aRS, const LogicalSize& aSize,
             LogicalPoint* aPos)
 {
   auto justifySelf = aJustifySelf;
@@ -3420,20 +3420,20 @@ nsGridContainerFrame::Tracks::Initialize(
  */
 static nscoord
 MeasuringReflow(nsIFrame*                aChild,
-                const nsHTMLReflowState* aReflowState,
+                const ReflowInput* aReflowState,
                 nsRenderingContext*      aRC,
                 const LogicalSize&       aAvailableSize)
 {
   nsContainerFrame* parent = aChild->GetParent();
   nsPresContext* pc = aChild->PresContext();
-  Maybe<nsHTMLReflowState> dummyParentState;
-  const nsHTMLReflowState* rs = aReflowState;
+  Maybe<ReflowInput> dummyParentState;
+  const ReflowInput* rs = aReflowState;
   if (!aReflowState) {
     MOZ_ASSERT(!parent->HasAnyStateBits(NS_FRAME_IN_REFLOW));
     dummyParentState.emplace(pc, parent, aRC,
                              LogicalSize(parent->GetWritingMode(), 0,
                                          NS_UNCONSTRAINEDSIZE),
-                             nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+                             ReflowInput::DUMMY_PARENT_REFLOW_STATE);
     rs = dummyParentState.ptr();
   }
 #ifdef DEBUG
@@ -3441,9 +3441,9 @@ MeasuringReflow(nsIFrame*                aChild,
   parent->Properties().Set(
     nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
-  nsHTMLReflowState childRS(pc, *rs, aChild, aAvailableSize, nullptr,
-                            nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP |
-                            nsHTMLReflowState::COMPUTE_SIZE_USE_AUTO_BSIZE);
+  ReflowInput childRS(pc, *rs, aChild, aAvailableSize, nullptr,
+                            ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
+                            ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE);
   nsHTMLReflowMetrics childSize(childRS);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
@@ -4564,8 +4564,8 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowState& aState) con
 {
   Maybe<nsGridContainerFrame::Fragmentainer> data;
   WritingMode wm = aState.mWM;
-  const nsHTMLReflowState* gridRS = aState.mReflowState;
-  const nsHTMLReflowState* cbRS = gridRS->mCBReflowState;
+  const ReflowInput* gridRS = aState.mReflowState;
+  const ReflowInput* cbRS = gridRS->mCBReflowState;
   for ( ; cbRS; cbRS = cbRS->mCBReflowState) {
     nsIScrollableFrame* sf = do_QueryFrame(cbRS->frame);
     if (sf) {
@@ -4693,7 +4693,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   }
 
   LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
-  nsHTMLReflowState childRS(pc, *aState.mReflowState, aChild, childCBSize,
+  ReflowInput childRS(pc, *aState.mReflowState, aChild, childCBSize,
                             &percentBasis);
   childRS.mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
 
@@ -5347,7 +5347,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
 void
 nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
+                             const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -5549,7 +5549,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     // (unfortunately) so we have to check the style data and parent reflow state
     // to determine if it's indefinite.
     LogicalSize computedMinSize(aReflowState.ComputedMinSize());
-    const nsHTMLReflowState* cbState = aReflowState.mCBReflowState;
+    const ReflowInput* cbState = aReflowState.mCBReflowState;
     if (!stylePos->MinISize(wm).IsCoordPercentCalcUnit() ||
         (stylePos->MinISize(wm).HasPercent() && cbState &&
          cbState->ComputedSize(wm).ISize(wm) == NS_UNCONSTRAINEDSIZE)) {

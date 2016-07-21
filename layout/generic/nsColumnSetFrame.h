@@ -26,7 +26,7 @@ public:
 
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG
@@ -48,7 +48,7 @@ public:
    * Retrieve the available height for content of this frame. The available content
    * height is the available height for the frame, minus borders and padding.
    */
-  virtual nscoord GetAvailableContentBSize(const nsHTMLReflowState& aReflowState);
+  virtual nscoord GetAvailableContentBSize(const ReflowInput& aReflowState);
 
   virtual nsContainerFrame* GetContentInsertionFrame() override {
     nsIFrame* frame = PrincipalChildList().FirstChild();
@@ -162,7 +162,7 @@ protected:
   };
 
   bool ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsReflowStatus& aReflowStatus,
                      ReflowConfig& aConfig,
                      bool aLastColumnUnbounded,
@@ -176,7 +176,7 @@ protected:
    * style. This function will also be responsible for implementing
    * the state machine that controls column balancing.
    */
-  ReflowConfig ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
+  ReflowConfig ChooseColumnStrategy(const ReflowInput& aReflowState,
                                     bool aForceAuto, nscoord aFeasibleBSize,
                                     nscoord aInfeasibleBSize);
 
@@ -204,7 +204,7 @@ protected:
    * @param aStatus A final reflow status of the column set frame, passed in as
    *        an output parameter.
    */
-  void FindBestBalanceBSize(const nsHTMLReflowState& aReflowState,
+  void FindBestBalanceBSize(const ReflowInput& aReflowState,
                             nsPresContext* aPresContext,
                             ReflowConfig& aConfig,
                             ColumnBalanceData& aColData,
@@ -218,7 +218,7 @@ protected:
    * fit into the mColMaxBSize.
    */
   bool ReflowChildren(nsHTMLReflowMetrics& aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowState,
                         nsReflowStatus& aStatus,
                         const ReflowConfig& aConfig,
                         bool aLastColumnUnbounded,

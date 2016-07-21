@@ -217,7 +217,7 @@ nsSplittableFrame::GetConsumedBSize() const
 }
 
 nscoord
-nsSplittableFrame::GetEffectiveComputedBSize(const nsHTMLReflowState& aReflowState,
+nsSplittableFrame::GetEffectiveComputedBSize(const ReflowInput& aReflowState,
                                               nscoord aConsumedBSize) const
 {
   nscoord bSize = aReflowState.ComputedBSize();
@@ -236,7 +236,7 @@ nsSplittableFrame::GetEffectiveComputedBSize(const nsHTMLReflowState& aReflowSta
 }
 
 nsIFrame::LogicalSides
-nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsSplittableFrame::GetLogicalSkipSides(const ReflowInput* aReflowState) const
 {
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
     return LogicalSides(eLogicalSideBitsBBoth);

@@ -26,14 +26,14 @@
 
 using namespace mozilla;
 
-struct nsTableCellReflowState : public nsHTMLReflowState
+struct nsTableCellReflowState : public ReflowInput
 {
   nsTableCellReflowState(nsPresContext*           aPresContext,
-                         const nsHTMLReflowState& aParentReflowState,
+                         const ReflowInput& aParentReflowState,
                          nsIFrame*                aFrame,
                          const LogicalSize&       aAvailableSpace,
                          uint32_t                 aFlags = 0)
-    : nsHTMLReflowState(aPresContext, aParentReflowState, aFrame,
+    : ReflowInput(aPresContext, aParentReflowState, aFrame,
                         aAvailableSpace, nullptr, aFlags)
   {
   }
@@ -518,7 +518,7 @@ nsTableRowFrame::UpdateBSize(nscoord           aBSize,
 }
 
 nscoord
-nsTableRowFrame::CalcBSize(const nsHTMLReflowState& aReflowState)
+nsTableRowFrame::CalcBSize(const ReflowInput& aReflowState)
 {
   nsTableFrame* tableFrame = GetTableFrame();
   nscoord computedBSize = (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedBSize())
@@ -619,7 +619,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nsIFrame::LogicalSides
-nsTableRowFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsTableRowFrame::GetLogicalSkipSides(const ReflowInput* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
@@ -782,7 +782,7 @@ nscoord CalcBSizeFromUnpaginatedBSize(nsTableRowFrame& aRow,
 void
 nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
-                                const nsHTMLReflowState& aReflowState,
+                                const ReflowInput& aReflowState,
                                 nsTableFrame&            aTableFrame,
                                 nsReflowStatus&          aStatus)
 {
@@ -816,7 +816,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       nsTableCellReflowState
         kidReflowState(aPresContext, aReflowState, kidFrame,
                        LogicalSize(kidFrame->GetWritingMode(), 0, 0),
-                       nsHTMLReflowState::CALLER_WILL_INIT);
+                       ReflowInput::CALLER_WILL_INIT);
       InitChildReflowState(*aPresContext, LogicalSize(wm), false, kidReflowState);
       nsHTMLReflowMetrics desiredSize(aReflowState);
       nsReflowStatus  status;
@@ -909,7 +909,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         // Reflow the child
         kidReflowState.emplace(aPresContext, aReflowState, kidFrame,
                                kidAvailSize,
-                               nsHTMLReflowState::CALLER_WILL_INIT);
+                               ReflowInput::CALLER_WILL_INIT);
         InitChildReflowState(*aPresContext, kidAvailSize, borderCollapse,
                              *kidReflowState);
 
@@ -979,7 +979,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         // property value here.
         LogicalMargin computedOffsets(wm, computedOffsetProp ?
                                             *computedOffsetProp : nsMargin());
-        nsHTMLReflowState::ApplyRelativePositioning(kidFrame, wm, computedOffsets,
+        ReflowInput::ApplyRelativePositioning(kidFrame, wm, computedOffsets,
                                                     &kidPosition, containerSize);
       }
 
@@ -1077,7 +1077,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
 void
 nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -1132,7 +1132,7 @@ nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
  */
 nscoord
 nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  bool                     aIsTopOfPage,
                                  nsTableCellFrame*        aCellFrame,
                                  nscoord                  aAvailableBSize,
@@ -1152,7 +1152,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
                "expected consistent writing-mode within table");
   nsTableCellReflowState
     cellReflowState(aPresContext, aReflowState, aCellFrame, availSize,
-                    nsHTMLReflowState::CALLER_WILL_INIT);
+                    ReflowInput::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
   cellReflowState.mFlags.mIsTopOfPage = aIsTopOfPage;
 

@@ -62,12 +62,12 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   virtual bool CanContinueTextRun() const override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 
 //override of nsFrame method
   virtual nsresult GetChildFrameContainingOffset(int32_t inContentOffset,
