@@ -109,6 +109,7 @@ class Pickle {
   MOZ_MUST_USE bool ReadBytesInto(PickleIterator* iter, void* data, uint32_t length) const;
   MOZ_MUST_USE bool FlattenBytes(PickleIterator* iter, const char** data, uint32_t length,
                                  uint32_t alignment = sizeof(memberAlignmentType));
+  MOZ_MUST_USE bool ExtractBuffers(PickleIterator* iter, size_t length, BufferList* buffers) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
