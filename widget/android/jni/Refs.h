@@ -775,6 +775,38 @@ DEFINE_PRIMITIVE_ARRAY_REF(jdoubleArray,  double);
 #undef DEFINE_PRIMITIVE_ARRAY_REF
 
 
+class ByteBuffer : public ObjectBase<ByteBuffer, jobject>
+{
+public:
+    explicit ByteBuffer(const Context& ctx)
+        : ObjectBase<ByteBuffer, jobject>(ctx)
+    {}
+
+    static LocalRef New(void* data, size_t capacity)
+    {
+        JNIEnv* const env = GetEnvForThread();
+        const auto ret = LocalRef::Adopt(
+                env, env->NewDirectByteBuffer(data, jlong(capacity)));
+        MOZ_CATCH_JNI_EXCEPTION(env);
+        return ret;
+    }
+
+    void* Address()
+    {
+        void* const ret = Env()->GetDirectBufferAddress(Instance());
+        MOZ_CATCH_JNI_EXCEPTION(Env());
+        return ret;
+    }
+
+    size_t Capacity()
+    {
+        const size_t ret = size_t(Env()->GetDirectBufferCapacity(Instance()));
+        MOZ_CATCH_JNI_EXCEPTION(Env());
+        return ret;
+    }
+};
+
+
 template<>
 class TypedObject<jobjectArray>
     : public ObjectBase<TypedObject<jobjectArray>, jobjectArray>

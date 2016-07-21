@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 /**
@@ -96,6 +97,10 @@ public class Utils {
             return "mozilla::jni::Throwable::Param";
         }
 
+        if (type.equals(ByteBuffer.class)) {
+            return "mozilla::jni::ByteBuffer::Param";
+        }
+
         return "mozilla::jni::Object::Param";
     }
 
@@ -126,6 +131,10 @@ public class Utils {
 
         if (type.equals(Throwable.class)) {
             return "mozilla::jni::Throwable::LocalRef";
+        }
+
+        if (type.equals(ByteBuffer.class)) {
+            return "mozilla::jni::ByteBuffer::LocalRef";
         }
 
         return "mozilla::jni::Object::LocalRef";
