@@ -1254,18 +1254,17 @@ ContentChild::RecvInitImageBridge(Endpoint<PImageBridgeChild>&& aEndpoint)
   return ImageBridgeChild::InitForContent(Move(aEndpoint));
 }
 
+bool
+ContentChild::RecvInitVRManager(Endpoint<PVRManagerChild>&& aEndpoint)
+{
+  return gfx::VRManagerChild::InitForContent(Move(aEndpoint));
+}
+
 PSharedBufferManagerChild*
 ContentChild::AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,
                                               base::ProcessId aOtherProcess)
 {
   return SharedBufferManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
-}
-
-gfx::PVRManagerChild*
-ContentChild::AllocPVRManagerChild(Transport* aTransport,
-                                   ProcessId aOtherProcess)
-{
-  return gfx::VRManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
 }
 
 PBackgroundChild*

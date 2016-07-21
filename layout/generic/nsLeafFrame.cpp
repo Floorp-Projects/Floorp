@@ -50,47 +50,47 @@ nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 void
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aMetrics,
-                    const nsHTMLReflowState& aReflowState,
+                    ReflowOutput& aMetrics,
+                    const ReflowInput& aReflowInput,
                     nsReflowStatus& aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsLeafFrame");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
-                  aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
+                  aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  DoReflow(aPresContext, aMetrics, aReflowState, aStatus);
+  DoReflow(aPresContext, aMetrics, aReflowInput, aStatus);
 
   FinishAndStoreOverflow(&aMetrics);
 }
 
 void
 nsLeafFrame::DoReflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput& aMetrics,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus)
 {
-  NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
+  NS_ASSERTION(aReflowInput.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                "Shouldn't have unconstrained stuff here "
                "thanks to the rules of reflow");
-  NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
+  NS_ASSERTION(NS_INTRINSICSIZE != aReflowInput.ComputedHeight(),
                "Shouldn't have unconstrained stuff here "
                "thanks to ComputeAutoSize");
 
   // XXX how should border&padding effect baseline alignment?
   // => descent = borderPadding.bottom for example
-  WritingMode wm = aReflowState.GetWritingMode();
-  aMetrics.SetSize(wm, aReflowState.ComputedSizeWithBorderPadding());
+  WritingMode wm = aReflowInput.GetWritingMode();
+  aMetrics.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding());
 
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsLeafFrame::DoReflow: size=%d,%d",
                   aMetrics.ISize(wm), aMetrics.BSize(wm)));
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 
   aMetrics.SetOverflowAreasToDesiredBounds();
 }
@@ -103,12 +103,12 @@ nsLeafFrame::GetIntrinsicBSize()
 }
 
 void
-nsLeafFrame::SizeToAvailSize(const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
+nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowInput,
+                             ReflowOutput& aDesiredSize)
 {
-  WritingMode wm = aReflowState.GetWritingMode();
-  LogicalSize size(wm, aReflowState.AvailableISize(), // FRAME
-                   aReflowState.AvailableBSize());
+  WritingMode wm = aReflowInput.GetWritingMode();
+  LogicalSize size(wm, aReflowInput.AvailableISize(), // FRAME
+                   aReflowInput.AvailableBSize());
   aDesiredSize.SetSize(wm, size);
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);  

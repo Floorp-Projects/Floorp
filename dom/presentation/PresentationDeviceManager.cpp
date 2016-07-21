@@ -181,7 +181,7 @@ PresentationDeviceManager::AddDevice(nsIPresentationDevice* aDevice)
 
   mDevices.AppendElement(aDevice);
 
-  NotifyDeviceChange(aDevice, MOZ_UTF16("add"));
+  NotifyDeviceChange(aDevice, u"add");
 
   return NS_OK;
 }
@@ -199,7 +199,7 @@ PresentationDeviceManager::RemoveDevice(nsIPresentationDevice* aDevice)
 
   mDevices.RemoveElementAt(index);
 
-  NotifyDeviceChange(aDevice, MOZ_UTF16("remove"));
+  NotifyDeviceChange(aDevice, u"remove");
 
   return NS_OK;
 }
@@ -214,7 +214,7 @@ PresentationDeviceManager::UpdateDevice(nsIPresentationDevice* aDevice)
     return NS_ERROR_FAILURE;
   }
 
-  NotifyDeviceChange(aDevice, MOZ_UTF16("update"));
+  NotifyDeviceChange(aDevice, u"update");
 
   return NS_OK;
 }

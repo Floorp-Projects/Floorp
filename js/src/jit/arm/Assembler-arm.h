@@ -1207,6 +1207,7 @@ class Assembler : public AssemblerShared
         LessThanOrEqual = LE,
         Overflow = VS,
         CarrySet = CS,
+        CarryClear = CC,
         Signed = MI,
         NotSigned = PL,
         Zero = EQ,

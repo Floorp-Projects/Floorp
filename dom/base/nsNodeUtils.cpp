@@ -400,7 +400,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep, nsINode **aResult)
                       getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  newNode.swap(*aResult);
+  newNode.forget(aResult);
   return NS_OK;
 }
 
@@ -506,7 +506,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     aNode->mNodeInfo.swap(newNodeInfo);
     if (elem) {
-      elem->NodeInfoChanged(newNodeInfo);
+      elem->NodeInfoChanged();
     }
 
     nsIDocument* newDoc = aNode->OwnerDoc();

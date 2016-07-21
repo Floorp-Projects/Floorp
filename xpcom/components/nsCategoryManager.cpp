@@ -814,7 +814,7 @@ NS_CreateServicesFromCategory(const char* aCategory,
       nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance);
       if (observer) {
         observer->Observe(aOrigin, aObserverTopic,
-                          aObserverData ? aObserverData : MOZ_UTF16(""));
+                          aObserverData ? aObserverData : u"");
       } else {
         LogMessage("While creating services from category '%s', service for entry '%s', contract ID '%s' does not implement nsIObserver.",
                    aCategory, entryString.get(), contractID.get());

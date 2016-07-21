@@ -1153,8 +1153,9 @@ class DebuggerFrame : public NativeObject
                                                bool& result);
     static MOZ_MUST_USE bool getEnvironment(JSContext* cx, Handle<DebuggerFrame*> frame,
                                             MutableHandle<DebuggerEnvironment*> result);
+    static bool getIsGenerator(Handle<DebuggerFrame*> frame);
 
-    bool isGenerator() const;
+    bool isLive() const;
 
   private:
     static const ClassOps classOps_;
@@ -1162,6 +1163,8 @@ class DebuggerFrame : public NativeObject
     static const JSPropertySpec properties_[];
     static const JSFunctionSpec methods_[];
 
+    static MOZ_MUST_USE bool requireLive(JSContext* cx, Handle<DebuggerFrame*> frame);
+    static AbstractFramePtr getReferent(Handle<DebuggerFrame*> frame);
     static MOZ_MUST_USE bool getScriptFrameIter(JSContext* cx, Handle<DebuggerFrame*> frame,
                                                 mozilla::Maybe<ScriptFrameIter>& result);
 
@@ -1171,8 +1174,8 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool constructingGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool generatorGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool liveGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    AbstractFramePtr referent() const;
     Debugger* owner() const;
 };
 
@@ -1242,6 +1245,8 @@ class DebuggerObject : public NativeObject
                                                MutableHandleObject result);
     static MOZ_MUST_USE bool unwrap(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandle<DebuggerObject*> result);
+    static MOZ_MUST_USE bool isPromise(JSContext* cx, Handle<DebuggerObject*> object,
+                                       bool& result);
 
     // Infallible properties
     bool isCallable() const;
@@ -1250,7 +1255,6 @@ class DebuggerObject : public NativeObject
     bool isBoundFunction() const;
     bool isArrowFunction() const;
     bool isGlobal() const;
-    bool isPromise() const;
     JSAtom* name() const;
     JSAtom* displayName() const;
 

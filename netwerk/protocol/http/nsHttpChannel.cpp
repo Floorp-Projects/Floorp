@@ -1131,20 +1131,6 @@ nsHttpChannel::CallOnStartRequest()
         }
     }
 
-    // Check for a Content-Signature header and inject mediator if the header is
-    // requested and available.
-    // If requested (mLoadInfo->GetVerifySignedContent), but not present, or
-    // present but not valid, fail this channel and return
-    // NS_ERROR_INVALID_SIGNATURE to indicate a signature error and trigger a
-    // fallback load in nsDocShell.
-    if (!mCanceled) {
-        rv = ProcessContentSignatureHeader(mResponseHead);
-        if (NS_FAILED(rv)) {
-            LOG(("Content-signature verification failed.\n"));
-            return rv;
-        }
-    }
-
     LOG(("  calling mListener->OnStartRequest\n"));
     if (mListener) {
         MOZ_ASSERT(!mOnStartRequestCalled,
@@ -1204,6 +1190,24 @@ nsHttpChannel::CallOnStartRequest()
         } else if (mApplicationCacheForWrite) {
             LOG(("offline cache is up to date, not updating"));
             CloseOfflineCacheEntry();
+        }
+    }
+
+    // Check for a Content-Signature header and inject mediator if the header is
+    // requested and available.
+    // If requested (mLoadInfo->GetVerifySignedContent), but not present, or
+    // present but not valid, fail this channel and return
+    // NS_ERROR_INVALID_SIGNATURE to indicate a signature error and trigger a
+    // fallback load in nsDocShell.
+    // Note that OnStartRequest has already been called on the target stream
+    // listener at this point. We have to add the listener here that late to
+    // ensure that it's the last listener and can thus block the load in
+    // OnStopRequest.
+    if (!mCanceled) {
+        rv = ProcessContentSignatureHeader(mResponseHead);
+        if (NS_FAILED(rv)) {
+            LOG(("Content-signature verification failed.\n"));
+            return rv;
         }
     }
 
@@ -1528,8 +1532,8 @@ nsHttpChannel::ProcessContentSignatureHeader(nsHttpResponseHead *aResponseHead)
     // create a new listener that meadiates the content
     RefPtr<ContentVerifier> contentVerifyingMediator =
       new ContentVerifier(mListener, mListenerContext);
-    rv = contentVerifyingMediator->Init(
-      NS_ConvertUTF8toUTF16(contentSignatureHeader));
+    rv = contentVerifyingMediator->Init(contentSignatureHeader, this,
+                                        mListenerContext);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_SIGNATURE);
     mListener = contentVerifyingMediator;
 
@@ -2206,7 +2210,7 @@ nsHttpChannel::PromptTempRedirect()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLString messageString;
-    rv = stringBundle->GetStringFromName(MOZ_UTF16("RepostFormData"), getter_Copies(messageString));
+    rv = stringBundle->GetStringFromName(u"RepostFormData", getter_Copies(messageString));
     // GetStringFromName can return NS_OK and nullptr messageString.
     if (NS_SUCCEEDED(rv) && messageString) {
         bool repost = false;

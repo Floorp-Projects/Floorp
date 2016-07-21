@@ -304,6 +304,35 @@ CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitWasmLoadI64(LWasmLoadI64* lir)
+{
+    const MWasmLoad* mir = lir->mir();
+
+    MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+    MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
+
+    uint32_t offset = mir->offset();
+    if (offset > INT32_MAX) {
+        // This is unreachable because of bounds checks.
+        masm.breakpoint();
+        return;
+    }
+
+    Register ptr = ToRegister(lir->ptr());
+
+    // Maybe add the offset.
+    if (offset) {
+        Register ptrPlusOffset = ToRegister(lir->ptrCopy());
+        masm.addPtr(Imm32(offset), ptrPlusOffset);
+        ptr = ptrPlusOffset;
+    } else {
+        MOZ_ASSERT(lir->ptrCopy()->isBogusTemp());
+    }
+
+    masm.ma_load(ToRegister(lir->output()), BaseIndex(HeapReg, ptr, TimesOne), SizeDouble);
+}
+
+void
 CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
 {
     MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);

@@ -1500,11 +1500,12 @@
     "description": "The lifetime of accepted HTTPS server certificates, in weeks, up to 2 years. Bucket 105 is all end-entity HTTPS server certificates with a lifetime > 2 years."
   },
   "KEYGEN_GENERATED_KEY_TYPE": {
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1191414,1284945],
     "description": "The number of times we generate a key via keygen, keyed on algorithm and keysize. Keys include RSA with key size (512, 1024, 2048, possibly others), secp384r1, secp256r1, and 'other_ec'."
   },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
@@ -8231,6 +8232,16 @@
     "n_buckets": 100,
     "bug_numbers": [1285419]
   },
+  "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
+    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
+    "expires_in_version": "55",
+    "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2180'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
+    "keyed": true,
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 50,
+    "bug_numbers": [1287987]
+  },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
     "expires_in_version": "55",
@@ -10007,6 +10018,14 @@
     "bug_numbers": [1272501],
     "releaseChannelCollection": "opt-out",
     "description": "HTMLInputElement.webkitdirectory attribute used"
+  },
+  "CONTAINER_USED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "bug_numbers": [1276006],
+    "n_values": 5,
+    "description": "Records a value each time a builtin container is opened. 1=personal 2=work 3=banking 4=shopping. Does not record usage of user-created containers."
   },
   "UNIQUE_CONTAINERS_OPENED": {
     "alert_emails": ["amarchesini@mozilla.com"],

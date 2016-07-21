@@ -82,7 +82,7 @@ nsCommandManager::CommandStatusChanged(const char* aCommandName)
       // should we get the command state to pass here? This might be expensive.
       observer->Observe(NS_ISUPPORTS_CAST(nsICommandManager*, this),
                         aCommandName,
-                        MOZ_UTF16("command_status_changed"));
+                        u"command_status_changed");
     }
   }
 

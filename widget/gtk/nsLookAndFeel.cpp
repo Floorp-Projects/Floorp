@@ -1357,6 +1357,7 @@ nsLookAndFeel::Init()
     gtk_widget_path_free(path);
 
     // GtkInfoBar
+    // TODO - Use WidgetCache for it?
     GtkWidget* infoBar = gtk_info_bar_new();
     GtkWidget* infoBarContent = gtk_info_bar_get_content_area(GTK_INFO_BAR(infoBar));
     GtkWidget* infoBarLabel = gtk_label_new(nullptr);

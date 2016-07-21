@@ -57,7 +57,7 @@ function observe(topic) {
   // We need to remove any observer added once the add-on is unloaded;
   // otherwise we'll get a "dead object" exception.
   // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1001833
-  unload(() => removeObserver(observerChannel, topic));
+  unload(() => removeObserver(observerChannel, topic), { weak: true });
 
   return observerChannel;
 }

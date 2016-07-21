@@ -1304,11 +1304,11 @@ MapLangAttributeInto(const nsMappedAttributes* aAttributes, nsRuleData* aData)
     nsCSSValue* emphasisPos = aData->ValueForTextEmphasisPosition();
     if (emphasisPos->GetUnit() == eCSSUnit_Null) {
       const nsAString& lang = langValue->GetStringValue();
-      if (nsStyleUtil::MatchesLanguagePrefix(lang, MOZ_UTF16("zh"))) {
+      if (nsStyleUtil::MatchesLanguagePrefix(lang, u"zh")) {
         emphasisPos->SetIntValue(NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH,
                                 eCSSUnit_Enumerated);
-      } else if (nsStyleUtil::MatchesLanguagePrefix(lang, MOZ_UTF16("ja")) ||
-                 nsStyleUtil::MatchesLanguagePrefix(lang, MOZ_UTF16("mn"))) {
+      } else if (nsStyleUtil::MatchesLanguagePrefix(lang, u"ja") ||
+                 nsStyleUtil::MatchesLanguagePrefix(lang, u"mn")) {
         // This branch is currently no part of the spec.
         // See bug 1040668 comment 69 and comment 75.
         emphasisPos->SetIntValue(NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT,
@@ -3082,7 +3082,7 @@ nsGenericHTMLFormElementWithState::RestoreFormControlState()
 }
 
 void
-nsGenericHTMLFormElementWithState::NodeInfoChanged(mozilla::dom::NodeInfo* aOldNodeInfo)
+nsGenericHTMLFormElementWithState::NodeInfoChanged()
 {
   mStateKey.SetIsVoid(true);
 }

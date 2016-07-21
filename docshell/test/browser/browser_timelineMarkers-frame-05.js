@@ -91,12 +91,24 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
     check: function(markers) {
       markers = markers.filter(m => m.name == "ConsoleTime");
       ok(markers.length > 0, "Promise marker includes stack");
-
+      ok(markers[0].stack.functionDisplayName == "testConsoleTime",
+         "testConsoleTime is on the stack");
       let frame = markers[0].endStack;
-      ok(frame.parent.asyncParent !== null, "Parent frame has async parent");
-      is(frame.parent.asyncParent.asyncCause, "promise callback",
+      ok(frame.functionDisplayName == "testConsoleTimeEnd",
+         "testConsoleTimeEnd is on the stack");
+
+      frame = frame.parent;
+      ok(frame.functionDisplayName == "makePromise/<",
+         "makePromise/< is on the stack");
+      let asyncFrame = frame.asyncParent;
+      ok(asyncFrame !== null, "Frame has async parent");
+      is(asyncFrame.asyncCause, "promise callback",
          "Async parent has correct cause");
-      is(frame.parent.asyncParent.functionDisplayName, "makePromise",
+      // Skip over self-hosted parts of our Promise implementation.
+      while (asyncFrame.source === 'self-hosted') {
+        asyncFrame = asyncFrame.parent;
+      }
+      is(asyncFrame.functionDisplayName, "makePromise",
          "Async parent has correct function name");
     }
   });

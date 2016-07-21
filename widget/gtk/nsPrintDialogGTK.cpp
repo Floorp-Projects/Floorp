@@ -55,7 +55,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   bundleSvc->CreateBundle("chrome://global/locale/printdialog.properties", getter_AddRefs(printBundle));
   nsXPIDLString intlString;
 
-  printBundle->GetStringFromName(MOZ_UTF16("headerFooterCustom"), getter_Copies(intlString));
+  printBundle->GetStringFromName(u"headerFooterCustom", getter_Copies(intlString));
   GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), printDialog,
 #if (MOZ_WIDGET_GTK == 2)
                                                          (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
@@ -71,7 +71,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
                                           GTK_RESPONSE_REJECT,
                                           -1);
 
-  printBundle->GetStringFromName(MOZ_UTF16("customHeaderFooterPrompt"), getter_Copies(intlString));
+  printBundle->GetStringFromName(u"customHeaderFooterPrompt", getter_Copies(intlString));
   GtkWidget* custom_label = gtk_label_new(NS_ConvertUTF16toUTF8(intlString).get());
   GtkWidget* custom_entry = gtk_entry_new();
   GtkWidget* question_icon = gtk_image_new_from_stock(GTK_STOCK_DIALOG_QUESTION, GTK_ICON_SIZE_DIALOG);

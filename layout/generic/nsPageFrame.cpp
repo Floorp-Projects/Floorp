@@ -51,13 +51,13 @@ nsPageFrame::~nsPageFrame()
 
 void
 nsPageFrame::Reflow(nsPresContext*           aPresContext,
-                                  nsHTMLReflowMetrics&     aDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
+                                  ReflowOutput&     aDesiredSize,
+                                  const ReflowInput& aReflowInput,
                                   nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPageFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   NS_ASSERTION(mFrames.FirstChild() &&
@@ -94,20 +94,20 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
       return;
     }
 
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
+    ReflowInput kidReflowInput(aPresContext, aReflowInput, frame,
                                      LogicalSize(frame->GetWritingMode(),
                                                  maxSize));
-    kidReflowState.mFlags.mIsTopOfPage = true;
-    kidReflowState.mFlags.mTableIsSplittable = true;
+    kidReflowInput.mFlags.mIsTopOfPage = true;
+    kidReflowInput.mFlags.mTableIsSplittable = true;
 
     // Use the margins given in the @page rule.
     // If a margin is 'auto', use the margin from the print settings for that side.
-    const nsStyleSides& marginStyle = kidReflowState.mStyleMargin->mMargin;
+    const nsStyleSides& marginStyle = kidReflowInput.mStyleMargin->mMargin;
     NS_FOR_CSS_SIDES(side) {
       if (marginStyle.GetUnit(side) == eStyleUnit_Auto) {
         mPageContentMargin.Side(side) = mPD->mReflowMargin.Side(side);
       } else {
-        mPageContentMargin.Side(side) = kidReflowState.ComputedPhysicalMargin().Side(side);
+        mPageContentMargin.Side(side) = kidReflowInput.ComputedPhysicalMargin().Side(side);
       }
     }
 
@@ -133,40 +133,40 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
       }
     }
 
-    kidReflowState.SetComputedWidth(maxWidth);
-    kidReflowState.SetComputedHeight(maxHeight);
+    kidReflowInput.SetComputedWidth(maxWidth);
+    kidReflowInput.SetComputedHeight(maxHeight);
 
     // calc location of frame
     nscoord xc = mPageContentMargin.left;
     nscoord yc = mPageContentMargin.top;
 
     // Get the child's desired size
-    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
+    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowInput, xc, yc, 0, aStatus);
 
     // Place and size the child
-    FinishReflowChild(frame, aPresContext, aDesiredSize, &kidReflowState, xc, yc, 0);
+    FinishReflowChild(frame, aPresContext, aDesiredSize, &kidReflowInput, xc, yc, 0);
 
     NS_ASSERTION(!NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                  !frame->GetNextInFlow(), "bad child flow list");
   }
   PR_PL(("PageFrame::Reflow %p ", this));
   PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.Width(), aDesiredSize.Height(),
-         aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
+         aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
   // Return our desired size
-  WritingMode wm = aReflowState.GetWritingMode();
-  aDesiredSize.ISize(wm) = aReflowState.AvailableISize();
-  if (aReflowState.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.BSize(wm) = aReflowState.AvailableBSize();
+  WritingMode wm = aReflowInput.GetWritingMode();
+  aDesiredSize.ISize(wm) = aReflowInput.AvailableISize();
+  if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.BSize(wm) = aReflowInput.AvailableBSize();
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
 
   PR_PL(("PageFrame::Reflow %p ", this));
-  PR_PL(("[%d,%d]\n", aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
+  PR_PL(("[%d,%d]\n", aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 nsIAtom*
@@ -708,19 +708,19 @@ nsPageBreakFrame::GetIntrinsicBSize()
 
 void
 nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
+                         ReflowOutput&     aDesiredSize,
+                         const ReflowInput& aReflowInput,
                          nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
   // Override reflow, since we don't want to deal with what our
   // computed values are.
-  WritingMode wm = aReflowState.GetWritingMode();
+  WritingMode wm = aReflowInput.GetWritingMode();
   LogicalSize finalSize(wm, GetIntrinsicISize(),
-                        aReflowState.AvailableBSize() == NS_UNCONSTRAINEDSIZE ?
-                          0 : aReflowState.AvailableBSize());
+                        aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE ?
+                          0 : aReflowInput.AvailableBSize());
   // round the height down to the nearest pixel
   finalSize.BSize(wm) -=
     finalSize.BSize(wm) % nsPresContext::CSSPixelsToAppUnits(1);

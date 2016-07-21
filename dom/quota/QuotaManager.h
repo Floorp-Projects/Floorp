@@ -347,6 +347,10 @@ public:
   uint64_t
   GetGroupLimit() const;
 
+  void
+  GetGroupUsageAndLimit(const nsACString& aGroup,
+                        UsageInfo* aUsageInfo);
+
   static void
   GetStorageId(PersistenceType aPersistenceType,
                const nsACString& aOrigin,

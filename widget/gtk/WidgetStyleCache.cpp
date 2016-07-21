@@ -158,6 +158,14 @@ CreateToolbarSeparatorWidget()
 }
 
 static GtkWidget*
+CreateInfoBarWidget()
+{
+  GtkWidget* widget = gtk_info_bar_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -195,6 +203,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateToolbarWidget();
     case MOZ_GTK_TOOLBAR_SEPARATOR:
       return CreateToolbarSeparatorWidget();
+    case MOZ_GTK_INFO_BAR:
+      return CreateInfoBarWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -335,6 +345,10 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       // TODO - create from CSS node
       return GetWidgetStyleWithClass(MOZ_GTK_GRIPPER,
                                      GTK_STYLE_CLASS_GRIP);
+    case MOZ_GTK_INFO_BAR:
+      // TODO - create from CSS node
+      return GetWidgetStyleWithClass(MOZ_GTK_INFO_BAR,
+                                     GTK_STYLE_CLASS_INFO);
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -389,6 +403,9 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_GRIPPER:
       return GetWidgetStyleWithClass(MOZ_GTK_GRIPPER,
                                      GTK_STYLE_CLASS_GRIP);
+    case MOZ_GTK_INFO_BAR:
+      return GetWidgetStyleWithClass(MOZ_GTK_INFO_BAR,
+                                     GTK_STYLE_CLASS_INFO);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);

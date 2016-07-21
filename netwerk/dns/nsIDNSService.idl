@@ -10,7 +10,7 @@ interface nsIDNSRecord;
 interface nsIDNSListener;
 
 %{C++
-template<class T> class nsTArray;
+#include "nsTArrayForwardDeclare.h"
 namespace mozilla { namespace net {
     struct DNSCacheEntries;
 } }
@@ -143,7 +143,7 @@ interface nsIDNSService : nsISupports
     const unsigned long RESOLVE_PRIORITY_LOW    = (1 << 3);
 
     /**
-     * if set, indicates request is speculative. Speculative requests 
+     * if set, indicates request is speculative. Speculative requests
      * return errors if prefetching is disabled by configuration.
      */
     const unsigned long RESOLVE_SPECULATE = (1 << 4);

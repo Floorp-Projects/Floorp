@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>DOM mutations test</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function runTest()
+    {
+      // children change will recreate the table
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getNode('c1'))
+      ];
+
+      this.invoke = function runTest_invoke() {
+        var tree = {
+          SECTION: [ // c1
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_CONTAINER: [
+              { TEXT_LEAF: [] } // something with ..
+            ] },
+            { TEXT_LEAF: [] } // More text
+          ]
+        };
+        testAccessibleTree('c1', tree);
+
+        getNode('c1_t').querySelector('span').remove();
+      };
+
+      this.finalCheck = function runTest_finalCheck() {
+        var tree = {
+          SECTION: [ // c1
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_LEAF: [] } // More text
+          ]
+        };
+        testAccessibleTree('c1', tree);
+      };
+
+      this.getID = function runTest_getID()
+      {
+        return 'child DOM node is removed before the layout notifies the a11y about parent removal/show';
+      };
+    }
+
+    function runShadowTest()
+    {
+      // children change will recreate the table
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, 'c2')
+      ];
+
+      this.invoke = function runShadowTest_invoke() {
+        var tree = {
+          SECTION: [ // c2
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_CONTAINER: [
+              { TEXT_LEAF: [] } // something with ..
+            ] },
+            { TEXT_LEAF: [] } // More text
+          ]
+        };
+        testAccessibleTree('c2', tree);
+
+        gShadowRoot.firstElementChild.querySelector('span').remove();
+      };
+
+      this.finalCheck = function runShadowTest_finalCheck() {
+        var tree = {
+          SECTION: [ // c2
+            { TEXT_LEAF: [] }, // Some text
+            { TEXT_LEAF: [] } // More text
+          ]
+        };
+        testAccessibleTree('c2', tree);
+      };
+
+      this.getID = function runShadowTest_getID() {
+        return 'child DOM node is removed before the layout notifies the a11y about parent removal/show in shadow DOM';
+      };
+    }
+
+    //enableLogging("tree");
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new runTest());
+      gQueue.push(new runShadowTest());
+      gQueue.invoke(); // will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1">
+    <div id="c1_t" style="display: table" role="presentation">
+    Some text
+    <span style="display: table-cell">something with accessibles goes here</span>
+    More text
+    </div>
+  </div>
+
+  <template id="tmpl">
+    <div style="display: table" role="presentation">
+    Some text
+    <span style="display: table-cell">something with accessibles goes here</span>
+    More text
+    </div>
+  </template>
+
+  <div id="c2"><div id="c2_c" role="presentation"></div></div>
+
+  <script>
+    var gShadowRoot = document.getElementById('c2_c').createShadowRoot();
+    var tmpl = document.getElementById('tmpl');
+    gShadowRoot.appendChild(document.importNode(tmpl.content, true));
+  </script>
+</body>
+</html>

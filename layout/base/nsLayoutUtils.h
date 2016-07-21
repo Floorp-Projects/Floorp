@@ -27,7 +27,7 @@
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
 #include "mozilla/ToString.h"
-#include "nsHTMLReflowMetrics.h"
+#include "mozilla/ReflowOutput.h"
 #include "ImageContainer.h"
 #include "gfx2DGlue.h"
 
@@ -2732,7 +2732,7 @@ public:
   static bool IsOutlineStyleAutoEnabled();
 
   static void SetBSizeFromFontMetrics(const nsIFrame* aFrame,
-                                      nsHTMLReflowMetrics& aMetrics,
+                                      mozilla::ReflowOutput& aMetrics,
                                       const mozilla::LogicalMargin& aFramePadding,
                                       mozilla::WritingMode aLineWM,
                                       mozilla::WritingMode aFrameWM);

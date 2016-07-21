@@ -19,14 +19,14 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-const char16_t* kAbortEventType = MOZ_UTF16("abort");
-const char16_t* kBlockedEventType = MOZ_UTF16("blocked");
-const char16_t* kCompleteEventType = MOZ_UTF16("complete");
-const char16_t* kErrorEventType = MOZ_UTF16("error");
-const char16_t* kSuccessEventType = MOZ_UTF16("success");
-const char16_t* kUpgradeNeededEventType = MOZ_UTF16("upgradeneeded");
-const char16_t* kVersionChangeEventType = MOZ_UTF16("versionchange");
-const char16_t* kCloseEventType = MOZ_UTF16("close");
+const char16_t* kAbortEventType = u"abort";
+const char16_t* kBlockedEventType = u"blocked";
+const char16_t* kCompleteEventType = u"complete";
+const char16_t* kErrorEventType = u"error";
+const char16_t* kSuccessEventType = u"success";
+const char16_t* kUpgradeNeededEventType = u"upgradeneeded";
+const char16_t* kVersionChangeEventType = u"versionchange";
+const char16_t* kCloseEventType = u"close";
 
 already_AddRefed<nsIDOMEvent>
 CreateGenericEvent(EventTarget* aOwner,
