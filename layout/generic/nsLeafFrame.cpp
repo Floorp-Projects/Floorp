@@ -51,7 +51,7 @@ nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 void
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
-                    const nsHTMLReflowState& aReflowState,
+                    const ReflowInput& aReflowState,
                     nsReflowStatus& aStatus)
 {
   MarkInReflow();
@@ -70,7 +70,7 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
 void
 nsLeafFrame::DoReflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus)
 {
   NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
@@ -103,7 +103,7 @@ nsLeafFrame::GetIntrinsicBSize()
 }
 
 void
-nsLeafFrame::SizeToAvailSize(const nsHTMLReflowState& aReflowState,
+nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
   WritingMode wm = aReflowState.GetWritingMode();

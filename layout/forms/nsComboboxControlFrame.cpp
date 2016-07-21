@@ -418,7 +418,7 @@ public:
 
 void
 nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
-                                       const nsHTMLReflowState& aReflowState)
+                                       const ReflowInput& aReflowState)
 {
   // All we want out of it later on, really, is the block size of a row, so we
   // don't even need to cache mDropdownFrame's ascent or anything.  If we don't
@@ -434,7 +434,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   WritingMode wm = mDropdownFrame->GetWritingMode();
   LogicalSize availSize = aReflowState.AvailableSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mDropdownFrame,
+  ReflowInput kidReflowState(aPresContext, aReflowState, mDropdownFrame,
                                    availSize);
 
   // If the dropdown's intrinsic inline size is narrower than our
@@ -809,7 +809,7 @@ nsComboboxControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 void
 nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
+                               const ReflowInput& aReflowState,
                                nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -1287,7 +1287,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -1309,10 +1309,10 @@ nsComboboxDisplayFrame::GetType() const
 void
 nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
+                               const ReflowInput& aReflowState,
                                nsReflowStatus&          aStatus)
 {
-  nsHTMLReflowState state(aReflowState);
+  ReflowInput state(aReflowState);
   if (state.ComputedBSize() == NS_INTRINSICSIZE) {
     // Note that the only way we can have a computed block size here is
     // if the combobox had a specified block size.  If it didn't, size

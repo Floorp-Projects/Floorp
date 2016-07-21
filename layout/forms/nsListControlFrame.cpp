@@ -356,7 +356,7 @@ nsListControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 void
 nsListControlFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(aReflowState.ComputedISize() != NS_UNCONSTRAINEDSIZE,
@@ -414,7 +414,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   mMightNeedSecondPass = autoBSize &&
     (NS_SUBTREE_DIRTY(this) || aReflowState.ShouldReflowAllKids());
 
-  nsHTMLReflowState state(aReflowState);
+  ReflowInput state(aReflowState);
   int32_t length = GetNumberOfRows();
 
   nscoord oldBSizeOfARow = BSizeOfARow();
@@ -494,7 +494,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
 void
 nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState,
+                                     const ReflowInput& aReflowState,
                                      nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(aReflowState.ComputedBSize() == NS_UNCONSTRAINEDSIZE,
@@ -510,7 +510,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     NS_UNCONSTRAINEDSIZE : GetScrolledFrame()->BSize(wm);
 #endif
 
-  nsHTMLReflowState state(aReflowState);
+  ReflowInput state(aReflowState);
 
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // When not doing an initial reflow, and when the block size is
@@ -1494,7 +1494,7 @@ nsListControlFrame::AboutToRollup()
 
 void
 nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
-                              const nsHTMLReflowState* aReflowState,
+                              const ReflowInput* aReflowState,
                               nsDidReflowStatus        aStatus)
 {
   bool wasInterrupted = !mHasPendingInterruptAtStartOfReflow &&

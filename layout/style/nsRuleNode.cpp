@@ -5916,7 +5916,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
   // Backup original display value for calculation of a hypothetical
   // box (CSS2 10.6.4/10.6.5), in addition to getting our style data right later.
-  // See nsHTMLReflowState::CalculateHypotheticalBox
+  // See ReflowInput::CalculateHypotheticalBox
   display->mOriginalDisplay = display->mDisplay;
 
   // appearance: enum, inherit, initial

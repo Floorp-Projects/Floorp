@@ -223,7 +223,7 @@ ViewportFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 nsPoint
-ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const
+ViewportFrame::AdjustReflowStateForScrollbars(ReflowInput* aReflowState) const
 {
   // Get our prinicpal child frame and see if we're scrollable
   nsIFrame* kidFrame = mFrames.FirstChild();
@@ -243,7 +243,7 @@ ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) c
 }
 
 nsRect
-ViewportFrame::AdjustReflowStateAsContainingBlock(nsHTMLReflowState* aReflowState) const
+ViewportFrame::AdjustReflowStateAsContainingBlock(ReflowInput* aReflowState) const
 {
 #ifdef DEBUG
   nsPoint offset =
@@ -269,7 +269,7 @@ ViewportFrame::AdjustReflowStateAsContainingBlock(nsHTMLReflowState* aReflowStat
 void
 ViewportFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -306,7 +306,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
       nsHTMLReflowMetrics kidDesiredSize(aReflowState);
       WritingMode         wm = kidFrame->GetWritingMode();
       LogicalSize         availableSpace = aReflowState.AvailableSize(wm);
-      nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
+      ReflowInput   kidReflowState(aPresContext, aReflowState,
                                          kidFrame, availableSpace);
 
       // Reflow the frame
@@ -337,7 +337,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   if (HasAbsolutelyPositionedChildren()) {
     // Make a copy of the reflow state and change the computed width and height
     // to reflect the available space for the fixed items
-    nsHTMLReflowState reflowState(aReflowState);
+    ReflowInput reflowState(aReflowState);
 
     if (reflowState.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
       // We have an intrinsic-height document with abs-pos/fixed-pos children.

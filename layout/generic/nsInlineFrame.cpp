@@ -362,7 +362,7 @@ ReparentChildListStyle(nsPresContext* aPresContext,
 void
 nsInlineFrame::Reflow(nsPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -569,7 +569,7 @@ nsInlineFrame::PullOverflowsFromPrevInFlow()
 
 void
 nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
-                            const nsHTMLReflowState& aReflowState,
+                            const ReflowInput& aReflowState,
                             InlineReflowState& irs,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus)
@@ -794,7 +794,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
 void
 nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  InlineReflowState& irs,
                                  nsIFrame* aFrame,
                                  nsReflowStatus& aStatus)
@@ -941,7 +941,7 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 //////////////////////////////////////////////////////////////////////
 
 nsIFrame::LogicalSides
-nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsInlineFrame::GetLogicalSkipSides(const ReflowInput* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
@@ -1093,7 +1093,7 @@ nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& i
 void
 nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
                          nsHTMLReflowMetrics& aMetrics,
-                         const nsHTMLReflowState& aReflowState,
+                         const ReflowInput& aReflowState,
                          nsReflowStatus& aStatus)
 {
   MarkInReflow();

@@ -94,7 +94,7 @@ public:
    */
   void Reflow(nsContainerFrame*        aDelegatingFrame,
               nsPresContext*           aPresContext,
-              const nsHTMLReflowState& aReflowState,
+              const ReflowInput& aReflowState,
               nsReflowStatus&          aReflowStatus,
               const nsRect&            aContainingBlock,
               AbsPosReflowFlags        aFlags,
@@ -127,7 +127,7 @@ protected:
 
   void ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                            nsPresContext*           aPresContext,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            const nsRect&            aContainingBlockRect,
                            AbsPosReflowFlags        aFlags,
                            nsIFrame*                aKidFrame,

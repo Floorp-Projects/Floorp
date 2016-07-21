@@ -1055,7 +1055,7 @@ nsIFrame::GetUsedPadding() const
 }
 
 nsIFrame::Sides
-nsIFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+nsIFrame::GetSkipSides(const ReflowInput* aReflowState) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
                      NS_STYLE_BOX_DECORATION_BREAK_CLONE) &&
@@ -4933,7 +4933,7 @@ nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
 
 void
 nsFrame::DidReflow(nsPresContext*           aPresContext,
-                   const nsHTMLReflowState*  aReflowState,
+                   const ReflowInput*  aReflowState,
                    nsDidReflowStatus         aStatus)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
@@ -4965,7 +4965,7 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
 void
 nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
                                         nsHTMLReflowMetrics&     aDesiredSize,
-                                        const nsHTMLReflowState& aReflowState,
+                                        const ReflowInput& aReflowState,
                                         nsReflowStatus&          aStatus,
                                         bool                     aConstrainBSize)
 {
@@ -4977,7 +4977,7 @@ nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
 void
 nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
+                              const ReflowInput& aReflowState,
                               nsReflowStatus&          aStatus,
                               bool                     aConstrainBSize)
 {
@@ -5031,7 +5031,7 @@ nsFrame::CanContinueTextRun() const
 void
 nsFrame::Reflow(nsPresContext*          aPresContext,
                 nsHTMLReflowMetrics&     aDesiredSize,
-                const nsHTMLReflowState& aReflowState,
+                const ReflowInput& aReflowState,
                 nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -5854,7 +5854,7 @@ nsIFrame::MovePositionBy(const nsPoint& aTranslation)
   if (IsRelativelyPositioned()) {
     computedOffsets = Properties().Get(nsIFrame::ComputedOffsetProperty());
   }
-  nsHTMLReflowState::ApplyRelativePositioning(this, computedOffsets ?
+  ReflowInput::ApplyRelativePositioning(this, computedOffsets ?
                                               *computedOffsets : nsMargin(),
                                               &position);
   SetPosition(position);
@@ -6044,7 +6044,7 @@ nsFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas)
 #define MAX_FRAME_DEPTH (MAX_REFLOW_DEPTH+4)
 
 bool
-nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
+nsFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowState,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus)
 {
@@ -8958,11 +8958,11 @@ nsFrame::DoXULLayout(nsBoxLayoutState& aState)
 
   if (HasAbsolutelyPositionedChildren()) {
     // Set up a |reflowState| to pass into ReflowAbsoluteFrames
-    nsHTMLReflowState reflowState(aState.PresContext(), this,
+    ReflowInput reflowState(aState.PresContext(), this,
                                   aState.GetRenderingContext(),
                                   LogicalSize(ourWM, ISize(),
                                               NS_UNCONSTRAINEDSIZE),
-                                  nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+                                  ReflowInput::DUMMY_PARENT_REFLOW_STATE);
 
     AddStateBits(NS_FRAME_IN_REFLOW);
     // Set up a |reflowStatus| to pass into ReflowAbsoluteFrames
@@ -9061,10 +9061,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     nsIFrame *parentFrame = GetParent();
     nsFrameState savedState = parentFrame->GetStateBits();
     WritingMode parentWM = parentFrame->GetWritingMode();
-    nsHTMLReflowState
+    ReflowInput
       parentReflowState(aPresContext, parentFrame, aRenderingContext,
                         LogicalSize(parentWM, parentSize),
-                        nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+                        ReflowInput::DUMMY_PARENT_REFLOW_STATE);
     parentFrame->RemoveStateBits(~nsFrameState(0));
     parentFrame->AddStateBits(savedState);
 
@@ -9082,10 +9082,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // Construct the parent chain manually since constructing it normally
     // messes up dimensions.
-    const nsHTMLReflowState *outerReflowState = aState.OuterReflowState();
+    const ReflowInput *outerReflowState = aState.OuterReflowState();
     NS_ASSERTION(!outerReflowState || outerReflowState->frame != this,
                  "in and out of XUL on a single frame?");
-    const nsHTMLReflowState* parentRS;
+    const ReflowInput* parentRS;
     if (outerReflowState && outerReflowState->frame == parentFrame) {
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
@@ -9102,9 +9102,9 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     WritingMode wm = GetWritingMode();
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
     logicalSize.BSize(wm) = NS_INTRINSICSIZE;
-    nsHTMLReflowState reflowState(aPresContext, *parentRS, this,
+    ReflowInput reflowState(aPresContext, *parentRS, this,
                                   logicalSize, nullptr,
-                                  nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+                                  ReflowInput::DUMMY_PARENT_REFLOW_STATE);
 
     // XXX_jwir3: This is somewhat fishy. If this is actually changing the value
     //            here (which it might be), then we should make sure that it's
@@ -9156,7 +9156,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       reflowState.SetHResize(true);
 
       // When font size inflation is enabled, a horizontal resize
-      // requires a full reflow.  See nsHTMLReflowState::InitResizeFlags
+      // requires a full reflow.  See ReflowInput::InitResizeFlags
       // for more details.
       if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
         AddStateBits(NS_FRAME_IS_DIRTY);
@@ -9491,7 +9491,7 @@ nsAdaptorAddIndents()
 }
 
 void
-nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
+nsAdaptorPrintReason(ReflowInput& aReflowState)
 {
     char* reflowReasonString;
 
@@ -9609,7 +9609,7 @@ nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList)
 
 DR_cookie::DR_cookie(nsPresContext*          aPresContext,
                      nsIFrame*                aFrame, 
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsHTMLReflowMetrics&     aMetrics,
                      nsReflowStatus&          aStatus)
   :mPresContext(aPresContext), mFrame(aFrame), mReflowState(aReflowState), mMetrics(aMetrics), mStatus(aStatus)
@@ -9675,7 +9675,7 @@ DR_intrinsic_size_cookie::~DR_intrinsic_size_cookie()
 
 DR_init_constraints_cookie::DR_init_constraints_cookie(
                      nsIFrame*                aFrame,
-                     nsHTMLReflowState*       aState,
+                     ReflowInput*       aState,
                      nscoord                  aCBWidth,
                      nscoord                  aCBHeight,
                      const nsMargin*          aMargin,
@@ -9684,7 +9684,7 @@ DR_init_constraints_cookie::DR_init_constraints_cookie(
   , mState(aState)
 {
   MOZ_COUNT_CTOR(DR_init_constraints_cookie);
-  mValue = nsHTMLReflowState::DisplayInitConstraintsEnter(mFrame, mState,
+  mValue = ReflowInput::DisplayInitConstraintsEnter(mFrame, mState,
                                                           aCBWidth, aCBHeight,
                                                           aMargin, aPadding);
 }
@@ -9692,7 +9692,7 @@ DR_init_constraints_cookie::DR_init_constraints_cookie(
 DR_init_constraints_cookie::~DR_init_constraints_cookie()
 {
   MOZ_COUNT_DTOR(DR_init_constraints_cookie);
-  nsHTMLReflowState::DisplayInitConstraintsExit(mFrame, mState, mValue);
+  ReflowInput::DisplayInitConstraintsExit(mFrame, mState, mValue);
 }
 
 DR_init_offsets_cookie::DR_init_offsets_cookie(
@@ -9718,18 +9718,18 @@ DR_init_offsets_cookie::~DR_init_offsets_cookie()
 
 DR_init_type_cookie::DR_init_type_cookie(
                      nsIFrame*                aFrame,
-                     nsHTMLReflowState*       aState)
+                     ReflowInput*       aState)
   : mFrame(aFrame)
   , mState(aState)
 {
   MOZ_COUNT_CTOR(DR_init_type_cookie);
-  mValue = nsHTMLReflowState::DisplayInitFrameTypeEnter(mFrame, mState);
+  mValue = ReflowInput::DisplayInitFrameTypeEnter(mFrame, mState);
 }
 
 DR_init_type_cookie::~DR_init_type_cookie()
 {
   MOZ_COUNT_DTOR(DR_init_type_cookie);
-  nsHTMLReflowState::DisplayInitFrameTypeExit(mFrame, mState, mValue);
+  ReflowInput::DisplayInitFrameTypeExit(mFrame, mState, mValue);
 }
 
 struct DR_FrameTypeInfo;
@@ -9748,7 +9748,7 @@ struct DR_State
   DR_FrameTypeInfo* GetFrameTypeInfo(char* aFrameName);
   void InitFrameTypeTable();
   DR_FrameTreeNode* CreateTreeNode(nsIFrame*                aFrame,
-                                   const nsHTMLReflowState* aReflowState);
+                                   const ReflowInput* aReflowState);
   void FindMatchingRule(DR_FrameTreeNode& aNode);
   bool RuleMatches(DR_Rule&          aRule,
                      DR_FrameTreeNode& aNode);
@@ -10218,12 +10218,12 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode)
 }
     
 DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
-                                           const nsHTMLReflowState* aReflowState)
+                                           const ReflowInput* aReflowState)
 {
   // find the frame of the parent reflow state (usually just the parent of aFrame)
   nsIFrame* parentFrame;
   if (aReflowState) {
-    const nsHTMLReflowState* parentRS = aReflowState->mParentReflowState;
+    const ReflowInput* parentRS = aReflowState->mParentReflowState;
     parentFrame = (parentRS) ? parentRS->frame : nullptr;
   } else {
     parentFrame = aFrame->GetParent();
@@ -10317,7 +10317,7 @@ CheckPixelError(nscoord aSize,
 
 static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
                                     nsIFrame*                aFrame,
-                                    const nsHTMLReflowState& aReflowState,
+                                    const ReflowInput& aReflowState,
                                     DR_FrameTreeNode&        aTreeNode,
                                     bool                     aChanged)
 {
@@ -10374,7 +10374,7 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
 
 void* nsFrame::DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
-                                  const nsHTMLReflowState& aReflowState)
+                                  const ReflowInput& aReflowState)
 {
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
@@ -10580,8 +10580,8 @@ void DR_cookie::Change() const
 }
 
 /* static */ void*
-nsHTMLReflowState::DisplayInitConstraintsEnter(nsIFrame* aFrame,
-                                               nsHTMLReflowState* aState,
+ReflowInput::DisplayInitConstraintsEnter(nsIFrame* aFrame,
+                                               ReflowInput* aState,
                                                nscoord aContainingBlockWidth,
                                                nscoord aContainingBlockHeight,
                                                const nsMargin* aBorder,
@@ -10619,8 +10619,8 @@ nsHTMLReflowState::DisplayInitConstraintsEnter(nsIFrame* aFrame,
 }
 
 /* static */ void
-nsHTMLReflowState::DisplayInitConstraintsExit(nsIFrame* aFrame,
-                                              nsHTMLReflowState* aState,
+ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
+                                              ReflowInput* aState,
                                               void* aValue)
 {
   NS_PRECONDITION(aFrame, "non-null frame required");
@@ -10661,7 +10661,7 @@ nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
 
-  // aState is not necessarily a nsHTMLReflowState
+  // aState is not necessarily a ReflowInput
   DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nullptr);
   if (treeNode && treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
@@ -10704,8 +10704,8 @@ nsCSSOffsetState::DisplayInitOffsetsExit(nsIFrame* aFrame,
 }
 
 /* static */ void*
-nsHTMLReflowState::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
-                                             nsHTMLReflowState* aState)
+ReflowInput::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
+                                             ReflowInput* aState)
 {
   NS_PRECONDITION(aFrame, "non-null frame required");
   NS_PRECONDITION(aState, "non-null state required");
@@ -10718,8 +10718,8 @@ nsHTMLReflowState::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
 }
 
 /* static */ void
-nsHTMLReflowState::DisplayInitFrameTypeExit(nsIFrame* aFrame,
-                                            nsHTMLReflowState* aState,
+ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
+                                            ReflowInput* aState,
                                             void* aValue)
 {
   NS_PRECONDITION(aFrame, "non-null frame required");

@@ -76,7 +76,7 @@ nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 /* virtual */ void
 nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
                         nsHTMLReflowMetrics& aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowState,
                         nsReflowStatus& aStatus)
 {
   // Even if we want to hide this frame, we have to reflow it first.

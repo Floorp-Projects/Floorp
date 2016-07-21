@@ -458,12 +458,12 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
         WritingMode wm = cb->GetWritingMode();
         const LogicalSize size(wm, cb->GetContentRectRelativeToSelf().Size());
 
-        nsHTMLReflowState::ComputeRelativeOffsets(wm, cont, size, newOffsets);
+        ReflowInput::ComputeRelativeOffsets(wm, cont, size, newOffsets);
         NS_ASSERTION(newOffsets.left == -newOffsets.right &&
                      newOffsets.top == -newOffsets.bottom,
                      "ComputeRelativeOffsets should return valid results");
 
-        // nsHTMLReflowState::ApplyRelativePositioning would work here, but
+        // ReflowInput::ApplyRelativePositioning would work here, but
         // since we've already checked mPosition and aren't changing the frame's
         // normal position, go ahead and add the offsets directly.
         cont->SetPosition(cont->GetNormalPosition() +
@@ -489,7 +489,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   LogicalSize parentSize = parentFrame->GetLogicalSize();
 
   nsFrameState savedState = parentFrame->GetStateBits();
-  nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
+  ReflowInput parentReflowState(aFrame->PresContext(), parentFrame,
                                       &rc, parentSize);
   parentFrame->RemoveStateBits(~nsFrameState(0));
   parentFrame->AddStateBits(savedState);
@@ -498,7 +498,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   // and therefore it won't have an mCBReflowState set up.
   // But we may need one (for InitCBReflowState in a child state), so let's
   // try to create one here for the cases where it will be needed.
-  Maybe<nsHTMLReflowState> cbReflowState;
+  Maybe<ReflowInput> cbReflowState;
   nsIFrame* cbFrame = parentFrame->GetContainingBlock();
   if (cbFrame && (aFrame->GetContainingBlock() != parentFrame ||
                   parentFrame->GetType() == nsGkAtoms::tableFrame)) {
@@ -532,7 +532,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
     parentReflowState.mStyleBorder->GetComputedBorder();
   cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
   LogicalSize lcbSize(frameWM, cbSize);
-  nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
+  ReflowInput reflowState(aFrame->PresContext(), parentReflowState,
                                 aFrame, availSize, &lcbSize);
   nsSize computedSize(reflowState.ComputedWidth(), reflowState.ComputedHeight());
   computedSize.width += reflowState.ComputedPhysicalBorderPadding().LeftRight();

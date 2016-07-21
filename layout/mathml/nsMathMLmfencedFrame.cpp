@@ -211,7 +211,7 @@ ApplyUnstretchedMetrics(nsPresContext*      aPresContext,
 void
 nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
+                             const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -261,7 +261,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+    ReflowInput childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
                 childReflowState, childStatus);

@@ -81,7 +81,7 @@ public:
   virtual nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
@@ -137,16 +137,16 @@ protected:
 
   explicit nsInlineFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
 
   void ReflowFrames(nsPresContext* aPresContext,
-                    const nsHTMLReflowState& aReflowState,
+                    const ReflowInput& aReflowState,
                     InlineReflowState& rs,
                     nsHTMLReflowMetrics& aMetrics,
                     nsReflowStatus& aStatus);
 
   void ReflowInlineFrame(nsPresContext* aPresContext,
-                         const nsHTMLReflowState& aReflowState,
+                         const ReflowInput& aReflowState,
                          InlineReflowState& rs,
                          nsIFrame* aFrame,
                          nsReflowStatus& aStatus);
@@ -210,7 +210,7 @@ public:
   virtual nsIAtom* GetType() const override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 
   virtual void Init(nsIContent*       aContent,

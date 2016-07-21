@@ -9,7 +9,7 @@
 #include "nsQueryFrame.h"
 
 namespace mozilla {
-struct nsHTMLReflowState;
+struct ReflowInput;
 } // namespace mozilla
 
 /**
@@ -24,10 +24,10 @@ public:
 
   // Notify the observer that aReflowState has no computed bsize,
   // but it has a percent bsize
-  virtual void NotifyPercentBSize(const mozilla::nsHTMLReflowState& aReflowState) = 0;
+  virtual void NotifyPercentBSize(const mozilla::ReflowInput& aReflowState) = 0;
 
   // Ask the observer if it should observe aReflowState.frame
-  virtual bool NeedsToObserve(const mozilla::nsHTMLReflowState& aReflowState) = 0;
+  virtual bool NeedsToObserve(const mozilla::ReflowInput& aReflowState) = 0;
 };
 
 #endif // nsIPercentBSizeObserver_h___ 

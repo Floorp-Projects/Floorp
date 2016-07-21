@@ -820,7 +820,7 @@ void
 nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
                                     nsPresContext*           aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                    const nsHTMLReflowState& aReflowState,
+                                    const ReflowInput& aReflowState,
                                     nsReflowStatus&          aStatus)
 {
   // Having foreign/hybrid children, e.g., from html markups, is not defined by
@@ -869,7 +869,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
 void
 nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
+                               const ReflowInput& aReflowState,
                                nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -890,7 +890,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
     WritingMode wm = childFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+    ReflowInput childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
                 childReflowState, childStatus);

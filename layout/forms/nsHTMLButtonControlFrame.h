@@ -36,7 +36,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext, 
@@ -102,7 +102,7 @@ protected:
   // of the button itself from the results.
   void ReflowButtonContents(nsPresContext* aPresContext,
                             nsHTMLReflowMetrics& aButtonDesiredSize,
-                            const nsHTMLReflowState& aButtonReflowState,
+                            const ReflowInput& aButtonReflowState,
                             nsIFrame* aFirstKid);
 
   nsButtonFrameRenderer mRenderer;

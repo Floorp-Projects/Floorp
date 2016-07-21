@@ -38,7 +38,7 @@ public:
 
   virtual void Reflow(nsPresContext* aPresContext,
                           nsHTMLReflowMetrics& aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
+                          const ReflowInput& aReflowState,
                           nsReflowStatus& aStatus) override;
   virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                  InlineMinISizeData *aData) override;
@@ -81,7 +81,7 @@ BRFrame::~BRFrame()
 void
 BRFrame::Reflow(nsPresContext* aPresContext,
                 nsHTMLReflowMetrics& aMetrics,
-                const nsHTMLReflowState& aReflowState,
+                const ReflowInput& aReflowState,
                 nsReflowStatus& aStatus)
 {
   MarkInReflow();

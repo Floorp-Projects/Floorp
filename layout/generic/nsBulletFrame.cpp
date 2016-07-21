@@ -631,7 +631,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 void
 nsBulletFrame::Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus)
 {
   MarkInReflow();

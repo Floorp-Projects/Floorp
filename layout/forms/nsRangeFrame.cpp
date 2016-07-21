@@ -315,7 +315,7 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsRangeFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -375,7 +375,7 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
 void
 nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState)
+                                     const ReflowInput& aReflowState)
 {
   // The width/height of our content box, which is the available width/height
   // for our anonymous content:
@@ -399,7 +399,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     WritingMode wm = trackFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState trackReflowState(aPresContext, aReflowState,
+    ReflowInput trackReflowState(aPresContext, aReflowState,
                                        trackFrame, availSize);
 
     // Find the x/y position of the track frame such that it will be positioned
@@ -434,7 +434,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     WritingMode wm = thumbFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState thumbReflowState(aPresContext, aReflowState,
+    ReflowInput thumbReflowState(aPresContext, aReflowState,
                                        thumbFrame, availSize);
 
     // Where we position the thumb depends on its size, so we first reflow
@@ -458,7 +458,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     WritingMode wm = rangeProgressFrame->GetWritingMode();
     LogicalSize availSize = aReflowState.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    nsHTMLReflowState progressReflowState(aPresContext, aReflowState,
+    ReflowInput progressReflowState(aPresContext, aReflowState,
                                           rangeProgressFrame, availSize);
 
     // We first reflow the range-progress frame at {0,0} to obtain its

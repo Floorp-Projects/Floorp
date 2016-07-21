@@ -39,7 +39,7 @@ public:
                                       bool aShrinkWrap) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 };
 

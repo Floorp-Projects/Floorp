@@ -229,7 +229,7 @@ nsTableWrapperFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 
 void
 nsTableWrapperFrame::InitChildReflowState(nsPresContext&     aPresContext,
-                                          nsHTMLReflowState& aReflowState)
+                                          ReflowInput& aReflowState)
 {
   nsMargin collapseBorder;
   nsMargin collapsePadding(0,0,0,0);
@@ -246,11 +246,11 @@ nsTableWrapperFrame::InitChildReflowState(nsPresContext&     aPresContext,
   aReflowState.Init(&aPresContext, nullptr, pCollapseBorder, pCollapsePadding);
 }
 
-// get the margin and padding data. nsHTMLReflowState doesn't handle the
+// get the margin and padding data. ReflowInput doesn't handle the
 // case of auto margins
 void
 nsTableWrapperFrame::GetChildMargin(nsPresContext*           aPresContext,
-                                    const nsHTMLReflowState& aOuterRS,
+                                    const ReflowInput& aOuterRS,
                                     nsIFrame*                aChildFrame,
                                     nscoord                  aAvailISize,
                                     LogicalMargin&           aMargin)
@@ -265,18 +265,18 @@ nsTableWrapperFrame::GetChildMargin(nsPresContext*           aPresContext,
   // XXX We really shouldn't construct a reflow state to do this.
   WritingMode wm = aOuterRS.GetWritingMode();
   LogicalSize availSize(wm, aAvailISize, aOuterRS.AvailableSize(wm).BSize(wm));
-  nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame, availSize,
-                            nullptr, nsHTMLReflowState::CALLER_WILL_INIT);
+  ReflowInput childRS(aPresContext, aOuterRS, aChildFrame, availSize,
+                            nullptr, ReflowInput::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, childRS);
 
   aMargin = childRS.ComputedLogicalMargin();
 }
 
 static nsSize
-GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
+GetContainingBlockSize(const ReflowInput& aOuterRS)
 {
   nsSize size(0,0);
-  const nsHTMLReflowState* containRS = aOuterRS.mCBReflowState;
+  const ReflowInput* containRS = aOuterRS.mCBReflowState;
 
   if (containRS) {
     size.width = containRS->ComputedWidth();
@@ -732,8 +732,8 @@ nsTableWrapperFrame::GetInnerOrigin(uint32_t             aCaptionSide,
 void
 nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext*            aPresContext,
                                            nsIFrame*                 aChildFrame,
-                                           const nsHTMLReflowState&  aOuterRS,
-                                           Maybe<nsHTMLReflowState>& aChildRS,
+                                           const ReflowInput&  aOuterRS,
+                                           Maybe<ReflowInput>& aChildRS,
                                            nscoord                   aAvailISize)
 {
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
@@ -761,7 +761,7 @@ nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext*            aPresContex
   // create and init the child reflow state, using passed-in Maybe<>,
   // so that caller can use it after we return.
   aChildRS.emplace(aPresContext, aOuterRS, aChildFrame, availSize,
-                  nullptr, nsHTMLReflowState::CALLER_WILL_INIT);
+                  nullptr, ReflowInput::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, *aChildRS);
 
   // see if we need to reset top-of-page due to a caption
@@ -778,7 +778,7 @@ nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext*            aPresContex
 void
 nsTableWrapperFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
                                         nsIFrame*                  aChildFrame,
-                                        const nsHTMLReflowState&   aChildRS,
+                                        const ReflowInput&   aChildRS,
                                         nsHTMLReflowMetrics&       aMetrics,
                                         nsReflowStatus&            aStatus)
 {
@@ -819,7 +819,7 @@ nsTableWrapperFrame::UpdateOverflowAreas(nsHTMLReflowMetrics& aMet)
 void
 nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aOuterRS,
+                            const ReflowInput& aOuterRS,
                             nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -836,8 +836,8 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
     MoveOverflowToChildList();
   }
 
-  Maybe<nsHTMLReflowState> captionRS;
-  Maybe<nsHTMLReflowState> innerRS;
+  Maybe<ReflowInput> captionRS;
+  Maybe<ReflowInput> innerRS;
 
   nsRect origInnerRect = InnerTableFrame()->GetRect();
   nsRect origInnerVisualOverflow = InnerTableFrame()->GetVisualOverflowRect();

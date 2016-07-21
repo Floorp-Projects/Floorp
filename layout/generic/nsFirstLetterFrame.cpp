@@ -164,7 +164,7 @@ nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 void
 nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aMetrics,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aReflowStatus)
 {
   MarkInReflow();
@@ -197,7 +197,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     // line context is when its floating.
     WritingMode kidWritingMode = GetWritingMode(kid);
     LogicalSize kidAvailSize = availSize.ConvertTo(kidWritingMode, wm);
-    nsHTMLReflowState rs(aPresContext, aReflowState, kid, kidAvailSize);
+    ReflowInput rs(aPresContext, aReflowState, kid, kidAvailSize);
     nsLineLayout ll(aPresContext, nullptr, &aReflowState, nullptr, nullptr);
 
     ll.BeginLineReflow(bp.IStart(wm), bp.BStart(wm),
@@ -398,7 +398,7 @@ nsFirstLetterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 }
 
 nsIFrame::LogicalSides
-nsFirstLetterFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsFirstLetterFrame::GetLogicalSkipSides(const ReflowInput* aReflowState) const
 {
   if (GetPrevContinuation()) {
     // We shouldn't get calls to GetSkipSides for later continuations since

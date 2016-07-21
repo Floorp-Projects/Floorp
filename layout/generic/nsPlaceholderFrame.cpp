@@ -106,7 +106,7 @@ nsPlaceholderFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
 void
 nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
+                           const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
 #ifdef DEBUG

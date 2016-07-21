@@ -384,7 +384,7 @@ nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 void
 nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
+                        const ReflowInput& aReflowState,
                         nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -449,7 +449,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   // get the legend's margin
   LogicalMargin legendMargin(wm);
   // reflow the legend only if needed
-  Maybe<nsHTMLReflowState> legendReflowState;
+  Maybe<ReflowInput> legendReflowState;
   if (legend) {
     legendReflowState.emplace(aPresContext, aReflowState, legend,
                                 legendAvailSize);
@@ -507,9 +507,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                           border.Size(wm)).GetPhysicalSize(wm);
   // reflow the content frame only if needed
   if (reflowInner) {
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, inner,
+    ReflowInput kidReflowState(aPresContext, aReflowState, inner,
                                      innerAvailSize, nullptr,
-                                     nsHTMLReflowState::CALLER_WILL_INIT);
+                                     ReflowInput::CALLER_WILL_INIT);
     // Override computed padding, in case it's percentage padding
     kidReflowState.Init(aPresContext, nullptr, nullptr,
                         &aReflowState.ComputedPhysicalPadding());
@@ -620,7 +620,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     LogicalMargin offsets =
       legendReflowState->ComputedLogicalOffsets().
         ConvertTo(wm, legendReflowState->GetWritingMode());
-    nsHTMLReflowState::ApplyRelativePositioning(legend, wm, offsets,
+    ReflowInput::ApplyRelativePositioning(legend, wm, offsets,
                                                 &actualLegendPos,
                                                 containerSize);
 

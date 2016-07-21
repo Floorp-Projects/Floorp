@@ -155,7 +155,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
 }
 
 static nscoord
-GetAvailableContentISize(const nsHTMLReflowState& aReflowState)
+GetAvailableContentISize(const ReflowInput& aReflowState)
 {
   if (aReflowState.AvailableISize() == NS_INTRINSICSIZE) {
     return NS_INTRINSICSIZE;
@@ -168,7 +168,7 @@ GetAvailableContentISize(const nsHTMLReflowState& aReflowState)
 }
 
 nscoord
-nsColumnSetFrame::GetAvailableContentBSize(const nsHTMLReflowState& aReflowState)
+nsColumnSetFrame::GetAvailableContentBSize(const ReflowInput& aReflowState)
 {
   if (aReflowState.AvailableBSize() == NS_INTRINSICSIZE) {
     return NS_INTRINSICSIZE;
@@ -198,7 +198,7 @@ GetColumnGap(nsColumnSetFrame*    aFrame,
 }
 
 nsColumnSetFrame::ReflowConfig
-nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
+nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowState,
                                        bool aForceAuto = false,
                                        nscoord aFeasibleBSize = NS_INTRINSICSIZE,
                                        nscoord aInfeasibleBSize = 0)
@@ -236,7 +236,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
   if (isBalancing) {
     const uint32_t MAX_NESTED_COLUMN_BALANCING = 2;
     uint32_t cnt = 0;
-    for (const nsHTMLReflowState* rs = aReflowState.mParentReflowState;
+    for (const ReflowInput* rs = aReflowState.mParentReflowState;
          rs && cnt < MAX_NESTED_COLUMN_BALANCING; rs = rs->mParentReflowState) {
       if (rs->mFlags.mIsColumnBalancing) {
         ++cnt;
@@ -343,7 +343,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
 
 bool
 nsColumnSetFrame::ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
-                                const nsHTMLReflowState& aReflowState,
+                                const ReflowInput& aReflowState,
                                 nsReflowStatus& aReflowStatus,
                                 ReflowConfig& aConfig,
                                 bool aLastColumnUnbounded,
@@ -450,7 +450,7 @@ nsColumnSetFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 
 bool
 nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState,
+                                 const ReflowInput& aReflowState,
                                  nsReflowStatus&          aStatus,
                                  const ReflowConfig&      aConfig,
                                  bool                     aUnboundedLastColumn,
@@ -606,7 +606,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         child->AddStateBits(NS_FRAME_IS_DIRTY);
 
       LogicalSize kidCBSize(wm, availSize.ISize(wm), computedSize.BSize(wm));
-      nsHTMLReflowState kidReflowState(PresContext(), aReflowState, child,
+      ReflowInput kidReflowState(PresContext(), aReflowState, child,
                                        availSize, &kidCBSize);
       kidReflowState.mFlags.mIsTopOfPage = true;
       kidReflowState.mFlags.mTableIsSplittable = false;
@@ -861,7 +861,7 @@ nsColumnSetFrame::DrainOverflowColumns()
 }
 
 void
-nsColumnSetFrame::FindBestBalanceBSize(const nsHTMLReflowState& aReflowState,
+nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowState,
                                        nsPresContext* aPresContext,
                                        ReflowConfig& aConfig,
                                        ColumnBalanceData& aColData,
@@ -1021,7 +1021,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const nsHTMLReflowState& aReflowState,
 void
 nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
+                         const ReflowInput& aReflowState,
                          nsReflowStatus&          aStatus)
 {
   MarkInReflow();

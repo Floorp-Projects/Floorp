@@ -493,7 +493,7 @@ nsBlockFrame::GetCaretBaseline() const
   RefPtr<nsFontMetrics> fm =
     nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
   nscoord lineHeight =
-    nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
+    ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
                                       contentRect.height, inflation);
   const WritingMode wm = GetWritingMode();
   return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight,
@@ -936,7 +936,7 @@ AvailableSpaceShrunk(WritingMode aWM,
 
 static LogicalSize
 CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
-                                         const nsHTMLReflowState& aReflowState,
+                                         const ReflowInput& aReflowState,
                                          LogicalSize aFrameSize)
 {
   // The issue here is that for a 'height' of 'auto' the reflow state
@@ -967,8 +967,8 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
     // First, find the reflow state for the outermost frame for this
     // content, except for fieldsets where the inner anonymous frame has
     // the correct padding area with the legend taken into account.
-    const nsHTMLReflowState* aLastRS = &aReflowState;
-    const nsHTMLReflowState* lastButOneRS = &aReflowState;
+    const ReflowInput* aLastRS = &aReflowState;
+    const ReflowInput* lastButOneRS = &aReflowState;
     while (aLastRS->mParentReflowState &&
            aLastRS->mParentReflowState->frame->GetContent() == frame->GetContent() &&
            aLastRS->mParentReflowState->frame->GetType() != nsGkAtoms::fieldSetFrame) {
@@ -1020,7 +1020,7 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
 void
 nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
-                     const nsHTMLReflowState& aReflowState,
+                     const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -1043,12 +1043,12 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 #endif
 
-  const nsHTMLReflowState *reflowState = &aReflowState;
+  const ReflowInput *reflowState = &aReflowState;
   WritingMode wm = aReflowState.GetWritingMode();
   nscoord consumedBSize = GetConsumedBSize();
   nscoord effectiveComputedBSize = GetEffectiveComputedBSize(aReflowState,
                                                              consumedBSize);
-  Maybe<nsHTMLReflowState> mutableReflowState;
+  Maybe<ReflowInput> mutableReflowState;
   // If we have non-auto block size, we're clipping our kids and we fit,
   // make sure our kids fit too.
   if (aReflowState.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
@@ -1077,7 +1077,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   nsSize oldSize = GetSize();
 
   // Should we create a float manager?
-  nsAutoFloatManager autoFloatManager(const_cast<nsHTMLReflowState&>(*reflowState));
+  nsAutoFloatManager autoFloatManager(const_cast<ReflowInput&>(*reflowState));
 
   // XXXldb If we start storing the float manager in the frame rather
   // than keeping it around only during reflow then we should create it
@@ -1476,7 +1476,7 @@ nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine()
 }
 
 void
-nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
+nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowState,
                                nsBlockReflowState&      aState,
                                nsHTMLReflowMetrics&     aMetrics,
                                nscoord*                 aBEndEdgeOfChildren)
@@ -3212,11 +3212,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // The availSpace here is irrelevant to our needs - all we want
       // out if this setup is the block-start margin value which doesn't depend
       // on the childs available space.
-      // XXX building a complete nsHTMLReflowState just to get the block-start
+      // XXX building a complete ReflowInput just to get the block-start
       // margin seems like a waste. And we do this for almost every block!
       WritingMode wm = frame->GetWritingMode();
       LogicalSize availSpace = aState.ContentSize(wm);
-      nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
+      ReflowInput reflowState(aState.mPresContext, aState.mReflowState,
                                     frame, availSpace);
 
       if (treatWithClearance) {
@@ -3354,7 +3354,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
     // construct the html reflow state for the block. ReflowBlock
     // will initialize it.
-    Maybe<nsHTMLReflowState> blockHtmlRS;
+    Maybe<ReflowInput> blockHtmlRS;
     blockHtmlRS.emplace(
       aState.mPresContext, aState.mReflowState, frame,
       availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
@@ -6096,7 +6096,7 @@ nsBlockFrame::ComputeFloatISize(nsBlockReflowState& aState,
 
   WritingMode blockWM = aState.mReflowState.GetWritingMode();
   WritingMode floatWM = aFloat->GetWritingMode();
-  nsHTMLReflowState
+  ReflowInput
     floatRS(aState.mPresContext, aState.mReflowState, aFloat,
             availSpace.Size(blockWM).ConvertTo(floatWM, blockWM));
 
@@ -6126,7 +6126,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   );
 #endif
 
-  nsHTMLReflowState
+  ReflowInput
     floatRS(aState.mPresContext, aState.mReflowState, aFloat,
             aAdjustedAvailableSpace.Size(wm).ConvertTo(aFloat->GetWritingMode(),
                                                        wm));
@@ -7176,7 +7176,7 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
                            nsHTMLReflowMetrics& aMetrics,
                            nscoord aLineTop)
 {
-  const nsHTMLReflowState &rs = aState.mReflowState;
+  const ReflowInput &rs = aState.mReflowState;
 
   // Reflow the bullet now
   WritingMode bulletWM = aBulletFrame->GetWritingMode();
@@ -7188,7 +7188,7 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   // Get the reason right.
   // XXXwaterson Should this look just like the logic in
   // nsBlockReflowContext::ReflowBlock and nsLineLayout::ReflowFrame?
-  nsHTMLReflowState reflowState(aState.mPresContext, rs,
+  ReflowInput reflowState(aState.mPresContext, rs,
                                 aBulletFrame, availSize);
   nsReflowStatus  status;
   aBulletFrame->Reflow(aState.mPresContext, aMetrics, reflowState, status);
@@ -7417,7 +7417,7 @@ nsBlockFrame::ISizeToClearPastFloats(const nsBlockReflowState& aState,
   WritingMode frWM = aFrame->GetWritingMode();
   LogicalSize availSpace = LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE).
                              ConvertTo(frWM, wm);
-  nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
+  ReflowInput reflowState(aState.mPresContext, aState.mReflowState,
                                 aFrame, availSpace);
   result.borderBoxISize =
     reflowState.ComputedSizeWithBorderPadding().ConvertTo(wm, frWM).ISize(wm);
@@ -7448,7 +7448,7 @@ nsBlockFrame::GetNearestAncestorBlock(nsIFrame* aCandidate)
 }
 
 void
-nsBlockFrame::ComputeFinalBSize(const nsHTMLReflowState& aReflowState,
+nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowState,
                                 nsReflowStatus*          aStatus,
                                 nscoord                  aContentBSize,
                                 const LogicalMargin&     aBorderPadding,

@@ -410,7 +410,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem>
 {
 public:
   // Normal constructor:
-  FlexItem(nsHTMLReflowState& aFlexItemReflowState,
+  FlexItem(ReflowInput& aFlexItemReflowState,
            float aFlexGrow, float aFlexShrink, nscoord aMainBaseSize,
            nscoord aMainMinSize, nscoord aMainMaxSize,
            nscoord aTentativeCrossSize,
@@ -744,7 +744,7 @@ public:
 
 protected:
   // Helper called by the constructor, to set mNeedsMinSizeAutoResolution:
-  void CheckForMinSizeAuto(const nsHTMLReflowState& aFlexItemReflowState,
+  void CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowState,
                            const FlexboxAxisTracker& aAxisTracker);
 
   // Our frame:
@@ -1181,13 +1181,13 @@ UniquePtr<FlexItem>
 nsFlexContainerFrame::GenerateFlexItemForChild(
   nsPresContext* aPresContext,
   nsIFrame*      aChildFrame,
-  const nsHTMLReflowState& aParentReflowState,
+  const ReflowInput& aParentReflowState,
   const FlexboxAxisTracker& aAxisTracker)
 {
   // Create temporary reflow state just for sizing -- to get hypothetical
   // main-size and the computed values of min / max main-size property.
   // (This reflow state will _not_ be used for reflow.)
-  nsHTMLReflowState
+  ReflowInput
     childRS(aPresContext, aParentReflowState, aChildFrame,
             aParentReflowState.ComputedSize(aChildFrame->GetWritingMode()));
 
@@ -1215,7 +1215,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   nscoord mainMaxSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker, childWM,
                                                    childRS.ComputedMaxISize(),
                                                    childRS.ComputedMaxBSize());
-  // This is enforced by the nsHTMLReflowState where these values come from:
+  // This is enforced by the ReflowInput where these values come from:
   MOZ_ASSERT(mainMinSize <= mainMaxSize, "min size is larger than max size");
 
   // CROSS SIZES (tentative cross size, min/max cross size)
@@ -1314,7 +1314,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 // The logic here should be similar to the logic for isAutoWidth/isAutoHeight
 // in nsLayoutUtils::ComputeSizeWithIntrinsicDimensions().
 static bool
-IsCrossSizeDefinite(const nsHTMLReflowState& aItemReflowState,
+IsCrossSizeDefinite(const ReflowInput& aItemReflowState,
                     const FlexboxAxisTracker& aAxisTracker)
 {
   const nsStylePosition* pos = aItemReflowState.mStylePosition;
@@ -1342,7 +1342,7 @@ IsCrossSizeDefinite(const nsHTMLReflowState& aItemReflowState,
 // If my understanding there ends up being wrong, we'll need to update this.
 static nscoord
 CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
-                        const nsHTMLReflowState& aItemReflowState,
+                        const ReflowInput& aItemReflowState,
                         bool aMinSizeFallback,
                         const FlexboxAxisTracker& aAxisTracker)
 {
@@ -1398,7 +1398,7 @@ MainSizeFromAspectRatio(nscoord aCrossSize,
 // Spec reference: http://dev.w3.org/csswg/css-flexbox/#min-size-auto
 static nscoord
 PartiallyResolveAutoMinSize(const FlexItem& aFlexItem,
-                            const nsHTMLReflowState& aItemReflowState,
+                            const ReflowInput& aItemReflowState,
                             const FlexboxAxisTracker& aAxisTracker)
 {
   MOZ_ASSERT(aFlexItem.NeedsMinSizeAutoResolution(),
@@ -1457,7 +1457,7 @@ PartiallyResolveAutoMinSize(const FlexItem& aFlexItem,
 // the cross-size is indefinite), returns false.
 static bool
 ResolveAutoFlexBasisFromRatio(FlexItem& aFlexItem,
-                              const nsHTMLReflowState& aItemReflowState,
+                              const ReflowInput& aItemReflowState,
                               const FlexboxAxisTracker& aAxisTracker)
 {
   MOZ_ASSERT(NS_AUTOHEIGHT == aFlexItem.GetFlexBaseSize(),
@@ -1493,7 +1493,7 @@ void
 nsFlexContainerFrame::
   ResolveAutoFlexBasisAndMinSize(nsPresContext* aPresContext,
                                  FlexItem& aFlexItem,
-                                 const nsHTMLReflowState& aItemReflowState,
+                                 const ReflowInput& aItemReflowState,
                                  const FlexboxAxisTracker& aAxisTracker)
 {
   // (Note: We should never have a used flex-basis of "auto" if our main axis
@@ -1518,7 +1518,7 @@ nsFlexContainerFrame::
   // have a single-line (nowrap) flex container which itself has a definite
   // cross-size.  Otherwise, we'll wait to do stretching, since (in other
   // cases) we don't know how much the item should stretch yet.
-  const nsHTMLReflowState* flexContainerRS = aItemReflowState.mParentReflowState;
+  const ReflowInput* flexContainerRS = aItemReflowState.mParentReflowState;
   MOZ_ASSERT(flexContainerRS,
              "flex item's reflow state should have ptr to container's state");
   if (NS_STYLE_FLEX_WRAP_NOWRAP == flexContainerRS->mStylePosition->mFlexWrap) {
@@ -1614,16 +1614,16 @@ nsFlexContainerFrame::
   MeasureFlexItemContentHeight(nsPresContext* aPresContext,
                                FlexItem& aFlexItem,
                                bool aForceVerticalResizeForMeasuringReflow,
-                               const nsHTMLReflowState& aParentReflowState)
+                               const ReflowInput& aParentReflowState)
 {
   // Set up a reflow state for measuring the flex item's auto-height:
   WritingMode wm = aFlexItem.Frame()->GetWritingMode();
   LogicalSize availSize = aParentReflowState.ComputedSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  nsHTMLReflowState
+  ReflowInput
     childRSForMeasuringHeight(aPresContext, aParentReflowState,
                               aFlexItem.Frame(), availSize,
-                              nullptr, nsHTMLReflowState::CALLER_WILL_INIT);
+                              nullptr, ReflowInput::CALLER_WILL_INIT);
   childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
   childRSForMeasuringHeight.Init(aPresContext);
 
@@ -1669,7 +1669,7 @@ nsFlexContainerFrame::
   return std::max(0, childDesiredHeight);
 }
 
-FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
+FlexItem::FlexItem(ReflowInput& aFlexItemReflowState,
                    float aFlexGrow, float aFlexShrink, nscoord aFlexBaseSize,
                    nscoord aMainMinSize,  nscoord aMainMaxSize,
                    nscoord aTentativeCrossSize,
@@ -1706,7 +1706,7 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
   MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
              "out-of-flow frames should not be treated as flex items");
 
-  const nsHTMLReflowState* containerRS = aFlexItemReflowState.mParentReflowState;
+  const ReflowInput* containerRS = aFlexItemReflowState.mParentReflowState;
   if (IsLegacyBox(containerRS->mStyleDisplay,
                   containerRS->frame->StyleContext())) {
     // For -webkit-box/-webkit-inline-box, we need to:
@@ -1806,7 +1806,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
 }
 
 void
-FlexItem::CheckForMinSizeAuto(const nsHTMLReflowState& aFlexItemReflowState,
+FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowState,
                               const FlexboxAxisTracker& aAxisTracker)
 {
   const nsStylePosition* pos = aFlexItemReflowState.mStylePosition;
@@ -3363,7 +3363,7 @@ AddNewFlexLineToList(LinkedList<FlexLine>& aLines,
 void
 nsFlexContainerFrame::GenerateFlexLines(
   nsPresContext* aPresContext,
-  const nsHTMLReflowState& aReflowState,
+  const ReflowInput& aReflowState,
   nscoord aContentBoxMainSize,
   nscoord aAvailableBSizeForContent,
   const nsTArray<StrutInfo>& aStruts,
@@ -3478,7 +3478,7 @@ nsFlexContainerFrame::GenerateFlexLines(
 // flex container).
 nscoord
 nsFlexContainerFrame::GetMainSizeFromReflowState(
-  const nsHTMLReflowState& aReflowState,
+  const ReflowInput& aReflowState,
   const FlexboxAxisTracker& aAxisTracker)
 {
   if (aAxisTracker.IsRowOriented()) {
@@ -3528,7 +3528,7 @@ GetLargestLineMainSize(const FlexLine* aFirstLine)
  * reflow state.)
  */
 static nscoord
-ResolveFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
+ResolveFlexContainerMainSize(const ReflowInput& aReflowState,
                              const FlexboxAxisTracker& aAxisTracker,
                              nscoord aTentativeMainSize,
                              nscoord aAvailableBSizeForContent,
@@ -3581,7 +3581,7 @@ ResolveFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
 }
 
 nscoord
-nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
+nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowState,
                                        const FlexboxAxisTracker& aAxisTracker,
                                        nscoord aSumLineCrossSizes,
                                        nscoord aAvailableBSizeForContent,
@@ -3680,7 +3680,7 @@ static nscoord
 ComputePhysicalAscentFromFlexRelativeAscent(
   nscoord aFlexRelativeAscent,
   nscoord aContentBoxCrossSize,
-  const nsHTMLReflowState& aReflowState,
+  const ReflowInput& aReflowState,
   const FlexboxAxisTracker& aAxisTracker)
 {
   return aReflowState.ComputedPhysicalBorderPadding().top +
@@ -3693,7 +3693,7 @@ void
 nsFlexContainerFrame::SizeItemInCrossAxis(
   nsPresContext* aPresContext,
   const FlexboxAxisTracker& aAxisTracker,
-  nsHTMLReflowState& aChildReflowState,
+  ReflowInput& aChildReflowState,
   FlexItem& aItem)
 {
   if (aAxisTracker.IsCrossAxisHorizontal()) {
@@ -3808,7 +3808,7 @@ FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
 void
 nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
+                             const ReflowInput& aReflowState,
                              nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -3951,7 +3951,7 @@ private:
 void
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState,
+                                   const ReflowInput& aReflowState,
                                    nsReflowStatus&          aStatus,
                                    nscoord aContentBoxMainSize,
                                    nscoord aAvailableBSizeForContent,
@@ -4001,7 +4001,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         WritingMode wm = item->Frame()->GetWritingMode();
         LogicalSize availSize = aReflowState.ComputedSize(wm);
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-        nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+        ReflowInput childReflowState(aPresContext, aReflowState,
                                            item->Frame(), availSize);
         if (!sizeOverride) {
           // Directly override the computed main-size, by tweaking reflow state:
@@ -4258,7 +4258,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
 void
 nsFlexContainerFrame::MoveFlexItemToFinalPosition(
-  const nsHTMLReflowState& aReflowState,
+  const ReflowInput& aReflowState,
   const FlexItem& aItem,
   LogicalPoint& aFramePos,
   const nsSize& aContainerSize)
@@ -4274,7 +4274,7 @@ nsFlexContainerFrame::MoveFlexItemToFinalPosition(
                "relpos previously-reflowed frame should've cached its offsets");
     logicalOffsets = LogicalMargin(outerWM, *cachedOffsets);
   }
-  nsHTMLReflowState::ApplyRelativePositioning(aItem.Frame(), outerWM,
+  ReflowInput::ApplyRelativePositioning(aItem.Frame(), outerWM,
                                               logicalOffsets, &aFramePos,
                                               aContainerSize);
   aItem.Frame()->SetPosition(outerWM, aFramePos, aContainerSize);
@@ -4285,7 +4285,7 @@ nsFlexContainerFrame::MoveFlexItemToFinalPosition(
 void
 nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
                                      const FlexboxAxisTracker& aAxisTracker,
-                                     const nsHTMLReflowState& aReflowState,
+                                     const ReflowInput& aReflowState,
                                      const FlexItem& aItem,
                                      LogicalPoint& aFramePos,
                                      const nsSize& aContainerSize)
@@ -4294,7 +4294,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   WritingMode wm = aItem.Frame()->GetWritingMode();
   LogicalSize availSize = aReflowState.ComputedSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+  ReflowInput childReflowState(aPresContext, aReflowState,
                                      aItem.Frame(), availSize);
 
   // Keep track of whether we've overriden the child's computed height
@@ -4375,7 +4375,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
 
   LogicalMargin offsets =
     childReflowState.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
-  nsHTMLReflowState::ApplyRelativePositioning(aItem.Frame(), outerWM,
+  ReflowInput::ApplyRelativePositioning(aItem.Frame(), outerWM,
                                               offsets, &aFramePos,
                                               aContainerSize);
 

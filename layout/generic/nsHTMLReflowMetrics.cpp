@@ -36,7 +36,7 @@ nsOverflowAreas::SetAllTo(const nsRect& aRect)
   }
 }
 
-nsHTMLReflowMetrics::nsHTMLReflowMetrics(const nsHTMLReflowState& aState,
+nsHTMLReflowMetrics::nsHTMLReflowMetrics(const ReflowInput& aState,
                                          uint32_t aFlags)
   : mISize(0)
   , mBSize(0)

@@ -66,7 +66,7 @@ public:
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
   /**
@@ -84,7 +84,7 @@ public:
    * GetContentDocumentFixedPositionMargins adjustments.
    * @return the rect to use as containing block rect
    */
-  nsRect AdjustReflowStateAsContainingBlock(nsHTMLReflowState* aReflowState) const;
+  nsRect AdjustReflowStateAsContainingBlock(ReflowInput* aReflowState) const;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -101,7 +101,7 @@ protected:
    * available width for aReflowState accordingly.
    * @return the current scroll position, or 0,0 if not scrollable
    */
-  nsPoint AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const;
+  nsPoint AdjustReflowStateForScrollbars(ReflowInput* aReflowState) const;
 };
 
 
