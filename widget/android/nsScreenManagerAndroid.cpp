@@ -7,6 +7,7 @@
 
 #include "nsScreenManagerAndroid.h"
 #include "nsWindow.h"
+#include "AndroidBridge.h"
 #include "GeneratedJNIWrappers.h"
 #include "AndroidRect.h"
 #include <mozilla/jni/Refs.h>
@@ -37,7 +38,7 @@ nsScreenAndroid::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, i
       return NS_ERROR_FAILURE;
     }
 
-    java::sdk::Rect::LocalRef rect = java::GeckoAppShell::GetScreenSize();
+    widget::sdk::Rect::LocalRef rect = widget::GeckoAppShell::GetScreenSize();
     rect->Left(outLeft);
     rect->Top(outTop);
     rect->Width(outWidth);
@@ -64,7 +65,7 @@ nsScreenAndroid::GetPixelDepth(int32_t *aPixelDepth)
       return NS_ERROR_FAILURE;
     }
 
-    *aPixelDepth = java::GeckoAppShell::GetScreenDepthWrapper();
+    *aPixelDepth = widget::GeckoAppShell::GetScreenDepthWrapper();
     return NS_OK;
 }
 
@@ -79,7 +80,7 @@ void
 nsScreenAndroid::ApplyMinimumBrightness(uint32_t aBrightness)
 {
     if (mozilla::jni::IsAvailable()) {
-      java::GeckoAppShell::SetKeepScreenOn(aBrightness == BRIGHTNESS_FULL);
+      widget::GeckoAppShell::SetKeepScreenOn(aBrightness == BRIGHTNESS_FULL);
     }
 }
 

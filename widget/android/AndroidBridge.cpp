@@ -57,7 +57,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::jni;
-using namespace mozilla::java;
+using namespace mozilla::widget;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
 pthread_t AndroidBridge::sJavaUiThread;
@@ -199,12 +199,12 @@ AndroidBridge::AndroidBridge()
     JNIEnv* const jEnv = jni::GetGeckoThreadEnv();
     AutoLocalJNIFrame jniFrame(jEnv);
 
-    mClassLoader = Object::GlobalRef(jEnv, java::GeckoThread::ClsLoader());
+    mClassLoader = Object::GlobalRef(jEnv, widget::GeckoThread::ClsLoader());
     mClassLoaderLoadClass = GetMethodID(
             jEnv, jEnv->GetObjectClass(mClassLoader.Get()),
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 
-    mMessageQueue = java::GeckoThread::MsgQueue();
+    mMessageQueue = widget::GeckoThread::MsgQueue();
     auto msgQueueClass = Class::LocalRef::Adopt(
             jEnv, jEnv->GetObjectClass(mMessageQueue.Get()));
     // mMessageQueueNext must not be null
@@ -987,7 +987,7 @@ AndroidBridge::HandleGeckoMessage(JSContext* cx, JS::HandleObject object)
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
-    auto message = widget::CreateNativeJSContainer(cx, object);
+    auto message = mozilla::widget::CreateNativeJSContainer(cx, object);
     GeckoAppShell::HandleGeckoMessageWrapper(message);
 }
 

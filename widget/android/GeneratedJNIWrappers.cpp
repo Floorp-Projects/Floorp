@@ -8,7 +8,7 @@
 #include "mozilla/jni/Accessors.h"
 
 namespace mozilla {
-namespace java {
+namespace widget {
 
 const char ANRReporter::name[] =
         "org/mozilla/gecko/ANRReporter";

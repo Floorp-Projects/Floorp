@@ -90,7 +90,7 @@ bool CameraStreamImpl::Init(const nsCString& contentType, const uint32_t& camera
 }
 
 void CameraStreamImpl::Close() {
-    java::GeckoAppShell::CloseCamera();
+    mozilla::widget::GeckoAppShell::CloseCamera();
     mCallback = nullptr;
 }
 

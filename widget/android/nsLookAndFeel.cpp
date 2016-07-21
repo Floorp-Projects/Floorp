@@ -475,7 +475,7 @@ nsLookAndFeel::GetEchoPasswordImpl()
 {
     if (!mInitializedShowPassword) {
         if (XRE_IsParentProcess()) {
-            mShowPassword = java::GeckoAppShell::GetShowPasswordSetting();
+            mShowPassword = widget::GeckoAppShell::GetShowPasswordSetting();
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
         }

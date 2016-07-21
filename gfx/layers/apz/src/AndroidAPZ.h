@@ -22,7 +22,7 @@ public:
     return this;
   }
 
-  java::StackScroller::GlobalRef mOverScroller;
+  widget::StackScroller::GlobalRef mOverScroller;
 };
 
 class AndroidFlingAnimation: public AsyncPanZoomAnimation {
@@ -40,7 +40,7 @@ private:
   bool CheckBounds(Axis& aAxis, float aValue, float aDirection, float* aClamped);
 
   AsyncPanZoomController& mApzc;
-  java::StackScroller::GlobalRef mOverScroller;
+  widget::StackScroller::GlobalRef mOverScroller;
   RefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   RefPtr<const AsyncPanZoomController> mScrolledApzc;
   bool mSentBounceX;

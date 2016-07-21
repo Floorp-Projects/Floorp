@@ -6,7 +6,7 @@
 #include "nsShellService.h"
 #include "nsString.h"
 
-#include "GeneratedJNIWrappers.h"
+#include "AndroidBridge.h"
 
 using namespace mozilla;
 
@@ -25,6 +25,6 @@ nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI,
   if (!aTitle.Length() || !aURI.Length())
     return NS_ERROR_FAILURE;
 
-  java::GeckoAppShell::CreateShortcut(aTitle, aURI);
+  widget::GeckoAppShell::CreateShortcut(aTitle, aURI);
   return NS_OK;
 }
