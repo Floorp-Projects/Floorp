@@ -2052,6 +2052,49 @@ public:
     template<class Impl> class Natives;
 };
 
+class GeckoNetworkManager : public mozilla::jni::ObjectBase<GeckoNetworkManager, jobject>
+{
+public:
+    static const char name[];
+
+    explicit GeckoNetworkManager(const Context& ctx) : ObjectBase<GeckoNetworkManager, jobject>(ctx) {}
+
+    struct OnConnectionChanged_t {
+        typedef GeckoNetworkManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                mozilla::jni::String::Param,
+                bool,
+                int32_t> Args;
+        static constexpr char name[] = "onConnectionChanged";
+        static constexpr char signature[] =
+                "(ILjava/lang/String;ZI)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct OnStatusChanged_t {
+        typedef GeckoNetworkManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "onStatusChanged";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static const bool isMultithreaded = false;
+
+    template<class Impl> class Natives;
+};
+
 class GeckoSmsManager : public mozilla::jni::ObjectBase<GeckoSmsManager, jobject>
 {
 public:
