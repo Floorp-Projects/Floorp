@@ -310,13 +310,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case THUMBNAIL: {
-            mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            ReadPointArray(mPoints, jenv, jPoints, 1);
-            mByteBuffer = new RefCountedJavaObject(jenv, jenv->GetObjectField(jobj, jByteBufferField));
-            break;
-        }
-
         case ZOOMEDVIEW: {
             mX = jenv->GetDoubleField(jobj, jXField);
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
