@@ -2866,11 +2866,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         eventRegions->AddFrame(aBuilder, child);
         aBuilder->SetLayerEventRegions(eventRegions);
         aLists.BorderBackground()->AppendNewToTop(eventRegions);
-      }
-
-      nsDisplayLayerEventRegions* eventRegions = aBuilder->GetLayerEventRegions();
-      if (eventRegions) {
-        eventRegions->AddFrame(aBuilder, child);
+      } else {
+        nsDisplayLayerEventRegions* eventRegions = aBuilder->GetLayerEventRegions();
+        if (eventRegions) {
+          eventRegions->AddFrame(aBuilder, child);
+        }
       }
     }
 
