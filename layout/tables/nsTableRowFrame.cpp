@@ -77,7 +77,7 @@ nsTableRowFrame::InitChildReflowState(nsPresContext&          aPresContext,
   nsMargin* pCollapseBorder = nullptr;
   if (aBorderCollapse) {
     // we only reflow cells, so don't need to check frame type
-    nsBCTableCellFrame* bcCellFrame = (nsBCTableCellFrame*)aReflowState.frame;
+    nsBCTableCellFrame* bcCellFrame = (nsBCTableCellFrame*)aReflowState.mFrame;
     if (bcCellFrame) {
       WritingMode wm = GetWritingMode();
       collapseBorder = bcCellFrame->GetBorderWidth(wm).GetPhysicalMargin(wm);

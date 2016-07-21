@@ -1872,7 +1872,7 @@ private:
     , mStartRow(0)
     , mWM(aWM)
   {
-    MOZ_ASSERT(!aReflowState || aReflowState->frame == mFrame);
+    MOZ_ASSERT(!aReflowState || aReflowState->mFrame == mFrame);
     if (aReflowState) {
       mBorderPadding = aReflowState->ComputedLogicalBorderPadding();
       mSkipSides = aFrame->PreReflowBlockLevelLogicalSkipSides();
@@ -4567,14 +4567,14 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowState& aState) con
   const ReflowInput* gridRS = aState.mReflowState;
   const ReflowInput* cbRS = gridRS->mCBReflowState;
   for ( ; cbRS; cbRS = cbRS->mCBReflowState) {
-    nsIScrollableFrame* sf = do_QueryFrame(cbRS->frame);
+    nsIScrollableFrame* sf = do_QueryFrame(cbRS->mFrame);
     if (sf) {
       break;
     }
     if (wm.IsOrthogonalTo(cbRS->GetWritingMode())) {
       break;
     }
-    nsIAtom* frameType = cbRS->frame->GetType();
+    nsIAtom* frameType = cbRS->mFrame->GetType();
     if ((frameType == nsGkAtoms::canvasFrame &&
          PresContext()->IsPaginated()) ||
         frameType == nsGkAtoms::columnSetFrame) {

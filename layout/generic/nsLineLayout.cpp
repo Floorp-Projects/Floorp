@@ -83,25 +83,25 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mDirtyNextLine(false),
     mLineAtStart(false),
     mHasRuby(false),
-    mSuppressLineWrap(aOuterReflowState->frame->IsSVGText())
+    mSuppressLineWrap(aOuterReflowState->mFrame->IsSVGText())
 {
   MOZ_ASSERT(aOuterReflowState, "aOuterReflowState must not be null");
-  NS_ASSERTION(aFloatManager || aOuterReflowState->frame->GetType() ==
+  NS_ASSERTION(aFloatManager || aOuterReflowState->mFrame->GetType() ==
                                   nsGkAtoms::letterFrame,
                "float manager should be present");
   MOZ_ASSERT((!!mBaseLineLayout) ==
-             (aOuterReflowState->frame->GetType() ==
+             (aOuterReflowState->mFrame->GetType() ==
               nsGkAtoms::rubyTextContainerFrame),
              "Only ruby text container frames have "
              "a different base line layout");
   MOZ_COUNT_CTOR(nsLineLayout);
 
   // Stash away some style data that we need
-  nsBlockFrame* blockFrame = do_QueryFrame(aOuterReflowState->frame);
+  nsBlockFrame* blockFrame = do_QueryFrame(aOuterReflowState->mFrame);
   if (blockFrame)
     mStyleText = blockFrame->StyleTextForLineLayout();
   else
-    mStyleText = aOuterReflowState->frame->StyleText();
+    mStyleText = aOuterReflowState->mFrame->StyleText();
 
   mLineNumber = 0;
   mTotalPlacedFrames = 0;
@@ -109,7 +109,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mTrimmableISize = 0;
 
   mInflationMinFontSize =
-    nsLayoutUtils::InflationMinFontSizeFor(aOuterReflowState->frame);
+    nsLayoutUtils::InflationMinFontSizeFor(aOuterReflowState->mFrame);
 
   // Instead of always pre-initializing the free-lists for frames and
   // spans, we do it on demand so that situations that only use a few
@@ -162,19 +162,19 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 #ifdef DEBUG
   if ((aISize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aISize) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
+    nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
     printf(": Init: bad caller: width WAS %d(0x%x)\n",
            aISize, aISize);
   }
   if ((aBSize != NS_UNCONSTRAINEDSIZE) && CRAZY_SIZE(aBSize) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
+    nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
     printf(": Init: bad caller: height WAS %d(0x%x)\n",
            aBSize, aBSize);
   }
 #endif
 #ifdef NOISY_REFLOW
-  nsFrame::ListTag(stdout, mBlockReflowState->frame);
+  nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
   printf(": BeginLineReflow: %d,%d,%d,%d impacted=%s %s\n",
          aICoord, aBCoord, aISize, aBSize,
          aImpactedByFloats?"true":"false",
@@ -219,7 +219,7 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   // If this is the first line of a block then see if the text-indent
   // property amounts to anything.
 
-  if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowState->frame)) {
+  if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowState->mFrame)) {
     const nsStyleCoord &textIndent = mStyleText->mTextIndent;
     nscoord pctBasis = 0;
     if (textIndent.HasPercent()) {
@@ -233,11 +233,11 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
     psd->mICoord += indent;
   }
 
-  PerFrameData* pfd = NewPerFrameData(mBlockReflowState->frame);
+  PerFrameData* pfd = NewPerFrameData(mBlockReflowState->mFrame);
   pfd->mAscent = 0;
   pfd->mSpan = psd;
   psd->mFrame = pfd;
-  nsIFrame* frame = mBlockReflowState->frame;
+  nsIFrame* frame = mBlockReflowState->mFrame;
   if (frame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
     // Ruby text container won't be reflowed via ReflowFrame, hence the
     // relative positioning information should be recorded here.
@@ -258,7 +258,7 @@ void
 nsLineLayout::EndLineReflow()
 {
 #ifdef NOISY_REFLOW
-  nsFrame::ListTag(stdout, mBlockReflowState->frame);
+  nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
   printf(": EndLineReflow: width=%d\n", mRootSpan->mICoord - mRootSpan->mIStart);
 #endif
 
@@ -314,14 +314,14 @@ nsLineLayout::UpdateBand(WritingMode aWM,
   if ((availSpace.ISize(lineWM) != NS_UNCONSTRAINEDSIZE) &&
       CRAZY_SIZE(availSpace.ISize(lineWM)) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
+    nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
     printf(": UpdateBand: bad caller: ISize WAS %d(0x%x)\n",
            availSpace.ISize(lineWM), availSpace.ISize(lineWM));
   }
   if ((availSpace.BSize(lineWM) != NS_UNCONSTRAINEDSIZE) &&
       CRAZY_SIZE(availSpace.BSize(lineWM)) &&
       !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
+    nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
     printf(": UpdateBand: bad caller: BSize WAS %d(0x%x)\n",
            availSpace.BSize(lineWM), availSpace.BSize(lineWM));
   }
@@ -340,7 +340,7 @@ nsLineLayout::UpdateBand(WritingMode aWM,
   nscoord deltaISize = availSpace.ISize(lineWM) -
                        (mRootSpan->mIEnd - mRootSpan->mIStart);
 #ifdef NOISY_REFLOW
-  nsFrame::ListTag(stdout, mBlockReflowState->frame);
+  nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
   printf(": UpdateBand: %d,%d,%d,%d deltaISize=%d deltaICoord=%d\n",
          availSpace.IStart(lineWM), availSpace.BStart(lineWM),
          availSpace.ISize(lineWM), availSpace.BSize(lineWM),
@@ -443,7 +443,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   psd->mIEnd = aIEnd;
   psd->mBaseline = aBaseline;
 
-  nsIFrame* frame = aSpanReflowState->frame;
+  nsIFrame* frame = aSpanReflowState->mFrame;
   psd->mNoWrap = !frame->StyleText()->WhiteSpaceCanWrap(frame) ||
                  mSuppressLineWrap ||
                  frame->StyleContext()->ShouldSuppressLineBreak();
@@ -1470,7 +1470,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
   NS_ASSERTION(mGotLineBox, "must have line box");
 
-  nsIFrame *blockFrame = mBlockReflowState->frame;
+  nsIFrame *blockFrame = mBlockReflowState->mFrame;
   NS_ASSERTION(blockFrame->IsFrameOfType(nsIFrame::eBlockFrame),
                "must be for block");
   if (!static_cast<nsBlockFrame*>(blockFrame)->BulletIsEmpty()) {
@@ -2004,7 +2004,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("  [frame]");
-    nsFrame::ListTag(stdout, frame);
+    nsFrame::ListTag(stdout, mFrame);
     printf(": verticalAlignUnit=%d (enum == %d",
            verticalAlign.GetUnit(),
            ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
@@ -3121,7 +3121,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
   nscoord availISize = psd->mIEnd - psd->mIStart;
   nscoord remainingISize = availISize - aLine->ISize();
 #ifdef NOISY_INLINEDIR_ALIGN
-  nsFrame::ListTag(stdout, mBlockReflowState->frame);
+  nsFrame::ListTag(stdout, mBlockReflowState->mFrame);
   printf(": availISize=%d lineBounds.IStart=%d lineISize=%d delta=%d\n",
          availISize, aLine->IStart(), aLine->ISize(), remainingISize);
 #endif
@@ -3146,7 +3146,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
     }
   }
 
-  bool isSVG = mBlockReflowState->frame->IsSVGText();
+  bool isSVG = mBlockReflowState->mFrame->IsSVGText();
   bool doTextAlign = remainingISize > 0 || textAlignTrue;
 
   int32_t additionalGaps = 0;
@@ -3363,7 +3363,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
             frame->StyleText()->HasTextEmphasis() ||
             frame->StyleText()->HasWebkitTextStroke()) {
           nsTextFrame* f = static_cast<nsTextFrame*>(frame);
-          r = f->RecomputeOverflow(mBlockReflowState->frame);
+          r = f->RecomputeOverflow(mBlockReflowState->mFrame);
         }
         frame->FinishAndStoreOverflow(r, frame->GetSize());
       }

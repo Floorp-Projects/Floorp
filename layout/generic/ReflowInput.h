@@ -103,8 +103,8 @@ public:
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalMargin LogicalMargin;
 
-  // the frame being reflowed
-  nsIFrame*           frame;
+  // The frame being reflowed.
+  nsIFrame* mFrame;
 
   // rendering context to use for measurement
   nsRenderingContext* rendContext;
@@ -165,7 +165,7 @@ protected:
 public:
   // Callers using this constructor must call InitOffsets on their own.
   SizeComputationInput(nsIFrame *aFrame, nsRenderingContext *aRenderingContext)
-    : frame(aFrame)
+    : mFrame(aFrame)
     , rendContext(aRenderingContext)
     , mWritingMode(aFrame->GetWritingMode())
   {
@@ -816,10 +816,10 @@ public:
     // were tested there along with NS_FRAME_CONTAINS_RELATIVE_BSIZE.
     // This would need to be combined with a slight change in which
     // frames NS_FRAME_CONTAINS_RELATIVE_BSIZE is marked on.
-    return (frame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
+    return (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
            IsIResize() ||
            (IsBResize() && 
-            (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
+            (mFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
   }
 
   // This method doesn't apply min/max computed widths to the value passed in.
@@ -870,7 +870,7 @@ public:
                                        nsPoint* aPosition);
 
   void ApplyRelativePositioning(nsPoint* aPosition) const {
-    ApplyRelativePositioning(frame, ComputedPhysicalOffsets(), aPosition);
+    ApplyRelativePositioning(mFrame, ComputedPhysicalOffsets(), aPosition);
   }
 
   static void
@@ -896,7 +896,7 @@ public:
 
   void ApplyRelativePositioning(mozilla::LogicalPoint* aPosition,
                                 const nsSize& aContainerSize) const {
-    ApplyRelativePositioning(frame, mWritingMode,
+    ApplyRelativePositioning(mFrame, mWritingMode,
                              ComputedLogicalOffsets(), aPosition,
                              aContainerSize);
   }

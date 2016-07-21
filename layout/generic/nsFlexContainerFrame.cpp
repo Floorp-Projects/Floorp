@@ -1675,7 +1675,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowState,
                    nscoord aTentativeCrossSize,
                    nscoord aCrossMinSize, nscoord aCrossMaxSize,
                    const FlexboxAxisTracker& aAxisTracker)
-  : mFrame(aFlexItemReflowState.frame),
+  : mFrame(aFlexItemReflowState.mFrame),
     mFlexGrow(aFlexGrow),
     mFlexShrink(aFlexShrink),
     mIntrinsicRatio(mFrame->GetIntrinsicRatio()),
@@ -1708,7 +1708,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowState,
 
   const ReflowInput* containerRS = aFlexItemReflowState.mParentReflowState;
   if (IsLegacyBox(containerRS->mStyleDisplay,
-                  containerRS->frame->StyleContext())) {
+                  containerRS->mFrame->StyleContext())) {
     // For -webkit-box/-webkit-inline-box, we need to:
     // (1) Use "-webkit-box-align" instead of "align-items" to determine the
     //     container's cross-axis alignment behavior.
@@ -1716,7 +1716,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowState,
     //     cross-axis alignment. (The legacy box model doesn't support this.)
     // So, each FlexItem simply copies the container's converted "align-items"
     // value and disregards their own "align-self" property.
-    const nsStyleXUL* containerStyleXUL = containerRS->frame->StyleXUL();
+    const nsStyleXUL* containerStyleXUL = containerRS->mFrame->StyleXUL();
     mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
   } else {
     mAlignSelf = aFlexItemReflowState.mStylePosition->ComputedAlignSelf(

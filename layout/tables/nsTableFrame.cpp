@@ -77,10 +77,10 @@ struct TableReflowInput {
     : reflowState(aReflowState)
     , availSize(aAvailSize)
   {
-    MOZ_ASSERT(reflowState.frame->GetType() == nsGkAtoms::tableFrame,
+    MOZ_ASSERT(reflowState.mFrame->GetType() == nsGkAtoms::tableFrame,
                "TableReflowInput should only be created for nsTableFrame");
     nsTableFrame* table =
-      static_cast<nsTableFrame*>(reflowState.frame->FirstInFlow());
+      static_cast<nsTableFrame*>(reflowState.mFrame->FirstInFlow());
     WritingMode wm = aReflowState.GetWritingMode();
     LogicalMargin borderPadding = table->GetChildAreaOffset(wm, &reflowState);
 
@@ -1677,8 +1677,8 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowState)
 {
   WritingMode wm = aParentReflowState.GetWritingMode();
   for (const ReflowInput* rs = &aParentReflowState;
-       rs && rs->frame; rs = rs->mParentReflowState) {
-    nsIAtom* frameType = rs->frame->GetType();
+       rs && rs->mFrame; rs = rs->mParentReflowState) {
+    nsIAtom* frameType = rs->mFrame->GetType();
     if (IS_TABLE_CELL(frameType)                     ||
         (nsGkAtoms::tableRowFrame      == frameType) ||
         (nsGkAtoms::tableRowGroupFrame == frameType)) {
@@ -1702,13 +1702,13 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowState)
 void
 nsTableFrame::CheckRequestSpecialBSizeReflow(const ReflowInput& aReflowState)
 {
-  NS_ASSERTION(IS_TABLE_CELL(aReflowState.frame->GetType()) ||
-               aReflowState.frame->GetType() == nsGkAtoms::tableRowFrame ||
-               aReflowState.frame->GetType() == nsGkAtoms::tableRowGroupFrame ||
-               aReflowState.frame->GetType() == nsGkAtoms::tableFrame,
+  NS_ASSERTION(IS_TABLE_CELL(aReflowState.mFrame->GetType()) ||
+               aReflowState.mFrame->GetType() == nsGkAtoms::tableRowFrame ||
+               aReflowState.mFrame->GetType() == nsGkAtoms::tableRowGroupFrame ||
+               aReflowState.mFrame->GetType() == nsGkAtoms::tableFrame,
                "unexpected frame type");
   WritingMode wm = aReflowState.GetWritingMode();
-  if (!aReflowState.frame->GetPrevInFlow() &&  // 1st in flow
+  if (!aReflowState.mFrame->GetPrevInFlow() &&  // 1st in flow
       (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedBSize() ||  // no computed bsize
        0                    == aReflowState.ComputedBSize()) &&
       eStyleUnit_Percent == aReflowState.mStylePosition->BSize(wm).GetUnit() && // pct bsize
@@ -1726,15 +1726,15 @@ void
 nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowState)
 {
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
-  for (const ReflowInput* rs = &aReflowState; rs && rs->frame; rs = rs->mParentReflowState) {
-    nsIAtom* frameType = rs->frame->GetType();
+  for (const ReflowInput* rs = &aReflowState; rs && rs->mFrame; rs = rs->mParentReflowState) {
+    nsIAtom* frameType = rs->mFrame->GetType();
     NS_ASSERTION(IS_TABLE_CELL(frameType) ||
                  nsGkAtoms::tableRowFrame == frameType ||
                  nsGkAtoms::tableRowGroupFrame == frameType ||
                  nsGkAtoms::tableFrame == frameType,
                  "unexpected frame type");
 
-    rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+    rs->mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     if (nsGkAtoms::tableFrame == frameType) {
       NS_ASSERTION(rs != &aReflowState,
                    "should not request special bsize reflow for table");
@@ -2751,7 +2751,7 @@ nsTableFrame::InitChildReflowState(ReflowInput& aReflowState)
   nsPresContext* presContext = PresContext();
   if (IsBorderCollapse()) {
     nsTableRowGroupFrame* rgFrame =
-       static_cast<nsTableRowGroupFrame*>(aReflowState.frame);
+       static_cast<nsTableRowGroupFrame*>(aReflowState.mFrame);
     WritingMode wm = GetWritingMode();
     LogicalMargin border = rgFrame->GetBCBorderWidth(wm);
     collapseBorder = border.GetPhysicalMargin(wm);

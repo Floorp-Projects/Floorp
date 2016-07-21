@@ -67,7 +67,7 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRS,
   // caller.
 
 #ifdef NOISY_BLOCKDIR_MARGINS
-  nsFrame::ListTag(stdout, aRS.frame);
+  nsFrame::ListTag(stdout, aRS.mFrame);
   printf(": %d => %d\n", aRS.ComputedLogicalMargin().BStart(wm), aMargin->get());
 #endif
 
@@ -79,7 +79,7 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRS,
   // block-start-padding then this step is skipped because it will be a margin
   // root.  It is also skipped if the frame is a margin root for other
   // reasons.
-  nsIFrame* frame = DescendIntoBlockLevelFrame(aRS.frame);
+  nsIFrame* frame = DescendIntoBlockLevelFrame(aRS.mFrame);
   nsPresContext* prescontext = frame->PresContext();
   nsBlockFrame* block = nullptr;
   if (0 == aRS.ComputedLogicalBorderPadding().BStart(wm)) {
@@ -153,8 +153,8 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRS,
           // we can only drill down one level so we only have to support
           // one extra reflow state.
           const ReflowInput* outerReflowState = &aRS;
-          if (frame != aRS.frame) {
-            NS_ASSERTION(frame->GetParent() == aRS.frame,
+          if (frame != aRS.mFrame) {
+            NS_ASSERTION(frame->GetParent() == aRS.mFrame,
                          "Can only drill through one level of block wrapper");
             LogicalSize availSpace = aRS.ComputedSize(frame->GetWritingMode());
             outerReflowState = new ReflowInput(prescontext,
@@ -202,18 +202,18 @@ nsBlockReflowContext::ComputeCollapsedBStartMargin(const ReflowInput& aRS,
         // and we have processed all its normal lines.
         setBlockIsEmpty = true;
         // All lines are empty, or we wouldn't be here!
-        *aBlockIsEmpty = aRS.frame->IsSelfEmpty();
+        *aBlockIsEmpty = aRS.mFrame->IsSelfEmpty();
       }
     }
   }
   done:
 
   if (!setBlockIsEmpty && aBlockIsEmpty) {
-    *aBlockIsEmpty = aRS.frame->IsEmpty();
+    *aBlockIsEmpty = aRS.mFrame->IsEmpty();
   }
   
 #ifdef NOISY_BLOCKDIR_MARGINS
-  nsFrame::ListTag(stdout, aRS.frame);
+  nsFrame::ListTag(stdout, aRS.mFrame);
   printf(": => %d\n", aMargin->get());
 #endif
 
@@ -231,7 +231,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
                                   nsReflowStatus&     aFrameReflowStatus,
                                   BlockReflowInput& aState)
 {
-  mFrame = aFrameRS.frame;
+  mFrame = aFrameRS.mFrame;
   mWritingMode = aState.mReflowState.GetWritingMode();
   mContainerSize = aState.ContainerSize();
   mSpace = aSpace;
@@ -244,7 +244,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
     mBStartMargin = aPrevMargin;
 
 #ifdef NOISY_BLOCKDIR_MARGINS
-    nsFrame::ListTag(stdout, mOuterReflowState.frame);
+    nsFrame::ListTag(stdout, mOuterReflowState.mFrame);
     printf(": reflowing ");
     nsFrame::ListTag(stdout, mFrame);
     printf(" margin => %d, clearance => %d\n", mBStartMargin.get(), aClearance);
@@ -395,7 +395,7 @@ nsBlockReflowContext::PlaceBlock(const ReflowInput&  aReflowState,
 
 #ifdef NOISY_BLOCKDIR_MARGINS
     printf("  ");
-    nsFrame::ListTag(stdout, mOuterReflowState.frame);
+    nsFrame::ListTag(stdout, mOuterReflowState.mFrame);
     printf(": ");
     nsFrame::ListTag(stdout, mFrame);
     printf(" -- collapsing block start & end margin together; BStart=%d spaceBStart=%d\n",
