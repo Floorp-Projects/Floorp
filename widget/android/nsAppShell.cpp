@@ -81,42 +81,6 @@ StaticAutoPtr<Mutex> nsAppShell::sAppShellLock;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAppShell, nsBaseAppShell, nsIObserver)
 
-class ThumbnailRunnable : public Runnable {
-public:
-    ThumbnailRunnable(nsIAndroidBrowserApp* aBrowserApp, int aTabId,
-                       const nsTArray<nsIntPoint>& aPoints, RefCountedJavaObject* aBuffer):
-        mBrowserApp(aBrowserApp), mPoints(aPoints), mTabId(aTabId), mBuffer(aBuffer) {}
-
-    virtual nsresult Run() {
-        const auto& buffer = jni::ByteBuffer::Ref::From(mBuffer->GetObject());
-        nsCOMPtr<mozIDOMWindowProxy> domWindow;
-        nsCOMPtr<nsIBrowserTab> tab;
-        mBrowserApp->GetBrowserTab(mTabId, getter_AddRefs(tab));
-        if (!tab) {
-            widget::ThumbnailHelper::SendThumbnail(buffer, mTabId, false, false);
-            return NS_ERROR_FAILURE;
-        }
-
-        tab->GetWindow(getter_AddRefs(domWindow));
-        if (!domWindow) {
-            widget::ThumbnailHelper::SendThumbnail(buffer, mTabId, false, false);
-            return NS_ERROR_FAILURE;
-        }
-
-        NS_ASSERTION(mPoints.Length() == 1, "Thumbnail event does not have enough coordinates");
-
-        bool shouldStore = true;
-        nsresult rv = AndroidBridge::Bridge()->CaptureThumbnail(domWindow, mPoints[0].x, mPoints[0].y, mTabId, buffer, shouldStore);
-        widget::ThumbnailHelper::SendThumbnail(buffer, mTabId, NS_SUCCEEDED(rv), shouldStore);
-        return rv;
-    }
-private:
-    nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
-    nsTArray<nsIntPoint> mPoints;
-    int mTabId;
-    RefPtr<RefCountedJavaObject> mBuffer;
-};
-
 class WakeLockListener final : public nsIDOMMozWakeLockListener {
 private:
   ~WakeLockListener() {}
@@ -696,18 +660,6 @@ nsAppShell::LegacyGeckoEvent::Run()
     case AndroidGeckoEvent::NATIVE_POKE:
         nsAppShell::Get()->NativeEventCallback();
         break;
-
-    case AndroidGeckoEvent::THUMBNAIL: {
-        if (!nsAppShell::Get()->mBrowserApp)
-            break;
-
-        int32_t tabId = curEvent->MetaState();
-        const nsTArray<nsIntPoint>& points = curEvent->Points();
-        RefCountedJavaObject* buffer = curEvent->ByteBuffer();
-        RefPtr<ThumbnailRunnable> sr = new ThumbnailRunnable(nsAppShell::Get()->mBrowserApp, tabId, points, buffer);
-        MessageLoop::current()->PostIdleTask(NewRunnableMethod(sr.get(), &ThumbnailRunnable::Run));
-        break;
-    }
 
     case AndroidGeckoEvent::ZOOMEDVIEW: {
         if (!nsAppShell::Get()->mBrowserApp)
