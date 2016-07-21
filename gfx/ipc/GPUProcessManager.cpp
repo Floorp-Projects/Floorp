@@ -135,6 +135,12 @@ GPUProcessManager::EnsureGPUReady()
 }
 
 void
+GPUProcessManager::EnsureVRManager()
+{
+  VRManagerChild::InitSameProcess();
+}
+
+void
 GPUProcessManager::EnsureImageBridgeChild()
 {
   if (ImageBridgeChild::IsCreated()) {
@@ -259,6 +265,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
   uint64_t layerTreeId = AllocateLayerTreeId();
 
   EnsureImageBridgeChild();
+  EnsureVRManager();
 
   if (mGPUChild) {
     RefPtr<CompositorSession> session = CreateRemoteSession(
