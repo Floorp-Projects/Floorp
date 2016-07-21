@@ -316,7 +316,7 @@ GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize* aMin,
  */
 bool
 nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
-                             nsHTMLReflowMetrics* aKidMetrics,
+                             ReflowOutput* aKidMetrics,
                              bool aAssumeHScroll, bool aAssumeVScroll,
                              bool aForce)
 {
@@ -447,7 +447,7 @@ void
 nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
                                        bool aAssumeHScroll,
                                        bool aAssumeVScroll,
-                                       nsHTMLReflowMetrics* aMetrics,
+                                       ReflowOutput* aMetrics,
                                        bool aFirstPass)
 {
   WritingMode wm = mHelper.mScrolledFrame->GetWritingMode();
@@ -650,9 +650,9 @@ nsHTMLScrollFrame::InInitialReflow() const
 
 void
 nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
-                                  const nsHTMLReflowMetrics& aDesiredSize)
+                                  const ReflowOutput& aDesiredSize)
 {
-  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.GetWritingMode(), aDesiredSize.mFlags);
+  ReflowOutput kidDesiredSize(aDesiredSize.GetWritingMode(), aDesiredSize.mFlags);
   ReflowScrolledFrame(aState, GuessHScrollbarNeeded(*aState),
                       GuessVScrollbarNeeded(*aState), &kidDesiredSize, true);
 
@@ -834,7 +834,7 @@ GetBrowserRoot(nsIContent* aContent)
 
 void
 nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus)
 {

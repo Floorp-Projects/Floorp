@@ -31,7 +31,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
@@ -126,7 +126,7 @@ nsImageControlFrame::GetType() const
 
 void
 nsImageControlFrame::Reflow(nsPresContext*           aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
+                            ReflowOutput&     aDesiredSize,
                             const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus)
 {

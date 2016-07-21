@@ -254,7 +254,7 @@ public:
    */
   void ReflowChild(nsIFrame*                      aChildFrame,
                    nsPresContext*                 aPresContext,
-                   nsHTMLReflowMetrics&           aDesiredSize,
+                   ReflowOutput&           aDesiredSize,
                    const ReflowInput&       aReflowState,
                    const mozilla::WritingMode&    aWM,
                    const mozilla::LogicalPoint&   aPos,
@@ -284,7 +284,7 @@ public:
    */
   static void FinishReflowChild(nsIFrame*                    aKidFrame,
                                 nsPresContext*               aPresContext,
-                                const nsHTMLReflowMetrics&   aDesiredSize,
+                                const ReflowOutput&   aDesiredSize,
                                 const ReflowInput*     aReflowState,
                                 const mozilla::WritingMode&  aWM,
                                 const mozilla::LogicalPoint& aPos,
@@ -296,7 +296,7 @@ public:
   //    incrementally.
   void ReflowChild(nsIFrame*                      aKidFrame,
                    nsPresContext*                 aPresContext,
-                   nsHTMLReflowMetrics&           aDesiredSize,
+                   ReflowOutput&           aDesiredSize,
                    const ReflowInput&       aReflowState,
                    nscoord                        aX,
                    nscoord                        aY,
@@ -306,7 +306,7 @@ public:
 
   static void FinishReflowChild(nsIFrame*                  aKidFrame,
                                 nsPresContext*             aPresContext,
-                                const nsHTMLReflowMetrics& aDesiredSize,
+                                const ReflowOutput& aDesiredSize,
                                 const ReflowInput*   aReflowState,
                                 nscoord                    aX,
                                 nscoord                    aY,

@@ -50,7 +50,7 @@ nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 void
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aMetrics,
+                    ReflowOutput& aMetrics,
                     const ReflowInput& aReflowState,
                     nsReflowStatus& aStatus)
 {
@@ -69,7 +69,7 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
 
 void
 nsLeafFrame::DoReflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aMetrics,
+                      ReflowOutput& aMetrics,
                       const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus)
 {
@@ -104,7 +104,7 @@ nsLeafFrame::GetIntrinsicBSize()
 
 void
 nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
+                             ReflowOutput& aDesiredSize)
 {
   WritingMode wm = aReflowState.GetWritingMode();
   LogicalSize size(wm, aReflowState.AvailableISize(), // FRAME

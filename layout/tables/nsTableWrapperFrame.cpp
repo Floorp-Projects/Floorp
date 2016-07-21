@@ -779,7 +779,7 @@ void
 nsTableWrapperFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
                                         nsIFrame*                  aChildFrame,
                                         const ReflowInput&   aChildRS,
-                                        nsHTMLReflowMetrics&       aMetrics,
+                                        ReflowOutput&       aMetrics,
                                         nsReflowStatus&            aStatus)
 {
   // Using zero as containerSize here because we want consistency between
@@ -807,7 +807,7 @@ nsTableWrapperFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
 }
 
 void
-nsTableWrapperFrame::UpdateOverflowAreas(nsHTMLReflowMetrics& aMet)
+nsTableWrapperFrame::UpdateOverflowAreas(ReflowOutput& aMet)
 {
   aMet.SetOverflowAreasToDesiredBounds();
   ConsiderChildOverflow(aMet.mOverflowAreas, InnerTableFrame());
@@ -818,7 +818,7 @@ nsTableWrapperFrame::UpdateOverflowAreas(nsHTMLReflowMetrics& aMet)
 
 void
 nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
+                            ReflowOutput&     aDesiredSize,
                             const ReflowInput& aOuterRS,
                             nsReflowStatus&          aStatus)
 {
@@ -910,7 +910,7 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // First reflow the caption.
-  Maybe<nsHTMLReflowMetrics> captionMet;
+  Maybe<ReflowOutput> captionMet;
   LogicalSize captionSize(wm);
   LogicalMargin captionMargin(wm);
   if (mCaptionFrames.NotEmpty()) {
@@ -942,7 +942,7 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
 
   // Then, now that we know how much to reduce the isize of the inner
   // table to account for side captions, reflow the inner table.
-  nsHTMLReflowMetrics innerMet(innerRS->GetWritingMode());
+  ReflowOutput innerMet(innerRS->GetWritingMode());
   OuterDoReflowChild(aPresContext, InnerTableFrame(), *innerRS,
                      innerMet, aStatus);
   LogicalSize innerSize(wm, innerMet.ISize(wm), innerMet.BSize(wm));

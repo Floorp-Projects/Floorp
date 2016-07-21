@@ -675,17 +675,17 @@ public:
   }
 
   bool TryLayout(ScrollReflowInput* aState,
-                   nsHTMLReflowMetrics* aKidMetrics,
+                   ReflowOutput* aKidMetrics,
                    bool aAssumeVScroll, bool aAssumeHScroll,
                    bool aForce);
   bool ScrolledContentDependsOnHeight(ScrollReflowInput* aState);
   void ReflowScrolledFrame(ScrollReflowInput* aState,
                            bool aAssumeHScroll,
                            bool aAssumeVScroll,
-                           nsHTMLReflowMetrics* aMetrics,
+                           ReflowOutput* aMetrics,
                            bool aFirstPass);
   void ReflowContents(ScrollReflowInput* aState,
-                      const nsHTMLReflowMetrics& aDesiredSize);
+                      const ReflowOutput& aDesiredSize);
   void PlaceScrollArea(const ScrollReflowInput& aState,
                        const nsPoint& aScrollPosition);
   nscoord GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext);
@@ -701,7 +701,7 @@ public:
   virtual bool IsXULCollapsed() override;
   
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 

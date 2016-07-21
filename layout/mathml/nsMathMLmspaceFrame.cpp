@@ -94,7 +94,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 
 void
 nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
+                            ReflowOutput&     aDesiredSize,
                             const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus)
 {
@@ -121,7 +121,7 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
 
 /* virtual */ nsresult
 nsMathMLmspaceFrame::MeasureForWidth(DrawTarget* aDrawTarget,
-                                     nsHTMLReflowMetrics& aDesiredSize)
+                                     ReflowOutput& aDesiredSize)
 {
   ProcessAttributes(PresContext());
   mBoundingMetrics = nsBoundingMetrics();

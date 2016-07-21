@@ -282,7 +282,7 @@ public:
 
 void
 nsVideoFrame::Reflow(nsPresContext*           aPresContext,
-                     nsHTMLReflowMetrics&     aMetrics,
+                     ReflowOutput&     aMetrics,
                      const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
@@ -312,7 +312,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
     if (child->GetContent() == mPosterImage) {
       // Reflow the poster frame.
       nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
-      nsHTMLReflowMetrics kidDesiredSize(aReflowState);
+      ReflowOutput kidDesiredSize(aReflowState);
       WritingMode wm = imageFrame->GetWritingMode();
       LogicalSize availableSize = aReflowState.AvailableSize(wm);
       LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode()).
@@ -353,7 +353,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
       }
     } else if (child->GetContent() == mCaptionDiv) {
       // Reflow to caption div
-      nsHTMLReflowMetrics kidDesiredSize(aReflowState);
+      ReflowOutput kidDesiredSize(aReflowState);
       WritingMode wm = child->GetWritingMode();
       LogicalSize availableSize = aReflowState.AvailableSize(wm);
       LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode()).

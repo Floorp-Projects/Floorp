@@ -67,7 +67,7 @@ public:
                            nsIFrame*       aOldFrame) override;
 
   virtual void Reflow(nsPresContext*          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
@@ -161,7 +161,7 @@ int32_t gReflows = 0;
 
 void
 nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
-                       nsHTMLReflowMetrics&     aDesiredSize,
+                       ReflowOutput&     aDesiredSize,
                        const ReflowInput& aReflowState,
                        nsReflowStatus&          aStatus)
 {

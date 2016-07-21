@@ -99,7 +99,7 @@ public:
     * @see nsTableFrame::ShrinkWrapChildren
     */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -279,7 +279,7 @@ protected:
    * only reflow dirty cells.
    */
   void ReflowChildren(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsTableFrame&            aTableFrame,
                       nsReflowStatus&          aStatus);

@@ -104,7 +104,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
@@ -153,7 +153,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
+                          ReflowOutput&     aDesiredSize,
                           const ReflowInput& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
@@ -564,7 +564,7 @@ int32_t nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
 void
 nsHTMLFramesetFrame::GetDesiredSize(nsPresContext*           aPresContext,
                                     const ReflowInput& aReflowState,
-                                    nsHTMLReflowMetrics&     aDesiredSize)
+                                    ReflowOutput&     aDesiredSize)
 {
   WritingMode wm = aReflowState.GetWritingMode();
   LogicalSize desiredSize(wm);
@@ -692,7 +692,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                 LogicalSize(aChild->GetWritingMode(), aSize));
   reflowState.SetComputedWidth(std::max(0, aSize.width - reflowState.ComputedPhysicalBorderPadding().LeftRight()));
   reflowState.SetComputedHeight(std::max(0, aSize.height - reflowState.ComputedPhysicalBorderPadding().TopBottom()));
-  nsHTMLReflowMetrics metrics(aReflowState);
+  ReflowOutput metrics(aReflowState);
   metrics.Width() = aSize.width;
   metrics.Height() = aSize.height;
   nsReflowStatus status;
@@ -792,7 +792,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
 
 void
 nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
+                            ReflowOutput&     aDesiredSize,
                             const ReflowInput& aReflowState,
                             nsReflowStatus&          aStatus)
 {
@@ -1372,7 +1372,7 @@ void nsHTMLFramesetBorderFrame::SetColor(nscolor aColor)
 
 void
 nsHTMLFramesetBorderFrame::Reflow(nsPresContext*           aPresContext,
-                                  nsHTMLReflowMetrics&     aDesiredSize,
+                                  ReflowOutput&     aDesiredSize,
                                   const ReflowInput& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
@@ -1587,7 +1587,7 @@ nscoord nsHTMLFramesetBlankFrame::GetIntrinsicBSize()
 
 void
 nsHTMLFramesetBlankFrame::Reflow(nsPresContext*           aPresContext,
-                                 nsHTMLReflowMetrics&     aDesiredSize,
+                                 ReflowOutput&     aDesiredSize,
                                  const ReflowInput& aReflowState,
                                  nsReflowStatus&          aStatus)
 {

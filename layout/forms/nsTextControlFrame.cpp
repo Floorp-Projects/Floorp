@@ -485,7 +485,7 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 
 void
 nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
+                           ReflowOutput&     aDesiredSize,
                            const ReflowInput& aReflowState,
                            nsReflowStatus&          aStatus)
 {
@@ -544,7 +544,7 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                                            nsPresContext*           aPresContext,
                                            const ReflowInput& aReflowState,
                                            nsReflowStatus&          aStatus,
-                                           nsHTMLReflowMetrics& aParentDesiredSize)
+                                           ReflowOutput& aParentDesiredSize)
 {
   // compute available size and frame offsets for child
   WritingMode wm = aKid->GetWritingMode();
@@ -568,7 +568,7 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                     aReflowState.ComputedPhysicalPadding().top;
 
   // reflow the child
-  nsHTMLReflowMetrics desiredSize(aReflowState);
+  ReflowOutput desiredSize(aReflowState);
   ReflowChild(aKid, aPresContext, desiredSize, kidReflowState, 
               xOffset, yOffset, 0, aStatus);
 

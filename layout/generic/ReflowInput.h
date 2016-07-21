@@ -852,7 +852,7 @@ public:
     ComputedBSize() = aComputedBSize;
   }
 
-  void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
+  void SetTruncated(const ReflowOutput& aMetrics, nsReflowStatus* aStatus) const;
 
   bool WillReflowAgainForClearance() const {
     return mDiscoveredClearance && *mDiscoveredClearance;

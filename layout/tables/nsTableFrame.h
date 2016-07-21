@@ -369,11 +369,11 @@ public:
     * @see nsIFrame::Reflow
     */
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
-  void ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
+  void ReflowTable(ReflowOutput&     aDesiredSize,
                    const ReflowInput& aReflowState,
                    nscoord                  aAvailBSize,
                    nsIFrame*&               aLastChildReflowed,
@@ -654,7 +654,7 @@ protected:
     * @param aDesiredSize    the metrics of the table
     * @param aBorderPadding  the border and padding of the table
     */
-  void AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
+  void AdjustForCollapsingRowsCols(ReflowOutput& aDesiredSize,
                                    const WritingMode aWM,
                                    const LogicalMargin& aBorderPadding);
 
@@ -664,7 +664,7 @@ protected:
    *  been reflowed (e.g. in AdjustForCollapsingRowsCols).
    */
   void FixupPositionedTableParts(nsPresContext*           aPresContext,
-                                 nsHTMLReflowMetrics&     aDesiredSize,
+                                 ReflowOutput&     aDesiredSize,
                                  const ReflowInput& aReflowState);
 
   // Clears the list of positioned table parts.
@@ -698,7 +698,7 @@ protected:
   // reflow state, the table attributes and the content driven rowgroup bsizes
   // this function can change the overflow area
   void CalcDesiredBSize(const ReflowInput& aReflowState,
-                        nsHTMLReflowMetrics& aDesiredSize);
+                        ReflowOutput& aDesiredSize);
 
   // The following is a helper for CalcDesiredBSize
 
@@ -708,7 +708,7 @@ protected:
   void PlaceChild(TableReflowInput&  aReflowState,
                   nsIFrame*            aKidFrame,
                   nsPoint              aKidPosition,
-                  nsHTMLReflowMetrics& aKidDesiredSize,
+                  ReflowOutput& aKidDesiredSize,
                   const nsRect&        aOriginalKidRect,
                   const nsRect&        aOriginalKidVisualOverflow);
    void PlaceRepeatedFooter(TableReflowInput& aReflowState,

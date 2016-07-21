@@ -25,7 +25,7 @@ public:
   explicit nsColumnSetFrame(nsStyleContext* aContext);
 
   virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 
@@ -161,7 +161,7 @@ protected:
     }
   };
 
-  bool ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
+  bool ReflowColumns(ReflowOutput& aDesiredSize,
                      const ReflowInput& aReflowState,
                      nsReflowStatus& aReflowStatus,
                      ReflowConfig& aConfig,
@@ -208,7 +208,7 @@ protected:
                             nsPresContext* aPresContext,
                             ReflowConfig& aConfig,
                             ColumnBalanceData& aColData,
-                            nsHTMLReflowMetrics& aDesiredSize,
+                            ReflowOutput& aDesiredSize,
                             nsCollapsingMargin& aOutMargin,
                             bool& aUnboundedLastColumn,
                             bool& aRunWasFeasible,
@@ -217,7 +217,7 @@ protected:
    * Reflow column children. Returns true iff the content that was reflowed
    * fit into the mColMaxBSize.
    */
-  bool ReflowChildren(nsHTMLReflowMetrics& aDesiredSize,
+  bool ReflowChildren(ReflowOutput& aDesiredSize,
                         const ReflowInput& aReflowState,
                         nsReflowStatus& aStatus,
                         const ReflowConfig& aConfig,

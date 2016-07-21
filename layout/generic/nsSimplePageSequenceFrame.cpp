@@ -90,7 +90,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 //----------------------------------------------------------------------
 
 void
-nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+nsSimplePageSequenceFrame::SetDesiredSize(ReflowOutput& aDesiredSize,
                                           const ReflowInput& aReflowState,
                                           nscoord aWidth,
                                           nscoord aHeight)
@@ -144,7 +144,7 @@ nsSimplePageSequenceFrame::ComputeCenteringMargin(
 
 void
 nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
-                                  nsHTMLReflowMetrics&     aDesiredSize,
+                                  ReflowOutput&     aDesiredSize,
                                   const ReflowInput& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
@@ -242,7 +242,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nscoord maxXMost = 0;
 
   // Tile the pages vertically
-  nsHTMLReflowMetrics kidSize(aReflowState);
+  ReflowOutput kidSize(aReflowState);
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nsIFrame* kidFrame = e.get();
     // Set the shared data into the page frame before reflow

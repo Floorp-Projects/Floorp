@@ -263,7 +263,7 @@ public:
                          nscoord                       aConsumed);
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
@@ -416,7 +416,7 @@ protected:
 
   void ComputeFinalSize(const ReflowInput& aReflowState,
                         BlockReflowInput&      aState,
-                        nsHTMLReflowMetrics&     aMetrics,
+                        ReflowOutput&     aMetrics,
                         nscoord*                 aBottomEdgeOfChildren);
 
   void ComputeOverflowAreas(const nsRect&         aBounds,
@@ -801,7 +801,7 @@ protected:
 
   void ReflowBullet(nsIFrame* aBulletFrame,
                     BlockReflowInput& aState,
-                    nsHTMLReflowMetrics& aMetrics,
+                    ReflowOutput& aMetrics,
                     nscoord aLineTop);
 
   //----------------------------------------

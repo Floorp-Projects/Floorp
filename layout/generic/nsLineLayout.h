@@ -30,7 +30,7 @@ struct nsStyleText;
 class nsLineLayout {
   using BlockReflowInput = mozilla::BlockReflowInput;
   using ReflowInput = mozilla::ReflowInput;
-  using nsHTMLReflowMetrics = mozilla::nsHTMLReflowMetrics;
+  using ReflowOutput = mozilla::ReflowOutput;
   
 public:
   /**
@@ -106,10 +106,10 @@ public:
   // if the frame is pushed to the next line because it doesn't fit.
   void ReflowFrame(nsIFrame* aFrame,
                    nsReflowStatus& aReflowStatus,
-                   nsHTMLReflowMetrics* aMetrics,
+                   ReflowOutput* aMetrics,
                    bool& aPushedFrame);
 
-  void AddBulletFrame(nsIFrame* aFrame, const nsHTMLReflowMetrics& aMetrics);
+  void AddBulletFrame(nsIFrame* aFrame, const ReflowOutput& aMetrics);
 
   void RemoveBulletFrame(nsIFrame* aFrame) {
     PushFrame(aFrame);
@@ -675,12 +675,12 @@ protected:
                        bool aNotSafeToBreak,
                        bool aFrameCanContinueTextRun,
                        bool aCanRollBackBeforeFrame,
-                       nsHTMLReflowMetrics& aMetrics,
+                       ReflowOutput& aMetrics,
                        nsReflowStatus& aStatus,
                        bool* aOptionalBreakAfterFits);
 
   void PlaceFrame(PerFrameData* pfd,
-                  nsHTMLReflowMetrics& aMetrics);
+                  ReflowOutput& aMetrics);
 
   void AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
                       const nsStyleText* aStyleText, float aInflation,

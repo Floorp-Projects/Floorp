@@ -91,7 +91,7 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
 
 /* virtual */ void
 nsRubyFrame::Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
+                    ReflowOutput& aDesiredSize,
                     const ReflowInput& aReflowState,
                     nsReflowStatus& aStatus)
 {
@@ -181,7 +181,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   AutoRubyTextContainerArray textContainers(aBaseContainer);
   const uint32_t rtcCount = textContainers.Length();
 
-  nsHTMLReflowMetrics baseMetrics(aReflowState);
+  ReflowOutput baseMetrics(aReflowState);
   bool pushedFrame;
   aReflowState.mLineLayout->ReflowFrame(aBaseContainer, aStatus,
                                         &baseMetrics, pushedFrame);
@@ -271,7 +271,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     nsRubyTextContainerFrame* textContainer = textContainers[i];
     WritingMode rtcWM = textContainer->GetWritingMode();
     nsReflowStatus textReflowStatus;
-    nsHTMLReflowMetrics textMetrics(aReflowState);
+    ReflowOutput textMetrics(aReflowState);
     ReflowInput textReflowState(aPresContext, aReflowState, textContainer,
                                       availSize.ConvertTo(rtcWM, lineWM));
     // FIXME We probably shouldn't be using the same nsLineLayout for

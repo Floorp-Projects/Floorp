@@ -1020,7 +1020,7 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
 
 void
 nsBlockFrame::Reflow(nsPresContext*           aPresContext,
-                     nsHTMLReflowMetrics&     aMetrics,
+                     ReflowOutput&     aMetrics,
                      const ReflowInput& aReflowState,
                      nsReflowStatus&          aStatus)
 {
@@ -1235,7 +1235,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         mLines.front() != mLines.back() &&
         mLines.begin().next()->IsBlock()))) {
     // Reflow the bullet
-    nsHTMLReflowMetrics metrics(aReflowState);
+    ReflowOutput metrics(aReflowState);
     // XXX Use the entire line when we fix bug 25888.
     nsLayoutUtils::LinePosition position;
     WritingMode wm = aReflowState.GetWritingMode();
@@ -1479,7 +1479,7 @@ nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine()
 void
 nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowState,
                                BlockReflowInput&      aState,
-                               nsHTMLReflowMetrics&     aMetrics,
+                               ReflowOutput&     aMetrics,
                                nscoord*                 aBEndEdgeOfChildren)
 {
   WritingMode wm = aState.mReflowState.GetWritingMode();
@@ -2613,7 +2613,7 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
 
   // Handle an odd-ball case: a list-item with no lines
   if (HasOutsideBullet() && mLines.empty()) {
-    nsHTMLReflowMetrics metrics(aState.mReflowState);
+    ReflowOutput metrics(aState.mReflowState);
     nsIFrame* bullet = GetOutsideBullet();
     WritingMode wm = aState.mReflowState.GetWritingMode();
     ReflowBullet(bullet, aState, metrics,
@@ -2625,7 +2625,7 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
       // There are no lines so we have to fake up some y motion so that
       // we end up with *some* height.
 
-      if (metrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+      if (metrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
         nscoord ascent;
         WritingMode wm = aState.mReflowState.GetWritingMode();
         if (nsLayoutUtils::GetFirstLineBaseline(wm, bullet, &ascent)) {
@@ -4432,7 +4432,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
        (mLines.front() != mLines.back() &&
         0 == mLines.front()->BSize() &&
         aLine == mLines.begin().next()))) {
-    nsHTMLReflowMetrics metrics(aState.mReflowState);
+    ReflowOutput metrics(aState.mReflowState);
     nsIFrame* bullet = GetOutsideBullet();
     ReflowBullet(bullet, aState, metrics, aState.mBCoord);
     NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
@@ -6205,7 +6205,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
   aFloatOffsets =
     floatRS.ComputedLogicalOffsets().ConvertTo(wm, floatRS.GetWritingMode());
 
-  const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
+  const ReflowOutput& metrics = brc.GetMetrics();
 
   // Set the rect, make sure the view is properly sized and positioned,
   // and tell the frame we're done reflowing it
@@ -7174,7 +7174,7 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
 void
 nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
                            BlockReflowInput& aState,
-                           nsHTMLReflowMetrics& aMetrics,
+                           ReflowOutput& aMetrics,
                            nscoord aLineTop)
 {
   const ReflowInput &rs = aState.mReflowState;

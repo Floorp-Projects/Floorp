@@ -80,7 +80,7 @@ public:
               ComputeSizeFlags aFlags) override;
   virtual nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
   virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 
@@ -142,7 +142,7 @@ protected:
   void ReflowFrames(nsPresContext* aPresContext,
                     const ReflowInput& aReflowState,
                     InlineReflowState& rs,
-                    nsHTMLReflowMetrics& aMetrics,
+                    ReflowOutput& aMetrics,
                     nsReflowStatus& aStatus);
 
   void ReflowInlineFrame(nsPresContext* aPresContext,
@@ -209,7 +209,7 @@ public:
 #endif
   virtual nsIAtom* GetType() const override;
   virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus& aStatus) override;
 

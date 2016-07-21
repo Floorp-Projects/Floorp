@@ -268,7 +268,7 @@ ViewportFrame::AdjustReflowStateAsContainingBlock(ReflowInput* aReflowState) con
 
 void
 ViewportFrame::Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
+                      ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowState,
                       nsReflowStatus&          aStatus)
 {
@@ -303,7 +303,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
         NS_SUBTREE_DIRTY(mFrames.FirstChild())) {
       // Reflow our one-and-only principal child frame
       nsIFrame*           kidFrame = mFrames.FirstChild();
-      nsHTMLReflowMetrics kidDesiredSize(aReflowState);
+      ReflowOutput kidDesiredSize(aReflowState);
       WritingMode         wm = kidFrame->GetWritingMode();
       LogicalSize         availableSpace = aReflowState.AvailableSize(wm);
       ReflowInput   kidReflowState(aPresContext, aReflowState,

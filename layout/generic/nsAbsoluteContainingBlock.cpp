@@ -424,7 +424,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
 
   // Do the reflow
-  nsHTMLReflowMetrics kidDesiredSize(kidReflowState);
+  ReflowOutput kidDesiredSize(kidReflowState);
   aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
   const LogicalSize kidSize = kidDesiredSize.Size(wm).ConvertTo(outerWM, wm);

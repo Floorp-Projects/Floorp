@@ -22,7 +22,7 @@ public:
 
   // nsIFrame
   virtual void Reflow(nsPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
+                      ReflowOutput& aDesiredSize,
                       const ReflowInput& aMaxSize,
                       nsReflowStatus&      aStatus) override;
 
