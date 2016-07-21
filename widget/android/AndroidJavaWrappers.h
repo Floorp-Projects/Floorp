@@ -479,9 +479,6 @@ public:
     int Flags() { return mFlags; }
     int Count() { return mCount; }
     int PointerIndex() { return mPointerIndex; }
-    int ConnectionType() { return mConnectionType; }
-    bool IsWifi() { return mIsWifi; }
-    int DHCPGateway() { return mDHCPGateway; }
     short ScreenOrientation() { return mScreenOrientation; }
     short ScreenAngle() { return mScreenAngle; }
     RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
@@ -519,9 +516,6 @@ protected:
     double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
-    int mConnectionType;
-    bool mIsWifi;
-    int mDHCPGateway;
     short mScreenOrientation;
     short mScreenAngle;
     RefPtr<RefCountedJavaObject> mByteBuffer;
@@ -583,10 +577,6 @@ protected:
     static jfieldID jCountField;
     static jfieldID jPointerIndexField;
 
-    static jfieldID jConnectionTypeField;
-    static jfieldID jIsWifiField;
-    static jfieldID jDHCPGatewayField;
-
     static jfieldID jScreenOrientationField;
     static jfieldID jScreenAngleField;
     static jfieldID jByteBufferField;
@@ -607,14 +597,12 @@ public:
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         VIEWPORT = 20,
-        NETWORK_CHANGED = 22,
         THUMBNAIL = 25,
         SCREENORIENTATION_CHANGED = 27,
         NATIVE_GESTURE_EVENT = 31,
         CALL_OBSERVER = 33,
         REMOVE_OBSERVER = 34,
         LOW_MEMORY = 35,
-        NETWORK_LINK_CHANGE = 36,
         TELEMETRY_HISTOGRAM_ADD = 37,
         ADD_OBSERVER = 38,
         TELEMETRY_UI_SESSION_START = 42,
