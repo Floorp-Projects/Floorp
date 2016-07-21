@@ -150,6 +150,7 @@ private:
   void ShutdownVsyncIOThread();
 
   void EnsureImageBridgeChild();
+  void EnsureVRManager();
 
   RefPtr<CompositorSession> CreateRemoteSession(
     nsBaseWidget* aWidget,

@@ -29,10 +29,9 @@ public:
   bool GetVRDevices(nsTArray<RefPtr<VRDeviceProxy> >& aDevices);
   bool RefreshVRDevicesWithCallback(dom::Navigator* aNavigator);
 
-  static void StartUpSameProcess();
+  static void InitSameProcess();
   static bool InitForContent(Endpoint<PVRManagerChild>&& aEndpoint);
   static void ShutDown();
-
 
   static VRManagerChild* Get();
 

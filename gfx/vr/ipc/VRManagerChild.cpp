@@ -59,16 +59,18 @@ VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint)
 }
 
 /*static*/ void
-VRManagerChild::StartUpSameProcess()
+VRManagerChild::InitSameProcess()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-  if (sVRManagerChildSingleton == nullptr) {
-    sVRManagerChildSingleton = new VRManagerChild();
-    sVRManagerParentSingleton = VRManagerParent::CreateSameProcess();
-    sVRManagerChildSingleton->Open(sVRManagerParentSingleton->GetIPCChannel(),
-                                   mozilla::layers::CompositorThreadHolder::Loop(),
-                                   mozilla::ipc::ChildSide);
+  if (sVRManagerChildSingleton) {
+    return;
   }
+
+  sVRManagerChildSingleton = new VRManagerChild();
+  sVRManagerParentSingleton = VRManagerParent::CreateSameProcess();
+  sVRManagerChildSingleton->Open(sVRManagerParentSingleton->GetIPCChannel(),
+                                 mozilla::layers::CompositorThreadHolder::Loop(),
+                                 mozilla::ipc::ChildSide);
 }
 
 /*static*/ void
