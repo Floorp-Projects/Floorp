@@ -26,6 +26,8 @@
 
 using namespace mozilla;
 
+namespace mozilla {
+
 struct nsTableCellReflowState : public ReflowInput
 {
   nsTableCellReflowState(nsPresContext*           aPresContext,
@@ -40,6 +42,8 @@ struct nsTableCellReflowState : public ReflowInput
 
   void FixUp(const LogicalSize& aAvailSpace);
 };
+
+} // namespace mozilla
 
 void nsTableCellReflowState::FixUp(const LogicalSize& aAvailSpace)
 {
