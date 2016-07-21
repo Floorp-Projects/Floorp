@@ -115,6 +115,7 @@ EXPORTS.mozilla.layout += [
 
 UNIFIED_SOURCES += [
     'AsyncScrollBase.cpp',
+    'BlockReflowInput.cpp',
     'DetailsFrame.cpp',
     'FrameChildList.cpp',
     'MathMLTextRunFactory.cpp',
@@ -122,7 +123,6 @@ UNIFIED_SOURCES += [
     'nsBackdropFrame.cpp',
     'nsBlockFrame.cpp',
     'nsBlockReflowContext.cpp',
-    'nsBlockReflowState.cpp',
     'nsBRFrame.cpp',
     'nsBulletFrame.cpp',
     'nsCanvasFrame.cpp',
