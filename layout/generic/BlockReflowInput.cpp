@@ -28,7 +28,7 @@ using namespace mozilla::layout;
 static bool sFloatFragmentsInsideColumnEnabled;
 static bool sFloatFragmentsInsideColumnPrefCached;
 
-nsBlockReflowState::nsBlockReflowState(const ReflowInput& aReflowState,
+BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowState,
                                        nsPresContext* aPresContext,
                                        nsBlockFrame* aFrame,
                                        bool aBStartMarginRoot,
@@ -101,7 +101,7 @@ nsBlockReflowState::nsBlockReflowState(const ReflowInput& aReflowState,
   mFloatManager = aReflowState.mFloatManager;
 
   NS_ASSERTION(mFloatManager,
-               "FloatManager should be set in nsBlockReflowState" );
+               "FloatManager should be set in BlockReflowInput" );
   if (mFloatManager) {
     // Save the coordinate system origin for later.
     mFloatManager->GetTranslation(mFloatManagerI, mFloatManagerB);
@@ -147,7 +147,7 @@ nsBlockReflowState::nsBlockReflowState(const ReflowInput& aReflowState,
 }
 
 nscoord
-nsBlockReflowState::GetConsumedBSize()
+BlockReflowInput::GetConsumedBSize()
 {
   if (mConsumedBSize == NS_INTRINSICSIZE) {
     mConsumedBSize = mBlock->GetConsumedBSize();
@@ -157,7 +157,7 @@ nsBlockReflowState::GetConsumedBSize()
 }
 
 void
-nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(
+BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(
                       nsIFrame* aFrame,
                       const LogicalRect& aFloatAvailableSpace,
                       nscoord& aIStartResult,
@@ -222,7 +222,7 @@ GetBEndMarginClone(nsIFrame* aFrame,
 // at the current Y coordinate. This method assumes that
 // GetAvailableSpace has already been called.
 void
-nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
+BlockReflowInput::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            const nsStyleDisplay* aDisplay,
                                            const nsFlowAreaRect& aFloatAvailableSpace,
                                            bool aBlockAvoidsFloats,
@@ -303,7 +303,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 }
 
 bool
-nsBlockReflowState::ReplacedBlockFitsInAvailSpace(nsIFrame* aReplacedBlock,
+BlockReflowInput::ReplacedBlockFitsInAvailSpace(nsIFrame* aReplacedBlock,
                             const nsFlowAreaRect& aFloatAvailableSpace) const
 {
   if (!aFloatAvailableSpace.mHasFloats) {
@@ -330,7 +330,7 @@ nsBlockReflowState::ReplacedBlockFitsInAvailSpace(nsIFrame* aReplacedBlock,
 }
 
 nsFlowAreaRect
-nsBlockReflowState::GetFloatAvailableSpaceWithState(
+BlockReflowInput::GetFloatAvailableSpaceWithState(
                       nscoord aBCoord,
                       nsFloatManager::SavedState *aState) const
 {
@@ -367,7 +367,7 @@ nsBlockReflowState::GetFloatAvailableSpaceWithState(
 }
 
 nsFlowAreaRect
-nsBlockReflowState::GetFloatAvailableSpaceForBSize(
+BlockReflowInput::GetFloatAvailableSpaceForBSize(
                       nscoord aBCoord, nscoord aBSize,
                       nsFloatManager::SavedState *aState) const
 {
@@ -413,7 +413,7 @@ nsBlockReflowState::GetFloatAvailableSpaceForBSize(
  * margins of blocks collapse).
  */
 void
-nsBlockReflowState::ReconstructMarginBefore(nsLineList::iterator aLine)
+BlockReflowInput::ReconstructMarginBefore(nsLineList::iterator aLine)
 {
   mPrevBEndMargin.Zero();
   nsBlockFrame *block = mBlock;
@@ -440,7 +440,7 @@ nsBlockReflowState::ReconstructMarginBefore(nsLineList::iterator aLine)
 }
 
 void
-nsBlockReflowState::SetupPushedFloatList()
+BlockReflowInput::SetupPushedFloatList()
 {
   MOZ_ASSERT(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mPushedFloats,
              "flag mismatch");
@@ -458,7 +458,7 @@ nsBlockReflowState::SetupPushedFloatList()
 }
 
 void
-nsBlockReflowState::AppendPushedFloatChain(nsIFrame* aFloatCont)
+BlockReflowInput::AppendPushedFloatChain(nsIFrame* aFloatCont)
 {
   SetupPushedFloatList();
   while (true) {
@@ -482,7 +482,7 @@ nsBlockReflowState::AppendPushedFloatChain(nsIFrame* aFloatCont)
  * around, attached to the frame tree.
  */
 void
-nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
+BlockReflowInput::RecoverFloats(nsLineList::iterator aLine,
                                   nscoord aDeltaBCoord)
 {
   WritingMode wm = mReflowState.GetWritingMode();
@@ -531,13 +531,13 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
  *
  * When this function is called, |aLine| has just been slid by |aDeltaBCoord|
  * and the purpose of RecoverStateFrom is to ensure that the
- * nsBlockReflowState is in the same state that it would have been in
+ * BlockReflowInput is in the same state that it would have been in
  * had the line just been reflowed.
  *
  * Most of the state recovery that we have to do involves floats.
  */
 void
-nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
+BlockReflowInput::RecoverStateFrom(nsLineList::iterator aLine,
                                      nscoord aDeltaBCoord)
 {
   // Make the line being recovered the current line
@@ -566,7 +566,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
 // float as well unless it won't fit next to what we already have.
 // But nobody else implements it that way...
 bool
-nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
+BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
                              nsIFrame*           aFloat,
                              nscoord             aAvailableISize)
 {
@@ -657,7 +657,7 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
 }
 
 bool
-nsBlockReflowState::CanPlaceFloat(nscoord aFloatISize,
+BlockReflowInput::CanPlaceFloat(nscoord aFloatISize,
                                   const nsFlowAreaRect& aFloatAvailableSpace)
 {
   // A float fits at a given block-dir position if there are no floats
@@ -710,7 +710,7 @@ FloatMarginISize(const ReflowInput& aCBReflowState,
 }
 
 bool
-nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
+BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
 {
   WritingMode wm = mReflowState.GetWritingMode();
   // Save away the Y coordinate before placing the float. We will
@@ -1029,7 +1029,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 }
 
 void
-nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
+BlockReflowInput::PushFloatPastBreak(nsIFrame *aFloat)
 {
   // This ensures that we:
   //  * don't try to place later but smaller floats (which CSS says
@@ -1057,7 +1057,7 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
  * Place below-current-line floats.
  */
 void
-nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
+BlockReflowInput::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
                                                 nsLineBox* aLine)
 {
   nsFloatCache* fc = aList.Head();
@@ -1083,7 +1083,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList,
 }
 
 nscoord
-nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
+BlockReflowInput::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
                                 nsIFrame *aReplacedBlock,
                                 uint32_t aFlags)
 {
@@ -1095,7 +1095,7 @@ nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
 #endif
 
 #ifdef NOISY_FLOAT_CLEARING
-  printf("nsBlockReflowState::ClearFloats: aBCoord=%d breakType=%d\n",
+  printf("BlockReflowInput::ClearFloats: aBCoord=%d breakType=%d\n",
          aBCoord, aBreakType);
   mFloatManager->List(stdout);
 #endif
