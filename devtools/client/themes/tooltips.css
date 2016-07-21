@@ -3,6 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Tooltip specific theme variables */
+
+.theme-dark {
+  --bezier-diagonal-color: #eee;
+  --bezier-grid-color: rgba(0, 0, 0, 0.2);
+}
+
+.theme-light {
+  --bezier-diagonal-color: rgba(0, 0, 0, 0.2);
+  --bezier-grid-color: rgba(0, 0, 0, 0.05);
+}
+
 /* Tooltip widget (see devtools/client/shared/widgets/Tooltip.js) */
 
 .devtools-tooltip .panel-arrowcontent {
