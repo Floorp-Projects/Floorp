@@ -89,10 +89,6 @@
 #include "nsScreenManagerGonk.h"
 #endif
 
-#ifdef MOZ_ANDROID_APZ
-#include "AndroidBridge.h"
-#endif
-
 #include "LayerScope.h"
 
 namespace mozilla {

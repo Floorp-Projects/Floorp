@@ -25,10 +25,6 @@
 #include "cairo.h"
 #include "VsyncSource.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
 #include "mozilla/layers/CompositorBridgeParent.h"
