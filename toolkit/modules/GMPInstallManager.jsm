@@ -208,17 +208,11 @@ GMPInstallManager.prototype = {
         log.info("Found addon: " + gmpAddon.toString());
 
         if (!gmpAddon.isValid) {
-          GMPUtils.maybeReportTelemetry(gmpAddon.id,
-                                        "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
-                                        GMPInstallFailureReason.GMP_INVALID);
           log.info("Addon |" + gmpAddon.id + "| is invalid.");
           return false;
         }
 
         if (GMPUtils.isPluginHidden(gmpAddon)) {
-          GMPUtils.maybeReportTelemetry(gmpAddon.id,
-                                        "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
-                                        GMPInstallFailureReason.GMP_HIDDEN);
           log.info("Addon |" + gmpAddon.id + "| has been hidden.");
           return false;
         }
@@ -231,14 +225,8 @@ GMPInstallManager.prototype = {
         let addonUpdateEnabled = false;
         if (GMP_PLUGIN_IDS.indexOf(gmpAddon.id) >= 0) {
           if (!this._isAddonEnabled(gmpAddon.id)) {
-            GMPUtils.maybeReportTelemetry(gmpAddon.id,
-                                          "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
-                                          GMPInstallFailureReason.GMP_DISABLED);
             log.info("GMP |" + gmpAddon.id + "| has been disabled; skipping check.");
           } else if (!this._isAddonUpdateEnabled(gmpAddon.id)) {
-            GMPUtils.maybeReportTelemetry(gmpAddon.id,
-                                          "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON",
-                                          GMPInstallFailureReason.GMP_UPDATE_DISABLED);
             log.info("Auto-update is off for " + gmpAddon.id +
                      ", skipping check.");
           } else {
