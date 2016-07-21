@@ -8,19 +8,25 @@ package org.mozilla.gecko.home;
 import java.util.List;
 
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderClient;
 import org.mozilla.gecko.home.BookmarksListAdapter.FolderInfo;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.BookmarksListAdapter.RefreshType;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -193,7 +199,32 @@ public class BookmarksPanel extends HomeFragment {
 
         @Override
         public Cursor loadCursor() {
-            return mDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderInfo.id);
+            final boolean isRootFolder = mFolderInfo.id == BrowserContract.Bookmarks.FIXED_ROOT_ID;
+
+            final ContentResolver contentResolver = getContext().getContentResolver();
+
+            Cursor partnerCursor = null;
+            Cursor userCursor = null;
+
+            if (GeckoSharedPrefs.forProfile(getContext()).getBoolean(GeckoPreferences.PREFS_READ_PARTNER_BOOKMARKS_PROVIDER, false)
+                    && (isRootFolder || mFolderInfo.id <= Bookmarks.FAKE_PARTNER_BOOKMARKS_START)) {
+                partnerCursor = PartnerBookmarksProviderClient.getBookmarksInFolder(contentResolver, mFolderInfo.id);
+            }
+
+            if (isRootFolder || mFolderInfo.id > Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {
+                userCursor = mDB.getBookmarksInFolder(contentResolver, mFolderInfo.id);
+            }
+
+
+            if (partnerCursor == null && userCursor == null) {
+                return null;
+            } else if (partnerCursor == null) {
+                return userCursor;
+            } else if (userCursor == null) {
+                return partnerCursor;
+            } else {
+                return new MergeCursor(new Cursor[] { partnerCursor, userCursor });
+            }
         }
 
         @Override
