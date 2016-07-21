@@ -1183,6 +1183,9 @@ auto ThumbnailHelper::SendThumbnail(mozilla::jni::ByteBuffer::Param a0, int32_t 
     return mozilla::jni::Method<SendThumbnail_t>::Call(ThumbnailHelper::Context(), nullptr, a0, a1, a2, a3);
 }
 
+constexpr char ThumbnailHelper::RequestThumbnail_t::name[];
+constexpr char ThumbnailHelper::RequestThumbnail_t::signature[];
+
 const char Distribution::name[] =
         "org/mozilla/gecko/distribution/Distribution";
 
