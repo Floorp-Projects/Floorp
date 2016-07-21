@@ -24,7 +24,7 @@ public:
 
   SharedMessagePortMessage()
     : StructuredCloneHolder(CloningSupported, TransferringSupported,
-                            DifferentProcess)
+                            StructuredCloneScope::DifferentProcess)
   {}
 
   void Read(nsISupports* aParent,
