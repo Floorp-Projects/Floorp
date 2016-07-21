@@ -100,7 +100,7 @@ BEGIN_TEST(test_DeflateStringToUTF8Buffer)
     // like with the ASCII string but generates UTF-8 output that is different
     // from the ASCII input.
 
-    str = JS_NewUCStringCopyZ(cx, MOZ_UTF16("\xD3\x68\xE3\xEF")); // u"Óhãï"
+    str = JS_NewUCStringCopyZ(cx, u"\xD3\x68\xE3\xEF"); // u"Óhãï"
     MOZ_RELEASE_ASSERT(str);
     flatStr = JS_FlattenString(cx, str);
 
@@ -192,7 +192,7 @@ BEGIN_TEST(test_DeflateStringToUTF8Buffer)
     // Test with a UTF-16 string, which calls JSFlatString::twoByteChars
     // to retrieve the characters from the string.
 
-    str = JS_NewUCStringCopyZ(cx, MOZ_UTF16("\x038C\x0068\x0203\x0457")); // u"Όhȃї"
+    str = JS_NewUCStringCopyZ(cx, u"\x038C\x0068\x0203\x0457"); // u"Όhȃї"
     MOZ_RELEASE_ASSERT(str);
     flatStr = JS_FlattenString(cx, str);
 

@@ -194,8 +194,8 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
                     NS_ASSERTION(false,
                         "nsIAboutModule->newChannel(aURI, aLoadInfo) needs to set LoadInfo");
                     const char16_t* params[] = {
-                        MOZ_UTF16("nsIAboutModule->newChannel(aURI)"),
-                        MOZ_UTF16("nsIAboutModule->newChannel(aURI, aLoadInfo)")
+                        u"nsIAboutModule->newChannel(aURI)",
+                        u"nsIAboutModule->newChannel(aURI, aLoadInfo)"
                     };
                     nsContentUtils::ReportToConsole(
                         nsIScriptError::warningFlag,

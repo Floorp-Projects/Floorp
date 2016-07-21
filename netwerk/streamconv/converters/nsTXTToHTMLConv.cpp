@@ -12,7 +12,7 @@
 
 #include "mozilla/UniquePtrExtensions.h"
 
-#define TOKEN_DELIMITERS MOZ_UTF16("\t\r\n ")
+#define TOKEN_DELIMITERS u"\t\r\n "
 
 using namespace mozilla;
 

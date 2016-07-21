@@ -82,7 +82,7 @@ JS::ubi::Concrete<JSString>::size(mozilla::MallocSizeOf mallocSizeOf) const
     return size;
 }
 
-const char16_t JS::ubi::Concrete<JSString>::concreteTypeName[] = MOZ_UTF16("JSString");
+const char16_t JS::ubi::Concrete<JSString>::concreteTypeName[] = u"JSString";
 
 #ifdef DEBUG
 

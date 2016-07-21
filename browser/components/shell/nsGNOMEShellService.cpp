@@ -284,7 +284,7 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString brandShortName;
-    brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
+    brandBundle->GetStringFromName(u"brandShortName",
                                    getter_Copies(brandShortName));
 
     // use brandShortName as the application id.
@@ -402,7 +402,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
     rv = bundleService->CreateBundle(BRAND_PROPERTIES,
                                      getter_AddRefs(brandBundle));
     if (NS_SUCCEEDED(rv) && brandBundle) {
-      rv = brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
+      rv = brandBundle->GetStringFromName(u"brandShortName",
                                           getter_Copies(brandName));
       NS_ENSURE_SUCCESS(rv, rv);
     }

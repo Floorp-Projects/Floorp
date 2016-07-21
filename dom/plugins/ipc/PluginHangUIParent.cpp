@@ -387,7 +387,7 @@ PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIDOMWindowProxy> navWin;
-  rv = winMediator->GetMostRecentWindow(MOZ_UTF16("navigator:browser"),
+  rv = winMediator->GetMostRecentWindow(u"navigator:browser",
                                         getter_AddRefs(navWin));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!navWin) {

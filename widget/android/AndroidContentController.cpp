@@ -132,9 +132,9 @@ AndroidContentController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
       // This is used by tests to determine when the APZ is done doing whatever
       // it's doing. XXX generify this as needed when writing additional tests.
       observerService->NotifyObservers(nullptr, "APZ:TransformEnd", nullptr);
-      observerService->NotifyObservers(nullptr, "PanZoom:StateChange", MOZ_UTF16("NOTHING"));
+      observerService->NotifyObservers(nullptr, "PanZoom:StateChange", u"NOTHING");
     } else if (aChange == layers::GeckoContentController::APZStateChange::eTransformBegin) {
-      observerService->NotifyObservers(nullptr, "PanZoom:StateChange", MOZ_UTF16("PANNING"));
+      observerService->NotifyObservers(nullptr, "PanZoom:StateChange", u"PANNING");
     }
   }
 }
