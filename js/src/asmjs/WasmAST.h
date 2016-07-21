@@ -49,7 +49,7 @@ class AstName
   public:
     template <size_t Length>
     explicit AstName(const char16_t (&str)[Length]) : begin_(str), end_(str + Length - 1) {
-      MOZ_ASSERT(str[Length - 1] == MOZ_UTF16('\0'));
+      MOZ_ASSERT(str[Length - 1] == u'\0');
     }
 
     AstName(const char16_t* begin, size_t length) : begin_(begin), end_(begin + length) {}
@@ -171,8 +171,18 @@ class AstSig : public AstBase
     }
 };
 
+const uint32_t AstNodeUnknownOffset = 0;
+
 class AstNode : public AstBase
-{};
+{
+    uint32_t offset_; // if applicable, offset in the binary format file
+
+  public:
+    AstNode() : offset_(AstNodeUnknownOffset) {}
+
+    uint32_t offset() const { return offset_; }
+    void setOffset(uint32_t offset) { offset_ = offset; }
+};
 
 enum class AstExprKind
 {

@@ -16,7 +16,7 @@
 #include "nsBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsSprocketLayout.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 
 nsresult
 NS_NewGridLayout2( nsIPresShell* aPresShell, nsBoxLayout** aNewLayout)

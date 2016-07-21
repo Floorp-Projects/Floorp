@@ -58,22 +58,82 @@ enum PrintOperatorPrecedence
     GroupPrecedence = 16,
 };
 
+// StringBuffer wrapper to track the position (line and column) within the generated
+// source.
+class WasmPrintBuffer
+{
+    StringBuffer& stringBuffer_;
+    uint32_t lineno_;
+    uint32_t column_;
+
+  public:
+    explicit WasmPrintBuffer(StringBuffer& stringBuffer) : stringBuffer_(stringBuffer), lineno_(1), column_(1) {}
+    inline char processChar(char ch) {
+        if (ch == '\n') {
+            lineno_++; column_ = 1;
+        } else
+            column_++;
+        return ch;
+    }
+    inline char16_t processChar(char16_t ch) {
+        if (ch == '\n') {
+            lineno_++; column_ = 1;
+        } else
+            column_++;
+        return ch;
+    }
+    bool append(const char ch) {
+        return stringBuffer_.append(processChar(ch));
+    }
+    bool append(const char16_t ch) {
+        return stringBuffer_.append(processChar(ch));
+    }
+    bool append(const char* str, size_t length) {
+        for (size_t i = 0; i < length; i++)
+            processChar(str[i]);
+        return stringBuffer_.append(str, length);
+    }
+    bool append(const char16_t* begin, const char16_t* end) {
+        for (const char16_t* p = begin; p != end; p++)
+            processChar(*p);
+        return stringBuffer_.append(begin, end);
+    }
+    bool append(const char16_t* str, size_t length) {
+        return append(str, str + length);
+    }
+    template <size_t ArrayLength>
+    bool append(const char (&array)[ArrayLength]) {
+        return append(array, ArrayLength - 1);
+    }
+    char16_t getChar(size_t index) {
+        return stringBuffer_.getChar(index);
+    }
+    size_t length() {
+        return stringBuffer_.length();
+    }
+    StringBuffer& stringBuffer() { return stringBuffer_; }
+    uint32_t lineno() { return lineno_; }
+    uint32_t column() { return column_; }
+};
+
 struct WasmPrintContext
 {
     JSContext* cx;
     AstModule* module;
-    StringBuffer& buffer;
+    WasmPrintBuffer& buffer;
     const ExperimentalTextFormatting& f;
+    GeneratedSourceMap* maybeSourceMap;
     uint32_t indent;
 
     uint32_t currentFuncIndex;
     PrintOperatorPrecedence currentPrecedence;
 
-    WasmPrintContext(JSContext* cx, AstModule* module, StringBuffer& buffer, const ExperimentalTextFormatting& f)
+    WasmPrintContext(JSContext* cx, AstModule* module, WasmPrintBuffer& buffer, const ExperimentalTextFormatting& f, GeneratedSourceMap* wasmSourceMap_)
       : cx(cx),
         module(module),
         buffer(buffer),
         f(f),
+        maybeSourceMap(wasmSourceMap_),
         indent(0),
         currentFuncIndex(0),
         currentPrecedence(PrintOperatorPrecedence::ExpressionPrecedence)
@@ -123,7 +183,7 @@ PrintInt32(WasmPrintContext& c, int32_t num, bool printSign = false)
         if (!c.buffer.append("+"))
             return false;
     }
-    return NumberValueToStringBuffer(c.cx, Int32Value(num), c.buffer);
+    return NumberValueToStringBuffer(c.cx, Int32Value(num), c.buffer.stringBuffer());
 }
 
 static bool
@@ -145,7 +205,7 @@ PrintInt64(WasmPrintContext& c, int64_t num)
 
     n = abs;
     while (pow) {
-        if (!c.buffer.append((char16_t)(MOZ_UTF16('0') + n / pow)))
+        if (!c.buffer.append((char16_t)(u'0' + n / pow)))
             return false;
         n -= (n / pow) * pow;
         pow /= 10;
@@ -168,7 +228,7 @@ PrintDouble(WasmPrintContext& c, double num)
     }
 
     uint32_t startLength = c.buffer.length();
-    if (!NumberValueToStringBuffer(c.cx, DoubleValue(num), c.buffer))
+    if (!NumberValueToStringBuffer(c.cx, DoubleValue(num), c.buffer.stringBuffer()))
         return false;
     MOZ_ASSERT(startLength < c.buffer.length());
 
@@ -1269,6 +1329,13 @@ PrintReturn(WasmPrintContext& c, AstReturn& ret)
 static bool
 PrintExpr(WasmPrintContext& c, AstExpr& expr)
 {
+    if (c.maybeSourceMap) {
+        uint32_t lineno = c.buffer.lineno();
+        uint32_t column = c.buffer.column();
+        if (!c.maybeSourceMap->exprlocs().emplaceBack(lineno, column, expr.offset()))
+            return false;
+    }
+
     switch (expr.kind()) {
       case AstExprKind::Nop:
         return PrintNop(c, expr.as<AstNop>());
@@ -1538,6 +1605,9 @@ PrintFunctionBody(WasmPrintContext& c, AstFunc& func, const AstModule::SigVector
     const AstSig* sig = sigs[func.sig().index()];
     c.indent++;
 
+    size_t startExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
+    uint32_t startLineno = c.buffer.lineno();
+
     uint32_t argsNum = sig->args().length();
     uint32_t localsNum = func.vars().length();
     if (localsNum > 0) {
@@ -1574,6 +1644,13 @@ PrintFunctionBody(WasmPrintContext& c, AstFunc& func, const AstModule::SigVector
 
     c.indent--;
 
+    size_t endExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
+    uint32_t endLineno = c.buffer.lineno();
+
+    if (c.maybeSourceMap) {
+        if (!c.maybeSourceMap->functionlocs().emplaceBack(startExprIndex, endExprIndex, startLineno, endLineno))
+            return false;
+    }
     return true;
 }
 
@@ -1699,7 +1776,8 @@ PrintModule(WasmPrintContext& c, AstModule& module)
 
 bool
 wasm::BinaryToExperimentalText(JSContext* cx, const uint8_t* bytes, size_t length,
-                               StringBuffer& buffer, const ExperimentalTextFormatting& formatting)
+                               StringBuffer& buffer, const ExperimentalTextFormatting& formatting,
+                               GeneratedSourceMap* sourceMap)
 {
 
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
@@ -1708,7 +1786,8 @@ wasm::BinaryToExperimentalText(JSContext* cx, const uint8_t* bytes, size_t lengt
     if (!BinaryToAst(cx, bytes, length, lifo, &module))
         return false;
 
-    WasmPrintContext c(cx, module, buffer, formatting);
+    WasmPrintBuffer buf(buffer);
+    WasmPrintContext c(cx, module, buf, formatting, sourceMap);
 
     if (!PrintModule(c, *module)) {
         if (!cx->isExceptionPending())

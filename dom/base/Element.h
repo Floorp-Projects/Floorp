@@ -988,7 +988,7 @@ public:
    */
   virtual nsAttrInfo GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const;
 
-  virtual void NodeInfoChanged(mozilla::dom::NodeInfo* aOldNodeInfo)
+  virtual void NodeInfoChanged()
   {
   }
 

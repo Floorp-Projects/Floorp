@@ -135,14 +135,14 @@ nsBox::BeginXULLayout(nsBoxLayoutState& aState)
 
   if (GetStateBits() & NS_FRAME_IS_DIRTY)
   {
-    // If the parent is dirty, all the children are dirty (nsHTMLReflowState
+    // If the parent is dirty, all the children are dirty (ReflowInput
     // does this too).
     nsIFrame* box;
     for (box = GetChildXULBox(this); box; box = GetNextXULBox(box))
       box->AddStateBits(NS_FRAME_IS_DIRTY);
   }
 
-  // Another copy-over from nsHTMLReflowState.
+  // Another copy-over from ReflowInput.
   // Since we are in reflow, we don't need to store these properties anymore.
   FrameProperties props = Properties();
   props.Delete(UsedBorderProperty());

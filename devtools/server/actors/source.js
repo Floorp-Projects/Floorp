@@ -185,7 +185,6 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
   get threadActor() { return this._threadActor; },
   get sources() { return this._threadActor.sources; },
   get dbg() { return this.threadActor.dbg; },
-  get scripts() { return this.threadActor.scripts; },
   get source() { return this._source; },
   get generatedSource() { return this._generatedSource; },
   get breakpointActorMap() { return this.threadActor.breakpointActorMap; },
@@ -444,7 +443,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    **/
   getExecutableOffsets: function (source, onlyLine) {
     let offsets = new Set();
-    for (let s of this.threadActor.scripts.getScriptsBySource(source)) {
+    for (let s of this.dbg.findScripts({ source })) {
       for (let offset of s.getAllColumnOffsets()) {
         offsets.add(onlyLine ? offset.lineNumber : offset);
       }
@@ -718,10 +717,17 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         actor,
         GeneratedLocation.fromOriginalLocation(originalLocation)
       )) {
-        const scripts = this.scripts.getScriptsBySourceActorAndLine(
-          this,
-          originalLine
-        );
+        const query = { line: originalLine };
+        // For most cases, we have a real source to query for. The
+        // only time we don't is for HTML pages. In that case we want
+        // to query for scripts in an HTML page based on its URL, as
+        // there could be several sources within an HTML page.
+        if (this.source) {
+          query.source = this.source;
+        } else {
+          query.url = this.url;
+        }
+        const scripts = this.dbg.findScripts(query);
 
         // Never do breakpoint sliding for column breakpoints.
         // Additionally, never do breakpoint sliding if no scripts
@@ -836,11 +842,15 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
       generatedLastColumn
     } = generatedLocation;
 
-    // Find all scripts that match the given source actor and line number.
-    let scripts = this.scripts.getScriptsBySourceActorAndLine(
-      generatedSourceActor,
-      generatedLine
-    );
+    // Find all scripts that match the given source actor and line
+    // number.
+    const query = { line: generatedLine };
+    if (generatedSourceActor.source) {
+      query.source = generatedSourceActor.source;
+    } else {
+      query.url = generatedSourceActor.url;
+    }
+    let scripts = this.dbg.findScripts(query);
 
     scripts = scripts.filter((script) => !actor.hasScript(script));
 

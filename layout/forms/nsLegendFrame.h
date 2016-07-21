@@ -18,8 +18,8 @@ public:
   explicit nsLegendFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
 
   virtual void Reflow(nsPresContext*           aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
+                      ReflowOutput&     aDesiredSize,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

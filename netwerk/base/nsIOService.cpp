@@ -690,8 +690,8 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
   NS_ASSERTION(false, "Deprecated, use NewChannelFromURI2 providing loadInfo arguments!");
 
   const char16_t* params[] = {
-    MOZ_UTF16("nsIOService::NewChannelFromURI()"),
-    MOZ_UTF16("nsIOService::NewChannelFromURI2()")
+    u"nsIOService::NewChannelFromURI()",
+    u"nsIOService::NewChannelFromURI2()"
   };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Security by Default"),
@@ -890,8 +890,8 @@ nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
   NS_ASSERTION(false, "Deprecated, use NewChannelFromURIWithProxyFlags2 providing loadInfo arguments!");
 
   const char16_t* params[] = {
-    MOZ_UTF16("nsIOService::NewChannelFromURIWithProxyFlags()"),
-    MOZ_UTF16("nsIOService::NewChannelFromURIWithProxyFlags2()")
+    u"nsIOService::NewChannelFromURIWithProxyFlags()",
+    u"nsIOService::NewChannelFromURIWithProxyFlags2()"
   };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Security by Default"),
@@ -952,8 +952,8 @@ nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *a
   NS_ASSERTION(false, "Deprecated, use NewChannel2 providing loadInfo arguments!");
 
   const char16_t* params[] = {
-    MOZ_UTF16("nsIOService::NewChannel()"),
-    MOZ_UTF16("nsIOService::NewChannel2()")
+    u"nsIOService::NewChannel()",
+    u"nsIOService::NewChannel2()"
   };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Security by Default"),
@@ -1033,8 +1033,8 @@ nsIOService::SetOffline(bool offline)
         if (observerService) {
             (void)observerService->NotifyObservers(nullptr,
                 NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
-                MOZ_UTF16("true") :
-                MOZ_UTF16("false"));
+                u"true" :
+                u"false");
         }
     }
 
@@ -1081,7 +1081,7 @@ nsIOService::SetOffline(bool offline)
             if (observerService && mConnectivity) {
                 observerService->NotifyObservers(subject,
                                                  NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                                 MOZ_UTF16(NS_IOSERVICE_ONLINE));
+                                                 (u"" NS_IOSERVICE_ONLINE));
             }
         }
     }
@@ -1146,8 +1146,8 @@ nsIOService::SetConnectivityInternal(bool aConnectivity)
     if (XRE_IsParentProcess()) {
         observerService->NotifyObservers(nullptr,
             NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC, aConnectivity ?
-            MOZ_UTF16("true") :
-            MOZ_UTF16("false"));
+            u"true" :
+            u"false");
     }
 
     if (mOffline) {
@@ -1161,11 +1161,11 @@ nsIOService::SetConnectivityInternal(bool aConnectivity)
         observerService->NotifyObservers(
             static_cast<nsIIOService *>(this),
             NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-            MOZ_UTF16(NS_IOSERVICE_ONLINE));
+            (u"" NS_IOSERVICE_ONLINE));
     } else {
         // If we were previously online and lost connectivity
         // send the OFFLINE notification
-        const nsLiteralString offlineString(MOZ_UTF16(NS_IOSERVICE_OFFLINE));
+        const nsLiteralString offlineString(u"" NS_IOSERVICE_OFFLINE);
         observerService->NotifyObservers(static_cast<nsIIOService *>(this),
                                          NS_IOSERVICE_GOING_OFFLINE_TOPIC,
                                          offlineString.get());
@@ -1400,7 +1400,7 @@ nsIOService::NotifyWakeup()
         (void)observerService->
             NotifyObservers(nullptr,
                             NS_NETWORK_LINK_TOPIC,
-                            MOZ_UTF16(NS_NETWORK_LINK_DATA_CHANGED));
+                            (u"" NS_NETWORK_LINK_DATA_CHANGED));
     }
 
     RecheckCaptivePortal();
@@ -1910,7 +1910,7 @@ nsIOService::NotifyAppOfflineStatus(uint32_t appId, int32_t state)
         observerService->NotifyObservers(
             info,
             NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC,
-            MOZ_UTF16("all data in nsIAppOfflineInfo subject argument"));
+            u"all data in nsIAppOfflineInfo subject argument");
     }
 }
 

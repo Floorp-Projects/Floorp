@@ -18,15 +18,20 @@
 #include "nsIPresShell.h"
 
 class nsRenderingContext;
-struct nsHTMLReflowState;
+namespace mozilla {
+struct ReflowInput;
+} // namespace mozilla
+
 
 class MOZ_STACK_CLASS nsBoxLayoutState
 {
+  using ReflowInput = mozilla::ReflowInput;
+
 public:
   explicit nsBoxLayoutState(nsPresContext* aPresContext,
                             nsRenderingContext* aRenderingContext = nullptr,
-                            // see OuterReflowState() below
-                            const nsHTMLReflowState* aOuterReflowState = nullptr,
+                            // see OuterReflowInput() below
+                            const ReflowInput* aOuterReflowInput = nullptr,
                             uint16_t aReflowDepth = 0);
   nsBoxLayoutState(const nsBoxLayoutState& aState);
 
@@ -55,14 +60,14 @@ public:
 
   // The HTML reflow state that lives outside the box-block boundary.
   // May not be set reliably yet.
-  const nsHTMLReflowState* OuterReflowState() { return mOuterReflowState; }
+  const ReflowInput* OuterReflowInput() { return mOuterReflowInput; }
 
   uint16_t GetReflowDepth() { return mReflowDepth; }
   
 private:
   RefPtr<nsPresContext> mPresContext;
   nsRenderingContext *mRenderingContext;
-  const nsHTMLReflowState *mOuterReflowState;
+  const ReflowInput *mOuterReflowInput;
   uint32_t mLayoutFlags;
   uint16_t mReflowDepth; 
   bool mPaintingDisabled;

@@ -3675,15 +3675,37 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
 
   // Touch action region
 
-  uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(aFrame);
-  if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
-    mNoActionRegion.Or(mNoActionRegion, borderBox);
-  } else {
-    if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
-      mHorizontalPanRegion.Or(mHorizontalPanRegion, borderBox);
+  nsIFrame* touchActionFrame = aFrame;
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(aFrame);
+  if (scrollFrame) {
+    touchActionFrame = do_QueryFrame(scrollFrame);
+  }
+  uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
+  if (touchAction != NS_STYLE_TOUCH_ACTION_AUTO) {
+    // If this frame has touch-action areas, and there were already
+    // touch-action areas from some other element on this same event regions,
+    // then all we know is that there are multiple elements with touch-action
+    // properties. In particular, we don't know what the relationship is
+    // between those elements in terms of DOM ancestry, and so we don't know
+    // how to combine the regions properly. Instead, we just add all the areas
+    // to the dispatch-to-content region, so that the APZ knows to check with
+    // the main thread. XXX we need to come up with a better way to do this,
+    // see bug 1287829.
+    bool alreadyHadRegions = !mNoActionRegion.IsEmpty() ||
+        !mHorizontalPanRegion.IsEmpty() ||
+        !mVerticalPanRegion.IsEmpty();
+    if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
+      mNoActionRegion.OrWith(borderBox);
+    } else {
+      if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
+        mHorizontalPanRegion.OrWith(borderBox);
+      }
+      if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
+        mVerticalPanRegion.OrWith(borderBox);
+      }
     }
-    if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
-      mVerticalPanRegion.Or(mVerticalPanRegion, borderBox);
+    if (alreadyHadRegions) {
+      mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
     }
   }
 }
@@ -3710,6 +3732,15 @@ nsDisplayLayerEventRegions::IsEmpty() const
   return false;
 }
 
+nsRegion
+nsDisplayLayerEventRegions::CombinedTouchActionRegion()
+{
+  nsRegion result;
+  result.Or(mHorizontalPanRegion, mVerticalPanRegion);
+  result.OrWith(mNoActionRegion);
+  return result;
+}
+
 int32_t
 nsDisplayLayerEventRegions::ZIndex() const
 {
@@ -3733,6 +3764,15 @@ nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
   }
   if (!mDispatchToContentHitRegion.IsEmpty()) {
     AppendToString(aStream, mDispatchToContentHitRegion, " (dispatchToContentRegion ", ")");
+  }
+  if (!mNoActionRegion.IsEmpty()) {
+    AppendToString(aStream, mNoActionRegion, " (noActionRegion ", ")");
+  }
+  if (!mHorizontalPanRegion.IsEmpty()) {
+    AppendToString(aStream, mHorizontalPanRegion, " (horizPanRegion ", ")");
+  }
+  if (!mVerticalPanRegion.IsEmpty()) {
+    AppendToString(aStream, mVerticalPanRegion, " (vertPanRegion ", ")");
   }
 }
 

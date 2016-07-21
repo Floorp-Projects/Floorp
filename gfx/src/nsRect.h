@@ -129,9 +129,6 @@ struct nsRect :
     *this = aRect1.SaturatingUnionEdges(aRect2);
   }
 
-  // Return whether this rect's right or bottom edge overflow int32.
-  bool Overflows() const;
-
   /**
    * Return this rect scaled to a different appunits per pixel (APP) ratio.
    * In the RoundOut version we make the rect the smallest rect containing the

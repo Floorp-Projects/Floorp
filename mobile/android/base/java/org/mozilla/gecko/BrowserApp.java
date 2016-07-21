@@ -3763,7 +3763,7 @@ public class BrowserApp extends GeckoApp
 
         if (AppConstants.MOZ_ANDROID_BEAM && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
             String uri = intent.getDataString();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
+            mLayerView.loadUri(uri, GeckoView.LOAD_NEW_TAB);
         }
 
         // Only solicit feedback when the app has been launched from the icon shortcut.

@@ -26,6 +26,8 @@ namespace SkDashPath {
     bool FilterDashPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
                         const SkPathEffect::DashInfo& info);
 
+    const SkScalar kMaxDashCount = 1000000;
+
     /*
      * Caller should have already used ValidDashPath to exclude invalid data.
      */

@@ -1500,11 +1500,12 @@
     "description": "The lifetime of accepted HTTPS server certificates, in weeks, up to 2 years. Bucket 105 is all end-entity HTTPS server certificates with a lifetime > 2 years."
   },
   "KEYGEN_GENERATED_KEY_TYPE": {
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1191414,1284945],
     "description": "The number of times we generate a key via keygen, keyed on algorithm and keysize. Keys include RSA with key size (512, 1024, 2048, possibly others), secp384r1, secp256r1, and 'other_ec'."
   },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
@@ -5079,6 +5080,32 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "a testing histogram; not meant to be touched - initially not recording"
+  },
+  "TELEMETRY_TEST_CATEGORICAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1188888],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "CommonLabel",
+      "Label2",
+      "Label3"
+    ],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_CATEGORICAL_OPTOUT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1188888],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "CommonLabel",
+      "Label4",
+      "Label5",
+      "Label6"
+    ],
+    "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD": {
     "expires_in_version": "never",
@@ -9991,6 +10018,14 @@
     "bug_numbers": [1272501],
     "releaseChannelCollection": "opt-out",
     "description": "HTMLInputElement.webkitdirectory attribute used"
+  },
+  "CONTAINER_USED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "bug_numbers": [1276006],
+    "n_values": 5,
+    "description": "Records a value each time a builtin container is opened. 1=personal 2=work 3=banking 4=shopping. Does not record usage of user-created containers."
   },
   "UNIQUE_CONTAINERS_OPENED": {
     "alert_emails": ["amarchesini@mozilla.com"],

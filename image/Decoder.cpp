@@ -52,6 +52,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mImage(aImage)
   , mProgress(NoProgress)
   , mFrameCount(0)
+  , mLoopLength(FrameTimeout::Zero())
   , mDecoderFlags(DefaultDecoderFlags())
   , mSurfaceFlags(DefaultSurfaceFlags())
   , mInitialized(false)
@@ -341,8 +342,6 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     }
   }
 
-  nsIntRect refreshArea;
-
   if (aFrameNum == 1) {
     MOZ_ASSERT(aPreviousFrame, "Must provide a previous frame when animated");
     aPreviousFrame->SetRawAccessOnly();
@@ -354,7 +353,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     if (previousFrameData.mDisposalMethod == DisposalMethod::CLEAR ||
         previousFrameData.mDisposalMethod == DisposalMethod::CLEAR_ALL ||
         previousFrameData.mDisposalMethod == DisposalMethod::RESTORE_PREVIOUS) {
-      refreshArea = previousFrameData.mRect;
+      mFirstFrameRefreshArea = previousFrameData.mRect;
     }
   }
 
@@ -363,13 +362,13 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
 
     // Some GIFs are huge but only have a small area that they animate. We only
     // need to refresh that small area when frame 0 comes around again.
-    refreshArea.UnionRect(refreshArea, frame->GetRect());
+    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, frame->GetRect());
   }
 
   mFrameCount++;
 
   if (mImage) {
-    mImage->OnAddedFrame(mFrameCount, refreshArea);
+    mImage->OnAddedFrame(mFrameCount);
   }
 
   return ref;
@@ -411,7 +410,7 @@ Decoder::PostHasTransparency()
 }
 
 void
-Decoder::PostIsAnimated(int32_t aFirstFrameTimeout)
+Decoder::PostIsAnimated(FrameTimeout aFirstFrameTimeout)
 {
   mProgress |= FLAG_IS_ANIMATED;
   mImageMetadata.SetHasAnimation();
@@ -423,7 +422,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
                          /* = Opacity::SOME_TRANSPARENCY */,
                        DisposalMethod aDisposalMethod
                          /* = DisposalMethod::KEEP */,
-                       int32_t aTimeout         /* = 0 */,
+                       FrameTimeout aTimeout /* = FrameTimeout::Forever() */,
                        BlendMethod aBlendMethod /* = BlendMethod::OVER */,
                        const Maybe<nsIntRect>& aBlendRect /* = Nothing() */)
 {
@@ -439,6 +438,8 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
                         aBlendMethod, aBlendRect);
 
   mProgress |= FLAG_FRAME_COMPLETE;
+
+  mLoopLength += aTimeout;
 
   // If we're not sending partial invalidations, then we send an invalidation
   // here when the first frame is complete.
@@ -474,6 +475,15 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   mDecodeDone = true;
 
   mImageMetadata.SetLoopCount(aLoopCount);
+
+  // Some metadata that we track should take into account every frame in the
+  // image. If this is a first-frame-only decode, our accumulated loop length
+  // and first frame refresh area only includes the first frame, so it's not
+  // correct and we don't record it.
+  if (!IsFirstFrameDecode()) {
+    mImageMetadata.SetLoopLength(mLoopLength);
+    mImageMetadata.SetFirstFrameRefreshArea(mFirstFrameRefreshArea);
+  }
 
   mProgress |= FLAG_DECODE_COMPLETE;
 }

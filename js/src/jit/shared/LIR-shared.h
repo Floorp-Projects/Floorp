@@ -7738,12 +7738,19 @@ class LWasmLoad : public details::LWasmLoadBase<1, 1>
     LIR_HEADER(WasmLoad);
 };
 
-class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 0>
+class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 1>
 {
   public:
     explicit LWasmLoadI64(const LAllocation& ptr)
       : LWasmLoadBase(ptr)
-    {}
+    {
+        setTemp(0, LDefinition::BogusTemp());
+    }
+
+    const LDefinition* ptrCopy() {
+        return Base::getTemp(0);
+    }
+
     LIR_HEADER(WasmLoadI64);
 };
 

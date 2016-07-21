@@ -142,6 +142,8 @@ def _call_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
     It's possible to see spurious errors on Windows due to various things
     keeping a handle to the directory open (explorer, virus scanners, etc)
     So we try a few times if it fails with a known error.
+    retry_delay is multiplied by the number of failed attempts to increase
+    the likelihood of success in subsequent attempts.
     """
     retry_count = 0
     while True:
@@ -160,7 +162,7 @@ def _call_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
 
             print '%s() failed for "%s". Reason: %s (%s). Retrying...' % \
                     (func.__name__, args, e.strerror, e.errno)
-            time.sleep(retry_delay)
+            time.sleep(retry_count * retry_delay)
         else:
             # If no exception has been thrown it should be done
             break
@@ -176,8 +178,8 @@ def remove(path):
      - retry operations on some known errors due to various things keeping
        a handle on file paths - like explorer, virus scanners, etc. The
        known errors are errno.EACCES and errno.ENOTEMPTY, and it will
-       retry up to 5 five times with a delay of 0.5 seconds between each
-       attempt.
+       retry up to 5 five times with a delay of (failed_attempts * 0.5) seconds
+       between each attempt.
 
     Note that no error will be raised if the given path does not exists.
 

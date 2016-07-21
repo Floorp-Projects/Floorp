@@ -18,38 +18,38 @@ struct ParseKeySystemTestCase {
 
 const ParseKeySystemTestCase ParseKeySystemTests[] = {
   {
-    MOZ_UTF16("org.w3.clearkey"),
+    u"org.w3.clearkey",
     NO_CDM_VERSION,
     true,
   }, {
-    MOZ_UTF16("org.w3.clearkey.123"),
+    u"org.w3.clearkey.123",
     123,
     true,
   }, {
-    MOZ_UTF16("org.w3.clearkey.-1"),
+    u"org.w3.clearkey.-1",
     NO_CDM_VERSION,
     false,
   }, {
-    MOZ_UTF16("org.w3.clearkey.NaN"),
+    u"org.w3.clearkey.NaN",
     NO_CDM_VERSION,
     false,
   }, {
-    MOZ_UTF16("org.w3.clearkey.0"),
+    u"org.w3.clearkey.0",
     0,
     true,
   }, {
-    MOZ_UTF16("org.w3.clearkey.123567890123567890123567890123567890123567890"),
+    u"org.w3.clearkey.123567890123567890123567890123567890123567890",
     NO_CDM_VERSION,
     false,
   }, {
-    MOZ_UTF16("org.w3.clearkey.0.1"),
+    u"org.w3.clearkey.0.1",
     NO_CDM_VERSION,
     false,
   }
 };
 
 TEST(EME, EMEParseKeySystem) {
-  const nsAutoString clearkey(MOZ_UTF16("org.w3.clearkey"));
+  const nsAutoString clearkey(u"org.w3.clearkey");
   for (const ParseKeySystemTestCase& test : ParseKeySystemTests) {
     nsAutoString keySystem;
     int32_t version;

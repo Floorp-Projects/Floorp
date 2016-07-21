@@ -37,7 +37,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
     bool largeArcFlag = aSeg[4] != 0.0f;
     bool sweepFlag = aSeg[5] != 0.0f;
     nsTextFormatter::ssprintf(aValue,
-                              MOZ_UTF16("%c%g,%g %g %d,%d %g,%g"),
+                              u"%c%g,%g %g %d,%d %g,%g",
                               typeAsChar, aSeg[1], aSeg[2], aSeg[3],
                               largeArcFlag, sweepFlag, aSeg[6], aSeg[7]);
   } else {
@@ -48,30 +48,30 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
       break;
 
     case 1:
-      nsTextFormatter::ssprintf(aValue, MOZ_UTF16("%c%g"),
+      nsTextFormatter::ssprintf(aValue, u"%c%g",
                                 typeAsChar, aSeg[1]);
       break;
 
     case 2:
-      nsTextFormatter::ssprintf(aValue, MOZ_UTF16("%c%g,%g"),
+      nsTextFormatter::ssprintf(aValue, u"%c%g,%g",
                                 typeAsChar, aSeg[1], aSeg[2]);
       break;
 
     case 4:
-      nsTextFormatter::ssprintf(aValue, MOZ_UTF16("%c%g,%g %g,%g"),
+      nsTextFormatter::ssprintf(aValue, u"%c%g,%g %g,%g",
                                 typeAsChar, aSeg[1], aSeg[2], aSeg[3], aSeg[4]);
       break;
 
     case 6:
       nsTextFormatter::ssprintf(aValue,
-                                MOZ_UTF16("%c%g,%g %g,%g %g,%g"),
+                                u"%c%g,%g %g,%g %g,%g",
                                 typeAsChar, aSeg[1], aSeg[2], aSeg[3], aSeg[4],
                                 aSeg[5], aSeg[6]);
       break;
 
     default:
       MOZ_ASSERT(false, "Unknown segment type");
-      aValue = MOZ_UTF16("<unknown-segment-type>");
+      aValue = u"<unknown-segment-type>";
       return;
     }
   }

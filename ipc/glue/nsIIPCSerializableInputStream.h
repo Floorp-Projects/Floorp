@@ -7,10 +7,9 @@
 #ifndef mozilla_ipc_nsIIPCSerializableInputStream_h
 #define mozilla_ipc_nsIIPCSerializableInputStream_h
 
-#include "nsISupports.h"
 #include "mozilla/Attributes.h"
-
-template <class> class nsTArray;
+#include "nsISupports.h"
+#include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 namespace ipc {

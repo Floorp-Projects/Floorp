@@ -30,6 +30,8 @@ class WasmInstanceObject;
 
 namespace wasm {
 
+class GeneratedSourceMap;
+
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
 // structures with the Module from which they were instantiated and other
@@ -47,6 +49,8 @@ class Instance
 
     bool                                 profilingEnabled_;
     CacheableCharsVector                 funcLabels_;
+
+    UniquePtr<GeneratedSourceMap>        maybeSourceMap_;
 
     // Internal helpers:
     uint8_t** addressOfMemoryBase() const;
@@ -103,7 +107,10 @@ class Instance
     // constructor), this method will render the binary as text. Otherwise, a
     // diagnostic string will be returned.
 
+    // Text format support functions:
+
     JSString* createText(JSContext* cx);
+    bool getLineOffsets(size_t lineno, Vector<uint32_t>& offsets);
 
     // Return the name associated with a given function index, or generate one
     // if none was given by the module.

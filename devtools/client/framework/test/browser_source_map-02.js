@@ -1,9 +1,9 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests the SourceLocationController updates generated sources when pretty printing
+ * Tests the SourceMapService updates generated sources when pretty printing
  * and un pretty printing.
  */
 
@@ -11,17 +11,17 @@ const DEBUGGER_ROOT = "http://example.com/browser/devtools/client/debugger/test/
 // Empty page
 const PAGE_URL = `${DEBUGGER_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${URL_ROOT}code_ugly.js`;
-const { SourceLocationController } = require("devtools/client/framework/source-location");
+const { SourceMapService } = require("devtools/client/framework/source-map-service");
 
 add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
 
-  let controller = new SourceLocationController(toolbox.target);
+  let service = new SourceMapService(toolbox.target);
 
   let checkedPretty = false;
   let checkedUnpretty = false;
 
-  function onUpdate(oldLoc, newLoc) {
+  function onUpdate(e, oldLoc, newLoc) {
     if (oldLoc.line === 3) {
       checkPrettified(oldLoc, newLoc);
       checkedPretty = true;
@@ -32,8 +32,8 @@ add_task(function* () {
       throw new Error(`Unexpected location update: ${JSON.stringify(oldLoc)}`);
     }
   }
-
-  controller.bindLocation({ url: JS_URL, line: 3 }, onUpdate);
+  const loc1 = { url: JS_URL, line: 3 };
+  service.subscribe(loc1, onUpdate);
 
   // Inject JS script
   let sourceShown = waitForSourceShown(toolbox.getCurrentPanel(), "code_ugly.js");
@@ -47,12 +47,12 @@ add_task(function* () {
   yield waitUntil(() => checkedPretty);
 
   // TODO check unprettified change once bug 1177446 fixed
-  /*
-  sourceShown = waitForSourceShown(toolbox.getCurrentPanel(), "code_ugly.js");
-  ppButton.click();
-  yield sourceShown;
-  yield waitUntil(() => checkedUnpretty);
-  */
+  // info("Testing un-pretty printing.");
+  // sourceShown = waitForSourceShown(toolbox.getCurrentPanel(), "code_ugly.js");
+  // ppButton.click();
+  // yield sourceShown;
+  // yield waitUntil(() => checkedUnpretty);
+
 
   yield toolbox.destroy();
   gBrowser.removeCurrentTab();

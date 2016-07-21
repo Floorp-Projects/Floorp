@@ -20,6 +20,7 @@ namespace quota {
 struct UsageParams
 {
   PrincipalInfo principalInfo;
+  bool getGroupUsage;
 };
 
 union UsageRequestParams

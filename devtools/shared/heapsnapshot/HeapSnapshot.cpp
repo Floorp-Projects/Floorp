@@ -735,7 +735,7 @@ AddGlobalsAsRoots(AutoObjectVector& globals, ubi::RootList& roots)
   unsigned length = globals.length();
   for (unsigned i = 0; i < length; i++) {
     if (!roots.addRoot(ubi::Node(globals[i].get()),
-                       MOZ_UTF16("heap snapshot global")))
+                       u"heap snapshot global"))
     {
       return false;
     }

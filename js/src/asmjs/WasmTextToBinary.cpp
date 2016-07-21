@@ -555,8 +555,8 @@ class WasmTokenStream
 WasmToken
 WasmTokenStream::nan(const char16_t* begin)
 {
-    if (consume(MOZ_UTF16(":"))) {
-        if (!consume(MOZ_UTF16("0x")))
+    if (consume(u":")) {
+        if (!consume(u"0x"))
             return fail(begin);
 
         uint8_t digit;
@@ -571,7 +571,7 @@ WasmToken
 WasmTokenStream::literal(const char16_t* begin)
 {
     CheckedInt<uint64_t> u = 0;
-    if (consume(MOZ_UTF16("0x"))) {
+    if (consume(u"0x")) {
         if (cur_ == end_)
             return fail(begin);
 
@@ -641,18 +641,18 @@ WasmTokenStream::skipSpaces()
 {
     while (cur_ != end_) {
         char16_t ch = *cur_;
-        if (ch == ';' && consume(MOZ_UTF16(";;"))) {
+        if (ch == ';' && consume(u";;")) {
             // Skipping single line comment.
             while (cur_ != end_ && !IsWasmNewLine(*cur_))
                 cur_++;
-        } else if (ch == '(' && consume(MOZ_UTF16("(;"))) {
+        } else if (ch == '(' && consume(u"(;")) {
             // Skipping multi-line and possibly nested comments.
             size_t level = 1;
             while (cur_ != end_) {
                 char16_t ch = *cur_;
-                if (ch == '(' && consume(MOZ_UTF16("(;"))) {
+                if (ch == '(' && consume(u"(;")) {
                     level++;
-                } else if (ch == ';' && consume(MOZ_UTF16(";)"))) {
+                } else if (ch == ';' && consume(u";)")) {
                     if (--level == 0)
                         break;
                 } else {
@@ -717,9 +717,9 @@ WasmTokenStream::next()
 
       case '+': case '-':
         cur_++;
-        if (consume(MOZ_UTF16("infinity")))
+        if (consume(u"infinity"))
             return WasmToken(WasmToken::Infinity, begin, cur_);
-        if (consume(MOZ_UTF16("nan")))
+        if (consume(u"nan"))
             return nan(begin);
         if (!IsWasmDigit(*cur_))
             break;
@@ -729,247 +729,247 @@ WasmTokenStream::next()
         return literal(begin);
 
       case 'a':
-        if (consume(MOZ_UTF16("align")))
+        if (consume(u"align"))
             return WasmToken(WasmToken::Align, begin, cur_);
         break;
 
       case 'b':
-        if (consume(MOZ_UTF16("block")))
+        if (consume(u"block"))
             return WasmToken(WasmToken::Block, begin, cur_);
-        if (consume(MOZ_UTF16("br"))) {
-            if (consume(MOZ_UTF16("_table")))
+        if (consume(u"br")) {
+            if (consume(u"_table"))
                 return WasmToken(WasmToken::BrTable, begin, cur_);
-            if (consume(MOZ_UTF16("_if")))
+            if (consume(u"_if"))
                 return WasmToken(WasmToken::BrIf, begin, cur_);
             return WasmToken(WasmToken::Br, begin, cur_);
         }
         break;
 
       case 'c':
-        if (consume(MOZ_UTF16("call"))) {
-            if (consume(MOZ_UTF16("_indirect")))
+        if (consume(u"call")) {
+            if (consume(u"_indirect"))
                 return WasmToken(WasmToken::CallIndirect, begin, cur_);
-            if (consume(MOZ_UTF16("_import")))
+            if (consume(u"_import"))
                 return WasmToken(WasmToken::CallImport, begin, cur_);
             return WasmToken(WasmToken::Call, begin, cur_);
         }
         break;
 
       case 'd':
-        if (consume(MOZ_UTF16("data")))
+        if (consume(u"data"))
             return WasmToken(WasmToken::Data, begin, cur_);
         break;
 
       case 'e':
-        if (consume(MOZ_UTF16("elem")))
+        if (consume(u"elem"))
             return WasmToken(WasmToken::Elem, begin, cur_);
-        if (consume(MOZ_UTF16("else")))
+        if (consume(u"else"))
             return WasmToken(WasmToken::Else, begin, cur_);
-        if (consume(MOZ_UTF16("export")))
+        if (consume(u"export"))
             return WasmToken(WasmToken::Export, begin, cur_);
         break;
 
       case 'f':
-        if (consume(MOZ_UTF16("func")))
+        if (consume(u"func"))
             return WasmToken(WasmToken::Func, begin, cur_);
 
-        if (consume(MOZ_UTF16("f32"))) {
-            if (!consume(MOZ_UTF16(".")))
+        if (consume(u"f32")) {
+            if (!consume(u"."))
                 return WasmToken(WasmToken::ValueType, ValType::F32, begin, cur_);
 
             switch (*cur_) {
               case 'a':
-                if (consume(MOZ_UTF16("abs")))
+                if (consume(u"abs"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Abs, begin, cur_);
-                if (consume(MOZ_UTF16("add")))
+                if (consume(u"add"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Add, begin, cur_);
                 break;
               case 'c':
-                if (consume(MOZ_UTF16("ceil")))
+                if (consume(u"ceil"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Ceil, begin, cur_);
-                if (consume(MOZ_UTF16("const")))
+                if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
-                if (consume(MOZ_UTF16("convert_s/i32"))) {
+                if (consume(u"convert_s/i32")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI32,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("convert_u/i32"))) {
+                if (consume(u"convert_u/i32")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI32,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("convert_s/i64"))) {
+                if (consume(u"convert_s/i64")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI64,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("convert_u/i64"))) {
+                if (consume(u"convert_u/i64")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI64,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("copysign")))
+                if (consume(u"copysign"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32CopySign, begin, cur_);
                 break;
               case 'd':
-                if (consume(MOZ_UTF16("demote/f64")))
+                if (consume(u"demote/f64"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32DemoteF64,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("div")))
+                if (consume(u"div"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Div, begin, cur_);
                 break;
               case 'e':
-                if (consume(MOZ_UTF16("eq")))
+                if (consume(u"eq"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Eq, begin, cur_);
                 break;
               case 'f':
-                if (consume(MOZ_UTF16("floor")))
+                if (consume(u"floor"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Floor, begin, cur_);
                 break;
               case 'g':
-                if (consume(MOZ_UTF16("ge")))
+                if (consume(u"ge"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ge, begin, cur_);
-                if (consume(MOZ_UTF16("gt")))
+                if (consume(u"gt"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Gt, begin, cur_);
                 break;
               case 'l':
-                if (consume(MOZ_UTF16("le")))
+                if (consume(u"le"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Le, begin, cur_);
-                if (consume(MOZ_UTF16("lt")))
+                if (consume(u"lt"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Lt, begin, cur_);
-                if (consume(MOZ_UTF16("load")))
+                if (consume(u"load"))
                     return WasmToken(WasmToken::Load, Expr::F32Load, begin, cur_);
                 break;
               case 'm':
-                if (consume(MOZ_UTF16("max")))
+                if (consume(u"max"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Max, begin, cur_);
-                if (consume(MOZ_UTF16("min")))
+                if (consume(u"min"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Min, begin, cur_);
-                if (consume(MOZ_UTF16("mul")))
+                if (consume(u"mul"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Mul, begin, cur_);
                 break;
               case 'n':
-                if (consume(MOZ_UTF16("nearest")))
+                if (consume(u"nearest"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Nearest, begin, cur_);
-                if (consume(MOZ_UTF16("neg")))
+                if (consume(u"neg"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Neg, begin, cur_);
-                if (consume(MOZ_UTF16("ne")))
+                if (consume(u"ne"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ne, begin, cur_);
                 break;
               case 'r':
-                if (consume(MOZ_UTF16("reinterpret/i32")))
+                if (consume(u"reinterpret/i32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ReinterpretI32,
                                      begin, cur_);
                 break;
               case 's':
-                if (consume(MOZ_UTF16("sqrt")))
+                if (consume(u"sqrt"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Sqrt, begin, cur_);
-                if (consume(MOZ_UTF16("sub")))
+                if (consume(u"sub"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Sub, begin, cur_);
-                if (consume(MOZ_UTF16("store")))
+                if (consume(u"store"))
                     return WasmToken(WasmToken::Store, Expr::F32Store, begin, cur_);
                 break;
               case 't':
-                if (consume(MOZ_UTF16("trunc")))
+                if (consume(u"trunc"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Trunc, begin, cur_);
                 break;
             }
             break;
         }
-        if (consume(MOZ_UTF16("f64"))) {
-            if (!consume(MOZ_UTF16(".")))
+        if (consume(u"f64")) {
+            if (!consume(u"."))
                 return WasmToken(WasmToken::ValueType, ValType::F64, begin, cur_);
 
             switch (*cur_) {
               case 'a':
-                if (consume(MOZ_UTF16("abs")))
+                if (consume(u"abs"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Abs, begin, cur_);
-                if (consume(MOZ_UTF16("add")))
+                if (consume(u"add"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Add, begin, cur_);
                 break;
               case 'c':
-                if (consume(MOZ_UTF16("ceil")))
+                if (consume(u"ceil"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Ceil, begin, cur_);
-                if (consume(MOZ_UTF16("const")))
+                if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
-                if (consume(MOZ_UTF16("convert_s/i32"))) {
+                if (consume(u"convert_s/i32")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI32,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("convert_u/i32"))) {
+                if (consume(u"convert_u/i32")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI32,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("convert_s/i64"))) {
+                if (consume(u"convert_s/i64")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI64,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("convert_u/i64"))) {
+                if (consume(u"convert_u/i64")) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI64,
                                      begin, cur_);
                 }
-                if (consume(MOZ_UTF16("copysign")))
+                if (consume(u"copysign"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64CopySign, begin, cur_);
                 break;
               case 'd':
-                if (consume(MOZ_UTF16("div")))
+                if (consume(u"div"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Div, begin, cur_);
                 break;
               case 'e':
-                if (consume(MOZ_UTF16("eq")))
+                if (consume(u"eq"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Eq, begin, cur_);
                 break;
               case 'f':
-                if (consume(MOZ_UTF16("floor")))
+                if (consume(u"floor"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Floor, begin, cur_);
                 break;
               case 'g':
-                if (consume(MOZ_UTF16("ge")))
+                if (consume(u"ge"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ge, begin, cur_);
-                if (consume(MOZ_UTF16("gt")))
+                if (consume(u"gt"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Gt, begin, cur_);
                 break;
               case 'l':
-                if (consume(MOZ_UTF16("le")))
+                if (consume(u"le"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Le, begin, cur_);
-                if (consume(MOZ_UTF16("lt")))
+                if (consume(u"lt"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Lt, begin, cur_);
-                if (consume(MOZ_UTF16("load")))
+                if (consume(u"load"))
                     return WasmToken(WasmToken::Load, Expr::F64Load, begin, cur_);
                 break;
               case 'm':
-                if (consume(MOZ_UTF16("max")))
+                if (consume(u"max"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Max, begin, cur_);
-                if (consume(MOZ_UTF16("min")))
+                if (consume(u"min"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Min, begin, cur_);
-                if (consume(MOZ_UTF16("mul")))
+                if (consume(u"mul"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Mul, begin, cur_);
                 break;
               case 'n':
-                if (consume(MOZ_UTF16("nearest")))
+                if (consume(u"nearest"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Nearest, begin, cur_);
-                if (consume(MOZ_UTF16("neg")))
+                if (consume(u"neg"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Neg, begin, cur_);
-                if (consume(MOZ_UTF16("ne")))
+                if (consume(u"ne"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ne, begin, cur_);
                 break;
               case 'p':
-                if (consume(MOZ_UTF16("promote/f32")))
+                if (consume(u"promote/f32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64PromoteF32,
                                      begin, cur_);
                 break;
               case 'r':
-                if (consume(MOZ_UTF16("reinterpret/i64")))
+                if (consume(u"reinterpret/i64"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64ReinterpretI64,
                                      begin, cur_);
                 break;
               case 's':
-                if (consume(MOZ_UTF16("sqrt")))
+                if (consume(u"sqrt"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Sqrt, begin, cur_);
-                if (consume(MOZ_UTF16("sub")))
+                if (consume(u"sub"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Sub, begin, cur_);
-                if (consume(MOZ_UTF16("store")))
+                if (consume(u"store"))
                     return WasmToken(WasmToken::Store, Expr::F64Store, begin, cur_);
                 break;
               case 't':
-                if (consume(MOZ_UTF16("trunc")))
+                if (consume(u"trunc"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Trunc, begin, cur_);
                 break;
             }
@@ -978,364 +978,364 @@ WasmTokenStream::next()
         break;
 
       case 'g':
-        if (consume(MOZ_UTF16("get_local")))
+        if (consume(u"get_local"))
             return WasmToken(WasmToken::GetLocal, begin, cur_);
         break;
 
       case 'i':
-        if (consume(MOZ_UTF16("i32"))) {
-            if (!consume(MOZ_UTF16(".")))
+        if (consume(u"i32")) {
+            if (!consume(u"."))
                 return WasmToken(WasmToken::ValueType, ValType::I32, begin, cur_);
 
             switch (*cur_) {
               case 'a':
-                if (consume(MOZ_UTF16("add")))
+                if (consume(u"add"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Add, begin, cur_);
-                if (consume(MOZ_UTF16("and")))
+                if (consume(u"and"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32And, begin, cur_);
                 break;
               case 'c':
-                if (consume(MOZ_UTF16("const")))
+                if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::I32, begin, cur_);
-                if (consume(MOZ_UTF16("clz")))
+                if (consume(u"clz"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I32Clz, begin, cur_);
-                if (consume(MOZ_UTF16("ctz")))
+                if (consume(u"ctz"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I32Ctz, begin, cur_);
                 break;
               case 'd':
-                if (consume(MOZ_UTF16("div_s")))
+                if (consume(u"div_s"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivS, begin, cur_);
-                if (consume(MOZ_UTF16("div_u")))
+                if (consume(u"div_u"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivU, begin, cur_);
                 break;
               case 'e':
-                if (consume(MOZ_UTF16("eqz")))
+                if (consume(u"eqz"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I32Eqz, begin, cur_);
-                if (consume(MOZ_UTF16("eq")))
+                if (consume(u"eq"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Eq, begin, cur_);
                 break;
               case 'g':
-                if (consume(MOZ_UTF16("ge_s")))
+                if (consume(u"ge_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GeS, begin, cur_);
-                if (consume(MOZ_UTF16("ge_u")))
+                if (consume(u"ge_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GeU, begin, cur_);
-                if (consume(MOZ_UTF16("gt_s")))
+                if (consume(u"gt_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GtS, begin, cur_);
-                if (consume(MOZ_UTF16("gt_u")))
+                if (consume(u"gt_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GtU, begin, cur_);
                 break;
               case 'l':
-                if (consume(MOZ_UTF16("le_s")))
+                if (consume(u"le_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LeS, begin, cur_);
-                if (consume(MOZ_UTF16("le_u")))
+                if (consume(u"le_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LeU, begin, cur_);
-                if (consume(MOZ_UTF16("lt_s")))
+                if (consume(u"lt_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtS, begin, cur_);
-                if (consume(MOZ_UTF16("lt_u")))
+                if (consume(u"lt_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtU, begin, cur_);
-                if (consume(MOZ_UTF16("load"))) {
+                if (consume(u"load")) {
                     if (IsWasmSpace(*cur_))
                         return WasmToken(WasmToken::Load, Expr::I32Load, begin, cur_);
-                    if (consume(MOZ_UTF16("8_s")))
+                    if (consume(u"8_s"))
                         return WasmToken(WasmToken::Load, Expr::I32Load8S, begin, cur_);
-                    if (consume(MOZ_UTF16("8_u")))
+                    if (consume(u"8_u"))
                         return WasmToken(WasmToken::Load, Expr::I32Load8U, begin, cur_);
-                    if (consume(MOZ_UTF16("16_s")))
+                    if (consume(u"16_s"))
                         return WasmToken(WasmToken::Load, Expr::I32Load16S, begin, cur_);
-                    if (consume(MOZ_UTF16("16_u")))
+                    if (consume(u"16_u"))
                         return WasmToken(WasmToken::Load, Expr::I32Load16U, begin, cur_);
                     break;
                 }
                 break;
               case 'm':
-                if (consume(MOZ_UTF16("mul")))
+                if (consume(u"mul"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Mul, begin, cur_);
                 break;
               case 'n':
-                if (consume(MOZ_UTF16("ne")))
+                if (consume(u"ne"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Ne, begin, cur_);
                 break;
               case 'o':
-                if (consume(MOZ_UTF16("or")))
+                if (consume(u"or"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Or, begin, cur_);
                 break;
               case 'p':
-                if (consume(MOZ_UTF16("popcnt")))
+                if (consume(u"popcnt"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I32Popcnt, begin, cur_);
                 break;
               case 'r':
-                if (consume(MOZ_UTF16("reinterpret/f32")))
+                if (consume(u"reinterpret/f32"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I32ReinterpretF32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("rem_s")))
+                if (consume(u"rem_s"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemS, begin, cur_);
-                if (consume(MOZ_UTF16("rem_u")))
+                if (consume(u"rem_u"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemU, begin, cur_);
-                if (consume(MOZ_UTF16("rotr")))
+                if (consume(u"rotr"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Rotr, begin, cur_);
-                if (consume(MOZ_UTF16("rotl")))
+                if (consume(u"rotl"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Rotl, begin, cur_);
                 break;
               case 's':
-                if (consume(MOZ_UTF16("sub")))
+                if (consume(u"sub"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Sub, begin, cur_);
-                if (consume(MOZ_UTF16("shl")))
+                if (consume(u"shl"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Shl, begin, cur_);
-                if (consume(MOZ_UTF16("shr_s")))
+                if (consume(u"shr_s"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrS, begin, cur_);
-                if (consume(MOZ_UTF16("shr_u")))
+                if (consume(u"shr_u"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrU, begin, cur_);
-                if (consume(MOZ_UTF16("store"))) {
+                if (consume(u"store")) {
                     if (IsWasmSpace(*cur_))
                         return WasmToken(WasmToken::Store, Expr::I32Store, begin, cur_);
-                    if (consume(MOZ_UTF16("8")))
+                    if (consume(u"8"))
                         return WasmToken(WasmToken::Store, Expr::I32Store8, begin, cur_);
-                    if (consume(MOZ_UTF16("16")))
+                    if (consume(u"16"))
                         return WasmToken(WasmToken::Store, Expr::I32Store16, begin, cur_);
                     break;
                 }
                 break;
               case 't':
-                if (consume(MOZ_UTF16("trunc_s/f32")))
+                if (consume(u"trunc_s/f32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncSF32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("trunc_s/f64")))
+                if (consume(u"trunc_s/f64"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncSF64,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("trunc_u/f32")))
+                if (consume(u"trunc_u/f32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncUF32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("trunc_u/f64")))
+                if (consume(u"trunc_u/f64"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncUF64,
                                      begin, cur_);
                 break;
               case 'w':
-                if (consume(MOZ_UTF16("wrap/i64")))
+                if (consume(u"wrap/i64"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I32WrapI64,
                                      begin, cur_);
                 break;
               case 'x':
-                if (consume(MOZ_UTF16("xor")))
+                if (consume(u"xor"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32Xor, begin, cur_);
                 break;
             }
             break;
         }
-        if (consume(MOZ_UTF16("i64"))) {
-            if (!consume(MOZ_UTF16(".")))
+        if (consume(u"i64")) {
+            if (!consume(u"."))
                 return WasmToken(WasmToken::ValueType, ValType::I64, begin, cur_);
 
             switch (*cur_) {
               case 'a':
-                if (consume(MOZ_UTF16("add")))
+                if (consume(u"add"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Add, begin, cur_);
-                if (consume(MOZ_UTF16("and")))
+                if (consume(u"and"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64And, begin, cur_);
                 break;
               case 'c':
-                if (consume(MOZ_UTF16("const")))
+                if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::I64, begin, cur_);
-                if (consume(MOZ_UTF16("clz")))
+                if (consume(u"clz"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I64Clz, begin, cur_);
-                if (consume(MOZ_UTF16("ctz")))
+                if (consume(u"ctz"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I64Ctz, begin, cur_);
                 break;
               case 'd':
-                if (consume(MOZ_UTF16("div_s")))
+                if (consume(u"div_s"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64DivS, begin, cur_);
-                if (consume(MOZ_UTF16("div_u")))
+                if (consume(u"div_u"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64DivU, begin, cur_);
                 break;
               case 'e':
-                if (consume(MOZ_UTF16("eqz")))
+                if (consume(u"eqz"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I64Eqz, begin, cur_);
-                if (consume(MOZ_UTF16("eq")))
+                if (consume(u"eq"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64Eq, begin, cur_);
-                if (consume(MOZ_UTF16("extend_s/i32")))
+                if (consume(u"extend_s/i32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I64ExtendSI32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("extend_u/i32")))
+                if (consume(u"extend_u/i32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I64ExtendUI32,
                                      begin, cur_);
                 break;
               case 'g':
-                if (consume(MOZ_UTF16("ge_s")))
+                if (consume(u"ge_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GeS, begin, cur_);
-                if (consume(MOZ_UTF16("ge_u")))
+                if (consume(u"ge_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GeU, begin, cur_);
-                if (consume(MOZ_UTF16("gt_s")))
+                if (consume(u"gt_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GtS, begin, cur_);
-                if (consume(MOZ_UTF16("gt_u")))
+                if (consume(u"gt_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GtU, begin, cur_);
                 break;
               case 'l':
-                if (consume(MOZ_UTF16("le_s")))
+                if (consume(u"le_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LeS, begin, cur_);
-                if (consume(MOZ_UTF16("le_u")))
+                if (consume(u"le_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LeU, begin, cur_);
-                if (consume(MOZ_UTF16("lt_s")))
+                if (consume(u"lt_s"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LtS, begin, cur_);
-                if (consume(MOZ_UTF16("lt_u")))
+                if (consume(u"lt_u"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LtU, begin, cur_);
-                if (consume(MOZ_UTF16("load"))) {
+                if (consume(u"load")) {
                     if (IsWasmSpace(*cur_))
                         return WasmToken(WasmToken::Load, Expr::I64Load, begin, cur_);
-                    if (consume(MOZ_UTF16("8_s")))
+                    if (consume(u"8_s"))
                         return WasmToken(WasmToken::Load, Expr::I64Load8S, begin, cur_);
-                    if (consume(MOZ_UTF16("8_u")))
+                    if (consume(u"8_u"))
                         return WasmToken(WasmToken::Load, Expr::I64Load8U, begin, cur_);
-                    if (consume(MOZ_UTF16("16_s")))
+                    if (consume(u"16_s"))
                         return WasmToken(WasmToken::Load, Expr::I64Load16S, begin, cur_);
-                    if (consume(MOZ_UTF16("16_u")))
+                    if (consume(u"16_u"))
                         return WasmToken(WasmToken::Load, Expr::I64Load16U, begin, cur_);
-                    if (consume(MOZ_UTF16("32_s")))
+                    if (consume(u"32_s"))
                         return WasmToken(WasmToken::Load, Expr::I64Load32S, begin, cur_);
-                    if (consume(MOZ_UTF16("32_u")))
+                    if (consume(u"32_u"))
                         return WasmToken(WasmToken::Load, Expr::I64Load32U, begin, cur_);
                     break;
                 }
                 break;
               case 'm':
-                if (consume(MOZ_UTF16("mul")))
+                if (consume(u"mul"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Mul, begin, cur_);
                 break;
               case 'n':
-                if (consume(MOZ_UTF16("ne")))
+                if (consume(u"ne"))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64Ne, begin, cur_);
                 break;
               case 'o':
-                if (consume(MOZ_UTF16("or")))
+                if (consume(u"or"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Or, begin, cur_);
                 break;
               case 'p':
-                if (consume(MOZ_UTF16("popcnt")))
+                if (consume(u"popcnt"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I64Popcnt, begin, cur_);
                 break;
               case 'r':
-                if (consume(MOZ_UTF16("reinterpret/f64")))
+                if (consume(u"reinterpret/f64"))
                     return WasmToken(WasmToken::UnaryOpcode, Expr::I64ReinterpretF64,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("rem_s")))
+                if (consume(u"rem_s"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64RemS, begin, cur_);
-                if (consume(MOZ_UTF16("rem_u")))
+                if (consume(u"rem_u"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64RemU, begin, cur_);
-                if (consume(MOZ_UTF16("rotr")))
+                if (consume(u"rotr"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Rotr, begin, cur_);
-                if (consume(MOZ_UTF16("rotl")))
+                if (consume(u"rotl"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Rotl, begin, cur_);
                 break;
               case 's':
-                if (consume(MOZ_UTF16("sub")))
+                if (consume(u"sub"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Sub, begin, cur_);
-                if (consume(MOZ_UTF16("shl")))
+                if (consume(u"shl"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Shl, begin, cur_);
-                if (consume(MOZ_UTF16("shr_s")))
+                if (consume(u"shr_s"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64ShrS, begin, cur_);
-                if (consume(MOZ_UTF16("shr_u")))
+                if (consume(u"shr_u"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64ShrU, begin, cur_);
-                if (consume(MOZ_UTF16("store"))) {
+                if (consume(u"store")) {
                     if (IsWasmSpace(*cur_))
                         return WasmToken(WasmToken::Store, Expr::I64Store, begin, cur_);
-                    if (consume(MOZ_UTF16("8")))
+                    if (consume(u"8"))
                         return WasmToken(WasmToken::Store, Expr::I64Store8, begin, cur_);
-                    if (consume(MOZ_UTF16("16")))
+                    if (consume(u"16"))
                         return WasmToken(WasmToken::Store, Expr::I64Store16, begin, cur_);
-                    if (consume(MOZ_UTF16("32")))
+                    if (consume(u"32"))
                         return WasmToken(WasmToken::Store, Expr::I64Store32, begin, cur_);
                     break;
                 }
                 break;
               case 't':
-                if (consume(MOZ_UTF16("trunc_s/f32")))
+                if (consume(u"trunc_s/f32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncSF32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("trunc_s/f64")))
+                if (consume(u"trunc_s/f64"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncSF64,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("trunc_u/f32")))
+                if (consume(u"trunc_u/f32"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncUF32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("trunc_u/f64")))
+                if (consume(u"trunc_u/f64"))
                     return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncUF64,
                                      begin, cur_);
                 break;
               case 'x':
-                if (consume(MOZ_UTF16("xor")))
+                if (consume(u"xor"))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64Xor, begin, cur_);
                 break;
             }
             break;
         }
-        if (consume(MOZ_UTF16("import")))
+        if (consume(u"import"))
             return WasmToken(WasmToken::Import, begin, cur_);
-        if (consume(MOZ_UTF16("infinity")))
+        if (consume(u"infinity"))
             return WasmToken(WasmToken::Infinity, begin, cur_);
-        if (consume(MOZ_UTF16("if")))
+        if (consume(u"if"))
             return WasmToken(WasmToken::If, begin, cur_);
         break;
 
       case 'l':
-        if (consume(MOZ_UTF16("local")))
+        if (consume(u"local"))
             return WasmToken(WasmToken::Local, begin, cur_);
-        if (consume(MOZ_UTF16("loop")))
+        if (consume(u"loop"))
             return WasmToken(WasmToken::Loop, begin, cur_);
         break;
 
       case 'm':
-        if (consume(MOZ_UTF16("module")))
+        if (consume(u"module"))
             return WasmToken(WasmToken::Module, begin, cur_);
-        if (consume(MOZ_UTF16("memory")))
+        if (consume(u"memory"))
             return WasmToken(WasmToken::Memory, begin, cur_);
         break;
 
       case 'n':
-        if (consume(MOZ_UTF16("nan")))
+        if (consume(u"nan"))
             return nan(begin);
-        if (consume(MOZ_UTF16("nop")))
+        if (consume(u"nop"))
             return WasmToken(WasmToken::Nop, begin, cur_);
         break;
 
       case 'o':
-        if (consume(MOZ_UTF16("offset")))
+        if (consume(u"offset"))
             return WasmToken(WasmToken::Offset, begin, cur_);
         break;
 
       case 'p':
-        if (consume(MOZ_UTF16("param")))
+        if (consume(u"param"))
             return WasmToken(WasmToken::Param, begin, cur_);
         break;
 
       case 'r':
-        if (consume(MOZ_UTF16("resizable")))
+        if (consume(u"resizable"))
             return WasmToken(WasmToken::Resizable, begin, cur_);
-        if (consume(MOZ_UTF16("result")))
+        if (consume(u"result"))
             return WasmToken(WasmToken::Result, begin, cur_);
-        if (consume(MOZ_UTF16("return")))
+        if (consume(u"return"))
             return WasmToken(WasmToken::Return, begin, cur_);
         break;
 
       case 's':
-        if (consume(MOZ_UTF16("select")))
+        if (consume(u"select"))
             return WasmToken(WasmToken::TernaryOpcode, Expr::Select, begin, cur_);
-        if (consume(MOZ_UTF16("set_local")))
+        if (consume(u"set_local"))
             return WasmToken(WasmToken::SetLocal, begin, cur_);
-        if (consume(MOZ_UTF16("segment")))
+        if (consume(u"segment"))
             return WasmToken(WasmToken::Segment, begin, cur_);
-        if (consume(MOZ_UTF16("start")))
+        if (consume(u"start"))
             return WasmToken(WasmToken::Start, begin, cur_);
         break;
 
       case 't':
-        if (consume(MOZ_UTF16("table")))
+        if (consume(u"table"))
             return WasmToken(WasmToken::Table, begin, cur_);
-        if (consume(MOZ_UTF16("then")))
+        if (consume(u"then"))
             return WasmToken(WasmToken::Then, begin, cur_);
-        if (consume(MOZ_UTF16("type")))
+        if (consume(u"type"))
             return WasmToken(WasmToken::Type, begin, cur_);
         break;
 
       case 'u':
-        if (consume(MOZ_UTF16("unreachable")))
+        if (consume(u"unreachable"))
             return WasmToken(WasmToken::Unreachable, begin, cur_);
         break;
 

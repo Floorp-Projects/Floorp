@@ -13,13 +13,13 @@
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsTHashtable.h"
 
 template <class> struct already_AddRefed;
 class nsIFile;
 class nsIRunnable;
 class nsIThreadPool;
-template <class> class nsTArray;
 
 namespace mozilla {
 

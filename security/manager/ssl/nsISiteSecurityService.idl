@@ -10,7 +10,7 @@ interface nsIHttpChannel;
 interface nsISSLStatus;
 
 %{C++
-template<class T> class nsTArray;
+#include "nsTArrayForwardDeclare.h"
 class nsCString;
 namespace mozilla
 {

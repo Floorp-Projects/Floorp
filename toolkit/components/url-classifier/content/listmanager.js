@@ -353,11 +353,23 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
   //   request: list of tables and existing chunk ranges from tableData
   // }
   var streamerMap = { tableList: null, tableNames: {}, request: "" };
+  let useProtobuf = false;
   for (var tableName in this.tablesData) {
     // Skip tables not matching this update url
     if (this.tablesData[tableName].updateUrl != updateUrl) {
       continue;
     }
+
+    // Check if |updateURL| is for 'proto'. (only v4 uses protobuf for now.)
+    // We use the table name 'goog-*-proto' and an additional provider "google4"
+    // to describe the v4 settings.
+    let isCurTableProto = tableName.endsWith('-proto');
+    if (useProtobuf && !isCurTableProto) {
+      log('ERROR: Tables for the same updateURL should all be "proto" or none. ' +
+          'Check "browser.safebrowsing.provider.google4.lists"');
+    }
+    useProtobuf = isCurTableProto;
+
     if (this.needsUpdate_[this.tablesData[tableName].updateUrl][tableName]) {
       streamerMap.tableNames[tableName] = true;
     }
@@ -367,21 +379,27 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
       streamerMap.tableList += "," + tableName;
     }
   }
-  // Build the request. For each table already in the database, include the
-  // chunk data from the database
-  var lines = tableData.split("\n");
-  for (var i = 0; i < lines.length; i++) {
-    var fields = lines[i].split(";");
-    var name = fields[0];
-    if (streamerMap.tableNames[name]) {
-      streamerMap.request += lines[i] + "\n";
-      delete streamerMap.tableNames[name];
+
+  if (useProtobuf) {
+    // TODO: Bug 1275507 - XPCOM API to build v4 update request.
+    streamerMap.request = "";
+  } else {
+    // Build the request. For each table already in the database, include the
+    // chunk data from the database
+    var lines = tableData.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      var fields = lines[i].split(";");
+      var name = fields[0];
+      if (streamerMap.tableNames[name]) {
+        streamerMap.request += lines[i] + "\n";
+        delete streamerMap.tableNames[name];
+      }
     }
-  }
-  // For each requested table that didn't have chunk data in the database,
-  // request it fresh
-  for (let tableName in streamerMap.tableNames) {
-    streamerMap.request += tableName + ";\n";
+    // For each requested table that didn't have chunk data in the database,
+    // request it fresh
+    for (let tableName in streamerMap.tableNames) {
+      streamerMap.request += tableName + ";\n";
+    }
   }
 
   log("update request: " + JSON.stringify(streamerMap, undefined, 2) + "\n");

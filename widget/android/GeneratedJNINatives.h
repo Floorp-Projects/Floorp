@@ -137,6 +137,40 @@ const JNINativeMethod GeckoJavaSampler::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoNetworkManager::Natives : public mozilla::jni::NativeImpl<GeckoNetworkManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[2];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoNetworkManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoNetworkManager::OnConnectionChanged_t>(
+            mozilla::jni::NativeStub<GeckoNetworkManager::OnConnectionChanged_t, Impl>
+            ::template Wrap<&Impl::OnConnectionChanged>),
+
+    mozilla::jni::MakeNativeMethod<GeckoNetworkManager::OnStatusChanged_t>(
+            mozilla::jni::NativeStub<GeckoNetworkManager::OnStatusChanged_t, Impl>
+            ::template Wrap<&Impl::OnStatusChanged>)
+};
+
+template<class Impl>
+class GeckoScreenOrientation::Natives : public mozilla::jni::NativeImpl<GeckoScreenOrientation, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoScreenOrientation::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoScreenOrientation::OnOrientationChange_t>(
+            mozilla::jni::NativeStub<GeckoScreenOrientation::OnOrientationChange_t, Impl>
+            ::template Wrap<&Impl::OnOrientationChange>)
+};
+
+template<class Impl>
 class GeckoSmsManager::Natives : public mozilla::jni::NativeImpl<GeckoSmsManager, Impl>
 {
 public:
@@ -238,7 +272,7 @@ template<class Impl>
 class GeckoView::Window::Natives : public mozilla::jni::NativeImpl<Window, Impl>
 {
 public:
-    static const JNINativeMethod methods[4];
+    static const JNINativeMethod methods[5];
 };
 
 template<class Impl>
@@ -251,6 +285,10 @@ const JNINativeMethod GeckoView::Window::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoView::Window::DisposeNative_t>(
             mozilla::jni::NativeStub<GeckoView::Window::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
+
+    mozilla::jni::MakeNativeMethod<GeckoView::Window::LoadUri_t>(
+            mozilla::jni::NativeStub<GeckoView::Window::LoadUri_t, Impl>
+            ::template Wrap<&Impl::LoadUri>),
 
     mozilla::jni::MakeNativeMethod<GeckoView::Window::Open_t>(
             mozilla::jni::NativeStub<GeckoView::Window::Open_t, Impl>

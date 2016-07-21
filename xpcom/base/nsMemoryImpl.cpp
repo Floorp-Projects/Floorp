@@ -31,7 +31,7 @@ NS_IMPL_QUERY_INTERFACE(nsMemoryImpl, nsIMemory)
 NS_IMETHODIMP
 nsMemoryImpl::HeapMinimize(bool aImmediate)
 {
-  return FlushMemory(MOZ_UTF16("heap-minimize"), aImmediate);
+  return FlushMemory(u"heap-minimize", aImmediate);
 }
 
 NS_IMETHODIMP

@@ -193,6 +193,9 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
     void visitAsmJSCall(LAsmJSCall* ins);
+    void visitWasmBoundsCheck(LWasmBoundsCheck* ins);
+    void visitWasmLoad(LWasmLoad* ins);
+    void visitWasmStore(LWasmStore* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);

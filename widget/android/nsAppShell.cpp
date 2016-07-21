@@ -23,7 +23,6 @@
 #include "nsIDOMClientRect.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
-#include "nsINetworkLinkService.h"
 #include "nsISpeculativeConnect.h"
 #include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
@@ -43,7 +42,6 @@
 #include <pthread.h>
 #include <wchar.h>
 
-#include "mozilla/dom/ScreenOrientation.h"
 #ifdef MOZ_GAMEPAD
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/dom/Gamepad.h"
@@ -61,6 +59,8 @@
 #endif
 
 #include "ANRReporter.h"
+#include "GeckoNetworkManager.h"
+#include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
@@ -133,29 +133,6 @@ NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 nsCOMPtr<nsIPowerManagerService> sPowerManagerService = nullptr;
 StaticRefPtr<WakeLockListener> sWakeLockListener;
 
-namespace {
-
-already_AddRefed<nsIURI>
-ResolveURI(const nsCString& uriStr)
-{
-    nsCOMPtr<nsIIOService> ioServ = do_GetIOService();
-    nsCOMPtr<nsIURI> uri;
-
-    if (NS_SUCCEEDED(ioServ->NewURI(uriStr, nullptr,
-                                    nullptr, getter_AddRefs(uri)))) {
-        return uri.forget();
-    }
-
-    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
-    if (fixup && NS_SUCCEEDED(
-            fixup->CreateFixupURI(uriStr, 0, nullptr, getter_AddRefs(uri)))) {
-        return uri.forget();
-    }
-    return nullptr;
-}
-
-} // namespace
-
 
 class GeckoThreadSupport final
     : public widget::GeckoThread::Natives<GeckoThreadSupport>
@@ -176,7 +153,7 @@ public:
         return UsesGeckoThreadProxy::OnNativeCall(aCall);
     }
 
-    static void SpeculativeConnect(jni::String::Param uriStr)
+    static void SpeculativeConnect(jni::String::Param aUriStr)
     {
         if (!NS_IsMainThread()) {
             // We will be on the main thread if the call was queued on the Java
@@ -192,7 +169,7 @@ public:
             return;
         }
 
-        nsCOMPtr<nsIURI> uri = ResolveURI(uriStr->ToCString());
+        nsCOMPtr<nsIURI> uri = nsAppShell::ResolveURI(aUriStr->ToCString());
         if (!uri) {
             return;
         }
@@ -408,6 +385,8 @@ nsAppShell::nsAppShell()
         GeckoAppShellSupport::Init();
         GeckoThreadSupport::Init();
         mozilla::ANRReporter::Init();
+        mozilla::GeckoNetworkManager::Init();
+        mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
         nsWindow::InitNatives();
 
@@ -658,6 +637,25 @@ nsAppShell::SyncRunEvent(Event&& event,
     }
 }
 
+already_AddRefed<nsIURI>
+nsAppShell::ResolveURI(const nsCString& aUriStr)
+{
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService();
+    nsCOMPtr<nsIURI> uri;
+
+    if (NS_SUCCEEDED(ioServ->NewURI(aUriStr, nullptr,
+                                    nullptr, getter_AddRefs(uri)))) {
+        return uri.forget();
+    }
+
+    nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+    if (fixup && NS_SUCCEEDED(
+            fixup->CreateFixupURI(aUriStr, 0, nullptr, getter_AddRefs(uri)))) {
+        return uri.forget();
+    }
+    return nullptr;
+}
+
 class nsAppShell::LegacyGeckoEvent : public Event
 {
     mozilla::UniquePtr<AndroidGeckoEvent> ae;
@@ -806,77 +804,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::LOAD_URI: {
-        nsCOMPtr<nsICommandLineRunner> cmdline
-            (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-        if (!cmdline)
-            break;
-
-        if (curEvent->Characters().Length() == 0)
-            break;
-
-        char *uri = ToNewUTF8String(curEvent->Characters());
-        if (!uri)
-            break;
-
-        char *flag = ToNewUTF8String(curEvent->CharactersExtra());
-
-        const char *argv[4] = {
-            "dummyappname",
-            "-url",
-            uri,
-            flag ? flag : ""
-        };
-        nsresult rv = cmdline->Init(4, argv, nullptr, nsICommandLine::STATE_REMOTE_AUTO);
-        if (NS_SUCCEEDED(rv))
-            cmdline->Run();
-        free(uri);
-        if (flag)
-            free(flag);
-        break;
-    }
-
-    case AndroidGeckoEvent::NETWORK_CHANGED: {
-        hal::NotifyNetworkChange(hal::NetworkInformation(curEvent->ConnectionType(),
-                                                         curEvent->IsWifi(),
-                                                         curEvent->DHCPGateway()));
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os) {
-            os->NotifyObservers(nullptr,
-                                NS_NETWORK_LINK_TYPE_TOPIC,
-                                nsString(curEvent->Characters()).get());
-        }
-        break;
-    }
-
-    case AndroidGeckoEvent::SCREENORIENTATION_CHANGED: {
-        nsresult rv;
-        nsCOMPtr<nsIScreenManager> screenMgr =
-            do_GetService("@mozilla.org/gfx/screenmanager;1", &rv);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("Can't find nsIScreenManager!");
-            break;
-        }
-
-        nsIntRect rect;
-        int32_t colorDepth, pixelDepth;
-        int16_t angle;
-        dom::ScreenOrientationInternal orientation;
-        nsCOMPtr<nsIScreen> screen;
-
-        screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-        screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height);
-        screen->GetColorDepth(&colorDepth);
-        screen->GetPixelDepth(&pixelDepth);
-        orientation =
-            static_cast<dom::ScreenOrientationInternal>(curEvent->ScreenOrientation());
-        angle = curEvent->ScreenAngle();
-
-        hal::NotifyScreenConfigurationChange(
-            hal::ScreenConfiguration(rect, orientation, angle, colorDepth, pixelDepth));
-        break;
-    }
-
     case AndroidGeckoEvent::CALL_OBSERVER:
     {
         nsCOMPtr<nsIObserver> observer;
@@ -905,23 +832,10 @@ nsAppShell::LegacyGeckoEvent::Run()
         if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
             nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
             if (os) {
-                os->NotifyObservers(nullptr,
-                                    "memory-pressure",
-                                    MOZ_UTF16("low-memory"));
+                os->NotifyObservers(nullptr, "memory-pressure", u"low-memory");
             }
         }
         break;
-
-    case AndroidGeckoEvent::NETWORK_LINK_CHANGE:
-    {
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os) {
-            os->NotifyObservers(nullptr,
-                                NS_NETWORK_LINK_TOPIC,
-                                curEvent->Characters().get());
-        }
-        break;
-    }
 
     case AndroidGeckoEvent::TELEMETRY_HISTOGRAM_ADD:
         // If the extras field is not empty then this is a keyed histogram.

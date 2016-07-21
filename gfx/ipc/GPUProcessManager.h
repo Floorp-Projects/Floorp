@@ -45,6 +45,7 @@ namespace gfx {
 class GPUChild;
 class VsyncBridgeChild;
 class VsyncIOThreadHolder;
+class PVRManagerChild;
 
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
 // objects that may live in another process. Currently, it provides access
@@ -83,9 +84,10 @@ public:
 
   bool CreateContentCompositorBridge(base::ProcessId aOtherProcess,
                                      ipc::Endpoint<PCompositorBridgeChild>* aOutEndpoint);
-
   bool CreateContentImageBridge(base::ProcessId aOtherProcess,
                                 ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
+  bool CreateContentVRManager(base::ProcessId aOtherProcess,
+                              ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -148,6 +150,7 @@ private:
   void ShutdownVsyncIOThread();
 
   void EnsureImageBridgeChild();
+  void EnsureVRManager();
 
   RefPtr<CompositorSession> CreateRemoteSession(
     nsBaseWidget* aWidget,

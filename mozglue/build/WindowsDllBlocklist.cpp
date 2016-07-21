@@ -243,6 +243,7 @@ static const int kUser32BeforeBlocklistParameterLen =
   sizeof(kUser32BeforeBlocklistParameter) - 1;
 
 static DWORD sThreadLoadingXPCOMModule;
+static bool sBlocklistInitAttempted;
 static bool sBlocklistInitFailed;
 static bool sUser32BeforeBlocklist;
 
@@ -756,9 +757,16 @@ WindowsDllInterceptor NtDllIntercept;
 MFBT_API void
 DllBlocklist_Initialize()
 {
+  if (sBlocklistInitAttempted) {
+    return;
+  }
+  sBlocklistInitAttempted = true;
+
   if (GetModuleHandleA("user32.dll")) {
     sUser32BeforeBlocklist = true;
   }
+  // Catch any missing DELAYLOADS for user32.dll
+  MOZ_ASSERT(!sUser32BeforeBlocklist);
 
   NtDllIntercept.Init("ntdll.dll");
 
