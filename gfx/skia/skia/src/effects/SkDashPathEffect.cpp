@@ -251,9 +251,8 @@ bool SkDashPathEffect::asPoints(PointData* results,
         // Too many midpoints can cause results->fNumPoints to overflow or
         // otherwise cause the results->fPoints allocation below to OOM.
         // Cap it to a sane value.
-        static const SkScalar kMaxPoints = 1000000;
         SkScalar numIntervals = len2 / fIntervalLength;
-        if (!SkScalarIsFinite(numIntervals) || numIntervals > kMaxPoints) {
+        if (!SkScalarIsFinite(numIntervals) || numIntervals > SkDashPath::kMaxDashCount) {
             return false;
         }
         int numMidPoints = SkScalarFloorToInt(numIntervals);
