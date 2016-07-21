@@ -4652,7 +4652,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     aState.mRows.AlignBaselineSubtree(*aGridItemInfo);
     aState.mCols.AlignBaselineSubtree(*aGridItemInfo);
     // Setup [align|justify]-content:[last-]baseline related frame properties.
-    // These are added to the padding in nsCSSOffsetState::InitOffsets.
+    // These are added to the padding in SizeComputationInput::InitOffsets.
     // (a negative value signals the value is for 'last-baseline' and should be
     //  added to the (logical) end padding)
     typedef const FramePropertyDescriptor<SmallValueHolder<nscoord>>* Prop;

@@ -181,7 +181,7 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(
     iEndOffset = 0;
   } else {
     LogicalMargin frameMargin(wm);
-    nsCSSOffsetState os(aFrame, mReflowState.rendContext,
+    SizeComputationInput os(aFrame, mReflowState.rendContext,
                         wm, mContentArea.ISize(wm));
     frameMargin =
       os.ComputedLogicalMargin().ConvertTo(wm, aFrame->GetWritingMode());
@@ -209,7 +209,7 @@ GetBEndMarginClone(nsIFrame* aFrame,
 {
   if (aFrame->StyleBorder()->mBoxDecorationBreak ==
         NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
-    nsCSSOffsetState os(aFrame, aRenderingContext, aWritingMode,
+    SizeComputationInput os(aFrame, aRenderingContext, aWritingMode,
                         aContentArea.ISize(aWritingMode));
     return os.ComputedLogicalMargin().
                 ConvertTo(aWritingMode,
@@ -679,7 +679,7 @@ static nscoord
 FloatMarginISize(const ReflowInput& aCBReflowState,
                  nscoord aFloatAvailableISize,
                  nsIFrame *aFloat,
-                 const nsCSSOffsetState& aFloatOffsetState)
+                 const SizeComputationInput& aFloatOffsetState)
 {
   AutoMaybeDisableFontInflation an(aFloat);
   WritingMode wm = aFloatOffsetState.GetWritingMode();
@@ -746,7 +746,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   NS_ASSERTION(aFloat->GetParent() == mBlock,
                "Float frame has wrong parent");
 
-  nsCSSOffsetState offsets(aFloat, mReflowState.rendContext,
+  SizeComputationInput offsets(aFloat, mReflowState.rendContext,
                            wm, mReflowState.ComputedISize());
 
   nscoord floatMarginISize = FloatMarginISize(mReflowState,
