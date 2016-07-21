@@ -27,7 +27,7 @@
 namespace mozilla {
 
 class ThumbnailHelper final
-    : public widget::ThumbnailHelper::Natives<ThumbnailHelper>
+    : public java::ThumbnailHelper::Natives<ThumbnailHelper>
     , public jni::UsesNativeCallProxy
 {
     ThumbnailHelper() = delete;
@@ -234,7 +234,7 @@ public:
                 !tab ||
                 NS_FAILED(tab->GetWindow(getter_AddRefs(window))) ||
                 !window) {
-            widget::ThumbnailHelper::SendThumbnail(
+            java::ThumbnailHelper::SendThumbnail(
                     aData, aTabId, /* success */ false, /* store */ false);
             return;
         }
@@ -244,7 +244,7 @@ public:
         const bool success = !!docShell;
         const bool store = success ? ShouldStoreThumbnail(docShell) : false;
 
-        widget::ThumbnailHelper::SendThumbnail(aData, aTabId, success, store);
+        java::ThumbnailHelper::SendThumbnail(aData, aTabId, success, store);
     }
 };
 

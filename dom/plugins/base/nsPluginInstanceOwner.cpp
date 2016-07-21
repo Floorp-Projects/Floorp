@@ -1559,7 +1559,7 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!mInstance || !mJavaView)
     return;
 
-  widget::GeckoAppShell::RemovePluginView(
+  java::GeckoAppShell::RemovePluginView(
       jni::Object::Ref::From(jobject(mJavaView)), mFullScreen);
   jni::GetGeckoThreadEnv()->DeleteGlobalRef((jobject)mJavaView);
   mJavaView = nullptr;

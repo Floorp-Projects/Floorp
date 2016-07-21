@@ -7,7 +7,6 @@
 #include "assert.h"
 #include "ANPBase.h"
 #include <android/log.h>
-#include "AndroidBridge.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsWindow.h"

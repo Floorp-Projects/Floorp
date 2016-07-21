@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-class SmsManager : public widget::GeckoSmsManager::Natives<SmsManager>
+class SmsManager : public java::GeckoSmsManager::Natives<SmsManager>
 {
 private:
     SmsManager();

@@ -5,10 +5,10 @@
 #include "nsThreadUtils.h"
 #include "nsAndroidHistory.h"
 #include "nsComponentManagerUtils.h"
-#include "AndroidBridge.h"
-#include "Link.h"
 #include "nsIURI.h"
 #include "nsIObserverService.h"
+#include "GeneratedJNIWrappers.h"
+#include "Link.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
@@ -77,7 +77,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   list->AppendElement(aContent);
 
   if (jni::IsAvailable()) {
-    widget::GeckoAppShell::CheckURIVisited(uriString);
+    java::GeckoAppShell::CheckURIVisited(uriString);
   }
 
   return NS_OK;
@@ -203,7 +203,7 @@ nsAndroidHistory::SaveVisitURI(nsIURI* aURI) {
     // Save this URI in our history
     nsAutoCString spec;
     (void)aURI->GetSpec(spec);
-    widget::GeckoAppShell::MarkURIVisited(NS_ConvertUTF8toUTF16(spec));
+    java::GeckoAppShell::MarkURIVisited(NS_ConvertUTF8toUTF16(spec));
   }
 
   // Finally, notify that we've been visited.
@@ -292,7 +292,7 @@ nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
       SaveVisitURI(aURI);
     }
     NS_ConvertUTF8toUTF16 uriString(uri);
-    widget::GeckoAppShell::SetURITitle(uriString, aTitle);
+    java::GeckoAppShell::SetURITitle(uriString, aTitle);
   }
   return NS_OK;
 }
