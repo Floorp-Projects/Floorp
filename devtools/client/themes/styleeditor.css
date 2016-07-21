@@ -203,19 +203,48 @@ h3 {
   }
 }
 
+/* CSS coverage */
 .csscoverage-report {
   background-color: var(--theme-toolbar-background);
+  -moz-box-orient: horizontal;
 }
 
 .csscoverage-report-container {
   height: 100vh;
-  padding: 0 30px;
+  padding: 0 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -moz-box-flex: 1;
 }
 
 .csscoverage-report-content {
   margin: 20px auto;
   -moz-column-width: 300px;
   font-size: 13px;
+  -moz-user-select: text;
+}
+
+.csscoverage-report-summary,
+.csscoverage-report-unused,
+.csscoverage-report-optimize {
+  display: inline-block;
+}
+
+.csscoverage-report-unused,
+.csscoverage-report-optimize {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 950px) {
+  .csscoverage-report-content {
+    display: block;
+  }
+
+  .csscoverage-report-summary {
+    display: block;
+    text-align: center;
+  }
 }
 
 .csscoverage-report h1 {
@@ -231,6 +260,12 @@ h3 {
 .csscoverage-report h3 {
   font-weight: bold;
   margin: 10px 0;
+}
+
+.csscoverage-report code,
+.csscoverage-report textarea {
+  font-family: var(--monospace-font-family);
+  font-size: inherit;
 }
 
 .csscoverage-list:after {
@@ -268,9 +303,14 @@ h3 {
   border-inline-start: none;
 }
 
+.csscoverage-report .pie-table-chart-container {
+  -moz-box-orient: vertical;
+  text-align: start;
+}
+
 .chart-colored-blob[name="Used Preload"] {
   fill: var(--theme-highlight-pink);
-  background: var(--theme-highlight-pink);;
+  background: var(--theme-highlight-pink);
 }
 
 .chart-colored-blob[name=Used] {
@@ -299,5 +339,5 @@ h3 {
 }
 
 .csscoverage-report-chart {
-  margin: 0 50px;
+  margin: 0 20px;
 }
