@@ -211,7 +211,7 @@ ApplyUnstretchedMetrics(nsPresContext*      aPresContext,
 void
 nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                              ReflowOutput&     aDesiredSize,
-                             const ReflowInput& aReflowState,
+                             const ReflowInput& aReflowInput,
                              nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -226,7 +226,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   RefPtr<nsFontMetrics> fm =
     nsLayoutUtils::GetFontMetricsForFrame(this, fontSizeInflation);
   nscoord axisHeight, em;
-  GetAxisHeight(aReflowState.mRenderingContext->GetDrawTarget(), fm, axisHeight);
+  GetAxisHeight(aReflowInput.mRenderingContext->GetDrawTarget(), fm, axisHeight);
   GetEmHeight(fm, em);
   // leading to be left at the top and the bottom of stretched chars
   nscoord leading = NSToCoordRound(0.2f * em); 
@@ -255,21 +255,21 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
     descent = fm->MaxDescent();
   }
   while (childFrame) {
-    ReflowOutput childDesiredSize(aReflowState,
+    ReflowOutput childDesiredSize(aReflowInput,
                                          aDesiredSize.mFlags
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
     WritingMode wm = childFrame->GetWritingMode();
-    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput childReflowState(aPresContext, aReflowState,
+    ReflowInput childReflowInput(aPresContext, aReflowInput,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
-                childReflowState, childStatus);
+                childReflowInput, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
 
-    mozilla::WritingMode outerWM = aReflowState.GetWritingMode();
+    mozilla::WritingMode outerWM = aReflowInput.GetWritingMode();
     nscoord childDescent = childDesiredSize.BSize(outerWM) -
                            childDesiredSize.BlockStartAscent();
     if (descent < childDescent)
@@ -286,7 +286,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nsBoundingMetrics containerSize;
   nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_VERTICAL;
 
-  DrawTarget* drawTarget = aReflowState.mRenderingContext->GetDrawTarget();
+  DrawTarget* drawTarget = aReflowInput.mRenderingContext->GetDrawTarget();
 
   GetPreferredStretchSize(drawTarget,
                           0, /* i.e., without embellishments */
@@ -295,7 +295,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   while (childFrame) {
     nsIMathMLFrame* mathmlChild = do_QueryFrame(childFrame);
     if (mathmlChild) {
-      ReflowOutput childDesiredSize(aReflowState);
+      ReflowOutput childDesiredSize(aReflowInput);
       // retrieve the metrics that was stored at the previous pass
       GetReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                      childDesiredSize.mBoundingMetrics);
@@ -395,7 +395,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
     childFrame = firstChild;
   }
   while (childFrame) {
-    ReflowOutput childSize(aReflowState);
+    ReflowOutput childSize(aReflowInput);
     GetReflowAndBoundingMetricsFor(childFrame, childSize, bm);
     if (firstTime) {
       firstTime = false;
@@ -447,7 +447,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   GatherAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 static void

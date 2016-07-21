@@ -90,7 +90,7 @@ public:
   virtual nsSize GetIntrinsicRatio() override;
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
   
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
@@ -131,7 +131,7 @@ public:
     return NS_FRAME_SPLITTABLE;
   }
 
-  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowState = nullptr) const override;
+  virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
 
   nsresult GetIntrinsicImageSize(nsSize& aSize);
 

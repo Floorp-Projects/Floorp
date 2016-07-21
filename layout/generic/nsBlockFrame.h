@@ -241,7 +241,7 @@ public:
   /**
    * Compute the final block size of this frame.
    *
-   * @param aReflowState Data structure passed from parent during reflow.
+   * @param aReflowInput Data structure passed from parent during reflow.
    * @param aReflowStatus A pointer to the reflow status for when we're finished
    *        doing reflow. this will get set appropriately if the block-size
    *        causes us to exceed the current available (page) block-size.
@@ -255,7 +255,7 @@ public:
    * @param aFinalSize Out parameter for final block-size.
    * @param aConsumed The block-size already consumed by our previous-in-flows.
    */
-  void ComputeFinalBSize(const ReflowInput&      aReflowState,
+  void ComputeFinalBSize(const ReflowInput&      aReflowInput,
                          nsReflowStatus*               aStatus,
                          nscoord                       aContentBSize,
                          const mozilla::LogicalMargin& aBorderPadding,
@@ -264,7 +264,7 @@ public:
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
@@ -414,7 +414,7 @@ protected:
   // helper for SlideLine and UpdateLineContainerSize
   void MoveChildFramesOfLine(nsLineBox* aLine, nscoord aDeltaBCoord);
 
-  void ComputeFinalSize(const ReflowInput& aReflowState,
+  void ComputeFinalSize(const ReflowInput& aReflowInput,
                         BlockReflowInput&      aState,
                         ReflowOutput&     aMetrics,
                         nscoord*                 aBottomEdgeOfChildren);

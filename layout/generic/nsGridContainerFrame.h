@@ -73,7 +73,7 @@ public:
   // nsIFrame overrides
   void Reflow(nsPresContext*           aPresContext,
               ReflowOutput&     aDesiredSize,
-              const ReflowInput& aReflowState,
+              const ReflowInput& aReflowInput,
               nsReflowStatus&          aStatus) override;
   nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
@@ -160,7 +160,7 @@ public:
 
   struct TrackSize;
   struct GridItemInfo;
-  struct GridReflowState;
+  struct GridReflowInput;
 protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
@@ -209,7 +209,7 @@ protected:
    * @return the consumed size of all of this grid container's continuations
    *         so far including this frame
    */
-  nscoord ReflowChildren(GridReflowState&     aState,
+  nscoord ReflowChildren(GridReflowInput&     aState,
                          const LogicalRect&   aContentArea,
                          ReflowOutput& aDesiredSize,
                          nsReflowStatus&      aStatus);
@@ -259,10 +259,10 @@ private:
   };
 
   mozilla::Maybe<nsGridContainerFrame::Fragmentainer>
-    GetNearestFragmentainer(const GridReflowState& aState) const;
+    GetNearestFragmentainer(const GridReflowInput& aState) const;
 
   // @return the consumed size of all continuations so far including this frame
-  nscoord ReflowInFragmentainer(GridReflowState&     aState,
+  nscoord ReflowInFragmentainer(GridReflowInput&     aState,
                                 const LogicalRect&   aContentArea,
                                 ReflowOutput& aDesiredSize,
                                 nsReflowStatus&      aStatus,
@@ -271,7 +271,7 @@ private:
 
   // Helper for ReflowInFragmentainer
   // @return the consumed size of all continuations so far including this frame
-  nscoord ReflowRowsInFragmentainer(GridReflowState&     aState,
+  nscoord ReflowRowsInFragmentainer(GridReflowInput&     aState,
                                     const LogicalRect&   aContentArea,
                                     ReflowOutput& aDesiredSize,
                                     nsReflowStatus&      aStatus,
@@ -289,7 +289,7 @@ private:
                          nsSize                  aContainerSize,
                          mozilla::Maybe<nscoord> aStretchBSize,
                          const Fragmentainer*    aFragmentainer,
-                         const GridReflowState&  aState,
+                         const GridReflowInput&  aState,
                          const LogicalRect&      aContentArea,
                          ReflowOutput&    aDesiredSize,
                          nsReflowStatus&         aStatus);

@@ -37,11 +37,11 @@ public:
                    nscoord                     aClearance,
                    bool                        aIsAdjacentWithBStart,
                    nsLineBox*                  aLine,
-                   ReflowInput&          aReflowState,
+                   ReflowInput&          aReflowInput,
                    nsReflowStatus&             aReflowStatus,
                    BlockReflowInput&         aState);
 
-  bool PlaceBlock(const ReflowInput& aReflowState,
+  bool PlaceBlock(const ReflowInput& aReflowInput,
                   bool                     aForceFit,
                   nsLineBox*               aLine,
                   nsCollapsingMargin&      aBEndMarginResult /* out */,
@@ -83,7 +83,7 @@ public:
 
 protected:
   nsPresContext* mPresContext;
-  const ReflowInput& mOuterReflowState;
+  const ReflowInput& mOuterReflowInput;
 
   nsIFrame* mFrame;
   mozilla::LogicalRect mSpace;

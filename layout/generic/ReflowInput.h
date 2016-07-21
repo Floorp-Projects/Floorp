@@ -175,8 +175,8 @@ public:
                    mozilla::WritingMode aContainingBlockWritingMode,
                    nscoord aContainingBlockISize);
 
-  struct ReflowStateFlags {
-    ReflowStateFlags() { memset(this, 0, sizeof(*this)); }
+  struct ReflowInputFlags {
+    ReflowInputFlags() { memset(this, 0, sizeof(*this)); }
     uint16_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
                                      // percent bsize frames inside cells which may not have computed bsizes
     uint16_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
@@ -206,7 +206,7 @@ public:
     uint16_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
                                                 // reflowing this child to
                                                 // measure its intrinsic height.
-    uint16_t mDummyParentReflowState:1; // a "fake" reflow state made
+    uint16_t mDummyParentReflowInput:1; // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
     uint16_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
@@ -281,7 +281,7 @@ protected:
   void InitOffsets(mozilla::WritingMode aWM,
                    const mozilla::LogicalSize& aPercentBasis,
                    nsIAtom* aFrameType,
-                   ReflowStateFlags aFlags,
+                   ReflowInputFlags aFlags,
                    const nsMargin* aBorder = nullptr,
                    const nsMargin* aPadding = nullptr);
 
@@ -317,7 +317,7 @@ protected:
 struct ReflowInput : public SizeComputationInput {
   // the reflow states are linked together. this is the pointer to the
   // parent's reflow state
-  const ReflowInput* mParentReflowState;
+  const ReflowInput* mParentReflowInput;
 
   // pointer to the float manager associated with this area
   nsFloatManager* mFloatManager;
@@ -327,7 +327,7 @@ struct ReflowInput : public SizeComputationInput {
 
   // The appropriate reflow state for the containing block (for
   // percentage widths, etc.) of this reflow state's frame.
-  const ReflowInput *mCBReflowState;
+  const ReflowInput *mCBReflowInput;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
@@ -344,7 +344,7 @@ struct ReflowInput : public SizeComputationInput {
   nscoord mBlockDelta;
 
   // If an ReflowInput finds itself initialized with an unconstrained
-  // inline-size, it will look up its parentReflowState chain for a state
+  // inline-size, it will look up its parentReflowInput chain for a state
   // with an orthogonal writing mode and a non-NS_UNCONSTRAINEDSIZE value for
   // orthogonal limit; when it finds such a reflow-state, it will use its
   // orthogonal-limit value to constrain inline-size.
@@ -591,7 +591,7 @@ public:
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
   int16_t mReflowDepth;
-  ReflowStateFlags mFlags;
+  ReflowInputFlags mFlags;
 
   // Logical and physical accessors for the resize flags. All users should go
   // via these accessors, so that in due course we can change the storage from
@@ -659,7 +659,7 @@ public:
    * state are copied from the parent's reflow state. The remainder is computed.
    *
    * @param aPresContext Must be equal to aFrame->PresContext().
-   * @param aParentReflowState A reference to an ReflowInput object that
+   * @param aParentReflowInput A reference to an ReflowInput object that
    *        is to be the parent of this object.
    * @param aFrame The frame for whose reflow state is being constructed.
    * @param aAvailableSpace See comments for availableHeight and availableWidth
@@ -671,7 +671,7 @@ public:
    *        below).
    */
   ReflowInput(nsPresContext*              aPresContext,
-                    const ReflowInput&    aParentReflowState,
+                    const ReflowInput&    aParentReflowInput,
                     nsIFrame*                   aFrame,
                     const mozilla::LogicalSize& aAvailableSpace,
                     const mozilla::LogicalSize* aContainingBlockSize = nullptr,
@@ -680,7 +680,7 @@ public:
   // Values for |aFlags| passed to constructor
   enum {
     // Indicates that the parent of this reflow state is "fake" (see
-    // mDummyParentReflowState in mFlags).
+    // mDummyParentReflowInput in mFlags).
     DUMMY_PARENT_REFLOW_STATE = (1<<0),
 
     // Indicates that the calling function will initialize the reflow state, and
@@ -922,7 +922,7 @@ public:
 
 protected:
   void InitFrameType(nsIAtom* aFrameType);
-  void InitCBReflowState();
+  void InitCBReflowInput();
   void InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType);
 
   void InitConstraints(nsPresContext*              aPresContext,

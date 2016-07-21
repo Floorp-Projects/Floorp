@@ -376,8 +376,8 @@ class nsAutoFloatManager {
   using ReflowInput = mozilla::ReflowInput;
 
 public:
-  explicit nsAutoFloatManager(ReflowInput& aReflowState)
-    : mReflowState(aReflowState),
+  explicit nsAutoFloatManager(ReflowInput& aReflowInput)
+    : mReflowInput(aReflowInput),
       mNew(nullptr),
       mOld(nullptr) {}
 
@@ -392,7 +392,7 @@ public:
   CreateFloatManager(nsPresContext *aPresContext);
 
 protected:
-  ReflowInput &mReflowState;
+  ReflowInput &mReflowInput;
   nsFloatManager *mNew;
   nsFloatManager *mOld;
 };

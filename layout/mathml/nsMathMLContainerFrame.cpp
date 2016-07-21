@@ -820,7 +820,7 @@ void
 nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
                                     nsPresContext*           aPresContext,
                                     ReflowOutput&     aDesiredSize,
-                                    const ReflowInput& aReflowState,
+                                    const ReflowInput& aReflowInput,
                                     nsReflowStatus&          aStatus)
 {
   // Having foreign/hybrid children, e.g., from html markups, is not defined by
@@ -839,7 +839,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
 #endif
   
   nsContainerFrame::
-         ReflowChild(aChildFrame, aPresContext, aDesiredSize, aReflowState,
+         ReflowChild(aChildFrame, aPresContext, aDesiredSize, aReflowInput,
                      0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 
   if (aDesiredSize.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
@@ -857,7 +857,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   }
   if (IsForeignChild(aChildFrame)) {
     // use ComputeTightBounds API as aDesiredSize.mBoundingMetrics is not set.
-    nsRect r = aChildFrame->ComputeTightBounds(aReflowState.mRenderingContext->GetDrawTarget());
+    nsRect r = aChildFrame->ComputeTightBounds(aReflowInput.mRenderingContext->GetDrawTarget());
     aDesiredSize.mBoundingMetrics.leftBearing = r.x;
     aDesiredSize.mBoundingMetrics.rightBearing = r.XMost();
     aDesiredSize.mBoundingMetrics.ascent = aDesiredSize.BlockStartAscent() - r.y;
@@ -869,7 +869,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
 void
 nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
                                ReflowOutput&     aDesiredSize,
-                               const ReflowInput& aReflowState,
+                               const ReflowInput& aReflowInput,
                                nsReflowStatus&          aStatus)
 {
   MarkInReflow();
@@ -885,15 +885,15 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   nsReflowStatus childStatus;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    ReflowOutput childDesiredSize(aReflowState, // ???
+    ReflowOutput childDesiredSize(aReflowInput, // ???
                                          aDesiredSize.mFlags);
     WritingMode wm = childFrame->GetWritingMode();
-    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    LogicalSize availSize = aReflowInput.ComputedSize(wm);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput childReflowState(aPresContext, aReflowState,
+    ReflowInput childReflowInput(aPresContext, aReflowInput,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
-                childReflowState, childStatus);
+                childReflowInput, childStatus);
     //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
@@ -907,7 +907,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   // The stretching of siblings of an embellished child is _deferred_ until
   // after finishing the stretching of the embellished child - bug 117652
 
-  DrawTarget* drawTarget = aReflowState.mRenderingContext->GetDrawTarget();
+  DrawTarget* drawTarget = aReflowInput.mRenderingContext->GetDrawTarget();
 
   if (!NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
       (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) ||
@@ -932,7 +932,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
       nsIMathMLFrame* mathMLFrame = do_QueryFrame(childFrame);
       if (mathMLFrame) {
         // retrieve the metrics that was stored at the previous pass
-        ReflowOutput childDesiredSize(aReflowState);
+        ReflowOutput childDesiredSize(aReflowInput);
         GetReflowAndBoundingMetricsFor(childFrame,
           childDesiredSize, childDesiredSize.mBoundingMetrics);
 
@@ -951,7 +951,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   FinalizeReflow(drawTarget, aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 static nscoord AddInterFrameSpacingToSize(ReflowOutput&    aDesiredSize,

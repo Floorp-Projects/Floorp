@@ -92,12 +92,12 @@ void nsTableColFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
 void
 nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   ReflowOutput&     aDesiredSize,
-                                  const ReflowInput& aReflowState,
+                                  const ReflowInput& aReflowInput,
                                   nsReflowStatus&          aStatus)
 {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableColFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   aDesiredSize.ClearSize();
   const nsStyleVisibility* colVis = StyleVisibility();
   bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
@@ -105,7 +105,7 @@ nsTableColFrame::Reflow(nsPresContext*          aPresContext,
     GetTableFrame()->SetNeedToCollapse(true);
   }
   aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 int32_t nsTableColFrame::GetSpan()

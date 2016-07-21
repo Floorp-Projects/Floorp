@@ -78,7 +78,7 @@ public:
 
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aMetrics,
-                      const ReflowInput& aReflowState,
+                      const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
