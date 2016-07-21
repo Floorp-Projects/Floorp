@@ -56,6 +56,8 @@ using namespace mozilla::layout;
  ** nsTableReflowState                                                         **
  ********************************************************************************/
 
+namespace mozilla {
+
 struct nsTableReflowState {
 
   // the real reflow state
@@ -102,6 +104,8 @@ struct nsTableReflowState {
     }
   }
 };
+
+} // namespace mozilla
 
 /********************************************************************************
  ** nsTableFrame                                                               **

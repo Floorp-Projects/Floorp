@@ -28,9 +28,9 @@ class nsStyleContext;
 namespace mozilla {
 class WritingMode;
 class LogicalMargin;
+struct nsTableReflowState;
 } // namespace mozilla
 
-struct nsTableReflowState;
 struct BCPropertyData;
 
 static inline bool IS_TABLE_CELL(nsIAtom* frameType) {
@@ -132,6 +132,7 @@ class nsTableFrame : public nsContainerFrame
   typedef mozilla::image::DrawResult DrawResult;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalMargin LogicalMargin;
+  typedef mozilla::nsTableReflowState nsTableReflowState;
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTableFrame)
