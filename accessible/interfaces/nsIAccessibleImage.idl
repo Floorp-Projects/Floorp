@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(09086623-0f09-4310-ac56-c2cda7c29648)]
+[scriptable, builtinclass, uuid(09086623-0f09-4310-ac56-c2cda7c29648)]
 interface nsIAccessibleImage : nsISupports
 {
   /**
