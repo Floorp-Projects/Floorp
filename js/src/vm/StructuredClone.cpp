@@ -1335,6 +1335,7 @@ JSStructuredCloneWriter::transferOwnership()
             // The current setup of the array buffer inheritance hierarchy doesn't
             // lend itself well to generic manipulation via proxies.
             Rooted<ArrayBufferObject*> arrayBuffer(context(), &CheckedUnwrap(obj)->as<ArrayBufferObject>());
+            JSAutoCompartment ac(context(), arrayBuffer);
             size_t nbytes = arrayBuffer->byteLength();
 
             // Structured cloning currently only has optimizations for mapped
