@@ -69,7 +69,6 @@ public class GeckoEvent {
         NOOP(15),
         VIEWPORT(20),
         THUMBNAIL(25),
-        SCREENORIENTATION_CHANGED(27),
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
@@ -122,9 +121,6 @@ public class GeckoEvent {
     private String mCharacters;
     private String mCharactersExtra;
     private String mData;
-
-    private short mScreenOrientation;
-    private short mScreenAngle;
 
     private ByteBuffer mBuffer;
 
@@ -361,13 +357,6 @@ public class GeckoEvent {
         event.mX = (double) scaleFactor;
         event.mMetaState = tabId;
         event.mBuffer = buffer;
-        return event;
-    }
-
-    public static GeckoEvent createScreenOrientationEvent(short aScreenOrientation, short aScreenAngle) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.SCREENORIENTATION_CHANGED);
-        event.mScreenOrientation = aScreenOrientation;
-        event.mScreenAngle = aScreenAngle;
         return event;
     }
 
