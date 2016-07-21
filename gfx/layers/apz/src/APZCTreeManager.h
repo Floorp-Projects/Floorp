@@ -27,7 +27,6 @@ namespace layers {
 
 class Layer;
 class AsyncPanZoomController;
-class APZCTreeManagerParent;
 class CompositorBridgeParent;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
@@ -382,19 +381,17 @@ public:
    */
   void SetLongTapEnabled(bool aTapGestureEnabled) override;
 
-  // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
-
-  void TransformEventRefPoint(
-      LayoutDeviceIntPoint* aRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid) override;
-
-  void UpdateWheelTransaction(
-      LayoutDeviceIntPoint aRefPoint,
-      EventMessage aEventMessage) override;
-
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
+
+  // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
+  void TransformEventRefPoint(
+      LayoutDeviceIntPoint* aRefPoint,
+      ScrollableLayerGuid* aOutTargetGuid) override;
+  void UpdateWheelTransaction(
+      LayoutDeviceIntPoint aRefPoint,
+      EventMessage aEventMessage) override;
 
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
