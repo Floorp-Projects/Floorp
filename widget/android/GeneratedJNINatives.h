@@ -156,6 +156,21 @@ const JNINativeMethod GeckoNetworkManager::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoScreenOrientation::Natives : public mozilla::jni::NativeImpl<GeckoScreenOrientation, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoScreenOrientation::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoScreenOrientation::OnOrientationChange_t>(
+            mozilla::jni::NativeStub<GeckoScreenOrientation::OnOrientationChange_t, Impl>
+            ::template Wrap<&Impl::OnOrientationChange>)
+};
+
+template<class Impl>
 class GeckoSmsManager::Natives : public mozilla::jni::NativeImpl<GeckoSmsManager, Impl>
 {
 public:
