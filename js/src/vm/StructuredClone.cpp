@@ -71,6 +71,7 @@ using JS::CanonicalizeNaN;
 enum StructuredDataType : uint32_t {
     /* Structured data types provided by the engine */
     SCTAG_FLOAT_MAX = 0xFFF00000,
+    SCTAG_HEADER = 0xFFF10000,
     SCTAG_NULL = 0xFFFF0000,
     SCTAG_UNDEFINED,
     SCTAG_BOOLEAN,
@@ -226,9 +227,10 @@ class SCInput {
 
 struct JSStructuredCloneReader {
   public:
-    explicit JSStructuredCloneReader(SCInput& in, const JSStructuredCloneCallbacks* cb,
+    explicit JSStructuredCloneReader(SCInput& in, JS::StructuredCloneScope scope,
+                                     const JSStructuredCloneCallbacks* cb,
                                      void* cbClosure)
-        : in(in), objs(in.context()), allObjs(in.context()),
+        : in(in), scope(scope), objs(in.context()), allObjs(in.context()),
           callbacks(cb), closure(cbClosure) { }
 
     SCInput& input() { return in; }
@@ -237,6 +239,7 @@ struct JSStructuredCloneReader {
   private:
     JSContext* context() { return in.context(); }
 
+    bool readHeader();
     bool readTransferMap();
 
     template <typename CharT>
@@ -253,6 +256,8 @@ struct JSStructuredCloneReader {
     bool startRead(MutableHandleValue vp);
 
     SCInput& in;
+
+    JS::StructuredCloneScope scope;
 
     // Stack of objects with properties remaining to be read.
     AutoValueVector objs;
@@ -272,10 +277,11 @@ struct JSStructuredCloneReader {
 struct JSStructuredCloneWriter {
   public:
     explicit JSStructuredCloneWriter(JSContext* cx,
+                                     JS::StructuredCloneScope scope,
                                      const JSStructuredCloneCallbacks* cb,
                                      void* cbClosure,
                                      Value tVal)
-        : out(cx), objs(out.context()),
+        : out(cx), scope(scope), objs(out.context()),
           counts(out.context()), entries(out.context()),
           memory(out.context()), callbacks(cb),
           closure(cbClosure), transferable(out.context(), tVal),
@@ -289,7 +295,7 @@ struct JSStructuredCloneWriter {
             ReportOutOfMemory(context());
             return false;
         }
-        return parseTransferable() && writeTransferMap();
+        return parseTransferable() && writeHeader() && writeTransferMap();
     }
 
     bool write(HandleValue v);
@@ -306,6 +312,7 @@ struct JSStructuredCloneWriter {
 
     JSContext* context() { return out.context(); }
 
+    bool writeHeader();
     bool writeTransferMap();
 
     bool writeString(uint32_t tag, JSString* str);
@@ -328,6 +335,9 @@ struct JSStructuredCloneWriter {
     inline void checkStack();
 
     SCOutput out;
+
+    // The (address space, thread) scope within which this clone is valid.
+    JS::StructuredCloneScope scope;
 
     // Vector of objects with properties remaining to be written.
     //
@@ -411,19 +421,21 @@ ReportDataCloneError(JSContext* cx,
 
 bool
 WriteStructuredClone(JSContext* cx, HandleValue v, uint64_t** bufp, size_t* nbytesp,
+                     JS::StructuredCloneScope scope,
                      const JSStructuredCloneCallbacks* cb, void* cbClosure,
                      Value transferable)
 {
-    JSStructuredCloneWriter w(cx, cb, cbClosure, transferable);
+    JSStructuredCloneWriter w(cx, scope, cb, cbClosure, transferable);
     return w.init() && w.write(v) && w.extractBuffer(bufp, nbytesp);
 }
 
 bool
-ReadStructuredClone(JSContext* cx, uint64_t* data, size_t nbytes, MutableHandleValue vp,
+ReadStructuredClone(JSContext* cx, uint64_t* data, size_t nbytes,
+                    JS::StructuredCloneScope scope, MutableHandleValue vp,
                     const JSStructuredCloneCallbacks* cb, void* cbClosure)
 {
     SCInput in(cx, data, nbytes);
-    JSStructuredCloneReader r(in, cb, cbClosure);
+    JSStructuredCloneReader r(in, scope, cb, cbClosure);
     return r.read(vp);
 }
 
@@ -1264,6 +1276,12 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
 }
 
 bool
+JSStructuredCloneWriter::writeHeader()
+{
+    return out.writePair(SCTAG_HEADER, (uint32_t)scope);
+}
+
+bool
 JSStructuredCloneWriter::writeTransferMap()
 {
     if (transferableObjects.empty())
@@ -1307,6 +1325,8 @@ JSStructuredCloneWriter::transferOwnership()
     // grabbing out pointers from the transferables and stuffing them into the
     // transfer map.
     uint64_t* point = out.rawBuffer();
+    MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_HEADER);
+    point++;
     MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_TRANSFER_MAP_HEADER);
     point++;
     MOZ_ASSERT(LittleEndian::readUint64(point) == transferableObjects.count());
@@ -1342,6 +1362,8 @@ JSStructuredCloneWriter::transferOwnership()
             // and malloc'd buffers, not asm.js-ified buffers.
             bool hasStealableContents = arrayBuffer->hasStealableContents() &&
                                         (arrayBuffer->isMapped() || arrayBuffer->hasMallocedContents());
+            if (scope == JS::StructuredCloneScope::DifferentProcess)
+                hasStealableContents = false;
 
             ArrayBufferObject::BufferContents bufContents =
                 ArrayBufferObject::stealContents(context(), arrayBuffer, hasStealableContents);
@@ -1897,6 +1919,29 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
 }
 
 bool
+JSStructuredCloneReader::readHeader()
+{
+    uint32_t tag, data;
+    if (!in.getPair(&tag, &data))
+        return in.reportTruncated();
+
+    if (tag != SCTAG_HEADER) {
+        // Old structured clone buffer. We must have read it from disk or
+        // somewhere, so we can assume it's scope-compatible.
+        return true;
+    }
+
+    MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
+    if (data < uint32_t(scope)) {
+        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
+                             JSMSG_SC_BAD_SERIALIZED_DATA, "incompatible structured clone scope");
+        return false;
+    }
+
+    return true;
+}
+
+bool
 JSStructuredCloneReader::readTransferMap()
 {
     JSContext* cx = context();
@@ -2071,6 +2116,9 @@ JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag)
 bool
 JSStructuredCloneReader::read(MutableHandleValue vp)
 {
+    if (!readHeader())
+        return false;
+
     if (!readTransferMap())
         return false;
 
@@ -2178,7 +2226,8 @@ using namespace js;
 
 JS_PUBLIC_API(bool)
 JS_ReadStructuredClone(JSContext* cx, uint64_t* buf, size_t nbytes,
-                       uint32_t version, MutableHandleValue vp,
+                       uint32_t version, JS::StructuredCloneScope scope,
+                       MutableHandleValue vp,
                        const JSStructuredCloneCallbacks* optionalCallbacks,
                        void* closure)
 {
@@ -2190,11 +2239,12 @@ JS_ReadStructuredClone(JSContext* cx, uint64_t* buf, size_t nbytes,
         return false;
     }
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
-    return ReadStructuredClone(cx, buf, nbytes, vp, callbacks, closure);
+    return ReadStructuredClone(cx, buf, nbytes, scope, vp, callbacks, closure);
 }
 
 JS_PUBLIC_API(bool)
 JS_WriteStructuredClone(JSContext* cx, HandleValue value, uint64_t** bufp, size_t* nbytesp,
+                        JS::StructuredCloneScope scope,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
                         void* closure, HandleValue transferable)
 {
@@ -2203,7 +2253,7 @@ JS_WriteStructuredClone(JSContext* cx, HandleValue value, uint64_t** bufp, size_
     assertSameCompartment(cx, value);
 
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
-    return WriteStructuredClone(cx, value, bufp, nbytesp, callbacks, closure, transferable);
+    return WriteStructuredClone(cx, value, bufp, nbytesp, scope, callbacks, closure, transferable);
 }
 
 JS_PUBLIC_API(bool)
@@ -2247,7 +2297,7 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
 
     const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
 
-    JSAutoStructuredCloneBuffer buf;
+    JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcessSameThread, callbacks, closure);
     {
         // If we use Maybe<AutoCompartment> here, G++ can't tell that the
         // destructor is only called when Maybe::construct was called, and
@@ -2266,6 +2316,7 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
 }
 
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer&& other)
+    : scope_(other.scope_)
 {
     ownTransferables_ = other.ownTransferables_;
     other.steal(&data_, &nbytes_, &version_, &callbacks_, &closure_);
@@ -2275,6 +2326,7 @@ JSAutoStructuredCloneBuffer&
 JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer&& other)
 {
     MOZ_ASSERT(&other != this);
+    MOZ_ASSERT(scope_ == other.scope_);
     clear();
     ownTransferables_ = other.ownTransferables_;
     other.steal(&data_, &nbytes_, &version_, &callbacks_, &closure_);
@@ -2369,7 +2421,7 @@ JSAutoStructuredCloneBuffer::read(JSContext* cx, MutableHandleValue vp,
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(data_);
-    return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp,
+    return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, scope_, vp,
                                     optionalCallbacks, closure);
 }
 
@@ -2390,6 +2442,7 @@ JSAutoStructuredCloneBuffer::write(JSContext* cx, HandleValue value,
 {
     clear();
     bool ok = JS_WriteStructuredClone(cx, value, &data_, &nbytes_,
+                                      scope_,
                                       optionalCallbacks, closure,
                                       transferable);
 

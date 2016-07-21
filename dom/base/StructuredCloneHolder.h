@@ -31,7 +31,9 @@ namespace dom {
 class StructuredCloneHolderBase
 {
 public:
-  StructuredCloneHolderBase();
+  typedef JS::StructuredCloneScope StructuredCloneScope;
+
+  StructuredCloneHolderBase(StructuredCloneScope aScope = StructuredCloneScope::SameProcessSameThread);
   virtual ~StructuredCloneHolderBase();
 
   // These methods should be implemented in order to clone data.
@@ -115,6 +117,8 @@ public:
 protected:
   nsAutoPtr<JSAutoStructuredCloneBuffer> mBuffer;
 
+  StructuredCloneScope mStructuredCloneScope;
+
 #ifdef DEBUG
   bool mClearCalled;
 #endif
@@ -139,24 +143,17 @@ public:
     TransferringNotSupported
   };
 
-  enum ContextSupport
-  {
-    SameProcessSameThread,
-    SameProcessDifferentThread,
-    DifferentProcess
-  };
-
   // If cloning is supported, this object will clone objects such as Blobs,
   // FileList, ImageData, etc.
   // If transferring is supported, we will transfer MessagePorts and in the
   // future other transferrable objects.
-  // The ContextSupport is useful to know where the cloned/transferred data can
-  // be read and written. Additional checks about the nature of the objects
-  // will be done based on this context value because not all the objects can
-  // be sent between threads or processes.
+  // The StructuredCloneScope is useful to know where the cloned/transferred
+  // data can be read and written. Additional checks about the nature of the
+  // objects will be done based on this scope value because not all the
+  // objects can be sent between threads or processes.
   explicit StructuredCloneHolder(CloningSupport aSupportsCloning,
                                  TransferringSupport aSupportsTransferring,
-                                 ContextSupport aContextSupport);
+                                 StructuredCloneScope aStructuredCloneScope);
   virtual ~StructuredCloneHolder();
 
   // Normally you should just use Write() and Read().
@@ -194,9 +191,9 @@ public:
     return mBlobImplArray;
   }
 
-  ContextSupport SupportedContext() const
+  StructuredCloneScope CloneScope() const
   {
-    return mSupportedContext;
+    return mStructuredCloneScope;
   }
 
   // The parent object is set internally just during the Read(). This method
@@ -294,7 +291,6 @@ protected:
 
   bool mSupportsCloning;
   bool mSupportsTransferring;
-  ContextSupport mSupportedContext;
 
   // Used for cloning blobs in the structured cloning algorithm.
   nsTArray<RefPtr<BlobImpl>> mBlobImplArray;

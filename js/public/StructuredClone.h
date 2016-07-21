@@ -22,6 +22,13 @@ struct JSStructuredCloneWriter;
 // API for the HTML5 internal structured cloning algorithm.
 
 namespace JS {
+
+enum class StructuredCloneScope : uint32_t {
+    SameProcessSameThread,
+    SameProcessDifferentThread,
+    DifferentProcess
+};
+
 enum TransferableOwnership {
     /** Transferable data has not been filled in yet */
     SCTAG_TMO_UNFILLED = 0,
@@ -134,7 +141,7 @@ typedef void (*FreeTransferStructuredCloneOp)(uint32_t tag, JS::TransferableOwne
 // Increment this when anything at all changes in the serialization format.
 // (Note that this does not need to be bumped for Transferable-only changes,
 // since they are never saved to persistent storage.)
-#define JS_STRUCTURED_CLONE_VERSION 6
+#define JS_STRUCTURED_CLONE_VERSION 7
 
 struct JSStructuredCloneCallbacks {
     ReadStructuredCloneOp read;
@@ -148,6 +155,7 @@ struct JSStructuredCloneCallbacks {
 /** Note: if the *data contains transferable objects, it can be read only once. */
 JS_PUBLIC_API(bool)
 JS_ReadStructuredClone(JSContext* cx, uint64_t* data, size_t nbytes, uint32_t version,
+                       JS::StructuredCloneScope scope,
                        JS::MutableHandleValue vp,
                        const JSStructuredCloneCallbacks* optionalCallbacks, void* closure);
 
@@ -157,6 +165,7 @@ JS_ReadStructuredClone(JSContext* cx, uint64_t* data, size_t nbytes, uint32_t ve
  */
 JS_PUBLIC_API(bool)
 JS_WriteStructuredClone(JSContext* cx, JS::HandleValue v, uint64_t** datap, size_t* nbytesp,
+                        JS::StructuredCloneScope scope,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
                         void* closure, JS::HandleValue transferable);
 
@@ -174,6 +183,7 @@ JS_StructuredClone(JSContext* cx, JS::HandleValue v, JS::MutableHandleValue vp,
 
 /** RAII sugar for JS_WriteStructuredClone. */
 class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
+    const JS::StructuredCloneScope scope_;
     uint64_t* data_;
     size_t nbytes_;
     uint32_t version_;
@@ -187,14 +197,9 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     void* closure_;
 
   public:
-    JSAutoStructuredCloneBuffer()
-        : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
-          ownTransferables_(NoTransferables),
-          callbacks_(nullptr), closure_(nullptr)
-    {}
-
-    JSAutoStructuredCloneBuffer(const JSStructuredCloneCallbacks* callbacks, void* closure)
-        : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
+    JSAutoStructuredCloneBuffer(JS::StructuredCloneScope scope,
+                                const JSStructuredCloneCallbacks* callbacks, void* closure)
+        : scope_(scope), data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
           ownTransferables_(NoTransferables),
           callbacks_(callbacks), closure_(closure)
     {}
