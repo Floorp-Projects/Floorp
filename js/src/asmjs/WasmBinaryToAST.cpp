@@ -133,14 +133,14 @@ AstDecodeGenerateName(AstDecodeContext& c, const AstName& prefix, uint32_t index
     }
 
     AstVector<char16_t> result(c.lifo);
-    if (!result.append(MOZ_UTF16('$')))
+    if (!result.append(u'$'))
         return false;
     if (!result.append(prefix.begin(), prefix.length()))
         return false;
 
     uint32_t tmp = index;
     do {
-        if (!result.append(MOZ_UTF16('0')))
+        if (!result.append(u'0'))
             return false;
         tmp /= 10;
     } while (tmp);
@@ -148,7 +148,7 @@ AstDecodeGenerateName(AstDecodeContext& c, const AstName& prefix, uint32_t index
     if (index) {
         char16_t* p = result.end();
         for (tmp = index; tmp; tmp /= 10)
-            *(--p) = MOZ_UTF16('0' + (tmp % 10));
+            *(--p) = u'0' + (tmp % 10);
     }
 
     size_t length = result.length();

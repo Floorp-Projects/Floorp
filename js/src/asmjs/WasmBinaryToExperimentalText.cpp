@@ -205,7 +205,7 @@ PrintInt64(WasmPrintContext& c, int64_t num)
 
     n = abs;
     while (pow) {
-        if (!c.buffer.append((char16_t)(MOZ_UTF16('0') + n / pow)))
+        if (!c.buffer.append((char16_t)(u'0' + n / pow)))
             return false;
         n -= (n / pow) * pow;
         pow /= 10;
