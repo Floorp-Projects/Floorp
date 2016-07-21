@@ -87,7 +87,7 @@ public:
         mBrowserApp(aBrowserApp), mPoints(aPoints), mTabId(aTabId), mBuffer(aBuffer) {}
 
     virtual nsresult Run() {
-        const auto& buffer = jni::ByteBuffer::Ref::From(mBuffer->GetObject());
+        const auto& buffer = jni::Object::Ref::From(mBuffer->GetObject());
         nsCOMPtr<mozIDOMWindowProxy> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
         mBrowserApp->GetBrowserTab(mTabId, getter_AddRefs(tab));
@@ -714,7 +714,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         const nsTArray<nsIntPoint>& points = curEvent->Points();
         float scaleFactor = (float) curEvent->X();
         RefPtr<RefCountedJavaObject> javaBuffer = curEvent->ByteBuffer();
-        const auto& mBuffer = jni::ByteBuffer::Ref::From(javaBuffer->GetObject());
+        const auto& mBuffer = jni::Object::Ref::From(javaBuffer->GetObject());
 
         nsCOMPtr<mozIDOMWindowProxy> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
