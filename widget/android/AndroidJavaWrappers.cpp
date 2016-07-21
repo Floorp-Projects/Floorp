@@ -39,9 +39,6 @@ jfieldID AndroidGeckoEvent::jMetaStateField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
 jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
-jfieldID AndroidGeckoEvent::jConnectionTypeField = 0;
-jfieldID AndroidGeckoEvent::jIsWifiField = 0;
-jfieldID AndroidGeckoEvent::jDHCPGatewayField = 0;
 jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 jfieldID AndroidGeckoEvent::jScreenAngleField = 0;
 jfieldID AndroidGeckoEvent::jByteBufferField = 0;
@@ -112,9 +109,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jFlagsField = geckoEvent.getField("mFlags", "I");
     jCountField = geckoEvent.getField("mCount", "I");
     jPointerIndexField = geckoEvent.getField("mPointerIndex", "I");
-    jConnectionTypeField = geckoEvent.getField("mConnectionType", "I");
-    jIsWifiField = geckoEvent.getField("mIsWifi", "Z");
-    jDHCPGatewayField = geckoEvent.getField("mDHCPGateway", "I");
     jScreenOrientationField = geckoEvent.getField("mScreenOrientation", "S");
     jScreenAngleField = geckoEvent.getField("mScreenAngle", "S");
     jByteBufferField = geckoEvent.getField("mBuffer", "Ljava/nio/ByteBuffer;");
@@ -320,13 +314,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case NETWORK_CHANGED: {
-            mConnectionType = jenv->GetIntField(jobj, jConnectionTypeField);
-            mIsWifi = jenv->GetBooleanField(jobj, jIsWifiField);
-            mDHCPGateway = jenv->GetIntField(jobj, jDHCPGatewayField);
-            break;
-        }
-
         case THUMBNAIL: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             ReadPointArray(mPoints, jenv, jPoints, 1);
@@ -362,11 +349,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case LOW_MEMORY: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
-            break;
-        }
-
-        case NETWORK_LINK_CHANGE: {
-            ReadCharactersField(jenv);
             break;
         }
 

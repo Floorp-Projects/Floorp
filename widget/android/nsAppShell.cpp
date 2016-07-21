@@ -23,7 +23,6 @@
 #include "nsIDOMClientRect.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
-#include "nsINetworkLinkService.h"
 #include "nsISpeculativeConnect.h"
 #include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
@@ -804,19 +803,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::NETWORK_CHANGED: {
-        hal::NotifyNetworkChange(hal::NetworkInformation(curEvent->ConnectionType(),
-                                                         curEvent->IsWifi(),
-                                                         curEvent->DHCPGateway()));
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os) {
-            os->NotifyObservers(nullptr,
-                                NS_NETWORK_LINK_TYPE_TOPIC,
-                                nsString(curEvent->Characters()).get());
-        }
-        break;
-    }
-
     case AndroidGeckoEvent::SCREENORIENTATION_CHANGED: {
         nsresult rv;
         nsCOMPtr<nsIScreenManager> screenMgr =
@@ -879,17 +865,6 @@ nsAppShell::LegacyGeckoEvent::Run()
             }
         }
         break;
-
-    case AndroidGeckoEvent::NETWORK_LINK_CHANGE:
-    {
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        if (os) {
-            os->NotifyObservers(nullptr,
-                                NS_NETWORK_LINK_TOPIC,
-                                curEvent->Characters().get());
-        }
-        break;
-    }
 
     case AndroidGeckoEvent::TELEMETRY_HISTOGRAM_ADD:
         // If the extras field is not empty then this is a keyed histogram.
