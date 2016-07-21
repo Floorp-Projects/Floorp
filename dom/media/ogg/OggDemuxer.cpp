@@ -862,11 +862,23 @@ RefPtr<MediaRawData>
 OggDemuxer::GetNextPacket(TrackInfo::TrackType aType)
 {
   OggCodecState* state = GetTrackCodecState(aType);
-  DemuxUntilPacketAvailable(state);
+  ogg_packet* packet = nullptr;
+
+  do {
+    if (packet) {
+      OggCodecState::ReleasePacket(state->PacketOut());
+    }
+    DemuxUntilPacketAvailable(state);
+
+    packet = state->PacketPeek();
+  } while (packet && state->IsHeader(packet));
+
+  if (!packet) {
+    return nullptr;
+  }
 
   // Check the eos state in case we need to look for chained streams.
-  ogg_packet* packet = state->PacketPeek();
-  bool eos = packet && packet->e_o_s;
+  bool eos = packet->e_o_s;
 
   RefPtr<MediaRawData> data = state->PacketOutAsMediaRawData();;
 
