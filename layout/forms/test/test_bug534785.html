@@ -33,7 +33,7 @@ SimpleTest.waitForFocus(function() {
 
     is(document.activeElement, i, "Should be focused before frame reconstruction");
     synthesizeKey("1", {});
-    is(i.value, "1test", "Can accept keyboard events before frame reconstruction");
+    is(i.value, "test1", "Can accept keyboard events before frame reconstruction");
 
     // force frame reconstruction
     i.style.display = "none";
@@ -43,7 +43,7 @@ SimpleTest.waitForFocus(function() {
 
     is(document.activeElement, i, "Should be focused after frame reconstruction");
     synthesizeKey("2", {});
-    is(i.value, "12test", "Can accept keyboard events after frame reconstruction");
+    is(i.value, "test12", "Can accept keyboard events after frame reconstruction");
 
     // Make sure reframing happens gracefully
     var reframeDiv = document.getElementById("reframe");
