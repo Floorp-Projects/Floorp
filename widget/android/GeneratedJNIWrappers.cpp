@@ -915,6 +915,12 @@ constexpr char GeckoNetworkManager::OnConnectionChanged_t::signature[];
 constexpr char GeckoNetworkManager::OnStatusChanged_t::name[];
 constexpr char GeckoNetworkManager::OnStatusChanged_t::signature[];
 
+const char GeckoScreenOrientation::name[] =
+        "org/mozilla/gecko/GeckoScreenOrientation";
+
+constexpr char GeckoScreenOrientation::OnOrientationChange_t::name[];
+constexpr char GeckoScreenOrientation::OnOrientationChange_t::signature[];
+
 const char GeckoSmsManager::name[] =
         "org/mozilla/gecko/GeckoSmsManager";
 

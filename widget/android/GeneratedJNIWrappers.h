@@ -2095,6 +2095,33 @@ public:
     template<class Impl> class Natives;
 };
 
+class GeckoScreenOrientation : public mozilla::jni::ObjectBase<GeckoScreenOrientation, jobject>
+{
+public:
+    static const char name[];
+
+    explicit GeckoScreenOrientation(const Context& ctx) : ObjectBase<GeckoScreenOrientation, jobject>(ctx) {}
+
+    struct OnOrientationChange_t {
+        typedef GeckoScreenOrientation Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int16_t,
+                int16_t> Args;
+        static constexpr char name[] = "onOrientationChange";
+        static constexpr char signature[] =
+                "(SS)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static const bool isMultithreaded = false;
+
+    template<class Impl> class Natives;
+};
+
 class GeckoSmsManager : public mozilla::jni::ObjectBase<GeckoSmsManager, jobject>
 {
 public:
