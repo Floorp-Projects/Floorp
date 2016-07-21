@@ -361,23 +361,11 @@
             var style = window.getComputedStyle(input, "");
             var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
             input.top = textRect.y - topadj;
-
-            // The leftside of the textbox is aligned to the left side of the text
-            // in LTR mode, and left side of the cell in RTL mode.
-            var left, widthdiff;
-            if (style.direction == "rtl") {
-              left = cellRect.x;
-              widthdiff = cellRect.x - textRect.x;
-            } else {
-              left = textRect.x;
-              widthdiff = textRect.x - cellRect.x;
-            }
-
-            input.left = left;
+            input.left = cellRect.x;
             input.height = textRect.height + topadj +
                            parseInt(style.borderBottomWidth) +
                            parseInt(style.paddingBottom);
-            input.width = cellRect.width - widthdiff;
+            input.width = cellRect.width;
             input.hidden = false;
 
             input.value = this.view.getCellText(row, column);
@@ -389,6 +377,11 @@
 
             this._editingRow = row;
             this._editingColumn = column;
+
+            // Clear the text because we don't want the text appearing underneath the input.
+            this.view.setCellText(this._editingRow, this._editingColumn, "");
+            // Save the original text so we can restore it after stoping editing.
+            input.setAttribute("data-original-text", input.value);
 
             this.setAttribute("editing", "true");
             return true;
@@ -406,16 +399,15 @@
             var input = this.inputField;
             var editingRow = this._editingRow;
             var editingColumn = this._editingColumn;
+            var value = accept ? input.value : input.getAttribute("data-original-text");
             this._editingRow = -1;
             this._editingColumn = null;
-            if (accept) {
-              var value = input.value;
-              this.view.setCellText(editingRow, editingColumn, value);
-            }
+            this.view.setCellText(editingRow, editingColumn, value);
 
             input.hidden = true;
             input.value = "";
             this.removeAttribute("editing");
+            input.removeAttribute("data-original-text");
           ]]>
         </body>
       </method>
