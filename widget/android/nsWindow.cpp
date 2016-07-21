@@ -231,6 +231,9 @@ public:
     /**
      * GeckoView methods
      */
+private:
+    nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
+
 public:
     // Create and attach a window.
     static void Open(const jni::Class::LocalRef& aCls,
@@ -1123,7 +1126,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                    js::ProfileEntry::Category::OTHER);
 
     nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-    MOZ_ASSERT(ww);
+    MOZ_RELEASE_ASSERT(ww);
 
     nsAdoptingCString url;
     if (aChromeURI) {
@@ -1154,10 +1157,11 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
     ww->OpenWindow(nullptr, url, nullptr, "chrome,dialog=0,resizable",
                    args, getter_AddRefs(domWindow));
-    MOZ_ASSERT(domWindow);
+    MOZ_RELEASE_ASSERT(domWindow);
 
-    nsCOMPtr<nsIWidget> widget =
-        WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(domWindow));
+    nsCOMPtr<nsPIDOMWindowOuter> pdomWindow =
+            nsPIDOMWindowOuter::From(domWindow);
+    nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(pdomWindow);
     MOZ_ASSERT(widget);
 
     const auto window = static_cast<nsWindow*>(widget.get());
@@ -1165,6 +1169,8 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     // Attach a new GeckoView support object to the new window.
     window->mGeckoViewSupport  = mozilla::MakeUnique<GeckoViewSupport>(
             window, GeckoView::Window::LocalRef(aCls.Env(), aWindow), aView);
+
+    window->mGeckoViewSupport->mDOMWindow = pdomWindow;
 
     // Attach the GLController to the new window.
     window->mGLControllerSupport = mozilla::MakeUnique<GLControllerSupport>(
@@ -1177,7 +1183,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         nsCOMPtr<nsIXULWindow> xulWindow(
                 window->mWidgetListener->GetXULWindow());
         if (xulWindow) {
-            // Out window is not intrinsically sized, so tell nsXULWindow to
+            // Our window is not intrinsically sized, so tell nsXULWindow to
             // not set a size for us.
             xulWindow->SetIntrinsicallySized(false);
         }
@@ -1187,20 +1193,12 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 void
 nsWindow::GeckoViewSupport::Close()
 {
-    nsIWidgetListener* const widgetListener = window.mWidgetListener;
-
-    if (!widgetListener) {
+    if (!mDOMWindow) {
         return;
     }
 
-    nsCOMPtr<nsIXULWindow> xulWindow(widgetListener->GetXULWindow());
-    // GeckoView-created top-level windows should be a XUL window.
-    MOZ_ASSERT(xulWindow);
-
-    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(xulWindow));
-    MOZ_ASSERT(baseWindow);
-
-    baseWindow->Destroy();
+    mDOMWindow->ForceClose();
+    mDOMWindow = nullptr;
 }
 
 void
