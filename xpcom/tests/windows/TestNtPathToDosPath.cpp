@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
       fail("Querying network drive");
       return 1;
     }
-    networkPath += MOZ_UTF16("\\");
+    networkPath += u"\\";
     if (!TestNtPathToDosPath(networkPath.get(), expected)) {
       fail("Mapped UNC path");
       result = 1;
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
       fail("Querying second network drive");
       return 1;
     }
-    networkPath += MOZ_UTF16("\\");
+    networkPath += u"\\";
     if (!TestNtPathToDosPath(networkPath.get(), expected)) {
       fail("Re-mapped UNC path");
       result = 1;

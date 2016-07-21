@@ -80,8 +80,8 @@ public:
 
     observerService->NotifyObservers(wrapper, topic.get(),
                                      mActive
-                                       ? MOZ_UTF16("active")
-                                       : MOZ_UTF16("inactive"));
+                                       ? u"active"
+                                       : u"inactive");
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("NotifyChannelActiveRunnable, type = %d, active = %d\n",

@@ -70,7 +70,7 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
 
             const char16_t* name = backEdge->name().get();
             if (!name)
-                name = (const char16_t*) MOZ_UTF16("<no edge name>");
+                name = u"<no edge name>";
             js_fputs(name, stderr);
             fprintf(stderr, "'\n");
 

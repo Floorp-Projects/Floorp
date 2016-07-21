@@ -1014,7 +1014,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
         NS_ConvertASCIItoUTF16 ucsTargetScheme(targetScheme);
         const char16_t* formatStrings[] = { ucsTargetScheme.get() };
         rv = sStrBundle->
-            FormatStringFromName(MOZ_UTF16("ProtocolFlagError"),
+            FormatStringFromName(u"ProtocolFlagError",
                                  formatStrings,
                                  ArrayLength(formatStrings),
                                  getter_Copies(message));

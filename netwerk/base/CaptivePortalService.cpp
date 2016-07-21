@@ -9,7 +9,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 
-#define kInterfaceName "captive-portal-inteface"
+static const char16_t kInterfaceName[] = u"captive-portal-inteface";
 
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kAbortCaptivePortalLoginEvent[] = "captive-portal-login-abort";
@@ -69,8 +69,7 @@ CaptivePortalService::PerformCheck()
 
   LOG(("CaptivePortalService::PerformCheck - Calling CheckCaptivePortal\n"));
   mRequestInProgress = true;
-  mCaptivePortalDetector->CheckCaptivePortal(
-    MOZ_UTF16(kInterfaceName), this);
+  mCaptivePortalDetector->CheckCaptivePortal(kInterfaceName, this);
   return NS_OK;
 }
 
@@ -161,7 +160,7 @@ CaptivePortalService::Stop()
   mRequestInProgress = false;
   mStarted = false;
   if (mCaptivePortalDetector) {
-    mCaptivePortalDetector->Abort(MOZ_UTF16(kInterfaceName));
+    mCaptivePortalDetector->Abort(kInterfaceName);
   }
   mCaptivePortalDetector = nullptr;
   return NS_OK;
@@ -278,7 +277,7 @@ CaptivePortalService::Prepare()
   LOG(("CaptivePortalService::Prepare\n"));
   // XXX: Finish preparation shouldn't be called until dns and routing is available.
   if (mCaptivePortalDetector) {
-    mCaptivePortalDetector->FinishPreparation(MOZ_UTF16(kInterfaceName));
+    mCaptivePortalDetector->FinishPreparation(kInterfaceName);
   }
   return NS_OK;
 }

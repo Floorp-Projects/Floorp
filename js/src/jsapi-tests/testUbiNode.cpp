@@ -62,7 +62,7 @@ class Concrete<FakeNode> : public Base
     const char16_t* typeName() const override { return concreteTypeName; }
 };
 
-const char16_t Concrete<FakeNode>::concreteTypeName[] = MOZ_UTF16("FakeNode");
+const char16_t Concrete<FakeNode>::concreteTypeName[] = u"FakeNode";
 
 } // namespace ubi
 } // namespace JS
@@ -157,7 +157,7 @@ BEGIN_TEST(test_ubiNodeJSObjectConstructorName)
     UniqueTwoByteChars ctorName;
     CHECK(JS::ubi::Node(&val.toObject()).jsObjectConstructorName(cx, ctorName));
     CHECK(ctorName);
-    CHECK(js_strcmp(ctorName.get(), MOZ_UTF16("Ctor")) == 0);
+    CHECK(js_strcmp(ctorName.get(), u"Ctor") == 0);
 
     return true;
 }
@@ -938,9 +938,9 @@ BEGIN_TEST(test_JS_ubi_ShortestPaths_multiple_edges_to_target)
     //                '---'
     FakeNode a('a');
     FakeNode b('b');
-    CHECK(a.addEdgeTo(b, MOZ_UTF16("x")));
-    CHECK(a.addEdgeTo(b, MOZ_UTF16("y")));
-    CHECK(a.addEdgeTo(b, MOZ_UTF16("z")));
+    CHECK(a.addEdgeTo(b, u"x"));
+    CHECK(a.addEdgeTo(b, u"y"));
+    CHECK(a.addEdgeTo(b, u"z"));
 
     mozilla::Maybe<JS::ubi::ShortestPaths> maybeShortestPaths;
     {

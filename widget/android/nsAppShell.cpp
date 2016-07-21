@@ -832,9 +832,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
             nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
             if (os) {
-                os->NotifyObservers(nullptr,
-                                    "memory-pressure",
-                                    MOZ_UTF16("low-memory"));
+                os->NotifyObservers(nullptr, "memory-pressure", u"low-memory");
             }
         }
         break;

@@ -1002,5 +1002,5 @@ nsXBLPrototypeHandler::Write(nsIObjectOutputStream* aStream)
 
   rv = aStream->Write32(mLineNumber);
   NS_ENSURE_SUCCESS(rv, rv);
-  return aStream->WriteWStringZ(mHandlerText ? mHandlerText : MOZ_UTF16(""));
+  return aStream->WriteWStringZ(mHandlerText ? mHandlerText : u"");
 }
