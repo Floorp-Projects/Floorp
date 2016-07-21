@@ -1003,7 +1003,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
-  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+  NS_PRECONDITION(aReflowState.mFrame == aKidFrame, "bad reflow state");
   if (aWM.IsVerticalRL() || (!aWM.IsVertical() && !aWM.IsBidiLTR())) {
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "ReflowChild with unconstrained container width!");
@@ -1050,7 +1050,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
-  NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+  NS_PRECONDITION(aReflowState.mFrame == aKidFrame, "bad reflow state");
 
   // Position the child frame and its view if requested.
   if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {

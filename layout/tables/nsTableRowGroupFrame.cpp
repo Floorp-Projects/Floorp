@@ -321,7 +321,7 @@ nsTableRowGroupFrame::InitChildReflowState(nsPresContext&     aPresContext,
   nsMargin padding(0,0,0,0);
   nsMargin* pCollapseBorder = nullptr;
   if (aBorderCollapse) {
-    nsTableRowFrame *rowFrame = do_QueryFrame(aReflowState.frame);
+    nsTableRowFrame *rowFrame = do_QueryFrame(aReflowState.mFrame);
     if (rowFrame) {
       WritingMode wm = GetWritingMode();
       LogicalMargin border = rowFrame->GetBCBorderWidth(wm);
@@ -1593,10 +1593,10 @@ nsTableRowGroupFrame::GetBSizeBasis(const ReflowInput& aReflowState)
   }
   else {
     const ReflowInput* parentRS = aReflowState.mParentReflowState;
-    if (parentRS && (tableFrame != parentRS->frame)) {
+    if (parentRS && (tableFrame != parentRS->mFrame)) {
       parentRS = parentRS->mParentReflowState;
     }
-    if (parentRS && (tableFrame == parentRS->frame) &&
+    if (parentRS && (tableFrame == parentRS->mFrame) &&
         (parentRS->ComputedBSize() > 0) && (parentRS->ComputedBSize() < NS_UNCONSTRAINEDSIZE)) {
       nscoord cellSpacing = tableFrame->GetRowSpacing(-1, tableFrame->GetRowCount());
       result = parentRS->ComputedBSize() - cellSpacing;

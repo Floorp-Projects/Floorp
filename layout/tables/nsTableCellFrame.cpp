@@ -120,7 +120,7 @@ nsTableCellFrame::NotifyPercentBSize(const ReflowInput& aReflowState)
   // Maybe the cell reflow state; we sure if we're inside the |if|.
   const ReflowInput *cellRS = aReflowState.mCBReflowState;
 
-  if (cellRS && cellRS->frame == this &&
+  if (cellRS && cellRS->mFrame == this &&
       (cellRS->ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
        cellRS->ComputedBSize() == 0)) { // XXXldb Why 0?
     // This is a percentage bsize on a frame whose percentage bsizes
@@ -133,13 +133,13 @@ nsTableCellFrame::NotifyPercentBSize(const ReflowInput& aReflowState)
 
     if (nsTableFrame::AncestorsHaveStyleBSize(*cellRS) ||
         (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
-         cellRS->mParentReflowState->frame->
+         cellRS->mParentReflowState->mFrame->
            HasAnyStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
 
       for (const ReflowInput *rs = aReflowState.mParentReflowState;
            rs != cellRS;
            rs = rs->mParentReflowState) {
-        rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+        rs->mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       }
 
       nsTableFrame::RequestSpecialBSizeReflow(*cellRS);
@@ -154,7 +154,7 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowState)
   const ReflowInput *rs = aReflowState.mParentReflowState;
   if (!rs)
     return false;
-  if (rs->frame == this) {
+  if (rs->mFrame == this) {
     // We always observe the child block.  It will never send any
     // notifications, but we need this so that the observer gets
     // propagated to its kids.
@@ -167,7 +167,7 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowState)
 
   // We always need to let the percent bsize observer be propagated
   // from a table wrapper frame to an inner table frame.
-  nsIAtom *fType = aReflowState.frame->GetType();
+  nsIAtom *fType = aReflowState.mFrame->GetType();
   if (fType == nsGkAtoms::tableFrame) {
     return true;
   }
@@ -178,7 +178,7 @@ nsTableCellFrame::NeedsToObserve(const ReflowInput& aReflowState)
   // XXX This may not be true in the case of orthogonal flows within
   // the cell (bug 1174711 comment 8); we may need to observe isizes
   // instead of bsizes for orthogonal children.
-  return rs->frame == this &&
+  return rs->mFrame == this &&
          (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
           fType == nsGkAtoms::tableWrapperFrame);
 }

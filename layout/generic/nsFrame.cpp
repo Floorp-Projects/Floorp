@@ -9083,10 +9083,10 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // Construct the parent chain manually since constructing it normally
     // messes up dimensions.
     const ReflowInput *outerReflowState = aState.OuterReflowState();
-    NS_ASSERTION(!outerReflowState || outerReflowState->frame != this,
+    NS_ASSERTION(!outerReflowState || outerReflowState->mFrame != this,
                  "in and out of XUL on a single frame?");
     const ReflowInput* parentRS;
-    if (outerReflowState && outerReflowState->frame == parentFrame) {
+    if (outerReflowState && outerReflowState->mFrame == parentFrame) {
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
       // This means we actually have a real parent reflow state.
@@ -10224,7 +10224,7 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   nsIFrame* parentFrame;
   if (aReflowState) {
     const ReflowInput* parentRS = aReflowState->mParentReflowState;
-    parentFrame = (parentRS) ? parentRS->frame : nullptr;
+    parentFrame = (parentRS) ? parentRS->mFrame : nullptr;
   } else {
     parentFrame = aFrame->GetParent();
   }
