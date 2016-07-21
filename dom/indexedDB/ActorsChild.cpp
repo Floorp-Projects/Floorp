@@ -2491,6 +2491,10 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
         HandleResponse(aResponse.get_ObjectStoreGetResponse().cloneInfo());
         break;
 
+      case RequestResponse::TObjectStoreGetKeyResponse:
+        HandleResponse(aResponse.get_ObjectStoreGetKeyResponse().key());
+        break;
+
       case RequestResponse::TObjectStoreGetAllResponse:
         HandleResponse(aResponse.get_ObjectStoreGetAllResponse().cloneInfos());
         break;

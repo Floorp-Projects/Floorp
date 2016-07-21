@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>IDBObjectStore.getKey() - Exception Orders</title>
+<link rel="author" title="Mozilla" href="https://www.mozilla.org">
+<link rel="help" href="http://w3c.github.io/IndexedDB/#dom-idbobjectstore-getkey">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="support.js"></script>
+
+<script>
+indexeddb_test(
+    function(t, db, txn) {
+        var deletedObjectStore = db.createObjectStore("s");
+        db.deleteObjectStore("s");
+        txn.oncomplete = function() {
+            assert_throws("InvalidStateError", function() {
+                deletedObjectStore.getKey(1);
+            }, "Deletion check should precede transaction-state check");
+            t.done();
+        };
+    },
+    null,
+    "InvalidStateError(Deleted ObjectStore) vs. TransactionInactiveError"
+);
+
+indexeddb_test(
+    function(t, db, txn) {
+        var store = db.createObjectStore("s");
+        txn.oncomplete = function() {
+            assert_throws("TransactionInactiveError", function() {
+                store.getKey(null);
+            }, "Transaction-state check should precede key range check");
+            t.done();
+        };
+    },
+    null,
+    "TransactionInactiveError vs. DataError"
+);
+
+indexeddb_test(
+    function(t, db, txn) {
+        var store = db.createObjectStore("s");
+        assert_throws("DataError", function() {
+            store.getKey(null);
+        }, "key range check");
+        t.done();
+    },
+    null,
+    "DataError"
+);
+</script>
+
+<div id="log"></div>

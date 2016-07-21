@@ -8185,23 +8185,24 @@ private:
   GetResponse(RequestResponse& aResponse) override;
 };
 
-class ObjectStoreGetAllKeysRequestOp final
+class ObjectStoreGetKeyRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
 
-  const ObjectStoreGetAllKeysParams mParams;
+  const uint32_t mObjectStoreId;
+  const OptionalKeyRange mOptionalKeyRange;
+  const uint32_t mLimit;
+  const bool mGetAll;
   FallibleTArray<Key> mResponse;
 
 private:
   // Only created by TransactionBase.
-  ObjectStoreGetAllKeysRequestOp(TransactionBase* aTransaction,
-                                 const ObjectStoreGetAllKeysParams& aParams)
-    : NormalTransactionOp(aTransaction)
-    , mParams(aParams)
-  { }
+  ObjectStoreGetKeyRequestOp(TransactionBase* aTransaction,
+                             const RequestParams& aParams,
+                             bool aGetAll);
 
-  ~ObjectStoreGetAllKeysRequestOp()
+  ~ObjectStoreGetKeyRequestOp()
   { }
 
   virtual nsresult
@@ -14529,6 +14530,22 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
       break;
     }
 
+    case RequestParams::TObjectStoreGetKeyParams: {
+      const ObjectStoreGetKeyParams& params =
+        aParams.get_ObjectStoreGetKeyParams();
+      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+        GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      if (NS_WARN_IF(!VerifyRequestParams(params.keyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+    }
+
     case RequestParams::TObjectStoreGetAllParams: {
       const ObjectStoreGetAllParams& params =
         aParams.get_ObjectStoreGetAllParams();
@@ -14991,10 +15008,14 @@ TransactionBase::AllocRequest(const RequestParams& aParams, bool aTrustParams)
         new ObjectStoreGetRequestOp(this, aParams, /* aGetAll */ true);
       break;
 
+    case RequestParams::TObjectStoreGetKeyParams:
+      actor =
+        new ObjectStoreGetKeyRequestOp(this, aParams, /* aGetAll */ false);
+      break;
+
     case RequestParams::TObjectStoreGetAllKeysParams:
       actor =
-        new ObjectStoreGetAllKeysRequestOp(this,
-                                     aParams.get_ObjectStoreGetAllKeysParams());
+        new ObjectStoreGetKeyRequestOp(this, aParams, /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreDeleteParams:
@@ -25892,31 +25913,54 @@ ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
   }
 }
 
+ObjectStoreGetKeyRequestOp::ObjectStoreGetKeyRequestOp(
+                                                  TransactionBase* aTransaction,
+                                                  const RequestParams& aParams,
+                                                  bool aGetAll)
+  : NormalTransactionOp(aTransaction)
+  , mObjectStoreId(aGetAll ?
+                     aParams.get_ObjectStoreGetAllKeysParams().objectStoreId() :
+                     aParams.get_ObjectStoreGetKeyParams().objectStoreId())
+  , mOptionalKeyRange(aGetAll ?
+                        aParams.get_ObjectStoreGetAllKeysParams()
+                               .optionalKeyRange() :
+                        OptionalKeyRange(aParams.get_ObjectStoreGetKeyParams()
+                                                .keyRange()))
+  , mLimit(aGetAll ? aParams.get_ObjectStoreGetAllKeysParams().limit() : 1)
+  , mGetAll(aGetAll)
+{
+  MOZ_ASSERT(aParams.type() == RequestParams::TObjectStoreGetKeyParams ||
+             aParams.type() == RequestParams::TObjectStoreGetAllKeysParams);
+  MOZ_ASSERT(mObjectStoreId);
+  MOZ_ASSERT_IF(!aGetAll,
+                mOptionalKeyRange.type() ==
+                  OptionalKeyRange::TSerializedKeyRange);
+}
+
 nsresult
-ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
+ObjectStoreGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
 
   PROFILER_LABEL("IndexedDB",
-                 "ObjectStoreGetAllKeysRequestOp::DoDatabaseWork",
+                 "ObjectStoreGetKeyRequestOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
   const bool hasKeyRange =
-    mParams.optionalKeyRange().type() == OptionalKeyRange::TSerializedKeyRange;
+      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(
-      mParams.optionalKeyRange().get_SerializedKeyRange(),
-      NS_LITERAL_CSTRING("key"),
-      keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
+                                NS_LITERAL_CSTRING("key"),
+                                keyRangeClause);
   }
 
   nsAutoCString limitClause;
-  if (uint32_t limit = mParams.limit()) {
+  if (mLimit) {
     limitClause.AssignLiteral(" LIMIT ");
-    limitClause.AppendInt(limit);
+    limitClause.AppendInt(mLimit);
   }
 
   nsCString query =
@@ -25933,16 +25977,14 @@ ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
-                             mParams.objectStoreId());
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(
-      mParams.optionalKeyRange().get_SerializedKeyRange(),
-      stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
+                                 stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25965,18 +26007,32 @@ ObjectStoreGetAllKeysRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
+  MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
+
   return NS_OK;
 }
 
 void
-ObjectStoreGetAllKeysRequestOp::GetResponse(RequestResponse& aResponse)
+ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse)
 {
-  aResponse = ObjectStoreGetAllKeysResponse();
+  MOZ_ASSERT_IF(mLimit, mResponse.Length() <= mLimit);
+
+  if (mGetAll) {
+    aResponse = ObjectStoreGetAllKeysResponse();
+
+    if (!mResponse.IsEmpty()) {
+      nsTArray<Key>& response =
+        aResponse.get_ObjectStoreGetAllKeysResponse().keys();
+      mResponse.SwapElements(response);
+    }
+
+    return;
+  }
+
+  aResponse = ObjectStoreGetKeyResponse();
 
   if (!mResponse.IsEmpty()) {
-    nsTArray<Key>& response =
-      aResponse.get_ObjectStoreGetAllKeysResponse().keys();
-    mResponse.SwapElements(response);
+    aResponse.get_ObjectStoreGetKeyResponse().key() = Move(mResponse[0]);
   }
 }
 
