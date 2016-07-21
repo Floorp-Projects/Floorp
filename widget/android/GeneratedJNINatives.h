@@ -137,6 +137,25 @@ const JNINativeMethod GeckoJavaSampler::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoNetworkManager::Natives : public mozilla::jni::NativeImpl<GeckoNetworkManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[2];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoNetworkManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoNetworkManager::OnConnectionChanged_t>(
+            mozilla::jni::NativeStub<GeckoNetworkManager::OnConnectionChanged_t, Impl>
+            ::template Wrap<&Impl::OnConnectionChanged>),
+
+    mozilla::jni::MakeNativeMethod<GeckoNetworkManager::OnStatusChanged_t>(
+            mozilla::jni::NativeStub<GeckoNetworkManager::OnStatusChanged_t, Impl>
+            ::template Wrap<&Impl::OnStatusChanged>)
+};
+
+template<class Impl>
 class GeckoSmsManager::Natives : public mozilla::jni::NativeImpl<GeckoSmsManager, Impl>
 {
 public:
