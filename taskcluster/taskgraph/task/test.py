@@ -141,6 +141,12 @@ class TestTask(base.Task):
             transforms.append(transform)
         return transforms
 
+    @classmethod
+    def from_json(cls, task_dict):
+        test_task = cls(kind=task_dict['attributes']['kind'],
+                        task=task_dict)
+        return test_task
+
     def __init__(self, kind, task):
         self.dependencies = task['dependencies']
         super(TestTask, self).__init__(kind, task['label'], task['attributes'], task['task'])

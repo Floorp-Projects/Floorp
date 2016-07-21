@@ -3620,6 +3620,7 @@ Widgets.Table.prototype = extend(Widgets.BaseWidget.prototype, {
     result.className = "consoletable devtools-monospace";
 
     this.table = new TableWidget(result, {
+      wrapTextInElements: true,
       initialColumns: this.columns,
       uniqueId: "_index",
       firstColumn: "_index"

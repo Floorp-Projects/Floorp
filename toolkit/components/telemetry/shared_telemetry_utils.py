@@ -35,13 +35,27 @@ class StringTable:
             self.current_index += self.c_strlen(string)
             return result
 
+    def stringIndexes(self, strings):
+        """ Returns a list of indexes for the provided list of strings.
+        Adds the strings to the table if they are not in it yet.
+        :param strings: list of strings to put into the table.
+        """
+        return [self.stringIndex(s) for s in strings]
+
     def writeDefinition(self, f, name):
         """Writes the string table to a file as a C const char array.
+
+        This writes out the string table as one single C char array for memory
+        size reasons, separating the individual strings with '\0' characters.
+        This way we can index directly into the string array and avoid the additional
+        storage costs for the pointers to them (and potential extra relocations for those).
+
         :param f: the output stream.
         :param name: the name of the output array.
         """
         entries = self.table.items()
         entries.sort(key=lambda x:x[1])
+
         # Avoid null-in-string warnings with GCC and potentially
         # overlong string constants; write everything out the long way.
         def explodeToCharArray(string):
@@ -51,16 +65,19 @@ class StringTable:
                 else:
                     return "'%s'" % s
             return ", ".join(map(toCChar, string))
+
         f.write("const char %s[] = {\n" % name)
-        for (string, offset) in entries[:-1]:
+        for (string, offset) in entries:
+            if "*/" in string:
+                raise ValueError, "String in string table contains unexpected sequence '*/': %s" % string
+
             e = explodeToCharArray(string)
             if e:
-                f.write("  /* %5d */ %s, '\\0',\n"
-                        % (offset, explodeToCharArray(string)))
+                f.write("  /* %5d - \"%s\" */ %s, '\\0',\n"
+                        % (offset, string, explodeToCharArray(string)))
             else:
-                f.write("  /* %5d */ '\\0',\n" % offset)
-        f.write("  /* %5d */ %s, '\\0' };\n\n"
-                % (entries[-1][1], explodeToCharArray(entries[-1][0])))
+                f.write("  /* %5d - \"%s\" */ '\\0',\n" % (offset, string))
+        f.write("};\n\n")
 
 def static_assert(output, expression, message):
     """Writes a C++ compile-time assertion expression to a file.

@@ -86,7 +86,7 @@ browser.jar:
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
-* skin/classic/browser/customizableui/panelUIOverlay.css       (customizableui/panelUIOverlay.css)
+* skin/classic/browser/customizableui/panelUI.css       (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
   skin/classic/browser/downloads/buttons-XP.png                (downloads/buttons-XP.png)
