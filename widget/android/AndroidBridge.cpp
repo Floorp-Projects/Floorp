@@ -1706,7 +1706,7 @@ NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(nsIAndroidBrowserApp * *aBrowserApp
 {
     nsAppShell* const appShell = nsAppShell::Get();
     if (appShell)
-        NS_IF_ADDREF(*aBrowserApp = appShell->GetBrowserApp());
+        appShell->GetBrowserApp(aBrowserApp);
     return NS_OK;
 }
 
