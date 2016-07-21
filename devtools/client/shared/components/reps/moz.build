@@ -14,7 +14,6 @@ DevToolsModules(
     'function.js',
     'grip-array.js',
     'grip.js',
-    'named-node-map.js',
     'null.js',
     'number.js',
     'object-box.js',

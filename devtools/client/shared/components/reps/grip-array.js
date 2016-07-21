@@ -35,8 +35,9 @@ define(function (require, exports, module) {
     },
 
     getTitle: function (object, context) {
-      if (this.props.objectLink) {
-        return this.props.objectLink({
+      let objectLink = this.props.objectLink || span;
+      if (this.props.mode != "tiny") {
+        return objectLink({
           object: object
         }, object.class);
       }
@@ -117,11 +118,12 @@ define(function (require, exports, module) {
       }
 
       let objectLink = this.props.objectLink || span;
+      let title = this.getTitle(object);
 
       return (
         ObjectBox({
           className: "array"},
-          this.getTitle(object),
+          title,
           objectLink({
             className: "arrayLeftBracket",
             role: "presentation",
