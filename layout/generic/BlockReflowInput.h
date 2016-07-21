@@ -5,8 +5,8 @@
 
 /* state used in reflow of block frames */
 
-#ifndef nsBlockReflowState_h
-#define nsBlockReflowState_h
+#ifndef BlockReflowInput_h
+#define BlockReflowInput_h
 
 #include "nsFloatManager.h"
 #include "nsLineBox.h"
@@ -18,19 +18,19 @@ class nsOverflowContinuationTracker;
 
 // Block reflow state flags.
 //
-// BRS_UNCONSTRAINEDBSIZE is set in the nsBlockReflowState constructor when the
+// BRS_UNCONSTRAINEDBSIZE is set in the BlockReflowInput constructor when the
 // frame being reflowed has been given NS_UNCONSTRAINEDSIZE as its available
 // BSize in the ReflowInput. If set, NS_UNCONSTRAINEDSIZE is passed to
 // nsLineLayout as the available BSize.
 #define BRS_UNCONSTRAINEDBSIZE    0x00000001
-// BRS_ISBSTARTMARGINROOT is set in the nsBlockReflowState constructor when
+// BRS_ISBSTARTMARGINROOT is set in the BlockReflowInput constructor when
 // reflowing a "block margin root" frame (i.e. a frame with the
 // NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
 //
 // The flag is also set when reflowing a frame whose computed BStart border
 // padding is non-zero.
 #define BRS_ISBSTARTMARGINROOT    0x00000002
-// BRS_ISBENDMARGINROOT is set in the nsBlockReflowState constructor when
+// BRS_ISBENDMARGINROOT is set in the BlockReflowInput constructor when
 // reflowing a "block margin root" frame (i.e. a frame with the
 // NS_BLOCK_MARGIN_ROOT flag set, for which margins apply by default).
 //
@@ -52,7 +52,7 @@ class nsOverflowContinuationTracker;
 // won't be set, so subsequent calls to ShouldApplyBStartMargin() will continue
 // crawl the line list.)
 //
-// This flag is also set in the nsBlockReflowState constructor if
+// This flag is also set in the BlockReflowInput constructor if
 // BRS_ISBSTARTMARGINROOT is set; that is, the frame being reflowed is a margin
 // root by default.
 #define BRS_APPLYBSTARTMARGIN     0x00000008
@@ -73,14 +73,14 @@ class nsOverflowContinuationTracker;
 
 namespace mozilla {
 
-// nsBlockReflowState contains additional reflow state information that the
+// BlockReflowInput contains additional reflow state information that the
 // block frame uses along with ReflowInput. Like ReflowInput, this
 // is read-only data that is passed down from a parent frame to its children.
-class nsBlockReflowState {
+class BlockReflowInput {
   using ReflowInput = mozilla::ReflowInput;
 
 public:
-  nsBlockReflowState(const ReflowInput& aReflowState,
+  BlockReflowInput(const ReflowInput& aReflowState,
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      bool aBStartMarginRoot, bool aBEndMarginRoot,
@@ -382,4 +382,4 @@ private:
 
 }; // namespace mozilla
 
-#endif // nsBlockReflowState_h
+#endif // BlockReflowInput_h
