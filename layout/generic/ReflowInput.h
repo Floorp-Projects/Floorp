@@ -106,8 +106,8 @@ public:
   // The frame being reflowed.
   nsIFrame* mFrame;
 
-  // rendering context to use for measurement
-  nsRenderingContext* rendContext;
+  // Rendering context to use for measurement.
+  nsRenderingContext* mRenderingContext;
 
   const nsMargin& ComputedPhysicalMargin() const { return mComputedMargin; }
   const nsMargin& ComputedPhysicalBorderPadding() const { return mComputedBorderPadding; }
@@ -166,7 +166,7 @@ public:
   // Callers using this constructor must call InitOffsets on their own.
   SizeComputationInput(nsIFrame *aFrame, nsRenderingContext *aRenderingContext)
     : mFrame(aFrame)
-    , rendContext(aRenderingContext)
+    , mRenderingContext(aRenderingContext)
     , mWritingMode(aFrame->GetWritingMode())
   {
   }

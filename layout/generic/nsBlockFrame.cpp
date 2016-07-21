@@ -984,7 +984,7 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
       if (scrollFrame) {
         scrollbars =
           scrollFrame->GetDesiredScrollbarSizes(aLastRS->mFrame->PresContext(),
-                                                aLastRS->rendContext);
+                                                aLastRS->mRenderingContext);
         if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
           scrollbars.top = scrollbars.bottom = 0;
         }
@@ -7399,7 +7399,7 @@ nsBlockFrame::ISizeToClearPastFloats(const BlockReflowInput& aState,
 {
   nscoord inlineStartOffset, inlineEndOffset;
   WritingMode wm = aState.mReflowState.GetWritingMode();
-  SizeComputationInput offsetState(aFrame, aState.mReflowState.rendContext,
+  SizeComputationInput offsetState(aFrame, aState.mReflowState.mRenderingContext,
                                wm, aState.mContentArea.ISize(wm));
 
   ReplacedElementISizeToClear result;

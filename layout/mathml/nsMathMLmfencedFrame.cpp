@@ -226,7 +226,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   RefPtr<nsFontMetrics> fm =
     nsLayoutUtils::GetFontMetricsForFrame(this, fontSizeInflation);
   nscoord axisHeight, em;
-  GetAxisHeight(aReflowState.rendContext->GetDrawTarget(), fm, axisHeight);
+  GetAxisHeight(aReflowState.mRenderingContext->GetDrawTarget(), fm, axisHeight);
   GetEmHeight(fm, em);
   // leading to be left at the top and the bottom of stretched chars
   nscoord leading = NSToCoordRound(0.2f * em); 
@@ -286,7 +286,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nsBoundingMetrics containerSize;
   nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_VERTICAL;
 
-  DrawTarget* drawTarget = aReflowState.rendContext->GetDrawTarget();
+  DrawTarget* drawTarget = aReflowState.mRenderingContext->GetDrawTarget();
 
   GetPreferredStretchSize(drawTarget,
                           0, /* i.e., without embellishments */

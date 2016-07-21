@@ -429,13 +429,13 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   innerAvailSize.BSize(innerWM) = legendAvailSize.BSize(legendWM) =
     NS_UNCONSTRAINEDSIZE;
   NS_ASSERTION(!inner ||
-      nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+      nsLayoutUtils::IntrinsicForContainer(aReflowState.mRenderingContext,
                                            inner,
                                            nsLayoutUtils::MIN_ISIZE) <=
                innerAvailSize.ISize(innerWM),
                "Bogus availSize.ISize; should be bigger");
   NS_ASSERTION(!legend ||
-      nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+      nsLayoutUtils::IntrinsicForContainer(aReflowState.mRenderingContext,
                                            legend,
                                            nsLayoutUtils::MIN_ISIZE) <=
                legendAvailSize.ISize(legendWM),

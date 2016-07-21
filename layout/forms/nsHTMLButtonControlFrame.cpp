@@ -286,7 +286,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // focuspadding (which other browsers don't have) so that there's a
   // little more space for it.
   // Note that GetMinISize includes the focusPadding.
-  nscoord IOverflow = GetMinISize(aButtonReflowState.rendContext) -
+  nscoord IOverflow = GetMinISize(aButtonReflowState.mRenderingContext) -
                       aButtonReflowState.ComputedISize();
   nscoord IFocusPadding = focusPadding.IStartEnd(wm);
   nscoord focusPaddingReduction = std::min(IFocusPadding,

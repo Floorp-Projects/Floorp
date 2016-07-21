@@ -1672,7 +1672,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
 {
   GridReflowState(nsGridContainerFrame*    aFrame,
                   const ReflowInput& aRS)
-    : GridReflowState(aFrame, *aRS.rendContext, &aRS, aRS.mStylePosition,
+    : GridReflowState(aFrame, *aRS.mRenderingContext, &aRS, aRS.mStylePosition,
                       aRS.GetWritingMode())
   {}
   GridReflowState(nsGridContainerFrame* aFrame,

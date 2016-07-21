@@ -890,7 +890,7 @@ nsMathMLmtableWrapperFrame::Reflow(nsPresContext*           aPresContext,
       RefPtr<nsFontMetrics> fm =
         nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
       nscoord axisHeight;
-      GetAxisHeight(aReflowState.rendContext->GetDrawTarget(), fm, axisHeight);
+      GetAxisHeight(aReflowState.mRenderingContext->GetDrawTarget(), fm, axisHeight);
       if (rowFrame) {
         // anchor the table on the axis of the row of reference
         // XXX fallback to baseline because it is a hard problem
