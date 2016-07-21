@@ -267,11 +267,15 @@ add_task(function* test1() {
     testInDocument(document, "browser window");
 });
 
-function newTabTest(location) {
-    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, location);
-    let doc = content.document;
-    testInDocument(doc, location);
-    yield BrowserTestUtils.removeTab(tab);
+function* newTabTest(location) {
+    yield BrowserTestUtils.withNewTab({ gBrowser, url: location },
+        function* (browser) {
+          yield ContentTask.spawn(browser, { location, testInDocument_: testInDocument.toSource() },
+            function* ({ location, testInDocument_ }) {
+              let testInDocument = eval(`(() => (${testInDocument_}))()`);
+              testInDocument(content.document, location);
+            });
+        });
 }
 
 add_task(function* test2() {
