@@ -43,6 +43,7 @@
 
 #include "jsatominlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -106,6 +107,13 @@ TypedArrayObject::ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarra
 
     // tarray is not shared, because if it were it would have a buffer.
     memcpy(buffer->dataPointer(), tarray->viewDataUnshared(), tarray->byteLength());
+
+    // Free the data slot pointer if has no inline data
+    if (!tarray->hasInlineElements() && !cx->runtime()->gc.nursery.isInside(tarray->elements())) {
+        js_free(tarray->elements());
+        tarray->setInlineElements();
+    }
+
     tarray->setPrivate(buffer->dataPointer());
 
     tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*buffer));
@@ -162,6 +170,7 @@ TypedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* obj, const J
     TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
     const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
     MOZ_ASSERT(newObj->elements() == oldObj->elements());
+    MOZ_ASSERT(obj->isTenured());
 
     // Typed arrays with a buffer object do not need an update.
     if (oldObj->hasBuffer())
@@ -595,20 +604,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
     }
 
-    static void*
-    allocateTypedArrayElementsBuffer(JSContext* cx, uint32_t len)
-    {
-        if (len == 0)
-            return nullptr;
-
-        void* buf = cx->runtime()->pod_callocCanGC<HeapSlot>(len);
-        if (!buf) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-        return buf;
-    }
-
     static TypedArrayObject*
     makeTypedArrayWithTemplate(JSContext* cx, TypedArrayObject* templateObj, uint32_t len)
     {
@@ -631,16 +626,25 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         NewObjectKind newKind = GenericObject;
 
-        void* buf = nullptr;
-        if (!fitsInline) {
-            buf = allocateTypedArrayElementsBuffer(cx, len);
-            if (!buf)
-                return nullptr;
-        }
-
         RootedObject tmp(cx, NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind));
         if (!tmp)
             return nullptr;
+
+        void* buf = nullptr;
+        if (!fitsInline && len > 0) {
+            buf = js::AllocateObjectBuffer<NativeType>(cx, len);
+            //buf = cx->runtime()->pod_callocCanGC<HeapSlot>(len);
+            if (!buf) {
+                ReportOutOfMemory(cx);
+                return nullptr;
+            }
+
+            memset(buf, 0, nbytes);
+
+            Nursery& nursery = cx->runtime()->gc.nursery;
+            if (!nursery.isInside(buf))
+                newKind = TenuredObject;
+        }
 
         TypedArrayObject* obj = &tmp->as<TypedArrayObject>();
         initTypedArraySlots(obj, len, buf, allocKind);
@@ -1251,11 +1255,11 @@ TypedArrayObject::GetTemplateObjectForNative(JSContext* cx, Native native, uint3
     if (native == &TypedArrayObjectTemplate<T>::class_constructor) { \
         size_t nbytes; \
         if (!js::CalculateAllocSize<T>(len, &nbytes)) \
-            return false; \
+            return true; \
         \
         if (nbytes < TypedArrayObject::SINGLETON_BYTE_LENGTH) { \
             res.set(TypedArrayObjectTemplate<T>::makeTemplateObject(cx, len)); \
-            return !!res; \
+            return true; \
         } \
     }
 JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
