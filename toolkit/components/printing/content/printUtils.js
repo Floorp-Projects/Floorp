@@ -588,10 +588,12 @@ var PrintUtils = {
       printPreviewTB.initialize(ppBrowser);
 
       // Enable simplify page checkbox when the page is an article
-      if (this._sourceBrowser.isArticle)
+      if (this._sourceBrowser.isArticle) {
         printPreviewTB.enableSimplifyPage();
-      else
+      } else {
+        this.logTelemetry("PRINT_PREVIEW_SIMPLIFY_PAGE_UNAVAILABLE_COUNT");
         printPreviewTB.disableSimplifyPage();
+      }
 
       // copy the window close handler
       if (document.documentElement.hasAttribute("onclose"))
