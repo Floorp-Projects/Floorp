@@ -113,6 +113,24 @@ public:
   // Returns the start time that a granulepos represents.
   virtual int64_t StartTime(int64_t granulepos) { return -1; }
 
+  // Returns the duration of the given packet, if it can be determined.
+  virtual int64_t PacketDuration(ogg_packet* aPacket) { return -1; }
+
+  // Returns the start time of the given packet, if it can be determined.
+  virtual int64_t PacketStartTime(ogg_packet* aPacket) {
+    if (aPacket->granulepos < 0) {
+      return -1;
+    }
+    int64_t endTime = Time(aPacket->granulepos);
+    int64_t duration = PacketDuration(aPacket);
+    if (duration > endTime) {
+      // Audio preskip may eat a whole packet or more.
+      return 0;
+    } else {
+      return endTime - duration;
+    }
+  }
+
   // Initializes the codec state.
   virtual bool Init();
 
@@ -139,16 +157,34 @@ public:
   // decoding.
   virtual bool IsHeader(ogg_packet* aPacket) { return false; }
 
-  // Returns the next packet in the stream, or nullptr if there are no more
+  // Returns true if the OggCodecState thinks this packet represents a
+  // keyframe, from which decoding can restart safely.
+  virtual bool IsKeyframe(ogg_packet* aPacket) { return true; }
+
+  // Returns true if there is a packet available for dequeueing in the stream.
+  bool IsPacketReady();
+
+  // Returns the next raw packet in the stream, or nullptr if there are no more
   // packets buffered in the packet queue. More packets can be buffered by
   // inserting one or more pages into the stream by calling PageIn(). The
   // caller is responsible for deleting returned packet's using
   // OggCodecState::ReleasePacket(). The packet will have a valid granulepos.
   ogg_packet* PacketOut();
 
+  // Returns the next raw packet in the stream, or nullptr if there are no more
+  // packets buffered in the packet queue, without consuming it.
+  // The packet will have a valid granulepos.
+  ogg_packet* PacketPeek();
+
   // Releases the memory used by a cloned packet. Every packet returned by
   // PacketOut() must be free'd using this function.
   static void ReleasePacket(ogg_packet* aPacket);
+
+  // Returns the next packet in the stream as a MediaRawData, or nullptr
+  // if there are no more packets buffered in the packet queue. More packets
+  // can be buffered by inserting one or more pages into the stream by calling
+  // PageIn(). The packet will have a valid granulepos.
+  virtual RefPtr<MediaRawData> PacketOutAsMediaRawData();
 
   // Extracts all packets from the page, and inserts them into the packet
   // queue. They can be extracted by calling PacketOut(). Packets from an
@@ -218,6 +254,7 @@ public:
   CodecType GetType() { return TYPE_VORBIS; }
   bool DecodeHeader(ogg_packet* aPacket);
   int64_t Time(int64_t granulepos);
+  int64_t PacketDuration(ogg_packet* aPacket);
   bool Init();
   nsresult Reset();
   bool IsHeader(ogg_packet* aPacket);
@@ -292,8 +329,10 @@ public:
   bool DecodeHeader(ogg_packet* aPacket);
   int64_t Time(int64_t granulepos);
   int64_t StartTime(int64_t granulepos);
+  int64_t PacketDuration(ogg_packet* aPacket);
   bool Init();
   bool IsHeader(ogg_packet* aPacket);
+  bool IsKeyframe(ogg_packet* aPacket);
   nsresult PageIn(ogg_page* aPage); 
 
   // Returns the maximum number of microseconds which a keyframe can be offset
@@ -305,7 +344,7 @@ public:
 
   th_info mInfo;
   th_comment mComment;
-  th_setup_info *mSetup;
+  th_setup_info* mSetup;
   th_dec_ctx* mCtx;
 
   float mPixelAspectRatio;
@@ -329,6 +368,7 @@ public:
   CodecType GetType() { return TYPE_OPUS; }
   bool DecodeHeader(ogg_packet* aPacket);
   int64_t Time(int64_t aGranulepos);
+  int64_t PacketDuration(ogg_packet* aPacket);
   bool Init();
   nsresult Reset();
   nsresult Reset(bool aStart);
@@ -349,7 +389,7 @@ public:
 #endif
 
   nsAutoPtr<OpusParser> mParser;
-  OpusMSDecoder *mDecoder;
+  OpusMSDecoder* mDecoder;
 
   int mSkip;        // Number of samples left to trim before playback.
   // Granule position (end sample) of the last decoded Opus packet. This is

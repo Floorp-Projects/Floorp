@@ -179,11 +179,49 @@ void OggPacketQueue::Append(ogg_packet* aPacket) {
   nsDeque::Push(aPacket);
 }
 
+bool OggCodecState::IsPacketReady()
+{
+  return !mPackets.IsEmpty();
+}
+
 ogg_packet* OggCodecState::PacketOut() {
   if (mPackets.IsEmpty()) {
     return nullptr;
   }
   return mPackets.PopFront();
+}
+
+ogg_packet* OggCodecState::PacketPeek() {
+  if (mPackets.IsEmpty()) {
+    return nullptr;
+  }
+  return mPackets.PeekFront();
+}
+
+RefPtr<MediaRawData> OggCodecState::PacketOutAsMediaRawData()
+{
+  ogg_packet* packet = PacketOut();
+  if (!packet) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(!IsHeader(packet), "PacketOutAsMediaRawData can only be called on non-header packets");
+  RefPtr<MediaRawData> sample = new MediaRawData(packet->packet, packet->bytes);
+
+  int64_t end_tstamp = Time(packet->granulepos);
+  NS_ASSERTION(end_tstamp >= 0, "timestamp invalid");
+
+  int64_t duration = PacketDuration(packet);
+  NS_ASSERTION(duration >= 0, "duration invalid");
+
+  sample->mTimecode = packet->granulepos;
+  sample->mTime = end_tstamp - duration;
+  sample->mDuration = duration;
+  sample->mKeyframe = IsKeyframe(packet);
+
+  ReleasePacket(packet);
+
+  return sample;
 }
 
 nsresult OggCodecState::PageIn(ogg_page* aPage) {
@@ -365,6 +403,17 @@ int64_t TheoraState::StartTime(int64_t granulepos) {
   return t.value() / mInfo.fps_numerator;
 }
 
+int64_t TheoraState::PacketDuration(ogg_packet* aPacket) {
+  if (!mActive || mInfo.fps_numerator == 0) {
+    return -1;
+  }
+  CheckedInt64 t = CheckedInt64(mInfo.fps_denominator) * USECS_PER_S;
+  if (!t.isValid()) {
+    return -1;
+  }
+  return t.value() / mInfo.fps_numerator;
+}
+
 int64_t
 TheoraState::MaxKeyframeOffset()
 {
@@ -383,6 +432,14 @@ TheoraState::MaxKeyframeOffset()
 
   // Total time in usecs keyframe can be offset from any given frame.
   return frameDuration * keyframeDiff;
+}
+
+bool
+TheoraState::IsKeyframe(ogg_packet* pkt)
+{
+  // first bit of packet is 1 for header, 0 for data
+  // second bit of packet is 1 for inter frame, 0 for intra frame
+  return (pkt->bytes >= 1 && (pkt->packet[0] & 0x40) == 0x00);
 }
 
 nsresult
@@ -622,6 +679,24 @@ int64_t VorbisState::Time(vorbis_info* aInfo, int64_t aGranulepos)
   if (!t.isValid())
     t = 0;
   return t.value() / aInfo->rate;
+}
+
+int64_t VorbisState::PacketDuration(ogg_packet* aPacket)
+{
+  if (!mActive) {
+    return -1;
+  }
+  if (aPacket->granulepos == -1) {
+    return -1;
+  }
+  // @FIXME store these in a more stable place
+  if (mVorbisPacketSamples.count(aPacket) == 0) {
+    // We haven't seen this packet, don't know its size?
+    return -1;
+  }
+
+  long samples = mVorbisPacketSamples[aPacket];
+  return Time(samples);
 }
 
 bool
@@ -982,6 +1057,12 @@ static int GetOpusDeltaGP(ogg_packet* packet)
   }
   NS_WARNING("Invalid Opus packet.");
   return nframes;
+}
+
+int64_t OpusState::PacketDuration(ogg_packet* aPacket)
+{
+  CheckedInt64 t = CheckedInt64(GetOpusDeltaGP(aPacket)) * USECS_PER_S;
+  return t.isValid() ? t.value() / 48000 : -1;
 }
 
 bool OpusState::ReconstructOpusGranulepos(void)
