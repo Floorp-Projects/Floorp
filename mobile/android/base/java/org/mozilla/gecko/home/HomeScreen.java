@@ -38,12 +38,17 @@ public interface HomeScreen {
 
     void onToolbarFocusChange(boolean hasFocus);
 
+    // The following three methods are HomePager specific. The persistence framework might need
+    // refactoring/generalising at some point, but it isn't entirely clear what other panels
+    // might need so we can leave these as is for now.
     void showPanel(String panelId, Bundle restoreData);
-
     void setOnPanelChangeListener(OnPanelChangeListener listener);
-
     void setPanelStateChangeListener(HomeFragment.PanelStateChangeListener listener);
 
+    /**
+     * Set a banner that may be displayed at the bottom of the HomeScreen. This can be used
+     * e.g. to show snippets.
+     */
     void setBanner(HomeBanner banner);
 
     void load(LoaderManager lm, FragmentManager fm, String panelId, Bundle restoreData, PropertyAnimator animator);
