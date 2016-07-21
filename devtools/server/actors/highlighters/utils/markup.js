@@ -325,6 +325,10 @@ CanvasFrameAnonymousContentHelper.prototype = {
     return typeof this.getAttributeForElement(id, name) === "string";
   },
 
+  getCanvasContext: function (id, type = "2d") {
+    return this.content ? this.content.getCanvasContext(id, type) : null;
+  },
+
   /**
    * Add an event listener to one of the elements inserted in the canvasFrame
    * native anonymous container.
@@ -460,6 +464,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       getAttribute: name => this.getAttributeForElement(id, name),
       removeAttribute: name => this.removeAttributeForElement(id, name),
       hasAttribute: name => this.hasAttributeForElement(id, name),
+      getCanvasContext: type => this.getCanvasContext(id, type),
       addEventListener: (type, handler) => {
         return this.addEventListenerForElement(id, type, handler);
       },
