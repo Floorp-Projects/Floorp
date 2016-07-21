@@ -20,7 +20,7 @@
 #include "gfxTypes.h"
 #include "JustificationUtils.h"
 #include "mozilla/WritingModes.h"
-#include "nsBlockReflowState.h"
+#include "BlockReflowInput.h"
 #include "nsLineBox.h"
 #include "plarena.h"
 
