@@ -1814,35 +1814,32 @@ moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
 {
     gint x, y, w, h;
 
-    if (state->inHover && !state->disabled) {   
-        GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-        GtkStyleContext* style =
-            ClaimStyleContext(widget, direction, state_flags);
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    GtkStyleContext* style = ClaimStyleContext(widget, direction, state_flags);
 
-        bool pre_3_6 = gtk_check_version(3, 6, 0) != nullptr;
-        if (pre_3_6) {
-            // GTK+ 3.4 saves the style context and adds the menubar class to
-            // menubar children, but does each of these only when drawing, not
-            // during layout.
-            gtk_style_context_save(style);
-            if (widget == MOZ_GTK_MENUBARITEM) {
-                gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
-            }
+    bool pre_3_6 = gtk_check_version(3, 6, 0) != nullptr;
+    if (pre_3_6) {
+        // GTK+ 3.4 saves the style context and adds the menubar class to
+        // menubar children, but does each of these only when drawing, not
+        // during layout.
+        gtk_style_context_save(style);
+        if (widget == MOZ_GTK_MENUBARITEM) {
+            gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
         }
-
-        x = rect->x;
-        y = rect->y;
-        w = rect->width;
-        h = rect->height;
-
-        gtk_render_background(style, cr, x, y, w, h);
-        gtk_render_frame(style, cr, x, y, w, h);
-
-        if (pre_3_6) {
-            gtk_style_context_restore(style);
-        }
-        ReleaseStyleContext(style);
     }
+
+    x = rect->x;
+    y = rect->y;
+    w = rect->width;
+    h = rect->height;
+
+    gtk_render_background(style, cr, x, y, w, h);
+    gtk_render_frame(style, cr, x, y, w, h);
+
+    if (pre_3_6) {
+        gtk_style_context_restore(style);
+    }
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
