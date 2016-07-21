@@ -5,8 +5,8 @@
 
 /* struct containing the input to nsIFrame::Reflow */
 
-#ifndef nsHTMLReflowState_h___
-#define nsHTMLReflowState_h___
+#ifndef mozilla_nsHTMLReflowState_h
+#define mozilla_nsHTMLReflowState_h
 
 #include "nsMargin.h"
 #include "nsStyleCoord.h"
@@ -93,6 +93,8 @@ typedef uint32_t  nsCSSFrameType;
 #define NS_FRAME_GET_TYPE(_ft)                           \
   ((_ft) & ~(NS_CSS_FRAME_TYPE_REPLACED |                \
              NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
+
+namespace mozilla {
 
 // A base class of nsHTMLReflowState that computes only the padding,
 // border, and margin, since those values are needed more often.
@@ -970,5 +972,6 @@ protected:
   void CalculateBlockSideMargins(nsIAtom* aFrameType);
 };
 
-#endif /* nsHTMLReflowState_h___ */
+} // namespace mozilla
 
+#endif // mozilla_nsHTMLReflowState_h

@@ -75,6 +75,8 @@ class nsOverflowContinuationTracker;
 // block frame uses along with nsHTMLReflowState. Like nsHTMLReflowState, this
 // is read-only data that is passed down from a parent frame to its children.
 class nsBlockReflowState {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
 public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                      nsPresContext* aPresContext,

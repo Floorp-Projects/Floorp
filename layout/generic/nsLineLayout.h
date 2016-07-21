@@ -28,6 +28,8 @@ class nsFloatManager;
 struct nsStyleText;
 
 class nsLineLayout {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
 public:
   /**
    * @param aBaseLineLayout the nsLineLayout for ruby base,

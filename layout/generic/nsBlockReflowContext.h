@@ -13,7 +13,6 @@
 #include "nsHTMLReflowMetrics.h"
 
 class nsBlockReflowState;
-struct nsHTMLReflowState;
 class nsLineBox;
 class nsPresContext;
 
@@ -21,6 +20,8 @@ class nsPresContext;
  * An encapsulation of the state and algorithm for reflowing block frames.
  */
 class nsBlockReflowContext {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
 public:
   nsBlockReflowContext(nsPresContext* aPresContext,
                        const nsHTMLReflowState& aParentRS);
