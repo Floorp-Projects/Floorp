@@ -22,7 +22,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsGridLayout2.h"
 #include "nsGridRow.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 
 already_AddRefed<nsBoxLayout> NS_NewGridRowGroupLayout()
 {

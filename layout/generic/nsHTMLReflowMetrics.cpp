@@ -6,7 +6,7 @@
 /* struct containing the output from nsIFrame::Reflow */
 
 #include "nsHTMLReflowMetrics.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 
 void
 nsOverflowAreas::UnionWith(const nsOverflowAreas& aOther)
