@@ -10,7 +10,7 @@
 #include "mozilla/jni/Refs.h"
 
 namespace mozilla {
-namespace widget {
+namespace java {
 
 class ANRReporter : public mozilla::jni::ObjectBase<ANRReporter, jobject>
 {

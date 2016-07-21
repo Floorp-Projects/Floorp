@@ -152,7 +152,7 @@ bool HandleUncaughtException(JNIEnv* aEnv)
     MOZ_ASSERT(e);
 
     aEnv->ExceptionClear();
-    String::LocalRef stack = widget::GeckoAppShell::HandleUncaughtException(e);
+    String::LocalRef stack = java::GeckoAppShell::HandleUncaughtException(e);
 
 #ifdef MOZ_CRASHREPORTER
     if (stack) {

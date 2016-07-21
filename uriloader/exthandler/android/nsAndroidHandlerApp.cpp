@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAndroidHandlerApp.h"
-#include "AndroidBridge.h"
+#include "GeneratedJNIWrappers.h"
 
 using namespace mozilla;
 
@@ -76,7 +76,7 @@ nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowC
 {
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
-  return widget::GeckoAppShell::OpenUriExternal(
+  return java::GeckoAppShell::OpenUriExternal(
           uriSpec, mMimeType, mPackageName, mClassName,
           mAction, EmptyString()) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -84,7 +84,7 @@ nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowC
 NS_IMETHODIMP
 nsAndroidHandlerApp::Share(const nsAString & data, const nsAString & title)
 {
-  return widget::GeckoAppShell::OpenUriExternal(
+  return java::GeckoAppShell::OpenUriExternal(
           data, mMimeType, mPackageName, mClassName,
           mAction, EmptyString()) ? NS_OK : NS_ERROR_FAILURE;
 }
