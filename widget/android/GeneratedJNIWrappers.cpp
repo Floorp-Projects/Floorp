@@ -1178,7 +1178,7 @@ const char ThumbnailHelper::name[] =
 constexpr char ThumbnailHelper::SendThumbnail_t::name[];
 constexpr char ThumbnailHelper::SendThumbnail_t::signature[];
 
-auto ThumbnailHelper::SendThumbnail(mozilla::jni::Object::Param a0, int32_t a1, bool a2, bool a3) -> void
+auto ThumbnailHelper::SendThumbnail(mozilla::jni::ByteBuffer::Param a0, int32_t a1, bool a2, bool a3) -> void
 {
     return mozilla::jni::Method<SendThumbnail_t>::Call(ThumbnailHelper::Context(), nullptr, a0, a1, a2, a3);
 }
@@ -1431,7 +1431,7 @@ const char LayerView::name[] =
 constexpr char LayerView::updateZoomedView_t::name[];
 constexpr char LayerView::updateZoomedView_t::signature[];
 
-auto LayerView::updateZoomedView(mozilla::jni::Object::Param a0) -> void
+auto LayerView::updateZoomedView(mozilla::jni::ByteBuffer::Param a0) -> void
 {
     return mozilla::jni::Method<updateZoomedView_t>::Call(LayerView::Context(), nullptr, a0);
 }
