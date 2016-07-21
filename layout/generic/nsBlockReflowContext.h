@@ -58,10 +58,10 @@ public:
 
   /**
    * Computes the collapsed block-start margin (in the context's parent's
-   * writing mode) for a block whose reflow state is in aRS.
+   * writing mode) for a block whose reflow state is in aRI.
    * The computed margin is added into aMargin, whose writing mode is the
    * parent's mode as found in mMetrics.GetWritingMode(); note this may not be
-   * the block's own writing mode as found in aRS.
+   * the block's own writing mode as found in aRI.
    * If aClearanceFrame is null then this is the first optimistic pass which
    * shall assume that no frames have clearance, and we clear the HasClearance
    * on all frames encountered.
@@ -75,7 +75,7 @@ public:
    * We return true if we changed the clearance state of any line and marked it
    * dirty.
    */
-  bool ComputeCollapsedBStartMargin(const ReflowInput& aRS,
+  bool ComputeCollapsedBStartMargin(const ReflowInput& aRI,
                                     nsCollapsingMargin* aMargin,
                                     nsIFrame* aClearanceFrame,
                                     bool* aMayNeedRetry,

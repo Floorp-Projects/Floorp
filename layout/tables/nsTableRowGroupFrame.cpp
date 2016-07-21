@@ -1592,14 +1592,14 @@ nsTableRowGroupFrame::GetBSizeBasis(const ReflowInput& aReflowInput)
     result = aReflowInput.ComputedBSize() - cellSpacing;
   }
   else {
-    const ReflowInput* parentRS = aReflowInput.mParentReflowInput;
-    if (parentRS && (tableFrame != parentRS->mFrame)) {
-      parentRS = parentRS->mParentReflowInput;
+    const ReflowInput* parentRI = aReflowInput.mParentReflowInput;
+    if (parentRI && (tableFrame != parentRI->mFrame)) {
+      parentRI = parentRI->mParentReflowInput;
     }
-    if (parentRS && (tableFrame == parentRS->mFrame) &&
-        (parentRS->ComputedBSize() > 0) && (parentRS->ComputedBSize() < NS_UNCONSTRAINEDSIZE)) {
+    if (parentRI && (tableFrame == parentRI->mFrame) &&
+        (parentRI->ComputedBSize() > 0) && (parentRI->ComputedBSize() < NS_UNCONSTRAINEDSIZE)) {
       nscoord cellSpacing = tableFrame->GetRowSpacing(-1, tableFrame->GetRowCount());
-      result = parentRS->ComputedBSize() - cellSpacing;
+      result = parentRI->ComputedBSize() - cellSpacing;
     }
   }
 

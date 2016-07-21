@@ -739,7 +739,7 @@ public:
 
   mozilla::LogicalSize ComputeContainingBlockRectangle(
          nsPresContext*           aPresContext,
-         const ReflowInput* aContainingBlockRS) const;
+         const ReflowInput* aContainingBlockRI) const;
 
   /**
    * Apply the mComputed(Min/Max)Width constraints to the content

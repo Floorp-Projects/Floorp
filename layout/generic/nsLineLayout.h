@@ -46,7 +46,7 @@ public:
 
   void Init(BlockReflowInput* aState, nscoord aMinLineBSize,
             int32_t aLineNumber) {
-    mBlockRS = aState;
+    mBlockRI = aState;
     mMinLineBSize = aMinLineBSize;
     mLineNumber = aLineNumber;
   }
@@ -184,10 +184,10 @@ public:
     // provided to the line layout. However, floats should never be
     // associated with ruby text containers, hence this method should
     // not be called in that case.
-    MOZ_ASSERT(mBlockRS,
+    MOZ_ASSERT(mBlockRI,
                "Should not call this method if there is no block reflow state "
                "available");
-    return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
+    return mBlockRI->AddFloat(this, aFloat, aAvailableISize);
   }
 
   void SetTrimmableISize(nscoord aTrimmableISize) {
@@ -343,7 +343,7 @@ public:
    * context (e.g. MathML or floating first-letter).
    */
   nsIFrame* LineContainerFrame() const { return mBlockReflowInput->mFrame; }
-  const ReflowInput* LineContainerRS() const { return mBlockReflowInput; }
+  const ReflowInput* LineContainerRI() const { return mBlockReflowInput; }
   const nsLineList::iterator* GetLine() const {
     return mGotLineBox ? &mLineBox : nullptr;
   }
@@ -412,7 +412,7 @@ protected:
   //     member. It should not be a problem currently, since the only
   //     code use it is handling float, which does not affect ruby.
   //     See comment in nsLineLayout::AddFloat
-  BlockReflowInput* mBlockRS;/* XXX hack! */
+  BlockReflowInput* mBlockRI;/* XXX hack! */
 
   nsLineList::iterator mLineBox;
 
