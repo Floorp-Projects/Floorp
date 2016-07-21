@@ -1339,7 +1339,13 @@ this.Schemas = {
                             pattern,
                             format);
     } else if (type.type == "object" && "functions" in type) {
-      checkTypeProperties("functions");
+      // NOTE: "events" and "properties" are currently ignored, because they are used
+      // in the DevTools schema files, but they are not currently used by anything in the
+      // initial set of supported DevTools APIs. See Bug 1290901 for rationale.
+      // Introducing a complete support of "events" and "properties" in the SubModuleType
+      // will be re-evaluated as part of Bug 1293298 and Bug 1293301.
+
+      checkTypeProperties("functions", "events", "properties");
 
       // The path we pass in here is only used for error messages.
       let functions = type.functions.map(fun => this.parseFunction(path.concat(type.id), fun));
