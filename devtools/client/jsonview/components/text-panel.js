@@ -71,11 +71,6 @@ define(function (require, exports, module) {
       return (
         Toolbar({},
           ToolbarButton({
-            className: "btn prettyprint",
-            onClick: this.onPrettify},
-            Locale.$STR("jsonViewer.PrettyPrint")
-          ),
-          ToolbarButton({
             className: "btn save",
             onClick: this.onSave},
             Locale.$STR("jsonViewer.Save")
@@ -84,6 +79,11 @@ define(function (require, exports, module) {
             className: "btn copy",
             onClick: this.onCopy},
             Locale.$STR("jsonViewer.Copy")
+          ),
+          ToolbarButton({
+            className: "btn prettyprint",
+            onClick: this.onPrettify},
+            Locale.$STR("jsonViewer.PrettyPrint")
           )
         )
       );

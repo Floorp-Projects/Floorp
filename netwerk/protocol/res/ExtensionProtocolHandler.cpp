@@ -78,6 +78,39 @@ private:
 
 NS_IMPL_ISUPPORTS(PipeCloser, nsIRequestObserver)
 
+bool
+ExtensionProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
+                                              const nsACString& aPath,
+                                              const nsACString& aPathname,
+                                              nsACString& aResult)
+{
+  // Create special moz-extension:-pages such as moz-extension://foo/_blank.html
+  // for all registered extensions. We can't just do this as a substitution
+  // because substitutions can only match on host.
+  if (!SubstitutingProtocolHandler::HasSubstitution(aHost)) {
+    return false;
+  }
+  if (aPathname.EqualsLiteral("/_blank.html")) {
+    aResult.AssignLiteral("about:blank");
+    return true;
+  }
+  if (aPathname.EqualsLiteral("/_generated_background_page.html")) {
+    nsCOMPtr<nsIAddonPolicyService> aps =
+      do_GetService("@mozilla.org/addons/policy-service;1");
+    if (!aps) {
+      return false;
+    }
+    nsresult rv = aps->GetGeneratedBackgroundPageUrl(aHost, aResult);
+    NS_ENSURE_SUCCESS(rv, false);
+    if (!aResult.IsEmpty()) {
+      MOZ_RELEASE_ASSERT(Substring(aResult, 0, 5).Equals("data:"));
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsresult
 ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                             nsILoadInfo* aLoadInfo,

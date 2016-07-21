@@ -52,6 +52,8 @@ const MAX_VISIBLE_STRING_SIZE = 100;
  *                          the table. See @setupColumns for more info.
  *        - uniqueId: the column which will be the unique identifier of each
  *                    entry in the table. Default: name.
+ *        - wrapTextInElements: Don't ever use 'value' attribute on labels.
+ *                              Default: false.
  *        - emptyText: text to display when no entries in the table to display.
  *        - highlightUpdated: true to highlight the changed/added row.
  *        - removableColumns: Whether columns are removeable. If set to false,
@@ -68,9 +70,10 @@ function TableWidget(node, options = {}) {
   this._parent = node;
 
   let {initialColumns, emptyText, uniqueId, highlightUpdated, removableColumns,
-       firstColumn, cellContextMenuId} = options;
+       firstColumn, wrapTextInElements, cellContextMenuId} = options;
   this.emptyText = emptyText || "";
   this.uniqueId = uniqueId || "name";
+  this.wrapTextInElements = wrapTextInElements || false;
   this.firstColumn = firstColumn || "";
   this.highlightUpdated = highlightUpdated || false;
   this.removableColumns = removableColumns !== false;
@@ -964,6 +967,7 @@ function Column(table, id, header) {
   this.window = table.window;
   this.id = id;
   this.uniqueId = table.uniqueId;
+  this.wrapTextInElements = table.wrapTextInElements;
   this.table = table;
   this.cells = [];
   this.items = {};
@@ -1446,6 +1450,7 @@ Column.prototype = {
 function Cell(column, item, nextCell) {
   let document = column.document;
 
+  this.wrapTextInElements = column.wrapTextInElements;
   this.label = document.createElementNS(XUL_NS, "label");
   this.label.setAttribute("crop", "end");
   this.label.className = "plain table-widget-cell";
@@ -1497,6 +1502,12 @@ Cell.prototype = {
     if (value == null) {
       this.label.setAttribute("value", "");
       return;
+    }
+
+    if (this.wrapTextInElements && !(value instanceof Ci.nsIDOMNode)) {
+      let span = this.label.ownerDocument.createElementNS(HTML_NS, "span");
+      span.textContent = value;
+      value = span;
     }
 
     if (!(value instanceof Ci.nsIDOMNode) &&

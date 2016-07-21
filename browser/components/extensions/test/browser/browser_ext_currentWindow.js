@@ -5,9 +5,9 @@
 function genericChecker() {
   let kind = "background";
   let path = window.location.pathname;
-  if (path.indexOf("popup") != -1) {
+  if (path.includes("/popup.html")) {
     kind = "popup";
-  } else if (path.indexOf("page") != -1) {
+  } else if (path.includes("/page.html")) {
     kind = "page";
   }
 
@@ -34,7 +34,7 @@ function genericChecker() {
       browser.tabs.query({
         windowId: args[0],
       }, tabs => {
-        let tab = tabs.find(tab => tab.url.indexOf("page.html") != -1);
+        let tab = tabs.find(tab => tab.url.includes("/page.html"));
         browser.tabs.remove(tab.id, () => {
           browser.test.sendMessage("closed");
         });

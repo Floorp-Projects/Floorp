@@ -40,6 +40,8 @@ void Accumulate(mozilla::Telemetry::ID aID, const nsCString& aKey,
 void Accumulate(const char* name, uint32_t sample);
 void Accumulate(const char* name, const nsCString& key, uint32_t sample);
 
+void AccumulateCategorical(mozilla::Telemetry::ID aId, const nsCString& aLabel);
+
 void
 ClearHistogram(mozilla::Telemetry::ID aId);
 

@@ -170,7 +170,9 @@ enum class GLRenderer {
     Adreno205,
     AdrenoTM200,
     AdrenoTM205,
+    AdrenoTM305,
     AdrenoTM320,
+    AdrenoTM330,
     AdrenoTM420,
     Mali400MP,
     SGX530,
@@ -1621,17 +1623,9 @@ private:
     }
 
 public:
-    void fTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels) {
-        if (!IsTextureSizeSafeToPassToDriver(target, width, height)) {
-            // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
-            // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
-            level = -1;
-            width = -1;
-            height = -1;
-            border = -1;
-        }
-        raw_fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
-    }
+    void fTexImage2D(GLenum target, GLint level, GLint internalformat,
+                     GLsizei width, GLsizei height, GLint border,
+                     GLenum format, GLenum type, const GLvoid* pixels);
 
     void fTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels) {
         ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(pixels);
@@ -3531,6 +3525,7 @@ protected:
     GLsizei mMaxSamples;
     bool mNeedsTextureSizeChecks;
     bool mNeedsFlushBeforeDeleteFB;
+    bool mTextureAllocCrashesOnMapFailure;
     bool mWorkAroundDriverBugs;
 
     bool IsTextureSizeSafeToPassToDriver(GLenum target, GLsizei width, GLsizei height) const {
@@ -3698,6 +3693,12 @@ GLuint CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
  */
 GLuint CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
                      GLenum aType, const gfx::IntSize& aSize, bool linear = true);
+
+/**
+ * Helper function that calculates the number of bytes required per
+ * texel for a texture from its format and type.
+ */
+uint32_t GetBytesPerTexel(GLenum format, GLenum type);
 
 } /* namespace gl */
 } /* namespace mozilla */

@@ -23,12 +23,8 @@ loader.lazyGetter(this, "CssLogic", () => require("devtools/server/css-logic").C
 loader.lazyGetter(this, "SharedCssLogic", () => require("devtools/shared/inspector/css-logic"));
 loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
 
-// When gathering rules to read for pseudo elements, we will skip
-// :before and :after, which are handled as a special case.
-loader.lazyGetter(this, "PSEUDO_ELEMENTS_TO_READ", () => {
-  return DOMUtils.getCSSPseudoElementNames().filter(pseudo => {
-    return pseudo !== ":before" && pseudo !== ":after";
-  });
+loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
+  return DOMUtils.getCSSPseudoElementNames();
 });
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -541,10 +537,9 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
           rules.push(oneRule);
         });
 
-    // Now any pseudos (except for ::before / ::after, which was handled as
-    // a 'normal rule' above.
+    // Now any pseudos.
     if (showElementStyles) {
-      for (let readPseudo of PSEUDO_ELEMENTS_TO_READ) {
+      for (let readPseudo of PSEUDO_ELEMENTS) {
         this._getElementRules(bindingElement, readPseudo, inherited, options)
             .forEach(oneRule => {
               rules.push(oneRule);

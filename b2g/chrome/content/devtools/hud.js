@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, 'EventLoopLagFront', function() {
-  return devtools.require('devtools/server/actors/eventlooplag').EventLoopLagFront;
+  return devtools.require('devtools/shared/fronts/eventlooplag').EventLoopLagFront;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'PerformanceEntriesFront', function() {

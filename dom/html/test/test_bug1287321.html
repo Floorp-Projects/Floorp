@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287321
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1287321</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1287321 **/
+
+  function test() {
+    var r = document.getElementById("range");
+    var rect = r.getBoundingClientRect();
+    var y = parseInt((rect.height / 2));
+    var movement = parseInt(rect.width / 10);
+    var x = movement;
+    synthesizeMouse(r, x, y, { type: "mousedown" });
+    x += movement;
+    var eventCount = 0;
+    r.oninput = function() {
+      ++eventCount;
+    }
+    synthesizeMouse(r, x, y, { type: "mousemove" });
+    is(eventCount, 1, "Got the expected input event");
+
+    x += movement;
+    synthesizeMouse(r, x, y, { type: "mousemove" });
+    is(eventCount, 2, "Got the expected input event");
+
+    synthesizeMouse(r, x, y, { type: "mousemove" });
+    is(eventCount, 2, "Got the expected input event");
+
+    x += movement;
+    synthesizeMouse(r, x, y, { type: "mousemove" });
+    is(eventCount, 3, "Got the expected input event");
+
+    synthesizeMouse(r, x, y, { type: "mouseup" });
+    is(eventCount, 3, "Got the expected input event");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(test);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1287321">Mozilla Bug 1287321</a>
+<input type="range" id="range">
+</body>
+</html>
