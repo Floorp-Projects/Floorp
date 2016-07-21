@@ -58,7 +58,7 @@ ReflowInput::ReflowInput(nsPresContext*       aPresContext,
                                      nsRenderingContext*  aRenderingContext,
                                      const LogicalSize&   aAvailableSpace,
                                      uint32_t             aFlags)
-  : nsCSSOffsetState(aFrame, aRenderingContext)
+  : SizeComputationInput(aFrame, aRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
   , mReflowDepth(0)
@@ -145,12 +145,12 @@ FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame)
   return 0;
 }
 
-// NOTE: If we ever want to use nsCSSOffsetState for a flex item or a
+// NOTE: If we ever want to use SizeComputationInput for a flex item or a
 // grid item, we need to make it take the containing-block block-size as
 // well as the inline-size, since flex items and grid items resolve
 // block-direction percent margins and padding against the
 // containing-block block-size, rather than its inline-size.
-nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
+SizeComputationInput::SizeComputationInput(nsIFrame *aFrame,
                                    nsRenderingContext *aRenderingContext,
                                    WritingMode aContainingBlockWritingMode,
                                    nscoord aContainingBlockISize)
@@ -163,7 +163,7 @@ nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
              "values against CB inline size, which is incorrect for "
              "flex/grid items. "
              "Additionally for grid items, this path doesn't handle baseline "
-             "padding contribution - see nsCSSOffsetState::InitOffsets");
+             "padding contribution - see SizeComputationInput::InitOffsets");
   LogicalSize cbSize(aContainingBlockWritingMode, aContainingBlockISize,
                      aContainingBlockISize);
   ReflowStateFlags flags;
@@ -180,7 +180,7 @@ ReflowInput::ReflowInput(
                      const LogicalSize&       aAvailableSpace,
                      const LogicalSize*       aContainingBlockSize,
                      uint32_t                 aFlags)
-  : nsCSSOffsetState(aFrame, aParentReflowState.rendContext)
+  : SizeComputationInput(aFrame, aParentReflowState.rendContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
@@ -251,7 +251,7 @@ ReflowInput::ReflowInput(
 }
 
 inline nscoord
-nsCSSOffsetState::ComputeISizeValue(nscoord aContainingBlockISize,
+SizeComputationInput::ComputeISizeValue(nscoord aContainingBlockISize,
                                     nscoord aContentEdgeToBoxSizing,
                                     nscoord aBoxSizingToMarginEdge,
                                     const nsStyleCoord& aCoord) const
@@ -264,7 +264,7 @@ nsCSSOffsetState::ComputeISizeValue(nscoord aContainingBlockISize,
 }
 
 nscoord
-nsCSSOffsetState::ComputeISizeValue(nscoord aContainingBlockISize,
+SizeComputationInput::ComputeISizeValue(nscoord aContainingBlockISize,
                                     StyleBoxSizing aBoxSizing,
                                     const nsStyleCoord& aCoord) const
 {
@@ -281,7 +281,7 @@ nsCSSOffsetState::ComputeISizeValue(nscoord aContainingBlockISize,
 }
 
 nscoord
-nsCSSOffsetState::ComputeBSizeValue(nscoord aContainingBlockBSize,
+SizeComputationInput::ComputeBSizeValue(nscoord aContainingBlockBSize,
                                     StyleBoxSizing aBoxSizing,
                                     const nsStyleCoord& aCoord) const
 {
@@ -2411,7 +2411,7 @@ UpdateProp(FrameProperties& aProps,
 }
 
 void
-nsCSSOffsetState::InitOffsets(WritingMode aWM,
+SizeComputationInput::InitOffsets(WritingMode aWM,
                               const LogicalSize& aPercentBasis,
                               nsIAtom* aFrameType,
                               ReflowStateFlags aFlags,
@@ -2782,7 +2782,7 @@ ReflowInput::CalcLineHeight(nsIContent* aContent,
 }
 
 bool
-nsCSSOffsetState::ComputeMargin(WritingMode aWM,
+SizeComputationInput::ComputeMargin(WritingMode aWM,
                                 const LogicalSize& aPercentBasis)
 {
   // SVG text frames have no margin.
@@ -2830,7 +2830,7 @@ nsCSSOffsetState::ComputeMargin(WritingMode aWM,
 }
 
 bool
-nsCSSOffsetState::ComputePadding(WritingMode aWM,
+SizeComputationInput::ComputePadding(WritingMode aWM,
                                  const LogicalSize& aPercentBasis,
                                  nsIAtom* aFrameType)
 {

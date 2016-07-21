@@ -9697,7 +9697,7 @@ DR_init_constraints_cookie::~DR_init_constraints_cookie()
 
 DR_init_offsets_cookie::DR_init_offsets_cookie(
                      nsIFrame*                aFrame,
-                     nsCSSOffsetState*        aState,
+                     SizeComputationInput*        aState,
                      const LogicalSize&       aPercentBasis,
                      const nsMargin*          aMargin,
                      const nsMargin*          aPadding)
@@ -9705,7 +9705,7 @@ DR_init_offsets_cookie::DR_init_offsets_cookie(
   , mState(aState)
 {
   MOZ_COUNT_CTOR(DR_init_offsets_cookie);
-  mValue = nsCSSOffsetState::DisplayInitOffsetsEnter(mFrame, mState,
+  mValue = SizeComputationInput::DisplayInitOffsetsEnter(mFrame, mState,
                                                      aPercentBasis,
                                                      aMargin, aPadding);
 }
@@ -9713,7 +9713,7 @@ DR_init_offsets_cookie::DR_init_offsets_cookie(
 DR_init_offsets_cookie::~DR_init_offsets_cookie()
 {
   MOZ_COUNT_DTOR(DR_init_offsets_cookie);
-  nsCSSOffsetState::DisplayInitOffsetsExit(mFrame, mState, mValue);
+  SizeComputationInput::DisplayInitOffsetsExit(mFrame, mState, mValue);
 }
 
 DR_init_type_cookie::DR_init_type_cookie(
@@ -10649,8 +10649,8 @@ ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
 
 
 /* static */ void*
-nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
-                                          nsCSSOffsetState* aState,
+SizeComputationInput::DisplayInitOffsetsEnter(nsIFrame* aFrame,
+                                          SizeComputationInput* aState,
                                           const LogicalSize& aPercentBasis,
                                           const nsMargin* aBorder,
                                           const nsMargin* aPadding)
@@ -10681,8 +10681,8 @@ nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
 }
 
 /* static */ void
-nsCSSOffsetState::DisplayInitOffsetsExit(nsIFrame* aFrame,
-                                         nsCSSOffsetState* aState,
+SizeComputationInput::DisplayInitOffsetsExit(nsIFrame* aFrame,
+                                         SizeComputationInput* aState,
                                          void* aValue)
 {
   NS_PRECONDITION(aFrame, "non-null frame required");

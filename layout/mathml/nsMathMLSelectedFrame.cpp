@@ -117,7 +117,7 @@ nsMathMLSelectedFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     nscoord availableISize = aAvailableISize - aBorder.ISize(aWM) -
         aPadding.ISize(aWM) - aMargin.ISize(aWM);
     LogicalSize cbSize = aCBSize - aBorder - aPadding - aMargin;
-    nsCSSOffsetState offsetState(childFrame, aRenderingContext, aWM,
+    SizeComputationInput offsetState(childFrame, aRenderingContext, aWM,
                                  availableISize);
     LogicalSize size =
         childFrame->ComputeSize(aRenderingContext, aWM, cbSize,
