@@ -5,9 +5,12 @@
 #ifndef PNGLCONF_H
 #define PNGLCONF_H
 
-/* limit image dimensions (bug #251381, #591822, and #967656) */
-#ifndef MOZ_PNG_MAX_DIMENSION
-# define MOZ_PNG_MAX_DIMENSION 32767
+/* Limit image dimensions (bug #251381, #591822, #967656, and #1283961) */
+#ifndef MOZ_PNG_MAX_WIDTH
+#  define MOZ_PNG_MAX_WIDTH 0x7fffffffL /* Unlimited */
+#endif
+#ifndef MOZ_PNG_MAX_HEIGHT
+#  define MOZ_PNG_MAX_HEIGHT 0x7fffffffL /* Unlimited */
 #endif
 
 #define PNG_API_RULE 0
@@ -23,8 +26,8 @@
 #define PNG_sRGB_PROFILE_CHECKS -1
 #define PNG_USER_CHUNK_CACHE_MAX 128
 #define PNG_USER_CHUNK_MALLOC_MAX 4000000L
-#define PNG_USER_HEIGHT_MAX MOZ_PNG_MAX_DIMENSION
-#define PNG_USER_WIDTH_MAX MOZ_PNG_MAX_DIMENSION
+#define PNG_USER_HEIGHT_MAX MOZ_PNG_MAX_WIDTH
+#define PNG_USER_WIDTH_MAX MOZ_PNG_MAX_HEIGHT
 #define PNG_WEIGHT_SHIFT 8
 #define PNG_ZBUF_SIZE 8192
 #define PNG_Z_DEFAULT_COMPRESSION (-1)
