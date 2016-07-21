@@ -2019,7 +2019,7 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
     LogicalSize availSize(wm, size);
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     ReflowInput reflowState(aPresContext, positionedPart,
-                                  aReflowState.rendContext, availSize,
+                                  aReflowState.mRenderingContext, availSize,
                                   ReflowInput::DUMMY_PARENT_REFLOW_STATE);
     nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
@@ -2092,7 +2092,7 @@ nsTableFrame::ReflowTable(ReflowOutput&     aDesiredSize,
   ReflowChildren(reflowState, aStatus, aLastChildReflowed,
                  aDesiredSize.mOverflowAreas);
 
-  ReflowColGroups(aReflowState.rendContext);
+  ReflowColGroups(aReflowState.mRenderingContext);
 }
 
 nsIFrame*

@@ -213,7 +213,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
     const nsStyleCoord *styleISize = &colFrame->StylePosition()->ISize(wm);
     nscoord colISize;
     if (styleISize->ConvertsToLength()) {
-      colISize = nsLayoutUtils::ComputeISizeValue(aReflowState.rendContext,
+      colISize = nsLayoutUtils::ComputeISizeValue(aReflowState.mRenderingContext,
                                                   colFrame, 0, 0, 0,
                                                   *styleISize);
       specTotal += colISize;
@@ -247,7 +247,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const ReflowInput& aReflowState)
           // MIN_ISIZE for symmetry with GetMinISize above, just in case
           // there is a difference.
           colISize =
-            nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
+            nsLayoutUtils::IntrinsicForContainer(aReflowState.mRenderingContext,
                                                  cellFrame,
                                                  nsLayoutUtils::MIN_ISIZE);
         } else if (styleISize->GetUnit() == eStyleUnit_Percent) {

@@ -157,7 +157,7 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
                                     aDesiredSize.mBoundingMetrics);
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
   }
-  FinalizeReflow(aReflowState.rendContext->GetDrawTarget(), aDesiredSize);
+  FinalizeReflow(aReflowState.mRenderingContext->GetDrawTarget(), aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
 

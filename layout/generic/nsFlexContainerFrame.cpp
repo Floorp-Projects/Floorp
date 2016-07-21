@@ -1568,7 +1568,7 @@ nsFlexContainerFrame::
     if (aAxisTracker.IsMainAxisHorizontal()) {
       if (minSizeNeedsToMeasureContent) {
         nscoord frameMinISize =
-          aFlexItem.Frame()->GetMinISize(aItemReflowState.rendContext);
+          aFlexItem.Frame()->GetMinISize(aItemReflowState.mRenderingContext);
         resolvedMinSize = std::min(resolvedMinSize, frameMinISize);
       }
       NS_ASSERTION(!flexBasisNeedsToMeasureContent,

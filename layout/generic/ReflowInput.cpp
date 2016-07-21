@@ -155,7 +155,7 @@ SizeComputationInput::SizeComputationInput(nsIFrame *aFrame,
                                    WritingMode aContainingBlockWritingMode,
                                    nscoord aContainingBlockISize)
   : mFrame(aFrame)
-  , rendContext(aRenderingContext)
+  , mRenderingContext(aRenderingContext)
   , mWritingMode(aFrame->GetWritingMode())
 {
   MOZ_ASSERT(!aFrame->IsFlexOrGridItem(),
@@ -180,7 +180,7 @@ ReflowInput::ReflowInput(
                      const LogicalSize&       aAvailableSpace,
                      const LogicalSize*       aContainingBlockSize,
                      uint32_t                 aFlags)
-  : SizeComputationInput(aFrame, aParentReflowState.rendContext)
+  : SizeComputationInput(aFrame, aParentReflowState.mRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
@@ -256,7 +256,7 @@ SizeComputationInput::ComputeISizeValue(nscoord aContainingBlockISize,
                                     nscoord aBoxSizingToMarginEdge,
                                     const nsStyleCoord& aCoord) const
 {
-  return nsLayoutUtils::ComputeISizeValue(rendContext, mFrame,
+  return nsLayoutUtils::ComputeISizeValue(mRenderingContext, mFrame,
                                           aContainingBlockISize,
                                           aContentEdgeToBoxSizing,
                                           aBoxSizingToMarginEdge,
@@ -1623,7 +1623,7 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     AutoMaybeDisableFontInflation an(mFrame);
 
     computedSize =
-      mFrame->ComputeSize(rendContext, wm, cbSize.ConvertTo(wm, cbwm),
+      mFrame->ComputeSize(mRenderingContext, wm, cbSize.ConvertTo(wm, cbwm),
                          cbSize.ConvertTo(wm, cbwm).ISize(wm), // XXX or AvailableISize()?
                          ComputedLogicalMargin().Size(wm) +
                            ComputedLogicalOffsets().Size(wm),
@@ -2366,7 +2366,7 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       }
 
       LogicalSize size =
-        mFrame->ComputeSize(rendContext, wm, cbSize, AvailableISize(),
+        mFrame->ComputeSize(mRenderingContext, wm, cbSize, AvailableISize(),
                            ComputedLogicalMargin().Size(wm),
                            ComputedLogicalBorderPadding().Size(wm) -
                              ComputedLogicalPadding().Size(wm),
