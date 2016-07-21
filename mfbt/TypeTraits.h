@@ -98,9 +98,7 @@ template<> struct IsIntegralHelper<long long>          : TrueType {};
 template<> struct IsIntegralHelper<unsigned long long> : TrueType {};
 template<> struct IsIntegralHelper<bool>               : TrueType {};
 template<> struct IsIntegralHelper<wchar_t>            : TrueType {};
-#ifdef MOZ_CHAR16_IS_NOT_WCHAR
 template<> struct IsIntegralHelper<char16_t>           : TrueType {};
-#endif
 
 } /* namespace detail */
 
@@ -112,9 +110,6 @@ template<> struct IsIntegralHelper<char16_t>           : TrueType {};
  * mozilla::IsIntegral<const long>::value is true;
  * mozilla::IsIntegral<int*>::value is false;
  * mozilla::IsIntegral<double>::value is false;
- *
- * Note that the behavior of IsIntegral on char16_t and char32_t is
- * unspecified.
  */
 template<typename T>
 struct IsIntegral : detail::IsIntegralHelper<typename RemoveCV<T>::Type>
@@ -444,9 +439,7 @@ template<> struct IsPod<bool>               : TrueType {};
 template<> struct IsPod<float>              : TrueType {};
 template<> struct IsPod<double>             : TrueType {};
 template<> struct IsPod<wchar_t>            : TrueType {};
-#ifdef MOZ_CHAR16_IS_NOT_WCHAR
 template<> struct IsPod<char16_t>           : TrueType {};
-#endif
 template<typename T> struct IsPod<T*>       : TrueType {};
 
 namespace detail {

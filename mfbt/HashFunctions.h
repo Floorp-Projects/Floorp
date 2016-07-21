@@ -10,7 +10,7 @@
  * This file exports functions for hashing data down to a 32-bit value,
  * including:
  *
- *  - HashString    Hash a char* or uint16_t/wchar_t* of known or unknown
+ *  - HashString    Hash a char* or char16_t/wchar_t* of known or unknown
  *                  length.
  *
  *  - HashBytes     Hash a byte array of known length.
@@ -260,19 +260,6 @@ HashString(const unsigned char* aStr, size_t aLength)
 }
 
 MOZ_MUST_USE inline uint32_t
-HashString(const uint16_t* aStr)
-{
-  return detail::HashUntilZero(aStr);
-}
-
-MOZ_MUST_USE inline uint32_t
-HashString(const uint16_t* aStr, size_t aLength)
-{
-  return detail::HashKnownLength(aStr, aLength);
-}
-
-#ifdef MOZ_CHAR16_IS_NOT_WCHAR
-MOZ_MUST_USE inline uint32_t
 HashString(const char16_t* aStr)
 {
   return detail::HashUntilZero(aStr);
@@ -283,10 +270,9 @@ HashString(const char16_t* aStr, size_t aLength)
 {
   return detail::HashKnownLength(aStr, aLength);
 }
-#endif
 
 /*
- * On Windows, wchar_t (char16_t) is not the same as uint16_t, even though it's
+ * On Windows, wchar_t is not the same as char16_t, even though it's
  * the same width!
  */
 #ifdef WIN32
