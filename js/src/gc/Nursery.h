@@ -119,22 +119,7 @@ class Nursery
     static const size_t Alignment = gc::ChunkSize;
     static const size_t ChunkShift = gc::ChunkShift;
 
-    explicit Nursery(JSRuntime* rt)
-      : runtime_(rt),
-        position_(0),
-        currentStart_(0),
-        currentEnd_(0),
-        heapStart_(0),
-        heapEnd_(0),
-        currentChunk_(0),
-        numActiveChunks_(0),
-        numNurseryChunks_(0),
-        previousPromotionRate_(0),
-        profileThreshold_(0),
-        enableProfiling_(false),
-        minorGcCount_(0),
-        freeMallocedBuffersTask(nullptr)
-    {}
+    explicit Nursery(JSRuntime* rt);
     ~Nursery();
 
     MOZ_MUST_USE bool init(uint32_t maxNurseryBytes);
@@ -349,6 +334,16 @@ class Nursery
      */
     using CellsWithUniqueIdSet = HashSet<gc::Cell*, PointerHasher<gc::Cell*, 3>, SystemAllocPolicy>;
     CellsWithUniqueIdSet cellsWithUid_;
+
+#ifdef JS_GC_ZEAL
+    struct Canary
+    {
+        uintptr_t magicValue;
+        Canary* next;
+    };
+
+    Canary* lastCanary_;
+#endif
 
     /* The maximum number of bytes allowed to reside in nursery buffers. */
     static const size_t MaxNurseryBufferSize = 1024;
