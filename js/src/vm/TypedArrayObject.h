@@ -31,8 +31,6 @@ typedef struct JSProperty JSProperty;
 
 namespace js {
 
-enum class TypedArrayLength { Fixed, Dynamic };
-
 /*
  * TypedArrayObject
  *
