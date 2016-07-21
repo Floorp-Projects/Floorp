@@ -6,10 +6,6 @@
 
 #include "InProcessCompositorSession.h"
 
-// so we can cast an APZCTreeManager to an IAPZCTreeManager
-#include "mozilla/layers/APZCTreeManager.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-
 namespace mozilla {
 namespace layers {
 
@@ -54,7 +50,7 @@ InProcessCompositorSession::SetContentController(GeckoContentController* aContro
   mCompositorBridgeParent->SetControllerForLayerTree(mRootLayerTreeId, aController);
 }
 
-already_AddRefed<IAPZCTreeManager>
+already_AddRefed<APZCTreeManager>
 InProcessCompositorSession::GetAPZCTreeManager() const
 {
   return mCompositorBridgeParent->GetAPZCTreeManager(mRootLayerTreeId);

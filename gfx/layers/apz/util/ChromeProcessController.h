@@ -21,7 +21,7 @@ namespace mozilla {
 
 namespace layers {
 
-class IAPZCTreeManager;
+class APZCTreeManager;
 class APZEventState;
 
 // A ChromeProcessController is attached to the root of a compositor's layer
@@ -33,7 +33,7 @@ protected:
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
-  explicit ChromeProcessController(nsIWidget* aWidget, APZEventState* aAPZEventState, IAPZCTreeManager* aAPZCTreeManager);
+  explicit ChromeProcessController(nsIWidget* aWidget, APZEventState* aAPZEventState, APZCTreeManager* aAPZCTreeManager);
   ~ChromeProcessController();
   virtual void Destroy() override;
 
@@ -53,7 +53,7 @@ public:
 private:
   nsCOMPtr<nsIWidget> mWidget;
   RefPtr<APZEventState> mAPZEventState;
-  RefPtr<IAPZCTreeManager> mAPZCTreeManager;
+  RefPtr<APZCTreeManager> mAPZCTreeManager;
   MessageLoop* mUILoop;
 
   void InitializeRoot();

@@ -58,9 +58,9 @@ using mozilla::Unused;
 #include "Layers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
@@ -472,7 +472,7 @@ public:
             return;
         }
 
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
         RefPtr<CompositorBridgeParent> compositor = mWindow->GetCompositorBridgeParent();
         if (controller && compositor) {
             // TODO: Pass in correct values for presShellId and viewId.
@@ -491,7 +491,7 @@ public:
             return;
         }
 
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
         if (controller) {
             controller->AdjustScrollForSurfaceShift(
                 ScreenPoint(aX, aY));
@@ -502,10 +502,7 @@ public:
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
-        if (controller) {
-            controller->SetLongTapEnabled(aIsLongpressEnabled);
-        }
+        APZCTreeManager::SetLongTapEnabled(aIsLongpressEnabled);
     }
 
     bool HandleScrollEvent(int64_t aTime, int32_t aMetaState,
@@ -520,7 +517,7 @@ public:
             return false;
         }
 
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
         if (!controller) {
             return false;
         }
@@ -620,7 +617,7 @@ public:
             return false;
         }
 
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
         if (!controller) {
             return false;
         }
@@ -713,7 +710,7 @@ public:
             return false;
         }
 
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
         if (!controller) {
             return false;
         }
@@ -835,7 +832,7 @@ public:
 
     void HandleMotionEventVelocity(int64_t aTime, float aSpeedY)
     {
-        RefPtr<IAPZCTreeManager> controller = mWindow->mAPZC;
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
         if (controller) {
             controller->ProcessTouchVelocity((uint32_t)aTime, aSpeedY);
         }
