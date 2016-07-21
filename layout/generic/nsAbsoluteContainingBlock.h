@@ -16,7 +16,6 @@
 #include "mozilla/TypedEnumBits.h"
 
 class nsContainerFrame;
-struct nsHTMLReflowState;
 class nsPresContext;
 
 /**

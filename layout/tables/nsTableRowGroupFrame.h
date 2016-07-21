@@ -18,6 +18,8 @@
 class nsTableRowFrame;
 
 struct nsRowGroupReflowState {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
   const nsHTMLReflowState& reflowState;  // Our reflow state
 
   nsTableFrame* tableFrame;

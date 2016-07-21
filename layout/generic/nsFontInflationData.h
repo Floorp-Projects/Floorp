@@ -10,10 +10,10 @@
 
 #include "nsContainerFrame.h"
 
-struct nsHTMLReflowState;
-
 class nsFontInflationData
 {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
 public:
 
   static nsFontInflationData* FindFontInflationDataFor(const nsIFrame *aFrame);

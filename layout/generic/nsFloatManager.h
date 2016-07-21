@@ -18,8 +18,10 @@
 
 class nsIPresShell;
 class nsIFrame;
-struct nsHTMLReflowState;
 class nsPresContext;
+namespace mozilla {
+struct nsHTMLReflowState;
+} // namespace mozilla
 
 /**
  * The available space for content not occupied by floats is divided
@@ -371,6 +373,8 @@ private:
  * manager in the reflow state when the object goes out of scope.
  */
 class nsAutoFloatManager {
+  using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
 public:
   explicit nsAutoFloatManager(nsHTMLReflowState& aReflowState)
     : mReflowState(aReflowState),

@@ -16,11 +16,15 @@
 #include "nsCoord.h"
 
 class nsRenderingContext;
+namespace mozilla {
 struct nsHTMLReflowState;
+} // namespace mozilla
 
 class nsITableLayoutStrategy
 {
 public:
+    using nsHTMLReflowState = mozilla::nsHTMLReflowState;
+
     virtual ~nsITableLayoutStrategy() {}
 
     /** Implement nsIFrame::GetMinISize for the table */
