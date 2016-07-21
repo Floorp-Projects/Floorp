@@ -15,7 +15,7 @@
 #include "mozilla/Logging.h"
 
 #include "nsIPresShell.h"
-#include "nsHTMLReflowState.h"
+#include "mozilla/ReflowInput.h"
 #include "nsHTMLParts.h"
 #include "nsISelectionDisplay.h"
 
