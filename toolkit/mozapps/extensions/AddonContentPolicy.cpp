@@ -33,9 +33,9 @@ using namespace mozilla;
  */
 
 #define VERSIONED_JS_BLOCKED_MESSAGE \
-  MOZ_UTF16("Versioned JavaScript is a non-standard, deprecated extension, and is ") \
-  MOZ_UTF16("not supported in WebExtension code. For alternatives, please see: ") \
-  MOZ_UTF16("https://developer.mozilla.org/Add-ons/WebExtensions/Tips")
+  u"Versioned JavaScript is a non-standard, deprecated extension, and is " \
+  u"not supported in WebExtension code. For alternatives, please see: " \
+  u"https://developer.mozilla.org/Add-ons/WebExtensions/Tips"
 
 AddonContentPolicy::AddonContentPolicy()
 {
@@ -238,7 +238,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
         // The CSP parser silently converts 'self' keywords to the origin
         // URL, so we need to reconstruct the URL to see if it was present.
         if (!mFoundSelf) {
-          nsAutoString url(MOZ_UTF16("moz-extension://"));
+          nsAutoString url(u"moz-extension://");
           url.Append(host);
 
           mFoundSelf = url.Equals(mURL);
@@ -409,7 +409,7 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
   // There is no add-on-specific behavior in the CSP code, beyond the ability
   // for add-ons to specify a custom policy, but the parser requires a valid
   // origin in order to operate correctly.
-  nsAutoString url(MOZ_UTF16("moz-extension://"));
+  nsAutoString url(u"moz-extension://");
   {
     nsCOMPtr<nsIUUIDGenerator> uuidgen = services::GetUUIDGenerator();
     NS_ENSURE_TRUE(uuidgen, NS_ERROR_FAILURE);

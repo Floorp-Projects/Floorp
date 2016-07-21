@@ -10128,13 +10128,13 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   if (k1) {
     k1->GetFrameName(n1);
   } else {
-    n1.AssignLiteral(MOZ_UTF16("(null)"));
+    n1.AssignLiteral(u"(null)");
   }
 
   if (k2) {
     k2->GetFrameName(n2);
   } else {
-    n2.AssignLiteral(MOZ_UTF16("(null)"));
+    n2.AssignLiteral(u"(null)");
   }
 
   printf("verifyreflow: %s %p != %s %p  %s\n",

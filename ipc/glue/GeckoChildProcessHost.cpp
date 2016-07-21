@@ -688,10 +688,10 @@ AddContentSandboxAllowedFiles(int32_t aSandboxLevel,
 
   // Convert network share path to format for sandbox policy.
   if (Substring(binDirPath, 0, 2).Equals(L"\\\\")) {
-    binDirPath.InsertLiteral(MOZ_UTF16("??\\UNC"), 1);
+    binDirPath.InsertLiteral(u"??\\UNC", 1);
   }
 
-  binDirPath.AppendLiteral(MOZ_UTF16("\\*"));
+  binDirPath.AppendLiteral(u"\\*");
 
   aAllowedFilesRead.push_back(std::wstring(binDirPath.get()));
 }
