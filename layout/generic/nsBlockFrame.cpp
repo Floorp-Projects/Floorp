@@ -968,48 +968,48 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
     // First, find the reflow state for the outermost frame for this
     // content, except for fieldsets where the inner anonymous frame has
     // the correct padding area with the legend taken into account.
-    const ReflowInput* aLastRS = &aReflowInput;
-    const ReflowInput* lastButOneRS = &aReflowInput;
-    while (aLastRS->mParentReflowInput &&
-           aLastRS->mParentReflowInput->mFrame->GetContent() == frame->GetContent() &&
-           aLastRS->mParentReflowInput->mFrame->GetType() != nsGkAtoms::fieldSetFrame) {
-      lastButOneRS = aLastRS;
-      aLastRS = aLastRS->mParentReflowInput;
+    const ReflowInput* aLastRI = &aReflowInput;
+    const ReflowInput* lastButOneRI = &aReflowInput;
+    while (aLastRI->mParentReflowInput &&
+           aLastRI->mParentReflowInput->mFrame->GetContent() == frame->GetContent() &&
+           aLastRI->mParentReflowInput->mFrame->GetType() != nsGkAtoms::fieldSetFrame) {
+      lastButOneRI = aLastRI;
+      aLastRI = aLastRI->mParentReflowInput;
     }
-    if (aLastRS != &aReflowInput) {
+    if (aLastRI != &aReflowInput) {
       // Scrollbars need to be specifically excluded, if present, because they are outside the
       // padding-edge. We need better APIs for getting the various boxes from a frame.
-      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRS->mFrame);
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(aLastRI->mFrame);
       nsMargin scrollbars(0,0,0,0);
       if (scrollFrame) {
         scrollbars =
-          scrollFrame->GetDesiredScrollbarSizes(aLastRS->mFrame->PresContext(),
-                                                aLastRS->mRenderingContext);
-        if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
+          scrollFrame->GetDesiredScrollbarSizes(aLastRI->mFrame->PresContext(),
+                                                aLastRI->mRenderingContext);
+        if (!lastButOneRI->mFlags.mAssumingHScrollbar) {
           scrollbars.top = scrollbars.bottom = 0;
         }
-        if (!lastButOneRS->mFlags.mAssumingVScrollbar) {
+        if (!lastButOneRI->mFlags.mAssumingVScrollbar) {
           scrollbars.left = scrollbars.right = 0;
         }
       }
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available, converted to our writing mode
-      WritingMode lastWM = aLastRS->GetWritingMode();
-      LogicalSize lastRSSize =
+      WritingMode lastWM = aLastRI->GetWritingMode();
+      LogicalSize lastRISize =
         LogicalSize(lastWM,
-                    aLastRS->ComputedISize(),
-                    aLastRS->ComputedBSize()).ConvertTo(aWM, lastWM);
-      LogicalMargin lastRSPadding =
-        aLastRS->ComputedLogicalPadding().ConvertTo(aWM, lastWM);
+                    aLastRI->ComputedISize(),
+                    aLastRI->ComputedBSize()).ConvertTo(aWM, lastWM);
+      LogicalMargin lastRIPadding =
+        aLastRI->ComputedLogicalPadding().ConvertTo(aWM, lastWM);
       LogicalMargin logicalScrollbars(aWM, scrollbars);
-      if (lastRSSize.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
-        cbSize.ISize(aWM) = std::max(0, lastRSSize.ISize(aWM) +
-                                        lastRSPadding.IStartEnd(aWM) -
+      if (lastRISize.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
+        cbSize.ISize(aWM) = std::max(0, lastRISize.ISize(aWM) +
+                                        lastRIPadding.IStartEnd(aWM) -
                                         logicalScrollbars.IStartEnd(aWM));
       }
-      if (lastRSSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
-        cbSize.BSize(aWM) = std::max(0, lastRSSize.BSize(aWM) +
-                                        lastRSPadding.BStartEnd(aWM) -
+      if (lastRISize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
+        cbSize.BSize(aWM) = std::max(0, lastRISize.BSize(aWM) +
+                                        lastRIPadding.BStartEnd(aWM) -
                                         logicalScrollbars.BStartEnd(aWM));
       }
     }
@@ -3355,8 +3355,8 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
     // construct the html reflow state for the block. ReflowBlock
     // will initialize it.
-    Maybe<ReflowInput> blockHtmlRS;
-    blockHtmlRS.emplace(
+    Maybe<ReflowInput> blockHtmlRI;
+    blockHtmlRI.emplace(
       aState.mPresContext, aState.mReflowInput, frame,
       availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
 
@@ -3383,16 +3383,16 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       }
 
       if (mayNeedRetry) {
-        blockHtmlRS->mDiscoveredClearance = &clearanceFrame;
+        blockHtmlRI->mDiscoveredClearance = &clearanceFrame;
       } else if (!applyBStartMargin) {
-        blockHtmlRS->mDiscoveredClearance =
+        blockHtmlRI->mDiscoveredClearance =
           aState.mReflowInput.mDiscoveredClearance;
       }
 
       frameReflowStatus = NS_FRAME_COMPLETE;
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
                       clearance, aState.IsAdjacentWithTop(),
-                      aLine.get(), *blockHtmlRS, frameReflowStatus, aState);
+                      aLine.get(), *blockHtmlRI, frameReflowStatus, aState);
 
       // Now the block has a height.  Using that height, get the
       // available space again and call ComputeBlockAvailSpace again.
@@ -3479,8 +3479,8 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
         clearance = 0;
       }
 
-      blockHtmlRS.reset();
-      blockHtmlRS.emplace(
+      blockHtmlRI.reset();
+      blockHtmlRI.emplace(
         aState.mPresContext, aState.mReflowInput, frame,
         availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
     } while (true);
@@ -3494,7 +3494,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
     aState.mPrevChild = frame;
 
-    if (blockHtmlRS->WillReflowAgainForClearance()) {
+    if (blockHtmlRI->WillReflowAgainForClearance()) {
       // If an ancestor of ours is going to reflow for clearance, we
       // need to avoid calling PlaceBlock, because it unsets dirty bits
       // on the child block (both itself, and through its call to
@@ -3532,7 +3532,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
         !floatAvailableSpace.mHasFloats;
       nsCollapsingMargin collapsedBEndMargin;
       nsOverflowAreas overflowAreas;
-      *aKeepReflowGoing = brc.PlaceBlock(*blockHtmlRS, forceFit, aLine.get(),
+      *aKeepReflowGoing = brc.PlaceBlock(*blockHtmlRI, forceFit, aLine.get(),
                                          collapsedBEndMargin,
                                          overflowAreas,
                                          frameReflowStatus);

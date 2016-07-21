@@ -1671,9 +1671,9 @@ struct nsGridContainerFrame::SharedGridData
 struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
 {
   GridReflowInput(nsGridContainerFrame*    aFrame,
-                  const ReflowInput& aRS)
-    : GridReflowInput(aFrame, *aRS.mRenderingContext, &aRS, aRS.mStylePosition,
-                      aRS.GetWritingMode())
+                  const ReflowInput& aRI)
+    : GridReflowInput(aFrame, *aRI.mRenderingContext, &aRI, aRI.mStylePosition,
+                      aRI.GetWritingMode())
   {}
   GridReflowInput(nsGridContainerFrame* aFrame,
                   nsRenderingContext&   aRC)
@@ -2309,7 +2309,7 @@ SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
 static void
 AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
                  bool aSameSide, nscoord aBaselineAdjust, nscoord aCBSize,
-                 const ReflowInput& aRS, const LogicalSize& aChildSize,
+                 const ReflowInput& aRI, const LogicalSize& aChildSize,
                  LogicalPoint* aPos)
 {
   MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO, "unexpected 'auto' "
@@ -2340,8 +2340,8 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
   // methods? (bug 1209710)
 
   // Get the item's margin corresponding to the container's start/end side.
-  const LogicalMargin margin = aRS.ComputedLogicalMargin();
-  WritingMode wm = aRS.GetWritingMode();
+  const LogicalMargin margin = aRI.ComputedLogicalMargin();
+  WritingMode wm = aRI.GetWritingMode();
   nscoord marginStart, marginEnd;
   if (aAxis == eLogicalAxisBlock) {
     if (MOZ_LIKELY(aSameSide)) {
@@ -2361,7 +2361,7 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
     }
   }
 
-  const auto& styleMargin = aRS.mStyleMargin->mMargin;
+  const auto& styleMargin = aRI.mStyleMargin->mMargin;
   bool hasAutoMarginStart;
   bool hasAutoMarginEnd;
   if (aAxis == eLogicalAxisBlock) {
@@ -2446,7 +2446,7 @@ SameSide(WritingMode aContainerWM, LogicalSide aContainerSide,
 static void
 AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
           uint8_t aAlignSelf, nscoord aCBSize, const WritingMode aCBWM,
-          const ReflowInput& aRS, const LogicalSize& aSize,
+          const ReflowInput& aRI, const LogicalSize& aSize,
           LogicalPoint* aPos)
 {
   auto alignSelf = aAlignSelf;
@@ -2459,7 +2459,7 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
   if (MOZ_LIKELY(alignSelf == NS_STYLE_ALIGN_NORMAL)) {
     alignSelf = NS_STYLE_ALIGN_STRETCH;
   }
-  WritingMode childWM = aRS.GetWritingMode();
+  WritingMode childWM = aRI.GetWritingMode();
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
   // |sameSide| is true if the container's start side in this axis is the same
   // as the child's start side, in the child's parallel axis.
@@ -2474,13 +2474,13 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
   }
   LogicalAxis axis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
   AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide, baselineAdjust,
-                   aCBSize, aRS, aSize, aPos);
+                   aCBSize, aRI, aSize, aPos);
 }
 
 static void
 JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
             uint8_t aJustifySelf, nscoord aCBSize, const WritingMode aCBWM,
-            const ReflowInput& aRS, const LogicalSize& aSize,
+            const ReflowInput& aRI, const LogicalSize& aSize,
             LogicalPoint* aPos)
 {
   auto justifySelf = aJustifySelf;
@@ -2489,7 +2489,7 @@ JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
   if (MOZ_LIKELY(justifySelf == NS_STYLE_ALIGN_NORMAL)) {
     justifySelf = NS_STYLE_ALIGN_STRETCH;
   }
-  WritingMode childWM = aRS.GetWritingMode();
+  WritingMode childWM = aRI.GetWritingMode();
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
   // |sameSide| is true if the container's start side in this axis is the same
   // as the child's start side, in the child's parallel axis.
@@ -2517,7 +2517,7 @@ JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
 
   LogicalAxis axis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
   AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide, baselineAdjust,
-                   aCBSize, aRS, aSize, aPos);
+                   aCBSize, aRI, aSize, aPos);
 }
 
 static uint16_t
@@ -3441,16 +3441,16 @@ MeasuringReflow(nsIFrame*                aChild,
   parent->Properties().Set(
     nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
-  ReflowInput childRS(pc, *rs, aChild, aAvailableSize, nullptr,
+  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, nullptr,
                             ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
                             ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE);
-  ReflowOutput childSize(childRS);
+  ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
-  WritingMode wm = childRS.GetWritingMode();
-  parent->ReflowChild(aChild, pc, childSize, childRS, wm,
+  WritingMode wm = childRI.GetWritingMode();
+  parent->ReflowChild(aChild, pc, childSize, childRI, wm,
                       LogicalPoint(wm), nsSize(), flags, childStatus);
-  parent->FinishReflowChild(aChild, pc, childSize, &childRS, wm,
+  parent->FinishReflowChild(aChild, pc, childSize, &childRI, wm,
                             LogicalPoint(wm), nsSize(), flags);
 #ifdef DEBUG
     parent->Properties().Delete(nsContainerFrame::DebugReflowingWithInfiniteISize());
@@ -4564,8 +4564,8 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowInput& aState) con
 {
   Maybe<nsGridContainerFrame::Fragmentainer> data;
   WritingMode wm = aState.mWM;
-  const ReflowInput* gridRS = aState.mReflowInput;
-  const ReflowInput* cbRS = gridRS->mCBReflowInput;
+  const ReflowInput* gridRI = aState.mReflowInput;
+  const ReflowInput* cbRS = gridRI->mCBReflowInput;
   for ( ; cbRS; cbRS = cbRS->mCBReflowInput) {
     nsIScrollableFrame* sf = do_QueryFrame(cbRS->mFrame);
     if (sf) {
@@ -4579,20 +4579,20 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowInput& aState) con
          PresContext()->IsPaginated()) ||
         frameType == nsGkAtoms::columnSetFrame) {
       data.emplace();
-      data->mIsTopOfPage = gridRS->mFlags.mIsTopOfPage;
+      data->mIsTopOfPage = gridRI->mFlags.mIsTopOfPage;
       data->mToFragmentainerEnd = aState.mFragBStart +
-        gridRS->AvailableBSize() - aState.mBorderPadding.BStart(wm);
+        gridRI->AvailableBSize() - aState.mBorderPadding.BStart(wm);
       const auto numRows = aState.mRows.mSizes.Length();
       data->mCanBreakAtStart =
         numRows > 0 && aState.mRows.mSizes[0].mPosition > 0;
-      nscoord bSize = gridRS->ComputedBSize();
+      nscoord bSize = gridRI->ComputedBSize();
       data->mIsAutoBSize = bSize == NS_AUTOHEIGHT;
       if (data->mIsAutoBSize) {
-        bSize = gridRS->ComputedMinBSize();
+        bSize = gridRI->ComputedMinBSize();
       } else {
         bSize = NS_CSS_MINMAX(bSize,
-                              gridRS->ComputedMinBSize(),
-                              gridRS->ComputedMaxBSize());
+                              gridRI->ComputedMinBSize(),
+                              gridRI->ComputedMaxBSize());
       }
       nscoord gridEnd =
         aState.mRows.GridLineEdge(numRows, GridLineSide::eBeforeGridGap);
@@ -4693,19 +4693,19 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   }
 
   LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
-  ReflowInput childRS(pc, *aState.mReflowInput, aChild, childCBSize,
+  ReflowInput childRI(pc, *aState.mReflowInput, aChild, childCBSize,
                             &percentBasis);
-  childRS.mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
+  childRI.mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
 
   // If the child is stretching in its block axis, and we might be fragmenting
   // it in that axis, then setup a frame property to tell
   // nsBlockFrame::ComputeFinalSize the size.
   if (isConstrainedBSize && !wm.IsOrthogonalTo(childWM)) {
     bool stretch = false;
-    if (!childRS.mStyleMargin->HasBlockAxisAuto(childWM) &&
-        childRS.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
+    if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
+        childRI.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
       auto blockAxisAlignment =
-        childRS.mStylePosition->ComputedAlignSelf(StyleContext());
+        childRI.mStylePosition->ComputedAlignSelf(StyleContext());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
           blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
         stretch = true;
@@ -4721,9 +4721,9 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   // We need the width of the child before we can correctly convert
   // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
   // aContainerSize, and then pass the correct position to FinishReflowChild.
-  ReflowOutput childSize(childRS);
+  ReflowOutput childSize(childRI);
   const nsSize dummyContainerSize;
-  ReflowChild(aChild, pc, childSize, childRS, childWM, LogicalPoint(childWM),
+  ReflowChild(aChild, pc, childSize, childRI, childWM, LogicalPoint(childWM),
               dummyContainerSize, 0, aStatus);
   LogicalPoint childPos =
     cb.Origin(wm).ConvertTo(childWM, wm,
@@ -4732,29 +4732,29 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   if (MOZ_LIKELY(isGridItem)) {
     LogicalSize size = childSize.Size(childWM); // from the ReflowChild()
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      auto align = childRS.mStylePosition->ComputedAlignSelf(containerSC);
+      auto align = childRI.mStylePosition->ComputedAlignSelf(containerSC);
       auto state = aGridItemInfo->mState[eLogicalAxisBlock];
       if (state & ItemState::eContentBaseline) {
         align = (state & ItemState::eFirstBaseline) ? NS_STYLE_ALIGN_SELF_START
                                                     : NS_STYLE_ALIGN_SELF_END;
       }
       nscoord cbsz = cb.BSize(wm) - consumedGridAreaBSize;
-      AlignSelf(*aGridItemInfo, align, cbsz, wm, childRS, size, &childPos);
+      AlignSelf(*aGridItemInfo, align, cbsz, wm, childRI, size, &childPos);
     }
-    auto justify = childRS.mStylePosition->ComputedJustifySelf(containerSC);
+    auto justify = childRI.mStylePosition->ComputedJustifySelf(containerSC);
     auto state = aGridItemInfo->mState[eLogicalAxisInline];
     if (state & ItemState::eContentBaseline) {
       justify = (state & ItemState::eFirstBaseline) ? NS_STYLE_JUSTIFY_SELF_START
                                                     : NS_STYLE_JUSTIFY_SELF_END;
     }
     nscoord cbsz = cb.ISize(wm);
-    JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRS, size, &childPos);
+    JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRI, size, &childPos);
   } else {
     // Put a placeholder at the padding edge, in case an ancestor is its CB.
     childPos -= padStart;
   }
-  childRS.ApplyRelativePositioning(&childPos, aContainerSize);
-  FinishReflowChild(aChild, pc, childSize, &childRS, childWM, childPos,
+  childRI.ApplyRelativePositioning(&childPos, aContainerSize);
+  FinishReflowChild(aChild, pc, childSize, &childRI, childWM, childPos,
                     aContainerSize, 0);
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, aChild);
 }
