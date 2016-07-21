@@ -2620,6 +2620,12 @@ public:
 
     class Window;
 
+    static const int32_t LOAD_DEFAULT = 0;
+
+    static const int32_t LOAD_NEW_TAB = 1;
+
+    static const int32_t LOAD_SWITCH_TAB = 2;
+
     static const bool isMultithreaded = false;
 
 };
@@ -2667,6 +2673,21 @@ public:
         static constexpr char name[] = "disposeNative";
         static constexpr char signature[] =
                 "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct LoadUri_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                int32_t> Args;
+        static constexpr char name[] = "loadUri";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;I)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
