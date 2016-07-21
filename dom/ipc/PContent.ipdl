@@ -694,7 +694,8 @@ parent:
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
                  StructuredCloneData initialData,
-                 FontFamilyListEntry[] fontFamilies /* used on MacOSX only */);
+                 FontFamilyListEntry[] fontFamilies /* used on MacOSX only */,
+                 OptionalURIParams userContentSheetURL);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
