@@ -1452,20 +1452,43 @@ ContentEventHandler::GetNodePositionHavingFlatText(nsINode* aNode,
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetFirstFrameHavingFlatTextInRange(nsRange* aRange)
 {
-  // used to iterate over all contents and their frames
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  iter->Init(aRange);
+  NodePosition nodePosition;
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
+  for (iter->Init(aRange); !iter->IsDone(); iter->Next()) {
+    nsINode* node = iter->GetCurrentNode();
+    if (NS_WARN_IF(!node)) {
+      break;
+    }
 
-  // get the starting frame
-  NodePosition nodePosition(iter->GetCurrentNode(), aRange->StartOffset());
-  if (!nodePosition.mNode) {
-    nodePosition =
-      GetNodePositionHavingFlatText(aRange->GetStartParent(),
-                                    nodePosition.mOffset);
-    if (NS_WARN_IF(!nodePosition.IsValid())) {
-      return FrameAndNodeOffset();
+    if (!node->IsContent()) {
+      continue;
+    }
+
+    if (node->IsNodeOfType(nsINode::eTEXT)) {
+      // If the range starts at the end of a text node, we need to find
+      // next node which causes text.
+      int32_t offsetInNode =
+        node == aRange->GetStartParent() ? aRange->StartOffset() : 0;
+      if (static_cast<uint32_t>(offsetInNode) < node->Length()) {
+        nodePosition.mNode = node;
+        nodePosition.mOffset = offsetInNode;
+        break;
+      }
+      continue;
+    }
+
+    // If the element node causes a line break before it, it's the first
+    // node causing text.
+    if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
+      nodePosition.mNode = node;
+      nodePosition.mOffset = 0;
     }
   }
+
+  if (!nodePosition.IsValid()) {
+    return FrameAndNodeOffset();
+  }
+
   nsIFrame* firstFrame = nullptr;
   GetFrameForTextRect(nodePosition.mNode, nodePosition.mOffset,
                       true, &firstFrame);
@@ -1574,10 +1597,14 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
     // TODO: If the range is collapsed, that means offset reaches to the end
     //       of the contents.  We need to do something here.
 
-    // get the starting frame
+    // Get the first frame which causes some text after the offset.
     FrameAndNodeOffset firstFrame = GetFirstFrameHavingFlatTextInRange(range);
-    if (NS_WARN_IF(!firstFrame.IsValid())) {
-      return NS_ERROR_FAILURE;
+
+    // If GetFirstFrameHavingFlatTextInRange() does not return valid frame,
+    // that means that there is no remaining content which causes text.
+    // So, in such case, we must have reached the end of the contents.
+    if (!firstFrame.IsValid()) {
+      break;
     }
 
     nsIContent* firstContent = firstFrame.mFrame->GetContent();
@@ -1621,8 +1648,6 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
       rv = firstFrame->GetCharacterRectsInRange(firstFrame.mStartOffsetInNode,
                                                 kEndOffset - offset, charRects);
       if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(charRects.IsEmpty())) {
-        // XXX: If the node isn't a text node and does not cause a line break,
-        //      we need to recompute with new range, but how?
         return rv;
       }
       // Assign the characters whose rects are computed by the call of
