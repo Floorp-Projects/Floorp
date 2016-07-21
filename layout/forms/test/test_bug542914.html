@@ -80,9 +80,9 @@ function runTests(callback, type) {
   d.focus();
   is(d.value, "new", "Dynamic control's value can be set before initialization");
   sendChar("x");
-  is(d.value, "xnew", "Dynamic control accepts keyboard input without explicit initialization");
+  is(d.value, "newx", "Dynamic control accepts keyboard input without explicit initialization");
   $("display").removeChild(d);
-  is(d.value, "xnew", "Dynamic control retains value after being removed from the document");
+  is(d.value, "newx", "Dynamic control retains value after being removed from the document");
 
   callback();
 }

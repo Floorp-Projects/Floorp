@@ -18,13 +18,13 @@
             doIs(t.value, "Test", "Shouldn't have lost our initial value");
             t.focus();
             sendString("Foo");
-            doIs(t.value, "FooTest", "Typing should work");
+            doIs(t.value, "TestFoo", "Typing should work");
             window.parent.postMessage("c", "*");
           } else {
             doIs(evt.data, "continue", "Unexpected message");
-            doIs(t.value, "FooTest", "Shouldn't have lost our typed value");
+            doIs(t.value, "TestFoo", "Shouldn't have lost our typed value");
             sendString("Bar");
-            doIs(t.value, "BarFooTest", "Typing should still work");
+            doIs(t.value, "TestFooBar", "Typing should still work");
             window.parent.postMessage("f", "*");
           }
         },
