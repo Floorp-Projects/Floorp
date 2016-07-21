@@ -671,7 +671,7 @@ HTMLTextAreaElement::GetSelectionStart(ErrorResult& aError)
   nsresult rv = GetSelectionRange(&selStart, &selEnd);
 
   if (NS_FAILED(rv) && mState.IsSelectionCached()) {
-    return mState.GetSelectionProperties().mStart;
+    return mState.GetSelectionProperties().GetStart();
   }
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
@@ -691,7 +691,7 @@ void
 HTMLTextAreaElement::SetSelectionStart(uint32_t aSelectionStart, ErrorResult& aError)
 {
   if (mState.IsSelectionCached()) {
-    mState.GetSelectionProperties().mStart = aSelectionStart;
+    mState.GetSelectionProperties().SetStart(aSelectionStart);
     return;
   }
 
@@ -734,7 +734,7 @@ HTMLTextAreaElement::GetSelectionEnd(ErrorResult& aError)
   nsresult rv = GetSelectionRange(&selStart, &selEnd);
 
   if (NS_FAILED(rv) && mState.IsSelectionCached()) {
-    return mState.GetSelectionProperties().mEnd;
+    return mState.GetSelectionProperties().GetEnd();
   }
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
@@ -754,7 +754,7 @@ void
 HTMLTextAreaElement::SetSelectionEnd(uint32_t aSelectionEnd, ErrorResult& aError)
 {
   if (mState.IsSelectionCached()) {
-    mState.GetSelectionProperties().mEnd = aSelectionEnd;
+    mState.GetSelectionProperties().SetEnd(aSelectionEnd);
     return;
   }
 
@@ -831,7 +831,7 @@ HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& a
 
   if (NS_FAILED(rv)) {
     if (mState.IsSelectionCached()) {
-      DirectionToName(mState.GetSelectionProperties().mDirection, aDirection);
+      DirectionToName(mState.GetSelectionProperties().GetDirection(), aDirection);
       return;
     }
     aError.Throw(rv);
@@ -856,7 +856,7 @@ HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection, ErrorRes
     } else if (aDirection.EqualsLiteral("backward")) {
       dir = nsITextControlFrame::eBackward;
     }
-    mState.GetSelectionProperties().mDirection = dir;
+    mState.GetSelectionProperties().SetDirection(dir);
     return;
   }
 
@@ -923,8 +923,8 @@ HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
   aRv = GetSelectionRange(&start, &end);
   if (aRv.Failed()) {
     if (mState.IsSelectionCached()) {
-      start = mState.GetSelectionProperties().mStart;
-      end = mState.GetSelectionProperties().mEnd;
+      start = mState.GetSelectionProperties().GetStart();
+      end = mState.GetSelectionProperties().GetEnd();
       aRv = NS_OK;
     }
   }
@@ -961,8 +961,8 @@ HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
     aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
     if (aRv.Failed()) {
       if (mState.IsSelectionCached()) {
-        aSelectionStart = mState.GetSelectionProperties().mStart;
-        aSelectionEnd = mState.GetSelectionProperties().mEnd;
+        aSelectionStart = mState.GetSelectionProperties().GetStart();
+        aSelectionEnd = mState.GetSelectionProperties().GetEnd();
         aRv = NS_OK;
       }
     }
