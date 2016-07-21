@@ -239,5 +239,27 @@ int main(void)
   MOZ_RELEASE_ASSERT(iter2.AdvanceAcrossSegments(bl2, kBorrowSize - 5));
   MOZ_RELEASE_ASSERT(iter1.Data() == iter2.Data());
 
+  // Extracting.
+
+  const size_t kExtractStart = 8;
+  const size_t kExtractSize = 24;
+  const size_t kExtractOverSize = 1000;
+
+  iter = bl.Iter();
+  iter.Advance(bl, kExtractStart);
+  bl2 = bl.Extract(iter, kExtractSize, &success);
+  MOZ_RELEASE_ASSERT(success);
+  MOZ_RELEASE_ASSERT(bl2.Size() == kExtractSize);
+
+  BufferList bl3 = bl.Extract(iter, kExtractOverSize, &success);
+  MOZ_RELEASE_ASSERT(!success);
+
+  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl, kSmallWrite * 3 - kExtractSize - kExtractStart));
+  MOZ_RELEASE_ASSERT(iter.Done());
+
+  iter = bl2.Iter();
+  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl2, kExtractSize));
+  MOZ_RELEASE_ASSERT(iter.Done());
+
   return 0;
 }

@@ -425,6 +425,21 @@ bool Pickle::FlattenBytes(PickleIterator* iter, const char** data, uint32_t leng
   return iter->iter_.AdvanceAcrossSegments(buffers_, AlignInt(length) - length);
 }
 
+bool Pickle::ExtractBuffers(PickleIterator* iter, size_t length, BufferList* buffers) const
+{
+  if (AlignInt(length) < length) {
+    return false;
+  }
+
+  bool success;
+  *buffers = const_cast<BufferList*>(&buffers_)->Extract(iter->iter_, length, &success);
+  if (!success) {
+    return false;
+  }
+
+  return iter->iter_.AdvanceAcrossSegments(buffers_, AlignInt(length) - length);
+}
+
 bool Pickle::ReadBytesInto(PickleIterator* iter, void* data, uint32_t length) const {
   if (AlignInt(length) < length) {
     return false;
