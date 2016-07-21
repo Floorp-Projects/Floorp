@@ -7398,7 +7398,7 @@ nsBlockFrame::ISizeToClearPastFloats(const nsBlockReflowState& aState,
 {
   nscoord inlineStartOffset, inlineEndOffset;
   WritingMode wm = aState.mReflowState.GetWritingMode();
-  nsCSSOffsetState offsetState(aFrame, aState.mReflowState.rendContext,
+  SizeComputationInput offsetState(aFrame, aState.mReflowState.rendContext,
                                wm, aState.mContentArea.ISize(wm));
 
   ReplacedElementISizeToClear result;
@@ -7412,7 +7412,7 @@ nsBlockFrame::ISizeToClearPastFloats(const nsBlockReflowState& aState,
   // want to displace if the width won't compute to a value small enough
   // to fit.
   // All we really need here is the result of ComputeSize, and we
-  // could *almost* get that from an nsCSSOffsetState, except for the
+  // could *almost* get that from an SizeComputationInput, except for the
   // last argument.
   WritingMode frWM = aFrame->GetWritingMode();
   LogicalSize availSpace = LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE).
