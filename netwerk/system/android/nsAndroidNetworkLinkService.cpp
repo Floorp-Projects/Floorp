@@ -10,8 +10,6 @@
 
 #include "AndroidBridge.h"
 
-namespace java = mozilla::java;
-
 NS_IMPL_ISUPPORTS(nsAndroidNetworkLinkService,
                   nsINetworkLinkService)
 
@@ -33,7 +31,7 @@ nsAndroidNetworkLinkService::GetIsLinkUp(bool *aIsUp)
     return NS_OK;
   }
 
-  *aIsUp = java::GeckoAppShell::IsNetworkLinkUp();
+  *aIsUp = mozilla::widget::GeckoAppShell::IsNetworkLinkUp();
   return NS_OK;
 }
 
@@ -42,7 +40,7 @@ nsAndroidNetworkLinkService::GetLinkStatusKnown(bool *aIsKnown)
 {
   NS_ENSURE_TRUE(mozilla::AndroidBridge::Bridge(), NS_ERROR_NOT_IMPLEMENTED);
 
-  *aIsKnown = java::GeckoAppShell::IsNetworkLinkKnown();
+  *aIsKnown = mozilla::widget::GeckoAppShell::IsNetworkLinkKnown();
   return NS_OK;
 }
 
@@ -58,6 +56,6 @@ nsAndroidNetworkLinkService::GetLinkType(uint32_t *aLinkType)
     return NS_OK;
   }
 
-  *aLinkType = java::GeckoAppShell::NetworkLinkType();
+  *aLinkType = mozilla::widget::GeckoAppShell::NetworkLinkType();
   return NS_OK;
 }

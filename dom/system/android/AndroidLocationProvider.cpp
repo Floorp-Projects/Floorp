@@ -6,8 +6,8 @@
 
 #include "nsGeolocation.h"
 #include "nsGeoPosition.h"
+#include "AndroidBridge.h"
 #include "AndroidLocationProvider.h"
-#include "GeneratedJNIWrappers.h"
 
 using namespace mozilla;
 
@@ -27,7 +27,7 @@ AndroidLocationProvider::~AndroidLocationProvider()
 NS_IMETHODIMP
 AndroidLocationProvider::Startup()
 {
-    java::GeckoAppShell::EnableLocation(true);
+    widget::GeckoAppShell::EnableLocation(true);
     return NS_OK;
 }
 
@@ -43,13 +43,13 @@ AndroidLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 NS_IMETHODIMP
 AndroidLocationProvider::Shutdown()
 {
-    java::GeckoAppShell::EnableLocation(false);
+    widget::GeckoAppShell::EnableLocation(false);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 AndroidLocationProvider::SetHighAccuracy(bool enable)
 {
-    java::GeckoAppShell::EnableLocationHighAccuracy(enable);
+    widget::GeckoAppShell::EnableLocationHighAccuracy(enable);
     return NS_OK;
 }

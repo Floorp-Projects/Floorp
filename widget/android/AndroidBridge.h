@@ -156,8 +156,8 @@ public:
     bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical,
                                    mozilla::ParentLayerPoint& aScrollOffset, mozilla::CSSToParentLayerScale& aZoom);
 
-    void SetLayerClient(java::GeckoLayerClient::Param jobj);
-    const java::GeckoLayerClient::Ref& GetLayerClient() { return mLayerClient; }
+    void SetLayerClient(widget::GeckoLayerClient::Param jobj);
+    const widget::GeckoLayerClient::Ref& GetLayerClient() { return mLayerClient; }
 
     bool GetHandlersForURL(const nsAString& aURL,
                            nsIMutableArray* handlersArray = nullptr,
@@ -342,7 +342,7 @@ protected:
     nsTArray<nsCOMPtr<nsIMobileMessageCallback>> mSmsRequests;
     nsTArray<nsCOMPtr<nsIMobileMessageCursorCallback>> mSmsCursorRequests;
 
-    java::GeckoLayerClient::GlobalRef mLayerClient;
+    widget::GeckoLayerClient::GlobalRef mLayerClient;
 
     // the android.telephony.SmsMessage class
     jclass mAndroidSmsMessageClass;

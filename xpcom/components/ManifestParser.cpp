@@ -585,7 +585,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
     mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION",
                                                            "RELEASE",
                                                            osVersion);
-    isTablet = java::GeckoAppShell::IsTablet();
+    isTablet = mozilla::widget::GeckoAppShell::IsTablet();
   }
 #endif
 

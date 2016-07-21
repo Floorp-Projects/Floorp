@@ -5,14 +5,13 @@
 
 #include "base/basictypes.h"
 
-#include "ANPBase.h"
-#include "GeneratedJNIWrappers.h"
-#include "PluginPRLibrary.h"
 #include "assert.h"
-#include "nsNPAPIPluginInstance.h"
-#include "nsNPAPIPlugin.h"
-
+#include "ANPBase.h"
 #include <android/log.h>
+#include "nsNPAPIPluginInstance.h"
+#include "AndroidBridge.h"
+#include "nsNPAPIPlugin.h"
+#include "PluginPRLibrary.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_system_##name
@@ -61,7 +60,7 @@ jclass anp_system_loadJavaClass(NPP instance, const char* className)
   nsCString libName;
   lib->GetLibraryPath(libName);
 
-  return mozilla::java::GeckoAppShell::LoadPluginClass(className, libName).Forget();
+  return mozilla::widget::GeckoAppShell::LoadPluginClass(className, libName).Forget();
 }
 
 void anp_system_setPowerState(NPP instance, ANPPowerState powerState)
