@@ -72,7 +72,6 @@ EXPORTS += [
     'nsFrameState.h',
     'nsFrameStateBits.h',
     'nsHTMLParts.h',
-    'nsHTMLReflowMetrics.h',
     'nsIAnonymousContentCreator.h',
     'nsIFrame.h',
     'nsIFrameInlines.h',
@@ -102,6 +101,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'ReflowInput.h',
+    'ReflowOutput.h',
     'WritingModes.h',
 ]
 
@@ -140,7 +140,6 @@ UNIFIED_SOURCES += [
     'nsGfxScrollFrame.cpp',
     'nsGridContainerFrame.cpp',
     'nsHTMLCanvasFrame.cpp',
-    'nsHTMLReflowMetrics.cpp',
     'nsImageFrame.cpp',
     'nsImageMap.cpp',
     'nsInlineFrame.cpp',
@@ -166,6 +165,7 @@ UNIFIED_SOURCES += [
     'nsVideoFrame.cpp',
     'nsViewportFrame.cpp',
     'ReflowInput.cpp',
+    'ReflowOutput.cpp',
     'RubyUtils.cpp',
     'ScrollbarActivity.cpp',
     'ScrollSnap.cpp',
