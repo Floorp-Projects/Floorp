@@ -1787,6 +1787,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
   ClearInDocument();
 
+#ifdef MOZ_STYLO
+  // Drop any servo node data, since it will generally need to be recomputed on
+  // re-insertion anyway.
+  ServoData().reset();
+#endif
+
   // Editable descendant count only counts descendants that
   // are in the uncomposed document.
   ResetEditableDescendantCount();
