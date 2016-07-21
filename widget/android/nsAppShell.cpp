@@ -61,6 +61,7 @@
 
 #include "ANRReporter.h"
 #include "GeckoNetworkManager.h"
+#include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
@@ -386,6 +387,7 @@ nsAppShell::nsAppShell()
         GeckoThreadSupport::Init();
         mozilla::ANRReporter::Init();
         mozilla::GeckoNetworkManager::Init();
+        mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
         nsWindow::InitNatives();
 
