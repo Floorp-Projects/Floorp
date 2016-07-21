@@ -498,6 +498,16 @@ a {
   margin: 5px 0 0 0;
 }
 
+/* Force cells to only show one row of contents.  Getting normal ellipses
+   behavior has proven impossible so far, so this is better than letting
+   rows get out of vertical alignment when one cell has a lot of content. */
+.consoletable .table-widget-cell > span {
+  overflow: hidden;
+  display: flex;
+  height: 1.25em;
+  line-height: 1.25em;
+}
+
 .theme-light .message[severity=error] .stacktrace {
   background-color: rgba(255, 255, 255, 0.5);
 }

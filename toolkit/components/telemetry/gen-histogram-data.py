@@ -15,32 +15,56 @@ import itertools
 banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 """
 
-def print_array_entry(output, histogram, name_index, exp_index):
+def print_array_entry(output, histogram, name_index, exp_index, label_index, label_count):
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
-    print("  { %s, %s, %s, %s, %d, %d, %s, %s }," \
-        % (histogram.low(), histogram.high(),
-           histogram.n_buckets(), histogram.nsITelemetry_kind(),
-           name_index, exp_index, histogram.dataset(),
+    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %s }," \
+        % (histogram.low(),
+           histogram.high(),
+           histogram.n_buckets(),
+           histogram.nsITelemetry_kind(),
+           name_index,
+           exp_index,
+           histogram.dataset(),
+           label_index,
+           label_count,
            "true" if histogram.keyed() else "false"), file=output)
     if cpp_guard:
         print("#endif", file=output)
 
 def write_histogram_table(output, histograms):
-    table = StringTable()
+    string_table = StringTable()
+    label_table = []
+    label_count = 0
 
     print("const HistogramInfo gHistograms[] = {", file=output)
     for histogram in histograms:
-        name_index = table.stringIndex(histogram.name())
-        exp_index = table.stringIndex(histogram.expiration())
-        print_array_entry(output, histogram, name_index, exp_index)
-    print("};", file=output)
+        name_index = string_table.stringIndex(histogram.name())
+        exp_index = string_table.stringIndex(histogram.expiration())
+
+        labels = histogram.labels()
+        label_index = 0
+        if len(labels) > 0:
+            label_index = label_count
+            label_table.append((histogram.name(), string_table.stringIndexes(labels)))
+            label_count += len(labels)
+
+        print_array_entry(output, histogram,
+                          name_index, exp_index,
+                          label_index, len(labels))
+    print("};\n", file=output)
 
     strtab_name = "gHistogramStringTable"
-    table.writeDefinition(output, strtab_name)
+    string_table.writeDefinition(output, strtab_name)
     static_assert(output, "sizeof(%s) <= UINT32_MAX" % strtab_name,
                   "index overflow")
+
+    print("\nconst uint32_t gHistogramLabelTable[] = {", file=output)
+    for name,indexes in label_table:
+        print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
+    print("};", file=output)
+
 
 # Write out static asserts for histogram data.  We'd prefer to perform
 # these checks in this script itself, but since several histograms
@@ -89,6 +113,7 @@ def write_histogram_static_asserts(output, histograms):
         'flag' : static_asserts_for_flag,
         'count': static_asserts_for_count,
         'enumerated' : static_asserts_for_enumerated,
+        'categorical' : static_asserts_for_enumerated,
         'linear' : static_asserts_for_linear,
         'exponential' : static_asserts_for_exponential,
         }
