@@ -140,9 +140,6 @@ def build_dict(config, env=os.environ):
         d['platform_guess'] = guess_platform()
         d['buildtype_guess'] = guess_buildtype()
 
-    if d['buildapp'] == 'mobile/android' and 'MOZ_ANDROID_MIN_SDK_VERSION' in substs:
-        d['android_min_sdk'] = substs['MOZ_ANDROID_MIN_SDK_VERSION']
-
     return d
 
 
