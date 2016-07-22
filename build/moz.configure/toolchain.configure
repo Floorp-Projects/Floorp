@@ -400,6 +400,82 @@ def check_compiler(compiler, language, target):
     )
 
 
+@imports(_from='collections', _import='defaultdict')
+@imports(_from='__builtin__', _import='sorted')
+def get_vc_paths(base):
+    vc = defaultdict(lambda: defaultdict(dict))
+    subkey = r'Microsoft\VisualStudio\VC\*\*\*\Compiler'
+    for v, h, t, p in get_registry_values(base + '\\' + subkey):
+        vc[v][h][t] = p
+    if not vc:
+        return
+    version, data = sorted(vc.iteritems(), key=lambda x: Version(x[0]))[-1]
+    return data
+
+
+@depends(host)
+@imports('platform')
+def vc_compiler_path(host):
+    if host.kernel != 'WINNT':
+        return
+    vc_host = {
+        'x86': 'x86',
+        'AMD64': 'x64',
+    }.get(platform.machine())
+    if vc_host is None:
+        return
+    vc_target = {
+        'x86': 'x86',
+        'x86_64': 'x64',
+        'arm': 'arm',
+    }.get(host.cpu)
+    if vc_target is None:
+        return
+
+    base_key = r'HKEY_LOCAL_MACHINE\SOFTWARE'
+    data = get_vc_paths(base_key)
+    if not data:
+        data = get_vc_paths(base_key + r'\Wow6432Node')
+    if not data:
+        return
+
+    path = data.get(vc_host, {}).get(vc_target)
+    if not path and vc_host == 'x64':
+        vc_host = 'x86'
+        path = data.get(vc_host, {}).get(vc_target)
+    if not path:
+        return
+    path = os.path.dirname(path)
+    if vc_host != vc_target:
+        other_path = data.get(vc_host, {}).get(vc_host)
+        if other_path:
+            return (path, os.path.dirname(other_path))
+    return (path,)
+
+
+@depends(vc_compiler_path)
+@imports('os')
+def toolchain_search_path(vc_compiler_path):
+    if vc_compiler_path:
+        result = [os.environ.get('PATH')]
+        result.extend(vc_compiler_path)
+        return result
+
+
+# Normally, we'd just have CC, etc. set to absolute paths, but the build system
+# doesn't currently handle properly the case where the paths contain spaces.
+# Additionally, there's the issue described further below in valid_compiler().
+@depends(toolchain_search_path)
+@imports('os')
+def alter_path(toolchain_search_path):
+    if toolchain_search_path:
+        path = os.pathsep.join(toolchain_search_path)
+        os.environ['PATH'] = path
+        return path
+
+set_config('PATH', alter_path)
+
+
 @template
 def default_c_compilers(host_or_target):
     '''Template defining the set of default C compilers for the host and
@@ -541,7 +617,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
     # old-configure AC_SUBST it (because it's autoconf doing it, not us)
     compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
-                          input=delayed_getattr(provided_compiler, 'compiler'))
+                          input=delayed_getattr(provided_compiler, 'compiler'),
+                          paths=toolchain_search_path)
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
     @checking('whether %s can be used' % what, lambda x: bool(x))
