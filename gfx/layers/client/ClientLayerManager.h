@@ -238,6 +238,8 @@ public:
 
   void SetNextPaintSyncId(int32_t aSyncId);
 
+  void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
+
   class DidCompositeObserver {
   public:
     virtual void DidComposite() = 0;
