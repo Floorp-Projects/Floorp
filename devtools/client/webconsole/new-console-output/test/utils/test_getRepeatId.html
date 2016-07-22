@@ -13,47 +13,43 @@
 
 <script type="text/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  const {
-    prepareMessage,
-    getRepeatId
-  } = require("devtools/client/webconsole/new-console-output/utils/messages");
+  const { getRepeatId } = require("devtools/client/webconsole/new-console-output/utils/messages");
 
   yield testDuplicateValues();
   yield testDifferentValues();
   yield testDifferentSeverities();
   yield testFalsyValues();
-  yield testConsoleVsJSTerm();
 
   SimpleTest.finish();
 
   function testDuplicateValues() {
-    const {message: message1} = yield getPacket("console.log('same')", "consoleAPICall");
-    const {message: message2} = yield getPacket("console.log('same')", "consoleAPICall");
+    const message1 = stubConsoleMessages.get("console.log('foobar', 'test')");
+    const message2 = message1.set("repeat", 3);
 
     is(getRepeatId(message1), getRepeatId(message2),
       "getRepeatId() returns same repeat id for objects with the same values");
   }
 
   function testDifferentValues() {
-    const {message: message1} = yield getPacket("console.log('same')", "consoleAPICall");
-    const {message: message2} = yield getPacket("console.log('diff')", "consoleAPICall");
+    const message1 = stubConsoleMessages.get("console.log('foobar', 'test')");
+    const message2 = message1.set("parameters", ["funny", "monkey"]);
 
     isnot(getRepeatId(message1), getRepeatId(message2),
       "getRepeatId() returns different repeat ids for different values");
   }
 
   function testDifferentSeverities() {
-    const {message: message1} = yield getPacket("console.log('test')", "consoleAPICall");
-    const {message: message2} = yield getPacket("console.warn('test')", "consoleAPICall");
+    const message1 = stubConsoleMessages.get("console.log('foobar', 'test')");
+    const message2 = message1.set("level", "error");
 
     isnot(getRepeatId(message1), getRepeatId(message2),
       "getRepeatId() returns different repeat ids for different severities");
   }
 
   function testFalsyValues() {
-    const {message: messageNaN} = yield getPacket("console.log(NaN)", "consoleAPICall");
-    const {message: messageUnd} = yield getPacket("console.log(undefined)", "consoleAPICall");
-    const {message: messageNul} = yield getPacket("console.log(null)", "consoleAPICall");
+    const messageNaN = stubConsoleMessages.get("console.log(NaN)");
+    const messageUnd = stubConsoleMessages.get("console.log(undefined)");
+    const messageNul = stubConsoleMessages.get("console.log(null)");
 
     const repeatIds = new Set([
       getRepeatId(messageNaN),
@@ -62,25 +58,6 @@ window.onload = Task.async(function* () {
     );
     is(repeatIds.size, 3,
       "getRepeatId() handles falsy values distinctly");
-
-    const {message: messageNaN2} = yield getPacket("console.log(NaN)", "consoleAPICall");
-    const {message: messageUnd2} = yield getPacket("console.log(undefined)", "consoleAPICall");
-    const {message: messageNul2} = yield getPacket("console.log(null)", "consoleAPICall");
-
-    is(getRepeatId(messageNaN), getRepeatId(messageNaN2),
-      "getRepeatId() handles NaN values");
-    is(getRepeatId(messageUnd), getRepeatId(messageUnd2),
-      "getRepeatId() handles undefined values");
-    is(getRepeatId(messageNul), getRepeatId(messageNul2),
-      "getRepeatId() handles null values");
-  }
-
-  function testConsoleVsJSTerm() {
-    const {message: message1} = yield getPacket("console.log(undefined)", "consoleAPICall");
-    const {result: message2} = yield getPacket("undefined");
-
-    isnot(getRepeatId(message1), getRepeatId(message2),
-      "getRepeatId() returns different repeat ids for console vs JSTerm");
   }
 });
 </script>
