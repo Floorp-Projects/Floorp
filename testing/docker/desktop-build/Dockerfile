@@ -1,4 +1,4 @@
-FROM          taskcluster/centos6-build-upd:0.1.7.20160719131900
+FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
