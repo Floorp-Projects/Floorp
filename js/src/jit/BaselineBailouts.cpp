@@ -1720,6 +1720,8 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
     for (size_t i = 0; i < frame->script()->nfixed(); i++)
         *frame->valueSlot(i) = rematFrame->locals()[i];
 
+    frame->setReturnValue(rematFrame->returnValue());
+
     if (rematFrame->hasCachedSavedFrame())
         frame->setHasCachedSavedFrame();
 
