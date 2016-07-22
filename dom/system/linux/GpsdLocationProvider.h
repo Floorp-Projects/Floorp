@@ -11,6 +11,8 @@
 #include "nsGeolocation.h"
 #include "nsIGeolocationProvider.h"
 
+class MLSFallback;
+
 namespace mozilla {
 
 class LazyIdleThread;
@@ -19,6 +21,7 @@ namespace dom {
 
 class GpsdLocationProvider final : public nsIGeolocationProvider
 {
+  class MLSGeolocationUpdate;
   class NotifyErrorRunnable;
   class PollRunnable;
   class UpdateRunnable;
@@ -40,6 +43,7 @@ private:
   nsCOMPtr<nsIGeolocationUpdate> mCallback;
   RefPtr<LazyIdleThread> mPollThread;
   RefPtr<PollRunnable> mPollRunnable;
+  RefPtr<MLSFallback> mMLSProvider;
 };
 
 } // namespace dom
