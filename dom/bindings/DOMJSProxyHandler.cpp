@@ -297,7 +297,6 @@ DOMProxyHandler::GetExpandoObject(JSObject *obj)
   return v.isUndefined() ? nullptr : &v.toObject();
 }
 
-// static
 void
 ShadowingDOMProxyHandler::trace(JSTracer* trc, JSObject* proxy) const
 {
