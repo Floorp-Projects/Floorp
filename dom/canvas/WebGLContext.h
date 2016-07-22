@@ -896,7 +896,7 @@ public:
     // WebGLTextureUpload.cpp
 public:
     bool ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
-                              uint32_t tailPixels, const webgl::TexUnpackBlob* blob);
+                              uint32_t tailPixels, webgl::TexUnpackBlob* blob);
 
 protected:
     bool ValidateTexImageSpecification(const char* funcName, uint8_t funcDims,
