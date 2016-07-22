@@ -1,16 +1,5 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension idle API test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 add_task(function* testIdle() {
@@ -26,7 +15,7 @@ add_task(function* testIdle() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
 
     manifest: {
       permissions: ["idle"],
@@ -39,5 +28,3 @@ add_task(function* testIdle() {
 
   yield extension.unload();
 });
-</script>
-</body>

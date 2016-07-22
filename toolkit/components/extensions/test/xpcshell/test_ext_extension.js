@@ -1,16 +1,5 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>WebExtension test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 add_task(function* test_is_allowed_incognito_access() {
@@ -22,7 +11,7 @@ add_task(function* test_is_allowed_incognito_access() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {},
   });
 
@@ -38,7 +27,7 @@ add_task(function* test_in_incognito_context_false() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {},
   });
 
@@ -48,7 +37,7 @@ add_task(function* test_in_incognito_context_false() {
 });
 
 add_task(function* test_is_allowed_file_scheme_access() {
-  function backgroundScript() {
+  function background() {
     browser.extension.isAllowedFileSchemeAccess().then(isAllowedFileSchemeAccess => {
       browser.test.assertEq(false, isAllowedFileSchemeAccess, "isAllowedFileSchemeAccess is false");
       browser.test.notifyPass("isAllowedFileSchemeAccess");
@@ -56,18 +45,11 @@ add_task(function* test_is_allowed_file_scheme_access() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
+    background,
     manifest: {},
   });
 
   yield extension.startup();
-  info("extension loaded");
   yield extension.awaitFinish("isAllowedFileSchemeAccess");
   yield extension.unload();
-  info("extension unloaded");
 });
-
-</script>
-
-</body>
-</html>
