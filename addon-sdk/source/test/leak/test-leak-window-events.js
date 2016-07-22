@@ -44,4 +44,22 @@ exports["test window/events for leaks"] = function*(assert) {
   });
 };
 
+exports["test window/events for leaks with existing window"] = function*(assert) {
+  yield asyncWindowLeakTest(assert, _ => {
+    return new Promise((resolve, reject) => {
+      let loader = Loader(module);
+      let w = open();
+      w.addEventListener("load", function windowLoaded(evt) {
+        w.removeEventListener("load", windowLoaded);
+        let { events } = loader.require("sdk/window/events");
+        w.addEventListener("DOMWindowClose", function windowClosed(evt) {
+          w.removeEventListener("DOMWindowClose", windowClosed);
+          resolve(loader);
+        });
+        w.close();
+      });
+    });
+  });
+};
+
 require("sdk/test").run(exports);
