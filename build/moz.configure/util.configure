@@ -92,6 +92,105 @@ def unique_list(l):
             result.append(i)
     return result
 
+
+# Get values out of the Windows registry. This function can only be called on
+# Windows.
+# The `pattern` argument is a string starting with HKEY_ and giving the full
+# "path" of the registry key to get the value for, with backslash separators.
+# The string can contains wildcards ('*').
+# The result of this functions is an enumerator yielding tuples for each
+# match. Each of these tuples contains the key name matching wildcards
+# followed by the value.
+#
+# Examples:
+#   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
+#                       r'Windows Kits\Installed Roots\KitsRoot*')
+#   yields e.g.:
+#     ('KitsRoot81', r'C:\Program Files (x86)\Windows Kits\8.1\')
+#     ('KitsRoot10', r'C:\Program Files (x86)\Windows Kits\10\')
+#
+#   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
+#                       r'Windows Kits\Installed Roots\KitsRoot8.1')
+#   yields e.g.:
+#     (r'C:\Program Files (x86)\Windows Kits\8.1\',)
+#
+#   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
+#                       r'Windows Kits\*\KitsRoot*')
+#   yields e.g.:
+#     ('Installed Roots', 'KitsRoot81',
+#      r'C:\Program Files (x86)\Windows Kits\8.1\')
+#     ('Installed Roots', 'KitsRoot10',
+#      r'C:\Program Files (x86)\Windows Kits\10\')
+#
+#   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
+#                       r'VisualStudio\VC\*\x86\*\Compiler')
+#   yields e.g.:
+#     ('19.0', 'arm', r'C:\...\amd64_arm\cl.exe')
+#     ('19.0', 'x64', r'C:\...\amd64\cl.exe')
+#     ('19.0', 'x86', r'C:\...\amd64_x86\cl.exe')
+@imports(_import='_winreg', _as='winreg')
+@imports(_from='__builtin__', _import='WindowsError')
+@imports(_from='fnmatch', _import='fnmatch')
+def get_registry_values(pattern):
+    def enum_helper(func, key):
+        i = 0
+        while True:
+            try:
+                yield func(key, i)
+            except WindowsError:
+                break
+            i += 1
+
+    def get_keys(key, pattern):
+        try:
+            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]))
+        except WindowsError:
+            return
+        for k in enum_helper(winreg.EnumKey, s):
+            if fnmatch(k, pattern[-1]):
+                try:
+                    yield k, winreg.OpenKey(s, k)
+                except WindowsError:
+                    pass
+
+    def get_values(key, pattern):
+        try:
+            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]))
+        except WindowsError:
+            return
+        for k, v, t in enum_helper(winreg.EnumValue, s):
+            if fnmatch(k, pattern[-1]):
+                yield k, v
+
+    def split_pattern(pattern):
+        subpattern = []
+        for p in pattern:
+            subpattern.append(p)
+            if '*' in p:
+                yield subpattern
+                subpattern = []
+        if subpattern:
+            yield subpattern
+
+    pattern = pattern.split('\\')
+    assert pattern[0].startswith('HKEY_')
+    keys = [(getattr(winreg, pattern[0]),)]
+    pattern = list(split_pattern(pattern[1:]))
+    for i, p in enumerate(pattern):
+        next_keys = []
+        for base_key in keys:
+            matches = base_key[:-1]
+            base_key = base_key[-1]
+            if i == len(pattern) - 1:
+                want_name = '*' in p[-1]
+                for name, value in get_values(base_key, p):
+                    yield matches + ((name, value) if want_name else (value,))
+            else:
+                for name, k in get_keys(base_key, p):
+                    next_keys.append(matches + (name, k))
+        keys = next_keys
+
+
 @imports(_from='mozbuild.configure.util', _import='Version', _as='_Version')
 def Version(v):
     'A version number that can be compared usefully.'
