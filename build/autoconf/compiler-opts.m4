@@ -147,18 +147,6 @@ if test "$CLANG_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage"
 fi
 
-AC_MSG_CHECKING([whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) actually is a C++ compiler])
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
-_SAVE_LIBS=$LIBS
-LIBS=
-AC_TRY_LINK([#include <new>], [int *foo = new int;],,
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([$CXX $CXXFLAGS $LDFLAGS failed to compile and link a simple C++ source.]))
-LIBS=$_SAVE_LIBS
-AC_LANG_RESTORE
-AC_MSG_RESULT([yes])
-
 if test -n "$DEVELOPER_OPTIONS"; then
     MOZ_FORCE_GOLD=1
 fi
