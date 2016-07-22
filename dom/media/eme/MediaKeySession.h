@@ -42,7 +42,7 @@ public:
                   MediaKeys* aKeys,
                   const nsAString& aKeySystem,
                   const nsAString& aCDMVersion,
-                  MediaKeySessionType aSessionType,
+                  SessionType aSessionType,
                   ErrorResult& aRv);
 
   void SetSessionId(const nsAString& aSessionId);
@@ -119,7 +119,7 @@ private:
   const nsString mKeySystem;
   const nsString mCDMVersion;
   nsString mSessionId;
-  const MediaKeySessionType mSessionType;
+  const SessionType mSessionType;
   const uint32_t mToken;
   bool mIsClosed;
   bool mUninitialized;
