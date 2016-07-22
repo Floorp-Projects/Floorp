@@ -10,7 +10,7 @@
 #include <mach/mach_time.h>
 #endif
 #include <sys/time.h>
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(__LP64__)
 #include <time64.h>
 #else
 #include <time.h>
