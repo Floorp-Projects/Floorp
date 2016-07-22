@@ -13,7 +13,8 @@
 HAS_MISC_RULE = True
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-JETPACK_PACKAGE_MANIFESTS += ['source/test/jetpack-package.ini']
+JETPACK_PACKAGE_MANIFESTS += ['source/test/jetpack-package.ini',
+                              'source/test/leak/jetpack-package.ini']
 JETPACK_ADDON_MANIFESTS += ['source/test/addons/jetpack-addon.ini']
 
 addons = [
