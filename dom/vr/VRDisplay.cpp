@@ -352,7 +352,7 @@ VRPose::GetLinearAcceleration(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aRetval,
                               ErrorResult& aRv)
 {
-  if (!mLinearAcceleration && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) {
+  if (!mLinearAcceleration && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_LinearAcceleration) {
     // Lazily create the Float32Array
     mLinearAcceleration = dom::Float32Array::Create(aCx, this, 3, mVRState.linearAcceleration);
     if (!mLinearAcceleration) {
@@ -409,7 +409,7 @@ VRPose::GetAngularAcceleration(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv)
 {
-  if (!mAngularAcceleration && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
+  if (!mAngularAcceleration && mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_AngularAcceleration) {
     // Lazily create the Float32Array
     mAngularAcceleration = dom::Float32Array::Create(aCx, this, 3, mVRState.angularAcceleration);
     if (!mAngularAcceleration) {
@@ -441,9 +441,15 @@ VRDisplay::VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient)
   , mDepthNear(0.01f) // Default value from WebVR Spec
   , mDepthFar(10000.0f) // Default value from WebVR Spec
 {
-  mDisplayId = aClient->GetDisplayInfo().GetDisplayID();
-  mDisplayName = NS_ConvertASCIItoUTF16(aClient->GetDisplayInfo().GetDisplayName());
-  mCapabilities = new VRDisplayCapabilities(aWindow, aClient->GetDisplayInfo().GetCapabilities());
+  const gfx::VRDisplayInfo& info = aClient->GetDisplayInfo();
+  mDisplayId = info.GetDisplayID();
+  mDisplayName = NS_ConvertASCIItoUTF16(info.GetDisplayName());
+  mCapabilities = new VRDisplayCapabilities(aWindow, info.GetCapabilities());
+  if (info.GetCapabilities() & gfx::VRDisplayCapabilityFlags::Cap_StageParameters) {
+    mStageParameters = new VRStageParameters(aWindow,
+                                             info.GetSittingToStandingTransform(),
+                                             info.GetStageSize());
+  }
   mozilla::HoldJSObjects(this);
 }
 
@@ -482,9 +488,7 @@ VRDisplay::Capabilities()
 VRStageParameters*
 VRDisplay::GetStageParameters()
 {
-  // XXX When we implement room scale experiences for OpenVR, we should return
-  // something here.
-  return nullptr;
+  return mStageParameters;
 }
 
 already_AddRefed<VRPose>
@@ -645,7 +649,7 @@ VRDisplay::IsConnected() const
   return mClient->GetIsConnected();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(VRDisplay, DOMEventTargetHelper, mCapabilities)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(VRDisplay, DOMEventTargetHelper, mCapabilities, mStageParameters)
 
 NS_IMPL_ADDREF_INHERITED(VRDisplay, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(VRDisplay, DOMEventTargetHelper)
