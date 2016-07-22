@@ -1272,7 +1272,7 @@ MockExtension.prototype = {
   },
 
   shutdown() {
-    this.addon.uninstall(true);
+    this.addon.uninstall();
     return this.cleanupGeneratedFile();
   },
 
