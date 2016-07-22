@@ -393,8 +393,9 @@ ServoStyleSet::RestyleSubtree(nsINode* aNode, bool aForce)
 {
   if (aForce) {
     MOZ_ASSERT(aNode->IsContent());
-    ServoRestyleManager::DirtyTree(aNode->AsContent());
+    aNode->SetIsDirtyForServo();
   }
 
+  MOZ_ASSERT(aNode->IsDirtyForServo() || aNode->HasDirtyDescendantsForServo());
   Servo_RestyleSubtree(aNode, mRawSet.get());
 }
