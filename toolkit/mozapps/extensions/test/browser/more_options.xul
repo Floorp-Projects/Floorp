@@ -17,7 +17,7 @@
     <radiogroup>
       <radio label="India" value="india" />
       <radio label="Juliet" value="juliet" />
-      <radio label="Kilo" value="kilo" />
+      <radio label="Kilo &#x338F;" value="kilo &#x338F;" />
     </radiogroup>
   </setting>
   <setting pref="extensions.inlinesettings3.menulist" type="menulist" title="Menulist">
