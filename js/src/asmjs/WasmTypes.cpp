@@ -330,6 +330,154 @@ GetCPUID()
 #endif
 }
 
+typedef uint32_t ImmediateType;  // for 32/64 consistency
+static const unsigned sImmediateBits = sizeof(ImmediateType) * 8 - 1;  // -1 for ImmediateBit
+static const unsigned sReturnBit = 1;
+static const unsigned sLengthBits = 4;
+static const unsigned sTypeBits = 2;
+static const unsigned sMaxTypes = (sImmediateBits - sReturnBit - sLengthBits) / sTypeBits;
+
+static bool
+IsImmediateType(ValType vt)
+{
+    MOZ_ASSERT(uint32_t(vt) > 0);
+    return (uint32_t(vt) - 1) < (1 << sTypeBits);
+}
+
+static bool
+IsImmediateType(ExprType et)
+{
+    return et == ExprType::Void || IsImmediateType(NonVoidToValType(et));
+}
+
+/* static */ bool
+SigIdDesc::isGlobal(const Sig& sig)
+{
+    unsigned numTypes = (sig.ret() == ExprType::Void ? 0 : 1) +
+                        (sig.args().length());
+    if (numTypes > sMaxTypes)
+        return true;
+
+    if (!IsImmediateType(sig.ret()))
+        return true;
+
+    for (ValType v : sig.args()) {
+        if (!IsImmediateType(v))
+            return true;
+    }
+
+    return false;
+}
+
+/* static */ SigIdDesc
+SigIdDesc::global(const Sig& sig, uint32_t globalDataOffset)
+{
+    MOZ_ASSERT(isGlobal(sig));
+    return SigIdDesc(Kind::Global, globalDataOffset);
+}
+
+static ImmediateType
+LengthToBits(uint32_t length)
+{
+    static_assert(sMaxTypes <= ((1 << sLengthBits) - 1), "fits");
+    MOZ_ASSERT(length <= sMaxTypes);
+    return length;
+}
+
+static ImmediateType
+TypeToBits(ValType type)
+{
+    static_assert(3 <= ((1 << sTypeBits) - 1), "fits");
+    MOZ_ASSERT(uint32_t(type) >= 1 && uint32_t(type) <= 4);
+    return uint32_t(type) - 1;
+}
+
+size_t
+Sig::serializedSize() const
+{
+    return sizeof(ret_) +
+           SerializedPodVectorSize(args_);
+}
+
+uint8_t*
+Sig::serialize(uint8_t* cursor) const
+{
+    cursor = WriteScalar<ExprType>(cursor, ret_);
+    cursor = SerializePodVector(cursor, args_);
+    return cursor;
+}
+
+const uint8_t*
+Sig::deserialize(const uint8_t* cursor)
+{
+    (cursor = ReadScalar<ExprType>(cursor, &ret_)) &&
+    (cursor = DeserializePodVector(cursor, &args_));
+    return cursor;
+}
+
+size_t
+Sig::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return args_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+/* static */ SigIdDesc
+SigIdDesc::immediate(const Sig& sig)
+{
+    ImmediateType immediate = ImmediateBit;
+    uint32_t shift = 1;
+
+    if (sig.ret() != ExprType::Void) {
+        immediate |= (1 << shift);
+        shift += sReturnBit;
+
+        immediate |= TypeToBits(NonVoidToValType(sig.ret())) << shift;
+        shift += sTypeBits;
+    } else {
+        shift += sReturnBit;
+    }
+
+    immediate |= LengthToBits(sig.args().length()) << shift;
+    shift += sLengthBits;
+
+    for (ValType argType : sig.args()) {
+        immediate |= TypeToBits(argType) << shift;
+        shift += sTypeBits;
+    }
+
+    MOZ_ASSERT(shift <= sImmediateBits);
+    return SigIdDesc(Kind::Immediate, immediate);
+}
+
+size_t
+SigWithId::serializedSize() const
+{
+    return Sig::serializedSize() +
+           sizeof(id);
+}
+
+uint8_t*
+SigWithId::serialize(uint8_t* cursor) const
+{
+    cursor = Sig::serialize(cursor);
+    cursor = WriteBytes(cursor, &id, sizeof(id));
+    return cursor;
+}
+
+const uint8_t*
+SigWithId::deserialize(const uint8_t* cursor)
+{
+    (cursor = Sig::deserialize(cursor)) &&
+    (cursor = ReadBytes(cursor, &id, sizeof(id)));
+    return cursor;
+}
+
+size_t
+SigWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return Sig::sizeOfExcludingThis(mallocSizeOf);
+}
+
 Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
   : usesSignal(),
     cpuId(GetCPUID()),

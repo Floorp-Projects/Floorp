@@ -33,6 +33,7 @@ namespace wasm {
 class CallSite;
 class CodeRange;
 class Instance;
+class SigIdDesc;
 struct CallThunk;
 struct FuncOffsets;
 struct Metadata;
@@ -111,7 +112,7 @@ void
 GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      ProfilingOffsets* offsets);
 void
-GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, uint32_t sigIndex,
+GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
                          FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);

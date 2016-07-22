@@ -400,8 +400,9 @@ MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero)
 // ===============================================================
 // Branch functions
 
+template <class L>
 void
-MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branch32(Condition cond, Register lhs, Register rhs, L label)
 {
     ma_b(lhs, rhs, label, cond);
 }

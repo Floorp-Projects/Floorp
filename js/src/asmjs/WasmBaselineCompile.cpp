@@ -1737,7 +1737,7 @@ class BaseCompiler
     void beginFunction() {
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
-        wasm::GenerateFunctionPrologue(masm, localSize_, mg_.funcSigIndex(func_.index()),
+        wasm::GenerateFunctionPrologue(masm, localSize_, mg_.funcSigs[func_.index()]->id,
                                        &compileResults_.offsets());
 
         MOZ_ASSERT(masm.framePushed() == uint32_t(localSize_));
@@ -2041,7 +2041,7 @@ class BaseCompiler
 
     // Precondition: sync()
 
-    void funcPtrCall(const Sig& sig, uint32_t sigIndex, uint32_t length, uint32_t globalDataOffset,
+    void funcPtrCall(const SigWithId& sig, uint32_t length, uint32_t globalDataOffset,
                      Stk& indexVal, const FunctionCall& call)
     {
         Register ptrReg = WasmTableCallPtrReg;
@@ -2054,7 +2054,17 @@ class BaseCompiler
         } else {
             masm.branch32(Assembler::Condition::AboveOrEqual, ptrReg, Imm32(length),
                           wasm::JumpTarget::OutOfBounds);
-            masm.move32(Imm32(sigIndex), WasmTableCallSigReg);
+        }
+
+        switch (sig.id.kind()) {
+          case SigIdDesc::Kind::Global:
+            masm.loadWasmGlobalPtr(sig.id.globalDataOffset(), WasmTableCallSigReg);
+            break;
+          case SigIdDesc::Kind::Immediate:
+            masm.move32(Imm32(sig.id.immediate()), WasmTableCallSigReg);
+            break;
+          case SigIdDesc::Kind::None:
+            break;
         }
 
         {
@@ -5143,7 +5153,7 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
 
     Nothing callee_;
 
-    const Sig& sig = mg_.sigs[sigIndex];
+    const SigWithId& sig = mg_.sigs[sigIndex];
 
     if (deadCode_) {
         return skipCall(sig.args()) && iter_.readCallIndirectCallee(&callee_) &&
@@ -5175,7 +5185,7 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
                              ? mg_.tables[mg_.asmJSSigToTableIndex[sigIndex]]
                              : mg_.tables[0];
 
-    funcPtrCall(sig, sigIndex, table.initial, table.globalDataOffset, callee, baselineCall);
+    funcPtrCall(sig, table.initial, table.globalDataOffset, callee, baselineCall);
 
     endCall(baselineCall);
 
