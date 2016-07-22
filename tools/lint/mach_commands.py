@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import platform
+import re
 import subprocess
 import sys
 import which
@@ -28,13 +29,6 @@ from mach.decorators import (
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-
-ESLINT_PACKAGES = [
-    "eslint@2.9.0",
-    "eslint-plugin-html@1.4.0",
-    "eslint-plugin-mozilla@0.2.0",
-    "eslint-plugin-react@4.2.3"
-]
 
 ESLINT_NOT_FOUND_MESSAGE = '''
 Could not find eslint!  We looked at the --binary option, at the ESLINT
@@ -61,6 +55,9 @@ option in the node installation) and try again.
 Valid installation paths:
 '''.strip()
 
+VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+CARET_VERSION_RANGE_RE = re.compile(r"^\^((\d+)\.\d+\.\d+)$")
+
 
 def setup_argument_parser():
     from mozlint import cli
@@ -84,7 +81,7 @@ class MachCommands(MachCommandBase):
     @Command('eslint', category='devenv',
              description='Run eslint or help configure eslint for optimal development.')
     @CommandArgument('-s', '--setup', default=False, action='store_true',
-                     help='configure eslint for optimal development.')
+                     help='Configure eslint for optimal development.')
     @CommandArgument('-e', '--ext', default='[.js,.jsm,.jsx,.xml,.html]',
                      help='Filename extensions to lint, default: "[.js,.jsm,.jsx,.xml,.html]".')
     @CommandArgument('-b', '--binary', default=None,
@@ -103,8 +100,8 @@ class MachCommands(MachCommandBase):
         if setup:
             return self.eslint_setup()
 
-        npmPath = self.get_node_or_npm_path("npm")
-        if not npmPath:
+        npm_path = self.get_node_or_npm_path("npm")
+        if not npm_path:
             return 1
 
         if self.eslint_module_has_issues():
@@ -162,7 +159,7 @@ class MachCommands(MachCommandBase):
                  'Finished eslint. {msg} encountered.')
         return success
 
-    def eslint_setup(self, update_only=False):
+    def eslint_setup(self):
         """Ensure eslint is optimally configured.
 
         This command will inspect your eslint configuration and
@@ -178,30 +175,22 @@ class MachCommands(MachCommandBase):
         # we manually switch folders here instead.
         os.chdir(module_path)
 
-        npmPath = self.get_node_or_npm_path("npm")
-        if not npmPath:
+        npm_path = self.get_node_or_npm_path("npm")
+        if not npm_path:
             return 1
 
-        # Install eslint and necessary plugins.
-        for pkg in ESLINT_PACKAGES:
-            name, version = pkg.split("@")
-            success = False
+        # Install ESLint and external plugins
+        cmd = [npm_path, "install"]
+        print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
+        if not self.call_process("eslint", cmd):
+            return 1
 
-            if self.node_package_installed(pkg, cwd=module_path):
-                success = True
-            else:
-                if pkg.startswith("eslint-plugin-mozilla"):
-                    cmd = [npmPath, "install",
-                           os.path.join(module_path, "eslint-plugin-mozilla")]
-                else:
-                    cmd = [npmPath, "install", pkg]
-
-                print("Installing %s v%s using \"%s\"..."
-                      % (name, version, " ".join(cmd)))
-                success = self.call_process(pkg, cmd)
-
-            if not success:
-                return 1
+        # Install in-tree ESLint plugin
+        cmd = [npm_path, "install",
+               os.path.join(module_path, "eslint-plugin-mozilla")]
+        print("Installing eslint-plugin-mozilla using \"%s\"..." % (" ".join(cmd)))
+        if not self.call_process("eslint-plugin-mozilla", cmd):
+            return 1
 
         eslint_path = os.path.join(module_path, "node_modules", ".bin", "eslint")
 
@@ -224,42 +213,67 @@ class MachCommands(MachCommandBase):
 
         return True
 
+    def expected_eslint_modules(self):
+        # Read the expected version of ESLint and external modules
+        expected_modules_path = os.path.join(self.get_eslint_module_path(), "package.json")
+        with open(expected_modules_path, "r") as f:
+            expected_modules = json.load(f)["dependencies"]
+
+        # Also read the in-tree ESLint plugin version
+        mozilla_json_path = os.path.join(self.get_eslint_module_path(),
+                                         "eslint-plugin-mozilla", "package.json")
+        with open(mozilla_json_path, "r") as f:
+            expected_modules["eslint-plugin-mozilla"] = json.load(f)["version"]
+
+        return expected_modules
+
     def eslint_module_has_issues(self):
         has_issues = False
-        node_module_path = os.path.join(self.get_eslint_module_path(), "node_modules")
+        node_modules_path = os.path.join(self.get_eslint_module_path(), "node_modules")
 
-        for pkg in ESLINT_PACKAGES:
-            name, req_version = pkg.split("@")
-            path = os.path.join(node_module_path, name, "package.json")
+        for name, version_range in self.expected_eslint_modules().iteritems():
+            path = os.path.join(node_modules_path, name, "package.json")
 
             if not os.path.exists(path):
-                print("%s v%s needs to be installed locally." % (name, req_version))
+                print("%s v%s needs to be installed locally." % (name, version_range))
                 has_issues = True
                 continue
 
             data = json.load(open(path))
 
-            if data["version"] != req_version:
-                print("%s v%s should be v%s." % (name, data["version"], req_version))
+            if not self.version_in_range(data["version"], version_range):
+                print("%s v%s should be v%s." % (name, data["version"], version_range))
                 has_issues = True
 
         return has_issues
 
-    def node_package_installed(self, package_name="", globalInstall=False, cwd=None):
-        try:
-            npmPath = self.get_node_or_npm_path("npm")
-
-            cmd = [npmPath, "ls", "--parseable", package_name]
-
-            if globalInstall:
-                cmd.append("-g")
-
-            with open(os.devnull, "w") as fnull:
-                subprocess.check_call(cmd, stdout=fnull, stderr=fnull, cwd=cwd)
-
+    def version_in_range(self, version, version_range):
+        """
+        Check if a module version is inside a version range.  Only supports explicit versions and
+        caret ranges for the moment, since that's all we've used so far.
+        """
+        if version == version_range:
             return True
-        except subprocess.CalledProcessError:
-            return False
+
+        version_match = VERSION_RE.match(version)
+        if not version_match:
+            raise RuntimeError("mach eslint doesn't understand module version %s" % version)
+        version = LooseVersion(version)
+
+        # Caret ranges as specified by npm allow changes that do not modify the left-most non-zero
+        # digit in the [major, minor, patch] tuple.  The code below assumes the major digit is
+        # non-zero.
+        range_match = CARET_VERSION_RANGE_RE.match(version_range)
+        if range_match:
+            range_version = range_match.group(1)
+            range_major = int(range_match.group(2))
+
+            range_min = LooseVersion(range_version)
+            range_max = LooseVersion("%d.0.0" % (range_major + 1))
+
+            return range_min <= version < range_max
+
+        return False
 
     def get_possible_node_paths_win(self):
         """
@@ -282,17 +296,17 @@ class MachCommands(MachCommandBase):
         if platform.system() == "Windows":
             for ext in [".cmd", ".exe", ""]:
                 try:
-                    nodeOrNpmPath = which.which(filename + ext,
-                                                path=self.get_possible_node_paths_win())
-                    if self.is_valid(nodeOrNpmPath, minversion):
-                        return nodeOrNpmPath
+                    node_or_npm_path = which.which(filename + ext,
+                                                   path=self.get_possible_node_paths_win())
+                    if self.is_valid(node_or_npm_path, minversion):
+                        return node_or_npm_path
                 except which.WhichError:
                     pass
         else:
             try:
-                nodeOrNpmPath = which.which(filename)
-                if self.is_valid(nodeOrNpmPath, minversion):
-                    return nodeOrNpmPath
+                node_or_npm_path = which.which(filename)
+                if self.is_valid(node_or_npm_path, minversion):
+                    return node_or_npm_path
             except which.WhichError:
                 pass
 
