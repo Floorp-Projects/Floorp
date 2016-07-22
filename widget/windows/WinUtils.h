@@ -78,7 +78,7 @@ class nsWindow;
 class nsWindowBase;
 struct KeyPair;
 
-#ifndef DPI_AWARENESS_CONTEXT_DECLARED
+#if !defined(DPI_AWARENESS_CONTEXT_DECLARED) && !defined(DPI_AWARENESS_CONTEXT_UNAWARE)
 
 DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
 
