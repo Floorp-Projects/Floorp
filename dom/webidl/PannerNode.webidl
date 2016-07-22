@@ -21,6 +21,7 @@ enum DistanceModelType {
   "exponential"
 };
 
+[Pref="dom.webaudio.enabled"]
 interface PannerNode : AudioNode {
 
     // Default for stereo is equalpower

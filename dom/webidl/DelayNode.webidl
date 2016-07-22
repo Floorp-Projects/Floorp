@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Pref="dom.webaudio.enabled"]
 interface DelayNode : AudioNode {
 
     readonly attribute AudioParam delayTime;
