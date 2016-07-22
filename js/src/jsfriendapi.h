@@ -1243,10 +1243,9 @@ struct ExpandoAndGeneration {
       generation(0)
   {}
 
-  void Unlink()
+  void OwnerUnlinked()
   {
       ++generation;
-      expando.setUndefined();
   }
 
   static size_t offsetOfExpando()
