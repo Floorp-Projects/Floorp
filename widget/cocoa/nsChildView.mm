@@ -2160,8 +2160,8 @@ CreateCGContext(const LayoutDeviceIntSize& aSize)
 LayoutDeviceIntSize
 TextureSizeForSize(const LayoutDeviceIntSize& aSize)
 {
-  return LayoutDeviceIntSize(gfx::NextPowerOfTwo(aSize.width),
-                             gfx::NextPowerOfTwo(aSize.height));
+  return LayoutDeviceIntSize(RoundUpPow2(aSize.width),
+                             RoundUpPow2(aSize.height));
 }
 
 // When this method is entered, mEffectsLock is already being held.
