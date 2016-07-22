@@ -12,7 +12,7 @@ case "$choice" in
   y|Y )
     echo ""
     echo "1. Go to https://api.pub.build.mozilla.org/"
-    echo "2. Log In using your Mozilla LDAP account."
+    echo "2. Log in using your Mozilla LDAP account."
     echo "3. Click on \"Tokens.\""
     echo "4. Issue a user token with the permissions tooltool.upload.public and tooltool.download.public."
     echo ""
@@ -22,7 +22,7 @@ case "$choice" in
     ;;
   n|N )
     echo ""
-    echo "You will need to contact somebody that has these permissions... people most likely to have these permissions are members of the releng, ateam, a sheriff or mratcliffe@mozilla.com."
+    echo "You will need to contact somebody that has these permissions... people most likely to have these permissions are members of the releng, ateam, a sheriff, mratcliffe, or jryans"
     exit 1
     ;;
   * )
