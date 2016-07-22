@@ -66,7 +66,7 @@ public:
 
   // JavaScript: MediaKeys.createSession()
   already_AddRefed<MediaKeySession> CreateSession(JSContext* aCx,
-                                                  MediaKeySessionType aSessionType,
+                                                  SessionType aSessionType,
                                                   ErrorResult& aRv);
 
   // JavaScript: MediaKeys.SetServerCertificate()
