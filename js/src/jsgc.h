@@ -865,8 +865,6 @@ class GCHelperState
     State state();
     void setState(State state);
 
-    bool shrinkFlag;
-
     friend class js::gc::ArenaLists;
 
     static void freeElementsAndArray(void** array, void** end) {
@@ -883,8 +881,7 @@ class GCHelperState
       : rt(rt),
         done(),
         state_(IDLE),
-        thread(nullptr),
-        shrinkFlag(false)
+        thread(nullptr)
     { }
 
     void finish();
@@ -905,11 +902,6 @@ class GCHelperState
      */
     bool isBackgroundSweeping() const {
         return state_ == SWEEPING;
-    }
-
-    bool shouldShrink() const {
-        MOZ_ASSERT(isBackgroundSweeping());
-        return shrinkFlag;
     }
 };
 

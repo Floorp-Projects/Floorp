@@ -84,6 +84,17 @@ function* openTabAndSetupStorage(url) {
 
     let windows = getAllWindows(content);
     for (let win of windows) {
+      let readyState = win.document.readyState;
+      info(`Found a window: ${readyState}`);
+      if (readyState != "complete") {
+        yield new Promise(resolve => {
+          let onLoad = () => {
+            win.removeEventListener("load", onLoad);
+            resolve();
+          };
+          win.addEventListener("load", onLoad);
+        });
+      }
       if (win.setup) {
         yield win.setup();
       }

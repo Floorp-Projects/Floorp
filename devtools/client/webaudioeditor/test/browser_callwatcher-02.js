@@ -16,9 +16,9 @@ add_task(function* () {
 
   loadFrameScripts();
 
+  let rendered = waitForGraphRendered(panelWin, 2, 0);
   reload(target);
-
-  yield waitForGraphRendered(panelWin, 2, 0);
+  yield rendered;
 
   let error = yield evalInDebuggee("throwError()");
   is(error.lineNumber, 21, "error has correct lineNumber");

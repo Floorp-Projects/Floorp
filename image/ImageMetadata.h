@@ -62,8 +62,9 @@ public:
     }
   }
   nsIntSize GetSize() const { return *mSize; }
-  Orientation GetOrientation() const { return *mOrientation; }
   bool HasSize() const { return mSize.isSome(); }
+
+  Orientation GetOrientation() const { return *mOrientation; }
   bool HasOrientation() const { return mOrientation.isSome(); }
 
   void SetHasAnimation() { mHasAnimation = true; }

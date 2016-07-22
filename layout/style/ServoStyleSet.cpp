@@ -381,6 +381,13 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
   return nsRestyleHint(0);
 }
 
+nsRestyleHint
+ServoStyleSet::ComputeRestyleHint(dom::Element* aElement,
+                                  ServoElementSnapshot* aSnapshot)
+{
+  return Servo_ComputeRestyleHint(aElement, aSnapshot, mRawSet.get());
+}
+
 void
 ServoStyleSet::RestyleSubtree(nsINode* aNode, bool aForce)
 {

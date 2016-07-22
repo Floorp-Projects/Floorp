@@ -262,10 +262,9 @@ ResponsiveUI.prototype = {
    */
   init: Task.async(function* () {
     let ui = this;
-    let toolViewportContentBrowser;
 
-    // Watch for the tab's beforeunload to catch app shutdown early
-    this.tab.linkedBrowser.addEventListener("beforeunload", this, true);
+    // Watch for tab close so we can clean up RDM synchronously
+    this.tab.addEventListener("TabClose", this);
 
     // Swap page content from the current tab into a viewport within RDM
     this.swap = swapToInnerBrowser({
@@ -277,8 +276,7 @@ ResponsiveUI.prototype = {
         yield message.request(toolWindow, "init");
         toolWindow.addInitialViewport("about:blank");
         yield message.wait(toolWindow, "browser-mounted");
-        toolViewportContentBrowser = ui.getViewportBrowser();
-        return toolViewportContentBrowser;
+        return ui.getViewportBrowser();
       })
     });
     yield this.swap.start();
@@ -286,8 +284,7 @@ ResponsiveUI.prototype = {
     // Notify the inner browser to start the frame script
     yield message.request(this.toolWindow, "start-frame-script");
 
-    this.touchEventSimulator =
-      new TouchEventSimulator(toolViewportContentBrowser);
+    this.touchEventSimulator = new TouchEventSimulator(this.getViewportBrowser());
   }),
 
   /**
@@ -305,26 +302,26 @@ ResponsiveUI.prototype = {
     }
     this.destroying = true;
 
-    // If our tab is about to be unloaded, there's not enough time to exit
+    // If our tab is about to be closed, there's not enough time to exit
     // gracefully, but that shouldn't be a problem since the tab will go away.
-    // So, skip any yielding when we're about to unload.
-    let isBeforeUnload = options && options.reason == "beforeunload";
+    // So, skip any yielding when we're about to close the tab.
+    let isTabClosing = options && options.reason == "TabClose";
 
     // Ensure init has finished before starting destroy
-    if (!isBeforeUnload) {
+    if (!isTabClosing) {
       yield this.inited;
     }
 
-    this.tab.linkedBrowser.removeEventListener("beforeunload", this, true);
+    this.tab.removeEventListener("TabClose", this);
     this.toolWindow.removeEventListener("message", this);
 
     // Stop the touch event simulator if it was running
-    if (!isBeforeUnload) {
+    if (!isTabClosing) {
       yield this.touchEventSimulator.stop();
     }
 
     // Notify the inner browser to stop the frame script
-    if (!isBeforeUnload) {
+    if (!isTabClosing) {
       yield message.request(this.toolWindow, "stop-frame-script");
     }
 
@@ -352,19 +349,7 @@ ResponsiveUI.prototype = {
       case "message":
         this.handleMessage(event);
         break;
-      case "beforeunload":
-        // Ignore the event for locations like about:blank
-        if (event.target.location != TOOL_URL) {
-          return;
-        }
-        // We want to ensure we close RDM before browser window close when
-        // quitting.  Session restore starts its final session data flush when
-        // it gets the `quit-application-granted` notification.  If we were to
-        // wait for browser windows to close before destroying (which will undo
-        // the content swap), session restore gets wedged in a confused state
-        // since we're moving browsers at the same time that it is blocking
-        // shutdown on messages from each browser.  So instead, we destroy
-        // earlier based on the tab's `beforeunload` event.
+      case "TabClose":
         ResponsiveUIManager.closeIfNeeded(browserWindow, tab, {
           reason: event.type,
         });
@@ -428,6 +413,13 @@ ResponsiveUI.prototype = {
    */
   getViewportBrowser() {
     return this.toolWindow.getViewportBrowser();
+  },
+
+  /**
+   * Helper for contacting the viewport content. Assumes a single viewport for now.
+   */
+  getViewportMessageManager() {
+    return this.getViewportBrowser().messageManager;
   },
 
 };

@@ -39,19 +39,17 @@ function test() {
           is(aResponse.pong, "pong", "Actor should respond to requests.");
 
           // Make sure that lazily-created actors are created only once.
-          let conn = transport._serverConnection;
-
-          // First we look for the pool of global actors.
-          let extraPools = conn._extraPools;
-          let globalPool;
-
-          let actorPrefix = conn._prefix + "test_one";
           let count = 0;
-          for (let pool of extraPools) {
-            count += Object.keys(pool._actors).filter(e => {
-              return e.startsWith(actorPrefix);
-            }).length;
+          for (let connID of Object.getOwnPropertyNames(DebuggerServer._connections)) {
+            let conn = DebuggerServer._connections[connID];
+            let actorPrefix = conn._prefix + "test_one";
+            for (let pool of conn._extraPools) {
+              count += Object.keys(pool._actors).filter(e => {
+                return e.startsWith(actorPrefix);
+              }).length;
+            }
           }
+
           is(count, 2,
             "Only two actor exists in all pools. One tab actor and one global.");
 

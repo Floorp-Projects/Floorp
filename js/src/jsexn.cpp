@@ -266,7 +266,8 @@ static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
 static bool
 CaptureStack(JSContext* cx, MutableHandleObject stack)
 {
-    return CaptureCurrentStack(cx, stack, MAX_REPORTED_STACK_DEPTH);
+    return CaptureCurrentStack(cx, stack,
+                               JS::StackCapture(JS::MaxFrames(MAX_REPORTED_STACK_DEPTH)));
 }
 
 JSString*

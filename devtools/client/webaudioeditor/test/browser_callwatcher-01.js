@@ -15,9 +15,9 @@ add_task(function* () {
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
 
+  let rendered = waitForGraphRendered(panelWin, 3, 0);
   reload(target);
-
-  yield waitForGraphRendered(panelWin, 3, 0);
+  yield rendered;
 
   ok(true, "Successfully created a node from AudioContext via `call`.");
   ok(true, "Successfully created a node from AudioContext via `apply`.");

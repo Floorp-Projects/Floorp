@@ -9,10 +9,12 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/RestyleManagerBase.h"
+#include "mozilla/ServoElementSnapshot.h"
 #include "nsChangeHint.h"
+#include "nsHashKeys.h"
+#include "nsINode.h"
 #include "nsISupportsImpl.h"
 #include "nsPresContext.h"
-#include "nsINode.h"
 
 namespace mozilla {
 namespace dom {
@@ -60,25 +62,25 @@ public:
                            nsIAtom* aAttribute,
                            int32_t aModType,
                            const nsAttrValue* aNewValue);
-  void AttributeChanged(dom::Element* aElement,
-                        int32_t aNameSpaceID,
-                        nsIAtom* aAttribute,
-                        int32_t aModType,
+  void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
+                        nsIAtom* aAttribute, int32_t aModType,
                         const nsAttrValue* aOldValue);
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
-  bool HasPendingRestyles() {
-    if (MOZ_UNLIKELY(IsDisconnected())) {
-      return false;
-    }
-
-    return PresContext()->PresShell()->GetDocument()->HasDirtyDescendantsForServo();
-  }
+  bool HasPendingRestyles() { return mModifiedElements.Count() != 0; }
 
 protected:
   ~ServoRestyleManager() {}
 
 private:
+  ServoElementSnapshot* SnapshotForElement(Element* aElement);
+
+  /**
+   * The element-to-element snapshot table to compute restyle hints.
+   */
+  nsClassHashtable<nsRefPtrHashKey<Element>, ServoElementSnapshot>
+    mModifiedElements;
+
   /**
    * Traverses a tree of content that Servo has just restyled, recreating style
    * contexts for their frames with the new style data.
@@ -95,9 +97,15 @@ private:
    * Propagates the IS_DIRTY flag down to the tree, setting
    * HAS_DIRTY_DESCENDANTS appropriately.
    */
-  static void DirtyTree(nsIContent* aContent);
+  static void DirtyTree(nsIContent* aContent, bool aIncludingRoot = true);
 
-  inline ServoStyleSet* StyleSet() const {
+  /**
+   * Marks the tree with the appropriate dirty flags for the given restyle hint.
+   */
+  static void NoteRestyleHint(Element* aElement, nsRestyleHint aRestyleHint);
+
+  inline ServoStyleSet* StyleSet() const
+  {
     MOZ_ASSERT(PresContext()->StyleSet()->IsServo(),
                "ServoRestyleManager should only be used with a Servo-flavored "
                "style backend");

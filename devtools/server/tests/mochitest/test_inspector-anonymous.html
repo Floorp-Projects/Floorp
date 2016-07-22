@@ -72,8 +72,7 @@ window.onload = function() {
   addAsyncTest(function* testNativeAnonymousStartingNode() {
     info ("Tests attaching an element that a walker can't see.");
 
-    let serverConnection = gWalker.conn._transport._serverConnection;
-    let serverWalker = serverConnection.getActor(gWalker.actorID);
+    let serverWalker = DebuggerServer._searchAllConnectionsForActor(gWalker.actorID);
     let docwalker = new _documentWalker(
       gInspectee.querySelector("select"),
       gInspectee.defaultView,

@@ -17,7 +17,7 @@
 namespace mozilla {
 
 class GeckoScreenOrientation final
-    : public widget::GeckoScreenOrientation::Natives<GeckoScreenOrientation>
+    : public java::GeckoScreenOrientation::Natives<GeckoScreenOrientation>
     , public UsesGeckoThreadProxy
 {
     GeckoScreenOrientation() = delete;

@@ -13,6 +13,7 @@
 #include "nsIAtom.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPtr.h"
 
 #define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR
                                                             // CANNOT be used to GET a location
@@ -42,7 +43,7 @@ public:
   static nsresult
   Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-  static nsDirectoryService* gService;
+  static mozilla::StaticRefPtr<nsDirectoryService> gService;
 
 private:
   ~nsDirectoryService();

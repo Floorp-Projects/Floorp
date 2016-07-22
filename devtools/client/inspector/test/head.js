@@ -6,7 +6,7 @@
 /* import-globals-from ../../framework/test/shared-head.js */
 /* import-globals-from ../../commandline/test/helpers.js */
 /* import-globals-from ../../shared/test/test-actor-registry.js */
-/* globals registerTestActor, getTestActor */
+/* import-globals-from ../../inspector/test/shared-head.js */
 "use strict";
 
 // Load the shared-head file first.
@@ -27,6 +27,11 @@ Services.scriptloader.loadSubScript(
 // Import helpers registering the test-actor in remote targets
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
+  this);
+
+// Import helpers for the inspector that are also shared with others
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/inspector/test/shared-head.js",
   this);
 
 DevToolsUtils.testing = true;
@@ -122,24 +127,6 @@ function selectAndHighlightNode(selector, inspector) {
 }
 
 /**
- * Set the inspector's current selection to the first match of the given css
- * selector
- * @param {String|NodeFront} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
- * @return {Promise} Resolves when the inspector is updated with the new node
- */
-var selectNode = Task.async(function* (selector, inspector, reason = "test") {
-  info("Selecting the node for '" + selector + "'");
-  let nodeFront = yield getNodeFront(selector, inspector);
-  let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(nodeFront, reason);
-  yield updated;
-});
-
-/**
  * Select node for a given selector, make it focusable and set focus in its
  * container element.
  * @param {String|NodeFront} selector
@@ -182,32 +169,6 @@ var openInspectorForURL = Task.async(function* (url, hostType) {
   return { tab, inspector, toolbox, testActor };
 });
 
-/**
- * Open the toolbox, with the inspector tool visible.
- * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
- * @return a promise that resolves when the inspector is ready
- */
-var openInspector = Task.async(function* (hostType) {
-  info("Opening the inspector");
-
-  let toolbox = yield openToolboxForTab(gBrowser.selectedTab, "inspector",
-                                        hostType);
-  let inspector = toolbox.getPanel("inspector");
-
-  if (inspector._updateProgress) {
-    info("Need to wait for the inspector to update");
-    yield inspector.once("inspector-updated");
-  }
-
-  info("Waiting for actor features to be detected");
-  yield inspector._detectingActorFeatures;
-
-  yield registerTestActor(toolbox.target.client);
-  let testActor = yield getTestActor(toolbox);
-
-  return {toolbox, inspector, testActor};
-});
-
 function getActiveInspector() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
@@ -243,103 +204,6 @@ var clickOnInspectMenuItem = Task.async(function* (testActor, selector) {
 
   return getActiveInspector();
 });
-
-/**
- * Open the toolbox, with the inspector tool visible, and the one of the sidebar
- * tabs selected.
- *
- * @param {String} id
- *        The ID of the sidebar tab to be opened
- * @return a promise that resolves when the inspector is ready and the tab is
- * visible and ready
- */
-var openInspectorSidebarTab = Task.async(function* (id) {
-  let {toolbox, inspector, testActor} = yield openInspector();
-
-  info("Selecting the " + id + " sidebar");
-  inspector.sidebar.select(id);
-
-  return {
-    toolbox,
-    inspector,
-    testActor
-  };
-});
-
-/**
- * Open the toolbox, with the inspector tool visible, and the rule-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the rule view
- * is visible and ready
- */
-function openRuleView() {
-  return openInspectorSidebarTab("ruleview").then(data => {
-    return {
-      toolbox: data.toolbox,
-      inspector: data.inspector,
-      testActor: data.testActor,
-      view: data.inspector.ruleview.view
-    };
-  });
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the computed-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the computed
- * view is visible and ready
- */
-function openComputedView() {
-  return openInspectorSidebarTab("computedview").then(data => {
-    return {
-      toolbox: data.toolbox,
-      inspector: data.inspector,
-      testActor: data.testActor,
-      view: data.inspector.computedview.computedView
-    };
-  });
-}
-
-/**
- * Select the rule view sidebar tab on an already opened inspector panel.
- *
- * @param {InspectorPanel} inspector
- *        The opened inspector panel
- * @return {CssRuleView} the rule view
- */
-function selectRuleView(inspector) {
-  inspector.sidebar.select("ruleview");
-  return inspector.ruleview.view;
-}
-
-/**
- * Select the computed view sidebar tab on an already opened inspector panel.
- *
- * @param {InspectorPanel} inspector
- *        The opened inspector panel
- * @return {CssComputedView} the computed view
- */
-function selectComputedView(inspector) {
-  inspector.sidebar.select("computedview");
-  return inspector.computedview.computedView;
-}
-
-/**
- * Get the NodeFront for a node that matches a given css selector, via the
- * protocol.
- * @param {String|NodeFront} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @return {Promise} Resolves to the NodeFront instance
- */
-function getNodeFront(selector, {walker}) {
-  if (selector._form) {
-    return selector;
-  }
-  return walker.querySelector(walker.rootNode, selector);
-}
 
 /**
  * Get the NodeFront for a node that matches a given css selector inside a

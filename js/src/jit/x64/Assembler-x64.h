@@ -827,11 +827,11 @@ class Assembler : public AssemblerX86Shared
 
     void loadWasmActivation(Register dest) {
         CodeOffset label = loadRipRelativeInt64(dest);
-        append(AsmJSGlobalAccess(label, wasm::ActivationGlobalDataOffset));
+        append(wasm::GlobalAccess(label, wasm::ActivationGlobalDataOffset));
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
         CodeOffset label = loadRipRelativeInt64(HeapReg);
-        append(AsmJSGlobalAccess(label, wasm::HeapGlobalDataOffset));
+        append(wasm::GlobalAccess(label, wasm::HeapGlobalDataOffset));
     }
 
     void cmpq(Register rhs, Register lhs) {

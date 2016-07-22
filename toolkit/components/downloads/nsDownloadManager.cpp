@@ -61,7 +61,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#include "GeneratedJNIWrappers.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -2791,7 +2791,7 @@ nsDownload::SetState(DownloadState aState)
             if (mimeInfo)
               mimeInfo->GetMIMEType(contentType);
 
-            mozilla::widget::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
+            java::DownloadsIntegration::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
           }
 #else
           if (addToRecentDocs && !mPrivate) {

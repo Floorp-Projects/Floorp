@@ -77,7 +77,7 @@ RootAccessible::Name(nsString& aName)
 {
   aName.Truncate();
 
-  if (mRoleMapEntry) {
+  if (ARIARoleMap()) {
     Accessible::Name(aName);
     if (!aName.IsEmpty())
       return eNameOK;

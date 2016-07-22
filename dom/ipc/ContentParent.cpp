@@ -2838,7 +2838,7 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
 #ifdef MOZ_WIDGET_ANDROID
   NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
 
-  *showPassword = mozilla::widget::GeckoAppShell::GetShowPasswordSetting();
+  *showPassword = java::GeckoAppShell::GetShowPasswordSetting();
 #endif
   return true;
 }
@@ -5749,8 +5749,8 @@ ContentParent::RecvStoreAndBroadcastBlobURLRegistration(const nsCString& aURI,
     return false;
   }
 
-  if (NS_SUCCEEDED(nsHostObjectProtocolHandler::AddDataEntry(aURI, blobImpl,
-                                                             aPrincipal))) {
+  if (NS_SUCCEEDED(nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal,
+                                                             blobImpl))) {
     BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, this);
 
     // We want to store this blobURL, so we can unregister it if the child

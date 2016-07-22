@@ -68,7 +68,6 @@ public class GeckoEvent {
         MOTION_EVENT(2),
         NOOP(15),
         VIEWPORT(20),
-        THUMBNAIL(25),
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
@@ -337,15 +336,6 @@ public class GeckoEvent {
           .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
-        return event;
-    }
-
-    public static GeckoEvent createThumbnailEvent(int tabId, int bufw, int bufh, ByteBuffer buffer) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.THUMBNAIL);
-        event.mPoints = new Point[1];
-        event.mPoints[0] = new Point(bufw, bufh);
-        event.mMetaState = tabId;
-        event.mBuffer = buffer;
         return event;
     }
 

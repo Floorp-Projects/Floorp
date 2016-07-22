@@ -12,6 +12,7 @@ Iframe for testing multiple host detetion in storage actor
 document.cookie = "sc1=foobar;";
 localStorage.setItem("iframe-s-ls1", "foobar");
 sessionStorage.setItem("iframe-s-ss1", "foobar-2");
+dump("added cookies and storage from secured iframe\n");
 
 let idbGenerator = function*() {
   let request = indexedDB.open("idb-s1", 1);
@@ -65,7 +66,7 @@ let idbGenerator = function*() {
   });
 
   db2.close();
-  dump("added cookies and stuff from secured iframe\n");
+  dump("added indexedDB from secured iframe\n");
 };
 
 function deleteDB(dbName) {

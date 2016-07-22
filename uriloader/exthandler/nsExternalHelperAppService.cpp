@@ -100,7 +100,7 @@
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
+#include "GeneratedJNIWrappers.h"
 #endif
 
 #include "mozilla/Preferences.h"
@@ -382,7 +382,7 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
   // In the case where we do not have the permission we will start the
   // download to the app cache directory and later move it to the final
   // destination after prompting for the permission.
-  auto downloadDir = widget::DownloadsIntegration::GetTemporaryDownloadDirectory();
+  auto downloadDir = java::DownloadsIntegration::GetTemporaryDownloadDirectory();
 
   nsresult rv;
   if (downloadDir) {

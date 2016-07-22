@@ -99,6 +99,7 @@ devtools/client/shared/developer-toolbar.js
 devtools/client/shared/components/test/**
 devtools/client/shared/redux/middleware/test/**
 devtools/client/shared/test/**
+!devtools/client/shared/test/test-actor-registry.js
 devtools/client/shared/widgets/*.jsm
 devtools/client/sourceeditor/**
 devtools/client/webaudioeditor/**

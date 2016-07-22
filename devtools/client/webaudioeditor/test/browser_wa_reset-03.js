@@ -11,12 +11,12 @@ add_task(function* () {
   let { panelWin } = panel;
   let { gFront, $, InspectorView } = panelWin;
 
-  reload(target);
-
-  let [actors] = yield Promise.all([
+  let events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  let [actors] = yield events;
   let nodeIds = actors.map(actor => actor.actorID);
 
   yield clickGraphNode(panelWin, nodeIds[1], true);
@@ -27,12 +27,12 @@ add_task(function* () {
    * Reload
    */
 
-  reload(target);
-
-  [actors] = yield Promise.all([
+  events = Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
+  reload(target);
+  [actors] = yield events;
   nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
