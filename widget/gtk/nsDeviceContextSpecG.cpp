@@ -16,6 +16,7 @@
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
 #include "nsIServiceManager.h" 
+#include "nsThreadUtils.h"
 
 #include "nsPSPrinters.h"
 #include "nsPaperPS.h"  /* Paper size list */

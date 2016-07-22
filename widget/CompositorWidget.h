@@ -29,6 +29,7 @@ class SourceSurface;
 namespace widget {
 
 class WinCompositorWidget;
+class X11CompositorWidget;
 class CompositorWidgetInitData;
 
 // Gecko widgets usually need to communicate with the CompositorWidget with
@@ -39,7 +40,7 @@ class CompositorWidgetInitData;
 class CompositorWidgetDelegate;
 
 // Platforms that support out-of-process widgets.
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_X11)
 // CompositorWidgetParent should implement CompositorWidget and
 // PCompositorWidgetParent.
 class CompositorWidgetParent;
@@ -243,6 +244,9 @@ public:
   virtual RefPtr<VsyncObserver> GetVsyncObserver() const;
 
   virtual WinCompositorWidget* AsWindows() {
+    return nullptr;
+  }
+  virtual X11CompositorWidget* AsX11() {
     return nullptr;
   }
 

@@ -5,6 +5,8 @@
 
 #include "nsScreenGtk.h"
 
+#include "nsIWidget.h"
+
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
