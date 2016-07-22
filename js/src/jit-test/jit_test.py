@@ -121,7 +121,7 @@ def main(argv):
     op.add_option('--ion', dest='jitflags', action='store_const', const='ion',
                   help='Run tests once with --ion-eager and once with'
                   ' --baseline-eager (equivalent to --jitflags=ion)')
-    op.add_option('--tbpl', dest='jit_flags', action='store_const', const='all',
+    op.add_option('--tbpl', dest='jitflags', action='store_const', const='all',
                   help='Run tests with all IonMonkey option combinations'
                   ' (equivalent to --jitflags=all)')
     op.add_option('-j', '--worker-count', dest='max_jobs', type=int,
