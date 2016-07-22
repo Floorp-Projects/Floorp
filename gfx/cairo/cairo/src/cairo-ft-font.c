@@ -741,7 +741,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 	double best_y_size = 0;
 
 	for (i = 0; i < unscaled->face->num_fixed_sizes; i++) {
-	    double x_size = unscaled->face->available_sizes[i].y_ppem / 64.;
+	    double x_size = unscaled->face->available_sizes[i].x_ppem / 64.;
 	    double y_size = unscaled->face->available_sizes[i].y_ppem / 64.;
 	    double distance = y_size - y_scale;
 

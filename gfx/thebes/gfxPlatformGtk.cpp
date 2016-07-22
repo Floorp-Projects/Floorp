@@ -625,7 +625,20 @@ gfxPlatformGtk::GetGdkDrawable(cairo_surface_t *target)
 already_AddRefed<ScaledFont>
 gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
-    return GetScaledFontForFontWithCairoSkia(aTarget, aFont);
+    switch (aTarget->GetBackendType()) {
+    case BackendType::CAIRO:
+    case BackendType::SKIA:
+        if (aFont->GetType() == gfxFont::FONT_TYPE_FONTCONFIG) {
+            gfxFontconfigFontBase* fcFont = static_cast<gfxFontconfigFontBase*>(aFont);
+            return Factory::CreateScaledFontForFontconfigFont(
+                    fcFont->GetCairoScaledFont(),
+                    fcFont->GetPattern(),
+                    fcFont->GetAdjustedSize());
+        }
+        MOZ_FALLTHROUGH;
+    default:
+        return GetScaledFontForFontWithCairoSkia(aTarget, aFont);
+    }
 }
 
 #ifdef GL_PROVIDER_GLX

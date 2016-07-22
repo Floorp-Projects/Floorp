@@ -1163,7 +1163,6 @@ void SkScalerContext_FreeType::generateMetrics(SkGlyph* glyph) {
             FT_Vector vector;
             vector.x = fFace->glyph->metrics.vertBearingX - fFace->glyph->metrics.horiBearingX;
             vector.y = -fFace->glyph->metrics.vertBearingY - fFace->glyph->metrics.horiBearingY;
-            FT_Vector_Transform(&vector, &fMatrix22);
             fFace->glyph->bitmap_left += SkFDot6Floor(vector.x);
             fFace->glyph->bitmap_top  += SkFDot6Floor(vector.y);
         }
@@ -1172,10 +1171,18 @@ void SkScalerContext_FreeType::generateMetrics(SkGlyph* glyph) {
             glyph->fMaskFormat = SkMask::kARGB32_Format;
         }
 
-        glyph->fWidth   = SkToU16(fFace->glyph->bitmap.width);
-        glyph->fHeight  = SkToU16(fFace->glyph->bitmap.rows);
-        glyph->fTop     = -SkToS16(fFace->glyph->bitmap_top);
-        glyph->fLeft    = SkToS16(fFace->glyph->bitmap_left);
+        SkRect srcRect = SkRect::MakeXYWH(
+            SkIntToScalar(face->glyph->bitmap_left),
+            -SkIntToScalar(face->glyph->bitmap_top),
+            SkIntToScalar(face->glyph->bitmap.width),
+            SkIntToScalar(face->glyph->bitmap.rows));
+        SkRect destRect;
+        fMatrix22Scalar.mapRect(&destRect, srcRect);
+        SkIRect glyphRect = destRect.roundOut();
+        glyph->fWidth  = SkToU16(glyphRect.width());
+        glyph->fHeight = SkToU16(glyphRect.height());
+        glyph->fTop    = SkToS16(SkScalarRoundToInt(destRect.fTop));
+        glyph->fLeft   = SkToS16(SkScalarRoundToInt(destRect.fLeft));
         break;
 
       default:

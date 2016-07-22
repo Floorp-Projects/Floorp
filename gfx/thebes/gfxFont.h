@@ -1794,7 +1794,8 @@ public:
         FONT_TYPE_FT2,
         FONT_TYPE_MAC,
         FONT_TYPE_OS2,
-        FONT_TYPE_CAIRO
+        FONT_TYPE_CAIRO,
+        FONT_TYPE_FONTCONFIG
     } FontType;
 
     virtual FontType GetType() const = 0;

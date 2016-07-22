@@ -1,4 +1,4 @@
-# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
 # vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -426,6 +426,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/HomeListView.java',
     'home/HomePager.java',
     'home/HomePanelsManager.java',
+    'home/HomeScreen.java',
     'home/ImageLoader.java',
     'home/MultiTypeCursorAdapter.java',
     'home/PanelAuthCache.java',

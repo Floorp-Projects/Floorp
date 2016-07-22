@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsISupportsImpl.h"
+#include "gfxFT2FontBase.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -310,6 +311,20 @@ protected:
     nsCString mBundledFontsPath;
     bool      mBundledFontsInitialized;
 #endif
+};
+
+class gfxFontconfigFontBase : public gfxFT2FontBase {
+public:
+    gfxFontconfigFontBase(cairo_scaled_font_t *aScaledFont,
+                          FcPattern *aPattern,
+                          gfxFontEntry *aFontEntry,
+                          const gfxFontStyle *aFontStyle);
+
+    virtual FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }
+    virtual FcPattern *GetPattern() const { return mPattern; }
+
+private:
+    nsCountedRef<FcPattern> mPattern;
 };
 
 #endif /* GFX_FONTCONFIG_UTILS_H */

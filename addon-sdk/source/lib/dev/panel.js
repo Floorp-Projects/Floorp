@@ -164,6 +164,10 @@ validate.define(Panel, contract({
   invertIconForLightTheme: {
     is: ["boolean", "undefined"],
     msg: "The `options.invertIconForLightTheme` must be a boolean."
+  },
+  invertIconForDarkTheme: {
+    is: ["boolean", "undefined"],
+    msg: "The `options.invertIconForDarkTheme` must be a boolean."
   }
 }));
 

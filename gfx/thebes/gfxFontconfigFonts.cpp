@@ -662,17 +662,12 @@ gfxDownloadedFcFontEntry::GetFontTable(uint32_t aTableTag)
  * cairo_scaled_font created from an FcPattern.
  */
 
-class gfxFcFont : public gfxFT2FontBase {
+class gfxFcFont : public gfxFontconfigFontBase {
 public:
     virtual ~gfxFcFont();
     static already_AddRefed<gfxFcFont>
     GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern,
                   const gfxFontStyle *aFontStyle);
-
-#ifdef USE_SKIA
-    virtual already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-        GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
-#endif
 
     // return a cloned font resized and offset to simulate sub/superscript glyphs
     virtual already_AddRefed<gfxFont>
@@ -684,7 +679,9 @@ protected:
     virtual already_AddRefed<gfxFont> GetSmallCapsFont() override;
 
 private:
-    gfxFcFont(cairo_scaled_font_t *aCairoFont, gfxFcFontEntry *aFontEntry,
+    gfxFcFont(cairo_scaled_font_t *aCairoFont,
+              FcPattern *aPattern,
+              gfxFcFontEntry *aFontEntry,
               const gfxFontStyle *aFontStyle);
 
     // key for locating a gfxFcFont corresponding to a cairo_scaled_font
@@ -1663,9 +1660,10 @@ gfxPangoFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
 cairo_user_data_key_t gfxFcFont::sGfxFontKey;
 
 gfxFcFont::gfxFcFont(cairo_scaled_font_t *aCairoFont,
+                     FcPattern *aPattern,
                      gfxFcFontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
-    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
+    : gfxFontconfigFontBase(aCairoFont, aPattern, aFontEntry, aFontStyle)
 {
     cairo_scaled_font_set_user_data(mScaledFont, &sGfxFontKey, this, nullptr);
 }
@@ -1710,7 +1708,7 @@ gfxFcFont::MakeScaledFont(gfxFontStyle *aFontStyle, gfxFloat aScaleFactor)
                                  &fontMatrix, &ctm, options);
     cairo_font_options_destroy(options);
 
-    font = new gfxFcFont(newFont, fe, aFontStyle);
+    font = new gfxFcFont(newFont, GetPattern(), fe, aFontStyle);
     gfxFontCache::GetCache()->AddNew(font);
     cairo_scaled_font_destroy(newFont);
 
@@ -1960,7 +1958,7 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern,
         // pattern as input and can modify elements of the resulting pattern
         // that affect rendering but are not included in the gfxFontStyle.
         cairo_scaled_font_t *cairoFont = CreateScaledFont(renderPattern, face);
-        font = new gfxFcFont(cairoFont, fe, &style);
+        font = new gfxFcFont(cairoFont, renderPattern, fe, &style);
         gfxFontCache::GetCache()->AddNew(font);
         cairo_scaled_font_destroy(cairoFont);
     }
@@ -2261,25 +2259,3 @@ ApplyGdkScreenFontOptions(FcPattern *aPattern)
 
 #endif // MOZ_WIDGET_GTK
 
-#ifdef USE_SKIA
-already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-gfxFcFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
-{
-  cairo_scaled_font_t *scaled_font = CairoScaledFont();
-  cairo_font_options_t *options = cairo_font_options_create();
-  cairo_scaled_font_get_font_options(scaled_font, options);
-  cairo_hint_style_t hint_style = cairo_font_options_get_hint_style(options);     
-  cairo_antialias_t antialias = cairo_font_options_get_antialias(options);
-  cairo_font_options_destroy(options);
-
-  mozilla::gfx::FontHinting hinting =
-    mozilla::gfx::CairoHintingToGfxHinting(hint_style);
-
-  mozilla::gfx::AntialiasMode aaMode =
-    mozilla::gfx::CairoAntialiasToGfxAntialias(antialias);
-
-  // We don't want to force the use of the autohinter over the font's built in hints
-  // The fontconfig AA mode must be passed along because it may override the hinting style.
-  return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, false, aaMode);
-}
-#endif
