@@ -83,8 +83,7 @@ private:
   ~GMPDecryptorChild();
 
   // GMPDecryptorChild
-  bool RecvInit(const bool& aDistinctiveIdentifierRequired,
-                const bool& aPersistentStateRequired) override;
+  bool RecvInit() override;
 
   bool RecvCreateSession(const uint32_t& aCreateSessionToken,
                          const uint32_t& aPromiseId,

@@ -34,9 +34,7 @@ class ClearKeySessionManager final : public GMPDecryptor
 public:
   ClearKeySessionManager();
 
-  virtual void Init(GMPDecryptorCallback* aCallback,
-                    bool aDistinctiveIdentifierAllowed,
-                    bool aPersistentStateAllowed) override;
+  virtual void Init(GMPDecryptorCallback* aCallback) override;
 
   virtual void CreateSession(uint32_t aCreateSessionToken,
                              uint32_t aPromiseId,
