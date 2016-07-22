@@ -13,6 +13,7 @@
 #include "jspubtd.h"
 #include "nsIException.h"
 #include "nsStringGlue.h"
+#include "jsapi.h"
 
 class nsIStackFrame;
 class nsPIDOMWindowInner;
@@ -57,11 +58,8 @@ GetCurrentJSStack(int32_t aMaxDepth = -1);
 // Internal stuff not intended to be widely used.
 namespace exceptions {
 
-// aMaxDepth can be used to define a maximal depth for the stack trace. If the
-// value is -1, a default maximal depth will be selected.  Will return null if
-// there is no JS stack right now.
 already_AddRefed<nsIStackFrame>
-CreateStack(JSContext* aCx, int32_t aMaxDepth = -1);
+CreateStack(JSContext* aCx, JS::StackCapture&& aCaptureMode);
 
 } // namespace exceptions
 } // namespace dom
