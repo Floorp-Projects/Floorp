@@ -42,8 +42,8 @@ const Tool = Class({
     this.themes = themes;
 
     each(([key, Panel]) => {
-      const { url, label, tooltip, icon,
-             invertIconForLightTheme } = validate(Panel.prototype);
+      const { url, label, tooltip, icon, invertIconForLightTheme,
+              invertIconForDarkTheme } = validate(Panel.prototype);
       const { id } = Panel.prototype;
 
       gDevTools.registerTool({
@@ -53,6 +53,7 @@ const Tool = Class({
         tooltip: tooltip,
         icon: icon,
         invertIconForLightTheme: invertIconForLightTheme,
+        invertIconForDarkTheme: invertIconForDarkTheme,
         isTargetSupported: target => target.isLocalTab,
         build: (window, toolbox) => {
           const panel = new Panel();

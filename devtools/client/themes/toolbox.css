@@ -134,6 +134,21 @@
   width: 16px; /* Prevents collapse during theme switching */
 }
 
+/* Support invertable icon flags and make icon white when it's on a blue background */
+.theme-light .devtools-tab[icon-invertable="light-theme"]:not([selected]) > image,
+.devtools-tab[icon-invertable="dark-theme"][selected] > image {
+  filter: invert(1);
+}
+
+/* Don't apply any filter to non-invertable command button icons */
+.command-button:not(.command-button-invertable),
+/* [icon-invertable="light-theme"] icons are white, so do not invert them for the dark theme */
+.theme-dark .devtools-tab[icon-invertable="light-theme"] > image,
+/* Since "highlighted" icons are green, we should omit the filter */
+.devtools-tab[icon-invertable][highlighted]:not([selected]) > image {
+  filter: none;
+}
+
 .devtools-tab > label {
   white-space: nowrap;
   margin: 0 4px;

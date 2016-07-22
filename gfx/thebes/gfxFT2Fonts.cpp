@@ -225,20 +225,3 @@ gfxFT2Font::AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
     AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
-#ifdef USE_SKIA
-already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-gfxFT2Font::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
-{
-  mozilla::gfx::FontHinting hinting;
-
-  if (gfxPlatform::GetPlatform()->FontHintingEnabled()) {
-    hinting = mozilla::gfx::FontHinting::NORMAL;
-  } else {
-    hinting = mozilla::gfx::FontHinting::NONE;
-  }
-
-  // We don't want to force the use of the autohinter over the font's built in hints
-  return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, false);
-}
-#endif
-

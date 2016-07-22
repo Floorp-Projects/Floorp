@@ -611,6 +611,7 @@ DrawTargetSkia::ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialias
       case FontType::MAC:
       case FontType::GDI:
       case FontType::DWRITE:
+      case FontType::FONTCONFIG:
         return true;
       default:
         // TODO: Figure out what to do for the other platforms.
@@ -1001,10 +1002,15 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
                            const DrawOptions &aOptions,
                            const GlyphRenderingOptions *aRenderingOptions)
 {
-  if (aFont->GetType() != FontType::MAC &&
-      aFont->GetType() != FontType::SKIA &&
-      aFont->GetType() != FontType::GDI &&
-      aFont->GetType() != FontType::DWRITE) {
+  switch (aFont->GetType()) {
+  case FontType::SKIA:
+  case FontType::CAIRO:
+  case FontType::FONTCONFIG:
+  case FontType::MAC:
+  case FontType::GDI:
+  case FontType::DWRITE:
+    break;
+  default:
     return;
   }
 
@@ -1032,26 +1038,18 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aOptions.mAntialiasMode);
   paint.mPaint.setLCDRenderText(shouldLCDRenderText);
 
-  if (aRenderingOptions && aRenderingOptions->GetType() == FontType::CAIRO) {
-    const GlyphRenderingOptionsCairo* cairoOptions =
-      static_cast<const GlyphRenderingOptionsCairo*>(aRenderingOptions);
+  bool useSubpixelText = true;
 
-    paint.mPaint.setHinting(GfxHintingToSkiaHinting(cairoOptions->GetHinting()));
-
-    if (cairoOptions->GetAutoHinting()) {
-      paint.mPaint.setAutohinted(true);
-    }
-
-    if (cairoOptions->GetAntialiasMode() == AntialiasMode::NONE) {
-      paint.mPaint.setAntiAlias(false);
-    }
-  } else {
+  switch (aFont->GetType()) {
+  case FontType::SKIA:
+  case FontType::CAIRO:
+  case FontType::FONTCONFIG:
     // SkFontHost_cairo does not support subpixel text positioning,
     // so only enable it for other font hosts.
-    paint.mPaint.setSubpixelText(true);
-
-    if (aFont->GetType() == FontType::MAC &&
-       aOptions.mAntialiasMode == AntialiasMode::GRAY) {
+    useSubpixelText = false;
+    break;
+  case FontType::MAC:
+    if (aOptions.mAntialiasMode == AntialiasMode::GRAY) {
       // Normally, Skia enables LCD FontSmoothing which creates thicker fonts
       // and also enables subpixel AA. CoreGraphics without font smoothing
       // explicitly creates thinner fonts and grayscale AA.
@@ -1068,18 +1066,22 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
       // To accomplish this we have to explicitly disable hinting,
       // and disable LCDRenderText.
       paint.mPaint.setHinting(SkPaint::kNo_Hinting);
-    } else {
-      paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
     }
+    break;
+  case FontType::GDI:
+    if (!shouldLCDRenderText) {
+      // If we have non LCD GDI text, Cairo currently always uses cleartype fonts and
+      // converts them to grayscale. Force Skia to do the same, otherwise we use
+      // GDI fonts with the ANTIALIASED_QUALITY which is generally bolder than
+      // Cleartype fonts.
+      paint.mPaint.setFlags(paint.mPaint.getFlags() | SkPaint::kGenA8FromLCD_Flag);
+    }
+    break;
+  default:
+    break;
   }
 
-  if (!shouldLCDRenderText && aFont->GetType() == FontType::GDI) {
-    // If we have non LCD GDI text, Cairo currently always uses cleartype fonts and
-    // converts them to grayscale. Force Skia to do the same, otherwise we use
-    // GDI fonts with the ANTIALIASED_QUALITY which is generally bolder than
-    // Cleartype fonts.
-    paint.mPaint.setFlags(paint.mPaint.getFlags() | SkPaint::kGenA8FromLCD_Flag);
-  }
+  paint.mPaint.setSubpixelText(useSubpixelText);
 
   std::vector<uint16_t> indices;
   std::vector<SkPoint> offsets;

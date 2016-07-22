@@ -4,6 +4,7 @@
 
 #eyedropper-button {
   margin-inline-start: 5px;
+  display: block;
 }
 
 #eyedropper-button::before {

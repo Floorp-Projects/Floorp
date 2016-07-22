@@ -115,6 +115,9 @@ DEFINES['SKIA_IMPLEMENTATION'] = 1
 if not CONFIG['MOZ_ENABLE_SKIA_GPU']:
     DEFINES['SK_SUPPORT_GPU'] = 0
 
+if CONFIG['MOZ_TREE_FREETYPE']:
+    DEFINES['SK_CAN_USE_DLOPEN'] = 0
+
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CXX'] or CONFIG['CLANG_CL']:
     CXXFLAGS += [

@@ -9,27 +9,35 @@
  * matching the offending error. If an object has multiple regex criteria, they
  * ALL need to match an error in order for that error not to cause a test
  * failure. */
-const kWhitelist = [
+let whitelist = [
   // CodeMirror is imported as-is, see bug 1004423.
-  {sourceName: /codemirror\.css$/i},
+  {sourceName: /codemirror\.css$/i,
+   isFromDevTools: true},
   // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
   {sourceName: /web\/viewer\.css$/i,
-   errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i},
+   errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i,
+   isFromDevTools: false},
   // Tracked in bug 1004428.
-  {sourceName: /aboutaccounts\/(main|normalize)\.css$/i},
+  {sourceName: /aboutaccounts\/(main|normalize)\.css$/i,
+    isFromDevTools: false},
   // TokBox SDK assets, see bug 1032469.
-  {sourceName: /loop\/.*sdk-content\/.*\.css$/i},
+  {sourceName: /loop\/.*sdk-content\/.*\.css$/i,
+    isFromDevTools: false},
   // Loop standalone client CSS uses placeholder cross browser pseudo-element
   {sourceName: /loop\/.*\.css$/i,
-   errorMessage: /Unknown pseudo-class.*placeholder/i},
+   errorMessage: /Unknown pseudo-class.*placeholder/i,
+   isFromDevTools: false},
   {sourceName: /loop\/.*shared\/css\/common.css$/i,
-   errorMessage: /Unknown property .user-select./i},
+   errorMessage: /Unknown property .user-select./i,
+   isFromDevTools: false},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
-   errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i},
+   errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
+   isFromDevTools: true},
   // Responsive Design Mode CSS uses a UA-only pseudo-class, see Bug 1241714.
   {sourceName: /responsive-ua\.css$/i,
-   errorMessage: /Unknown pseudo-class.*moz-dropdown-list/i},
+   errorMessage: /Unknown pseudo-class.*moz-dropdown-list/i,
+   isFromDevTools: true},
 ];
 
 var moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
@@ -42,21 +50,23 @@ const kPathSuffix = "?always-parse-css-" + Math.random();
 
 /**
  * Check if an error should be ignored due to matching one of the whitelist
- * objects defined in kWhitelist
+ * objects defined in whitelist
  *
  * @param aErrorObject the error to check
  * @return true if the error should be ignored, false otherwise.
  */
 function ignoredError(aErrorObject) {
-  for (let whitelistItem of kWhitelist) {
+  for (let whitelistItem of whitelist) {
     let matches = true;
-    for (let prop in whitelistItem) {
-      if (!whitelistItem[prop].test(aErrorObject[prop] || "")) {
+    for (let prop of ["sourceName", "errorMessage"]) {
+      if (whitelistItem.hasOwnProperty(prop) &&
+          !whitelistItem[prop].test(aErrorObject[prop] || "")) {
         matches = false;
         break;
       }
     }
     if (matches) {
+      whitelistItem.used = true;
       return true;
     }
   }
@@ -150,7 +160,7 @@ function messageIsCSSError(msg) {
       msg.sourceName.endsWith(kPathSuffix)) {
     let sourceName = msg.sourceName.slice(0, -kPathSuffix.length);
     let msgInfo = { sourceName, errorMessage: msg.errorMessage };
-    // Check if this error is whitelisted in kWhitelist
+    // Check if this error is whitelisted in whitelist
     if (!ignoredError(msgInfo)) {
       ok(false, `Got error message for ${sourceName}: ${msg.errorMessage}`);
       return true;
@@ -233,6 +243,15 @@ add_task(function* checkAllTheCSS() {
   // as the ok(false) in messageIsCSSError.
   let errors = messages.filter(messageIsCSSError);
   is(errors.length, 0, "All the styles (" + allPromises.length + ") loaded without errors.");
+
+  // Confirm that all whitelist rules have been used.
+  for (let item of whitelist) {
+    if (!item.used && isDevtools == item.isFromDevTools) {
+      ok(false, "Unused whitelist item. " +
+                (item.sourceName ? " sourceName: " + item.sourceName : "") +
+                (item.errorMessage ? " errorMessage: " + item.errorMessage : ""));
+    }
+  }
 
   // Clean up to avoid leaks:
   iframe.remove();
