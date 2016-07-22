@@ -322,7 +322,6 @@ def old_configure_options(*options):
     '--with-thumb-interwork',
     '--with-unify-dist',
     '--with-user-appdir',
-    '--with-windows-version',
     '--x-includes',
     '--x-libraries',
 

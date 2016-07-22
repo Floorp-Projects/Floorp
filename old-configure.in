@@ -255,26 +255,7 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-# Target the Windows 8.1 SDK by default
-WINSDK_TARGETVER=603
 WINVER=502
-
-MOZ_ARG_WITH_STRING(windows-version,
-[  --with-windows-version=WINSDK_TARGETVER
-                          Windows SDK version to target. Win8.1 (603) is
-                          currently the minimum supported version.],
-  WINSDK_TARGETVER=$withval)
-
-# Currently only version 603 is allowed
-case "$WINSDK_TARGETVER" in
-603)
-    MOZ_WINSDK_TARGETVER=0${WINSDK_TARGETVER}0000
-    ;;
-
-*)
-    AC_MSG_ERROR([Invalid value for --with-windows-version ($WINSDK_TARGETVER)]);
-    ;;
-esac
 
 case "$target" in
 *-mingw*)
@@ -507,7 +488,6 @@ case "$target" in
         AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
     fi
 
-    AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     ;;
 esac
 
