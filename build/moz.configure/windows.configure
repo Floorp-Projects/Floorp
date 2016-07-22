@@ -1,0 +1,32 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+option('--with-windows-version', nargs=1, default='603',
+       help='Windows SDK version to target. Win 8.1 (603) is currently'
+            'the minimum supported version.')
+
+@depends(target)
+def is_windows(target):
+    return target.kernel == 'WINNT'
+
+
+@depends_when('--with-windows-version', when=is_windows)
+@imports(_from='__builtin__', _import='ValueError')
+def valid_windows_version(value):
+    if not value:
+        die('Cannot build with --without-windows-version')
+    try:
+        version = int(value[0], 16)
+        if version in (0x603,):
+            return version
+    except ValueError:
+        pass
+
+    die('Invalid value for --with-windows-version (%s)', value[0])
+
+add_old_configure_assignment(
+    'MOZ_WINSDK_TARGETVER',
+    depends(valid_windows_version)(lambda x: '%04x0000' % x if x else None))
