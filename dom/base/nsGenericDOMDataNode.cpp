@@ -647,6 +647,12 @@ nsGenericDOMDataNode::GetAttrNameAt(uint32_t aIndex) const
   return nullptr;
 }
 
+nsAttrInfo
+nsGenericDOMDataNode::GetAttrInfoAt(uint32_t aIndex) const
+{
+  return nsAttrInfo(nullptr, nullptr);
+}
+
 uint32_t
 nsGenericDOMDataNode::GetAttrCount() const
 {
