@@ -128,28 +128,16 @@ Instance::activation()
 }
 
 bool
-Instance::toggleProfiling(JSContext* cx)
+Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
 {
-    profilingEnabled_ = !profilingEnabled_;
-
-    {
-        AutoWritableJitCode awjc(cx->runtime(), codeSegment_->code(), codeSegment_->codeLength());
-        AutoFlushICache afc("Instance::toggleProfiling");
-        AutoFlushICache::setRange(uintptr_t(codeSegment_->code()), codeSegment_->codeLength());
-
-        for (const CallSite& callSite : metadata_->callSites)
-            ToggleProfiling(*this, callSite, profilingEnabled_);
-        for (const CallThunk& callThunk : metadata_->callThunks)
-            ToggleProfiling(*this, callThunk, profilingEnabled_);
-        for (const CodeRange& codeRange : metadata_->codeRanges)
-            ToggleProfiling(*this, codeRange, profilingEnabled_);
-    }
+    if (profilingEnabled_ == newProfilingEnabled)
+        return true;
 
     // When enabled, generate profiling labels for every name in funcNames_
     // that is the name of some Function CodeRange. This involves malloc() so
     // do it now since, once we start sampling, we'll be in a signal-handing
     // context where we cannot malloc.
-    if (profilingEnabled_) {
+    if (newProfilingEnabled) {
         for (const CodeRange& codeRange : metadata_->codeRanges) {
             if (!codeRange.isFunction())
                 continue;
@@ -179,12 +167,29 @@ Instance::toggleProfiling(JSContext* cx)
         funcLabels_.clear();
     }
 
+    // Only mutate the code after the fallible operations are complete to avoid
+    // the need to rollback.
+    profilingEnabled_ = newProfilingEnabled;
+
+    {
+        AutoWritableJitCode awjc(cx->runtime(), codeSegment_->code(), codeSegment_->codeLength());
+        AutoFlushICache afc("Instance::ensureProfilingState");
+        AutoFlushICache::setRange(uintptr_t(codeSegment_->code()), codeSegment_->codeLength());
+
+        for (const CallSite& callSite : metadata_->callSites)
+            ToggleProfiling(*this, callSite, newProfilingEnabled);
+        for (const CallThunk& callThunk : metadata_->callThunks)
+            ToggleProfiling(*this, callThunk, newProfilingEnabled);
+        for (const CodeRange& codeRange : metadata_->codeRanges)
+            ToggleProfiling(*this, codeRange, newProfilingEnabled);
+    }
+
     // Typed-function tables' elements point directly to either the profiling or
     // non-profiling prologue and must therefore be updated when the profiling
     // mode is toggled.
 
     for (const SharedTable& table : tables_) {
-        if (!table->isTypedFunction())
+        if (!table->isTypedFunction() || !table->initialized())
             continue;
 
         void** array = table->array();
@@ -193,7 +198,7 @@ Instance::toggleProfiling(JSContext* cx)
             const CodeRange* codeRange = lookupCodeRange(array[i]);
             void* from = codeSegment_->code() + codeRange->funcNonProfilingEntry();
             void* to = codeSegment_->code() + codeRange->funcProfilingEntry();
-            if (!profilingEnabled_)
+            if (!newProfilingEnabled)
                 Swap(from, to);
             MOZ_ASSERT(array[i] == from);
             array[i] = to;
@@ -512,16 +517,10 @@ Instance::updateStackLimit(JSContext* cx)
 bool
 Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
 {
-    const FuncExport& func = metadata_->lookupFuncExport(funcIndex);
+    if (!cx->compartment()->wasm.ensureProfilingState(cx))
+        return false;
 
-    // Enable/disable profiling in the Module to match the current global
-    // profiling state. Don't do this if the Module is already active on the
-    // stack since this would leave the Module in a state where profiling is
-    // enabled but the stack isn't unwindable.
-    if (profilingEnabled() != cx->runtime()->spsProfiler.enabled() && !activation()) {
-        if (!toggleProfiling(cx))
-            return false;
-    }
+    const FuncExport& func = metadata_->lookupFuncExport(funcIndex);
 
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32
