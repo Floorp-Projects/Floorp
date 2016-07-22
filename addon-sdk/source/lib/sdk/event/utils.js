@@ -244,9 +244,16 @@ const WeakValueGetterSetter = {
   },
   set: function(v) {
     if (v && typeof v === "object") {
-      this._weakValue = Cu.getWeakReference(v)
-      this._simpleValue = undefined;
-      return;
+      try {
+        // Try to set a weak reference.  This can throw for some values.
+        // For example, if the value is a native object that does not
+        // implement nsISupportsWeakReference.
+        this._weakValue = Cu.getWeakReference(v)
+        this._simpleValue = undefined;
+        return;
+      } catch (e) {
+        // Do nothing.  Fall through to setting _simpleValue below.
+      }
     }
     this._simpleValue = v;
     this._weakValue = undefined;
