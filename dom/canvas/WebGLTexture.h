@@ -8,6 +8,8 @@
 
 #include <algorithm>
 #include <map>
+#include <set>
+#include <vector>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
@@ -18,6 +20,7 @@
 #include "WebGLFramebufferAttachable.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
+#include "WebGLTypes.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -25,11 +28,19 @@ class WebGLContext;
 
 namespace dom {
 class Element;
+class HTMLVideoElement;
 class ImageData;
 class ArrayBufferViewOrSharedArrayBufferView;
 } // namespace dom
 
+namespace layers {
+class Image;
+} // namespace layers
+
 namespace webgl {
+struct DriverUnpackInfo;
+struct FormatUsageInfo;
+struct PackingInfo;
 class TexUnpackBlob;
 } // namespace webgl
 

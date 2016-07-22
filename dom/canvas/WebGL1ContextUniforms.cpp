@@ -8,7 +8,8 @@
 namespace mozilla {
 
 bool
-WebGL1Context::ValidateAttribPointerType(bool /*integerMode*/, GLenum type, GLsizei* out_alignment, const char* info)
+WebGL1Context::ValidateAttribPointerType(bool /*integerMode*/, GLenum type,
+                                         uint32_t* out_alignment, const char* info)
 {
     MOZ_ASSERT(out_alignment);
     if (!out_alignment)

@@ -9,8 +9,8 @@
 #include <map>
 #include <set>
 
-#include "GLTypes.h"
 #include "mozilla/UniquePtr.h"
+#include "WebGLTypes.h"
 
 namespace mozilla {
 namespace webgl {

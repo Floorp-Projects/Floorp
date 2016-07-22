@@ -16,6 +16,9 @@ typedef int64_t WebGLintptr;
 typedef bool WebGLboolean;
 
 namespace mozilla {
+namespace gl {
+class GLContext; // This is going to be needed a lot.
+} // namespace gl
 
 /*
  * WebGLTextureFakeBlackStatus is an enum to track what needs to use a dummy 1x1 black

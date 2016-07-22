@@ -9,6 +9,7 @@
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
+#include "WebGLStrongTypes.h"
 
 namespace mozilla {
 

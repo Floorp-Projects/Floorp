@@ -6,13 +6,13 @@
 
 #include "WebGLExtensions.h"
 
+#include "gfxPrefs.h"
+#include "GLContext.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "GLContext.h"
 #include "WebGLContext.h"
 #include "WebGLTimerQuery.h"
-#include "gfxPrefs.h"
 
 namespace mozilla {
 

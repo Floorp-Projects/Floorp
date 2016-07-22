@@ -7,7 +7,6 @@
 
 #include "GLBlitHelper.h"
 #include "GLContext.h"
-#include "GLDefs.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/RefPtr.h"
@@ -467,6 +466,9 @@ TexUnpackImage::TexUnpackImage(const WebGLContext* webgl, TexImageTarget target,
     , mImage(image)
 { }
 
+TexUnpackImage::~TexUnpackImage()
+{ }
+
 bool
 TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                               WebGLTexture* tex, TexImageTarget target, GLint level,
@@ -537,9 +539,9 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
                            " upload.",
                            funcName);
 
-    const RefPtr<SourceSurface> surf = mImage->GetAsSourceSurface();
+    const RefPtr<gfx::SourceSurface> surf = mImage->GetAsSourceSurface();
 
-    RefPtr<DataSourceSurface> dataSurf;
+    RefPtr<gfx::DataSourceSurface> dataSurf;
     if (surf) {
         // WARNING: OSX can lose our MakeCurrent here.
         dataSurf = surf->GetDataSurface();

@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#include "nsPrintfCString.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLBuffer.h"
 #include "WebGLContextUtils.h"
@@ -571,7 +572,7 @@ WebGLContext::ValidateAttribPointer(bool integerMode, GLuint index, GLint size, 
         return false;
     }
 
-    GLsizei requiredAlignment = 0;
+    uint32_t requiredAlignment = 0;
     if (!ValidateAttribPointerType(integerMode, type, &requiredAlignment, info))
         return false;
 
