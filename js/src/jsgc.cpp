@@ -2441,11 +2441,31 @@ GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, s
     }
 }
 
-// Pointer updates run in three phases because of depdendencies between the
-// different types of GC thing. The most important consideration is the
-// dependency:
+// After cells have been relocated any pointers to a cell's old locations must
+// be updated to point to the new location.  This happens by iterating through
+// all cells in heap and tracing their children (non-recursively) to update
+// them.
 //
-//    object ---> shape ---> base shape
+// This is complicated by the fact that updating a GC thing sometimes depends on
+// making use of other GC things.  After a moving GC these things may not be in
+// a valid state since they may contain pointers which have not been updated
+// yet.
+//
+// The main dependencies are:
+//
+//   - Updating a shape makes use of its base shape
+//   - Updating a JSObject makes use of its shape
+//   - Updating a typed object makes use of its type descriptor object
+//
+// This means we require at least four phases for update:
+//
+//  1) base shapes
+//  2) shapes
+//  3) typed object type descriptor objects
+//  4) all other objects
+//
+// Since we want to minimize the number of phases, we put everything else into
+// the second phase and label it the 'misc' phase.
 
 static const AllocKinds UpdatePhaseBaseShapes {
     AllocKind::BASE_SHAPE
