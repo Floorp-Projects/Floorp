@@ -159,6 +159,22 @@
   color: #666;
 }
 
+/* Autocomplete list clone used for accessibility. */
+
+.devtools-autocomplete-list-aria-clone {
+  /* Cannot use display:none or visibility:hidden : screen readers ignore the element. */
+  position: fixed;
+  overflow: hidden;
+  margin: 0;
+  width: 0;
+  height: 0;
+}
+
+.devtools-autocomplete-list-aria-clone li {
+  /* Prevent screen readers from prefacing every item with 'bullet'. */
+  list-style-type: none;
+}
+
 /* links to source code, like displaying `myfile.js:45` */
 
 .devtools-source-link {
