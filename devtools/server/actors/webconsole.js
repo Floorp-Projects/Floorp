@@ -1054,18 +1054,11 @@ WebConsoleActor.prototype =
     for (let key in aRequest.preferences) {
       this._prefs[key] = aRequest.preferences[key];
 
-      if (this.networkMonitor) {
-        if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
-          this.networkMonitor.saveRequestAndResponseBodies = this._prefs[key];
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.saveRequestAndResponseBodies =
-              this._prefs[key];
-          }
-        } else if (key == "NetworkMonitor.throttleData") {
-          this.networkMonitor.throttleData = this._prefs[key];
-          if (this.networkMonitorChild) {
-            this.networkMonitorChild.throttleData = this._prefs[key];
-          }
+      if (key == "NetworkMonitor.saveRequestAndResponseBodies" &&
+          this.networkMonitor) {
+        this.networkMonitor.saveRequestAndResponseBodies = this._prefs[key];
+        if (this.networkMonitorChild) {
+          this.networkMonitorChild.saveRequestAndResponseBodies = this._prefs[key];
         }
       }
     }

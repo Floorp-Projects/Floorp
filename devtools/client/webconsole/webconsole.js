@@ -387,7 +387,6 @@ WebConsoleFrame.prototype = {
   _destroyer: null,
 
   _saveRequestAndResponseBodies: true,
-  _throttleData: null,
 
   // Chevron width at the starting of Web Console's input box.
   _chevronWidth: 0,
@@ -416,36 +415,6 @@ WebConsoleFrame.prototype = {
     this.webConsoleClient.setPreferences(toSet, response => {
       if (!response.error) {
         this._saveRequestAndResponseBodies = newValue;
-        deferred.resolve(response);
-      } else {
-        deferred.reject(response.error);
-      }
-    });
-
-    return deferred.promise;
-  },
-
-  /**
-   * Setter for throttling data.
-   *
-   * @param boolean value
-   *        The new value you want to set; @see NetworkThrottleManager.
-   */
-  setThrottleData: function(value) {
-    if (!this.webConsoleClient) {
-      // Don't continue if the webconsole disconnected.
-      return promise.resolve(null);
-    }
-
-    let deferred = promise.defer();
-    let toSet = {
-      "NetworkMonitor.throttleData": value,
-    };
-
-    // Make sure the web console client connection is established first.
-    this.webConsoleClient.setPreferences(toSet, response => {
-      if (!response.error) {
-        this._throttleData = value;
         deferred.resolve(response);
       } else {
         deferred.reject(response.error);
