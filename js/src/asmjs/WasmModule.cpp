@@ -23,6 +23,8 @@
 #include "asmjs/WasmSerialize.h"
 #include "jit/JitOptions.h"
 
+#include "jsatominlines.h"
+
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Debugger-inl.h"
 
@@ -469,8 +471,18 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
             }
         }
 
-        for (uint32_t i = 0; i < seg.elems.length(); i++)
-            table.array()[offset + i] = codeSegment.code() + seg.elems[i];
+        // If profiling is already enabled in the wasm::Compartment, the new
+        // instance must use the profiling entry for typed functions instead of
+        // the default nonProfilingEntry.
+        bool useProfilingEntry = instance.profilingEnabled() && table.isTypedFunction();
+
+        uint8_t* code = codeSegment.code();
+        for (uint32_t i = 0; i < seg.elems.length(); i++) {
+            void* callee = code + seg.elems[i];
+            if (useProfilingEntry)
+                callee = code + instance.lookupCodeRange(callee)->funcProfilingEntry();
+            table.array()[offset + i] = callee;
+        }
 
         prevEnd = offset + seg.elems.length();
     }
@@ -746,21 +758,24 @@ Module::instantiate(JSContext* cx,
     if (!JS_DefinePropertyById(cx, instanceObj, id, val, JSPROP_ENUMERATE))
         return false;
 
+    // Register the instance with the JSCompartment so that it can find out
+    // about global events like profiling being enabled in the compartment.
+
+    if (!cx->compartment()->wasm.registerInstance(cx, instanceObj))
+        return false;
+
     // Initialize table elements only after the instance is fully initialized
     // since the Table object needs to point to a valid instance object. Perform
     // initialization as the final step after the instance is fully live since
-    // it is observable (in the case of an imported Table object).
+    // it is observable (in the case of an imported Table object) and can't be
+    // easily rolled back in case of error.
 
     if (!initElems(cx, instanceObj, globalImports, table))
         return false;
 
-    // Done! Notify the Debugger of the new Instance.
-
-    Debugger::onNewWasmInstance(cx, instanceObj);
-
-    // Call the start function, if there's one. By specification, it does not
-    // take any arguments nor does it return a value, so just create a dummy
-    // arguments object.
+    // Call the start function, if there's one. This effectively makes the
+    // instance object live to content and thus must go after initialization is
+    // complete.
 
     if (metadata_->hasStartFunction()) {
         FixedInvokeArgs<0> args(cx);

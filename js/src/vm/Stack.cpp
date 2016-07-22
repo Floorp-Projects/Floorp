@@ -1639,6 +1639,8 @@ WasmActivation::WasmActivation(JSContext* cx, wasm::Instance& instance)
     prevWasm_ = cx->runtime()->wasmActivationStack_;
     cx->runtime()->wasmActivationStack_ = this;
 
+    cx->compartment()->wasm.activationCount_++;
+
     // Now that the WasmActivation is fully initialized, make it visible to
     // asynchronous profiling.
     registerProfiling();
@@ -1657,6 +1659,9 @@ WasmActivation::~WasmActivation()
     MOZ_ASSERT(cx_->runtime()->wasmActivationStack_ == this);
 
     cx_->runtime()->wasmActivationStack_ = prevWasm_;
+
+    MOZ_ASSERT(cx_->compartment()->wasm.activationCount_ > 0);
+    cx_->compartment()->wasm.activationCount_--;
 }
 
 InterpreterFrameIterator&

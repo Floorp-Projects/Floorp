@@ -14,7 +14,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
-#include "asmjs/WasmJS.h"
+#include "asmjs/WasmCompartment.h"
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
@@ -516,11 +516,8 @@ struct JSCompartment
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
-    // All wasm live instances in the compartment.
-    using WasmInstanceObjectSet = js::GCHashSet<js::ReadBarriered<js::WasmInstanceObject*>,
-                                                js::MovableCellHasher<js::ReadBarriered<js::WasmInstanceObject*>>,
-                                                js::SystemAllocPolicy>;
-    JS::WeakCache<WasmInstanceObjectSet> wasmInstances;
+    // WebAssembly state for the compartment.
+    js::wasm::Compartment wasm;
 
   private:
     // All non-syntactic lexical scopes in the compartment. These are kept in
