@@ -7,12 +7,13 @@ import ConfigParser
 import json
 import os
 import socket
+import sys
 import traceback
 import warnings
 
 from contextlib import contextmanager
 
-from decorators import do_crash_check
+from decorators import do_process_check
 from keys import Keys
 
 import geckoinstance
@@ -644,12 +645,12 @@ class Marionette(object):
         timeout = timeout or self.DEFAULT_STARTUP_TIMEOUT
         return transport.wait_for_port(self.host, self.port, timeout=timeout)
 
-    @do_crash_check
+    @do_process_check
     def raise_for_port(self, port_obtained):
         if not port_obtained:
             raise IOError("Timed out waiting for port!")
 
-    @do_crash_check
+    @do_process_check
     def _send_message(self, name, params=None, key=None):
         """Send a blocking message to the server.
 
@@ -678,14 +679,6 @@ class Marionette(object):
 
             else:
                 msg = self.client.request(name, params)
-
-        except IOError:
-            if self.instance:
-                # If we've launched the binary we've connected to, wait
-                # for it to shut down.
-                returncode = self.instance.runner.wait(timeout=self.DEFAULT_STARTUP_TIMEOUT)
-                raise IOError("process died with returncode %s" % returncode)
-            raise
 
         except socket.timeout:
             self.session = None
@@ -750,6 +743,28 @@ class Marionette(object):
             print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
                    (name, returncode))
         return crashed
+
+    def force_shutdown(self):
+        """Force a shutdown of the running instance.
+
+        If we've launched the binary we are connected to, wait for it to shut down.
+        In the case when it doesn't happen, force its shut down.
+
+        """
+        if self.instance:
+            exc, val, tb = sys.exc_info()
+
+            returncode = self.instance.runner.returncode
+            if returncode is None:
+                self.instance.runner.stop()
+                message = 'Process killed because the connection was lost'
+            else:
+                message = 'Process died with returncode "{returncode}"'
+
+            if exc:
+                message += ' (Reason: {reason})'
+
+            raise exc, message.format(returncode=returncode, reason=val), tb
 
     @staticmethod
     def convert_keys(*string):
