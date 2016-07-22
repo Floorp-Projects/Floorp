@@ -7,6 +7,7 @@
 #include "GpsdLocationProvider.h"
 #include <errno.h>
 #include <gps.h>
+#include "MLSFallback.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LazyIdleThread.h"
@@ -17,6 +18,62 @@
 
 namespace mozilla {
 namespace dom {
+
+//
+// MLSGeolocationUpdate
+//
+
+/**
+ * |MLSGeolocationUpdate| provides a fallback if gpsd is not supported.
+ */
+class GpsdLocationProvider::MLSGeolocationUpdate final
+  : public nsIGeolocationUpdate
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGEOLOCATIONUPDATE
+
+  explicit MLSGeolocationUpdate(nsIGeolocationUpdate* aCallback);
+
+protected:
+  ~MLSGeolocationUpdate() = default;
+
+private:
+  nsCOMPtr<nsIGeolocationUpdate> mCallback;
+};
+
+GpsdLocationProvider::MLSGeolocationUpdate::MLSGeolocationUpdate(
+  nsIGeolocationUpdate* aCallback)
+  : mCallback(aCallback)
+{
+  MOZ_ASSERT(mCallback);
+}
+
+// nsISupports
+//
+
+NS_IMPL_ISUPPORTS(GpsdLocationProvider::MLSGeolocationUpdate, nsIGeolocationUpdate);
+
+// nsIGeolocationUpdate
+//
+
+NS_IMETHODIMP
+GpsdLocationProvider::MLSGeolocationUpdate::Update(nsIDOMGeoPosition* aPosition)
+{
+  nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+  aPosition->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mCallback->Update(aPosition);
+}
+
+NS_IMETHODIMP
+GpsdLocationProvider::MLSGeolocationUpdate::NotifyError(uint16_t aError)
+{
+  return mCallback->NotifyError(aError);
+}
 
 //
 // UpdateRunnable
@@ -99,6 +156,11 @@ public:
     , mRunning(true)
   {
     MOZ_ASSERT(mLocationProvider);
+  }
+
+  static bool IsSupported()
+  {
+    return GPSD_API_MAJOR_VERSION == 5;
   }
 
   bool IsRunning() const
@@ -288,6 +350,12 @@ GpsdLocationProvider::Update(nsIDOMGeoPosition* aPosition)
     return; // not initialized or already shut down
   }
 
+  if (mMLSProvider) {
+    /* We got a location from gpsd, so let's cancel our MLS fallback. */
+    mMLSProvider->Shutdown();
+    mMLSProvider = nullptr;
+  }
+
   mCallback->Update(aPosition);
 }
 
@@ -296,6 +364,14 @@ GpsdLocationProvider::NotifyError(int aError)
 {
   if (!mCallback) {
     return; // not initialized or already shut down
+  }
+
+  if (!mMLSProvider) {
+    /* With gpsd failed, we restart MLS. It will be canceled once we
+     * get another location from gpsd.
+     */
+    mMLSProvider = MakeAndAddRef<MLSFallback>();
+    mMLSProvider->Startup(new MLSGeolocationUpdate(mCallback));
   }
 
   mCallback->NotifyError(aError);
@@ -312,6 +388,10 @@ NS_IMPL_ISUPPORTS(GpsdLocationProvider, nsIGeolocationProvider)
 NS_IMETHODIMP
 GpsdLocationProvider::Startup()
 {
+  if (!PollRunnable::IsSupported()) {
+    return NS_OK; // We'll fall back to MLS.
+  }
+
   if (mPollRunnable) {
     return NS_OK; // already running
   }
@@ -349,12 +429,25 @@ GpsdLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 {
   mCallback = aCallback;
 
+  /* The MLS fallback will kick in after a few seconds if gpsd
+   * doesn't provide location information within time. Once we
+   * see the first message from gpsd, the fallback will be
+   * disabled in |Update|.
+   */
+  mMLSProvider = MakeAndAddRef<MLSFallback>();
+  mMLSProvider->Startup(new MLSGeolocationUpdate(aCallback));
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GpsdLocationProvider::Shutdown()
 {
+  if (mMLSProvider) {
+    mMLSProvider->Shutdown();
+    mMLSProvider = nullptr;
+  }
+
   if (!mPollRunnable) {
     return NS_OK; // not running
   }
