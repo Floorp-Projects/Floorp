@@ -6,11 +6,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import shutil
+import stat
+import tarfile
 import tempfile
 import unittest
 
 from ..util import docker
 from mozunit import MockedOpen
+
+
+MODE_STANDARD = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
 
 
 class TestDocker(unittest.TestCase):
@@ -46,3 +51,29 @@ class TestDocker(unittest.TestCase):
         files["{}/myimage/VERSION".format(docker.DOCKER_ROOT)] = "1.2.3"
         with MockedOpen(files):
             self.assertEqual(docker.docker_image('myimage'), "mozilla/myimage:1.2.3")
+
+    def test_create_context_tar_basic(self):
+        tmp = tempfile.mkdtemp()
+        try:
+            d = os.path.join(tmp, 'test_image')
+            os.mkdir(d)
+            with open(os.path.join(d, 'Dockerfile'), 'a'):
+                pass
+            os.chmod(os.path.join(d, 'Dockerfile'), MODE_STANDARD)
+
+            with open(os.path.join(d, 'extra'), 'a'):
+                pass
+            os.chmod(os.path.join(d, 'extra'), MODE_STANDARD)
+
+            tp = os.path.join(tmp, 'tar')
+            h = docker.create_context_tar(tmp, d, tp, 'my_image')
+            self.assertEqual(h, '2a6d7f1627eba60daf85402418e041d728827d309143c6bc1c6bb3035bde6717')
+
+            # File prefix should be "my_image"
+            with tarfile.open(tp, 'r:gz') as tf:
+                self.assertEqual(tf.getnames(), [
+                    'my_image/Dockerfile',
+                    'my_image/extra',
+                ])
+        finally:
+            shutil.rmtree(tmp)
