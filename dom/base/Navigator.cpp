@@ -2586,30 +2586,18 @@ Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
 static nsCString
 ToCString(const nsString& aString)
 {
-  nsCString str("'");
-  str.Append(NS_ConvertUTF16toUTF8(aString));
-  str.AppendLiteral("'");
-  return str;
-}
-
-static nsCString
-ToCString(const MediaKeysRequirement aValue)
-{
-  nsCString str("'");
-  str.Append(nsDependentCString(MediaKeysRequirementValues::strings[static_cast<uint32_t>(aValue)].value));
-  str.AppendLiteral("'");
-  return str;
+  return NS_ConvertUTF16toUTF8(aString);
 }
 
 static nsCString
 ToCString(const MediaKeySystemMediaCapability& aValue)
 {
   nsCString str;
-  str.AppendLiteral("{contentType=");
-  str.Append(ToCString(aValue.mContentType));
-  str.AppendLiteral(", robustness=");
-  str.Append(ToCString(aValue.mRobustness));
-  str.AppendLiteral("}");
+  str.AppendLiteral("{contentType='");
+  if (!aValue.mContentType.IsEmpty()) {
+    str.Append(ToCString(aValue.mContentType));
+  }
+  str.AppendLiteral("'}");
   return str;
 }
 
@@ -2617,55 +2605,38 @@ template<class Type>
 static nsCString
 ToCString(const Sequence<Type>& aSequence)
 {
-  nsCString str;
-  str.AppendLiteral("[");
+  nsCString s;
+  s.AppendLiteral("[");
   for (size_t i = 0; i < aSequence.Length(); i++) {
     if (i != 0) {
-      str.AppendLiteral(",");
+      s.AppendLiteral(",");
     }
-    str.Append(ToCString(aSequence[i]));
+    s.Append(ToCString(aSequence[i]));
   }
-  str.AppendLiteral("]");
-  return str;
-}
-
-template<class Type>
-static nsCString
-ToCString(const Optional<Sequence<Type>>& aOptional)
-{
-  nsCString str;
-  if (aOptional.WasPassed()) {
-    str.Append(ToCString(aOptional.Value()));
-  } else {
-    str.AppendLiteral("[]");
-  }
-  return str;
+  s.AppendLiteral("]");
+  return s;
 }
 
 static nsCString
 ToCString(const MediaKeySystemConfiguration& aConfig)
 {
   nsCString str;
-  str.AppendLiteral("{label=");
-  str.Append(ToCString(aConfig.mLabel));
+  str.AppendLiteral("{");
+  str.AppendPrintf("label='%s'", NS_ConvertUTF16toUTF8(aConfig.mLabel).get());
 
-  str.AppendLiteral(", initDataTypes=");
-  str.Append(ToCString(aConfig.mInitDataTypes));
+  if (aConfig.mInitDataTypes.WasPassed()) {
+    str.AppendLiteral(", initDataTypes=");
+    str.Append(ToCString(aConfig.mInitDataTypes.Value()));
+  }
 
-  str.AppendLiteral(", audioCapabilities=");
-  str.Append(ToCString(aConfig.mAudioCapabilities));
-
-  str.AppendLiteral(", videoCapabilities=");
-  str.Append(ToCString(aConfig.mVideoCapabilities));
-
-  str.AppendLiteral(", distinctiveIdentifier=");
-  str.Append(ToCString(aConfig.mDistinctiveIdentifier));
-
-  str.AppendLiteral(", persistentState=");
-  str.Append(ToCString(aConfig.mPersistentState));
-
-  str.AppendLiteral(", sessionTypes=");
-  str.Append(ToCString(aConfig.mSessionTypes));
+  if (aConfig.mAudioCapabilities.WasPassed()) {
+    str.AppendLiteral(", audioCapabilities=");
+    str.Append(ToCString(aConfig.mAudioCapabilities.Value()));
+  }
+  if (aConfig.mVideoCapabilities.WasPassed()) {
+    str.AppendLiteral(", videoCapabilities=");
+    str.Append(ToCString(aConfig.mVideoCapabilities.Value()));
+  }
 
   str.AppendLiteral("}");
 
