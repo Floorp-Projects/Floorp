@@ -39,6 +39,8 @@ struct nsAttrInfo
 
   const nsAttrName* mName;
   const nsAttrValue* mValue;
+
+  explicit operator bool() const { return mName != nullptr; }
 };
 
 #endif
