@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Pref="dom.webaudio.enabled"]
 interface DynamicsCompressorNode : AudioNode {
 
     readonly attribute AudioParam threshold; // in Decibels
