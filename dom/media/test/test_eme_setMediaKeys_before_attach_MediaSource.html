@@ -14,7 +14,7 @@
 function beginTest() {
   var video = document.createElement("video");
 
-  navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, gCencMediaKeySystemConfig)
+  navigator.requestMediaKeySystemAccess("org.w3.clearkey", [{initDataTypes: ["cenc"]}])
     .then(function(keySystemAccess) {
       return keySystemAccess.createMediaKeys();
     })
