@@ -162,6 +162,10 @@ SVGElementMetrics::EnsureCtx() const
 {
   if (!mCtx && mSVGElement) {
     mCtx = mSVGElement->GetCtx();
+    if (!mCtx && mSVGElement->IsSVGElement(nsGkAtoms::svg)) {
+      // mSVGElement must be the outer svg element
+      mCtx = static_cast<SVGSVGElement*>(mSVGElement);
+    }
   }
   return mCtx != nullptr;
 }
