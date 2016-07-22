@@ -43,22 +43,26 @@ function eventsFor(window) {
   return map(changes, toEventWithDefaultViewTarget);
 }
 
-// In addition to observing windows that are open we also observe windows
-// that are already already opened in case they're in process of loading.
-var opened = windows(null, { includePrivate: true });
-var currentEvents = merge(opened.map(eventsFor));
+// Create our event channels.  We do this in a separate function to
+// minimize the chance of leaking intermediate objects on the global.
+function makeEvents() {
+  // In addition to observing windows that are open we also observe windows
+  // that are already already opened in case they're in process of loading.
+  var opened = windows(null, { includePrivate: true });
+  var currentEvents = merge(opened.map(eventsFor));
 
-// Register system event listeners for top level window open / close.
-function rename({type, target, data}) {
-  return { type: rename[type], target: target, data: data }
+  // Register system event listeners for top level window open / close.
+  function rename({type, target, data}) {
+    return { type: rename[type], target: target, data: data }
+  }
+  rename.domwindowopened = "open";
+  rename.domwindowclosed = "close";
+
+  var openEvents = map(observe("domwindowopened"), rename);
+  var closeEvents = map(observe("domwindowclosed"), rename);
+  var futureEvents = expand(openEvents, ({target}) => eventsFor(target));
+
+  return merge([currentEvents, futureEvents, openEvents, closeEvents]);
 }
-rename.domwindowopened = "open";
-rename.domwindowclosed = "close";
 
-var openEvents = map(observe("domwindowopened"), rename);
-var closeEvents = map(observe("domwindowclosed"), rename);
-var futureEvents = expand(openEvents, ({target}) => eventsFor(target));
-
-var channel = merge([currentEvents, futureEvents,
-                     openEvents, closeEvents]);
-exports.events = channel;
+exports.events = makeEvents();
