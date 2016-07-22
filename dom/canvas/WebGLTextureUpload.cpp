@@ -177,68 +177,37 @@ WebGLContext::ValidateUnpackPixels(const char* funcName, uint32_t fullRows,
     return false;
 }
 
-static UniquePtr<webgl::TexUnpackBlob>
-BlobFromView(WebGLContext* webgl, const char* funcName, TexImageTarget target,
-             uint32_t width, uint32_t height, uint32_t depth,
-             const webgl::PackingInfo& pi,
-             const dom::Nullable<dom::ArrayBufferView>& maybeView)
+static bool
+ValidateUnpackBytes(WebGLContext* webgl, const char* funcName, uint32_t width,
+                    uint32_t height, uint32_t depth, const webgl::PackingInfo& pi,
+                    uint32_t byteCount, const webgl::TexUnpackBlob* blob)
 {
-    const uint8_t* bytes = nullptr;
-    uint32_t byteCount = 0;
+    const auto bytesPerPixel = webgl::BytesPerPixel(pi);
+    const auto bytesPerRow = CheckedUint32(blob->mRowLength) * bytesPerPixel;
+    const auto rowStride = RoundUpToMultipleOf(bytesPerRow, blob->mAlignment);
 
-    if (!maybeView.IsNull()) {
-        const auto& view = maybeView.Value();
-
-        const auto jsType = JS_GetArrayBufferViewType(view.Obj());
-        if (!DoesJSTypeMatchUnpackType(pi.type, jsType)) {
-            webgl->ErrorInvalidOperation("%s: `pixels` must be compatible with `type`.",
-                                         funcName);
-            return nullptr;
-        }
-
-        if (width && height && depth) {
-            view.ComputeLengthAndData();
-
-            bytes = view.DataAllowShared();
-            byteCount = view.LengthAllowShared();
-        }
+    const auto fullRows = byteCount / rowStride;
+    if (!fullRows.isValid()) {
+        webgl->ErrorOutOfMemory("%s: Unacceptable upload size calculated.");
+        return false;
     }
 
-    UniquePtr<webgl::TexUnpackBlob> blob(new webgl::TexUnpackBytes(webgl, target, width,
-                                                                   height, depth, bytes));
+    const auto bodyBytes = fullRows.value() * rowStride.value();
+    const auto tailPixels = (byteCount - bodyBytes) / bytesPerPixel;
 
-    //////
-
-    if (bytes) {
-        const auto bytesPerPixel = webgl::BytesPerPixel(pi);
-        const auto bytesPerRow = CheckedUint32(blob->mRowLength) * bytesPerPixel;
-        const auto rowStride = RoundUpToMultipleOf(bytesPerRow, blob->mAlignment);
-
-        const auto fullRows = byteCount / rowStride;
-        if (!fullRows.isValid()) {
-            webgl->ErrorOutOfMemory("%s: Unacceptable upload size calculated.");
-            return nullptr;
-        }
-
-        const auto bodyBytes = fullRows.value() * rowStride.value();
-        const auto tailPixels = (byteCount - bodyBytes) / bytesPerPixel;
-
-        if (!webgl->ValidateUnpackPixels(funcName, fullRows.value(), tailPixels,
-                                         blob.get()))
-        {
-            return nullptr;
-        }
-    }
-
-    //////
-
-    return Move(blob);
+    return webgl->ValidateUnpackPixels(funcName, fullRows.value(), tailPixels, blob);
 }
 
 bool
-WebGLContext::ValidateUnpackInfo(const char* funcName, GLenum format, GLenum type,
-                                 webgl::PackingInfo* const out)
+WebGLContext::ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum format,
+                                 GLenum type, webgl::PackingInfo* const out)
 {
+    if (usePBOs != bool(mBoundPixelUnpackBuffer)) {
+        ErrorInvalidOperation("%s: PACK_BUFFER must be %s.", funcName,
+                              (usePBOs ? "non-null" : "null"));
+        return false;
+    }
+
     if (!mFormatUsage->AreUnpackEnumsValid(format, type)) {
         ErrorInvalidEnum("%s: Invalid unpack format/type: 0x%04x/0x%04x", funcName,
                          format, type);
@@ -265,17 +234,97 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
         return;
     }
 
+    const bool usePBOs = false;
     webgl::PackingInfo pi;
-    if (!mContext->ValidateUnpackInfo(funcName, unpackFormat, unpackType, &pi))
+    if (!mContext->ValidateUnpackInfo(funcName, usePBOs, unpackFormat, unpackType, &pi))
         return;
 
-    const auto blob = BlobFromView(mContext, funcName, target, width, height, depth, pi,
-                                   maybeView);
-    if (!blob)
+    ////
+
+    const void* bytes = nullptr;
+    uint32_t byteCount = 0;
+
+    if (!maybeView.IsNull()) {
+        const auto& view = maybeView.Value();
+
+        const auto jsType = JS_GetArrayBufferViewType(view.Obj());
+        if (!DoesJSTypeMatchUnpackType(pi.type, jsType)) {
+            mContext->ErrorInvalidOperation("%s: `pixels` not compatible with `type`.",
+                                            funcName);
+            return;
+        }
+
+        if (width && height && depth) {
+            view.ComputeLengthAndData();
+
+            bytes = view.DataAllowShared();
+            byteCount = view.LengthAllowShared();
+        }
+    }
+
+    const bool isClientData = true;
+    const webgl::TexUnpackBytes blob(mContext, target, width, height, depth, isClientData,
+                                     bytes);
+
+    if (bytes &&
+        !ValidateUnpackBytes(mContext, funcName, width, height, depth, pi, byteCount,
+                             &blob))
+    {
         return;
+    }
 
     TexOrSubImageBlob(isSubImage, funcName, target, level, internalFormat, xOffset,
-                      yOffset, zOffset, pi, blob.get());
+                      yOffset, zOffset, pi, &blob);
+}
+
+void
+WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarget target,
+                            GLint level, GLenum internalFormat, GLint xOffset,
+                            GLint yOffset, GLint zOffset, GLsizei rawWidth,
+                            GLsizei rawHeight, GLsizei rawDepth, GLint border,
+                            GLenum unpackFormat, GLenum unpackType,
+                            WebGLsizeiptr offset)
+{
+    uint32_t width, height, depth;
+    if (!ValidateExtents(mContext, funcName, rawWidth, rawHeight, rawDepth, border,
+                         &width, &height, &depth))
+    {
+        return;
+    }
+
+    const bool usePBOs = true;
+    webgl::PackingInfo pi;
+    if (!mContext->ValidateUnpackInfo(funcName, usePBOs, unpackFormat, unpackType, &pi))
+        return;
+
+    ////
+
+    if (offset < 0) {
+        mContext->ErrorInvalidValue("%s: offset cannot be negative.", funcName);
+        return;
+    }
+
+    const bool isClientData = false;
+    const auto ptr = (const void*)offset;
+    const webgl::TexUnpackBytes blob(mContext, target, width, height, depth, isClientData,
+                                     ptr);
+
+    const auto& packBuffer = mContext->mBoundPixelUnpackBuffer;
+    const auto bufferByteCount = packBuffer->ByteLength();
+
+    uint32_t byteCount = 0;
+    if (bufferByteCount >= offset) {
+        byteCount = bufferByteCount - offset;
+    }
+
+    if (!ValidateUnpackBytes(mContext, funcName, width, height, depth, pi, byteCount,
+                             &blob))
+    {
+        return;
+    }
+
+    TexOrSubImageBlob(isSubImage, funcName, target, level, internalFormat, xOffset,
+                      yOffset, zOffset, pi, &blob);
 }
 
 ////////////////////////////////////////
@@ -319,8 +368,9 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
                             GLint yOffset, GLint zOffset, GLenum unpackFormat,
                             GLenum unpackType, dom::ImageData* imageData)
 {
+    const bool usePBOs = false;
     webgl::PackingInfo pi;
-    if (!mContext->ValidateUnpackInfo(funcName, unpackFormat, unpackType, &pi))
+    if (!mContext->ValidateUnpackInfo(funcName, usePBOs, unpackFormat, unpackType, &pi))
         return;
 
     if (!imageData) {
@@ -368,8 +418,9 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
                             GLenum unpackType, dom::Element* elem,
                             ErrorResult* const out_error)
 {
+    const bool usePBOs = false;
     webgl::PackingInfo pi;
-    if (!mContext->ValidateUnpackInfo(funcName, unpackFormat, unpackType, &pi))
+    if (!mContext->ValidateUnpackInfo(funcName, usePBOs, unpackFormat, unpackType, &pi))
         return;
 
     //////
@@ -415,7 +466,9 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
     const uint32_t depth = 1;
 
     if (!layersImage && !dataSurf) {
-        const webgl::TexUnpackBytes blob(mContext, target, width, height, depth, nullptr);
+        const bool isClientData = true;
+        const webgl::TexUnpackBytes blob(mContext, target, width, height, depth,
+                                         isClientData, nullptr);
         TexOrSubImageBlob(isSubImage, funcName, target, level, internalFormat, xOffset,
                           yOffset, zOffset, pi, &blob);
         return;

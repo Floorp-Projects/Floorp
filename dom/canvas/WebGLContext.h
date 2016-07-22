@@ -914,8 +914,8 @@ protected:
                                    WebGLTexture** const out_texture,
                                    WebGLTexture::ImageInfo** const out_imageInfo);
 
-    bool ValidateUnpackInfo(const char* funcName, GLenum format, GLenum type,
-                            webgl::PackingInfo* const out);
+    bool ValidateUnpackInfo(const char* funcName, bool usePBOs, GLenum format,
+                            GLenum type, webgl::PackingInfo* const out);
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
