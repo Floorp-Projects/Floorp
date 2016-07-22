@@ -85,11 +85,8 @@ IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
 }
 
-namespace dom {
-
-/* static */
-nsresult
-MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
+static nsresult
+IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (aType.IsEmpty()) {
     return NS_ERROR_DOM_TYPE_ERR;
@@ -138,6 +135,8 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+
+namespace dom {
 
 /* static */ already_AddRefed<MediaSource>
 MediaSource::Constructor(const GlobalObject& aGlobal,
@@ -226,7 +225,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
-  nsresult rv = IsTypeSupported(aType, &diagnostics);
+  nsresult rv = mozilla::IsTypeSupported(aType, &diagnostics);
   diagnostics.StoreFormatDiagnostics(GetOwner()
                                      ? GetOwner()->GetExtantDoc()
                                      : nullptr,
@@ -346,7 +345,7 @@ MediaSource::IsTypeSupported(const GlobalObject& aOwner, const nsAString& aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
-  nsresult rv = IsTypeSupported(aType, &diagnostics);
+  nsresult rv = mozilla::IsTypeSupported(aType, &diagnostics);
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner.GetAsSupports());
   diagnostics.StoreFormatDiagnostics(window ? window->GetExtantDoc() : nullptr,
                                      aType, NS_SUCCEEDED(rv), __func__);

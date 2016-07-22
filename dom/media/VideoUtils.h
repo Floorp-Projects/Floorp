@@ -323,24 +323,16 @@ void
 LogToBrowserConsole(const nsAString& aMsg);
 
 bool
-ParseMIMETypeString(const nsAString& aMIMEType,
-                    nsString& aOutContainerType,
-                    nsTArray<nsString>& aOutCodecs);
-
-bool
 ParseCodecsString(const nsAString& aCodecs, nsTArray<nsString>& aOutCodecs);
 
 bool
-IsH264CodecString(const nsAString& aCodec);
+IsH264ContentType(const nsAString& aContentType);
+
+bool
+IsAACContentType(const nsAString& aContentType);
 
 bool
 IsAACCodecString(const nsAString& aCodec);
-
-bool
-IsVP8CodecString(const nsAString& aCodec);
-
-bool
-IsVP9CodecString(const nsAString& aCodec);
 
 template <typename String>
 class StringListRange
@@ -454,6 +446,15 @@ StringListContains(const ListString& aList, const ItemString& aItem)
   }
   return false;
 }
+
+bool
+IsVorbisContentType(const nsAString& aContentType);
+
+bool
+IsVP8ContentType(const nsAString& aContentType);
+
+bool
+IsVP9ContentType(const nsAString& aContentType);
 
 } // end namespace mozilla
 
