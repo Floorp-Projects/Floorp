@@ -12,6 +12,7 @@ const Cu = Components.utils;
 const CC = Components.Constructor;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 function debug(aMsg) {
@@ -58,7 +59,7 @@ this.Bootstraper = {
         isPackage: false
       };
 
-      //DOMApplicationRegistry.confirmInstall(appData, null, aResolve);
+      DOMApplicationRegistry.confirmInstall(appData, null, aResolve);
     });
   },
 
@@ -101,9 +102,6 @@ this.Bootstraper = {
     * cleanly replace it by the current one.
     */
   uninstallPreviousSystemApp: function() {
-    // TODO: FIXME
-    return Promise.resolve();
-
     let oldManifestURL;
     try{
       oldManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url");
@@ -145,7 +143,8 @@ this.Bootstraper = {
     }
 
     return new Promise((aResolve, aReject) => {
-      this.uninstallPreviousSystemApp.bind(this)
+      DOMApplicationRegistry.registryReady
+          .then(this.uninstallPreviousSystemApp.bind(this))
           .then(this.loadManifest.bind(this))
           .then(this.installSystemApp.bind(this))
           .then(this.configure.bind(this))
