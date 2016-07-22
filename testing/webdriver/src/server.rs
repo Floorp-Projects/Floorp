@@ -35,7 +35,7 @@ impl Session {
 }
 
 pub trait WebDriverHandler<U: WebDriverExtensionRoute=VoidWebDriverExtensionRoute> : Send {
-    fn handle_command(&mut self, session: &Option<Session>, msg: &WebDriverMessage<U>) -> WebDriverResult<WebDriverResponse>;
+    fn handle_command(&mut self, session: &Option<Session>, msg: WebDriverMessage<U>) -> WebDriverResult<WebDriverResponse>;
     fn delete_session(&mut self, session: &Option<Session>);
 }
 
@@ -61,7 +61,7 @@ impl <T: WebDriverHandler<U>,
             match msg_chan.recv() {
                 Ok(DispatchMessage::HandleWebDriver(msg, resp_chan)) => {
                     let resp = match self.check_session(&msg) {
-                        Ok(_) => self.handler.handle_command(&self.session, &msg),
+                        Ok(_) => self.handler.handle_command(&self.session, msg),
                         Err(e) => Err(e)
                     };
 
