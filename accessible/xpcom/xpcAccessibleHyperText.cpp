@@ -41,10 +41,14 @@ xpcAccessibleHyperText::GetCharacterCount(int32_t* aCharacterCount)
   NS_ENSURE_ARG_POINTER(aCharacterCount);
   *aCharacterCount = 0;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aCharacterCount = Intl()->CharacterCount();
+  if (mIntl.IsAccessible()) {
+    *aCharacterCount = Intl()->CharacterCount();
+  } else {
+    *aCharacterCount = mIntl.AsProxy()->CharacterCount();
+  }
   return NS_OK;
 }
 
@@ -54,10 +58,16 @@ xpcAccessibleHyperText::GetText(int32_t aStartOffset, int32_t aEndOffset,
 {
   aText.Truncate();
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->TextSubstring(aStartOffset, aEndOffset, aText);
+  if (mIntl.IsAccessible()) {
+    Intl()->TextSubstring(aStartOffset, aEndOffset, aText);
+  } else {
+    nsString text;
+    mIntl.AsProxy()->TextSubstring(aStartOffset, aEndOffset, text);
+    aText = text;
+  }
   return NS_OK;
 }
 
@@ -73,10 +83,18 @@ xpcAccessibleHyperText::GetTextBeforeOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  if (mIntl.IsAccessible()) {
+    Intl()->TextBeforeOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, 
+                             aText);
+  } else {
+    nsString text;
+    mIntl.AsProxy()->GetTextBeforeOffset(aOffset, aBoundaryType, text,
+                                         aStartOffset, aEndOffset);
+    aText = text;
+  }
   return NS_OK;
 }
 
@@ -91,10 +109,18 @@ xpcAccessibleHyperText::GetTextAtOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  if (mIntl.IsAccessible()) {
+    Intl()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, 
+                         aText);
+  } else {
+    nsString text;
+    mIntl.AsProxy()->GetTextAtOffset(aOffset, aBoundaryType, text, 
+                                     aStartOffset, aEndOffset);
+    aText = text;
+  }
   return NS_OK;
 }
 
@@ -109,10 +135,18 @@ xpcAccessibleHyperText::GetTextAfterOffset(int32_t aOffset,
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->TextAfterOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  if (mIntl.IsAccessible()) {
+    Intl()->TextAfterOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, 
+                            aText);
+  } else {
+    nsString text;
+    mIntl.AsProxy()->GetTextAfterOffset(aOffset, aBoundaryType, text, 
+                                        aStartOffset, aEndOffset);
+    aText = text;
+  }
   return NS_OK;
 }
 
@@ -123,10 +157,14 @@ xpcAccessibleHyperText::GetCharacterAtOffset(int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aCharacter);
   *aCharacter = L'\0';
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aCharacter = Intl()->CharAt(aOffset);
+  if (mIntl.IsAccessible()) {
+    *aCharacter = Intl()->CharAt(aOffset);
+  } else {
+    *aCharacter = mIntl.AsProxy()->CharAt(aOffset);
+  }
   return NS_OK;
 }
 
@@ -143,12 +181,24 @@ xpcAccessibleHyperText::GetTextAttributes(bool aIncludeDefAttrs,
   *aStartOffset = *aEndOffset = 0;
   *aAttributes = nullptr;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> attrs =
-   Intl()->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
-  attrs.swap(*aAttributes);
+  nsCOMPtr<nsIPersistentProperties> props;
+  if (mIntl.IsAccessible()) {
+    props = Intl()->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset,
+                                   aEndOffset);
+  } else {
+    AutoTArray<Attribute, 10> attrs;
+    mIntl.AsProxy()->TextAttributes(aIncludeDefAttrs, aOffset, &attrs,
+        aStartOffset, aEndOffset);
+    uint32_t attrCount = attrs.Length();
+    nsAutoString unused;
+    for (uint32_t i = 0; i < attrCount; i++) {
+      props->SetStringProperty(attrs[i].Name(), attrs[i].Value(), unused);
+    }
+  }
+  props.forget(aAttributes);
 
   return NS_OK;
 }
@@ -159,11 +209,23 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(nsIPersistentProperties** aAttr
   NS_ENSURE_ARG_POINTER(aAttributes);
   *aAttributes = nullptr;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> attrs = Intl()->DefaultTextAttributes();
-  attrs.swap(*aAttributes);
+  nsCOMPtr<nsIPersistentProperties> props;
+  if (mIntl.IsAccessible()) {
+    props = Intl()->DefaultTextAttributes();
+  } else {
+    AutoTArray<Attribute, 10> attrs;
+    mIntl.AsProxy()->DefaultTextAttributes(&attrs);
+    uint32_t attrCount = attrs.Length();
+    nsAutoString unused;
+    for (uint32_t i = 0; i < attrCount; i++) {
+      props->SetStringProperty(attrs[i].Name(), attrs[i].Value(), unused);
+    }
+  }
+  props.forget(aAttributes);
+
   return NS_OK;
 }
 
@@ -179,10 +241,15 @@ xpcAccessibleHyperText::GetCharacterExtents(int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aHeight);
   *aX = *aY = *aWidth = *aHeight;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  nsIntRect rect = Intl()->CharBounds(aOffset, aCoordType);
+  nsIntRect rect;
+  if (mIntl.IsAccessible()) {
+    rect = Intl()->CharBounds(aOffset, aCoordType);
+  } else {
+    rect = mIntl.AsProxy()->CharBounds(aOffset, aCoordType);
+  }
   *aX = rect.x; *aY = rect.y;
   *aWidth = rect.width; *aHeight = rect.height;
   return NS_OK;
@@ -200,10 +267,15 @@ xpcAccessibleHyperText::GetRangeExtents(int32_t aStartOffset, int32_t aEndOffset
   NS_ENSURE_ARG_POINTER(aHeight);
   *aX = *aY = *aWidth = *aHeight = 0;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  nsIntRect rect = Intl()->TextBounds(aStartOffset, aEndOffset, aCoordType);
+  nsIntRect rect;
+  if (mIntl.IsAccessible()) {
+    rect = Intl()->TextBounds(aStartOffset, aEndOffset, aCoordType);
+  } else {
+    rect = mIntl.AsProxy()->TextBounds(aStartOffset, aEndOffset, aCoordType);
+  }
   *aX = rect.x; *aY = rect.y;
   *aWidth = rect.width; *aHeight = rect.height;
   return NS_OK;
@@ -216,10 +288,14 @@ xpcAccessibleHyperText::GetOffsetAtPoint(int32_t aX, int32_t aY,
   NS_ENSURE_ARG_POINTER(aOffset);
   *aOffset = -1;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aOffset = Intl()->OffsetAtPoint(aX, aY, aCoordType);
+  if (mIntl.IsAccessible()) {
+    *aOffset = Intl()->OffsetAtPoint(aX, aY, aCoordType);
+  } else {
+    *aOffset = mIntl.AsProxy()->OffsetAtPoint(aX, aY, aCoordType);
+  }
   return NS_OK;
 }
 
@@ -229,20 +305,28 @@ xpcAccessibleHyperText::GetCaretOffset(int32_t* aCaretOffset)
   NS_ENSURE_ARG_POINTER(aCaretOffset);
   *aCaretOffset = -1;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aCaretOffset = Intl()->CaretOffset();
+  if (mIntl.IsAccessible()) {
+    *aCaretOffset = Intl()->CaretOffset();
+  } else {
+    *aCaretOffset = mIntl.AsProxy()->CaretOffset();
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::SetCaretOffset(int32_t aCaretOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->SetCaretOffset(aCaretOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->SetCaretOffset(aCaretOffset);
+  } else {
+    mIntl.AsProxy()->SetCaretOffset(aCaretOffset);
+  }
   return NS_OK;
 }
 
@@ -252,10 +336,14 @@ xpcAccessibleHyperText::GetSelectionCount(int32_t* aSelectionCount)
   NS_ENSURE_ARG_POINTER(aSelectionCount);
   *aSelectionCount = 0;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aSelectionCount = Intl()->SelectionCount();
+  if (mIntl.IsAccessible()) {
+    *aSelectionCount = Intl()->SelectionCount();
+  } else {
+    *aSelectionCount = mIntl.AsProxy()->SelectionCount();
+  }
   return NS_OK;
 }
 
@@ -268,13 +356,22 @@ xpcAccessibleHyperText::GetSelectionBounds(int32_t aSelectionNum,
   NS_ENSURE_ARG_POINTER(aEndOffset);
   *aStartOffset = *aEndOffset = 0;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  if (aSelectionNum < 0 || aSelectionNum >= Intl()->SelectionCount())
+  if (aSelectionNum < 0)
     return NS_ERROR_INVALID_ARG;
 
-  Intl()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  if (mIntl.IsAccessible()) {
+    if (aSelectionNum >= Intl()->SelectionCount())
+      return NS_ERROR_INVALID_ARG;
+      
+    Intl()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
+  } else {
+    nsString unused;
+    mIntl.AsProxy()->SelectionBoundsAt(aSelectionNum, unused, aStartOffset, 
+                                       aEndOffset);
+  }
   return NS_OK;
 }
 
@@ -283,33 +380,51 @@ xpcAccessibleHyperText::SetSelectionBounds(int32_t aSelectionNum,
                                            int32_t aStartOffset,
                                            int32_t aEndOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  if (aSelectionNum < 0 ||
-      !Intl()->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset))
+  if (aSelectionNum < 0)
     return NS_ERROR_INVALID_ARG;
 
+  if (mIntl.IsAccessible()) {
+      if (!Intl()->SetSelectionBoundsAt(aSelectionNum, aStartOffset, 
+                                        aEndOffset)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+  } else {
+      if (!mIntl.AsProxy()->SetSelectionBoundsAt(aSelectionNum, aStartOffset, 
+                                                aEndOffset)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->AddToSelection(aStartOffset, aEndOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->AddToSelection(aStartOffset, aEndOffset);
+  } else {
+    mIntl.AsProxy()->AddToSelection(aStartOffset, aEndOffset);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::RemoveSelection(int32_t aSelectionNum)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->RemoveFromSelection(aSelectionNum);
+  if (mIntl.IsAccessible()) {
+    Intl()->RemoveFromSelection(aSelectionNum);
+  } else {
+    mIntl.AsProxy()->RemoveFromSelection(aSelectionNum);
+  }
   return NS_OK;
 }
 
@@ -318,10 +433,14 @@ xpcAccessibleHyperText::ScrollSubstringTo(int32_t aStartOffset,
                                           int32_t aEndOffset,
                                           uint32_t aScrollType)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
+  if (mIntl.IsAccessible()) {
+    Intl()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
+  } else {
+    mIntl.AsProxy()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
+  }
   return NS_OK;
 }
 
@@ -331,10 +450,16 @@ xpcAccessibleHyperText::ScrollSubstringToPoint(int32_t aStartOffset,
                                                uint32_t aCoordinateType,
                                                int32_t aX, int32_t aY)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType, aX, aY);
+  if (mIntl.IsAccessible()) {
+    Intl()->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType,
+                                   aX, aY);
+  } else {
+    mIntl.AsProxy()->ScrollSubstringToPoint(aStartOffset, aEndOffset,
+                                            aCoordinateType, aX, aY);
+  }
   return NS_OK;
 }
 
@@ -452,60 +577,86 @@ xpcAccessibleHyperText::GetRangeAtPoint(int32_t aX, int32_t aY,
 NS_IMETHODIMP
 xpcAccessibleHyperText::SetTextContents(const nsAString& aText)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->ReplaceText(aText);
+  if (mIntl.IsAccessible()) {
+    Intl()->ReplaceText(aText);
+  } else {
+    nsString text(aText);
+    mIntl.AsProxy()->ReplaceText(text);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::InsertText(const nsAString& aText, int32_t aOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->InsertText(aText, aOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->InsertText(aText, aOffset);
+  } else {
+    nsString text(aText);
+    mIntl.AsProxy()->InsertText(text, aOffset);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::CopyText(int32_t aStartOffset, int32_t aEndOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->CopyText(aStartOffset, aEndOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->CopyText(aStartOffset, aEndOffset);
+  } else {
+    mIntl.AsProxy()->CopyText(aStartOffset, aEndOffset);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::CutText(int32_t aStartOffset, int32_t aEndOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->CutText(aStartOffset, aEndOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->CutText(aStartOffset, aEndOffset);
+  } else {
+    mIntl.AsProxy()->CutText(aStartOffset, aEndOffset);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::DeleteText(int32_t aStartOffset, int32_t aEndOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->DeleteText(aStartOffset, aEndOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->DeleteText(aStartOffset, aEndOffset);
+  } else {
+    mIntl.AsProxy()->DeleteText(aStartOffset, aEndOffset);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessibleHyperText::PasteText(int32_t aOffset)
 {
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  Intl()->PasteText(aOffset);
+  if (mIntl.IsAccessible()) {
+    Intl()->PasteText(aOffset);
+  } else {
+    mIntl.AsProxy()->PasteText(aOffset);
+  }
   return NS_OK;
 }
 
@@ -518,10 +669,14 @@ xpcAccessibleHyperText::GetLinkCount(int32_t* aLinkCount)
   NS_ENSURE_ARG_POINTER(aLinkCount);
   *aLinkCount = 0;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aLinkCount = Intl()->LinkCount();
+  if (mIntl.IsAccessible()) {
+    *aLinkCount = Intl()->LinkCount();
+  } else {
+    *aLinkCount = mIntl.AsProxy()->LinkCount();
+  }
   return NS_OK;
 }
 
@@ -531,10 +686,14 @@ xpcAccessibleHyperText::GetLinkAt(int32_t aIndex, nsIAccessibleHyperLink** aLink
   NS_ENSURE_ARG_POINTER(aLink);
   *aLink = nullptr;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aLink = ToXPC(Intl()->LinkAt(aIndex)));
+  if (mIntl.IsAccessible()) {
+    NS_IF_ADDREF(*aLink = ToXPC(Intl()->LinkAt(aIndex)));
+  } else {
+    NS_IF_ADDREF(*aLink = ToXPC(mIntl.AsProxy()->LinkAt(aIndex)));
+  }
   return NS_OK;
 }
 
@@ -546,13 +705,20 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
   NS_ENSURE_ARG_POINTER(aIndex);
   *aIndex = -1;
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
-  Accessible* link = xpcLink->ToInternalAccessible();
-  if (link)
-    *aIndex = Intl()->LinkIndexOf(link);
+  if (Accessible* accLink = xpcLink->ToInternalAccessible()) {
+    *aIndex = Intl()->LinkIndexOf(accLink);
+  } else {
+    xpcAccessibleHyperText* linkHyperText =
+      static_cast<xpcAccessibleHyperText*>(xpcLink.get());
+    ProxyAccessible* proxyLink = linkHyperText->mIntl.AsProxy();
+    if (proxyLink) {
+      *aIndex = mIntl.AsProxy()->LinkIndexOf(proxyLink);
+    }
+  }
 
   return NS_OK;
 }
@@ -564,9 +730,13 @@ xpcAccessibleHyperText::GetLinkIndexAtOffset(int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aLinkIndex);
   *aLinkIndex = -1; // API says this magic value means 'not found'
 
-  if (!Intl())
+  if (mIntl.IsNull())
     return NS_ERROR_FAILURE;
 
-  *aLinkIndex = Intl()->LinkIndexAtOffset(aOffset);
+  if (mIntl.IsAccessible()) {
+    *aLinkIndex = Intl()->LinkIndexAtOffset(aOffset);
+  } else {
+    *aLinkIndex = mIntl.AsProxy()->LinkIndexAtOffset(aOffset);
+  }
   return NS_OK;
 }
