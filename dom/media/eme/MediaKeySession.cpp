@@ -44,7 +44,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
                                  MediaKeys* aKeys,
                                  const nsAString& aKeySystem,
                                  const nsAString& aCDMVersion,
-                                 MediaKeySessionType aSessionType,
+                                 SessionType aSessionType,
                                  ErrorResult& aRv)
   : DOMEventTargetHelper(aParent)
   , mKeys(aKeys)
@@ -386,7 +386,7 @@ MediaKeySession::Remove(ErrorResult& aRv)
       NS_LITERAL_CSTRING("MediaKeySession.Remove() called before sessionId set by CDM"));
     return promise.forget();
   }
-  if (mSessionType != MediaKeySessionType::Persistent_license) {
+  if (mSessionType != SessionType::Persistent) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
                          NS_LITERAL_CSTRING("Calling MediaKeySession.remove() on non-persistent session"));
     // "The operation is not supported on session type sessions."
