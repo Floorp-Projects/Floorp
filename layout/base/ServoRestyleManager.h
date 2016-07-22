@@ -94,12 +94,6 @@ private:
                                     ServoStyleSet* aStyleSet);
 
   /**
-   * Propagates the IS_DIRTY flag down to the tree, setting
-   * HAS_DIRTY_DESCENDANTS appropriately.
-   */
-  static void DirtyTree(nsIContent* aContent, bool aIncludingRoot = true);
-
-  /**
    * Marks the tree with the appropriate dirty flags for the given restyle hint.
    */
   static void NoteRestyleHint(Element* aElement, nsRestyleHint aRestyleHint);
