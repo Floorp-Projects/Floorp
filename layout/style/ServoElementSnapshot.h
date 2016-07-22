@@ -11,6 +11,7 @@
 #include "mozilla/TypedEnumBits.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
+#include "nsAttrInfo.h"
 #include "nsChangeHint.h"
 #include "nsIAtom.h"
 
@@ -115,12 +116,12 @@ public:
   /**
    * Needed methods for attribute matching.
    */
-  const nsAttrName* GetAttrNameAt(uint32_t aIndex) const
+  nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const
   {
     if (aIndex >= mAttrs.Length()) {
-      return nullptr;
+      return nsAttrInfo(nullptr, nullptr);
     }
-    return &mAttrs[aIndex].mName;
+    return nsAttrInfo(&mAttrs[aIndex].mName, &mAttrs[aIndex].mValue);
   }
 
   const nsAttrValue* GetParsedAttr(nsIAtom* aLocalName) const
