@@ -6,6 +6,7 @@
 
 #include "WindowSurfaceX11.h"
 #include "gfxPlatform.h"
+#include "X11UndefineNone.h"
 
 namespace mozilla {
 namespace widget {
@@ -19,7 +20,7 @@ WindowSurfaceX11::WindowSurfaceX11(Display* aDisplay,
   , mVisual(aVisual)
   , mDepth(aDepth)
   , mFormat(GetVisualFormat(aVisual, aDepth))
-  , mGC(None)
+  , mGC(X11None)
 {
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::UNKNOWN,
              "Could not find SurfaceFormat for visual!");
@@ -27,7 +28,7 @@ WindowSurfaceX11::WindowSurfaceX11(Display* aDisplay,
 
 WindowSurfaceX11::~WindowSurfaceX11()
 {
-  if (mGC != None)
+  if (mGC != X11None)
     XFreeGC(mDisplay, mGC);
 }
 
