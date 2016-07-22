@@ -673,7 +673,10 @@ CreateStack(JSContext* aCx, int32_t aMaxDepth)
   }
 
   JS::Rooted<JSObject*> stack(aCx);
-  if (!JS::CaptureCurrentStack(aCx, &stack, aMaxDepth)) {
+  JS::StackCapture capture = aMaxDepth == 0
+    ? JS::StackCapture(JS::AllFrames())
+    : JS::StackCapture(JS::MaxFrames(aMaxDepth));
+  if (!JS::CaptureCurrentStack(aCx, &stack, mozilla::Move(capture))) {
     return nullptr;
   }
 
