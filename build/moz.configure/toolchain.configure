@@ -856,4 +856,5 @@ def libcxx_inline_visibility(c_compiler, target):
 set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_inline_visibility)
 set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49', libcxx_inline_visibility)
 
+include('windows.configure')
 include('rust.configure')
