@@ -92,11 +92,7 @@ MediaKeySystemAccess::GetConfiguration(MediaKeySystemConfiguration& aConfig)
 already_AddRefed<Promise>
 MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 {
-  RefPtr<MediaKeys> keys(new MediaKeys(mParent,
-                                       mKeySystem,
-                                       mCDMVersion,
-                                       mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-                                       mConfig.mPersistentState == MediaKeysRequirement::Required));
+  RefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem, mCDMVersion));
   return keys->Init(aRv);
 }
 
