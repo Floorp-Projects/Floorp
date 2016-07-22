@@ -619,37 +619,9 @@ GetMajorType(const nsAString& aContentType)
   return Invalid;
 }
 
-static CodecType
-GetCodecType(const GMPCodecString& aCodec)
-{
-  if (aCodec.Equals(GMP_CODEC_AAC) ||
-      aCodec.Equals(GMP_CODEC_OPUS) ||
-      aCodec.Equals(GMP_CODEC_VORBIS)) {
-    return Audio;
-  }
-  if (aCodec.Equals(GMP_CODEC_H264) ||
-      aCodec.Equals(GMP_CODEC_VP8) ||
-      aCodec.Equals(GMP_CODEC_VP9)) {
-    return Video;
-  }
-  return Invalid;
-}
-
-static bool
-AllCodecsOfType(const nsTArray<GMPCodecString>& aCodecs, const CodecType aCodecType)
-{
-  for (const GMPCodecString& codec : aCodecs) {
-    if (GetCodecType(codec) != aCodecType) {
-      return false;
-    }
-  }
-  return true;
-}
-
 // 3.1.2.3 Get Supported Capabilities for Audio/Video Type
 static Sequence<MediaKeySystemMediaCapability>
-GetSupportedCapabilities(const CodecType aCodecType,
-                         mozIGeckoMediaPluginService* aGMPService,
+GetSupportedCapabilities(mozIGeckoMediaPluginService* aGMPService,
                          const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
                          const MediaKeySystemConfiguration& aPartialConfig,
                          const KeySystemConfig& aKeySystem,
@@ -760,19 +732,20 @@ GetSupportedCapabilities(const CodecType aCodecType,
     // (Note: codecs array is 'parameter').
 
     // If media types is empty:
+    const auto majorType = GetMajorType(container);
     if (codecs.IsEmpty()) {
       // If container normatively implies a specific set of codecs and codec constraints:
       // Let parameters be that set.
       if (isMP4) {
-        if (aCodecType == Audio) {
+        if (majorType == Audio) {
           codecs.AppendElement(GMP_CODEC_AAC);
-        } else if (aCodecType == Video) {
+        } else if (majorType == Video) {
           codecs.AppendElement(GMP_CODEC_H264);
         }
       } else if (isWebM) {
-        if (aCodecType == Audio) {
+        if (majorType == Audio) {
           codecs.AppendElement(GMP_CODEC_VORBIS);
-        } else if (aCodecType == Video) {
+        } else if (majorType == Video) {
           codecs.AppendElement(GMP_CODEC_VP8);
         }
       }
@@ -781,7 +754,6 @@ GetSupportedCapabilities(const CodecType aCodecType,
     }
 
     // If content type is not strictly a audio/video type, continue to the next iteration.
-    const auto majorType = GetMajorType(container);
     if (majorType == Invalid) {
       EME_LOG("MediaKeySystemConfiguration (label='%s') "
               "MediaKeySystemMediaCapability('%s','%s') unsupported; "
@@ -791,16 +763,7 @@ GetSupportedCapabilities(const CodecType aCodecType,
               NS_ConvertUTF16toUTF8(robustness).get());
       continue;
     }
-    if (majorType != aCodecType || !AllCodecsOfType(codecs, aCodecType)) {
-      EME_LOG("MediaKeySystemConfiguration (label='%s') "
-              "MediaKeySystemMediaCapability('%s','%s') unsupported; "
-              "MIME type mixes audio codecs in video capabilities "
-              "or video codecs in audio capabilities.",
-              NS_ConvertUTF16toUTF8(aPartialConfig.mLabel).get(),
-              NS_ConvertUTF16toUTF8(contentType).get(),
-              NS_ConvertUTF16toUTF8(robustness).get());
-      continue;
-    }
+
     // If robustness is not the empty string and contains an unrecognized
     // value or a value not supported by implementation, continue to the
     // next iteration. String comparison is case-sensitive.
@@ -1053,8 +1016,7 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     // configuration's videoCapabilities member, accumulated configuration,
     // and restrictions.
     Sequence<MediaKeySystemMediaCapability> caps =
-      GetSupportedCapabilities(Video,
-                               aGMPService,
+      GetSupportedCapabilities(aGMPService,
                                aCandidate.mVideoCapabilities,
                                config,
                                aKeySystem,
@@ -1079,8 +1041,7 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     // for Audio/Video Type algorithm on Audio, candidate configuration's audioCapabilities
     // member, accumulated configuration, and restrictions.
     Sequence<MediaKeySystemMediaCapability> caps =
-      GetSupportedCapabilities(Audio,
-                               aGMPService,
+      GetSupportedCapabilities(aGMPService,
                                aCandidate.mAudioCapabilities,
                                config,
                                aKeySystem,
