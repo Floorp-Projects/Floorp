@@ -87,7 +87,6 @@ if CONFIG['_MSC_VER']:
     SOURCES['skia/src/opts/SkOpts_sse2.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=20']
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=31']
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=41']
-    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['/arch:AVX -DSK_CPU_SSE_LEVEL=51']
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -97,7 +96,6 @@ if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['skia/src/opts/SkOpts_sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
-    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
     DEFINES['SK_ARM_HAS_OPTIONAL_NEON'] = 1
 elif CONFIG['CLANG_CL']:
@@ -105,7 +103,6 @@ elif CONFIG['CLANG_CL']:
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE4.cpp'].flags += ['-msse4.1']
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
     SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
-    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
 
 if CONFIG['GNU_CXX'] and CONFIG['CPU_ARCH'] == 'arm':
     SOURCES['skia/src/opts/SkBlitRow_opts_arm.cpp'].flags += ['-fomit-frame-pointer']
@@ -231,7 +228,6 @@ def generate_separated_sources(platform_sources):
       'skia/src/opts/SkOpts_sse2.cpp',
       'skia/src/opts/SkOpts_ssse3.cpp',
       'skia/src/opts/SkOpts_sse41.cpp',
-      'skia/src/opts/SkOpts_avx.cpp',
     },
     'arm': {
       'skia/src/core/SkUtilsArm.cpp',
