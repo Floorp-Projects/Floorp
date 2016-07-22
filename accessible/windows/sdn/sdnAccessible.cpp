@@ -19,6 +19,7 @@
 #include "nsWinUtils.h"
 #include "nsRange.h"
 
+#include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
@@ -149,7 +150,7 @@ sdnAccessible::get_attributes(unsigned  short aMaxAttribs,
     aAttribValues[index] = aAttribNames[index] = nullptr;
     nsAutoString attributeValue;
 
-    nsAttrInfo attr = elm->GetAttrInfoAt(index);
+    dom::BorrowedAttrInfo attr = elm->GetAttrInfoAt(index);
     attr.mValue->ToString(attributeValue);
 
     aNameSpaceIDs[index] = static_cast<short>(attr.mName->NamespaceID());

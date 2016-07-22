@@ -301,7 +301,7 @@ SVGUseElement::CreateAnonymousContent()
       return nullptr;
 
     // copy attributes
-    nsAttrInfo info;
+    BorrowedAttrInfo info;
     uint32_t i;
     for (i = 0; (info = newcontent->GetAttrInfoAt(i)); i++) {
       nsAutoString value;

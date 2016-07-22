@@ -484,7 +484,7 @@ nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
   return MakeMappedUnique(mapped);
 }
 
-nsAttrInfo
+BorrowedAttrInfo
 nsAttrAndChildArray::AttrInfoAt(uint32_t aPos) const
 {
   NS_ASSERTION(aPos < AttrCount(),
@@ -492,10 +492,10 @@ nsAttrAndChildArray::AttrInfoAt(uint32_t aPos) const
 
   uint32_t nonmapped = NonMappedAttrCount();
   if (aPos < nonmapped) {
-    return nsAttrInfo(&ATTRS(mImpl)[aPos].mName, &ATTRS(mImpl)[aPos].mValue);
+    return BorrowedAttrInfo(&ATTRS(mImpl)[aPos].mName, &ATTRS(mImpl)[aPos].mValue);
   }
 
-  return nsAttrInfo(mImpl->mMappedAttrs->NameAt(aPos - nonmapped),
+  return BorrowedAttrInfo(mImpl->mMappedAttrs->NameAt(aPos - nonmapped),
                     mImpl->mMappedAttrs->AttrAt(aPos - nonmapped));
 }
 

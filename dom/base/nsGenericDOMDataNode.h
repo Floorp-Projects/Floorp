@@ -123,7 +123,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) override;
   virtual const nsAttrName* GetAttrNameAt(uint32_t aIndex) const override;
-  virtual nsAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
+  virtual mozilla::dom::BorrowedAttrInfo GetAttrInfoAt(uint32_t aIndex) const override;
   virtual uint32_t GetAttrCount() const override;
   virtual const nsTextFragment *GetText() override;
   virtual uint32_t TextLength() const override;

@@ -406,7 +406,7 @@ nsXBLBinding::GenerateAnonymousContent()
   // Always check the content element for potential attributes.
   // This shorthand hack always happens, even when we didn't
   // build anonymous content.
-  nsAttrInfo attrInfo;
+  BorrowedAttrInfo attrInfo;
   for (uint32_t i = 0; (attrInfo = content->GetAttrInfoAt(i)); ++i) {
     int32_t namespaceID = attrInfo.mName->NamespaceID();
     // Hold a strong reference here so that the atom doesn't go away during
