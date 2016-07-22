@@ -7602,7 +7602,8 @@ StateName(State state)
         "Mark",
         "Sweep",
         "Finalize",
-        "Compact"
+        "Compact",
+        "Decommit"
     };
     MOZ_ASSERT(ArrayLength(names) == NUM_STATES);
     MOZ_ASSERT(state < NUM_STATES);
