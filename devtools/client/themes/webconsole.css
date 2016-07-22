@@ -647,7 +647,7 @@ a.learn-more-link.webconsole-learn-more-link {
   height: 100%;
 }
 
-.webconsole-filteringbar-wrapper {
+.webconsole-filterbar-wrapper {
   flex-grow: 0;
 }
 
@@ -656,10 +656,11 @@ a.learn-more-link.webconsole-learn-more-link {
   overflow: auto;
 }
 
-.webconsole-filteringbar-primary {
+.webconsole-filterbar-primary {
   display: flex;
 }
 
-.webconsole-filteringbar-primary .devtools-searchinput {
+.webconsole-filterbar-primary .devtools-plain-input {
   flex: 1 1 100%;
+  border-color: transparent;
 }
