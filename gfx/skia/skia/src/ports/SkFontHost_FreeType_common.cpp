@@ -402,16 +402,12 @@ void SkScalerContext_FreeType_Base::generateGlyphImage(FT_Face face, const SkGly
                      SkMask::kARGB32_Format == maskFormat ||
                      SkMask::kLCD16_Format == maskFormat);
 
-            if (fRec.fFlags & SkScalerContext::kEmbolden_Flag &&
-                !(face->style_flags & FT_STYLE_FLAG_BOLD))
-            {
-                FT_GlyphSlot_Own_Bitmap(face->glyph);
-                FT_Bitmap_Embolden(face->glyph->library, &face->glyph->bitmap,
-                                   kBitmapEmboldenStrength, 0);
-            }
-
-            // If no scaling needed, directly copy glyph bitmap.
-            if (glyph.fWidth == face->glyph->bitmap.width &&
+            // If no skew or scaling needed, directly copy glyph bitmap.
+            bool skewed = fRec.fPreSkewX != 0 ||
+                          fRec.fPost2x2[0][1] != 0 ||
+                          fRec.fPost2x2[1][0] != 0;
+            if (!skewed &&
+                glyph.fWidth == face->glyph->bitmap.width &&
                 glyph.fHeight == face->glyph->bitmap.rows &&
                 glyph.fTop == -face->glyph->bitmap_top &&
                 glyph.fLeft == face->glyph->bitmap_left)
@@ -460,8 +456,22 @@ void SkScalerContext_FreeType_Base::generateGlyphImage(FT_Face face, const SkGly
             // Scale unscaledBitmap into dstBitmap.
             SkCanvas canvas(dstBitmap);
             canvas.clear(SK_ColorTRANSPARENT);
-            canvas.scale(SkIntToScalar(glyph.fWidth) / SkIntToScalar(face->glyph->bitmap.width),
-                         SkIntToScalar(glyph.fHeight) / SkIntToScalar(face->glyph->bitmap.rows));
+            if (skewed) {
+                // Apply any transforms with the bitmap placed at (0, 0).
+                SkMatrix matrix;
+                fRec.getSingleMatrix(&matrix);
+                SkRect srcRect = SkRect::MakeIWH(face->glyph->bitmap.width, face->glyph->bitmap.rows);
+                SkRect destRect;
+                matrix.mapRect(&destRect, srcRect);
+                matrix.postTranslate(-destRect.fLeft, -destRect.fTop);
+                // Rescale to the glyph's actual size.
+                matrix.postScale(SkIntToScalar(glyph.fWidth) / destRect.width(),
+                                 SkIntToScalar(glyph.fHeight) / destRect.height());
+                canvas.setMatrix(matrix);
+            } else {
+                canvas.scale(SkIntToScalar(glyph.fWidth) / SkIntToScalar(face->glyph->bitmap.width),
+                             SkIntToScalar(glyph.fHeight) / SkIntToScalar(face->glyph->bitmap.rows));
+            }
             SkPaint paint;
             paint.setFilterQuality(kMedium_SkFilterQuality);
             canvas.drawBitmap(unscaledBitmap, 0, 0, &paint);

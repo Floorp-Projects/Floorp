@@ -119,6 +119,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._containers = new Map();
 
   // Binding functions that need to be called in scope.
+  this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(this);
   this._mutationObserver = this._mutationObserver.bind(this);
   this._onDisplayChange = this._onDisplayChange.bind(this);
   this._onMouseClick = this._onMouseClick.bind(this);
@@ -168,6 +169,18 @@ MarkupView.prototype = {
   CONTAINER_FLASHING_DURATION: 500,
 
   _selectedContainer: null,
+
+  /**
+   * Handle promise rejections for various asynchronous actions, and only log errors if
+   * the markup view still exists.
+   * This is useful to silence useless errors that happen when the markup view is
+   * destroyed while still initializing (and making protocol requests).
+   */
+  _handleRejectionIfNotDestroyed: function (e) {
+    if (!this._destroyer) {
+      console.error(e);
+    }
+  },
 
   _initTooltips: function () {
     this.eventDetailsTooltip = new HTMLTooltip(this._inspector.toolbox,
@@ -591,14 +604,7 @@ MarkupView.prototype = {
       // Make sure the new selection is navigated to.
       this.maybeNavigateToNewSelection();
       return undefined;
-    }).catch(e => {
-      if (!this._destroyer) {
-        console.error(e);
-      } else {
-        console.warn("Could not mark node as selected, the markup-view was " +
-          "destroyed while showing the node.");
-      }
-    });
+    }).catch(this._handleRejectionIfNotDestroyed);
 
     promise.all([onShowBoxModel, onShow]).then(done);
   },
@@ -1031,8 +1037,8 @@ MarkupView.prototype = {
 
     this._waitForChildren().then(() => {
       if (this._destroyer) {
-        console.warn("Could not fully update after markup mutations, " +
-          "the markup-view was destroyed while waiting for children.");
+        // Could not fully update after markup mutations, the markup-view was destroyed
+        // while waiting for children. Bail out silently.
         return;
       }
       this._flashMutatedNodes(mutations);
@@ -1131,16 +1137,7 @@ MarkupView.prototype = {
       return this._ensureVisible(node);
     }).then(() => {
       scrollIntoViewIfNeeded(this.getContainer(node).editor.elt, centered);
-    }, e => {
-      // Only report this rejection as an error if the panel hasn't been
-      // destroyed in the meantime.
-      if (!this._destroyer) {
-        console.error(e);
-      } else {
-        console.warn("Could not show the node, the markup-view was destroyed " +
-          "while waiting for children");
-      }
-    });
+    }, this._handleRejectionIfNotDestroyed);
   },
 
   /**
@@ -1149,8 +1146,8 @@ MarkupView.prototype = {
   _expandContainer: function (container) {
     return this._updateChildren(container, {expand: true}).then(() => {
       if (this._destroyer) {
-        console.warn("Could not expand the node, the markup-view was " +
-          "destroyed");
+        // Could not expand the node, the markup-view was destroyed in the meantime. Just
+        // silently give up.
         return;
       }
       container.setExpanded(true);
@@ -1687,7 +1684,7 @@ MarkupView.prototype = {
 
         container.children.appendChild(fragment);
         return container;
-      }).then(null, console.error);
+      }).catch(this._handleRejectionIfNotDestroyed);
     this._queuedChildUpdates.set(container, updatePromise);
     return updatePromise;
   },

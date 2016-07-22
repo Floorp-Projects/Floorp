@@ -867,7 +867,9 @@ public:
    */
   virtual void SetVisibleRegion(const LayerIntRegion& aRegion)
   {
-    if (!mVisibleRegion.IsEqual(aRegion)) {
+    // IsEmpty is required otherwise we get invalidation glitches.
+    // See bug 1288464 for investigating why.
+    if (!mVisibleRegion.IsEqual(aRegion) || aRegion.IsEmpty()) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) VisibleRegion was %s is %s", this,
         mVisibleRegion.ToString().get(), aRegion.ToString().get()));
       mVisibleRegion = aRegion;

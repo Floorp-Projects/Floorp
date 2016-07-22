@@ -195,26 +195,16 @@ protected:
     bool      mContainsAppFonts;
 };
 
-class gfxFontconfigFont : public gfxFT2FontBase {
+class gfxFontconfigFont : public gfxFontconfigFontBase {
 public:
     gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
+                      FcPattern *aPattern,
                       gfxFontEntry *aFontEntry,
                       const gfxFontStyle *aFontStyle,
-                      bool aNeedsBold,
-                      bool aAutoHinting = false);
-
-    bool GetAutoHinting() const { return mAutoHinting; }
-
-#ifdef USE_SKIA
-    virtual already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
-    GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
-#endif
+                      bool aNeedsBold);
 
 protected:
     virtual ~gfxFontconfigFont();
-
-private:
-    bool mAutoHinting;
 };
 
 class nsILanguageAtomService;

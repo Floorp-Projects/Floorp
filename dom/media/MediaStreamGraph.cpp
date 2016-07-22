@@ -1542,26 +1542,6 @@ MediaStreamGraphImpl::Process()
   }
 }
 
-void
-MediaStreamGraphImpl::MaybeProduceMemoryReport()
-{
-  MonitorAutoLock lock(mMemoryReportMonitor);
-  if (mNeedsMemoryReport) {
-    mNeedsMemoryReport = false;
-
-    for (MediaStream* s : AllStreams()) {
-      AudioNodeStream* stream = s->AsAudioNodeStream();
-      if (stream) {
-        AudioNodeSizes usage;
-        stream->SizeOfAudioNodesIncludingThis(MallocSizeOf, usage);
-        mAudioStreamSizes.AppendElement(usage);
-      }
-    }
-
-    lock.Notify();
-  }
-}
-
 bool
 MediaStreamGraphImpl::UpdateMainThreadState()
 {
@@ -1592,8 +1572,6 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
   // Process graph message from the main thread for this iteration.
   RunMessagesInQueue();
-
-  MaybeProduceMemoryReport();
 
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
   UpdateGraph(stateEnd);
@@ -3366,10 +3344,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
 #ifdef MOZ_WEBRTC
   , mFarendObserverRef(nullptr)
 #endif
-  , mMemoryReportMonitor("MSGIMemory")
   , mSelfRef(this)
-  , mAudioStreamSizes()
-  , mNeedsMemoryReport(false)
 #ifdef DEBUG
   , mCanRunMessagesSynchronously(false)
 #endif
@@ -3388,7 +3363,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
 
   mLastMainThreadUpdate = TimeStamp::Now();
 
-  RegisterWeakMemoryReporter(this);
+  RegisterWeakAsyncMemoryReporter(this);
 }
 
 void
@@ -3495,47 +3470,116 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
 
 NS_IMPL_ISUPPORTS(MediaStreamGraphImpl, nsIMemoryReporter)
 
-struct ArrayClearer
-{
-  explicit ArrayClearer(nsTArray<AudioNodeSizes>& aArray) : mArray(aArray) {}
-  ~ArrayClearer() { mArray.Clear(); }
-  nsTArray<AudioNodeSizes>& mArray;
-};
-
 NS_IMETHODIMP
 MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                                      nsISupports* aData, bool aAnonymize)
 {
-  // Clears out the report array after we're done with it.
-  ArrayClearer reportCleanup(mAudioStreamSizes);
+  if (mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
+    // Shutting down, nothing to report.
+    FinishCollectReports(aHandleReport, aData, nsTArray<AudioNodeSizes>());
+    return NS_OK;
+  }
 
-  {
-    MonitorAutoLock memoryReportLock(mMemoryReportMonitor);
-    mNeedsMemoryReport = true;
-
+  class Message final : public ControlMessage {
+  public:
+    Message(MediaStreamGraphImpl *aGraph,
+            nsIHandleReportCallback* aHandleReport,
+            nsISupports *aHandlerData)
+      : ControlMessage(nullptr)
+      , mGraph(aGraph)
+      , mHandleReport(aHandleReport)
+      , mHandlerData(aHandlerData) {}
+    void Run() override
     {
-      // Wake up the MSG thread if it's real time (Offline graphs can't be
-      // sleeping).
-      MonitorAutoLock monitorLock(mMonitor);
-      if (!CurrentDriver()->AsOfflineClockDriver()) {
-        CurrentDriver()->WakeUp();
-      }
+      mGraph->CollectSizesForMemoryReport(mHandleReport.forget(),
+                                          mHandlerData.forget());
     }
+    void RunDuringShutdown() override
+    {
+      // Run this message during shutdown too, so that endReports is called.
+      Run();
+    }
+    MediaStreamGraphImpl *mGraph;
+    // nsMemoryReporterManager keeps the callback and data alive only if it
+    // does not time out.
+    nsCOMPtr<nsIHandleReportCallback> mHandleReport;
+    nsCOMPtr<nsISupports> mHandlerData;
+  };
 
-    if (mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN) {
-      // Shutting down, nothing to report.
+  // When a non-realtime graph has not started, there is no thread yet, so
+  // collect sizes on this thread.
+  if (!(mRealtime || mNonRealtimeProcessing)) {
+    CollectSizesForMemoryReport(do_AddRef(aHandleReport), do_AddRef(aData));
+    return NS_OK;
+  }
+
+  AppendMessage(MakeUnique<Message>(this, aHandleReport, aData));
+
+  return NS_OK;
+}
+
+void
+MediaStreamGraphImpl::CollectSizesForMemoryReport(
+  already_AddRefed<nsIHandleReportCallback> aHandleReport,
+  already_AddRefed<nsISupports> aHandlerData)
+{
+  class FinishCollectRunnable final : public Runnable
+  {
+  public:
+    explicit FinishCollectRunnable(
+               already_AddRefed<nsIHandleReportCallback> aHandleReport,
+               already_AddRefed<nsISupports> aHandlerData)
+      : mHandleReport(aHandleReport)
+      , mHandlerData(aHandlerData)
+    {}
+
+    NS_IMETHOD Run() override
+    {
+      MediaStreamGraphImpl::FinishCollectReports(mHandleReport, mHandlerData,
+                                                 Move(mAudioStreamSizes));
       return NS_OK;
     }
 
-    // Wait for up to one second for the report to complete.
-    nsresult rv;
-    const PRIntervalTime kMaxWait = PR_SecondsToInterval(1);
-    while ((rv = memoryReportLock.Wait(kMaxWait)) != NS_OK) {
-      if (PR_GetError() != PR_PENDING_INTERRUPT_ERROR) {
-        return rv;
-      }
+    nsTArray<AudioNodeSizes> mAudioStreamSizes;
+
+  private:
+    ~FinishCollectRunnable() {}
+
+    // Avoiding nsCOMPtr because NSCAP_ASSERT_NO_QUERY_NEEDED in its
+    // constructor modifies the ref-count, which cannot be done off main
+    // thread.
+    RefPtr<nsIHandleReportCallback> mHandleReport;
+    RefPtr<nsISupports> mHandlerData;
+  };
+
+  RefPtr<FinishCollectRunnable> runnable =
+    new FinishCollectRunnable(Move(aHandleReport), Move(aHandlerData));
+
+  auto audioStreamSizes = &runnable->mAudioStreamSizes;
+
+  for (MediaStream* s : AllStreams()) {
+    AudioNodeStream* stream = s->AsAudioNodeStream();
+    if (stream) {
+      AudioNodeSizes* usage = audioStreamSizes->AppendElement();
+      stream->SizeOfAudioNodesIncludingThis(MallocSizeOf, *usage);
     }
   }
+
+  NS_DispatchToMainThread(runnable.forget());
+}
+
+void
+MediaStreamGraphImpl::
+FinishCollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                     const nsTArray<AudioNodeSizes>& aAudioStreamSizes)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIMemoryReporterManager> manager =
+    do_GetService("@mozilla.org/memory-reporter-manager;1");
+
+  if (!manager)
+    return;
 
 #define REPORT(_path, _amount, _desc)                                       \
   do {                                                                      \
@@ -3543,18 +3587,14 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
     rv = aHandleReport->Callback(EmptyCString(), _path,                     \
                                  KIND_HEAP, UNITS_BYTES, _amount,           \
                                  NS_LITERAL_CSTRING(_desc), aData);         \
-    NS_ENSURE_SUCCESS(rv, rv);                                              \
+    if (NS_WARN_IF(NS_FAILED(rv)))                                          \
+      return;                                                               \
   } while (0)
 
-  for (size_t i = 0; i < mAudioStreamSizes.Length(); i++) {
-    const AudioNodeSizes& usage = mAudioStreamSizes[i];
-    const char* const nodeType =  usage.mNodeType.IsEmpty() ?
-                                  "<unknown>" : usage.mNodeType.get();
-
-    nsPrintfCString domNodePath("explicit/webaudio/audio-node/%s/dom-nodes",
-                                nodeType);
-    REPORT(domNodePath, usage.mDomNode,
-           "Memory used by AudioNode DOM objects (Web Audio).");
+  for (size_t i = 0; i < aAudioStreamSizes.Length(); i++) {
+    const AudioNodeSizes& usage = aAudioStreamSizes[i];
+    const char* const nodeType =
+      usage.mNodeType ? usage.mNodeType : "<unknown>";
 
     nsPrintfCString enginePath("explicit/webaudio/audio-node/%s/engine-objects",
                                nodeType);
@@ -3579,7 +3619,7 @@ MediaStreamGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 #undef REPORT
 
-  return NS_OK;
+  manager->EndReport();
 }
 
 SourceMediaStream*

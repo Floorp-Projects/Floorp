@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="whitesmoke">
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#0b0b0b">
   <rect fill-opacity=".5" x="2" y="3" width="8" height="1" rx=".5"/>
   <rect x="6" y="6" width="8" height="1" rx=".5"/>
   <rect fill-opacity=".5" x="4" y="9" width="8" height="1" rx=".5"/>

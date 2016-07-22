@@ -58,14 +58,13 @@ var tests = {
 
     let mm = getGroupMessageManager("social");
     mm.addMessageListener("sharedata", function handler(msg) {
-      gBrowser.removeTab(testTab);
       is(msg.data, expecting, "microformats data ok");
       mm.removeMessageListener("sharedata", handler);
-      next();
+      BrowserTestUtils.removeTab(testTab).then(next);
     });
 
     let url = "https://example.com/browser/browser/base/content/test/social/microformats.html"
-    addTab(url, function(tab) {
+    BrowserTestUtils.openNewForegroundTab(gBrowser, url).then(tab => {
       testTab = tab;
       let doc = tab.linkedBrowser.contentDocument;
       target = doc.getElementById("test-review");
