@@ -24,21 +24,21 @@ NotifyProgress(NotNull<Decoder*> aDecoder)
 {
   MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
 
+  Progress progress = aDecoder->TakeProgress();
+  nsIntRect invalidRect = aDecoder->TakeInvalidRect();
+  SurfaceFlags surfaceFlags = aDecoder->GetSurfaceFlags();
+
   // Synchronously notify if we can.
   if (NS_IsMainThread() &&
       !(aDecoder->GetDecoderFlags() & DecoderFlags::ASYNC_NOTIFY)) {
-    aDecoder->GetImage()->NotifyProgress(aDecoder->TakeProgress(),
-                                         aDecoder->TakeInvalidRect(),
-                                         aDecoder->GetSurfaceFlags());
+    aDecoder->GetImage()->NotifyProgress(progress, invalidRect, surfaceFlags);
     return;
   }
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<Decoder>> decoder = aDecoder;
   NS_DispatchToMainThread(NS_NewRunnableFunction([=]() -> void {
-    decoder->GetImage()->NotifyProgress(decoder->TakeProgress(),
-                                        decoder->TakeInvalidRect(),
-                                        decoder->GetSurfaceFlags());
+    decoder->GetImage()->NotifyProgress(progress, invalidRect, surfaceFlags);
   }));
 }
 
