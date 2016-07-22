@@ -303,8 +303,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
         return NS_ERROR_FAILURE;
 
     // swap connection ownership
-    *_retval = ts->conn;
-    ts->conn = nullptr;
+    ts->conn.forget(_retval);
     delete ts;
 
     return NS_OK;
@@ -347,7 +346,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    NS_ADDREF(aConn);
+    // ts->conn is a RefPtr
     ts->conn = aConn;
     ts->timer = timer;
 
