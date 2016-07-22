@@ -58,12 +58,12 @@ class nsFilePicker :
 {
   virtual ~nsFilePicker();
 public:
-  nsFilePicker(); 
+  nsFilePicker();
 
   NS_IMETHOD Init(mozIDOMWindowProxy *aParent, const nsAString& aTitle, int16_t aMode);
-                  
+
   NS_DECL_ISUPPORTS
-  
+
   // IUnknown's QueryInterface
   STDMETHODIMP QueryInterface(REFIID refiid, void** ppvResult);
 
@@ -73,8 +73,8 @@ public:
   NS_IMETHOD GetFile(nsIFile * *aFile);
   NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
-  NS_IMETHOD Show(int16_t *aReturnVal); 
-  NS_IMETHOD ShowW(int16_t *aReturnVal); 
+  NS_IMETHOD Show(int16_t *aReturnVal);
+  NS_IMETHOD ShowW(int16_t *aReturnVal);
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
   // IFileDialogEvents
@@ -131,7 +131,7 @@ protected:
   public:
     ComDlgFilterSpec() {}
     ~ComDlgFilterSpec() {}
-    
+
     const uint32_t Length() {
       return mSpecList.Length();
     }
@@ -143,7 +143,7 @@ protected:
     const COMDLG_FILTERSPEC* get() {
       return mSpecList.Elements();
     }
-    
+
     void Append(const nsAString& aTitle, const nsAString& aFilter);
   private:
     AutoTArray<COMDLG_FILTERSPEC, 1> mSpecList;
