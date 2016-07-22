@@ -6,7 +6,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
 import os
-import tarfile
+
+from mozpack.archive import (
+    create_tar_gz_from_files,
+)
+
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 DOCKER_ROOT = os.path.join(GECKO, 'testing', 'docker')
@@ -65,8 +69,17 @@ def create_context_tar(context_dir, out_path, prefix):
 
     Returns the SHA-256 hex digest of the created archive.
     """
-    with tarfile.open(out_path, 'w:gz') as tar:
-        tar.add(context_dir, arcname=prefix)
+    archive_files = {}
+
+    for root, dirs, files in os.walk(context_dir):
+        for f in files:
+            source_path = os.path.join(root, f)
+            rel = source_path[len(context_dir) + 1:]
+            archive_path = os.path.join(prefix, rel)
+            archive_files[archive_path] = source_path
+
+    with open(out_path, 'wb') as fh:
+        create_tar_gz_from_files(fh, archive_files, '%s.tar.gz' % prefix)
 
     h = hashlib.sha256()
     with open(out_path, 'rb') as fh:
