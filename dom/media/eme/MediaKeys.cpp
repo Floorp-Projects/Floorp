@@ -356,15 +356,15 @@ MediaKeys::Init(ErrorResult& aRv)
     return promise.forget();
   }
 
-  nsAutoString origin;
-  nsresult rv = nsContentUtils::GetUTFOrigin(mPrincipal, origin);
+  nsAutoCString origin;
+  nsresult rv = mPrincipal->GetOrigin(origin);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                          NS_LITERAL_CSTRING("Couldn't get principal origin string in MediaKeys::Init"));
     return promise.forget();
   }
-  nsAutoString topLevelOrigin;
-  rv = nsContentUtils::GetUTFOrigin(mTopLevelPrincipal, topLevelOrigin);
+  nsAutoCString topLevelOrigin;
+  rv = mTopLevelPrincipal->GetOrigin(topLevelOrigin);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                          NS_LITERAL_CSTRING("Couldn't get top-level principal origin string in MediaKeys::Init"));
@@ -376,8 +376,8 @@ MediaKeys::Init(ErrorResult& aRv)
 
   EME_LOG("MediaKeys[%p]::Create() (%s, %s), %s",
           this,
-          NS_ConvertUTF16toUTF8(origin).get(),
-          NS_ConvertUTF16toUTF8(topLevelOrigin).get(),
+          origin.get(),
+          topLevelOrigin.get(),
           (inPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
 
   // The CDMProxy's initialization is asynchronous. The MediaKeys is
@@ -392,8 +392,8 @@ MediaKeys::Init(ErrorResult& aRv)
   mCreatePromiseId = StorePromise(promise);
   AddRef();
   mProxy->Init(mCreatePromiseId,
-               origin,
-               topLevelOrigin,
+               NS_ConvertUTF8toUTF16(origin),
+               NS_ConvertUTF8toUTF16(topLevelOrigin),
                KeySystemToGMPName(mKeySystem),
                inPrivateBrowsing);
 
