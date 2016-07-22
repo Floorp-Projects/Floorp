@@ -1655,8 +1655,7 @@
             // As frameLoaders start out with an active docShell we have to
             // deactivate it if this is not the selected tab's browser or the
             // browser window is minimized.
-            aBrowser.docShellIsActive = (aBrowser == this.selectedBrowser &&
-                                         window.windowState != window.STATE_MINIMIZED);
+            aBrowser.docShellIsActive = this.shouldActivateDocShell(aBrowser);
 
             // Create a new tab progress listener for the new browser we just injected,
             // since tab progress listeners have logic for handling the initial about:blank
@@ -2759,8 +2758,11 @@
               remoteBrowser._outerWindowIDBrowserMap.delete(aOtherBrowser.outerWindowID);
             }
 
-            aOtherBrowser.docShellIsActive = (ourBrowser == this.selectedBrowser &&
-                                              window.windowState != window.STATE_MINIMIZED);
+            // If switcher is active, it will intercept swap events and
+            // react as needed.
+            if (!this._switcher) {
+              aOtherBrowser.docShellIsActive = this.shouldActivateDocShell(ourBrowser);
+            }
 
             // Swap the docshells
             ourBrowser.swapDocShells(aOtherBrowser);
@@ -3266,6 +3268,56 @@
       </method>
 
       <!--
+        List of browsers whose docshells must be active in order for print preview
+        to work.
+      -->
+      <field name="_printPreviewBrowsers">
+        new Set()
+      </field>
+
+      <method name="activateBrowserForPrintPreview">
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            this._printPreviewBrowsers.add(aBrowser);
+            if (this._switcher) {
+              this._switcher.activateBrowserForPrintPreview(aBrowser);
+            }
+            aBrowser.docShellIsActive = true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="deactivatePrintPreviewBrowsers">
+        <body>
+          <![CDATA[
+            let browsers = this._printPreviewBrowsers;
+            this._printPreviewBrowsers = new Set();
+            for (let browser of browsers) {
+              browser.docShellIsActive = this.shouldActivateDocShell(browser);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <!--
+        Returns true if a given browser's docshell should be active.
+      -->
+      <method name="shouldActivateDocShell">
+        <parameter name="aBrowser"/>
+        <body>
+          <![CDATA[
+            if (this._switcher) {
+              return this._switcher.shouldActivateDocShell(aBrowser);
+            }
+            return (aBrowser == this.selectedBrowser &&
+                    window.windowState != window.STATE_MINIMIZED) ||
+                   this._printPreviewBrowsers.has(aBrowser);
+          ]]>
+        </body>
+      </method>
+
+      <!--
         The tab switcher is responsible for asynchronously switching
         tabs in e10s. It waits until the new tab is ready (i.e., the
         layer tree is available) before switching to it. Then it
@@ -3296,35 +3348,12 @@
         It's important that we always show either the spinner or a tab
         whose layers are available. Otherwise the compositor will draw
         an entirely black frame, which is very jarring. To ensure this
-        never happens, we do the following:
-
-        1. When switching away from a tab, we assume the old tab might
-        still be drawn until a MozAfterPaint event occurs. Because
-        layout and compositing happen asynchronously, we don't have
-        any other way of knowing when the switch actually takes
-        place. Therefore, we don't unload the old tab until the next
-        MozAfterPaint event.
-
-        2. Suppose that the user switches from tab A to B and then
-        back to A. Suppose that we ask for tab A's layers to be
-        unloaded via message M1 after the first switch and then
-        request them again via message M2 once the second switch
-        happens. Both loading and unloading of layers happens
-        asynchronously, and this can cause problems. It's possible
-        that the content process publishes one last layer tree before
-        M1 is received. The parent process doesn't know that this
-        layer tree was published before M1 and not after M2, so it
-        will display the tab. However, once M1 arrives, the content
-        process will destroy the layer tree for A and now we will
-        display black for it.
-
-        To counter this problem, we keep tab A in a separate
-        "unloading" state until the layer tree is actually dropped in
-        the compositor thread. While the tab is in the "unloading"
-        state, we're not allowed to request layers for it. Once the
-        layers are dropped in the compositor, an event will fire and
-        we will transition the tab to the "unloaded" state. Then we
-        are free to request the tab's layers again.
+        never happens when switching away from a tab, we assume the
+        old tab might still be drawn until a MozAfterPaint event
+        occurs. Because layout and compositing happen asynchronously,
+        we don't have any other way of knowing when the switch
+        actually takes place. Therefore, we don't unload the old tab
+        until the next MozAfterPaint event.
       -->
       <field name="_switcher">null</field>
       <method name="_getSwitcher">
@@ -3417,34 +3446,55 @@
               return state;
             },
 
-            setTabState: function(tab, state) {
+            setTabStateNoAction(tab, state) {
               if (state == this.STATE_UNLOADED) {
                 this.tabState.delete(tab);
               } else {
                 this.tabState.set(tab, state);
               }
+            },
+
+            setTabState: function(tab, state) {
+              this.setTabStateNoAction(tab, state);
 
               let browser = tab.linkedBrowser;
-              let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+              let {tabParent} = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
               if (state == this.STATE_LOADING) {
-                // Ask for a MozLayerTreeReady event.
-                fl.requestNotifyLayerTreeReady();
+                this.assert(!this.minimized);
                 browser.docShellIsActive = true;
+                if (!tabParent) {
+                  this.onLayersReady(browser);
+		}
               } else if (state == this.STATE_UNLOADING) {
-                // Ask for MozLayerTreeCleared event.
-                fl.requestNotifyLayerTreeCleared();
                 browser.docShellIsActive = false;
+                if (!tabParent) {
+                  this.onLayersCleared(browser);
+                }
               }
+            },
+
+            get minimized() {
+              return window.windowState == window.STATE_MINIMIZED;
             },
 
             init: function() {
               this.log("START");
 
+              // If we minimized the window before the switcher was activated,
+              // we might have set  the preserveLayers flag for the current
+              // browser. Let's clear it.
+              this.tabbrowser.mCurrentBrowser.preserveLayers(false);
+
               window.addEventListener("MozAfterPaint", this);
               window.addEventListener("MozLayerTreeReady", this);
               window.addEventListener("MozLayerTreeCleared", this);
               window.addEventListener("TabRemotenessChange", this);
-              this.setTabState(this.requestedTab, this.STATE_LOADED);
+              window.addEventListener("sizemodechange", this);
+              window.addEventListener("SwapDocShells", this, true);
+              window.addEventListener("EndSwapDocShells", this, true);
+              if (!this.minimized) {
+                this.setTabState(this.requestedTab, this.STATE_LOADED);
+              }
             },
 
             destroy: function() {
@@ -3461,6 +3511,9 @@
               window.removeEventListener("MozLayerTreeReady", this);
               window.removeEventListener("MozLayerTreeCleared", this);
               window.removeEventListener("TabRemotenessChange", this);
+              window.removeEventListener("sizemodechange", this);
+              window.removeEventListener("SwapDocShells", this, true);
+              window.removeEventListener("EndSwapDocShells", this, true);
 
               this.tabbrowser._switcher = null;
 
@@ -3479,7 +3532,7 @@
               this.assert(!this.loadTimer);
               this.assert(!this.loadingTab);
               this.assert(this.lastVisibleTab === this.requestedTab);
-              this.assert(this.getTabState(this.requestedTab) == this.STATE_LOADED);
+              this.assert(this.minimized || this.getTabState(this.requestedTab) == this.STATE_LOADED);
 
               this.destroy();
 
@@ -3519,7 +3572,7 @@
               }
 
               // Show or hide the spinner as needed.
-              let needSpinner = this.getTabState(showTab) != this.STATE_LOADED;
+              let needSpinner = this.getTabState(showTab) != this.STATE_LOADED && !this.minimized;
               if (!needSpinner && this.spinnerTab) {
                 this.spinnerHidden();
                 this.tabbrowser.removeAttribute("pendingpaint");
@@ -3574,14 +3627,15 @@
             // We've decided to try to load requestedTab.
             loadRequestedTab: function() {
               this.assert(!this.loadTimer);
+              this.assert(!this.minimized);
 
               // loadingTab can be non-null here if we timed out loading the current tab.
               // In that case we just overwrite it with a different tab; it's had its chance.
               this.loadingTab = this.requestedTab;
               this.log("Loading tab " + this.tinfo(this.loadingTab));
 
-              this.setTabState(this.requestedTab, this.STATE_LOADING);
               this.loadTimer = this.setTimer(() => this.onLoadTimeout(), this.TAB_SWITCH_TIMEOUT);
+              this.setTabState(this.requestedTab, this.STATE_LOADING);
             },
 
             // This function runs before every event. It fixes up the state
@@ -3626,13 +3680,21 @@
               this.assert(!this.loadingTab || this.loadTimer);
 
               // If we're not loading anything, try loading the requested tab.
-              if (!this.loadTimer && this.getTabState(this.requestedTab) == this.STATE_UNLOADED) {
+              let requestedState = this.getTabState(this.requestedTab);
+              if (!this.loadTimer && !this.minimized &&
+                  (requestedState == this.STATE_UNLOADED ||
+                   requestedState == this.STATE_UNLOADING)) {
                 this.loadRequestedTab();
               }
 
               // See how many tabs still have work to do.
               let numPending = 0;
               for (let [tab, state] of this.tabState) {
+                // Skip print preview browsers since they shouldn't affect tab switching.
+                if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
+                  continue;
+                }
+
                 if (state == this.STATE_LOADED && tab !== this.requestedTab) {
                   numPending++;
                 }
@@ -3667,6 +3729,10 @@
 
               // Unload any tabs that can be unloaded.
               for (let [tab, state] of this.tabState) {
+                if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
+                  continue;
+                }
+
                 if (state == this.STATE_LOADED &&
                     !this.maybeVisibleTabs.has(tab) &&
                     tab !== this.lastVisibleTab &&
@@ -3700,9 +3766,11 @@
 
             // Fires when the layers become available for a tab.
             onLayersReady: function(browser) {
-              this.logState("onLayersReady");
-
               let tab = this.tabbrowser.getTabForBrowser(browser);
+              this.logState(`onLayersReady(${tab._tPos})`);
+
+              this.assert(this.getTabState(tab) == this.STATE_LOADING ||
+                          this.getTabState(tab) == this.STATE_LOADED);
               this.setTabState(tab, this.STATE_LOADED);
 
               this.maybeFinishTabSwitch();
@@ -3724,10 +3792,11 @@
 
             // Called when we're done clearing the layers for a tab.
             onLayersCleared: function(browser) {
-              this.logState("onLayersCleared");
-
               let tab = this.tabbrowser.getTabForBrowser(browser);
               if (tab) {
+                this.logState(`onLayersCleared(${tab._tPos})`);
+                this.assert(this.getTabState(tab) == this.STATE_UNLOADING ||
+                            this.getTabState(tab) == this.STATE_UNLOADED);
                 this.setTabState(tab, this.STATE_UNLOADED);
               }
             },
@@ -3736,7 +3805,7 @@
             // a MozLayerTreeReady notification that we requested may never fire,
             // so we need to simulate it.
             onRemotenessChange: function(tab) {
-              this.logState("onRemotenessChange");
+              this.logState(`onRemotenessChange(${tab._tPos}, ${tab.linkedBrowser.isRemoteBrowser})`);
               if (!tab.linkedBrowser.isRemoteBrowser) {
                 if (this.getTabState(tab) == this.STATE_LOADING) {
                   this.onLayersReady(tab.linkedBrowser);
@@ -3759,19 +3828,90 @@
               }
             },
 
+            onSizeModeChange() {
+              if (this.minimized) {
+                for (let [tab, state] of this.tabState) {
+                  // Skip print preview browsers since they shouldn't affect tab switching.
+                  if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
+                    continue;
+                  }
+
+                  if (state == this.STATE_LOADING || state == this.STATE_LOADED) {
+                    this.setTabState(tab, this.STATE_UNLOADING);
+                  }
+                }
+                if (this.loadTimer) {
+                  this.clearTimer(this.loadTimer);
+                  this.loadTimer = null;
+                }
+                this.loadingTab = null;
+              } else {
+                // Do nothing. We'll automatically start loading the requested tab in
+                // postActions.
+              }
+            },
+
+            onSwapDocShells(ourBrowser, otherBrowser) {
+              // This event fires before the swap. ourBrowser is from
+              // our window. We save the state of otherBrowser since ourBrowser
+              // needs to take on that state at the end of the swap.
+
+              let otherTabbrowser = otherBrowser.ownerDocument.defaultView.gBrowser;
+              let otherState;
+              if (otherTabbrowser && otherTabbrowser._switcher) {
+                let otherTab = otherTabbrowser.getTabForBrowser(otherBrowser);
+                otherState = otherTabbrowser._switcher.getTabState(otherTab);
+              } else {
+                otherState = (otherBrowser.docShellIsActive
+                              ? this.STATE_LOADED
+                              : this.STATE_UNLOADED);
+              }
+
+              if (!this.swapMap) {
+                this.swapMap = new WeakMap();
+              }
+              this.swapMap.set(otherBrowser, otherState);
+            },
+
+            onEndSwapDocShells(ourBrowser, otherBrowser) {
+              // The swap has happened. We reset the loadingTab in
+              // case it has been swapped. We also set ourBrowser's state
+              // to whatever otherBrowser's state was before the swap.
+
+              if (this.loadTimer) {
+                // Clearing the load timer means that we will
+                // immediately display a spinner if ourBrowser isn't
+                // ready yet. Typically it will already be ready
+                // though. If it's not, we're probably in a new window,
+                // in which case we have no other tabs to display anyway.
+                this.clearTimer(this.loadTimer);
+                this.loadTimer = null;
+              }
+              this.loadingTab = null;
+
+              let otherState = this.swapMap.get(otherBrowser);
+              this.swapMap.delete(otherBrowser);
+
+              let ourTab = this.tabbrowser.getTabForBrowser(ourBrowser);
+              if (ourTab) {
+                this.setTabStateNoAction(ourTab, otherState);
+              }
+            },
+
+            shouldActivateDocShell(browser) {
+              let tab = this.tabbrowser.getTabForBrowser(browser);
+              let state = this.getTabState(tab);
+              return state == this.STATE_LOADING || state == this.STATE_LOADED;
+            },
+
+            activateBrowserForPrintPreview(browser) {
+	      let tab = this.tabbrowser.getTabForBrowser(browser);
+	      this.setTabState(tab, this.STATE_LOADING);
+	    },
+
             // Called when the user asks to switch to a given tab.
             requestTab: function(tab) {
               if (tab === this.requestedTab) {
-                return;
-              }
-
-              // Instrumentation to figure out bug 1166351 - if the binding
-              // on the browser we're switching to has gone away, try to find out
-              // why. We should remove this and the checkBrowserBindingAlive
-              // method once bug 1166351 has been closed.
-              if (this.tabbrowser.AppConstants.E10S_TESTING_ONLY &&
-                  !this.checkBrowserBindingAlive(tab)) {
-                Cu.reportError("Please report the above errors in bug 1166351.");
                 return;
               }
 
@@ -3818,6 +3958,12 @@
                 this.onLayersCleared(event.originalTarget);
               } else if (event.type == "TabRemotenessChange") {
                 this.onRemotenessChange(event.target);
+              } else if (event.type == "sizemodechange") {
+                this.onSizeModeChange();
+              } else if (event.type == "SwapDocShells") {
+                this.onSwapDocShells(event.originalTarget, event.detail);
+              } else if (event.type == "EndSwapDocShells") {
+                this.onEndSwapDocShells(event.originalTarget, event.detail);
               }
 
               this.postActions();
@@ -3903,42 +4049,6 @@
               this._shouldLog = result;
               this._logInit = true;
               return this._shouldLog;
-            },
-
-            // Instrumentation for bug 1166351
-            checkBrowserBindingAlive: function(tab) {
-              let err = Cu.reportError;
-
-              if (!tab.linkedBrowser) {
-                err("Attempting to switch to tab that has no linkedBrowser.");
-                return false;
-              }
-
-              let b = tab.linkedBrowser;
-
-              if (!b._alive) {
-                // The browser binding has been removed. Dump a bunch of
-                // diagnostic information to the browser console.
-                let utils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-                let results = utils.getBindingURLs(b);
-                let urls = [];
-
-                for (let i = 0; i < results.length; ++i) {
-                  urls.push(results.queryElementAt(i, Ci.nsIURI).spec);
-                }
-                err("The browser has the following bindings:");
-                err(urls);
-                err("MozBinding is currently: " +
-                    window.getComputedStyle(b).MozBinding);
-                if (!b.parentNode) {
-                  err("Browser was removed from the DOM.");
-                } else {
-                  err("Parent is: " + b.parentNode.outerHTML);
-                }
-                return false;
-              }
-
-              return true;
             },
 
             tinfo: function(tab) {
@@ -4307,9 +4417,9 @@
               this._handleKeyPressEventMac(aEvent);
               break;
             case "sizemodechange":
-              if (aEvent.target == window) {
-                this.mCurrentBrowser.setDocShellIsActiveAndForeground(
-                  window.windowState != window.STATE_MINIMIZED);
+              if (aEvent.target == window && !this._switcher) {
+                this.mCurrentBrowser.preserveLayers(window.windowState == window.STATE_MINIMIZED);
+                this.mCurrentBrowser.docShellIsActive = this.shouldActivateDocShell(this.mCurrentBrowser);
               }
               break;
           }

@@ -818,6 +818,12 @@ ClientLayerManager::SetNextPaintSyncId(int32_t aSyncId)
 }
 
 void
+ClientLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
+{
+  mForwarder->SetLayerObserverEpoch(aLayerObserverEpoch);
+}
+
+void
 ClientLayerManager::AddDidCompositeObserver(DidCompositeObserver* aObserver)
 {
   if (!mDidCompositeObservers.Contains(aObserver)) {

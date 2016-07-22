@@ -60,6 +60,9 @@ public:
   uint64_t GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 
+  uint64_t GetChildEpoch() const { return mChildEpoch; }
+  bool ShouldParentObserveEpoch();
+
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
   virtual bool AllocShmem(size_t aSize,
@@ -139,6 +142,8 @@ protected:
                                 const mozilla::TimeStamp& aTransactionStart,
                                 const int32_t& aPaintSyncId) override;
 
+  virtual bool RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
+
   virtual bool RecvClearCachedResources() override;
   virtual bool RecvForceComposite() override;
   virtual bool RecvSetTestSampleTime(const TimeStamp& aTime) override;
@@ -196,6 +201,13 @@ private:
   //   mId != 0 => mRoot == null
   // because the "real tree" is owned by the compositor.
   uint64_t mId;
+
+  // These fields keep track of the latest epoch values in the child and the
+  // parent. mChildEpoch is the latest epoch value received from the child.
+  // mParentEpoch is the latest epoch value that we have told TabParent about
+  // (via ObserveLayerUpdate).
+  uint64_t mChildEpoch;
+  uint64_t mParentEpoch;
 
   uint64_t mPendingTransaction;
 
