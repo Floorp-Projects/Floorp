@@ -646,49 +646,24 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
     {
         // Enable Activation.
         //
-        // This sequence requires three registers, and needs to preserve the 'callee'
-        // register, so there are four live registers.
+        // This sequence requires two registers, and needs to preserve the
+        // 'callee' register, so there are three live registers.
         MOZ_ASSERT(callee == AsmJSIonExitRegCallee);
-        Register reg0 = AsmJSIonExitRegE0;
-        Register reg1 = AsmJSIonExitRegE1;
-        Register reg2 = AsmJSIonExitRegE2;
+        Register cx = AsmJSIonExitRegE0;
+        Register act = AsmJSIonExitRegE1;
 
-        // The following is inlined:
-        //   JSContext* cx = activation->cx();
-        //   Activation* act = cx->activation();
-        //   act.active_ = true;
-        //   act.prevJitTop_ = cx->jitTop;
-        //   act.prevJitActivation_ = cx->jitActivation;
-        //   cx->jitActivation = act;
-        //   act.prevProfilingActivation_ = cx->profilingActivation;
-        //   cx->profilingActivation_ = act;
-        // On the ARM store8() uses the secondScratchReg (lr) as a temp.
-        size_t offsetOfActivation = JSContext::offsetOfActivation();
-        size_t offsetOfJitTop = offsetof(JSContext, jitTop);
-        size_t offsetOfJitActivation = offsetof(JSContext, jitActivation);
-        size_t offsetOfProfilingActivation = JSContext::offsetOfProfilingActivation();
-        masm.loadWasmActivation(reg0);
-        masm.loadPtr(Address(reg0, WasmActivation::offsetOfContext()), reg0);
-        masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
+        // JitActivation* act = cx->activation();
+        masm.movePtr(SymbolicAddress::Context, cx);
+        masm.loadPtr(Address(cx, JSContext::offsetOfActivation()), act);
 
-        //   act.active_ = true;
-        masm.store8(Imm32(1), Address(reg1, JitActivation::offsetOfActiveUint8()));
+        // act.active_ = true;
+        masm.store8(Imm32(1), Address(act, JitActivation::offsetOfActiveUint8()));
 
-        //   act.prevJitTop_ = cx->jitTop;
-        masm.loadPtr(Address(reg0, offsetOfJitTop), reg2);
-        masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitTop()));
+        // cx->jitActivation = act;
+        masm.storePtr(act, Address(cx, offsetof(JSContext, jitActivation)));
 
-        //   act.prevJitActivation_ = cx->jitActivation;
-        masm.loadPtr(Address(reg0, offsetOfJitActivation), reg2);
-        masm.storePtr(reg2, Address(reg1, JitActivation::offsetOfPrevJitActivation()));
-        //   cx->jitActivation = act;
-        masm.storePtr(reg1, Address(reg0, offsetOfJitActivation));
-
-        //   act.prevProfilingActivation_ = cx->profilingActivation;
-        masm.loadPtr(Address(reg0, offsetOfProfilingActivation), reg2);
-        masm.storePtr(reg2, Address(reg1, Activation::offsetOfPrevProfiling()));
-        //   cx->profilingActivation_ = act;
-        masm.storePtr(reg1, Address(reg0, offsetOfProfilingActivation));
+        // cx->profilingActivation_ = act;
+        masm.storePtr(act, Address(cx, JSContext::offsetOfProfilingActivation()));
     }
 
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
@@ -702,38 +677,28 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi, bool usesHeap)
         // JSReturnReg_Type, so there are five live registers.
         MOZ_ASSERT(JSReturnReg_Data == AsmJSIonExitRegReturnData);
         MOZ_ASSERT(JSReturnReg_Type == AsmJSIonExitRegReturnType);
-        Register reg0 = AsmJSIonExitRegD0;
-        Register reg1 = AsmJSIonExitRegD1;
-        Register reg2 = AsmJSIonExitRegD2;
+        Register cx = AsmJSIonExitRegD0;
+        Register act = AsmJSIonExitRegD1;
+        Register tmp = AsmJSIonExitRegD2;
 
-        // The following is inlined:
-        //   rt->profilingActivation = prevProfilingActivation_;
-        //   rt->activation()->active_ = false;
-        //   rt->jitTop = prevJitTop_;
-        //   rt->jitActivation = prevJitActivation_;
-        // On the ARM store8() uses the secondScratchReg (lr) as a temp.
-        size_t offsetOfActivation = JSRuntime::offsetOfActivation();
-        size_t offsetOfJitTop = offsetof(JSRuntime, jitTop);
-        size_t offsetOfJitActivation = offsetof(JSRuntime, jitActivation);
-        size_t offsetOfProfilingActivation = JSRuntime::offsetOfProfilingActivation();
+        // JitActivation* act = cx->activation();
+        masm.movePtr(SymbolicAddress::Context, cx);
+        masm.loadPtr(Address(cx, JSContext::offsetOfActivation()), act);
 
-        masm.movePtr(SymbolicAddress::Runtime, reg0);
-        masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
+        // cx->jitTop = act->prevJitTop_;
+        masm.loadPtr(Address(act, JitActivation::offsetOfPrevJitTop()), tmp);
+        masm.storePtr(tmp, Address(cx, offsetof(JSContext, jitTop)));
 
-        //   rt->jitTop = prevJitTop_;
-        masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitTop()), reg2);
-        masm.storePtr(reg2, Address(reg0, offsetOfJitTop));
+        // cx->jitActivation = act->prevJitActivation_;
+        masm.loadPtr(Address(act, JitActivation::offsetOfPrevJitActivation()), tmp);
+        masm.storePtr(tmp, Address(cx, offsetof(JSContext, jitActivation)));
 
-        //   rt->profilingActivation = rt->activation()->prevProfiling_;
-        masm.loadPtr(Address(reg1, Activation::offsetOfPrevProfiling()), reg2);
-        masm.storePtr(reg2, Address(reg0, offsetOfProfilingActivation));
+        // cx->profilingActivation = act->prevProfilingActivation_;
+        masm.loadPtr(Address(act, Activation::offsetOfPrevProfiling()), tmp);
+        masm.storePtr(tmp, Address(cx, JSContext::offsetOfProfilingActivation()));
 
-        //   rt->activation()->active_ = false;
-        masm.store8(Imm32(0), Address(reg1, JitActivation::offsetOfActiveUint8()));
-
-        //   rt->jitActivation = prevJitActivation_;
-        masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitActivation()), reg2);
-        masm.storePtr(reg2, Address(reg0, offsetOfJitActivation));
+        // act->active_ = false;
+        masm.store8(Imm32(0), Address(act, JitActivation::offsetOfActiveUint8()));
     }
 
     // Reload the global register since JIT code can clobber any register.
