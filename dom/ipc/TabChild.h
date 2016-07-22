@@ -646,6 +646,9 @@ public:
       mAPZChild = aAPZChild;
   }
 
+  // Request that the docshell be marked as active.
+  void ForcePaint(uint64_t aLayerObserverEpoch);
+
 protected:
   virtual ~TabChild();
 
@@ -658,7 +661,8 @@ protected:
   virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) override;
 
   virtual bool RecvSetDocShellIsActive(const bool& aIsActive,
-                                       const bool& aIsHidden) override;
+                                       const bool& aIsHidden,
+                                       const uint64_t& aLayerObserverEpoch) override;
 
   virtual bool RecvNavigateByKey(const bool& aForward,
                                  const bool& aForDocumentNavigation) override;
@@ -777,6 +781,9 @@ private:
   // APZChild clears this pointer from its destructor, so it shouldn't be a
   // dangling pointer.
   layers::APZChild* mAPZChild;
+
+  // The most recently seen layer observer epoch in RecvSetDocShellIsActive.
+  uint64_t mLayerObserverEpoch;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
