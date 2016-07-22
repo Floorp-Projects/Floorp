@@ -26,10 +26,7 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 
   *aHyperlinkCount = 0;
 
-  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
-    *aHyperlinkCount = proxy->LinkCount();
-    return S_OK;
-  }
+  MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
   if (hyperText->IsDefunct())
@@ -53,19 +50,13 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
   *aHyperlink = nullptr;
 
   AccessibleWrap* hyperLink;
-  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
-    ProxyAccessible* link = proxy->LinkAt(aLinkIndex);
-    if (!link)
-      return E_FAIL;
-
-    hyperLink = WrapperFor(link);
-  } else {
-    HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
-    if (hyperText->IsDefunct())
-      return CO_E_OBJNOTCONNECTED;
-
-    hyperLink = static_cast<AccessibleWrap*>(hyperText->LinkAt(aLinkIndex));
+  MOZ_ASSERT(!HyperTextProxyFor(this));
+  HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
+  if (hyperText->IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
   }
+
+  hyperLink = static_cast<AccessibleWrap*>(hyperText->LinkAt(aLinkIndex));
 
   if (!hyperLink)
     return E_FAIL;
@@ -88,10 +79,7 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkInde
 
   *aHyperlinkIndex = 0;
 
-  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
-    *aHyperlinkIndex = proxy->LinkIndexAtOffset(aCharIndex);
-    return S_OK;
-  }
+  MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessibleWrap* hyperAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (hyperAcc->IsDefunct())
